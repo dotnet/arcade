@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{BE8ED8C1-C314-4C4E-A929-64C9C8B3552A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AssemblyName>Xunit.NetCore.Extensions</AssemblyName>
+    <RootNamespace>Xunit.NetCore.Extensions</RootNamespace>
+    <CLSCompliant>false</CLSCompliant>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Runtime">
+      <Private>True</Private>
+      <HintPath>..\packages\System.Runtime.4.0.20-beta-22703\lib\portable-wpa81+wp80+win80+net45+aspnetcore50\System.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Extensions">
+      <Private>True</Private>
+      <HintPath>..\packages\System.Runtime.Extensions.4.0.10-beta-22703\lib\portable-wpa81+wp80+win80+net45+aspnetcore50\System.Runtime.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="xunit.abstractions.netcore">
+      <Private>True</Private>
+      <HintPath>..\packages\xunit.runner.dependencies.netcore.1.0.1-prerelease\lib\portable-wpa80+win8+net45+aspnetcore50\xunit.abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="xunit.core.netcore">
+      <Private>True</Private>
+      <HintPath>..\packages\xunit.core.netcore.1.0.0-prerelease\lib\portable-net45+aspnetcore50+win+wpa81+wp80\xunit.core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ActiveIssueAttribute.cs" />
+    <Compile Include="ActiveIssueDiscoverer.cs" />
+    <Compile Include="OuterLoopAttribute.cs" />
+    <Compile Include="OuterLoopTestsDiscoverer.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
+</Project>
