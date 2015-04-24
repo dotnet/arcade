@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -21,13 +23,18 @@ namespace Xunit.NetCore.Extensions
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
         {
             IEnumerable<object> ctorArgs = traitAttribute.GetConstructorArguments();
-            foreach (var arg in ctorArgs)
+            Debug.Assert(ctorArgs.Count() >= 2);
+
+            string issue = ctorArgs.First().ToString();
+            PlatformID platforms = (PlatformID)ctorArgs.Last();
+            if ((platforms.HasFlag(PlatformID.Windows) && Interop.IsWindows) ||
+                (platforms.HasFlag(PlatformID.Linux) && Interop.IsLinux) ||
+                (platforms.HasFlag(PlatformID.OSX) && Interop.IsOSX))
             {
-                string issue = arg.ToString();
-                yield return new KeyValuePair<string, string>("category", "failing");
-                yield return new KeyValuePair<string, string>("ActiveIssue", issue);
-                break;
+                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing);
+                yield return new KeyValuePair<string, string>(XunitConstants.ActiveIssue, issue);
             }
+
         }
     }
 }

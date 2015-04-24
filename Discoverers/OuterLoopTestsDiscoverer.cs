@@ -20,7 +20,7 @@ namespace Xunit.NetCore.Extensions
         /// <returns>The trait values.</returns>
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
         {
-            yield return new KeyValuePair<string, string>("category", "outerloop");
+            yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.OuterLoop);
         }
     }
 }
