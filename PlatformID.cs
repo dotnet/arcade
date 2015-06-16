@@ -12,7 +12,8 @@ namespace Xunit
         Windows = 1,
         Linux = 2,
         OSX = 4,
-        AnyUnix = Linux | OSX,
-        Any = Windows | Linux | OSX
+        FreeBSD = 8,
+        AnyUnix = FreeBSD | Linux | OSX,
+        Any = ~0
     }
 }

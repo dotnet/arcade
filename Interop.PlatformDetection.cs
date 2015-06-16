@@ -11,14 +11,15 @@ internal static partial class Interop
 {
     internal enum OperatingSystem
     {
-        Windows,
+        FreeBSD,
         Linux,
-        OSX
+        OSX,
+        Windows
     }
 
-    internal static bool IsWindows
+    internal static bool IsFreeBSD
     {
-        get { return OperatingSystem.Windows == PlatformDetection.OperatingSystem; }
+        get { return OperatingSystem.FreeBSD == PlatformDetection.OperatingSystem; }
     }
 
     internal static bool IsLinux
@@ -29,6 +30,11 @@ internal static partial class Interop
     internal static bool IsOSX
     {
         get { return OperatingSystem.OSX == PlatformDetection.OperatingSystem; }
+    }
+
+    internal static bool IsWindows
+    {
+        get { return OperatingSystem.Windows == PlatformDetection.OperatingSystem; }
     }
 
     internal static class PlatformDetection
@@ -44,9 +50,13 @@ internal static partial class Interop
                     byte* buffer = stackalloc byte[8192]; // the size use with uname is platform specific; this should be large enough for any OS
                     if (uname(buffer) == 0)
                     {
-                        return Marshal.PtrToStringAnsi((IntPtr)buffer) == "Darwin" ?
-                            OperatingSystem.OSX :
-                            OperatingSystem.Linux;
+                        string os = Marshal.PtrToStringAnsi((IntPtr)buffer);
+                        if (os == "FreeBSD")
+                            return OperatingSystem.FreeBSD;
+                        else if (os == "Darwin")
+                            return OperatingSystem.OSX;
+                        else
+                            return OperatingSystem.Linux;
                     }
                 }
             }
