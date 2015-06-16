@@ -27,9 +27,10 @@ namespace Xunit.NetCore.Extensions
 
             string issue = ctorArgs.First().ToString();
             PlatformID platforms = (PlatformID)ctorArgs.Last();
-            if ((platforms.HasFlag(PlatformID.Windows) && Interop.IsWindows) ||
+            if ((platforms.HasFlag(PlatformID.FreeBSD) && Interop.IsFreeBSD) ||
                 (platforms.HasFlag(PlatformID.Linux) && Interop.IsLinux) ||
-                (platforms.HasFlag(PlatformID.OSX) && Interop.IsOSX))
+                (platforms.HasFlag(PlatformID.OSX) && Interop.IsOSX) ||
+                (platforms.HasFlag(PlatformID.Windows) && Interop.IsWindows))
             {
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing);
                 yield return new KeyValuePair<string, string>(XunitConstants.ActiveIssue, issue);
