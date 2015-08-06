@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -27,10 +28,10 @@ namespace Xunit.NetCore.Extensions
 
             string issue = ctorArgs.First().ToString();
             PlatformID platforms = (PlatformID)ctorArgs.Last();
-            if ((platforms.HasFlag(PlatformID.FreeBSD) && Interop.IsFreeBSD) ||
-                (platforms.HasFlag(PlatformID.Linux) && Interop.IsLinux) ||
-                (platforms.HasFlag(PlatformID.OSX) && Interop.IsOSX) ||
-                (platforms.HasFlag(PlatformID.Windows) && Interop.IsWindows))
+            if ((platforms.HasFlag(PlatformID.FreeBSD) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("FREEBSD"))) ||
+                (platforms.HasFlag(PlatformID.Linux) && RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) ||
+                (platforms.HasFlag(PlatformID.OSX) && RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) ||
+                (platforms.HasFlag(PlatformID.Windows) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)))
             {
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing);
                 yield return new KeyValuePair<string, string>(XunitConstants.ActiveIssue, issue);

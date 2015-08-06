@@ -20,7 +20,6 @@
     <Compile Include="Attributes\OuterLoopAttribute.cs" />
     <Compile Include="Discoverers\OuterLoopTestsDiscoverer.cs" />
     <Compile Include="Discoverers\PlatformSpecificDiscoverer.cs" />
-    <Compile Include="Interop.PlatformDetection.cs" />
     <Compile Include="PlatformID.cs" />
     <Compile Include="XunitConstants.cs" />
   </ItemGroup>
