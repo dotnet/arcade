@@ -10,7 +10,7 @@ namespace Xunit
     /// Apply this attribute to your test method to specify this is a platform specific test.
     /// </summary>
     [TraitDiscoverer("Xunit.NetCore.Extensions.PlatformSpecificDiscoverer", "Xunit.NetCore.Extensions")]
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
     public class PlatformSpecificAttribute : Attribute, ITraitAttribute
     {
         public PlatformSpecificAttribute(PlatformID platform) { }
