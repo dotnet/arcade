@@ -10,7 +10,7 @@
     "System.Resources.ResourceManager": "4.0.0",
     "System.Runtime.Extensions": "4.0.10",
     "System.Runtime.InteropServices.RuntimeInformation":"4.0.0-beta-*",
-    "xunit": "2.1.0-rc1-*"
+    "xunit": "2.1.0"
     },
   "frameworks": {
     "dnxcore50": {}
