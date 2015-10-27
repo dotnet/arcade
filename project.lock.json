@@ -261,7 +261,7 @@
           "lib/DNXCore50/System.Runtime.InteropServices.dll": {}
         }
       },
-      "System.Runtime.InteropServices.RuntimeInformation/4.0.0-beta-23420": {
+      "System.Runtime.InteropServices.RuntimeInformation/4.0.0-beta-23426": {
         "type": "package",
         "dependencies": {
           "System.Runtime": "4.0.0"
@@ -439,7 +439,7 @@
       }
     },
     "DNXCore,Version=v5.0/win7-x86": {
-      "runtime.win.System.Runtime.InteropServices.RuntimeInformation/4.0.0-beta-23420": {
+      "runtime.win.System.Runtime.InteropServices.RuntimeInformation/4.0.0-beta-23426": {
         "type": "package",
         "dependencies": {
           "System.Resources.ResourceManager": "4.0.0",
@@ -710,7 +710,7 @@
           "lib/DNXCore50/System.Runtime.InteropServices.dll": {}
         }
       },
-      "System.Runtime.InteropServices.RuntimeInformation/4.0.0-beta-23420": {
+      "System.Runtime.InteropServices.RuntimeInformation/4.0.0-beta-23426": {
         "type": "package",
         "dependencies": {
           "System.Runtime": "4.0.0"
@@ -888,7 +888,7 @@
       }
     },
     "DNXCore,Version=v5.0/win7-x64": {
-      "runtime.win.System.Runtime.InteropServices.RuntimeInformation/4.0.0-beta-23420": {
+      "runtime.win.System.Runtime.InteropServices.RuntimeInformation/4.0.0-beta-23426": {
         "type": "package",
         "dependencies": {
           "System.Resources.ResourceManager": "4.0.0",
@@ -1159,7 +1159,7 @@
           "lib/DNXCore50/System.Runtime.InteropServices.dll": {}
         }
       },
-      "System.Runtime.InteropServices.RuntimeInformation/4.0.0-beta-23420": {
+      "System.Runtime.InteropServices.RuntimeInformation/4.0.0-beta-23426": {
         "type": "package",
         "dependencies": {
           "System.Runtime": "4.0.0"
@@ -1338,14 +1338,14 @@
     }
   },
   "libraries": {
-    "runtime.win.System.Runtime.InteropServices.RuntimeInformation/4.0.0-beta-23420": {
+    "runtime.win.System.Runtime.InteropServices.RuntimeInformation/4.0.0-beta-23426": {
       "type": "package",
       "serviceable": true,
-      "sha512": "42dt60VwE2gRW6GYoa4+dDw/Cp28H9YPbVQhhbLLco7c4uJGvoIIqY5EflXGTtm+MgkE4spRCSzNzLibXv/BbQ==",
+      "sha512": "bjeo7THAMmMP1RMTFL9r9TdvlbG8vM1lhAiAoFAkvtWB+jo4OgK6ntr9VecXpdNeY3f3LrvOtt7rjciE0+RZAA==",
       "files": [
         "ref/dotnet/_._",
-        "runtime.win.System.Runtime.InteropServices.RuntimeInformation.4.0.0-beta-23420.nupkg",
-        "runtime.win.System.Runtime.InteropServices.RuntimeInformation.4.0.0-beta-23420.nupkg.sha512",
+        "runtime.win.System.Runtime.InteropServices.RuntimeInformation.4.0.0-beta-23426.nupkg",
+        "runtime.win.System.Runtime.InteropServices.RuntimeInformation.4.0.0-beta-23426.nupkg.sha512",
         "runtime.win.System.Runtime.InteropServices.RuntimeInformation.nuspec",
         "runtimes/win/lib/dotnet5.4/System.Runtime.InteropServices.RuntimeInformation.dll"
       ]
@@ -2032,10 +2032,10 @@
         "System.Runtime.InteropServices.nuspec"
       ]
     },
-    "System.Runtime.InteropServices.RuntimeInformation/4.0.0-beta-23420": {
+    "System.Runtime.InteropServices.RuntimeInformation/4.0.0-beta-23426": {
       "type": "package",
       "serviceable": true,
-      "sha512": "oJDYMFSRoQQ04MWQka14pbT+mIzKuq91KZx+YWedWuv+fYnkT6JPI5r+3DfI6VPRFQ57hOuFFdfEahDr45NgmQ==",
+      "sha512": "uB3rNsyNaqZjg0ubKuQl5VE+nYL60Dc+cdJixfnbxRkBp8STGJoQZ+WikVQh25IpWBg0ptdcixy9+aopYh+92Q==",
       "files": [
         "lib/MonoAndroid10/_._",
         "lib/MonoTouch10/_._",
@@ -2047,8 +2047,8 @@
         "ref/xamarinios10/_._",
         "ref/xamarinmac20/_._",
         "runtime.json",
-        "System.Runtime.InteropServices.RuntimeInformation.4.0.0-beta-23420.nupkg",
-        "System.Runtime.InteropServices.RuntimeInformation.4.0.0-beta-23420.nupkg.sha512",
+        "System.Runtime.InteropServices.RuntimeInformation.4.0.0-beta-23426.nupkg",
+        "System.Runtime.InteropServices.RuntimeInformation.4.0.0-beta-23426.nupkg.sha512",
         "System.Runtime.InteropServices.RuntimeInformation.nuspec"
       ]
     },
