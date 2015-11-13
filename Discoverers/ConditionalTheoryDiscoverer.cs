@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -34,14 +33,20 @@ namespace Xunit.NetCore.Extensions
                         _diagnosticMessageSink,
                         discoveryOptions.MethodDisplayOrDefault(),
                         testMethod,
-                        "An appropriate member \"" + conditionMemberName + "\" could not be found.")
+                        ConditionalFactDiscoverer.GetFailedLookupString(conditionMemberName))
                 };
             }
 
-            object result = conditionMethodInfo.Invoke(null, null);
-            return (bool)result ?
-                base.Discover(discoveryOptions, testMethod, theoryAttribute) :
-                Array.Empty<IXunitTestCase>();
+            IEnumerable<IXunitTestCase> testCases = base.Discover(discoveryOptions, testMethod, theoryAttribute);
+            if ((bool)conditionMethodInfo.Invoke(null, null))
+            {
+                return testCases;
+            }
+            else
+            {
+                string skippedReason = "\"" + conditionMemberName + "\" returned false.";
+                return testCases.Select(tc => new SkippedTestCase(tc, skippedReason));
+            }
         }
     }
 }

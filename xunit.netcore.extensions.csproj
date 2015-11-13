@@ -25,6 +25,7 @@
     <Compile Include="Discoverers\OuterLoopTestsDiscoverer.cs" />
     <Compile Include="Discoverers\PlatformSpecificDiscoverer.cs" />
     <Compile Include="PlatformID.cs" />
+    <Compile Include="SkippedTestCase.cs" />
     <Compile Include="XunitConstants.cs" />
   </ItemGroup>
   <ItemGroup>
