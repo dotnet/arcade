@@ -34,16 +34,30 @@ namespace Xunit.NetCore.Extensions
                         _diagnosticMessageSink,
                         discoveryOptions.MethodDisplayOrDefault(),
                         testMethod,
-                        "An appropriate member \"" + conditionMemberName + "\" could not be found.")
+                        GetFailedLookupString(conditionMemberName))
                 };
             }
 
-            object result = conditionMethodInfo.Invoke(null, null);
-            return (bool)result ?
-                base.Discover(discoveryOptions, testMethod, factAttribute) :
-                Array.Empty<IXunitTestCase>();
+            IEnumerable<IXunitTestCase> testCases = base.Discover(discoveryOptions, testMethod, factAttribute);
+            if ((bool)conditionMethodInfo.Invoke(null, null))
+            {
+                return testCases;
+            }
+            else
+            {
+                string skippedReason = "\"" + conditionMemberName + "\" returned false.";
+                return testCases.Select(tc => new SkippedTestCase(tc, skippedReason));
+            }
         }
 
+        internal static string GetFailedLookupString(string name)
+        {
+            return
+                "An appropriate member \"" + name + "\" could not be found. " +
+                "The conditional method needs to be a static method or property on this or any ancestor type, " +
+                "of any visibility, accepting zero arguments, and having a return type of Boolean.";
+        }
+        
         internal static MethodInfo LookupConditionalMethod(Type t, string name)
         {
             if (t == null || name == null)
