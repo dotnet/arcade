@@ -17,5 +17,6 @@ namespace Xunit.NetCore.Extensions
         public const string Failing = "failing";
         public const string ActiveIssue = "activeissue";
         public const string OuterLoop = "outerloop";
+        public const string IgnoreForCI = "ignoreforci";
     }
 }
