@@ -7,16 +7,16 @@ using Xunit.Sdk;
 
 namespace Xunit.NetCore.Extensions
 {
-    internal struct XunitConstants
+    public struct XunitConstants
     {
-        public const string NonFreeBSDTest = "nonfreebsdtests";
-        public const string NonLinuxTest = "nonlinuxtests";
-        public const string NonOSXTest = "nonosxtests";
-        public const string NonWindowsTest = "nonwindowstests";
+        internal const string NonFreeBSDTest = "nonfreebsdtests";
+        internal const string NonLinuxTest = "nonlinuxtests";
+        internal const string NonOSXTest = "nonosxtests";
+        internal const string NonWindowsTest = "nonwindowstests";
+        internal const string Failing = "failing";
+        internal const string ActiveIssue = "activeissue";
+        internal const string OuterLoop = "outerloop";
         public const string Category = "category";
-        public const string Failing = "failing";
-        public const string ActiveIssue = "activeissue";
-        public const string OuterLoop = "outerloop";
         public const string IgnoreForCI = "ignoreforci";
     }
 }
