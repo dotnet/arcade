@@ -9,7 +9,7 @@
     "System.Reflection": "4.0.10",
     "System.Resources.ResourceManager": "4.0.0",
     "System.Runtime.Extensions": "4.0.10",
-    "System.Runtime.InteropServices.RuntimeInformation": "4.0.0-rc3-23811",
+    "System.Runtime.InteropServices.RuntimeInformation": "4.0.0-rc2-23816",
     "xunit": "2.1.0"
   },
   "frameworks": {
