@@ -11,6 +11,7 @@ namespace Xunit.NetCore.Extensions
     {
         internal const string NonFreeBSDTest = "nonfreebsdtests";
         internal const string NonLinuxTest = "nonlinuxtests";
+        internal const string NonNetBSDTest = "nonnetbsdtests";
         internal const string NonOSXTest = "nonosxtests";
         internal const string NonWindowsTest = "nonwindowstests";
         internal const string Failing = "failing";

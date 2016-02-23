@@ -31,6 +31,7 @@ namespace Xunit.NetCore.Extensions
             PlatformID platforms = (PlatformID)ctorArgs.Last();
             if ((platforms.HasFlag(PlatformID.FreeBSD) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("FREEBSD"))) ||
                 (platforms.HasFlag(PlatformID.Linux) && RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) ||
+                (platforms.HasFlag(PlatformID.NetBSD) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("NETBSD"))) ||
                 (platforms.HasFlag(PlatformID.OSX) && RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) ||
                 (platforms.HasFlag(PlatformID.Windows) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)))
             {
