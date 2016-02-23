@@ -31,6 +31,8 @@ namespace Xunit.NetCore.Extensions
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonOSXTest);
             if (!platform.HasFlag(PlatformID.FreeBSD))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonFreeBSDTest);
+            if (!platform.HasFlag(PlatformID.NetBSD))
+                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetBSDTest);
         }
     }
 }
