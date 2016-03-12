@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -25,9 +26,22 @@ namespace Xunit.NetCore.Extensions
             MethodInfo testMethodInfo = testMethod.Method.ToRuntimeMethod();
 
             string conditionMemberName = theoryAttribute.GetConstructorArguments().FirstOrDefault() as string;
+            Type declaringType = testMethodInfo.DeclaringType;
+            string[] symbols = conditionMemberName.Split('.');
+
+            if (symbols.Length == 2)
+            {
+                conditionMemberName = symbols[1];
+                ITypeInfo type = testMethod.TestClass.Class.Assembly.GetTypes(false).Where(t => t.Name.Contains(symbols[0])).FirstOrDefault();
+                if (type != null)
+                {
+                    declaringType = type.ToRuntimeType();
+                }
+            }
+
             MethodInfo conditionMethodInfo;
             if (conditionMemberName == null ||
-                (conditionMethodInfo = ConditionalFactDiscoverer.LookupConditionalMethod(testMethodInfo.DeclaringType, conditionMemberName)) == null)
+                (conditionMethodInfo = ConditionalFactDiscoverer.LookupConditionalMethod(declaringType, conditionMemberName)) == null)
             {
                 return new[] {
                     new ExecutionErrorTestCase(
