@@ -23,45 +23,9 @@ namespace Xunit.NetCore.Extensions
         public override IEnumerable<IXunitTestCase> Discover(
             ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IAttributeInfo theoryAttribute)
         {
-            MethodInfo testMethodInfo = testMethod.Method.ToRuntimeMethod();
-
-            string conditionMemberName = theoryAttribute.GetConstructorArguments().FirstOrDefault() as string;
-            Type declaringType = testMethodInfo.DeclaringType;
-            string[] symbols = conditionMemberName.Split('.');
-
-            if (symbols.Length == 2)
-            {
-                conditionMemberName = symbols[1];
-                ITypeInfo type = testMethod.TestClass.Class.Assembly.GetTypes(false).Where(t => t.Name.Contains(symbols[0])).FirstOrDefault();
-                if (type != null)
-                {
-                    declaringType = type.ToRuntimeType();
-                }
-            }
-
-            MethodInfo conditionMethodInfo;
-            if (conditionMemberName == null ||
-                (conditionMethodInfo = ConditionalFactDiscoverer.LookupConditionalMethod(declaringType, conditionMemberName)) == null)
-            {
-                return new[] {
-                    new ExecutionErrorTestCase(
-                        _diagnosticMessageSink,
-                        discoveryOptions.MethodDisplayOrDefault(),
-                        testMethod,
-                        ConditionalFactDiscoverer.GetFailedLookupString(conditionMemberName))
-                };
-            }
-
+            string[] conditionMemberNames = theoryAttribute.GetConstructorArguments().FirstOrDefault() as string[];
             IEnumerable<IXunitTestCase> testCases = base.Discover(discoveryOptions, testMethod, theoryAttribute);
-            if ((bool)conditionMethodInfo.Invoke(null, null))
-            {
-                return testCases;
-            }
-            else
-            {
-                string skippedReason = "\"" + conditionMemberName + "\" returned false.";
-                return testCases.Select(tc => new SkippedTestCase(tc, skippedReason));
-            }
+            return ConditionalFactDiscoverer.DiscoverConditionalTestCases(discoveryOptions, _diagnosticMessageSink, testMethod, testCases, conditionMemberNames);
         }
     }
 }
