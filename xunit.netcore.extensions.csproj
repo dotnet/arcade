@@ -19,6 +19,7 @@
     <Compile Include="Attributes\ActiveIssueAttribute.cs" />
     <Compile Include="Attributes\PlatformSpecificAttribute.cs" />
     <Compile Include="Discoverers\ConditionalFactDiscoverer.cs" />
+    <Compile Include="Discoverers\ConditionalTestDiscoverer.cs" />
     <Compile Include="Discoverers\ConditionalTheoryDiscoverer.cs" />
     <Compile Include="Discoverers\ActiveIssueDiscoverer.cs" />
     <Compile Include="Attributes\OuterLoopAttribute.cs" />
