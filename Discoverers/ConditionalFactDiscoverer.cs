@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -23,45 +24,71 @@ namespace Xunit.NetCore.Extensions
         public override IEnumerable<IXunitTestCase> Discover(
             ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IAttributeInfo factAttribute)
         {
+            string[] conditionMemberNames = factAttribute.GetConstructorArguments().FirstOrDefault() as string[];
+            IEnumerable<IXunitTestCase> testCases = base.Discover(discoveryOptions, testMethod, factAttribute);
+            return DiscoverConditionalTestCases(discoveryOptions, _diagnosticMessageSink, testMethod, testCases, conditionMemberNames);
+        }
+
+        // This helper method evaluates the given condition member names for a given set of test cases.
+        // If any condition member evaluates to 'false', the test cases are marked to be skipped.
+        // The skip reason is the collection of all the condition members that evalated to 'false'.
+        internal static IEnumerable<IXunitTestCase> DiscoverConditionalTestCases(
+                                                        ITestFrameworkDiscoveryOptions discoveryOptions,
+                                                        IMessageSink diagnosticMessageSink,
+                                                        ITestMethod testMethod,
+                                                        IEnumerable<IXunitTestCase> testCases,
+                                                        IEnumerable<string> conditionMemberNames)
+        {
             MethodInfo testMethodInfo = testMethod.Method.ToRuntimeMethod();
+            Type testMethodDeclaringType = testMethodInfo.DeclaringType;
+            List<string> falseConditions = new List<string>();
 
-            string conditionMemberName = factAttribute.GetConstructorArguments().FirstOrDefault() as string;
-            Type declaringType = testMethodInfo.DeclaringType;
-            string[] symbols = conditionMemberName.Split('.');
-
-            if (symbols.Length == 2)
+            foreach (string entry in conditionMemberNames)
             {
-                conditionMemberName = symbols[1];
-                ITypeInfo type = testMethod.TestClass.Class.Assembly.GetTypes(false).Where(t => t.Name.Contains(symbols[0])).FirstOrDefault();
-                if (type != null)
+                string conditionMemberName = entry;
+                string[] symbols = conditionMemberName.Split('.');
+                Type declaringType = testMethodDeclaringType;
+
+                if (symbols.Length == 2)
                 {
-                    declaringType = type.ToRuntimeType();
+                    conditionMemberName = symbols[1];
+                    ITypeInfo type = testMethod.TestClass.Class.Assembly.GetTypes(false).Where(t => t.Name.Contains(symbols[0])).FirstOrDefault();
+                    if (type != null)
+                    {
+                        declaringType = type.ToRuntimeType();
+                    }
                 }
-            }
-            
-            MethodInfo conditionMethodInfo;
-            if (conditionMemberName == null ||
-                (conditionMethodInfo = LookupConditionalMethod(declaringType, conditionMemberName)) == null)
-            {
-                return new[] {
+
+                MethodInfo conditionMethodInfo;
+                if (conditionMemberName == null ||
+                    (conditionMethodInfo = LookupConditionalMethod(declaringType, conditionMemberName)) == null)
+                {
+                    return new[] {
                     new ExecutionErrorTestCase(
-                        _diagnosticMessageSink,
+                        diagnosticMessageSink,
                         discoveryOptions.MethodDisplayOrDefault(),
                         testMethod,
                         GetFailedLookupString(conditionMemberName))
                 };
+                }
+
+                // In the case of multiple conditions, collect the results of all
+                // of them to produce a summary skip reason.
+                if (!(bool)conditionMethodInfo.Invoke(null, null))
+                {
+                    falseConditions.Add(conditionMemberName);
+                }
             }
 
-            IEnumerable<IXunitTestCase> testCases = base.Discover(discoveryOptions, testMethod, factAttribute);
-            if ((bool)conditionMethodInfo.Invoke(null, null))
+            // Compose a summary of all conditions that returned false.
+            if (falseConditions.Count > 0)
             {
-                return testCases;
-            }
-            else
-            {
-                string skippedReason = "\"" + conditionMemberName + "\" returned false.";
+                string skippedReason = String.Format("Condition(s) not met: \"{0}\"", String.Join("\", \"", falseConditions));
                 return testCases.Select(tc => new SkippedTestCase(tc, skippedReason));
             }
+
+            // No conditions returned false (including the absence of any conditions).
+            return testCases;
         }
 
         internal static string GetFailedLookupString(string name)

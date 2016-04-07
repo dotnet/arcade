@@ -11,11 +11,11 @@ namespace Xunit
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class ConditionalTheoryAttribute : TheoryAttribute
     {
-        public string ConditionMemberName { get; private set; }
+        public string[] ConditionMemberNames { get; private set; }
 
-        public ConditionalTheoryAttribute(string conditionMemberName)
+        public ConditionalTheoryAttribute(params string[] conditionMemberNames)
         {
-            ConditionMemberName = conditionMemberName;
+            ConditionMemberNames = conditionMemberNames;
         }
     }
 }
