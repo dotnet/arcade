@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -25,7 +24,7 @@ namespace Xunit.NetCore.Extensions
         {
             string[] conditionMemberNames = theoryAttribute.GetConstructorArguments().FirstOrDefault() as string[];
             IEnumerable<IXunitTestCase> testCases = base.Discover(discoveryOptions, testMethod, theoryAttribute);
-            return ConditionalFactDiscoverer.DiscoverConditionalTestCases(discoveryOptions, _diagnosticMessageSink, testMethod, testCases, conditionMemberNames);
+            return ConditionalTestDiscoverer.Discover(discoveryOptions, _diagnosticMessageSink, testMethod, testCases, conditionMemberNames);
         }
     }
 }
