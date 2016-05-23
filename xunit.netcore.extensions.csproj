@@ -10,6 +10,7 @@
     <RootNamespace>Xunit.NetCore.Extensions</RootNamespace>
     <CLSCompliant>false</CLSCompliant>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NuGetTargetMoniker>.NETStandard,Version=v1.5</NuGetTargetMoniker>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'" />
