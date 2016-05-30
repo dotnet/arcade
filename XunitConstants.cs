@@ -19,5 +19,6 @@ namespace Xunit.NetCore.Extensions
         internal const string OuterLoop = "outerloop";
         public const string Category = "category";
         public const string IgnoreForCI = "ignoreforci";
+        public const string RequiresElevation = "requireselevation";
     }
 }
