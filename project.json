@@ -4,7 +4,7 @@
     "xunit": "2.1.0"
   },
   "frameworks": {
-    "netstandard1.5": {
+    "netstandard1.3": {
       "imports": [ "dnxcore50", "portable-net45+win8" ]
     }
   }
