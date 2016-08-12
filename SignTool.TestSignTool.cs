@@ -18,8 +18,7 @@ namespace SignTool
         /// </summary>
         private sealed class TestSignTool : SignToolBase
         {
-            internal TestSignTool(string appPath, string binariesPath, string msbuildPath)
-                : base(appPath, binariesPath, msbuildPath)
+            internal TestSignTool(SignToolArgs args) : base(args)
             {
 
             }

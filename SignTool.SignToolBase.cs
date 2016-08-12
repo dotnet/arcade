@@ -13,19 +13,21 @@ namespace SignTool
     {
         private abstract class SignToolBase : ISignTool
         {
-            internal string MSBuildPath { get; }
-            internal string BinariesPath { get; }
-            internal string AppPath { get; }
+            private readonly SignToolArgs _args;
 
-            internal SignToolBase(string appPath, string binariesPath, string msbuildPath)
+            internal string MSBuildPath => _args.MSBuildPath;
+            internal string OutputPath => _args.OutputPath;
+            internal string IntermediateOutputPath => _args.IntermediateOutputPath;
+            internal string AppPath => _args.AppPath;
+
+            internal SignToolBase(SignToolArgs args)
             {
-                BinariesPath = binariesPath;
-                AppPath = appPath;
-                MSBuildPath = msbuildPath;
+                _args = args;
 
+                // TODO: this is a bad place for this check.
                 if (!File.Exists(MSBuildPath))
                 {
-                    throw new Exception($"Unable to locate MSBuild at the path '{msbuildPath}'.");
+                    throw new Exception($"Unable to locate MSBuild at the path '{MSBuildPath}'.");
                 }
             }
 
@@ -39,6 +41,7 @@ namespace SignTool
             {
                 var buildFilePath = Path.Combine(AppPath, "build.proj");
                 var commandLine = new StringBuilder();
+                // TODO: rename that target
                 commandLine.Append(@"/v:m /target:RoslynSign ");
                 commandLine.Append($@"""{buildFilePath}"" ");
                 Console.WriteLine($"msbuild.exe {commandLine.ToString()}");
@@ -92,9 +95,9 @@ namespace SignTool
 
                 AppendLine(builder, depth: 1, text: $@"</ItemGroup>");
 
-                var intermediatesPath = Path.Combine(Path.GetDirectoryName(BinariesPath), "Obj");
+                var intermediatesPath = Path.Combine(Path.GetDirectoryName(OutputPath), "Obj");
                 AppendLine(builder, depth: 1, text: @"<Target Name=""RoslynSign"">");
-                AppendLine(builder, depth: 2, text: $@"<SignFiles Files=""@(FilesToSign)"" BinariesDirectory=""{BinariesPath}"" IntermediatesDirectory=""{intermediatesPath}"" Type=""real"" />");
+                AppendLine(builder, depth: 2, text: $@"<SignFiles Files=""@(FilesToSign)"" BinariesDirectory=""{OutputPath}"" IntermediatesDirectory=""{IntermediateOutputPath}"" Type=""real"" />");
                 AppendLine(builder, depth: 1, text: @"</Target>");
                 AppendLine(builder, depth: 0, text: @"</Project>");
 

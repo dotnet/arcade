@@ -27,6 +27,7 @@
     <Compile Include="SignTool.cs" />
     <Compile Include="SignTool.SignToolBase.cs" />
     <Compile Include="SignTool.TestSignTool.cs" />
+    <Compile Include="SignToolArgs.cs" />
     <Compile Include="VsixData.cs" />
   </ItemGroup>
   <ItemGroup>

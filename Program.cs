@@ -14,18 +14,15 @@ namespace SignTool
     {
         internal static void Main(string[] args)
         {
-            string binariesPath;
-            string msbuildPath;
-            bool test;
-
-            if (!ParseCommandLineArguments(args, out binariesPath, out msbuildPath, out test))
+            SignToolArgs signToolArgs;
+            if (!ParseCommandLineArguments(args, out signToolArgs))
             {
-                Console.WriteLine("SignTool.exe [-test] [-binariesPath <path>] [-msbuildPath <path>]");
+                PrintUsage();
                 Environment.Exit(1);
             }
 
-            var signTool = SignToolFactory.Create(AppContext.BaseDirectory, binariesPath, msbuildPath, test);
-            var batchData = ReadBatchSignInput(binariesPath);
+            var signTool = SignToolFactory.Create(signToolArgs);
+            var batchData = ReadBatchSignInput(signToolArgs.OutputPath);
             var util = new BatchSignUtil(signTool, batchData);
             util.Go();
         }
@@ -65,18 +62,32 @@ namespace SignTool
             }
         }
 
+        internal static void PrintUsage()
+        {
+            var usage =
+@"SignTool.exe [-test] [-intermediateOutputPath <path>] [-msbuildPath <path>] outputPath
+
+test: Run tool without actually modifying any state.
+outputPath: Directory containing the binaries.
+intermediateOutputPath: Directory containing intermediate output.  Default is (outputpath\..\Obj)
+msbuildPath: Path to MSBuild.exe to use as signing mechanism.
+";
+            Console.WriteLine(usage);
+        }
+
         internal static bool ParseCommandLineArguments(
             string[] args,
-            out string binariesPath,
-            out string msbuildPath,
-            out bool test)
+            out SignToolArgs signToolArgs)
         {
-            binariesPath = Path.GetDirectoryName(Path.GetDirectoryName(AppContext.BaseDirectory));
-            msbuildPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"MSBuild\14.0\bin\MSBuild.exe");
-            test = false;
+            signToolArgs = default(SignToolArgs);
+
+            string intermediateOutputPath = null;
+            string outputPath = null;
+            string msbuildPath = null;
+            var test = false;
 
             var i = 0;
-            while (i < args.Length)
+            while (i + 1 < args.Length)
             {
                 var current = args[i];
                 switch (current.ToLower())
@@ -85,14 +96,14 @@ namespace SignTool
                         test = true;
                         i++;
                         break;
-                    case "-binariespath":
+                    case "-intermediateOutputPath":
                         if (i + 1 >= args.Length)
                         {
                             Console.WriteLine("-binariesPath needs an argument");
                             return false;
                         }
 
-                        binariesPath = args[i + 1];
+                        intermediateOutputPath = args[i + 1];
                         i += 2;
                         break;
                     case "-msbuildpath":
@@ -110,6 +121,25 @@ namespace SignTool
                         return false;
                 }
             }
+
+            if (i + 1 != args.Length)
+            {
+                Console.WriteLine("Need a value for outputPath");
+                return false;
+            }
+
+            outputPath = args[i];
+
+            // Get defaults for all of the optional values that weren't specified
+            msbuildPath = msbuildPath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"MSBuild\14.0\bin\MSBuild.exe");
+            intermediateOutputPath = intermediateOutputPath ?? Path.Combine(Path.GetDirectoryName(outputPath), "Obj");
+
+            signToolArgs = new SignToolArgs(
+                outputPath: outputPath,
+                msbuildPath: msbuildPath,
+                intermediateOutputPath: intermediateOutputPath,
+                appPath: AppContext.BaseDirectory,
+                test: test);
             return true;
         }
     }
