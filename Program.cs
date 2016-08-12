@@ -76,7 +76,7 @@ namespace SignTool
                 return false;
             }
 
-            batchData = new BatchSignInput(outputPath, map, fileJson.ExcludeList);
+            batchData = new BatchSignInput(outputPath, map, fileJson.ExcludeList ?? Array.Empty<string>());
             return true;
         }
 
