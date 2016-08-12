@@ -65,11 +65,12 @@ namespace SignTool
         internal static void PrintUsage()
         {
             var usage =
-@"SignTool.exe [-test] [-intermediateOutputPath <path>] [-msbuildPath <path>] outputPath
+@"SignTool.exe [-test] [-intermediateOutputPath <path>] [-msbuildPath <path>] [-nugetPackagesPath <path>] outputPath
 
 test: Run tool without actually modifying any state.
 outputPath: Directory containing the binaries.
-intermediateOutputPath: Directory containing intermediate output.  Default is (outputpath\..\Obj)
+intermediateOutputPath: Directory containing intermediate output.  Default is (outputpath\..\Obj).
+nugetPackagesPath: Path containing downloaded NuGet packages.
 msbuildPath: Path to MSBuild.exe to use as signing mechanism.
 ";
             Console.WriteLine(usage);
@@ -84,37 +85,37 @@ msbuildPath: Path to MSBuild.exe to use as signing mechanism.
             string intermediateOutputPath = null;
             string outputPath = null;
             string msbuildPath = null;
+            string nugetPackagesPath = null;
             var test = false;
 
             var i = 0;
+
             while (i + 1 < args.Length)
             {
-                var current = args[i];
-                switch (current.ToLower())
+                var current = args[i].ToLower();
+                switch (current)
                 {
                     case "-test":
                         test = true;
                         i++;
                         break;
                     case "-intermediateOutputPath":
-                        if (i + 1 >= args.Length)
+                        if (!ParsePathOption(args, ref i, current, out intermediateOutputPath))
                         {
-                            Console.WriteLine("-binariesPath needs an argument");
                             return false;
                         }
-
-                        intermediateOutputPath = args[i + 1];
-                        i += 2;
                         break;
                     case "-msbuildpath":
-                        if (i + 1 >= args.Length)
+                        if (!ParsePathOption(args, ref i, current, out msbuildPath))
                         {
-                            Console.WriteLine("-msbuildPath needs an argument");
                             return false;
                         }
-
-                        msbuildPath = args[i + 1];
-                        i += 2;
+                        break;
+                    case "-nugetPackagesPath":
+                        if (!ParsePathOption(args, ref i, current, out nugetPackagesPath))
+                        {
+                            return false;
+                        }
                         break;
                     default:
                         Console.WriteLine($"Unrecognized option {current}");
@@ -134,12 +135,37 @@ msbuildPath: Path to MSBuild.exe to use as signing mechanism.
             msbuildPath = msbuildPath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"MSBuild\14.0\bin\MSBuild.exe");
             intermediateOutputPath = intermediateOutputPath ?? Path.Combine(Path.GetDirectoryName(outputPath), "Obj");
 
+            if (string.IsNullOrWhiteSpace(nugetPackagesPath))
+            {
+                nugetPackagesPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
+                if (string.IsNullOrWhiteSpace(nugetPackagesPath))
+                {
+                    nugetPackagesPath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                        @".nuget\packages");
+                }
+            }
+
             signToolArgs = new SignToolArgs(
                 outputPath: outputPath,
                 msbuildPath: msbuildPath,
                 intermediateOutputPath: intermediateOutputPath,
+                nugetPackagesPath: nugetPackagesPath,
                 appPath: AppContext.BaseDirectory,
                 test: test);
+            return true;
+        }
+
+        private static bool ParsePathOption(string[] args, ref int i, string optionName, out string optionValue)
+        {
+            if (i + 1 >= args.Length)
+            {
+                Console.WriteLine($"{optionName} needs an argument");
+                return false;
+            }
+
+            optionValue = args[i + 1];
+            i += 2;
             return true;
         }
     }

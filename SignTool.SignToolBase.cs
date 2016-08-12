@@ -18,6 +18,7 @@ namespace SignTool
             internal string MSBuildPath => _args.MSBuildPath;
             internal string OutputPath => _args.OutputPath;
             internal string IntermediateOutputPath => _args.IntermediateOutputPath;
+            internal string NuGetPackagesPath => _args.NuGetPackagesPath;
             internal string AppPath => _args.AppPath;
 
             internal SignToolBase(SignToolArgs args)
@@ -76,6 +77,11 @@ namespace SignTool
                 var builder = new StringBuilder();
                 AppendLine(builder, depth: 0, text: @"<?xml version=""1.0"" encoding=""utf-8""?>");
                 AppendLine(builder, depth: 0, text: @"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">");
+
+                // Setup the code to get the NuGet package root.
+                AppendLine(builder, depth: 0, text: @"<PropertyGroup>");
+                AppendLine(builder, depth: 1, text: $@"<NuGetPackageRoot>{NuGetPackagesPath}</NuGetPackageRoot>");
+                AppendLine(builder, depth: 0, text: @"</PropertyGroup>");
 
                 AppendLine(builder, depth: 1, text: $@"<Import Project=""$(NuGetPackageRoot)\MicroBuild.Core\0.2.0\build\MicroBuild.Core.props"" />");
                 AppendLine(builder, depth: 1, text: $@"<Import Project=""$(NuGetPackageRoot)\MicroBuild.Core\0.2.0\build\MicroBuild.Core.targets"" />");
