@@ -10,10 +10,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="BatchSignData.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="BatchSignData.md" />
+    <None Include="SignToolData.md" />
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>

@@ -21,7 +21,7 @@ namespace SignTool
 
             if (!ParseCommandLineArguments(args, out binariesPath, out settingsFile, out msbuildPath, out test))
             {
-                Console.WriteLine("SignTool.exe [-test] [-binariesPath <path>] [-settingsFile <path>] [-msbuildPath <path>]");
+                Console.WriteLine("SignTool.exe [-test] [-repoPath <path>] [-settingsFile <path>] [-msbuildPath <path>] <binaries path>");
                 Environment.Exit(1);
             }
 
@@ -66,20 +66,24 @@ namespace SignTool
             }
         }
 
-        internal static bool ParseCommandLineArguments(
+        internal static bool ParseCommandLineArgumentsCore(
             string[] args,
             out string binariesPath,
-            out string settingsFile,
+            out string repoPath, 
+            out string configFile,
             out string msbuildPath,
+            out string 
             out bool test)
         {
-            binariesPath = Path.GetDirectoryName(Path.GetDirectoryName(AppContext.BaseDirectory));
-            settingsFile = Path.Combine(Environment.CurrentDirectory, @"build\Targets\Settings.targets");
             msbuildPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"MSBuild\14.0\bin\MSBuild.exe");
+            binariesPath = null;
+            repoPath = null;
+            settingsFile = null;
+            settingsFile = Path.Combine(Environment.CurrentDirectory, @"build\Targets\Settings.targets");
             test = false;
 
             var i = 0;
-            while (i < args.Length)
+            while (i  + 1 < args.Length)
             {
                 var current = args[i];
                 switch (current.ToLower())
