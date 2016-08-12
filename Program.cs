@@ -21,6 +21,12 @@ namespace SignTool
                 Environment.Exit(1);
             }
 
+            if (!File.Exists(signToolArgs.MSBuildPath))
+            {
+                Console.WriteLine($"Unable to locate MSBuild at the path '{signToolArgs.MSBuildPath}'.");
+                Environment.Exit(1);
+            }
+
             var signTool = SignToolFactory.Create(signToolArgs);
             var batchData = ReadBatchSignInput(signToolArgs.OutputPath);
             var util = new BatchSignUtil(signTool, batchData);

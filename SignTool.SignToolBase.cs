@@ -24,12 +24,6 @@ namespace SignTool
             internal SignToolBase(SignToolArgs args)
             {
                 _args = args;
-
-                // TODO: this is a bad place for this check.
-                if (!File.Exists(MSBuildPath))
-                {
-                    throw new Exception($"Unable to locate MSBuild at the path '{MSBuildPath}'.");
-                }
             }
 
             public abstract void RemovePublicSign(string assemblyPath);
@@ -42,8 +36,8 @@ namespace SignTool
             {
                 var buildFilePath = Path.Combine(AppPath, "build.proj");
                 var commandLine = new StringBuilder();
-                // TODO: rename that target
-                commandLine.Append(@"/v:m /target:RoslynSign ");
+
+                commandLine.Append(@"/v:m /target:BatchSignTool ");
                 commandLine.Append($@"""{buildFilePath}"" ");
                 Console.WriteLine($"msbuild.exe {commandLine.ToString()}");
 
@@ -83,6 +77,7 @@ namespace SignTool
                 AppendLine(builder, depth: 1, text: $@"<NuGetPackageRoot>{NuGetPackagesPath}</NuGetPackageRoot>");
                 AppendLine(builder, depth: 0, text: @"</PropertyGroup>");
 
+                // TODO: need an option for Microbuild version
                 AppendLine(builder, depth: 1, text: $@"<Import Project=""$(NuGetPackageRoot)\MicroBuild.Core\0.2.0\build\MicroBuild.Core.props"" />");
                 AppendLine(builder, depth: 1, text: $@"<Import Project=""$(NuGetPackageRoot)\MicroBuild.Core\0.2.0\build\MicroBuild.Core.targets"" />");
 
@@ -102,7 +97,7 @@ namespace SignTool
                 AppendLine(builder, depth: 1, text: $@"</ItemGroup>");
 
                 var intermediatesPath = Path.Combine(Path.GetDirectoryName(OutputPath), "Obj");
-                AppendLine(builder, depth: 1, text: @"<Target Name=""RoslynSign"">");
+                AppendLine(builder, depth: 1, text: @"<Target Name=""BatchSignTool"">");
                 AppendLine(builder, depth: 2, text: $@"<SignFiles Files=""@(FilesToSign)"" BinariesDirectory=""{OutputPath}"" IntermediatesDirectory=""{IntermediateOutputPath}"" Type=""real"" />");
                 AppendLine(builder, depth: 1, text: @"</Target>");
                 AppendLine(builder, depth: 0, text: @"</Project>");
