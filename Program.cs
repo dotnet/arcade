@@ -28,15 +28,14 @@ namespace SignTool
             }
 
             var signTool = SignToolFactory.Create(signToolArgs);
-            var batchData = ReadConfigFile(signToolArgs.OutputPath);
+            var batchData = ReadConfigFile(signToolArgs.OutputPath, signToolArgs.ConfigFile);
             var util = new BatchSignUtil(signTool, batchData);
             util.Go();
         }
 
-        internal static BatchSignInput ReadConfigFile(string outputPath)
+        internal static BatchSignInput ReadConfigFile(string outputPath, string configFile)
         {
-            var filePath = Path.Combine(AppContext.BaseDirectory, "BatchSignData.json");
-            using (var file = File.OpenText(filePath))
+            using (var file = File.OpenText(configFile))
             {
                 var serializer = new JsonSerializer();
                 var fileJson = (Json.FileJson)serializer.Deserialize(file, typeof(Json.FileJson));
