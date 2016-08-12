@@ -15,10 +15,10 @@ namespace SignTool
         /// <summary>
         /// The path where the binaries are built to: e:\path\to\source\Binaries\Debug
         /// </summary>
-        internal string RootBinaryPath { get; }
+        internal string OutputPath { get; }
 
         /// <summary>
-        /// The names of the binaries to be signed.  These are all relative paths off of the <see cref="RootBinaryPath"/>
+        /// The names of the binaries to be signed.  These are all relative paths off of the <see cref="OutputPath"/>
         /// property.
         /// </summary>
         internal ImmutableArray<FileName> BinaryNames { get; }
@@ -44,13 +44,13 @@ namespace SignTool
         /// </summary>
         internal ImmutableDictionary<FileName, FileSignInfo> BinarySignDataMap { get; }
 
-        internal BatchSignInput(string rootBinaryPath, Dictionary<string, SignInfo> fileSignDataMap, IEnumerable<string> externalBinaryNames)
+        internal BatchSignInput(string outputPath, Dictionary<string, SignInfo> fileSignDataMap, IEnumerable<string> externalBinaryNames)
         {
-            RootBinaryPath = rootBinaryPath;
+            OutputPath = outputPath;
 
             // Use order by to make the output of this tool as predictable as possible.
             var binaryNames = fileSignDataMap.Keys;
-            BinaryNames = binaryNames.OrderBy(x => x).Select(x => new FileName(rootBinaryPath, x)).ToImmutableArray();
+            BinaryNames = binaryNames.OrderBy(x => x).Select(x => new FileName(outputPath, x)).ToImmutableArray();
             ExternalBinaryNames = externalBinaryNames.OrderBy(x => x).ToImmutableArray();
 
             AssemblyNames = BinaryNames.Where(x => x.IsAssembly).ToImmutableArray();

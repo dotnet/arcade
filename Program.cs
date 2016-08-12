@@ -28,12 +28,12 @@ namespace SignTool
             }
 
             var signTool = SignToolFactory.Create(signToolArgs);
-            var batchData = ReadBatchSignInput(signToolArgs.OutputPath);
+            var batchData = ReadConfigFile(signToolArgs.OutputPath);
             var util = new BatchSignUtil(signTool, batchData);
             util.Go();
         }
 
-        internal static BatchSignInput ReadBatchSignInput(string rootBinaryPath)
+        internal static BatchSignInput ReadConfigFile(string outputPath)
         {
             var filePath = Path.Combine(AppContext.BaseDirectory, "BatchSignData.json");
             using (var file = File.OpenText(filePath))
@@ -64,20 +64,21 @@ namespace SignTool
                     Environment.Exit(1);
                 }
 
-                return new BatchSignInput(rootBinaryPath, map, fileJson.ExcludeList);
+                return new BatchSignInput(outputPath, map, fileJson.ExcludeList);
             }
         }
 
         internal static void PrintUsage()
         {
             var usage =
-@"SignTool.exe [-test] [-intermediateOutputPath <path>] [-msbuildPath <path>] [-nugetPackagesPath <path>] outputPath
+@"SignTool.exe [-test] [-intermediateOutputPath <path>] [-msbuildPath <path>] [-nugetPackagesPath <path>] [-config <path>] outputPath
 
 test: Run tool without actually modifying any state.
 outputPath: Directory containing the binaries.
 intermediateOutputPath: Directory containing intermediate output.  Default is (outputpath\..\Obj).
 nugetPackagesPath: Path containing downloaded NuGet packages.
 msbuildPath: Path to MSBuild.exe to use as signing mechanism.
+config: Path to SignToolData.json. Default build\config\SignToolData.json.
 ";
             Console.WriteLine(usage);
         }
@@ -92,6 +93,7 @@ msbuildPath: Path to MSBuild.exe to use as signing mechanism.
             string outputPath = null;
             string msbuildPath = null;
             string nugetPackagesPath = null;
+            string configFile = null;
             var test = false;
 
             var i = 0;
@@ -119,6 +121,12 @@ msbuildPath: Path to MSBuild.exe to use as signing mechanism.
                         break;
                     case "-nugetPackagesPath":
                         if (!ParsePathOption(args, ref i, current, out nugetPackagesPath))
+                        {
+                            return false;
+                        }
+                        break;
+                    case "-config":
+                        if (!ParsePathOption(args, ref i, current, out configFile))
                         {
                             return false;
                         }
@@ -152,12 +160,22 @@ msbuildPath: Path to MSBuild.exe to use as signing mechanism.
                 }
             }
 
+            if (configFile == null)
+            {
+                var sourcesPath = GetSourcesPath(outputPath);
+                if (sourcesPath != null)
+                {
+                    configFile = Path.Combine(sourcesPath, @"build\config\SignToolData.json");
+                }
+            }
+
             signToolArgs = new SignToolArgs(
                 outputPath: outputPath,
                 msbuildPath: msbuildPath,
                 intermediateOutputPath: intermediateOutputPath,
                 nugetPackagesPath: nugetPackagesPath,
                 appPath: AppContext.BaseDirectory,
+                configFile: configFile,
                 test: test);
             return true;
         }
@@ -173,6 +191,23 @@ msbuildPath: Path to MSBuild.exe to use as signing mechanism.
             optionValue = args[i + 1];
             i += 2;
             return true;
+        }
+
+        private static string GetSourcesPath(string outputPath)
+        {
+            var current = Path.GetDirectoryName(outputPath);
+            while (!string.IsNullOrEmpty(current))
+            {
+                var gitDir = Path.Combine(current, ".git");
+                if (Directory.Exists(gitDir))
+                {
+                    return current;
+                }
+
+                current = Path.GetDirectoryName(current);
+            }
+
+            return null;
         }
     }
 }
