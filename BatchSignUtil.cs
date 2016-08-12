@@ -80,6 +80,12 @@ namespace SignTool
             var round = 0;
             var signedSet = new HashSet<FileName>(_batchData.AssemblyNames);
             var toSignList = _batchData.VsixNames.ToList();
+
+            if (toSignList.Count == 0)
+            {
+                return;
+            }
+
             do
             {
                 Console.WriteLine($"Signing VSIX round {round}");
