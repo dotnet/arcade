@@ -37,34 +37,47 @@ namespace SignTool
         {
             using (var file = File.OpenText(configFile))
             {
-                var serializer = new JsonSerializer();
-                var fileJson = (Json.FileJson)serializer.Deserialize(file, typeof(Json.FileJson));
-                var map = new Dictionary<string, SignInfo>();
-                var allGood = true;
-                foreach (var item in fileJson.SignList)
-                {
-                    var data = new SignInfo(certificate: item.Certificate, strongName: item.StrongName);
-                    foreach (var name in item.FileList)
-                    {
-                        if (map.ContainsKey(name))
-                        {
-                            Console.WriteLine($"Duplicate file entry: {name}");
-                            allGood = false;
-                        }
-                        else
-                        {
-                            map.Add(name, data);
-                        }
-                    }
-                }
-
-                if (!allGood)
+                BatchSignInput batchData;
+                if (!TryReadConfigFile(Console.Out, file, outputPath, out batchData))
                 {
                     Environment.Exit(1);
                 }
 
-                return new BatchSignInput(outputPath, map, fileJson.ExcludeList);
+                return batchData;
             }
+        }
+
+        internal static bool TryReadConfigFile(TextWriter output, TextReader configReader, string outputPath, out BatchSignInput batchData)
+        {
+            var serializer = new JsonSerializer();
+            var fileJson = (Json.FileJson)serializer.Deserialize(configReader, typeof(Json.FileJson));
+            var map = new Dictionary<string, SignInfo>();
+            var allGood = true;
+            foreach (var item in fileJson.SignList)
+            {
+                var data = new SignInfo(certificate: item.Certificate, strongName: item.StrongName);
+                foreach (var name in item.FileList)
+                {
+                    if (map.ContainsKey(name))
+                    {
+                        Console.WriteLine($"Duplicate file entry: {name}");
+                        allGood = false;
+                    }
+                    else
+                    {
+                        map.Add(name, data);
+                    }
+                }
+            }
+
+            if (!allGood)
+            {
+                batchData = null;
+                return false;
+            }
+
+            batchData = new BatchSignInput(outputPath, map, fileJson.ExcludeList);
+            return true;
         }
 
         internal static void PrintUsage()
@@ -184,6 +197,7 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
             if (i + 1 >= args.Length)
             {
                 Console.WriteLine($"{optionName} needs an argument");
+                optionValue = null;
                 return false;
             }
 

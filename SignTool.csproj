@@ -8,12 +8,14 @@
     <RootNamespace>SignTool</RootNamespace>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <OutputType>Exe</OutputType>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <ItemGroup>
     <None Include="SignToolData.md" />
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
     <Compile Include="FileName.cs" />
     <Compile Include="FileSignInfo.cs" />
     <Compile Include="ContentUtil.cs" />
