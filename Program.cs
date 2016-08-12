@@ -15,17 +15,16 @@ namespace SignTool
         internal static void Main(string[] args)
         {
             string binariesPath;
-            string settingsFile;
             string msbuildPath;
             bool test;
 
-            if (!ParseCommandLineArguments(args, out binariesPath, out settingsFile, out msbuildPath, out test))
+            if (!ParseCommandLineArguments(args, out binariesPath, out msbuildPath, out test))
             {
-                Console.WriteLine("SignTool.exe [-test] [-repoPath <path>] [-settingsFile <path>] [-msbuildPath <path>] <binaries path>");
+                Console.WriteLine("SignTool.exe [-test] [-binariesPath <path>] [-msbuildPath <path>]");
                 Environment.Exit(1);
             }
 
-            var signTool = SignToolFactory.Create(AppContext.BaseDirectory, binariesPath, settingsFile, msbuildPath, test);
+            var signTool = SignToolFactory.Create(AppContext.BaseDirectory, binariesPath, msbuildPath, test);
             var batchData = ReadBatchSignInput(binariesPath);
             var util = new BatchSignUtil(signTool, batchData);
             util.Go();
@@ -66,24 +65,18 @@ namespace SignTool
             }
         }
 
-        internal static bool ParseCommandLineArgumentsCore(
+        internal static bool ParseCommandLineArguments(
             string[] args,
             out string binariesPath,
-            out string repoPath, 
-            out string configFile,
             out string msbuildPath,
-            out string 
             out bool test)
         {
+            binariesPath = Path.GetDirectoryName(Path.GetDirectoryName(AppContext.BaseDirectory));
             msbuildPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"MSBuild\14.0\bin\MSBuild.exe");
-            binariesPath = null;
-            repoPath = null;
-            settingsFile = null;
-            settingsFile = Path.Combine(Environment.CurrentDirectory, @"build\Targets\Settings.targets");
             test = false;
 
             var i = 0;
-            while (i  + 1 < args.Length)
+            while (i < args.Length)
             {
                 var current = args[i];
                 switch (current.ToLower())
@@ -100,16 +93,6 @@ namespace SignTool
                         }
 
                         binariesPath = args[i + 1];
-                        i += 2;
-                        break;
-                    case "-settingsfile":
-                        if (i + 1 >= args.Length)
-                        {
-                            Console.WriteLine("-settingsFile needs an argument");
-                            return false;
-                        }
-
-                        settingsFile = args[i + 1];
                         i += 2;
                         break;
                     case "-msbuildpath":

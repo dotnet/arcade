@@ -29,8 +29,8 @@ namespace SignTool
                  + sizeof(Int16)  // minor version
                  + sizeof(Int64); // metadata directory
 
-            internal RealSignTool(string appPath, string binariesPath, string settingsFile, string msbuildPath)
-                : base(appPath, binariesPath, settingsFile, msbuildPath)
+            internal RealSignTool(string appPath, string binariesPath, string msbuildPath)
+                : base(appPath, binariesPath, msbuildPath)
             {
 
             }

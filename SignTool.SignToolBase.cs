@@ -15,13 +15,11 @@ namespace SignTool
         {
             internal string MSBuildPath { get; }
             internal string BinariesPath { get; }
-            internal string SettingsFile { get; }
             internal string AppPath { get; }
 
-            internal SignToolBase(string appPath, string binariesPath, string settingsFile, string msbuildPath)
+            internal SignToolBase(string appPath, string binariesPath, string msbuildPath)
             {
                 BinariesPath = binariesPath;
-                SettingsFile = settingsFile;
                 AppPath = appPath;
                 MSBuildPath = msbuildPath;
 
@@ -75,8 +73,6 @@ namespace SignTool
                 var builder = new StringBuilder();
                 AppendLine(builder, depth: 0, text: @"<?xml version=""1.0"" encoding=""utf-8""?>");
                 AppendLine(builder, depth: 0, text: @"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">");
-
-                AppendLine(builder, depth: 1, text: $@"<Import Project=""{SettingsFile}"" />");
 
                 AppendLine(builder, depth: 1, text: $@"<Import Project=""$(NuGetPackageRoot)\MicroBuild.Core\0.2.0\build\MicroBuild.Core.props"" />");
                 AppendLine(builder, depth: 1, text: $@"<Import Project=""$(NuGetPackageRoot)\MicroBuild.Core\0.2.0\build\MicroBuild.Core.targets"" />");
