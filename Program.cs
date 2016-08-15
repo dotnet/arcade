@@ -15,7 +15,7 @@ namespace SignTool
         internal static void Main(string[] args)
         {
             SignToolArgs signToolArgs;
-            if (!ParseCommandLineArguments(args, out signToolArgs))
+            if (!ParseCommandLineArguments(StandardHost.Instance, args, out signToolArgs))
             {
                 PrintUsage();
                 Environment.Exit(1);
@@ -96,6 +96,7 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
         }
 
         internal static bool ParseCommandLineArguments(
+            IHost host,
             string[] args,
             out SignToolArgs signToolArgs)
         {
@@ -119,7 +120,7 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
                         test = true;
                         i++;
                         break;
-                    case "-intermediateOutputPath":
+                    case "-intermediateoutputpath":
                         if (!ParsePathOption(args, ref i, current, out intermediateOutputPath))
                         {
                             return false;
@@ -131,7 +132,7 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
                             return false;
                         }
                         break;
-                    case "-nugetPackagesPath":
+                    case "-nugetpackagespath":
                         if (!ParsePathOption(args, ref i, current, out nugetPackagesPath))
                         {
                             return false;
@@ -158,23 +159,23 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
             outputPath = args[i];
 
             // Get defaults for all of the optional values that weren't specified
-            msbuildPath = msbuildPath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"MSBuild\14.0\bin\MSBuild.exe");
+            msbuildPath = msbuildPath ?? Path.Combine(host.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"MSBuild\14.0\bin\MSBuild.exe");
             intermediateOutputPath = intermediateOutputPath ?? Path.Combine(Path.GetDirectoryName(outputPath), "Obj");
 
             if (string.IsNullOrWhiteSpace(nugetPackagesPath))
             {
-                nugetPackagesPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
+                nugetPackagesPath = host.GetEnvironmentVariable("NUGET_PACKAGES");
                 if (string.IsNullOrWhiteSpace(nugetPackagesPath))
                 {
                     nugetPackagesPath = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                        host.GetFolderPath(Environment.SpecialFolder.UserProfile),
                         @".nuget\packages");
                 }
             }
 
             if (configFile == null)
             {
-                var sourcesPath = GetSourcesPath(outputPath);
+                var sourcesPath = GetSourcesPath(host, outputPath);
                 if (sourcesPath != null)
                 {
                     configFile = Path.Combine(sourcesPath, @"build\config\SignToolData.json");
@@ -206,13 +207,13 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
             return true;
         }
 
-        private static string GetSourcesPath(string outputPath)
+        private static string GetSourcesPath(IHost host, string outputPath)
         {
             var current = Path.GetDirectoryName(outputPath);
             while (!string.IsNullOrEmpty(current))
             {
                 var gitDir = Path.Combine(current, ".git");
-                if (Directory.Exists(gitDir))
+                if (host.DirectoryExists(gitDir))
                 {
                     return current;
                 }
