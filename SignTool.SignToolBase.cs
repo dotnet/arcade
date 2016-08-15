@@ -13,6 +13,8 @@ namespace SignTool
     {
         private abstract class SignToolBase : ISignTool
         {
+            internal const string MicroBuildVersion = "0.2.0";
+
             private readonly SignToolArgs _args;
 
             internal string MSBuildPath => _args.MSBuildPath;
@@ -37,7 +39,7 @@ namespace SignTool
                 var buildFilePath = Path.Combine(AppPath, "build.proj");
                 var commandLine = new StringBuilder();
 
-                commandLine.Append(@"/v:m /target:BatchSignTool ");
+                commandLine.Append(@"/v:m ");
                 commandLine.Append($@"""{buildFilePath}"" ");
                 Console.WriteLine($"msbuild.exe {commandLine.ToString()}");
 
@@ -70,16 +72,17 @@ namespace SignTool
             {
                 var builder = new StringBuilder();
                 AppendLine(builder, depth: 0, text: @"<?xml version=""1.0"" encoding=""utf-8""?>");
-                AppendLine(builder, depth: 0, text: @"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">");
+                AppendLine(builder, depth: 0, text: @"<Project DefaultTargets=""AfterBuild"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">");
 
                 // Setup the code to get the NuGet package root.
-                AppendLine(builder, depth: 0, text: @"<PropertyGroup>");
-                AppendLine(builder, depth: 1, text: $@"<NuGetPackageRoot>{NuGetPackagesPath}</NuGetPackageRoot>");
-                AppendLine(builder, depth: 0, text: @"</PropertyGroup>");
+                AppendLine(builder, depth: 1, text: @"<PropertyGroup>");
+                AppendLine(builder, depth: 2, text: $@"<NuGetPackageRoot>{NuGetPackagesPath}</NuGetPackageRoot>");
+                AppendLine(builder, depth: 2, text: $@"<OutDir>{OutputPath}</OutDir>");
+                AppendLine(builder, depth: 2, text: $@"<IntermediateOutputPath>{IntermediateOutputPath}</IntermediateOutputPath>");
+                AppendLine(builder, depth: 2, text: $@"<SignType>real</SignType>");
+                AppendLine(builder, depth: 1, text: @"</PropertyGroup>");
 
-                // TODO: need an option for Microbuild version
-                AppendLine(builder, depth: 1, text: $@"<Import Project=""$(NuGetPackageRoot)\MicroBuild.Core\0.2.0\build\MicroBuild.Core.props"" />");
-                AppendLine(builder, depth: 1, text: $@"<Import Project=""$(NuGetPackageRoot)\MicroBuild.Core\0.2.0\build\MicroBuild.Core.targets"" />");
+                AppendLine(builder, depth: 1, text: $@"<Import Project=""$(NuGetPackageRoot)\MicroBuild.Core\{MicroBuildVersion}\build\MicroBuild.Core.props"" />");
 
                 AppendLine(builder, depth: 1, text: $@"<ItemGroup>");
 
@@ -96,10 +99,12 @@ namespace SignTool
 
                 AppendLine(builder, depth: 1, text: $@"</ItemGroup>");
 
-                var intermediatesPath = Path.Combine(Path.GetDirectoryName(OutputPath), "Obj");
-                AppendLine(builder, depth: 1, text: @"<Target Name=""BatchSignTool"">");
-                AppendLine(builder, depth: 2, text: $@"<SignFiles Files=""@(FilesToSign)"" BinariesDirectory=""{OutputPath}"" IntermediatesDirectory=""{IntermediateOutputPath}"" Type=""real"" />");
+                // The MicroBuild targets hook AfterBuild to do the signing hence we just make it our no-op default target
+                AppendLine(builder, depth: 1, text: @"<Target Name=""AfterBuild"">");
+                AppendLine(builder, depth: 2, text: @"<Message Text=""Running actual signning process"" />");
                 AppendLine(builder, depth: 1, text: @"</Target>");
+
+                AppendLine(builder, depth: 1, text: $@"<Import Project=""$(NuGetPackageRoot)\MicroBuild.Core\{MicroBuildVersion}\build\MicroBuild.Core.targets"" />");
                 AppendLine(builder, depth: 0, text: @"</Project>");
 
                 return builder.ToString();
