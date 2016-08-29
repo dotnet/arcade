@@ -14,9 +14,23 @@ namespace Xunit.NetCore.Extensions
         internal const string NonNetBSDTest = "nonnetbsdtests";
         internal const string NonOSXTest = "nonosxtests";
         internal const string NonWindowsTest = "nonwindowstests";
+
+        internal const string NonNet45Test = "nonnet45tests";
+        internal const string NonNet451Test = "nonnet451tests";
+        internal static string NonNet452Test = "nonnet452tests";
+        internal static string NonNet46Test = "nonnet46tests";
+        internal static string NonNet461Test = "nonnet461tests";
+        internal static string NonNet462Test = "nonnet462tests";
+        internal static string NonNet463Test = "nonnet463tests";
+        internal static string NonNetcore50Test = "nonnetcore50tests";
+        internal static string NonNetcore50aotTest = "nonnetcore50aottests";
+        internal static string NonNetcoreapp1_0Test = "nonnetcoreapp1.0tests";
+        internal static string NonNetcoreapp1_1Test = "nonnetcoreapp1.1tests";
+
         internal const string Failing = "failing";
         internal const string ActiveIssue = "activeissue";
         internal const string OuterLoop = "outerloop";
+
         public const string Category = "category";
         public const string IgnoreForCI = "ignoreforci";
         public const string RequiresElevation = "requireselevation";
