@@ -12,8 +12,8 @@ namespace Xunit
     /// </summary>
     [TraitDiscoverer("Xunit.NetCore.Extensions.SkipOnTargetFrameworkDiscoverer", "Xunit.NetCore.Extensions")]
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
-    public class SkipOnTargetFramework : Attribute, ITraitAttribute
+    public class SkipOnTargetFrameworkAttribute : Attribute, ITraitAttribute
     {
-        public SkipOnTargetFramework(TargetFrameworkMoniker platform) { }
+        public SkipOnTargetFrameworkAttribute(TargetFrameworkMonikers platform) { }
     }
 }

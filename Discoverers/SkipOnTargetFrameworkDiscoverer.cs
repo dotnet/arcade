@@ -22,28 +22,28 @@ namespace Xunit.NetCore.Extensions
         /// <returns>The trait values.</returns>
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
         {
-            TargetFrameworkMoniker platform = (TargetFrameworkMoniker)traitAttribute.GetConstructorArguments().First();
-            if (platform.HasFlag(TargetFrameworkMoniker.Net45))
+            TargetFrameworkMonikers platform = (TargetFrameworkMonikers)traitAttribute.GetConstructorArguments().First();
+            if (platform.HasFlag(TargetFrameworkMonikers.Net45))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet45Test);
-            if (platform.HasFlag(TargetFrameworkMoniker.Net451))
+            if (platform.HasFlag(TargetFrameworkMonikers.Net451))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet451Test);
-            if (platform.HasFlag(TargetFrameworkMoniker.Net452))
+            if (platform.HasFlag(TargetFrameworkMonikers.Net452))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet452Test);
-            if (platform.HasFlag(TargetFrameworkMoniker.Net46))
+            if (platform.HasFlag(TargetFrameworkMonikers.Net46))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet46Test);
-            if (platform.HasFlag(TargetFrameworkMoniker.Net461))
+            if (platform.HasFlag(TargetFrameworkMonikers.Net461))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet461Test);
-            if (platform.HasFlag(TargetFrameworkMoniker.Net462))
+            if (platform.HasFlag(TargetFrameworkMonikers.Net462))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet462Test);
-            if (platform.HasFlag(TargetFrameworkMoniker.Net463))
+            if (platform.HasFlag(TargetFrameworkMonikers.Net463))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet463Test);
-            if (platform.HasFlag(TargetFrameworkMoniker.Netcore50))
+            if (platform.HasFlag(TargetFrameworkMonikers.Netcore50))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcore50Test);
-            if (platform.HasFlag(TargetFrameworkMoniker.Netcore50aot))
+            if (platform.HasFlag(TargetFrameworkMonikers.Netcore50aot))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcore50aotTest);
-            if (platform.HasFlag(TargetFrameworkMoniker.Netcoreapp1_0))
+            if (platform.HasFlag(TargetFrameworkMonikers.Netcoreapp1_0))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcoreapp1_0Test);
-            if (platform.HasFlag(TargetFrameworkMoniker.Netcoreapp1_1))
+            if (platform.HasFlag(TargetFrameworkMonikers.Netcoreapp1_1))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcoreapp1_1Test);
         }
     }
