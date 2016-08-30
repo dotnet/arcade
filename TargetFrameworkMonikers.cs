@@ -8,7 +8,7 @@ using Xunit.Sdk;
 namespace Xunit
 {
     [Flags]
-    public enum TargetFrameworkMoniker
+    public enum TargetFrameworkMonikers
     {
         Net45 = 0x1,
         Net451 = 0x2,
