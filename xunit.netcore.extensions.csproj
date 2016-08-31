@@ -31,6 +31,7 @@
     <Compile Include="PlatformID.cs" />
     <Compile Include="SkippedTestCase.cs" />
     <Compile Include="TargetFrameworkMonikers.cs" />
+    <Compile Include="TestPlatforms.cs" />
     <Compile Include="XunitConstants.cs" />
   </ItemGroup>
   <ItemGroup>
