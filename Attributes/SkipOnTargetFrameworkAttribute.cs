@@ -14,6 +14,6 @@ namespace Xunit
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
     public class SkipOnTargetFrameworkAttribute : Attribute, ITraitAttribute
     {
-        public SkipOnTargetFrameworkAttribute(TargetFrameworkMonikers platform) { }
+        public SkipOnTargetFrameworkAttribute(TargetFrameworkMonikers platform, string reason = null) { }
     }
 }
