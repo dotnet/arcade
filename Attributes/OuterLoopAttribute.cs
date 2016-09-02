@@ -15,5 +15,6 @@ namespace Xunit
     public class OuterLoopAttribute : Attribute, ITraitAttribute
     {
         public OuterLoopAttribute() { }
+        public OuterLoopAttribute(string reason) { }
     }
 }
