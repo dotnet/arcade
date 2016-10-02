@@ -16,9 +16,5 @@ namespace Xunit
     {
         public ActiveIssueAttribute(int issueNumber, TestPlatforms platforms = TestPlatforms.Any) { }
         public ActiveIssueAttribute(string issue, TestPlatforms platforms = TestPlatforms.Any) { }
-
-        // TODO #999: Remove PlatformID when all uses have transitioned to TestPlatforms.
-        public ActiveIssueAttribute(int issueNumber, PlatformID platforms) { }
-        public ActiveIssueAttribute(string issue, PlatformID platforms) { }
     }
 }

@@ -28,7 +28,6 @@
     <Compile Include="Discoverers\OuterLoopTestsDiscoverer.cs" />
     <Compile Include="Discoverers\PlatformSpecificDiscoverer.cs" />
     <Compile Include="Discoverers\SkipOnTargetFrameworkDiscoverer.cs" />
-    <Compile Include="PlatformID.cs" />
     <Compile Include="SkippedTestCase.cs" />
     <Compile Include="TargetFrameworkMonikers.cs" />
     <Compile Include="TestPlatforms.cs" />
