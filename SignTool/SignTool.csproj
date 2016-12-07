@@ -9,6 +9,7 @@
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <OutputType>Exe</OutputType>
     <SignAssembly>false</SignAssembly>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
     <None Include="SignToolData.md" />
