@@ -33,8 +33,28 @@ namespace SignTool.UnitTests
     ""sign"": []
 }";
                 var data = Load(json);
-                Assert.Equal(0, data.BinaryNames.Length);
-                Assert.Equal(0, data.ExternalBinaryNames.Length);
+                Assert.Equal(0, data.FileNames.Length);
+                Assert.Equal(0, data.ExternalFileNames.Length);
+            }
+
+            [Fact]
+            public void MsiContent()
+            {
+                var json = @"
+{
+  ""sign"": [
+  {
+    ""certificate"": ""Microsoft402"",
+    ""strongName"": null,
+    ""values"": [
+      ""test.msi""
+    ]
+  }]
+}";
+
+                var data = Load(json);
+                Assert.Equal(new[] { "test.msi" }, data.FileNames.Select(x => x.Name));
+                Assert.Equal(0, data.ExternalFileNames.Length);
             }
         }
 

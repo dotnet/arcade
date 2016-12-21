@@ -14,7 +14,7 @@ The configuration file has two main sections: sign and exclude.
 
 ``` json
 {
-    "sign": [ ]     
+    "sign": [ ],
     "exclude": [ ]
 }
 ```

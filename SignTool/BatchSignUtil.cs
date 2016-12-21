@@ -68,7 +68,7 @@ namespace SignTool
                 Console.WriteLine($"\t{name.RelativePath}");
             }
 
-            _signTool.Sign(_batchData.AssemblyNames.Select(x => _batchData.BinarySignDataMap[x]));
+            _signTool.Sign(_batchData.AssemblyNames.Select(x => _batchData.FileSignDataMap[x]));
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace SignTool
                 }
 
                 Console.WriteLine($"\tSigning ...");
-                _signTool.Sign(list.Select(x => _batchData.BinarySignDataMap[x]));
+                _signTool.Sign(list.Select(x => _batchData.FileSignDataMap[x]));
 
                 // Signing is complete so now we can update the signed set.
                 list.ForEach(x => signedSet.Add(x));
@@ -195,7 +195,7 @@ namespace SignTool
         private Dictionary<FileName, VsixData> VerifyBeforeSign()
         {
             var allGood = true;
-            var map = VerifyBinariesBeforeSign(ref allGood);
+            var map = VerifyFilesBeforeSign(ref allGood);
             var vsixDataMap = VerifyVsixContentsBeforeSign(map, ref allGood);
 
             if (!allGood)
@@ -210,31 +210,31 @@ namespace SignTool
         /// Validate all of the binaries which are specified to be signed exist on disk.  Compute their
         /// checksums at this time so we can use it for VSIX content validation.
         /// </summary>
-        private Dictionary<string, FileName> VerifyBinariesBeforeSign(ref bool allGood)
+        private Dictionary<string, FileName> VerifyFilesBeforeSign(ref bool allGood)
         {
             var checksumToNameMap = new Dictionary<string, FileName>(StringComparer.Ordinal);
-            foreach (var binaryName in _batchData.BinaryNames)
+            foreach (var fileName in _batchData.FileNames)
             {
-                if (!File.Exists(binaryName.FullPath))
+                if (!File.Exists(fileName.FullPath))
                 {
-                    Console.WriteLine($"Did not find {binaryName} at {binaryName.FullPath}");
+                    Console.WriteLine($"Did not find {fileName} at {fileName.FullPath}");
                     allGood = false;
                     continue;
                 }
 
                 // Ensure we don't attempt to sign a VSIX with a non-VSIX certificate or vice versa. 
-                var fileSignInfo = _batchData.BinarySignDataMap[binaryName];
-                if (binaryName.IsVsix != IsVsixCertificate(fileSignInfo.Certificate))
+                var fileSignInfo = _batchData.FileSignDataMap[fileName];
+                if (fileName.IsVsix != IsVsixCertificate(fileSignInfo.Certificate))
                 {
-                    var msg = binaryName.IsVsix
-                        ? $"Vsix {binaryName} must be signed with a VSIX certificate"
-                        : $"Non-Vsix {binaryName} must not be signed with a VSIX certificate";
+                    var msg = fileName.IsVsix
+                        ? $"Vsix {fileName} must be signed with a VSIX certificate"
+                        : $"Non-Vsix {fileName} must not be signed with a VSIX certificate";
                     Console.WriteLine(msg);
                     allGood = false;
                 }
 
-                var checksum = _contentUtil.GetChecksum(binaryName.FullPath);
-                checksumToNameMap[checksum] = binaryName;
+                var checksum = _contentUtil.GetChecksum(fileName.FullPath);
+                checksumToNameMap[checksum] = fileName;
             }
 
             return checksumToNameMap;
@@ -267,13 +267,13 @@ namespace SignTool
                         continue;
                     }
 
-                    if (_batchData.ExternalBinaryNames.Contains(name))
+                    if (_batchData.ExternalFileNames.Contains(name))
                     {
                         nestedExternalBinaries.Add(name);
                         continue;
                     }
 
-                    if (!_batchData.BinaryNames.Any(x => FilePathComparer.Equals(x.Name, name)))
+                    if (!_batchData.FileNames.Any(x => FilePathComparer.Equals(x.Name, name)))
                     {
                         allGood = false;
                         Console.WriteLine($"VSIX {vsixName} has part {name} which is not listed in the sign or external list");

@@ -18,51 +18,57 @@ namespace SignTool
         internal string OutputPath { get; }
 
         /// <summary>
-        /// The names of the binaries to be signed.  These are all relative paths off of the <see cref="OutputPath"/>
+        /// The names of the files to be signed.  These are all relative paths off of the <see cref="OutputPath"/>
         /// property.
         /// </summary>
-        internal ImmutableArray<FileName> BinaryNames { get; }
+        internal ImmutableArray<FileName> FileNames { get; }
 
         /// <summary>
         /// These are binaries which are included in our VSIX files but are already signed.  This list is used for 
         /// validation purpsoes.  These are all flat names and cannot be relative paths.
         /// </summary>
-        internal ImmutableArray<string> ExternalBinaryNames { get;}
+        internal ImmutableArray<string> ExternalFileNames { get;}
 
         /// <summary>
-        /// Names of assemblies that need to be signed.  This is a subste of <see cref="BinaryNames"/>
+        /// Names of assemblies that need to be signed.  This is a subset of <see cref="FileNames"/>
         /// </summary>
         internal ImmutableArray<FileName> AssemblyNames { get; }
 
         /// <summary>
-        /// Names of VSIX that need to be signed.  This is a subste of <see cref="BinaryNames"/>
+        /// Names of VSIX that need to be signed.  This is a subset of <see cref="FileNames"/>
         /// </summary>
         internal ImmutableArray<FileName> VsixNames { get; }
 
         /// <summary>
+        /// Names of other file types which aren't specifically handled by the tool.  This is a subset of <see cref="FileNames"/>
+        /// </summary>
+        internal ImmutableArray<FileName> OtherNames { get; }
+
+        /// <summary>
         /// A map of all of the binaries that need to be signed to the actual signing data.
         /// </summary>
-        internal ImmutableDictionary<FileName, FileSignInfo> BinarySignDataMap { get; }
+        internal ImmutableDictionary<FileName, FileSignInfo> FileSignDataMap { get; }
 
-        internal BatchSignInput(string outputPath, Dictionary<string, SignInfo> fileSignDataMap, IEnumerable<string> externalBinaryNames)
+        internal BatchSignInput(string outputPath, Dictionary<string, SignInfo> fileSignDataMap, IEnumerable<string> externalFileNames)
         {
             OutputPath = outputPath;
 
             // Use order by to make the output of this tool as predictable as possible.
-            var binaryNames = fileSignDataMap.Keys;
-            BinaryNames = binaryNames.OrderBy(x => x).Select(x => new FileName(outputPath, x)).ToImmutableArray();
-            ExternalBinaryNames = externalBinaryNames.OrderBy(x => x).ToImmutableArray();
+            var fileNames = fileSignDataMap.Keys;
+            FileNames = fileNames.OrderBy(x => x).Select(x => new FileName(outputPath, x)).ToImmutableArray();
+            ExternalFileNames = externalFileNames.OrderBy(x => x).ToImmutableArray();
 
-            AssemblyNames = BinaryNames.Where(x => x.IsAssembly).ToImmutableArray();
-            VsixNames = BinaryNames.Where(x => x.IsVsix).ToImmutableArray();
+            AssemblyNames = FileNames.Where(x => x.IsAssembly).ToImmutableArray();
+            VsixNames = FileNames.Where(x => x.IsVsix).ToImmutableArray();
+            OtherNames = FileNames.Where(x => !x.IsAssembly && !x.IsVsix).ToImmutableArray();
 
             var builder = ImmutableDictionary.CreateBuilder<FileName, FileSignInfo>();
-            foreach (var name in BinaryNames)
+            foreach (var name in FileNames)
             {
                 var data = fileSignDataMap[name.RelativePath];
                 builder.Add(name, new FileSignInfo(name, data));
             }
-            BinarySignDataMap = builder.ToImmutable();
+            FileSignDataMap = builder.ToImmutable();
         }
     }
 }
