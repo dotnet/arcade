@@ -37,8 +37,8 @@ namespace SignTool
             // Next remove public sign from all of the assemblies.  It can interfere with the signing process.
             RemovePublicSign();
 
-            // Next step is to sign all of the assemblies.
-            SignAssemblies();
+            // Next step is to sign all of the root files.
+            SignFlatFiles();
 
             // Last we sign the VSIX files (being careful to take into account nesting)
             SignVsixes(vsixDataMap);
@@ -60,15 +60,16 @@ namespace SignTool
         /// <summary>
         /// Sign all of the assembly files.  No need to consider nesting here and it can be done in a single pass.
         /// </summary>
-        private void SignAssemblies()
+        private void SignFlatFiles()
         {
-            Console.WriteLine("Signing assemblies");
-            foreach (var name in _batchData.AssemblyNames)
+            Console.WriteLine("Signing files");
+            var otherFiles = _batchData.FileNames.Where(x => !x.IsVsix);
+            foreach (var name in otherFiles)
             {
                 Console.WriteLine($"\t{name.RelativePath}");
             }
 
-            _signTool.Sign(_batchData.AssemblyNames.Select(x => _batchData.FileSignDataMap[x]));
+            _signTool.Sign(otherFiles.Select(x => _batchData.FileSignDataMap[x]));
         }
 
         /// <summary>
