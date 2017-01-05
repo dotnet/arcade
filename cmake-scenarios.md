@@ -3,7 +3,7 @@
 This document presents the scenarios for CMake in .NET Core. Each subheading below is a name of a scenario. Under each subheading there will be a short description of the scenario and a narrative. The narrative includes an actor, flow of events, and the resulting outcomes. An outcome consists of one or more pairs of the current and desired experiences.
 
  * [Build a .NET Core repository on a clean machine](#build-a-net-core-repository-on-a-clean-machine)
- * [Build a .NET Core repository on an existing development machine](#build-a-.net-core-repository-on-an-existing-development-machine)
+ * [Build a .NET Core repository on an existing development machine](#build-a-net-core-repository-on-an-existing-development-machine)
  * [Setup an official build for a .NET Core repository](#setup-an-official-build-for-a-net-core-repository)
  * [Service a .NET Core release](#service-a-net-core-release)
  * [Revise the CMake version of a .NET Core repository](#revise-the-cmake-version-of-a-net-core-repository)
@@ -50,7 +50,10 @@ Flow of events:
 Note: Since an existing development machine is being used, the machine could have the declared version of CMake.
 
 ### Outcome #2: Build fails 
-**Current**:  Build fails saying CMake, which is a prerequisite is not available on the machine. I try to download CMake based on the error message. I am not certain on what version to download.
+**Current**:  
+
+ 1. Build fails saying CMake, which is a prerequisite is not available on the machine. I try to download CMake based on the error message. I am not certain on what version to download.
+ 2. Build fails in strange ways due to a version of CMake present on the machine, and thus making it difficult to trace back.
 
 **Desired**: 
  1. On a clean machine, the desired experience should be same as earlier scenario [Build a .NET Core repository on a clean machine](#build-a-net-core-repository-on-a-clean-machine)
