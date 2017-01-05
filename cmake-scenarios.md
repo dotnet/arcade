@@ -1,14 +1,14 @@
- # CMake Scenarios
+# CMake Scenarios
 
 This document presents the scenarios for CMake in .NET Core. Each subheading below is a name of a scenario. Under each subheading there will be a short description of the scenario and a narrative. The narrative includes an actor, flow of events, and the resulting outcomes. An outcome consists of one or more pairs of the current and desired experiences.
 
  * [Build a .NET Core repository on a clean machine](#build-a-net-core-repository-on-a-clean-machine)
+ * [Build a .NET Core repository on an existing development machine](#build-a-.net-core-repository-on-an-existing-development-machine)
  * [Setup an official build for a .NET Core repository](#setup-an-official-build-for-a-net-core-repository)
- * [Setup an official build for a .NET Core repository](#setup-an-official-build-for-a-net-core-repository)
- * [Service a .NET Core repository](#service-a-net-core-repository)
+ * [Service a .NET Core release](#service-a-net-core-release)
  * [Revise the CMake version of a .NET Core repository](#revise-the-cmake-version-of-a-net-core-repository)
  * [A new version of CMake can be tested against a .NET Core repository](#a-new-version-of-cmake-can-be-tested-against-a-net-core-repository)
- * [Guidance for setting up official builds for a .NET Core repository is available](#guidance-for-setting-up-official-builds-for-net-core-repository-is-available)
+ * [Guidance for setting up official builds for a .NET Core repository is available](#guidance-for-setting-up-official-builds-for-a-net-core-repository-is-available)
 
 ## Build a .NET Core repository on a clean machine
 A .NET Core user (Microsoft employee or someone in the open) clones a .NET Core repository and attempts to build.
@@ -18,16 +18,16 @@ I am an IT Manager from Contoso who was inspired by .NET Core demoes at [Connect
 
 Flow of events:
  1. I setup a clean Windows 10 VM through my Azure subscription.
- 2. I clone CoreFx repository from [dotnet/corefx](https://github.com/dotnet/corefx.git)
- 3. I attempt to build the repository using the build command (build.cmd)
+ 2. I cloned CoreFx repository from [dotnet/corefx](https://github.com/dotnet/corefx.git)
+ 3. I attempted to build the repository using the build command (build.cmd)
 
 ### Outcome #1 Build fails
 **Current**: Build fails saying CMake, which is a prerequisite is missing on the VM.  Though the error message provides an URL from where CMake can be downloaded from, it does not list a specific version or a range of supported versions. I am not certain on what version to download.
 
 **Desired**: 
 Error message informs me the specific version of CMake to download, and the suggested source to download it from. I have two options from here:
-* I download the specific version and perform a default install. *(TBD: Should the user restart Command or Terminal window?).* 
-* Perform a gesture described in the error message to acquire CMake. I perform the gesture so that a tool downloads and extracts the declared version of CMake to a .NET Core sandbox tools folder.
+ * I download the specific version and perform a default install. *(TBD: Should the user restart Command or Terminal window?).* 
+ * Perform a gesture described in the error message to acquire CMake. I perform the gesture so that a tool downloads and extracts the declared version of CMake to a .NET Core sandbox tools folder.
 
 Either of the above two options allow me to run build command successfully
 
@@ -49,17 +49,15 @@ Flow of events:
 
 Note: Since an existing development machine is being used, the machine could have the declared version of CMake.
 
-### Outcome #2: Build fails since CMake version available on the machine is not the declared version
-**Current**: Build potentially fails in strange ways.
+### Outcome #2: Build fails 
+**Current**:  Build fails saying CMake, which is a prerequisite is not available on the machine. I try to download CMake based on the error message. I am not certain on what version to download.
 
 **Desired**: 
-Build fails with an error message informing me that a CMake version was detected, and the version is not the declared version. I install the declared version of CMake or perform a gesture so that a tool downloads CMake to a .NET Core sandbox tools folder. Thus, CMake is available for the build.
+ 1. On a clean machine, the desired experience should be same as earlier scenario [Build a .NET Core repository on a clean machine](#build-a-net-core-repository-on-a-clean-machine)
+ 2. On an existing machine that has a version of CMake different than the declared version, build fails with an error message informing me that a CMake version was detected, and the version is not the declared version. I install the declared version of CMake or perform a gesture so that a tool downloads CMake to a .NET Core sandbox tools folder. Thus, CMake is available for the build.
+
 *(TBD: Do we enable strict mode? This means if the version of CMake on the user's machine is not the same as declared version then, build fails. In the common usage of checking CMake version through [cmake_minimum_required](https://cmake.org/cmake/help/v3.7/command/cmake_minimum_required.html#command:cmake_minimum_required) an error is reported only when the version available is lower than the required version.)*
 
-### Outcome #3: Build fails saying CMake, which is a prerequisite is not available on the machine
-**Current**: I try to download CMake based on the error message. I am not certain on what version to download.
-
-**Desired**: Same as the desired experience in earlier scenario [Build a .NET Core repository on a clean machine](#build-a-net-core-repository-on-a-clean-machine)
 
 ## Setup an official build for a .NET Core repository
 A .NET Core repository owner would like to setup a reliable, repeatable and trustable process of producing official builds.
@@ -69,8 +67,8 @@ I am the owner of [.NET CoreFx](https://github.com/dotnet/corefx) repository.  I
 
 Flow of events:
 
- 1. Create a new VSTS build definition that runs the build command of the repository. 
- 2. Ensure the builds succeeds
+ 1. Created a new VSTS build definition that runs the build command of the repository. 
+ 2. Ensured the builds succeed
 
 ### Outcome #1: Official builds consume the declared version of CMake.
 
@@ -86,10 +84,10 @@ Note: OSS Tool repository will download CMake source code, security audit the so
 ### Outcome #2: Official builds setup and maintenance is reliable and costs lowered
 **Current**: Build agents are tied to a specific version of CMake.
 
-**Desired**: Build VMs are more contained and not dependent on a particular build agent for CMake installations. Thus, the same agent can build multiple repositories and branches.
+**Desired**: Build agents are more contained and not dependent on a particular build agent for CMake installations. Thus, the same agent can build multiple repositories and branches.
 
-## Service a .NET Core repository
-A .NET Core team member who would like to service a release branch, and needs the release configuration to rebuild.
+## Service a .NET Core release
+A .NET Core team member who would like to service a release, and needs the release configuration to rebuild.
 
 ### Narrative
 I am a .NET Core team member who is assigned to service a [CoreFx](https://github.com/dotnet/corefx) release to address an issue reported in the product. 
@@ -99,7 +97,7 @@ Flow of events:
  2. I created a service branch i.e., fork from release branch, and have a fix ready.
  3. I followed the developer guidelines available for that branch to perform a build.
 
-### Outcome:  Service branch builds consume the declared version of CMake
+### Outcome: Service branch builds consume the declared version of CMake
 **Current**: Since a declared version of CMake is not available within the repository, I will build the service branch using the latest version of CMake available. This latest version of CMake might introduce new product behaviors that I will have to resolve. Thus, lack of declared version introduces uncertainty and additional costs in servicing a branch.
 
 **Desired**:
@@ -115,7 +113,7 @@ I am a .NET Core contributor working on new features in CoreFx. These features r
 
 Flow of events:
  1. I verified the compatibility of existing features with the new version of CMake.
- 2. I would like to update official builds to consume this new version of CMake.
+ 2. I would like to update the product to be built using this new version of CMake.
 
 ### Outcome: All build scenarios are aware of the new version of CMake
 **Current**: Though as a .NET Core contributor I can build a local repository using different versions of CMake, doing the same with official builds involves cost such as updating build definition, notifying repository owners, and finally inform the open community of users about the new version of CMake.
@@ -131,7 +129,7 @@ A .NET Core team member can try a new version of CMake to build a .NET Core repo
 As a team member of .NET Core or Engineering Services, I would like to check the applicability of a new version of CMake in a .NET Core repository. For instance, verify if a new version of CMake is compatible with a .NET Core repository, and no unexpected regressions in the product are introduced.
 
 Flow of events:
- 1. I build the local repository using the new version of CMake. Ensure build succeeds.
+ 1. I built the local repository using the new version of CMake. Ensure build succeeds.
  2. I would like to test official builds produced with this new version of CMake.
 
 ### Outcome: A test run of official build consuming the new CMake package can be performed
@@ -142,8 +140,7 @@ Flow of events:
 
 **Desired**:
  1. I'm able to build a .NET Core repository using a CMake version, which is not in the declared version.
- 2. I can modify the prerequisite step in official build so that it acquires my CMake package from OSS Tools repository.
- 3. I can perform a test run of official build and ensure that the CMake package is consumed, and build succeeded.
+ 2. I can perform a test run of official build and ensure that the CMake package is consumed, and build succeeded.
 
 ## Guidance for setting up official builds for a .NET Core repository is available
 A .NET Core repository owner refers to documentation that describes the procedure to setup up official builds.
@@ -152,11 +149,11 @@ A .NET Core repository owner refers to documentation that describes the procedur
 I'm team member on Red Hat.  I would like to setup official builds of our CoreFx repository using the same CMake version used in .NET Core official builds.
 
 Flow of events:
- 1. I fork CoreFx repository from [dotnet/corefx](https://github.com/dotnet/corefx.git)
- 2. I follow the developer guidelines to setup official builds
+ 1. I forked CoreFx repository from [dotnet/corefx](https://github.com/dotnet/corefx.git)
+ 2. I followed the developer guidelines to setup official builds
 
 ### Outcome: .NET Core users refer to documentation about setting up official builds
-**Current**: In my attempt to setup official builds, I will use the latest version of CMake in official builds since CoreFx documentation does not provide any guidance on declared CMake version. I submit a PR to CoreFx. PR fails CI. After spending lot of time on investigating the failure it is realized that native binaries from Red Hat build is significantly different from those produced in .NET Core product team's official builds. This difference is due to the different versions of CMake used in the respective builds.
+**Current**: In my attempt to setup official builds, I will use the latest version of CMake in official builds since CoreFx documentation does not provide any guidance on declared CMake version. Native binaries from Red Hat build is now significantly different from those produced in .NET Core product team's official builds. This difference is due to the different versions of CMake used in the respective builds.
 
 **Desired**: 
  1. Declared version of the .NET Core repository is available within the repository itself.  I can find it, and enforce it with my toolset story
