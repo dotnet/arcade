@@ -14,7 +14,7 @@ This document presents the scenarios for CMake in .NET Core. Each subheading bel
 A .NET Core user (Microsoft employee or someone in the open) clones a .NET Core repository and attempts to build.
 
 ### Narrative
-I am an IT Manager from Contoso who was inspired by .NET Core demoes at [Connect(); 2016](https://msdn.microsoft.com/en-us/magazine/connect16mag.aspx), and I would like to contribute to .NET Core. 
+I am an IT Manager from Contoso who was inspired by .NET Core demos at [Connect(); 2016](https://msdn.microsoft.com/en-us/magazine/connect16mag.aspx), and I would like to contribute to .NET Core. 
 
 Flow of events:
  1. I setup a clean Windows 10 VM through my Azure subscription.
@@ -22,7 +22,7 @@ Flow of events:
  3. I attempted to build the repository using the build command (build.cmd)
 
 ### Outcome #1 Build fails
-**Current**: Build fails saying CMake, which is a prerequisite is missing on the VM.  Though the error message provides an URL from where CMake can be downloaded from, it does not list a specific version or a range of supported versions. I am not certain on what version to download.
+**Current**: Build fails saying CMake, which is a prerequisite, is missing on the VM.  Though the error message provides an URL from where CMake can be downloaded, it does not list a specific version or a range of supported versions. I am not certain on what version to download.
 
 **Desired**: 
 Error message informs me the specific version of CMake to download, and the suggested source to download it from. I have two options from here:
@@ -35,7 +35,7 @@ Either of the above two options allow me to run build command successfully
 A .NET Core user would like to clone a .NET Core repository to his/her existing development machine, and build that repository.
 
 ### Narrative
-I am an IT Manager from Contoso who was inspired by .NET Core demoes at [Connect(); 2016](https://msdn.microsoft.com/en-us/magazine/connect16mag.aspx), and I would like to contribute to .NET Core. 
+I am an IT Manager from Contoso who was inspired by .NET Core demos at [Connect(); 2016](https://msdn.microsoft.com/en-us/magazine/connect16mag.aspx), and I would like to contribute to .NET Core. 
 
 Flow of events:
  1. On my existing development machine, I cloned CoreFx repository from
@@ -57,11 +57,9 @@ Note: Since an existing development machine is being used, the machine could hav
 
 **Desired**: 
  1. On a clean machine, the desired experience should be same as earlier scenario [Build a .NET Core repository on a clean machine](#build-a-net-core-repository-on-a-clean-machine)
- 2. On an existing machine that has a version of CMake different than the declared version, build fails with an error message informing me that a CMake version was detected, and the version is not the declared version. I install the declared version of CMake or perform a gesture so that a tool downloads CMake to a .NET Core sandbox tools folder. Thus, CMake is available for the build.
+ 2. On an existing machine that has a version of CMake different than the declared version, a build warning is presented informing me that a CMake version was detected, and the version is not the declared version. I can acquire the declared version of CMake or perform a gesture so that a tool downloads CMake to a .NET Core sandbox tools folder. Thus, CMake is available for the build.
 
-*(TBD: Do we enable strict mode? This means if the version of CMake on the user's machine is not the same as declared version then, build fails. In the common usage of checking CMake version through [cmake_minimum_required](https://cmake.org/cmake/help/v3.7/command/cmake_minimum_required.html#command:cmake_minimum_required) an error is reported only when the version available is lower than the required version.)*
-
-
+ 
 ## Setup an official build for a .NET Core repository
 A .NET Core repository owner would like to setup a reliable, repeatable and trustable process of producing official builds.
 
