@@ -53,12 +53,14 @@ Note: Since an existing development machine is being used, the machine could hav
 **Current**:  
 
  1. Build fails saying CMake, which is a prerequisite is not available on the machine. I try to download CMake based on the error message. I am not certain on what version to download.
- 2. Build fails in strange ways due to a version of CMake present on the machine, and thus making it difficult to trace back.
+ 2. Builds fails if CMake version is less than the required minimum. Error message notifies me of the same.
+ 3. Build fails in strange ways due to a version of CMake present on the machine, and thus making it difficult to trace back.
 
 **Desired**: 
  1. On a clean machine, the desired experience should be same as earlier scenario [Build a .NET Core repository on a clean machine](#build-a-net-core-repository-on-a-clean-machine)
- 2. On an existing machine that has a version of CMake different than the declared version, a build warning is presented informing me that a CMake version was detected, and the version is not the declared version. I can acquire the declared version of CMake or perform a gesture so that a tool downloads CMake to a .NET Core sandbox tools folder. Thus, CMake is available for the build.
+ 2. On an existing machine that has a version of CMake greater than the declared version, a build warning is presented informing me that a CMake version was detected, and the version is not the declared version. Same warning is also presented if CMake version available is less than the declared version but greater than or equal to the required minimum. In either case, I can acquire the declared version of CMake or perform a gesture so that a tool downloads CMake to a .NET Core sandbox tools folder. Thus, CMake is available for the build.
 
+Note: Build tooling shall ensure that the required minimum version of CMake should be less than or equal to the declared version in a repository. This means, in a repository collect the version in each _cmake_minimum_required_ statement, and find the maximum version in the collection. Ensure that this maximum is less than declared version.
  
 ## Setup an official build for a .NET Core repository
 A .NET Core repository owner would like to setup a reliable, repeatable and trustable process of producing official builds.
