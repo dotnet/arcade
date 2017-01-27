@@ -23,13 +23,3 @@ A target in BuildTools runs before the main project package restore, detects tha
 Devs who have the internal tooling packages but don't have convenient access to the VSTS feed can set `InternalToolSource` to a directory to use it as an internal tool package feed.
 
 If `InternalToolSource` isn't set, no internal tooling is restored.
-
-## (Alternative: bootstrap/init-tools) Fetching during tool init
-
-Instead of restoring during the build into the packages directory, internal tools could be restored during the bootstrap/init-tools process. This has benefits:
-
- * Tools are put in `Tools`: easy to locate during build steps.
- * Uses the same overall process for `internal-tool-runtime` as the established `tool-runtime` flow.
- * Intuitively where tools should be restored.
-
-However, most repos use init-tools, not bootstrap. If CoreFX can't uptake bootstrap yet, the (significant) changes would need to be ported across many repositories' init-tools scripts, or else it would diverge even further.
