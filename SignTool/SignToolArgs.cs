@@ -13,6 +13,7 @@ namespace SignTool
         internal string NuGetPackagesPath { get; }
         internal string AppPath { get; }
         internal string MSBuildPath { get; }
+        internal string DotnetPath { get; }
         internal string ConfigFile { get; }
         internal bool Test { get; }
 
@@ -21,6 +22,7 @@ namespace SignTool
             string intermediateOutputPath,
             string appPath,
             string msbuildPath,
+            string dotnetPath,
             string nugetPackagesPath,
             string configFile,
             bool test)
@@ -29,6 +31,7 @@ namespace SignTool
             IntermediateOutputPath = intermediateOutputPath;
             AppPath = appPath;
             MSBuildPath = msbuildPath;
+            DotnetPath = dotnetPath;
             NuGetPackagesPath = nugetPackagesPath;
             ConfigFile = configFile;
             Test = test;

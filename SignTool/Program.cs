@@ -21,11 +21,20 @@ namespace SignTool
                 Environment.Exit(1);
             }
 
-            if (!File.Exists(signToolArgs.MSBuildPath))
+            if (signToolArgs.MSBuildPath != null && !File.Exists(signToolArgs.MSBuildPath))
             {
                 Console.WriteLine($"Unable to locate MSBuild at the path '{signToolArgs.MSBuildPath}'.");
                 Environment.Exit(1);
             }
+
+            if (signToolArgs.DotnetPath != null && !File.Exists(signToolArgs.DotnetPath))
+            {
+                Console.WriteLine($"Unable to locate dotnet at the path '{signToolArgs.DotnetPath}'.");
+                Environment.Exit(1);
+            }
+
+            // A default msbuild path was set.
+            Debug.Assert(signToolArgs.MSBuildPath != null || signToolArgs.DotnetPath != null);
 
             var signTool = SignToolFactory.Create(signToolArgs);
             var batchData = ReadConfigFile(signToolArgs.OutputPath, signToolArgs.ConfigFile);
@@ -105,6 +114,7 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
             string intermediateOutputPath = null;
             string outputPath = null;
             string msbuildPath = null;
+            string dotnetPath = null;
             string nugetPackagesPath = null;
             string configFile = null;
             var test = false;
@@ -128,6 +138,12 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
                         break;
                     case "-msbuildpath":
                         if (!ParsePathOption(args, ref i, current, out msbuildPath))
+                        {
+                            return false;
+                        }
+                        break;
+                    case "-dotnetpath":
+                        if (!ParsePathOption(args, ref i, current, out dotnetPath))
                         {
                             return false;
                         }
@@ -159,7 +175,11 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
             outputPath = args[i];
 
             // Get defaults for all of the optional values that weren't specified
-            msbuildPath = msbuildPath ?? Path.Combine(host.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"MSBuild\14.0\bin\MSBuild.exe");
+            if (msbuildPath == null && dotnetPath == null)
+            {
+                msbuildPath = Path.Combine(host.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"MSBuild\14.0\bin\MSBuild.exe");
+            }
+
             intermediateOutputPath = intermediateOutputPath ?? Path.Combine(Path.GetDirectoryName(outputPath), "Obj");
 
             if (string.IsNullOrWhiteSpace(nugetPackagesPath))
@@ -185,6 +205,7 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
             signToolArgs = new SignToolArgs(
                 outputPath: outputPath,
                 msbuildPath: msbuildPath,
+                dotnetPath: dotnetPath,
                 intermediateOutputPath: intermediateOutputPath,
                 nugetPackagesPath: nugetPackagesPath,
                 appPath: AppContext.BaseDirectory,
