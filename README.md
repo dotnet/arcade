@@ -46,7 +46,6 @@ Example configuration files:
 
 - [Roslyn](https://github.com/dotnet/roslyn/blob/master/build/config/SignToolData.json)
 - [DiaSym Reader](https://github.com/dotnet/symreader/blob/master/build/Signing/SignToolData.json)
-- [Live Unit Testing](https://github.com/dotnet/testimpact/blob/master/build/Signing/BatchSignData.json)
 
 ## Arguments
 
