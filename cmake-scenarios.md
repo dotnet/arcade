@@ -25,11 +25,12 @@ Flow of events:
 **Current**: Build fails saying CMake, which is a prerequisite, is missing on the VM.  Though the error message provides an URL from where CMake can be downloaded, it does not list a specific version or a range of supported versions. I am not certain on what version to download.
 
 **Desired**: 
-Error message informs me the specific version of CMake to download, and the suggested source to download it from. I have two options from here:
- * I download the specific version and perform a default install. *(TBD: Should the user restart Command or Terminal window?).* 
- * Perform a gesture described in the error message to acquire CMake. I perform the gesture so that a tool downloads and extracts the declared version of CMake to a .NET Core sandbox tools folder.
+Build probes for CMake in .NET Core sandbox tools folder in addition to the current probing locations. If CMake is not found, then the build attempts to acquire the declared version of CMake from the ***tools*** cache. If acquisition fails, then the build presents an error message that informs the user the specific version of CMake to download, and the suggested source to download it from. I have two options from here:
 
-Either of the above two options allow me to run build command successfully
+ - I download the specific version and perform a default install. *(TBD: Should the user restart Command or Terminal window?).* 
+ - Perform a gesture described in the error message to acquire CMake. I perform the gesture so that a tool downloads and extracts the declared version of CMake to a .NET Core sandbox tools folder.
+
+Either of the above options allow me to run build command successfully.
 
 ## Build a .NET Core repository on an existing development machine
 A .NET Core user would like to clone a .NET Core repository to his/her existing development machine, and build that repository.
@@ -52,13 +53,17 @@ Note: Since an existing development machine is being used, the machine could hav
 ### Outcome #2: Build fails 
 **Current**:  
 
- 1. Build fails saying CMake, which is a prerequisite is not available on the machine. I try to download CMake based on the error message. I am not certain on what version to download.
- 2. Build fails in strange ways due to a version of CMake present on the machine, and thus making it difficult to trace back.
+ - Build fails saying CMake, which is a prerequisite is not available on the machine. I try to download CMake based on the error message. I am not certain on what version to download.
+ - Build fails in strange ways due to a version of CMake present on the machine, and thus making it difficult to trace back.
 
 **Desired**: 
- 1. On a clean machine, the desired experience should be same as earlier scenario [Build a .NET Core repository on a clean machine](#build-a-net-core-repository-on-a-clean-machine)
- 2. On an existing machine that has a version of CMake different than the declared version, a build warning is presented informing me that a CMake version was detected, and the version is not the declared version. I can acquire the declared version of CMake or perform a gesture so that a tool downloads CMake to a .NET Core sandbox tools folder. Thus, CMake is available for the build.
 
+ 1. On a clean machine, the desired experience should be same as earlier scenario [Build a .NET Core repository on a clean machine](#build-a-net-core-repository-on-a-clean-machine)
+ 2. On an existing machine that has a version of CMake, which is different than the declared version, there are two outcomes:
+  1. Default outcome is build consumes the available CMake version.
+  2. I can ensure the build consumes the declared version of CMake. This means if the build detects that the version of CMake available is not the declared version, then the build attempts to acquire the declared version. This acquisition experience should be same as in the earlier scenario [Build a .NET Core repository on a clean machine](#build-a-net-core-repository-on-a-clean-machine). 
+
+Either of the above options allow me to run build command successfully.
  
 ## Setup an official build for a .NET Core repository
 A .NET Core repository owner would like to setup a reliable, repeatable and trustable process of producing official builds.
@@ -102,7 +107,7 @@ Flow of events:
 **Current**: Since a declared version of CMake is not available within the repository, I will build the service branch using the latest version of CMake available. This latest version of CMake might introduce new product behaviors that I will have to resolve. Thus, lack of declared version introduces uncertainty and additional costs in servicing a branch.
 
 **Desired**:
- 1. I can run the build such that if the required toolset does not match then, build fails.
+ 1. I can run the build such that if the required toolset does not match then, the build acquires the required toolset.
  2. I can find out the CMake version used to build the release branch. Declared version is available within the repository itself.
  3. I can acquire and run build with tools in a sandbox folder.
 
