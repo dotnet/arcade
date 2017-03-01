@@ -1,0 +1,23 @@
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project DefaultTargets="Build" InitialTargets="RestoreToolsetCheck">
+
+  <!--
+  
+  Requires the following properties to be set:
+    NuGetPackageRoot
+    ToolsetCompilerPackageVersion
+    
+  -->
+
+  <PropertyGroup>
+    <ToolsetCompilerPackageDir>$(NuGetPackageRoot)Microsoft.Net.Compilers\$(ToolsetCompilerPackageVersion)\</ToolsetCompilerPackageDir>
+    <ToolsetCompilerPropsFilePath>$(ToolsetCompilerPackageDir)build\Microsoft.Net.Compilers.props</ToolsetCompilerPropsFilePath>
+  </PropertyGroup>
+  
+  <Target Name="RestoreToolsetCheck" Condition="'$(BuildingProject)' == 'true'">
+    <Error Text="Toolset packages have not been restored, run Restore.cmd before building" 
+           Condition="!Exists('$(ToolsetCompilerPropsFilePath)')" />
+  </Target>
+  
+  <Import Project="$(ToolsetCompilerPropsFilePath)" Condition="Exists('$(ToolsetCompilerPropsFilePath)')" />
+</Project>

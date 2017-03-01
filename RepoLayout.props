@@ -1,0 +1,16 @@
+﻿<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+  <!--
+     Properties describing the layout of the repo.
+  -->
+  
+  <PropertyGroup>
+    <DotNetRoot>$(RepoRoot).dotnet\</DotNetRoot>
+    <DotNetTool>$(DotNetRoot)dotnet.exe</DotNetTool>
+    <ArtifactsDir>$(RepoRoot)artifacts\</ArtifactsDir>
+    <ArtifactsBinDir>$(ArtifactsDir)$(Configuration)\bin\</ArtifactsBinDir>
+    <ArtifactsObjDir>$(ArtifactsDir)$(Configuration)\obj\</ArtifactsObjDir>
+    <ArtifactsTestResultsDir>$(ArtifactsDir)$(Configuration)\TestResults\</ArtifactsTestResultsDir>
+    <PackageOutputPath>$(ArtifactsDir)$(Configuration)\packages\</PackageOutputPath>
+  </PropertyGroup>
+</Project>

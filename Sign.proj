@@ -1,0 +1,24 @@
+﻿<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project DefaultTargets="Sign">
+  <!--
+    Required parameters:
+      DirectoryBuildPropsPath              Path to the Directory.Build.props file in the repo root.
+      SignType                             "real" to real-sign the outputs (set by microbuild as an environment variable)
+  -->
+
+  <Import Project="$(DirectoryBuildPropsPath)" Condition="Exists('$(DirectoryBuildPropsPath)')"/>
+  <Import Project="RepoLayout.props" />
+  
+  <Target Name="Sign">
+    <ItemGroup>
+      <SignToolArgs Include='-nugetPackagesPath "$(NuGetPackageRoot)\"' />
+      <SignToolArgs Include='-intermediateOutputPath "$(ArtifactsObjDir)\"' />
+      <SignToolArgs Include='-dotnetPath "$(DotNetTool)"' />
+      <SignToolArgs Include='-config "$(SignToolDataPath)"' />
+      <SignToolArgs Include='-test' Condition="'$(SignType)' != 'real'" />
+      <SignToolArgs Include='"$(ArtifactsBinDir)\"' />
+    </ItemGroup>
+    
+    <Exec Command="$(NuGetPackageRoot)RoslynTools.Microsoft.SignTool\$(RoslynToolsMicrosoftSignToolVersion)\tools\SignTool.exe @(SignToolArgs, ' ')" />
+  </Target>
+</Project>

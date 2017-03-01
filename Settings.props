@@ -1,0 +1,8 @@
+﻿<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+  <Import Project="ProjectLayout.props" />
+  <Import Project="Compiler.props" />
+  <Import Project="Version.props"/>
+  <Import Project="ProjectDefaults.props"/>
+  <Import Project="Test.props"/>
+</Project>

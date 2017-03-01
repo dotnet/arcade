@@ -1,0 +1,60 @@
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <TestArchitectures Condition="'$(TestArchitectures)' == ''">x64</TestArchitectures>
+    <AutoGenerateBindingRedirects Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">true</AutoGenerateBindingRedirects>
+    <_TestTargetName Condition="'$(TargetFrameworks)' == ''">InnerTest</_TestTargetName>
+    <_TestTargetName Condition="'$(TargetFrameworks)' != ''">OuterTest</_TestTargetName>
+  </PropertyGroup>
+  
+  <Target Name="Test" DependsOnTargets="$(_TestTargetName)" Condition="'$(IsTestProject)' == 'true'" />
+
+  <ItemGroup>
+    <_TestArchitectureItems Include="$(TestArchitectures)" />
+  </ItemGroup>
+          
+  <!-- Using Inputs/Outputs just to loop over test architectures -->
+  <Target Name="InnerTest" Inputs="*%(_TestArchitectureItems.Identity)" Outputs="*%(_TestArchitectureItems.Identity)" Returns="@(_FailedTestRuns)">
+    <PropertyGroup>
+      <_TestArchitecture>%(_TestArchitectureItems.Identity)</_TestArchitecture>
+      <_TestEnvironment>$(TargetFramework)|$(_TestArchitecture)</_TestEnvironment>
+      <_TestOutPathNoExt>$(ArtifactsTestResultsDir)$(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture)</_TestOutPathNoExt>
+      <_TestStdOutPath>$(_TestOutPathNoExt).log</_TestStdOutPath>
+      <_TestLogPath>$(_TestOutPathNoExt).xml</_TestLogPath>
+      <_TestLogger>xunit;LogFilePath="$(_TestLogPath)";Environment="$(_TestEnvironment)";XUnitVersion="$(XUnitVersion)"</_TestLogger>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(ArtifactsTestResultsDir)"/>
+    <Delete Files="$(_TestOutPathNoExt)" />
+    <Delete Files="$(_TestStdOutPath)" />
+
+    <Exec Command='"$(DotNetTool)" test "$(MSBuildProjectFullPath)" --no-build --framework:$(TargetFramework) --configuration:$(Configuration) --logger:$(_TestLogger) -- --platform:$(_TestArchitecture) > $(_TestStdOutPath)'
+          LogStandardErrorAsError="true"
+          WorkingDirectory="$(OutDir)"
+          IgnoreExitCode="true">
+
+      <Output TaskParameter="ExitCode" PropertyName="_TestErrorCode" />
+    </Exec>
+    
+    <ItemGroup>
+      <_FailedTestRuns Include="$(_TestEnvironment)" Condition="'$(_TestErrorCode)' != '0'" />
+    </ItemGroup>
+
+    <Message Text="Test succeeded: $(MSBuildProjectName) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' == '0'" />
+    <Warning Text="Test failed: $(MSBuildProjectName) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0'" />
+  </Target>
+  
+  <Target Name="OuterTest" Returns="@(InnerOutput)">
+    <ItemGroup>
+      <_TargetFramework Include="$(TargetFrameworks)" />
+    </ItemGroup>
+    <MSBuild Projects="$(MSBuildProjectFile)"
+             Condition="'$(TargetFrameworks)' != '' "
+             Targets="InnerTest"
+             Properties="TargetFramework=%(_TargetFramework.Identity)">
+      <Output ItemName="_FailedTestRuns" TaskParameter="TargetOutputs" />
+    </MSBuild>
+
+    <Error Text="Tests failed on platforms: @(_FailedTestRuns, ', ')" Condition="'@(_FailedTestRuns)' != ''" />
+  </Target>
+</Project>

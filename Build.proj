@@ -1,0 +1,82 @@
+﻿<Project DefaultTargets="Execute">
+  <!--
+  
+  Required parameters:
+    SolutionPath      Path to the solution to build
+  
+  Optional parameters:
+    Configuration     Build configuration: "Debug", "Release", etc.
+    CIBuild           "true" when building on CI server
+    Restore           "true" to restore toolset and solution
+    Build             "true" to build solution
+    Test              "true" to run tests
+    Sign              "true" to sign built binaries
+    Pack              "true" to build NuGet packages
+    
+  -->
+
+  <!-- 
+      Import Directory.Build.props file next to or above the solution file.
+      We expect this file to define dependency versions, NuGetPackageRoot and SignToolDataPath.
+    -->
+  <PropertyGroup>
+    <_DirectoryBuildPropsFile>Directory.Build.props</_DirectoryBuildPropsFile>
+    <_DirectoryBuildPropsBasePath>$([MSBuild]::GetDirectoryNameOfFileAbove('$(SolutionPath)', '$(_DirectoryBuildPropsFile)'))</_DirectoryBuildPropsBasePath>
+    <DirectoryBuildPropsPath>$([System.IO.Path]::Combine('$(_DirectoryBuildPropsBasePath)', '$(_DirectoryBuildPropsFile)'))</DirectoryBuildPropsPath>
+  </PropertyGroup>
+
+  <Import Project="$(DirectoryBuildPropsPath)"/>
+  <Import Project="RepoLayout.props"/>
+
+  <Target Name="Execute">
+    <ItemGroup>
+      <_DotNetDlls Include="$(DotNetRoot)sdk\**\dotnet.dll" />
+    </ItemGroup>
+    
+    <!-- Copy XUnitLogger.dll to $(DotNetRoot)sdk\*\Extensions.
+         It's currently not possible to pass the logger path to dotnet test directly,
+         It loads extensions from dotnet sdk Extensions folder, so we need to copy it there on restore. 
+         See https://github.com/Microsoft/vstest/issues/522 -->
+    <Copy DestinationFiles="@(_DotNetDlls->'$(DotNetRoot)sdk\%(RecursiveDir)Extensions\XUnitLogger.dll')"
+          SkipUnchangedFiles="true"
+          SourceFiles="@(_DotNetDlls->'$(NuGetPackageRoot)RoslynTools.Microsoft.XUnitLogger\$(RoslynToolsMicrosoftXUnitLoggerVersion)\lib\netstandard1.5\XUnitLogger.dll')"
+          Condition="'$(Restore)' == 'true'" />
+    
+    <PropertyGroup>
+      <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+      <Props>Configuration=$(Configuration);CIBuild=$(CIBuild)</Props>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PreSignTargets Include="Restore" Condition="'$(Restore)' == 'true'" />
+      <PreSignTargets Include="Build" Condition="'$(Build)' == 'true'" />
+      <PreSignTargets Include="Test" Condition="'$(Test)' == 'true'" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PostSignTargets Include="Pack" Condition="'$(Pack)' == 'true'" />
+    </ItemGroup>
+
+    <!-- Note: msbuild caches the metaproject for the solution (see https://github.com/Microsoft/msbuild/issues/1695)
+         We invalidate the cache by changing the value of __BuildPhase property.
+    -->
+    
+    <MSBuild Projects="$(SolutionPath)"
+             Properties="$(Props);__BuildPhase=PreSign"
+             Targets="@(PreSignTargets)"
+             BuildInParallel="true"
+             Condition="'@(PreSignTargets)' != ''"/>
+
+    <MSBuild Projects="Sign.proj"
+             Properties="$(Props);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
+             Targets="Sign"
+             BuildInParallel="true"
+             Condition="'$(Sign)' == 'true'"/>
+
+    <MSBuild Projects="$(SolutionPath)"
+             Properties="$(Props);__BuildPhase=PostSign"
+             Targets="@(PostSignTargets)"
+             BuildInParallel="true"
+             Condition="'@(PostSignTargets)' != ''"/>
+  </Target>
+</Project>

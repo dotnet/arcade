@@ -1,0 +1,63 @@
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+    <HighEntropyVA>true</HighEntropyVA>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <Authors>Microsoft</Authors>
+    <Serviceable>true</Serviceable>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseUrl>http://go.microsoft.com/fwlink/?LinkId=529443</PackageLicenseUrl>
+
+    <!-- By default do not build nuget package for a project. Project may override. -->
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <Choose>
+    <!-- C# specific settings -->
+    <When Condition="'$(MSBuildProjectExtension)' == '.csproj' OR '$(Language)' == 'C#' OR '$(ProjectLanguage)' == 'CSharp'">
+      <PropertyGroup>
+        <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+        <NoWarn>$(NoWarn);1591</NoWarn>
+      </PropertyGroup>
+      
+      <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+      </PropertyGroup>
+
+      <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <DebugType>full</DebugType>
+        <DefineConstants>TRACE</DefineConstants>
+        <Optimize>true</Optimize>
+      </PropertyGroup>
+    </When>
+      
+    <!-- VB specific settings -->
+    <When Condition="'$(MSBuildProjectExtension)' == '.vbproj' OR '$(Language)' == 'VB' OR '$(ProjectLanguage)' == 'VB'">
+      <PropertyGroup>
+        <MyType>Empty</MyType>
+        <OptionCompare>Binary</OptionCompare>
+        <OptionExplicit>On</OptionExplicit>
+        <OptionInfer>On</OptionInfer>
+        <OptionStrict>On</OptionStrict>
+        <VBRuntime>Embed</VBRuntime>
+        <RemoveIntegerChecks>true</RemoveIntegerChecks>
+        <RootNamespace></RootNamespace>
+      </PropertyGroup>
+
+      <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+        <DebugSymbols>true</DebugSymbols>
+        <DefineDebug>true</DefineDebug>
+        <DefineTrace>true</DefineTrace>
+      </PropertyGroup>
+      
+      <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <DefineTrace>true</DefineTrace>
+        <Optimize>true</Optimize>
+      </PropertyGroup>
+    </When>
+  </Choose>
+</Project>
