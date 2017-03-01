@@ -13,7 +13,6 @@
     <ItemGroup>
       <SignToolArgs Include='-nugetPackagesPath "$(NuGetPackageRoot)\"' />
       <SignToolArgs Include='-intermediateOutputPath "$(ArtifactsObjDir)\"' />
-      <SignToolArgs Include='-dotnetPath "$(DotNetTool)"' />
       <SignToolArgs Include='-config "$(SignToolDataPath)"' />
       <SignToolArgs Include='-test' Condition="'$(SignType)' != 'real'" />
       <SignToolArgs Include='"$(ArtifactsBinDir)\"' />
