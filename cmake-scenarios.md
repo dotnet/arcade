@@ -1,12 +1,6 @@
-This document presents the scenarios for CMake in .NET Core. 
-
-# Summary
-[CMake](https://cmake.org/overview/) is a prerequisite for building .NET Core repositories such as CoreFx and CoreCLR. When a developer attempts to build, a repository using the build script, the script probes for CMake on the machine, and if CMake is not found then, the script terminates and the build fails. There is no guidance for developer on which version of CMake to install. Not stating a version of CMake for a repository can lead to further challenges for example, when a servicing a release. 
-
-Thus, there is need to improve CMake usage and acquisition experience. Hence the purpose of this document is to define the scenarios for CMake in .NET Core, and lay a foundation for designing the improved experience.
-
 # CMake Scenarios
-Each subheading below is a name of a scenario. Under each subheading there will be a short description of the scenario and a narrative. The narrative includes an actor, flow of events, and the resulting outcomes. An outcome consists of one or more pairs of the current and desired experiences.
+
+This document presents the scenarios for CMake in .NET Core. Each subheading below is a name of a scenario. Under each subheading there will be a short description of the scenario and a narrative. The narrative includes an actor, flow of events, and the resulting outcomes. An outcome consists of one or more pairs of the current and desired experiences.
 
  * [Build a .NET Core repository on a clean machine](#build-a-net-core-repository-on-a-clean-machine)
  * [Build a .NET Core repository on an existing development machine](#build-a-net-core-repository-on-an-existing-development-machine)
