@@ -1,0 +1,36 @@
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+  <!--
+    Required variables:
+      SetupOutputPath             Directory to drop the VSIX to.
+      SetupIntermediateOutputPath Intermediate directory.
+      MicroBuildPath              MicroBuild package path.
+  -->
+  
+  <PropertyGroup>
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
+    <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
+    <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
+  </PropertyGroup>
+
+  <Import Project="$(MicroBuildPath)build\MicroBuild.Core.props" />
+
+  <PropertyGroup>
+    <FinalizeManifest>true</FinalizeManifest>
+    <FinalizeSkipLayout>true</FinalizeSkipLayout>
+    <IsPackage>true</IsPackage>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <OutputPath>$(SetupOutputPath)</OutputPath>
+    <IntermediateOutputPath>$(SetupIntermediateOutputPath)</IntermediateOutputPath>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(BUILD_BUILDNUMBER)' == ''">
+    <FinalizeManifest>false</FinalizeManifest>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <MergeManifest Include="$(SetupOutputPath)*.json" />
+  </ItemGroup>
+
+  <Import Project="$(MicroBuildPath)build\MicroBuild.Core.targets" />
+</Project>

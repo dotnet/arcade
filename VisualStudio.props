@@ -1,0 +1,18 @@
+<Project>
+  <!-- VSSDK target to build VSIX -->
+  <Import Project="$(NuGetPackageRoot)Microsoft.VSSDK.BuildTools\$(MicrosoftVSSDKBuildToolsVersion)\build\Microsoft.VsSDK.BuildTools.props" />
+
+  <!-- VSIX settings -->
+  <PropertyGroup>
+    <StartAction>Program</StartAction>
+    <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
+    <VisualStudioDeploymentRootSuffix Condition="'$(VisualStudioDeploymentRootSuffix)' == ''">Exp</VisualStudioDeploymentRootSuffix>
+    <StartArguments>/rootsuffix $(VisualStudioDeploymentRootSuffix) /log</StartArguments>
+
+    <UseCodebase>true</UseCodebase>
+    <IsProductComponent>true</IsProductComponent>
+    <Ngen>true</Ngen>
+    <NgenArchitecture>All</NgenArchitecture>
+    <NgenPriority>3</NgenPriority>
+  </PropertyGroup>
+</Project>

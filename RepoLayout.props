@@ -12,5 +12,6 @@
     <ArtifactsObjDir>$(ArtifactsDir)$(Configuration)\obj\</ArtifactsObjDir>
     <ArtifactsTestResultsDir>$(ArtifactsDir)$(Configuration)\TestResults\</ArtifactsTestResultsDir>
     <PackageOutputPath>$(ArtifactsDir)$(Configuration)\packages\</PackageOutputPath>
+    <VisualStudioSetupOutputPath>$(ArtifactsDir)$(Configuration)\VSSetup\</VisualStudioSetupOutputPath>
   </PropertyGroup>
 </Project>
