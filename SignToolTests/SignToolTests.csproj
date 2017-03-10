@@ -14,6 +14,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="project.json" />
+    <None Include="SignTool.UnitTests.xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SignTool\SignTool.csproj">
