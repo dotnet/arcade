@@ -22,7 +22,7 @@ namespace SignTool
                 Environment.Exit(1);
             }
 
-            if (!File.Exists(signToolArgs.MSBuildPath))
+            if (!signToolArgs.Test && !File.Exists(signToolArgs.MSBuildPath))
             {
                 Console.WriteLine($"Unable to locate MSBuild at the path '{signToolArgs.MSBuildPath}'.");
                 Environment.Exit(1);
@@ -160,7 +160,7 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
             outputPath = args[i];
 
             // Get defaults for all of the optional values that weren't specified
-            if (msbuildPath == null)
+            if (msbuildPath == null && !test)
             {
                 var vsInstallDir = LocateVS.Instance.GetInstallPath("15.0", new[] { "Microsoft.Component.MSBuild" });
                 msbuildPath = Path.Combine(vsInstallDir, "MSBuild", "15.0", "Bin", "msbuild.exe");

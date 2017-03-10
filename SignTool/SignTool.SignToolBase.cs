@@ -45,7 +45,11 @@ namespace SignTool
 
                 string fileName = MSBuildPath;
                 var commandLine = $@"/v:m ""{buildFilePath}""";
-                Console.WriteLine($"{fileName} {commandLine}");
+
+                if (!_args.Test)
+                {
+                    Console.WriteLine($"{fileName} {commandLine}");
+                }
 
                 var startInfo = new ProcessStartInfo()
                 {
