@@ -53,10 +53,6 @@
       <PreSignTargets Include="Test" Condition="'$(Test)' == 'true'" />
     </ItemGroup>
 
-    <ItemGroup>
-      <PostSignTargets Include="Pack" Condition="'$(Pack)' == 'true'" />
-    </ItemGroup>
-
     <!-- Note: msbuild caches the metaproject for the solution (see https://github.com/Microsoft/msbuild/issues/1695)
          We invalidate the cache by changing the value of __BuildPhase property.
     -->
@@ -73,11 +69,15 @@
              BuildInParallel="true"
              Condition="'$(Sign)' == 'true'"/>
 
+    <!-- It is important to skip the build (NoBuild=true) when creating NuGet packages.
+         Otherwise, if the output binaries were real-signed in the previous step the Build task 
+         overwrite the signed files with the ones from obj dir.
+    -->
     <MSBuild Projects="$(SolutionPath)"
-             Properties="$(Props);__BuildPhase=PostSign"
-             Targets="@(PostSignTargets)"
+             Properties="$(Props);NoBuild=true;__BuildPhase=PostSign"
+             Targets="Pack"
              BuildInParallel="true"
-             Condition="'@(PostSignTargets)' != ''"/>
+             Condition="'$(Pack)' == 'true'"/>
 
     <MSBuild Projects="VisualStudio.Pack.proj"
              Properties="$(Props);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"

@@ -5,17 +5,20 @@
   
   Requires the following properties to be set:
     NuGetPackageRoot
-    ToolsetCompilerPackageVersion
+    MicrosoftNetCompilersVersion
     
   -->
 
   <PropertyGroup>
-    <ToolsetCompilerPackageDir>$(NuGetPackageRoot)Microsoft.Net.Compilers\$(ToolsetCompilerPackageVersion)\</ToolsetCompilerPackageDir>
+    <ToolsetCompilerPackageDir>$(NuGetPackageRoot)Microsoft.Net.Compilers\$(MicrosoftNetCompilersVersion)\</ToolsetCompilerPackageDir>
     <ToolsetCompilerPropsFilePath>$(ToolsetCompilerPackageDir)build\Microsoft.Net.Compilers.props</ToolsetCompilerPropsFilePath>
   </PropertyGroup>
   
   <Target Name="RestoreToolsetCheck" Condition="'$(BuildingProject)' == 'true'">
-    <Error Text="Toolset packages have not been restored, run Restore.cmd before building" 
+    <Error Text="Property not set: MicrosoftNetCompilersVersion" 
+           Condition="'$(MicrosoftNetCompilersVersion)' == ''"/>
+    
+    <Error Text="Toolset packages have not been restored, run Restore before building" 
            Condition="!Exists('$(ToolsetCompilerPropsFilePath)')" />
   </Target>
   
