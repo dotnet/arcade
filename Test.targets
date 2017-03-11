@@ -5,6 +5,8 @@
     <AutoGenerateBindingRedirects Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">true</AutoGenerateBindingRedirects>
     <_TestTargetName Condition="'$(TargetFrameworks)' == ''">InnerTest</_TestTargetName>
     <_TestTargetName Condition="'$(TargetFrameworks)' != ''">OuterTest</_TestTargetName>
+    <_TestUsingDotNetCli>false</_TestUsingDotNetCli>
+    <_TestUsingDotNetCli Condition="Exists('$(DotNetTool)')">true</_TestUsingDotNetCli>
   </PropertyGroup>
   
   <Target Name="Test" DependsOnTargets="$(_TestTargetName)" Condition="'$(IsTestProject)' == 'true'" />
@@ -15,20 +17,32 @@
           
   <!-- Using Inputs/Outputs just to loop over test architectures -->
   <Target Name="InnerTest" Inputs="*%(_TestArchitectureItems.Identity)" Outputs="*%(_TestArchitectureItems.Identity)" Returns="@(_FailedTestRuns)">
+    <Error Text="Property not set: XUnitRunnerConsoleVersion" Condition="'$(_TestUsingDotNetCli)' != 'true' and '$(XUnitRunnerConsoleVersion)' == ''"/>
+
     <PropertyGroup>
       <_TestArchitecture>%(_TestArchitectureItems.Identity)</_TestArchitecture>
       <_TestEnvironment>$(TargetFramework)|$(_TestArchitecture)</_TestEnvironment>
       <_TestOutPathNoExt>$(ArtifactsTestResultsDir)$(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture)</_TestOutPathNoExt>
       <_TestStdOutPath>$(_TestOutPathNoExt).log</_TestStdOutPath>
       <_TestLogPath>$(_TestOutPathNoExt).xml</_TestLogPath>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(_TestUsingDotNetCli)' == 'true'">
       <_TestLogger>xunit;LogFilePath="$(_TestLogPath)";Environment="$(_TestEnvironment)";XUnitVersion="$(XUnitVersion)"</_TestLogger>
+      <_TestRunnerCommand>"$(DotNetTool)" test "$(MSBuildProjectFullPath)" --no-build --framework:$(TargetFramework) --configuration:$(Configuration) --logger:$(_TestLogger) -- --platform:$(_TestArchitecture)</_TestRunnerCommand>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(_TestUsingDotNetCli)' != 'true'">
+      <_XUnitConsoleExe>xunit.console.exe</_XUnitConsoleExe>
+      <_XUnitConsoleExe Condition="'$(_TestArchitecture)' == 'x86'">xunit.console.x86.exe</_XUnitConsoleExe>
+      <_TestRunnerCommand>"$(NuGetPackageRoot)xunit.runner.console\$(XUnitRunnerConsoleVersion)\tools\$(_XUnitConsoleExe)" "$(TargetPath)" -verbose -xml "$(_TestLogPath)"</_TestRunnerCommand>
     </PropertyGroup>
 
     <MakeDir Directories="$(ArtifactsTestResultsDir)"/>
     <Delete Files="$(_TestOutPathNoExt)" />
     <Delete Files="$(_TestStdOutPath)" />
 
-    <Exec Command='"$(DotNetTool)" test "$(MSBuildProjectFullPath)" --no-build --framework:$(TargetFramework) --configuration:$(Configuration) --logger:$(_TestLogger) -- --platform:$(_TestArchitecture) > $(_TestStdOutPath)'
+    <Exec Command='$(_TestRunnerCommand) > $(_TestStdOutPath)'
           LogStandardErrorAsError="true"
           WorkingDirectory="$(OutDir)"
           IgnoreExitCode="true">
