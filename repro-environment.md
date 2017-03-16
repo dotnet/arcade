@@ -6,6 +6,7 @@ At a high level, the following big steps represent the work to get a dev a repro
 1. Product is (re)built and test run  (yes for now, we'll rebuild the whole thing)
 1. Dev investigates failure
 
+
 # Aquiring machines
 There are two main methods to aquire machines for a reproduction environment: 1) Dev Test Lab (DTL) for VMs and 2) Asset Explorer (AE) for physical hardware like Macs, X64, etc.
 
@@ -28,5 +29,19 @@ AE is a tool (originally from Office) which manages inventory in "pools", allowi
 
 ### Implementation Notes
 
+
 # Machine environment setup / configuration
-Once a machine is aquired, additional setup is still required in order to 
+Once a machine is aquired, additional setup is still required in order to support building the product and tests (again) so a reproduction can occur.
+
+### Requirements
+- Prereqs are either installed, or verified to be installed
+- Machine config 
+- Exact hash is restored (GitHub is what's initially supported)
+
+### Misc reference material
+- dotnet-ci jumping off point: https://github.com/dotnet/dotnet-ci
+- buildtools groovy example: https://github.com/dotnet/buildtools/blob/master/netci.groovy 
+
+
+# Product and Tests are Built
+
