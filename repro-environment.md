@@ -1,3 +1,11 @@
+# Overview
+At a high level, the following big steps represent the work to get a dev a reproduction environment
+1. The dev chooses a target environment
+1. The right machine (VM or otherwise) is aquired and access info made available
+1. Machine is setup and configured so a reproduction can happen
+1. Product is (re)built and test run  (yes for now, we'll rebuild the whole thing)
+1. Dev investigates failure
+
 # Aquiring machines
 There are two main methods to aquire machines for a reproduction environment: 1) Dev Test Lab (DTL) for VMs and 2) Asset Explorer (AE) for physical hardware like Macs, X64, etc.
 
@@ -19,3 +27,6 @@ AE is a tool (originally from Office) which manages inventory in "pools", allowi
 - The machine should be delivered in a known state which can reasonably be setup to repro
 
 ### Implementation Notes
+
+# Machine environment setup / configuration
+Once a machine is aquired, additional setup is still required in order to 
