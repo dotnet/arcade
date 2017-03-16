@@ -1,3 +1,4 @@
+
 # Overview
 At a high level, the following big steps represent the work to get a dev a reproduction environment
 1. The dev chooses a target environment
@@ -6,6 +7,11 @@ At a high level, the following big steps represent the work to get a dev a repro
 1. Product is (re)built and test run  (yes for now, we'll rebuild the whole thing)
 1. Dev investigates failure
 
+# Dev chooses target environment
+
+### Requirements
+- Be able to choose a specific hash, or latest
+- Button on MC?  
 
 # Aquiring machines
 There are two main methods to aquire machines for a reproduction environment: 1) Dev Test Lab (DTL) for VMs and 2) Asset Explorer (AE) for physical hardware like Macs, X64, etc.
@@ -35,8 +41,13 @@ Once a machine is aquired, additional setup is still required in order to suppor
 
 ### Requirements
 - Prereqs are either installed, or verified to be installed
+- Debugger and compilers installed
 - Machine config 
 - Exact hash is restored (GitHub is what's initially supported)
+- Matching symbols (especially for when we find a way to NOT rebuild the product)
+- Logs from original failure available
+- Shares already setup
+- Make it easy to re-run the failing test  (initially, this might just be run all the test again...hopefully we can do better)
 
 ### Misc reference material
 - dotnet-ci jumping off point: https://github.com/dotnet/dotnet-ci
@@ -44,4 +55,8 @@ Once a machine is aquired, additional setup is still required in order to suppor
 
 
 # Product and Tests are Built
+The right first step is to just rebuild the product again.  Not ideal, but crawl, walk, run....
 
+### Requirements (not all are needed initially)
+- Be able to easily rebuild a single test so that it can instrumented  (script file already there?)
+- Be able to easily replace bits on the repro box from the dev box
