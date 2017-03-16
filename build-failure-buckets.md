@@ -7,3 +7,5 @@
 - regex for buckets from Jenkins: https://ci.dot.net/failure-cause-management/
 - Plug in itself: https://github.com/jenkinsci/build-failure-analyzer-plugin
 - XML hurl w/ regex: https://ci.dot.net/userContent/build-failure-analyzer.xml 
+
+- Aho-Corasick Alg for searching large files: https://github.com/pdonald/aho-corasick (https://en.wikipedia.org/wiki/Aho%E2%80%93Corasick_algorithm)
