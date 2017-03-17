@@ -1,4 +1,3 @@
-
 # Overview
 At a high level, the following big steps represent the work to get a dev a reproduction environment
 1. The dev chooses a target environment
@@ -19,6 +18,7 @@ There are two main methods to aquire machines for a reproduction environment: 1)
 ### DTL
 - VM image management happens here (would love to find a way to share with CI and VSTS)
 - Special artifacts selectable
+- https://microsoft.sharepoint.com/teams/DD_DDIT/DDITLabs/Pages/Azure-DTL.aspx
 
 ### Asset Explorer (AE)
 AE is a tool (originally from Office) which manages inventory in "pools", allowing for check out and check in.  It does not manage the machines directly, but is simply a database of sort to keep track what's available and who has what.  The good news is that it has a web API.
