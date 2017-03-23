@@ -6,6 +6,10 @@ At a high level, the following big steps represent the work to get a dev a repro
 1. Product is (re)built and test run  (yes for now, we'll rebuild the whole thing)
 1. Dev investigates failure
 
+At this time, the hope is that as a first step, we can use Jenkins to "rerun" a failing leg, but do so without publishing or updating the PR.  That way, the full state can be handed back to the dev for their investigation.
+
+For the start of a more complete requirements list, and possible systems/tools to round out the solution in the future, please read the rest of this mini-doc.
+
 # Dev chooses target environment
 
 ### Requirements
