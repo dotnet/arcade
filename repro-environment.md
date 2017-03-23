@@ -12,21 +12,9 @@ At a high level, the following big steps represent the work to get a dev a repro
 - Be able to choose a specific hash, or latest
 - Button on MC?  
 
+
 # Aquiring machines
 There are two main methods to aquire machines for a reproduction environment: 1) Dev Test Lab (DTL) for VMs and 2) Asset Explorer (AE) for physical hardware like Macs, X64, etc.
-
-### DTL
-- VM image management happens here (would love to find a way to share with CI and VSTS)
-- Special artifacts selectable
-- https://microsoft.sharepoint.com/teams/DD_DDIT/DDITLabs/Pages/Azure-DTL.aspx
-
-### Asset Explorer (AE)
-AE is a tool (originally from Office) which manages inventory in "pools", allowing for check out and check in.  It does not manage the machines directly, but is simply a database of sort to keep track what's available and who has what.  The good news is that it has a web API.
-
-- Our pool is \STB\DevDiv\DotNet
-- Web services url is http://aee/ws
-- To install the AE client is http://aee/installae.  IE is needed to install the client.
-- Contact: Dale Hirt in DDIT
 
 ### Requirements
 - Common interface to "check out" a machine (VM or otherwise)
@@ -34,7 +22,21 @@ AE is a tool (originally from Office) which manages inventory in "pools", allowi
 - The machine should be delivered in a known state which can reasonably be setup to repro
 
 ### Implementation Notes
+For an initial "strawman", the current idea is to use Jenkins to basically redo a run, but not publish or update the PR, and then give the machine to the dev to poke around with.
 
+#### Tools/Systems that will probably help in the future
+*DTL*
+- VM image management happens here (would love to find a way to share with CI and VSTS)
+- Special artifacts selectable
+- https://microsoft.sharepoint.com/teams/DD_DDIT/DDITLabs/Pages/Azure-DTL.aspx
+
+*Asset Explorer (AE)*
+AE is a tool (originally from Office) which manages inventory in "pools", allowing for check out and check in.  It does not manage the machines directly, but is simply a database of sort to keep track what's available and who has what.  The good news is that it has a web API.
+
+- Our pool is \STB\DevDiv\DotNet
+- Web services url is http://aee/ws
+- To install the AE client is http://aee/installae.  IE is needed to install the client.
+- Contact: Dale Hirt in DDIT
 
 # Machine environment setup / configuration
 Once a machine is aquired, additional setup is still required in order to support building the product and tests (again) so a reproduction can occur.
@@ -48,6 +50,9 @@ Once a machine is aquired, additional setup is still required in order to suppor
 - Logs from original failure available
 - Shares already setup
 - Make it easy to re-run the failing test  (initially, this might just be run all the test again...hopefully we can do better)
+
+### Implementation Notes
+For an initial "strawman", the current idea is to use Jenkins to basically redo a run, but not publish or update the PR, and then give the machine to the dev to poke around with.
 
 ### Misc reference material
 - dotnet-ci jumping off point: https://github.com/dotnet/dotnet-ci
