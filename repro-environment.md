@@ -12,6 +12,9 @@ At a high level, the following big steps represent the work to get a dev a repro
 - Be able to choose a specific hash, or latest
 - Button on MC?  
 
+### Implementation Notes
+For an initial "strawman", the current idea is to use Jenkins to basically redo a run, but not publish or update the PR, and then give the machine to the dev to poke around with.
+
 
 # Aquiring machines
 There are two main methods to aquire machines for a reproduction environment: 1) Dev Test Lab (DTL) for VMs and 2) Asset Explorer (AE) for physical hardware like Macs, X64, etc.
@@ -31,6 +34,7 @@ For an initial "strawman", the current idea is to use Jenkins to basically redo 
 - https://microsoft.sharepoint.com/teams/DD_DDIT/DDITLabs/Pages/Azure-DTL.aspx
 
 *Asset Explorer (AE)*
+
 AE is a tool (originally from Office) which manages inventory in "pools", allowing for check out and check in.  It does not manage the machines directly, but is simply a database of sort to keep track what's available and who has what.  The good news is that it has a web API.
 
 - Our pool is \STB\DevDiv\DotNet
