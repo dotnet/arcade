@@ -12,6 +12,7 @@
     Test              "true" to run tests
     Sign              "true" to sign built binaries
     Pack              "true" to build NuGet packages
+    Properties        List of properties to pass to each build phase ("Name=Value;Name=Value;...")
     
   -->
 
@@ -44,7 +45,7 @@
     
     <PropertyGroup>
       <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
-      <Props>Configuration=$(Configuration);CIBuild=$(CIBuild)</Props>
+      <Props>$(Properties);Configuration=$(Configuration);CIBuild=$(CIBuild)</Props>
     </PropertyGroup>
 
     <ItemGroup>
@@ -53,6 +54,12 @@
       <PreSignTargets Include="Test" Condition="'$(Test)' == 'true'" />
     </ItemGroup>
 
+    <!--
+      Create TestResults directory, in case the repo doesn't contain any test project that is run. 
+      Both MicroBuild and Jenkins fail if the directory is not present.
+    -->
+    <MakeDir Directories="$(ArtifactsTestResultsDir)" Condition="'$(Test)' == 'true'"/>
+    
     <!-- Note: msbuild caches the metaproject for the solution (see https://github.com/Microsoft/msbuild/issues/1695)
          We invalidate the cache by changing the value of __BuildPhase property.
     -->

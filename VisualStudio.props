@@ -4,11 +4,11 @@
 
   <!-- VSIX settings -->
   <PropertyGroup>
+    <DeployExtension Condition="'$(DeployExtension)' == '' and '$(CIBuild)' != 'true'">true</DeployExtension>
+    <DeployExtension Condition="'$(DeployExtension)' == '' and '$(CIBuild)' == 'true'">false</DeployExtension>
     <StartAction>Program</StartAction>
     <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
-    <VisualStudioDeploymentRootSuffix Condition="'$(VisualStudioDeploymentRootSuffix)' == ''">Exp</VisualStudioDeploymentRootSuffix>
-    <StartArguments>/rootsuffix $(VisualStudioDeploymentRootSuffix) /log</StartArguments>
-
+    <StartArguments>/rootsuffix $(VSSDKTargetPlatformRegRootSuffix) /log</StartArguments>
     <UseCodebase>true</UseCodebase>
     <IsProductComponent>true</IsProductComponent>
     <Ngen>true</Ngen>
