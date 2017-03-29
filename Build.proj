@@ -53,12 +53,6 @@
       <PreSignTargets Include="Build" Condition="'$(Build)' == 'true'" />
       <PreSignTargets Include="Test" Condition="'$(Test)' == 'true'" />
     </ItemGroup>
-
-    <!--
-      Create TestResults directory, in case the repo doesn't contain any test project that is run. 
-      Both MicroBuild and Jenkins fail if the directory is not present.
-    -->
-    <MakeDir Directories="$(ArtifactsTestResultsDir)" Condition="'$(Test)' == 'true'"/>
     
     <!-- Note: msbuild caches the metaproject for the solution (see https://github.com/Microsoft/msbuild/issues/1695)
          We invalidate the cache by changing the value of __BuildPhase property.
