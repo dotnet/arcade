@@ -106,7 +106,7 @@
     </Compile>
     <Compile Include="..\common\TestDiscoveryVisitor.cs">
       <Link>Common\TestDiscoveryVisitor.cs</Link>
-    </Compile>    
+    </Compile>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
@@ -124,7 +124,6 @@
     <None Include="XUnit.Runner.Uap_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\Square150x150Logo.scale-200.png" />
