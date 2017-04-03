@@ -15,12 +15,10 @@
   -->
 
   <PropertyGroup Condition="'$(NuspecFile)' != ''">
-    <PackDependsOn>GenerateNuspecProperties;$(PackDependsOn)</PackDependsOn>
+    <GenerateNuspecDependsOn>$(GenerateNuspecDependsOn);GenerateNuspecProperties</GenerateNuspecDependsOn>
   </PropertyGroup>
 
-  <Target Name="GenerateNuspecProperties"
-          BeforeTargets="Pack"
-          Condition="'$(NuspecFile)' != ''">
+  <Target Name="GenerateNuspecProperties" BeforeTargets="GenerateNuspec">
     <PropertyGroup>
       <_NuspecPropertiesTempFile>$(IntermediateOutputPath)NuspecProps.txt</_NuspecPropertiesTempFile>
     </PropertyGroup>
