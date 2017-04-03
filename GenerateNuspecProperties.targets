@@ -8,13 +8,14 @@
     https://github.com/NuGet/Home/wiki/Adding-nuget-pack-as-a-msbuild-target#packing-using-a-nuspec.
     
     Required properties:
-      RepoRoot
       VersionsPropsPath
       ToolsetCompilerPackageDir
+      OutputPath
       IntermediateOutputPath
   -->
 
   <PropertyGroup Condition="'$(NuspecFile)' != ''">
+    <NuspecBasePath>$(OutputPath)</NuspecBasePath>
     <GenerateNuspecDependsOn>$(GenerateNuspecDependsOn);GenerateNuspecProperties</GenerateNuspecDependsOn>
   </PropertyGroup>
 
@@ -30,7 +31,6 @@
     </ReadLinesFromFile>
 
     <PropertyGroup>
-      <NuspecBasePath>$([System.IO.Path]::GetFullPath('$(OutDir)'))</NuspecBasePath>
       <NuspecProperties>version=$(Version);@(_PropsForDependencies, ';')</NuspecProperties>
     </PropertyGroup>
   </Target>
