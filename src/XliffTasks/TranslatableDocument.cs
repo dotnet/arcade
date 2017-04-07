@@ -11,7 +11,7 @@ namespace XliffTasks
     /// <summary>
     /// Represents a document that can be translated by applying substitutions to nodes.
     /// </summary>
-    internal abstract class TranslatableDocument : IDocument
+    internal abstract class TranslatableDocument : Document
     {
         /// <summary>
         /// The nodes of the document that can have substitutions.
@@ -21,16 +21,26 @@ namespace XliffTasks
         /// <summary>
         /// Indicates if content has been loaded in to the document.
         /// </summary>
-        public bool HasContent { get; private set; }
+        public override bool HasContent => _hasContent;
+        private bool _hasContent;
 
         /// <summary>
         /// Loads (or reloads) the document content from the given reader.
         /// </summary>
-        public void Load(TextReader reader)
+        public sealed override void Load(TextReader reader)
         {
             LoadCore(reader);
             Nodes = GetTranslatableNodes().ToList().AsReadOnly();
-            HasContent = true;
+            _hasContent = true;
+        }
+
+        /// <summary>
+        /// Saves the document's content to the given file path.
+        /// </summary>
+        public sealed override void Save(TextWriter writer)
+        {
+            EnsureContent();
+            SaveCore(writer);
         }
 
         /// <summary>
@@ -40,7 +50,7 @@ namespace XliffTasks
         /// </summary>
         public void Translate(IReadOnlyDictionary<string, string> translations)
         {
-            this.EnsureContent();
+            EnsureContent();
 
             foreach (var node in Nodes)
             {
@@ -49,17 +59,7 @@ namespace XliffTasks
                     node.Translate(translation);
                 }
             }
-        }
-
-        /// <summary>
-        /// Saves the document's content (with translations applied if <see cref="Translate" /> was called) to the given writer.
-        /// </summary>
-        public void Save(TextWriter writer)
-        {
-            this.EnsureContent();
-
-            SaveCore(writer);
-        }
+       }
 
         protected abstract void LoadCore(TextReader reader);
 

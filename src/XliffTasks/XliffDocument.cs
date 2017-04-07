@@ -15,19 +15,19 @@ namespace XliffTasks
     /// 
     /// See https://en.wikipedia.org/wiki/XLIFF
     /// </summary>
-    internal sealed class XliffDocument : IDocument
+    internal sealed class XliffDocument : Document
     {
         private XDocument _document;
 
         /// <summary>
         /// Indicates if content has been loaded in to the document.
         /// </summary>
-        public bool HasContent => _document != null;
+        public override bool HasContent => _document != null;
 
         /// <summary>
         /// Loads (or reloads) the document content from the given reader.
         /// </summary>
-        public void Load(TextReader reader)
+        public override void Load(TextReader reader)
         {
             _document = XDocument.Load(reader);
         }
@@ -43,7 +43,7 @@ namespace XliffTasks
             _document = new XDocument(
                 new XElement(ns + "xliff",
                     new XAttribute("xmlns", ns.NamespaceName),
-                    new XAttribute(XNamespace.Xmlns + "xsi",  xsi.NamespaceName),
+                    new XAttribute(XNamespace.Xmlns + "xsi", xsi.NamespaceName),
                     new XAttribute("version", "1.2"),
                     new XAttribute(xsi + "schemaLocation", $"{ns.NamespaceName} xliff-core-1.2-transitional.xsd"),
                     new XElement(ns + "file",
@@ -59,9 +59,9 @@ namespace XliffTasks
         /// <summary>
         /// Saves the document's content (with translations applied if <see cref="Translate" /> was called) to the given file path.
         /// </summary>
-        public void Save(TextWriter writer)
+        public override void Save(TextWriter writer)
         {
-            this.EnsureContent();
+            EnsureContent();
             _document.SaveCustom(writer);
         }
 
@@ -70,7 +70,7 @@ namespace XliffTasks
         /// </summary>
         public void Update(TranslatableDocument sourceDocument, string sourceDocumentName)
         {
-            throw new NotImplementedException(); 
+            throw new NotImplementedException();
         }
 
         /// <summary>
