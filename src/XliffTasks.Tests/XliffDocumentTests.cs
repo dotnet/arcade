@@ -10,7 +10,7 @@ namespace XliffTasks.Tests
     public class XliffDocumentTests
     {
         [Fact]
-        public void NewDocument()
+        public void LoadNewInitializesNewDocumentWithCorrectContent()
         {
             var xliffDocument = new XliffDocument();
             xliffDocument.LoadNew("test.resx", "es");
