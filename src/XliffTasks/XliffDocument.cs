@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace XliffTasks
@@ -68,9 +69,74 @@ namespace XliffTasks
         /// <summary>
         /// Updates this XLIFF document with the source data from the given translatable document.
         /// </summary>
-        public void Update(TranslatableDocument sourceDocument, string sourceDocumentName)
+        /// <returns>True if any changes were made to this document.</returns>
+        public bool Update(TranslatableDocument sourceDocument)
         {
-            throw new NotImplementedException();
+            bool changed = false;
+            Dictionary<string, TranslatableNode> nodesById = sourceDocument.Nodes.ToDictionary(n => n.Id);
+            XNamespace ns = _document.Root.Name.Namespace;
+
+            foreach (XElement unitElement in _document.Descendants(ns + "trans-unit").ToList())
+            {
+                XElement sourceElement = unitElement.Element(ns + "source");
+                XElement noteElement = unitElement.Element(ns + "note");
+                XAttribute idAttribute = unitElement.Attribute("id");
+                XAttribute stateAttribute = unitElement.Element(ns + "target").Attribute("state");
+
+                string id = idAttribute.Value;
+                string state = stateAttribute.Value;
+                string source = sourceElement.Value;
+                string note = noteElement.Value;
+
+                // delete node in document that has been removed from source 
+                if (!nodesById.TryGetValue(id, out TranslatableNode sourceNode))
+                {
+                    unitElement.Remove();
+                    changed = true;
+                    continue;
+                }
+
+                // update trans-unit state if either the source text or associated note has change.
+                if (source != sourceNode.Source || note != sourceNode.Note)
+                {
+                    sourceElement.Value = sourceNode.Source;
+                    noteElement.Value = sourceNode.Note;
+                    noteElement.SelfCloseIfPossible();
+
+                    if (state == "translated")
+                    {
+                        stateAttribute.Value = "needs-review-translation";
+                    }
+
+                    changed = true;
+                }
+
+                // signal to loop below that this node is not new
+                nodesById.Remove(id);
+            }
+
+            // Add new trans-units
+            var bodyElement = _document.Descendants(ns + "body").Single();
+            foreach (TranslatableNode sourceNode in sourceDocument.Nodes)
+            {
+                // Nodes that have been removed from nodesById table are not new and have already been handled.
+                // Do not refactor this check away by iterating over dictionary values as the document order must be maintained deterministically.
+                if (!nodesById.ContainsKey(sourceNode.Id))
+                {
+                    continue;
+                }
+
+                bodyElement.Add(
+                    new XElement(ns + "trans-unit",
+                        new XAttribute("id", sourceNode.Id),
+                        new XElement(ns + "source", sourceNode.Source),
+                        new XElement(ns + "target", new XAttribute("state", "new"), sourceNode.Source),
+                        new XElement(ns + "note"), sourceNode.Note));
+
+                changed = true;
+            }
+
+            return changed;
         }
 
         /// <summary>

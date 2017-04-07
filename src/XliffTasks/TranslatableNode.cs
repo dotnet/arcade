@@ -1,15 +1,30 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Diagnostics;
+
 namespace XliffTasks
 {
     internal abstract class TranslatableNode
     {
         protected TranslatableNode(string id, string source, string note)
         {
-            Id = id;
-            Source = source;
-            Note = note;
+            Id = id ?? throw new ArgumentNullException(nameof(id));
+            Source = source ?? throw new ArgumentNullException(nameof(source));
+            Note = note ?? string.Empty;
+
+            ThrowIfEmpty(id, nameof(id));
+            ThrowIfEmpty(source, nameof(source));
+        }
+
+        private static void ThrowIfEmpty(string value, string parameterName)
+        {
+            Debug.Assert(value != null);
+            if (value.Length == 0)
+            {
+                throw new ArgumentException($"{parameterName} cannot be empty", parameterName);
+            }
         }
 
         /// <summary>
