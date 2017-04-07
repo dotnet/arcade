@@ -10,21 +10,12 @@ namespace XliffTasks
     {
         protected TranslatableNode(string id, string source, string note)
         {
-            Id = id ?? throw new ArgumentNullException(nameof(id));
-            Source = source ?? throw new ArgumentNullException(nameof(source));
+            Validation.ThrowIfNullOrEmpty(id, nameof(id));
+            Validation.ThrowIfNullOrEmpty(source, nameof(source));
+
+            Id = id;
+            Source = source;
             Note = note ?? string.Empty;
-
-            ThrowIfEmpty(id, nameof(id));
-            ThrowIfEmpty(source, nameof(source));
-        }
-
-        private static void ThrowIfEmpty(string value, string parameterName)
-        {
-            Debug.Assert(value != null);
-            if (value.Length == 0)
-            {
-                throw new ArgumentException($"{parameterName} cannot be empty", parameterName);
-            }
         }
 
         /// <summary>
