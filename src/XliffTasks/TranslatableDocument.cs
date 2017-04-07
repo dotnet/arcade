@@ -11,7 +11,7 @@ namespace XliffTasks
     /// <summary>
     /// Represents a document that can be translated by applying substitutions to nodes.
     /// </summary>
-    internal abstract class TranslatableDocument
+    internal abstract class TranslatableDocument : IDocument
     {
         /// <summary>
         /// The nodes of the document that can have substitutions.
@@ -24,31 +24,8 @@ namespace XliffTasks
         public bool HasContent { get; private set; }
 
         /// <summary>
-        /// Loads (or reloads) the document from the given file path.
+        /// Loads (or reloads) the document content from the given reader.
         /// </summary>
-        public void Load(string path)
-        {
-            using (var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                Load(stream);
-            }
-        }
-
-        /// <summary>
-        /// Loads (or reloads) the document from the given stream.
-        /// </summary>
-        public void Load(Stream stream)
-        {
-            using (var reader = new StreamReader(stream))
-            {
-                Load(reader);
-            }
-        }
-
-        /// <summary>
-        /// Loads (or reloads) the document from the given stream.
-        /// </summary>
-        /// <param name="reader"></param>
         public void Load(TextReader reader)
         {
             LoadCore(reader);
@@ -63,7 +40,7 @@ namespace XliffTasks
         /// </summary>
         public void Translate(IReadOnlyDictionary<string, string> translations)
         {
-            EnsureLoaded();
+            this.EnsureContent();
 
             foreach (var node in Nodes)
             {
@@ -75,37 +52,11 @@ namespace XliffTasks
         }
 
         /// <summary>
-        /// Saves the document's content (with translations applied if <see cref="Translate" /> was called) to the given file path.
-        /// </summary>
-        public void Save(string path)
-        {
-            EnsureLoaded();
-
-            using (var stream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.Read))
-            {
-                Save(stream);
-            }
-        }
-
-        /// <summary>
-        /// Saves the document's content (with translations applied if <see cref="Translate" /> was called) to the given stream.
-        /// </summary>
-        public void Save(Stream stream)
-        {
-            EnsureLoaded();
-
-            using (var writer = new StreamWriter(stream))
-            {
-                Save(writer);
-            }
-        }
-
-        /// <summary>
-        /// Saves the document's content (with translations applied if <see cref="Translate" /> was called) to the given path.
+        /// Saves the document's content (with translations applied if <see cref="Translate" /> was called) to the given writer.
         /// </summary>
         public void Save(TextWriter writer)
         {
-            EnsureLoaded();
+            this.EnsureContent();
 
             SaveCore(writer);
         }
@@ -115,13 +66,5 @@ namespace XliffTasks
         protected abstract void SaveCore(TextWriter writer);
 
         protected abstract IEnumerable<TranslatableNode> GetTranslatableNodes();
-
-        private void EnsureLoaded()
-        {
-            if (!HasContent)
-            {
-                throw new InvalidOperationException("No content was loaded.");
-            }
-        }
     }
 }

@@ -21,16 +21,7 @@ namespace XliffTasks
 
         protected override void SaveCore(TextWriter writer)
         {
-            var settings = new XmlWriterSettings
-            {
-                Indent = true,
-                OmitXmlDeclaration = writer is StringWriter,
-            };
-
-            using (var xmlWriter = XmlWriter.Create(writer, settings))
-            {
-                Document.Save(xmlWriter);
-            }
+            Document.SaveCustom(writer);
         }
 
         protected sealed class TranslatableXmlElement : TranslatableNode
