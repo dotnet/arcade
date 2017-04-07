@@ -66,7 +66,7 @@ namespace XliffTasks
         }
 
         /// <summary>
-        /// Updates this XLIFF document with the source data frrom the given translatable document.
+        /// Updates this XLIFF document with the source data from the given translatable document.
         /// </summary>
         public void Update(TranslatableDocument sourceDocument, string sourceDocumentName)
         {
