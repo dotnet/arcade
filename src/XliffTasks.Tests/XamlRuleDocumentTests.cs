@@ -7,7 +7,7 @@ using Xunit;
 
 namespace XliffTasks.Tests
 {
-    public class CpsRuleTranslationTests
+    public class XamlRuleTranslationTests
     {
         [Fact]
         public void BasicLoadAndTranslate()

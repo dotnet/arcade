@@ -1,15 +1,21 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Diagnostics;
+
 namespace XliffTasks
 {
     internal abstract class TranslatableNode
     {
         protected TranslatableNode(string id, string source, string note)
         {
+            Validation.ThrowIfNullOrEmpty(id, nameof(id));
+            Validation.ThrowIfNullOrEmpty(source, nameof(source));
+
             Id = id;
             Source = source;
-            Note = note;
+            Note = note ?? string.Empty;
         }
 
         /// <summary>

@@ -24,5 +24,13 @@ namespace XliffTasks
                 document.Save(xmlWriter);
             }
         }
+
+        public static void SelfCloseIfPossible(this XElement element)
+        {
+            if (element.Value.Length == 0)
+            {
+                element.RemoveNodes();
+            }
+        }
     }
 }
