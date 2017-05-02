@@ -6,27 +6,26 @@ At a high level, the following big steps represent the work to get a dev a repro
 1. Product is (re)built and test run  (yes for now, we'll rebuild the whole thing)
 1. Dev investigates failure
 
-At this time, the hope is that as a first step, we can use Jenkins to "rerun" a failing leg, but do so without publishing or updating the PR.  That way, the full state can be handed back to the dev for their investigation.
-
 For the start of a more complete requirements list, and possible systems/tools to round out the solution in the future, please read the rest of this mini-doc.
+
+Requirements needed for the first round are noted with a (*)
 
 # Dev chooses target environment
 
 ### Requirements
-- Be able to choose a specific hash, or latest
-- Button on MC?  
+- Be able to choose a specific hash, or latest from a given repo
+- Button on MC OR single command line to request 
 
-### Implementation Notes
-For an initial "strawman", the current idea is to use Jenkins to basically redo a run, but not publish or update the PR, and then give the machine to the dev to poke around with.
-
+### Implementation (early) Notes
+For an initial "strawman", the current idea is to use Jenkins to basically redo a run, but not publish or update the PR, and then give the machine to the dev to poke around with.  
 
 # Aquiring machines
 There are two main methods to aquire machines for a reproduction environment: 1) Dev Test Lab (DTL) for VMs and 2) Asset Explorer (AE) for physical hardware like Macs, X64, etc.
 
 ### Requirements
-- Common interface to "check out" a machine (VM or otherwise)
-- Checking out a machine comes with sufficient data to connect and configure
-- The machine should be delivered in a known state which can reasonably be setup to repro
+- *Common interface to "check out" a machine (VM or otherwise)
+- *Checking out a machine comes with sufficient data and access to connect and configure
+- *The machine should be delivered in a known state which can reasonably be setup to repro
 
 ### Implementation Notes
 For an initial "strawman", the current idea is to use Jenkins to basically redo a run, but not publish or update the PR, and then give the machine to the dev to poke around with.
@@ -50,13 +49,12 @@ AE is a tool (originally from Office) which manages inventory in "pools", allowi
 Once a machine is aquired, additional setup is still required in order to support building the product and tests (again) so a reproduction can occur.
 
 ### Requirements
-- Prereqs are either installed, or verified to be installed
-- Debugger and compilers installed
-- Machine config 
-- Exact hash is restored (GitHub is what's initially supported)
+- *Prereqs are either installed, or verified to be installed
+- *Debugger and compilers installed
+- *Exact hash is restored (GitHub is what's initially supported)
 - Matching symbols (especially for when we find a way to NOT rebuild the product)
 - Logs from original failure available
-- Shares already setup
+- *Shares already setup
 - Make it easy to re-run the failing test  (initially, this might just be run all the test again...hopefully we can do better)
 
 ### Implementation Notes
@@ -68,8 +66,16 @@ For an initial "strawman", the current idea is to use Jenkins to basically redo 
 
 
 # Product and Tests are Built
-The right first step is to just rebuild the product again.  Not ideal, but crawl, walk, run....
+The right first step is to just rebuild the product again, and then run test.  Not ideal, but crawl, walk, run....
 
 ### Requirements (not all are needed initially)
+- *Be able to easily build the product, build the test, and then run the tests
 - Be able to easily rebuild a single test so that it can instrumented  (script file already there?)
 - Be able to easily replace bits on the repro box from the dev box
+- Portable Linux support is needed (build on one platform, but run on another)
+
+# Known Challenges
+- Additional cost of VM's might be high.  Need to look for ways to optimize.
+- Access to the repro VM's might be difficult.  Namelyl with permissions and potentially IPs.
+- If Jenkins is chosen as an initial implimentation path, there may be scaling and maintenance challenges.
+- We still want to share VM/Machine aquisition, and if we juse Jenkins initially, this goal would not be significantly furthered.
