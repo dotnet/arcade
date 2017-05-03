@@ -1,3 +1,4 @@
+
 # Overview
 At a high level, the following big steps represent the work to get a dev a reproduction environment
 1. The dev chooses a target environment
@@ -5,6 +6,7 @@ At a high level, the following big steps represent the work to get a dev a repro
 1. Machine is setup and configured so a reproduction can happen
 1. Product is (re)built and test run  (yes for now, we'll rebuild the whole thing)
 1. Dev investigates failure
+1. Environment is decommisioned once the dev is done, or according to policy
 
 For the start of a more complete requirements list, and possible systems/tools to round out the solution in the future, please read the rest of this mini-doc.
 
@@ -64,7 +66,6 @@ For an initial "strawman", the current idea is to use Jenkins to basically redo 
 - dotnet-ci jumping off point: https://github.com/dotnet/dotnet-ci
 - buildtools groovy example: https://github.com/dotnet/buildtools/blob/master/netci.groovy 
 
-
 # Product and Tests are Built
 The right first step is to just rebuild the product again, and then run test.  Not ideal, but crawl, walk, run....
 
@@ -73,6 +74,14 @@ The right first step is to just rebuild the product again, and then run test.  N
 - Be able to easily rebuild a single test so that it can instrumented  (script file already there?)
 - Be able to easily replace bits on the repro box from the dev box
 - Portable Linux support is needed (build on one platform, but run on another)
+
+# Repro Environment is Decommisioned
+Once the dev is done, the environment needs to be decommisioned.
+
+### Requirements (not all are needed initially)
+- *Decommision once dev indicates they are complete with repro
+- *Be able to reasonably produce a "report" of all outstanding environments and their age and dev
+- Decommision environments based on policy (e.g. time, last used, etc)
 
 # Known Challenges
 - Additional cost of VM's might be high.  Need to look for ways to optimize.
