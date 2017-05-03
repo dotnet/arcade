@@ -54,7 +54,7 @@ Once a machine is aquired, additional setup is still required in order to suppor
 - *Exact hash is restored (GitHub is what's initially supported)
 - Matching symbols (especially for when we find a way to NOT rebuild the product)
 - Logs from original failure available
-- *Shares already setup
+- *Provide method to move files onto/off-of machine
 - Make it easy to re-run the failing test  (initially, this might just be run all the test again...hopefully we can do better)
 
 ### Implementation Notes
