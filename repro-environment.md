@@ -1,4 +1,3 @@
-
 # Overview
 At a high level, the following big steps represent the work to get a dev a reproduction environment
 1. The dev chooses a target environment
@@ -15,8 +14,10 @@ Requirements needed for the first round are noted with a (*)
 # Dev chooses target environment
 
 ### Requirements
+- *Dev must have Microsoft credentials that we can manage
 - Be able to choose a specific hash, or latest from a given repo
 - Button on MC OR single command line to request 
+- VSTS git hashes are currently a non-requirement
 
 ### Implementation (early) Notes
 For an initial "strawman", the current idea is to use Jenkins to basically redo a run, but not publish or update the PR, and then give the machine to the dev to poke around with.  
@@ -26,8 +27,10 @@ There are two main methods to aquire machines for a reproduction environment: 1)
 
 ### Requirements
 - *Common interface to "check out" a machine (VM or otherwise)
-- *Checking out a machine comes with sufficient data and access to connect and configure
+- *Checking out a machine comes with sufficient data and access to connect and configure 
 - *The machine should be delivered in a known state which can reasonably be setup to repro
+- Devs needs the ability to list all environments they've asked for, including current state (e.gl. if they're ready or not)
+- Dev should have the ability to give other devs access
 
 ### Implementation Notes
 For an initial "strawman", the current idea is to use Jenkins to basically redo a run, but not publish or update the PR, and then give the machine to the dev to poke around with.
