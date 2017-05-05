@@ -7,9 +7,11 @@ At a high level, the following big steps represent the work to get a dev a repro
 1. Dev investigates failure
 1. Environment is decommisioned once the dev is done, or according to policy
 
+The immediate goal is to find the quickest implimentation that will work for every participant in the .NET Core eco-system.  From there, we can find ways to improve sustainability as well as flesh out feature sets.  For now however, biggest "bang for the buck" is the goal.  From there, we will have learned much and can chart an even better path.
+
 For the start of a more complete requirements list, and possible systems/tools to round out the solution in the future, please read the rest of this mini-doc.
 
-Requirements needed for the first round are noted with a (*)
+**Requirements needed for the first round are noted with a (*)**
 
 # Dev chooses target environment
 
@@ -57,7 +59,7 @@ Once a machine is aquired, additional setup is still required in order to suppor
 - *Prereqs are either installed, or verified to be installed
 - *Debugger and compilers installed
 - *Exact hash is restored (GitHub is what's initially supported)
-- Matching symbols (especially for when we find a way to NOT rebuild the product)
+- *Matching symbols (especially for when we find a way to NOT rebuild the product)
 - Logs from original failure available
 - *Provide method to move files onto/off-of machine
 - Make it easy to re-run the failing test  (initially, this might just be run all the test again...hopefully we can do better)
@@ -77,6 +79,18 @@ The right first step is to just rebuild the product again, and then run test.  N
 - Be able to easily rebuild a single test so that it can instrumented  (script file already there?)
 - Be able to easily replace bits on the repro box from the dev box
 - Portable Linux support is needed (build on one platform, but run on another)
+
+# Test is Run
+This is where the "repro" actually happens
+
+### Requirements
+- *Be able to easily run the failing tests and see the results
+- *Be able to attach a debugger to the test
+- Be able to run only the failing test
+- Be able to find "edge case" (but very expensive) test failures quickly and reasonably
+
+### Implementation Notes
+- Many devs want a "snapshot" of the actual failed instance
 
 # Repro Environment is Decommisioned
 Once the dev is done, the environment needs to be decommisioned.
