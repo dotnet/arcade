@@ -21,7 +21,7 @@ The following document shows the initial two implementation approaches for the f
 
 ## 1st approach
 "Snapshot" of the machine that contains the failure instance. Provision a DTL machine and restore the state so that the dev can poke in it.
-More details to come according to the investigation we are going to do.
+We are going to start an investigation of different ways we could get a "snapshot" of the machines we want. 
 
 ## 2nd approach
 In essence, Jenkins will redo a job (without publishing or updating the PR), and then give the machine to the dev to poke around with. 
@@ -29,7 +29,12 @@ In order to do this, Jenkins jobs will have a way to signal that the dev wants a
 For other types of jobs, it would add a parameter to the job.
 Once Jenkins assigns a machine and gets the resources it will identify the workspace, compress it and upload it to an Azure Storage Account.
 To provision the machine we'll use DTL. When the machine is ready, it will download and restore the selected workspace.
-After this is done, we'lllet the Dev know how to access the machine.
+After this is done, we'll let the Dev know how to access the machine.
+
+## Progress
+For information about the progress, please go to the following Issues:
+- Issue [751](https://github.com/dotnet/core-eng/issues/751).
+- Issue [750](https://github.com/dotnet/core-eng/issues/750).
 
 ## Tools/Systems that will probably help in the future
 *DTL*
