@@ -44,7 +44,23 @@
     <Capability Name="internetClient" />
     <Capability Name="internetClientServer" />
     <Capability Name="privateNetworkClientServer" />
-    <uap:Capability Name="enterpriseAuthentication" />    
+    <Capability Name="codeGeneration" />
+    <Capability Name="appLicensing" />
+    <Capability Name="packagePolicySystem" />
+    <Capability Name="networkDataPlanProvisioning" />
+    <Capability Name="networkConnectionManagerProvisioning" />
+    <Capability Name="userPrincipalName" />
+    <Capability Name="networkingVpnProvider" />
+    <uap:Capability Name="enterpriseAuthentication" />
+    <uap:Capability Name="sharedUserCertificates" /> 
     <uap:Capability Name="documentsLibrary" />
+    <uap:Capability Name="musicLibrary" />
+    <uap:Capability Name="picturesLibrary" />
+    <uap:Capability Name="videosLibrary" />
+    <uap:Capability Name="removableStorage" />
+    <uap:Capability Name="appointments" />
+    <uap:Capability Name="contacts" />
+    <uap:Capability Name="recordedCallsFolder" />
+    <uap:Capability Name="userAccountInformation" />
   </Capabilities>
 </Package>
