@@ -28,17 +28,42 @@ namespace Xunit.NetCore.Extensions
             Debug.Assert(ctorArgs.Count() >= 2);
 
             string issue = ctorArgs.First().ToString();
-            TestPlatforms platforms = (TestPlatforms)ctorArgs.Last();
+            TestPlatforms platforms = TestPlatforms.Any;
+            TargetFrameworkMonikers frameworks = (TargetFrameworkMonikers)0;
+            
+            foreach (object arg in ctorArgs.Skip(1)) // First argument is the issue number.
+            {
+                if (arg is TestPlatforms)
+                {
+                    platforms = (TestPlatforms)arg;
+                }
+                else if (arg is TargetFrameworkMonikers)
+                {
+                    frameworks = (TargetFrameworkMonikers)arg;
+                }
+            }
+        
             if ((platforms.HasFlag(TestPlatforms.FreeBSD) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("FREEBSD"))) ||
                 (platforms.HasFlag(TestPlatforms.Linux) && RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) ||
                 (platforms.HasFlag(TestPlatforms.NetBSD) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("NETBSD"))) ||
                 (platforms.HasFlag(TestPlatforms.OSX) && RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) ||
                 (platforms.HasFlag(TestPlatforms.Windows) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)))
             {
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing);
+                if (frameworks.HasFlag(TargetFrameworkMonikers.NetFramework))
+                    yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetfxTest);
+                if (frameworks.HasFlag(TargetFrameworkMonikers.Netcoreapp))
+                    yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcoreappTest);
+                if (frameworks.HasFlag(TargetFrameworkMonikers.Uap))
+                    yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonUapTest);
+                if (frameworks.HasFlag(TargetFrameworkMonikers.UapAot))
+                    yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonUapAotTest);
+                if (frameworks.HasFlag(TargetFrameworkMonikers.NetcoreCoreRT))
+                    yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcoreCoreRTTest);
+                if (frameworks == (TargetFrameworkMonikers)0)
+                    yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing);
+
                 yield return new KeyValuePair<string, string>(XunitConstants.ActiveIssue, issue);
             }
-
         }
     }
 }
