@@ -1,5 +1,5 @@
 # Implementation Details 1st iteration
-The following document shows the initial two implementation approaches for the first iteration of the repro environment solution according to the requirements.
+The following document shows the initial implementation approaches for the first iteration of the repro environment solution according to the requirements.
 
 # Requirements
 - Dev must have Microsoft credentials that we can manage
@@ -18,20 +18,28 @@ The following document shows the initial two implementation approaches for the f
 - Be able to reasonably produce a "report" of all outstanding environments and their age and dev
 
 # Implementation 
+[Implementation](./implementation.png?raw=true)
 
-## 1st approach
-"Snapshot" of the machine that contains the failure instance. Provision a DTL machine and restore the state so that the dev can poke in it.
-More details to come according to the investigation we are going to do.
+## 1. Signal job to repro
+Jenkins will redo a job (without publishing or updating the PR). In order to do this, Jenkins jobs will have a way to signal that the dev wants a repo from that job. For the purposes of this iteration, the jobs are going to have an extra paramenter that when used, it will signal the job as a repro environment job.
 
-## 2nd approach
-In essence, Jenkins will redo a job (without publishing or updating the PR), and then give the machine to the dev to poke around with. 
-In order to do this, Jenkins jobs will have a way to signal that the dev wants a repo from that job. In the case of Pipeline jobs, it would use the CI SDK to flag the job.
-For other types of jobs, it would add a parameter to the job.
-Once Jenkins assigns a machine and gets the resources it will identify the workspace, compress it and upload it to an Azure Storage Account.
-To provision the machine we'll use DTL. When the machine is ready, it will download and restore the selected workspace.
-After this is done, we'lllet the Dev know how to access the machine.
+## 2. Save running environment
+Jenkins machines are configured to use unmanaged disks. It uses OS Disk and Resource Disks. To capture the environment we are going to "Snapshot" the OS Disk, compress the workspace (located in the Resource Disk) and upload both information to an Azure Storage Account.
 
-## Tools/Systems that will probably help in the future
+## 3. Notify user
+Display in the Jenkins console a message to tell the user that the environment has been saved and what the next steps are to run the functionality to create a new VM.
+
+## 4. Create VM with repro environment
+Execute an Azure Function with specified parameters that will create a VM with the same OS Disk that was used by the original job and restore the workspace directory. 
+In case this is not possible, the VM will contain information about how to connect and download the workspace from Azure.
+
+The machine will also contain scripts/configuration/readme files that will help the developer use the new environment.
+
+## 5. Notify user
+Display in the function console a message about the machine created and how to connect to it.
+
+
+# Tools/Systems that will probably help in the future
 *DTL*
 - VM image management happens here (would love to find a way to share with CI and VSTS)
 - Special artifacts selectable
