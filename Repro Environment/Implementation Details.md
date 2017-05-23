@@ -38,6 +38,10 @@ The machine will also contain scripts/configuration/readme files that will help 
 ## 5. Notify user
 Display in the function console a message about the machine created and how to connect to it.
 
+## Progress
+For information about the progress, please go to the following Issues:
+- Issue [751](https://github.com/dotnet/core-eng/issues/751).
+- Issue [750](https://github.com/dotnet/core-eng/issues/750).
 
 # Tools/Systems that will probably help in the future
 *DTL*
