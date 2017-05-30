@@ -62,7 +62,7 @@ For information about the progress, please go to the following Issues:
 - Independent of the outcome of the steps to save the OS Disk and the workspace, always enable the Jenkins process before finishing a Job.
 - The Jenkins machines are hosted under the Subscription `DDDotnetCIClients`. The application in charge of taking the snapshot needs to have read permission to the Subscription.
 - The application/Azure functions created need to behave read and write access to a Storage Account under the same Subscription the Jenkins machines are.
-- The application created needs to handle at least two scenarios for the snapshots: 
+- The application created needs to handle at least the following scenarios for the snapshots: 
   - Managed Disks
   - Un-Managed Disks
   - VM Scale Sets
@@ -71,6 +71,7 @@ For information about the progress, please go to the following Issues:
   - Upload the compressed file to Azure. => Windows machines have AZCopy installed. We need to figure out how to use the Azure CLI to upload files to Azure in non-windows machines.
   - Call a service in charge of the snapshot. => So far, the Windows machines have PowerShell. We need to figure a way to call the service on non-windows machines. It could be cURL or wget.
 - The service in charge of creating a new VM from a snapshot needs to have access to the Subscription where the VHD and the workspace are stored.
+- To create a VM we need to manage user credentials so we the user that requested the machine can have access to it.
 - The Subscription where the Jenkins machines are should have enough public IPs or other mechanisms that the new created VMs could use for the users to connect to them.
 - Moving a snapshot from one Subscription group o another is costly and could take more than 4 hours.
 
