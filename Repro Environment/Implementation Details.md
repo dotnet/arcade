@@ -65,10 +65,11 @@ For information about the progress, please go to the following Issues:
 - The application created needs to handle at least two scenarios for the snapshots: 
   - Managed Disks
   - Un-Managed Disks
+  - VM Scale Sets
 - Installing new programs in the Jenkins machines is not a trivial process so we need to adapt to what we have available. We need:
-  - Compress and decompress files. => So far, the Windows machines have 7z installed. We need to verify that we can use other compression methods in non-windows machines.
+  - Compress and decompress files. => So far, the Windows machines have 7z installed. We need to verify that we can use other compression methods, like p7zip, in non-windows machines.
   - Upload the compressed file to Azure. => Windows machines have AZCopy installed. We need to figure out how to use the Azure CLI to upload files to Azure in non-windows machines.
-  - Call a service in charge of the snapshot. => So far, the Windows machines have PowerShell. We need to figure a way to call the service on non-windows machines.
+  - Call a service in charge of the snapshot. => So far, the Windows machines have PowerShell. We need to figure a way to call the service on non-windows machines. It could be cURL or wget.
 - The service in charge of creating a new VM from a snapshot needs to have access to the Subscription where the VHD and the workspace are stored.
 - The Subscription where the Jenkins machines are should have enough public IPs or other mechanisms that the new created VMs could use for the users to connect to them.
 - Moving a snapshot from one Subscription group o another is costly and could take more than 4 hours.
