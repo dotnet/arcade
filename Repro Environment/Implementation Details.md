@@ -21,7 +21,7 @@ The following document shows the initial implementation approaches for the first
 ![Implementation](./implementation.PNG?raw=true)
 
 ## 1. Signal job to repro
-Jenkins will redo a job (without publishing or updating the PR). In order to do this, Jenkins jobs will have a way to signal that the dev wants a repo from that job. For the purposes of this iteration, the jobs are going to have an extra paramenter that when used, it will signal the job as a repro environment job.
+Jenkins will redo a job (without publishing or updating the PR). In order to do this, Jenkins jobs will have a way to signal that the dev wants a repro from that job. For the purposes of this iteration, the jobs are going to have an extra paramenter that when used, it will signal the job as a repro environment job.
 
 ## 2. Save running environment
 Jenkins machines are configured to use unmanaged disks. It uses OS Disk and Resource Disks. To capture the environment we are going to "Snapshot" the OS Disk, compress the workspace (located in the Resource Disk) and upload both information to an Azure Storage Account.
