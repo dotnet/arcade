@@ -76,3 +76,18 @@ Once the dev is done, the environment needs to be decommisioned.
 - Access to the repro VM's might be difficult.  Namelyl with permissions and potentially IPs.
 - If Jenkins is chosen as an initial implimentation path, there may be scaling and maintenance challenges.
 - We still want to share VM/Machine aquisition, and if we juse Jenkins initially, this goal would not be significantly furthered.
+
+# Tools/Systems that will probably help in the future
+*DTL*
+- VM image management happens here (would love to find a way to share with CI and VSTS)
+- Special artifacts selectable
+- https://microsoft.sharepoint.com/teams/DD_DDIT/DDITLabs/Pages/Azure-DTL.aspx
+
+*Asset Explorer (AE)*
+
+AE is a tool (originally from Office) which manages inventory in "pools", allowing for check out and check in.  It does not manage the machines directly, but is simply a database of sort to keep track what's available and who has what.  The good news is that it has a web API.
+
+- Our pool is \STB\DevDiv\DotNet
+- Web services url is http://aee/ws
+- To install the AE client is http://aee/installae.  IE is needed to install the client.
+- Contact: Dale Hirt in DDIT
