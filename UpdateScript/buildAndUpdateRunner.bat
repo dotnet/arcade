@@ -51,6 +51,7 @@ setlocal
     xcopy /y %_source%\XUnit.Runner.Uap.exe %_dest%\
     xcopy /y %_source%\XUnit.Runner.Uap.xr.xml %_dest%\
     xcopy /y %_source%\xunit.runner.utility.dotnet.dll %_dest%\
+    xcopy /y %_source%\RunnerRemoteExecutionService.winmd %_dest%\
 
     xcopy /y "C:\Program Files\WindowsApps\Microsoft.VCLibs.140.00_14.0.24123.0_x64__8wekyb3d8bbwe\*.dll" %_dest%\
     xcopy /y "C:\Program Files\WindowsApps\Microsoft.NET.CoreRuntime.1.1_1.1.24920.0_x64__8wekyb3d8bbwe\uaphost.dll" %_dest%\

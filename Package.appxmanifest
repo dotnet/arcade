@@ -37,6 +37,9 @@
             </uap:SupportedFileTypes>
           </uap:FileTypeAssociation>
         </uap:Extension>
+        <uap:Extension Category="windows.appService" EntryPoint="RunnerRemoteExecutionService.RemoteExecutor">
+          <uap:AppService Name="com.microsoft.corefxuaptests"/>
+        </uap:Extension>        
       </Extensions>
     </Application>
   </Applications>

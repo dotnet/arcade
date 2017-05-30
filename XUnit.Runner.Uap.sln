@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26209.1
+VisualStudioVersion = 15.0.26430.6
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnit.Runner.Uap", "XUnit.Runner.Uap.csproj", "{8C6C0E38-4E67-4E89-973F-6AB7786B8A14}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunnerRemoteExecutionServiceUAP", "RunnerRemoteExecutionServiceUAP\RunnerRemoteExecutionServiceUAP.csproj", "{A5A5BB82-734B-443A-99AE-AAC7D7CAA03B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,18 @@ Global
 		{8C6C0E38-4E67-4E89-973F-6AB7786B8A14}.Release|x86.ActiveCfg = Release|x86
 		{8C6C0E38-4E67-4E89-973F-6AB7786B8A14}.Release|x86.Build.0 = Release|x86
 		{8C6C0E38-4E67-4E89-973F-6AB7786B8A14}.Release|x86.Deploy.0 = Release|x86
+		{A5A5BB82-734B-443A-99AE-AAC7D7CAA03B}.Debug|ARM.ActiveCfg = Debug|ARM
+		{A5A5BB82-734B-443A-99AE-AAC7D7CAA03B}.Debug|ARM.Build.0 = Debug|ARM
+		{A5A5BB82-734B-443A-99AE-AAC7D7CAA03B}.Debug|x64.ActiveCfg = Debug|x64
+		{A5A5BB82-734B-443A-99AE-AAC7D7CAA03B}.Debug|x64.Build.0 = Debug|x64
+		{A5A5BB82-734B-443A-99AE-AAC7D7CAA03B}.Debug|x86.ActiveCfg = Debug|x86
+		{A5A5BB82-734B-443A-99AE-AAC7D7CAA03B}.Debug|x86.Build.0 = Debug|x86
+		{A5A5BB82-734B-443A-99AE-AAC7D7CAA03B}.Release|ARM.ActiveCfg = Release|ARM
+		{A5A5BB82-734B-443A-99AE-AAC7D7CAA03B}.Release|ARM.Build.0 = Release|ARM
+		{A5A5BB82-734B-443A-99AE-AAC7D7CAA03B}.Release|x64.ActiveCfg = Release|x64
+		{A5A5BB82-734B-443A-99AE-AAC7D7CAA03B}.Release|x64.Build.0 = Release|x64
+		{A5A5BB82-734B-443A-99AE-AAC7D7CAA03B}.Release|x86.ActiveCfg = Release|x86
+		{A5A5BB82-734B-443A-99AE-AAC7D7CAA03B}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
