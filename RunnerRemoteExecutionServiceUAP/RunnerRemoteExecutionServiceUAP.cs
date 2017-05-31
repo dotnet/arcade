@@ -16,6 +16,7 @@ namespace RunnerRemoteExecutionService
     {
         private BackgroundTaskDeferral backgroundTaskDeferral;
         private AppServiceConnection appServiceconnection;
+        internal const int SuccessExitCode = 42;
 
         public void Run(IBackgroundTaskInstance taskInstance)
         {
@@ -61,8 +62,8 @@ namespace RunnerRemoteExecutionService
             string methodName;
             string[] additionalArgs;
 
-            // default the results to 0 as success. We override it at failures.
-            returnData["Results"] = 0;
+            // default the results to SuccessExitCode as success. We override it at failures.
+            returnData["Results"] = SuccessExitCode;
 
             // The message expects to be passed the target assembly name to load, the type
             // from that assembly to find, and the method from that assembly to invoke.
