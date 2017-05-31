@@ -4,7 +4,7 @@
 using System;
 using System.IO;
 
-namespace XliffTasks
+namespace XliffTasks.Model
 {
     internal abstract class Document
     {

@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.Xml.Linq;
 
-namespace XliffTasks
+namespace XliffTasks.Model
 {
     /// <summary>
     /// A <see cref="TranslatableDocument"/> for files in .resx format.
@@ -25,7 +25,7 @@ namespace XliffTasks
                 string name = node.Attribute("name").Value;
                 XElement valueElement = node.Element("value");
                 string value = valueElement?.Value;
-                string comment = node.Element("comment")?.Value;
+                string comment = node.Element("comment")?.Value ?? "";
 
                 // skip designer goo that should not be translated
                 if (name.StartsWith(">>") || name.EndsWith(".LayoutSettings"))

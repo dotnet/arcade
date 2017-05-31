@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="**\*.cs" />
     <Content Include="build\*" PackagePath="build" />
+    <Content Include="buildCrossTargeting\*" PackagePath="buildCrossTargeting" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp1.1'">
@@ -20,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
+    <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />

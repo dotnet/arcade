@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using XliffTasks.Model;
 using Xunit;
 
 namespace XliffTasks.Tests

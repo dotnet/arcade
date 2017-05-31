@@ -1,0 +1,30 @@
+﻿<!-- Copyright (c) .NET Foundation and contributors. All rights reserved.                               -->
+<!-- Licensed under the MIT license. See LICENSE file in the project root for full license information. -->
+
+<Project>
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+
+    <!-- IntermediateOutputPath isn't necessarily set in outer-build context -->
+    <XlfIntermediateOutputPath Condition="'$(XlfIntermediateOutputPath)' == '' and '$(IntermediateOutputPath)' == ''">$(BaseIntermediateOutputPath)$(Configuration)\$(MSBuildProjectName).xlf\</XlfIntermediateOutputPath>
+  </PropertyGroup>
+
+  <!-- Reuse inner build targets... -->
+  <Import Project="$(MSBuildThisFileDirectory)..\build\XliffTasks.targets" />
+
+  <!--
+    ...but override XlfSource items across all inner builds. This is necessary because
+    items might be conditioned on target framework and default globbed items are not
+    present in outer build context.
+    -->
+  <Target Name="GetXlfSources" DependsOnTargets="_ComputeTargetFrameworkItems">
+    <MSBuild Projects="@(_InnerBuildProjects)" Targets="GetXlfSources">
+      <Output TaskParameter="TargetOutputs" ItemName="_InnerXlfSource"/>
+    </MSBuild>
+    <ItemGroup>
+      <XlfSource Include="@(_InnerXlfSource->Distinct())" Exclude="@(XlfSource)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
