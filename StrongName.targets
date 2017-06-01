@@ -4,7 +4,6 @@
     Reads variables:
       SignAssembly    "true" to sign the output assembly of the current project 
       SignType        "real" to real-sign the outputs (set by microbuild as an environment variable)
-      BuildingProject "true" if building from command line, "false" to indicate a design-time build
     
     Writes variables:
       DelaySign
@@ -16,8 +15,7 @@
   <Choose>
     <When Condition="'$(SignAssembly)' == 'true'">
       <Choose>
-        <When Condition="'$(SignType)' == 'real' OR '$(BuildingProject)' == 'false'">
-          <!-- We are either real-signing or doing a design build, so we need to delay sign -->
+        <When Condition="'$(SignType)' == 'real'">
           <PropertyGroup>
             <DelaySign>true</DelaySign>
             <PublicSign>false</PublicSign>
@@ -25,7 +23,6 @@
         </When>
 
         <Otherwise>
-          <!-- We are not real-signing or doing a design build, so we need to public sign -->
           <PropertyGroup>
             <DelaySign>false</DelaySign>
             <PublicSign>true</PublicSign>
