@@ -73,7 +73,8 @@ namespace XliffTasks.Model
             Dictionary<string, TranslatableNode> nodesById = sourceDocument.Nodes.ToDictionary(n => n.Id);
             XNamespace ns = _document.Root.Name.Namespace;
 
-            XAttribute originalAttribute = _document.Root.Element(ns + "file").Attribute("original");
+            XElement fileElement = _document.Root.Element(ns + "file");
+            XAttribute originalAttribute = fileElement.Attribute("original");
             if (originalAttribute.Value != sourceDocumentId)
             {
                 // update original path in case where user has renaned source file and corresponding xlf
@@ -81,7 +82,17 @@ namespace XliffTasks.Model
                 changed = true;
             }
 
-            foreach (XElement unitElement in _document.Descendants(ns + "trans-unit").ToList())
+            XElement bodyElement = fileElement.Element(ns + "body");
+            XElement groupElement = bodyElement.Element(ns + "group");
+
+            if (groupElement != null && !groupElement.Elements().Any())
+            {
+                // remove unnecessary empty group added by older tool. We don't want to bother keeping that unnecessary id up-to-date.
+                groupElement.Remove();
+                changed = true;
+            }
+
+            foreach (XElement unitElement in bodyElement.Descendants(ns + "trans-unit").ToList())
             {
                 XElement sourceElement = unitElement.Element(ns + "source");
                 XElement targetElement = unitElement.Element(ns + "target");
@@ -137,7 +148,6 @@ namespace XliffTasks.Model
             }
 
             // Add new trans-units
-            var bodyElement = _document.Descendants(ns + "body").Single();
             foreach (TranslatableNode sourceNode in sourceDocument.Nodes)
             {
                 // Nodes that have been removed from nodesById table are not new and have already been handled.
