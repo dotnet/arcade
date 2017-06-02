@@ -76,5 +76,14 @@ For information about the progress, please go to the following Issues:
 - Moving a snapshot from one Subscription group o another is costly and could take more than 4 hours.
 
 ## Stakeholders:
--...
-
+- As much as possible have the repro tool working for both Helix and Jenkins.
+- Create a dotnet-bot command to trigger the reproBuild job execution fro the comments of the PR.
+- When creating the VM, is it neccesary to have specific user/password combination? can we use a generic one?
+- If there is more input required from the user, ask everything in one place, for example, when re-building the failing Job.
+- For the prototype to have more impact, the repro tool should include jobs running in Linux too.
+- When there is a transiet error, make sure eveything that was created is correctly deleted.
+- Evaluate retention policies and the managment of the VMs. For example, what should a dev do when it is done with the VM?
+- Once the dev connects to the rehydrated machine, put information in the Desktop about the machine, the folders, where to start and how to repro the issue.
+- Make the process more automatized. For POC purposes is ok, but for real use it involves too many steps.
+- Consider the option to turn the ReproBuild option ON by default in specific Jobs that are known to run corner cases.
+- Re-consider the Subscription we are currently using. There could be security and IPs limitation.
