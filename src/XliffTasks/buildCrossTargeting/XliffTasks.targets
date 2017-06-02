@@ -5,26 +5,27 @@
 
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-
-    <!-- IntermediateOutputPath isn't necessarily set in outer-build context -->
-    <XlfIntermediateOutputPath Condition="'$(XlfIntermediateOutputPath)' == '' and '$(IntermediateOutputPath)' == ''">$(BaseIntermediateOutputPath)$(Configuration)\$(MSBuildProjectName).xlf\</XlfIntermediateOutputPath>
   </PropertyGroup>
 
-  <!-- Reuse inner build targets... -->
-  <Import Project="$(MSBuildThisFileDirectory)..\build\XliffTasks.targets" />
+  <Target Name="UpdateXlfOnBuild"
+          DependsOnTargets="UpdateXlf"
+          BeforeTargets="DispatchToInnerBuilds"
+          Condition="'$(EnableXlfLocalization)' == 'true' and '$(UpdateXlfOnBuild)' == 'true'"
+          />
 
-  <!--
-    ...but override XlfSource items across all inner builds. This is necessary because
-    items might be conditioned on target framework and default globbed items are not
-    present in outer build context.
-    -->
-  <Target Name="GetXlfSources" DependsOnTargets="_ComputeTargetFrameworkItems">
-    <MSBuild Projects="@(_InnerBuildProjects)" Targets="GetXlfSources">
-      <Output TaskParameter="TargetOutputs" ItemName="_InnerXlfSource"/>
-    </MSBuild>
+  <Target Name="UpdateXlf">
     <ItemGroup>
-      <XlfSource Include="@(_InnerXlfSource->Distinct())" Exclude="@(XlfSource)" />
+      <_XlfTargetFramework Include="$(TargetFrameworks)" />
     </ItemGroup>
+
+    <!--
+      These inner builds cannot be parallelized as they would race to 
+      update the same inner xlf files.
+    -->
+    <MSBuild Projects="$(MSBuildProjectFile)"
+             Targets="UpdateXlf"
+             Properties="TargetFramework=%(_XlfTargetFramework.Identity)"
+             />
   </Target>
 
 </Project>

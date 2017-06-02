@@ -42,8 +42,9 @@
 
     <!--
       This is an "inner build" of a cross-targeted project if there are multiple target frameworks, but 
-      we're instantiated with a single one. We musn't update .xlf source files during an inner build
-      because inner builds happen in parallel, which would cause a race when modifying the same files.
+      we're instantiated with a single one. We musn't trigger an update  of .xlf source files on inner build
+      because inner builds happen in parallel, which would cause a race when modifying the same files. Instead,
+      there is an outer build trigger that calls inner UpdateXlf serially.
     -->
     <_IsInnerXlfBuild Condition="'$(TargetFrameworks)' != '' and '$(TargetFramework)' != ''">true</_IsInnerXlfBuild>
   </PropertyGroup>
@@ -65,7 +66,7 @@
 
   <Target Name="UpdateXlfOnBuild"
           Condition="'$(EnableXlfLocalization)' == 'true' and '$(UpdateXlfOnBuild)' == 'true' and '$(_IsInnerXlfBuild)' != 'true'"
-          BeforeTargets="Build;DispatchToInnerBuilds;$(BuildDependsOn)"
+          BeforeTargets="BeforeBuild"
           DependsOnTargets="UpdateXlf"
           />
   
