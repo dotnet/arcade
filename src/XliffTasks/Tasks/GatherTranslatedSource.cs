@@ -49,15 +49,13 @@ namespace XliffTasks.Tasks
         {
             // Set link metadata to logically locate translated source next to untranslated source
             // so that the correct resource names are generated.
-
             string link = xlf.GetMetadata(MetadataKey.Link);
-            string linkFileName = Path.GetFileName(translatedFullPath);
-
-            if (!string.IsNullOrEmpty(link))
+            if (string.IsNullOrEmpty(link))
             {
                 link = xlf.GetMetadataOrThrow(MetadataKey.XlfSource);
             }
 
+            string linkFileName = Path.GetFileName(translatedFullPath);
             if (link.IndexOfAny(s_directorySeparatorChars) < 0)
             {
                 link = linkFileName;
