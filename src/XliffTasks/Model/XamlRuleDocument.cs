@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.Xml.Linq;
 
-namespace XliffTasks
+namespace XliffTasks.Model
 {
     /// <summary>
     /// A <see cref="TranslatableDocument"/> for files in CPS rule .xaml format
@@ -26,7 +26,7 @@ namespace XliffTasks
                     yield return new TranslatableXmlAttribute(
                         id: GenerateId(attribute),
                         source: attribute.Value,
-                        note: "",
+                        note: null,
                         attribute: attribute);
                 }
             }

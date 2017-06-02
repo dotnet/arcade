@@ -1,13 +1,12 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace XliffTasks
+namespace XliffTasks.Model
 {
     /// <summary>
     /// Represents a document in XLIFF format which can be updated from source from
@@ -16,7 +15,7 @@ namespace XliffTasks
     /// 
     /// See https://en.wikipedia.org/wiki/XLIFF
     /// </summary>
-    internal sealed class XliffDocument : Document
+    internal sealed class XlfDocument : Document
     {
         private XDocument _document;
 
@@ -36,7 +35,7 @@ namespace XliffTasks
         /// <summary>
         /// Loads initial document content for a new XLIFF document.
         /// </summary>
-        public void LoadNew(string sourceDocumentId, string targetLanguage)
+        public void LoadNew(string targetLanguage)
         {
             XNamespace ns = "urn:oasis:names:tc:xliff:document:1.2";
             XNamespace xsi = "http://www.w3.org/2001/XMLSchema-instance";
@@ -51,10 +50,8 @@ namespace XliffTasks
                         new XAttribute("datatype", "xml"),
                         new XAttribute("source-language", "en"),
                         new XAttribute("target-language", targetLanguage),
-                        new XAttribute("original", sourceDocumentId),
-                        new XElement(ns + "body",
-                            new XElement(ns + "group",
-                                new XAttribute("id", sourceDocumentId))))));
+                        new XAttribute("original", "_"), // placeholder will be replaced on first update
+                        new XElement(ns + "body"))));
         }
 
         /// <summary>
@@ -70,25 +67,34 @@ namespace XliffTasks
         /// Updates this XLIFF document with the source data from the given translatable document.
         /// </summary>
         /// <returns>True if any changes were made to this document.</returns>
-        public bool Update(TranslatableDocument sourceDocument)
+        public bool Update(TranslatableDocument sourceDocument, string sourceDocumentId)
         {
             bool changed = false;
             Dictionary<string, TranslatableNode> nodesById = sourceDocument.Nodes.ToDictionary(n => n.Id);
             XNamespace ns = _document.Root.Name.Namespace;
 
+            XAttribute originalAttribute = _document.Root.Element(ns + "file").Attribute("original");
+            if (originalAttribute.Value != sourceDocumentId)
+            {
+                // update original path in case where user has renaned source file and corresponding xlf
+                originalAttribute.Value = sourceDocumentId;
+                changed = true;
+            }
+
             foreach (XElement unitElement in _document.Descendants(ns + "trans-unit").ToList())
             {
                 XElement sourceElement = unitElement.Element(ns + "source");
+                XElement targetElement = unitElement.Element(ns + "target");
                 XElement noteElement = unitElement.Element(ns + "note");
                 XAttribute idAttribute = unitElement.Attribute("id");
-                XAttribute stateAttribute = unitElement.Element(ns + "target").Attribute("state");
+                XAttribute stateAttribute = targetElement.Attribute("state");
 
                 string id = idAttribute.Value;
                 string state = stateAttribute.Value;
                 string source = sourceElement.Value;
                 string note = noteElement.Value;
 
-                // delete node in document that has been removed from source 
+                // delete node in document that has been removed from source.
                 if (!nodesById.TryGetValue(id, out TranslatableNode sourceNode))
                 {
                     unitElement.Remove();
@@ -97,15 +103,30 @@ namespace XliffTasks
                 }
 
                 // update trans-unit state if either the source text or associated note has change.
-                if (source != sourceNode.Source || note != sourceNode.Note)
+                if (source != sourceNode.Source || (sourceNode.Note != null && note != sourceNode.Note))
                 {
                     sourceElement.Value = sourceNode.Source;
-                    noteElement.Value = sourceNode.Note;
-                    noteElement.SelfCloseIfPossible();
 
-                    if (state == "translated")
+                    // if sourceNode.Note is null, it indicates that the source format can't have notes, in which case
+                    // they may be applied directly to the xlf by the user and we should not revert that on update
+                    if (sourceNode.Note != null)
                     {
-                        stateAttribute.Value = "needs-review-translation";
+                        noteElement.Value = sourceNode.Note;
+                        noteElement.SelfCloseIfPossible();
+                    }
+
+                    switch (state)
+                    {
+                        case "new":
+                            // when a new string gets modified before it has been translated,
+                            // update untranslated target to match the new source
+                            targetElement.Value = sourceNode.Source;
+                            break;
+
+                        case "translated":
+                            // flag strings that have been modified after translation for review/re-translation
+                            stateAttribute.Value = "needs-review-translation";
+                            break;
                     }
 
                     changed = true;
@@ -146,12 +167,12 @@ namespace XliffTasks
         public IReadOnlyDictionary<string, string> GetTranslations()
         {
             var dictionary = new Dictionary<string, string>();
-            var ns = _document.Root.Name.Namespace;
+            XNamespace ns = _document.Root.Name.Namespace;
 
             foreach (var element in _document.Descendants(ns + "trans-unit"))
             {
                 string id = element.Attribute("id").Value;
-                string target = element.Attribute("target").Value;
+                string target = element.Element(ns + "target").Value;
 
                 dictionary.Add(id, target);
             }

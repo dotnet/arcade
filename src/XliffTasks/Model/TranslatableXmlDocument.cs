@@ -5,7 +5,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace XliffTasks
+namespace XliffTasks.Model
 {
     /// <summary>
     /// A <see cref="TranslatableDocument"/> backed by an XML-based format

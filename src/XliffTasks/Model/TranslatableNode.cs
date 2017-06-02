@@ -1,10 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Diagnostics;
-
-namespace XliffTasks
+namespace XliffTasks.Model
 {
     internal abstract class TranslatableNode
     {
@@ -15,7 +12,7 @@ namespace XliffTasks
 
             Id = id;
             Source = source;
-            Note = note ?? string.Empty;
+            Note = note;
         }
 
         /// <summary>
@@ -30,6 +27,7 @@ namespace XliffTasks
 
         /// <summary>
         /// A comment associated with the node.
+        /// Null if this node cannot have comments, empty if it has none.
         /// </summary>
         public string Note { get; }
 

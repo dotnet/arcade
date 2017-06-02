@@ -2,27 +2,26 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.IO;
+using XliffTasks.Model;
 using Xunit;
 
 namespace XliffTasks.Tests
 {
-    public class XliffDocumentTests
+    public class XlfDocumentTests
     {
         [Fact]
         public void LoadNewInitializesNewDocumentWithCorrectContent()
         {
-            var xliffDocument = new XliffDocument();
-            xliffDocument.LoadNew("test.resx", "es");
+            var xliffDocument = new XlfDocument();
+            xliffDocument.LoadNew("es");
 
             var writer = new StringWriter();
             xliffDocument.Save(writer);
 
             string expected =
 @"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
-  <file datatype=""xml"" source-language=""en"" target-language=""es"" original=""test.resx"">
-    <body>
-      <group id=""test.resx"" />
-    </body>
+  <file datatype=""xml"" source-language=""en"" target-language=""es"" original=""_"">
+    <body />
   </file>
 </xliff>";
 
@@ -50,7 +49,6 @@ namespace XliffTasks.Tests
 @"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
   <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
     <body>
-      <group id=""test.resx"" />
       <trans-unit id=""Hello"">
         <source>Hello!</source>
         <target state=""new"">Hello!</target>
@@ -76,7 +74,6 @@ namespace XliffTasks.Tests
  @"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
   <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
     <body>
-      <group id=""test.resx"" />
       <trans-unit id=""Hello"">
         <source>Hello!</source>
         <target state=""translated"">Bonjour!</target>
@@ -118,7 +115,6 @@ namespace XliffTasks.Tests
  @"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
   <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
     <body>
-      <group id=""test.resx"" />
       <trans-unit id=""Goodbye"">
         <source>Goodbye World!</source>
         <target state=""needs-review-translation"">Au revoir!</target>
@@ -150,11 +146,11 @@ namespace XliffTasks.Tests
 
         private static string Update(string xliff, string resx)
         {
-            var xliffDocument = new XliffDocument();
+            var xliffDocument = new XlfDocument();
 
             if (string.IsNullOrEmpty(xliff))
             {
-                xliffDocument.LoadNew("test.resx", "fr");
+                xliffDocument.LoadNew("fr");
             }
             else
             {
@@ -163,7 +159,7 @@ namespace XliffTasks.Tests
 
             var resxDocument = new ResxDocument();
             resxDocument.Load(new StringReader(resx));
-            xliffDocument.Update(resxDocument);
+            xliffDocument.Update(resxDocument, "test.resx");
 
             var writer = new StringWriter();
             xliffDocument.Save(writer);

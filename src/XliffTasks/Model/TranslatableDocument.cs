@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace XliffTasks
+namespace XliffTasks.Model
 {
     /// <summary>
     /// Represents a document that can be translated by applying substitutions to nodes.

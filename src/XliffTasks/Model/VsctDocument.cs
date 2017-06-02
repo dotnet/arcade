@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.Xml.Linq;
 
-namespace XliffTasks
+namespace XliffTasks.Model
 {
     /// <summary>
     /// A <see cref="TranslatableDocument"/> for files in .vsct format.
@@ -33,7 +33,7 @@ namespace XliffTasks
                     yield return new TranslatableXmlElement(
                         id: $"{id}|{name.LocalName}",
                         source: child.Value,
-                        note: "",
+                        note: null,
                         element: child);
                 }
             }
