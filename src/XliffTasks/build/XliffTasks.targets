@@ -64,7 +64,7 @@
   </Target>
 
   <Target Name="UpdateXlfOnBuild"
-          Condition="'$(SkipXlf)' != 'true' and '$(UpdateXlfOnBuild)' == 'true' and '$(_IsInnerXlfBuild)' != 'true'"
+          Condition="'$(EnableXlfLocalization)' == 'true' and '$(UpdateXlfOnBuild)' == 'true' and '$(_IsInnerXlfBuild)' != 'true'"
           BeforeTargets="Build;DispatchToInnerBuilds;$(BuildDependsOn)"
           DependsOnTargets="UpdateXlf"
           />
@@ -121,7 +121,7 @@
   </Target>
 
   <Target Name="TranslateSourceFromXlf"
-          Condition="'$(SkipXlfLocalization)' != 'true'"
+          Condition="'$(EnableXlfLocalization)' == 'true'"
           DependsOnTargets="GatherXlf;BatchTranslateSourceFromXlf"
           BeforeTargets="PrepareResourceNames;$(PrepareResourceNamesDependsOn)"
           >
