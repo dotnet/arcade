@@ -21,6 +21,7 @@ The following document shows the initial implementation approach for the first i
 - Support retention policy for the snapshot/workspace data
 - Decommision once dev indicates they are complete with repro (could be rudamentary for prototype)
 - Be able to reasonably produce a "report" of all outstanding environments and their age and dev (not necessarily needed for prototype)
+- Ability to download workspace for local (or custom) repro (not necessarily needed for prototype)
 
 # Implementation 
 ![Implementation](./implementation.PNG?raw=true)
