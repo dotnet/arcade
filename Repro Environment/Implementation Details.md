@@ -91,3 +91,7 @@ For information about the progress, please go to the following Issues:
 - Re-consider the Subscription we are currently using. There could be security and IPs limitation.
 - To consider the project valuable, it should target Mac and ARM too.
 - The resulting tool should be Jenkins/platform independent.
+- Explore options to dump the environment in a script and then run the script in the new VM. (each repro should be in charge of enabling the dumps)
+- Revisit other options where we don't need to save all the OS Disk as currently it takes 128GB.
+  - The ability to take the workspace out of the Jenkins machine and use it in local dev machines is a good 1st step to make a repro.
+  - Other option could be use the templates Jenkins uses for the machine and then download the workspace there.
