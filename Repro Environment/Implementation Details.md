@@ -2,20 +2,25 @@
 The following document shows the initial implementation approach for the first iteration of the repro environment solution according to the requirements.
 
 # Requirements
+- The dev experience should be "simple" (single click) and "fast" (Less than 15 minutes to create the environment)
+- Ability to config repro capability (saving data for later machine creation on failture) to repro the failure
+- Ability to request a job to repro (automatically creates the environment)
+- Must work for Windows and Linux  (MAC and ARM post prototype)
+- Needs to work for both Jenkins and Helix (Jenkins only for prototype)
 - Solution is for devs who work at Microsoft only
-- Common interface to "check out" a machine (VM or otherwise)
 - Checking out a machine comes with sufficient data and access to connect and configure 
 - The machine should be delivered in a known state which can reasonably be setup to repro
 - Prereqs are either installed, or verified to be installed
-- Debugger and compilers installed
+- A workable version of debugger and compilers installed (not necessarily needed for prototype)
 - Exact hash is restored (GitHub is what's initially supported)
 - Matching symbols (especially for when we find a way to NOT rebuild the product)
 - Provide method to move files onto/off-of machine
-- Be able to easily build the product, build the test, and then run the tests
-- Be able to easily run the failing tests and see the results
-- Be able to attach a debugger to the test
-- Decommision once dev indicates they are complete with repro
-- Be able to reasonably produce a "report" of all outstanding environments and their age and dev
+- Be able to easily build the product, build the test, and then run the tests (not necessarily needed for prototype)
+- Be able to easily run the failing tests and see the results (not necessarily needed for prototype)
+- Be able to attach a debugger to the test (not necessarily needed for prototype)
+- Support retention policy for the snapshot/workspace data
+- Decommision once dev indicates they are complete with repro (could be rudamentary for prototype)
+- Be able to reasonably produce a "report" of all outstanding environments and their age and dev (not necessarily needed for prototype)
 
 # Implementation 
 ![Implementation](./implementation.PNG?raw=true)
