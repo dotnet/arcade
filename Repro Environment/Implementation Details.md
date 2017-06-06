@@ -13,7 +13,7 @@ The following document shows the initial implementation approach for the first i
 - Prereqs are either installed, or verified to be installed
 - A workable version of debugger and compilers installed (not necessarily needed for prototype)
 - Exact hash is restored (GitHub is what's initially supported)
-- Matching symbols (especially for when we find a way to NOT rebuild the product)
+- Matching symbols - especially for when we find a way to NOT rebuild the product (not necessarily needed for prototype)
 - Provide method to move files onto/off-of machine
 - Be able to easily build the product, build the test, and then run the tests (not necessarily needed for prototype)
 - Be able to easily run the failing tests and see the results (not necessarily needed for prototype)
