@@ -2,7 +2,7 @@
 The following document shows the initial implementation approach for the first iteration of the repro environment solution according to the requirements.
 
 # Requirements
-- Dev must have Microsoft credentials that we can manage
+- Solution is for devs who work at Microsoft only
 - Common interface to "check out" a machine (VM or otherwise)
 - Checking out a machine comes with sufficient data and access to connect and configure 
 - The machine should be delivered in a known state which can reasonably be setup to repro
