@@ -13,7 +13,7 @@ An `optional-tool-runtime/project.json` file in BuildTools specifies all require
 In the official build, three properties are set for the `sync` call:
 
 ```
-OptionalToolSource=https://devdiv.pkgs.visualstudio.com/_packaging/dotnet-core-internal-tools/nuget/v3/index.json
+OptionalToolSource=https://devdiv.pkgs.visualstudio.com/_packaging/dotnet-core-internal-tooling/nuget/v3/index.json
 OptionalToolSourceUser=dn-bot
 OptionalToolSourcePassword=******
 ```
