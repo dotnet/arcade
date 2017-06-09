@@ -14,4 +14,11 @@
       <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
     </PropertyGroup>
   </Target>
+
+  <!-- 
+    By default the SDK sets RootNamespace to the name of the project. Clear it here to avoid prefixing our namespaces.
+  -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.vbproj' OR '$(Language)' == 'VB' OR '$(ProjectLanguage)' == 'VB'">
+    <RootNamespace />
+  </PropertyGroup>
 </Project>

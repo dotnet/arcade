@@ -7,7 +7,7 @@
   <Import Project="RepoLayout.props"/>
   
   <PropertyGroup>
-    <OutDirName Condition="'$(OutDirName)' == ''">$([System.IO.Path]::GetFileName('$(MSBuildProjectDirectory)'))</OutDirName>
+    <OutDirName Condition="'$(OutDirName)' == ''">$(MSBuildProjectName)</OutDirName>
     <BaseOutputPath Condition="'$(BaseOutputPath)' == ''">$(ArtifactsBinDir)$(OutDirName)\</BaseOutputPath>
     <OutputPath>$(BaseOutputPath)</OutputPath>
     <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)' == ''">$(ArtifactsObjDir)$(OutDirName)\</BaseIntermediateOutputPath>

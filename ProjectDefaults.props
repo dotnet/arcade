@@ -3,6 +3,7 @@
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
     <HighEntropyVA>true</HighEntropyVA>
+    <NeutralLanguage>en-US</NeutralLanguage>
     <Company>Microsoft Corporation</Company>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
     <Authors>Microsoft</Authors>
@@ -12,6 +13,13 @@
 
     <!-- By default do not build nuget package for a project. Project may override. -->
     <IsPackable>false</IsPackable>
+
+    <!-- 
+      NuGet.Build.Tasks.Pack.targets sets the default value of Description property to "Setup Description", 
+      which causes GenerateAssemblyInfo to generate AssemblyDescription("Setup Description") attribute.
+      https://github.com/Microsoft/msbuild/issues/2202 
+    -->
+    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
   </PropertyGroup>
 
   <Choose>
@@ -45,7 +53,6 @@
         <OptionStrict>On</OptionStrict>
         <VBRuntime>Embed</VBRuntime>
         <RemoveIntegerChecks>true</RemoveIntegerChecks>
-        <RootNamespace></RootNamespace>
       </PropertyGroup>
 
       <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
