@@ -2,6 +2,7 @@
 <Project>  
   <Import Project="StrongName.targets"/>
   <Import Project="GenerateInternalsVisibleTo.targets" />
+  <Import Project="GenerateResxSource.targets" />
   <Import Project="Test.targets"/>
 
   <!-- Workaround for https://github.com/Microsoft/msbuild/issues/1310 -->
