@@ -3,18 +3,18 @@ The following document shows the implementation details for the prototype of the
 
 # Requirements
 - The dev experience should be "simple" (single click) and "fast" (Less than 15 minutes to create the environment).
-- Ability to config repro capability (saving data for later machine creation on failture) to repro the failure.
+- Ability to config repro capability (saving data for later machine creation on failure) to repro the failure.
 - Ability to request a job to repro (automatically creates the environment).
 - Must work for Windows and Linux.
 - Needs to work for Jenkins.
-- Solution is for devs who work at Microsoft only.
+- The solution is for devs who work at Microsoft only.
 - Checking out a machine comes with sufficient data and access to connect and configure.
 - The machine should be delivered in a known state which can reasonably be setup to repro.
-- Prereqs are either installed, or verified to be installed.
+- Prereqs are either installed or verified to be installed.
 - Exact hash is restored (GitHub is what's initially supported).
-- Provide method to move files onto/off-of machine.
+- Provide a method to move files onto/off-of machine.
 - Support retention policy for the snapshot/workspace data.
-- Decommision once dev indicates they are complete with repro (rudamentary).
+- Decommission once dev indicates they are complete with repro (rudimentary).
 
 # Nice to Have
 - A workable version of debugger and compilers installed.
@@ -41,7 +41,7 @@ The repro owners have the ability to request this feature per Job creation so th
 5) Mission Control will display information about the status of the VM.
 6) When a VM is created, the dev will be notified by:
     - Mission Control status page.
-    - Email send to the dev.
+    - Email sent to the dev.
 
 ### 2. Rerun a job
 ![](./Scenario2.png?raw=true)
@@ -52,7 +52,7 @@ When a job fails and the environment is not automatically saved, the dev could:
 4) When the VM is created, the dev will be notified by:
     - Mission Control status page.
     - Jenkins console log.
-    - Email send to the dev.
+    - Email sent to the dev.
 
 ### Idea of how the Jenkins UI might look like
 ![](./JenkinsUI.png?raw=true)
