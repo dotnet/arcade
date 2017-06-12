@@ -36,6 +36,7 @@
 
   <Target Name="GetEmbeddedResourcesWithSourceGeneration">
     <ItemGroup>
+      <!-- TODO: Avoid checking for XlfLanguage; https://github.com/dotnet/xliff-tasks/issues/19 -->
       <EmbeddedResourceSG Include="@(EmbeddedResource)" Condition="'%(EmbeddedResource.GenerateSource)' == 'true' and '%(EmbeddedResource.XlfLanguage)' == ''" />
       <EmbeddedResourceSG>
         <SourceOutputPath>$(IntermediateOutputPath)%(EmbeddedResourceSG.ManifestResourceName).cs</SourceOutputPath>
