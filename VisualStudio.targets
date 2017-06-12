@@ -53,7 +53,7 @@
           DependsOnTargets="Build"
           Condition="'$(VisualStudioSetupComponent)' != '' and '$(DesignTimeBuild)' != 'true' and '$(BuildingForLiveUnitTesting)' != 'true'">
     
-    <Copy SourceFiles="@(_VsixPayload)" DestinationFolder="$(VisualStudioSetupOutputPath)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />   
+    <Copy SourceFiles="@(_VsixPayload)" DestinationFolder="$(VisualStudioSetupOutputPath)$(VisualStudioSetupComponent)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />   
   </Target>
   
   <Import Project="$(NuGetPackageRoot)Microsoft.VSSDK.BuildTools\$(MicrosoftVSSDKBuildToolsVersion)\build\Microsoft.VsSDK.BuildTools.targets" />
