@@ -32,7 +32,7 @@ SDT extension currently support 4 tools that are applicable to .NET Core. A shor
 |[CoreCLR](https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build/index?context=Mine&path=%5CDotNet%5Craeda&definitionId=6598&_a=completed)|[CoreCLR-master](http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_master/Summary)|
 |Core-Setup|TODO|
 
-In the current setup, a security build is triggered manually. Official Id and corresponding Azure container name  needs to be provided at the time of queuing the build. In near future, Maestro will be extend to determine the Official Id and container name, and trigger a security build automatically.  Issue #[970](https://github.com/dotnet/core-eng/issues/970)
+In the current setup, a security build is triggered manually. Official Id and corresponding Azure container name  needs to be provided at the time of queuing the build. In near future, Maestro will be extend to determine the Official Id and container name, and trigger a security build automatically.
 
 TSA is configured to send an email report for each scan or security build to [dncsec](dncsec@microsoft.com) that include .NET Core repository owners responsible for security issues. Repository owners should focus on new issues and regressions highlighted in the report, and take necessary action to resolve those issues.
 
