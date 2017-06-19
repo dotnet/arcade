@@ -20,24 +20,17 @@ namespace XUnit.Runner.Uap
 
         internal static StringBuilder log;
 
-        public async void UpdateTextBox(string text)
+        public void UpdateLog(string text)
         {
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
-                Windows.UI.Core.CoreDispatcherPriority.Normal,
-            () =>
-            {
-                log.AppendLine(text);
-                outputTextBox.Text += $"{text}\r\n";
-            });
+            log.AppendLine(text);
         }
 
         private void RunXunitTestsInDirectory(object sender, RoutedEventArgs e)
         {
             // Run tests for assemblies in current directory
             XunitTestRunner runner = new XunitTestRunner();
-            UpdateTextBox("Starting...");
 
-            Task.Run(() => runner.RunTests(App.LaunchArgs.Arguments, log, UpdateTextBox));
+            Task.Run(() => runner.RunTests(App.LaunchArgs.Arguments, log, UpdateLog));
         }
     }
 }

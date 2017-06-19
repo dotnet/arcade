@@ -11,7 +11,7 @@
         <Ellipse Fill="Yellow" ></Ellipse>
         <TextBlock FontFamily="Verdana" FontSize="50" VerticalAlignment="Center" HorizontalAlignment="Center" > Xunit UAP Runner</TextBlock>
         <TextBox Margin="20" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Auto" x:Name="outputTextBox" TextWrapping="Wrap"
-                  IsTextPredictionEnabled="False" IsReadOnly="True"
+                  IsTextPredictionEnabled="False" IsReadOnly="True" Text="Starting..."
                   >
             
             
