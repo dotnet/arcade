@@ -29,8 +29,8 @@ SDT extension currently support 4 tools that are applicable to .NET Core. A shor
 
 |Build Definition|TSA Report|
 |:---------------|:---------|
-|[CoreFx](https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build/index?context=Mine&path=%5CDotNet%5Craeda&definitionId=6552&_a=completed)|[CoreFx-master](http://aztsa/api/Result/CodeBase/DotNet-CoreFx-Trusted_master/Summary)|
-|[CoreCLR](https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build/index?context=Mine&path=%5CDotNet%5Craeda&definitionId=6598&_a=completed)|[CoreCLR-master](http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_master/Summary)|
+|[CoreFx](https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6552&_a=completed)|[CoreFx-master](http://aztsa/api/Result/CodeBase/DotNet-CoreFx-Trusted_master/Summary)|
+|[CoreCLR](https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6598&_a=completed)|[CoreCLR-master](http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_master/Summary)|
 |Core-Setup|TODO|
 
 In the current setup, a security build is triggered manually. Official Id and corresponding Azure container name  needs to be provided at the time of queuing the build. In near future, Maestro will be extend to determine the Official Id and container name, and trigger a security build automatically.
@@ -45,7 +45,7 @@ Kickoff of a security build is as simple as queuing a VSTS build definition. Whi
 
 For example, a recent build Id of CoreFx master branch is `20170619-02`. Packages produced from this build were published to Azure container named `corefx-beta-20170619-02` . To launch a security build that will scan the assemblies and source code from that official build, perform the following steps:
 
- 1. Navigate to CoreFx security build [definition](https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build/index?context=Mine&path=%5CDotNet%5Craeda&definitionId=6552&_a=completed)
+ 1. Navigate to CoreFx security build [definition](https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6552&_a=completed)
  2. Click "Queue new build"
  3. Enter the variable values for *PB_BuildNumber* and *PB_CloudDropContainer* as `20170619-02` and `corefx-beta-20170619-02` respectively. Refer to the screenshot below.
  4. Click OK to start the build. 
