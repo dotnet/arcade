@@ -38,23 +38,30 @@ In the current setup, a security build is triggered manually. Official Id and co
 TSA is configured to send an email report for each scan or security build to [dncsec](dncsec@microsoft.com) that include .NET Core repository owners responsible for security issues. Repository owners should focus on new issues and regressions highlighted in the report, and take necessary action to resolve those issues.
 
 ##How to kickoff a security build
-Kickoff of a security build is as simple as queuing a VSTS build definition. While queuing, values for two input variables need to be provided. These variables are as follows:
+Kickoff of a security build is as simple as queuing a VSTS build definition. While queuing, values for four input variables need to be provided. These variables are as follows:
 
  - *PB_BuildNumber* - official build Id of the repository.
  - *PB_CloudDropContainer* - name of the Azure container from where the packages published from the official build (*PB_BuildNumber*) can be downloaded.
+ - *CodeBase* - TSA codebase that corresponds to the branch. For example, `master` or `2.0.0`.
+ - *NotificationAlias* - A comma separated email Ids where the TSA report should be sent.
 
-For example, a recent build Id of CoreFx master branch is `20170619-02`. Packages produced from this build were published to Azure container named `corefx-beta-20170619-02` . To launch a security build that will scan the assemblies and source code from that official build, perform the following steps:
+For example, a recent build Id of CoreCLR `2.0.0` branch is `20170621-01`. Packages produced from this build were published to Azure container named `coreclr-preview3-20170621-01` . To launch a security build that will scan the assemblies and source code from that official build, perform the following steps:
 
- 1. Navigate to CoreFx security build [definition](https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6552&_a=completed)
+ 1. Navigate to CoreCLR security build [definition](https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6598&_a=completed)
  2. Click "Queue new build"
- 3. Enter the variable values for *PB_BuildNumber* and *PB_CloudDropContainer* as `20170619-02` and `corefx-beta-20170619-02` respectively. Refer to the screenshot below.
- 4. Click OK to start the build. 
+ 3. Enter the variable values:
+	  - *PB_BuildNumber* = `20170621-01`
+	  - *PB_CloudDropContainer* = `coreclr-preview3-20170621-01` 
+	  - *CodeBase* = `2.0.0`
+	  - *NotificationAlias*  = `dncsec@microsoft.com,joc@microsoft.com`
+Refer to the screenshot below.
+ 4. Click OK to start the build 
 
  ----------
 ![QueueSecurityBuild.](./assets/QueueSecurityBuild.png?raw=true)
 
 ----------
 
-As described in the earlier section, when the build finishes successfully, an email report of the security build is sent to [dncsec](dncsec@microsoft.com), and the same report can be viewed online.
+As described in the earlier section, when the build finishes successfully, an email report of the security build is sent to listed email Ids. The same report can be viewed online at TSA website. For example, report for CoreCLR  `2.0.0` will be at http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_2.0.0/Summary
 
 For any questions about security builds, please contact [dncsec](dncsec@microsoft.com).
