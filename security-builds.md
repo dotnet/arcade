@@ -2,7 +2,8 @@
 
 This document describes how to setup a security build for .NET Core repository, and how to [kickoff](#how-to-kickoff-security-build) a security build.
 
-##How to setup a security build
+## How to setup a security build
+
 Security Development Lifecycle ([SDL](http://sdl/)) specifies the minimum security requirements that must be satisfied before making a Microsoft software or service available to customers. To help product teams fulfill the security requirements, SDL team provides a few tools and services, in addition to detailed guidance and a dedicated support team. Some these tools and services are available as a VSTS extension called Secure Development Tools ([SDT](https://www.1eswiki.com/wiki/Secure_Development_Tools_VSTS_Extension)), which is a collection of build tasks. These build tasks can be added to a VSTS build definition. 
 
 Trust Services Automation ([TSA](http://sql/wiki/Trust_Services_Automation_%28TSA%29)) is a service that analyzes the logs produced for security tools, identifies regressions, creates workitems to track the regressions, and generates a detailed report. One of the tasks in SDT extension is to collect logs from security tools and upload them for processing at TSA. This allows product teams to setup a VSTS build definition that acquire the latest version of security tools, run the tools against the product, gather and analyze logs, detect regressions, and prepare reports.
@@ -37,7 +38,8 @@ In the current setup, a security build is triggered manually. Official Id and co
 
 TSA is configured to send an email report for each scan or security build to [dncsec](dncsec@microsoft.com) that include .NET Core repository owners responsible for security issues. Repository owners should focus on new issues and regressions highlighted in the report, and take necessary action to resolve those issues.
 
-##How to kickoff a security build
+## How to kickoff a security build
+
 Kickoff of a security build is as simple as queuing a VSTS build definition. While queuing, values for four input variables need to be provided. These variables are as follows:
 
  - *PB_BuildNumber* - official build Id of the repository.
