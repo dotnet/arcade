@@ -15,6 +15,7 @@ The following document shows the implementation details for the prototype of the
 - Provide a method to move files onto/off-of machine.
 - Support retention policy for the snapshot/workspace data.
 - Decommission once dev indicates they are complete with repro (rudimentary).
+- Start gathering telemetry of the system, like i.e. how many times it is being used, and by which repo. 
 
 # Nice to Have
 - A workable version of debugger and compilers installed.
