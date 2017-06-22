@@ -36,7 +36,7 @@ The properties have the following semantics:
 
 - certificate: name of the authenticode certificate to use for signing.  Valid values include Microsoft402, WindowsPhone623, MicrosoftSHA1Win8WinBlue and VsixSHA2.  More are likely available.  This value must be specified.
 - strongName: name of the key to use when strong naming the binary.  This can be `null` for values which do not require strong name signing such as VSIX files. 
-- values: array of paths, relative to the binaries directory, which will be signed in this manner. 
+- values: array of paths, relative to the binaries directory, which will be signed in this manner.  These paths can include `*` globbing for directory names (helps support localization). 
 
 The exclude section is only relevant when VSIX values are being signed.  It's not uncommon to include files in a VSIX which are not built by the repo producing the VSIX.  Such files should not be included in signing (responsibility of the repo that produced them).  
 
@@ -46,6 +46,7 @@ Example configuration files:
 
 - [Roslyn](https://github.com/dotnet/roslyn/blob/master/build/config/SignToolData.json)
 - [DiaSym Reader](https://github.com/dotnet/symreader/blob/master/build/Signing/SignToolData.json)
+- [SDK](https://github.com/dotnet/sdk/blob/master/build/Signing/SignToolConfig.json)
 
 ## Arguments
 
@@ -61,3 +62,4 @@ The only required argument is `outputPath` and `-config`.  The rest will be infe
 - `-msbuildPath`: Path to the MSBuild.exe binary used to run the actual signing process on Microbuild.  The default is to use MSBuid 14.0 standard installation.
 - `-nugetPackagesPath`: Defaults to `~\.nuget\packages`.  Needed to specify the `<Import>` statements for Microbuild.
 - `-intermediateOutputPath`: Defaults to `<outputPath>\Obj`.  
+

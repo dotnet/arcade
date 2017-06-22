@@ -52,21 +52,21 @@ namespace SignTool
         {
             var serializer = new JsonSerializer();
             var fileJson = (Json.FileJson)serializer.Deserialize(configReader, typeof(Json.FileJson));
-            var map = new Dictionary<string, SignInfo>();
+            var map = new Dictionary<string, SignInfo>(StringComparer.OrdinalIgnoreCase);
             var allGood = true;
             foreach (var item in fileJson.SignList)
             {
                 var data = new SignInfo(certificate: item.Certificate, strongName: item.StrongName);
-                foreach (var name in item.FileList)
+                foreach (var relativeFileName in ExpandFileList(outputPath, item.FileList, ref allGood))
                 {
-                    if (map.ContainsKey(name))
+                    if (map.ContainsKey(relativeFileName))
                     {
-                        Console.WriteLine($"Duplicate file entry: {name}");
+                        Console.WriteLine($"Duplicate file entry: {relativeFileName}");
                         allGood = false;
                     }
                     else
                     {
-                        map.Add(name, data);
+                        map.Add(relativeFileName, data);
                     }
                 }
             }
@@ -79,6 +79,44 @@ namespace SignTool
 
             batchData = new BatchSignInput(outputPath, map, fileJson.ExcludeList ?? Array.Empty<string>());
             return true;
+        }
+
+        /// <summary>
+        /// The files to sign section supports globbing. The only caveat is that globs must expand to match at least a 
+        /// single file else an error occurs. This function will expand those globas as necessary.
+        /// </summary>
+        private static List<string> ExpandFileList(string outputPath, IEnumerable<string> relativeFileNames, ref bool allGood)
+        {
+            var list = new List<string>();
+            foreach (var relativeFileName in relativeFileNames)
+            {
+                if (!relativeFileName.Contains('*'))
+                {
+                    list.Add(relativeFileName);
+                    continue;
+                }
+
+                var fullName = Path.Combine(outputPath, relativeFileName);
+                try
+                {
+                    var expandedNameList = PathUtil.ExpandDirectoryGlob(fullName);
+                    if (expandedNameList.Count == 0)
+                    {
+                        Console.WriteLine($"The glob {relativeFileName} expanded to 0 entries");
+                        allGood = false;
+                        continue;
+                    }
+
+                    list.AddRange(expandedNameList);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error expanding glob {relativeFileName}: {ex.Message}");
+                    allGood = false;
+                }
+            }
+
+            return list;
         }
 
         internal static void PrintUsage()
