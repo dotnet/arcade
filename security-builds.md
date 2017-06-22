@@ -21,18 +21,20 @@ SDT extension currently support 4 tools that are applicable to .NET Core. A shor
 
 |Tool|Description|
 |:---|:----------|
-|BinSkim | Validates compiler/linker settings and other security-relevant binary characteristics.|
-|APIScan | Determines whether or not the software complies with the API Usage Standard of the Interoperability Policy.|
-|CredScan | Index and scan for credentials or other sensitive content.|
-|PoliCheck | Scan code, code comments, and content for words that may be sensitive for legal, cultural, or geopolitical reasons.|
+| BinSkim | Validates compiler/linker settings and other security-relevant binary characteristics.|
+| APIScan | Determines whether or not the software complies with the API Usage Standard of the Interoperability Policy.|
+| CredScan | Index and scan for credentials or other sensitive content.|
+| PoliCheck | Scan code, code comments, and content for words that may be sensitive for legal, cultural, or geopolitical reasons.|
+
 
 .NET Core security build definitions and link to the report is listed in the table below.
 
+
 |Build Definition|TSA Report|
 |:---------------|:---------|
-|[CoreFx](https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6552&_a=completed)|[CoreFx-master](http://aztsa/api/Result/CodeBase/DotNet-CoreFx-Trusted_master/Summary)|
-|[CoreCLR](https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6598&_a=completed)|[CoreCLR-master](http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_master/Summary)|
-|Core-Setup|TODO|
+| [CoreFx](https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6552&_a=completed) | [CoreFx-master](http://aztsa/api/Result/CodeBase/DotNet-CoreFx-Trusted_master/Summary) |
+| [CoreCLR](https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6598&_a=completed) | [CoreCLR-master](http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_master/Summary) |
+| [Core-Setup](https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6658&_a=completed) | [Core-Setup-master](http://aztsa/api/Result/CodeBase/DotNet-Core-Setup-Trusted_master/Summary) |
 
 In the current setup, a security build is triggered manually. Official Id and corresponding Azure container name  needs to be provided at the time of queuing the build. In near future, Maestro will be extend to determine the Official Id and container name, and trigger a security build automatically.
 
@@ -52,18 +54,65 @@ For example, a recent build Id of CoreCLR `2.0.0` branch is `20170621-01`. Packa
  1. Navigate to CoreCLR security build [definition](https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6598&_a=completed)
  2. Click "Queue new build"
  3. Enter the variable values:
-	  - *PB_BuildNumber* = `20170621-01`
-	  - *PB_CloudDropContainer* = `coreclr-preview3-20170621-01` 
-	  - *CodeBase* = `2.0.0`
-	  - *NotificationAlias*  = `dncsec@microsoft.com,joc@microsoft.com`
-Refer to the screenshot below.
+      - *PB_BuildNumber* = `20170621-01`
+      - *PB_CloudDropContainer* = `coreclr-preview3-20170621-01` 
+      - *CodeBase* = `2.0.0`
+      - *NotificationAlias*  = `dncsec@microsoft.com,joc@microsoft.com`
+      
+      Refer to the screenshot below. See [how to get values for queue variables](#how-to-get-values-for-queue-variables)
  4. Click OK to start the build 
 
- ----------
+----------
 ![QueueSecurityBuild.](./assets/QueueSecurityBuild.png?raw=true)
 
 ----------
 
-As described in the earlier section, when the build finishes successfully, an email report of the security build is sent to listed email Ids. The same report can be viewed online at TSA website. For example, report for CoreCLR  `2.0.0` will be at http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_2.0.0/Summary
+#### Core-Setup
+
+Core-Setup requires an additional queue variable called `PB_BlobName`, which is the name of the Azure Storage blob that contains the packages produced from official builds. This blob is under the default container named `dotnet`. 
+
+----------
+![QueueCoreSetup.](./assets/QueueCoreSetup.png?raw=true)
+
+----------
+
+As described in the earlier section, when the build finishes successfully, an email report of the security build is sent to listed email Ids. The same report can be viewed online. For example, report for CoreCLR `2.0.0` will be at TSA [website](http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_2.0.0/Summary)
+
+
+### How to get values for queue variables
+
+Team dashboard [MC](https://mc.dot.net) is the place to begin when looking for details about .NET Core builds. In the dashboard, navigate to .NET Core release branch such as [2.0.0](https://mc.dot.net/#/product/netcore/200) to get the summary of most recent builds. Described below is how to get the values for queue variables for each .NET Core repository's security build. 
+
+*PB_BuildNumber* is the official build number and is a required variable in security build of all three repositories. To determine this build number for a repository, navigate to the dashboard, identify the most recent build under the corresponding repository. Build number is usually in a year-month-day format. For example, `20170622.01`. Replace the dot with a hyphen.  In this example,  *PB_BuildNumber* is `20170622-01`. 
+
+*PB_CloudDropContainer* is the name of the container where the packages produced *PB_BuildNumber* build are stored. To get this container name, in the dashboard, click on the build number link or button. In the details, click the URL against `buildUri` to navigate to VSTS build. Navigate to the log for `PipeBuild.exe` task in this VSTS build, and locate the container name as described below.
+
+#### CoreFx
+
+In case of CoreFx, container name is the value against `PB_Label`. Shown below is a portion of `PipeBuild.exe` task log showing the container name.
+
+>OfficialBuildId=20170622-01 PB_SignType=real PB_Label=**corefx-preview1-20170622-01** SourceVersion...
+
+
+#### CoreCLR
+
+In case of CoreCLR, container name is `Label`. Shown below is a portion of `PipeBuild.exe` task log showing the container name.
+
+>OfficialBuildId=20170622-01 SignType=real Label=**coreclr-preview3-20170622-01** SourceVersion...
+
+#### Core-Setup
+
+In Core-Setup, the default container name is `dotnet`. An additional variable named `PB_BlobName` is required for security build of Core-Setup.  To locate this value, open `PipeBuild.exe` task log, search for the build leg named `Core-Setup-Publish`, and click the URL against this to navigate to the build leg. Example fragment from the log is shown below.
+
+ >Core-Setup-Publish - https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build?_a=summary&buildId=820812...
+
+In the build leg, locate text similar to the fragment shown below.
+
+>Downloading **Runtime/2.0.0-preview3-25422-01**...
+
+
+`Runtime/2.0.0-preview3-25422-01` is the value for `PB_BlobName`.
+
+----------
 
 For any questions about security builds, please contact [dncsec](dncsec@microsoft.com).
