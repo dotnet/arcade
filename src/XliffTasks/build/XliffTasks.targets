@@ -122,11 +122,11 @@
   </Target>
 
   <Target Name="TranslateSourceFromXlf"
-          Condition="'$(EnableXlfLocalization)' == 'true' and '@(Xlf)' != ''"
+          Condition="'$(EnableXlfLocalization)' == 'true'"
           DependsOnTargets="GatherXlf;BatchTranslateSourceFromXlf"
           BeforeTargets="PrepareResourceNames;$(PrepareResourceNamesDependsOn)"
           >
-    <GatherTranslatedSource XlfFiles="@(Xlf)">
+    <GatherTranslatedSource XlfFiles="@(Xlf)" Condition="'@(Xlf)' != ''">
       <Output TaskParameter="Outputs" ItemName="%(Xlf.XlfOutputItem)" />
       <Output TaskParameter="Outputs" ItemName="FileWrites" />
     </GatherTranslatedSource>
