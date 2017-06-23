@@ -88,7 +88,7 @@ namespace XliffTasks.Tasks
             }
             else
             {
-                xlfExtension = $".{extension}.{language}.xlf";
+                xlfExtension = $"{extension}.{language}.xlf";
             }
 
             return Path.Combine(directory, "xlf", filename + xlfExtension);
