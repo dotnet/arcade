@@ -104,7 +104,7 @@ namespace SignTool
 
                 // The MicroBuild targets hook AfterBuild to do the signing hence we just make it our no-op default target
                 AppendLine(builder, depth: 1, text: @"<Target Name=""AfterBuild"">");
-                AppendLine(builder, depth: 2, text: @"<Message Text=""Running actual signning process"" />");
+                AppendLine(builder, depth: 2, text: @"<Message Text=""Running actual signing process"" />");
                 AppendLine(builder, depth: 1, text: @"</Target>");
 
                 AppendLine(builder, depth: 1, text: $@"<Import Project=""$(NuGetPackageRoot)\MicroBuild.Core\{MicroBuildVersion}\build\MicroBuild.Core.targets"" />");
