@@ -53,7 +53,7 @@ namespace Xunit.NetCore.Extensions
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetfxTest);
                 if (frameworks.HasFlag(TargetFrameworkMonikers.Netcoreapp))
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcoreappTest);
-                if (frameworks.HasFlag(TargetFrameworkMonikers.Uap))
+                if (frameworks.HasFlag(TargetFrameworkMonikers.UapNotUapAot))
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonUapTest);
                 if (frameworks.HasFlag(TargetFrameworkMonikers.UapAot))
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonUapAotTest);
