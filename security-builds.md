@@ -1,6 +1,11 @@
 # Security Builds for .NET Core
 
-This document describes how to setup a security build for .NET Core repository, and how to [kickoff](#how-to-kickoff-security-build) a security build.
+This document describes security builds of .NET Core.
+
+- [How to setup a security build](#how-to-setup-a-security-build)
+- [How to kickoff a security build](#how-to-kickoff-a-security-build)
+- [How to get values for queue variables](#how-to-get-values-for-queue-variables)
+
 
 ## How to setup a security build
 
