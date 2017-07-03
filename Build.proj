@@ -1,9 +1,9 @@
 ﻿<Project DefaultTargets="Execute">
   <!--
-  
+
   Required parameters:
     SolutionPath      Path to the solution to build
-  
+
   Optional parameters:
     Configuration     Build configuration: "Debug", "Release", etc.
     CIBuild           "true" when building on CI server
@@ -13,10 +13,10 @@
     Sign              "true" to sign built binaries
     Pack              "true" to build NuGet packages
     Properties        List of properties to pass to each build phase ("Name=Value;Name=Value;...")
-    
+
   -->
 
-  <!-- 
+  <!--
       Import Directory.Build.props file next to or above the solution file.
       We expect this file to define dependency versions, NuGetPackageRoot and SignToolDataPath.
     -->
@@ -33,16 +33,16 @@
     <ItemGroup>
       <_DotNetDlls Include="$(DotNetRoot)sdk\**\dotnet.dll" />
     </ItemGroup>
-    
+
     <!-- Copy XUnitLogger.dll to $(DotNetRoot)sdk\*\Extensions.
          It's currently not possible to pass the logger path to dotnet test directly,
-         It loads extensions from dotnet sdk Extensions folder, so we need to copy it there on restore. 
+         It loads extensions from dotnet sdk Extensions folder, so we need to copy it there on restore.
          See https://github.com/Microsoft/vstest/issues/522 -->
     <Copy DestinationFiles="@(_DotNetDlls->'$(DotNetRoot)sdk\%(RecursiveDir)Extensions\XUnitLogger.dll')"
           SkipUnchangedFiles="true"
           SourceFiles="@(_DotNetDlls->'$(NuGetPackageRoot)RoslynTools.Microsoft.XUnitLogger\$(RoslynToolsMicrosoftXUnitLoggerVersion)\lib\netstandard1.5\XUnitLogger.dll')"
           Condition="'$(Restore)' == 'true'" />
-    
+
     <PropertyGroup>
       <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
       <Props>$(Properties);Configuration=$(Configuration);CIBuild=$(CIBuild)</Props>
@@ -53,11 +53,11 @@
       <PreSignTargets Include="Build" Condition="'$(Build)' == 'true'" />
       <PreSignTargets Include="Test" Condition="'$(Test)' == 'true'" />
     </ItemGroup>
-    
+
     <!-- Note: msbuild caches the metaproject for the solution (see https://github.com/Microsoft/msbuild/issues/1695)
          We invalidate the cache by changing the value of __BuildPhase property.
     -->
-    
+
     <MSBuild Projects="$(SolutionPath)"
              Properties="$(Props);__BuildPhase=PreSign"
              Targets="@(PreSignTargets)"
@@ -71,7 +71,7 @@
              Condition="'$(Sign)' == 'true'"/>
 
     <!-- It is important to skip the build (NoBuild=true) when creating NuGet packages.
-         Otherwise, if the output binaries were real-signed in the previous step the Build task 
+         Otherwise, if the output binaries were real-signed in the previous step the Build task
          overwrite the signed files with the ones from obj dir.
     -->
     <MSBuild Projects="$(SolutionPath)"
