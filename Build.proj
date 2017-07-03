@@ -9,6 +9,7 @@
     CIBuild           "true" when building on CI server
     Restore           "true" to restore toolset and solution
     Build             "true" to build solution
+    Rebuild           "true" to rebuild solution
     Test              "true" to run tests
     Sign              "true" to sign built binaries
     Pack              "true" to build NuGet packages
@@ -50,7 +51,8 @@
 
     <ItemGroup>
       <PreSignTargets Include="Restore" Condition="'$(Restore)' == 'true'" />
-      <PreSignTargets Include="Build" Condition="'$(Build)' == 'true'" />
+      <PreSignTargets Include="Rebuild" Condition"'$(Rebuild)' == 'true'" />>
+      <PreSignTargets Include="Build" Condition="'$(Build)' == 'true' AND '$(Rebuild)' != 'true'" />
       <PreSignTargets Include="Test" Condition="'$(Test)' == 'true'" />
     </ItemGroup>
 
