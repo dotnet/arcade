@@ -40,6 +40,7 @@ SDT extension currently support 4 tools that are applicable to .NET Core. A shor
 | [CoreFx](https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6552&_a=completed) | [CoreFx-master](http://aztsa/api/Result/CodeBase/DotNet-CoreFx-Trusted_master/Summary) |
 | [CoreCLR](https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6598&_a=completed) | [CoreCLR-master](http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_master/Summary) |
 | [Core-Setup](https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6658&_a=completed) | [Core-Setup-master](http://aztsa/api/Result/CodeBase/DotNet-Core-Setup-Trusted_master/Summary) |
+| [CLI](https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6698&_a=completed) | [CLI-master](http://aztsa/api/Result/CodeBase/DotNet-CLI-Trusted_master/Summary) |
 
 In the current setup, a security build is triggered manually. Official Id and corresponding Azure container name  needs to be provided at the time of queuing the build. In near future, Maestro will be extend to determine the Official Id and container name, and trigger a security build automatically.
 
@@ -74,12 +75,22 @@ For example, a recent build Id of CoreCLR `2.0.0` branch is `20170621-01`. Packa
 
 #### Core-Setup
 
-Core-Setup requires an additional queue variable called `PB_BlobName`, which is the name of the Azure Storage blob that contains the packages produced from official builds. This blob is under the default container named `dotnet`. 
+Core-Setup requires an additional queue variable called `PB_BlobName`, which is the name of the Azure Storage blob that contains the packages produced from the official build under test. This blob is under the default container named `dotnet`. 
 
 ----------
 ![QueueCoreSetup.](./assets/QueueCoreSetup.png?raw=true)
 
 ----------
+
+#### CLI
+
+CLI requires an additional queue variable called `PB_BlobNameFilter`, which is the name of the Azure Storage blob that contains the blobs produced from the official build under test.
+
+----------
+![QueueCLI.](./assets/QueueCLI.png?raw=true)
+
+----------
+
 
 As described in the earlier section, when the build finishes successfully, an email report of the security build is sent to listed email Ids. The same report can be viewed online. For example, report for CoreCLR `2.0.0` will be at TSA [website](http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_2.0.0/Summary)
 
@@ -88,9 +99,10 @@ As described in the earlier section, when the build finishes successfully, an em
 
 Team dashboard [MC](https://mc.dot.net) is the place to begin when looking for details about .NET Core builds. In the dashboard, navigate to .NET Core release branch such as [2.0.0](https://mc.dot.net/#/product/netcore/200) to get the summary of most recent builds. Described below is how to get the values for queue variables for each .NET Core repository's security build. 
 
-*PB_BuildNumber* is the official build number and is a required variable in security build of all three repositories. To determine this build number for a repository, navigate to the dashboard, identify the most recent build under the corresponding repository. Build number is usually in a year-month-day format. For example, `20170622.01`. Replace the dot with a hyphen.  In this example,  *PB_BuildNumber* is `20170622-01`. 
+*PB_BuildNumber* is the official build number, and is a required variable in security build of all four repositories. To determine this build number for a repository, navigate to the dashboard, identify the most recent build under the corresponding repository. Build number is usually in a year-month-day format. For example, `20170622.01`. Replace the dot with a hyphen.  In this example,  *PB_BuildNumber* is `20170622-01`. 
 
-*PB_CloudDropContainer* is the name of the container where the packages produced *PB_BuildNumber* build are stored. To get this container name, in the dashboard, click on the build number link or button. In the details, click the URL against `buildUri` to navigate to VSTS build. Navigate to the log for `PipeBuild.exe` task in this VSTS build, and locate the container name as described below.
+*PB_CloudDropContainer* is the name of the container where the packages produced from *PB_BuildNumber* build are stored. To get this container name, in the dashboard, click on the build number link or button. In the details, click the URL against `buildUri` to navigate to VSTS build. Navigate to the log for `PipeBuild.exe` task in this VSTS build, and locate the container name as described below.
+
 
 #### CoreFx
 
@@ -107,7 +119,7 @@ In case of CoreCLR, container name is `Label`. Shown below is a portion of `Pipe
 
 #### Core-Setup
 
-In Core-Setup, the default container name is `dotnet`. An additional variable named `PB_BlobName` is required for security build of Core-Setup.  To locate this value, open `PipeBuild.exe` task log, search for the build leg named `Core-Setup-Publish`, and click the URL against this to navigate to the build leg. Example fragment from the log is shown below.
+In Core-Setup, the default container name (*PB_CloudDropContainer*) is `dotnet`. An additional variable named `PB_BlobName` is required for security build of Core-Setup.  To locate this value, open `PipeBuild.exe` task log, search for the build leg named `Core-Setup-Publish`, and click the URL against this to navigate to the build leg. Example fragment from the log is shown below.
 
  >Core-Setup-Publish - https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build?_a=summary&buildId=820812...
 
@@ -119,5 +131,12 @@ In the build leg, locate text similar to the fragment shown below.
 `Runtime/2.0.0-preview3-25422-01` is the value for `PB_BlobName`.
 
 ----------
+
+
+#### CLI
+
+In CLI, the default container name (*PB_CloudDropContainer*) is `dotnet`.  An additional variable named `PB_BlobNameFilter` is required for security build of CLI. `PB_BlobNameFilter` follows `Sdk/<branch>` format. So, when queuing a build for `master` branch, set the value this variable to `Sdk/master`, and for a released branch such as `2.0.0` set the value to `Sdk/release/2.0.0`.
+
+
 
 For any questions about security builds, please contact [dncsec](dncsec@microsoft.com).
