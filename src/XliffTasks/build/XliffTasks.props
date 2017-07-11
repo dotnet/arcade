@@ -55,6 +55,12 @@
       <XlfSourceFormat>XamlRule</XlfSourceFormat>
       <XlfOutputItem>XamlPropertyRuleTranslated</XlfOutputItem>
     </XamlPropertyRuleNoCodeBehind>
+
+    <XamlPropertyProjectItemsSchema>
+      <XlfInput>true</XlfInput>
+      <XlfSourceFormat>XamlRule</XlfSourceFormat>
+      <XlfOutputItem>XamlPropertyRuleTranslated</XlfOutputItem>
+    </XamlPropertyProjectItemsSchema>
   </ItemDefinitionGroup>
 
 </Project>

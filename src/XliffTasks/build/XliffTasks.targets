@@ -24,6 +24,7 @@
     <XlfSource Include="@(VSCTCompile->WithMetadataValue('XlfInput', 'true'))" />
     <XlfSource Include="@(XamlPropertyRule->WithMetadataValue('XlfInput', 'true'))" />
     <XlfSource Include="@(XamlPropertyRuleNoCodeBehind->WithMetadataValue('XlfInput', 'true'))" />
+    <XlfSource Include="@(XamlPropertyProjectItemsSchema->WithMetadataValue('XlfInput', 'true'))" />
   </ItemGroup>
 
   <!--

@@ -5,6 +5,7 @@ namespace XliffTasks
 {
     internal static class MetadataKey
     {
+        public const string DependentUpon = nameof(DependentUpon);
         public const string Link = nameof(Link);
         public const string LogicalName = nameof(LogicalName);
         public const string ManifestResourceName = nameof(ManifestResourceName);
