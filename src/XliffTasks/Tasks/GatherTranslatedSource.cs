@@ -31,6 +31,7 @@ namespace XliffTasks.Tasks
                 SetLink(xlf, output, translatedFullPath);
                 AdjustManifestResourceName(xlf, output, language);
                 AdjustLogicalName(xlf, output, language);
+                AdjustDependentUpon(xlf, output, language);
 
                 outputs[index++] = output;
             }
@@ -87,6 +88,17 @@ namespace XliffTasks.Tasks
                 string logicalExtension = Path.GetExtension(logicalName);
                 logicalName = Path.ChangeExtension(logicalName, $".{language}{logicalExtension}");
                 output.SetMetadata(MetadataKey.LogicalName, logicalName);
+            }
+        }
+
+        private static void AdjustDependentUpon(ITaskItem xlf, ITaskItem output, string language)
+        {
+            string dependentUpon = xlf.GetMetadata(MetadataKey.DependentUpon);
+            if (!string.IsNullOrEmpty(dependentUpon))
+            {
+                string sourceDirectory = Path.GetDirectoryName(xlf.GetMetadataOrThrow(MetadataKey.XlfSource));
+                dependentUpon = Path.GetFullPath(Path.Combine(sourceDirectory, dependentUpon));
+                output.SetMetadata(MetadataKey.DependentUpon, dependentUpon);
             }
         }
     }
