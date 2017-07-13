@@ -20,6 +20,7 @@
     <CLSCompliant>False</CLSCompliant>
     <AppxPackageDir>$(BinDir)\AppPackages</AppxPackageDir>
     <PackageCertificateKeyFile>XUnit.Runner.Uap_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <SkipMergingFrameworkResources>true</SkipMergingFrameworkResources>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
