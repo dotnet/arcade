@@ -1,0 +1,3 @@
+<Project>
+  <Import Project="$(VSToolsPath)\vssdk\Microsoft.VsSDK.targets"/>
+</Project>

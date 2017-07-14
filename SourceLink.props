@@ -1,0 +1,13 @@
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+  <PropertyGroup>
+    <!-- Generate source link when building in microbuild. -->
+    <SourceLinkCreate Condition="'$(OfficialBuild)' == 'true'">true</SourceLinkCreate>
+    
+    <SourceLinkRepo>$(RepoRoot)</SourceLinkRepo>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="SourceLink.Create.CommandLine" Version="$(SourceLinkCreateCommandLineVersion)" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

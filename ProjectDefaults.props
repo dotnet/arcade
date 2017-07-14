@@ -1,7 +1,8 @@
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
-  <PropertyGroup>
+  <PropertyGroup>    
     <SignAssembly>true</SignAssembly>
+    <StrongNameKeyId>MicrosoftShared</StrongNameKeyId>
     <HighEntropyVA>true</HighEntropyVA>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Company>Microsoft Corporation</Company>
@@ -20,11 +21,52 @@
       https://github.com/Microsoft/msbuild/issues/2202 
     -->
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+
+    <!-- 
+      Only generate runtimeconfig.json files for .exes of net core apps. It's unnecessary in desktop projects. 
+    -->
+    <GenerateRuntimeConfigurationFiles Condition="'$(TargetFramework)' != 'netcoreapp1.1' and '$(TargetFramework)' != 'netcoreapp2.0'">false</GenerateRuntimeConfigurationFiles>
+
+    <!-- Enable IOperation analyzers -->
+    <Features>IOperation,$(Features)</Features>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Language)' == ''">
+    <Language Condition="'$(MSBuildProjectExtension)' == '.csproj'">C#</Language>
+    <Language Condition="'$(MSBuildProjectExtension)' == '.vbproj'">VB</Language>
+  </PropertyGroup>
+  
+  <!-- 
+      When building WPF / VSIX projects MSBuild will create a temporary project with an extension of
+      tmp_proj.  In that case the SDK is unable to determine the target language and cannot pick
+      the correct import. Need to set it explicitly here. 
+      See https://github.com/dotnet/project-system/issues/1467
+    -->
+  <Choose>
+    <When Condition="'$(MSBuildProjectExtension)' != '.csproj' and '$(MSBuildProjectExtension)' != '.vbproj' and '$(MSBuildProjectExtension)' != '.shproj'">
+      <Choose>
+        <When Condition="'$(Language)' == 'C#' or Exists('$(MSBuildProjectDirectory)\$(AssemblyName).csproj')">
+          <PropertyGroup>
+            <Language>C#</Language>
+            <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
+          </PropertyGroup>
+        </When>
+        <When Condition="'$(Language)' == 'VB' or Exists('$(MSBuildProjectDirectory)\$(AssemblyName).vbproj')">
+          <PropertyGroup>
+            <Language>VB</Language>
+            <LanguageTargets>$(MSBuildToolsPath)\Microsoft.VisualBasic.targets</LanguageTargets>
+          </PropertyGroup>
+        </When>
+      </Choose>
+    </When>
+  </Choose>
+  
+  <Import Project="|Build precondition failed: Unable to determine the language of the project. Consider adding Directory.Build.props that sets Language property to directory '$(MSBuildProjectDirectory)'.|"
+          Condition="'$(Language)' == '' and '$(MSBuildProjectExtension)' != '.shproj'"/>
+  
   <Choose>
     <!-- C# specific settings -->
-    <When Condition="'$(MSBuildProjectExtension)' == '.csproj' OR '$(Language)' == 'C#' OR '$(ProjectLanguage)' == 'CSharp'">
+    <When Condition="'$(Language)' == 'C#'">
       <PropertyGroup>
         <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
         <NoWarn>$(NoWarn);1591</NoWarn>
@@ -44,7 +86,7 @@
     </When>
       
     <!-- VB specific settings -->
-    <When Condition="'$(MSBuildProjectExtension)' == '.vbproj' OR '$(Language)' == 'VB' OR '$(ProjectLanguage)' == 'VB'">
+    <When Condition="'$(Language)' == 'VB'">
       <PropertyGroup>
         <MyType>Empty</MyType>
         <OptionCompare>Binary</OptionCompare>
@@ -57,12 +99,14 @@
 
       <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
         <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
         <DefineDebug>true</DefineDebug>
         <DefineTrace>true</DefineTrace>
       </PropertyGroup>
       
       <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <DefineTrace>true</DefineTrace>
+        <DebugType>full</DebugType>
         <Optimize>true</Optimize>
       </PropertyGroup>
     </When>

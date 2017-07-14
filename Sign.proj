@@ -8,7 +8,8 @@
 
   <Import Project="$(DirectoryBuildPropsPath)" Condition="Exists('$(DirectoryBuildPropsPath)')"/>
   <Import Project="RepoLayout.props" />
-  
+  <Import Project="DefaultVersions.props" />
+
   <Target Name="Sign">
     <ItemGroup>
       <SignToolArgs Include='-nugetPackagesPath "$(NuGetPackageRoot)\"' />

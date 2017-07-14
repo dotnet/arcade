@@ -1,0 +1,14 @@
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+  <!-- 
+    When not building in CI, automatically sync .xlf files to .resx files on build.
+    Otherwise, let the build fail to catch .xlf files that are not up-to-date. 
+  -->
+  <PropertyGroup>
+    <UpdateXlfOnBuild Condition="'$(CIBuild)' != 'true'">true</UpdateXlfOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="XliffTasks" Version="$(XliffTasksVersion)" PrivateAssets="all"/>
+  </ItemGroup>
+</Project>

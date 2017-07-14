@@ -1,25 +1,25 @@
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
-<Project>  
+<Project>
+  <PropertyGroup>
+    <DeployProjectOutput Condition="'$(DeployProjectOutput)' == ''">$(__DeployProjectOutput)</DeployProjectOutput>
+  </PropertyGroup>
+  
+  <!-- Default empty deploy target. -->
+  <Target Name="Deploy" AfterTargets="Build" Condition="'$(DeployProjectOutput)' == 'true'" />
+  
   <Import Project="StrongName.targets"/>
   <Import Project="GenerateInternalsVisibleTo.targets" />
   <Import Project="GenerateResxSource.targets" />
-  <Import Project="Test.targets"/>
+  <Import Project="Workarounds.targets"/>
 
-  <!-- Workaround for https://github.com/Microsoft/msbuild/issues/1310 -->
-  <Target Name="ForceGenerationOfBindingRedirects"
-          AfterTargets="ResolveAssemblyReferences"
-          BeforeTargets="GenerateBindingRedirects"
-          Condition="'$(AutoGenerateBindingRedirects)' == 'true'">
-    <PropertyGroup>
-      <!-- Needs to be set in a target because it has to be set after the initial evaluation in the common targets -->
-      <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
-    </PropertyGroup>
-  </Target>
+  <Import Project="XUnit.targets" Condition="'$(UsingToolXUnit)' == 'true'"/>
+  <Import Project="VisualStudio.targets" Condition="'$(UsingToolVSSDK)' == 'true' and '$(DesignTimeBuild)' != 'true' and '$(BuildingForLiveUnitTesting)' != 'true'"/>
+  <Import Project="OptimizationData.targets" Condition="'$(UsingToolIbcOptimization)' == 'true' and '$(IbcOptimizationDataDir)' != ''"/>
 
   <!-- 
     By default the SDK sets RootNamespace to the name of the project. Clear it here to avoid prefixing our namespaces.
   -->
-  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.vbproj' OR '$(Language)' == 'VB' OR '$(ProjectLanguage)' == 'VB'">
+  <PropertyGroup Condition="'$(Language)' == 'VB'">
     <RootNamespace />
   </PropertyGroup>
 </Project>

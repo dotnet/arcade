@@ -1,0 +1,72 @@
+﻿<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project DefaultTargets="Pack">
+  <!--
+    Required parameters:
+      DirectoryBuildPropsPath              Path to the Directory.Build.props file in the repo root.
+  -->
+
+  <Import Project="$(DirectoryBuildPropsPath)" Condition="Exists('$(DirectoryBuildPropsPath)')"/>
+  <Import Project="DefaultVersions.props"/>
+  <Import Project="RepoLayout.props" />
+
+  <ItemGroup>
+    <_StubFiles Include="$(VisualStudioSetupIntermediateOutputPath)**\*.stub"/>
+    <_StubDirs Include="@(_StubFiles->'%(RecursiveDir)')"/>
+  </ItemGroup>
+
+  <!--
+    TODO: Currently we need to erase Experimental flag from VSIXes that are inserted into VS.
+    The build produces VSIXes to VisualStudioSetupPath that need this treatment.
+    This task copies them to VisualStudioSetupInsertionPath and removes the flag from the manifest.
+  -->
+  <Target Name="PrepareVsixes" Outputs="%(_StubFiles.Identity)">
+    <ReadLinesFromFile File="%(_StubFiles.Identity)">
+      <Output TaskParameter="Lines" ItemName="_StubLines" />
+    </ReadLinesFromFile>
+
+    <PropertyGroup>
+      <_VsixFileName>@(_StubLines)</_VsixFileName>
+      <_JsonFileName>%(_StubFiles.FileName).json</_JsonFileName>
+      <_RemoveExperimentalFlag>false</_RemoveExperimentalFlag>
+      <_RemoveExperimentalFlag Condition="Exists('$(VisualStudioSetupOutputPath)$(_VsixFileName)')">true</_RemoveExperimentalFlag>
+    </PropertyGroup>
+    
+    <MakeDir Directories="$(VisualStudioSetupInsertionPath)"/>
+    
+    <Copy SourceFiles="$(VisualStudioSetupOutputPath)$(_VsixFileName);$(VisualStudioSetupOutputPath)$(_JsonFileName)"
+          DestinationFolder="$(VisualStudioSetupInsertionPath)" 
+          Condition="'$(_RemoveExperimentalFlag)' == 'true'"/>
+    
+    <PropertyGroup>
+      <_ModifyVsixManifestToolExe>$(NuGetPackageRoot)\RoslynTools.Microsoft.ModifyVsixManifest\$(RoslynToolsMicrosoftModifyVsixManifestVersion)\tools\ModifyVsixManifest.exe</_ModifyVsixManifestToolExe>
+      <_ModifyVsixManifestArgs>--remove=//x:PackageManifest/x:Installation/@Experimental --add-attribute=//x:PackageManifest/x:Installation;SystemComponent;true</_ModifyVsixManifestArgs>
+    </PropertyGroup>
+
+    <Exec Command='"$(_ModifyVsixManifestToolExe)" --vsix="$(VisualStudioSetupInsertionPath)$(_VsixFileName)" $(_ModifyVsixManifestArgs)'
+          Condition="'$(_RemoveExperimentalFlag)' == 'true'"/>
+
+    <ItemGroup Condition="'$(_RemoveExperimentalFlag)' == 'true'">
+      <FileWrites Include="$(VisualStudioSetupInsertionPath)$(_VsixFileName);$(VisualStudioSetupInsertionPath)$(_JsonFileName)"/>
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="Pack" DependsOnTargets="PrepareVsixes" Outputs="%(_StubDirs.Identity)">
+    <PropertyGroup>
+      <_ComponentDir>%(_StubDirs.Identity)</_ComponentDir>
+      <_ComponentName>$(_ComponentDir.TrimEnd('\'))</_ComponentName>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <_Args Include="ComponentName=$(_ComponentName)"/>
+      <_Args Include="SetupOutputPath=$(VisualStudioSetupInsertionPath)"/>
+      <_Args Include="ComponentIntermediateOutputPath=$(VisualStudioSetupIntermediateOutputPath)$(_ComponentName)\"/>
+      <_Args Include="MicroBuildPath=$(NuGetPackageRoot)MicroBuild.Core\$(MicroBuildCoreVersion)\"/>
+    </ItemGroup>
+
+    <Message Text="Packaging VS component '$(_ComponentName)'" Importance="high"/>
+    
+    <MSBuild Projects="VisualStudio.SetupPackage.vsmanproj" Properties="@(_Args)"/>
+  </Target>
+</Project>
+
+

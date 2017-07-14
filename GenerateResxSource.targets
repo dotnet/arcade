@@ -31,15 +31,19 @@
           Inputs="@(EmbeddedResourceSG)"
           Outputs="%(EmbeddedResourceSG.SourceOutputPath)">
     
-    <Exec Command='"$(ToolsetCompilerPackageDir)tools\csi.exe" "$(MSBuildThisFileDirectory)GenerateResxSource.csx" "%(EmbeddedResourceSG.FullPath)" "%(EmbeddedResourceSG.ManifestResourceName)" "%(EmbeddedResourceSG.SourceOutputPath)"' />
+    <Exec Command='"$(ToolsetCompilerPackageDir)tools\csi.exe" "$(MSBuildThisFileDirectory)GenerateResxSource.csx" "$(Language)" "%(EmbeddedResourceSG.FullPath)" "%(EmbeddedResourceSG.ManifestResourceName)" "%(EmbeddedResourceSG.SourceOutputPath)"' />
   </Target>
 
   <Target Name="GetEmbeddedResourcesWithSourceGeneration">
+    <PropertyGroup>
+      <_EmbeddedResourceSourceExtension Condition="'$(Language)' == 'C#'">cs</_EmbeddedResourceSourceExtension>
+      <_EmbeddedResourceSourceExtension Condition="'$(Language)' == 'VB'">vb</_EmbeddedResourceSourceExtension>
+    </PropertyGroup>
+    <Error Text="GenerateResxSource doesn't support language: '$(Language)'" Condition="'$(_EmbeddedResourceSourceExtension)' == ''"/>
     <ItemGroup>
-      <!-- TODO: Avoid checking for XlfLanguage; https://github.com/dotnet/xliff-tasks/issues/19 -->
       <EmbeddedResourceSG Include="@(EmbeddedResource)" Condition="'%(EmbeddedResource.GenerateSource)' == 'true' and '%(EmbeddedResource.XlfLanguage)' == ''" />
       <EmbeddedResourceSG>
-        <SourceOutputPath>$(IntermediateOutputPath)%(EmbeddedResourceSG.ManifestResourceName).cs</SourceOutputPath>
+        <SourceOutputPath>$(IntermediateOutputPath)%(EmbeddedResourceSG.ManifestResourceName).$(_EmbeddedResourceSourceExtension)</SourceOutputPath>
       </EmbeddedResourceSG>
     </ItemGroup>
   </Target>

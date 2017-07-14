@@ -10,8 +10,11 @@
     <ArtifactsDir>$(RepoRoot)artifacts\</ArtifactsDir>
     <ArtifactsBinDir>$(ArtifactsDir)$(Configuration)\bin\</ArtifactsBinDir>
     <ArtifactsObjDir>$(ArtifactsDir)$(Configuration)\obj\</ArtifactsObjDir>
+    <ArtifactsToolsetDir>$(ArtifactsDir)toolset\</ArtifactsToolsetDir>
     <ArtifactsTestResultsDir>$(ArtifactsDir)$(Configuration)\TestResults\</ArtifactsTestResultsDir>
     <PackageOutputPath>$(ArtifactsDir)$(Configuration)\packages\</PackageOutputPath>
     <VisualStudioSetupOutputPath>$(ArtifactsDir)$(Configuration)\VSSetup\</VisualStudioSetupOutputPath>
+    <VisualStudioSetupInsertionPath>$(VisualStudioSetupOutputPath)Insertion\</VisualStudioSetupInsertionPath>
+    <VisualStudioSetupIntermediateOutputPath>$(ArtifactsDir)$(Configuration)\VSSetup.obj\</VisualStudioSetupIntermediateOutputPath>
   </PropertyGroup>
 </Project>

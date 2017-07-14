@@ -21,14 +21,16 @@
     
   -->
 
-  <Import Project="GitHash.props" Condition="'$(BUILD_BUILDNUMBER)' != ''"/>
-
   <PropertyGroup>
     <AssemblyVersion>$(VersionBase).0</AssemblyVersion>
+    <OfficialBuild>false</OfficialBuild>
+    <OfficialBuild Condition="'$(BUILD_BUILDNUMBER)' != ''">true</OfficialBuild>
   </PropertyGroup>
   
+  <Import Project="GitHash.props" Condition="'$(OfficialBuild)' == 'true'"/>
+
   <Choose>
-    <When Condition="'$(BUILD_BUILDNUMBER)' != ''">
+    <When Condition="'$(OfficialBuild)' == 'true'">
       <PropertyGroup>
         <_BuildNumberFiveDigitDateStamp>$([MSBuild]::Subtract($(BUILD_BUILDNUMBER.Split('.')[0].Substring(3).Trim()), 8800))</_BuildNumberFiveDigitDateStamp>
         <_BuildNumberBuildOfTheDayPadded>$(BUILD_BUILDNUMBER.Split('.')[1].PadLeft(2,'0'))</_BuildNumberBuildOfTheDayPadded>

@@ -1,12 +1,135 @@
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
+  <!--
+    There are three kinds of projects that use targets defined here:
+      1) Projects using VS SDK to build VSIX packages:       IsVsixProject == true, CreateVsixContainer == true
+      2) Projects using VS SDK to generate .pkgdef files:    IsVsixProject == true, GeneratePkgDefFile == true
+      3) Projects that pack Willow packages (swix):          SwrFile items present
+  -->
+  
+  <PropertyGroup>
+    <!--
+      TODO: Currently we need to erase Experimental flag from VSIXes that are inserted into VS.
+      The build produces VSIXes with the flag and Pack target then makes a copy to VisualStudioSetupInsertionPath
+      and updates the manifest.
+      Instead the VSIX installer should allow to override the experimental flag, so that we can only produce a single VSIX and
+      build VSIX that is going to be inserted into VS directrly to directory $(VisualStudioSetupInsertionPath).
+    -->
+    <_TargetVsixContainerDir>$(VisualStudioSetupOutputPath)</_TargetVsixContainerDir>
+    
+    <TargetVsixContainerName Condition="'$(TargetVsixContainerName)' == ''">$(TargetName).vsix</TargetVsixContainerName>
+    <TargetVsixContainer Condition="'$(TargetVsixContainer)' == ''">$(_TargetVsixContainerDir)$(TargetVsixContainerName)</TargetVsixContainer>
+    
+    <DeployExtension>false</DeployExtension>
+    <DeployExtension Condition="'$(DeployProjectOutput)' == 'true'">true</DeployExtension>
+
+    <_ComponentIntermediateDir Condition="'$(VisualStudioInsertionComponent)' != ''">$(VisualStudioSetupIntermediateOutputPath)$(VisualStudioInsertionComponent)\</_ComponentIntermediateDir>
+  </PropertyGroup>
+
   <!-- 
-    The VSSDK immplements some targets which are run during design time builds per convention. 
-    If the Project is not a VSIX project and sets $CreateVSIXContainer=false these targets should be 
-    a no-op. However they dont check for that and that's a bug. To workaround, we override them
-    with empty targets and conditionally import these if CreateVSIXContainer is false.
-    Tracked by https://devdiv.visualstudio.com/DevDiv/_workitems?id=365685&fullScreen=false&_a=edit   
-   -->
-  <Import Project="VisualStudio.DesignTimeBuild.targets" Condition="'$(CreateVsixContainer)' == 'false'"/>
+    Read package id from the extension.vsixmanifest file. VS SDK doesn't expose this value in any msbuild property.
+  -->
+  <Target Name="_SetStubFileNameFromManifest">
+    <PropertyGroup>
+      <_VsxXmlNamespace>&lt;Namespace Prefix='vsx' Uri='http://schemas.microsoft.com/developer/vsx-schema/2011'/&gt;</_VsxXmlNamespace>
+    </PropertyGroup>
+
+    <XmlPeek Namespaces="$(_VsxXmlNamespace)"
+             XmlInputPath="$(IntermediateVsixManifest)"
+             Query="/vsx:PackageManifest/vsx:Metadata/vsx:PackageId/text()">
+      <Output TaskParameter="Result" PropertyName="_VsixPackageId" />
+    </XmlPeek>
+
+    <XmlPeek Namespaces="$(_VsxXmlNamespace)"
+             XmlInputPath="$(IntermediateVsixManifest)"
+             Query="/vsx:PackageManifest/vsx:Metadata/vsx:Identity/@Id"
+             Condition="'$(_VsixPackageId)' == ''">
+      <Output TaskParameter="Result" PropertyName="_VsixPackageId" />
+    </XmlPeek>
+
+    <Error Text="Unable to determine VSIX package id for project '$(MSBuildProjectFullPath)'." Condition="'$(_VsixPackageId)' == ''"/>
+
+    <PropertyGroup>
+      <_PackageStubFile>$(_ComponentIntermediateDir)$(_VsixPackageId).stub</_PackageStubFile>
+    </PropertyGroup>
+  </Target>
+
+  <!-- 
+    Create VSIX container directory. 
+  -->
+  <Target Name="_MakeTargetVsixContainerDir" 
+          BeforeTargets="CreateVsixContainer" 
+          Condition="'$(CreateVsixContainer)' == 'true'"
+          Outputs="$(_TargetVsixContainerDir)">
+    
+    <MakeDir Directories="$(_TargetVsixContainerDir)" />
+  </Target>
+
+  <!-- 
+    Create VSIX container directory and a stub file that can be used in Pack phase to identify what VSIXes belong to the component.
+  -->
+  <Target Name="_WriteComponentStubFile" Outputs="$(_PackageStubFile)">
+    <Error Text="VisualStudioInsertionComponent property must only be set for projects with extension.vsixmanifest or SWR files." Condition="'$(_PackageStubFile)' == ''"/>
+
+    <MakeDir Directories="$(_ComponentIntermediateDir)" />
+    <WriteLinesToFile File="$(_PackageStubFile)" Lines="$(TargetVsixContainerName)" Overwrite="true" />
+
+    <ItemGroup>
+      <FileWrites Include="$(_PackageStubFile)"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_WriteComponentStubFileForVsixContainer"
+          BeforeTargets="CreateVsixContainer"
+          DependsOnTargets="_SetStubFileNameFromManifest;_WriteComponentStubFile"
+          Condition="'$(CreateVsixContainer)' == 'true' and '$(VisualStudioInsertionComponent)' != ''"/>
+
+  <Target Name="ValidateSingleSwixVersion" BeforeTargets="Pack">
+    <ItemGroup>
+      <_SwixNugets Include="$(NuGetPackageRoot)MicroBuild.Plugins.swixbuild\**\*.nupkg"/>
+    </ItemGroup>
+
+    <Error Text="MicroBuild only supports a single version of MicroBuild.Plugins.swixbuild package in the nuget cache. Found the following: @(_SwixNugets, ', ')"
+           Condition="'@(_SwixNugets->Count())' != '1'"
+           ContinueOnError="false" />
+  </Target>
+  
+  <!--
+    Packaging SWR files to Willow VSIX.
+  -->
+  <Target Name="SwixPack" 
+          DependsOnTargets="_SetStubFileNameForSwixProject;_WriteComponentStubFile"
+          AfterTargets="Pack" 
+          Condition="'@(SwrFile)' != ''">
+    
+    <PropertyGroup>
+      <_SwrProperties>@(SwrProperty)</_SwrProperties>
+      <_SwrFiles>@(SwrFile->'%(FullPath)')</_SwrFiles>
+    </PropertyGroup>
+    <ItemGroup>
+      <_SwixArgs Include="SwrProperties=$([MSBuild]::Escape($(_SwrProperties)))"/>
+      <_SwixArgs Include="SwrFiles=$([MSBuild]::Escape($(_SwrFiles)))"/>
+      <_SwixArgs Include="SwrPackageName=$(TargetName)"/>
+      <_SwixArgs Include="IntermediateOutputPath=$(IntermediateOutputPath)"/>
+      <_SwixArgs Include="MicroBuildPath=$(NuGetPackageRoot)MicroBuild.Core\$(MicroBuildCoreVersion)\"/>
+    </ItemGroup>
+
+    <MSBuild Projects="$(RepoToolsetDir)VisualStudio.SetupPackage.swixproj" Properties="@(_SwixArgs)" Targets="Build"/>
+
+    <Copy SourceFiles="$(IntermediateOutputPath)$(TargetName).vsix;$(IntermediateOutputPath)$(TargetName).json"
+          DestinationFolder="$(VisualStudioSetupInsertionPath)" />
+    
+    <ItemGroup>
+      <FileWrites Include="$(VisualStudioSetupInsertionPath)$(TargetName).vsix"/>
+      <FileWrites Include="$(VisualStudioSetupInsertionPath)$(TargetName).json"/>
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="_SetStubFileNameForSwixProject">
+    <PropertyGroup>
+      <_PackageStubFile>$(_ComponentIntermediateDir)$(TargetName).stub</_PackageStubFile>
+    </PropertyGroup>
+  </Target>
   
   <!--
     This is a workaround for allowing neutral CTO resource produced from *.vsct to go in the main assembly.
@@ -38,27 +161,35 @@
       </_ResourcesToMergeWithCTOWithCultureMetadata>
     </ItemGroup>
   </Target>
-  
-  <ItemGroup>
-    <!-- Include manifest -->
-    <_VsixPayload Include="$(OutputPath)$(VsixPackageId).json" />
-    
-    <!-- Include .vsix -->
-    <_VsixPayload Include="$(OutputPath)$(MSBuildProjectName).vsix" />
-  </ItemGroup>
-  
-  <!-- Copy VS setup components to the VS setup output dir -->
-  <Target Name="CopyVisualStudioSetupComponents" 
-          AfterTargets="Build" 
-          DependsOnTargets="Build"
-          Condition="'$(VisualStudioSetupComponent)' != '' and '$(DesignTimeBuild)' != 'true' and '$(BuildingForLiveUnitTesting)' != 'true'">
-    
-    <Copy SourceFiles="@(_VsixPayload)" DestinationFolder="$(VisualStudioSetupOutputPath)$(VisualStudioSetupComponent)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />   
+
+  <!-- 
+    The VSSDK implements some targets which are run during design time builds per convention. 
+    If the Project is not a VSIX project and sets $CreateVSIXContainer=false these targets should be 
+    a no-op. However they dont check for that and that's a bug. To workaround, we override them
+    with empty targets and conditionally import these if CreateVSIXContainer is false.
+    Tracked by https://devdiv.visualstudio.com/DevDiv/_workitems?id=365685&fullScreen=false&_a=edit   
+   -->
+  <Import Project="VisualStudio.DesignTimeBuild.targets" Condition="'$(CreateVsixContainer)' != 'true'"/>
+
+  <Import Project="VisualStudio.ImportSdk.targets" Condition="'$(VSToolsPath)' != ''" />
+
+  <!-- 
+    Support for templates. 
+  -->
+  <Target Name="GetVsixTemplateItems" DependsOnTargets="ZipProjects;ZipItems">
+    <ItemGroup>
+      <VSIXSourceItem Include="@(IntermediateZipItem)">
+        <VSIXSubPath>%(IntermediateZipItem.Filename)\%(IntermediateZipItem.Language)\%(IntermediateZipItem.OutputSubPath)\%(IntermediateZipItem.Culture)</VSIXSubPath>
+      </VSIXSourceItem>
+      <VSIXSourceItem Include="@(IntermediateZipProject)">
+        <VSIXSubPath>%(IntermediateZipProject.Filename)\%(IntermediateZipProject.Language)\%(IntermediateZipProject.OutputSubPath)\%(IntermediateZipProject.Culture)</VSIXSubPath>
+      </VSIXSourceItem>
+    </ItemGroup>
   </Target>
-  
-  <Import Project="$(NuGetPackageRoot)Microsoft.VSSDK.BuildTools\$(MicrosoftVSSDKBuildToolsVersion)\build\Microsoft.VsSDK.BuildTools.targets" />
-  <Import Project="$(VSToolsPath)\vssdk\Microsoft.VsSDK.targets" />
-  
+  <PropertyGroup>
+    <GetVsixSourceItemsDependsOn>$(GetVsixSourceItemsDependsOn);GetVsixTemplateItems</GetVsixSourceItemsDependsOn>
+  </PropertyGroup>
+
   <!-- Returns the current build version. Used in .vsixmanifests to substitute our build version into them -->
   <Target Name="GetBuildVersion" Outputs="$(VsixVersion)" />
 </Project>

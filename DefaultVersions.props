@@ -1,0 +1,30 @@
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+  <!--
+    Sets versions of packages used by the toolset unless they were already specified by the repo.
+  -->
+  <PropertyGroup>
+    <!-- Opt-out features -->
+    <UsingToolXliff Condition="'$(UsingToolXliff)' == ''">true</UsingToolXliff>
+    <UsingToolSourceLink Condition="'$(UsingToolSourceLink)' == ''">true</UsingToolSourceLink>
+    <UsingToolXUnit Condition="'$(UsingToolXUnit)' == ''">true</UsingToolXUnit>
+
+    <!-- Opt-in features -->
+    <UsingToolVSSDK Condition="'$(UsingToolVSSDK)' == ''">false</UsingToolVSSDK>
+    <UsingToolIbcOptimization Condition="'$(UsingToolIbcOptimization)' == ''">false</UsingToolIbcOptimization>
+
+    <!-- Default versions -->
+    <XliffTasksVersion Condition="'$(XliffTasksVersion)' == ''">0.2.0-beta-000051</XliffTasksVersion>
+    <SourceLinkCreateCommandLineVersion Condition="'$(SourceLinkCreateCommandLineVersion)' == ''">2.2.0-b491</SourceLinkCreateCommandLineVersion>
+    <XUnitVersion Condition="'$(XUnitVersion)' == ''">2.3.0-beta3-build3705</XUnitVersion>
+    <MicrosoftVSSDKBuildToolsVersion Condition="'$(MicrosoftVSSDKBuildToolsVersion)' == ''">15.1.192</MicrosoftVSSDKBuildToolsVersion>
+    <MicroBuildPluginsSwixBuildVersion Condition="'$(MicroBuildPluginsSwixBuildVersion)' == ''">1.0.147</MicroBuildPluginsSwixBuildVersion>
+    <MicrosoftDotNetIBCMergeVersion Condition="'$(MicrosoftDotNetIBCMergeVersion)' == ''">4.7.1-alpha-00001</MicrosoftDotNetIBCMergeVersion>
+    <RoslynToolsMicrosoftSignToolVersion Condition="'$(RoslynToolsMicrosoftSignToolVersion)' == ''">0.3.3-beta</RoslynToolsMicrosoftSignToolVersion>
+    <MicroBuildCoreVersion Condition="'$(MicroBuildCoreVersion)' == ''">0.2.0</MicroBuildCoreVersion>
+    <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">2.3.0-beta3-build3705</XUnitRunnerVisualStudioVersion>
+    <MicrosoftNETTestSdkVersion Condition="'$(MicrosoftNETTestSdkVersion)' == ''">15.3.0-preview-20170628-02</MicrosoftNETTestSdkVersion>
+    <MicrosoftNetCompilersVersion Condition="'$(MicrosoftNetCompilersVersion)' == ''">2.3.0-beta4-61908-01</MicrosoftNetCompilersVersion>
+    <RoslynToolsMicrosoftModifyVsixManifestVersion Condition="'$(RoslynToolsMicrosoftModifyVsixManifestVersion)' == ''">0.2.4-beta</RoslynToolsMicrosoftModifyVsixManifestVersion>
+  </PropertyGroup>
+</Project>

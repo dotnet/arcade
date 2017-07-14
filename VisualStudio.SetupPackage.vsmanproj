@@ -1,12 +1,13 @@
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
-<Project>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!--
     Required variables:
-      SetupOutputPath             Directory to drop the VSIX to.
-      SetupIntermediateOutputPath Intermediate directory.
-      MicroBuildPath              MicroBuild package path.
+      ComponentName                   Name of the component (VSIX)
+      SetupOutputPath                 Directory to drop Willow manifests to.
+      ComponentIntermediateOutputPath Intermediate directory where the component is being built.
+      MicroBuildPath                  MicroBuild package path.
   -->
-  
+
   <PropertyGroup>
     <ResolveNuGetPackages>false</ResolveNuGetPackages>
     <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
@@ -20,17 +21,19 @@
     <FinalizeSkipLayout>true</FinalizeSkipLayout>
     <IsPackage>true</IsPackage>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetName>$(ComponentName)</TargetName>
     <OutputPath>$(SetupOutputPath)</OutputPath>
-    <IntermediateOutputPath>$(SetupIntermediateOutputPath)</IntermediateOutputPath>
+    <IntermediateOutputPath>$(ComponentIntermediateOutputPath)</IntermediateOutputPath>
   </PropertyGroup>
-  
+
+  <ItemGroup>
+    <_PackageStubFiles Include="$(ComponentIntermediateOutputPath)*.stub"/>
+    <MergeManifest Include="@(_PackageStubFiles->'$(SetupOutputPath)%(Filename).json')"/>
+  </ItemGroup>
+
   <PropertyGroup Condition="'$(BUILD_BUILDNUMBER)' == ''">
     <FinalizeManifest>false</FinalizeManifest>
   </PropertyGroup>
-  
-  <ItemGroup>
-    <MergeManifest Include="$(SetupOutputPath)*.json" />
-  </ItemGroup>
 
   <Import Project="$(MicroBuildPath)build\MicroBuild.Core.targets" />
 </Project>

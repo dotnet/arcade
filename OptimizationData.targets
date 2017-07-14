@@ -1,0 +1,32 @@
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+  <!--
+    Required properties:
+      IbcOptimizationDataDir           The directory containing IBC optimization data.
+  -->
+  <PropertyGroup>
+    <_OptimizationDataFile>$([System.IO.Path]::GetFullPath('$(IbcOptimizationDataDir)$(TargetName).pgo'))</_OptimizationDataFile>
+  </PropertyGroup>
+
+  <Target Name="ApplyOptimizations"
+          Condition="Exists('$(_OptimizationDataFile)')"
+          Inputs="@(IntermediateAssembly)"
+          Outputs="@(IntermediateAssembly);$(PostCompileBinaryModificationSentinelFile)">
+
+    <PropertyGroup>
+      <_RunIbc>false</_RunIbc>
+      <_RunIbc Condition="'$(Configuration)' == 'Release' and '$(OfficialBuild)' == 'true'">true</_RunIbc>
+
+      <_IbcMergePath>$(NuGetPackageRoot)\Microsoft.DotNet.IBCMerge\$(MicrosoftDotNetIBCMergeVersion)\lib\net45\ibcmerge.exe</_IbcMergePath>
+      <_IbcMergeCommandLineArgs>-q -f -partialNGEN -minify -mo "@(IntermediateAssembly)" -incremental "$(_OptimizationDataFile)"</_IbcMergeCommandLineArgs>
+    </PropertyGroup>
+
+    <Message Text="IBCMerge tool will be run in an official build with arguments: $(_IbcMergeCommandLineArgs)" Condition="'$(_RunIbc)' != 'true'" Importance="normal"/>
+    
+    <Exec Command='"$(_IbcMergePath)" $(_IbcMergeCommandLineArgs)' ConsoleToMSBuild="true" Condition="'$(_RunIbc)' == 'true'">
+      <Output TaskParameter="ConsoleOutput" PropertyName="IbcMergeOutput" />
+    </Exec>
+
+    <Message Text="$(IbcMergeOutput)" />
+  </Target>
+</Project>
