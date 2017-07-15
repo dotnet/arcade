@@ -19,7 +19,7 @@
     The build produces VSIXes to VisualStudioSetupPath that need this treatment.
     This task copies them to VisualStudioSetupInsertionPath and removes the flag from the manifest.
   -->
-  <Target Name="PrepareVsixes" Outputs="%(_StubFiles.Identity)">
+  <Target Name="PrepareVsixes" Outputs="%(_StubFiles.Identity)" Condition="'@(_StubFiles)' != ''">
     <ReadLinesFromFile File="%(_StubFiles.Identity)">
       <Output TaskParameter="Lines" ItemName="_StubLines" />
     </ReadLinesFromFile>
@@ -50,7 +50,7 @@
     </ItemGroup>
   </Target>
   
-  <Target Name="Pack" DependsOnTargets="PrepareVsixes" Outputs="%(_StubDirs.Identity)">
+  <Target Name="Pack" DependsOnTargets="PrepareVsixes" Outputs="%(_StubDirs.Identity)" Condition="'@(_StubDirs)' != ''">
     <PropertyGroup>
       <_ComponentDir>%(_StubDirs.Identity)</_ComponentDir>
       <_ComponentName>$(_ComponentDir.TrimEnd('\'))</_ComponentName>
