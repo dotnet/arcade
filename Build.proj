@@ -56,7 +56,7 @@
       <RestoreToolsProp Include="RoslynToolsMicrosoftSignToolVersion=$(RoslynToolsMicrosoftSignToolVersion)"/>
       <RestoreToolsProp Include="MicroBuildCoreVersion=$(MicroBuildCoreVersion)"/>
       <RestoreToolsProp Include="MicroBuildPluginsSwixBuildVersion=$(MicroBuildPluginsSwixBuildVersion)"/>
-      <RestoreToolsProp Include="MicrosoftNetCompilersVersion=$(MicrosoftNetCompilersVersion)"/>
+      <RestoreToolsProp Include="RoslynToolsMicrosoftModifyVsixManifestVersion=$(RoslynToolsMicrosoftModifyVsixManifestVersion)"/>
     </ItemGroup>
     
     <!--

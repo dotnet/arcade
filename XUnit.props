@@ -12,7 +12,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="xunit" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="$(XUnitRunnerVisualStudioVersion)" />
-    <PackageReference Include="xunit.runner.console" Version="$(XUnitVersion)" Condition="'$(TestUsingDotNetCli)' != 'true'"/>
+    <PackageReference Include="xunit.runner.console" Version="$(XUnitVersion)" />
     
     <!-- Test runner configuration -->
     <None Include="$(XUnitConfigurationFile)" Condition="'$(XUnitConfigurationFile)' != '' and '$(XUnitConfigurationFile)' != 'Default'">

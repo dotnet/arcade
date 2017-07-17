@@ -171,12 +171,15 @@
    -->
   <Import Project="VisualStudio.DesignTimeBuild.targets" Condition="'$(CreateVsixContainer)' != 'true'"/>
 
-  <Import Project="VisualStudio.ImportSdk.targets" Condition="'$(VSToolsPath)' != ''" />
+  <!--
+    VSSDK is needed in projects generating VSIX packages or pkgdef files.
+  -->
+  <Import Project="VisualStudio.ImportSdk.targets" Condition="'$(IsVsixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true'" />
 
-  <!-- 
+  <!--
     Support for templates. 
   -->
-  <Target Name="GetVsixTemplateItems" DependsOnTargets="ZipProjects;ZipItems">
+  <Target Name="_GetVsixTemplateItems" DependsOnTargets="ZipProjects;ZipItems" Condition="'@(VSTemplate)' != ''">
     <ItemGroup>
       <VSIXSourceItem Include="@(IntermediateZipItem)">
         <VSIXSubPath>%(IntermediateZipItem.Filename)\%(IntermediateZipItem.Language)\%(IntermediateZipItem.OutputSubPath)\%(IntermediateZipItem.Culture)</VSIXSubPath>
@@ -187,7 +190,7 @@
     </ItemGroup>
   </Target>
   <PropertyGroup>
-    <GetVsixSourceItemsDependsOn>$(GetVsixSourceItemsDependsOn);GetVsixTemplateItems</GetVsixSourceItemsDependsOn>
+    <GetVsixSourceItemsDependsOn>$(GetVsixSourceItemsDependsOn);_GetVsixTemplateItems</GetVsixSourceItemsDependsOn>
   </PropertyGroup>
 
   <!-- Returns the current build version. Used in .vsixmanifests to substitute our build version into them -->

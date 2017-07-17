@@ -24,7 +24,7 @@
     <MicroBuildCoreVersion Condition="'$(MicroBuildCoreVersion)' == ''">0.2.0</MicroBuildCoreVersion>
     <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">2.3.0-beta3-build3705</XUnitRunnerVisualStudioVersion>
     <MicrosoftNETTestSdkVersion Condition="'$(MicrosoftNETTestSdkVersion)' == ''">15.3.0-preview-20170628-02</MicrosoftNETTestSdkVersion>
-    <MicrosoftNetCompilersVersion Condition="'$(MicrosoftNetCompilersVersion)' == ''">2.3.0-beta4-61908-01</MicrosoftNetCompilersVersion>
+    <MicrosoftNetCompilersVersion Condition="'$(MicrosoftNetCompilersVersion)' == ''">2.3.0</MicrosoftNetCompilersVersion>
     <RoslynToolsMicrosoftModifyVsixManifestVersion Condition="'$(RoslynToolsMicrosoftModifyVsixManifestVersion)' == ''">0.2.4-beta</RoslynToolsMicrosoftModifyVsixManifestVersion>
   </PropertyGroup>
 </Project>
