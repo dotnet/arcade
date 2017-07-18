@@ -174,7 +174,7 @@
   <!--
     VSSDK is needed in projects generating VSIX packages or pkgdef files.
   -->
-  <Import Project="VisualStudio.ImportSdk.targets" Condition="'$(IsVsixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true'" />
+  <Import Project="VisualStudio.ImportSdk.targets" Condition="'$(VSToolsPath)' != '' and ('$(IsVsixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true')" />
 
   <!--
     Support for templates. 

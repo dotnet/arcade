@@ -16,7 +16,7 @@
       <SignToolArgs Include='-intermediateOutputPath "$(ArtifactsObjDir)\"' />
       <SignToolArgs Include='-config "$(SignToolDataPath)"' />
       <SignToolArgs Include='-test' Condition="'$(SignType)' != 'real'" />
-      <SignToolArgs Include='"$(ArtifactsBinDir)\"' />
+      <SignToolArgs Include='"$(ArtifactsConfigurationDir)\"' />
     </ItemGroup>
     
     <Exec Command="$(NuGetPackageRoot)RoslynTools.Microsoft.SignTool\$(RoslynToolsMicrosoftSignToolVersion)\tools\SignTool.exe @(SignToolArgs, ' ')" />
