@@ -36,12 +36,14 @@ namespace XliffTasks.Tests
 @"<root>
   <data name=""Hello"">
     <value>Hello!</value>
+    <comment>Greeting</comment>
   </data>
   <data name=""Goodbye"">
     <value>Goodbye!</value>
   </data>
   <data name=""Apple"">
    <value>Apple</value>
+   <comment>Tasty</comment>
   </data>
 </root>";
 
@@ -52,7 +54,7 @@ namespace XliffTasks.Tests
       <trans-unit id=""Hello"">
         <source>Hello!</source>
         <target state=""new"">Hello!</target>
-        <note />
+        <note>Greeting</note>
       </trans-unit>
       <trans-unit id=""Goodbye"">
         <source>Goodbye!</source>
@@ -62,7 +64,7 @@ namespace XliffTasks.Tests
       <trans-unit id=""Apple"">
         <source>Apple</source>
         <target state=""new"">Apple</target>
-        <note />
+        <note>Tasty</note>
       </trans-unit>
     </body>
   </file>
@@ -77,7 +79,7 @@ namespace XliffTasks.Tests
       <trans-unit id=""Hello"">
         <source>Hello!</source>
         <target state=""translated"">Bonjour!</target>
-        <note />
+        <note>Greeting</note>
       </trans-unit>
       <trans-unit id=""Goodbye"">
         <source>Goodbye!</source>
@@ -87,7 +89,7 @@ namespace XliffTasks.Tests
       <trans-unit id=""Apple"">
         <source>Apple</source>
         <target state=""translated"">Apple</target>
-        <note />
+        <note>Tasty</note>
       </trans-unit>
     </body>
   </file>

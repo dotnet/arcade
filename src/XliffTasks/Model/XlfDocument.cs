@@ -162,7 +162,7 @@ namespace XliffTasks.Model
                         new XAttribute("id", sourceNode.Id),
                         new XElement(ns + "source", sourceNode.Source),
                         new XElement(ns + "target", new XAttribute("state", "new"), sourceNode.Source),
-                        new XElement(ns + "note"), sourceNode.Note));
+                        new XElement(ns + "note", sourceNode.Note == "" ? null : sourceNode.Note)));
 
                 changed = true;
             }
