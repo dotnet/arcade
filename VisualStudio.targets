@@ -83,16 +83,6 @@
           BeforeTargets="CreateVsixContainer"
           DependsOnTargets="_SetStubFileNameFromManifest;_WriteComponentStubFile"
           Condition="'$(CreateVsixContainer)' == 'true' and '$(VisualStudioInsertionComponent)' != ''"/>
-
-  <Target Name="ValidateSingleSwixVersion" BeforeTargets="Pack">
-    <ItemGroup>
-      <_SwixNugets Include="$(NuGetPackageRoot)MicroBuild.Plugins.swixbuild\**\*.nupkg"/>
-    </ItemGroup>
-
-    <Error Text="MicroBuild only supports a single version of MicroBuild.Plugins.swixbuild package in the nuget cache. Found the following: @(_SwixNugets, ', ')"
-           Condition="'@(_SwixNugets->Count())' != '1'"
-           ContinueOnError="false" />
-  </Target>
   
   <!--
     Packaging SWR files to Willow VSIX.
