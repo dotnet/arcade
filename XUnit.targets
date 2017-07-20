@@ -26,7 +26,9 @@
       <_TestEnvironment>$(TargetFramework)|$(_TestArchitecture)</_TestEnvironment>
       <_TestOutPathNoExt>$(ArtifactsTestResultsDir)$(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture)</_TestOutPathNoExt>
       <_TestStdOutPath>$(_TestOutPathNoExt).log</_TestStdOutPath>
-      <_TestLogPath>$(_TestOutPathNoExt).xml</_TestLogPath>
+      <_TestStdErrPath>$(_TestOutPathNoExt).error.log</_TestStdErrPath>
+      <_TestResultsXmlPath>$(_TestOutPathNoExt).xml</_TestResultsXmlPath>
+      <_TestResultsHtmlPath>$(_TestOutPathNoExt).html</_TestResultsHtmlPath>
       <_TargetFileNameNoExt>$([System.IO.Path]::GetFileNameWithoutExtension('$(TargetFileName)'))</_TargetFileNameNoExt>
       <_CoreRuntimeConfigPath>$(TargetDir)$(_TargetFileNameNoExt).runtimeconfig.json</_CoreRuntimeConfigPath>
       <_CoreDepsPath>$(TargetDir)$(_TargetFileNameNoExt).deps.json</_CoreDepsPath>
@@ -35,22 +37,21 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(_RunOnCore)' == 'true'">
-      <_TestRunnerCommand>"$(DotNetTool)" exec --depsfile "$(_CoreDepsPath)" --runtimeconfig "$(_CoreRuntimeConfigPath)" "$(NuGetPackageRoot)xunit.runner.console\$(XUnitVersion)\tools\netcoreapp1.0\xunit.console.dll" "$(TargetPath)" -noautoreporters -xml "$(_TestLogPath)"</_TestRunnerCommand>
+      <_TestRunnerCommand>"$(DotNetTool)" exec --depsfile "$(_CoreDepsPath)" --runtimeconfig "$(_CoreRuntimeConfigPath)" "$(NuGetPackageRoot)xunit.runner.console\$(XUnitVersion)\tools\netcoreapp1.0\xunit.console.dll" "$(TargetPath)" -noautoreporters -xml "$(_TestResultsXmlPath)"</_TestRunnerCommand>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(_RunOnCore)' != 'true'">
       <_XUnitConsoleExe>xunit.console.exe</_XUnitConsoleExe>
       <_XUnitConsoleExe Condition="'$(_TestArchitecture)' == 'x86'">xunit.console.x86.exe</_XUnitConsoleExe>
-      <_TestRunnerCommand>"$(NuGetPackageRoot)xunit.runner.console\$(XUnitVersion)\tools\net452\$(_XUnitConsoleExe)" "$(TargetPath)" -verbose -xml "$(_TestLogPath)"</_TestRunnerCommand>
+      <_TestRunnerCommand>"$(NuGetPackageRoot)xunit.runner.console\$(XUnitVersion)\tools\net452\$(_XUnitConsoleExe)" "$(TargetPath)" -noshadow -xml "$(_TestResultsXmlPath)" -html "$(_TestResultsHtmlPath)"</_TestRunnerCommand>
     </PropertyGroup>
 
     <MakeDir Directories="$(ArtifactsTestResultsDir)"/>
-    <Delete Files="$(_TestOutPathNoExt)" />
-    <Delete Files="$(_TestStdOutPath)" />
+    <Delete Files="$(_TestOutPathNoExt).*" />
 
     <Message Text="Running tests: $(TargetPath) [$(_TestEnvironment)]" Importance="high"/>
 
-    <Exec Command='$(_TestRunnerCommand) > $(_TestStdOutPath)'
+    <Exec Command='$(_TestRunnerCommand) > "$(_TestStdOutPath)" 2> "$(_TestStdErrPath)"'
           LogStandardErrorAsError="false"
           WorkingDirectory="$(OutDir)"
           IgnoreExitCode="true">
@@ -63,15 +64,10 @@
     <ItemGroup>
       <_FailedTestRuns Include="$(_TestEnvironment)" Condition="'$(_TestErrorCode)' != '0'" />
     </ItemGroup>
-
-    <PropertyGroup>
-      <_TestResultMessage Condition="'$(_TestErrorCode)' == '0'">Tests succeeded: $(TargetPath) [$(_TestEnvironment)]</_TestResultMessage>
-      <_TestResultMessage Condition="'$(_TestErrorCode)' != '0'">Tests failed: $(TargetPath) [$(_TestEnvironment)]; $(_TestStdOutPath)</_TestResultMessage>
-    </PropertyGroup>
     
-    <Message Text="$(_TestResultMessage)" Condition="'$(_TestErrorCode)' == '0'" Importance="high"/>
-    <Warning Text="$(_TestResultMessage)" Condition="'$(_TestErrorCode)' != '0' and '$(TargetFrameworks)' != ''" />
-    <Error Text="$(_TestResultMessage)" Condition="'$(_TestErrorCode)' != '0' and '$(TargetFrameworks)' == ''" />
+    <Message Text="Tests succeeded: $(TargetPath) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' == '0'" Importance="high" />
+    <Warning Text="$(_TestResultsHtmlPath) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0' and '$(TargetFrameworks)' != ''" File="XUnit" />
+    <Error Text="$(_TestResultsHtmlPath) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0' and '$(TargetFrameworks)' == ''" File="XUnit" />
   </Target>
   
   <Target Name="OuterTest" Returns="@(InnerOutput)">
@@ -79,13 +75,13 @@
       <_TargetFramework Include="$(TargetFrameworks)" />
     </ItemGroup>
     <MSBuild Projects="$(MSBuildProjectFile)"
-             Condition="'$(TargetFrameworks)' != '' "
+             Condition="'$(TargetFrameworks)' != ''"
              Targets="InnerTest"
              Properties="TargetFramework=%(_TargetFramework.Identity)">
       <Output ItemName="_FailedTestRuns" TaskParameter="TargetOutputs" />
     </MSBuild>
 
-    <Error Text="Tests failed on platforms: @(_FailedTestRuns, ', ')" Condition="'@(_FailedTestRuns)' != ''" />
+    <Error Text="Tests failed on platforms: @(_FailedTestRuns, ', ')" Condition="'@(_FailedTestRuns)' != ''" File="XUnit" />
   </Target>
 
   <!-- 

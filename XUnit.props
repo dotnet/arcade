@@ -13,13 +13,5 @@
     <PackageReference Include="xunit" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="$(XUnitRunnerVisualStudioVersion)" />
     <PackageReference Include="xunit.runner.console" Version="$(XUnitVersion)" />
-    
-    <!-- Test runner configuration -->
-    <None Include="$(XUnitConfigurationFile)" Condition="'$(XUnitConfigurationFile)' != '' and '$(XUnitConfigurationFile)' != 'Default'">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="$(MSBuildThisFileDirectory)xunit.runner.json" Condition="'$(XUnitConfigurationFile)' == 'Default'">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 </Project>
