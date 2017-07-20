@@ -14,7 +14,7 @@
     <UsingToolIbcOptimization Condition="'$(UsingToolIbcOptimization)' == ''">false</UsingToolIbcOptimization>
 
     <!-- Default versions -->
-    <XliffTasksVersion Condition="'$(XliffTasksVersion)' == ''">0.2.0-beta-000051</XliffTasksVersion>
+    <XliffTasksVersion Condition="'$(XliffTasksVersion)' == ''">0.2.0-beta-000053</XliffTasksVersion>
     <SourceLinkCreateCommandLineVersion Condition="'$(SourceLinkCreateCommandLineVersion)' == ''">2.2.0-b491</SourceLinkCreateCommandLineVersion>
     <XUnitVersion Condition="'$(XUnitVersion)' == ''">2.3.0-beta3-build3705</XUnitVersion>
     <MicrosoftVSSDKBuildToolsVersion Condition="'$(MicrosoftVSSDKBuildToolsVersion)' == ''">15.1.192</MicrosoftVSSDKBuildToolsVersion>
