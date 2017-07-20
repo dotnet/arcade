@@ -101,7 +101,7 @@
       <_SwixArgs Include="SwrFiles=$([MSBuild]::Escape($(_SwrFiles)))"/>
       <_SwixArgs Include="SwrPackageName=$(TargetName)"/>
       <_SwixArgs Include="IntermediateOutputPath=$(IntermediateOutputPath)"/>
-      <_SwixArgs Include="MicroBuildPath=$(NuGetPackageRoot)MicroBuild.Core\$(MicroBuildCoreVersion)\"/>
+      <_SwixArgs Include="MicroBuildPath=$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)\"/>
     </ItemGroup>
 
     <MSBuild Projects="$(RepoToolsetDir)VisualStudio.SetupPackage.swixproj" Properties="@(_SwixArgs)" Targets="Build"/>

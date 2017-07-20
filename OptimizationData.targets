@@ -17,7 +17,7 @@
       <_RunIbc>false</_RunIbc>
       <_RunIbc Condition="'$(Configuration)' == 'Release' and '$(OfficialBuild)' == 'true'">true</_RunIbc>
 
-      <_IbcMergePath>$(NuGetPackageRoot)\Microsoft.DotNet.IBCMerge\$(MicrosoftDotNetIBCMergeVersion)\lib\net45\ibcmerge.exe</_IbcMergePath>
+      <_IbcMergePath>$(NuGetPackageRoot)\microsoft.dotnet.ibcmerge\$(MicrosoftDotNetIBCMergeVersion)\lib\net45\ibcmerge.exe</_IbcMergePath>
       <_IbcMergeCommandLineArgs>-q -f -partialNGEN -minify -mo "@(IntermediateAssembly)" -incremental "$(_OptimizationDataFile)"</_IbcMergeCommandLineArgs>
     </PropertyGroup>
 

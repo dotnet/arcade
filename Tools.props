@@ -4,6 +4,6 @@
     <PackageReference Include="Microsoft.Net.Compilers" Version="$(MicrosoftNetCompilersVersion)" />
   </ItemGroup>
   <PropertyGroup>
-    <ToolsetCompilerPackageDir>$(NuGetPackageRoot)Microsoft.Net.Compilers\$(MicrosoftNetCompilersVersion)\</ToolsetCompilerPackageDir>
+    <ToolsetCompilerPackageDir>$(NuGetPackageRoot)microsoft.net.compilers\$(MicrosoftNetCompilersVersion)\</ToolsetCompilerPackageDir>
   </PropertyGroup>
 </Project>

@@ -38,7 +38,7 @@
           Condition="'$(_RemoveExperimentalFlag)' == 'true'"/>
     
     <PropertyGroup>
-      <_ModifyVsixManifestToolExe>$(NuGetPackageRoot)\RoslynTools.Microsoft.ModifyVsixManifest\$(RoslynToolsMicrosoftModifyVsixManifestVersion)\tools\ModifyVsixManifest.exe</_ModifyVsixManifestToolExe>
+      <_ModifyVsixManifestToolExe>$(NuGetPackageRoot)\roslyntools.microsoft.modifyvsixmanifest\$(RoslynToolsMicrosoftModifyVsixManifestVersion)\tools\ModifyVsixManifest.exe</_ModifyVsixManifestToolExe>
       <_ModifyVsixManifestArgs>--remove=//x:PackageManifest/x:Installation/@Experimental --add-attribute=//x:PackageManifest/x:Installation;SystemComponent;true</_ModifyVsixManifestArgs>
     </PropertyGroup>
 
@@ -60,7 +60,7 @@
       <_Args Include="ComponentName=$(_ComponentName)"/>
       <_Args Include="SetupOutputPath=$(VisualStudioSetupInsertionPath)"/>
       <_Args Include="ComponentIntermediateOutputPath=$(VisualStudioSetupIntermediateOutputPath)$(_ComponentName)\"/>
-      <_Args Include="MicroBuildPath=$(NuGetPackageRoot)MicroBuild.Core\$(MicroBuildCoreVersion)\"/>
+      <_Args Include="MicroBuildPath=$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)\"/>
     </ItemGroup>
 
     <Message Text="Packaging VS component '$(_ComponentName)'" Importance="high"/>
