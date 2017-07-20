@@ -13,21 +13,11 @@
       PublicKeyToken
       AssemblyOriginatorKeyFile
   -->
-  <Choose>
-    <When Condition="'$(SignType)' == 'real'">
-      <PropertyGroup>
-        <DelaySign>true</DelaySign>
-        <PublicSign>false</PublicSign>
-      </PropertyGroup>
-    </When>
-
-    <Otherwise>
-      <PropertyGroup>
-        <DelaySign>false</DelaySign>
-        <PublicSign>true</PublicSign>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
+  
+  <PropertyGroup>
+    <DelaySign>false</DelaySign>
+    <PublicSign>true</PublicSign>
+  </PropertyGroup>
 
   <!-- Binaries are delay or public-signed with one of these keys; later, the signing system will finish the strong-name signing. -->
   <Choose>
