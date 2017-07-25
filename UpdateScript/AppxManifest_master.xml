@@ -72,6 +72,11 @@
     <uap:Capability Name="appointments" />
     <uap:Capability Name="contacts" />
     <uap:Capability Name="userAccountInformation" />
+    <DeviceCapability Name="serialcommunication">
+      <Device Id="any">
+        <Function Type="name:serialPort" />
+      </Device>
+    </DeviceCapability>
   </Capabilities>
   <build:Metadata>
     <build:Item Name="TargetFrameworkMoniker" Value=".NETCore,Version=v5.0" />
