@@ -58,6 +58,18 @@ When a job fails and the environment is not automatically saved, the dev could:
 ### Idea of how the Jenkins UI might look like
 ![](./JenkinsUI.png?raw=true)
 
+### Idea of how the Mission Control UI might look like
+![](./MainPage.png?raw=true)
+
+Same design for Snapshots and Virtual Machine information.
+All the buttons will trigger a dialog requesting more information.
+  - Connect: Information on how to connect to the machine according to the restrictions.
+  - Delete: Confirmation.
+  - Extend Expiration: Input a number between 1 and 3. There also needs to be a limit on the number of extensions allowed.
+  - Create VM: Input `Username` and `Password`.
+
+![](./Snap.png?raw=true)
+
 ## Connect to the new VM
 The interfaces to connect to the VM will be:
 - A link in the Jenkins Job that will redirect to Mission Control.
