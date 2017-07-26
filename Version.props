@@ -56,7 +56,7 @@
         <Version>$(VersionBase)-dev</Version>
         <AssemblyVersion Condition="'$(UseShippingAssemblyVersion)' != 'true'">42.42.42.42</AssemblyVersion>
         <FileVersion>42.42.42.42</FileVersion>
-        <VsixVersion>$(VersionBase).9000000</VsixVersion>
+        <VsixVersion>42.42.42.42</VsixVersion>
         <InformationalVersion>$(FileVersion)</InformationalVersion>
       </PropertyGroup>
     </Otherwise>
