@@ -17,7 +17,6 @@
     Sign              "true" to sign built binaries
     Pack              "true" to build NuGet packages
     Properties        List of properties to pass to each build phase ("Name=Value;Name=Value;...")
-    
   -->
 
   <!-- 
@@ -38,10 +37,13 @@
     <PropertyGroup>
       <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
       <Props>$(Properties);Configuration=$(Configuration);CIBuild=$(CIBuild);__DeployProjectOutput=$(Deploy)</Props>
+
+      <_QuietRestore>false</_QuietRestore>
+      <_QuietRestore Condition="'$(CIBuild)' != 'true' and '$(RepoToolsetQuietRestore)' == 'true'">true</_QuietRestore>
     </PropertyGroup>
 
     <ItemGroup>
-      <PreSignTargets Include="Restore" Condition="'$(Restore)' == 'true'" />
+      <PreSignTargets Include="Restore" Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'" />
       <PreSignTargets Include="Rebuild" Condition="'$(Rebuild)' == 'true'" />
       <PreSignTargets Include="Build" Condition="'$(Build)' == 'true' and '$(Rebuild)' != 'true'" />
       <!-- Deploy target is set up to chain after Build so that F5 in VS works. -->
@@ -58,7 +60,32 @@
       <RestoreToolsProp Include="MicroBuildPluginsSwixBuildVersion=$(MicroBuildPluginsSwixBuildVersion)"/>
       <RestoreToolsProp Include="RoslynToolsMicrosoftModifyVsixManifestVersion=$(RoslynToolsMicrosoftModifyVsixManifestVersion)"/>
     </ItemGroup>
+
+    <!--
+      Workaround for https://github.com/NuGet/Home/issues/4695.
+      We launch a new msbuild process to restore.
+    -->
+    <ItemGroup>
+      <_PropsItems Include="$(Props)" />
+      <_PropsArgs Include="@(_PropsItems->'/p:%(Identity)')" />
+      <_RestoreToolsPropArgs Include="@(RestoreToolsProp->'/p:%(Identity)')" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <_PropsCmdLine>@(_PropsCmd, ' ')</_PropsCmdLine>
+      <_RestoreToolsPropsCmdLine>@(_RestoreToolsPropArgs, ' ')</_RestoreToolsPropsCmdLine>
+    </PropertyGroup>
+
+    <Message Text="Restoring packages ..." Importance="high" Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" />
     
+    <MakeDir Directories="$(ArtifactsLogDir)" Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" />
+    
+    <Exec Command='"$(MSBuildBinPath)\MSBuild.exe" "$(MSBuildProjectDirectory)\Tools.proj" /bl:"$(ArtifactsLogDir)RestoreRepoTools.binlog" /nologo /m /v:quiet /t:Restore /nodeReuse:false $(_RestoreToolsPropsCmdLine)'
+          Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
+
+    <Exec Command='"$(MSBuildBinPath)\MSBuild.exe" "$(SolutionPath)" /bl:"$(ArtifactsLogDir)Restore.binlog" /nologo /m /v:quiet /t:Restore /nodeReuse:false $(_PropsCmdLine) /p:__BuildPhase=PreSign'
+          Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
+
     <!--
       Note: msbuild caches the metaproject for the solution (see https://github.com/Microsoft/msbuild/issues/1695)
       We invalidate the cache by changing the value of __BuildPhase property.
@@ -67,7 +94,7 @@
     <MSBuild Projects="Tools.proj"
              Targets="Restore"
              Properties="@(RestoreToolsProp)" 
-             Condition="'$(Restore)' == 'true'"/>
+             Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
 
     <MSBuild Projects="$(SolutionPath)"
              Properties="$(Props);__BuildPhase=PreSign"
@@ -101,5 +128,6 @@
              Targets="Pack"
              BuildInParallel="true"
              Condition="'$(Pack)' == 'true' and '$(UsingToolVSSDK)' == 'true'"/>
+
   </Target>
 </Project>

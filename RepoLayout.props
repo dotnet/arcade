@@ -11,6 +11,8 @@
     <ArtifactsConfigurationDir>$(ArtifactsDir)$(Configuration)\</ArtifactsConfigurationDir>
     <ArtifactsBinDir>$(ArtifactsConfigurationDir)bin\</ArtifactsBinDir>
     <ArtifactsObjDir>$(ArtifactsConfigurationDir)obj\</ArtifactsObjDir>
+    <ArtifactsLogDir>$(ArtifactsConfigurationDir)log\</ArtifactsLogDir>
+    <ArtifactsTmpDir>$(ArtifactsConfigurationDir)tmp\</ArtifactsTmpDir>
     <ArtifactsToolsetDir>$(ArtifactsDir)toolset\</ArtifactsToolsetDir>
     <ArtifactsTestResultsDir>$(ArtifactsConfigurationDir)TestResults\</ArtifactsTestResultsDir>
     <PackageOutputPath>$(ArtifactsConfigurationDir)packages\</PackageOutputPath>
