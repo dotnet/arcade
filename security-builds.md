@@ -5,6 +5,7 @@ This document describes security builds of .NET Core.
 - [How to setup a security build](#how-to-setup-a-security-build)
 - [How to kickoff a security build](#how-to-kickoff-a-security-build)
 - [How to get values for queue variables](#how-to-get-values-for-queue-variables)
+- [How to access and resolve security issues](#how-to-access-and-resolve-security-issues)
 
 
 ## How to setup a security build
@@ -137,6 +138,36 @@ In the build leg, locate text similar to the fragment shown below.
 
 In CLI, the default container name (*PB_CloudDropContainer*) is `dotnet`.  An additional variable named `PB_BlobNameFilter` is required for security build of CLI. `PB_BlobNameFilter` follows `Sdk/<branch>` format. So, when queuing a build for `master` branch, set the value this variable to `Sdk/master`, and for a released branch such as `2.0.0` set the value to `Sdk/release/2.0.0`.
 
+
+## How to access and resolve security issues
+
+For each successful build, TSA analyzes the logs from the build, and create issues, which are VSTS workitems. Query to the workitems will be in the email report sent to `dncsec`. As mentioned earlier, the report can be accessed at TSA reports, whose URL is in the format - `http://aztsa/api/Result/CodeBase/<codebase-name>/Summary`. For example, CoreFx master is at `http://aztsa/api/Result/CodeBase/DotNet-CoreFx-Trusted_master/Summary`
+
+Repository owner is responsible to triage, and drive towards resolving all security issues logged against the codebase. There are certain cases where an issue cannot be fixed, a few of them are summarized below.
+
+#### Case #1: External 
+
+Say an issue is with an assembly that is not owned or built by the repository, then resolve the issue by setting the following attribute-value in the workitem.
+
+|Attribute|Value|
+|:--------|:----|
+| State|Done |
+| Reason | Work Finished |
+| Status | Resolved |
+| Resolution | Will not Fix |
+
+TSA will stop reporting such issues in future builds.
+
+#### Case #2: Configuration 
+
+Say there was a configuration error while launching the build. For example, the branch name was set to `2.0.0`  instead of `master`. This will pollute TSA codebase with issues from other branch. So, to cleanup the codebase, resolve such configuration issues by setting the following attribute-value in the workitem.
+
+|Attribute|Value|
+|:--------|:----|
+| State|Done |
+| Reason | Work Finished |
+| Status | Resolved |
+| Resolution | Configuration/Environment |
 
 
 For any questions about security builds, please contact [dncsec](dncsec@microsoft.com).
