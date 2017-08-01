@@ -6,9 +6,15 @@ For example, Core-Setup release/1.0.0 and release/1.1.0 pipebuilds. GitHub sends
 
 ## Finding web hook settings
 
-Go to **Settings** and click **Webhooks**. If you don't see **Settings**, you don't have permission.
+On the repository page, go to the **Settings** tab and click **Webhooks**. You may need to click on a dropdown to find **Settings** due to ZenHub.
 
-Example url: https://github.com/dotnet/versions/settings/hooks/
+![settings with zenhub](settings-with-zenhub.png)
+
+If you don't see **Settings** anywhere, you don't have permission. Check https://repos.opensource.microsoft.com/DotNet/repos to see who has admin permission.
+
+![webhooks list](webhooks-list.png)
+
+Example web hooks page url: https://github.com/dotnet/versions/settings/hooks/
 
 ## Web hook configuration
 
@@ -17,3 +23,5 @@ Example url: https://github.com/dotnet/versions/settings/hooks/
  * Secret: [Maestro-WebhookSecretToken on EngKeyVault](https://ms.portal.azure.com/#asset/Microsoft_Azure_KeyVault/Secret/https://engkeyvault.vault.azure.net/secrets/Maestro-WebhookSecretToken/e6b838f3a9ce420d8ef3f9bf97047020)
  * "Which events would you like to trigger this webhook?": `Just the push event.`
  * Active: checked
+
+![webhook manage](webhook-manage.png)
