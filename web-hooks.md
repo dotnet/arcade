@@ -10,11 +10,13 @@ On the repository page, go to the **Settings** tab and click **Webhooks**. You m
 
 ![settings with zenhub](settings-with-zenhub.png)
 
+---
+
 If you don't see **Settings** anywhere, you don't have permission. Check https://repos.opensource.microsoft.com/DotNet/repos to see who has admin permission.
 
-![webhooks list](webhooks-list.png)
-
 Example web hooks page url: https://github.com/dotnet/versions/settings/hooks/
+
+![webhooks list](webhooks-list.png)
 
 ## Web hook configuration
 
