@@ -85,12 +85,8 @@ Core-Setup requires an additional queue variable called `PB_BlobName`, which is 
 
 #### CLI
 
-CLI requires an additional queue variable called `PB_BlobNameFilter`, which is the name of the Azure Storage blob that contains the blobs produced from the official build under test.
-
-----------
-![QueueCLI.](./assets/QueueCLI.png?raw=true)
-
-----------
+CLI builds are fully automated. This means no variable needs to be set at the time of queuing.
+A build is triggerred everyday around midnight. Build downloads the latest packages (zip) from Azure Storage corresponding to the branch. For example, latest packages of `master` branch are downloaded from (https://dotnetcli.blob.core.windows.net/dotnet/Sdk/master). SHA and build number are read from `latest.version` file (https://dotnetcli.blob.core.windows.net/dotnet/Sdk/master/latest.version).
 
 
 As described in the earlier section, when the build finishes successfully, an email report of the security build is sent to listed email Ids. The same report can be viewed online. For example, report for CoreCLR `2.0.0` will be at TSA [website](http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_2.0.0/Summary)
@@ -132,11 +128,6 @@ In the build leg, locate text similar to the fragment shown below.
 `Runtime/2.0.0-preview3-25422-01` is the value for `PB_BlobName`.
 
 ----------
-
-
-#### CLI
-
-In CLI, the default container name (*PB_CloudDropContainer*) is `dotnet`.  An additional variable named `PB_BlobNameFilter` is required for security build of CLI. `PB_BlobNameFilter` follows `Sdk/<branch>` format. So, when queuing a build for `master` branch, set the value this variable to `Sdk/master`, and for a released branch such as `2.0.0` set the value to `Sdk/release/2.0.0`.
 
 
 ## How to access and resolve security issues
