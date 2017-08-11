@@ -23,7 +23,7 @@ namespace Xunit.NetCore.Extensions
             ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IAttributeInfo theoryAttribute)
         {
             IEnumerable<IXunitTestCase> testCases = base.Discover(discoveryOptions, testMethod, theoryAttribute);
-            return ConditionalTestDiscoverer.Discover(discoveryOptions, _diagnosticMessageSink, testMethod, testCases, theoryAttribute.GetConstructorArguments().FirstOrDefault() as object[]);
+            return ConditionalTestDiscoverer.Discover(discoveryOptions, _diagnosticMessageSink, testMethod, testCases, theoryAttribute.GetConstructorArguments().ToArray());
         }
     }
 }
