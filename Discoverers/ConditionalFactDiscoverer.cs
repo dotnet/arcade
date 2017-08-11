@@ -22,9 +22,8 @@ namespace Xunit.NetCore.Extensions
         public override IEnumerable<IXunitTestCase> Discover(
             ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IAttributeInfo factAttribute)
         {
-            string[] conditionMemberNames = factAttribute.GetConstructorArguments().FirstOrDefault() as string[];
             IEnumerable<IXunitTestCase> testCases = base.Discover(discoveryOptions, testMethod, factAttribute);
-            return ConditionalTestDiscoverer.Discover(discoveryOptions, _diagnosticMessageSink, testMethod, testCases, conditionMemberNames);
+            return ConditionalTestDiscoverer.Discover(discoveryOptions, _diagnosticMessageSink, testMethod, testCases, factAttribute.GetConstructorArguments().FirstOrDefault() as object[]);
         }
     }
 }
