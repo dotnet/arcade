@@ -1,13 +1,12 @@
 #  Prototype Documentation
 The following document shows the user documentation for the prototype of the repro environment solution according to the [requirements](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20Prototype.md#requirements).
 
-# What is the Repro Tool?
-When a job fails in Jenkins, the developer may ask for a virtual machine with the sufficient data and access to connect and build the code that is located in the machine to determine why the job failed.
-
-## Known Issues
+### Known Issues
 - [1580](https://github.com/dotnet/core-eng/issues/1580) Repro pluging should build with parent job parameters.
 - [1487](https://github.com/dotnet/core-eng/issues/1487) Fix delete API timeout.
 
+# What is the Repro Tool?
+When a job fails in Jenkins, the developer may ask for a virtual machine with the sufficient data and access to connect and build the code that is located in the machine to determine why the job failed.
 
 The systems that are interacting with the Repro Tool are:
 ## Jenkins
