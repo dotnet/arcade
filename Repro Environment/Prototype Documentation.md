@@ -3,7 +3,7 @@ The following document shows the user documentation for the prototype of the rep
 
 ### Known Issues
 - [1580](https://github.com/dotnet/core-eng/issues/1580) Repro pluging should build with parent job parameters.
-- [1487](https://github.com/dotnet/core-eng/issues/1487) Fix delete API timeout.
+- [1487](https://github.com/dotnet/core-eng/issues/1487) Delete a VM in MC always reports error.
 
 # What is the Repro Tool?
 When a job fails in Jenkins, the developer may ask for a virtual machine with the sufficient data and access to connect and build the code that is located in the machine to determine why the job failed.
