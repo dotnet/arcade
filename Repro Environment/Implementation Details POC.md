@@ -24,7 +24,7 @@ The following document shows the initial implementation approach for the first i
 - Ability to download workspace for local (or custom) repro (not necessarily needed for prototype)
 
 # Implementation 
-![Implementation](./implementation.PNG?raw=true)
+![Implementation](./Images/implementation.PNG?raw=true)
 
 ## 1. Signal job to repro
 Jenkins will redo a job (without publishing or updating the PR). In order to do this, Jenkins jobs will have a way to signal that the dev wants a repro from that job. For the purposes of this iteration, the jobs are going to have an extra paramenter that when used, it will signal the job as a repro environment job.

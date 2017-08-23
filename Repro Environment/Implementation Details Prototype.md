@@ -32,7 +32,7 @@ The following document shows the implementation details for the prototype of the
 There are two flows that could trigger the request of a repro: have a Jenkins Job that when failed it automatically will [save the running environment](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20POC.md#2-save-running-environment) so later the dev can request a [VM with the repro environment](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20POC.md#4-create-vm-with-repro-environment) or rebuild a Job and signal it to automatically save the running environment and create a VM as part of the Job.
 
 ### 1. Save running environment by default
-![](./Scenario1.png?raw=true)
+![](./Images/Scenario1.png?raw=true)
 
 The repro owners have the ability to request this feature per Job creation so that not all the jobs have an automatic saving option.
 1) A job fails and the running environment is saved. The log of the job will inform the dev about the process in the Jenkins console log.
@@ -45,7 +45,7 @@ The repro owners have the ability to request this feature per Job creation so th
     - Email sent to the dev.
 
 ### 2. Rerun a job
-![](./Scenario2.png?raw=true)
+![](./Images/Scenario2.png?raw=true)
 When a job fails and the environment is not automatically saved, the dev could:
 1) Log in into Jenkins.
 2) Click on a link to rebuild and repro the job.
@@ -56,10 +56,10 @@ When a job fails and the environment is not automatically saved, the dev could:
     - Email sent to the dev.
 
 ### Idea of how the Jenkins UI might look like
-![](./JenkinsUI.png?raw=true)
+![](./Images/JenkinsUI.png?raw=true)
 
 ### Idea of how the Mission Control UI might look like
-![](./MainPage.png?raw=true)
+![](./Images/MainPage.png?raw=true)
 
 Same design for Snapshots and Virtual Machine information.
 All the buttons will trigger a dialog requesting more information.
@@ -68,7 +68,7 @@ All the buttons will trigger a dialog requesting more information.
   - Extend Expiration: Input a number between 1 and 3. There also needs to be a limit on the number of extensions allowed.
   - Create VM: Input `Username` and `Password`.
 
-![](./Snap.png?raw=true)
+![](./Images/Snap.png?raw=true)
 
 ## Connect to the new VM
 The interfaces to connect to the VM will be:
