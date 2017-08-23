@@ -4,6 +4,11 @@ The following document shows the user documentation for the prototype of the rep
 # What is the Repro Tool?
 When a job fails in Jenkins, the developer may ask for a virtual machine with the sufficient data and access to connect and build the code that is located in the machine to determine why the job failed.
 
+## Known Issues
+- [1580](https://github.com/dotnet/core-eng/issues/1580) Repro pluging should build with parent job parameters.
+- [1487](https://github.com/dotnet/core-eng/issues/1487) Fix delete API timeout.
+
+
 The systems that are interacting with the Repro Tool are:
 ## Jenkins
 Once a job fails, the user needs to Log In and look for the job. There is going to be a new link by the name of `Repro`.
