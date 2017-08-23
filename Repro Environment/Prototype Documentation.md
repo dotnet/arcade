@@ -31,4 +31,4 @@ Please note the Prototype is currently located at [Mission Control Int](https://
 - Please create a new issue in the [core-eng](https://github.com/dotnet/core-eng) repository.
 - Other way is to use the `thumbs up/down` in Mission Control when located in the Repros tab. 
 
-![](./Images/FeedbackMC.PNG?raw=true)
+![](./Images/FeedbackMC.png?raw=true)
