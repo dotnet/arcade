@@ -2,7 +2,6 @@
 The following document shows the user documentation for the prototype of the repro environment solution according to the [requirements](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20Prototype.md#requirements).
 
 ### Known Issues
-- [1580](https://github.com/dotnet/core-eng/issues/1580) Repro plugin should build with parent job parameters.
 - [1487](https://github.com/dotnet/core-eng/issues/1487) Delete a VM in MC always reports error.
 
 # What is the Repro Tool?
