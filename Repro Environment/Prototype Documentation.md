@@ -7,9 +7,38 @@ The following document shows the user documentation for the prototype of the rep
 # What is the Repro Tool?
 When a job fails in Jenkins, the developer may ask for a virtual machine with the sufficient data and access to connect and build the code that is located in the machine to determine why the job failed.
 
-The systems that are interacting with the Repro Tool are:
-## Jenkins
-Once a job fails, the user needs to Log In and look for the job. There is going to be a new link by the name of `Repro`.
+# What to do
+Create a PR in dotnet/coreclr that will fail (if a job doesn't fail there is no way to `Repro` it).
+Click on details to go to Jenkins.
+
+The current active and validated jobs are:
+
+  - Windows_NT x64 Release Priority 1 Build and Test
+  - Ubuntu x64 Checked Build and Test
+
+![](./Images/GithubPR.PNG?raw=true)
+
+Click on Parameters
+
+![](./Images/GithubParameters.PNG?raw=true)
+
+Copy the value `sha1`
+
+![](./Images/Githubsha1.PNG?raw=true)
+
+Go to [Jenkins ci4](https://dotnet-ci4.westus2.cloudapp.azure.com/), Log In and find the same job, i.e. `checked_ubuntu_flow_prtest`
+
+Click on `Build with parameters`
+
+![](./Images/ci4BuildParameters.PNG?raw=true)
+
+Paste the value `sha1` into `GitBranchOrCommit`
+
+![](./Images/ci4Build.PNG?raw=true)
+
+Click `Build`.
+
+Once the job fails, there is going to be a new link by the name of `Repro`.
 
 ![](./Images/ReproLink.PNG?raw=true)
 
