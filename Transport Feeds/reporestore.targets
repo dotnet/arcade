@@ -1,0 +1,29 @@
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <ItemGroup>
+      <EnableFeeds Include="https://karajascli.blob.core.windows.net/karthikfeed-12349/packages/index.json">
+        <FeedKey>$(KarthikFeed12349Key)</FeedKey>
+      </EnableFeeds>
+      <EnableFeeds Include="https://dotnet.myget.org/F/dotnet-buildtools/api/v3/index.json" />
+      <DisableFeeds Include="https://dotnet.myget.org/F/dotnet-core/api/v3/index.json" />
+      <ConfigureInputDependsOn Include="Build" />
+    </ItemGroup>
+    
+    <PropertyGroup>
+      <DotNetCli>$(MSBuildThisFileDirectory)Tools/dotnetcli/dotnet</DotNetCli>
+      <PackagesDir>$(MSBuildThisFileDirectory)packages</PackagesDir>
+      <RestoreProject>$(MSBuildThisFileDirectory)NugetPackages.csproj</RestoreProject>
+      <KarthikFeed12349Key></KarthikFeed12349Key>
+    </PropertyGroup>
+    
+    <Target Name="Build">
+      <Message importance="high" text="Starting build..." />
+    </Target>
+    
+    <!-- Command: dotnet msbuild reporestore.targets /t:ConfigureInputFeeds -->
+    <Target Name="Restore" DependsOnTargets="ConfigureInputFeeds" >
+      <Message importance="high" text="Starting restore..." />
+      <Exec Command="$(DotNetCli) restore -v diag --packages $(PackagesDir) $(RestoreProject)" />
+    </Target>
+    
+    <Import Project="$(MSBuildThisFileDirectory)Tools/Restore.targets" />  
+</Project>
