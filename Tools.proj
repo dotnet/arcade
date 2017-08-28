@@ -8,8 +8,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="RoslynTools.Microsoft.SignTool" Version="$(RoslynToolsMicrosoftSignToolVersion)" />
-    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" />
-    <PackageReference Include="MicroBuild.Core.Sentinel" Version="1.0.0" />
     <PackageReference Include="MicroBuild.Plugins.SwixBuild" Version="$(MicroBuildPluginsSwixBuildVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" />
     <PackageReference Include="RoslynTools.Microsoft.ModifyVsixManifest" Version="$(RoslynToolsMicrosoftModifyVsixManifestVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" />
   </ItemGroup>

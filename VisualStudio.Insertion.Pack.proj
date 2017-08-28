@@ -60,7 +60,7 @@
       <_Args Include="ComponentName=$(_ComponentName)"/>
       <_Args Include="SetupOutputPath=$(VisualStudioSetupInsertionPath)"/>
       <_Args Include="ComponentIntermediateOutputPath=$(VisualStudioSetupIntermediateOutputPath)$(_ComponentName)\"/>
-      <_Args Include="MicroBuildPath=$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)\"/>
+      <_Args Include="SwixBuildPath=$(NuGetPackageRoot)microbuild.plugins.swixbuild\$(MicroBuildPluginsSwixBuildVersion)\"/>
     </ItemGroup>
 
     <Message Text="Packaging VS component '$(_ComponentName)'" Importance="high"/>

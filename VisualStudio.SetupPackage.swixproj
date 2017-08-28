@@ -6,7 +6,7 @@
       SwrFiles                    Files to be included.
       SwrPackageName              Name of the component (VSIX)
       IntermediateOutputPath      Intermediate output path.
-      MicroBuildPath              MicroBuild package path.
+      SwixBuildPath               SwixBuild package path.
   -->
   
   <PropertyGroup>
@@ -18,7 +18,7 @@
     <OutputName>$(SwrPackageName)</OutputName>
   </PropertyGroup>
 
-  <Import Project="$(MicroBuildPath)build\MicroBuild.Core.props" />
+  <Import Project="$(SwixBuildPath)build\MicroBuild.Plugins.*.props" />
 
   <ItemGroup>
     <_SwrProperties Include="$([MSBuild]::Unescape($(SwrProperties)))" />
@@ -33,5 +33,5 @@
     <Package Include="$(SwrFiles)" />
   </ItemGroup>
 
-  <Import Project="$(MicroBuildPath)build\MicroBuild.Core.targets" />
+  <Import Project="$(SwixBuildPath)build\MicroBuild.Plugins.*.targets" />
 </Project>

@@ -21,7 +21,6 @@
     <MicroBuildPluginsSwixBuildVersion Condition="'$(MicroBuildPluginsSwixBuildVersion)' == ''">1.0.147</MicroBuildPluginsSwixBuildVersion>
     <MicrosoftDotNetIBCMergeVersion Condition="'$(MicrosoftDotNetIBCMergeVersion)' == ''">4.7.1-alpha-00001</MicrosoftDotNetIBCMergeVersion>
     <RoslynToolsMicrosoftSignToolVersion Condition="'$(RoslynToolsMicrosoftSignToolVersion)' == ''">0.3.3-beta</RoslynToolsMicrosoftSignToolVersion>
-    <MicroBuildCoreVersion Condition="'$(MicroBuildCoreVersion)' == ''">0.2.0</MicroBuildCoreVersion>
     <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">2.3.0-beta3-build3705</XUnitRunnerVisualStudioVersion>
     <MicrosoftNETTestSdkVersion Condition="'$(MicrosoftNETTestSdkVersion)' == ''">15.3.0-preview-20170628-02</MicrosoftNETTestSdkVersion>
     <MicrosoftNetCompilersVersion Condition="'$(MicrosoftNetCompilersVersion)' == ''">2.3.0</MicrosoftNetCompilersVersion>

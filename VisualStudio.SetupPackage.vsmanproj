@@ -5,7 +5,7 @@
       ComponentName                   Name of the component (VSIX)
       SetupOutputPath                 Directory to drop Willow manifests to.
       ComponentIntermediateOutputPath Intermediate directory where the component is being built.
-      MicroBuildPath                  MicroBuild package path.
+      SwixBuildPath                   SwixBuild package path.
   -->
 
   <PropertyGroup>
@@ -14,7 +14,7 @@
     <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
   </PropertyGroup>
 
-  <Import Project="$(MicroBuildPath)build\MicroBuild.Core.props" />
+  <Import Project="$(SwixBuildPath)build\MicroBuild.Plugins.*.props" />
 
   <PropertyGroup>
     <FinalizeManifest>true</FinalizeManifest>
@@ -35,5 +35,5 @@
     <FinalizeManifest>false</FinalizeManifest>
   </PropertyGroup>
 
-  <Import Project="$(MicroBuildPath)build\MicroBuild.Core.targets" />
+  <Import Project="$(SwixBuildPath)build\MicroBuild.Plugins.*.targets" />
 </Project>
