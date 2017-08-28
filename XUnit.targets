@@ -60,6 +60,7 @@
     </Exec>
 
     <WriteLinesToFile File="$(_TestStdOutPath)" Overwrite="false" Lines=";=== COMMAND LINE ===;$(_TestRunnerCommand)" />
+    <Delete Files="$(_TestStdErrPath)" Condition="'$(_TestErrorCode)' == '0'"/>
 
     <ItemGroup>
       <_FailedTestRuns Include="$(_TestEnvironment)" Condition="'$(_TestErrorCode)' != '0'" />
