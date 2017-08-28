@@ -13,8 +13,9 @@ This document describes .NET Native AppCompat run operations in Helix.
 
 Run controller is a dedicated, DDIT managed VM for performing all AppCompat run operations. Details of this VM are as follows -
 
-|Property|Value|
-|:--------|:----|
+
+| Property | Value |
+|:---------|:------|
 | Name | AC-RC-DDIT |
 | Username (admin) | redmond\corbvt |
 | Password | Get it from [DevDiv Key vault](https://ms.portal.azure.com/#asset/Microsoft_Azure_KeyVault/Secret/https://appcompat.vault.azure.net/secrets/corbvt/9b8d9b2042c440749b941600031a2ecb) |
@@ -28,7 +29,7 @@ All the necessary tools and scripts to perform AppCompat runs through Helix are 
 
 
 | Tool | Description |
-| :-------- | :---- |
+|:-----|:------------|
 | GetBUTs| Determines the configurations for which a run needs to be performed. This is determined based on the coverage defined in `schedule.json`, run history and availability of latest build. |
 | HelixJobCreator | Prepares and submits a Helix job for each configuration listed in the input json. GetBUTs writes the configuration to a json, and invokes HelixJobCreator with input argument as the path to the json. |
 | HelixDownloadRunResults | Downloads AppCompat run results from Azure Storage account to the corpnet share. |
@@ -53,7 +54,7 @@ Get password from the Key Vault at (https://ms.portal.azure.com/#asset/Microsoft
 | Helix_ReporterResults | Result of each workitem post-Reporter processing. |
 
 
-Helix uploads run results as blobs to AppCompat Storage account at (https://ms.portal.azure.com/#resource/subscriptions/9c035fa3-535f-4bf9-a60a-1381e6d27ea5/resourceGroups/dotnetappcompat/providers/Microsoft.Storage/storageAccounts/dotnetappcompat/overview).  DDIT manages access to this account.
+Helix uploads run results as blobs to AppCompat Storage account at (https://ms.portal.azure.com/#resource/subscriptions/9c035fa3-535f-4bf9-a60a-1381e6d27ea5/resourceGroups/dotnetappcompat/providers/Microsoft.Storage/storageAccounts/dotnetappcompat/overview). DDIT manages access to this account.
 
 
 ## Day-to-day operations
@@ -80,6 +81,8 @@ AppCompat runs in Helix are fully automated. This means as new builds are produc
 #### How to add or remove a configuration from coverage
 
 Coverage is defined in `schedule.json` (Tools/GetBUTs/GetBUTs/schedule.json). Each object in the json should have the following attribute-value pairs -
+
+
 | Attribute | Description |
 |:----------|:------------|
 | DayOfWeek | Day of the week for which this config applies. Values will be `Mon-Thu` or {`Friday`, `Saturday`, `Sunday`} |
@@ -92,7 +95,10 @@ Coverage is defined in `schedule.json` (Tools/GetBUTs/GetBUTs/schedule.json). Ea
 | AppCount | Number of UWP apps to include in the run. | 
 | IsBaseline | TRUE if baseline run otherwise FALSE. | 
 
+
 A sample config is shown below. 
+
+
     {
         "DayOfWeek":  "Mon-Thu",
         "Config#":  "1",
@@ -104,6 +110,7 @@ A sample config is shown below.
         "AppCount":  "2000",
         "IsBaseline":  "FALSE"
     },
+
 
 Update the `schedule.json` to add, update or delete an object as required for the new coverage. Make sure to run `RebuildAll.bat` for the new changes to be applied.
 
