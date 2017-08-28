@@ -8,7 +8,7 @@ For example, Core-Setup release/1.0.0 and release/1.1.0 pipebuilds. GitHub sends
 
 On the repository page, go to the **Settings** tab and click **Webhooks**. You may need to click on a dropdown to find **Settings** due to ZenHub.
 
-![settings with zenhub](settings-with-zenhub.png)
+![settings with zenhub](assets/settings-with-zenhub.png)
 
 ---
 
@@ -16,7 +16,7 @@ If you don't see **Settings** anywhere, you don't have permission. Check https:/
 
 Example web hooks page url: https://github.com/dotnet/versions/settings/hooks/
 
-![webhooks list](webhooks-list.png)
+![webhooks list](assets/webhooks-list.png)
 
 ## Web hook configuration
 
@@ -26,4 +26,4 @@ Example web hooks page url: https://github.com/dotnet/versions/settings/hooks/
  * "Which events would you like to trigger this webhook?": `Just the push event.`
  * Active: checked
 
-![webhook manage](webhook-manage.png)
+![webhook manage](assets/webhook-manage.png)
