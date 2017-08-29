@@ -45,8 +45,8 @@
     <When Condition="'$(CIBuild)' == 'true'">
       <PropertyGroup>
         <Version>$(VersionBase)-ci</Version>
-        <FileVersion>$(VersionBase).65535</FileVersion>
-        <VsixVersion>$(VersionBase).9000000</VsixVersion>
+        <FileVersion>42.42.42.42</FileVersion>
+        <VsixVersion>42.42.42.42</VsixVersion>
         <InformationalVersion>$(FileVersion)</InformationalVersion>
       </PropertyGroup>
     </When>
