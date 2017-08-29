@@ -20,8 +20,3 @@ Whenever a change to the Maestro source code is submitted, the app needs to be p
  10. Right-click on the Microsoft.DotNet.Maestro.WebJob project, and select Publish as Azure WebJob.
  11. Repeat steps 5-8.
  12. Locally undo the removal of the connection string in Web.config, and the adding of the publish profiles to the csprojs.
-
-## Old deployment locations
- * In Eric Erhardt's Azure subscription (may have been removed)
-   * App service: [dotnet-maestro app service](https://ms.portal.azure.com/?flight=1#resource/subscriptions/3220c2af-392a-4438-bde4-16fc1d50b593/resourceGroups/dotnetclidepsmirror/providers/Microsoft.Web/sites/dotnet-maestro/appServices)
-   * Log blob storage: [maestroapp Storage Account](https://ms.portal.azure.com/?flight=1#resource/subscriptions/3220c2af-392a-4438-bde4-16fc1d50b593/resourceGroups/dotnetclidepsmirror/providers/Microsoft.Storage/storageAccounts/maestroapp/overview)
