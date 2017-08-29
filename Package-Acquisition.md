@@ -14,32 +14,33 @@ More than 15% of our build failures are due to MyGet errors. To address these is
  * Ability to track download numbers of different packages
  
 ## Current Proposal
-The current idea here is to utilise Azure blob storage. The following would apply to every repo that subscribes to this method of publishing. For every official build of a repo, we would produce the layout described below, in a local feed using the NuGet add api. The idea is the a single official build will produce 3 feeds - one for packages, one for symbols and one for other build assets. The index.json is generated at publish time. It contains the registration url (which will be the container) which describes the feed where the packages live and the respective versions (which in our case will always be 1).
+The current idea here is to utilise Azure blob storage. The following would apply to every repo that subscribes to this method of publishing. For every official build of a repo, we would produce the layout described below, in a local feed using the NuGet add api. The idea is the a single official build will produce a feed for packages, one for symbols and a folder for other build assets. The index.json is generated at publish time. It contains the registration url (which will be the container) which describes the feed where the packages live and the respective versions.
 
 ## Layout 
 
  - packages/
-   - *.nupkg
+   - `*`.nupkg
  - assets/
-   - *.* (installers, tar files, etc.)
-   - *.symbols.nupkg
+   - `*`.`*` (installers, tar files, etc.)
+   - `*`.symbols.nupkg
    
 There are two scenarios that an individual repo will support. 
 
  * An official build:   
-   Input feed: https://dotnetcore.azurewebsites.com/packages OR MyGet
-   Intermediate feed: Transport feed
-   Output feed: https://dotnetcore.azurewebsites.com/packages OR MyGet
+    - Input feed: https://dotnetcore.azurewebsites.com/packages OR MyGet 
+    - Intermediate feed: Transport feed 
+    - Output feed: https://dotnetcore.azurewebsites.com/packages OR MyGet 
    
    There is a single official feed which contains all the outputs of every component repo. The repo will use a feed where multiple versions of the product exist. You would be dependent on the versions which are decided by the Maestro updates, to determine what is going to be consumed. The publish step will need to update the versions index.json. There will be race conditions for parallel builds, this will be solved using the leasing lock on a blob (Azure Rest API) during a build.
    
    Every build will consist of multiple legs, these legs will need to publish to an intermediate container before Finalize. This container is the transport feed, it will contain the index.jsons that need to be merged with the final feeds' index.jsons.
    
-   If we ever need to migrate some of the older versions, the operation would just be moving things from one container to another and keeping just the root index.json.
+   If we need to migrate external packages, older versions of packages as build dependencies, or some other restore dependency , the operation would just be pushing those nupkgs to the feed.
   
  * An orchestrated source-build:
-   Input feed: https://dotnetcore.azurewebsites.com/<build-SHA in Source build>/packages 
-   Output feed: https://dotnetcore.azurewebsites.com/<build-SHA in Source build>/packages 
+    - Input feed: https://dotnetcore.azurewebsites.com/<build-SHA in Source build>/packages 
+    - Intermediate feed: https://dotnetcore.azurewebsites.com/<build-SHA in Source build>/packages 
+    - Output feed: https://dotnetcore.azurewebsites.com/<build-SHA in Source build>/packages 
    This is where there is a source-build orchestrated build definition which passes in a build number, which is used by all the legs of the definition which build a single repo. The transport feeds are used to carry the packages from the different legs. There shouldn't be an assumption that the build will happen completely locally on a machine, and so we need to support restoring from a transport feed. We use the commit SHA of the last update to source-build which tracks the last time a repo's submodule was updated. We don't push to the single official blob feed even if the build succeeds, as the packages produced will have similar versions. 
    
    Here there is no intermediate feed. The goal is that the final feed produced will be the feed that can be restored and tested from.

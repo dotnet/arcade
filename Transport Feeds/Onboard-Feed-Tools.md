@@ -38,16 +38,16 @@ You can use Microsoft.Dotnet.Build.Tasks.Feed tools to restore from transport fe
 
 4.  Set Feed parameters
      You will need to set the following properties. You can specify them at build time on the command line.
-     ```
-     <PropertyGroup>
-         <!-- Type of feed published, currently only supports Blob -->
-           <FeedType>Blob</FeedType>
-         <!-- Currently should be of the following format -->
-           <FeedAccountName>https://karajascli.blob.core.windows.net/karthikfeed-12348</FeedAccountName>
-         <!-- The account key associated with the storage account mentioned above -->
-       <FeedAccountKey></FeedAccountKey>
-    </PropertyGroup>
-    ```
+     
+     * AccountName - The storage account in your Azure subscription
+     * AccountKey - The password from your Azure storage account from above
+     * ContainerName - Container in which the feed is created
+     * ItemsToPush - items to publish to feed
+     * RelativePath - the relative path in the container where the feed is created.
+     
+    Optional parameters:
+     * PublishFlatContainer - Allows you to push a flat file to a container, useful for non-nupkg packages
+     * Overwrite - Allows you to overwrite packages (potentially useful for maintaining version numbers)
 
 4. During your publish step in your build definition, invoke the PublishOutputLeg target on your publish project.
     ```
@@ -66,7 +66,6 @@ You can use Microsoft.Dotnet.Build.Tasks.Feed tools to restore from transport fe
       <!-- Specify the sources you would like enabled/disabled -->
       <EnableFeeds Include="https://karajascli.blob.core.windows.net/karthikfeed-12349/packages/index.json" />
       <EnableFeeds Include="https://dotnet.myget.org/F/dotnet-buildtools/api/v3/index.json" />
-      <DisableFeeds Include="https://dotnet.myget.org/F/dotnet-core/api/v3/index.json" />
     </ItemGroup>
    ```
    

@@ -91,29 +91,42 @@ There will be a potential race condition here if multiple builds are queued up, 
  * File
    * only in source-build context
    
-**Possible api spec**
+**Api spec**
 
-```
+```C#
     interface IFeed<T>
     {
-        //check if key works and service status is running
-        bool CheckFeedStatus(string feed);
+        //check if feed exists, key works, and service status is running
+        Task<bool> CheckFeedStatus();
 
-        // sanitize items to perform feed action on.
-        // check if items are de-duplicated, have the right assembly versions and are signed, prior to publishing.
-        IEnumerable<T> ValidateItems(IEnumerable<T> items);
-    }
-```
-
-```
-    interface IFeedAction
-    {
-        //push item to feed
+        //check if feed exists
+        Task<bool> CheckIfFeedExists();
         
-        //pull item from feed - with a filter
+        //create feed container
+        Task<bool> CreateFeedContainer();
 
-        //delete package from feed
+        //Generate indexes
+        //multiple version of a package or single version of a package
+        string GenerateIndexes(IEnumerable<T> items, string relativePath);
 
-        //list items in feed - with versions
+        //quick sanity check on items to perform feed action on.
+        bool IsSanityChecked(IEnumerable<T> items);
     }
 ```
+
+```C#
+    interface IFeedAction<T>
+    {
+        Task<bool> PushToFeed(IEnumerable<T> items, string relativePath, bool containerExists);
+
+        Task<bool> PullFromFeed(string filterString);
+
+        Task<bool> DeleteFromFeed(string filterString);
+        
+        Task<IEnumerable<string>> ListPackagesOnFeed(string filterString);
+
+        Task<IEnumerable<string>> ListVersionsOfPackage(string packageName);
+    }
+```
+
+The current implementation does not implement this interface, but is close enough that the refactoring shouldn't be an issue.
