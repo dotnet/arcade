@@ -16,6 +16,7 @@
       <SignToolArgs Include='-intermediateOutputPath "$(ArtifactsObjDir)\"' />
       <SignToolArgs Include='-config "$(SignToolDataPath)"' />
       <SignToolArgs Include='-test' Condition="'$(SignType)' != 'real'" />
+      <SignToolArgs Include='-msbuildpath "$(MSBuildBinPath)\msbuild.exe"' />
       <SignToolArgs Include='"$(ArtifactsConfigurationDir)\"' />
     </ItemGroup>
     
