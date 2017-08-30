@@ -101,6 +101,19 @@
              BuildInParallel="true"
              Condition="'@(PreSignTargets)' != ''"/>
 
+    <!-- 
+      Since multiple projects may contribute to a single insertion component
+      we need to package them in a separate phase.
+
+      VSIX packages that are inserted are updated (experimental flag is removed), 
+      so we need to do that before signing.
+    -->
+    <MSBuild Projects="VisualStudio.Insertion.Pack.proj"
+             Properties="$(Props);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
+             Targets="Pack"
+             BuildInParallel="true"
+             Condition="'$(Pack)' == 'true' and '$(UsingToolVSSDK)' == 'true'"/>
+
     <MSBuild Projects="Sign.proj"
              Properties="$(Props);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
              Targets="Sign"
@@ -117,16 +130,5 @@
              Targets="Pack"
              BuildInParallel="true"
              Condition="'$(Pack)' == 'true'"/>
-
-    <!-- 
-      Since multiple projects may contribute to a single insertion component
-      we need to package them in a separate phase.
-    -->
-    <MSBuild Projects="VisualStudio.Insertion.Pack.proj"
-             Properties="$(Props);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
-             Targets="Pack"
-             BuildInParallel="true"
-             Condition="'$(Pack)' == 'true' and '$(UsingToolVSSDK)' == 'true'"/>
-
   </Target>
 </Project>
