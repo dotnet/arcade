@@ -20,3 +20,19 @@ Whenever a change to the Maestro source code is submitted, the app needs to be p
  10. Right-click on the Microsoft.DotNet.Maestro.WebJob project, and select Publish as Azure WebJob.
  11. Repeat steps 5-8.
  12. Locally undo the removal of the connection string in Web.config, and the adding of the publish profiles to the csprojs.
+
+## Monitoring logs
+Please check in the logs to validate if requests are still flowing:
+
+ 1. Open the [logs](#logs).
+ 2. Navigate to the latest date/hour (e.g. `maestro-prod/2017/08/31/22`).
+ 3. Download and open `*applicationLog.csv`.
+ 4. Make sure there are lines like `CommitPushed Complete` and `Successfully queued VSO build.`
+    * You may need to wait until a build-info commit happens on https://github.com/dotnet/versions/tree/master/build-info.
+
+## Confirming on Azure that the publish worked
+*Note:* This is a diagnosis step if you're not sure the publish worked. It's not a required publish step.
+
+ 1. Go to the App Service Editor (preview).
+ 2. Download `bin/Microsoft.DotNet.Maestro.dll` and `bin/Microsoft.DotNet.Maestro.WebApi.dll`
+ 3. Use ildasm, ILSpy, or some other disassembler to determine if the IL matches the changes you expected.
