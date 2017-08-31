@@ -108,9 +108,9 @@
       VSIX packages that are inserted are updated (experimental flag is removed), 
       so we need to do that before signing.
     -->
-    <MSBuild Projects="VisualStudio.Insertion.Pack.proj"
+    <MSBuild Projects="VisualStudio.Insertion.proj"
              Properties="$(Props);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
-             Targets="Pack"
+             Targets="PrePack"
              BuildInParallel="true"
              Condition="'$(Pack)' == 'true' and '$(UsingToolVSSDK)' == 'true'"/>
 
@@ -119,6 +119,16 @@
              Targets="Sign"
              BuildInParallel="true"
              Condition="'$(Sign)' == 'true'"/>
+
+    <!-- 
+      Insertion manifests (vsman files) contain hashes of the referenced VSIXes.
+      These need to be calculated using signed VSIXes.
+    -->
+    <MSBuild Projects="VisualStudio.Insertion.proj"
+             Properties="$(Props);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
+             Targets="Pack"
+             BuildInParallel="true"
+             Condition="'$(Pack)' == 'true' and '$(UsingToolVSSDK)' == 'true'"/>
 
     <!-- 
       It is important to skip the build (NoBuild=true) when creating NuGet packages.
