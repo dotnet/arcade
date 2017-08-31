@@ -14,7 +14,7 @@ Whenever a change to the Maestro source code is submitted, the app needs to be p
  4. Build the solution.
  5. Right-click on the Microsoft.DotNet.Maestro.WebApi project, and select Publish.
  6. Select “Microsoft Azure App Service”.
- 7. Select the “maestro-prod” app service and click OK.
+ 7. Select the “maestro-prod” app service in the HelixProd subscription and click OK.
  8. On the Settings page of the publish wizard, select the Release configuration.
  9. Click Publish.
  10. Right-click on the Microsoft.DotNet.Maestro.WebJob project, and select Publish as Azure WebJob.
