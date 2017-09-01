@@ -15,9 +15,10 @@
   </ItemGroup>
 
   <!--
-    TODO: Currently we need to erase Experimental flag from VSIXes that are inserted into VS.
+    Currently we need to erase Experimental flag from VSIXes that are inserted into VS.
     The build produces VSIXes to VisualStudioSetupPath that need this treatment.
     This task copies them to VisualStudioSetupInsertionPath and removes the flag from the manifest.
+    VSIX files that are already in VisualStudioSetupInsertionPath are already non-experimental.
   -->
   <Target Name="PrePack" Outputs="%(_StubFiles.Identity)" Condition="'@(_StubFiles)' != ''">
     <ReadLinesFromFile File="%(_StubFiles.Identity)">
@@ -67,7 +68,7 @@
       <_Args Include="SwixBuildPath=$(NuGetPackageRoot)microbuild.plugins.swixbuild\$(MicroBuildPluginsSwixBuildVersion)\"/>
     </ItemGroup>
 
-    <Message Text="Packaging VS component '$(_ComponentName)'" Importance="high"/>
+    <Message Text="Generating manifest for VS component '$(_ComponentName)'" Importance="high"/>
     
     <MSBuild Projects="VisualStudio.SetupPackage.vsmanproj" Properties="@(_Args)"/>
   </Target>

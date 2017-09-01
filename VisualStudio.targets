@@ -85,11 +85,11 @@
           Condition="'$(CreateVsixContainer)' == 'true' and '$(VisualStudioInsertionComponent)' != ''"/>
   
   <!--
-    Packaging SWR files to Willow VSIX.
+    Build Willow VSIX from SWR files.
   -->
-  <Target Name="SwixPack" 
+  <Target Name="SwixBuild" 
           DependsOnTargets="_SetStubFileNameForSwixProject;_WriteComponentStubFile"
-          AfterTargets="Pack" 
+          AfterTargets="Build" 
           Condition="'@(SwrFile)' != ''">
     
     <PropertyGroup>

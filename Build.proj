@@ -15,7 +15,7 @@
     Test              "true" to run tests
     IntegrationTest   "true" to run integration tests
     Sign              "true" to sign built binaries
-    Pack              "true" to build NuGet packages
+    Pack              "true" to build NuGet packages and VS insertion manifests
     Properties        List of properties to pass to each build phase ("Name=Value;Name=Value;...")
   -->
 
@@ -107,28 +107,18 @@
 
       VSIX packages that are inserted are updated (experimental flag is removed), 
       so we need to do that before signing.
+      
+      TODO: Consider moving to solution Build phase
     -->
     <MSBuild Projects="VisualStudio.Insertion.proj"
              Properties="$(Props);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
              Targets="PrePack"
-             BuildInParallel="true"
              Condition="'$(Pack)' == 'true' and '$(UsingToolVSSDK)' == 'true'"/>
 
     <MSBuild Projects="Sign.proj"
              Properties="$(Props);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
              Targets="Sign"
-             BuildInParallel="true"
              Condition="'$(Sign)' == 'true'"/>
-
-    <!-- 
-      Insertion manifests (vsman files) contain hashes of the referenced VSIXes.
-      These need to be calculated using signed VSIXes.
-    -->
-    <MSBuild Projects="VisualStudio.Insertion.proj"
-             Properties="$(Props);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
-             Targets="Pack"
-             BuildInParallel="true"
-             Condition="'$(Pack)' == 'true' and '$(UsingToolVSSDK)' == 'true'"/>
 
     <!-- 
       It is important to skip the build (NoBuild=true) when creating NuGet packages.
@@ -140,5 +130,16 @@
              Targets="Pack"
              BuildInParallel="true"
              Condition="'$(Pack)' == 'true'"/>
+
+    <!-- 
+      Insertion manifests (vsman files) contain hashes of the referenced VSIXes.
+      These need to be calculated using signed VSIXes.
+      In previous step (Pack on the solution) might have produced additional VSIXes that need to be inserted.
+      Hence we need to run this task after both signing and packaging is done on the solution.
+    -->
+    <MSBuild Projects="VisualStudio.Insertion.proj"
+             Properties="$(Props);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
+             Targets="Pack"
+             Condition="'$(Pack)' == 'true' and '$(UsingToolVSSDK)' == 'true'"/>
   </Target>
 </Project>
