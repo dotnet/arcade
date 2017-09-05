@@ -9,14 +9,21 @@
   <Import Project="$(DirectoryBuildPropsPath)" Condition="Exists('$(DirectoryBuildPropsPath)')"/>
   <Import Project="RepoLayout.props" />
   <Import Project="DefaultVersions.props" />
-
+  
   <Target Name="Sign">
+    <Exec Command='"$(MSBuildProjectDirectory)\vswhere.exe" -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild'
+          Condition="'$(SignType)' == 'real'"
+          ConsoleToMsBuild="true"
+          StandardErrorImportance="high">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_VsInstallDir" />
+    </Exec>
+
     <ItemGroup>
       <SignToolArgs Include='-nugetPackagesPath "$(NuGetPackageRoot)\"' />
       <SignToolArgs Include='-intermediateOutputPath "$(ArtifactsObjDir)\"' />
       <SignToolArgs Include='-config "$(SignToolDataPath)"' />
       <SignToolArgs Include='-test' Condition="'$(SignType)' != 'real'" />
-      <SignToolArgs Include='-msbuildpath "$(MSBuildBinPath)\msbuild.exe"' />
+      <SignToolArgs Include='-msbuildpath "$(_VsInstallDir)\MSBuild\15.0\Bin\msbuild.exe"' Condition="'$(SignType)' == 'real'"/>
       <SignToolArgs Include='"$(ArtifactsConfigurationDir)\"' />
     </ItemGroup>
     
