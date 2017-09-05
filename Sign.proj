@@ -9,7 +9,7 @@
   <Import Project="$(DirectoryBuildPropsPath)" Condition="Exists('$(DirectoryBuildPropsPath)')"/>
   <Import Project="RepoLayout.props" />
   <Import Project="DefaultVersions.props" />
-  
+
   <Target Name="Sign">
     <Exec Command='"$(MSBuildProjectDirectory)\vswhere.exe" -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild'
           Condition="'$(SignType)' == 'real'"
