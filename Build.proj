@@ -57,6 +57,7 @@
       <RestoreToolsProp Include="UsingToolVSSDK=$(UsingToolVSSDK)"/>
       <RestoreToolsProp Include="RoslynToolsMicrosoftSignToolVersion=$(RoslynToolsMicrosoftSignToolVersion)"/>
       <RestoreToolsProp Include="MicroBuildPluginsSwixBuildVersion=$(MicroBuildPluginsSwixBuildVersion)"/>
+      <RestoreToolsProp Include="MicroBuildCoreVersion=$(MicroBuildCoreVersion)"/>
       <RestoreToolsProp Include="RoslynToolsMicrosoftModifyVsixManifestVersion=$(RoslynToolsMicrosoftModifyVsixManifestVersion)"/>
     </ItemGroup>
 
