@@ -200,7 +200,8 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
             // Get defaults for all of the optional values that weren't specified
             if (msbuildPath == null && !test)
             {
-                var vsInstallDir = LocateVS.Instance.GetInstallPath("15.0", new[] { "Microsoft.Component.MSBuild" });
+                // installed VS versions could be "15.0" or "15.3", so "15." is a good proxy
+                var vsInstallDir = LocateVS.Instance.GetInstallPath("15.", new[] { "Microsoft.Component.MSBuild" });
                 msbuildPath = Path.Combine(vsInstallDir, "MSBuild", "15.0", "Bin", "msbuild.exe");
             }
 
