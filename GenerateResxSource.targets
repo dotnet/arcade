@@ -38,6 +38,7 @@
     <PropertyGroup>
       <_EmbeddedResourceSourceExtension Condition="'$(Language)' == 'C#'">cs</_EmbeddedResourceSourceExtension>
       <_EmbeddedResourceSourceExtension Condition="'$(Language)' == 'VB'">vb</_EmbeddedResourceSourceExtension>
+      <_EmbeddedResourceSourceExtension Condition="'$(Language)' == 'F#'">fs</_EmbeddedResourceSourceExtension>
     </PropertyGroup>
     <Error Text="GenerateResxSource doesn't support language: '$(Language)'" Condition="'$(_EmbeddedResourceSourceExtension)' == ''"/>
     <ItemGroup>
