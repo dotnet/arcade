@@ -2,9 +2,12 @@
 The following document shows the user documentation for the prototype of the repro environment solution according to the [requirements](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20Prototype.md#requirements).
 
 ### Known Issues
-- [1487](https://github.com/dotnet/core-eng/issues/1487) Delete a VM in Mission Control always reports error.
 - [1708](https://github.com/dotnet/core-eng/issues/1708) Information in windows is not showing up on start.
 - [1649](https://github.com/dotnet/core-eng/issues/1649) Jenkins is still running on windows after creating a snapshot and a VM.
+- [631](https://github.com/dotnet/core-eng/issues/631) As a user of Mission Control, pages that require authentication force authentication.
+- [1487](https://github.com/dotnet/core-eng/issues/1487) Delete a VM in Mission Control always reports error.
+- [1702](https://github.com/dotnet/core-eng/issues/1702) Show error returned by the API in the MC UI.
+- [1694](https://github.com/dotnet/core-eng/issues/1694) Reconsider the user experience when clicking Repro in Jenkins.
 
 # What is the Repro Tool?
 When a job fails in Jenkins, the developer may ask for a virtual machine with the sufficient data and access to connect and build the code that is located in the machine to determine why the job failed.
