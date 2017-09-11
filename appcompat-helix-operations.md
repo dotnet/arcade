@@ -127,10 +127,10 @@ Table below provides a high-level summary of ownership of components.
 
 | Component | Description | Owner |
 |:----------|:------------|:------|
-| UWP Apps | These are the apps used to validate the compatibility of each new build of .NET Native. These apps are extracted from the app packages submitted to the Store as-is by the customer. | Store Team [Navit Saxena](navits@microsoft.com) |
+| UWP Apps | These are the apps used to validate the compatibility of each new build of .NET Native. These apps are extracted from the app packages submitted to the Store as-is by the customer. | Store Team <br>[Navit Saxena](navits@microsoft.com) |
 | App Management Tools | Set of tools to download, extract, and store UWP apps. <br>Refer [Extract UWP Apps](https://microsoft.sharepoint.com/teams/netfx/corefx/_layouts/15/WopiFrame.aspx?sourcedoc={0cfbc196-0645-4781-84c6-5dffabd76bee}&action=edit&wd=target%28%2F%2FEngineering%2FEngineering.one%7C60de6949-3ae2-4d83-ab00-083dd4535a4a%2FExtract%20UWP%20Apps%7C30f0bacb-e98d-496d-813c-cb9456282091%2F%29)| Product Team [Vitek Karas](Vitek.Karas@microsoft.com) |
 | Run Management Tools| Set of tools to monitor builds, define schedule, submit Helix jobs based on a defined schedule, download job results, and analyze results. | Product Team [Vitek Karas](Vitek.Karas@microsoft.com) |
-| Helix AppCompat Queue | Helix queue for AppCompat runs. | .NET ES [Matt Galbraith](Matt.Galbraith@microsoft.com) |
+| Helix AppCompat Queue | Helix queue for AppCompat runs. | .NET ES <br>[Matt Galbraith](Matt.Galbraith@microsoft.com) |
 | Azure Storage | Storage for apps and run results. <br>Subscription Id: 9c035fa3-535f-4bf9-a60a-1381e6d27ea5 | DDIT (http://techease/) |
 | On-Premise Storage | Reporter, and app management tools currently operate on on-premise share (\\\fxcore\apps\WindowsStore\UWP). <br>This is a mirror of Azure storage. | DDIT (http://techease/) |
 
