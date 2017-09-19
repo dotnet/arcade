@@ -115,7 +115,7 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="RunLogger.cs" />
+    <Compile Include="StandardUapVisitor.cs" />
     <Compile Include="XunitTestRunner.cs" />
   </ItemGroup>
   <ItemGroup>
