@@ -232,7 +232,7 @@ void AppxApp::InitStdoutFile(bool testApp)
     wstring appContainerPath = GetAppContainerFolderPath();
 
     WIN32_FILE_ATTRIBUTE_DATA stdoutFileAttributeData;
-    stdoutFile = appContainerPath +  L"\\AC\\Temp\\stdout.txt";
+    stdoutFile = appContainerPath +  L"\\LocalState\\AC\\stdout.txt";
 
     // Delete the stdout file if it exists
     if (GetFileAttributesEx(stdoutFile.c_str(), ::GET_FILEEX_INFO_LEVELS::GetFileExInfoStandard, &stdoutFileAttributeData))

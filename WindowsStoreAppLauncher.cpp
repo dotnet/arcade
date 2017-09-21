@@ -255,9 +255,9 @@ void Execute(const unique_ptr<App>& app, const ArgInfo& info, DWORD& exitCode)
 
     if (info.isTestApp)
     {
-      wprintf(L"\n\nSTDOUT & STDERR from imersive process:\n");
+      wprintf(L"\n\nSTDOUT & STDERR from immersive process:\n");
       wprintf(L"==================================================================================\n");
-      wprintf(L"%s\n", app->GetAppStdOutContent().c_str());
+      wprintf(L"\n%s\n", app->GetAppStdOutContent().c_str());
       wprintf(L"==================================================================================\n");
     }
     else if (waitResult)
