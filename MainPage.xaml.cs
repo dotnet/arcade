@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Text;
+using System.IO;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -15,22 +14,32 @@ namespace XUnit.Runner.Uap
         public MainPage()
         {
             this.InitializeComponent();
-            log = new StringBuilder();
-        }
-
-        internal static StringBuilder log;
-
-        public void UpdateLog(string text)
-        {
-            log.AppendLine(text);
+            Application.Current.UnhandledException += OnUnhandledException;
         }
 
         private void RunXunitTestsInDirectory(object sender, RoutedEventArgs e)
         {
             // Run tests for assemblies in current directory
             XunitTestRunner runner = new XunitTestRunner();
+            Task.Run(() => runner.RunTests(App.LaunchArgs.Arguments));
+        }
 
-            Task.Run(() => runner.RunTests(App.LaunchArgs.Arguments, log, UpdateLog));
+        static void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            var ex = e.Exception as Exception;
+            StreamWriter log = Helpers.GetFileStreamWriterInLocalStorageAsync("stdout.txt").GetAwaiter().GetResult();
+
+            if (ex != null)
+            {
+                log.WriteLine(ex.ToString());
+            }
+            else
+            {
+                log.WriteLine("Error of unknown type thrown in application domain");
+            }
+
+            log.Dispose();
+            Application.Current.Exit();
         }
     }
 }

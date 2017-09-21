@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Windows.ApplicationModel;
-using Windows.Storage;
 using Windows.UI.Xaml;
 using Xunit;
+using Xunit.ConsoleClient;
 using Xunit.Shared;
 
 namespace XUnit.Runner.Uap
@@ -19,24 +16,21 @@ namespace XUnit.Runner.Uap
     {
         volatile static bool cancel = false;
 
-        private static StringBuilder log;
+        private static StreamWriter log;
 
-        public async void RunTests(string arguments, StringBuilder sbLog, Action<string> uiLogger)
+        public async void RunTests(string arguments)
         {
-            log = sbLog;
-
-            var reporters = new List<IRunnerReporter>();
+            log = await Helpers.GetFileStreamWriterInLocalStorageAsync("stdout.txt");
 
             string[] args = arguments.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            log.AppendLine($"Args: {arguments}");
+            log.WriteLine(arguments);
 
             var commandLine = CommandLine.Parse(args);
             if (commandLine.Debug)
             {
                 Debugger.Launch();
             }
-            var reporterMessageHandler = commandLine.Reporter.CreateMessageHandler(new RunLogger(uiLogger));
             var completionMessages = new ConcurrentDictionary<string, ExecutionSummary>();
             var assembliesElement = new XElement("assemblies");
 
@@ -58,22 +52,22 @@ namespace XUnit.Runner.Uap
                     using (var xunit = new XunitFrontController(AppDomainSupport.Denied, assembly.AssemblyFilename, assembly.ConfigFilename, assembly.Configuration.ShadowCopyOrDefault))
                     using (var discoveryVisitor = new TestDiscoveryVisitor())
                     {
+                        string assemblyName = Path.GetFileNameWithoutExtension(assembly.AssemblyFilename);
                         // Discover & filter the tests
-                        reporterMessageHandler.OnMessage(new TestAssemblyDiscoveryStarting(assembly, false, false, discoveryOptions));
+                        log.WriteLine($"Discovering: {assemblyName}");
                         xunit.Find(false, discoveryVisitor, discoveryOptions);
                         discoveryVisitor.Finished.WaitOne();
 
                         var testCasesDiscovered = discoveryVisitor.TestCases.Count;
                         var filteredTestCases = discoveryVisitor.TestCases.Where(commandLine.Project.Filters.Filter).ToList();
                         var testCasesToRun = filteredTestCases.Count;
-                        //log.AppendLine("testCasesToRun: " + testCasesToRun);
 
-                        reporterMessageHandler.OnMessage(new TestAssemblyDiscoveryFinished(assembly, discoveryOptions, testCasesDiscovered, testCasesToRun));
+                        log.WriteLine($"Discovered: {assemblyName}");
 
                         // Run the filtered tests
                         if (testCasesToRun == 0)
                         {
-                            completionMessages.TryAdd(Path.GetFileName(assembly.AssemblyFilename), new ExecutionSummary());
+                            log.WriteLine($"Info:        {assemblyName} has no tests to run");
                         }
                         else
                         {
@@ -82,24 +76,17 @@ namespace XUnit.Runner.Uap
                                 filteredTestCases = filteredTestCases.Select(xunit.Serialize).Select(xunit.Deserialize).ToList();
                             }
 
-                            reporterMessageHandler.OnMessage(new TestAssemblyExecutionStarting(assembly, executionOptions));
                             var assemblyElement = new XElement("assembly");
 
-                            IExecutionVisitor resultsVisitor = new XmlAggregateVisitor(reporterMessageHandler, completionMessages, assemblyElement, () => cancel);
-                            if (commandLine.FailSkips)
-                            {
-                                resultsVisitor = new FailSkipVisitor(resultsVisitor);
-                            }
+                            StandardUapVisitor resultsVisitor = new StandardUapVisitor(assemblyElement, () => cancel, log, completionMessages, commandLine.ShowProgress, commandLine.FailSkips);
 
                             xunit.RunTests(filteredTestCases, resultsVisitor, executionOptions);
 
-                            //log.AppendLine("Finished running tests");
                             resultsVisitor.Finished.WaitOne();
 
-                            reporterMessageHandler.OnMessage(new TestAssemblyExecutionFinished(assembly, executionOptions, resultsVisitor.ExecutionSummary));
                             assembliesElement.Add(assemblyElement);
 
-                            log.AppendLine($"{Path.GetFileNameWithoutExtension(assembly.AssemblyFilename)}  Total: {resultsVisitor.ExecutionSummary.Total}, Errors: {resultsVisitor.ExecutionSummary.Errors}, Failed: {resultsVisitor.ExecutionSummary.Failed}, Time: {resultsVisitor.ExecutionSummary.Time}");
+                            log.WriteLine($"{Path.GetFileNameWithoutExtension(assembly.AssemblyFilename)}  Total: {resultsVisitor.ExecutionSummary.Total}, Errors: {resultsVisitor.ExecutionSummary.Errors}, Failed: {resultsVisitor.ExecutionSummary.Failed}, Skipped: {resultsVisitor.ExecutionSummary.Skipped}, Time: {resultsVisitor.ExecutionSummary.Time}");
                         }
                     }
                 }
@@ -107,11 +94,12 @@ namespace XUnit.Runner.Uap
                 {
                     assembliesElement = new XElement("error");
                     assembliesElement.Add(e);
+                    log.WriteLine(e);
                 }
                 finally
                 {
                     await WriteResults(Path.GetFileName(assembly.AssemblyFilename), assembliesElement);
-                    await WriteLogs(Path.GetFileName(assembly.AssemblyFilename), log.ToString());
+                    log.Dispose();
                 }
             }
 
@@ -126,18 +114,6 @@ namespace XUnit.Runner.Uap
             {
                 data.Save(stream);
                 stream.Flush();
-            }
-        }
-
-        static async Task WriteLogs(string test, string data)
-        {
-            var file = await Helpers.GetStorageFileAsync($"{test}.txt");
-            using (var stream = await file.OpenStreamForWriteAsync())
-            {
-                using (StreamWriter sw = new StreamWriter(stream))
-                {
-                    await sw.WriteAsync(data);
-                }
             }
         }
     }
