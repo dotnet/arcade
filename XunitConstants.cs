@@ -29,6 +29,7 @@ namespace Xunit.NetCore.Extensions
 
         //Non version framework constants
         internal static string NonNetfxTest = "nonnetfxtests";
+        internal static string NonMonoTest = "nonmonotests";
         internal static string NonUapTest = "nonuaptests";
         internal static string NonUapAotTest = "nonuapaottests";
         internal static string NonNetcoreappTest = "nonnetcoreapptests";

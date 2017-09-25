@@ -25,6 +25,7 @@ namespace Xunit
         UapNotUapAot = 0x2000,
         UapAot = 0x4000,
         Uap = UapAot | UapNotUapAot,
-        NetcoreCoreRT = 0x8000
+        NetcoreCoreRT = 0x8000,
+        Mono = 0x10000
     }
 }
