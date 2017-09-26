@@ -13,7 +13,7 @@ We make use of an Azure Function Proxy to redirect nuget requests to the appropr
 
 4. Setup the proxy (contact dotnetes if you are unfamiliar with the portal)
   
-  - Set up an Azure Function with the name "<STORAGE ACCOUNT>-translate"
+  - Set up an Azure Function with the name "STORAGEACCOUNT-translate"
   - Enable Function proxies under the Function app settings tab
   - Edit the host.json and save
      ```
