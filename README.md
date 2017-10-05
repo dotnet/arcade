@@ -59,6 +59,7 @@ The only required argument is `outputPath` and `-config`.  The rest will be infe
 - `-config`: Path to the configuration file. Default is to use `build\config\SignToolData.json` from the nearest directory containing `.git`.
 - `<output path>`: The base path for which all the entries in the config file are based off of. 
 - `-test`: The tool will operate in verification mode.  This checks the correctness of the config file, ensures the VSIX have contents that are identical to the build output (not just name matching), and that binaries are in a correct signing state.  Designed for developer and CI runs.
+- `-testSign`: The binaries will be test signed. The default is to real sign.
 - `-msbuildPath`: Path to the MSBuild.exe binary used to run the actual signing process on Microbuild.  The default is to use MSBuid 14.0 standard installation.
 - `-nugetPackagesPath`: Defaults to `~\.nuget\packages`.  Needed to specify the `<Import>` statements for Microbuild.
 - `-intermediateOutputPath`: Defaults to `<outputPath>\Obj`.  

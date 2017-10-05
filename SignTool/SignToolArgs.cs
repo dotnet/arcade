@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +15,7 @@ namespace SignTool
         internal string MSBuildPath { get; }
         internal string ConfigFile { get; }
         internal bool Test { get; }
+        internal bool TestSign { get; }
 
         internal SignToolArgs(
             string outputPath,
@@ -23,7 +24,8 @@ namespace SignTool
             string msbuildPath,
             string nugetPackagesPath,
             string configFile,
-            bool test)
+            bool test,
+            bool testSign)
         {
             OutputPath = outputPath;
             IntermediateOutputPath = intermediateOutputPath;
@@ -32,6 +34,7 @@ namespace SignTool
             NuGetPackagesPath = nugetPackagesPath;
             ConfigFile = configFile;
             Test = test;
+            TestSign = testSign;
         }
     }
 }

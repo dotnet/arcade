@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -78,11 +78,12 @@ namespace SignTool
                 AppendLine(builder, depth: 0, text: @"<Project DefaultTargets=""AfterBuild"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">");
 
                 // Setup the code to get the NuGet package root.
+                var signKind = _args.TestSign ? "test" : "real";
                 AppendLine(builder, depth: 1, text: @"<PropertyGroup>");
                 AppendLine(builder, depth: 2, text: $@"<NuGetPackageRoot>{NuGetPackagesPath}</NuGetPackageRoot>");
                 AppendLine(builder, depth: 2, text: $@"<OutDir>{OutputPath}</OutDir>");
                 AppendLine(builder, depth: 2, text: $@"<IntermediateOutputPath>{IntermediateOutputPath}</IntermediateOutputPath>");
-                AppendLine(builder, depth: 2, text: $@"<SignType>real</SignType>");
+                AppendLine(builder, depth: 2, text: $@"<SignType>{signKind}</SignType>");
                 AppendLine(builder, depth: 1, text: @"</PropertyGroup>");
 
                 AppendLine(builder, depth: 1, text: $@"<Import Project=""$(NuGetPackageRoot)\MicroBuild.Core\{MicroBuildVersion}\build\MicroBuild.Core.props"" />");

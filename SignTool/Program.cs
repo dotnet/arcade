@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -147,6 +147,7 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
             string nugetPackagesPath = null;
             string configFile = null;
             var test = false;
+            var testSign = false;
 
             var i = 0;
 
@@ -157,6 +158,10 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
                 {
                     case "-test":
                         test = true;
+                        i++;
+                        break;
+                    case "-testSign":
+                        testSign = true;
                         i++;
                         break;
                     case "-intermediateoutputpath":
@@ -234,7 +239,8 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
                 nugetPackagesPath: nugetPackagesPath,
                 appPath: AppContext.BaseDirectory,
                 configFile: configFile,
-                test: test);
+                test: test,
+                testSign: testSign);
             return true;
         }
 
