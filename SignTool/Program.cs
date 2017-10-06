@@ -122,9 +122,10 @@ namespace SignTool
         internal static void PrintUsage()
         {
             var usage =
-@"SignTool.exe [-test] [-intermediateOutputPath <path>] [-msbuildPath <path>] [-nugetPackagesPath <path>] [-config <path>] outputPath
+@"SignTool.exe [-test] [-testSign] [-intermediateOutputPath <path>] [-msbuildPath <path>] [-nugetPackagesPath <path>] [-config <path>] outputPath
 
 test: Run tool without actually modifying any state.
+testSign: The binaries will be test signed. The default is to real sign.
 outputPath: Directory containing the binaries.
 intermediateOutputPath: Directory containing intermediate output.  Default is (outputpath\..\Obj).
 nugetPackagesPath: Path containing downloaded NuGet packages.
