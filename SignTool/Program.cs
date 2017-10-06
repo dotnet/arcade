@@ -160,7 +160,7 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
                         test = true;
                         i++;
                         break;
-                    case "-testSign":
+                    case "-testsign":
                         testSign = true;
                         i++;
                         break;
