@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.IO;
 using System.Xml.Linq;
 
 namespace XliffTasks.Model
@@ -36,6 +37,18 @@ namespace XliffTasks.Model
                         note: null,
                         element: child);
                 }
+            }
+        }
+
+        public override void RewriteRelativePathsToAbsolute(string sourceFullPath)
+        {
+            foreach (var imageTag in Document.Descendants(Document.Root.Name.Namespace + "Bitmap"))
+            {
+                string resourceRelativePath = imageTag.Attribute("href").Value;
+
+                var absolutePath = Path.Combine(Path.GetDirectoryName(sourceFullPath), resourceRelativePath);
+
+                imageTag.Attribute("href").Value = absolutePath;
             }
         }
     }

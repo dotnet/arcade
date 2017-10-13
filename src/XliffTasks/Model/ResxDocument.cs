@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace XliffTasks.Model
@@ -50,6 +52,24 @@ namespace XliffTasks.Model
                     source: value, 
                     note: comment, 
                     element: valueElement);
+            }
+        }
+
+        public override void RewriteRelativePathsToAbsolute(string sourceFullPath)
+        {
+            foreach (var node in Document.Descendants("data"))
+            {
+                if (node.Attribute("type")?.Value == "System.Resources.ResXFileRef, System.Windows.Forms")
+                {
+                    var valueNodeOfFileRef = node.Element("value");
+                    var splittedRelativePathAndSerializedType = valueNodeOfFileRef.Value.Split(';');
+                    var resourceRelativePath = splittedRelativePathAndSerializedType[0];
+
+                    var absolutePath = Path.Combine(Path.GetDirectoryName(sourceFullPath), resourceRelativePath);
+                    splittedRelativePathAndSerializedType[0] = absolutePath;
+
+                    valueNodeOfFileRef.Value = string.Join(";", splittedRelativePathAndSerializedType);
+                }
             }
         }
     }
