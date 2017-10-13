@@ -44,7 +44,7 @@ namespace XliffTasks.Model
         {
             foreach (var imageTag in Document.Descendants(Document.Root.Name.Namespace + "Bitmap"))
             {
-                string resourceRelativePath = imageTag.Attribute("href").Value;
+                string resourceRelativePath = imageTag.Attribute("href").Value.Replace('\\', Path.DirectorySeparatorChar);
 
                 var absolutePath = Path.Combine(Path.GetDirectoryName(sourceFullPath), resourceRelativePath);
 

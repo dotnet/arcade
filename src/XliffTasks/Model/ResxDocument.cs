@@ -63,7 +63,7 @@ namespace XliffTasks.Model
                 {
                     var valueNodeOfFileRef = node.Element("value");
                     var splittedRelativePathAndSerializedType = valueNodeOfFileRef.Value.Split(';');
-                    var resourceRelativePath = splittedRelativePathAndSerializedType[0];
+                    var resourceRelativePath = splittedRelativePathAndSerializedType[0].Replace('\\', Path.DirectorySeparatorChar);
 
                     var absolutePath = Path.Combine(Path.GetDirectoryName(sourceFullPath), resourceRelativePath);
                     splittedRelativePathAndSerializedType[0] = absolutePath;

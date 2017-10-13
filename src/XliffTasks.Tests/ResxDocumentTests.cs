@@ -51,6 +51,10 @@ namespace XliffTasks.Tests
         [Fact]
         public void RewriteFileReferenceToAbsoluteInDestinyFolder()
         {
+            string sourceFolder = Directory.GetCurrentDirectory();
+            string expectedAbsoluteLocation = Path.Combine(
+              Directory.GetCurrentDirectory(),
+              @"Resources\Package.ico".Replace('\\', Path.DirectorySeparatorChar));
             string source =
 @"<root>
   <data name=""400"" type=""System.Resources.ResXFileRef, System.Windows.Forms"">
@@ -66,15 +70,15 @@ namespace XliffTasks.Tests
             string expectedTranslation =
 @"<root>
   <data name=""400"" type=""System.Resources.ResXFileRef, System.Windows.Forms"">
-    <value>E:\sourceFolder\Resources\Package.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>ABSOLUTEPATH;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-</root>";
+</root>".Replace("ABSOLUTEPATH", expectedAbsoluteLocation);
 
             var document = new ResxDocument();
             var writer = new StringWriter();
             document.Load(new StringReader(source));
             document.RewriteRelativePathsToAbsolute(
-                @"E:\sourceFolder\Resources.resx");
+                Path.Combine(sourceFolder, "Resources.resx"));
             document.Save(writer);
 
             AssertHelper.AssertWithoutLineEndingDifference(expectedTranslation, writer.ToString());
