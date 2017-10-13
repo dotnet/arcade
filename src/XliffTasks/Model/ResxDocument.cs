@@ -62,13 +62,13 @@ namespace XliffTasks.Model
                 if (node.Attribute("type")?.Value == "System.Resources.ResXFileRef, System.Windows.Forms")
                 {
                     var valueNodeOfFileRef = node.Element("value");
-                    var splittedRelativePathAndSerializedType = valueNodeOfFileRef.Value.Split(';');
-                    var resourceRelativePath = splittedRelativePathAndSerializedType[0].Replace('\\', Path.DirectorySeparatorChar);
+                    var splitRelativePathAndSerializedType = valueNodeOfFileRef.Value.Split(';');
+                    var resourceRelativePath = splitRelativePathAndSerializedType[0].Replace('\\', Path.DirectorySeparatorChar);
 
                     var absolutePath = Path.Combine(Path.GetDirectoryName(sourceFullPath), resourceRelativePath);
-                    splittedRelativePathAndSerializedType[0] = absolutePath;
+                    splitRelativePathAndSerializedType[0] = absolutePath;
 
-                    valueNodeOfFileRef.Value = string.Join(";", splittedRelativePathAndSerializedType);
+                    valueNodeOfFileRef.Value = string.Join(";", splitRelativePathAndSerializedType);
                 }
             }
         }

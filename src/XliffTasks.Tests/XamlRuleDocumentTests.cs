@@ -59,7 +59,7 @@ namespace XliffTasks.Tests
             document.Translate(translations);
             document.Save(writer);
 
-            AssertHelper.AssertWithoutLineEndingDifference(expectedTranslation, writer.ToString());
+            AssertEx.EqualIgnoringLineEndings(expectedTranslation, writer.ToString());
         }
     }
 }

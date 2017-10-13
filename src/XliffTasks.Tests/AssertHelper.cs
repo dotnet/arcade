@@ -5,9 +5,9 @@ using Xunit;
 
 namespace XliffTasks.Tests
 {
-    static class AssertHelper
+    static class AssertEx
     {
-        public static void AssertWithoutLineEndingDifference(string expected, string actual)
+        public static void EqualIgnoringLineEndings(string expected, string actual)
         {
             Assert.Equal(
                 expected.Replace("\r", string.Empty),
