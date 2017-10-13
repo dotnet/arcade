@@ -61,6 +61,12 @@ namespace XliffTasks.Model
             }
        }
 
+        // rewrite nodes that point to external files (used often for icons, etc.)
+        // these will have relative paths adjusted to absolute path.
+        public virtual void RewriteRelativePathsToAbsolute(string sourceFullPath)
+        {
+        }
+
         protected abstract void LoadCore(TextReader reader);
 
         protected abstract void SaveCore(TextWriter writer);

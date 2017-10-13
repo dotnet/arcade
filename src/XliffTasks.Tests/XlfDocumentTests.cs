@@ -69,7 +69,7 @@ namespace XliffTasks.Tests
     </body>
   </file>
 </xliff>";
-            Assert.Equal(xliff, Update(xliff: "", resx: resx));
+             AssertEx.EqualIgnoringLineEndings(xliff, Update(xliff: "", resx: resx));
 
             // loc team translates
             string xliffAfterFirstTranslation =
@@ -141,8 +141,8 @@ namespace XliffTasks.Tests
   </file>
 </xliff>";
 
-            Assert.Equal(
-                xliffAfterApplyingResxModification, 
+             AssertEx.EqualIgnoringLineEndings(
+                xliffAfterApplyingResxModification,
                 Update(xliff: xliffAfterFirstTranslation, resx: resxAfterFirstModification));
         }
 

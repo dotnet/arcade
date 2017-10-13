@@ -67,7 +67,39 @@ namespace XliffTasks.Tests
             document.Translate(translations);
             document.Save(writer);
 
-            Assert.Equal(expectedTranslation, writer.ToString());
+            AssertEx.EqualIgnoringLineEndings(expectedTranslation, writer.ToString());
+        }
+
+        [Fact]
+        public void RewriteHrefOfImageToAbsoluteInDestinyFolder()
+        {
+            string sourceFolder = Directory.GetCurrentDirectory();
+            string expectedAbsoluteLocation = Path.Combine(
+              Directory.GetCurrentDirectory(), 
+              @"Resources\Images.png".Replace('\\', Path.DirectorySeparatorChar));
+
+            string source =
+@"<CommandTable xmlns=""http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable"" xmlns:xs=""http://www.w3.org/2001/XMLSchema"">
+  <Bitmaps>
+    <Bitmap guid=""guidImages"" href=""Resources\Images.png"" usedList=""bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows"" />
+  </Bitmaps>
+</CommandTable>";
+
+            string expectedTranslation =
+@"<CommandTable xmlns=""http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable"" xmlns:xs=""http://www.w3.org/2001/XMLSchema"">
+  <Bitmaps>
+    <Bitmap guid=""guidImages"" href=""ABSOLUTEPATH"" usedList=""bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows"" />
+  </Bitmaps>
+</CommandTable>".Replace("ABSOLUTEPATH", expectedAbsoluteLocation);
+
+            var document = new VsctDocument();
+            var writer = new StringWriter();
+            document.Load(new StringReader(source));
+            document.RewriteRelativePathsToAbsolute(
+                        Path.Combine(sourceFolder, "Resources.resx"));
+            document.Save(writer);
+
+            AssertEx.EqualIgnoringLineEndings(expectedTranslation, writer.ToString());
         }
     }
 }
