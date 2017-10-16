@@ -62,11 +62,33 @@ namespace XliffTasks.Model
         /// </summary>
         public void Save(string path)
         {
-            EnsureContent();
 
-            using (var stream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+            // On Windows:
+            // Readers will prevent the file from being overwritten due to FileShare.Read.
+            // Readers can read in parallel, but when there's contention with a writer
+            // On Unix:
+            // FileShare.Read does nothing, but...
+            // File.Replace is implemented with rename system call that will mean that even though writers can overwrite while
+            // reading is happening, each reader will see file before or after overwrite, not in between, which is the same reader-writer semantic we want.
+            EnsureContent();
+            var tempPath = Path.Combine(Path.GetDirectoryName(path), Path.GetRandomFileName());
+
+            using (var stream = File.Open(tempPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
             {
                 Save(stream);
+            }
+
+            try
+            {
+                File.Move(tempPath, path);
+            }
+            catch (IOException e) when (e.Message.Contains("Cannot create a file when that file already exists"))
+            {
+                File.Replace(
+                    tempPath,
+                    path,
+                    Path.ChangeExtension(tempPath, "back"),
+                    true);
             }
         }
 
