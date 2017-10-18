@@ -34,11 +34,11 @@ namespace XliffTasks
         {
             get
             {
-                var seconds = 5;
+                var milliseconds = 5;
                 while (true)
                 {
-                    yield return TimeSpan.FromSeconds(seconds);
-                    seconds *= 2;
+                    yield return TimeSpan.FromMilliseconds(milliseconds);
+                    milliseconds *= 2;
                 }
             }
         }
