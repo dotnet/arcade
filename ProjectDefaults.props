@@ -58,6 +58,7 @@
             <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
           </PropertyGroup>
         </When>
+
         <When Condition="'$(Language)' == 'VB' or Exists('$(MSBuildProjectDirectory)\$(AssemblyName).vbproj')">
           <PropertyGroup>
             <Language>VB</Language>
@@ -76,7 +77,7 @@
     <When Condition="'$(Language)' == 'C#'">
       <PropertyGroup>
         <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-        <NoWarn>$(NoWarn);1591</NoWarn>
+        <NoWarn Condition="'$(NoWarn)' == ''">1701;1702;1705;1591</NoWarn>
         <ProjectLanguage>CSharp</ProjectLanguage>
       </PropertyGroup>
 
