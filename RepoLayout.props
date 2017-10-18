@@ -10,7 +10,13 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DotNetRoot>$(RepoRoot).dotnet\</DotNetRoot>
+    <!-- Respect environment variable for the .NET install directory if set; otherwise, use the current default location -->
+    <DotNetRoot Condition="'$(DotNetRoot)' == ''">$(DOTNET_INSTALL_DIR)</DotNetRoot>
+    <DotNetRoot Condition="'$(DotNetRoot)' == ''">$(RepoRoot).dotnet\</DotNetRoot>
+    <DotNetRoot Condition="!HasTrailingSlash('$(DotNetRoot)')">$(DotNetRoot)\</DotNetRoot>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <DotNetTool>$(DotNetRoot)dotnet.exe</DotNetTool>
     <ArtifactsDir>$(RepoRoot)artifacts\</ArtifactsDir>
     <ArtifactsToolsetDir>$(ArtifactsDir)toolset\</ArtifactsToolsetDir>
