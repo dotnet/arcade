@@ -85,7 +85,7 @@ namespace XliffTasks.Model
                     File.Replace(
                         sourceFileName: tempPath,
                         destinationFileName: path,
-                        destinationBackupFileName: Path.ChangeExtension(tempPath, "back"),
+                        destinationBackupFileName: null,
                         ignoreMetadataErrors: true);
                 }
                 else
