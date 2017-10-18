@@ -62,14 +62,14 @@ namespace XliffTasks.Model
         /// </summary>
         public void Save(string path)
         {
-
-            // On Windows:
+            //On Windows:
             // Readers will prevent the file from being overwritten due to FileShare.Read.
-            // Readers can read in parallel, but when there's contention with a writer
-            // On Unix:
+            // Readers can read in parallel, but when there's contention with a writer, the retrying will kick in to resolve it.
+            //On Unix:
             // FileShare.Read does nothing, but...
-            // File.Replace is implemented with rename system call that will mean that even though writers can overwrite while
-            // reading is happening, each reader will see file before or after overwrite, not in between, which is the same reader-writer semantic we want.
+            // File.Replace is implemented with rename system call that will mean that even though writers can overwrite while 
+            // reading is happening, each reader will see file before or after overwrite, not in between
+
             EnsureContent();
             var tempPath = Path.Combine(Path.GetDirectoryName(path), Path.GetRandomFileName());
 
@@ -78,18 +78,21 @@ namespace XliffTasks.Model
                 Save(stream);
             }
 
-            try
+            ExponentialRetry.ExecuteWithRetryIOException(() =>
             {
-                File.Move(tempPath, path);
-            }
-            catch (IOException e) when (e.Message.Contains("Cannot create a file when that file already exists"))
-            {
-                File.Replace(
-                    tempPath,
-                    path,
-                    Path.ChangeExtension(tempPath, "back"),
-                    true);
-            }
+                if (File.Exists(path))
+                {
+                    File.Replace(
+                        sourceFileName: tempPath,
+                        destinationFileName: path,
+                        destinationBackupFileName: Path.ChangeExtension(tempPath, "back"),
+                        ignoreMetadataErrors: true);
+                }
+                else
+                {
+                    File.Move(sourceFileName: tempPath, destFileName: path);
+                }
+            }, maxRetryCount: 3);
         }
 
         /// <summary>
