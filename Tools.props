@@ -6,12 +6,26 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Net.Compilers" Version="$(MicrosoftNetCompilersVersion)" />
-  </ItemGroup>
+  <Choose>
+    <When Condition="'$(UsingToolMicrosoftNetCompilers)' != 'netcore'">
+      <ItemGroup>
+        <PackageReference Include="Microsoft.Net.Compilers.netcore" Version="$(MicrosoftNetCompilersNetCoreVersion)" />
+      </ItemGroup>
 
-  <PropertyGroup>
-    <ToolsetCompilerPackageDir>$(NuGetPackageRoot)microsoft.net.compilers\$(MicrosoftNetCompilersVersion)\</ToolsetCompilerPackageDir>
-  </PropertyGroup>
+      <PropertyGroup>
+        <ToolsetCompilerPackageDir>$(NuGetPackageRoot)microsoft.net.compilers.netcore\$(MicrosoftNetCompilersNetCoreVersion)\</ToolsetCompilerPackageDir>
+      </PropertyGroup>
+    </When>
+
+    <Otherwise>
+      <ItemGroup>
+        <PackageReference Include="Microsoft.Net.Compilers" Version="$(MicrosoftNetCompilersVersion)" />
+      </ItemGroup>
+
+      <PropertyGroup>
+        <ToolsetCompilerPackageDir>$(NuGetPackageRoot)microsoft.net.compilers\$(MicrosoftNetCompilersVersion)\</ToolsetCompilerPackageDir>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
 
 </Project>
