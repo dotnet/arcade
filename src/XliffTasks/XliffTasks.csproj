@@ -29,8 +29,4 @@
     <Reference Include="Microsoft.Build.Utilities.v4.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="Tasks\applesauce.cs" />
-  </ItemGroup>
-
 </Project>
