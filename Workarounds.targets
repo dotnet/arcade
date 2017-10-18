@@ -1,13 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
-  <!-- 
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <!--
     Workaround for incorrect implementation of _LoadPackInputItems target in NuGet.Build.Tasks.Pack.targets.
     The target was fixed in 15.3 but we need to support 15.1 until MicroBuild upgrades.
   -->
   <PropertyGroup Condition="'$(PackProjectInputFile)' == ''">
     <PackProjectInputFile>$(MSBuildProjectFullPath)</PackProjectInputFile>
   </PropertyGroup>
-  
+
   <!-- Workaround for https://github.com/Microsoft/msbuild/issues/1310 -->
   <Target Name="ForceGenerationOfBindingRedirects"
           AfterTargets="ResolveAssemblyReferences"
@@ -29,7 +35,7 @@
     </PropertyGroup>
   </Target>
 
-  <!-- 
+  <!--
     Workaround: In order to leverage LUT testing we need to have both of the following packages:
 
         - xunit.runner.desktop
@@ -37,7 +43,7 @@
 
     Both of these include xunit.abstractions.dll in different forms: content and reference
     respectively.  This creates a double write violation in our build.  The content item
-    is unnecessary for us since we reference the xunit package hence remove it here. 
+    is unnecessary for us since we reference the xunit package hence remove it here.
 
     https://github.com/dotnet/roslyn/issues/18753
   -->
@@ -47,8 +53,8 @@
     </ItemGroup>
   </Target>
 
-  <!-- 
-    Work around bug in Microsoft.NET.Sdk < v2.0 where satellites were deployed on top of each other in root. 
+  <!--
+    Work around bug in Microsoft.NET.Sdk < v2.0 where satellites were deployed on top of each other in root.
     https://github.com/dotnet/sdk/issues/1360
   -->
   <Target Name="WorkaroundIncorrectSatelliteDeployment" AfterTargets="ResolveLockFileCopyLocalProjectDeps">
@@ -61,7 +67,7 @@
   </Target>
 
   <!--
-    XAML targets create a temp project with OutDir set, which makes the SDK create an empty directory for it, 
+    XAML targets create a temp project with OutDir set, which makes the SDK create an empty directory for it,
     polluting the output dir. Avoid creating these directories.
     https://github.com/dotnet/sdk/issues/1367
   -->
@@ -69,7 +75,7 @@
     <OutDir/>
   </PropertyGroup>
 
-  <!-- 
+  <!--
     Workaround for PathTooLongException (see https://github.com/Microsoft/msbuild/issues/1786).
   -->
   <Target Name="WorkaroundAppConfigPathTooLong"
@@ -83,4 +89,5 @@
   <PropertyGroup Condition="'$(DebugType)' == 'portable'">
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
+
 </Project>

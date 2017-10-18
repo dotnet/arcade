@@ -1,12 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
   <PropertyGroup>
     <DeployProjectOutput Condition="'$(DeployProjectOutput)' == ''">$(__DeployProjectOutput)</DeployProjectOutput>
   </PropertyGroup>
-  
+
   <!-- Default empty deploy target. -->
   <Target Name="Deploy" AfterTargets="Build" Condition="'$(DeployProjectOutput)' == 'true'" />
-  
+
   <Import Project="StrongName.targets"/>
   <Import Project="GenerateInternalsVisibleTo.targets" />
   <Import Project="GenerateResxSource.targets" />
@@ -17,10 +23,11 @@
   <Import Project="OptimizationData.targets" Condition="'$(UsingToolIbcOptimization)' == 'true' and '$(IbcOptimizationDataDir)' != ''"/>
   <Import Project="SymStore.targets" Condition="'$(CIBuild)' == 'true' and '$(OS)' == 'Windows_NT'"/>
 
-  <!-- 
+  <!--
     By default the SDK sets RootNamespace to the name of the project. Clear it here to avoid prefixing our namespaces.
   -->
   <PropertyGroup Condition="'$(Language)' == 'VB'">
     <RootNamespace />
   </PropertyGroup>
+
 </Project>

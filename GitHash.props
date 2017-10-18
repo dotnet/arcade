@@ -1,26 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
   <!--
-  
+
   Requires the following properties to be set:
     RepoRoot
-    
+
   Defines the following properties:
     GitHeadSha
-    
+
   -->
-  
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
   <Choose>
     <When Condition="'$(BUILD_SOURCEVERSION)' != ''">
       <PropertyGroup>
         <GitHeadSha>$(BUILD_SOURCEVERSION)</GitHeadSha>
       </PropertyGroup>
     </When>
+
     <When Condition="'$(BUILD_SOURCEVERSION)' == '' and '$(GIT_COMMIT)' != ''">
       <PropertyGroup>
         <GitHeadSha>$(GIT_COMMIT)</GitHeadSha>
       </PropertyGroup>
     </When>
+
     <Otherwise>
       <PropertyGroup>
         <GitHeadSha>Not found</GitHeadSha>
@@ -32,4 +39,5 @@
       </PropertyGroup>
     </Otherwise>
   </Choose>
+
 </Project>

@@ -1,5 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(IsIntegrationTestProject)' == ''">
     <IsIntegrationTestProject>false</IsIntegrationTestProject>
     <IsIntegrationTestProject Condition="$(MSBuildProjectName.EndsWith('.IntegrationTests'))">true</IsIntegrationTestProject>
@@ -13,7 +19,7 @@
   <PropertyGroup>
     <IsTestProject>false</IsTestProject>
     <IsTestProject Condition="'$(IsUnitTestProject)' == 'true' or '$(IsIntegrationTestProject)' == 'true'">true</IsTestProject>
-    
+
     <!-- Disable building Integration Test projects in LUT. -->
     <BuildForLiveUnitTesting Condition="'$(BuildForLiveUnitTesting)' == '' and '$(IsIntegrationTestProject)' == 'true'">false</BuildForLiveUnitTesting>
   </PropertyGroup>
@@ -27,4 +33,5 @@
     <!-- Do not publish test assemblies and symbols to SymStore. -->
     <PublishOutputToSymStore Condition="'$(PublishOutputToSymStore)' == ''">false</PublishOutputToSymStore>
   </PropertyGroup>
+
 </Project>

@@ -1,11 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
-  <!-- 
+
+  <!--
     Reads variables:
-      SignAssembly    "true" to sign the output assembly of the current project 
+      SignAssembly    "true" to sign the output assembly of the current project
       SignType        "real" to real-sign the outputs (set by microbuild as an environment variable)
       StrongNameKeyId The id of the key used for strong name generation
-    
+
     Writes variables:
       DelaySign
       PublicSign
@@ -13,7 +15,11 @@
       PublicKeyToken
       AssemblyOriginatorKeyFile
   -->
-  
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
   <PropertyGroup>
     <DelaySign>false</DelaySign>
     <PublicSign>true</PublicSign>
@@ -38,7 +44,7 @@
   </Choose>
 
   <!--
-    Work around https://github.com/Microsoft/msbuild/issues/1490 (lack of support for public-signing satellites) by 
+    Work around https://github.com/Microsoft/msbuild/issues/1490 (lack of support for public-signing satellites) by
     delay-signing satellite assemblies when main assembly is public-signed.
   -->
   <Target Name="PrepareToDelaySignSatelliteAssemblies" BeforeTargets="GenerateSatelliteAssemblies">
@@ -66,4 +72,5 @@
     <Error Condition="'$(PublicKey)' == '' or '$(PublicKeyToken)' == '' or '$(AssemblyOriginatorKeyFile)' == ''"
            Text="PublicKey, PublicKeyToken and AssemblyOriginatorKeyFile must be specified" />
   </Target>
+
 </Project>

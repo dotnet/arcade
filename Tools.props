@@ -1,9 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Net.Compilers" Version="$(MicrosoftNetCompilersVersion)" />
   </ItemGroup>
+
   <PropertyGroup>
     <ToolsetCompilerPackageDir>$(NuGetPackageRoot)microsoft.net.compilers\$(MicrosoftNetCompilersVersion)\</ToolsetCompilerPackageDir>
   </PropertyGroup>
+
 </Project>

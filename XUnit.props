@@ -1,12 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
   <PropertyGroup>
     <_DotNetCliToolExists>false</_DotNetCliToolExists>
     <_DotNetCliToolExists Condition="Exists('$(DotNetTool)')">true</_DotNetCliToolExists>
-    
+
     <TestUsingDotNetCli Condition="'$(TestUsingDotNetCli)' == ''">$(_DotNetCliToolExists)</TestUsingDotNetCli>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <!-- Test dependencies -->
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
@@ -14,4 +20,5 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="$(XUnitRunnerVisualStudioVersion)" />
     <PackageReference Include="xunit.runner.console" Version="$(XUnitVersion)" />
   </ItemGroup>
+
 </Project>

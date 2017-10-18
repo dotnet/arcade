@@ -1,32 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
 
   <!--
-  
+
   Required properties:
     VersionBase
     PreReleaseVersionLabel (empty for release build)
-    
+
   Optional properties:
     CIBuild                     "true" if this is a CI build
     BUILD_BUILDNUMBER           Environment variable set by microbuild (format: "yyyymmdd.nn")
     UseShippingAssemblyVersion  "true" to set assembly version in a dev build to a shipping one instead of 42.42.42.42
-    
+
   Defined properties:
     Version
     AssemblyVersion
     FileVersion
     VsixVersion
     InformationalVersion
-    
+
   -->
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
 
   <PropertyGroup>
     <AssemblyVersion>$(VersionBase).0</AssemblyVersion>
     <OfficialBuild>false</OfficialBuild>
     <OfficialBuild Condition="'$(BUILD_BUILDNUMBER)' != ''">true</OfficialBuild>
   </PropertyGroup>
-  
+
   <Import Project="GitHash.props" Condition="'$(OfficialBuild)' == 'true'"/>
 
   <Choose>
@@ -61,4 +66,5 @@
       </PropertyGroup>
     </Otherwise>
   </Choose>
+
 </Project>

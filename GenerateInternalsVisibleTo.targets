@@ -1,5 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
   <PropertyGroup>
     <GeneratedInternalsVisibleToFile>$(IntermediateOutputPath)$(MSBuildProjectName).InternalsVisibleTo$(DefaultLanguageSourceExtension)</GeneratedInternalsVisibleToFile>
   </PropertyGroup>
@@ -21,7 +27,7 @@
 
   <!--
     Dependency on PrepareForBuild is necessary so that we don't accidentally get ordered before it.
-    We rely on PrepareForBuild to create the IntermediateOutputDirectory if it doesn't exist. 
+    We rely on PrepareForBuild to create the IntermediateOutputDirectory if it doesn't exist.
   -->
   <Target Name="GenerateInternalsVisibleToFile"
           Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFile)"
@@ -37,4 +43,5 @@
       <Output TaskParameter="OutputFile" ItemName="FileWrites" />
     </WriteCodeFragment>
   </Target>
+
 </Project>

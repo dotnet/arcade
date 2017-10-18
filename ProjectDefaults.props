@@ -1,6 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
-  <PropertyGroup>    
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <SignAssembly>true</SignAssembly>
     <StrongNameKeyId>MicrosoftShared</StrongNameKeyId>
     <HighEntropyVA>true</HighEntropyVA>
@@ -15,15 +21,15 @@
     <!-- By default do not build nuget package for a project. Project may override. -->
     <IsPackable>false</IsPackable>
 
-    <!-- 
-      NuGet.Build.Tasks.Pack.targets sets the default value of Description property to "Setup Description", 
+    <!--
+      NuGet.Build.Tasks.Pack.targets sets the default value of Description property to "Setup Description",
       which causes GenerateAssemblyInfo to generate AssemblyDescription("Setup Description") attribute.
-      https://github.com/Microsoft/msbuild/issues/2202 
+      https://github.com/Microsoft/msbuild/issues/2202
     -->
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
 
-    <!-- 
-      Only generate runtimeconfig.json files for .exes of net core apps. It's unnecessary in desktop projects. 
+    <!--
+      Only generate runtimeconfig.json files for .exes of net core apps. It's unnecessary in desktop projects.
     -->
     <GenerateRuntimeConfigurationFiles Condition="'$(TargetFramework)' != 'netcoreapp1.1' and '$(TargetFramework)' != 'netcoreapp2.0'">false</GenerateRuntimeConfigurationFiles>
 
@@ -36,11 +42,11 @@
     <Language Condition="'$(MSBuildProjectExtension)' == '.vbproj'">VB</Language>
     <Language Condition="'$(MSBuildProjectExtension)' == '.fsproj'">F#</Language>
   </PropertyGroup>
-  
-  <!-- 
+
+  <!--
       When building WPF / VSIX projects MSBuild will create a temporary project with an extension of
       tmp_proj.  In that case the SDK is unable to determine the target language and cannot pick
-      the correct import. Need to set it explicitly here. 
+      the correct import. Need to set it explicitly here.
       See https://github.com/dotnet/project-system/issues/1467
     -->
   <Choose>
@@ -61,10 +67,10 @@
       </Choose>
     </When>
   </Choose>
-  
+
   <Import Project="|Build precondition failed: Unable to determine the language of the project. Consider adding Directory.Build.props that sets Language property to directory '$(MSBuildProjectDirectory)'.|"
           Condition="'$(Language)' == '' and '$(MSBuildProjectExtension)' != '.shproj'"/>
-  
+
   <Choose>
     <!-- C# specific settings -->
     <When Condition="'$(Language)' == 'C#'">
@@ -72,7 +78,7 @@
         <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
         <NoWarn>$(NoWarn);1591</NoWarn>
       </PropertyGroup>
-      
+
       <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
         <DebugSymbols>true</DebugSymbols>
         <DebugType>full</DebugType>
@@ -85,7 +91,7 @@
         <Optimize>true</Optimize>
       </PropertyGroup>
     </When>
-      
+
     <!-- VB specific settings -->
     <When Condition="'$(Language)' == 'VB'">
       <PropertyGroup>
@@ -104,7 +110,7 @@
         <DefineDebug>true</DefineDebug>
         <DefineTrace>true</DefineTrace>
       </PropertyGroup>
-      
+
       <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <DefineTrace>true</DefineTrace>
         <DebugType>full</DebugType>
@@ -112,4 +118,5 @@
       </PropertyGroup>
     </When>
   </Choose>
+
 </Project>

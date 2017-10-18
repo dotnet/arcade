@@ -1,10 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
+
   <!--
     Generates a class source for EmbeddedResource whose GenerateSource property is set to true.
     The source file is generated to intermediate output dir to avoid polluting the source tree.
     See https://github.com/dotnet/sdk/issues/94 that tracks productization of this code.
   -->
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
 
   <Target Name="GenerateResxSource"
           BeforeTargets="CoreCompile"
@@ -30,7 +36,7 @@
   <Target Name="BatchGenerateResxSource"
           Inputs="@(EmbeddedResourceSG)"
           Outputs="%(EmbeddedResourceSG.SourceOutputPath)">
-    
+
     <Exec Command='"$(ToolsetCompilerPackageDir)tools\csi.exe" "$(MSBuildThisFileDirectory)GenerateResxSource.csx" "$(Language)" "%(EmbeddedResourceSG.FullPath)" "%(EmbeddedResourceSG.ManifestResourceName)" "%(EmbeddedResourceSG.SourceOutputPath)"' />
   </Target>
 
@@ -48,4 +54,5 @@
       </EmbeddedResourceSG>
     </ItemGroup>
   </Target>
+
 </Project>

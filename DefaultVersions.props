@@ -1,8 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
+
   <!--
     Sets versions of packages used by the toolset unless they were already specified by the repo.
   -->
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
   <PropertyGroup>
     <!-- Opt-out features -->
     <UsingToolXliff Condition="'$(UsingToolXliff)' == ''">true</UsingToolXliff>
@@ -29,4 +36,5 @@
     <RoslynToolsMicrosoftModifyVsixManifestVersion Condition="'$(RoslynToolsMicrosoftModifyVsixManifestVersion)' == ''">0.3.3-beta</RoslynToolsMicrosoftModifyVsixManifestVersion>
     <Pdb2PdbVersion Condition="'$(Pdb2PdbVersion)' == ''">1.1.0-beta1-62209-01</Pdb2PdbVersion>
   </PropertyGroup>
+
 </Project>
