@@ -78,7 +78,6 @@
       <PropertyGroup>
         <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
         <NoWarn Condition="'$(NoWarn)' == ''">1701;1702;1705;1591</NoWarn>
-        <ProjectLanguage>CSharp</ProjectLanguage>
       </PropertyGroup>
 
       <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
@@ -102,7 +101,6 @@
         <OptionExplicit>On</OptionExplicit>
         <OptionInfer>On</OptionInfer>
         <OptionStrict>On</OptionStrict>
-        <ProjectLanguage>VisualBasic</ProjectLanguage>
         <VBRuntime>Embed</VBRuntime>
         <RemoveIntegerChecks>true</RemoveIntegerChecks>
       </PropertyGroup>
@@ -118,13 +116,6 @@
         <DefineTrace>true</DefineTrace>
         <DebugType>full</DebugType>
         <Optimize>true</Optimize>
-      </PropertyGroup>
-    </When>
-
-    <!-- F# specific settings -->
-    <When Condition="'$(Language)' == 'F#'">
-      <PropertyGroup>
-        <ProjectLanguage>FSharp</ProjectLanguage>
       </PropertyGroup>
     </When>
   </Choose>
