@@ -8,6 +8,21 @@
     <_OptimizationDataFile>$([System.IO.Path]::GetFullPath('$(IbcOptimizationDataDir)$(TargetName).pgo'))</_OptimizationDataFile>
   </PropertyGroup>
 
+
+  <Target Name="PostCompileBinaryModification"
+          AfterTargets="CoreCompile"
+          DependsOnTargets="ApplyOptimizations"
+          Inputs="@(IntermediateAssembly)"
+          Outputs="@(IntermediateAssembly);$(PostCompileBinaryModificationSentinelFile)">
+
+    <!-- Write out a sentinel timestamp file to prevent unnecessary work in incremental builds. -->
+    <Touch AlwaysCreate="true" Files="$(PostCompileBinaryModificationSentinelFile)" />
+
+    <ItemGroup>
+      <FileWrites Include="$(PostCompileBinaryModificationSentinelFile)" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="ApplyOptimizations"
           Condition="Exists('$(_OptimizationDataFile)')"
           Inputs="@(IntermediateAssembly)"
@@ -22,7 +37,7 @@
     </PropertyGroup>
 
     <Message Text="IBCMerge tool will be run in an official build with arguments: $(_IbcMergeCommandLineArgs)" Condition="'$(_RunIbc)' != 'true'" Importance="normal"/>
-    
+
     <Exec Command='"$(_IbcMergePath)" $(_IbcMergeCommandLineArgs)' ConsoleToMSBuild="true" Condition="'$(_RunIbc)' == 'true'">
       <Output TaskParameter="ConsoleOutput" PropertyName="IbcMergeOutput" />
     </Exec>
