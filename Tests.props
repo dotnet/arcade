@@ -22,4 +22,9 @@
     <!-- VS TestExplorer uses this to identify a test project -->
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <!-- Do not publish test assemblies and symbols to SymStore. -->
+    <PublishOutputToSymStore Condition="'$(PublishOutputToSymStore)' == ''">false</PublishOutputToSymStore>
+  </PropertyGroup>
 </Project>

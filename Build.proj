@@ -59,6 +59,8 @@
       <RestoreToolsProp Include="MicroBuildPluginsSwixBuildVersion=$(MicroBuildPluginsSwixBuildVersion)"/>
       <RestoreToolsProp Include="MicroBuildCoreVersion=$(MicroBuildCoreVersion)"/>
       <RestoreToolsProp Include="RoslynToolsMicrosoftModifyVsixManifestVersion=$(RoslynToolsMicrosoftModifyVsixManifestVersion)"/>
+      <RestoreToolsProp Include="Pdb2PdbVersion=$(Pdb2PdbVersion)"/>
+      <RestoreToolsProp Include="UsingToolPdbConverter=$(UsingToolPdbConverter)"/>
     </ItemGroup>
 
     <!--

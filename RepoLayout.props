@@ -8,13 +8,14 @@
     <DotNetRoot>$(RepoRoot).dotnet\</DotNetRoot>
     <DotNetTool>$(DotNetRoot)dotnet.exe</DotNetTool>
     <ArtifactsDir>$(RepoRoot)artifacts\</ArtifactsDir>
+    <ArtifactsToolsetDir>$(ArtifactsDir)toolset\</ArtifactsToolsetDir>
     <ArtifactsConfigurationDir>$(ArtifactsDir)$(Configuration)\</ArtifactsConfigurationDir>
     <ArtifactsBinDir>$(ArtifactsConfigurationDir)bin\</ArtifactsBinDir>
     <ArtifactsObjDir>$(ArtifactsConfigurationDir)obj\</ArtifactsObjDir>
     <ArtifactsLogDir>$(ArtifactsConfigurationDir)log\</ArtifactsLogDir>
     <ArtifactsTmpDir>$(ArtifactsConfigurationDir)tmp\</ArtifactsTmpDir>
-    <ArtifactsToolsetDir>$(ArtifactsDir)toolset\</ArtifactsToolsetDir>
     <ArtifactsTestResultsDir>$(ArtifactsConfigurationDir)TestResults\</ArtifactsTestResultsDir>
+    <ArtifactsSymStoreDirectory>$(ArtifactsConfigurationDir)SymStore\</ArtifactsSymStoreDirectory>
     <PackageOutputPath>$(ArtifactsConfigurationDir)packages\</PackageOutputPath>
     <VisualStudioSetupOutputPath>$(ArtifactsConfigurationDir)VSSetup\</VisualStudioSetupOutputPath>
     <VisualStudioSetupInsertionPath>$(VisualStudioSetupOutputPath)Insertion\</VisualStudioSetupInsertionPath>

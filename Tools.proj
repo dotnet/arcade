@@ -12,5 +12,6 @@
     <PackageReference Include="RoslynTools.Microsoft.ModifyVsixManifest" Version="$(RoslynToolsMicrosoftModifyVsixManifestVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" />
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" />
     <PackageReference Include="MicroBuild.Core.Sentinel" Version="1.0.0" />
+    <PackageReference Include="Pdb2Pdb" Version="$(Pdb2PdbVersion)" Condition="'$(UsingToolPdbConverter)' == 'true'" />
   </ItemGroup>
 </Project>

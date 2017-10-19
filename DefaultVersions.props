@@ -12,6 +12,7 @@
     <!-- Opt-in features -->
     <UsingToolVSSDK Condition="'$(UsingToolVSSDK)' == ''">false</UsingToolVSSDK>
     <UsingToolIbcOptimization Condition="'$(UsingToolIbcOptimization)' == ''">false</UsingToolIbcOptimization>
+    <UsingToolPdbConverter Condition="'$(UsingToolPdbConverter)' == ''">false</UsingToolPdbConverter>
 
     <!-- Default versions -->
     <XliffTasksVersion Condition="'$(XliffTasksVersion)' == ''">0.2.0-beta-000053</XliffTasksVersion>
@@ -26,5 +27,6 @@
     <MicrosoftNETTestSdkVersion Condition="'$(MicrosoftNETTestSdkVersion)' == ''">15.3.0-preview-20170628-02</MicrosoftNETTestSdkVersion>
     <MicrosoftNetCompilersVersion Condition="'$(MicrosoftNetCompilersVersion)' == ''">2.3.0</MicrosoftNetCompilersVersion>
     <RoslynToolsMicrosoftModifyVsixManifestVersion Condition="'$(RoslynToolsMicrosoftModifyVsixManifestVersion)' == ''">0.3.3-beta</RoslynToolsMicrosoftModifyVsixManifestVersion>
+    <Pdb2PdbVersion Condition="'$(Pdb2PdbVersion)' == ''">1.1.0-beta1-62209-01</Pdb2PdbVersion>
   </PropertyGroup>
 </Project>
