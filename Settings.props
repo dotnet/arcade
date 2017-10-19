@@ -13,7 +13,7 @@
   <Import Project="ProjectDefaults.props"/>
   <Import Project="Tests.props" />
 
-  <Import Project="Tools.props" Condition="'$(UsingToolMicrosoftNetCompilers)' != 'false'" />
+  <Import Project="Compiler.props" Condition="'$(UsingToolMicrosoftNetCompilers)' == 'true'" />
   <Import Project="Localization.props" Condition="'$(UsingToolXliff)' == 'true'"/>
   <Import Project="SourceLink.props" Condition="'$(UsingToolSourceLink)' == 'true'"/>
   <Import Project="XUnit.props" Condition="'$(UsingToolXUnit)' == 'true' and ('$(IsUnitTestProject)' == 'true' or '$(IsIntegrationTestProject)' == 'true')"/>
