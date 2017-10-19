@@ -8,7 +8,8 @@
     <_OptimizationDataFile>$([System.IO.Path]::GetFullPath('$(IbcOptimizationDataDir)$(TargetName).pgo'))</_OptimizationDataFile>
   </PropertyGroup>
 
-
+  <!-- We need to write out this sentinel file so that when ApplyOptimizations runs and compares the intermediate assemby location
+       against itself the PostCompileBinaryModificationSentinelFile will have a newer timestamp allowing the target to be run.  -->
   <Target Name="PostCompileBinaryModification"
           AfterTargets="CoreCompile"
           DependsOnTargets="ApplyOptimizations"
