@@ -39,7 +39,7 @@
           Condition="'$(_RemoveExperimentalFlag)' == 'true'"/>
     
     <PropertyGroup>
-      <_ModifyVsixManifestToolExe>$(NuGetPackageRoot)\roslyntools.microsoft.modifyvsixmanifest\$(RoslynToolsMicrosoftModifyVsixManifestVersion)\tools\ModifyVsixManifest.exe</_ModifyVsixManifestToolExe>
+      <_ModifyVsixManifestToolExe>$(NuGetPackageRoot)roslyntools.microsoft.modifyvsixmanifest\$(RoslynToolsMicrosoftModifyVsixManifestVersion)\tools\ModifyVsixManifest.exe</_ModifyVsixManifestToolExe>
       <_ModifyVsixManifestArgs>--remove=//x:PackageManifest/x:Installation/@Experimental --add-attribute=//x:PackageManifest/x:Installation;SystemComponent;true</_ModifyVsixManifestArgs>
     </PropertyGroup>
 
