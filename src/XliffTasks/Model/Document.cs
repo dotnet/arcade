@@ -62,12 +62,37 @@ namespace XliffTasks.Model
         /// </summary>
         public void Save(string path)
         {
-            EnsureContent();
+            //On Windows:
+            // Readers will prevent the file from being overwritten due to FileShare.Read.
+            // Readers can read in parallel, but when there's contention with a writer, the retrying will kick in to resolve it.
+            //On Unix:
+            // FileShare.Read does nothing, but...
+            // File.Replace is implemented with rename system call that will mean that even though writers can overwrite while 
+            // reading is happening, each reader will see file before or after overwrite, not in between
 
-            using (var stream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+            EnsureContent();
+            var tempPath = Path.Combine(Path.GetDirectoryName(path), Path.GetRandomFileName());
+
+            using (var stream = File.Open(tempPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
             {
                 Save(stream);
             }
+
+            ExponentialRetry.ExecuteWithRetryOnIOException(() =>
+            {
+                if (File.Exists(path))
+                {
+                    File.Replace(
+                        sourceFileName: tempPath,
+                        destinationFileName: path,
+                        destinationBackupFileName: null,
+                        ignoreMetadataErrors: true);
+                }
+                else
+                {
+                    File.Move(sourceFileName: tempPath, destFileName: path);
+                }
+            }, maxRetryCount: 3);
         }
 
         /// <summary>
