@@ -7,7 +7,7 @@ namespace XliffTasks
 {
     public class ExponentialRetry
     {
-        public static void ExecuteWithRetryIOException(
+        public static void ExecuteWithRetryOnIOException(
            Action action,
            int maxRetryCount)
         {
@@ -22,7 +22,7 @@ namespace XliffTasks
                 catch (IOException e)
                 {
                     if (count == maxRetryCount)
-                        throw new AggregateException($"Retry failed after {count} times", e);
+                        throw new IOException($"Retry failed after {count} times", e);
                     count++;
                 }
                 Thread.Sleep(t);

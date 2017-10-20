@@ -78,7 +78,7 @@ namespace XliffTasks.Model
                 Save(stream);
             }
 
-            ExponentialRetry.ExecuteWithRetryIOException(() =>
+            ExponentialRetry.ExecuteWithRetryOnIOException(() =>
             {
                 if (File.Exists(path))
                 {
