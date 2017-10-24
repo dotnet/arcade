@@ -6,6 +6,7 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
+  <Import Project="GitHash.props" />
   <Import Project="DefaultVersions.props"/>
   <Import Project="ProjectLayout.props" />
   <Import Project="StrongName.props"/>
@@ -15,7 +16,6 @@
 
   <Import Project="Compiler.props" Condition="'$(UsingToolMicrosoftNetCompilers)' == 'true'" />
   <Import Project="Localization.props" Condition="'$(UsingToolXliff)' == 'true'"/>
-  <Import Project="SourceLink.props" Condition="'$(UsingToolSourceLink)' == 'true'"/>
   <Import Project="XUnit.props" Condition="'$(UsingToolXUnit)' == 'true' and ('$(IsUnitTestProject)' == 'true' or '$(IsIntegrationTestProject)' == 'true')"/>
   <Import Project="VisualStudio.props" Condition="'$(UsingToolVSSDK)' == 'true'"/>
 

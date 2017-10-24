@@ -18,6 +18,21 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseUrl>http://go.microsoft.com/fwlink/?LinkId=529443</PackageLicenseUrl>
 
+    <!-- 
+      The source root path used for deterministic normalization of source paths.
+      
+      If set the value is used in PathMap to instruct the compiler to normalize source paths 
+      emitted to the binary and PDB and as a root for Source Link mapping.
+      If set must end with a directory separator.
+      
+      If unset the PathMap and SourceLinkRoot need to be set explicitly to facilitate 
+      correct determinism and source linking.
+      
+      The path can't be just a single '/' due to bug in Roslyn compilers:
+      https://github.com/dotnet/roslyn/issues/22815
+    -->
+    <DeterministicSourceRoot>/_/</DeterministicSourceRoot>
+
     <!-- By default do not build nuget package for a project. Project may override. -->
     <IsPackable>false</IsPackable>
 
@@ -82,12 +97,10 @@
 
       <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
         <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
         <DefineConstants>DEBUG;TRACE</DefineConstants>
       </PropertyGroup>
 
       <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-        <DebugType>full</DebugType>
         <DefineConstants>TRACE</DefineConstants>
         <Optimize>true</Optimize>
       </PropertyGroup>
@@ -107,15 +120,21 @@
 
       <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
         <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
         <DefineDebug>true</DefineDebug>
         <DefineTrace>true</DefineTrace>
       </PropertyGroup>
 
       <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <DefineTrace>true</DefineTrace>
-        <DebugType>full</DebugType>
         <Optimize>true</Optimize>
+      </PropertyGroup>
+    </When>
+
+    <!-- F# specific settings -->
+    <When Condition="'$(Language)' == 'F#'">
+      <PropertyGroup>
+        <!-- F# compiler doesn't support PathMap (see https://github.com/Microsoft/visualfsharp/issues/3812) -->
+        <DeterministicSourceRoot></DeterministicSourceRoot>
       </PropertyGroup>
     </When>
   </Choose>

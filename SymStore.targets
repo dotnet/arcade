@@ -34,7 +34,7 @@
   <!-- 
     Convert Portable and Embedded PDBs. 
     We publish converted PDBs to Symbol Store so that WinDBG can find them when debugging crash dumps.
-    Since debugging crash dumps in VS is more common than in WinDBG we preserve SourceLink rather than converting to srcsvr.
+    Convert source link to srcsvr so that both WinDBG and VS can open the source files.
   -->
   <Target Name="_DeployPortableSymbolsToSymStore"
           AfterTargets="_InnerDeployToSymStore"
@@ -44,7 +44,7 @@
 
     <PropertyGroup>
       <_PdbConverterPath>$(NuGetPackageRoot)pdb2pdb\$(Pdb2PdbVersion)\tools\Pdb2Pdb.exe</_PdbConverterPath>
-      <_PdbConverterCommandLineArgs>"$(TargetPath)" /out "$(_SymStorePdbPath)" /verbose /sourcelink</_PdbConverterCommandLineArgs>
+      <_PdbConverterCommandLineArgs>"$(TargetPath)" /out "$(_SymStorePdbPath)" /verbose</_PdbConverterCommandLineArgs>
     </PropertyGroup>
 
     <Error Text="Attempt to publish Portable PDB to SymStore without conversion: UsingToolPdbConverter property is false in project $(MSBuildProjectName)"

@@ -7,6 +7,7 @@
   Required properties:
     VersionBase
     PreReleaseVersionLabel (empty for release build)
+    GitHeadSha
 
   Optional properties:
     CIBuild                     "true" if this is a CI build
@@ -31,8 +32,6 @@
     <OfficialBuild>false</OfficialBuild>
     <OfficialBuild Condition="'$(BUILD_BUILDNUMBER)' != ''">true</OfficialBuild>
   </PropertyGroup>
-
-  <Import Project="GitHash.props" Condition="'$(OfficialBuild)' == 'true'"/>
 
   <Choose>
     <When Condition="'$(OfficialBuild)' == 'true'">

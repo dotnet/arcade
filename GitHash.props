@@ -30,7 +30,7 @@
 
     <Otherwise>
       <PropertyGroup>
-        <GitHeadSha>Not found</GitHeadSha>
+        <GitHeadSha></GitHeadSha>
         <_DotGitDir>$(RepoRoot)\.git</_DotGitDir>
         <_HeadFileContent Condition="Exists('$(_DotGitDir)/HEAD')">$([System.IO.File]::ReadAllText('$(_DotGitDir)/HEAD').Trim())</_HeadFileContent>
         <_RefPath Condition="$(_HeadFileContent.StartsWith('ref: '))">$(_DotGitDir)/$(_HeadFileContent.Substring(5))</_RefPath>

@@ -30,10 +30,9 @@
     <MicrosoftNetCompilersNetCoreVersion Condition="'$(MicrosoftNetCompilersNetCoreVersion)' == ''">2.3.0</MicrosoftNetCompilersNetCoreVersion>
     <MicrosoftNETTestSdkVersion Condition="'$(MicrosoftNETTestSdkVersion)' == ''">15.3.0</MicrosoftNETTestSdkVersion>
     <MicrosoftVSSDKBuildToolsVersion Condition="'$(MicrosoftVSSDKBuildToolsVersion)' == ''">15.1.192</MicrosoftVSSDKBuildToolsVersion>
-    <Pdb2PdbVersion Condition="'$(Pdb2PdbVersion)' == ''">1.1.0-beta1-62209-01</Pdb2PdbVersion>
+    <Pdb2PdbVersion Condition="'$(Pdb2PdbVersion)' == ''">1.1.0-beta1-62221-01</Pdb2PdbVersion>
     <RoslynToolsMicrosoftModifyVsixManifestVersion Condition="'$(RoslynToolsMicrosoftModifyVsixManifestVersion)' == ''">0.3.3-beta</RoslynToolsMicrosoftModifyVsixManifestVersion>
     <RoslynToolsMicrosoftSignToolVersion Condition="'$(RoslynToolsMicrosoftSignToolVersion)' == ''">0.3.3-beta</RoslynToolsMicrosoftSignToolVersion>
-    <SourceLinkCreateCommandLineVersion Condition="'$(SourceLinkCreateCommandLineVersion)' == ''">2.2.0-b491</SourceLinkCreateCommandLineVersion>
     <XliffTasksVersion Condition="'$(XliffTasksVersion)' == ''">0.2.0-beta-000053</XliffTasksVersion>
     <XUnitVersion Condition="'$(XUnitVersion)' == ''">2.3.0</XUnitVersion>
     <XUnitRunnerConsoleVersion Condition="'$(XUnitRunnerConsoleVersion)' == ''">$(XUnitVersion)</XUnitRunnerConsoleVersion>
