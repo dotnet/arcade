@@ -50,6 +50,21 @@
 
     <!-- Enable IOperation analyzers -->
     <Features>IOperation,$(Features)</Features>
+
+    <!-- 
+      Official build:
+       - Build standalone Portable PDBs to reduce the size of the binaries.
+       - Convert Portable PDBs to Windows PDBs and publish the converted PDBs to Symbol Store to allow WinDBG, 
+         Watson and other tools to find symbol format they understand.
+        
+      Jenkins build:
+       - Embed PDBs to make it easier to debug Jenkins crash dumps.
+       
+      Developer build:
+       - Embed PDBs to be consistent with Jenkins builds.
+    -->
+    <DebugType Condition="'$(OfficialBuild)' == 'true'">portable</DebugType>
+    <DebugType Condition="'$(OfficialBuild)' != 'true'">embedded</DebugType>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Language)' == ''">
