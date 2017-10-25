@@ -18,7 +18,7 @@
   <Import Project="GenerateResxSource.targets" />
   <Import Project="Workarounds.targets"/>
 
-  <Import Project="SourceLink.targets" Condition="'$(UsingToolSourceLink)' == 'true' and '$(GitHeadSha)' != ''"/>
+  <Import Project="SourceLink.targets" Condition="'$(EnableSourceLink)' == 'true' and '$(GitHeadSha)' != ''"/>
   <Import Project="XUnit.targets" Condition="'$(UsingToolXUnit)' == 'true'"/>
   <Import Project="VisualStudio.targets" Condition="'$(UsingToolVSSDK)' == 'true' and '$(DesignTimeBuild)' != 'true' and '$(BuildingForLiveUnitTesting)' != 'true'"/>
   <Import Project="OptimizationData.targets" Condition="'$(UsingToolIbcOptimization)' == 'true' and '$(IbcOptimizationDataDir)' != ''"/>
