@@ -120,8 +120,18 @@ namespace RunnerRemoteExecutionService
 
                 // Invoke the test
                 object result = mi.Invoke(instance, additionalArgs);
-                var task = result as Task<int>;
-                returnData["Results"] = task != null ? task.GetAwaiter().GetResult() : (int) result;
+
+                int exitCode = 0;
+                if (result is Task<int> task)
+                {
+                    exitCode = task.GetAwaiter().GetResult();
+                }
+                else if (result is int exit)
+                {
+                    exitCode = exit;
+                }
+
+                returnData["Results"] = exitCode;
             }
             catch (Exception exc)
             {
