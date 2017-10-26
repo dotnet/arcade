@@ -56,7 +56,7 @@ CONTAINER: dotnet-core
 
 ## Moving to Blob Feed
 
-The current dotnet-core main blob feed is https://dotnetfeeds.blob.windows.net/dotnet-core/packages/index.json. This is publically accessible, meaning anyone can restore the packages.
+The current dotnet-core main blob feed is https://dotnetfeed.blob.core.windows.net/dotnet-core/packages/index.json. This is publically accessible, meaning anyone can restore the packages.
 
 ### Publishing:
 
@@ -129,6 +129,6 @@ Yes. You can overwrite any package or asset uploaded.
 
 Yes. This is currently supported and requires a proxy to be stood up. Please contact dnceng.
 
-4. Does the blob feed support symbole packages?
+4. Does the blob feed support symbol packages?
 
 Not yet so for publishing them put them in a flat container until support is added for the symbol package indexing.
