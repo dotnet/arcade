@@ -31,11 +31,11 @@ namespace XliffTasks.Tasks
 
             foreach (var source in Sources)
             {
-                string sourcePath = source.ItemSpec;
+                string sourceDocumentPath = source.GetMetadataOrDefault(MetadataKey.SourceDocumentPath, source.ItemSpec);
 
                 foreach (var language in Languages)
                 {
-                    string xlfPath = GetXlfPath(sourcePath, language);
+                    string xlfPath = GetXlfPath(sourceDocumentPath, language);
                     var xlf = new TaskItem(source) { ItemSpec = xlfPath };
                     xlf.SetMetadata(MetadataKey.XlfSource, source.ItemSpec);
                     xlf.SetMetadata(MetadataKey.XlfTranslatedFullPath, GetTranslatedOutputPath(source, language, outputPaths));
@@ -57,13 +57,14 @@ namespace XliffTasks.Tasks
                 source.SetMetadata(MetadataKey.XlfTranslatedFilename, translatedFilename);
             }
 
+            string sourceDocumentPath = source.GetMetadataOrDefault(MetadataKey.SourceDocumentPath, source.ItemSpec);
             string extension = Path.GetExtension(source.ItemSpec);
             string outputPath = Path.Combine(TranslatedOutputDirectory, $"{translatedFilename}.{language}{extension}");
 
             if (!outputPaths.Add(outputPath))
             {
                 throw new BuildErrorException(
-                    $"Two or more source files to be translated in the same project are named {Path.GetFileName(source.ItemSpec)}. " +
+                    $"Two or more source files to be translated in the same project are named {Path.GetFileName(sourceDocumentPath)}. " +
                     $"Give them unique names or set unique {MetadataKey.XlfTranslatedFilename} metadata.");
             }
 

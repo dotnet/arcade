@@ -18,5 +18,17 @@ namespace XliffTasks.Tasks
 
             return value;
         }
+
+        public static string GetMetadataOrDefault(this ITaskItem item, string key, string defaultValue)
+        {
+            string value = item.GetMetadata(key);
+
+            if (string.IsNullOrEmpty(value))
+            {
+                return defaultValue;
+            }
+
+            return value;
+        }
     }
 }

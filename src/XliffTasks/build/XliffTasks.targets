@@ -15,18 +15,6 @@
   <UsingTask TaskName="TranslateSource" AssemblyFile="$(XliffTasksAssembly)" />
   <UsingTask TaskName="UpdateXlf" AssemblyFile="$(XliffTasksAssembly)" />
 
-  <ItemGroup>
-    <EmbeddedResource Update="@(EmbeddedResource)">
-      <XlfInput Condition="'%(XlfInput)' == '' and '%(Extension)' == '.resx'">true</XlfInput>
-    </EmbeddedResource>
-
-    <XlfSource Include="@(EmbeddedResource->WithMetadataValue('XlfInput', 'true'))" />
-    <XlfSource Include="@(VSCTCompile->WithMetadataValue('XlfInput', 'true'))" />
-    <XlfSource Include="@(XamlPropertyRule->WithMetadataValue('XlfInput', 'true'))" />
-    <XlfSource Include="@(XamlPropertyRuleNoCodeBehind->WithMetadataValue('XlfInput', 'true'))" />
-    <XlfSource Include="@(XamlPropertyProjectItemsSchema->WithMetadataValue('XlfInput', 'true'))" />
-  </ItemGroup>
-
   <!--
     Note that .xlf files are source files, not build outputs. We therefore cannot use their modification time
     to drive incremental build. It is possible for .xlf files to be out-of-sync with their source
@@ -51,7 +39,8 @@
   </PropertyGroup>
 
   <!-- Updates the list of XlfSource items that drives incremental update (see above) -->
-  <Target Name="UpdateXlfSourceList">
+  <Target Name="UpdateXlfSourceList"
+          DependsOnTargets="GetXlfSources">
     <MakeDir Directories="$(XlfIntermediateOutputPath)" />
 
     <WriteLinesToFile File="$(_XlfSourceList)"
@@ -109,10 +98,22 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="GetXlfSources" Returns="@(XlfSource)" />
+  <Target Name="GetXlfSources" Returns="@(XlfSource)">
+    <ItemGroup>
+      <EmbeddedResource Update="@(EmbeddedResource)">
+        <XlfInput Condition="'%(EmbeddedResource.XlfInput)' == '' and '%(EmbeddedResource.Extension)' == '.resx'">true</XlfInput>
+      </EmbeddedResource>
+
+      <XlfSource Include="@(EmbeddedResource->WithMetadataValue('XlfInput', 'true'))" />
+      <XlfSource Include="@(VSCTCompile->WithMetadataValue('XlfInput', 'true'))" />
+      <XlfSource Include="@(XamlPropertyRule->WithMetadataValue('XlfInput', 'true'))" />
+      <XlfSource Include="@(XamlPropertyRuleNoCodeBehind->WithMetadataValue('XlfInput', 'true'))" />
+      <XlfSource Include="@(XamlPropertyProjectItemsSchema->WithMetadataValue('XlfInput', 'true'))" />
+    </ItemGroup>
+  </Target>
 
   <Target Name="GatherXlf" 
-          DependsOnTargets="EnsureXlfIsUpToDate"
+          DependsOnTargets="GetXlfSources;EnsureXlfIsUpToDate"
           >
     <GatherXlf Sources="@(XlfSource)"
                Languages="$(XlfLanguages)"
