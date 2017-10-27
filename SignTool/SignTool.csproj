@@ -17,6 +17,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="ContentMap.cs" />
     <Compile Include="FileName.cs" />
     <Compile Include="FileSignInfo.cs" />
     <Compile Include="ContentUtil.cs" />

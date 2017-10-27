@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -9,33 +9,36 @@ using System.Threading.Tasks;
 
 namespace SignTool
 {
-    internal sealed class VsixData
+    /// <summary>
+    /// Data for a zip container. Can refer to any zip format such as VSIX or nupkg
+    /// </summary>
+    internal sealed class ZipData
     {
         /// <summary>
-        /// Name of the VSIX
+        /// Name of the zip based package
         /// </summary>
         internal FileName Name { get; }
 
         /// <summary>
-        /// The set of binaries nested inside this VSIX.
+        /// The parts inside this zip archive which need to be signed.
         /// </summary>
-        internal ImmutableArray<VsixPart> NestedBinaryParts;
+        internal ImmutableArray<ZipPart> NestedParts;
 
         /// <summary>
-        /// The set of external binaries this VSIX depends on.
+        /// Name of the external binaries this zip depends on.
         /// </summary>
         internal ImmutableArray<string> NestedExternalNames { get; }
 
-        internal VsixData(FileName name, ImmutableArray<VsixPart> nestedBinaryParts, ImmutableArray<string> nestedExternalNames)
+        internal ZipData(FileName name, ImmutableArray<ZipPart> nestedBinaryParts, ImmutableArray<string> nestedExternalNames)
         {
             Name = name;
-            NestedBinaryParts = nestedBinaryParts;
+            NestedParts = nestedBinaryParts;
             NestedExternalNames = nestedExternalNames;
         }
 
-        internal VsixPart? GetNestedBinaryPart(string relativeName)
+        internal ZipPart? FindNestedBinaryPart(string relativeName)
         {
-            foreach (var part in NestedBinaryParts)
+            foreach (var part in NestedParts)
             {
                 if (relativeName == part.RelativeName)
                 {
@@ -47,17 +50,19 @@ namespace SignTool
         }
     }
 
-    internal struct VsixPart
+    internal struct ZipPart
     {
         internal string RelativeName { get; }
-        internal FileName BinaryName { get; }
+        internal FileName FileName { get; }
+        internal string Checksum { get; }
 
-        internal VsixPart(string relativeName, FileName binaryName)
+        internal ZipPart(string relativeName, FileName fileName, string checksum)
         {
             RelativeName = relativeName;
-            BinaryName = binaryName;
+            FileName = fileName;
+            Checksum = checksum;
         }
 
-        public override string ToString() => $"{RelativeName} -> {BinaryName.RelativePath}";
+        public override string ToString() => $"{RelativeName} -> {FileName.RelativePath} -> {Checksum}";
     }
 }

@@ -13,25 +13,37 @@ namespace SignTool
 {
     internal static class Program
     {
-        internal static void Main(string[] args)
+        internal const int ExitSuccess = 0;
+        internal const int ExitFailure = 1;
+
+        internal static int Main(string[] args)
         {
             SignToolArgs signToolArgs;
             if (!ParseCommandLineArguments(StandardHost.Instance, args, out signToolArgs))
             {
                 PrintUsage();
-                Environment.Exit(1);
+                return ExitFailure;
             }
 
             if (!signToolArgs.Test && !File.Exists(signToolArgs.MSBuildPath))
             {
                 Console.WriteLine($"Unable to locate MSBuild at the path '{signToolArgs.MSBuildPath}'.");
-                Environment.Exit(1);
+                return ExitFailure;
             }
 
             var signTool = SignToolFactory.Create(signToolArgs);
             var batchData = ReadConfigFile(signToolArgs.OutputPath, signToolArgs.ConfigFile);
             var util = new BatchSignUtil(signTool, batchData);
-            util.Go();
+            try
+            {
+                return util.Go(Console.Out) ? ExitSuccess : ExitFailure;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected exception: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                return 1;
+            }
         }
 
         internal static BatchSignInput ReadConfigFile(string outputPath, string configFile)
@@ -41,7 +53,7 @@ namespace SignTool
                 BatchSignInput batchData;
                 if (!TryReadConfigFile(Console.Out, file, outputPath, out batchData))
                 {
-                    Environment.Exit(1);
+                    Environment.Exit(ExitFailure);
                 }
 
                 return batchData;

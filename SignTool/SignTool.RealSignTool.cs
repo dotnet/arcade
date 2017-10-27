@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
@@ -34,12 +34,12 @@ namespace SignTool
 
             }
 
-            protected override int RunMSBuild(ProcessStartInfo startInfo)
+            protected override int RunMSBuild(ProcessStartInfo startInfo, TextWriter textWriter)
             {
                 var process = Process.Start(startInfo);
                 process.OutputDataReceived += (sender, e) =>
                 {
-                    Console.WriteLine(e.Data);
+                    textWriter.WriteLine(e.Data);
                 };
                 process.BeginOutputReadLine();
                 process.WaitForExit();
@@ -79,7 +79,7 @@ namespace SignTool
                     }
 
                     stream.Position = peReader.PEHeaders.CorHeaderStartOffset + OffsetFromStartOfCorHeaderToFlags;
-                    writer.Write((UInt32)(peReader.PEHeaders.CorHeader.Flags | CorFlags.StrongNameSigned));
+                    writer.Write((UInt32)(peReader.PEHeaders.CorHeader.Flags & ~CorFlags.StrongNameSigned));
                 }
             }
 

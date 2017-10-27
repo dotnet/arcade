@@ -1,8 +1,9 @@
-﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Packaging;
 using System.Linq;
@@ -28,83 +29,104 @@ namespace SignTool
             _batchData = batchData;
         }
 
-        internal void Go()
+        internal bool Go(TextWriter textWriter)
         {
-            // First validate our inputs and give a useful error message about anything that happens to be missing
-            // from the binaries directory.
-            var vsixDataMap = VerifyBeforeSign();
+            // Build up all of our data structures. This will run a number of integrity checks to make sure the
+            // data provided is correct / consistent.
+            var allGood = VerifyCertificates(textWriter);
+            var contentMap = BuildContentMap(textWriter, ref allGood);
+            var zipDataMap = BuildAllZipData(contentMap, textWriter, ref allGood);
+            if (!allGood)
+            {
+                return false;
+            }
 
             // Next remove public sign from all of the assemblies.  It can interfere with the signing process.
-            RemovePublicSign();
+            RemovePublicSign(textWriter);
 
-            // Next step is to sign all of the root files.
-            SignFlatFiles();
-
-            // Last we sign the VSIX files (being careful to take into account nesting)
-            SignVsixes(vsixDataMap);
+            // Next sign all of the files
+            SignFiles(contentMap, zipDataMap, textWriter);
 
             // Validate the signing worked and produced actual signed binaries in all locations.
-            VerifyAfterSign(vsixDataMap);
+            return VerifyAfterSign(zipDataMap, textWriter);
         }
 
-        private void RemovePublicSign()
+        private void RemovePublicSign(TextWriter textWriter)
         {
-            Console.WriteLine("Removing public sign");
+            textWriter.WriteLine("Removing public sign");
             foreach (var name in _batchData.AssemblyNames)
             {
-                Console.WriteLine($"\t{name}");
+                textWriter.WriteLine($"\t{name}");
                 _signTool.RemovePublicSign(name.FullPath);
             }
         }
 
         /// <summary>
-        /// Sign all of the assembly files.  No need to consider nesting here and it can be done in a single pass.
+        /// Actually sign all of the described files. 
         /// </summary>
-        private void SignFlatFiles()
+        private void SignFiles(ContentMap contetMap, Dictionary<FileName, ZipData> zipDataMap, TextWriter textWriter)
         {
-            Console.WriteLine("Signing files");
-            var otherFiles = _batchData.FileNames.Where(x => !x.IsVsix);
-            foreach (var name in otherFiles)
-            {
-                Console.WriteLine($"\t{name.RelativePath}");
-            }
-
-            _signTool.Sign(otherFiles.Select(x => _batchData.FileSignDataMap[x]));
-        }
-
-        /// <summary>
-        /// Sign all of the VSIX files.  It is possible for VSIX to nest other VSIX so we must consider this when 
-        /// picking the order.
-        /// </summary>
-        private void SignVsixes(Dictionary<FileName, VsixData> vsixDataMap)
-        {
+            // Generate the list of signed files in a deterministic order. Makes it easier to track down
+            // bugs if repeated runs use the same ordering.
+            var toSignList = _batchData.FileNames.ToList();
             var round = 0;
-            var signedSet = new HashSet<FileName>(_batchData.AssemblyNames);
-            var toSignList = _batchData.VsixNames.ToList();
+            var signedSet = new HashSet<FileName>();
 
-            if (toSignList.Count == 0)
+            void signFiles(IEnumerable<FileName> files)
             {
-                return;
+                textWriter.WriteLine($"Signing Round {round}");
+                foreach (var name in files)
+                {
+                    textWriter.WriteLine($"\t{name}");
+                }
+                _signTool.Sign(files.Select(x => _batchData.FileSignInfoMap[x]).Where(x => !x.IsEmpty), textWriter);
             }
 
-            do
+            void repackFiles(IEnumerable<FileName> files)
             {
-                Console.WriteLine($"Signing VSIX round {round}");
+                var any = false;
+                foreach (var file in files)
+                {
+                    if (file.IsZipContainer)
+                    {
+                        if (!any)
+                        {
+                            textWriter.WriteLine("Repacking");
+                            any = true;
+                        }
+
+                        textWriter.WriteLine($"\t{file}");
+                        Repack(zipDataMap[file]);
+                    }
+                }
+            }
+
+            // Is this file ready to be signed? That is are all of the items that it depends on already
+            // signed? 
+            bool isReadyToSign(FileName fileName)
+            {
+                if (!fileName.IsZipContainer)
+                {
+                    return true;
+                }
+
+                var zipData = zipDataMap[fileName];
+                return zipData.NestedParts.All(x => signedSet.Contains(x.FileName));
+            }
+
+            // Extract the next set of files that should be signed. This is the set of files for which all of the
+            // dependencies have been signed.
+            List<FileName> extractNextGroup()
+            {
                 var list = new List<FileName>();
                 var i = 0;
-                var progress = false;
                 while (i < toSignList.Count)
                 {
-                    var vsixName = toSignList[i];
-                    var vsixData = vsixDataMap[vsixName];
-                    var areNestedBinariesSigned = vsixData.NestedBinaryParts.All(x => signedSet.Contains(x.BinaryName));
-                    if (areNestedBinariesSigned)
+                    var current = toSignList[i];
+                    if (isReadyToSign(current))
                     {
-                        list.Add(vsixName);
+                        list.Add(current);
                         toSignList.RemoveAt(i);
-                        Console.WriteLine($"\tRepacking {vsixName}");
-                        Repack(vsixData);
-                        progress = true;
                     }
                     else
                     {
@@ -112,38 +134,41 @@ namespace SignTool
                     }
                 }
 
-                if (!progress)
+                return list;
+            }
+
+            while (toSignList.Count > 0)
+            {
+                var list = extractNextGroup();
+                if (list.Count == 0)
                 {
-                    throw new Exception("No progress made on nested VSIX which indicates validation bug");
+                    throw new Exception("No progress made on signing which indicates a bug");
                 }
 
-                Console.WriteLine($"\tSigning ...");
-                _signTool.Sign(list.Select(x => _batchData.FileSignDataMap[x]));
-
-                // Signing is complete so now we can update the signed set.
-                list.ForEach(x => signedSet.Add(x));
-
+                repackFiles(list);
+                signFiles(list);
                 round++;
-            } while (toSignList.Count > 0);
+                list.ForEach(x => signedSet.Add(x));
+            }
         }
 
         /// <summary>
         /// Repack the VSIX with the signed parts from the binaries directory.
         /// </summary>
-        private void Repack(VsixData vsixData)
+        private void Repack(ZipData vsixData)
         {
             using (var package = Package.Open(vsixData.Name.FullPath, FileMode.Open, FileAccess.ReadWrite))
             {
                 foreach (var part in package.GetParts())
                 {
                     var relativeName = GetPartRelativeFileName(part);
-                    var vsixPart = vsixData.GetNestedBinaryPart(relativeName);
+                    var vsixPart = vsixData.FindNestedBinaryPart(relativeName);
                     if (!vsixPart.HasValue)
                     {
                         continue;
                     }
 
-                    using (var stream = File.OpenRead(vsixPart.Value.BinaryName.FullPath))
+                    using (var stream = File.OpenRead(vsixPart.Value.FileName.FullPath))
                     using (var partStream = part.GetStream(FileMode.Open, FileAccess.ReadWrite))
                     {
                         stream.CopyTo(partStream);
@@ -151,28 +176,6 @@ namespace SignTool
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Get the name of all VSIX which are nested inside this VSIX.
-        /// </summary>
-        private IEnumerable<string> GetNestedVsixRelativeNames(FileName vsixName)
-        {
-            return GetVsixPartRelativeNames(vsixName).Where(x => IsVsix(x));
-        }
-
-        private bool AreNestedVsixSigned(FileName vsixName, HashSet<string> signedSet)
-        {
-            foreach (var relativeName in GetNestedVsixRelativeNames(vsixName))
-            {
-                var name = Path.GetFileName(relativeName);
-                if (!signedSet.Contains(name))
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
         /// <summary>
@@ -193,77 +196,120 @@ namespace SignTool
             return list;
         }
 
-        private Dictionary<FileName, VsixData> VerifyBeforeSign()
+        /// <summary>
+        /// Build up a table of checksum to <see cref="FileName"/> instance map. This will report errors if it
+        /// is unable to read any of the files off of disk.
+        /// </summary>
+        private ContentMap BuildContentMap(TextWriter textWriter, ref bool allGood)
         {
-            var allGood = true;
-            var map = VerifyFilesBeforeSign(ref allGood);
-            var vsixDataMap = VerifyVsixContentsBeforeSign(map, ref allGood);
-
-            if (!allGood)
+            var contentMap = new ContentMap();
+            foreach (var fileName in _batchData.FileNames)
             {
-                throw new Exception("Errors validating the state before signing");
+                try
+                {
+                    var checksum = _contentUtil.GetChecksum(fileName.FullPath);
+                    contentMap.Add(fileName, checksum);
+                }
+                catch (Exception ex)
+                {
+                    if (!File.Exists(fileName.FullPath))
+                    {
+                        textWriter.WriteLine($"Did not find {fileName} at {fileName.FullPath}");
+                    }
+                    else
+                    {
+                        textWriter.WriteLine($"Unable to read content of {fileName.FullPath}: {ex.Message}");
+                    }
+                    allGood = false;
+                }
             }
 
-            return vsixDataMap;
+            return contentMap;
         }
 
         /// <summary>
-        /// Validate all of the binaries which are specified to be signed exist on disk.  Compute their
-        /// checksums at this time so we can use it for VSIX content validation.
+        /// Sanity check the certificates that are attached to the various items. Ensure we aren't using say a VSIX
+        /// certificate on a DLL for example.
         /// </summary>
-        private Dictionary<string, FileName> VerifyFilesBeforeSign(ref bool allGood)
+        private bool VerifyCertificates(TextWriter textWriter)
         {
-            var checksumToNameMap = new Dictionary<string, FileName>(StringComparer.Ordinal);
-            foreach (var fileName in _batchData.FileNames)
+            var allGood = true;
+            foreach (var pair in _batchData.FileSignInfoMap.OrderBy(x => x.Key.RelativePath))
             {
-                if (!File.Exists(fileName.FullPath))
-                {
-                    Console.WriteLine($"Did not find {fileName} at {fileName.FullPath}");
-                    allGood = false;
-                    continue;
-                }
+                var fileName = pair.Key;
+                var fileSignInfo = pair.Value;
+                var isVsixCert = !string.IsNullOrEmpty(fileSignInfo.Certificate) && IsVsixCertificate(fileSignInfo.Certificate);
 
-                // Ensure we don't attempt to sign a VSIX with a non-VSIX certificate or vice versa. 
-                var fileSignInfo = _batchData.FileSignDataMap[fileName];
-                if (fileName.IsVsix != IsVsixCertificate(fileSignInfo.Certificate))
+                if (fileName.IsAssembly)
                 {
-                    var msg = fileName.IsVsix
-                        ? $"Vsix {fileName} must be signed with a VSIX certificate"
-                        : $"Non-Vsix {fileName} must not be signed with a VSIX certificate";
-                    Console.WriteLine(msg);
-                    allGood = false;
-                }
+                    if (fileSignInfo.StrongName == null)
+                    {
+                        textWriter.WriteLine($"Assembly {fileName} needs a strong name");
+                        allGood = false;
+                    }
 
-                var checksum = _contentUtil.GetChecksum(fileName.FullPath);
-                checksumToNameMap[checksum] = fileName;
+                    if (isVsixCert)
+                    {
+                        textWriter.WriteLine($"Assembly {fileName} cannot be signed with a VSIX certificate");
+                        allGood = false;
+                    }
+                }
+                else if (fileName.IsVsix)
+                {
+                    if (!isVsixCert)
+                    {
+                        textWriter.WriteLine($"VSIX {fileName} must be signed with a VSIX certificate");
+                        allGood = false;
+                    }
+
+                    if (fileSignInfo.StrongName != null)
+                    {
+                        textWriter.WriteLine($"VSIX {fileName} cannot be strong name signed");
+                        allGood = false;
+                    }
+                }
+                else if (fileName.IsNupkg)
+                {
+                    if (fileSignInfo.StrongName != null || fileSignInfo.Certificate != null)
+                    {
+                        textWriter.WriteLine($"Nupkg {fileName} cannot be strong name or certificate signed");
+                        allGood = false;
+                    }
+                }
             }
 
-            return checksumToNameMap;
+            return allGood;
         }
 
-        private Dictionary<FileName, VsixData> VerifyVsixContentsBeforeSign(Dictionary<string, FileName> checksumToNameMap, ref bool allGood)
+        private Dictionary<FileName, ZipData> BuildAllZipData(ContentMap contentMap, TextWriter textWriter, ref bool allGood)
         {
-            var vsixDataMap = new Dictionary<FileName, VsixData>();
-            foreach (var vsixName in _batchData.VsixNames)
+            var zipDataMap = new Dictionary<FileName, ZipData>();
+            foreach (var zipName in _batchData.FileNames.Where(x => x.IsZipContainer))
             {
-                var data = VerifyVsixContentsBeforeSign(vsixName, checksumToNameMap, ref allGood);
-                vsixDataMap[vsixName] = data;
+                var data = BuildZipData(zipName, contentMap, textWriter, ref allGood);
+                zipDataMap[zipName] = data;
             }
 
-            return vsixDataMap;
+            return zipDataMap;
         }
 
-        private VsixData VerifyVsixContentsBeforeSign(FileName vsixName, Dictionary<string, FileName> checksumToNameMap, ref bool allGood)
+        /// <summary>
+        /// Build up the <see cref="ZipData"/> instance for a given zip container. This will also report any consintency
+        /// errors found when examining the zip archive.
+        /// </summary>
+        private ZipData BuildZipData(FileName zipFileName, ContentMap contentMap, TextWriter textWriter, ref bool allGood)
         {
+            Debug.Assert(zipFileName.IsZipContainer);
+
             var nestedExternalBinaries = new List<string>();
-            var nestedParts = new List<VsixPart>();
-            using (var package = Package.Open(vsixName.FullPath, FileMode.Open, FileAccess.Read))
+            var nestedParts = new List<ZipPart>();
+            using (var package = Package.Open(zipFileName.FullPath, FileMode.Open, FileAccess.Read))
             {
                 foreach (var part in package.GetParts())
                 {
                     var relativeName = GetPartRelativeFileName(part);
                     var name = Path.GetFileName(relativeName);
-                    if (!IsVsix(name) && !IsAssembly(name))
+                    if (!IsZipContainer(name) && !IsAssembly(name))
                     {
                         continue;
                     }
@@ -277,7 +323,7 @@ namespace SignTool
                     if (!_batchData.FileNames.Any(x => FilePathComparer.Equals(x.Name, name)))
                     {
                         allGood = false;
-                        Console.WriteLine($"VSIX {vsixName} has part {name} which is not listed in the sign or external list");
+                        textWriter.WriteLine($"VSIX {zipFileName} has part {name} which is not listed in the sign or external list");
                         continue;
                     }
 
@@ -286,27 +332,26 @@ namespace SignTool
                     using (var stream = part.GetStream())
                     {
                         string checksum = _contentUtil.GetChecksum(stream);
-                        FileName checksumName;
-                        if (!checksumToNameMap.TryGetValue(checksum, out checksumName))
+                        if (!contentMap.TryGetFileName(checksum, out var checksumName))
                         {
                             allGood = false;
-                            Console.WriteLine($"{vsixName} has part {name} which does not match the content in the binaries directory");
+                            textWriter.WriteLine($"{zipFileName} has part {name} which does not match the content in the binaries directory");
                             continue;
                         }
 
                         if (!FilePathComparer.Equals(checksumName.Name, name))
                         {
                             allGood = false;
-                            Console.WriteLine($"{vsixName} has part {name} with a different name in the binaries directory: {checksumName}");
+                            textWriter.WriteLine($"{zipFileName} has part {name} with a different name in the binaries directory: {checksumName}");
                             continue;
                         }
 
-                        nestedParts.Add(new VsixPart(relativeName, checksumName));
+                        nestedParts.Add(new ZipPart(relativeName, checksumName, checksum));
                     }
                 }
             }
 
-            return new VsixData(vsixName, nestedParts.ToImmutableArray(), nestedExternalBinaries.ToImmutableArray());
+            return new ZipData(zipFileName, nestedParts.ToImmutableArray(), nestedExternalBinaries.ToImmutableArray());
         }
 
         private static string GetPartRelativeFileName(PackagePart part)
@@ -320,55 +365,43 @@ namespace SignTool
             return path;
         }
 
-        private void VerifyAfterSign(Dictionary<FileName, VsixData> vsixData)
-        {
-            if (!VerifyAssembliesAfterSign() || !VerifyVsixContentsAfterSign(vsixData))
-            {
-                throw new Exception("Verification of signed binaries failed");
-            }
-        }
-
-        private bool VerifyAssembliesAfterSign()
+        private bool VerifyAfterSign(Dictionary<FileName, ZipData> zipDataMap, TextWriter textWriter)
         {
             var allGood = true;
-            foreach (var name in _batchData.AssemblyNames)
+            foreach (var fileName in _batchData.FileNames)
             {
-                using (var stream = File.OpenRead(name.FullPath))
+                if (fileName.IsAssembly)
                 {
-                    if (!_signTool.VerifySignedAssembly(stream))
+                    using (var stream = File.OpenRead(fileName.FullPath))
                     {
-                        allGood = false;
-                        Console.WriteLine($"Assembly {name.RelativePath} is not signed properly");
+                        if (!_signTool.VerifySignedAssembly(stream))
+                        {
+                            textWriter.WriteLine($"Assembly {fileName} is not signed properly");
+                            allGood = false;
+                        }
                     }
                 }
-            }
-
-            return allGood;
-        }
-
-        private bool VerifyVsixContentsAfterSign(Dictionary<FileName, VsixData> vsixDataMap)
-        {
-            var allGood = true;
-            foreach (var vsixName in _batchData.VsixNames)
-            {
-                var vsixData = vsixDataMap[vsixName];
-                using (var package = Package.Open(vsixName.FullPath, FileMode.Open, FileAccess.Read))
+                else if (fileName.IsZipContainer)
                 {
-                    foreach (var part in package.GetParts())
+                    var zipData = zipDataMap[fileName];
+                    using (var package = Package.Open(fileName.FullPath, FileMode.Open, FileAccess.Read))
                     {
-                        var relativeName = GetPartRelativeFileName(part);
-                        var vsixPart = vsixData.GetNestedBinaryPart(relativeName);
-                        if (!vsixPart.HasValue || !vsixPart.Value.BinaryName.IsAssembly)
+                        foreach (var part in package.GetParts())
                         {
-                            continue;
-                        }
-
-                        using (var stream = part.GetStream())
-                        {
-                            if (!_signTool.VerifySignedAssembly(stream))
+                            var relativeName = GetPartRelativeFileName(part);
+                            var zipPart = zipData.FindNestedBinaryPart(relativeName);
+                            if (!zipPart.HasValue || !zipPart.Value.FileName.IsAssembly)
                             {
-                                allGood = false;
-                                Console.WriteLine($"Vsix {vsixName.RelativePath} has part {relativeName} which is not signed.");
+                                continue;
+                            }
+
+                            using (var stream = part.GetStream())
+                            {
+                                if (!_signTool.VerifySignedAssembly(stream))
+                                {
+                                    textWriter.WriteLine($"Zip container {fileName} has part {relativeName} which is not signed.");
+                                    allGood = false;
+                                }
                             }
                         }
                     }
@@ -378,9 +411,6 @@ namespace SignTool
             return allGood;
         }
 
-        private static bool IsVsixCertificate(string certificate)
-        {
-            return certificate.StartsWith("Vsix", StringComparison.OrdinalIgnoreCase);
-        }
+        private static bool IsVsixCertificate(string certificate) => certificate.StartsWith("Vsix", StringComparison.OrdinalIgnoreCase);
     }
 }

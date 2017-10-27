@@ -32,23 +32,23 @@ namespace SignTool
 
             public abstract bool VerifySignedAssembly(Stream assemblyStream);
 
-            protected abstract int RunMSBuild(ProcessStartInfo startInfo);
+            protected abstract int RunMSBuild(ProcessStartInfo startInfo, TextWriter textWriter);
 
-            public void Sign(IEnumerable<FileSignInfo> filesToSign)
+            public void Sign(IEnumerable<FileSignInfo> filesToSign, TextWriter textWriter)
             {
                 var buildFilePath = Path.Combine(AppPath, "build.proj");
                 
                 var content = GenerateBuildFileContent(filesToSign);
                 File.WriteAllText(buildFilePath, content);
-                Console.WriteLine("Generated project file");
-                Console.WriteLine(content);
+                textWriter.WriteLine("Generated project file");
+                textWriter.WriteLine(content);
 
                 string fileName = MSBuildPath;
                 var commandLine = $@"/v:m ""{buildFilePath}""";
 
                 if (!_args.Test)
                 {
-                    Console.WriteLine($"{fileName} {commandLine}");
+                    textWriter.WriteLine($"{fileName} {commandLine}");
                 }
 
                 var startInfo = new ProcessStartInfo()
@@ -60,13 +60,13 @@ namespace SignTool
                     WorkingDirectory = AppPath,
                 };
 
-                var exitCode = RunMSBuild(startInfo);
+                var exitCode = RunMSBuild(startInfo, textWriter);
 
                 File.Delete(buildFilePath);
 
                 if (exitCode != 0)
                 {
-                    Console.WriteLine("MSBuild failed!!!");
+                    textWriter.WriteLine("MSBuild failed!!!");
                     throw new Exception("Sign failed");
                 }
             }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Linq;
@@ -18,13 +18,13 @@ namespace SignTool
         internal string OutputPath { get; }
 
         /// <summary>
-        /// The names of the files to be signed.  These are all relative paths off of the <see cref="OutputPath"/>
+        /// The ordered names of the files to be signed.  These are all relative paths off of the <see cref="OutputPath"/>
         /// property.
         /// </summary>
         internal ImmutableArray<FileName> FileNames { get; }
 
         /// <summary>
-        /// These are binaries which are included in our VSIX files but are already signed.  This list is used for 
+        /// These are binaries which are included in our zip containers but are already signed.  This list is used for 
         /// validation purpsoes.  These are all flat names and cannot be relative paths.
         /// </summary>
         internal ImmutableArray<string> ExternalFileNames { get;}
@@ -35,9 +35,9 @@ namespace SignTool
         internal ImmutableArray<FileName> AssemblyNames { get; }
 
         /// <summary>
-        /// Names of VSIX that need to be signed.  This is a subset of <see cref="FileNames"/>
+        /// Names of zip containers that need to be examined for signing.  This is a subset of <see cref="FileNames"/>
         /// </summary>
-        internal ImmutableArray<FileName> VsixNames { get; }
+        internal ImmutableArray<FileName> ZipContainerNames { get; }
 
         /// <summary>
         /// Names of other file types which aren't specifically handled by the tool.  This is a subset of <see cref="FileNames"/>
@@ -47,7 +47,7 @@ namespace SignTool
         /// <summary>
         /// A map of all of the binaries that need to be signed to the actual signing data.
         /// </summary>
-        internal ImmutableDictionary<FileName, FileSignInfo> FileSignDataMap { get; }
+        internal ImmutableDictionary<FileName, FileSignInfo> FileSignInfoMap { get; }
 
         internal BatchSignInput(string outputPath, Dictionary<string, SignInfo> fileSignDataMap, IEnumerable<string> externalFileNames)
         {
@@ -59,8 +59,8 @@ namespace SignTool
             ExternalFileNames = externalFileNames.OrderBy(x => x).ToImmutableArray();
 
             AssemblyNames = FileNames.Where(x => x.IsAssembly).ToImmutableArray();
-            VsixNames = FileNames.Where(x => x.IsVsix).ToImmutableArray();
-            OtherNames = FileNames.Where(x => !x.IsAssembly && !x.IsVsix).ToImmutableArray();
+            ZipContainerNames = FileNames.Where(x => x.IsZipContainer).ToImmutableArray();
+            OtherNames = FileNames.Where(x => !x.IsAssembly && !x.IsZipContainer).ToImmutableArray();
 
             var builder = ImmutableDictionary.CreateBuilder<FileName, FileSignInfo>();
             foreach (var name in FileNames)
@@ -68,7 +68,7 @@ namespace SignTool
                 var data = fileSignDataMap[name.RelativePath];
                 builder.Add(name, new FileSignInfo(name, data));
             }
-            FileSignDataMap = builder.ToImmutable();
+            FileSignInfoMap = builder.ToImmutable();
         }
     }
 }
