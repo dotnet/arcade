@@ -13,6 +13,9 @@
     <None Include="SignToolData.md" />
     <Reference Include="System" />
     <Reference Include="WindowsBase" />
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing">
+      <Version>2.0.0</Version>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="RoslynTools.Microsoft.LocateVS" Version="0.2.4-beta" />
     <PackageReference Include="System.Collections.Immutable" Version="1.2.0" />

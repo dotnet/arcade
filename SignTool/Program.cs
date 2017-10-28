@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.FileSystemGlobbing;
+using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using Newtonsoft.Json;
 
 namespace SignTool
@@ -99,6 +101,9 @@ namespace SignTool
         /// </summary>
         private static List<string> ExpandFileList(string outputPath, IEnumerable<string> relativeFileNames, ref bool allGood)
         {
+            var directoryInfo = new DirectoryInfo(outputPath);
+            var matchDir = new DirectoryInfoWrapper(directoryInfo);
+
             var list = new List<string>();
             foreach (var relativeFileName in relativeFileNames)
             {
@@ -108,18 +113,19 @@ namespace SignTool
                     continue;
                 }
 
-                var fullName = Path.Combine(outputPath, relativeFileName);
                 try
                 {
-                    var expandedNameList = PathUtil.ExpandDirectoryGlob(fullName);
-                    if (expandedNameList.Count == 0)
+                    var matcher = new Matcher(StringComparison.OrdinalIgnoreCase);
+                    matcher.AddInclude(relativeFileName);
+                    var result = matcher.Execute(matchDir);
+                    if (!result.HasMatches)
                     {
                         Console.WriteLine($"The glob {relativeFileName} expanded to 0 entries");
                         allGood = false;
                         continue;
                     }
 
-                    list.AddRange(expandedNameList);
+                    list.AddRange(result.Files.Select(x => PathUtil.NormalizeSeparators(x.Path)));
                 }
                 catch (Exception ex)
                 {
