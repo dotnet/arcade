@@ -121,7 +121,6 @@ namespace SignTool
                     if (!result.HasMatches)
                     {
                         Console.WriteLine($"The glob {relativeFileName} expanded to 0 entries");
-                        allGood = false;
                         continue;
                     }
 
