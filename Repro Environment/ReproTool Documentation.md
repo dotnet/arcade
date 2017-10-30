@@ -90,5 +90,5 @@ Please note that both the Snapshots and the Machines expire after 3 days of bein
 ![](./Images/FeedbackMC.png?raw=true)
 
 [Mission Control Int]: https://mc.int-dot.net/#/
-[Helix]: https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/ReproTool%20Documentation.md#how-to-use-it-in-Helix
-[Jenkins]: https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/ReproTool%20Documentation.md#how-to-use-it-in-Jenkins
+[Helix]: https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/ReproTool%20Documentation.md#how-to-use-it-in-helix
+[Jenkins]: https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/ReproTool%20Documentation.md#how-to-use-it-in-jenkins
