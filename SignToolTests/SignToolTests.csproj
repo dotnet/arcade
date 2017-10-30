@@ -4,6 +4,11 @@
     <AssemblyName>SignTool.UnitTests</AssemblyName>
     <TargetFramework>net461</TargetFramework>
     <SignAssembly>false</SignAssembly>
+
+    <!-- Needed until we merge the more recente RepoToolset builds -->
+    <ArtifactsDir>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)\..\..\..\artifacts\$(Configuration)'))\</ArtifactsDir>
+    <OutputPath>$(ArtifactsDir)bin\$(MSBuildProjectName)\</OutputPath>
+    <IntermediateOutputPath>$(ArtifactsDir)obj\$(MSBuildProjectName)\</IntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Moq" Version="4.5.21" />
