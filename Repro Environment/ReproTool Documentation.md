@@ -7,6 +7,8 @@ The following document shows the user documentation of the repro environment sol
 - [1487](https://github.com/dotnet/core-eng/issues/1487) Delete a VM in Mission Control sometimes reports error.
 - [1694](https://github.com/dotnet/core-eng/issues/1694) Reconsider the user experience when clicking Repro in Jenkins.
 
+The complete list of issues in the baklog is located in the [Dev Test Failure Repro V2](https://github.com/dotnet/core-eng/issues/1988) Epic.
+
 # What is the Repro Tool?
 When a job fails in [Jenkins] or [Helix], the developer may ask for a virtual machine or Mac machine with the sufficient data and access to connect and build the code that is located in the original machine to determine why the job failed.
 
