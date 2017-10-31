@@ -29,13 +29,14 @@ namespace XliffTasks.Tasks
             foreach (var item in Sources)
             {
                 string sourcePath = item.ItemSpec;
+                string sourceDocumentPath = item.GetMetadataOrDefault(MetadataKey.SourceDocumentPath, item.ItemSpec);
                 string sourceFormat = item.GetMetadataOrThrow(MetadataKey.XlfSourceFormat);
                 TranslatableDocument sourceDocument = LoadSourceDocument(sourcePath, sourceFormat);
                 string sourceDocumentId = GetSourceDocumentId(sourcePath);
 
                 foreach (var language in Languages)
                 {
-                    string xlfPath = GetXlfPath(sourcePath, language);
+                    string xlfPath = GetXlfPath(sourceDocumentPath, language);
                     XlfDocument xlfDocument;
 
                     try

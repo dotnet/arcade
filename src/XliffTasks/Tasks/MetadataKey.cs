@@ -9,6 +9,7 @@ namespace XliffTasks
         public const string Link = nameof(Link);
         public const string LogicalName = nameof(LogicalName);
         public const string ManifestResourceName = nameof(ManifestResourceName);
+        public const string SourceDocumentPath = nameof(SourceDocumentPath);
         public const string XlfLanguage = nameof(XlfLanguage);
         public const string XlfSource = nameof(XlfSource);
         public const string XlfSourceFormat = nameof(XlfSourceFormat);
