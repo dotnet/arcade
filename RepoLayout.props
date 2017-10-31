@@ -17,7 +17,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DotNetTool>$(DotNetRoot)dotnet.exe</DotNetTool>
+    <DotNetTool>$(DotNetRoot)dotnet</DotNetTool>
+    <DotNetTool Condition="'$(OS)' == 'Windows_NT'">$(DotNetTool).exe</DotNetTool>
     <ArtifactsDir>$(RepoRoot)artifacts\</ArtifactsDir>
     <ArtifactsToolsetDir>$(ArtifactsDir)toolset\</ArtifactsToolsetDir>
     <ArtifactsConfigurationDir>$(ArtifactsDir)$(Configuration)\</ArtifactsConfigurationDir>
