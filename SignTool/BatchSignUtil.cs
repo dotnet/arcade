@@ -56,8 +56,12 @@ namespace SignTool
             textWriter.WriteLine("Removing public sign");
             foreach (var name in _batchData.AssemblyNames)
             {
-                textWriter.WriteLine($"\t{name}");
-                _signTool.RemovePublicSign(name.FullPath);
+                var fileSignInfo = _batchData.FileSignInfoMap[name];
+                if (fileSignInfo.StrongName != null)
+                {
+                    textWriter.WriteLine($"\t{name}");
+                    _signTool.RemovePublicSign(name.FullPath);
+                }
             }
         }
 
