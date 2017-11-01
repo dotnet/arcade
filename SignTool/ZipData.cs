@@ -49,20 +49,4 @@ namespace SignTool
             return null;
         }
     }
-
-    internal struct ZipPart
-    {
-        internal string RelativeName { get; }
-        internal FileName FileName { get; }
-        internal string Checksum { get; }
-
-        internal ZipPart(string relativeName, FileName fileName, string checksum)
-        {
-            RelativeName = relativeName;
-            FileName = fileName;
-            Checksum = checksum;
-        }
-
-        public override string ToString() => $"{RelativeName} -> {FileName.RelativePath} -> {Checksum}";
-    }
 }
