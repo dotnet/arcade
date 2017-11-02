@@ -67,7 +67,9 @@
 
   <!-- 
     The current MicroBuild symbol indexing task doesn't support specifying list of files to index.
-    Therefore we create hardlinks to the files in output directory, which will get signed.
+    Therefore we create hardlinks to the files in output directory, where DLLs and EXEs are signed.
+    These targets are executed after the signing phase so that we publish signed binaries to the
+    symbol store even if the files are copies and not hardlinked.
   -->
   <Target Name="_DeployWindowsSymbolsToSymStore"
           AfterTargets="_InnerDeployToSymStore"
