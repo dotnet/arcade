@@ -5,7 +5,6 @@
   <!--
     Reads variables:
       SignAssembly    "true" to sign the output assembly of the current project
-      SignType        "real" to real-sign the outputs (set by microbuild as an environment variable)
       StrongNameKeyId The id of the key used for strong name generation
 
     Writes variables:
@@ -65,8 +64,6 @@
   </PropertyGroup>
 
   <Target Name="VerifyBuildFlags">
-    <Error Condition="('$(SignType)' == 'real') AND '$(AssemblyVersion)' == '42.42.42.42'"
-           Text="Must specify a build version in order to real sign a build." />
     <Error Condition="'$(SignAssembly)' != 'true'"
            Text="SignAssembly must be true" />
     <Error Condition="'$(PublicKey)' == '' or '$(PublicKeyToken)' == '' or '$(AssemblyOriginatorKeyFile)' == ''"

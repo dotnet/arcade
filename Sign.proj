@@ -2,8 +2,8 @@
 <Project DefaultTargets="Sign">
   <!--
     Required parameters:
-      DirectoryBuildPropsPath              Path to the Directory.Build.props file in the repo root.
-      SignType                             "real" to real-sign the outputs (set by microbuild as an environment variable)
+      DirectoryBuildPropsPath       Path to the Directory.Build.props file in the repo root.
+      RealSign                      "true" to send binaries to the signing service, "false" to only validate signing configuration.
   -->
 
   <Import Project="$(DirectoryBuildPropsPath)" Condition="Exists('$(DirectoryBuildPropsPath)')"/>
@@ -12,7 +12,7 @@
 
   <Target Name="Sign">
     <Exec Command='"$(MSBuildProjectDirectory)\vswhere.exe" -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild'
-          Condition="'$(SignType)' == 'real'"
+          Condition="'$(RealSign)' == 'true'"
           ConsoleToMsBuild="true"
           StandardErrorImportance="high">
       <Output TaskParameter="ConsoleOutput" PropertyName="_VsInstallDir" />
@@ -22,8 +22,8 @@
       <SignToolArgs Include='-nugetPackagesPath "$(NuGetPackageRoot)\"' />
       <SignToolArgs Include='-intermediateOutputPath "$(ArtifactsObjDir)\"' />
       <SignToolArgs Include='-config "$(SignToolDataPath)"' />
-      <SignToolArgs Include='-test' Condition="'$(SignType)' != 'real'" />
-      <SignToolArgs Include='-msbuildpath "$(_VsInstallDir)\MSBuild\15.0\Bin\msbuild.exe"' Condition="'$(SignType)' == 'real'"/>
+      <SignToolArgs Include='-test' Condition="'$(RealSign)' != 'true'" />
+      <SignToolArgs Include='-msbuildpath "$(_VsInstallDir)\MSBuild\15.0\Bin\msbuild.exe"' Condition="'$(RealSign)' == 'true'"/>
       <SignToolArgs Include='"$(ArtifactsConfigurationDir)\"' />
     </ItemGroup>
     

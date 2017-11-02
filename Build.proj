@@ -1,5 +1,5 @@
 ﻿<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
-<Project DefaultTargets="Execute">
+<Project DefaultTargets="Execute" TreatAsLocalProperty="Sign;Test;IntegrationTest">
   <!--
   
   Required parameters:
@@ -16,8 +16,24 @@
     IntegrationTest   "true" to run integration tests
     Sign              "true" to sign built binaries
     Pack              "true" to build NuGet packages and VS insertion manifests
-    Properties        List of properties to pass to each build phase ("Name=Value;Name=Value;...")
+    SignType          "real" to send binaries to signing service, "test" to only validate signing configuration.
   -->
+
+  <!-- 
+    PipeBuild overrides:
+    
+    PB_SignType       {''|'public'|'real'|'test'}  Disables signing if set to a value other than 'real' 
+    PB_SkipTests      {''|'true'|'false'}          Disables tests if set to 'true'.
+  
+  -->
+  <PropertyGroup>
+    <RealSign>false</RealSign>
+    <RealSign Condition="'$(SignType)' == 'real' or '$(PB_SignType)' == 'real'">true</RealSign>
+
+    <Sign Condition="'$(PB_SignType)' != '' and '$(PB_SignType)' != 'real'">false</Sign>
+    <Test Condition="'$(PB_SkipTests)' == 'true'">false</Test>
+    <IntegrationTest Condition="'$(PB_SkipTests)' == 'true'">false</IntegrationTest>
+  </PropertyGroup>
 
   <!-- 
     Import Directory.Build.props file next to or above the solution file.
@@ -119,7 +135,7 @@
              Condition="'$(Pack)' == 'true' and '$(UsingToolVSSDK)' == 'true'"/>
 
     <MSBuild Projects="Sign.proj"
-             Properties="$(Props);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
+             Properties="$(Props);RealSign=$(RealSign);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
              Targets="Sign"
              Condition="'$(Sign)' == 'true'"/>
 
