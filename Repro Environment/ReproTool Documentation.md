@@ -6,6 +6,7 @@ The following document shows the user documentation of the repro environment sol
 - [1649](https://github.com/dotnet/core-eng/issues/1649) Jenkins is still running on windows after creating a snapshot and a VM.
 - [1487](https://github.com/dotnet/core-eng/issues/1487) Delete a VM in Mission Control sometimes reports error.
 - [1694](https://github.com/dotnet/core-eng/issues/1694) Reconsider the user experience when clicking Repro in Jenkins.
+- [2006](https://github.com/dotnet/core-eng/issues/2006) Password for some linux machines is not working.
 
 The complete list of issues in the baklog is located in the [Dev Test Failure Repro V2](https://github.com/dotnet/core-eng/issues/1988) Epic.
 
@@ -28,10 +29,19 @@ The Repro tool will save the log of the jobs that were executed as part of the r
 The workspace and files that contain information of the machine are located under the `D:\` directory. Go inside the workspace to start debugging the problem.
 
 ### Linux
-Run `source /home/helixbot/repro.sh` to set some environment variables and get to the directory where the test was executed. You'll find the executables, the dll, pdb, logs, etc.
+Follow the instructions provided in the shell environment. Then run `. repro.sh` to set some environment variables and get to the directory where the test was executed. You'll find the executables, the dll, pdb, logs, etc.
+
+Note: Each Repo/job has a different way of running test. You could find this information in the logs of test.
+For example, for CoreFx run `sh Runtest.sh $HELIX_CORRELATION_PAYLOAD`
 
 ### Mac
-Run `source repro.sh` to set some environment variables and get to the directory where the test was executed. You'll find the executables, the dll, pdb, logs, etc.
+1. `cd dotnetbuild/work/`
+2. Go to the latest updated folder. You could see the files information by doing `ls -la`
+3. Once in that folder keep doing `cd <folder>` until you find the folder with the name `payload`
+4. Run `. repro.sh` to set some environment variables and get to the directory where the test was executed. You'll find the executables, the dll, pdb, logs, etc. 
+
+Note: Each Repo/job has a different way of running test. You could find this information in the logs of test.
+For example, for CoreFx run `sh Runtest.sh $HELIX_CORRELATION_PAYLOAD`
 
 # How to use it in Jenkins
 When a job inside a PR fails, click on details to go to Jenkins and **Log In**. 
