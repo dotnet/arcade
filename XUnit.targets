@@ -32,7 +32,6 @@
       <_TestEnvironment>$(TargetFramework)|$(_TestArchitecture)</_TestEnvironment>
       <_TestOutPathNoExt>$(ArtifactsTestResultsDir)$(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture)</_TestOutPathNoExt>
       <_TestStdOutPath>$(_TestOutPathNoExt).log</_TestStdOutPath>
-      <_TestStdErrPath>$(_TestOutPathNoExt).error.log</_TestStdErrPath>
       <_TestResultsXmlPath>$(_TestOutPathNoExt).xml</_TestResultsXmlPath>
       <_TestResultsHtmlPath>$(_TestOutPathNoExt).html</_TestResultsHtmlPath>
       <_TargetFileNameNoExt>$([System.IO.Path]::GetFileNameWithoutExtension('$(TargetFileName)'))</_TargetFileNameNoExt>
@@ -43,13 +42,16 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(_RunOnCore)' == 'true'">
+      <!-- TODO: xUnit doesn't support -html on CoreCLR currently (see https://github.com/xunit/xunit/issues/977) -->
       <_TestRunnerCommand>"$(DotNetTool)" exec --depsfile "$(_CoreDepsPath)" --runtimeconfig "$(_CoreRuntimeConfigPath)" "$(NuGetPackageRoot)xunit.runner.console\$(XUnitVersion)\tools\netcoreapp1.0\xunit.console.dll" "$(TargetPath)" -noautoreporters -xml "$(_TestResultsXmlPath)"</_TestRunnerCommand>
+      <_TestResultsDisplayPath>$(_TestStdOutPath)</_TestResultsDisplayPath>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(_RunOnCore)' != 'true'">
       <_XUnitConsoleExe>xunit.console.exe</_XUnitConsoleExe>
       <_XUnitConsoleExe Condition="'$(_TestArchitecture)' == 'x86'">xunit.console.x86.exe</_XUnitConsoleExe>
       <_TestRunnerCommand>"$(NuGetPackageRoot)xunit.runner.console\$(XUnitVersion)\tools\net452\$(_XUnitConsoleExe)" "$(TargetPath)" -noshadow -xml "$(_TestResultsXmlPath)" -html "$(_TestResultsHtmlPath)"</_TestRunnerCommand>
+      <_TestResultsDisplayPath>$(_TestResultsHtmlPath)</_TestResultsDisplayPath>
     </PropertyGroup>
 
     <MakeDir Directories="$(ArtifactsTestResultsDir)"/>
@@ -57,7 +59,8 @@
 
     <Message Text="Running tests: $(TargetPath) [$(_TestEnvironment)]" Importance="high"/>
 
-    <Exec Command='$(_TestRunnerCommand) > "$(_TestStdOutPath)" 2> "$(_TestStdErrPath)"'
+    <!-- Note that xUnit outputs failure info to both STDOUT (stack trace, message) and STDERR (failed test name) -->
+    <Exec Command='$(_TestRunnerCommand) > "$(_TestStdOutPath)" 2>&amp;1'
           LogStandardErrorAsError="false"
           WorkingDirectory="$(OutDir)"
           IgnoreExitCode="true">
@@ -66,15 +69,14 @@
     </Exec>
 
     <WriteLinesToFile File="$(_TestStdOutPath)" Overwrite="false" Lines=";=== COMMAND LINE ===;$(_TestRunnerCommand)" />
-    <Delete Files="$(_TestStdErrPath)" Condition="'$(_TestErrorCode)' == '0'"/>
 
     <ItemGroup>
       <_FailedTestRuns Include="$(_TestEnvironment)" Condition="'$(_TestErrorCode)' != '0'" />
     </ItemGroup>
 
     <Message Text="Tests succeeded: $(TargetPath) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' == '0'" Importance="high" />
-    <Warning Text="$(_TestResultsHtmlPath) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0' and '$(TargetFrameworks)' != ''" File="XUnit" />
-    <Error Text="$(_TestResultsHtmlPath) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0' and '$(TargetFrameworks)' == ''" File="XUnit" />
+    <Warning Text="$(_TestResultsDisplayPath) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0' and '$(TargetFrameworks)' != ''" File="XUnit" />
+    <Error Text="$(_TestResultsDisplayPath) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0' and '$(TargetFrameworks)' == ''" File="XUnit" />
   </Target>
 
   <Target Name="OuterTest" Returns="@(InnerOutput)">
