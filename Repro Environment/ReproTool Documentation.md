@@ -26,7 +26,7 @@ The Repro tool will save the log of the jobs that were executed as part of the r
 ## I'm in the machine, now what?
 
 ### Windows
-The workspace and files that contain information of the machine are located under the `D:\` directory. Go inside the workspace to start debugging the problem.
+The workspace and files that contain information of the machine are located under the `D:\` directory and run. `d:\data\w\repro.cmd`
 
 ### Linux
 Follow the instructions provided in the shell environment. Then run `. repro.sh` to set some environment variables and get to the directory where the test was executed. You'll find the executables, the dll, pdb, logs, etc.
