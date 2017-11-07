@@ -7,6 +7,7 @@ The following document shows the user documentation of the repro environment sol
 - [1487](https://github.com/dotnet/core-eng/issues/1487) Delete a VM in Mission Control sometimes reports error.
 - [1694](https://github.com/dotnet/core-eng/issues/1694) Reconsider the user experience when clicking Repro in Jenkins.
 - [2006](https://github.com/dotnet/core-eng/issues/2006) Password for some linux machines is not working.
+- [2023](https://github.com/dotnet/core-eng/issues/2023) Include test information in MC Repro view.
 
 The complete list of issues in the baklog is located in the [Dev Test Failure Repro V2](https://github.com/dotnet/core-eng/issues/1988) Epic.
 
