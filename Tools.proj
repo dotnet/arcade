@@ -3,8 +3,17 @@
   <!--
     Used to restore global toolset packages.
   -->
+
+  <ItemGroup>
+    <_RestoreSources Include="$(ExternalRestoreSources)" Condition="'$(ExternalRestoreSources)' != ''"/>
+    <_RestoreSources Include="https://api.nuget.org/v3/index.json"/>
+    <_RestoreSources Include="https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json"/>
+    <_RestoreSources Include="https://dotnet.myget.org/F/symreader-converter/api/v3/index.json"
+                     Condition="'$(UsingToolPdbConverter)' == 'true' and $(Pdb2PdbVersion.Contains('-'))"/>
+  </ItemGroup>
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
+    <RestoreSources>@(_RestoreSources)</RestoreSources>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="RoslynTools.Microsoft.SignTool" Version="$(RoslynToolsMicrosoftSignToolVersion)" />

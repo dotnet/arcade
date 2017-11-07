@@ -38,4 +38,20 @@
     <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">2.3.0</XUnitRunnerVisualStudioVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <RepoRestoreSources Include="https://api.nuget.org/v3/index.json" />
+    
+    <RepoRestoreSources Include="https://dotnet.myget.org/F/dotnet-core/api/v3/index.json" 
+                        Condition="'$(UsingToolXliff)' == 'true' and $(XliffTasksVersion.Contains('-'))"/>
+    
+    <RepoRestoreSources Include="https://dotnet.myget.org/F/roslyn/api/v3/index.json" 
+                        Condition="'$(UsingToolMicrosoftNetCompilers)' == 'true' and $(MicrosoftNetCompilersVersion.Contains('-'))"/>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <RestoreSources>@(RepoRestoreSources);$(RestoreSources)</RestoreSources>
+  
+    <!-- Add externally defined NuGet package restore sources. This property is set by Build.proj. -->
+    <RestoreSources Condition="'$(__ExternalRestoreSources)' != ''">$(__ExternalRestoreSources);$(RestoreSources)</RestoreSources>
+  </PropertyGroup>
 </Project>

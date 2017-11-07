@@ -24,6 +24,7 @@
     
     PB_SignType       {''|'public'|'real'|'test'}  Disables signing if set to a value other than 'real' 
     PB_SkipTests      {''|'true'|'false'}          Disables tests if set to 'true'.
+    PB_RestoreSource  {''|URL}                     URL of pipe build package feed.
   
   -->
   <PropertyGroup>
@@ -52,31 +53,37 @@
   <Target Name="Execute">
     <PropertyGroup>
       <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
-      <Props>$(Properties);Configuration=$(Configuration);CIBuild=$(CIBuild);__DeployProjectOutput=$(Deploy)</Props>
 
       <_QuietRestore>false</_QuietRestore>
       <_QuietRestore Condition="'$(CIBuild)' != 'true' and '$(RepoToolsetQuietRestore)' == 'true'">true</_QuietRestore>
     </PropertyGroup>
 
     <ItemGroup>
-      <PreSignTargets Include="Restore" Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'" />
-      <PreSignTargets Include="Rebuild" Condition="'$(Rebuild)' == 'true'" />
-      <PreSignTargets Include="Build" Condition="'$(Build)' == 'true' and '$(Rebuild)' != 'true'" />
+      <_PreSignTargets Include="Rebuild" Condition="'$(Rebuild)' == 'true'" />
+      <_PreSignTargets Include="Build" Condition="'$(Build)' == 'true' and '$(Rebuild)' != 'true'" />
       <!-- Deploy target is set up to chain after Build so that F5 in VS works. -->
-      <PreSignTargets Include="Test" Condition="'$(Test)' == 'true'" />
-      <PreSignTargets Include="IntegrationTest" Condition="'$(IntegrationTest)' == 'true'" />
+      <_PreSignTargets Include="Test" Condition="'$(Test)' == 'true'" />
+      <_PreSignTargets Include="IntegrationTest" Condition="'$(IntegrationTest)' == 'true'" />
     </ItemGroup>
 
     <ItemGroup>
-      <RestoreToolsProp Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
-      <RestoreToolsProp Include="ExcludeRestorePackageImports=true"/>
-      <RestoreToolsProp Include="UsingToolVSSDK=$(UsingToolVSSDK)"/>
-      <RestoreToolsProp Include="RoslynToolsMicrosoftSignToolVersion=$(RoslynToolsMicrosoftSignToolVersion)"/>
-      <RestoreToolsProp Include="MicroBuildPluginsSwixBuildVersion=$(MicroBuildPluginsSwixBuildVersion)"/>
-      <RestoreToolsProp Include="MicroBuildCoreVersion=$(MicroBuildCoreVersion)"/>
-      <RestoreToolsProp Include="RoslynToolsMicrosoftModifyVsixManifestVersion=$(RoslynToolsMicrosoftModifyVsixManifestVersion)"/>
-      <RestoreToolsProp Include="Pdb2PdbVersion=$(Pdb2PdbVersion)"/>
-      <RestoreToolsProp Include="UsingToolPdbConverter=$(UsingToolPdbConverter)"/>
+      <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
+      <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
+      <_RestoreToolsProps Include="UsingToolVSSDK=$(UsingToolVSSDK)"/>
+      <_RestoreToolsProps Include="RoslynToolsMicrosoftSignToolVersion=$(RoslynToolsMicrosoftSignToolVersion)"/>
+      <_RestoreToolsProps Include="MicroBuildPluginsSwixBuildVersion=$(MicroBuildPluginsSwixBuildVersion)"/>
+      <_RestoreToolsProps Include="MicroBuildCoreVersion=$(MicroBuildCoreVersion)"/>
+      <_RestoreToolsProps Include="RoslynToolsMicrosoftModifyVsixManifestVersion=$(RoslynToolsMicrosoftModifyVsixManifestVersion)"/>
+      <_RestoreToolsProps Include="Pdb2PdbVersion=$(Pdb2PdbVersion)"/>
+      <_RestoreToolsProps Include="UsingToolPdbConverter=$(UsingToolPdbConverter)"/>
+      <_RestoreToolsProps Include="ExternalRestoreSources=$(PB_RestoreSource)" Condition="'$(PB_RestoreSource)' != ''"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <_SolutionBuildProps Include="Configuration=$(Configuration)"/>
+      <_SolutionBuildProps Include="CIBuild=$(CIBuild)"/>
+      <_SolutionBuildProps Include="__DeployProjectOutput=$(Deploy)"/>
+      <_SolutionBuildProps Include="__ExternalRestoreSources=$(PB_RestoreSource)" Condition="'$(PB_RestoreSource)' != ''"/>
     </ItemGroup>
 
     <!--
@@ -86,7 +93,7 @@
     <ItemGroup>
       <_PropsItems Include="$(Props)" />
       <_PropsArgs Include="@(_PropsItems->'/p:%(Identity)')" />
-      <_RestoreToolsPropArgs Include="@(RestoreToolsProp->'/p:%(Identity)')" />
+      <_RestoreToolsPropArgs Include="@(_RestoreToolsProps->'/p:%(Identity)')" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -111,14 +118,21 @@
 
     <MSBuild Projects="Tools.proj"
              Targets="Restore"
-             Properties="@(RestoreToolsProp)" 
+             Properties="@(_RestoreToolsProps)" 
+             Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
+
+    <!-- Run solution restore separately from the other targets. -->
+    <MSBuild Projects="$(SolutionPath)"
+             Properties="@(_SolutionBuildProps);__BuildPhase=Restore"
+             Targets="Restore"
+             BuildInParallel="true"
              Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
 
     <MSBuild Projects="$(SolutionPath)"
-             Properties="$(Props);__BuildPhase=PreSign"
-             Targets="@(PreSignTargets)"
+             Properties="@(_SolutionBuildProps);__BuildPhase=PreSign"
+             Targets="@(_PreSignTargets)"
              BuildInParallel="true"
-             Condition="'@(PreSignTargets)' != ''"/>
+             Condition="'@(_PreSignTargets)' != ''"/>
 
     <!-- 
       Since multiple projects may contribute to a single insertion component
