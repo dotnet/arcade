@@ -15,11 +15,11 @@
     <UsingToolXliff Condition="'$(UsingToolXliff)' == ''">true</UsingToolXliff>
     <UsingToolXUnit Condition="'$(UsingToolXUnit)' == ''">true</UsingToolXUnit>
     <UsingToolMicrosoftNetCompilers Condition="'$(UsingToolMicrosoftNetCompilers)' == ''">true</UsingToolMicrosoftNetCompilers>
+    <UsingToolPdbConverter Condition="'$(UsingToolPdbConverter)' == ''">true</UsingToolPdbConverter>
 
     <!-- Opt-in features -->
     <UsingToolVSSDK Condition="'$(UsingToolVSSDK)' == ''">false</UsingToolVSSDK>
     <UsingToolIbcOptimization Condition="'$(UsingToolIbcOptimization)' == ''">false</UsingToolIbcOptimization>
-    <UsingToolPdbConverter Condition="'$(UsingToolPdbConverter)' == ''">false</UsingToolPdbConverter>
 
     <!-- Default versions -->
     <MicroBuildPluginsSwixBuildVersion Condition="'$(MicroBuildPluginsSwixBuildVersion)' == ''">1.0.147</MicroBuildPluginsSwixBuildVersion>
