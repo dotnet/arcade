@@ -15,14 +15,14 @@ The complete list of issues in the baklog is located in the [Dev Test Failure Re
 When a job fails in [Jenkins] or [Helix], the developer may ask for a virtual machine or Mac machine with the sufficient data and access to connect and build the code that is located in the original machine to determine why the job failed.
 
 # How to use it in Helix
-When a test that was ran in Helix fails, go to [Mission Control Int] to the page where you can see the logs of the test. You would see a new link `Get Repro environment`. Once clicked, it would provide a set of instructions to follow in order to get the repro.
+When a test that was ran in Helix fails, go to [Mission Control] to the page where you can see the logs of the test. You would see a new link `Get Repro environment`. Once clicked, it would provide a set of instructions to follow in order to get the repro.
 
 ![](./Images/Helix-ReproLink.PNG?raw=true)
 
-Once the execution of the `helix-repro.exe` ends, go to [Mission Control Int].
+Once the execution of the `helix-repro.exe` ends, go to [Mission Control].
 See Mission Control section for more informatiom.
 
-The Repro tool will save the log of the jobs that were executed as part of the repro process. In case there is need to check them, go to the Private Runs page in [Mission Control Int] and look for the build identified by the buildnumber (aaa/mm/dd).vv Make sure to uncheck the `Show only failures` checkbox to get to the logs of the run.
+The Repro tool will save the log of the jobs that were executed as part of the repro process. In case there is need to check them, go to the Private Runs page in [Mission Control] and look for the build identified by the buildnumber (aaa/mm/dd).vv Make sure to uncheck the `Show only failures` checkbox to get to the logs of the run.
 
 ## I'm in the machine, now what?
 
@@ -58,7 +58,7 @@ The new job will say `Repro Job from build #<build number> requested by user <Gi
 
 The job will finish with the creation of a VM. 
 
-A link in the left side of the screen under the name `Connect to Repro VM` will let the user know that the environment is ready to consume. This link is going to redirect the user to [Mission Control Int] where the VM can be accessed.
+A link in the left side of the screen under the name `Connect to Repro VM` will let the user know that the environment is ready to consume. This link is going to redirect the user to [Mission Control] where the VM can be accessed.
 
 Please note that **Log in** is required in order to see the link.
 
@@ -75,9 +75,9 @@ Some of the files available are:
 - Machine.txt
 
 # Mission Control
-In order to see the information in [Mission Control Int], the user must **Log in**, otherwhise no information will be available. Under the Repro tab you'll find all the information about the requested environments that are still active.
+In order to see the information in [Mission Control], the user must **Log in**, otherwhise no information will be available. Under the Repro tab you'll find all the information about the requested environments that are still active.
 
-Go to [Mission Control Int], **Log In** and go to the `Repros` tab. 
+Go to [Mission Control], **Log In** and go to the `Repros` tab. 
 ![](./Images/ReproTab.PNG?raw=true)
 
 By default the user can see all the [Snapshots](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20POC.md#2-save-running-environment) and [Virtual Machines](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20POC.md#4-create-vm-with-repro-environment) created by that user.
@@ -93,7 +93,7 @@ To access a machine, click on `Connect`. For Windows and Linux it will download 
 For a Mac machine, `Connect` will download a `.txt` file with the instructions on how to connect to the machine.
 
 ## How to signal that I am done with the machine?
-Go back to [Mission Control Int], find the machine and click on `Delete`. 
+Go back to [Mission Control], find the machine and click on `Delete`. 
 Please note that both the Snapshots and the Machines expire after 3 days of being created, so in case you forget to delete them, we will delete them for you withouth previous notice.
 
 # How to give feedback?
@@ -102,6 +102,6 @@ Please note that both the Snapshots and the Machines expire after 3 days of bein
 
 ![](./Images/FeedbackMC.png?raw=true)
 
-[Mission Control Int]: https://mc.int-dot.net/#/
+[Mission Control]: https://mc.dot.net/#/
 [Helix]: https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/ReproTool%20Documentation.md#how-to-use-it-in-helix
 [Jenkins]: https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/ReproTool%20Documentation.md#how-to-use-it-in-jenkins
