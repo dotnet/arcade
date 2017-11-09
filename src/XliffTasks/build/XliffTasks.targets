@@ -126,7 +126,7 @@
   <Target Name="TranslateSourceFromXlf"
           Condition="'$(EnableXlfLocalization)' == 'true'"
           DependsOnTargets="GatherXlf;BatchTranslateSourceFromXlf"
-          BeforeTargets="PrepareResourceNames;$(PrepareResourceNamesDependsOn)"
+          BeforeTargets="VSCTCompile;PrepareResourceNames;$(PrepareResourceNamesDependsOn)"
           >
     <GatherTranslatedSource XlfFiles="@(Xlf)" Condition="'@(Xlf)' != ''">
       <Output TaskParameter="Outputs" ItemName="%(Xlf.XlfOutputItem)" />
