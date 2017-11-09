@@ -36,6 +36,7 @@
     <XUnitVersion Condition="'$(XUnitVersion)' == ''">2.3.0</XUnitVersion>
     <XUnitRunnerConsoleVersion Condition="'$(XUnitRunnerConsoleVersion)' == ''">$(XUnitVersion)</XUnitRunnerConsoleVersion>
     <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">2.3.0</XUnitRunnerVisualStudioVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">1.0.0-prerelease-02124-02</MicrosoftDotNetBuildTasksFeedVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -22,10 +22,12 @@
   <!-- 
     PipeBuild overrides:
     
-    PB_SignType       {''|'public'|'real'|'test'}  Disables signing if set to a value other than 'real' 
-    PB_SkipTests      {''|'true'|'false'}          Disables tests if set to 'true'.
-    PB_RestoreSource  {''|URL}                     URL of pipe build package feed.
-  
+    PB_SignType            {''|'public'|'real'|'test'}    Disables signing if set to a value other than 'real' 
+    PB_SkipTests           {''|'true'|'false'}            Disables tests if set to 'true'.
+    PB_RestoreSource       {''|URL}                       URL of pipe build package feed.
+    PB_PublishType         {''|store1-store2-...-storeN}  List of stores where to publish assets to.
+    PB_PublishBlobFeedUrl  {''|URL}                       Target feed URL.
+    PB_PublishBlobFeedKey  {''|string}                    Account key.
   -->
   <PropertyGroup>
     <RealSign>false</RealSign>
@@ -34,6 +36,9 @@
     <Sign Condition="'$(PB_SignType)' != '' and '$(PB_SignType)' != 'real'">false</Sign>
     <Test Condition="'$(PB_SkipTests)' == 'true'">false</Test>
     <IntegrationTest Condition="'$(PB_SkipTests)' == 'true'">false</IntegrationTest>
+
+    <_PipeBuildPublishing>false</_PipeBuildPublishing>
+    <_PipeBuildPublishing Condition="$(PB_PublishType.Contains('blob'))">true</_PipeBuildPublishing>
   </PropertyGroup>
 
   <!-- 
@@ -67,6 +72,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <_CommonProps Include="Configuration=$(Configuration)"/>
+      <_CommonProps Include="CIBuild=$(CIBuild)"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <_RestoreToolsProps Include="@(_CommonProps)"/>
       <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
       <_RestoreToolsProps Include="UsingToolVSSDK=$(UsingToolVSSDK)"/>
@@ -77,11 +88,12 @@
       <_RestoreToolsProps Include="Pdb2PdbVersion=$(Pdb2PdbVersion)"/>
       <_RestoreToolsProps Include="UsingToolPdbConverter=$(UsingToolPdbConverter)"/>
       <_RestoreToolsProps Include="ExternalRestoreSources=$(PB_RestoreSource)" Condition="'$(PB_RestoreSource)' != ''"/>
+      <_RestoreToolsProps Include="UsingPipeBuildPublishing=$(_PipeBuildPublishing)"/>
+      <_RestoreToolsProps Include="MicrosoftDotNetBuildTasksFeedVersion=$(MicrosoftDotNetBuildTasksFeedVersion)"/>
     </ItemGroup>
 
     <ItemGroup>
-      <_SolutionBuildProps Include="Configuration=$(Configuration)"/>
-      <_SolutionBuildProps Include="CIBuild=$(CIBuild)"/>
+      <_SolutionBuildProps Include="@(_CommonProps)"/>
       <_SolutionBuildProps Include="__DeployProjectOutput=$(Deploy)"/>
       <_SolutionBuildProps Include="__ExternalRestoreSources=$(PB_RestoreSource)" Condition="'$(PB_RestoreSource)' != ''"/>
     </ItemGroup>
@@ -91,13 +103,13 @@
       We launch a new msbuild process to restore.
     -->
     <ItemGroup>
-      <_PropsItems Include="$(Props)" />
-      <_PropsArgs Include="@(_PropsItems->'/p:%(Identity)')" />
+      <_SolutionBuildPropsItems Include="$(_SolutionBuildProps)" />
+      <_SolutionBuildPropsArgs Include="@(_SolutionBuildPropsItems->'/p:%(Identity)')" />
       <_RestoreToolsPropArgs Include="@(_RestoreToolsProps->'/p:%(Identity)')" />
     </ItemGroup>
 
     <PropertyGroup>
-      <_PropsCmdLine>@(_PropsCmd, ' ')</_PropsCmdLine>
+      <_SolutionBuildPropsCmdLine>@(_SolutionBuildPropsArgs, ' ')</_SolutionBuildPropsCmdLine>
       <_RestoreToolsPropsCmdLine>@(_RestoreToolsPropArgs, ' ')</_RestoreToolsPropsCmdLine>
     </PropertyGroup>
 
@@ -108,7 +120,7 @@
     <Exec Command='"$(MSBuildBinPath)\MSBuild.exe" "$(MSBuildProjectDirectory)\Tools.proj" /bl:"$(ArtifactsLogDir)RestoreRepoTools.binlog" /nologo /m /v:quiet /t:Restore /nodeReuse:false $(_RestoreToolsPropsCmdLine)'
           Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
-    <Exec Command='"$(MSBuildBinPath)\MSBuild.exe" "$(SolutionPath)" /bl:"$(ArtifactsLogDir)Restore.binlog" /nologo /m /v:quiet /t:Restore /nodeReuse:false $(_PropsCmdLine) /p:__BuildPhase=PreSign'
+    <Exec Command='"$(MSBuildBinPath)\MSBuild.exe" "$(SolutionPath)" /bl:"$(ArtifactsLogDir)Restore.binlog" /nologo /m /v:quiet /t:Restore /nodeReuse:false $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=PreSign'
           Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <!--
@@ -144,12 +156,12 @@
       TODO: Consider moving to solution Build phase
     -->
     <MSBuild Projects="VisualStudio.Insertion.proj"
-             Properties="$(Props);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
+             Properties="$(_CommonProps);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
              Targets="PrePack"
              Condition="'$(Pack)' == 'true' and '$(UsingToolVSSDK)' == 'true'"/>
 
     <MSBuild Projects="Sign.proj"
-             Properties="$(Props);RealSign=$(RealSign);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
+             Properties="$(_CommonProps);RealSign=$(RealSign);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
              Targets="Sign"
              Condition="'$(Sign)' == 'true'"/>
 
@@ -159,7 +171,7 @@
       overwrite the signed files with the ones from obj dir.
     -->
     <MSBuild Projects="$(SolutionPath)"
-             Properties="$(Props);NoBuild=true;__BuildPhase=PostSign"
+             Properties="$(_SolutionBuildProps);NoBuild=true;__BuildPhase=PostSign"
              Targets="Pack"
              BuildInParallel="true"
              Condition="'$(Pack)' == 'true'"/>
@@ -171,8 +183,13 @@
       Hence we need to run this task after both signing and packaging is done on the solution.
     -->
     <MSBuild Projects="VisualStudio.Insertion.proj"
-             Properties="$(Props);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
+             Properties="$(_CommonProps);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
              Targets="Pack"
              Condition="'$(Pack)' == 'true' and '$(UsingToolVSSDK)' == 'true'"/>
+
+    <MSBuild Projects="PipeBuild.Publish.proj"
+             Properties="$(_CommonProps);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath);ExpectedFeedUrl=$(PB_PublishBlobFeedUrl);AccountKey=$(PB_PublishBlobFeedKey)"
+             Targets="Publish"
+             Condition="$(_PipeBuildPublishing)"/>
   </Target>
 </Project>

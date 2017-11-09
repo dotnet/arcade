@@ -10,6 +10,8 @@
     <_RestoreSources Include="https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json"/>
     <_RestoreSources Include="https://dotnet.myget.org/F/symreader-converter/api/v3/index.json"
                      Condition="'$(UsingToolPdbConverter)' == 'true' and $(Pdb2PdbVersion.Contains('-'))"/>
+    <_RestoreSources Include="https://dotnetfeed.blob.core.windows.net/dotnet-core/packages/index.json"
+                     Condition="'$(UsingPipeBuildPublishing)' == 'true'" />
   </ItemGroup>
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
@@ -22,5 +24,6 @@
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" />
     <PackageReference Include="MicroBuild.Core.Sentinel" Version="1.0.0" />
     <PackageReference Include="Pdb2Pdb" Version="$(Pdb2PdbVersion)" Condition="'$(UsingToolPdbConverter)' == 'true'" />
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" Condition="'$(UsingPipeBuildPublishing)' == 'true'" />
   </ItemGroup>
 </Project>
