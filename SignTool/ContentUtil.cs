@@ -3,21 +3,18 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SignTool
 {
     internal sealed class ContentUtil
     {
         private readonly Dictionary<string, string> _filePathCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        private readonly MD5 _md5 = MD5.Create();
+        private readonly SHA256 _sha256 = SHA256.Create();
 
         internal string GetChecksum(Stream stream)
         {
-            var hash = _md5.ComputeHash(stream);
+            var hash = _sha256.ComputeHash(stream);
             return HashBytesToString(hash);
         }
 

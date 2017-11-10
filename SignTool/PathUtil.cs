@@ -9,8 +9,8 @@ namespace SignTool
 {
     internal static class PathUtil
     {
-        internal static bool IsVsix(string fileName) => Path.GetExtension(fileName) == ".vsix";
-        internal static bool IsNupkg(string fileName) => Path.GetExtension(fileName) == ".nupkg";
+        internal static bool IsVsix(string fileName) => Path.GetExtension(fileName).Equals(".vsix", StringComparison.OrdinalIgnoreCase);
+        internal static bool IsNupkg(string fileName) => Path.GetExtension(fileName).Equals(".nupkg", StringComparison.OrdinalIgnoreCase);
 
         internal static bool IsZipContainer(string fileName) =>
             IsVsix(fileName) ||

@@ -14,17 +14,19 @@ namespace SignTool
         internal string Name { get; }
         internal string FullPath { get; }
         internal string RelativePath { get; }
+        internal string SHA256Hash { get; }
 
         internal bool IsAssembly => PathUtil.IsAssembly(Name);
         internal bool IsVsix => PathUtil.IsVsix(Name);
         internal bool IsNupkg => PathUtil.IsVsix(Name);
         internal bool IsZipContainer => PathUtil.IsZipContainer(Name);
 
-        internal FileName(string rootBinaryPath, string relativePath)
+        internal FileName(string rootBinaryPath, string relativePath, string sha256Hash = null)
         {
             Name = Path.GetFileName(relativePath);
             FullPath = Path.Combine(rootBinaryPath, relativePath);
             RelativePath = relativePath;
+            SHA256Hash = sha256Hash;
         }
 
         public static bool operator ==(FileName left, FileName right) => left.FullPath == right.FullPath;

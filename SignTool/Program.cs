@@ -2,14 +2,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using Newtonsoft.Json;
+using SignTool.Json;
 
 namespace SignTool
 {
@@ -20,8 +18,7 @@ namespace SignTool
 
         internal static int Main(string[] args)
         {
-            SignToolArgs signToolArgs;
-            if (!ParseCommandLineArguments(StandardHost.Instance, args, out signToolArgs))
+            if (!ParseCommandLineArguments(StandardHost.Instance, args, out SignToolArgs signToolArgs))
             {
                 PrintUsage();
                 return ExitFailure;
@@ -33,9 +30,17 @@ namespace SignTool
                 return ExitFailure;
             }
 
+            BatchSignInput batchData;
             var signTool = SignToolFactory.Create(signToolArgs);
-            var batchData = ReadConfigFile(signToolArgs.OutputPath, signToolArgs.ConfigFile);
-            var util = new BatchSignUtil(signTool, batchData);
+            if (signToolArgs.OrchestrationMode)
+            {
+                batchData = ReadOrchestrationConfigFile(signToolArgs.OutputPath, signToolArgs.ConfigFile);
+            }
+            else
+            {
+                batchData = ReadConfigFile(signToolArgs.OutputPath, signToolArgs.ConfigFile);
+            }
+            var util = new BatchSignUtil(signTool, batchData, signToolArgs.OrchestrationManifestPath);
             try
             {
                 return util.Go(Console.Out) ? ExitSuccess : ExitFailure;
@@ -52,12 +57,10 @@ namespace SignTool
         {
             using (var file = File.OpenText(configFile))
             {
-                BatchSignInput batchData;
-                if (!TryReadConfigFile(Console.Out, file, outputPath, out batchData))
+                if (!TryReadConfigFile(Console.Out, file, outputPath, out BatchSignInput batchData))
                 {
                     Environment.Exit(ExitFailure);
                 }
-
                 return batchData;
             }
         }
@@ -91,13 +94,64 @@ namespace SignTool
                 return false;
             }
 
-            batchData = new BatchSignInput(outputPath, map, fileJson.ExcludeList ?? Array.Empty<string>());
+            batchData = new BatchSignInput(outputPath, map, fileJson.ExcludeList ?? Array.Empty<string>(), fileJson.PublishUrl ?? "unset");
             return true;
         }
 
+        internal static BatchSignInput ReadOrchestrationConfigFile(string outputPath, string configFile)
+        {
+            using (var file = File.OpenText(configFile))
+            {
+                if (!TryReadOrchestrationConfigFile(Console.Out, file, outputPath, out BatchSignInput batchData))
+                {
+                    Environment.Exit(ExitFailure);
+                }
+                return batchData;
+            }
+        }
+
+        internal static bool TryReadOrchestrationConfigFile(TextWriter output, TextReader configReader, string outputPath, out BatchSignInput batchData)
+        {
+            var serializer = new JsonSerializer();
+            var fileJson = (Json.OrchestratedFileJson)serializer.Deserialize(configReader, typeof(Json.OrchestratedFileJson));
+            var map = new Dictionary<FileSignDataEntry, SignInfo>();
+            // For now, a given json file will be assumed to serialize to one place and we'll throw otherwise
+            string publishUrl = (from OrchestratedFileSignData entry in fileJson.SignList
+                                 from FileSignDataEntry fileToSign in entry.FileList
+                                 select fileToSign.PublishToFeedUrl).Distinct().Single();
+            var allGood = true;
+            foreach (var item in fileJson.SignList)
+            {
+                var data = new SignInfo(certificate: item.Certificate, strongName: item.StrongName);
+                
+                foreach (FileSignDataEntry entry in item.FileList)
+                {
+                    if (map.ContainsKey(entry))
+                    {
+                        Console.WriteLine($"Duplicate signing info entry for: {entry.FilePath}");
+                        allGood = false;
+                    }
+                    else
+                    {
+                        map.Add(entry, data);
+                    }
+                }
+            }
+
+            if (!allGood)
+            {
+                batchData = null;
+                return false;
+            }
+
+            batchData = new BatchSignInput(outputPath, map, fileJson.ExcludeList ?? Array.Empty<string>(), publishUrl );
+            return true;
+        }
+
+
         /// <summary>
-        /// The files to sign section supports globbing. The only caveat is that globs must expand to match at least a 
-        /// single file else an error occurs. This function will expand those globas as necessary.
+        /// The 'files to sign' section supports globbing. The only caveat is that globs must expand to match at least a 
+        /// single file else an error occurs. This function will expand those globs as necessary.
         /// </summary>
         private static List<string> ExpandFileList(string outputPath, IEnumerable<string> relativeFileNames, ref bool allGood)
         {
@@ -143,11 +197,13 @@ namespace SignTool
 
 test: Run tool without actually modifying any state.
 testSign: The binaries will be test signed. The default is to real sign.
+orchestrationmode:  Support comma-separated list of one or more config files in the format outputted using the 'orchestrationConfigFile' argument.
 outputPath: Directory containing the binaries.
 intermediateOutputPath: Directory containing intermediate output.  Default is (outputpath\..\Obj).
 nugetPackagesPath: Path containing downloaded NuGet packages.
 msbuildPath: Path to MSBuild.exe to use as signing mechanism.
-config: Path to SignToolData.json. Default build\config\SignToolData.json.
+config: Path to SignToolData.json. Default: build\config\SignToolData.json.
+orchestrationConfigFile: Run tool to produce an orchestration json file.  This will contain SHA256 hashes of files for verification to consume later.  Cannot be used with -orchestrationmode
 ";
             Console.WriteLine(usage);
         }
@@ -164,8 +220,10 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
             string msbuildPath = null;
             string nugetPackagesPath = null;
             string configFile = null;
+            string orchestrationConfigFile = null;
             var test = false;
             var testSign = false;
+            var orchestrationMode = false;
 
             var i = 0;
 
@@ -180,6 +238,10 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
                         break;
                     case "-testsign":
                         testSign = true;
+                        i++;
+                        break;
+                    case "-orchestrationmode":
+                        orchestrationMode = true;
                         i++;
                         break;
                     case "-intermediateoutputpath":
@@ -206,10 +268,23 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
                             return false;
                         }
                         break;
+                    case "-orchestrationconfigfile":
+                        if (!ParsePathOption(args, ref i, current, out orchestrationConfigFile))
+                        {
+                            return false;
+                        }
+                        orchestrationConfigFile = orchestrationConfigFile.TrimEnd('\"').TrimStart('\"');
+                        break;
                     default:
                         Console.Error.WriteLine($"Unrecognized option {current}");
                         return false;
                 }
+            }
+
+            if (orchestrationMode && !string.IsNullOrEmpty(orchestrationConfigFile))
+            {
+                Console.WriteLine("Please specify either -orchestrationmode (for signing multiple json manifests w/ SHA256 entries) or a value for -orchestrationconfigfile to generate such a manifest, but not both.");
+                return false;
             }
 
             if (i + 1 != args.Length)
@@ -256,7 +331,9 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
                 appPath: AppContext.BaseDirectory,
                 configFile: configFile,
                 test: test,
-                testSign: testSign);
+                testSign: testSign,
+                orchestrationManifestPath: orchestrationConfigFile,
+                orchestrationMode: orchestrationMode);
             return true;
         }
 
@@ -287,7 +364,6 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
 
                 current = Path.GetDirectoryName(current);
             }
-
             return null;
         }
     }
