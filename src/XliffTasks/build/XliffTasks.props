@@ -38,6 +38,13 @@
       <XlfOutputItem>EmbeddedResource</XlfOutputItem>
     </EmbeddedResource>
 
+    <UnstructuredResource>
+      <Visible>false</Visible>
+      <XlfInput>true</XlfInput>
+      <XlfSourceFormat>Unstructured</XlfSourceFormat>
+      <XlfOutputItem>UnstructuredResourceTranslated</XlfOutputItem>
+    </UnstructuredResource>
+
     <VSCTCompile>
       <XlfInput>true</XlfInput>
       <XlfSourceFormat>Vsct</XlfSourceFormat>

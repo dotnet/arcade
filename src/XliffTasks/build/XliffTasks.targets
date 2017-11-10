@@ -105,6 +105,7 @@
       </EmbeddedResource>
 
       <XlfSource Include="@(EmbeddedResource->WithMetadataValue('XlfInput', 'true'))" />
+      <XlfSource Include="@(UnstructuredResource->WithMetadataValue('XlfInput', 'true'))" />
       <XlfSource Include="@(VSCTCompile->WithMetadataValue('XlfInput', 'true'))" />
       <XlfSource Include="@(XamlPropertyRule->WithMetadataValue('XlfInput', 'true'))" />
       <XlfSource Include="@(XamlPropertyRuleNoCodeBehind->WithMetadataValue('XlfInput', 'true'))" />

@@ -37,6 +37,10 @@ namespace XliffTasks.Tasks
             {
                 document = new ResxDocument();
             }
+            else if (format.Equals("Unstructured", StringComparison.OrdinalIgnoreCase))
+            {
+                document = new UnstructuredDocument();
+            }
             else if (format.Equals("Vsct", StringComparison.OrdinalIgnoreCase))
             {
                 document = new VsctDocument();
