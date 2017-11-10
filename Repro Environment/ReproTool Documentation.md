@@ -17,6 +17,8 @@ When a job fails in [Jenkins] or [Helix], the developer may ask for a virtual ma
 # How to use it in Helix
 When a test that was ran in Helix fails, go to [Mission Control] to the page where you can see the logs of the test. You would see a new link `Get Repro environment`. Once clicked, it would provide a set of instructions to follow in order to get the repro.
 
+Note: `helix-repro.exe` only works on Windows.
+
 ![](./Images/Helix-ReproLink.PNG?raw=true)
 
 Once the execution of the `helix-repro.exe` ends, go to [Mission Control].
