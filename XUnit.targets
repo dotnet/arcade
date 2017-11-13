@@ -34,14 +34,18 @@
       <_TestStdOutPath>$(_TestOutPathNoExt).log</_TestStdOutPath>
       <_TestResultsXmlPath>$(_TestOutPathNoExt).xml</_TestResultsXmlPath>
       <_TestResultsHtmlPath>$(_TestOutPathNoExt).html</_TestResultsHtmlPath>
+      <_RunOnCore>false</_RunOnCore>
+      <_RunOnCore Condition="$(TargetFramework.StartsWith('netcoreapp'))">true</_RunOnCore>
+    </PropertyGroup>
+
+    <Error Text="Architecture specified in TestArchitectures is not supported: '$(_TestArchitecture)'" File="XUnit" 
+           Condition="'$(_TestArchitecture)' != 'x64' and ('$(_TestArchitecture)' != 'x86' or $(_RunOnCore))"/>
+
+    <PropertyGroup Condition="'$(_RunOnCore)' == 'true'">
       <_TargetFileNameNoExt>$([System.IO.Path]::GetFileNameWithoutExtension('$(TargetFileName)'))</_TargetFileNameNoExt>
       <_CoreRuntimeConfigPath>$(TargetDir)$(_TargetFileNameNoExt).runtimeconfig.json</_CoreRuntimeConfigPath>
       <_CoreDepsPath>$(TargetDir)$(_TargetFileNameNoExt).deps.json</_CoreDepsPath>
-      <_RunOnCore>false</_RunOnCore>
-      <_RunOnCore Condition="'$(TestUsingDotNetCli)' == 'true' and $(TargetFramework.StartsWith('netcoreapp'))">true</_RunOnCore>
-    </PropertyGroup>
 
-    <PropertyGroup Condition="'$(_RunOnCore)' == 'true'">
       <!-- TODO: xUnit doesn't support -html on CoreCLR currently (see https://github.com/xunit/xunit/issues/977) -->
       <_TestRunnerCommand>"$(DotNetTool)" exec --depsfile "$(_CoreDepsPath)" --runtimeconfig "$(_CoreRuntimeConfigPath)" "$(NuGetPackageRoot)xunit.runner.console/$(XUnitVersion)/tools/netcoreapp1.0/xunit.console.dll" "$(TargetPath)" -noautoreporters -xml "$(_TestResultsXmlPath)" $(XUnitRunnerAdditionalArguments)</_TestRunnerCommand>
       <_TestResultsDisplayPath>$(_TestStdOutPath)</_TestResultsDisplayPath>

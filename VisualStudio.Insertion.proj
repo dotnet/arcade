@@ -13,43 +13,6 @@
     <_StubFiles Include="$(VisualStudioSetupIntermediateOutputPath)**\*.stub"/>
     <_StubDirs Include="@(_StubFiles->'%(RecursiveDir)')"/>
   </ItemGroup>
-
-  <!--
-    Currently we need to erase Experimental flag from VSIXes that are inserted into VS.
-    The build produces VSIXes to VisualStudioSetupPath that need this treatment.
-    This task copies them to VisualStudioSetupInsertionPath and removes the flag from the manifest.
-    VSIX files that are already in VisualStudioSetupInsertionPath are already non-experimental.
-  -->
-  <Target Name="PrePack" Outputs="%(_StubFiles.Identity)" Condition="'@(_StubFiles)' != ''">
-    <ReadLinesFromFile File="%(_StubFiles.Identity)">
-      <Output TaskParameter="Lines" ItemName="_StubLines" />
-    </ReadLinesFromFile>
-
-    <PropertyGroup>
-      <_VsixFileName>@(_StubLines)</_VsixFileName>
-      <_JsonFileName>%(_StubFiles.FileName).json</_JsonFileName>
-      <_RemoveExperimentalFlag>false</_RemoveExperimentalFlag>
-      <_RemoveExperimentalFlag Condition="Exists('$(VisualStudioSetupOutputPath)$(_VsixFileName)')">true</_RemoveExperimentalFlag>
-    </PropertyGroup>
-    
-    <MakeDir Directories="$(VisualStudioSetupInsertionPath)"/>
-    
-    <Copy SourceFiles="$(VisualStudioSetupOutputPath)$(_VsixFileName);$(VisualStudioSetupOutputPath)$(_JsonFileName)"
-          DestinationFolder="$(VisualStudioSetupInsertionPath)" 
-          Condition="'$(_RemoveExperimentalFlag)' == 'true'"/>
-    
-    <PropertyGroup>
-      <_ModifyVsixManifestToolExe>$(NuGetPackageRoot)roslyntools.microsoft.modifyvsixmanifest\$(RoslynToolsMicrosoftModifyVsixManifestVersion)\tools\ModifyVsixManifest.exe</_ModifyVsixManifestToolExe>
-      <_ModifyVsixManifestArgs>--remove=//x:PackageManifest/x:Installation/@Experimental --add-attribute=//x:PackageManifest/x:Installation;SystemComponent;true</_ModifyVsixManifestArgs>
-    </PropertyGroup>
-
-    <Exec Command='"$(_ModifyVsixManifestToolExe)" --vsix="$(VisualStudioSetupInsertionPath)$(_VsixFileName)" $(_ModifyVsixManifestArgs)'
-          Condition="'$(_RemoveExperimentalFlag)' == 'true'"/>
-
-    <ItemGroup Condition="'$(_RemoveExperimentalFlag)' == 'true'">
-      <FileWrites Include="$(VisualStudioSetupInsertionPath)$(_VsixFileName);$(VisualStudioSetupInsertionPath)$(_JsonFileName)"/>
-    </ItemGroup>
-  </Target>
   
   <!---
     This target is invoked in a separate phase after all input VSIX files are signed.

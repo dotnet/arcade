@@ -29,21 +29,22 @@
     <MicrosoftNetCompilersNetCoreVersion Condition="'$(MicrosoftNetCompilersNetCoreVersion)' == ''">2.3.0</MicrosoftNetCompilersNetCoreVersion>
     <MicrosoftNETTestSdkVersion Condition="'$(MicrosoftNETTestSdkVersion)' == ''">15.3.0</MicrosoftNETTestSdkVersion>
     <MicrosoftVSSDKBuildToolsVersion Condition="'$(MicrosoftVSSDKBuildToolsVersion)' == ''">15.1.192</MicrosoftVSSDKBuildToolsVersion>
-    <Pdb2PdbVersion Condition="'$(Pdb2PdbVersion)' == ''">1.1.0-beta1-62309-01</Pdb2PdbVersion>
+    <Pdb2PdbVersion Condition="'$(Pdb2PdbVersion)' == ''">1.1.0-beta1-62225-01</Pdb2PdbVersion>
     <RoslynToolsMicrosoftModifyVsixManifestVersion Condition="'$(RoslynToolsMicrosoftModifyVsixManifestVersion)' == ''">0.3.3-beta</RoslynToolsMicrosoftModifyVsixManifestVersion>
-    <RoslynToolsMicrosoftSignToolVersion Condition="'$(RoslynToolsMicrosoftSignToolVersion)' == ''">0.3.3-beta</RoslynToolsMicrosoftSignToolVersion>
+    <RoslynToolsMicrosoftSignToolVersion Condition="'$(RoslynToolsMicrosoftSignToolVersion)' == ''">0.3.7-beta</RoslynToolsMicrosoftSignToolVersion>
     <XliffTasksVersion Condition="'$(XliffTasksVersion)' == ''">0.2.0-beta-000053</XliffTasksVersion>
-    <XUnitVersion Condition="'$(XUnitVersion)' == ''">2.3.0</XUnitVersion>
+    <XUnitVersion Condition="'$(XUnitVersion)' == ''">2.3.1</XUnitVersion>
     <XUnitRunnerConsoleVersion Condition="'$(XUnitRunnerConsoleVersion)' == ''">$(XUnitVersion)</XUnitRunnerConsoleVersion>
-    <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">2.3.0</XUnitRunnerVisualStudioVersion>
+    <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">$(XUnitVersion)</XUnitRunnerVisualStudioVersion>
     <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">1.0.0-prerelease-02124-02</MicrosoftDotNetBuildTasksFeedVersion>
   </PropertyGroup>
 
   <PropertyGroup>
     <RestoreSources>$(RestoreSources);https://api.nuget.org/v3/index.json</RestoreSources>
     <RestoreSources Condition="'$(UsingToolXliff)' == 'true' and $(XliffTasksVersion.Contains('-'))">$(RestoreSources);https://dotnet.myget.org/F/dotnet-core/api/v3/index.json</RestoreSources>
-    <RestoreSources Condition="'$(UsingToolMicrosoftNetCompilers)' == 'true' and $(MicrosoftNetCompilersVersion.Contains('-'))">$(RestoreSources);https://dotnet.myget.org/F/roslyn/api/v3/index.json</RestoreSources> 
-  
+    <RestoreSources Condition="'$(UsingToolMicrosoftNetCompilers)' == 'true' and $(MicrosoftNetCompilersVersion.Contains('-'))">$(RestoreSources);https://dotnet.myget.org/F/roslyn/api/v3/index.json</RestoreSources>
+    <RestoreSources Condition="$(XUnitVersion.Contains('-')) or $(XUnitRunnerVisualStudioVersion.Contains('-')) or $(XUnitRunnerVisualStudioVersion.Contains('-'))">$(RestoreSources);https://www.myget.org/F/xunit/api/v3/index.json</RestoreSources>
+
     <!-- Add externally defined NuGet package restore sources. This property is set by Build.proj. -->
     <RestoreSources Condition="'$(__ExternalRestoreSources)' != ''">$(__ExternalRestoreSources);$(RestoreSources)</RestoreSources>
   </PropertyGroup>

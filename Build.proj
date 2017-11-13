@@ -51,7 +51,7 @@
     <DirectoryBuildPropsPath>$([System.IO.Path]::Combine('$(_DirectoryBuildPropsBasePath)', '$(_DirectoryBuildPropsFile)'))</DirectoryBuildPropsPath>
   </PropertyGroup>
 
-  <Import Project="$(DirectoryBuildPropsPath)"/>
+  <Import Project="$(DirectoryBuildPropsPath)" Condition="Exists('$(DirectoryBuildPropsPath)')"/>
   <Import Project="RepoLayout.props"/>
   <Import Project="DefaultVersions.props"/>
 
@@ -64,11 +64,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <_PreSignTargets Include="Rebuild" Condition="'$(Rebuild)' == 'true'" />
-      <_PreSignTargets Include="Build" Condition="'$(Build)' == 'true' and '$(Rebuild)' != 'true'" />
+      <_SolutionBuildTargets Include="Rebuild" Condition="'$(Rebuild)' == 'true'" />
+      <_SolutionBuildTargets Include="Build" Condition="'$(Build)' == 'true' and '$(Rebuild)' != 'true'" />
       <!-- Deploy target is set up to chain after Build so that F5 in VS works. -->
-      <_PreSignTargets Include="Test" Condition="'$(Test)' == 'true'" />
-      <_PreSignTargets Include="IntegrationTest" Condition="'$(IntegrationTest)' == 'true'" />
+      <_SolutionBuildTargets Include="Test" Condition="'$(Test)' == 'true'" />
+      <_SolutionBuildTargets Include="IntegrationTest" Condition="'$(IntegrationTest)' == 'true'" />
+      <_SolutionBuildTargets Include="Pack" Condition="'$(Pack)' == 'true' and '$(Sign)' != 'true'" />
     </ItemGroup>
 
     <ItemGroup>
@@ -98,13 +99,8 @@
       <_SolutionBuildProps Include="__ExternalRestoreSources=$(PB_RestoreSource)" Condition="'$(PB_RestoreSource)' != ''"/>
     </ItemGroup>
 
-    <!--
-      Workaround for https://github.com/NuGet/Home/issues/4695.
-      We launch a new msbuild process to restore.
-    -->
     <ItemGroup>
-      <_SolutionBuildPropsItems Include="$(_SolutionBuildProps)" />
-      <_SolutionBuildPropsArgs Include="@(_SolutionBuildPropsItems->'/p:%(Identity)')" />
+      <_SolutionBuildPropsArgs Include="@(_SolutionBuildProps->'/p:%(Identity)')" />
       <_RestoreToolsPropArgs Include="@(_RestoreToolsProps->'/p:%(Identity)')" />
     </ItemGroup>
 
@@ -113,6 +109,10 @@
       <_RestoreToolsPropsCmdLine>@(_RestoreToolsPropArgs, ' ')</_RestoreToolsPropsCmdLine>
     </PropertyGroup>
 
+    <!--
+      Workaround for https://github.com/NuGet/Home/issues/4695.
+      We launch a new msbuild process to restore.
+    -->
     <Message Text="Restoring packages ..." Importance="high" Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" />
     
     <MakeDir Directories="$(ArtifactsLogDir)" Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" />
@@ -120,67 +120,64 @@
     <Exec Command='"$(MSBuildBinPath)\MSBuild.exe" "$(MSBuildProjectDirectory)\Tools.proj" /bl:"$(ArtifactsLogDir)RestoreRepoTools.binlog" /nologo /m /v:quiet /t:Restore /nodeReuse:false $(_RestoreToolsPropsCmdLine)'
           Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
-    <Exec Command='"$(MSBuildBinPath)\MSBuild.exe" "$(SolutionPath)" /bl:"$(ArtifactsLogDir)Restore.binlog" /nologo /m /v:quiet /t:Restore /nodeReuse:false $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=PreSign'
+    <Exec Command='"$(MSBuildBinPath)\MSBuild.exe" "$(SolutionPath)" /bl:"$(ArtifactsLogDir)Restore.binlog" /nologo /m /v:quiet /t:Restore /nodeReuse:false $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
           Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <!--
-      Note: msbuild caches the metaproject for the solution (see https://github.com/Microsoft/msbuild/issues/1695)
-      We invalidate the cache by changing the value of __BuildPhase property.
+      Restore built-in tools.
     -->
-
     <MSBuild Projects="Tools.proj"
              Targets="Restore"
              Properties="@(_RestoreToolsProps)" 
              Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
 
-    <!-- Run solution restore separately from the other targets. -->
+    <!--
+      Run solution restore separately from the other targets, in a different build phase.
+      Since restore brings in new .props and .targets files we need to rerun evaluation.
+      
+      Note: msbuild caches the metaproject for the solution (see https://github.com/Microsoft/msbuild/issues/1695)
+      We invalidate the cache by changing the value of __BuildPhase property.
+    -->
     <MSBuild Projects="$(SolutionPath)"
-             Properties="@(_SolutionBuildProps);__BuildPhase=Restore"
+             Properties="@(_SolutionBuildProps);__BuildPhase=SolutionRestore"
              Targets="Restore"
              BuildInParallel="true"
              Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
 
-    <MSBuild Projects="$(SolutionPath)"
-             Properties="@(_SolutionBuildProps);__BuildPhase=PreSign"
-             Targets="@(_PreSignTargets)"
-             BuildInParallel="true"
-             Condition="'@(_PreSignTargets)' != ''"/>
-
-    <!-- 
-      Since multiple projects may contribute to a single insertion component
-      we need to package them in a separate phase.
-
-      VSIX packages that are inserted are updated (experimental flag is removed), 
-      so we need to do that before signing.
-      
-      TODO: Consider moving to solution Build phase
+    <!--
+      Build solution.
     -->
-    <MSBuild Projects="VisualStudio.Insertion.proj"
-             Properties="$(_CommonProps);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
-             Targets="PrePack"
-             Condition="'$(Pack)' == 'true' and '$(UsingToolVSSDK)' == 'true'"/>
+    <MSBuild Projects="$(SolutionPath)"
+             Properties="@(_SolutionBuildProps);__BuildPhase=SolutionBuild"
+             Targets="@(_SolutionBuildTargets)"
+             BuildInParallel="true"
+             Condition="'@(_SolutionBuildTargets)' != ''" />
 
+    <!--
+      Workaround for https://github.com/NuGet/Home/issues/6165.
+      Seems like nuget pack doesn't correctly close the stream created for .nupkg file thus keeping the file locked beyond the return of the task.
+      If signing, pack in a separate process to force it to close the files.
+    -->
+    <Exec Command='"$(MSBuildBinPath)\MSBuild.exe" "$(SolutionPath)" /nologo /m /v:quiet /t:Pack /nodeReuse:false /p:NoBuild=true $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionBuild'
+          Condition="'$(Pack)' == 'true' and '$(Sign)' == 'true'" 
+          StandardOutputImportance="normal" />
+
+    <!--
+      Sign artifacts.
+    -->
     <MSBuild Projects="Sign.proj"
              Properties="$(_CommonProps);RealSign=$(RealSign);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"
              Targets="Sign"
              Condition="'$(Sign)' == 'true'"/>
 
-    <!-- 
-      It is important to skip the build (NoBuild=true) when creating NuGet packages.
-      Otherwise, if the output binaries were real-signed in the previous step the Build task 
-      overwrite the signed files with the ones from obj dir.
-    -->
-    <MSBuild Projects="$(SolutionPath)"
-             Properties="$(_SolutionBuildProps);NoBuild=true;__BuildPhase=PostSign"
-             Targets="Pack"
-             BuildInParallel="true"
-             Condition="'$(Pack)' == 'true'"/>
-
-    <!-- 
+    <!--
+      Since multiple projects may contribute to a single insertion component
+      we need to package them in a separate phase.
+      
+      TODO: the sign tool needs to support vsman files:      
       Insertion manifests (vsman files) contain hashes of the referenced VSIXes.
       These need to be calculated using signed VSIXes.
-      In previous step (Pack on the solution) might have produced additional VSIXes that need to be inserted.
-      Hence we need to run this task after both signing and packaging is done on the solution.
+      Hence we need to run this task after both signing.
     -->
     <MSBuild Projects="VisualStudio.Insertion.proj"
              Properties="$(_CommonProps);DirectoryBuildPropsPath=$(DirectoryBuildPropsPath)"

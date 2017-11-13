@@ -6,13 +6,6 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <_DotNetCliToolExists>false</_DotNetCliToolExists>
-    <_DotNetCliToolExists Condition="Exists('$(DotNetTool)')">true</_DotNetCliToolExists>
-
-    <TestUsingDotNetCli Condition="'$(TestUsingDotNetCli)' == ''">$(_DotNetCliToolExists)</TestUsingDotNetCli>
-  </PropertyGroup>
-
   <ItemGroup>
     <!-- Test dependencies -->
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
