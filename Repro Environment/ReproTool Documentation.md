@@ -8,6 +8,7 @@ The following document shows the user documentation of the repro environment sol
 - [1694](https://github.com/dotnet/core-eng/issues/1694) Reconsider the user experience when clicking Repro in Jenkins.
 - [2006](https://github.com/dotnet/core-eng/issues/2006) Password for some linux machines is not working.
 - [2023](https://github.com/dotnet/core-eng/issues/2023) Include test information in MC Repro view.
+- [2081](https://github.com/dotnet/core-eng/issues/2081) Fail to create server core machines
 
 The complete list of issues in the baklog is located in the [Dev Test Failure Repro V2](https://github.com/dotnet/core-eng/issues/1988) Epic.
 
