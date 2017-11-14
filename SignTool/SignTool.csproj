@@ -22,7 +22,5 @@
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="System.Collections.Immutable" Version="1.2.0" />
     <PackageReference Include="System.Reflection.Metadata" Version="1.4.1-beta-24322-03" />
-    <PackageReference Include="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="1.3.269-rc" />
-    <PackageReference Include="Microsoft.VisualStudio.Setup.Configuration.Native.AnyCPU" Version="1.3.269-rc" />
   </ItemGroup>
 </Project>
