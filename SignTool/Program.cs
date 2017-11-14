@@ -207,26 +207,24 @@ config: Path to SignToolData.json. Default build\config\SignToolData.json.
                         }
                         break;
                     default:
-                        Console.WriteLine($"Unrecognized option {current}");
+                        Console.Error.WriteLine($"Unrecognized option {current}");
                         return false;
                 }
             }
 
             if (i + 1 != args.Length)
             {
-                Console.WriteLine("Need a value for outputPath");
+                Console.Error.WriteLine("Need a value for outputPath");
+                return false;
+            }
+
+            if (msbuildPath == null && !test)
+            {
+                Console.Error.WriteLine("-msbuildpath argument must be specified unless running in validation-only mode.");
                 return false;
             }
 
             outputPath = args[i];
-
-            // Get defaults for all of the optional values that weren't specified
-            if (msbuildPath == null && !test)
-            {
-                // installed VS versions could be "15.0" or "15.3", so "15." is a good proxy
-                var vsInstallDir = LocateVS.Instance.GetInstallPath("15.", new[] { "Microsoft.Component.MSBuild" });
-                msbuildPath = Path.Combine(vsInstallDir, "MSBuild", "15.0", "Bin", "msbuild.exe");
-            }
 
             intermediateOutputPath = intermediateOutputPath ?? Path.Combine(Path.GetDirectoryName(outputPath), "Obj");
 
