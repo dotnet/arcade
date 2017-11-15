@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using XliffTasks.Tasks;
 
 namespace XliffTasks.Model
 {
@@ -70,7 +71,17 @@ namespace XliffTasks.Model
         public bool Update(TranslatableDocument sourceDocument, string sourceDocumentId)
         {
             bool changed = false;
-            Dictionary<string, TranslatableNode> nodesById = sourceDocument.Nodes.ToDictionary(n => n.Id);
+            var nodesById = new Dictionary<string, TranslatableNode>();
+            foreach (var node in sourceDocument.Nodes)
+            {
+                if (nodesById.ContainsKey(node.Id))
+                {
+                    throw new BuildErrorException($"The document '{sourceDocumentId}' has a duplicate node '{node.Id}'.");
+                }
+
+                nodesById.Add(node.Id, node);
+            }
+
             XNamespace ns = _document.Root.Name.Namespace;
 
             XElement fileElement = _document.Root.Element(ns + "file");

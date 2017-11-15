@@ -12,6 +12,7 @@
 
   <UsingTask TaskName="GatherXlf" AssemblyFile="$(XliffTasksAssembly)" />
   <UsingTask TaskName="GatherTranslatedSource" AssemblyFile="$(XliffTasksAssembly)" />
+  <UsingTask TaskName="TransformTemplates" AssemblyFile="$(XliffTasksAssembly)" />
   <UsingTask TaskName="TranslateSource" AssemblyFile="$(XliffTasksAssembly)" />
   <UsingTask TaskName="UpdateXlf" AssemblyFile="$(XliffTasksAssembly)" />
 
@@ -104,7 +105,10 @@
         <XlfInput Condition="'%(EmbeddedResource.XlfInput)' == '' and '%(EmbeddedResource.Extension)' == '.resx'">true</XlfInput>
       </EmbeddedResource>
 
+      <UnstructuredResource Include="%(VSTemplate.TranslatableResources)" />
+
       <XlfSource Include="@(EmbeddedResource->WithMetadataValue('XlfInput', 'true'))" />
+      <XlfSource Include="@(UnstructuredResource->WithMetadataValue('XlfInput', 'true'))" />
       <XlfSource Include="@(VSCTCompile->WithMetadataValue('XlfInput', 'true'))" />
       <XlfSource Include="@(XamlPropertyRule->WithMetadataValue('XlfInput', 'true'))" />
       <XlfSource Include="@(XamlPropertyRuleNoCodeBehind->WithMetadataValue('XlfInput', 'true'))" />
@@ -132,6 +136,26 @@
       <Output TaskParameter="Outputs" ItemName="%(Xlf.XlfOutputItem)" />
       <Output TaskParameter="Outputs" ItemName="FileWrites" />
     </GatherTranslatedSource>
+
+    <ItemGroup>
+      <_VSTemplatesToLocalize Include="@(VSTemplate)" Condition="'%(VSTemplate.TranslatableResources)' != ''" />
+    </ItemGroup>
+
+    <TransformTemplates Templates="@(_VSTemplatesToLocalize)"
+                        UnstructuredResources="@(UnstructuredResource)"
+                        Languages="$(XlfLanguages)"
+                        TranslatedOutputDirectory="$(XlfIntermediateOutputPath)"
+                        Condition="'@(VSTemplate)' != '' and '@(UnstructuredResource)' != ''">
+      <Output TaskParameter="TransformedTemplates" ItemName="VSTemplate" />
+    </TransformTemplates>
+    <ItemGroup>
+      <!--
+      All items of the @(_VSTemplatesToLocalize) group (which was populated from @(VSTemplate)) have been
+      re-added to the collection with the string holes removed, so @(_VSTemplatesToLocalize) can all be
+      removed from the @(VSTemplate) collection.
+      -->
+      <VSTemplate Remove="@(_VSTemplatesToLocalize)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="BatchTranslateSourceFromXlf"
