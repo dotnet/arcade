@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,8 +33,8 @@ namespace SignTool.UnitTests
     ""sign"": []
 }";
                 var data = Load(json);
-                Assert.Equal(0, data.FileNames.Length);
-                Assert.Equal(0, data.ExternalFileNames.Length);
+                Assert.Empty(data.FileNames);
+                Assert.Empty(data.ExternalFileNames);
             }
 
             [Fact]
@@ -54,7 +54,7 @@ namespace SignTool.UnitTests
 
                 var data = Load(json);
                 Assert.Equal(new[] { "test.msi" }, data.FileNames.Select(x => x.Name));
-                Assert.Equal(0, data.ExternalFileNames.Length);
+                Assert.Empty(data.ExternalFileNames);
             }
         }
 
@@ -88,7 +88,7 @@ namespace SignTool.UnitTests
             [Fact]
             public void OutputPath()
             {
-                var args = Parse(@"e:\temp");
+                var args = Parse("-test", @"e:\temp");
                 Assert.Equal(@"e:\temp", args.OutputPath);
                 Assert.Equal(@"e:\Obj", args.IntermediateOutputPath);
             }
@@ -96,7 +96,7 @@ namespace SignTool.UnitTests
             [Fact]
             public void NuGetPackagesPathDefault()
             {
-                var args = Parse(@"e:\temp\Debug");
+                var args = Parse("-test", @"e:\temp\Debug");
                 Assert.Equal(Path.Combine(DefaultUserProfile, @".nuget\packages"), args.NuGetPackagesPath);
             }
 
@@ -105,14 +105,14 @@ namespace SignTool.UnitTests
             {
                 var host = CreateDefaultHost();
                 host.Setup(x => x.GetEnvironmentVariable(@"NUGET_PACKAGES")).Returns(@"e:\temp\.nuget");
-                var args = Parse(host.Object, @"e:\temp\Debug");
+                var args = Parse(host.Object, "-test", @"e:\temp\Debug");
                 Assert.Equal(@"e:\temp\.nuget", args.NuGetPackagesPath);
             }
 
             [Fact]
             public void NuGetPackagesPathExplicit()
             {
-                var args = Parse("-nugetPackagesPath", @"e:\temp\.nuget", @"e:\temp\Debug");
+                var args = Parse("-test", "-nugetPackagesPath", @"e:\temp\.nuget", @"e:\temp\Debug");
                 Assert.Equal(@"e:\temp\.nuget", args.NuGetPackagesPath);
                 Assert.Equal(@"e:\temp\Debug", args.OutputPath);
             }

@@ -1,26 +1,29 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
-    <AssemblyName>SignTool</AssemblyName>
     <TargetFramework>net461</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-    <!-- Needed until we merge the more recente RepoToolset builds -->
-    <ArtifactsDir>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)\..\..\..\artifacts\$(Configuration)'))\</ArtifactsDir>
-    <OutputPath>$(ArtifactsDir)bin\$(MSBuildProjectName)\</OutputPath>
-    <IntermediateOutputPath>$(ArtifactsDir)obj\$(MSBuildProjectName)\</IntermediateOutputPath>
+    <!-- Using an explicit nuspec file since NuGet Pack target currently doesn't support including dependencies in tools packages -->
+    <IsPackable>true</IsPackable>
+    <NuspecFile>SignTool.nuspec</NuspecFile>
+    <NuspecBasePath>$(OutputPath)</NuspecBasePath>
+    <NuspecProperties>version=$(Version);licenseUrl=$(PackageLicenseUrl);repoUrl=$(RepositoryUrl);copyright=$(Copyright)</NuspecProperties>
   </PropertyGroup>
-
   <ItemGroup>
-    <None Include="SignToolData.md" />
+    <InternalsVisibleTo Include="SignTool.UnitTests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="System" />
     <Reference Include="WindowsBase" />
-    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="2.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.2.0" />
-    <PackageReference Include="System.Reflection.Metadata" Version="1.4.1-beta-24322-03" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="$(MicrosoftExtensionsFileSystemGlobbingVersion)" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
+    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
+    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
   </ItemGroup>
 </Project>
