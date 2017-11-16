@@ -6,9 +6,9 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
-  <Import Project="GitHash.props" />
-  <Import Project="DefaultVersions.props"/>
   <Import Project="ProjectLayout.props" />
+  <Import Project="DefaultVersions.props"/>
+  <Import Project="GitHash.props" />
   <Import Project="StrongName.props"/>
   <Import Project="Version.props"/>
   <Import Project="ProjectDefaults.props"/>
