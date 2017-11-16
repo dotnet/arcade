@@ -8,6 +8,9 @@
 
   <PropertyGroup>
     <DeployProjectOutput Condition="'$(DeployProjectOutput)' == ''">$(__DeployProjectOutput)</DeployProjectOutput>
+    
+    <!-- Run Deploy step by default when the solution is build directly via msbuild (from command line or VS). -->
+    <DeployProjectOutput Condition="'$(DeployProjectOutput)' == ''">true</DeployProjectOutput>
   </PropertyGroup>
 
   <!-- Default empty deploy target. -->
