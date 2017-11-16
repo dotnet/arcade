@@ -57,6 +57,11 @@
 
   <Target Name="Execute">
     <PropertyGroup>
+      <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' != 'Core'">"$(MSBuildBinPath)\MSBuild.exe"</_MSBuildCmd>
+      <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' == 'Core'">"$(DotNetTool)" msbuild</_MSBuildCmd>
+    </PropertyGroup>
+    
+    <PropertyGroup>
       <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
 
       <_QuietRestore>false</_QuietRestore>
@@ -117,10 +122,10 @@
     
     <MakeDir Directories="$(ArtifactsLogDir)" Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" />
     
-    <Exec Command='"$(MSBuildBinPath)\MSBuild.exe" "$(MSBuildProjectDirectory)\Tools.proj" /bl:"$(ArtifactsLogDir)RestoreRepoTools.binlog" /nologo /m /v:quiet /t:Restore /nodeReuse:false $(_RestoreToolsPropsCmdLine)'
+    <Exec Command='$(_MSBuildCmd) "$(MSBuildProjectDirectory)\Tools.proj" /bl:"$(ArtifactsLogDir)RestoreRepoTools.binlog" /nologo /m /v:quiet /t:Restore /nodeReuse:false $(_RestoreToolsPropsCmdLine)'
           Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
-    <Exec Command='"$(MSBuildBinPath)\MSBuild.exe" "$(SolutionPath)" /bl:"$(ArtifactsLogDir)Restore.binlog" /nologo /m /v:quiet /t:Restore /nodeReuse:false $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
+    <Exec Command='$(_MSBuildCmd) "$(SolutionPath)" /bl:"$(ArtifactsLogDir)Restore.binlog" /nologo /m /v:quiet /t:Restore /nodeReuse:false $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
           Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <!--
@@ -158,9 +163,9 @@
       Seems like nuget pack doesn't correctly close the stream created for .nupkg file thus keeping the file locked beyond the return of the task.
       If signing, pack in a separate process to force it to close the files.
     -->
-    <Exec Command='"$(MSBuildBinPath)\MSBuild.exe" "$(SolutionPath)" /nologo /m /v:quiet /t:Pack /nodeReuse:false /p:NoBuild=true $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionBuild'
-          Condition="'$(Pack)' == 'true' and '$(Sign)' == 'true'" 
-          StandardOutputImportance="normal" />
+    <Message Text="Packaging ..." Importance="high" Condition="'$(Pack)' == 'true' and '$(Sign)' == 'true'" />
+    <Exec Command='$(_MSBuildCmd) "$(SolutionPath)" /nologo /m /v:minimal /t:Pack /nodeReuse:false /p:NoBuild=true $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionBuild'
+          Condition="'$(Pack)' == 'true' and '$(Sign)' == 'true'" />
 
     <!--
       Sign artifacts.
