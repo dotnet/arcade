@@ -101,5 +101,79 @@ namespace XliffTasks.Tests
 
             AssertEx.EqualIgnoringLineEndings(expectedTranslation, writer.ToString());
         }
+
+        [Fact]
+        public void NonUniqueIds()
+        {
+            string source =
+@"<CommandTable xmlns=""http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable"" xmlns:xs=""http://www.w3.org/2001/XMLSchema"">
+  <Commands package=""guidTestPackage"">
+    <Menus>
+      <Menu guid=""firstGuid"" id=""menuid"">
+        <Strings>
+          <MenuText>Some menu text</MenuText>
+          <ButtonText>Some button text</ButtonText>
+        </Strings>
+      </Menu>
+      <Menu guid=""secondGuid"" id=""menuid"">
+        <Strings>
+          <MenuText>More menu text</MenuText>
+          <ButtonText>More button text</ButtonText>
+        </Strings>
+      </Menu>
+      <Menu guid=""thirdGuid"" id=""otherMenuId"">
+        <Strings>
+          <MenuText>Even more menu text</MenuText>
+          <ButtonText>Even more button text</ButtonText>
+        </Strings>
+      </Menu>
+    </Menus>
+  </Commands>
+</CommandTable>";
+
+            var translations = new Dictionary<string, string>
+            {
+                ["firstGuid|menuid|MenuText"] = "Texte du menu",
+                ["firstGuid|menuid|ButtonText"] = "Texte du bouton",
+                ["secondGuid|menuid|MenuText"] = "Plus de texte de menu",
+                ["secondGuid|menuid|ButtonText"] = "Plus de texte de bouton",
+                ["otherMenuId|MenuText"] = "Encore plus de texte de menu",
+                ["otherMenuId|ButtonText"] = "Encore plus de texte de bouton",
+            };
+
+            string expectedTranslation =
+@"<CommandTable xmlns=""http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable"" xmlns:xs=""http://www.w3.org/2001/XMLSchema"">
+  <Commands package=""guidTestPackage"">
+    <Menus>
+      <Menu guid=""firstGuid"" id=""menuid"">
+        <Strings>
+          <MenuText>Texte du menu</MenuText>
+          <ButtonText>Texte du bouton</ButtonText>
+        </Strings>
+      </Menu>
+      <Menu guid=""secondGuid"" id=""menuid"">
+        <Strings>
+          <MenuText>Plus de texte de menu</MenuText>
+          <ButtonText>Plus de texte de bouton</ButtonText>
+        </Strings>
+      </Menu>
+      <Menu guid=""thirdGuid"" id=""otherMenuId"">
+        <Strings>
+          <MenuText>Encore plus de texte de menu</MenuText>
+          <ButtonText>Encore plus de texte de bouton</ButtonText>
+        </Strings>
+      </Menu>
+    </Menus>
+  </Commands>
+</CommandTable>";
+
+            var document = new VsctDocument();
+            var writer = new StringWriter();
+            document.Load(new StringReader(source));
+            document.Translate(translations);
+            document.Save(writer);
+
+            AssertEx.EqualIgnoringLineEndings(expectedTranslation, writer.ToString());
+        }
     }
 }
