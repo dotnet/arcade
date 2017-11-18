@@ -91,7 +91,7 @@
       <_RestoreToolsProps Include="MicroBuildPluginsSwixBuildVersion=$(MicroBuildPluginsSwixBuildVersion)"/>
       <_RestoreToolsProps Include="MicroBuildCoreVersion=$(MicroBuildCoreVersion)"/>
       <_RestoreToolsProps Include="RoslynToolsMicrosoftModifyVsixManifestVersion=$(RoslynToolsMicrosoftModifyVsixManifestVersion)"/>
-      <_RestoreToolsProps Include="Pdb2PdbVersion=$(Pdb2PdbVersion)"/>
+      <_RestoreToolsProps Include="MicrosoftDiaSymReaderPdb2PdbVersion=$(MicrosoftDiaSymReaderPdb2PdbVersion)"/>
       <_RestoreToolsProps Include="UsingToolPdbConverter=$(UsingToolPdbConverter)"/>
       <_RestoreToolsProps Include="ExternalRestoreSources=$(PB_RestoreSource)" Condition="'$(PB_RestoreSource)' != ''"/>
       <_RestoreToolsProps Include="UsingPipeBuildPublishing=$(_PipeBuildPublishing)"/>

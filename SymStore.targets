@@ -40,6 +40,9 @@
     Convert Portable and Embedded PDBs. 
     We publish converted PDBs to Symbol Store so that WinDBG can find them when debugging crash dumps.
     Convert source link to srcsvr so that both WinDBG and VS can open the source files.
+
+    We add SRC_INDEX=public srcsvr variable in order to preserve the source server stream when 
+    it's published to the public symbol server (msdl.microsoft.com).
   -->
   <Target Name="_DeployPortableSymbolsToSymStore"
           AfterTargets="_InnerDeployToSymStore"
@@ -48,8 +51,8 @@
           Condition="'$(PublishOutputToSymStore)' == 'true' and ('$(DebugType)' == 'portable' or '$(DebugType)' == 'embedded')">
 
     <PropertyGroup>
-      <_PdbConverterPath>$(NuGetPackageRoot)pdb2pdb\$(Pdb2PdbVersion)\tools\Pdb2Pdb.exe</_PdbConverterPath>
-      <_PdbConverterCommandLineArgs>"$(TargetPath)" /out "$(_SymStorePdbPath)" /verbose</_PdbConverterCommandLineArgs>
+      <_PdbConverterPath>$(NuGetPackageRoot)microsoft.diasymreader.pdb2pdb\$(MicrosoftDiaSymReaderPdb2PdbVersion)\tools\Pdb2Pdb.exe</_PdbConverterPath>
+      <_PdbConverterCommandLineArgs>"$(TargetPath)" /out "$(_SymStorePdbPath)" /verbose /srcsvrvar SRC_INDEX=public</_PdbConverterCommandLineArgs>
     </PropertyGroup>
 
     <Error Text="Attempt to publish Portable PDB to SymStore without conversion: UsingToolPdbConverter property is false in project $(MSBuildProjectName)"
