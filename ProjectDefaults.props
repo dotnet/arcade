@@ -46,14 +46,14 @@
        - Embed PDBs to make it easier to debug Jenkins crash dumps.
        
       Developer build:
-       - TODO: Embed PDBs to be consistent with Jenkins builds.
-       - Two issues with local builds: 
-         - Live Unit Testing doesn't support embedded PDBs:
-          https://github.com/dotnet/testimpact/issues/1877      
-         - Xunit doesn't display line numbers for embedded PDBs.
+       - Embed PDBs to be consistent with Jenkins builds.
+
+      TODO:
+      - Live Unit Testing doesn't support embedded PDBs:
+         https://github.com/dotnet/testimpact/issues/1877      
     -->
     <DebugType>portable</DebugType>
-    <DebugType Condition="'$(CIBuild)' == 'true' and '$(OfficialBuild)' != 'true'">embedded</DebugType>
+    <DebugType Condition="'$(OfficialBuild)' != 'true' and '$(BuildingForLiveUnitTesting)' != 'true'">embedded</DebugType>
 
     <!--
       The source root path used for deterministic normalization of source paths.
