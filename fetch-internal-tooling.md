@@ -1,4 +1,4 @@
-# Fetch Internal Tooling
+# Fetch Optional (Internal) Tooling
 
 This is an implementation plan for how to fetch sensitive internal tools during a .NET Core build.
 
@@ -18,8 +18,10 @@ OptionalToolSourceUser=dn-bot
 OptionalToolSourcePassword=******
 ```
 
-A target in BuildTools runs before the main project package restore, detects that these properties are set, then restores `internal-tool-runtime/project.json` into the `packages` directory. Build steps that need an internal tool can find it using `PrereleaseResolveNuGetPackageAssets`.
+A target in BuildTools runs before the main project package restore, detects that these properties are set, then restores `optional-tool-runtime/project.json` into the `packages` directory. Build steps that need an optional tool can find it using `PrereleaseResolveNuGetPackageAssets`.
 
-Devs who have the internal tooling packages but don't have convenient access to the VSTS feed can set `InternalToolSource` to a directory to use it as an internal tool package feed.
+The path to the project file can be overridden to specify repo-specific tooling, like in CoreFX: [dir.props#L303](https://github.com/dotnet/corefx/blob/30a0f7f753162b89ad110b4beba3fdeda434fe8c/dir.props#L303), [optional.json](https://github.com/dotnet/corefx/blob/30a0f7f753162b89ad110b4beba3fdeda434fe8c/external/test-runtime/optional.json).
 
-If `OptionalToolSource` isn't set, no internal tooling is restored.
+Devs who have the optional tooling packages but don't have convenient access to the VSTS feed can set `OptionalToolSource` to a directory to use it as an optional tool package feed.
+
+If `OptionalToolSource` isn't set, no optional tooling is restored.
