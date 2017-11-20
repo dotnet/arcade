@@ -15,9 +15,18 @@ namespace XliffTasks.Model
     {
         protected override IEnumerable<TranslatableNode> GetTranslatableNodes()
         {
+            HashSet<string> nonUniqueIds = FindNonUniqueIds();
+
             foreach (var strings in Document.Descendants(Document.Root.Name.Namespace + "Strings"))
             {
                 string id = strings.Parent.Attribute("id").Value;
+                if (nonUniqueIds.Contains(id))
+                {
+                    // The ID by itself is not unique in this document; we must include
+                    // the GUID as well.
+                    string guid = strings.Parent.Attribute("guid").Value;
+                    id = guid + "|" + id;
+                }
 
                 foreach (var child in strings.Elements())
                 {
@@ -38,6 +47,31 @@ namespace XliffTasks.Model
                         element: child);
                 }
             }
+        }
+
+        /// <summary>
+        /// Finds the set of IDs that do not uniquely identify a single set of strings.
+        /// Within a .vsct file only the combination of GUID and ID needs to be unique,
+        /// but for brevity we'd prefer to use just the ID when we can. By finding the
+        /// set of non-unique IDs we can identify when this will not be sufficient.
+        /// </summary>
+        /// <returns></returns>
+        private HashSet<string> FindNonUniqueIds()
+        {
+            var idsAlreadySeen = new HashSet<string>();
+            var conflictingIds = new HashSet<string>();
+
+            foreach (var strings in Document.Descendants(Document.Root.Name.Namespace + "Strings"))
+            {
+                string id = strings.Parent.Attribute("id").Value;
+
+                if (!idsAlreadySeen.Add(id))
+                {
+                    conflictingIds.Add(id);
+                }
+            }
+
+            return conflictingIds;
         }
 
         public override void RewriteRelativePathsToAbsolute(string sourceFullPath)
