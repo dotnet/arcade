@@ -5,7 +5,7 @@
 
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-    <XliffTasksDirectory Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\netcoreapp1.1\</XliffTasksDirectory>
+    <XliffTasksDirectory Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\netcoreapp2.0\</XliffTasksDirectory>
     <XliffTasksDirectory Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net46\</XliffTasksDirectory>
     <XliffTasksAssembly>$(XliffTasksDirectory)XliffTasks.dll</XliffTasksAssembly>
   </PropertyGroup>
