@@ -125,8 +125,7 @@ namespace SignTool
             {
                 ContentUtil contentUtil = new ContentUtil();
 
-                // Get all Zip Archives in the manifest
-                // We'll use a non-immutable queue as we may need to add new zips to the list.
+                // Get all Zip Archives in the manifest recursively.
                 Queue<FileName> allZipsWeKnowAbout = new Queue<FileName>(ZipContainerNames);
 
                 while (allZipsWeKnowAbout.Count > 0)
@@ -168,7 +167,7 @@ namespace SignTool
                     if (matchFile == null)
                     {
                         success = false;
-                        missingFiles.AppendLine($"Unable to find {missingFileWithHashToFind.Name} with SHA256 hash '{missingFileWithHashToFind.SHA256Hash}'");
+                        missingFiles.AppendLine($"File: {missingFileWithHashToFind.Name} Hash: '{missingFileWithHashToFind.SHA256Hash}'");
                     }
                     else
                     {

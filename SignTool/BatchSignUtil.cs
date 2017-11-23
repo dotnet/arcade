@@ -94,7 +94,7 @@ namespace SignTool
                     });
                 }
                 fileJsonWithInfo.SignList = newList.ToArray();
-
+                fileJsonWithInfo.Kind = "orchestration";
 
                 using (StreamWriter file = File.CreateText(outputPath))
                 {

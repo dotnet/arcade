@@ -6,6 +6,9 @@ namespace SignTool.Json
 {
     internal sealed class FileJson
     {
+        [JsonProperty(PropertyName = "kind")]
+        public string Kind { get; set; }
+
         [JsonProperty(PropertyName = "publishUrl")]
         public string PublishUrl { get; set; }
 
@@ -23,6 +26,9 @@ namespace SignTool.Json
 
     internal sealed class OrchestratedFileJson
     {
+        [JsonProperty(PropertyName = "kind")]
+        public string Kind { get; set; }
+
         [JsonProperty(PropertyName = "sign")]
         public OrchestratedFileSignData[] SignList { get; set; }
 

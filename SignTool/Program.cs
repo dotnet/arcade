@@ -7,6 +7,7 @@ using System.Linq;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using SignTool.Json;
 
 namespace SignTool
@@ -32,14 +33,21 @@ namespace SignTool
 
             BatchSignInput batchData;
             var signTool = SignToolFactory.Create(signToolArgs);
-            if (signToolArgs.OrchestrationMode)
+            string configFileKind = GetConfigFileKind(signToolArgs.ConfigFile);
+
+            switch (configFileKind.ToLower())
             {
-                batchData = ReadOrchestrationConfigFile(signToolArgs.OutputPath, signToolArgs.ConfigFile);
+                case "default":
+                    batchData = ReadConfigFile(signToolArgs.OutputPath, signToolArgs.ConfigFile);
+                    break;
+                case "orchestration":
+                    batchData = ReadOrchestrationConfigFile(signToolArgs.OutputPath, signToolArgs.ConfigFile);
+                    break;
+                default:
+                    Console.WriteLine($"Don't know how to deal with manifest kind '{configFileKind}'");
+                    return 1;
             }
-            else
-            {
-                batchData = ReadConfigFile(signToolArgs.OutputPath, signToolArgs.ConfigFile);
-            }
+
             var util = new BatchSignUtil(signTool, batchData, signToolArgs.OrchestrationManifestPath);
             try
             {
@@ -213,14 +221,14 @@ orchestrationConfigFile: Run tool to produce an orchestration json file.  This w
             string[] args,
             out SignToolArgs signToolArgs)
         {
-            signToolArgs = default(SignToolArgs);
+            signToolArgs = default;
 
             string intermediateOutputPath = null;
             string outputPath = null;
             string msbuildPath = null;
             string nugetPackagesPath = null;
             string configFile = null;
-            string orchestrationConfigFile = null;
+            string outputConfigFile = null;
             var test = false;
             var testSign = false;
             var orchestrationMode = false;
@@ -268,12 +276,12 @@ orchestrationConfigFile: Run tool to produce an orchestration json file.  This w
                             return false;
                         }
                         break;
-                    case "-orchestrationconfigfile":
-                        if (!ParsePathOption(args, ref i, current, out orchestrationConfigFile))
+                    case "-outputconfig":
+                        if (!ParsePathOption(args, ref i, current, out outputConfigFile))
                         {
                             return false;
                         }
-                        orchestrationConfigFile = orchestrationConfigFile.TrimEnd('\"').TrimStart('\"');
+                        outputConfigFile = outputConfigFile.TrimEnd('\"').TrimStart('\"');
                         break;
                     default:
                         Console.Error.WriteLine($"Unrecognized option {current}");
@@ -281,9 +289,9 @@ orchestrationConfigFile: Run tool to produce an orchestration json file.  This w
                 }
             }
 
-            if (orchestrationMode && !string.IsNullOrEmpty(orchestrationConfigFile))
+            if (orchestrationMode && !string.IsNullOrEmpty(outputConfigFile))
             {
-                Console.WriteLine("Please specify either -orchestrationmode (for signing multiple json manifests w/ SHA256 entries) or a value for -orchestrationconfigfile to generate such a manifest, but not both.");
+                Console.WriteLine("Please specify either -orchestrationmode (signing multiple json manifests with SHA256 entries) or a value for -outputconfig to generate such a manifest, but not both.");
                 return false;
             }
 
@@ -332,8 +340,7 @@ orchestrationConfigFile: Run tool to produce an orchestration json file.  This w
                 configFile: configFile,
                 test: test,
                 testSign: testSign,
-                orchestrationManifestPath: orchestrationConfigFile,
-                orchestrationMode: orchestrationMode);
+                orchestrationManifestPath: outputConfigFile);
             return true;
         }
 
@@ -365,6 +372,13 @@ orchestrationConfigFile: Run tool to produce an orchestration json file.  This w
                 current = Path.GetDirectoryName(current);
             }
             return null;
+        }
+
+        private static string GetConfigFileKind(string path)
+        {
+            JObject configFile = JObject.Parse(File.ReadAllText(path));
+            var kind = configFile["kind"]?.Value<string>();
+            return string.IsNullOrEmpty(kind) ? "default" : kind;
         }
     }
 }

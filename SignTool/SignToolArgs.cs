@@ -9,7 +9,6 @@ namespace SignTool
         internal string MSBuildPath { get; }
         internal string ConfigFile { get; }
         internal bool Test { get; }
-        internal bool OrchestrationMode { get; }
         internal bool TestSign { get; }
         internal string OrchestrationManifestPath { get; }
 
@@ -22,7 +21,6 @@ namespace SignTool
             string configFile,
             bool test,
             bool testSign,
-            bool orchestrationMode,
             string orchestrationManifestPath
             )
         {
@@ -35,7 +33,6 @@ namespace SignTool
             Test = test;
             TestSign = testSign;
             OrchestrationManifestPath = orchestrationManifestPath;
-            OrchestrationMode = orchestrationMode;
         }
     }
 }
