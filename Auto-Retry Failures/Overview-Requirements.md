@@ -12,6 +12,7 @@ The following are the Steps to achieve this at a high-level:
 1. On success or when the max retries allowed count is reached the work item is marked as WorkItemFinished.
 1. MC displays the retried workitem with a specific color/format (TBD). The Tests that passed on retried displayed with a specific icon (TBD)
 1. MC displays logs for each retry.
+1. MC displays number of retries
 
 # Out of scope
 1. There will be no attempt to retry a work item on timeouts.
@@ -53,6 +54,7 @@ In order to support automated configurable retry, we'll need a few changes in th
 1. Add a new icon to show that the test passed on a retry / test failed despite reruns. TBD what icon needs to be used. 
 1. Show multiple entries of logs for retried workitems. 
 1. "Show Failures Only" checkbox should display the retried tests as well.
+1. Show number of retries, we are already displaying number of failures and skips
  
 ### Nice to Have 
 1. Separate Checkbox - Show retried workitems (TBD the name) should display only the retried work items
