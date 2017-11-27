@@ -63,50 +63,40 @@ namespace SignTool
             return VerifyAfterSign(zipDataMap, textWriter);
         }
 
-        
-
         private bool GenerateOrchestrationManifest(TextWriter textWriter, BatchSignInput batchData, ContentMap contentMap, string outputPath)
         {
-            try
+            textWriter.WriteLine($"Generating orchestration file manifest into {outputPath}");
+            OrchestratedFileJson fileJsonWithInfo = new OrchestratedFileJson
             {
-                textWriter.WriteLine($"Generating orchestration file manifest into {outputPath}");
-                OrchestratedFileJson fileJsonWithInfo = new OrchestratedFileJson
-                {
-                    ExcludeList = _batchData.ExternalFileNames.ToArray() ?? Array.Empty<string>()
-                };
+                ExcludeList = _batchData.ExternalFileNames.ToArray() ?? Array.Empty<string>()
+            };
 
-                var distinctSigningCombos = batchData.FileSignInfoMap.Values.GroupBy(v => new { v.Certificate, v.StrongName });
+            var distinctSigningCombos = batchData.FileSignInfoMap.Values.GroupBy(v => new { v.Certificate, v.StrongName });
 
-                List<OrchestratedFileSignData> newList = new List<OrchestratedFileSignData>();
-                foreach (var combinationToSign in distinctSigningCombos)
-                {
-                    var filesInThisGroup = combinationToSign.Select(c => new FileSignDataEntry()
-                    {
-                        FilePath = c.FileName.RelativePath,
-                        SHA256Hash = contentMap.GetChecksum(c.FileName),
-                        PublishToFeedUrl = batchData.PublishUri
-                    });
-                    newList.Add(new OrchestratedFileSignData()
-                    {
-                        Certificate = combinationToSign.Key.Certificate,
-                        StrongName = combinationToSign.Key.StrongName,
-                        FileList = filesInThisGroup.ToArray()
-                    });
-                }
-                fileJsonWithInfo.SignList = newList.ToArray();
-                fileJsonWithInfo.Kind = "orchestration";
-
-                using (StreamWriter file = File.CreateText(outputPath))
-                {
-                    file.Write(JsonConvert.SerializeObject(fileJsonWithInfo, Formatting.Indented));
-                }
-            }
-            catch (Exception ex)
+            List<OrchestratedFileSignData> newList = new List<OrchestratedFileSignData>();
+            foreach (var combinationToSign in distinctSigningCombos)
             {
-                textWriter.WriteLine($"Unexpected exception: {ex.Message}");
-                textWriter.WriteLine(ex.StackTrace);
-                return false;
+                var filesInThisGroup = combinationToSign.Select(c => new FileSignDataEntry()
+                {
+                    FilePath = c.FileName.RelativePath,
+                    SHA256Hash = contentMap.GetChecksum(c.FileName),
+                    PublishToFeedUrl = batchData.PublishUri
+                });
+                newList.Add(new OrchestratedFileSignData()
+                {
+                    Certificate = combinationToSign.Key.Certificate,
+                    StrongName = combinationToSign.Key.StrongName,
+                    FileList = filesInThisGroup.ToArray()
+                });
             }
+            fileJsonWithInfo.SignList = newList.ToArray();
+            fileJsonWithInfo.Kind = "orchestration";
+
+            using (StreamWriter file = File.CreateText(outputPath))
+            {
+                file.Write(JsonConvert.SerializeObject(fileJsonWithInfo, Formatting.Indented));
+            }
+
             return true;
         }
 

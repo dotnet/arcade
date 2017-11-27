@@ -118,66 +118,63 @@ namespace SignTool
 
             // Nothing to do
             if (unpackNeeded.Count() == 0)
-            {
                 return;
-            }
-            else
+
+            ContentUtil contentUtil = new ContentUtil();
+
+            // Get all Zip Archives in the manifest recursively.
+            Queue<FileName> allZipsWeKnowAbout = new Queue<FileName>(ZipContainerNames);
+
+            while (allZipsWeKnowAbout.Count > 0)
             {
-                ContentUtil contentUtil = new ContentUtil();
+                FileName zipFile = allZipsWeKnowAbout.Dequeue();
+                string unpackFolder = Path.Combine(unpackingDirectory, zipFile.SHA256Hash);
 
-                // Get all Zip Archives in the manifest recursively.
-                Queue<FileName> allZipsWeKnowAbout = new Queue<FileName>(ZipContainerNames);
-
-                while (allZipsWeKnowAbout.Count > 0)
+                // Assumption:  If a zip with a given hash is already unpacked, it's probably OK.
+                if (!Directory.Exists(unpackFolder))
                 {
-                    FileName zipFile = allZipsWeKnowAbout.Dequeue();
-                    string unpackFolder = Path.Combine(unpackingDirectory, zipFile.SHA256Hash);
-
-                    // Assumption:  If a zip with a given hash is already unpacked, it's probably OK.
-                    if (!Directory.Exists(unpackFolder))
-                    {
-                        Directory.CreateDirectory(unpackFolder);
-                        ZipFile.ExtractToDirectory(zipFile.FullPath, unpackFolder);
-                    }
-                    // Add any zips we just unzipped.
-                    foreach (string file in Directory.GetFiles(unpackFolder, "*", SearchOption.AllDirectories))
-                    {
-                        if (PathUtil.IsZipContainer(file))
-                        {
-                            string relativePath = (string)(new Uri(unpackingDirectory).MakeRelativeUri(new Uri(file))).OriginalString;
-                            allZipsWeKnowAbout.Enqueue(new FileName(unpackingDirectory, relativePath, contentUtil.GetChecksum(file)));
-                        }
-                    }
+                    Directory.CreateDirectory(unpackFolder);
+                    ZipFile.ExtractToDirectory(zipFile.FullPath, unpackFolder);
                 }
-                // Lazy : Disks are fast, just calculate ALL hashes.  Could optimize by only files we intend to sign
-                Dictionary<string, string> existingHashLookup = new Dictionary<string, string>();
-                foreach (string file in Directory.GetFiles(unpackingDirectory, "*", SearchOption.AllDirectories))
+                // Add any zips we just unzipped.
+                foreach (string file in Directory.GetFiles(unpackFolder, "*", SearchOption.AllDirectories))
                 {
-                    existingHashLookup.Add(file, contentUtil.GetChecksum(file));
-                }
-
-                Dictionary<FileName, FileName> fileNameUpdates = new Dictionary<FileName, FileName>();
-                // At this point, we've unpacked every Zip we can possibly pull out into folders named for the zip's hash into 'unpackingDirectory'
-                foreach (FileName missingFileWithHashToFind in unpackNeeded)
-                {
-                    string matchFile = (from filePath in existingHashLookup.Keys
-                                        where Path.GetFileName(filePath).Equals(missingFileWithHashToFind.Name, StringComparison.OrdinalIgnoreCase)
-                                        where existingHashLookup[filePath] == missingFileWithHashToFind.SHA256Hash
-                                        select filePath).SingleOrDefault();
-                    if (matchFile == null)
+                    if (PathUtil.IsZipContainer(file))
                     {
-                        success = false;
-                        missingFiles.AppendLine($"File: {missingFileWithHashToFind.Name} Hash: '{missingFileWithHashToFind.SHA256Hash}'");
-                    }
-                    else
-                    {
-                        string relativePath = (string)(new Uri(OutputPath).MakeRelativeUri(new Uri(matchFile))).OriginalString.Replace('/', Path.DirectorySeparatorChar);
-                        FileName updatedFileName = new FileName(OutputPath, relativePath, missingFileWithHashToFind.SHA256Hash);
-                        candidateFileNames.Remove(missingFileWithHashToFind);
-                        candidateFileNames.Add(updatedFileName);
+                        string relativePath = (new Uri(unpackingDirectory).MakeRelativeUri(new Uri(file))).OriginalString;
+                        allZipsWeKnowAbout.Enqueue(new FileName(unpackingDirectory, relativePath, contentUtil.GetChecksum(file)));
                     }
                 }
             }
+            // Lazy : Disks are fast, just calculate ALL hashes.  Could optimize by only files we intend to sign
+            Dictionary<string, string> existingHashLookup = new Dictionary<string, string>();
+            foreach (string file in Directory.GetFiles(unpackingDirectory, "*", SearchOption.AllDirectories))
+            {
+                existingHashLookup.Add(file, contentUtil.GetChecksum(file));
+            }
+
+            Dictionary<FileName, FileName> fileNameUpdates = new Dictionary<FileName, FileName>();
+            // At this point, we've unpacked every Zip we can possibly pull out into folders named for the zip's hash into 'unpackingDirectory'
+            foreach (FileName missingFileWithHashToFind in unpackNeeded)
+            {
+                string matchFile = (from filePath in existingHashLookup.Keys
+                                    where Path.GetFileName(filePath).Equals(missingFileWithHashToFind.Name, StringComparison.OrdinalIgnoreCase)
+                                    where existingHashLookup[filePath] == missingFileWithHashToFind.SHA256Hash
+                                    select filePath).SingleOrDefault();
+                if (matchFile == null)
+                {
+                    success = false;
+                    missingFiles.AppendLine($"File: {missingFileWithHashToFind.Name} Hash: '{missingFileWithHashToFind.SHA256Hash}'");
+                }
+                else
+                {
+                    string relativePath = (new Uri(OutputPath).MakeRelativeUri(new Uri(matchFile))).OriginalString.Replace('/', Path.DirectorySeparatorChar);
+                    FileName updatedFileName = new FileName(OutputPath, relativePath, missingFileWithHashToFind.SHA256Hash);
+                    candidateFileNames.Remove(missingFileWithHashToFind);
+                    candidateFileNames.Add(updatedFileName);
+                }
+            }
+
             if (!success)
             {
                 throw new Exception($"Failure attempting to find one or more files:\n{missingFiles.ToString()}");

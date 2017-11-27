@@ -231,7 +231,6 @@ orchestrationConfigFile: Run tool to produce an orchestration json file.  This w
             string outputConfigFile = null;
             var test = false;
             var testSign = false;
-            var orchestrationMode = false;
 
             var i = 0;
 
@@ -246,10 +245,6 @@ orchestrationConfigFile: Run tool to produce an orchestration json file.  This w
                         break;
                     case "-testsign":
                         testSign = true;
-                        i++;
-                        break;
-                    case "-orchestrationmode":
-                        orchestrationMode = true;
                         i++;
                         break;
                     case "-intermediateoutputpath":
@@ -287,12 +282,6 @@ orchestrationConfigFile: Run tool to produce an orchestration json file.  This w
                         Console.Error.WriteLine($"Unrecognized option {current}");
                         return false;
                 }
-            }
-
-            if (orchestrationMode && !string.IsNullOrEmpty(outputConfigFile))
-            {
-                Console.WriteLine("Please specify either -orchestrationmode (signing multiple json manifests with SHA256 entries) or a value for -outputconfig to generate such a manifest, but not both.");
-                return false;
             }
 
             if (i + 1 != args.Length)
