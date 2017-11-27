@@ -23,7 +23,7 @@ Detailed requirements list below.
 
 1. Support a separate parameter / reuse delivery count in QueueInfo to identify if a particular work item is a retry work item.
 1. Requeue a work item if one or many tests fail in the work item.
-1. Identify if min(max retries for the work item, number of  has crossed.
+1. Identify if Min(Max Delivery Count for Requested Queue - 1, Requested Value for retries)  has crossed.
 1. Retry work item requeued with a special event other than work item started.
 1. WorkItemFinished should not be sent when requeuing a workitem until the workitem succeeds or max retires for the workitem has reached.
  
