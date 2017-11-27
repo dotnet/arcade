@@ -205,13 +205,12 @@ namespace SignTool
 
 test: Run tool without actually modifying any state.
 testSign: The binaries will be test signed. The default is to real sign.
-orchestrationmode:  Support comma-separated list of one or more config files in the format outputted using the 'orchestrationConfigFile' argument.
 outputPath: Directory containing the binaries.
 intermediateOutputPath: Directory containing intermediate output.  Default is (outputpath\..\Obj).
 nugetPackagesPath: Path containing downloaded NuGet packages.
 msbuildPath: Path to MSBuild.exe to use as signing mechanism.
 config: Path to SignToolData.json. Default: build\config\SignToolData.json.
-orchestrationConfigFile: Run tool to produce an orchestration json file.  This will contain SHA256 hashes of files for verification to consume later.  Cannot be used with -orchestrationmode
+outputConfig: Run tool to produce an orchestration json file with specified name.  This will contain SHA256 hashes of files for verification to consume later.
 ";
             Console.WriteLine(usage);
         }
