@@ -58,6 +58,8 @@ namespace SignTool
         /// </summary>
         internal ImmutableDictionary<FileName, FileSignInfo> FileSignInfoMap { get; }
 
+        private ContentUtil contentUtil = new ContentUtil();
+
         internal BatchSignInput(string outputPath, Dictionary<string, SignInfo> fileSignDataMap, IEnumerable<string> externalFileNames, string publishUri)
         {
             OutputPath = outputPath;
@@ -86,6 +88,11 @@ namespace SignTool
             PublishUri = publishUri;
 
             List<FileName> fileNames = fileSignDataMap.Keys.Select(x => new FileName(outputPath, x.FilePath, x.SHA256Hash)).ToList();
+
+            // We need to tolerate not being able to find zips in the same path as they were in on the original machine.
+            // As long as we can find a FileName with the same hash for each one, we should be OK.
+            ResolveMissingZipArchives(ref fileNames);
+
             ZipContainerNames = fileNames.Where(x => x.IsZipContainer).ToImmutableArray();
             // If there's any files we can't find, recursively unpack the zip archives we just made a list of above.
             UnpackMissingContent(ref fileNames);
@@ -105,6 +112,35 @@ namespace SignTool
             FileSignInfoMap = builder.ToImmutable();
         }
 
+        private void ResolveMissingZipArchives(ref List<FileName> fileNames)
+        {
+            StringBuilder missingFiles = new StringBuilder();
+            List<FileName> missingZips = fileNames.Where(x => x.IsZipContainer && !File.Exists(x.FullPath)).ToList();
+            foreach (FileName missingZip in missingZips)
+            {
+                // Throw if somehow the same missing zip is present more than once. May be OK to take FirstOrDefault.
+                var matchingFile = (from path in Directory.GetFiles(OutputPath, missingZip.Name, SearchOption.AllDirectories)
+                                    where contentUtil.GetChecksum(path).Equals(missingZip.SHA256Hash, StringComparison.OrdinalIgnoreCase)
+                                    select path).SingleOrDefault();
+
+                if (!string.IsNullOrEmpty(matchingFile))
+                {
+                    fileNames.Remove(missingZip);
+                    string relativePath = (new Uri(OutputPath).MakeRelativeUri(new Uri(matchingFile))).OriginalString.Replace('/', Path.DirectorySeparatorChar);
+                    FileName updatedFileName = new FileName(OutputPath, relativePath, missingZip.SHA256Hash);
+                    fileNames.Add(updatedFileName);
+                }
+                else
+                {
+                    missingFiles.AppendLine($"File: {missingZip.Name} Hash: {missingZip.SHA256Hash}");
+                }
+            }
+            if (!(missingFiles.Length == 0))
+            {
+                throw new FileNotFoundException($"Could not find one or more Zip-archive files referenced:\n{missingFiles}");
+            }
+        }
+
         private void UnpackMissingContent(ref List<FileName> candidateFileNames)
         {
             bool success = true;
@@ -119,8 +155,6 @@ namespace SignTool
             // Nothing to do
             if (unpackNeeded.Count() == 0)
                 return;
-
-            ContentUtil contentUtil = new ContentUtil();
 
             // Get all Zip Archives in the manifest recursively.
             Queue<FileName> allZipsWeKnowAbout = new Queue<FileName>(ZipContainerNames);
