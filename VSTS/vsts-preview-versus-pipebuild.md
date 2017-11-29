@@ -53,18 +53,22 @@ It turns out that the agent source code was not the source of truth, though neit
 ## VSTS versus PipeBuild gaps
 So, where does current VSTS functionality not quite close the gap to what we're accustomed to with PipeBuild?
 
-- Build number format.  It doesn't appear that there is (currently) a way to control the build number format via YAML. The documentation hints that this is on the radar very soon, https://github.com/Microsoft/vsts-agent/blob/master/docs/preview/yamlgettingstarted-features.md.  Why does this matter to us?  Currently, our PipeBuild VSTS definition will provide a specifically formatted build number which is then parsed by a library to produce an "OfficialBuildId".  That OfficialBuildId is passed to every build leg so that generated binary and package version numbers are consistent for a build.  An inability to control the build number format via YAML isn't necessarily a regression from what PipeBuild is doing today, but it does mean that we lose some of the benefit of config as code because anybody pointing at a YAML file will need to specifically know to go update their VSTS build definition to produce the proper build number format.
+Here are some items that we must have in order to start using VSTS preview for our builds.
 
 - Azure Key Vault - currently not supported in the YAML schema I previewed though Chris Patterson has told me this is now suported via a task.
-
-- Docker - Docker is on the radar for support (https://github.com/Microsoft/vsts-agent/blob/master/docs/preview/runtaskindocker.md), but I was unable to get this feature to work using the "Hosted Linux Agent" machine pool which supports YAML definitions.  Having this as a supported task is fantastic, once it works... In the interim, we could implement functionality using similar semantics to how we build for docker today.
-
-- Tasks - At the moment, using any task, or understanding how to implement a task in your YAML schema is extremely difficult.  Chris Patterson says that there is work in progress (shipping m126 [aka next week]) which will allow  you to configure a task or definition in the UI and right-click to copy it to YAML.
 
 - Templates - This feature was deprecated in the prototyping I was doing, but it would allow you to import YAML from another file into your pipeline.  Support for this will definitely make for a cleaner (less error-prone) code-base.
 
 - Agent pools - Currently YAML definitions are only enabled in the Hosted agent pools.  That means, we can't actually build our product because the machines in those pools don't have the necessary pre-requisites installed.
 
+- Build number format.  It doesn't appear that there is (currently) a way to control the build number format via YAML. The documentation hints that this is on the radar very soon, https://github.com/Microsoft/vsts-agent/blob/master/docs/preview/yamlgettingstarted-features.md.  Why does this matter to us?  Currently, our PipeBuild VSTS definition will provide a specifically formatted build number which is then parsed by a library to produce an "OfficialBuildId".  That OfficialBuildId is passed to every build leg so that generated binary and package version numbers are consistent for a build.  An inability to control the build number format via YAML isn't necessarily a regression from what PipeBuild is doing today, but it does mean that we lose some of the benefit of config as code because anybody pointing at a YAML file will need to specifically know to go update their VSTS build definition to produce the proper build number format.
+
 - Telemetry - How do we report status to Mission Control? or elsewhere?
+
+These ae additional items which it would be great to utilize, but we could work around if they're not present
+
+- Docker - Docker is on the radar for support (https://github.com/Microsoft/vsts-agent/blob/master/docs/preview/runtaskindocker.md), but I was unable to get this feature to work using the "Hosted Linux Agent" machine pool which supports YAML definitions.  Having this as a supported task is fantastic, once it works... In the interim, we could implement functionality using similar semantics to how we build for docker today.
+
+- Tasks - At the moment, using any task, or understanding how to implement a task in your YAML schema is extremely difficult.  Chris Patterson says that there is work in progress (shipping m126 [aka next week]) which will allow  you to configure a task or definition in the UI and right-click to copy it to YAML.
 
 - Cleanup - I don't know if this is yet a priority or if we continue to use our infrastructure to clean agents / docker.
