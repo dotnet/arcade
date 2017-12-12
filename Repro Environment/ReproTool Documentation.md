@@ -23,30 +23,29 @@ Note: `helix-repro.exe` only works on Windows.
 
 ![](./Images/Helix-ReproLink.PNG?raw=true)
 
-Once the execution of the `helix-repro.exe` ends, go to [Mission Control].
-See Mission Control section for more informatiom.
+The HelixRepro tool will not re-execute the jobs. It will only create the repro environment for you. 
+Once the execution of `helix-repro.exe` ends, go to [Mission Control] -> Repros -- Make sure your username is correct in the message on top of the page. 
+There should be a new entry representing the snapshot and/or Virtual Machine just created. 
+Use the `Connect` button on the far right of the line to download a script to connect to the VM.
+See Mission Control section for more information.
 
-The Repro tool will save the log of the jobs that were executed as part of the repro process. In case there is need to check them, go to the Private Runs page in [Mission Control] and look for the build identified by the buildnumber (aaa/mm/dd).vv Make sure to uncheck the `Show only failures` checkbox to get to the logs of the run.
+Once connected to the Machine all you need to do is execute a script called `repro.cmd/sh`. 
+The location of this script is OS dependent, use instructions below to find this file and re-execute the job.
+
 
 ## I'm in the machine, now what?
 
 ### Windows
-The workspace and files that contain information of the machine are located under the `D:\` directory and run. `d:\data\w\repro.cmd`
+The workspace and files that contain information of the machine are located under the `D:\` directory. To execute the job run `d:\data\w\repro.cmd`
 
 ### Linux
-Follow the instructions provided in the shell environment. Then run `. repro.sh` to set some environment variables and get to the directory where the test was executed. You'll find the executables, the dll, pdb, logs, etc.
-
-Note: Each Repo/job has a different way of running test. You could find this information in the logs of test.
-For example, for CoreFx run `sh Runtest.sh $HELIX_CORRELATION_PAYLOAD`
+Follow the instructions provided in the shell environment. Then run `. repro.sh` to set some environment variables and execute the job. You'll find the executables, dlls, pdbs, logs, etc. files here as well. 
 
 ### Mac
 1. `cd dotnetbuild/work/`
 2. Go to the latest updated folder. You could see the files information by doing `ls -la`
 3. Once in that folder keep doing `cd <folder>` until you find the folder with the name `payload`
-4. Run `. repro.sh` to set some environment variables and get to the directory where the test was executed. You'll find the executables, the dll, pdb, logs, etc. 
-
-Note: Each Repo/job has a different way of running test. You could find this information in the logs of test.
-For example, for CoreFx run `sh Runtest.sh $HELIX_CORRELATION_PAYLOAD`
+4. Run `. repro.sh` to set some environment variables and execute the job. You'll find the executables, dlls, pdbs, logs, etc. files here as well. 
 
 # How to use it in Jenkins
 When a job inside a PR fails, click on details to go to Jenkins and **Log In**. 
