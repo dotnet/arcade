@@ -23,17 +23,20 @@ Note: `helix-repro.exe` only works on Windows.
 
 ![](./Images/Helix-ReproLink.PNG?raw=true)
 
-The HelixRepro tool will not re-execute the jobs. It will only create the repro environment for you. 
-Once the execution of `helix-repro.exe` ends, go to [Mission Control] -> Repros -- Make sure your username is correct in the message on top of the page. 
-There should be a new entry representing the snapshot and/or Virtual Machine just created. 
-Use the `Connect` button on the far right of the line to download a script to connect to the VM.
-See Mission Control section for more information.
+The HelixRepro tool will not re-execute the jobs. It will only create the 
+repro environment for you. Once the execution of `helix-repro.exe` ends, 
+go to [Mission Control] -> Repros. There should be a new entry representing 
+the snapshot and/or Virtual Machine just created. 
 
-Once connected to the Machine all you need to do is execute a script called `repro.cmd/sh`. 
-The location of this script is OS dependent, use instructions below to find this file and re-execute the job.
+Once connected to the Machine all you need to do is execute a script 
+called `repro.cmd/sh`. The location of this script is OS dependent, use 
+instructions below to find this file and re-execute the job.
 
 
 ## I'm in the machine, now what?
+
+Use the `Connect` button on the far right of the VM detail line to download a 
+script to connect to the VM. See Mission Control section for more information.
 
 ### Windows
 The workspace and files that contain information of the machine are located under the `D:\` directory. To execute the job run `d:\data\w\repro.cmd`
