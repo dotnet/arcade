@@ -115,7 +115,7 @@ namespace SignTool
         }
 
         /// <summary>
-        /// Actually sign all of the described files. 
+        /// Actually sign all of the described files.
         /// </summary>
         private void SignFiles(ContentMap contentMap, Dictionary<FileName, ZipData> zipDataMap, TextWriter textWriter)
         {
@@ -155,7 +155,7 @@ namespace SignTool
             }
 
             // Is this file ready to be signed? That is are all of the items that it depends on already
-            // signed? 
+            // signed?
             bool isReadyToSign(FileName fileName)
             {
                 if (!fileName.IsZipContainer)
@@ -310,12 +310,6 @@ namespace SignTool
 
                 if (fileName.IsAssembly)
                 {
-                    if (fileSignInfo.StrongName == null)
-                    {
-                        textWriter.WriteLine($"Assembly {fileName} needs a strong name");
-                        allGood = false;
-                    }
-
                     if (isVsixCert)
                     {
                         textWriter.WriteLine($"Assembly {fileName} cannot be signed with a VSIX certificate");
@@ -395,7 +389,7 @@ namespace SignTool
                         continue;
                     }
 
-                    // This represents a binary that we need to sign.  Ensure the content in the VSIX is the same as the 
+                    // This represents a binary that we need to sign.  Ensure the content in the VSIX is the same as the
                     // content in the binaries directory by doing a chekcsum match.
                     using (var stream = part.GetStream())
                     {
