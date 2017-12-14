@@ -8,6 +8,9 @@ The tool is put in a NuGet package and uploaded to a VSTS feed. VSTS feeds requi
 
 ## Fetching during the build
 
+**To fetch internal tooling in your local dev build, see the [Running CoreFx tests on UAP (CoreCLR scenario) OneNote page
+](https://microsoft.sharepoint.com/teams/netfx/corefx/_layouts/OneNote.aspx?id=%2Fteams%2Fnetfx%2Fcorefx%2FDocuments%2FCoreFx%20Notes&wd=target%28Engineering%2FNet%20Standard%202.0.one%7CD8792BD0-63D5-4D0F-8EF0-B0F8444F49CD%2FRunning%20CoreFx%20tests%20on%20UAP%20%28CoreCLR%20scenario%5C%29%7C48A101A6-5621-4131-A49C-DA95C155D126%2F%29)**
+
 An `optional-tool-runtime/project.json` file in BuildTools specifies all required tooling that is only available from the internal VSTS feed. This is similar to [`tool-runtime/project.json`](https://github.com/dotnet/buildtools/blob/6a1400e631a097587246e973973e9fafe7ab6254/src/Microsoft.DotNet.Build.Tasks/PackageFiles/tool-runtime/project.json).
 
 In the official build, three properties are set for the `sync` call:
