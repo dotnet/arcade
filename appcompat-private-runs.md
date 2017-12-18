@@ -45,6 +45,11 @@ After that the run is queued in Helix and depending on the load (private runs ha
 * `--customSharedAssemblyPath <directory path>` - path to the shared assembly to use. If this is used, than the `--sharedAssemblyBuild` is ignored and the shared library from the specified path is used. This path should point to the shared library root, so the folder which contains the `ret` or `chk` subfolders. This option only applies to ShAsm runs. Default is none.
 * `--appBuildExtraArgs` - extra arguments to pass to ILC when building the apps.
 * `--sharedAssemblyBuildExtraArgs` - extra arguments to pass to ILC when building the shared library. Only used if shared library build is enabled via the `--sharedAssemblyBuild` option.
+* `--uploadIlcIntermediates <behavior>` - sets when ILC intermediates are uploaded along with the results. Default is to upload on "interesting" ILC failures. Availabe settings:
+  * `Never` - ILC intermediates are never uploaded.
+  * `OnIlcFailure` - ILC intermediates are uploaded for all ILC failures.
+  * `OnInterestingIlcFailure` - (default) ILC intermediates are uploaded only for interesting ILC failures. Currently all failures are interesting with the exception of ILC timeouts and NUTC OutOfMemory failures.
+* `--uploadCompiledAppToOutput` - if specified, the infra will upload the compiled app next to the results (Same container, blob name is GUID_GUID_OutputDrop.zip). Applies to all apps which passed ILC.
 * `--runName` - custom name of the run to use.
 * `--disableTrimming` - disables trimming of the TestILC and potentially other input. By default, the infra will remove certain parts of the TestILC directory tree to save space and make the runs faster. This can break certain special runs and/or configurations, so use this option to disable it if necessary.
 
