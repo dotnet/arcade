@@ -43,6 +43,8 @@ instructions below to find this file and re-execute the job.
 ### Windows
 The workspace and files that contain information of the machine are located under the `D:\` directory. To execute the job run `d:\data\w\repro.cmd`
 
+**In the event you are unable to find the payload zip file, you can download it manually from the url listed in the download.log file. (D:\download.log)**
+
 ### Linux
 Follow the instructions provided in the shell environment. Then run `. repro.sh` to set some environment variables and execute the job. You'll find the executables, dlls, pdbs, logs, etc. files here as well. 
 
