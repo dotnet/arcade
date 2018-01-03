@@ -10,6 +10,7 @@
   <Import Project="$(RepoToolsetDir)Settings.props" />
 
   <PropertyGroup>
+    <StrongNameKeyId>MicrosoftAspNet</StrongNameKeyId>
     <NetStandardImplicitPackageVersion>1.6.0</NetStandardImplicitPackageVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
