@@ -1,4 +1,4 @@
-#Metrics
+# Metrics
 
 ## Overview
 We want to unify our reporting infrastructure so that we have a centralized way to report on metrics related the health and behavior of the helix services.
