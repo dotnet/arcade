@@ -18,6 +18,7 @@ Whenever a change to the Maestro source code is submitted, the app needs to be p
  8. On the Settings page of the publish wizard, select the Release configuration.
  9. Click Publish.
  10. Right-click on the Microsoft.DotNet.Maestro.WebJob project, and select Publish as Azure WebJob.
+     * Note: You need the Azure Development workload installed in VS2017.
  11. Repeat steps 5-8.
  12. Locally undo the removal of the connection string in Web.config, and the adding of the publish profiles to the csprojs.
 
