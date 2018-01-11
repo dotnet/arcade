@@ -100,3 +100,20 @@ It will both email the outage to an alias (maybe dnceng) and notify the outage s
 and possible mark an outage.
 
 All of these alerts will alert to the same email address and also report to an alerting service.
+
+## What to Measure
+In short: whatever it's feasible to measure. Having a metric reporting should be very low cost to the service,
+as long as it's not in a very tight inner loop, so over-reporting should be prefered to under-reporting.
+
+Some examples of things that we should measure ...
+  * ... in any sort of producer/consumer model ...
+    * ... the average production and consumption rates
+    * ... the current depth of the backlog
+    * ... the average delay between production and consumption
+  * ... in any user exposed service ...
+    * ... availablity
+    * ... average response times for a fixed, known piece of work
+  * ... in a destributed service ...
+    * ... heartbeats inside the code that's doing work
+  * ... of any external service we depend on
+    * ... availability query (can we contact the service with the credentials we expect)
