@@ -117,7 +117,7 @@ Update the `schedule.json` to add, update or delete an object as required for th
 
 #### How to check the status of Helix jobs
 
-AppCompat jobs to Helix are submitted using `corefxac` token.  Status of these jobs is available at https://mc.dot.net/#/user/corfxac/builds
+AppCompat jobs to Helix are submitted using `corfxac` token.  Status of these jobs is available at https://mc.dot.net/#/user/corfxac/builds
 
 
 
