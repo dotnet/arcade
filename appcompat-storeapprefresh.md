@@ -94,3 +94,12 @@ Now insert all the apps into the DB, so run:
 
 The `<tablename>` must be the name of the create table above. The table should be empty since the command doesn't check for duplicates in any way.
 Please note that this might take a long time (hours) as I didn't spend much time trying to optimize the SQL call sequence (improve batching and such). The last import which was cca 114K apps took more than 3 hours to insert.
+
+## Applying ranking to the apps
+Last time I got ranking by asking for an ordered list of apps by purchase count. I specifically asked to get the apps identified by the BigID (the ID which always starts with 9). The person who helped was Zach Capehart <zacape@microsoft.com>. I got back a file which is in `\\fxcore\apps\WindowsStore\UWP\dec17\ranking\OrderedApps.txt"`. Using that file I then ran:
+
+`AppManager.exe updateapprank <tablename> OrderedApps.txt`
+
+This was VERY slow, so I ended up modifying the table to change the type of the `StoreAppId` column to `VARCHAR(15)` and creating a non-clustered index on it. After that the above command finished in about 2 hours for the cca 31K apps in the OrderedApps file.
+
+It's very possible that next time we will get the ranking data in a different format, so this process will have to be tweaked. But the goal is to fill the Rank column in the DB for the apps we have information about. The most "popular" app should be rank #1, second #2 and so on. Apps which we don't have information about should be left with rank NULL (we treat these as having rank after all those which do have a non-null value).
