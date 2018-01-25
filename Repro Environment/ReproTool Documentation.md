@@ -1,15 +1,18 @@
 #  Repro Tool Documentation
 The following document shows the user documentation of the repro environment solution according to the [requirements](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Prod%20Requirements.md).
 
+# Current version: 1.0.1
+The complete list of resolved issues is [here](./V1.0.1.md)
+
 ### Known Issues
-- [1708](https://github.com/dotnet/core-eng/issues/1708) Information in windows is not showing up on start.
-- [1649](https://github.com/dotnet/core-eng/issues/1649) Jenkins is still running on windows after creating a snapshot and a VM.
+- [2006](https://github.com/dotnet/core-eng/issues/2006) Set password for Fedora machines not working.
+- [2484](https://github.com/dotnet/core-eng/issues/2484) Set password for Windows 7 nto working.
 - [1487](https://github.com/dotnet/core-eng/issues/1487) Delete a VM in Mission Control sometimes reports error.
+- [2464](https://github.com/dotnet/core-eng/issues/2464) Use SCL workaround to run Python 2.7 in repro-tool scenarios on Redhat 6.9.
+- [2466](https://github.com/dotnet/core-eng/issues/2466) Permission denied when running scriptrunner.py in MAC.
+- [1649](https://github.com/dotnet/core-eng/issues/1649) Jenkins is still running on windows after creating a snapshot and a VM.
+- [2358](https://github.com/dotnet/core-eng/issues/2358) Improve the status: error experience in MC.
 - [1694](https://github.com/dotnet/core-eng/issues/1694) Reconsider the user experience when clicking Repro in Jenkins.
-- [2006](https://github.com/dotnet/core-eng/issues/2006) Password for some linux machines is not working.
-- [2023](https://github.com/dotnet/core-eng/issues/2023) Include test information in MC Repro view.
-- [2081](https://github.com/dotnet/core-eng/issues/2081) Fail to create server core machines
-- [2017](https://github.com/dotnet/core-eng/issues/2017) Not able to repro workitem with time outs.
 
 The complete list of issues in the baklog is located in the [Dev Test Failure Repro V2](https://github.com/dotnet/core-eng/issues/1988) Epic.
 
@@ -46,13 +49,19 @@ The workspace and files that contain information of the machine are located unde
 **In the event you are unable to find the payload zip file, you can download it manually from the url listed in the download.log file. (D:\download.log)**
 
 ### Linux
-Follow the instructions provided in the shell environment. Then run `. repro.sh` to set some environment variables and execute the job. You'll find the executables, dlls, pdbs, logs, etc. files here as well. 
+Follow the instructions provided in the shell environment. Then run `. repro.sh` to set some environment variables and get to the directory where the test was executed. You'll find the executables, the dll, pdb, logs, etc.
+ 
+ **Note:** Each Repo/job has a different way of running test. You could find this information in the logs of test.
+ For example, for CoreFx run `sh Runtest.sh $HELIX_CORRELATION_PAYLOAD`
 
 ### Mac
 1. `cd dotnetbuild/work/`
 2. Go to the latest updated folder. You could see the files information by doing `ls -la`
 3. Once in that folder keep doing `cd <folder>` until you find the folder with the name `payload`
-4. Run `. repro.sh` to set some environment variables and execute the job. You'll find the executables, dlls, pdbs, logs, etc. files here as well. 
+4. Run `. repro.sh` to set some environment variables and get to the directory where the test was executed. You'll find the executables, the dll, pdb, logs, etc.
+
+**Note:** Each Repo/job has a different way of running test. You could find this information in the logs of test.
+ For example, for CoreFx run `sh Runtest.sh $HELIX_CORRELATION_PAYLOAD`
 
 # How to use it in Jenkins
 When a job inside a PR fails, click on details to go to Jenkins and **Log In**. 
