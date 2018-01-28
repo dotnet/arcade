@@ -103,3 +103,11 @@ Last time I got ranking by asking for an ordered list of apps by purchase count.
 This was VERY slow, so I ended up modifying the table to change the type of the `StoreAppId` column to `VARCHAR(15)` and creating a non-clustered index on it. After that the above command finished in about 2 hours for the cca 31K apps in the OrderedApps file.
 
 It's very possible that next time we will get the ranking data in a different format, so this process will have to be tweaked. But the goal is to fill the Rank column in the DB for the apps we have information about. The most "popular" app should be rank #1, second #2 and so on. Apps which we don't have information about should be left with rank NULL (we treat these as having rank after all those which do have a non-null value).
+
+## Generating app product and version GUIDs
+The entire AppCompat infrastructure uses special identifiers to uniquely identify each app. For the infrastructure each version of each architecture of each app is treated as a unique app. Grouping of all versions and architectures of a given app is done only for purposes of easier consumption by humans (so that we can match the app behavior across architectures for example). For this purpose each app is assigned a GUID which is called a product GUID. Each version/architecture of an app is then assigned another GUID which is called a version GUID. The pair of the GUIDs formated as a string with underscore between them, so `"<product GUID>_<version GUID>"` is then used as the unique identifier of the application.
+To generate these identifiers, run the following command:
+
+`AppManager.exe generateappguids <tablename>`
+
+This will query the DB for all apps in the specified table which don't have any identifier assigned and will generate them and update the DB. This is not super fast, so expect it to take a couple of hours to finish. If the operation fails or you interrupt it running it again will resume, with one minor issue. If some versions of an app were alreasy assigned identifiers and some didn't for the same up, the second run will assign a new product identifier to this app. Not a big problem as nothing relies on this, but it's better to not interrupt this command.
