@@ -7,6 +7,7 @@ The complete list of resolved issues is [here](./V1.0.1.md)
 ### Known Issues
 - [2006](https://github.com/dotnet/core-eng/issues/2006) Set password for Fedora machines not working.
 - [2484](https://github.com/dotnet/core-eng/issues/2484) Set password for Windows 7 nto working.
+- [2551](https://github.com/dotnet/core-eng/issues/2551) Error when creating a OSX machine from Jenkins.
 - [1487](https://github.com/dotnet/core-eng/issues/1487) Delete a VM in Mission Control sometimes reports error.
 - [2464](https://github.com/dotnet/core-eng/issues/2464) Use SCL workaround to run Python 2.7 in repro-tool scenarios on Redhat 6.9.
 - [2466](https://github.com/dotnet/core-eng/issues/2466) Permission denied when running scriptrunner.py in MAC.
