@@ -93,7 +93,7 @@ Request information from the queue, so validation here might not be worth it.
 ## Helix Repro
 ### Console app
 - Validate parameters sent to Helix API
-- Handle response form the API
+- Handle response from the API
 
 ### Python
 - Disable Helix
@@ -109,5 +109,26 @@ Request information from the queue, so validation here might not be worth it.
     - Validate renaming files
 
 ## Jenkins Plugin
+### Attach to build
+- Validate the result of the build
+- Validate autentication is only for users part of the microsoft org
+- Validate the state of the autorepro environment variable
 
+### Create Snapshot
+- Validate the agent nature
+  - Scaleset
+  - Physical
+  - Azure VM
+- Zip workspace
+    - Validate parameters (workspace)
+- Upload payload
+    - Validate parameters
+- Repro API
+    - Validate parameters
+### Create VM
+- Validate the state of the autorepro environment variable
+- Repro API
+    - Validate parameters
+ 
+**Note:** Error handling for every request we do.
 
