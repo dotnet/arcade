@@ -20,6 +20,11 @@ This document speaks _only_ to the first bullet point below - e.g. tasks/targets
 -	Machine (VM) images and/or Docker containers
 -	"Resources" as planned by VSTS.
 
+####Approach
+-  The idea is to start with the "satellite" (non core) build tools so we can learn what works and what doesn't.  Once we're more comfortable, we can start to move farther into the "core" (touchier) tools.
+-  The assumption is that the ProdCon V2 effort will be largely addressing the repo level contracts themselves.  As mentioned earlier, the intent of this effort is to focus on the tools.  Note that there is likely some overlap (like with bootstrapping), but we'll deal with those as they come up.
+-  We like to take advantage of the ProdCon V2 effort to start off well.  To that end, there is some urgency so that we can be ready.
+
 ####Business Value (to remind us why we think we should do this)
 -  Build on the success of others.  Namely, being able to _reasonably_ share functionality across teams and repos. 
 -  Control and ownership.  Repo owners/devs can manage _what_ tools are needed (and which aren't), as well as _when_ they take it.  This includes not only new functionality, but almost more importantly, updates to existing.
@@ -29,6 +34,7 @@ This document speaks _only_ to the first bullet point below - e.g. tasks/targets
 ####Toolset Nuget Package Requirements
 -	If used by the build, the tool should be packaged, deployed, and consumed as a Nuget package.  (compilers, training tools, etc are out of scope.  See above list)
 -	Every package must be versioned.  (separate one-pager to flesh this out further)
+-  There needs to be a clear and easy way to bootstrap (get started and/or add a package).
 -	Each package is serviceable (forkable) itself, and can be easily used for servicing of the product.  The idea is that the common infra should “fork” with the product repo branch.  (see below for implementation notes/questions as this area is likely challenging to get right)
 -	Each contract represents a single area of work.  In other words, there is specific “intent” for each contract/package.  (contrasted with general “helper” stuff, or lumping several things together)
 -	New packages should be reviewed by the the product teams in conjunction with Engineering Services.  (think API reviews…)
