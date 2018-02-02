@@ -35,6 +35,7 @@ This document speaks _only_ to the first bullet point below - e.g. tasks/targets
 -	If used by the build, the tool should be packaged, deployed, and consumed as a Nuget package.  (compilers, training tools, etc are out of scope.  See above list)
 -	Every package must be versioned.  (Proposal: https://github.com/AArnott/Nerdbank.GitVersioning)
 - There needs to be a clear and easy way to bootstrap (get started and/or add a package).  (Proposal: https://github.com/chcosta/roslyn-tools/blob/bootstrap/docs/Toolset-Bootstrap.md)
+- A dev should be able to clone, then build without worrying about VM config or other prereqs.  (It's understood that this may not be 100% achievable today, but it should be the north star.)
 -	Each package is serviceable (forkable) itself, and can be easily used for servicing of the product.  The idea is that the common infra should “fork” with the product repo branch.  (see below for implementation notes/questions as this area is likely challenging to get right)
 - Each package must carry key pieces of meta-data for auditing.  Example: source repo link and commit SHA
 -	Each contract represents a single area of work.  In other words, there is specific “intent” for each contract/package.  (contrasted with general “helper” stuff, or lumping several things together)
@@ -46,7 +47,7 @@ This document speaks _only_ to the first bullet point below - e.g. tasks/targets
 
 ### Out of scope for this specific project
 -  Repo level contracts.  We do need to unify (at a high level) the "verbs" we use to interact with the repo.  (e.g. build, test, etc)  However, for this specific exercise, that work is out of scope.  Please note that much of this will likely be done as part of the ProdCon effort.
--  Tool chains like compilers, training, and the like.  The current thinking is to fully implement "config as code" (CodeFiguration  ®™ ASP) where the VM/Container contains the right tools what what is needed.
+-  ~~Tool chains like compilers, training, and the like.  The current thinking is to fully implement "config as code" (CodeFiguration  ®™ ASP) where the VM/Container contains the right tools what what is needed.~~
 
 ### Random Implementation Notes/Questions
 -  Tracking epic: https://github.com/dotnet/core-eng/issues/2548
