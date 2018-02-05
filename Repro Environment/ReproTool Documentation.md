@@ -72,7 +72,9 @@ Once logged in, there is going to be a new link by the name of `Repro`. Please n
 
 If the `Repro` link is clicked, a new job is going to start and will contain the same parameters the triggering job had and at the end, it will create a repro environment to be consumed by the user.
 
-**Note:** The jobs running on ci3.dot.net are not supported yet. Issue [1738](https://github.com/dotnet/core-eng/issues/1738) tracks the work.
+**Notes:** 
+- If the PR that originated the job has been merged, the Repro Tool will get the machine but not the bits in the machine.
+- The jobs running on ci3.dot.net are not supported yet. Issue [1738](https://github.com/dotnet/core-eng/issues/1738) tracks the work.
 
 ## How to know which Job is my Repro Job?
 The new job will say `Repro Job from build #<build number> requested by user <Github username>` as a description of it.
