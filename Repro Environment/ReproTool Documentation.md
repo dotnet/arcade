@@ -91,12 +91,23 @@ Please note that **Log in** is required in order to see the link.
 See Mission Control section for more information on how to connect to the machine.
 
 ## I'm in the machine, now what?
-The workspace and files that contain information of the machine are located under the `D:\` directory. Go inside the workspace to start debugging the problem.
-
-Some of the files available are:
+Once connected to the Machine all you need to do is locate the workspace folder. The location of it is OS dependent.
+Other type of files you would find in that location are:
 - Environment.txt
 - Installed.txt
 - Machine.txt
+
+### Windows
+The workspace and files that contain information of the machine are located under the `D:\` directory.
+
+### Linux
+Follow the instructions provided in the shell environment. Usually you will find it under /mnt.
+
+### Mac
+1. `cd dotnetbuild/work/`
+2. Go to the latest updated folder. You could see the files information by doing `ls -la`
+3. Once in that folder keep doing `cd <folder>` until you find the folder with the name `payload`
+4. Run `. repro.sh` to set some environment variables and get to the directory where the test was executed. You'll find the executables, the dll, pdb, logs, etc.
 
 # Mission Control
 In order to see the information in [Mission Control], the user must **Log in**, otherwhise no information will be available. Under the Repro tab you'll find all the information about the requested environments that are still active.
