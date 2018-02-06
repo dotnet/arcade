@@ -33,7 +33,9 @@ go to [Mission Control] -> Repros. There should be a new entry representing
 the snapshot and/or Virtual Machine just created. 
 
 Use the `Connect` button on the far right of the VM detail line to download a 
-script to connect to the VM. 
+script to connect to the VM. To connect to a VM, you need to be on corpnet. 
+
+ **Note:** There is a "known" problem with Azure and VPN - when accessing an Azure VM, your system uses the IP native to the system and not the corp address. The only way to access Azure systems through VPN is through a "jump box" (log into a system physically on corp and then TS/SSH into the system in Azure. One thing to try is to go into the VPN client options, there is an option to disable split tunneling that might work.
 
 See Mission Control section for more information.
 
@@ -87,6 +89,10 @@ A link in the left side of the screen under the name `Connect to Repro VM` will 
 Please note that **Log in** is required in order to see the link.
 
 ![](./Images/ConnectToVmLink.PNG?raw=true)
+
+To connect to a VM, you need to be on corpnet. 
+
+ **Note:** There is a "known" problem with Azure and VPN - when accessing an Azure VM, your system uses the IP native to the system and not the corp address. The only way to access Azure systems through VPN is through a "jump box" (log into a system physically on corp and then TS/SSH into the system in Azure. One thing to try is to go into the VPN client options, there is an option to disable split tunneling that might work.
 
 See Mission Control section for more information on how to connect to the machine.
 
