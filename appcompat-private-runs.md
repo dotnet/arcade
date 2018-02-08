@@ -27,6 +27,7 @@ These options can be used to turn on some of the special build modes for ILC:
   * Last shipped shared library is used to build the apps against (typically slightly different from the last shipped ILC)
   * To run the apps the shared library from the specified TestILC is used - note that by default we simply take the SharedLibrary.dll from the TestILC and run the apps with it.
 * `--pureNative` - apps are built with `/pureNative` option. If shared library is to be used, it will be built (by the test infra) using the specified TestILC and with the `/pureNative` option (so the shared library in the TestILC itself is ignored).
+* `--use64BitCompiler` - apps are built with `/Use64BitCompiler` option. No change to shared library behavior.
 * `--baseline` - the run will behave just like official baseline run. The specified TestILC is ignored and predetermined baseline version is used instead. If both `--tp` and `--baseline` are specified, then a different baseline build is used (the last shipped version of ILC).
 
 For less common command line options see below.
