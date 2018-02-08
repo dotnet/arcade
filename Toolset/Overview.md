@@ -1,4 +1,4 @@
-# ToolShed / Arcade (code name being discussed...)
+# Arcade
 
 ## Sharing Infrastructure Across .NET Core
 
