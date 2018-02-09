@@ -44,6 +44,8 @@ This document speaks _only_ to the first bullet point below - e.g. tasks/targets
 -	In addition to unit tests at the code level, end-to-end validation tests are required to ensure the contracts are still fulfilled.
 - Each package should carry its own documentation that is updated when the tool/package is updated.
 -	Each contract includes telemetry publishing for both a) usage and errors, and b) visibility (like Mission Control)
+- There is a "core" set of tool packages defined which every participating repo get.  Other packages produced by different product teams are also available, but these "curated" packages not automatically brought down by default.
+- New toolset packages should generally be extensively used in one repo, then if warranted, promoted to become more generally available.
 
 ### Out of scope for this specific project
 -  Repo level contracts.  We do need to unify (at a high level) the "verbs" we use to interact with the repo.  (e.g. build, test, etc)  However, for this specific exercise, that work is out of scope.  Please note that much of this will likely be done as part of the ProdCon effort.
