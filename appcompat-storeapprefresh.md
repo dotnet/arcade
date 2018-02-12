@@ -111,3 +111,15 @@ To generate these identifiers, run the following command:
 `AppManager.exe generateappguids <tablename>`
 
 This will query the DB for all apps in the specified table which don't have any identifier assigned and will generate them and update the DB. This is not super fast, so expect it to take a couple of hours to finish. If the operation fails or you interrupt it running it again will resume, with one minor issue. If some versions of an app were alreasy assigned identifiers and some didn't for the same up, the second run will assign a new product identifier to this app. Not a big problem as nothing relies on this, but it's better to not interrupt this command.
+
+## Add app size data
+It's also possible to add basic size information to the DB. This helps to filter out very large packages which would be unsuitable for testing for example.
+Add a new column to the table called ZipSize:
+
+`ALTER TABLE <tablename> ADD ZipSize BIGINT`
+
+And then run this command to fill it:
+
+`AppManager.exe addappsizetodb <tablename>`
+
+This will take a while (2 hours cca) as it has to go over all the apps both in the DB and in the blob storage.
