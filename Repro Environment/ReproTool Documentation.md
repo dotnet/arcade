@@ -55,7 +55,7 @@ The workspace and files that contain information of the machine are located unde
 Follow the instructions provided in the shell environment. Then run `. repro.sh` to set some environment variables and get to the directory where the test was executed. You'll find the executables, the dll, pdb, logs, etc.
  
  **Note:** Each Repo/job has a different way of running test. You could find this information in the logs of test.
- For example, for CoreFx run `sh Runtest.sh $HELIX_CORRELATION_PAYLOAD`
+ For example, for CoreFx run `sh RunTest.sh $HELIX_CORRELATION_PAYLOAD`
 
 ### Mac
 1. `cd dotnetbuild/work/`
@@ -64,7 +64,7 @@ Follow the instructions provided in the shell environment. Then run `. repro.sh`
 4. Run `. repro.sh` to set some environment variables and get to the directory where the test was executed. You'll find the executables, the dll, pdb, logs, etc.
 
 **Note:** Each Repo/job has a different way of running test. You could find this information in the logs of test.
- For example, for CoreFx run `sh Runtest.sh $HELIX_CORRELATION_PAYLOAD`
+ For example, for CoreFx run `sh RunTest.sh $HELIX_CORRELATION_PAYLOAD`
 
 # How to use it in Jenkins
 When a job inside a PR fails, click on details to go to Jenkins and **Log In**. 
