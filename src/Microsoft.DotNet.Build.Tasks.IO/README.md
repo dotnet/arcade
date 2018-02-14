@@ -117,3 +117,12 @@ Example:
     <Output TaskParameter="Files" ItemName="FilesWithHash">
 </ComputeManyChecksum>
 ```
+
+### `Chmod`
+
+Changes Unix permissions on files using `chmod`. On Windows, this task is a no-op.
+
+Task parameter    | Type    | Description
+------------------|---------|-------------
+File              | string  | **[Required]** The file to be chmod-ed.
+Mode              | string  | **[Required]** The file mode to be used.
