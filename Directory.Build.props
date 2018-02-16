@@ -1,0 +1,11 @@
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+  <PropertyGroup>
+    <VersionsPropsPath>$(RepoRoot)build\Versions.props</VersionsPropsPath>
+
+    <RepositoryUrl>https://github.com/dotnet/arcade</RepositoryUrl>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+
+    <RestoreSources>$(RestoreSources);https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</RestoreSources>
+  </PropertyGroup>
+</Project>

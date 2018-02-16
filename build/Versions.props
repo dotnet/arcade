@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- This repo version -->
+    <VersionBase>1.0.0</VersionBase>
+    <PreReleaseVersionLabel>beta</PreReleaseVersionLabel>
+    
+    <!-- Toolset -->
+    <RoslynToolsRepoToolsetVersion>1.0.0-beta-62614-02</RoslynToolsRepoToolsetVersion>
+    <DotNetCliVersion>2.0.2</DotNetCliVersion>
+
+
+    <!-- Libs -->
+    <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
+    <MoqVersion>4.5.21</MoqVersion>
+    <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
+    <MicrosoftBuildVersion>14.3.0</MicrosoftBuildVersion>
+    <MicrosoftBuildTasksCoreVersion>14.3.0</MicrosoftBuildTasksCoreVersion>
+  </PropertyGroup>
+
+  <PropertyGroup> 
+    <RestoreSources>
+      $(RestoreSources);
+      https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json
+    </RestoreSources>
+  </PropertyGroup>
+</Project>
