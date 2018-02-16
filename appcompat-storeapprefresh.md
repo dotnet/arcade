@@ -32,7 +32,7 @@ The tool needs makeappx.exe which is part of the Windows SDK, one is available i
 We copy the blobs to our storage just to get a snapshot from the store, so that we can do the rest without any dependency on the store team/servers. In theory we could start directly from the store without a copy, but it would make things time sensitive and possibly more complicated.
 Now we create a list of all the blobs we have available. This is done by running:
 
-`AppManager.exe enumeratebundles --outputCSV C:\ext\bundles.csv apps-dec17`
+`AppManager.exe enumerateblobs --outputCSV C:\ext\bundles.csv apps-dec17`
 
 The first parameter is the file to write the list to, the second parameter is the name of the storage container into which we copied the blobs (`apps-dec17` in this case).
 The tool will produce a CSV with URLs and names and size information about all the blobs. This is later used to drive the extraction.

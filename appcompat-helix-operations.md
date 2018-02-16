@@ -22,6 +22,7 @@ Run controller is a dedicated, DDIT managed VM for performing all AppCompat run 
 | CPUs, Memory, OS | 4, 8 GB, Windows Server 2016 |
 | Applications | Visual Studio 2017 |
 
+In case of problems with the VM itself (not typically when it's not running) file a TechEase ticket for DDITLABS. Use this past [ticket](http://ddweb/TechEase/TicketEdit.aspx?id=1485622) as a guide.
 
 ## Tools to perform runs
 
