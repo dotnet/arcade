@@ -5,8 +5,9 @@ The following document shows the user documentation of the repro environment sol
 The complete list of resolved issues is [here](./V1.0.1.md)
 
 ### Known Issues
+- [Blocking] [2484](https://github.com/dotnet/core-eng/issues/2484) Error getting a Windows 7 machine.
+- [2681](https://github.com/dotnet/core-eng/issues/2681) Can't create more than 1 VM per snapshot without deleting previous VMs.
 - [2006](https://github.com/dotnet/core-eng/issues/2006) Set password for Fedora machines not working.
-- [2484](https://github.com/dotnet/core-eng/issues/2484) Error getting a Windows 7 machine.
 - [2551](https://github.com/dotnet/core-eng/issues/2551) Error when creating a OSX machine from Jenkins.
 - [1487](https://github.com/dotnet/core-eng/issues/1487) Delete a VM in Mission Control sometimes reports error.
 - [2464](https://github.com/dotnet/core-eng/issues/2464) Use SCL workaround to run Python 2.7 in repro-tool scenarios on Redhat 6.9.
