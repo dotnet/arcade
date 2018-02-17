@@ -8,4 +8,13 @@
 
     <RestoreSources>$(RestoreSources);https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</RestoreSources>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Respect environment variable for the NuGet Packages Root if set; otherwise, use the current default location -->
+    <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(NUGET_PACKAGES)</NuGetPackageRoot>
+    <NuGetPackageRoot Condition="'$(RepoRoot)' != ''">$(RepoRoot)packages\</NuGetPackageRoot>
+    <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(MSBuildThisFileDirectory)packages\</NuGetPackageRoot>
+    <NuGetPackageRoot Condition="!HasTrailingSlash('$(NuGetPackageRoot)')">$(NuGetPackageRoot)\</NuGetPackageRoot>
+    <RestorePackagesPath>$(NuGetPackageRoot)</RestorePackagesPath>
+  </PropertyGroup>  
 </Project>

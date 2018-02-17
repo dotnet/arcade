@@ -40,19 +40,19 @@
   -->
   
   <PropertyGroup>
-    <_CoreToolsTasksFeedTaskDir>$(MSBuildThisFileDirectory)net46/</_CoreToolsTasksFeedTaskDir>
-    <_CoreToolsTasksFeedTaskDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)netstandard1.5/</_CoreToolsTasksFeedTaskDir>
+    <_MicrosoftDotNetBuildTasksFeedTaskDir>$(MSBuildThisFileDirectory)net46/</_MicrosoftDotNetBuildTasksFeedTaskDir>
+    <_MicrosoftDotNetBuildTasksFeedTaskDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)netstandard1.5/</_MicrosoftDotNetBuildTasksFeedTaskDir>
   </PropertyGroup>
-  <UsingTask TaskName="ConfigureInputFeeds" AssemblyFile="$(_CoreToolsTasksFeedTaskDir)CoreTools.Tasks.Feed.dll"/>
-  <UsingTask TaskName="CopyBlobDirectory" AssemblyFile="$(_CoreToolsTasksFeedTaskDir)CoreTools.Tasks.Feed.dll"/>
-  <UsingTask TaskName="FetchOrchestratedBuildManifestInfo" AssemblyFile="$(_CoreToolsTasksFeedTaskDir)CoreTools.Tasks.Feed.dll"/>
-  <UsingTask TaskName="GetBlobFeedPackageList" AssemblyFile="$(_CoreToolsTasksFeedTaskDir)CoreTools.Tasks.Feed.dll"/>
-  <UsingTask TaskName="ParseBlobUrl" AssemblyFile="$(_CoreToolsTasksFeedTaskDir)CoreTools.Tasks.Feed.dll"/>
-  <UsingTask TaskName="PushOrchestratedBuildManifest" AssemblyFile="$(_CoreToolsTasksFeedTaskDir)CoreTools.Tasks.Feed.dll"/>
-  <UsingTask TaskName="PushToBlobFeed" AssemblyFile="$(_CoreToolsTasksFeedTaskDir)CoreTools.Tasks.Feed.dll"/>
-  <UsingTask TaskName="UpdateOrchestratedBuildManifest" AssemblyFile="$(_CoreToolsTasksFeedTaskDir)CoreTools.Tasks.Feed.dll"/>
-  <UsingTask TaskName="WriteOrchestratedBuildManifestToFile" AssemblyFile="$(_CoreToolsTasksFeedTaskDir)CoreTools.Tasks.Feed.dll"/>
-  <UsingTask TaskName="WriteOrchestratedBuildManifestSummaryToFile" AssemblyFile="$(_CoreToolsTasksFeedTaskDir)CoreTools.Tasks.Feed.dll"/>
+  <UsingTask TaskName="ConfigureInputFeeds" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
+  <UsingTask TaskName="CopyBlobDirectory" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
+  <UsingTask TaskName="FetchOrchestratedBuildManifestInfo" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
+  <UsingTask TaskName="GetBlobFeedPackageList" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
+  <UsingTask TaskName="ParseBlobUrl" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
+  <UsingTask TaskName="PushOrchestratedBuildManifest" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
+  <UsingTask TaskName="PushToBlobFeed" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
+  <UsingTask TaskName="UpdateOrchestratedBuildManifest" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
+  <UsingTask TaskName="WriteOrchestratedBuildManifestToFile" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
+  <UsingTask TaskName="WriteOrchestratedBuildManifestSummaryToFile" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
   
   <PropertyGroup>
     <PushToBlobFeed_Overwrite Condition="'$(PushToBlobFeed_Overwrite)' == ''">false</PushToBlobFeed_Overwrite>
