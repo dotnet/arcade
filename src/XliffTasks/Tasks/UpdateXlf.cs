@@ -49,7 +49,9 @@ namespace XliffTasks.Tasks
                         throw new BuildErrorException($"'{xlfPath}' for '{sourcePath}' does not exist. {HowToUpdate}");
                     }
 
-                    if (!xlfDocument.Update(sourceDocument, sourceDocumentId))
+                    bool updated = xlfDocument.Update(sourceDocument, sourceDocumentId);
+
+                    if (!updated)
                     {
                         continue; // no changes
                     }
