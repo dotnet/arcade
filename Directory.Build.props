@@ -8,7 +8,7 @@
 
     <RestoreSources>$(RestoreSources);https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</RestoreSources>
 
-    <!-- Required source to acquire Microsoft.Build.* dependencies that the Feed package needs -->
+    <!-- Required source to acquire Microsoft.Build.* dependencies that the Feed package needs - https://github.com/dotnet/arcade/issues/10 -->
     <RestoreSources>$(RestoreSources);https://dotnet.myget.org/F/dotnet-buildtools/api/v3/index.json</RestoreSources>
   </PropertyGroup>
 
