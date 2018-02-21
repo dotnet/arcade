@@ -22,7 +22,7 @@
   </metadata>
   <files>
     <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Feed\netstandard1.5\*.dll" target="build\netstandard1.5" />
-    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Feed.net45\net45\*.dll" target="build\net46" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Feed\net45\*.dll" target="build\net46" />
     <file src="build\**" target="build" />
     <file src="sdk\**" target="sdk" />
   </files>
