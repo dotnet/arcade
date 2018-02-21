@@ -2,135 +2,44 @@
 <Project Sdk="RoslynTools.RepoToolset">
   <PropertyGroup>
     <AssemblyName>Microsoft.DotNet.Build.Tasks.Feed</AssemblyName>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net45</TargetFramework>
     <NuGetRuntimeIdentifier>win7-x64</NuGetRuntimeIdentifier>
-    <CopyNuGetImplementations>true</CopyNuGetImplementations>
-    <BuildToolsTaskDir>E:\gh\dotnet\buildtools\bin\AnyOS.AnyCPU.Debug\chcosta\</BuildToolsTaskDir>
-    <PrereleaseResolveNuGetPackages>true</PrereleaseResolveNuGetPackages>
-  </PropertyGroup>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <PackageTargetFallback>dotnet;net46</PackageTargetFallback>
 
-  <UsingTask TaskName="PrereleaseResolveNuGetPackageAssets" AssemblyFile="$(BuildToolsTaskDir)Microsoft.DotNet.Build.Tasks.dll"/>
-  <UsingTask TaskName="ValidateProjectDependencyVersions" AssemblyFile="$(BuildToolsTaskDir)Microsoft.DotNet.Build.Tasks.dll"/>
-  <UsingTask TaskName="IsRestoreRequired" AssemblyFile="$(BuildToolsTaskDir)Microsoft.DotNet.Build.Tasks.dll"/>
+    <!-- We hit package version conflicts due to assembly version mismatches, we are expecting those and ignore them for this project. -->
+    <NoWarn>$(NoWarn);NU1605</NoWarn>
+    <ResolveAssemblyReferencesSilent>True</ResolveAssemblyReferencesSilent>
+  </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)..\Compile.props" />
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Framework" Version="14.3.0" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="14.3.0" />
-    <PackageReference Include="Microsoft.DotNet.VersionTools" Version="2.1.0-preview2-02516-02" />
+    <!-- RepoToolset adds packagereferences to Microsoft.Net.Compilers and Xlifftasks that we don't need -->
+    <PackageReference Remove="@(PackageReference)" />
+  
+    <PackageReference Include="Microsoft.DotNet.VersionTools" Version="2.1.0-preview2-02515-0"/>
+    <PackageReference Include="NuGet.Versioning" Version="4.3.0" />
+    <PackageReference Include="NuGet.Packaging" Version="4.3.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="SleetLib" Version="2.2.24" />
-    <PackageReference Include="System.Xml.XmlDocument" Version="4.0.1" />
-    <PackageReference Include="WindowsAzure.Storage" Version="8.5.0" />
+    <PackageReference Include="System.Reflection.Metadata" Version="1.4.1" />
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.4.0-beta-24813-03" />
   </ItemGroup>
 
-  <Target Name="ResolveNuGetPackages"
-          Condition="'$(PrereleaseResolveNuGetPackages)'=='true'"
-          BeforeTargets="PrepareForBuild">
-
-<Message Importance="High" Text="ProjectAssetsFile: $(ProjectAssetsFile)" />
-    <PrereleaseResolveNuGetPackageAssets Condition="Exists('$(ProjectAssetsFile)')"
-                               AllowFallbackOnTargetSelection="true"
-                               IncludeFrameworkReferences="false"
-                               NuGetPackagesDirectory="$(PackagesDir)"
-                               RuntimeIdentifier="win"
-                               ProjectLanguage="$(Language)"
-                               ProjectLockFile="$(ProjectAssetsFile)"
-                               TargetMonikers="$(NuGetTargetMoniker)"
-                               ProjectReferencesCreatingPackages="">
-      <Output TaskParameter="ResolvedAnalyzers" ItemName="Analyzer" />
-      <Output TaskParameter="ResolvedReferences" ItemName="_ReferenceFromPackage" />
-      <Output TaskParameter="ResolvedCopyLocalItems" ItemName="_ReferenceCopyLocalPathsFromPackage" />
-      <Output TaskParameter="ReferencedPackages" ItemName="ReferencedNuGetPackages" />
-    </PrereleaseResolveNuGetPackageAssets>
-
-    <!-- We may have package references that we want to replace with project references -->
-    <ItemGroup>
-      <!-- Intersect project-refs with package-refs.
-             Project refs may be in _ResolvedProjectReferencePaths or Reference items.
-             Copy local may be in _ResolvedProjectReferencePaths or ReferenceCopyLocalPaths.
-             Copy local items may also be in any item like Content but we currently don't strip those.-->
-      <_ReferenceFileNamesToRemove Include="@(_ReferenceFromPackage)" Condition="'@(_ResolvedProjectReferencePaths->'%(FileName)%(Extension)')' == '%(FileName)%(Extension)'" />
-      <_ReferenceFileNamesToRemove Include="@(_ReferenceFromPackage)" Condition="'@(Reference->'%(FileName)%(Extension)')' == '%(FileName)%(Extension)'" />
-
-      <!-- If local copy is disabled remove all references, otherwise remove only project refrerences -->
-      <_ReferenceCopyLocalPathsFileNamesToRemove Include="@(_ReferenceCopyLocalPathsFromPackage)" Condition="'$(DisableReferenceCopyLocal)' == 'true' OR '@(_ResolvedProjectReferencePaths->'%(FileName)%(Extension)')' == '%(FileName)%(Extension)'" />
-      <_ReferenceCopyLocalPathsFileNamesToRemove Include="@(_ReferenceCopyLocalPathsFromPackage)" Condition="'$(DisableReferenceCopyLocal)' == 'true' OR '@(ReferenceCopyLocalPaths->'%(FileName)%(Extension)')' == '%(FileName)%(Extension)'" />
-
-      <!-- strip from the resolved package output -->
-      <_ReferenceFromPackage Remove="@(_ReferenceFileNamesToRemove)" />
-      <_ReferenceCopyLocalPathsFromPackage Remove="@(_ReferenceCopyLocalPathsFileNamesToRemove)" />
-
-      <!-- add the filtered resolved package output -->
-      <Reference Include="@(_ReferenceFromPackage)" />
-      <ReferenceCopyLocalPaths Include="@(_ReferenceCopyLocalPathsFromPackage)" />
-    </ItemGroup>
-
-    <Message Text="Excluding @(_ReferenceFileNamesToRemove);@(_ReferenceCopyLocalPathsFileNamesToRemove) from package references since the same file is provided by a project reference."
-             Condition="'@(_ReferenceFileNamesToRemove)' != '' or '@(_ReferenceCopyLocalPathsFileNamesToRemove)' != ''"/>
-  </Target>
-
-  <Target Name="RemoveTransitiveCompileReferences"
-          AfterTargets="ResolveNuGetPackages">
-    <ItemGroup Condition="'$(OmitTransitiveCompileReferences)' == 'true'">
-      <!-- get all references from nuget packages as ID so that we can substract the direct ref IDs-->
-      <_ReferenceAsPackageId Include="@(Reference->'%(NuGetPackageId)')" Condition="'%(Reference.NuGetPackageId)' != ''">
-        <OriginalIdentity>%(Identity)</OriginalIdentity>
-      </_ReferenceAsPackageId>
-
-      <!-- Indirect references are any references whose PackageId isn't in the direct reference set: ReferencedNuGetPackages -->
-      <_IndirectReferenceAsPackageId Include="@(_ReferenceAsPackageId)" Exclude="@(ReferencedNuGetPackages)"/>
-
-      <!-- Transform back to original -->
-      <IndirectReference Include="@(_IndirectReferenceAsPackageId->'%(OriginalIdentity)')" />
-
-      <Reference Remove="@(IndirectReference)"/>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="FilterTargetingPackResolvedNugetPackages"
-          Condition="'$(SkipFilterTargetingPackResolvedNugetPackages)' != 'true'"
-          AfterTargets="ResolveNuGetPackages" >
-    <PropertyGroup>
-      <_TargetingPackPrefix>Microsoft.TargetingPack</_TargetingPackPrefix>
-      <TargetingPackReferenceCoreAssembly Condition="'$(TargetingPackReferenceCoreAssembly)' == '' and '%(TargetingPackReference.Identity)' == 'System.Private.CoreLib'">System.Private.CoreLib</TargetingPackReferenceCoreAssembly>
-      <TargetingPackReferenceCoreAssembly Condition="'$(TargetingPackReferenceCoreAssembly)' == ''">mscorlib</TargetingPackReferenceCoreAssembly>
-
-      <!--
-        S.P.CoreLib is generally architecture specific so disable the msbuild warning about
-        referencing it from an MSIL project.
-        -->
-      <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch Condition="'$(TargetingPackReferenceCoreAssembly)' == 'System.Private.CoreLib'">None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
-    </PropertyGroup>
-
-    <!--
-      Add the mscorlib and windows to the reference set by default to avoid a lot of duplication in projects
-      They only act as a filter so if they aren't present in the packages references it will not impact anything.
-    -->
-    <ItemGroup Condition="'$(ExcludeDefaultTargetingPackReferences)' != 'true'">
-      <TargetingPackReference Include="$(TargetingPackReferenceCoreAssembly)" Condition="'$(TargetingPackReferenceCoreAssembly)' != ''" />
-      <TargetingPackReference Include="Windows" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <!-- Filter out all references coming out of the targeting pack packages except for TargetingPackReferences -->
-      <ResolvedTargetingPackReference Include="@(Reference)"
-        Condition="$([System.String]::new('%(Reference.NuGetPackageId)').StartsWith('$(_TargetingPackPrefix)'))" />
-      <ResolvedTargetingPackReferenceFilename Include="@(ResolvedTargetingPackReference -> '%(Filename)')">
-        <OriginalIdentity>%(Identity)</OriginalIdentity>
-      </ResolvedTargetingPackReferenceFilename>
-      <ResolvedTargetingPackReferenceFilename Remove="@(TargetingPackReference)" />
-      <PackageReferencesToRemove Include="@(ResolvedTargetingPackReferenceFilename -> '%(OriginalIdentity)')" />
-      <Reference Remove="@(PackageReferencesToRemove)" />
-
-      <!-- Filter out the copy-local set of references coming from the targeting pack packages -->
-      <PackageCopyLocalToRemove Include="@(ReferenceCopyLocalPaths)"
-        Condition="$([System.String]::new('%(ReferenceCopyLocalPaths.NuGetPackageId)').StartsWith('$(_TargetingPackPrefix)'))" />
-      <ReferenceCopyLocalPaths Remove="@(PackageCopyLocalToRemove)" />
-    </ItemGroup>
-
-    <Message Importance="Low"
-             Text="Removed all ResolvedTagetingPackReferences that were not specified explicitly as a TargetingPackReference=[@(TargetingPackReference)]. PackageReferencesToRemove=[@(PackageReferencesToRemove)]." />
-  </Target>  
-  
+  <ItemGroup>
+    <Reference Include="Microsoft.Build.Tasks.v4.0" />
+    <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.Build.Utilities.v4.0" />
+    <Reference Include="System" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Collections" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.IO" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Runtime" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
 </Project>
