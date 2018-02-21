@@ -16,6 +16,7 @@
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <MicrosoftBuildVersion>14.3.0</MicrosoftBuildVersion>
     <MicrosoftBuildTasksCoreVersion>14.3.0</MicrosoftBuildTasksCoreVersion>
+    <MicrosoftDotNetVersionTools>2.1.0-preview2-02521-02</MicrosoftDotNetVersionTools>
   </PropertyGroup>
 
   <PropertyGroup> 
