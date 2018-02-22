@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata minClientVersion="2.8.1">
+    <id>Microsoft.DotNet.Build.Tasks.Feed</id>
+    <version>$version$</version>
+    <title>DotNet Build Feed Tools</title>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <licenseUrl>$licenseUrl$</licenseUrl>
+    <projectUrl>$repoUrl$</projectUrl>
+    <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
+    <repository url="$repoUrl$" />
+    <summary>DotNet Build Feed Tools</summary>
+    <description>This package provides support for publishing assets to a nuget protocol based feed.
+    </description>
+    <copyright>Copyright © Microsoft Corporation</copyright>
+    <packageTypes>
+      <packageType name="MSBuildSdk" />
+    </packageTypes>
+    <tags></tags>
+    <dependencies>
+       <!-- Do not add any dependencies to this package as we want to install it versionless (i.e. -ExcludeVersion) and we don't want the dependencies to be installed that way -->
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Feed\netstandard1.5\*.dll" target="build\netstandard1.5" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Feed\net45\*.dll" target="build\net46" />
+    <file src="build\**" target="build" />
+    <file src="sdk\**" target="sdk" />
+  </files>
+</package>
