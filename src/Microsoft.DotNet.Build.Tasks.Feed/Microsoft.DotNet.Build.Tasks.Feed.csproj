@@ -27,34 +27,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\common\AzureBlobLease.cs">
-      <Link>AzureBlobLease.cs</Link>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)..\common\AzureConnectionStringBuildTask.cs">
-      <Link>AzureConnectionStringBuildTask.cs</Link>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)..\common\AzureHelper.cs">
-      <Link>AzureHelper.cs</Link>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)..\common\CreateAzureContainer.cs">
-      <Link>CreateAzureContainer.cs</Link>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)..\common\UploadClient.cs">
-      <Link>UploadClient.cs</Link>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)..\common\UploadToAzure.cs">
-      <Link>UploadToAzure.cs</Link>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
      <!-- RepoToolset adds packagereferences to Microsoft.Net.Compilers and Xlifftasks that we don't 
           need, so clear PackageReference item -->
-    <PackageReference Remove="@(PackageReference)" />
-    <PackageReference Include="Microsoft.DotNet.VersionTools" Version="$(MicrosoftDotNetVersionTools)"/>
-    <PackageReference Include="SleetLib" Version="2.2.24"/>
+    <PackageReference Include="Microsoft.DotNet.VersionTools" Version="$(MicrosoftDotNetVersionToolsVersion)"/>
+    <PackageReference Include="SleetLib" Version="$(SleetLibVersion)"/>
   </ItemGroup>
-
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <PackageReference Include="NuGet.Versioning" Version="4.3.0" />

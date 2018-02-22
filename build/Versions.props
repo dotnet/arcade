@@ -5,10 +5,8 @@
     <VersionBase>1.0.0</VersionBase>
     <PreReleaseVersionLabel>beta</PreReleaseVersionLabel>
     
-    <!-- Toolset -->
-    <RoslynToolsRepoToolsetVersion>1.0.0-beta-62614-02</RoslynToolsRepoToolsetVersion>
-    <DotNetCliVersion>2.0.2</DotNetCliVersion>
-
+    <!-- Opt-out repo features -->
+    <UsingToolXliff>false</UsingToolXliff>
 
     <!-- Libs -->
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
@@ -16,13 +14,15 @@
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <MicrosoftBuildVersion>14.3.0</MicrosoftBuildVersion>
     <MicrosoftBuildTasksCoreVersion>14.3.0</MicrosoftBuildTasksCoreVersion>
-    <MicrosoftDotNetVersionTools>2.1.0-preview2-02521-02</MicrosoftDotNetVersionTools>
+    <MicrosoftDotNetVersionToolsVersion>2.1.0-preview2-02521-02</MicrosoftDotNetVersionToolsVersion>
+    <SleetLibVersion>2.2.24</SleetLibVersion>
   </PropertyGroup>
 
-  <PropertyGroup> 
+  <PropertyGroup>
     <RestoreSources>
       $(RestoreSources);
-      https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json
+      https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
+      https://dotnet.myget.org/F/dotnet-buildtools/api/v3/index.json;
     </RestoreSources>
-  </PropertyGroup>
+  </PropertyGroup>  
 </Project>
