@@ -13,12 +13,12 @@ This document speaks _only_ to the first bullet point below - e.g. tasks/targets
 
 ### Methods for Consuming the .Net Core Shared Infrastructure Components
 
--	**MSBuild tasks/targets as Nuget packages**  (<-- what this doc is about)
--	VSTS extensions  (check the box in VSTS)
--	Hosted services with REST end points which are owned by the Engineering Services
--	Toolsets (think compilers, training tools, etc) as binaries in their own setup or Nuget packages
--	Machine (VM) images and/or Docker containers
--	"Resources" as planned by VSTS.
+- **MSBuild tasks/targets as Nuget packages**  (<-- what this doc is about)
+- VSTS extensions  (check the box in VSTS)
+- Hosted services with REST end points which are owned by the Engineering Services
+- Toolsets (think compilers, training tools, etc) as binaries in their own setup or Nuget packages
+- Machine (VM) images and/or Docker containers
+- "Resources" as planned by VSTS.
 
 ### Approach
 -  The idea is to start with the "satellite" (non core) build tools so we can learn what works and what doesn't.  Once we're more comfortable, we can start to move farther into the "core" (touchier) tools.
