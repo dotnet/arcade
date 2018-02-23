@@ -3,7 +3,7 @@
 ## Sharing Infrastructure Across .NET Core
 
 ### Overview / Introduction
-We need well-understood and consistent mechanisms to consume, update, and share engineering infrastructure across the .NET Core team.  
+We need well-understood and consistent mechanisms to consume, update, and share engineering infrastructure across the .NET Core team.
 
 The primary concept is to break the infrastructure into “pay for play” components, such that one piece of functionality can be consumed, with minimal dependencies.  The idea is to not force unnecessary dependencies, thus making it more reasonable to consume only what is needed.
 
