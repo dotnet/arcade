@@ -2,6 +2,7 @@
 // Jenkins DSL: https://github.com/jenkinsci/job-dsl-plugin/wiki
 
 import jobs.generation.Utilities;
+import jobs.generation.InternalUtilities;
 
 static getJobName(def opsysName, def configName) {
   return "${opsysName}_${configName}"
