@@ -1,0 +1,66 @@
+{
+    "sign": [
+      {
+        "certificate": "MicrosoftSHA2",
+        "strongName": "MsSharedLib72",
+        "values": [
+          "bin/Microsoft.DotNet.Build.Tasks.Feed/netstandard1.5/Microsoft.DotNet.Build.Tasks.Feed.dll",
+          "bin/Microsoft.DotNet.Build.Tasks.Feed/netstandard1.5/*/Microsoft.DotNet.Build.Tasks.Feed.resources.dll",
+          "bin/Microsoft.DotNet.Build.Tasks.Feed/net45/Microsoft.DotNet.Build.Tasks.Feed.dll",
+          "bin/Microsoft.DotNet.Build.Tasks.Feed/net45/*/Microsoft.DotNet.Build.Tasks.Feed.resources.dll"
+        ]
+      },
+      {
+        "certificate": null,
+        "strongName": null,
+        "values": [
+          "packages/*.nupkg"
+        ]
+      }
+    ],
+    "exclude": [
+      "Microsoft.Azure.KeyVault.Core.dll",
+      "Microsoft.Build.Framework.dll",
+      "Microsoft.Build.Utilities.Core.dll",
+      "Microsoft.CSharp.dll",
+      "Microsoft.Data.Edm.dll",
+      "Microsoft.Data.OData.dll",
+      "Microsoft.Data.Services.Client.dll",
+      "Microsoft.DiaSymReader.dll",
+      "Microsoft.DiaSymReader.PortablePdb.dll",
+      "Microsoft.DotNet.VersionTools.dll",
+      "Microsoft.WindowsAzure.Storage.dll",
+      "Newtonsoft.Json.dll",
+      "NuGet.Common.dll",
+      "NuGet.Frameworks.dll",
+      "NuGet.Packaging.Core.dll",
+      "NuGet.Packaging.dll",
+      "NuGet.Versioning.dll",
+      "SleetLib.dll",
+      "System.Buffers.dll",
+      "System.Collections.Concurrent.dll",
+      "System.Collections.Immutable.dll",
+      "System.Collections.NonGeneric.dll",
+      "System.Diagnostics.DiagnosticSource.dll",
+      "System.Dynamic.Runtime.dll",
+      "System.IO.Compression.ZipFile.dll",
+      "System.IO.FileSystem.Primitives.dll",
+      "System.ObjectModel.dll",
+      "System.Reflection.Emit.dll",
+      "System.Reflection.Emit.ILGeneration.dll",
+      "System.Reflection.Metadata.dll",
+      "System.Reflection.TypeExtensions.dll",
+      "System.Runtime.InteropServices.RuntimeInformation.dll",
+      "System.Runtime.Numerics.dll",
+      "System.Runtime.Serialization.Primitives.dll",
+      "System.Security.Cryptography.Primitives.dll",
+      "System.Spatial.dll",
+      "System.Threading.dll",
+      "System.Threading.Tasks.Extensions.dll",
+      "System.Threading.Thread.dll",
+      "System.Threading.ThreadPool.dll",
+      "System.Xml.ReaderWriter.dll",
+      "System.Xml.XDocument.dll",
+      "System.Xml.XmlDocument.dll"
+    ]
+  }
