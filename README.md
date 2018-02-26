@@ -1,4 +1,4 @@
-# Arcade
+- Arcade
 
 ## Sharing Infrastructure Across .NET Core
 
