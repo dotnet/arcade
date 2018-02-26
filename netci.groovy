@@ -51,10 +51,10 @@ static addBuildSteps(def job, def projectName, def opsysName, def configName, de
       def filesToExclude = "**/artifacts/${configName}/obj/**"
 
       def jobName = getJobName(opsysName, configName)
-      def fullJobName = InternalUtilities.getFullJobName(projectName, jobName, isPR)
+      def fullJobName = Utilities.getFullJobName(projectName, jobName, isPR)
       def myJob = job(fullJobName)
 
-     Internal Utilities.standardJobSetup(myJob, projectName, isPR, "*/${branchName}")
+      InternalUtilities.standardJobSetup(myJob, projectName, isPR, "*/${branchName}")
 
       if (isPR) {
         addGithubPRTriggerForBranch(myJob, branchName, jobName)
