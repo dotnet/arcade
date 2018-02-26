@@ -21,7 +21,7 @@ This document speaks _only_ to the first bullet point below - e.g. tasks/targets
 - "Resources" as planned by VSTS.
 
 ### Approach
--  The idea is to start with the "satellite" (non core) build tools so we can learn what works and what doesn't.  Once we're more comfortable, we can start to move farther into the "core" (touchier) tools.
+-  The idea is to start with the "satellite" (non-core) build tools so we can learn what works and what doesn't.  Once we're more comfortable, we can start to move farther into the "core" (touchier) tools.
 -  The assumption is that the ProdCon V2 effort will be largely addressing the repo level contracts themselves.  As mentioned earlier, the intent of this effort is to focus on the tools.  Note that there is likely some overlap (like with bootstrapping), but we'll deal with those as they come up.
 -  We like to take advantage of the ProdCon V2 effort to start off well.  To that end, there is some urgency so that we can be ready.
 
