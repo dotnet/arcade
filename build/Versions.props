@@ -4,18 +4,20 @@
     <!-- This repo version -->
     <VersionBase>1.0.0</VersionBase>
     <PreReleaseVersionLabel>beta</PreReleaseVersionLabel>
-    
+
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
     <UsingToolMicrosoftNetCompilers>false</UsingToolMicrosoftNetCompilers>
-    
+
     <!-- Libs -->
-    <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
-    <MoqVersion>4.5.21</MoqVersion>
-    <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
-    <MicrosoftBuildVersion>14.3.0</MicrosoftBuildVersion>
     <MicrosoftBuildTasksCoreVersion>14.3.0</MicrosoftBuildTasksCoreVersion>
+    <MicrosoftBuildVersion>14.3.0</MicrosoftBuildVersion>
     <MicrosoftDotNetVersionToolsVersion>2.1.0-preview2-02521-02</MicrosoftDotNetVersionToolsVersion>
+    <MicrosoftNETTestSdkVersion>15.6.0</MicrosoftNETTestSdkVersion>
+    <MonoPosixNETStandardVersion>1.0.0-beta5</MonoPosixNETStandardVersion>
+    <MoqVersion>4.5.21</MoqVersion>
+    <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
+    <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <SleetLibVersion>2.2.24</SleetLibVersion>
   </PropertyGroup>
 
@@ -24,5 +26,5 @@
       $(RestoreSources);
       https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
     </RestoreSources>
-  </PropertyGroup>  
+  </PropertyGroup>
 </Project>

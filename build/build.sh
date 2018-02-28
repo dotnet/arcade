@@ -118,18 +118,18 @@ done
 # Result: Sets 'readjsonvalue' to the value of the provided json key
 # Note: this method may return unexpected results if there are duplicate
 # keys in the json
-function ReadJson {  
+function ReadJson {
   local unamestr="$(uname)"
   local sedextended='-r'
   if [[ "$unamestr" == 'Darwin' ]]; then
     sedextended='-E'
-  fi; 
+  fi;
 
   readjsonvalue="$(grep -m 1 "\"${2}\"" ${1} | sed ${sedextended} 's/^ *//;s/.*: *"//;s/",?//')"
   if [[ ! "$readjsonvalue" ]]; then
     echo "Error: Cannot find \"${2}\" in ${1}" >&2;
     ExitWithExitCode 1
-  fi; 
+  fi;
 }
 
 function InstallDotNetCli {
@@ -137,7 +137,7 @@ function InstallDotNetCli {
 
   ReadJson "$globaljsonfile" "version"
   local dotnetcliversion="$readjsonvalue"
-  
+
   if [[ -z "$DOTNET_INSTALL_DIR" ]]; then
     export DOTNET_INSTALL_DIR="$reporoot/artifacts/.dotnet/$dotnetcliversion"
   fi
@@ -201,7 +201,7 @@ function InstallDotNetCli {
 # https://github.com/dotnet/cli/issues/6589
 # Currently, SDK's always get resolved to the global location, but we want our packages
 # to all be installed into a local folder (prevent machine contamination from global state).
-# 
+#
 # We are restoring all of our packages locally and setting nugetpackageroot to reference the
 # local location, but this breaks Custom SDK's which are expecting the SDK to be available
 # from the global user folder.
@@ -219,7 +219,7 @@ function InstallToolset {
     mkdir -p "$tempdir"
     echo '<Project Sdk="RoslynTools.RepoToolset"><Target Name="NoOp"/></Project>' > $toolsetproj
 
-    dotnet msbuild $toolsetproj /t:NoOp /m /nologo /clp:Summary /warnaserror /p:nugetpackageroot=$nugetpackageroot /v:$verbosity
+    dotnet msbuild $toolsetproj /t:NoOp /m /nologo /clp:Summary /warnaserror "/p:NuGetPackageRoot=$nugetpackageroot/" /v:$verbosity
     local lastexitcode=$?
 
     if [[ $lastexitcode != 0 ]]; then
@@ -232,7 +232,7 @@ function InstallToolset {
 function Build {
   InstallDotNetCli
 
-  if [[ $prepareMachine ]]; then
+  if [[ "$prepareMachine" == true ]]; then
     mkdir -p "$nugetpackageroot"
     dotnet nuget locals all --clear
     local lastexitcode=$?
@@ -244,10 +244,10 @@ function Build {
   fi
 
   InstallToolset
-  MakeGlobalSdkAvailableLocal  
+  MakeGlobalSdkAvailableLocal
 
   local logcmd=''
-  if [[ $ci || $log ]]; then
+  if [[ "$ci" == true || "$log" == true ]] ; then
     mkdir -p $logdir
     logcmd="/bl:$logdir/Build.binlog"
   fi
@@ -256,7 +256,11 @@ function Build {
     solution="$reporoot/Arcade.sln"
   fi
 
-  dotnet msbuild $toolsetbuildproj /m /nologo /clp:Summary /warnaserror /v:$verbosity $logcmd /p:Configuration=$configuration /p:SolutionPath=$solution /p:Restore=$restore /p:Build=$build /p:Rebuild=$rebuild /p:Deploy=$deploy /p:Test=$test /p:Sign=$sign /p:Pack=$pack /p:CIBuild=$ci /p:RestorePackagesPath=$nugetpackageroot /p:nugetpackageroot=$nugetpackageroot $properties
+  dotnet msbuild $toolsetbuildproj /m /nologo /clp:Summary /warnaserror \
+    /v:$verbosity $logcmd /p:Configuration=$configuration /p:SolutionPath=$solution \
+    /p:Restore=$restore /p:Build=$build /p:Rebuild=$rebuild /p:Deploy=$deploy /p:Test=$test /p:Sign=$sign /p:Pack=$pack /p:CIBuild=$ci \
+    "/p:RestorePackagesPath=$nugetpackageroot/" "/p:NuGetPackageRoot=$nugetpackageroot/" \
+    $properties
   local lastexitcode=$?
 
   if [[ $lastexitcode != 0 ]]; then
@@ -266,7 +270,7 @@ function Build {
 }
 
 function ExitWithExitCode {
-  if [[ $ci && $prepareMachine ]]; then
+  if [[ "$ci" == true && "$prepareMachine" == true ]]; then
     StopProcesses
   fi
   exit $1

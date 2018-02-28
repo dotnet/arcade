@@ -6,13 +6,19 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <!-- Respect environment variable for the NuGet Packages Root if set; otherwise, use the current default location -->
     <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(NUGET_PACKAGES)</NuGetPackageRoot>
     <NuGetPackageRoot Condition="'$(RepoRoot)' != ''">$(RepoRoot)packages\</NuGetPackageRoot>
     <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(MSBuildThisFileDirectory)packages\</NuGetPackageRoot>
     <NuGetPackageRoot Condition="!HasTrailingSlash('$(NuGetPackageRoot)')">$(NuGetPackageRoot)\</NuGetPackageRoot>
     <RestorePackagesPath>$(NuGetPackageRoot)</RestorePackagesPath>
-  </PropertyGroup>  
+  </PropertyGroup>
 
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
     <!-- Place 'NetFxTfm' in the 'TargetFramework' property of a csproj to include building framework version if building on Windows but to skip building against the framwork on non-Windows platforms.
@@ -20,5 +26,5 @@
          ie. <TargetFrameworks>netcoreapp2.0;$(NetFxTfm)</TargetFrameworks> -->
     <NetFxTfm>net45</NetFxTfm>
   </PropertyGroup>
-  
+
 </Project>

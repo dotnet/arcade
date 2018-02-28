@@ -26,7 +26,7 @@ static addGithubPRTriggerForBranch(def job, def branchName, def jobName) {
 static addXUnitDotNETResults(def job, def configName) {
   def resultFilePattern = "**/artifacts/${configName}/TestResults/*.xml"
   def skipIfNoTestFiles = false
-    
+
   Utilities.addXUnitDotNETResults(job, resultFilePattern, skipIfNoTestFiles)
 }
 
@@ -69,9 +69,9 @@ static addBuildSteps(def job, def projectName, def os, def configName, def isPR)
       } else {
         Utilities.addGithubPushTrigger(myJob)
       }
-      
+
       addArchival(myJob, filesToArchive, filesToExclude)
-//      addXUnitDotNETResults(myJob, configName)
+      addXUnitDotNETResults(myJob, configName)
 
       Utilities.setMachineAffinity(myJob, os, machineAffinity)
 

@@ -5,6 +5,15 @@ Contains tasks related to file IO.
 
 See ["Task Packages"](../../Documentation/TaskPackages.md#usage) for guidance on installing this package.
 
+Tasks in this package
+
+ - Chmod
+ - DownloadFile
+ - GetFileHash
+ - UnzipArchive
+ - VerifyFileHash
+ - ZipArchive
+
 ## Tasks
 
 This package contains the following MSBuild tasks.
@@ -55,9 +64,10 @@ BaseDirectory      | string      | **[Required]** The directory to use as the ba
 
 #### Parameter set - directory
 
-Task parameter     | Type    | Description
--------------------|---------|-------------
-SourceDirectory    | string  | **[Required]** Creates a zip for an entire directory.
+Task parameter         | Type    | Description
+-----------------------|---------|-------------
+SourceDirectory        | string  | **[Required]** Creates a zip for an entire directory.
+IncludeSourceDirectory | bool    | Include the source directory in the zip. Defaults to false.
 
 Example:
 ```xml
@@ -75,42 +85,56 @@ Uri                | string  | **[Required]** The file to download. Can be prefi
 OutputPath         | string  | **[Required]** The full file path destination for the downloaded file, including file name. The containing directory will be created if it doesn't already exist.
 Overwrite          | boolean | Overwrite output path if it exists
 TimeoutSeconds     | int     | The maximum amount of time (in seconds) to allow for downloading the file. Defaults to 15 minutes.
-MaxRetries         | int     | The maximum number of times to retry downloading if it fails. Defaults to 0.
 
 Example:
 ```xml
 <DownloadFile Uri="https://contoso.com/mytools.1.2.3.zip" OutputPath="$(OutputDir)mytools.1.2.3.zip" />
 ```
 
-### `ComputeChecksum`
+### `GetFileHash`
 
-Computes the checksum for a single file.
+Computes the checksums for files.
 
 Task parameter     | Type         | Description
 -------------------|--------------|-------------
-Files              | ITaskItem[]  | **[Required]** The file to be hashed.
+Files              | ITaskItem[]  | **[Required]** The files to be hashed.
 Algorithm          | string       | The algorithm. Allowed values: SHA256, SHA384, SHA512. Default = SHA256
-FileHash           | string       | **[Output]** The hash of the file in hex.
-FileHashBase64     | string       | **[Output]** The hash of the file base64 encoded.
-Items              | ITaskItem[]  | **[Output]** The input files with additional metadata set to include the file hash.
+FileHash           | string       | **[Output]** The hash of the file in hex. This is only set if there was one item group passed in.
+FileHashBase64     | string       | **[Output]** The hash of the file base64 encoded. This is only set if there was one item group passed in.
+Items              | ITaskItem[]  | **[Output]** The input files with additional metadata set to include the file hash. <br> Metadata items include: FileHashAlgoritm, FileHash, and FileHashBase64.
 MetadataName       | string       | The metadata name where the hash is store in each item. File hash is in hex. Defaults to "FileHash"
 MetadataNameBase64 | string       | The metadata name where the base64 encoded hash is store in each item. Defaults to "FileHashBase64"
 
 Example:
 ```xml
-<ComputeChecksum Files="file.txt">
+<GetFileHash Files="file.txt">
     <Output TaskParameter="FileHash" PropertyName="MyFileChecksum">
-</ComputeChecksum>
+</GetFileHash>
 
 <ItemGroup>
    <FilesToHash Include="*.txt" />
 </ItemGroup>
 
-<ComputeChecksum Files="@(FilesToHash)">
+<GetFileHash Files="@(FilesToHash)">
     <Output TaskParameter="Items" ItemName="FilesWithHash">
-</ComputeChecksum>
+</GetFileHash>
 
-<Message Text="%(FilesWithHash.FullPath) = %(FilesWithHash.FileHash)" />
+<Message Text="%(FilesWithHash.FullPath) = %(FilesWithHash.FileHash), algorithm = %(FilesWithHash.FileHashAlgoritm) " />
+```
+
+### `VerifyFileHash`
+
+Verifies that a checksum for a file
+
+Task parameter     | Type         | Description
+-------------------|--------------|-------------
+File               | string       | **[Required]** The file to be verified.
+Algorithm          | string       | The algorithm. Allowed values: SHA256, SHA384, SHA512. Default = SHA256
+FileHash           | string       | **[Required]** The expected hash of the file in hex.
+
+Example:
+```xml
+<VerifyFileHash File="file.txt" FileHash="B85656CE3BC7045D403CC55E688C872083A89986CBBF5B336684B669AE19CB7E" />
 ```
 
 ### `Chmod`
