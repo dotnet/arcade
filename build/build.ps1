@@ -95,7 +95,7 @@ function InstallToolset {
     CreateDirectory $TempDir
     $proj = Join-Path $TempDir "_restore.proj"
     '<Project Sdk="RoslynTools.RepoToolset"><Target Name="NoOp"/></Project>' | Set-Content $proj
-    & $DotNetExe msbuild $proj /t:NoOp /m /nologo /clp:None /warnaserror /flp:v=diag /v:$verbosity /p:NuGetPackageRoot=$NuGetPackageRoot /p:__ExcludeSdkImports=true
+    & $DotNetExe msbuild $proj /t:NoOp /m /nologo /clp:None /warnaserror /v:$verbosity /p:NuGetPackageRoot=$NuGetPackageRoot /p:__ExcludeSdkImports=true
   }
 }
 
