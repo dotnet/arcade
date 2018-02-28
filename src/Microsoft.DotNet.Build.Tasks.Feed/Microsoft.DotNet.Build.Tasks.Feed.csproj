@@ -2,7 +2,7 @@
 <Project Sdk="RoslynTools.RepoToolset">
 
   <PropertyGroup>
-    <TargetFrameworks>$(NetFxTfm);netstandard1.5</TargetFrameworks>
+    <TargetFrameworks>netstandard1.5;$(NetFxTfm)</TargetFrameworks>
     
     <IsPackable>true</IsPackable>
     <NuspecFile>$(MSBuildProjectName).nuspec</NuspecFile>
@@ -32,7 +32,6 @@
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
-    <!-- <PackageReference Include="Microsoft.TargetingPack.NETFramework.v4.5" Version="1.0.1" ExcludeAssets="all" /> -->
     <PackageReference Include="NuGet.Versioning" Version="4.3.0" />
     <PackageReference Include="NuGet.Packaging" Version="4.3.0" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
