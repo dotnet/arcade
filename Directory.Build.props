@@ -14,16 +14,6 @@
     <RestorePackagesPath>$(NuGetPackageRoot)</RestorePackagesPath>
   </PropertyGroup>  
 
-  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
-    <!--
-      We don't use any of MSBuild's resolution logic for resolving the framework, so just set these two properties to any folder
-      that exists to skip the GenerateReferenceAssemblyPaths task (not target) and to prevent it from outputting a warning (MSB3644).
-      Need to set these after the common targets import.
-      -->
-    <_TargetFrameworkDirectories>$(MSBuildThisFileDirectory)</_TargetFrameworkDirectories>
-    <_FullFrameworkReferenceAssemblyPaths>$(MSBuildThisFileDirectory)</_FullFrameworkReferenceAssemblyPaths>
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
     <!-- Place 'NetFxTfm' in the 'TargetFramework' property of a csproj to include building framework version if building on Windows but to skip building against the framwork on non-Windows platforms.
          Building targeting the framework is not supported on Linux
