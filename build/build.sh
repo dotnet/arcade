@@ -1,8 +1,20 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+source="${BASH_SOURCE[0]}"
+
+# resolve $source until the file is no longer a symlink
+while [[ -h "$source" ]]; do
+  scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
+  source="$(readlink "$source")"
+  # if $source was a relative symlink, we need to resolve it relative to the path where the
+  # symlink file was located
+  [[ $source != /* ]] && source="$scriptroot/$source"
+done
+scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
 build=false
 ci=false
-configuration="Debug"
+configuration='Debug'
 help=false
 log=false
 pack=false
@@ -10,10 +22,16 @@ prepareMachine=false
 rebuild=false
 restore=false
 sign=false
-solution=""
+solution=''
 test=false
-verbosity="minimal"
-properties=""
+verbosity='minimal'
+properties=''
+reporoot="$scriptroot/.."
+artifactsdir="$reporoot/artifacts"
+artifactsconfigurationdir="$artifactsdir/$configuration"
+logdir="$artifactsconfigurationdir/log"
+globaljsonfile="$reporoot/global.json"
+tempdir="$artifactsconfigurationdir/tmp"
 
 while [[ $# > 0 ]]; do
   lowerI="$(echo $1 | awk '{print tolower($0)}')"
@@ -96,88 +114,81 @@ while [[ $# > 0 ]]; do
   esac
 done
 
-function CreateDirectory {
-  if [ ! -d "$1" ]
-  then
-    mkdir -p "$1"
-  fi
-}
-
-function readJson {  
-  UNAMESTR=`uname`
-  SED_EXTENDED='-r'
-  if [[ "$UNAMESTR" == 'Darwin' ]]; then
-    SED_EXTENDED='-E'
+# ReadJson [filename] [json key]
+# Result: Sets 'readjsonvalue' to the value of the provided json key
+# Note: this method may return unexpected results if there are duplicate
+# keys in the json
+function ReadJson {  
+  local unamestr="$(uname)"
+  local sedextended='-r'
+  if [[ "$unamestr" == 'Darwin' ]]; then
+    sedextended='-E'
   fi; 
-  JsonValue=`grep -m 1 "\"${2}\"" ${1} | sed ${SED_EXTENDED} 's/^ *//;s/.*: *"//;s/",?//'`
-  if [ ! "$JsonValue" ]; then
+
+  readjsonvalue="$(grep -m 1 "\"${2}\"" ${1} | sed ${sedextended} 's/^ *//;s/.*: *"//;s/",?//')"
+  if [[ ! "$readjsonvalue" ]]; then
     echo "Error: Cannot find \"${2}\" in ${1}" >&2;
-    exit 1;
+    ExitWithExitCode 1
   fi; 
 }
 
 function InstallDotNetCli {
-  readJson "$GlobalJsonFile" "version"
-  DotNetCliVersion=$JsonValue
-  DotNetInstallVerbosity=""
+  local dotnetinstallverbosity=''
 
-  if [ -z "$DOTNET_INSTALL_DIR" ]
-  then
-    export DOTNET_INSTALL_DIR="$RepoRoot/artifacts/.dotnet/$DotNetCliVersion"
+  ReadJson "$globaljsonfile" "version"
+  local dotnetcliversion="$readjsonvalue"
+  
+  if [[ -z "$DOTNET_INSTALL_DIR" ]]; then
+    export DOTNET_INSTALL_DIR="$reporoot/artifacts/.dotnet/$dotnetcliversion"
   fi
 
-  DotNetRoot=$DOTNET_INSTALL_DIR
-  DotNetInstallScript="$DotNetRoot/dotnet-install.sh"
+  local dotnetroot="$DOTNET_INSTALL_DIR"
+  local dotnetinstallscript="$dotnetroot/dotnet-install.sh"
 
-  if [ ! -a "$DotNetInstallScript" ]
-  then
-    CreateDirectory "$DotNetRoot"
+  if [[ ! -a "$dotnetinstallscript" ]]; then
+    mkdir -p "$dotnetroot"
+
+    # Use curl if available, otherwise use wget
     if command -v curl > /dev/null; then
-      curl "https://dot.net/v1/dotnet-install.sh" -sSL --retry 10 --create-dirs -o "$DotNetInstallScript"
+      curl "https://dot.net/v1/dotnet-install.sh" -sSL --retry 10 --create-dirs -o "$dotnetinstallscript"
     else
-      wget -q -O "$DotNetInstallScript" "https://dot.net/v1/dotnet-install.sh"
+      wget -q -O "$dotnetinstallscript" "https://dot.net/v1/dotnet-install.sh"
     fi
   fi
 
-  if [[ "$(echo $verbosity | awk '{print tolower($0)}')" == "diagnostic" ]]
-  then
-    DotNetInstallVerbosity="--verbose"
+  if [[ "$(echo $verbosity | awk '{print tolower($0)}')" == 'diagnostic' ]]; then
+    dotnetinstallverbosity="--verbose"
   fi
 
   # Install a stage 0
-  SdkInstallDir="$DotNetRoot/sdk/$DotNetCliVersion"
+  local sdkinstalldir="$dotnetroot/sdk/$dotnetcliversion"
 
-  if [ ! -d "$SdkInstallDir" ]
-  then
-    bash "$DotNetInstallScript" --version $DotNetCliVersion $DotNetInstallVerbosity
-    LASTEXITCODE=$?
+  if [[ ! -d "$sdkinstalldir" ]]; then
+    bash "$dotnetinstallscript" --version $dotnetcliversion $dotnetinstallverbosity
+    local lastexitcode=$?
 
-    if [ $LASTEXITCODE != 0 ]
-    then
+    if [[ $lastexitcode != 0 ]]; then
       echo "Failed to install stage0"
-      return $LASTEXITCODE
+      ExitWithExitCode $lastexitcode
     fi
   fi
 
   # Install 1.0 shared framework
-  NetCoreApp10Version="1.0.5"
-  NetCoreApp10Dir="$DotNetRoot/shared/Microsoft.NETCore.App/$NetCoreApp10Version"
+  local netcoreappversion='1.0.5'
+  local netcoreapp10dir="$dotnetroot/shared/Microsoft.NETCore.App/$netcoreappversion"
 
-  if [ ! -d "$NetCoreApp10Dir" ]
-  then
-    echo "bash $DotNetInstallScript --channel Preview --version $NetCoreApp10Version --shared-runtime $DotNetInstallVerbosity"
-    bash "$DotNetInstallScript" --channel "Preview" --version $NetCoreApp10Version --shared-runtime $DotNetInstallVerbosity
-    LASTEXITCODE=$?
+  if [[ ! -d "$netcoreapp10dir" ]]; then
+    bash "$dotnetinstallscript" --channel "Preview" --version $netcoreappversion --shared-runtime $dotnetinstallverbosity
+    lastexitcode=$?
 
-    if [ $LASTEXITCODE != 0 ]
-    then
+    if [[ $lastexitcode != 0 ]]; then
       echo "Failed to install 1.0 shared framework"
-      return $LASTEXITCODE
+      ExitWithExitCode $lastexitcode
     fi
   fi
 
   # Put the stage 0 on the path
-  export PATH="$DotNetRoot:$PATH"
+  export PATH="$dotnetroot:"$PATH""
 
   # Disable first run since we want to control all package sources
   export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
@@ -186,36 +197,41 @@ function InstallDotNetCli {
   export DOTNET_MULTILEVEL_LOOKUP=0
 }
 
+# This is a temporary workaround for https://github.com/Microsoft/msbuild/issues/2095 and
+# https://github.com/dotnet/cli/issues/6589
+# Currently, SDK's always get resolved to the global location, but we want our packages
+# to all be installed into a local folder (prevent machine contamination from global state).
+# 
+# We are restoring all of our packages locally and setting nugetpackageroot to reference the
+# local location, but this breaks Custom SDK's which are expecting the SDK to be available
+# from the global user folder.
 function MakeGlobalSdkAvailableLocal {
-  RepoToolsetSource="$DefaultNuGetPackageRoot/roslyntools.repotoolset/$ToolsetVersion/"
-  RepoToolsetDestination="$NuGetPackageRoot/roslyntools.repotoolset/$ToolsetVersion/"
-  if [ ! -d "$RepoToolsetDestination" ]
-  then
-    cp -r $RepoToolsetSource $RepoToolsetDestination
+  local repotoolsetsource="$defaultnugetpackageroot/roslyntools.repotoolset/$toolsetversion/"
+  local repotoolsetdestination="$nugetpackageroot/roslyntools.repotoolset/$toolsetversion/"
+  if [[ ! -d "$repotoolsetdestination" ]]; then
+    cp -r $repotoolsetsource $repotoolsetdestination
   fi
 }
 
 function InstallToolset {
-  if $ci || $log
-  then
-    CreateDirectory $LogDir
-    logCmd="/bl:$LogDir/Build.binlog"
-  else
-    logCmd=""
+  local logCmd=''
+  if [[ $ci || $log ]]; then
+    mkdir -p "$logdir"
+    local logcmd="/bl:$logdir/Build.binlog"
   fi
 
-  if [ ! -d "$ToolsetBuildProj" ]
-  then
-    ToolsetProj="$TempDir/_restore.csproj"
-    CreateDirectory $TempDir
-    echo '<Project Sdk="RoslynTools.RepoToolset"><Target Name="NoOp"/></Project>' > $ToolsetProj 
-    dotnet msbuild $ToolsetProj /t:NoOp /m /nologo /clp:Summary /warnaserror /p:NuGetPackageRoot=$NuGetPackageRoot /v:$verbosity $logCmd
-    LASTEXITCODE=$?
+  if [[ ! -d "$toolsetbuildproj" ]]; then
+    local toolsetproj="$tempdir/_restore.csproj"
+    mkdir -p "$tempdir"
 
-    if [ $LASTEXITCODE != 0 ]
-    then
-      echo "Failed to build $ToolsetProj"
-      return $LASTEXITCODE
+    echo "dotnet msbuild $toolsetproj /t:NoOp /m /nologo /clp:Summary /warnaserror /p:nugetpackageroot=$nugetpackageroot /v:$verbosity $logcmd"
+
+    dotnet msbuild $toolsetproj /t:NoOp /m /nologo /clp:Summary /warnaserror /p:nugetpackageroot=$nugetpackageroot /v:$verbosity $logcmd
+    local lastexitcode=$?
+
+    if [[ $lastexitcode != 0 ]]; then
+      echo "Failed to build $toolsetproj"
+      ExitWithExitCode $lastexitcode
     fi
   fi
 }
@@ -223,61 +239,44 @@ function InstallToolset {
 function Build {
   InstallDotNetCli
 
-  if [ $? != 0 ]
-  then
-    return $?
-  fi
-
-  InstallToolset
-
-  if [ $? != 0 ]
-  then
-    return $?
-  fi
-
-  MakeGlobalSdkAvailableLocal  
-
-  if [ $? != 0 ]
-  then
-    return $?
-  fi
-
-  if $prepareMachine
-  then
-    CreateDirectory "$NuGetPackageRoot"
+  if [[ $prepareMachine ]]; then
+    mkdir -p "$nugetpackageroot"
     dotnet nuget locals all --clear
-    LASTEXITCODE=$?
+    local lastexitcode=$?
 
-    if [ $LASTEXITCODE != 0 ]
-    then
-      echo "Failed to clear NuGet cache"
-      return $LASTEXITCODE
+    if [[ $lastexitcode != 0 ]]; then
+      echo 'Failed to clear NuGet cache'
+      ExitWithExitCode $lastexitcode
     fi
   fi
 
-  if $ci || $log
-  then
-    CreateDirectory $LogDir
-    logCmd="/bl:$LogDir/Build.binlog"
-  else
-    logCmd=""
+  InstallToolset
+  MakeGlobalSdkAvailableLocal  
+
+  local logcmd=''
+  if [[ $ci || $log ]]; then
+    mkdir -p $logdir
+    logcmd="/bl:$logdir/Build.binlog"
   fi
 
-  if [ -z $solution ]
-  then
-    solution="$RepoRoot/Arcade.sln"
+  if [[ -z $solution ]]; then
+    solution="$reporoot/Arcade.sln"
   fi
 
-echo "dotnet msbuild $ToolsetBuildProj /m /nologo /clp:Summary /warnaserror /v:$verbosity $logCmd /p:Configuration=$configuration /p:SolutionPath=$solution /p:Restore=$restore /p:Build=$build /p:Rebuild=$rebuild /p:Deploy=$deploy /p:Test=$test /p:Sign=$sign /p:Pack=$pack /p:CIBuild=$ci /p:RestorePackagesPath=$NuGetPackageRoot /p:NuGetPackageRoot=$NuGetPackageRoot $properties"
-  
-  dotnet msbuild $ToolsetBuildProj /m /nologo /flp:v=diag /clp:Summary /warnaserror /v:$verbosity $logCmd /p:Configuration=$configuration /p:SolutionPath=$solution /p:Restore=$restore /p:Build=$build /p:Rebuild=$rebuild /p:Deploy=$deploy /p:Test=$test /p:Sign=$sign /p:Pack=$pack /p:CIBuild=$ci /p:RestorePackagesPath=$NuGetPackageRoot /p:NuGetPackageRoot=$NuGetPackageRoot $properties
-  LASTEXITCODE=$?
+  dotnet msbuild $toolsetbuildproj /m /nologo /clp:Summary /warnaserror /v:$verbosity $logcmd /p:Configuration=$configuration /p:SolutionPath=$solution /p:Restore=$restore /p:Build=$build /p:Rebuild=$rebuild /p:Deploy=$deploy /p:Test=$test /p:Sign=$sign /p:Pack=$pack /p:CIBuild=$ci /p:RestorePackagesPath=$nugetpackageroot /p:nugetpackageroot=$nugetpackageroot $properties
+  local lastexitcode=$?
 
-  if [ $LASTEXITCODE != 0 ]
-  then
-    echo "Failed to build $ToolsetBuildProj"
-    return $LASTEXITCODE
+  if [[ $lastexitcode != 0 ]]; then
+    echo "Failed to build $toolsetbuildproj"
+    ExitWithExitCode $lastexitcode
   fi
+}
+
+function ExitWithExitCode {
+  if [[ $ci && $prepareMachine ]]; then
+    StopProcesses
+  fi
+  exit $1
 }
 
 function StopProcesses {
@@ -286,55 +285,33 @@ function StopProcesses {
   pkill -9 "vbcscompiler"
 }
 
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-  ScriptRoot="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-  SOURCE="$(readlink "$SOURCE")"
-  [[ $SOURCE != /* ]] && SOURCE="$ScriptRoot/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-done
-ScriptRoot="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+function Main {
+  # HOME may not be defined in some scenarios, but it is required by NuGet
+  if [[ -z $HOME ]]; then
+    export HOME="$reporoot/artifacts/.home/"
+    mkdir -p "$HOME"
+  fi
 
-RepoRoot="$ScriptRoot/../"
-ArtifactsDir="$RepoRoot/artifacts"
-ArtifactsConfigurationDir="$ArtifactsDir/$configuration"
-LogDir="$ArtifactsConfigurationDir/log"
-GlobalJsonFile="$RepoRoot/global.json"
+  if [[ $ci ]]; then
+    mkdir -p "$tempdir"
+    export TEMP="$tempdir"
+    export TMP="$tempdir"
+  fi
 
-readJson $GlobalJsonFile "RoslynTools.RepoToolset"
-ToolsetVersion=$JsonValue
-TempDir="$ArtifactsConfigurationDir/tmp"
+  if [[ -z $NUGET_PACKAGES ]]; then
+    export NUGET_PACKAGES="$reporoot/packages"
+  fi
 
-# HOME may not be defined in some scenarios, but it is required by NuGet
-if [ -z $HOME ]
-then
-  export HOME="$RepoRoot/artifacts/.home/"
-  CreateDirectory "$HOME"
-fi
+  nugetpackageroot=$NUGET_PACKAGES
+  defaultnugetpackageroot="$HOME/.nuget/packages"
 
-if $ci
-then
-  CreateDirectory "$TempDir"
+  ReadJson $globaljsonfile "RoslynTools.RepoToolset"
+  toolsetversion=$readjsonvalue
 
-  export TEMP="$TempDir"
-  export TMP="$TempDir"
-fi
+  toolsetbuildproj="$nugetpackageroot/roslyntools.repotoolset/$toolsetversion/tools/Build.proj"
 
-if [ -z $NUGET_PACKAGES ]
-then
-  export NUGET_PACKAGES="$RepoRoot/packages"
-fi
+  Build
+  ExitWithExitCode $?
+}
 
-NuGetPackageRoot=$NUGET_PACKAGES
-DefaultNuGetPackageRoot="$HOME/.nuget/packages"
-
-ToolsetBuildProj="$NuGetPackageRoot/roslyntools.repotoolset/$ToolsetVersion/tools/Build.proj"
-
-Build
-LASTEXITCODE=$?
-
-if $ci && $prepareMachine
-then
-  StopProcesses
-fi
-
-exit $LASTEXITCODE
+Main
