@@ -3,7 +3,7 @@
 source="${BASH_SOURCE[0]}"
 
 # resolve $source until the file is no longer a symlink
-while [[ -h "$source" ]]; do 
+while [[ -h $source ]]; do 
   scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
   source="$(readlink "$source")"
   
