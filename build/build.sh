@@ -217,12 +217,13 @@ function InstallToolset {
   local logCmd=''
   if [[ $ci || $log ]]; then
     mkdir -p "$logdir"
-    local logcmd="/bl:$logdir/Build.binlog"
+    logcmd="/bl:$logdir/Build.binlog"
   fi
 
   if [[ ! -d "$toolsetbuildproj" ]]; then
     local toolsetproj="$tempdir/_restore.csproj"
     mkdir -p "$tempdir"
+    echo '<Project Sdk="RoslynTools.RepoToolset"><Target Name="NoOp"/></Project>' > $toolsetproj
 
     dotnet msbuild $toolsetproj /t:NoOp /m /nologo /clp:Summary /warnaserror /p:nugetpackageroot=$nugetpackageroot /v:$verbosity $logcmd
     local lastexitcode=$?
