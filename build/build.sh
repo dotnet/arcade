@@ -33,7 +33,7 @@ logdir="$artifactsconfigurationdir/log"
 globaljsonfile="$reporoot/global.json"
 tempdir="$artifactsconfigurationdir/tmp"
 
-while [[ $# > 0 ]]; do
+while (($# > 0)); do
   lowerI="$(echo $1 | awk '{print tolower($0)}')"
   case $lowerI in
     --build)
