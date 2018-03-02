@@ -214,18 +214,12 @@ function MakeGlobalSdkAvailableLocal {
 }
 
 function InstallToolset {
-  local logCmd=''
-  if [[ $ci || $log ]]; then
-    mkdir -p "$logdir"
-    logcmd="/bl:$logdir/Build.binlog"
-  fi
-
   if [[ ! -d "$toolsetbuildproj" ]]; then
     local toolsetproj="$tempdir/_restore.csproj"
     mkdir -p "$tempdir"
     echo '<Project Sdk="RoslynTools.RepoToolset"><Target Name="NoOp"/></Project>' > $toolsetproj
 
-    dotnet msbuild $toolsetproj /t:NoOp /m /nologo /clp:Summary /warnaserror /p:nugetpackageroot=$nugetpackageroot /v:$verbosity $logcmd
+    dotnet msbuild $toolsetproj /t:NoOp /m /nologo /clp:Summary /warnaserror /p:nugetpackageroot=$nugetpackageroot /v:$verbosity
     local lastexitcode=$?
 
     if [[ $lastexitcode != 0 ]]; then

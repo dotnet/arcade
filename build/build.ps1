@@ -94,16 +94,9 @@ function InstallToolset {
   if (!(Test-Path $ToolsetBuildProj)) {
     CreateDirectory $TempDir
 
-    if ($ci -or $log) {
-      CreateDirectory($logDir)
-      $logCmd = "/bl:" + (Join-Path $LogDir "RestoreToolset.binlog")
-    } else {
-      $logCmd = ""
-    }
-  
     $proj = Join-Path $TempDir "_restore.proj"
     '<Project Sdk="RoslynTools.RepoToolset"><Target Name="NoOp"/></Project>' | Set-Content $proj
-    & $DotNetExe msbuild $proj /t:NoOp /m /nologo /clp:None /warnaserror /v:$verbosity /p:NuGetPackageRoot=$NuGetPackageRoot /p:__ExcludeSdkImports=true $logCmd
+    & $DotNetExe msbuild $proj /t:NoOp /m /nologo /clp:None /warnaserror /v:$verbosity /p:NuGetPackageRoot=$NuGetPackageRoot /p:__ExcludeSdkImports=true
   }
 }
 
