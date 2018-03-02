@@ -127,7 +127,7 @@ try {
   $ArtifactsDir = Join-Path $RepoRoot "artifacts"
   $LogDir = Join-Path (Join-Path $ArtifactsDir $configuration) "log"
   $TempDir = Join-Path (Join-Path $ArtifactsDir $configuration) "tmp"
-  $globalJson = Get-Content(Join-Path $RepoRoot "global.json") | ConvertFrom-Json
+  $globalJson = Get-Content(Join-Path $RepoRoot "global.json") -Raw | ConvertFrom-Json
   $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "true"
 
   if ($solution -eq "") {
