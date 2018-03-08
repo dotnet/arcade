@@ -130,10 +130,10 @@ try {
   $TempDir = Join-Path (Join-Path $ArtifactsDir $configuration) "tmp"
   $globalJson = Get-Content(Join-Path $RepoRoot "global.json") -Raw | ConvertFrom-Json
   $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "true"
-  $officialBuild = "false"
+  $officialBuild = $false
 
-  if ($env:BUILD_BUILDNUMBER -ne "") {
-    $officialBuild = "true"
+  if ("$env:BUILD_BUILDNUMBER" -ne "") {
+    $officialBuild = $true
   }
 
   if ($solution -eq "") {
@@ -145,13 +145,12 @@ try {
     $DefaultNuGetPackageRoot = $NuGetPackageRoot
   } else {
     if ($officialBuild) {
-      $NuGetPackageRoot = (Join-Path $RepoRoot "packages") + "\"
+      $NuGetPackageRoot = Join-Path $RepoRoot "packages\"
     } else {
       $NuGetPackageRoot = Join-Path $env:UserProfile ".nuget\packages\"
     }
     $DefaultNuGetPackageRoot = Join-Path $env:UserProfile ".nuget\packages\"
   }
-
   $ToolsetVersion = $globalJson.'msbuild-sdks'.'RoslynTools.RepoToolset'
   $ToolsetBuildProj = Join-Path $NuGetPackageRoot "roslyntools.repotoolset\$ToolsetVersion\tools\Build.proj"
 
