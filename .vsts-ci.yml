@@ -1,0 +1,52 @@
+phases:
+
+- phase: Build_Windows_NT
+  variables: 
+    PB_PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/temp/index.json
+  queue:
+    parallel: 2
+    demands: 
+      - agent.os -equals Windows_NT
+    matrix:
+      Debug:
+        buildConfig: Debug
+      Release:
+        buildConfig: Release
+  steps:
+  - checkout: self
+    clean: true
+    fetchDepth: 1
+  - script: build\CIBuild.cmd -configuration $(buildConfig)
+    name: Build
+  - task: AzureKeyVault@1
+    inputs:
+      azureSubscription: 'DotNet-VSTS'
+      KeyVaultName: EngKeyVault
+      SecretsFilter: 'dotnetfeed-storage-access-key-1'
+    condition: eq(variables['buildConfig'], 'Release')
+  - script: Build.cmd -configuration $(buildConfig)
+                      /p:PB_PublishType=blob
+                      /p:PB_PublishBlobFeedUrl=$(PB_PublishBlobFeedUrl)
+                      /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
+    name: Publish
+    condition: eq(variables['buildConfig'], 'Release')
+
+- phase: Build_Linux
+  variables:
+    # set _PREVIEW_VSTS_DOCKER_IMAGE to the docker image you want to automatically run in a container
+    _PREVIEW_VSTS_DOCKER_IMAGE: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
+  queue:
+    parallel: 2
+    demands:
+    - agent.os -equals linux
+    matrix:
+      Debug:
+        buildConfig: Debug
+      Release:
+        buildConfig: Release
+  steps:
+    - checkout: self
+      clean: true
+      fetchDepth: 1
+    - script: build/cibuild.sh --configuration $(buildConfig)
+      name: Build

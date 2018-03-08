@@ -101,7 +101,9 @@ function InstallToolset {
 }
 
 function Build {
-  MakeGlobalSdkAvailableLocal
+  if ($officialBuild) {
+    MakeGlobalSdkAvailableLocal
+  }
 
   if ($ci -or $log) {
     CreateDirectory($logDir)
@@ -119,7 +121,6 @@ function Stop-Processes() {
   Get-Process -Name "vbcscompiler" -ErrorAction SilentlyContinue | Stop-Process
 }
 
-
 try {
   $RepoRoot = Join-Path $PSScriptRoot "..\"
   $DotNetRoot = Join-Path $RepoRoot ".\.dotnet"
@@ -129,6 +130,11 @@ try {
   $TempDir = Join-Path (Join-Path $ArtifactsDir $configuration) "tmp"
   $globalJson = Get-Content(Join-Path $RepoRoot "global.json") -Raw | ConvertFrom-Json
   $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "true"
+  $officialBuild = "false"
+
+  if ($env:BUILD_BUILDNUMBER -ne "") {
+    $officialBuild = "true"
+  }
 
   if ($solution -eq "") {
     $solution = @(Get-ChildItem(Join-Path $RepoRoot "*.sln"))[0]
@@ -138,7 +144,11 @@ try {
     $NuGetPackageRoot = $env:NUGET_PACKAGES.TrimEnd("\") + "\"
     $DefaultNuGetPackageRoot = $NuGetPackageRoot
   } else {
-    $NuGetPackageRoot = (Join-Path $RepoRoot "packages") + "\"
+    if ($officialBuild) {
+      $NuGetPackageRoot = (Join-Path $RepoRoot "packages") + "\"
+    } else {
+      $NuGetPackageRoot = Join-Path $env:UserProfile ".nuget\packages\"
+    }
     $DefaultNuGetPackageRoot = Join-Path $env:UserProfile ".nuget\packages\"
   }
 
