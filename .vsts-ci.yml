@@ -18,17 +18,19 @@ phases:
     fetchDepth: 1
   - script: build\CIBuild.cmd -configuration $(buildConfig)
     name: Build
+    condition: ne(variables['buildConfig'], 'Release')
   - task: AzureKeyVault@1
     inputs:
       azureSubscription: 'DotNet-VSTS'
       KeyVaultName: EngKeyVault
       SecretsFilter: 'dotnetfeed-storage-access-key-1'
     condition: eq(variables['buildConfig'], 'Release')
-  - script: Build.cmd -configuration $(buildConfig)
+  # Build and Publish on the Release configuration
+  - script: build\CIBuild.cmd -configuration $(buildConfig)
                       /p:PB_PublishType=blob
                       /p:PB_PublishBlobFeedUrl=$(PB_PublishBlobFeedUrl)
                       /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
-    name: Publish
+    name: Build_Publish
     condition: eq(variables['buildConfig'], 'Release')
 
 - phase: Build_Linux
