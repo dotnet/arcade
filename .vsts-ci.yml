@@ -2,6 +2,7 @@ phases:
 
 - phase: Build_Windows_NT
   variables: 
+    PB_PublishType: blob
     PB_PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/temp/index.json
   queue:
     parallel: 2
@@ -27,7 +28,7 @@ phases:
     condition: eq(variables['buildConfig'], 'Release')
   # Build and Publish on the Release configuration
   - script: build\CIBuild.cmd -configuration $(buildConfig)
-                      /p:PB_PublishType=blob
+                      /p:PB_PublishType=$(PB_PublishType)
                       /p:PB_PublishBlobFeedUrl=$(PB_PublishBlobFeedUrl)
                       /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
     name: Build_Publish
