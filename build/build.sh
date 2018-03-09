@@ -34,7 +34,7 @@ globaljsonfile="$reporoot/global.json"
 tempdir="$artifactsconfigurationdir/tmp"
 officialbuild=false
 
-if [[ ! -z $OfficialBuildId || ! -z $BUILD_BUILDNUMBER ]]; then
+if [[ ! -z $OfficialBuildId ]]; then
   officialbuild=true
 fi
 

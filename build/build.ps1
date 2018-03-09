@@ -69,7 +69,7 @@ function InstallDotNetCli {
     Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile $installScript
   }
   
-  & $installScript -Version $globalJson.sdk.version -InstallDir $DotNetRoot
+  & $installScript -Version $GlobalJson.sdk.version -InstallDir $DotNetRoot
   if ($lastExitCode -ne 0) {
     throw "Failed to install dotnet cli (exit code '$lastExitCode')."
   }
@@ -101,7 +101,7 @@ function InstallToolset {
 }
 
 function Build {
-  if ($officialBuild) {
+  if ($OfficialBuild) {
     MakeGlobalSdkAvailableLocal
   }
 
@@ -128,12 +128,12 @@ try {
   $ArtifactsDir = Join-Path $RepoRoot "artifacts"
   $LogDir = Join-Path (Join-Path $ArtifactsDir $configuration) "log"
   $TempDir = Join-Path (Join-Path $ArtifactsDir $configuration) "tmp"
-  $globalJson = Get-Content(Join-Path $RepoRoot "global.json") -Raw | ConvertFrom-Json
+  $GlobalJson = Get-Content(Join-Path $RepoRoot "global.json") -Raw | ConvertFrom-Json
   $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "true"
-  $officialBuild = $false
+  $OfficialBuild = $false
 
-  if ("$env:OfficialBuildId" -ne "" -Or "$env:BUILD_BUILDNUMBER" -ne "") {
-    $officialBuild = $true
+  if ("$env:OfficialBuildId" -ne "") {
+    $OfficialBuild = $true
   }
 
   if ($solution -eq "") {
@@ -144,14 +144,14 @@ try {
     $NuGetPackageRoot = $env:NUGET_PACKAGES.TrimEnd("\") + "\"
     $DefaultNuGetPackageRoot = $NuGetPackageRoot
   } else {
-    if ($officialBuild) {
+    if ($OfficialBuild) {
       $NuGetPackageRoot = Join-Path $RepoRoot "packages\"
     } else {
       $NuGetPackageRoot = Join-Path $env:UserProfile ".nuget\packages\"
     }
     $DefaultNuGetPackageRoot = Join-Path $env:UserProfile ".nuget\packages\"
   }
-  $ToolsetVersion = $globalJson.'msbuild-sdks'.'RoslynTools.RepoToolset'
+  $ToolsetVersion = $GlobalJson.'msbuild-sdks'.'RoslynTools.RepoToolset'
   $ToolsetBuildProj = Join-Path $NuGetPackageRoot "roslyntools.repotoolset\$ToolsetVersion\tools\Build.proj"
 
   if ($ci) {

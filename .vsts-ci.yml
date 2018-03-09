@@ -21,6 +21,8 @@ phases:
   - script: build\CIBuild.cmd -configuration $(buildConfig)
     name: Build
     condition: ne(variables['buildConfig'], 'Release')
+    env:
+      OfficialBuildId: $(BUILD.BUILDNUMBER)
   - task: AzureKeyVault@1
     inputs:
       azureSubscription: 'DotNet-VSTS'
@@ -34,6 +36,8 @@ phases:
               /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
     name: Build_Publish
     displayName: Build / Publish
+    env:
+      OfficialBuildId: $(BUILD.BUILDNUMBER)
     condition: eq(variables['buildConfig'], 'Release')
 
 - phase: Build_Linux
@@ -56,3 +60,6 @@ phases:
       fetchDepth: 1
     - script: build/cibuild.sh --configuration $(buildConfig)
       name: Build
+      env:
+        OfficialBuildId: $(BUILD.BUILDNUMBER)
+        
