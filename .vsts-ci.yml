@@ -1,9 +1,10 @@
 phases:
 
 - phase: Build_Windows_NT
+  displayName: Build Windows_NT
   variables: 
-    PB_PublishType: blob
-    PB_PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/temp/index.json
+    __PublishType: blob
+    __PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/temp/index.json
   queue:
     parallel: 2
     demands: 
@@ -28,13 +29,15 @@ phases:
     condition: eq(variables['buildConfig'], 'Release')
   # Build and Publish on the Release configuration
   - script: build\CIBuild.cmd -configuration $(buildConfig)
-                      /p:PB_PublishType=$(PB_PublishType)
-                      /p:PB_PublishBlobFeedUrl=$(PB_PublishBlobFeedUrl)
-                      /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
+              /p:PB_PublishType=$(__PublishType)
+              /p:PB_PublishBlobFeedUrl=$(__PublishBlobFeedUrl)
+              /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
     name: Build_Publish
+    displayName: Build / Publish
     condition: eq(variables['buildConfig'], 'Release')
 
 - phase: Build_Linux
+  displayName: Build Linux
   variables:
     # set _PREVIEW_VSTS_DOCKER_IMAGE to the docker image you want to automatically run in a container
     _PREVIEW_VSTS_DOCKER_IMAGE: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304

@@ -132,7 +132,7 @@ try {
   $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "true"
   $officialBuild = $false
 
-  if ("$env:BUILD_BUILDNUMBER" -ne "") {
+  if ("$env:OfficialBuildId" -ne "" -Or "$env:BUILD_BUILDNUMBER" -ne "") {
     $officialBuild = $true
   }
 
