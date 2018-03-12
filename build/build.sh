@@ -32,6 +32,11 @@ artifactsconfigurationdir="$artifactsdir/$configuration"
 logdir="$artifactsconfigurationdir/log"
 globaljsonfile="$reporoot/global.json"
 tempdir="$artifactsconfigurationdir/tmp"
+officialbuild=false
+
+if [[ ! -z $OfficialBuildId ]]; then
+  officialbuild=true
+fi
 
 while (($# > 0)); do
   lowerI="$(echo $1 | awk '{print tolower($0)}')"
@@ -244,7 +249,10 @@ function Build {
   fi
 
   InstallToolset
-  MakeGlobalSdkAvailableLocal
+
+  if [[ "$officialbuild" == true ]]; then
+    MakeGlobalSdkAvailableLocal
+  fi
 
   local logcmd=''
   if [[ "$ci" == true || "$log" == true ]] ; then
@@ -294,11 +302,14 @@ function Main {
     export TEMP="$tempdir"
     export TMP="$tempdir"
   fi
-
+  
   if [[ -z $NUGET_PACKAGES ]]; then
-    export NUGET_PACKAGES="$reporoot/packages"
+    if [[ "$officialbuild" == true ]]; then
+      export NUGET_PACKAGES="$reporoot/packages"
+    else
+      export NUGET_PACKAGES="$HOME/.nuget/packages"
+    fi
   fi
-
   nugetpackageroot=$NUGET_PACKAGES
   defaultnugetpackageroot="$HOME/.nuget/packages"
 
