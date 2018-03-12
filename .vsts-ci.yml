@@ -20,7 +20,6 @@ phases:
   - checkout: self
     clean: true
     fetchDepth: 1
-    # Install Microbuild signing plugin
   - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
     displayName: Install MicroBuild plugin
     inputs:
