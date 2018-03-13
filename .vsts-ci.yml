@@ -1,26 +1,39 @@
 phases:
-
-- phase: Build_Windows_NT
-  displayName: Build Windows_NT
+- phase: Windows_NT
   variables: 
     __PublishType: blob
     __PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/temp/index.json
+    __SignType: real
+    __UseEsrpSigning: true
+    __TeamName: DotNetCore
   queue:
+    name: DotNetCore-Build
     parallel: 2
     demands: 
       - agent.os -equals Windows_NT
     matrix:
-      Debug:
+      Build_Debug:
         buildConfig: Debug
-      Release:
+      Build_Release:
         buildConfig: Release
   steps:
   - checkout: self
     clean: true
     fetchDepth: 1
+  - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
+    displayName: Install MicroBuild plugin
+    inputs:
+      signType: real
+      zipSources: false
+      esrpSigning: '$(__UseEsrpSigning)'
+    env:
+      TeamName: $(__TeamName)
+    continueOnError: false
+    condition: and(succeeded(), in(variables.__SignType, 'real', 'test'))
   - script: build\CIBuild.cmd -configuration $(buildConfig)
+              /p:SignType=test
     name: Build
-    condition: ne(variables['buildConfig'], 'Release')
+    condition: and(succeeded(), ne(variables['buildConfig'], 'Release'))
     env:
       OfficialBuildId: $(BUILD.BUILDNUMBER)
   - task: AzureKeyVault@1
@@ -28,38 +41,74 @@ phases:
       azureSubscription: 'DotNet-VSTS'
       KeyVaultName: EngKeyVault
       SecretsFilter: 'dotnetfeed-storage-access-key-1'
-    condition: eq(variables['buildConfig'], 'Release')
+    condition: and(succeeded(), eq(variables['buildConfig'], 'Release'))
   # Build and Publish on the Release configuration
   - script: build\CIBuild.cmd -configuration $(buildConfig)
               /p:PB_PublishType=$(__PublishType)
               /p:PB_PublishBlobFeedUrl=$(__PublishBlobFeedUrl)
               /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
+              /p:SignType=$(__SignType)
     name: Build_Publish
     displayName: Build / Publish
     env:
       OfficialBuildId: $(BUILD.BUILDNUMBER)
-    condition: eq(variables['buildConfig'], 'Release')
-
-- phase: Build_Linux
-  displayName: Build Linux
+    condition: and(succeeded(), eq(variables['buildConfig'], 'Release'))
+  # Copy build logs to a staging directory
+  - task: CopyFiles@2
+    displayName: Gather Logs
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)\artifacts'
+      Contents: '**\*log'
+      TargetFolder: '$(Build.StagingDirectory)\BuildLogs'
+    continueOnError: true
+    condition: succeededOrFailed()
+  # Publish build logs to VSTS  
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Logs to VSTS
+    inputs:
+      PathtoPublish: '$(Build.StagingDirectory)\BuildLogs'
+      ArtifactName: Windows_$(Agent.JobName)
+      publishLocation: Container
+    continueOnError: true
+    condition: succeededOrFailed()
+    
+- phase: Linux
   variables:
     # set _PREVIEW_VSTS_DOCKER_IMAGE to the docker image you want to automatically run in a container
     _PREVIEW_VSTS_DOCKER_IMAGE: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
   queue:
+    name: Hosted Linux Preview
     parallel: 2
     demands:
     - agent.os -equals linux
     matrix:
-      Debug:
+      Build_Debug:
         buildConfig: Debug
-      Release:
+      Build_Release:
         buildConfig: Release
   steps:
-    - checkout: self
-      clean: true
-      fetchDepth: 1
-    - script: build/cibuild.sh --configuration $(buildConfig)
-      name: Build
-      env:
-        OfficialBuildId: $(BUILD.BUILDNUMBER)
-        
+  - checkout: self
+    clean: true
+    fetchDepth: 1
+  - script: build/cibuild.sh --configuration $(buildConfig)
+    name: Build
+    env:
+      OfficialBuildId: $(BUILD.BUILDNUMBER)
+  # Copy build logs to a staging directory
+  - task: CopyFiles@2
+    displayName: Gather Logs
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)/artifacts'
+      Contents: '**/*log'
+      TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
+    continueOnError: true
+    condition: succeededOrFailed()
+  # Publish build logs to VSTS  
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Logs to VSTS
+    inputs:
+      PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
+      ArtifactName: Linux_$(Agent.JobName)
+      publishLocation: Container
+    continueOnError: true
+    condition: succeededOrFailed()
