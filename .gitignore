@@ -50,8 +50,6 @@ _ReSharper*/
 *.dotCover
 
 # NuGet Packages
-*.nuget.props
-*.nuget.targets
 *.nupkg
 **/packages/*
 
