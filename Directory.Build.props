@@ -3,7 +3,7 @@
   <PropertyGroup>
     <RepositoryUrl>https://github.com/dotnet/arcade</RepositoryUrl>
     <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/dotnet/arcade/LICENSE.txt</PackageLicenseUrl>
+    <PackageLicenseUrl>$(RepositoryUrl)/LICENSE.txt</PackageLicenseUrl>
   </PropertyGroup>
 
   <PropertyGroup>
