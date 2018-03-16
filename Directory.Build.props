@@ -1,8 +1,9 @@
-<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
     <RepositoryUrl>https://github.com/dotnet/arcade</RepositoryUrl>
     <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+    <PackageLicenseUrl>$(RepositoryUrl)/LICENSE.txt</PackageLicenseUrl>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -21,10 +22,10 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-    <!-- Place 'NetFxTfm' in the 'TargetFramework' property of a csproj to include building framework version if building on Windows but to skip building against the framwork on non-Windows platforms.
+    <!-- Place 'NetFxTfm' in the 'TargetFramework' property of a csproj to include building framework version if building on 
+         Windows but to skip building against the framwork on non-Windows platforms.
          Building targeting the framework is not supported on Linux
          ie. <TargetFrameworks>netcoreapp2.0;$(NetFxTfm)</TargetFrameworks> -->
     <NetFxTfm>net45</NetFxTfm>
   </PropertyGroup>
-
 </Project>
