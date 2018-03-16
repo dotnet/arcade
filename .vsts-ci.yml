@@ -2,7 +2,7 @@ phases:
 - phase: Windows_NT
   variables: 
     __PublishType: blob
-    __PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/temp/index.json
+    __PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
     __SignType: real
     __UseEsrpSigning: true
     __TeamName: DotNetCore
