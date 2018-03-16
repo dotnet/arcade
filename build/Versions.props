@@ -3,7 +3,7 @@
   <PropertyGroup>
     <!-- This repo version -->
     <VersionBase>1.0.0</VersionBase>
-    <PreReleaseVersionLabel>beta</PreReleaseVersionLabel>
+    <PreReleaseVersionLabel>prerelease</PreReleaseVersionLabel>
 
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
