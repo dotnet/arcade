@@ -13,10 +13,10 @@ phases:
       - agent.os -equals Windows_NT
     matrix:
       Build_Debug:
-        buildConfig: Debug
+        BuildConfig: Debug
         PublishType: none
       Build_Release:
-        buildConfig: Release
+        BuildConfig: Release
         PublishType: blob
   steps:
   - checkout: self
@@ -38,7 +38,7 @@ phases:
       KeyVaultName: EngKeyVault
       SecretsFilter: 'dotnetfeed-storage-access-key-1'
   # Build and Publish on the Release configuration
-  - script: build\CIBuild.cmd -configuration $(buildConfig)
+  - script: build\CIBuild.cmd -configuration $(BuildConfig)
               /p:PB_PublishType=$(PublishType)
               /p:PB_PublishBlobFeedUrl=$(PublishBlobFeedUrl)
               /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
@@ -77,14 +77,14 @@ phases:
     - agent.os -equals linux
     matrix:
       Build_Debug:
-        buildConfig: Debug
+        BuildConfig: Debug
       Build_Release:
-        buildConfig: Release
+        BuildConfig: Release
   steps:
   - checkout: self
     clean: true
     fetchDepth: 1
-  - script: build/cibuild.sh --configuration $(buildConfig)
+  - script: build/cibuild.sh --configuration $(BuildConfig)
     name: Build
     env:
       OfficialBuildId: $(BUILD.BUILDNUMBER)
