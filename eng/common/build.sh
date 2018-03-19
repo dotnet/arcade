@@ -22,11 +22,11 @@ prepareMachine=false
 rebuild=false
 restore=false
 sign=false
-solution=''
+projects=''
 test=false
 verbosity='minimal'
 properties=''
-reporoot="$scriptroot/.."
+reporoot="$scriptroot/../.."
 artifactsdir="$reporoot/artifacts"
 artifactsconfigurationdir="$artifactsdir/$configuration"
 logdir="$artifactsconfigurationdir/log"
@@ -68,7 +68,7 @@ while (($# > 0)); do
       echo "  --pack           Package build outputs into NuGet packages and Willow components"
       echo ""
       echo "Advanced settings:"
-      echo "  --solution <value>     Path to solution to build"
+      echo "  --projects <value>     Semi-colon delimited list of sln/proj's to build. Globbing is supported (*.sln)"
       echo "  --ci           Set when running on CI server"
       echo "  --log          Enable logging (by default on CI)"
       echo "  --prepareMachine     Prepare machine for CI run"
@@ -100,8 +100,8 @@ while (($# > 0)); do
       sign=true
       shift 1
       ;;
-    --solution)
-      solution=$2
+    --projects)
+      projects=$2
       shift 2
       ;;
     --test)
@@ -260,12 +260,12 @@ function Build {
     logcmd="/bl:$logdir/Build.binlog"
   fi
 
-  if [[ -z $solution ]]; then
-    solution="$reporoot/Arcade.sln"
+  if [[ -z $projects ]]; then
+    projects="$reporoot/*.sln"
   fi
 
   dotnet msbuild $toolsetbuildproj /m /nologo /clp:Summary /warnaserror \
-    /v:$verbosity $logcmd /p:Configuration=$configuration /p:SolutionPath=$solution \
+    /v:$verbosity $logcmd /p:Configuration=$configuration /p:RepoRoot=$reporoot /p:Projects=$projects \
     /p:Restore=$restore /p:Build=$build /p:Rebuild=$rebuild /p:Deploy=$deploy /p:Test=$test /p:Sign=$sign /p:Pack=$pack /p:CIBuild=$ci \
     "/p:RestorePackagesPath=$nugetpackageroot/" "/p:NuGetPackageRoot=$nugetpackageroot/" \
     $properties
