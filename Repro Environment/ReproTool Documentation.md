@@ -1,7 +1,7 @@
 #  Repro Tool Documentation
 The following document shows the user documentation of the repro environment solution according to the [requirements](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Prod%20Requirements.md).
 
-# Current version: 1.0.1
+# Current version: 1.0.2
 The complete list of resolved issues is [here](./V1.0.1.md)
 
 ### Known Issues
