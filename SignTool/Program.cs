@@ -44,7 +44,7 @@ namespace SignTool
                     batchData = ReadOrchestrationConfigFile(signToolArgs.OutputPath, signToolArgs.ConfigFile);
                     break;
                 default:
-                    Console.WriteLine($"Don't know how to deal with manifest kind '{configFileKind}'");
+                    Console.WriteLine($"signtool : error : Don't know how to deal with manifest kind '{configFileKind}'");
                     return 1;
             }
 
@@ -86,7 +86,7 @@ namespace SignTool
                 {
                     if (map.ContainsKey(relativeFileName))
                     {
-                        Console.WriteLine($"Duplicate file entry: {relativeFileName}");
+                        Console.WriteLine($"signtool : error : Duplicate file entry: {relativeFileName}");
                         allGood = false;
                     }
                     else
@@ -136,7 +136,7 @@ namespace SignTool
                 {
                     if (map.ContainsKey(entry))
                     {
-                        Console.WriteLine($"Duplicate signing info entry for: {entry.FilePath}");
+                        Console.WriteLine($"signtool : error : Duplicate signing info entry for: {entry.FilePath}");
                         allGood = false;
                     }
                     else
@@ -190,7 +190,7 @@ namespace SignTool
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error expanding glob {relativeFileName}: {ex.Message}");
+                    Console.WriteLine($"signtool : error : Error expanding glob {relativeFileName}: {ex.Message}");
                     allGood = false;
                 }
             }

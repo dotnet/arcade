@@ -282,11 +282,11 @@ namespace SignTool
                 {
                     if (!File.Exists(fileName.FullPath))
                     {
-                        textWriter.WriteLine($"Did not find {fileName} at {fileName.FullPath}");
+                        textWriter.WriteLine($"signtool : error : Did not find {fileName} at {fileName.FullPath}");
                     }
                     else
                     {
-                        textWriter.WriteLine($"Unable to read content of {fileName.FullPath}: {ex.Message}");
+                        textWriter.WriteLine($"signtool : error : Unable to read content of {fileName.FullPath}: {ex.Message}");
                     }
                     allGood = false;
                 }
@@ -312,7 +312,7 @@ namespace SignTool
                 {
                     if (isVsixCert)
                     {
-                        textWriter.WriteLine($"Assembly {fileName} cannot be signed with a VSIX certificate");
+                        textWriter.WriteLine($"signtool : error : Assembly {fileName} cannot be signed with a VSIX certificate");
                         allGood = false;
                     }
                 }
@@ -320,13 +320,13 @@ namespace SignTool
                 {
                     if (!isVsixCert)
                     {
-                        textWriter.WriteLine($"VSIX {fileName} must be signed with a VSIX certificate");
+                        textWriter.WriteLine($"signtool : error : VSIX {fileName} must be signed with a VSIX certificate");
                         allGood = false;
                     }
 
                     if (fileSignInfo.StrongName != null)
                     {
-                        textWriter.WriteLine($"VSIX {fileName} cannot be strong name signed");
+                        textWriter.WriteLine($"signtool : error : VSIX {fileName} cannot be strong name signed");
                         allGood = false;
                     }
                 }
@@ -334,7 +334,7 @@ namespace SignTool
                 {
                     if (fileSignInfo.StrongName != null || fileSignInfo.Certificate != null)
                     {
-                        textWriter.WriteLine($"Nupkg {fileName} cannot be strong name or certificate signed");
+                        textWriter.WriteLine($"signtool : error : Nupkg {fileName} cannot be strong name or certificate signed");
                         allGood = false;
                     }
                 }
@@ -385,26 +385,26 @@ namespace SignTool
                     if (!_batchData.FileNames.Any(x => FilePathComparer.Equals(x.Name, name)))
                     {
                         allGood = false;
-                        textWriter.WriteLine($"Zip Container '{zipFileName}' has part '{name}' which is not listed in the sign or external list");
+                        textWriter.WriteLine($"signtool : error : Zip Container '{zipFileName}' has part '{name}' which is not listed in the sign or external list");
                         continue;
                     }
 
                     // This represents a binary that we need to sign.  Ensure the content in the VSIX is the same as the
-                    // content in the binaries directory by doing a chekcsum match.
+                    // content in the binaries directory by doing a checksum match.
                     using (var stream = part.GetStream())
                     {
                         string checksum = _contentUtil.GetChecksum(stream);
                         if (!contentMap.TryGetFileName(checksum, out var checksumName))
                         {
                             allGood = false;
-                            textWriter.WriteLine($"{zipFileName} has part {name} which does not match the content in the binaries directory");
+                            textWriter.WriteLine($"signtool : error : {zipFileName} has part {name} which does not match the content in the binaries directory");
                             continue;
                         }
 
                         if (!FilePathComparer.Equals(checksumName.Name, name))
                         {
                             allGood = false;
-                            textWriter.WriteLine($"{zipFileName} has part {name} with a different name in the binaries directory: {checksumName}");
+                            textWriter.WriteLine($"signtool : error : {zipFileName} has part {name} with a different name in the binaries directory: {checksumName}");
                             continue;
                         }
 
@@ -438,7 +438,7 @@ namespace SignTool
                     {
                         if (!_signTool.VerifySignedAssembly(stream))
                         {
-                            textWriter.WriteLine($"Assembly {fileName} is not signed properly");
+                            textWriter.WriteLine($"signtool : error : Assembly {fileName} is not signed properly");
                             allGood = false;
                         }
                     }
@@ -461,7 +461,7 @@ namespace SignTool
                             {
                                 if (!_signTool.VerifySignedAssembly(stream))
                                 {
-                                    textWriter.WriteLine($"Zip container {fileName} has part {relativeName} which is not signed.");
+                                    textWriter.WriteLine($"signtool : error : Zip container {fileName} has part {relativeName} which is not signed.");
                                     allGood = false;
                                 }
                             }
