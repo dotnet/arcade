@@ -84,7 +84,7 @@ phases:
   - checkout: self
     clean: true
     fetchDepth: 1
-  - script: build/cibuild.sh --configuration $(BuildConfig)
+  - script: eng/common/cibuild.sh --configuration $(BuildConfig) --preparemachine
     name: Build
     env:
       OfficialBuildId: $(BUILD.BUILDNUMBER)
