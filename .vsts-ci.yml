@@ -5,7 +5,7 @@ phases:
     __PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
     __SignType: real
     __UseEsrpSigning: true
-    TeamName: DotNetCore
+    __TeamName: DotNetCore
   queue:
     name: DotNetCore-Build
     parallel: 2
@@ -29,7 +29,7 @@ phases:
       zipSources: false
       esrpSigning: '$(__UseEsrpSigning)'
     env:
-      TeamName: $(TeamName)
+      TeamName: $(__TeamName)
     continueOnError: false
     condition: and(succeeded(), in(variables.__SignType, 'real', 'test'))
   - task: AzureKeyVault@1
