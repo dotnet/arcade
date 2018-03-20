@@ -30,7 +30,7 @@ phases:
       TeamName: $(__TeamName)
     continueOnError: false
     condition: and(succeeded(), in(variables.__SignType, 'real', 'test'))
-  - script: build\CIBuild.cmd -configuration $(buildConfig)
+  - script: eng\common\CIBuild.cmd -configuration $(buildConfig)
               /p:SignType=test
     name: Build
     condition: and(succeeded(), ne(variables['buildConfig'], 'Release'))
