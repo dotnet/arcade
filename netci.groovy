@@ -36,10 +36,10 @@ static addBuildSteps(def job, def projectName, def os, def configName, def isPR)
   job.with {
     steps {
       if(os == "Windows_NT") {
-        batchFile(".\\build\\CIBuild.cmd -configuration ${configName} -prepareMachine")
+        batchFile(".\\eng\\common\\CIBuild.cmd -configuration ${configName} -prepareMachine")
       }
       else {
-        shell("./build/cibuild.sh --configuration ${configName}")
+        shell("./eng/common/cibuild.sh --configuration ${configName} --preparemachine")
       }
     }
   }

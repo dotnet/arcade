@@ -2,9 +2,9 @@ phases:
 - phase: Windows_NT
   # variables apply to every build configuration in the matrix
   variables: 
-    PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
-    SignType: real
-    UseEsrpSigning: true
+    __PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
+    __SignType: real
+    __UseEsrpSigning: true
     TeamName: DotNetCore
   queue:
     name: DotNetCore-Build
@@ -25,24 +25,24 @@ phases:
   - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
     displayName: Install MicroBuild plugin
     inputs:
-      signType: '$(SignType)'
+      signType: '$(__SignType)'
       zipSources: false
-      esrpSigning: '$(UseEsrpSigning)'
+      esrpSigning: '$(__UseEsrpSigning)'
     env:
       TeamName: $(TeamName)
     continueOnError: false
-    condition: and(succeeded(), in(variables.SignType, 'real', 'test'))
+    condition: and(succeeded(), in(variables.__SignType, 'real', 'test'))
   - task: AzureKeyVault@1
     inputs:
       azureSubscription: 'DotNet-VSTS'
       KeyVaultName: EngKeyVault
       SecretsFilter: 'dotnetfeed-storage-access-key-1'
   # Build and Publish on the Release configuration
-  - script: build\CIBuild.cmd -configuration $(BuildConfig)
-              /p:PB_PublishType=$(PublishType)
-              /p:PB_PublishBlobFeedUrl=$(PublishBlobFeedUrl)
+  - script: eng\common\CIBuild.cmd -configuration $(BuildConfig) -prepareMachine
+              /p:PB_PublishType=$(__PublishType)
+              /p:PB_PublishBlobFeedUrl=$(__PublishBlobFeedUrl)
               /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
-              /p:SignType=$(SignType)
+              /p:SignType=$(__SignType)
     name: Build_Publish
     displayName: Build / Publish
     env:
