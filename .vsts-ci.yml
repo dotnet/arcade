@@ -43,7 +43,7 @@ phases:
       SecretsFilter: 'dotnetfeed-storage-access-key-1'
     condition: and(succeeded(), eq(variables['buildConfig'], 'Release'))
   # Build and Publish on the Release configuration
-  - script: eng\common\CIBuild.cmd -configuration $(buildConfig)
+  - script: eng\common\CIBuild.cmd -configuration $(buildConfig) -prepareMachine
               /p:PB_PublishType=$(__PublishType)
               /p:PB_PublishBlobFeedUrl=$(__PublishBlobFeedUrl)
               /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
@@ -90,7 +90,7 @@ phases:
   - checkout: self
     clean: true
     fetchDepth: 1
-  - script: eng/common/cibuild.sh --configuration $(buildConfig)
+  - script: eng/common/cibuild.sh --configuration $(buildConfig) --preparemachine
     name: Build
     env:
       OfficialBuildId: $(BUILD.BUILDNUMBER)
