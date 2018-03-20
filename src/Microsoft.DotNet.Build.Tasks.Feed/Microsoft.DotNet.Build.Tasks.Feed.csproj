@@ -4,14 +4,10 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard1.5;$(NetFxTfm)</TargetFrameworks>
 
-    <!-- Workaround for repotoolset applying uniform versioning to the entire repo https://github.com/dotnet/roslyn-tools/issues/189 -->
-    <VersionSubstring>$([System.Text.RegularExpressions.Regex]::Replace($(Version), $(VersionBase), ""))</VersionSubstring>
-    <VersionBase>2.2.0</VersionBase>
-    <Version>$(VersionBase)$(VersionSubstring)</Version>
+    <VersionPrefix>2.2.0</VersionPrefix>
     <IsPackable>true</IsPackable>
     <NuspecFile>$(MSBuildProjectName).nuspec</NuspecFile>
     <NuspecBasePath>$(MSBuildProjectDirectory)</NuspecBasePath>
-    <NuspecProperties>version=$(Version);licenseUrl=$(PackageLicenseUrl);repoUrl=$(RepositoryUrl);copyright=$(Copyright);ArtifactsBinDir=$(ArtifactsBinDir)</NuspecProperties>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <PackageTargetFallback>dotnet</PackageTargetFallback>
 
