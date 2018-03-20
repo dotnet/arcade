@@ -4,7 +4,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard1.5;$(NetFxTfm)</TargetFrameworks>
 
-    <VersionBase>2.2.0</VersionBase>
+    <VersionPrefix>2.2.0</VersionPrefix>
     <IsPackable>true</IsPackable>
     <NuspecFile>$(MSBuildProjectName).nuspec</NuspecFile>
     <NuspecBasePath>$(MSBuildProjectDirectory)</NuspecBasePath>

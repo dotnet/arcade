@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <PropertyGroup>
-    <!-- Version must be defined after project has been imported so that versionbase (defined in repo's Version.props or
-         per project) and VersionSuffix (defined in RepoToolsets Version.props) are defined -->
-    <Version>$(VersionBase)-$(VersionSuffix)</Version>
-
-    <NuspecProperties>$(NuspecProperties);version=$(Version);licenseUrl=$(PackageLicenseUrl);repoUrl=$(RepositoryUrl);copyright=$(Copyright);ArtifactsBinDir=$(ArtifactsBinDir)</NuspecProperties>
-  </PropertyGroup>
+  <Target Name="_InitializeNuspecProperties"
+          BeforeTargets="GenerateNuSpec">
+    <PropertyGroup>
+      <NuspecProperties>$(NuspecProperties);version=$(Version);licenseUrl=$(PackageLicenseUrl);repoUrl=$(RepositoryUrl);copyright=$(Copyright);ArtifactsBinDir=$(ArtifactsBinDir)</NuspecProperties>
+    </PropertyGroup>
+  </Target>
 </Project>
