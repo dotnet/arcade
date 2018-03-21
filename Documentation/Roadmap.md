@@ -1,5 +1,7 @@
 # Arcade - a Roadmap
 
+Please read the [Arcade overview document](https://github.com/dotnet/arcade/blob/master/Documentation/Overview.md) for principles and requirements - as well as an overview.
+
 How to read this Roadmap:
 - Each bullet in the phases link to the driving epic.
 - Epics contain a) what "done" means, and b) all the issues associated with the work.  (Note: We use [ZenHub](https://www.zenhub.com/) to make sense of epics)
