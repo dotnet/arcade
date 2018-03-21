@@ -1,0 +1,34 @@
+# Arcade - a Roadmap
+
+How to read this Roadmap:
+- Each bullet in the phases link to the driving epic.
+- Epics contain a) what "done" means, and b) all the issues associated with the work.  (Note: We use [ZenHub](https://www.zenhub.com/) to make sense of epics)
+- For the most part, each epic in the phases can be done in parallel.  This means that the order of the bullets in the phases don't necessarily imply priority.
+- Timing information (when available) is in each epic
+- This roadmap is a living document.  Full history (and most discussions) are in the issues/PRs themselves
+
+
+## Phase I
+Arcade exists and is useful for building and publishing shared packages.
+
+- [x] [Arcade building and publishing packages in the open](https://github.com/dotnet/arcade/issues/45)
+- [ ] [Arcade is serviceable](https://github.com/dotnet/arcade/issues/75)
+- [ ] [Publish initial "set" of shared packages](https://github.com/dotnet/arcade/issues/46)
+
+## Phase II 
+Arcade builds itself and is largely converged with the other toolsets
+
+- [ ] [Arcade is building Arcade](https://github.com/dotnet/arcade/issues/72)
+- [ ] [Define and Implement Repo API](https://github.com/dotnet/arcade/issues/85)
+- [ ] [Bootstrap for native builds](https://github.com/dotnet/arcade/issues/73)
+- [ ] [Converge "kore-build" and Arcade](https://github.com/dotnet/arcade/issues/88)
+- [ ] [Converge "repotoolset" and Arcade](https://github.com/dotnet/arcade/issues/89)
+- [ ] [Converge "buildtools" and Arcade](https://github.com/dotnet/arcade/issues/90)
+
+## Phase III
+Arcade is usable as a baseline for all repos in the stack.  The last bit of "impedance matching" work goes into this phase.  No epics yet, as phase III will clarify itself during Phase II.
+
+
+
+
+
