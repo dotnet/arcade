@@ -42,9 +42,10 @@ See Mission Control section for more information.
 
 ## I'm in the machine, now what?
 
-Once connected to the Machine all you need to do is execute a script 
-called `repro.cmd/sh`. The location of this script is OS dependent, use 
-instructions below to find this file and re-execute the job.
+Once connected to the Machine all you need to do is execute a script called `repro.cmd/sh` and then execute the tests.
+Because each Repo/job has a different way of running test, look at the original logs of the test to find the command to run. For example, for CoreFx run `. RunTests.sh $HELIX_CORRELATION_PAYLOAD`
+
+The location of the `repro.cmd/sh` script is OS dependent. Use instructions below to find this file and re-execute the job.
 
 ### Windows
 The workspace and files that contain information of the machine are located under the `D:\` directory. To execute the job run `d:\data\w\repro.cmd`
@@ -54,17 +55,11 @@ The workspace and files that contain information of the machine are located unde
 ### Linux
 Follow the instructions provided in the shell environment. Then run `. repro.sh` to set some environment variables and get to the directory where the test was executed. You'll find the executables, the dll, pdb, logs, etc.
  
- **Note:** Each Repo/job has a different way of running test. You could find this information in the logs of test.
- For example, for CoreFx run `sh RunTest.sh $HELIX_CORRELATION_PAYLOAD`
-
 ### Mac
 1. `cd dotnetbuild/work/`
 2. Go to the latest updated folder. You could see the files information by doing `ls -la`
 3. Once in that folder keep doing `cd <folder>` until you find the folder with the name `payload`
 4. Run `. repro.sh` to set some environment variables and get to the directory where the test was executed. You'll find the executables, the dll, pdb, logs, etc.
-
-**Note:** Each Repo/job has a different way of running test. You could find this information in the logs of test.
- For example, for CoreFx run `sh RunTest.sh $HELIX_CORRELATION_PAYLOAD`
 
 # How to use it in Jenkins
 When a job inside a PR fails, click on details to go to Jenkins and **Log In**. 
