@@ -170,18 +170,10 @@
     Sorts the trans-unit elements in the .xlf files by the value of their id attributes.
   -->
   <Target Name="SortXlf"
-          DependsOnTargets="GetXlfSources;UpdateXlfSourceList"
-          Inputs="@(XlfSource);$(_XlfSourceList)"
-          Outputs="$(_UpdateXlfLastRun)"
+          DependsOnTargets="GetXlfSources"
           >
     <SortXlf Sources="@(XlfSource)"
              Languages="$(XlfLanguages)"
              />
-
-    <Touch Files="$(_UpdateXlfLastRun)" AlwaysCreate="true" />
-
-    <ItemGroup>
-      <FileWrites Include="$(_UpdateXlfLastRun)" />
-    </ItemGroup>
   </Target>
 </Project>
