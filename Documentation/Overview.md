@@ -25,6 +25,7 @@ This approach publishes what amounts to “public surface area” for the shared
 - Incremental updates where ever humanly possible.  (avoid big changes with a "switch" when possible)
 - When something needs to be done across multiple repos, the extra work required to put the feature in Arcade is worth it.
 - Where appropriate, testing should be in one repo before "graduating" to Arcade.  This way we can learn more what's needed, thus minimizing churn.
+- When making a breaking change, compat switches or branching is required.  (largely due to servicing)
 
 ### Business Value (to remind us why we think we should do this)
 -  Build on the success of others.  Namely, being able to _reasonably_ share functionality across teams and repos. 
@@ -49,8 +50,8 @@ This approach publishes what amounts to “public surface area” for the shared
 - New toolset packages should generally be extensively used in one repo, then if warranted, promoted to become more generally available.
 
 ### Arcade building repos Requirements
-- Arcade builds, tests, packages, signs, and publishes itself using itself
+- Arcade builds, tests, packages, signs, and publishes itself using itself and the shipping sdk/cli
 - All tools bootstrapped in, getting as close as technically possible to 'clone and build' on a clean machine
 - A repo level API is explicitly defined and implemented, not just implied 
-- Method exist to directly manage Arcade in each participating repo
+- Method exist to directly maintain and update Arcade in each participating repo
 - Arcade (and its packages) is reasonably serviceable
