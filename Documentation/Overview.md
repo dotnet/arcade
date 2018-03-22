@@ -9,21 +9,23 @@ The primary concept is to break the infrastructure into “pay for play” compo
 
 This approach publishes what amounts to “public surface area” for the shared engineering infrastructure.  These “contracts” then allow for the product teams to reason about how (or if) they participate and manage their engagement with the common infra over time.  In short, the product teams “pull” what is needed, when it’s needed.
 
-This document speaks _only_ to the first bullet point below - e.g. tasks/targets as Nuget packages.  The rest of the bullets are for context only.
-
 ### Methods for Consuming the .Net Core Shared Infrastructure Components
 
-- **MSBuild tasks/targets as Nuget packages**  (<-- what this doc is about)
+- MSBuild tasks/targets as Nuget packages
+- Known "entry points" (repo API) in each repo to build, test, package, sign, and publish
 - VSTS extensions  (check the box in VSTS)
 - Hosted services with REST end points which are owned by the Engineering Services
 - Toolsets (think compilers, training tools, etc) as binaries in their own setup or Nuget packages
 - Machine (VM) images and/or Docker containers
 - "Resources" as planned by VSTS.
 
-### Approach
--  The idea is to start with the "satellite" (non core) build tools so we can learn what works and what doesn't.  Once we're more comfortable, we can start to move farther into the "core" (touchier) tools.
--  The assumption is that the ProdCon V2 effort will be largely addressing the repo level contracts themselves.  As mentioned earlier, the intent of this effort is to focus on the tools.  Note that there is likely some overlap (like with bootstrapping), but we'll deal with those as they come up.
--  We like to take advantage of the ProdCon V2 effort to start off well.  To that end, there is some urgency so that we can be ready.
+### Principles
+- Updates and changes should always be done with all the repos (not just yours) in mind.  This implies compromise by all to achieve a better common goal.
+- Simplicity and austerity are our friends.  We want to avoid clever, magic, or fancy features.
+- Incremental updates where ever humanly possible.  (avoid big changes with a "switch" when possible)
+- When something needs to be done across multiple repos, the extra work required to put the feature in Arcade is worth it.
+- Where appropriate, testing should be in one repo before "graduating" to Arcade.  This way we can learn more what's needed, thus minimizing churn.
+- When making a breaking change, compat switches or branching is required.  (largely due to servicing)
 
 ### Business Value (to remind us why we think we should do this)
 -  Build on the success of others.  Namely, being able to _reasonably_ share functionality across teams and repos. 
@@ -47,14 +49,9 @@ This document speaks _only_ to the first bullet point below - e.g. tasks/targets
 - There is a "core" set of tool packages defined which every participating repo get.  Other packages produced by different product teams are also available, but these "curated" packages not automatically brought down by default.
 - New toolset packages should generally be extensively used in one repo, then if warranted, promoted to become more generally available.
 
-### Out of scope for this specific project
--  Repo level contracts.  We do need to unify (at a high level) the "verbs" we use to interact with the repo.  (e.g. build, test, etc)  However, for this specific exercise, that work is out of scope.  Please note that much of this will likely be done as part of the ProdCon effort.
--  ~~Tool chains like compilers, training, and the like.  The current thinking is to fully implement "config as code" (CodeFiguration  ®™ ASP) where the VM/Container contains the right tools what what is needed.~~
-
-### Random Implementation Notes/Questions
--  Tracking epic: https://github.com/dotnet/core-eng/issues/2548
--  Bootstrapping must be simple and allows for easy version selection  (current thoughts: https://github.com/chcosta/roslyn-tools/blob/bootstrap/docs/Toolset-Bootstrap.md)
--  There is one (separate from product) feed for all common infrastructure (this is probably correct, but needs to be thought through. (https://github.com/dotnet/core-eng/pull/2552)   For example, what about our community?  Also, private repos?)
--  A method of discovering what shared infra offerings are available is important to figure out.  Likely this is largely a documentation effort, but perhaps there can be a special service which helps out.  Possibly use the "gallery" feature as an aid?  Documentation for each package will help too.
--  Working out the right way to “fork” infra (in this case packages) with the product branch needs additional attention.  The current thinking is to embed the git hash into every binary/package produced, and then ensure the repo is buildable clean given a specific hash.
-- Package reference should **not** float.  This implies the need for a "Maestro" like tool (re-use the prodcon approach?) to explicitely update tool references in multiple repos.
+### Arcade building repos Requirements
+- Arcade builds, tests, packages, signs, and publishes itself using itself and the shipping sdk/cli
+- All tools bootstrapped in, getting as close as technically possible to 'clone and build' on a clean machine
+- A repo level API is explicitly defined and implemented, not just implied 
+- Method exist to directly maintain and update Arcade in each participating repo
+- Arcade (and its packages) is reasonably serviceable
