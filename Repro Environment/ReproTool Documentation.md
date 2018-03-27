@@ -5,7 +5,6 @@ The following document shows the user documentation of the repro environment sol
 The complete list of resolved issues is [here](./V1.0.1.md)
 
 ### Known Issues
-- [Blocking] [2484](https://github.com/dotnet/core-eng/issues/2484) Error getting a Windows 7 machine.
 - [Blocking] Helix docker container Repro jobs are not supported. i.e. Alpine
 - [2006](https://github.com/dotnet/core-eng/issues/2006) Set password for Fedora machines not working.
 - [2551](https://github.com/dotnet/core-eng/issues/2551) Error when creating a OSX machine from Jenkins.
