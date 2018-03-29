@@ -15,6 +15,7 @@
   <UsingTask TaskName="TransformTemplates" AssemblyFile="$(XliffTasksAssembly)" />
   <UsingTask TaskName="TranslateSource" AssemblyFile="$(XliffTasksAssembly)" />
   <UsingTask TaskName="UpdateXlf" AssemblyFile="$(XliffTasksAssembly)" />
+  <UsingTask TaskName="SortXlf" AssemblyFile="$(XliffTasksAssembly)" />
 
   <!--
     Note that .xlf files are source files, not build outputs. We therefore cannot use their modification time
@@ -165,4 +166,14 @@
     <TranslateSource XlfFile="@(Xlf)" />
   </Target>
 
+  <!--
+    Sorts the trans-unit elements in the .xlf files by the value of their id attributes.
+  -->
+  <Target Name="SortXlf"
+          DependsOnTargets="GetXlfSources"
+          >
+    <SortXlf Sources="@(XlfSource)"
+             Languages="$(XlfLanguages)"
+             />
+  </Target>
 </Project>

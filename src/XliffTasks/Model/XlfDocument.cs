@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -168,14 +169,70 @@ namespace XliffTasks.Model
                     continue;
                 }
 
-                bodyElement.Add(
+                XElement newTransUnit = 
                     new XElement(ns + "trans-unit",
                         new XAttribute("id", sourceNode.Id),
                         new XElement(ns + "source", sourceNode.Source),
                         new XElement(ns + "target", new XAttribute("state", "new"), sourceNode.Source),
-                        new XElement(ns + "note", sourceNode.Note == "" ? null : sourceNode.Note)));
+                        new XElement(ns + "note", sourceNode.Note == "" ? null : sourceNode.Note));
+
+                bool inserted = false;
+                foreach (var transUnit in bodyElement.Elements(ns + "trans-unit"))
+                {
+                    if (StringComparer.Ordinal.Compare(newTransUnit.Attribute("id").Value, transUnit.Attribute("id").Value) < 0)
+                    {
+                        transUnit.AddBeforeSelf(newTransUnit);
+                        inserted = true;
+                        break;
+                    }
+                }
+
+                if (!inserted)
+                {
+                    bodyElement.Add(newTransUnit);
+                }
 
                 changed = true;
+            }
+
+            return changed;
+        }
+
+        /// <summary>
+        /// Sorts the <code>trans-unit</code> elements in the document by their <code>id</code> attribute.
+        /// </summary>
+        /// <returns>Returns <code>true</code> if the document was modified; <code>false</code> otherwise.</returns>
+        public bool Sort()
+        {
+            bool changed = false;
+
+            XNamespace ns = _document.Root.Name.Namespace;
+
+            XElement fileElement = _document.Root.Element(ns + "file");
+            XElement bodyElement = fileElement.Element(ns + "body");
+
+            IEnumerable<XElement> transUnits = bodyElement.Elements(ns + "trans-unit");
+
+            IComparer<string> comparer = StringComparer.Ordinal;
+            if (!transUnits.IsSorted(tu => tu.Attribute("id").Value, comparer))
+            {
+                changed = true;
+                SortedList<string, XElement> sortedTransUnits = new SortedList<string, XElement>(comparer);
+
+                // Sort the translation units
+                foreach (var transUnit in transUnits)
+                {
+                    sortedTransUnits.Add(transUnit.Attribute("id").Value, transUnit);
+                }
+
+                // Remove them from the body element
+                foreach (var transUnit in sortedTransUnits.Values)
+                {
+                    transUnit.Remove();
+                }
+
+                // Add them back in sorted order
+                bodyElement.Add(sortedTransUnits.Values);
             }
 
             return changed;
