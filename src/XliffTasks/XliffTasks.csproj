@@ -8,6 +8,7 @@
     <BuildOutputTargetFolder>tools</BuildOutputTargetFolder>
     <EnableDefaultItems>false</EnableDefaultItems>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
