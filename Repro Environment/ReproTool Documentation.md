@@ -132,6 +132,10 @@ For a Mac machine, `Connect` will download a `.txt` file with the instructions o
 Go back to [Mission Control], find the machine and click on `Delete`. 
 Please note that both the Snapshots and the Machines expire after 3 days of being created, so in case you forget to delete them, we will delete them for you withouth previous notice.
 
+# Where can I find more info?
+
+Repro tool source and additional documentation is available at https://mseng.visualstudio.com/Tools/_git/dotnet-repro-tool?_a=preview&path=%2FReadme.md&version=GBmaster
+
 # How to give feedback?
 - Please create a new issue in the [core-eng](https://github.com/dotnet/core-eng) repository.
 - Other way is to use the `thumbs up/down` in Mission Control when located in the Repros tab. 
