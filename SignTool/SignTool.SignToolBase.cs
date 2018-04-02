@@ -45,6 +45,10 @@ namespace SignTool
 
                 string fileName = MSBuildPath;
                 var commandLine = $@"/v:m ""{buildFilePath}""";
+                if (!string.IsNullOrEmpty(_args.MSBuildBinaryLogFilePath))
+                {
+                    commandLine += $@" /binaryLogger:""{_args.MSBuildBinaryLogFilePath}""";
+                }
 
                 if (!_args.Test)
                 {

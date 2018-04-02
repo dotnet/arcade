@@ -209,6 +209,7 @@ outputPath: Directory containing the binaries.
 intermediateOutputPath: Directory containing intermediate output.  Default is (outputpath\..\Obj).
 nugetPackagesPath: Path containing downloaded NuGet packages.
 msbuildPath: Path to MSBuild.exe to use as signing mechanism.
+msbuildBinaryLog: Path to the binary log to generate when invoking signing.
 config: Path to SignToolData.json. Default: build\config\SignToolData.json.
 outputConfig: Run tool to produce an orchestration json file with specified name.  This will contain SHA256 hashes of files for verification to consume later.
 ";
@@ -228,6 +229,7 @@ outputConfig: Run tool to produce an orchestration json file with specified name
             string nugetPackagesPath = null;
             string configFile = null;
             string outputConfigFile = null;
+            string msbuildBinaryLogFilePath = null;
             var test = false;
             var testSign = false;
 
@@ -254,6 +256,12 @@ outputConfig: Run tool to produce an orchestration json file with specified name
                         break;
                     case "-msbuildpath":
                         if (!ParsePathOption(args, ref i, current, out msbuildPath))
+                        {
+                            return false;
+                        }
+                        break;
+                    case "-msbuildBinaryLog":
+                        if (!ParsePathOption(args, ref i, current, out msbuildBinaryLogFilePath))
                         {
                             return false;
                         }
@@ -322,6 +330,7 @@ outputConfig: Run tool to produce an orchestration json file with specified name
             signToolArgs = new SignToolArgs(
                 outputPath: outputPath,
                 msbuildPath: msbuildPath,
+                msbuildBinaryLogFilePath: msbuildBinaryLogFilePath,
                 intermediateOutputPath: intermediateOutputPath,
                 nugetPackagesPath: nugetPackagesPath,
                 appPath: AppContext.BaseDirectory,
