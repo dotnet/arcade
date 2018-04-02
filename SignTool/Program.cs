@@ -260,7 +260,7 @@ outputConfig: Run tool to produce an orchestration json file with specified name
                             return false;
                         }
                         break;
-                    case "-msbuildBinaryLog":
+                    case "-msbuildbinarylog":
                         if (!ParsePathOption(args, ref i, current, out msbuildBinaryLogFilePath))
                         {
                             return false;
