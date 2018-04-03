@@ -14,6 +14,7 @@ How to read this Roadmap:
 Arcade exists and is useful for building and publishing shared packages.
 
 - [x] [Arcade building and publishing packages in the open](https://github.com/dotnet/arcade/issues/45)
+- [ ] ["Maestro" for Arcade scripts ](https://github.com/dotnet/arcade/issues/74)
 - [ ] [Arcade is serviceable](https://github.com/dotnet/arcade/issues/75)
 - [ ] [Publish initial "set" of shared packages](https://github.com/dotnet/arcade/issues/46)
 
