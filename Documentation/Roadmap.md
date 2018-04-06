@@ -22,6 +22,7 @@ Arcade exists and is useful for building and publishing shared packages.
 Arcade builds itself and is largely converged with the other toolsets
 
 - [ ] [Arcade is building Arcade](https://github.com/dotnet/arcade/issues/72)
+- [ ] [Use arcade as a "canary" build](https://github.com/dotnet/arcade/issues/111)
 - [ ] [Define and Implement Repo API](https://github.com/dotnet/arcade/issues/85)
 - [ ] [Bootstrap for native builds](https://github.com/dotnet/arcade/issues/73)
 - [ ] [Converge "kore-build" and Arcade](https://github.com/dotnet/arcade/issues/88)
