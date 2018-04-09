@@ -4,7 +4,7 @@
 
 ```MAJOR.MINOR.PATCH-PRERELEASE+BUILDMETADATA```
 
-MAJOR, MINOR, and PATCH versions are rigid in their requirements.  Please refer to the [SemVer2 documentation](https://semver.org) for details. PRERELEASE and BUILD are optional and leave a fair bit of room for organizations to implement what they want. There are two primary questions:
+MAJOR, MINOR, and PATCH versions are rigid in their requirements.  Please refer to the [SemVer2 documentation](https://semver.org) for details. PRERELEASE and BUILD are optional and leave a fair bit of room for organizations to implement what they want. The only caveat is that build metadata cannot be used to differentiate two different packages. Build metadata should not be used when determining version precedence. There are two primary questions:
 - What goes in the PRERELEASE and BUILD fields and when are they used?
 - Should we use stable versioning vs. date varying versioning?
 
@@ -41,17 +41,14 @@ Both types of versioning have advantages and disadvantages:
 
 ### Conclusion
 
-Stable version is more hassle than it's worth, though having the sha in the output package version is also useful.  We should combine a sha with the build revision (number of builds so far today) to generate a non-stable, unique, identifiable build.
-
-## Where are Version Numbers Stored?
-MAJOR, MINOR, PRERELEASE and PATCH version fields are explicit in the source.  The BUILD field is generated based on the input source and date, and build number.
+Stable version is more hassle than it's worth, though having the sha in the output package version is also useful.  We should combine a sha in the build metadata with the build date+revision (short data + number of builds so far today) to generate a non-stable, unique, identifiable build.
 
 ## Versioning Details
 
 We will use the following form:
 
 ```
-MAJOR.MINOR.PATCH-PRERELEASE+HEIGHT.SHORTSHA.BUILDS
+MAJOR.MINOR.PATCH-PRERELEASE.SHORTDATE.BUILDS+SHORTSHA
 ```
 
 Where:
@@ -59,13 +56,18 @@ Where:
 - **MINOR** - Minor version
 - **PATCH** - Patch version
 - **PRERELEASE** - alphanumeric prerelease version like `preview1`, `preview3` or `beta2`
-- **HEIGHT** - Commit height of source sha.  For sortability
-- **SHORTSHA** - shortened sha (how long?)
+- **SHORTDATE** - shortened date (5 digits)
 - **BUILDS** - Number of builds already started today, starting at 0.  No leading 0s
+- **SHORTSHA** - shortened sha
 
 ## Examples
 
-- 1.2.0-preview1+51.50f4e3aa.0
+- 1.2.0-preview1.08530.0+asdf34234
 - 1.2.0-preview1 (stabilized)
-- 3.0.1-beta2+12345.asd34523.5
+- 3.0.1-beta2.26405.10+asd34523
 - 3.0.1 (stabilized)
+
+## Version Number Generation
+MAJOR, MINOR, PRERELEASE and PATCH version fields are explicit in the source.  The rest of the fields are generated or supplied:
+
+**todo - add generation info**
