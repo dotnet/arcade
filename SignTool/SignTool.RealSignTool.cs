@@ -29,9 +29,11 @@ namespace SignTool
                  + sizeof(Int16)  // minor version
                  + sizeof(Int64); // metadata directory
 
+            internal bool TestSign { get; }
+
             internal RealSignTool(SignToolArgs args) : base(args)
             {
-
+                TestSign = args.TestSign;
             }
 
             protected override int RunMSBuild(ProcessStartInfo startInfo, TextWriter textWriter)
@@ -85,6 +87,12 @@ namespace SignTool
 
             public override bool VerifySignedAssembly(Stream assemblyStream)
             {
+                // The assembly won't verify by design when doing test signing.
+                if (TestSign)
+                {
+                    return true;
+                }
+
                 using (var memoryStream = new MemoryStream())
                 {
                     assemblyStream.CopyTo(memoryStream);
