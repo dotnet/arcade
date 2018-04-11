@@ -201,7 +201,7 @@ namespace Microsoft.DotNet.Build.Tasks.NuGet.Tests
             };
             Assert.True(task.Execute());
             var warning = Assert.Single(engine.Warnings);
-            Assert.Equal(ArcadeTaskErrors.NuspecMissingFilesNode, warning.Code);
+            Assert.Equal(NugetErrors.NuspecMissingFilesNode, warning.Code);
         }
 
         [Fact]
@@ -287,7 +287,7 @@ namespace Microsoft.DotNet.Build.Tasks.NuGet.Tests
 
             Assert.False(task.Execute(), "Task should fail");
             var error = Assert.Single(engine.Errors);
-            Assert.Equal(ArcadeTaskErrors.InvalidPackagePathMetadata, error.Code);
+            Assert.Equal(NugetErrors.InvalidPackagePathMetadata, error.Code);
         }
 
         [Fact]

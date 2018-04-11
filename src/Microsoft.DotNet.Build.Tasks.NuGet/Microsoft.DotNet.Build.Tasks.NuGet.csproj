@@ -1,4 +1,4 @@
-<Project Sdk="RoslynTools.RepoToolset">
+﻿<Project Sdk="RoslynTools.RepoToolset">
 
   <PropertyGroup>
     <!-- TODO: unify this with the rest of the projects in arcade. See dotnet/arcade#59 -->
@@ -11,6 +11,10 @@
     <NuspecProperties>NetFxTfm=$(NetFxTfm)</NuspecProperties>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.Build.Tasks.NuGet.Tests" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NuGet.Packaging" Version="$(NuGetPackagingVersion)" />

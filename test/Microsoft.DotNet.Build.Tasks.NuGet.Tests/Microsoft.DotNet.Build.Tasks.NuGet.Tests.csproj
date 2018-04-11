@@ -1,4 +1,4 @@
-<Project Sdk="RoslynTools.RepoToolset">
+﻿<Project Sdk="RoslynTools.RepoToolset">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
@@ -19,6 +19,5 @@
   </ItemGroup>
 
   <Import Project="..\Tasks.Tests.Shared\Tasks.Tests.Shared.projitems" Label="Shared" />
-  <Import Project="..\..\src\Tasks.Shared\Tasks.Shared.projitems" Label="Shared" />
 
 </Project>

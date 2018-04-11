@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Build.Tasks.NuGet
                     {
                         // Warn about this overly permissive default in nuspec.
                         Log.LogWarning(
-                            null, ArcadeTaskErrors.NuspecMissingFilesNode, null, FilePath, 0, 0, 0, 0,
+                            null, NugetErrors.NuspecMissingFilesNode, null, FilePath, 0, 0, 0, 0,
                             message: "The nuspec file is missing the <files> nodes. This causes all files in NuspecBase to be included in the package. " +
                             @"Add an empty `<files />` node to prevent this behavior. Add `<files> <file src=""**\*\"" target=""\"" /> </files>` to the nuspec to suppress this warning.");
                     }
@@ -141,7 +141,7 @@ namespace Microsoft.DotNet.Build.Tasks.NuGet
             catch (InvalidDataException ex)
             {
                 Log.LogError(
-                    null, ArcadeTaskErrors.InvalidNuspecFile, null, FilePath, 0, 0, 0, 0,
+                    null, NugetErrors.InvalidNuspecFile, null, FilePath, 0, 0, 0, 0,
                     message: ex.Message);
                 return false;
             }
@@ -231,7 +231,7 @@ namespace Microsoft.DotNet.Build.Tasks.NuGet
                 if (string.IsNullOrEmpty(fileName))
                 {
                     Log.LogError(
-                        null, ArcadeTaskErrors.InvalidPackagePathMetadata, null, FilePath, 0, 0, 0, 0,
+                        null, NugetErrors.InvalidPackagePathMetadata, null, FilePath, 0, 0, 0, 0,
                         message: "The PackagePath metadata value on {0} is invalid. PackagePath must be set to the exact file path within the nuget package.");
                     continue;
                 }
