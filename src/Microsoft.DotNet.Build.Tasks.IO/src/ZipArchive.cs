@@ -70,6 +70,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO
                 else
                 {
                     Log.LogError($"Zip file {OutputPath} already exists. Set {nameof(Overwrite)}=true to replace it.");
+                    return !Log.HasLoggedErrors;
                 }
             }
 
