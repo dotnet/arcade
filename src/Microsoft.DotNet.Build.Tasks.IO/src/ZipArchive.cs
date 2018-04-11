@@ -60,12 +60,12 @@ namespace Microsoft.DotNet.Build.Tasks.IO
 
         public override bool Execute()
         {
-            if (File.Exists(OutputPath))
+            if (IOFile.Exists(OutputPath))
             {
                 if (Overwrite)
                 {
-                    Log.LogMessage(MessageImportance.Low, $"'{OutputPath}' already existed, deleting before zipping...");
-                    File.Delete(OutputPath);
+                    Log.LogMessage(MessageImportance.Low, $"'{OutputPath}' already exists and Overwrite is '{Overwrite}', deleting before zipping...");
+                    IOFile.Delete(OutputPath);
                 }
                 else
                 {
