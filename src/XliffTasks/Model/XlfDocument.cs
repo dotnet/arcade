@@ -257,5 +257,18 @@ namespace XliffTasks.Model
 
             return dictionary;
         }
+
+        public int GetUntranslatedResourceCount()
+        {
+            XNamespace ns = _document.Root.Name.Namespace;
+
+            int untranslatedResourceCount =
+                (_document.Descendants(ns + "trans-unit")
+                 .Select(tu => tu.Element(ns + "target"))
+                 .Where(target => target.Attribute("state").Value != "translated"))
+                .Count();
+
+            return untranslatedResourceCount;
+        }
     }
 }

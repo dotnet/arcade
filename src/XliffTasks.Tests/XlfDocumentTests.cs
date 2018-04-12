@@ -280,6 +280,64 @@ namespace XliffTasks.Tests
                 Sort(xliff));
         }
 
+        [Fact]
+        public void UntranslatedResourceCount_Zero()
+        {
+            string xliff =
+ @"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
+  <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
+    <body>
+      <trans-unit id=""Apple"">
+        <source>Apple</source>
+        <target state=""translated"">Apple</target>
+        <note>Tasty</note>
+      </trans-unit>
+      <trans-unit id=""Goodbye"">
+        <source>Goodbye!</source>
+        <target state=""translated"">Au revoir!</target>
+        <note />
+      </trans-unit>
+      <trans-unit id=""Hello"">
+        <source>Hello!</source>
+        <target state=""translated"">Bonjour!</target>
+        <note>Greeting</note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>";
+
+            Assert.Equal(expected: 0, actual: UntranslatedResourceCount(xliff));
+        }
+
+        [Fact]
+        public void UntranslatedResourceCount_Two()
+        {
+            string xliff =
+ @"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
+  <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
+    <body>
+      <trans-unit id=""Apple"">
+        <source>Apple</source>
+        <target state=""translated"">Apple</target>
+        <note>Tasty</note>
+      </trans-unit>
+      <trans-unit id=""Goodbye"">
+        <source>Goodbye!</source>
+        <target state=""new"">Goodbye!</target>
+        <note />
+      </trans-unit>
+      <trans-unit id=""Hello"">
+        <source>Hello!</source>
+        <target state=""needs-review-translation"">Hallo!</target>
+        <note>Greeting</note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>";
+
+            Assert.Equal(expected: 2, actual: UntranslatedResourceCount(xliff));
+        }
+
         private static string Sort(string xliff)
         {
             var xliffDocument = new XlfDocument();
@@ -312,6 +370,14 @@ namespace XliffTasks.Tests
             var writer = new StringWriter();
             xliffDocument.Save(writer);
             return writer.ToString();
+        }
+
+        private static int UntranslatedResourceCount(string xliff)
+        {
+            var xliffDocument = new XlfDocument();
+            xliffDocument.Load(new StringReader(xliff));
+
+            return xliffDocument.GetUntranslatedResourceCount();
         }
     }
 }

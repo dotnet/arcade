@@ -16,6 +16,7 @@
   <UsingTask TaskName="TranslateSource" AssemblyFile="$(XliffTasksAssembly)" />
   <UsingTask TaskName="UpdateXlf" AssemblyFile="$(XliffTasksAssembly)" />
   <UsingTask TaskName="SortXlf" AssemblyFile="$(XliffTasksAssembly)" />
+  <UsingTask TaskName="EnsureAllResourcesTranslated" AssemblyFile="$(XliffTasksAssembly)" />
 
   <!--
     Note that .xlf files are source files, not build outputs. We therefore cannot use their modification time
@@ -61,14 +62,14 @@
           BeforeTargets="BeforeBuild"
           DependsOnTargets="UpdateXlf"
           />
-  
+
   <Target Name="EnsureXlfIsUpToDate"
           Condition="'$(ErrorOnOutOfDateXlf)' == 'true'"
           DependsOnTargets="_DisallowXlfModification;_UpdateXlf"
           />
-  
+
   <Target Name="UpdateXlf"
-          DependsOnTargets="_AllowXlfModification;_UpdateXlf" 
+          DependsOnTargets="_AllowXlfModification;_UpdateXlf"
           />
 
   <Target Name="_AllowXlfModification">
@@ -117,7 +118,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="GatherXlf" 
+  <Target Name="GatherXlf"
           DependsOnTargets="GetXlfSources;EnsureXlfIsUpToDate"
           >
     <GatherXlf Sources="@(XlfSource)"
@@ -175,5 +176,13 @@
     <SortXlf Sources="@(XlfSource)"
              Languages="$(XlfLanguages)"
              />
+  </Target>
+
+  <Target Name="EnsureAllResourcesTranslated"
+          DependsOnTargets="GetXlfSources"
+          >
+    <EnsureAllResourcesTranslated Sources="@(XlfSource)"
+                                  Languages="$(XlfLanguages)"
+                                  />
   </Target>
 </Project>
