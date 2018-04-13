@@ -22,8 +22,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!-- Place 'NetFxTfm' in the 'TargetFramework' property of a csproj to include building framework version.
-         ie. <TargetFrameworks>netcoreapp2.0;$(NetFxTfm)</TargetFrameworks> -->
+    <!-- 'NetFxTfm' is the standard desktop Target Framework Moniker which this repo's packages are targeting
+         ie.  Place 'NetFxTfm' in the 'TargetFramework' property of a csproj like <TargetFrameworks>netcoreapp2.0;$(NetFxTfm)</TargetFrameworks> -->
     <NetFxTfm>net45</NetFxTfm>
   </PropertyGroup>
 </Project>
