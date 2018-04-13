@@ -137,7 +137,7 @@ try {
   }
 
   if ($projects -eq "") {
-    $projects = Join-Path $RepoRoot "*.sln"
+    $projects = Join-Path $RepoRoot "**\*.sln"
   }
 
   if ($env:NUGET_PACKAGES -ne $null) {

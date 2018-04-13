@@ -1,0 +1,3062 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "2018-03-14",
+    "title": "Helix API (2018-03-14)",
+    "description": "This API provides mechanisms for creating Helix jobs and querying their state and final results. Any API method that requires authentication (indicated in the description of each method) requires an API key to be passed either in the form of a query parameter named 'access_token', or as a header in the form 'Authentication: token APIKEY', where APIKEY is your key. You can obtain your API key from /UserProfileAll API's that deal with jobs have optional authentication. Any anonmyous access will be scoped to a limited set of jobs."
+  },
+  "host": "helix.dot.net",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/api/2018-03-14/aggregate/analysis": {
+      "get": {
+        "tags": [
+          "Aggregate"
+        ],
+        "summary": "Get an aggregation of all workitem analyses for a specific workitem in the job set.",
+        "operationId": "Aggregate_AnalysisSummary",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "workitem",
+            "in": "query",
+            "description": "The workitem name to retrieve analyses for.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "description": "A list of grouping expressions that will control\r\n            the groups of the returned list. For more information, see 'jobs' method. {!:JobSummary(JobFilter,string[],int)}",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "otherProperties",
+            "in": "query",
+            "description": "A list of other job properties to return.",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "filter.creator",
+            "in": "query",
+            "description": "The job creator.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.source",
+            "in": "query",
+            "description": "The job source.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.type",
+            "in": "query",
+            "description": "The job type.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.build",
+            "in": "query",
+            "description": "The build number.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.name",
+            "in": "query",
+            "description": "The Name/CorrelationId number.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/AggregateWorkItemSummary"
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/aggregate/build/history": {
+      "get": {
+        "tags": [
+          "Aggregate"
+        ],
+        "summary": "Gets the build history for the past 30 days from the specified source and type pair(s)",
+        "description": "The source(s) and type(s) must come in pairs",
+        "operationId": "Aggregate_BuildHistory",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "description": "The sources to get build history for",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "The types to get build history for",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/BuildHistoryItem"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/aggregate/build": {
+      "get": {
+        "tags": [
+          "Aggregate"
+        ],
+        "summary": "Gets the information for the specified build.",
+        "description": "The source(s) and type(s) must come in pairs",
+        "operationId": "Aggregate_Build",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "sources",
+            "in": "query",
+            "description": "The sources for the build",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "types",
+            "in": "query",
+            "description": "The types for the build",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "buildNumber",
+            "in": "query",
+            "description": "The build number",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/BuildAggregation"
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/aggregate/jobs": {
+      "get": {
+        "tags": [
+          "Aggregate"
+        ],
+        "summary": "Get a summary of all the latest jobs that match the given filter.\r\nAggregation will include a passed/running/failed status for the aggregation",
+        "operationId": "Aggregate_JobSummary",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "groupBy",
+            "in": "query",
+            "description": "A list of grouping expressions that will control\r\nthe groups of the returned list. All jobs that have the same values for\r\nall provided group parameters will be aggregated into a single entry.\r\nValid values for the values are : 'job.build'; 'job.properties.*\", where * is any property sent with the job\r\nin the \"Properties\" value.",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "maxResultSets",
+            "in": "query",
+            "description": "The maximum number of the first grouping parameter\r\nto return. For example, if your groups were ['job.build', 'job.properties.config'],\r\npassing 6 will limit the return value to the first 6 builds. Additional\r\ngroup arguments are not limited.",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "filter.creator",
+            "in": "query",
+            "description": "The job creator.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.source",
+            "in": "query",
+            "description": "The job source.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.type",
+            "in": "query",
+            "description": "The job type.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.build",
+            "in": "query",
+            "description": "The build number.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.name",
+            "in": "query",
+            "description": "The Name/CorrelationId number.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AggregatedWorkItemCounts"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/aggregate/workitems": {
+      "get": {
+        "tags": [
+          "Aggregate"
+        ],
+        "summary": "Gets an aggregation of unique workitems in a job set.",
+        "operationId": "Aggregate_WorkItemSummary",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "groupBy",
+            "in": "query",
+            "description": "A list of grouping expressions that will control\r\n            the groups of the returned list. For more information, see 'jobs' method. {M:Helix.LifeTime.Web.Controllers.Api_2017_04_14.AggregateApi_2017_04_14_Controller.JobSummary(Helix.LifeTime.Web.Shared.JobFilter,System.String[],System.Int32)}",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "filter.creator",
+            "in": "query",
+            "description": "The job creator.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.source",
+            "in": "query",
+            "description": "The job source.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.type",
+            "in": "query",
+            "description": "The job type.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.build",
+            "in": "query",
+            "description": "The build number.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.name",
+            "in": "query",
+            "description": "The Name/CorrelationId number.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AggregatedWorkItemCounts"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/aggregate/analysisdetail": {
+      "get": {
+        "tags": [
+          "Aggregate"
+        ],
+        "operationId": "Aggregate_AnalysisDetail",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "build",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "workitem",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "analysisType",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "analysisName",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AggregateAnalysisDetail"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/aggregate/properties": {
+      "get": {
+        "tags": [
+          "Aggregate"
+        ],
+        "summary": "Get the properties for a build. This will return any properties that are common\r\namong all jobs in a given build. If a job doesn't have a particular property,\r\nthat property will still be returned if it is not different among jobs that have it.\r\n\r\nFor example, if all your build jobs have a \"sourceVersion\" property referencing the\r\nhash used in the build, that property would be returned.",
+        "operationId": "Aggregate_Properties",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "filter.creator",
+            "in": "query",
+            "description": "The job creator.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.source",
+            "in": "query",
+            "description": "The job source.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.type",
+            "in": "query",
+            "description": "The job type.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.build",
+            "in": "query",
+            "description": "The build number.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.name",
+            "in": "query",
+            "description": "The Name/CorrelationId number.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/aggregate/investigation/continue/{id}": {
+      "get": {
+        "tags": [
+          "Aggregate"
+        ],
+        "summary": "Continue a previous call to 'investigation'. See the GET 'investigation' API for more details",
+        "operationId": "Aggregate_Investigation_Continue",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The token from a previous call to 'investigation'",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/InvestigationResult"
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/aggregate/investigation": {
+      "get": {
+        "tags": [
+          "Aggregate"
+        ],
+        "summary": "Begin an investigation query. This call may not return all results immediately.\r\nIf the \"Token\" value of the response is set, future calls to investigation/continue will\r\nbe required to get further data.\r\nSomething requires \"investigation\" at least on provider detects a failure that does not\r\nhave an associated \"reason\" (PUT {job}/{analysisType}/reason).",
+        "operationId": "Aggregate_Investigation",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "groupBy",
+            "in": "query",
+            "description": "A list of grouping expressions that will control\r\n            the groups of the returned list. For more information, see 'jobs' method. {M:Helix.LifeTime.Web.Controllers.Api_2017_04_14.AggregateApi_2017_04_14_Controller.JobSummary(Helix.LifeTime.Web.Shared.JobFilter,System.String[],System.Int32)}",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "maxGroups",
+            "in": "query",
+            "description": "Maximum number of groups to return",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "maxResults",
+            "in": "query",
+            "description": "Maximum number of results across all groups to return",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "filter.creator",
+            "in": "query",
+            "description": "The job creator.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.source",
+            "in": "query",
+            "description": "The job source.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.type",
+            "in": "query",
+            "description": "The job type.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.build",
+            "in": "query",
+            "description": "The build number.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.name",
+            "in": "query",
+            "description": "The Name/CorrelationId number.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/InvestigationResult"
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/aggregate/history/{analysisType}": {
+      "get": {
+        "tags": [
+          "Aggregate"
+        ],
+        "summary": "Get the status history for a given analysis over the past several builds.\r\nUsing the same source and type, builds are walked backward from the current\r\ntime until a number of days matching {!:days} days worth\r\nof results are found, and all status counts grouped by build are returned.",
+        "operationId": "Aggregate_History",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "description": "The 'source' of all jobs to consider",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "The 'type' of all jobs to consider",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "workitem",
+            "in": "query",
+            "description": "The name of the workitem to analyse",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "analysisType",
+            "in": "path",
+            "description": "The type of analysis to get details for",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "analysisName",
+            "in": "query",
+            "description": "The name of a specific item in the analysis to get details for",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "description": "Number of days of history to examine",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HistoricalAnalysisItem"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access_token": []
+          }
+        ]
+      }
+    },
+    "/api/2018-03-14/aggregate/multi-source": {
+      "post": {
+        "tags": [
+          "Aggregate"
+        ],
+        "operationId": "Aggregate_MultiSource",
+        "consumes": [
+          "application/json",
+          "text/json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MultiSourceRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/MultiSourceResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "access_token": []
+          }
+        ]
+      }
+    },
+    "/api/2018-03-14/analysis/{job}/{analysisType}/reason": {
+      "put": {
+        "tags": [
+          "Analysis"
+        ],
+        "operationId": "Analysis_SetReason",
+        "consumes": [
+          "application/json",
+          "text/json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "job",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "workitem",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "analysisType",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "analysisName",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "reason",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FailureReason"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "The reason has been updated."
+          },
+          "400": {
+            "description": "The analysisType was not valid."
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/analysis/{job}/{analysisType}": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "operationId": "Analysis_GetDetails",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "job",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "workitem",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "analysisType",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "analysisName",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/info/queues/{queueId}": {
+      "get": {
+        "tags": [
+          "Information"
+        ],
+        "summary": "Return queue info queried from Tags on Azure scaleset. The info includes:\r\n  1. Whether the queue exists.\r\n  2. Friendly description (if available) of queue, otherwise instructions how to fix that (ping dnceng)\r\n  3. Path to place the Jenkins workspace on disk.\r\n  4. Whether queue is used for internal customers only.\r\n  5. What OS the machines in the group use (windows/linux/osx).\r\n  6. List of users to which this queue is restricted, “all” if the queue is NOT restricted.\r\n  7. If the machine is on premises\r\n  8. What is the current Queue Depth (Number of messages still in the queue)",
+        "operationId": "Information_QueueInfo",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "queueId",
+            "in": "path",
+            "description": ".NET Helix Queue Id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/QueueInfo"
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/info/queues": {
+      "get": {
+        "tags": [
+          "Information"
+        ],
+        "summary": "Return queue info queried from Tags on Azure scaleset. The info includes:\r\n  1. Whether the queue exists.\r\n  2. Friendly description (if available) of queue, otherwise instructions how to fix that (ping dnceng)\r\n  3. Path to place the Jenkins workspace on disk.\r\n  4. Whether queue is used for internal customers only.\r\n  5. What OS the machines in the group use (windows/linux/osx).\r\n  6. List of users to which this queue is restricted, “all” if the queue is NOT restricted.\r\n  7. If the machine is on premises\r\n  8. What is the current Queue Depth (Number of messages still in the queue)",
+        "operationId": "Information_QueueInfoList",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/QueueInfo"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/jobs": {
+      "get": {
+        "tags": [
+          "Job"
+        ],
+        "summary": "List most recent set of jobs matching specified criteria",
+        "operationId": "Job_List",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "count",
+            "in": "query",
+            "description": "The maximum number of jobs to return.",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "filter.creator",
+            "in": "query",
+            "description": "The job creator.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.source",
+            "in": "query",
+            "description": "The job source.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.type",
+            "in": "query",
+            "description": "The job type.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.build",
+            "in": "query",
+            "description": "The build number.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.name",
+            "in": "query",
+            "description": "The Name/CorrelationId number.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/JobSummary"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Job"
+        ],
+        "operationId": "Job_New",
+        "consumes": [
+          "application/json",
+          "text/json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "newJob",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/JobCreationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "schema": {
+              "$ref": "#/definitions/JobCreationResult"
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/jobs/jenkins": {
+      "post": {
+        "tags": [
+          "Job"
+        ],
+        "operationId": "Job_Jenkins",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          }
+        },
+        "security": [
+          {
+            "access_token": []
+          }
+        ]
+      }
+    },
+    "/api/2018-03-14/jobs/{job}": {
+      "get": {
+        "tags": [
+          "Job"
+        ],
+        "summary": "Provide a summary about a job, not including any work item statistics",
+        "operationId": "Job_Summary",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "job",
+            "in": "path",
+            "description": "Name of job",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/JobSummary"
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/jobs/{job}/details": {
+      "get": {
+        "tags": [
+          "Job"
+        ],
+        "summary": "Provide the same data in the summary, but also include aggregated work item statistics,\r\nincluding counts at each stage in the pipeline",
+        "operationId": "Job_Details",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "job",
+            "in": "path",
+            "description": "Name of job",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/JobDetails"
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/jobs/{job}/wait": {
+      "get": {
+        "tags": [
+          "Job"
+        ],
+        "summary": "Wait for job completion. If the server has to abandon the request, a 503 with a Retry-After will\r\nbe returned (as well as a \"{ retryAfter: 30}\", with the number of seconds to wait until retrying.",
+        "operationId": "Job_Wait",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "job",
+            "in": "path",
+            "description": "Job to wait for",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Job is complete",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Job is not complete, try again"
+          },
+          "503": {
+            "description": "Job is not complete, Retry-After header contains retry wait information"
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/repo": {
+      "get": {
+        "tags": [
+          "Repository"
+        ],
+        "operationId": "Repository_GetRepositories",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "_vcb",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ViewConfiguration"
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/scalesets/detailedHistory": {
+      "get": {
+        "tags": [
+          "ScaleSets"
+        ],
+        "summary": "Retrieves the varying machines counts for a given scaleSet from the ActiveMachines table for a given time period.\r\nBy default it returns the counts for all scaleSets.\r\nThis API returns historical data about the scaleSets at intervals of 15 minutes. It it limited to a maximum of 7 days.",
+        "operationId": "ScaleSets_GetDetailedVMScalingHistory",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Date(UTC time) after which we want to retrieve history. Cannot be more than 7 days old.",
+            "required": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "scaleSet",
+            "in": "query",
+            "description": "Optional. Get history for a particular scaleSet",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/DetailedVMScalingHistory"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/scalesets/aggregatedHistory": {
+      "get": {
+        "tags": [
+          "ScaleSets"
+        ],
+        "summary": "Retrieves the aggregated machines counts for all scaleSets from the ActiveMachines table for a given time period.\r\nThis API returns historical data about the total message Counts and VMCounts at intervals of 15 minutes. It it limited to a maximum of 30 days.",
+        "operationId": "ScaleSets_GetAggregatedVMScalingHistory",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Date(UTC time) after which we want to retrieve history. Cannot be more than 30 days old.",
+            "required": true,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AggregatedVMScalingHistory"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/telemetry/job": {
+      "post": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Sends JobStarted telemetry based on the given {Helix.LifeTime.Web.Controllers.Api_2018_03_14.JobInfo} and returns a token to use to send telemetry for the created job.",
+        "operationId": "Telemetry_StartJob",
+        "consumes": [
+          "application/json",
+          "text/json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "info",
+            "in": "body",
+            "description": "The information about the Job",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/JobInfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "security": [
+          {
+            "access_token": []
+          }
+        ]
+      }
+    },
+    "/api/2018-03-14/telemetry/job/build": {
+      "post": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Sends Telemetry for the start of a build work item.",
+        "operationId": "Telemetry_StartBuildWorkItem",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "X-Helix-Job-Token",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "buildUri",
+            "in": "query",
+            "description": "The uri where build details can be obtained.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/telemetry/job/build/{id}/finish": {
+      "post": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Sends Telemetry for the end of a build work item.",
+        "operationId": "Telemetry_FinishBuildWorkItem",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "X-Helix-Job-Token",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id returned from the {M:Helix.LifeTime.Web.Controllers.Api_2018_03_14.TelemetryApiController.StartBuildWorkItem(System.String,System.Uri)} call.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "errorCount",
+            "in": "query",
+            "description": "The number of errors reported for this build.",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "warningCount",
+            "in": "query",
+            "description": "The number of warnings reported for this build.",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "logUri",
+            "in": "query",
+            "description": "The Uri where logs for this build may be accessed.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/telemetry/job/xunit": {
+      "post": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Sends Telemetry for the start of an XUnit Test work item.",
+        "operationId": "Telemetry_StartXUnitWorkItem",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "X-Helix-Job-Token",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "friendlyName",
+            "in": "query",
+            "description": "The friendly name of this work item.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/telemetry/job/xunit/{id}/finish": {
+      "post": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Sends Telemetry for the end of an XUnit Test work item.",
+        "operationId": "Telemetry_FinishXUnitWorkItem",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "X-Helix-Job-Token",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id returned from the {M:Helix.LifeTime.Web.Controllers.Api_2018_03_14.TelemetryApiController.StartXUnitWorkItem(System.String,System.String)} call.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "exitCode",
+            "in": "query",
+            "description": "The exitCode of this work item.",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "resultsXmlUri",
+            "in": "query",
+            "description": "The Uri where XUnit v2 format test results can be accessed.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "logUri",
+            "in": "query",
+            "description": "The Uri where logs for this test run may be accessed.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/telemetry/job/workitem/{id}/warning": {
+      "post": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Sends Telemetry for a warning from a work item.",
+        "operationId": "Telemetry_Warning",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "X-Helix-Job-Token",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id returned from the {M:Helix.LifeTime.Web.Controllers.Api_2018_03_14.TelemetryApiController.StartBuildWorkItem(System.String,System.Uri)} or {M:Helix.LifeTime.Web.Controllers.Api_2018_03_14.TelemetryApiController.StartXUnitWorkItem(System.String,System.String)} call.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "eid",
+            "in": "query",
+            "description": "The id of the warning.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "message",
+            "in": "query",
+            "description": "The warning message.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "logUri",
+            "in": "query",
+            "description": "The Uri where warning logs may be accessed.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/telemetry/job/workitem/{id}/error": {
+      "post": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Sends Telemetry for an error from a work item.",
+        "operationId": "Telemetry_Error",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "X-Helix-Job-Token",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id returned from the {M:Helix.LifeTime.Web.Controllers.Api_2018_03_14.TelemetryApiController.StartBuildWorkItem(System.String,System.Uri)} or {M:Helix.LifeTime.Web.Controllers.Api_2018_03_14.TelemetryApiController.StartXUnitWorkItem(System.String,System.String)} call.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "eid",
+            "in": "query",
+            "description": "The id of the error.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "message",
+            "in": "query",
+            "description": "The error message.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "logUri",
+            "in": "query",
+            "description": "The Uri where error logs may be accessed.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/telemetry/job/workitem/{id}/log": {
+      "post": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Sends Telemetry for work item logs.",
+        "operationId": "Telemetry_Log",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "X-Helix-Job-Token",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id returned from the {M:Helix.LifeTime.Web.Controllers.Api_2018_03_14.TelemetryApiController.StartBuildWorkItem(System.String,System.Uri)} or {M:Helix.LifeTime.Web.Controllers.Api_2018_03_14.TelemetryApiController.StartXUnitWorkItem(System.String,System.String)} call.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "logUri",
+            "in": "query",
+            "description": "The Uri where logs may be accessed.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "description": "The format that this log is in.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "module",
+            "in": "query",
+            "description": "The module/dll where these logs came from.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/jobs/{job}/workitems": {
+      "get": {
+        "tags": [
+          "WorkItem"
+        ],
+        "summary": "List all work items for a given job.",
+        "operationId": "WorkItem_List",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "job",
+            "in": "path",
+            "description": "Job name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/WorkItemSummary"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/2018-03-14/jobs/{job}/workitems/{id}": {
+      "get": {
+        "tags": [
+          "WorkItem"
+        ],
+        "summary": "Fetch all the details about a single work item,\r\nincluding logs and any additional, unrecognized data that is stored in Helix.",
+        "operationId": "WorkItem_Details",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "job",
+            "in": "path",
+            "description": "Job name for the work item",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Work item name",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/WorkItemDetails"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "JobFilter": {
+      "type": "object",
+      "properties": {
+        "Creator": {
+          "description": "The job creator.",
+          "type": "string"
+        },
+        "Source": {
+          "description": "The job source.",
+          "type": "string"
+        },
+        "Type": {
+          "description": "The job type.",
+          "type": "string"
+        },
+        "Build": {
+          "description": "The build number.",
+          "type": "string"
+        },
+        "Name": {
+          "description": "The Name/CorrelationId number.",
+          "type": "string"
+        }
+      }
+    },
+    "AggregateWorkItemSummary": {
+      "required": [
+        "WorkItems",
+        "Analyses"
+      ],
+      "type": "object",
+      "properties": {
+        "WorkItems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkItemAggregateSummary"
+          }
+        },
+        "Analyses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/KeyedData`"
+          }
+        }
+      }
+    },
+    "WorkItemAggregateSummary": {
+      "type": "object",
+      "properties": {
+        "JobId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "WorkItemId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "MachineName": {
+          "type": "string"
+        },
+        "Job": {
+          "type": "string"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "Guid": {
+          "format": "uuid",
+          "type": "string",
+          "example": "00000000-0000-0000-0000-000000000000"
+        },
+        "QueueTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "StartTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "FinishedTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "ExitCode": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "ConsoleOutputUri": {
+          "type": "string"
+        },
+        "Logs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkItemLog"
+          }
+        },
+        "Errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkItemError"
+          }
+        },
+        "Warnings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkItemError"
+          }
+        },
+        "OtherEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UnknownWorkItemEvent"
+          }
+        },
+        "Passed": {
+          "type": "boolean"
+        },
+        "Attempt": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "State": {
+          "type": "string"
+        },
+        "Key": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "KeyedData`": {
+      "required": [
+        "Key",
+        "Data"
+      ],
+      "type": "object",
+      "properties": {
+        "Key": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "Data": {
+          "$ref": "#/definitions/AggregateAnalysisSummary"
+        }
+      }
+    },
+    "WorkItemLog": {
+      "required": [
+        "Module",
+        "Uri"
+      ],
+      "type": "object",
+      "properties": {
+        "Module": {
+          "description": "Module that log was sent from",
+          "type": "string"
+        },
+        "Uri": {
+          "description": "Uri to log data",
+          "type": "string"
+        }
+      }
+    },
+    "WorkItemError": {
+      "required": [
+        "Id",
+        "Message"
+      ],
+      "type": "object",
+      "properties": {
+        "Id": {
+          "description": "Error id that was fired from Helix",
+          "type": "string"
+        },
+        "Message": {
+          "description": "Error message that was sent from helix",
+          "type": "string"
+        },
+        "LogUri": {
+          "description": "Optional. Any log uri that was provide with the error.",
+          "type": "string"
+        }
+      }
+    },
+    "UnknownWorkItemEvent": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Timestamp": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "Values": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "AggregateAnalysisSummary": {
+      "required": [
+        "Type",
+        "Name",
+        "Status"
+      ],
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "Status": {
+          "type": "object",
+          "additionalProperties": {
+            "format": "int32",
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "BuildHistoryItem": {
+      "required": [
+        "BuildNumber",
+        "Timestamp",
+        "Passed"
+      ],
+      "type": "object",
+      "properties": {
+        "BuildNumber": {
+          "type": "string"
+        },
+        "Timestamp": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "Passed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BuildAggregation": {
+      "required": [
+        "BuildNumber"
+      ],
+      "type": "object",
+      "properties": {
+        "BuildNumber": {
+          "type": "string"
+        },
+        "Sources": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/BuildAggregationSource"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "BuildAggregationSource": {
+      "type": "object",
+      "properties": {
+        "Types": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/AggregatedWorkItemCounts"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "AggregatedWorkItemCounts": {
+      "required": [
+        "Key",
+        "Data"
+      ],
+      "type": "object",
+      "properties": {
+        "Key": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "Data": {
+          "$ref": "#/definitions/WorkItemStatusCounts"
+        }
+      }
+    },
+    "WorkItemStatusCounts": {
+      "required": [
+        "Analysis",
+        "WorkItemStatus"
+      ],
+      "type": "object",
+      "properties": {
+        "Analysis": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AnalysisCount"
+          }
+        },
+        "WorkItemStatus": {
+          "type": "object",
+          "additionalProperties": {
+            "format": "int32",
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "AnalysisCount": {
+      "required": [
+        "Name",
+        "Status"
+      ],
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Status": {
+          "type": "object",
+          "additionalProperties": {
+            "format": "int32",
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "AggregateAnalysisDetail": {
+      "required": [
+        "Analysis",
+        "Job",
+        "WorkItem",
+        "Key"
+      ],
+      "type": "object",
+      "properties": {
+        "Analysis": {
+          "description": "The analysis object requested.",
+          "type": "object"
+        },
+        "Job": {
+          "description": "The job this analysis is from",
+          "type": "string"
+        },
+        "WorkItem": {
+          "description": "The workitem this analysis is from",
+          "type": "string"
+        },
+        "Key": {
+          "description": "Contains each provided groupBy key and the value for this particular set",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "CancellationToken": {
+      "type": "object",
+      "properties": {
+        "IsCancellationRequested": {
+          "type": "boolean",
+          "readOnly": false
+        },
+        "CanBeCanceled": {
+          "type": "boolean",
+          "readOnly": false
+        },
+        "WaitHandle": {
+          "$ref": "#/definitions/WaitHandle",
+          "readOnly": false
+        }
+      }
+    },
+    "WaitHandle": {
+      "type": "object",
+      "properties": {
+        "Handle": {
+          "type": "object"
+        },
+        "SafeWaitHandle": {
+          "$ref": "#/definitions/SafeWaitHandle"
+        }
+      }
+    },
+    "SafeWaitHandle": {
+      "type": "object",
+      "properties": {
+        "IsInvalid": {
+          "type": "boolean",
+          "readOnly": false
+        },
+        "IsClosed": {
+          "type": "boolean",
+          "readOnly": false
+        }
+      }
+    },
+    "InvestigationResult": {
+      "type": "object",
+      "properties": {
+        "Result": {
+          "description": "Set of data currently available, if ContinuationToken is set,\r\nthis is not all of the data, and the continuation API should be called again",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InvestigationGroup"
+          }
+        },
+        "ContinuationToken": {
+          "description": "Token to be passed to subsequent calls to get more data",
+          "type": "string"
+        }
+      }
+    },
+    "InvestigationGroup": {
+      "required": [
+        "Key",
+        "Data"
+      ],
+      "type": "object",
+      "properties": {
+        "Key": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "Data": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/InvestigationAnalysis"
+            }
+          }
+        }
+      }
+    },
+    "InvestigationAnalysis": {
+      "required": [
+        "Job",
+        "WorkItem",
+        "Name",
+        "Analysis"
+      ],
+      "type": "object",
+      "properties": {
+        "Job": {
+          "type": "string"
+        },
+        "WorkItem": {
+          "type": "string"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "Analysis": {
+          "type": "object"
+        }
+      }
+    },
+    "HistoricalAnalysisItem": {
+      "type": "object",
+      "properties": {
+        "Queued": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "Build": {
+          "type": "string"
+        },
+        "Results": {
+          "type": "object",
+          "additionalProperties": {
+            "format": "int32",
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "MultiSourceRequest": {
+      "type": "object",
+      "properties": {
+        "Sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SingleSourceRequest"
+          },
+          "readOnly": false
+        },
+        "BuildCount": {
+          "format": "int32",
+          "type": "integer",
+          "readOnly": false
+        }
+      }
+    },
+    "SingleSourceRequest": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "readOnly": false
+        },
+        "Types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "MultiSourceResponse": {
+      "type": "object",
+      "properties": {
+        "Sources": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/MultiSourceResponseSource"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "MultiSourceResponseSource": {
+      "type": "object",
+      "properties": {
+        "Types": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/AggregatedWorkItemCounts"
+            }
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "FailureReason": {
+      "type": "object",
+      "properties": {
+        "Issue": {
+          "$ref": "#/definitions/FailureReasonPart"
+        },
+        "Owner": {
+          "$ref": "#/definitions/FailureReasonPart"
+        }
+      }
+    },
+    "FailureReasonPart": {
+      "type": "object",
+      "properties": {
+        "Display": {
+          "type": "string"
+        },
+        "Link": {
+          "type": "string"
+        }
+      }
+    },
+    "QueueInfo": {
+      "type": "object",
+      "properties": {
+        "Description": {
+          "type": "string"
+        },
+        "IsAvailable": {
+          "type": "boolean"
+        },
+        "IsInternalOnly": {
+          "type": "boolean"
+        },
+        "IsOnPremises": {
+          "type": "boolean"
+        },
+        "OperatingSystemGroup": {
+          "type": "string"
+        },
+        "QueueId": {
+          "type": "string"
+        },
+        "QueueDepth": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "UserList": {
+          "type": "string"
+        },
+        "WorkspacePath": {
+          "type": "string"
+        }
+      }
+    },
+    "JobCreationRequest": {
+      "required": [
+        "Source",
+        "Type",
+        "Build",
+        "Properties",
+        "ListUri",
+        "QueueId",
+        "ResultsUri",
+        "ResultsUriRSAS",
+        "ResultsUriWSAS"
+      ],
+      "type": "object",
+      "properties": {
+        "Source": {
+          "description": "Source of the code being sent through the job, prefixed with either\r\n'automated', 'official', or 'pr'. e.g. 'pr/corefx/master'",
+          "type": "string"
+        },
+        "Type": {
+          "description": "Type of the build, e.g. 'test/functional/uwp'",
+          "type": "string"
+        },
+        "Build": {
+          "description": "Build number. Must be in the format XXXXX.YY",
+          "type": "string"
+        },
+        "Properties": {
+          "description": "Custom properties for the job",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "ListUri": {
+          "description": "Uri to internet accessible JSON object describing workitem operations",
+          "type": "string"
+        },
+        "QueueId": {
+          "description": "Queue id that identifies which Helix queue to run this job on",
+          "type": "string"
+        },
+        "ResultsUri": {
+          "description": "Azure blob storage URI prefix for any results uploaded from all workitems.",
+          "type": "string"
+        },
+        "ResultsUriRSAS": {
+          "description": "Read-only SAS token for ResultsUri",
+          "type": "string"
+        },
+        "ResultsUriWSAS": {
+          "description": "Read/Write SAS token for ResultsUri",
+          "type": "string"
+        },
+        "Creator": {
+          "description": "Original creator of the job (only allowed for non-authenticated jobs)",
+          "type": "string"
+        },
+        "PullRequestId": {
+          "description": "ID of the pull request this is associated with",
+          "type": "string"
+        },
+        "MaxRetryCount": {
+          "format": "int32",
+          "description": "MaxRetryCount for Auto-Retry, eg: MaxRetryCount = 1 means at least 1 retry apart from the original run",
+          "type": "integer"
+        },
+        "Attempt": {
+          "description": "Identifier for a given attempt. Must be lexically sortable.",
+          "type": "string"
+        }
+      }
+    },
+    "JobCreationResult": {
+      "required": [
+        "Name",
+        "SummaryUrl",
+        "WaitUrl"
+      ],
+      "type": "object",
+      "properties": {
+        "Name": {
+          "description": "Name of the job that was created",
+          "type": "string"
+        },
+        "SummaryUrl": {
+          "description": "Url to navigate to get summary information about the current job",
+          "type": "string"
+        },
+        "WaitUrl": {
+          "description": "Url to call to long poll for job completion",
+          "type": "string"
+        }
+      }
+    },
+    "JobSummary": {
+      "required": [
+        "DetailsUrl",
+        "Name",
+        "WaitUrl",
+        "Source",
+        "Type",
+        "Build"
+      ],
+      "type": "object",
+      "properties": {
+        "FailureReason": {
+          "$ref": "#/definitions/FailureReason"
+        },
+        "QueueId": {
+          "type": "string"
+        },
+        "DetailsUrl": {
+          "description": "Url to the details view for this job",
+          "type": "string"
+        },
+        "Name": {
+          "description": "Name of the job",
+          "type": "string"
+        },
+        "Creator": {
+          "description": "User ID of the creator of the job",
+          "type": "string"
+        },
+        "Created": {
+          "description": "    Time the job was created, using the \"O\" DateTimeOffset format specifier.\r\n(\"yyyy-MM-ddTHH:mm:ss.fffffffK\")",
+          "type": "string"
+        },
+        "Finished": {
+          "description": "Time the job was finished, if it was finished.",
+          "type": "string"
+        },
+        "InitialWorkItemCount": {
+          "format": "int32",
+          "description": "Number of work items present in initial upload. Note that additional work items may be created\r\nduring execution, so the final \"finished\" number may be higher than this.",
+          "type": "integer"
+        },
+        "WaitUrl": {
+          "description": "Url that can be queried to wait for job completion",
+          "type": "string"
+        },
+        "Source": {
+          "type": "string"
+        },
+        "Type": {
+          "type": "string"
+        },
+        "Build": {
+          "type": "string"
+        },
+        "Properties": {
+          "type": "object"
+        },
+        "Errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkItemError"
+          }
+        }
+      }
+    },
+    "JobDetails": {
+      "required": [
+        "JobList",
+        "WorkItems",
+        "Name",
+        "WaitUrl",
+        "Source",
+        "Type",
+        "Build"
+      ],
+      "type": "object",
+      "properties": {
+        "FailureReason": {
+          "$ref": "#/definitions/FailureReason"
+        },
+        "QueueId": {
+          "type": "string"
+        },
+        "JobList": {
+          "description": "URI to the job list this job used",
+          "type": "string"
+        },
+        "WorkItems": {
+          "$ref": "#/definitions/JobWorkItemCounts",
+          "description": "List of work item counts in various stages"
+        },
+        "Name": {
+          "description": "Name of the job",
+          "type": "string"
+        },
+        "Creator": {
+          "description": "User ID of the creator of the job",
+          "type": "string"
+        },
+        "Created": {
+          "description": "    Time the job was created, using the \"O\" DateTimeOffset format specifier.\r\n(\"yyyy-MM-ddTHH:mm:ss.fffffffK\")",
+          "type": "string"
+        },
+        "Finished": {
+          "description": "Time the job was finished, if it was finished.",
+          "type": "string"
+        },
+        "InitialWorkItemCount": {
+          "format": "int32",
+          "description": "Number of work items present in initial upload. Note that additional work items may be created\r\nduring execution, so the final \"finished\" number may be higher than this.",
+          "type": "integer"
+        },
+        "WaitUrl": {
+          "description": "Url that can be queried to wait for job completion",
+          "type": "string"
+        },
+        "Source": {
+          "type": "string"
+        },
+        "Type": {
+          "type": "string"
+        },
+        "Build": {
+          "type": "string"
+        },
+        "Properties": {
+          "type": "object"
+        },
+        "Errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkItemError"
+          }
+        }
+      }
+    },
+    "JobWorkItemCounts": {
+      "required": [
+        "Unscheduled",
+        "Waiting",
+        "Running",
+        "Finished",
+        "ListUrl"
+      ],
+      "type": "object",
+      "properties": {
+        "Unscheduled": {
+          "format": "int32",
+          "description": "Number of jobs present in initial upload that have no been scheduled to a queue yet",
+          "type": "integer"
+        },
+        "Waiting": {
+          "format": "int32",
+          "description": "Number of jobs that are currently queued and waiting for a machine",
+          "type": "integer"
+        },
+        "Running": {
+          "format": "int32",
+          "description": "Number of jobs that are currently executing for this job",
+          "type": "integer"
+        },
+        "Finished": {
+          "format": "int32",
+          "description": "Number of jobs that have finished",
+          "type": "integer"
+        },
+        "ListUrl": {
+          "description": "Url to a list of all work items associated with this job",
+          "type": "string"
+        }
+      }
+    },
+    "ViewConfiguration": {
+      "type": "object",
+      "properties": {
+        "products": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ViewConfigurationProduct"
+          }
+        },
+        "repositories": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ViewConfigurationRepositories"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        }
+      }
+    },
+    "ViewConfigurationProduct": {
+      "type": "object",
+      "properties": {
+        "flavors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ViewConfigurationFlavor"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        }
+      }
+    },
+    "ViewConfigurationRepositories": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        }
+      }
+    },
+    "ViewConfigurationFlavor": {
+      "type": "object",
+      "properties": {
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ViewConfigurationSource"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        }
+      }
+    },
+    "ViewConfigurationSource": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "milestone": {
+          "type": "string"
+        },
+        "sortByBuild": {
+          "type": "boolean"
+        },
+        "releaseLinks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ViewConfigurationExternalTelemetry"
+          }
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ViewConfigurationType"
+          }
+        },
+        "externalLinks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ViewConfigurationExternalTelemetry"
+          }
+        },
+        "buildProperties": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        }
+      }
+    },
+    "ViewConfigurationExternalTelemetry": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "ViewConfigurationType": {
+      "type": "object",
+      "properties": {
+        "columns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Displayable"
+          }
+        },
+        "otherProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Displayable"
+          }
+        },
+        "noWorkitems": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        }
+      }
+    },
+    "Displayable": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        }
+      }
+    },
+    "DetailedVMScalingHistory": {
+      "required": [
+        "ScaleSetName",
+        "VMState",
+        "VMCount",
+        "Timestamp"
+      ],
+      "type": "object",
+      "properties": {
+        "ScaleSetName": {
+          "description": "Name of the scaleSet",
+          "type": "string"
+        },
+        "VMState": {
+          "description": "State of the scaleSet\r\nSucceeded - Scaling completed successfully.\r\nFailed - Scaling operation failed.\r\nUpdating - Scaling is in progress and the VM counts are being updated according to the rules.",
+          "type": "string"
+        },
+        "VMCount": {
+          "format": "int32",
+          "description": "Number of VMs that belong to the scaleSet",
+          "type": "integer"
+        },
+        "QueueName": {
+          "description": "Name of the queue that the scaleset is listening to.",
+          "type": "string"
+        },
+        "MessageCount": {
+          "format": "int32",
+          "description": "Number of active messages in the queue that the scaleset is listening to.",
+          "type": "integer"
+        },
+        "Timestamp": {
+          "format": "date-time",
+          "description": "The timestamp at which the snapshot was taken",
+          "type": "string"
+        }
+      }
+    },
+    "AggregatedVMScalingHistory": {
+      "required": [
+        "Timestamp",
+        "TotalMessageCount",
+        "TotalVMCount"
+      ],
+      "type": "object",
+      "properties": {
+        "Timestamp": {
+          "format": "date-time",
+          "description": "The timestamp at which the snapshot was taken",
+          "type": "string"
+        },
+        "TotalMessageCount": {
+          "format": "int32",
+          "description": "Total Number of Messages in all the queues that the scaleSets are listening to",
+          "type": "integer"
+        },
+        "TotalVMCount": {
+          "format": "int32",
+          "description": "Toal Number of VMs that are provisioned during snapshot",
+          "type": "integer"
+        }
+      }
+    },
+    "JobInfo": {
+      "required": [
+        "QueueId",
+        "Source",
+        "Type",
+        "Build"
+      ],
+      "type": "object",
+      "properties": {
+        "QueueId": {
+          "description": "The Helix QueueId the job was \"sent\" to",
+          "type": "string"
+        },
+        "Source": {
+          "description": "The Source for this job",
+          "type": "string"
+        },
+        "Type": {
+          "description": "The Type for this job",
+          "type": "string"
+        },
+        "Build": {
+          "description": "The Build for this job",
+          "type": "string"
+        },
+        "Attempt": {
+          "description": "The Attempt for this job",
+          "type": "string"
+        },
+        "Properties": {
+          "description": "The Collection of Properties for this job",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "InitialWorkItemCount": {
+          "format": "int32",
+          "description": "The Count of work items expected in this job",
+          "type": "integer"
+        }
+      }
+    },
+    "WorkItemSummary": {
+      "required": [
+        "DetailsUrl",
+        "Job",
+        "Name",
+        "State"
+      ],
+      "type": "object",
+      "properties": {
+        "DetailsUrl": {
+          "description": "Uri to the details for the current work item",
+          "type": "string"
+        },
+        "Job": {
+          "description": "Job name for this work item",
+          "type": "string"
+        },
+        "Name": {
+          "description": "Work item name that was uploaded when the job was started",
+          "type": "string"
+        },
+        "State": {
+          "description": "Current state of the workitem. Options are:\r\nUnscheduled - Work item has not been scheduled to a queue yet.\r\nWaiting - Item has been queued, but is not yet running.\r\nRunning- Work item is currently running on a Helix machine.\r\nFinished - Item is complete and results are recorded.\r\nPassed - Item is complete and all analyses report no failures.\r\nFailed - The item is completed, and failed to execute successfully; this includes an analysis determining failure (failed XUnit tests) or non-zero exit code.",
+          "type": "string"
+        }
+      }
+    },
+    "WorkItemDetails": {
+      "required": [
+        "Id",
+        "MachineName",
+        "Job",
+        "Name",
+        "State"
+      ],
+      "type": "object",
+      "properties": {
+        "FailureReason": {
+          "$ref": "#/definitions/FailureReason"
+        },
+        "Id": {
+          "description": "Internal helix ID value (usually a GUID)",
+          "type": "string"
+        },
+        "MachineName": {
+          "description": "Machine this job is/was running on. Not set if item has not started",
+          "type": "string"
+        },
+        "ExitCode": {
+          "format": "int32",
+          "description": "Exit code from work item. Only set once in the Finished state",
+          "type": "integer"
+        },
+        "ConsoleOutputUri": {
+          "description": "Uri to any console output generated by the work item",
+          "type": "string"
+        },
+        "Errors": {
+          "description": "List of any errors that were generated and reported to Helix during this work item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkItemError"
+          }
+        },
+        "Warnings": {
+          "description": "List of any warnings that were generated and reported to Helix during this work item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkItemError"
+          }
+        },
+        "Logs": {
+          "description": "List of all logs generated and uploaded from this work item",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkItemLog"
+          }
+        },
+        "Analysis": {
+          "$ref": "#/definitions/AnalysisReport",
+          "description": "Analysis as provided by analysis plug-ins. For information about specific analysis, see\r\nindividual documentation."
+        },
+        "OtherEvents": {
+          "description": "Any unrecognized events that were reported to Helix related to this work item.",
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "Job": {
+          "description": "Job name for this work item",
+          "type": "string"
+        },
+        "Name": {
+          "description": "Work item name that was uploaded when the job was started",
+          "type": "string"
+        },
+        "State": {
+          "description": "Current state of the workitem. Options are:\r\nUnscheduled - Work item has not been scheduled to a queue yet.\r\nWaiting - Item has been queued, but is not yet running.\r\nRunning- Work item is currently running on a Helix machine.\r\nFinished - Item is complete and results are recorded.\r\nPassed - Item is complete and all analyses report no failures.\r\nFailed - The item is completed, and failed to execute successfully; this includes an analysis determining failure (failed XUnit tests) or non-zero exit code.",
+          "type": "string"
+        }
+      }
+    },
+    "AnalysisReport": {
+      "type": "object",
+      "properties": {
+        "xunit": {
+          "$ref": "#/definitions/XUnitWorkItemResult"
+        },
+        "external": {
+          "$ref": "#/definitions/ExternalLinkResult"
+        }
+      }
+    },
+    "XUnitWorkItemResult": {
+      "type": "object",
+      "properties": {
+        "ResultXmlUrl": {
+          "type": "string"
+        },
+        "Results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/XUnitTestResult"
+          }
+        }
+      }
+    },
+    "ExternalLinkResult": {
+      "type": "object",
+      "properties": {
+        "Links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExternalLinkData"
+          }
+        }
+      }
+    },
+    "XUnitTestResult": {
+      "type": "object",
+      "properties": {
+        "Name": {
+          "description": "XUnit \"name\" of test, this is usually in the format of TypeName#MethodName(arguments...)",
+          "type": "string"
+        },
+        "Result": {
+          "description": "XUnit result string. Normal values are \"Pass\", \"Fail\", \"Skip\"",
+          "type": "string"
+        },
+        "FailureExceptionType": {
+          "description": "Fully qualified name of the exception type that caused the failure",
+          "type": "string"
+        },
+        "FailureMessage": {
+          "description": "XUnit failure message",
+          "type": "string"
+        },
+        "FailureStackTrace": {
+          "description": "Stack trace where failure/exception was observed",
+          "type": "string"
+        },
+        "Reason": {
+          "description": "The \"reason\" for the result, usually this is related to why a test was skipped",
+          "type": "string"
+        },
+        "Duration": {
+          "format": "int64",
+          "description": "Duration of test in 1/10,000 of a second.",
+          "type": "integer"
+        },
+        "Output": {
+          "description": "Any test output related to this failure",
+          "type": "string"
+        },
+        "FailureReason": {
+          "$ref": "#/definitions/FailureReason"
+        },
+        "Type": {
+          "type": "string"
+        },
+        "Method": {
+          "type": "string"
+        },
+        "Arguments": {
+          "type": "string"
+        }
+      }
+    },
+    "ExternalLinkData": {
+      "type": "object",
+      "properties": {
+        "WorkItemStatus": {
+          "type": "string"
+        },
+        "WorkItemStatusMessage": {
+          "type": "string"
+        },
+        "Description": {
+          "type": "string"
+        },
+        "Uri": {
+          "type": "string"
+        },
+        "WarningCount": {
+          "type": "string"
+        },
+        "Categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "FailureReason": {
+          "$ref": "#/definitions/FailureReason"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "access_token": {
+      "type": "apiKey",
+      "description": "API Key Authentication",
+      "name": "access_token",
+      "in": "query"
+    }
+  },
+  "security": [
+    {
+      "access_token": []
+    }
+  ]
+}
