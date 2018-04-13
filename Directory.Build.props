@@ -22,10 +22,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!-- Place 'NetFxTfm' in the 'TargetFramework' property of a csproj to include building framework version if building on 
-         Windows but to skip building against the framwork on non-Windows platforms.
-         Building targeting the framework is not supported on Linux
+    <!-- Place 'NetFxTfm' in the 'TargetFramework' property of a csproj to include building framework version.
          ie. <TargetFrameworks>netcoreapp2.0;$(NetFxTfm)</TargetFrameworks> -->
     <NetFxTfm>net45</NetFxTfm>
+    <UsingToolNetFrameworkReferenceAssemblies Condition="'$(OS)' != 'Windows_NT'">true</UsingToolNetFrameworkReferenceAssemblies>
   </PropertyGroup>
 </Project>
