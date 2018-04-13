@@ -1,11 +1,11 @@
 phases:
 - phase: Windows_NT
+  # variables apply to every build configuration in the matrix
   variables: 
-    __PublishType: blob
-    __PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
-    __SignType: real
-    __UseEsrpSigning: true
-    __TeamName: DotNetCore
+    _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
+    _SignType: real
+    _UseEsrpSigning: true
+    _TeamName: DotNetCore
   queue:
     name: DotNetCore-Build
     parallel: 2
@@ -13,9 +13,11 @@ phases:
       - agent.os -equals Windows_NT
     matrix:
       Build_Debug:
-        buildConfig: Debug
+        _BuildConfig: Debug
+        _PublishType: none
       Build_Release:
-        buildConfig: Release
+        _BuildConfig: Release
+        _PublishType: blob
   steps:
   - checkout: self
     clean: true
@@ -23,36 +25,28 @@ phases:
   - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
     displayName: Install MicroBuild plugin
     inputs:
-      signType: real
+      signType: '$(_SignType)'
       zipSources: false
-      esrpSigning: '$(__UseEsrpSigning)'
+      esrpSigning: '$(_UseEsrpSigning)'
     env:
-      TeamName: $(__TeamName)
+      TeamName: $(_TeamName)
     continueOnError: false
-    condition: and(succeeded(), in(variables.__SignType, 'real', 'test'))
-  - script: eng\common\CIBuild.cmd -configuration $(buildConfig) -prepareMachine
-              /p:SignType=test
-    name: Build
-    condition: and(succeeded(), ne(variables['buildConfig'], 'Release'))
-    env:
-      OfficialBuildId: $(BUILD.BUILDNUMBER)
+    condition: and(succeeded(), in(variables._SignType, 'real', 'test'))
   - task: AzureKeyVault@1
     inputs:
       azureSubscription: 'DotNet-VSTS'
       KeyVaultName: EngKeyVault
       SecretsFilter: 'dotnetfeed-storage-access-key-1'
-    condition: and(succeeded(), eq(variables['buildConfig'], 'Release'))
   # Build and Publish on the Release configuration
-  - script: eng\common\CIBuild.cmd -configuration $(buildConfig) -prepareMachine
-              /p:PB_PublishType=$(__PublishType)
-              /p:PB_PublishBlobFeedUrl=$(__PublishBlobFeedUrl)
+  - script: eng\common\CIBuild.cmd -configuration $(_BuildConfig) -prepareMachine
+              /p:PB_PublishType=$(_PublishType)
+              /p:PB_PublishBlobFeedUrl=$(_PublishBlobFeedUrl)
               /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
-              /p:SignType=$(__SignType)
+              /p:SignType=$(_SignType)
     name: Build_Publish
     displayName: Build / Publish
     env:
       OfficialBuildId: $(BUILD.BUILDNUMBER)
-    condition: and(succeeded(), eq(variables['buildConfig'], 'Release'))
   # Copy build logs to a staging directory
   - task: CopyFiles@2
     displayName: Gather Logs
@@ -83,14 +77,14 @@ phases:
     - agent.os -equals linux
     matrix:
       Build_Debug:
-        buildConfig: Debug
+        _BuildConfig: Debug
       Build_Release:
-        buildConfig: Release
+        _BuildConfig: Release
   steps:
   - checkout: self
     clean: true
     fetchDepth: 1
-  - script: eng/common/cibuild.sh --configuration $(buildConfig) --preparemachine
+  - script: eng/common/cibuild.sh --configuration $(_BuildConfig) --preparemachine
     name: Build
     env:
       OfficialBuildId: $(BUILD.BUILDNUMBER)
