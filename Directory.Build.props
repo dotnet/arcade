@@ -21,7 +21,7 @@
     <RestorePackagesPath>$(NuGetPackageRoot)</RestorePackagesPath>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+  <PropertyGroup>
     <!-- Place 'NetFxTfm' in the 'TargetFramework' property of a csproj to include building framework version if building on 
          Windows but to skip building against the framwork on non-Windows platforms.
          Building targeting the framework is not supported on Linux
