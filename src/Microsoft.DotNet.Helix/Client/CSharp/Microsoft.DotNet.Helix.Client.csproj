@@ -3,11 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.4</TargetFramework>
     <IsPackable>true</IsPackable>
+    <Description>This package provides access to the Helix Api located at https://helix.dot.net/</Description>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="3.0.3" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(RepoRoot)LICENSE.TXT;$(RepoRoot)THIRD-PARTY-NOTICES.TXT" Pack="true" PackagePath="%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>
