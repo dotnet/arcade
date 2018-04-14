@@ -23,4 +23,6 @@
     </None>
   </ItemGroup>
 
+  <Import Project="..\Tasks.Tests.Shared\Tasks.Tests.Shared.projitems" Label="Shared" />
+
 </Project>

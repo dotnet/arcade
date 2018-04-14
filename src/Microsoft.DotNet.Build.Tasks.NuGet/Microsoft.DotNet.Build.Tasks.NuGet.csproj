@@ -1,0 +1,36 @@
+﻿<Project Sdk="RoslynTools.RepoToolset">
+
+  <PropertyGroup>
+    <!-- TODO: unify this with the rest of the projects in arcade. See dotnet/arcade#59 -->
+    <NetFxTfm Condition="'$(OS)' == 'Windows_NT'">net461</NetFxTfm>
+    <TargetFrameworks>netstandard2.0;$(NetFxTfm)</TargetFrameworks>
+
+    <IsPackable>true</IsPackable>
+    <NuspecFile>$(MSBuildProjectName).nuspec</NuspecFile>
+    <NuspecBasePath>$(MSBuildProjectDirectory)</NuspecBasePath>
+    <NuspecProperties>NetFxTfm=$(NetFxTfm)</NuspecProperties>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.Build.Tasks.NuGet.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NuGet.Packaging" Version="$(NuGetPackagingVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'">
+    <Reference Include="Microsoft.Build.Tasks.v4.0" />
+    <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.Build.Utilities.v4.0" />
+  </ItemGroup>
+
+  <Import Project="..\Tasks.Shared\Tasks.Shared.projitems" Label="Shared" />
+
+</Project>

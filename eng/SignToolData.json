@@ -9,7 +9,9 @@
         "bin/Microsoft.DotNet.Build.Tasks.Feed/net45/Microsoft.DotNet.Build.Tasks.Feed.dll",
         "bin/Microsoft.DotNet.Build.Tasks.Feed/net45/*/Microsoft.DotNet.Build.Tasks.Feed.resources.dll",
         "bin/Microsoft.DotNet.Build.Tasks.IO/netcoreapp2.0/Microsoft.DotNet.Build.Tasks.IO.dll",
-        "bin/Microsoft.DotNet.Build.Tasks.IO/net45/Microsoft.DotNet.Build.Tasks.IO.dll"
+        "bin/Microsoft.DotNet.Build.Tasks.IO/net45/Microsoft.DotNet.Build.Tasks.IO.dll",
+        "bin/Microsoft.DotNet.Build.Tasks.NuGet/netstandard2.0/Microsoft.DotNet.Build.Tasks.NuGet.dll",
+        "bin/Microsoft.DotNet.Build.Tasks.NuGet/net461/Microsoft.DotNet.Build.Tasks.NuGet.dll"
       ]
     },
     {
@@ -39,30 +41,40 @@
     "NuGet.Packaging.dll",
     "NuGet.Versioning.dll",
     "SleetLib.dll",
+    "System.AppContext.dll",
     "System.Buffers.dll",
     "System.Collections.Concurrent.dll",
     "System.Collections.Immutable.dll",
     "System.Collections.NonGeneric.dll",
+    "System.Collections.Specialized.dll",
     "System.Diagnostics.DiagnosticSource.dll",
     "System.Dynamic.Runtime.dll",
     "System.IO.Compression.ZipFile.dll",
     "System.IO.FileSystem.Primitives.dll",
+    "System.Linq.dll",
+    "System.Linq.Expressions.dll",
     "System.ObjectModel.dll",
+    "System.Private.DataContractSerialization.dll",
     "System.Reflection.Emit.dll",
     "System.Reflection.Emit.ILGeneration.dll",
+    "System.Reflection.Emit.Lightweight.dll",
     "System.Reflection.Metadata.dll",
     "System.Reflection.TypeExtensions.dll",
+    "System.Resources.Reader.dll",
     "System.Runtime.InteropServices.RuntimeInformation.dll",
     "System.Runtime.Numerics.dll",
     "System.Runtime.Serialization.Primitives.dll",
+    "System.Runtime.Serialization.Xml.dll",
     "System.Security.Cryptography.Primitives.dll",
     "System.Spatial.dll",
+    "System.Text.RegularExpressions.dll",
     "System.Threading.dll",
     "System.Threading.Tasks.Extensions.dll",
     "System.Threading.Thread.dll",
     "System.Threading.ThreadPool.dll",
     "System.Xml.ReaderWriter.dll",
     "System.Xml.XDocument.dll",
-    "System.Xml.XmlDocument.dll"
+    "System.Xml.XmlDocument.dll",
+    "System.Xml.XmlSerializer.dll"
   ]
 }

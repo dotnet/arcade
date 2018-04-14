@@ -10,9 +10,9 @@ using Microsoft.Build.Framework;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Microsoft.DotNet.Build.Tasks.IO.Tests
+namespace Microsoft.DotNet.Build.Tasks
 {
-    public class MockEngine : IBuildEngine5
+    internal class MockEngine : IBuildEngine5
     {
         private readonly ITestOutputHelper _output;
 

@@ -11,13 +11,16 @@
     <UsingToolNetFrameworkReferenceAssemblies>true</UsingToolNetFrameworkReferenceAssemblies>
 
     <!-- Libs -->
-    <MicrosoftBuildTasksCoreVersion>14.3.0</MicrosoftBuildTasksCoreVersion>
-    <MicrosoftBuildVersion>14.3.0</MicrosoftBuildVersion>
+    <MicrosoftBuildFrameworkVersion>15.1.548</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildTasksCoreVersion>15.1.548</MicrosoftBuildTasksCoreVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>15.1.548</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftBuildVersion>15.1.548</MicrosoftBuildVersion>
     <MicrosoftDotNetVersionToolsVersion>2.1.0-preview2-02521-02</MicrosoftDotNetVersionToolsVersion>
     <MicrosoftNETTestSdkVersion>15.6.0</MicrosoftNETTestSdkVersion>
     <MonoPosixNETStandardVersion>1.0.0-beta5</MonoPosixNETStandardVersion>
     <MoqVersion>4.5.21</MoqVersion>
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
+    <NuGetPackagingVersion>4.6.0</NuGetPackagingVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <SleetLibVersion>2.2.24</SleetLibVersion>
   </PropertyGroup>
