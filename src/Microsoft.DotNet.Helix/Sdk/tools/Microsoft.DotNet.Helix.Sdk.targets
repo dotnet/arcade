@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.Sdk.tasks"/>
+
+  <Target Name="RunHelix">
+    <Message Importance="High" Text="Hello World!"/>
+  </Target>
+
+  <Target Name="StartBuildTelemetry">
+    <StartBuildTelemetry
+      AccessToken="$(AccessToken)"
+      ConfigFile="$(ConfigFile)"
+      Source="$(Source)"
+      Type="$(Type)"
+      Build="$(Build)"
+      QueueId="$(QueueId)"
+      Attempt="$(Attempt)"
+      BuildUri="$(BuildUri)"
+      Properties="$(Properties)"
+      />
+  </Target>
+
+  <Target Name="EndBuildTelemetry">
+    <EndBuildTelemetry
+      AccessToken="$(AccessToken)"
+      ConfigFile="$(ConfigFile)"
+      ErrorCount="$(ErrorCount)"
+      WarningCount="$(WarningCount)"
+      />
+  </Target>
+</Project>

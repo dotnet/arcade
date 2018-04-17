@@ -21,6 +21,8 @@
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <SleetLibVersion>2.2.24</SleetLibVersion>
     <MicrosoftRestClientRuntimeVersion>3.0.3</MicrosoftRestClientRuntimeVersion>
+    <MicrosoftBuildFrameworkVersion>15.1.548</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>15.1.548</MicrosoftBuildUtilitiesCoreVersion>
   </PropertyGroup>
 
   <PropertyGroup>
