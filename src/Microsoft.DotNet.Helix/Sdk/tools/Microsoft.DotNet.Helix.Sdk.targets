@@ -2,10 +2,6 @@
 <Project>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.Sdk.tasks"/>
 
-  <Target Name="RunHelix">
-    <Message Importance="High" Text="Hello World!"/>
-  </Target>
-
   <Target Name="StartBuildTelemetry">
     <StartBuildTelemetry
       AccessToken="$(AccessToken)"
