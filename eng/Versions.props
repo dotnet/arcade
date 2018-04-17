@@ -19,6 +19,7 @@
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <SleetLibVersion>2.2.24</SleetLibVersion>
+    <MicrosoftRestClientRuntimeVersion>3.0.3</MicrosoftRestClientRuntimeVersion>
   </PropertyGroup>
 
   <PropertyGroup>
