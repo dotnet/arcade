@@ -10,7 +10,8 @@
         "bin/Microsoft.DotNet.Build.Tasks.Feed/net45/*/Microsoft.DotNet.Build.Tasks.Feed.resources.dll",
         "bin/Microsoft.DotNet.Build.Tasks.IO/netcoreapp2.0/Microsoft.DotNet.Build.Tasks.IO.dll",
         "bin/Microsoft.DotNet.Build.Tasks.IO/net45/Microsoft.DotNet.Build.Tasks.IO.dll",
-        "bin/Microsoft.DotNet.Helix.Client/netstandard1.4/Microsoft.DotNet.Helix.Client.dll"
+        "bin/Microsoft.DotNet.Helix.Client/netstandard1.4/Microsoft.DotNet.Helix.Client.dll",
+        "bin/Microsoft.DotNet.Helix.Client/net45/Microsoft.DotNet.Helix.Client.dll"
       ]
     },
     {
