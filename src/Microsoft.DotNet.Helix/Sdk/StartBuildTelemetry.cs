@@ -51,8 +51,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                         Log.LogError($"The property '{prop}' is in an invalid format.");
                         return false;
                     }
-                    string key = prop.Substring(0, idx);
-                    string value = prop.Substring(idx + 1);
+                    string key = prop.Substring(0, idx).Trim();
+                    string value = prop.Substring(idx + 1).Trim();
                     propertiesDict.Add(key, value);
                 }
             }
