@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.Sdk.tasks"/>
-
   <Target Name="StartBuildTelemetry">
     <StartBuildTelemetry
       AccessToken="$(AccessToken)"

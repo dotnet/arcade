@@ -51,16 +51,17 @@ namespace Microsoft.DotNet.Helix.Sdk
             return true;
         }
 
-
         protected IHelixApi HelixApi { get; private set; }
 
         private IHelixApi GetHelixApi()
         {
             if (string.IsNullOrEmpty(AccessToken))
             {
+                Log.LogMessage(MessageImportance.Low, "No AccessToken provided, using anonymous access to helix api.");
                 return ApiFactory.GetAnonymous(BaseUri.AbsoluteUri);
             }
 
+            Log.LogMessage(MessageImportance.Low, "Authenticating to helix api using provided AccessToken");
             return ApiFactory.GetAuthenticated(BaseUri.AbsoluteUri, AccessToken);
         }
 

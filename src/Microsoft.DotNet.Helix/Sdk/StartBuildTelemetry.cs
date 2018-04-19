@@ -46,13 +46,14 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 foreach (string prop in Properties)
                 {
-                    string[] parts = prop.Split('=');
-                    if (parts.Length != 2)
-                    {
+                    int idx = prop.IndexOf("=");
+                    if (idx == -1) {
                         Log.LogError($"The property '{prop}' is in an invalid format.");
                         return false;
                     }
-                    propertiesDict.Add(parts[0], parts[1]);
+                    string key = prop.Substring(0, idx);
+                    string value = prop.Substring(idx + 1);
+                    propertiesDict.Add(key, value);
                 }
             }
 
@@ -69,13 +70,11 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             Log.LogMessage(MessageImportance.Normal, $"Created JobInfo: '{JsonConvert.SerializeObject(info, Constants.SerializerSettings)}'");
 
-            Log.LogMessage(MessageImportance.Normal, "Sending Job Start to helix api");
+            Log.LogMessage(MessageImportance.Normal, "Sending Job Start to Helix Api");
             string token = await HelixApi.Telemetry.StartJobAsync(info);
 
-
-            Log.LogMessage(MessageImportance.Normal, "Sending Build Start to helix api");
+            Log.LogMessage(MessageImportance.Normal, "Sending Build Start to Helix Api");
             string workItemId = await HelixApi.Telemetry.StartBuildWorkItemAsync(token, BuildUri);
-
 
             Log.LogMessage(MessageImportance.Normal, "Saving information to config file");
 
