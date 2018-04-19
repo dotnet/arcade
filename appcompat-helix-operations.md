@@ -44,7 +44,7 @@ All the necessary tools and scripts to perform AppCompat runs through Helix are 
 
 ## Run data
 
-Details of all AppCompat runs are stored in a SQL Azure database. Connection string for the database is - `dotnetappcompatsql.database.windows.net;initial catalog=AppCompat;user id=sql-azure-read-only;password=get_it_from_keyvault;MultipleActiveResultSets=True;App=EntityFramework`
+Details of all AppCompat runs are stored in a SQL Azure database. Connection string for the database is - `dotnetappcompatsql.database.windows.net;initial catalog=AppCompat;user id=AppCompatReader;password=get_it_from_keyvault;MultipleActiveResultSets=True;App=EntityFramework`
 
 Get password from the Key Vault at (https://ms.portal.azure.com/#asset/Microsoft_Azure_KeyVault/Secret/https://appcompat.vault.azure.net/secrets/sql-azure-read-only/1c32ad5ff6ac46b9892c4a624c691d19)
 
