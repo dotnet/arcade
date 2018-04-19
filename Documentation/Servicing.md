@@ -1,7 +1,7 @@
 # Servicing
 
 ## Overview
-Servicing (updating) packages and tools is an important part of being sustainable over time.  This document touches on the primary policy and mechanical aspects for how Arcade intends to handle servicing.
+Servicing (updating) packages and tools that are used in support of the build is an important part of being sustainable over time.  This document touches on the primary policy and mechanical aspects for how Arcade intends to handle servicing.
 
 ## Requirements
 * Allow updates to tools and packages to quickly flow to all participating repos, with reasonable confidence, and minimum effort.
@@ -16,3 +16,4 @@ Servicing (updating) packages and tools is an important part of being sustainabl
 * Breaking changes from Arcade should be 1) rare, 2) have a very strong business case, and 3) have a clear migration/mitigation plan for all effected repos.
   * In cases where very few repos are affected, updating the repo itself is a viable option.
   * In cases where no better option exists (last resort), the tools or package can fork or be quirked.
+* Only push a new CLI to the respos in the stack once it has been signed off by our consumer distros.
