@@ -13,18 +13,22 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <summary>
         /// The Job Source
         /// </summary>
+        [Required]
         public string Source { get; set; }
         /// <summary>
         /// The Job Type
         /// </summary>
+        [Required]
         public string Type { get; set; }
         /// <summary>
         /// The Build
         /// </summary>
+        [Required]
         public string Build { get; set; }
         /// <summary>
         /// The QueueId
         /// </summary>
+        [Required]
         public string QueueId { get; set; }
         /// <summary>
         /// The Attempt

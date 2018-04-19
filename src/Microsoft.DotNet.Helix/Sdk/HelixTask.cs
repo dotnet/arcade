@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <summary>
         /// The Helix Api Base Uri
         /// </summary>
-        public Uri BaseUri { get; set; } = new Uri("https://helix.dot.net/");
+        public string BaseUri { get; set; } = "https://helix.dot.net/";
 
         /// <summary>
         /// The Helix Api Access Token
@@ -58,11 +58,11 @@ namespace Microsoft.DotNet.Helix.Sdk
             if (string.IsNullOrEmpty(AccessToken))
             {
                 Log.LogMessage(MessageImportance.Low, "No AccessToken provided, using anonymous access to helix api.");
-                return ApiFactory.GetAnonymous(BaseUri.AbsoluteUri);
+                return ApiFactory.GetAnonymous(BaseUri);
             }
 
             Log.LogMessage(MessageImportance.Low, "Authenticating to helix api using provided AccessToken");
-            return ApiFactory.GetAuthenticated(BaseUri.AbsoluteUri, AccessToken);
+            return ApiFactory.GetAuthenticated(BaseUri, AccessToken);
         }
 
         public sealed override bool Execute()
