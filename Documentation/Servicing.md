@@ -16,4 +16,4 @@ Servicing (updating) packages and tools that are used in support of the build is
 * Breaking changes from Arcade should be 1) rare, 2) have a very strong business case, and 3) have a clear migration/mitigation plan for all effected repos.
   * In cases where very few repos are affected, updating the repo itself is a viable option.
   * In cases where no better option exists (last resort), the tools or package can fork or be quirked.
-* Only push a new CLI to the respos in the stack once it has been signed off by our consumer distros.
+* Only push a new CLI to the repos in the stack once it has been signed off by our consumer distros.

@@ -10,13 +10,14 @@ Various tools are needed to support both bootstrapping (both managed and native)
 * Scripts which acquire the tools are automatically deployed to all participating repos  (Maestro++)
 * Updates are only made after there is reasonable confidence they won't break 
 * Both managed and native tools (including any dependencies)
+* It should be possible to reasonbly get required tools for new platform bring up.  (distros not yet supported by core)
 
 ## Basic Mechanics
 At a high level, toolsets are managed by:
 * Known location in Azure blob storage for all tools
 * Scripts acquire the correct tools as part of the bootstrapping process
 * Scripts kept up to date by updating every participating repo (Maestro++)
-* Community needs to install the tools as prereqs - there's no provision to automatically bring them down  (currently under discussion as of 4/18)
+discussion as of 4/18)
 
 ## Servicing
 * See the ["Servicing" document](Documentation/Servicing.md) for a broader discussion of servicing and its policies
