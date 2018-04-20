@@ -39,6 +39,8 @@ I don't **think** so.  It should be a one-time cost for each asset and adding a 
 
 "Shims" are used to execute the native toolset.  Since there is no enforced structure on the file layout for a native asset, shims bridge the gap so that we have a single well-known entry point that can be used for our native toolset.  Having shims allows us to put all of them in a single folder (in a given repo) so that we can use them to access the tools rather than managing path access to every known toolset.
 
+It is possible that a native toolset will provide more than one shim.
+
 ### api version
 
 The "api version" should correspond to the version of the tool that each repo uses to acquire native toolset dependencies.  It is the *hope* that this version rarely (never?) change.
