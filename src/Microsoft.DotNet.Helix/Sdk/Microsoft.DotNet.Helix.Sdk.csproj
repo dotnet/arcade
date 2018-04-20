@@ -1,0 +1,59 @@
+<Project Sdk="RoslynTools.RepoToolset">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;$(NetFxTfm)</TargetFrameworks>
+    <PackageType>MSBuildSdk</PackageType>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" Publish="false"/>
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" Publish="false"/>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'">
+    <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.Build.Utilities.v4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Client\CSharp\Microsoft.DotNet.Helix.Client.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="sdk/**/*" Pack="true" PackagePath="sdk/%(RecursiveDir)%(Filename)%(Extension)"/>
+    <None Include="build/**/*" Pack="true" PackagePath="build/%(RecursiveDir)%(Filename)%(Extension)"/>
+    <None Include="tools/**/*" Pack="true" PackagePath="tools/%(RecursiveDir)%(Filename)%(Extension)"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="@(PackageReference)">
+      <PrivateAssets>All</PrivateAssets>
+      <Publish Condition=" '%(PackageReference.Publish)' != 'false' ">true</Publish>
+    </PackageReference>
+    <ProjectReference Update="@(ProjectReference)">
+      <PrivateAssets>All</PrivateAssets>
+      <Publish Condition=" '%(ProjectReference.Publish)' != 'false' ">true</Publish>
+    </ProjectReference>
+    <Reference Update="@(Reference)">
+      <Pack>false</Pack>
+    </Reference>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CollectAssets</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+  <Target Name="CollectAssets" DependsOnTargets="Publish">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="@(ResolvedFileToPublish->'$([MSBuild]::NormalizeDirectory($(PublishDir)))%(RelativePath)')">
+        <PackagePath>tools/$(TargetFramework)/any/%(ResolvedFileToPublish.RelativePath)</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
+
+</Project>
