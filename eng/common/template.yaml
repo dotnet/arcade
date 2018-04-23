@@ -1,0 +1,47 @@
+
+parameters:
+  buildSteps: []
+  dotnetCliVersion:
+
+steps:
+  - task: DotNetCoreInstaller@0
+    inputs:
+      version: ${{ parameters.dotnetCliVersion }}
+      packageType: sdk
+
+  - script: |
+      dotnet msbuild Helix.proj /t:StartBuildTelemetry
+    displayName: Send Build Start Telemetry
+    workingDirectory: $(Build.SourcesDirectory)/eng/common
+    env:
+      AccessToken: $(HelixAccessToken)
+      ConfigFile: $(Build.SourcesDirectory)/.helix.config
+      Source: $(HelixSource)
+      Type: $(HelixType)
+      Build: $(Build.BuildNumber)
+      QueueId: Windows.10.Amd64
+      Attempt: 1
+      BuildUri: https://mseng.visualstudio.com/Tools/Engineering%20Infrastructure/_build/index?buildId=$(Build.BuildId)&_a=summary
+      Properties: operatingSystem=Windows 10; stuff=true
+
+  - ${{ parameters.buildSteps }}
+
+  - script: |
+      echo '##vso[task.setvariable variable=ErrorCount]0'
+      echo '##vso[task.setvariable variable=WarningCount]0'
+    condition: succeeded()
+
+  - script: |
+      echo '##vso[task.setvariable variable=ErrorCount]1'
+      echo '##vso[task.setvariable variable=WarningCount]0'
+    condition: in(variables['Agent.JobStatus'], 'Failed', 'Canceled')
+
+  - script: |
+      dotnet msbuild Helix.proj /t:EndBuildTelemetry
+    displayName: Send Build End Telemetry
+    workingDirectory: $(Build.SourcesDirectory)/eng/common
+    condition: always()
+    env:
+      AccessToken: $(HelixAccessToken)
+      ConfigFile: $(Build.SourcesDirectory)/.helix.config
+
