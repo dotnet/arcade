@@ -178,6 +178,9 @@
              />
   </Target>
 
+  <!--
+    Checks that all trans-unit elements in the .xlf files have an up-to-date translation.
+  -->
   <Target Name="EnsureAllResourcesTranslated"
           DependsOnTargets="GetXlfSources"
           >
