@@ -3,7 +3,7 @@ phases:
   # variables apply to every build configuration in the matrix
   variables: 
     _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
-    _SignType: real
+    _SignType: test
     _UseEsrpSigning: true
     _TeamName: DotNetCore
   queue:
@@ -17,54 +17,57 @@ phases:
         _PublishType: none
       Build_Release:
         _BuildConfig: Release
-        _PublishType: blob
+        _PublishType: none
   steps:
   - checkout: self
     clean: true
     fetchDepth: 1
-  - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
-    displayName: Install MicroBuild plugin
-    inputs:
-      signType: '$(_SignType)'
-      zipSources: false
-      esrpSigning: '$(_UseEsrpSigning)'
-    env:
-      TeamName: $(_TeamName)
-    continueOnError: false
-    condition: and(succeeded(), in(variables._SignType, 'real', 'test'))
-  - task: AzureKeyVault@1
-    inputs:
-      azureSubscription: 'DotNet-VSTS'
-      KeyVaultName: EngKeyVault
-      SecretsFilter: 'dotnetfeed-storage-access-key-1'
-  # Build and Publish on the Release configuration
-  - script: eng\common\CIBuild.cmd -configuration $(_BuildConfig) -prepareMachine
-              /p:PB_PublishType=$(_PublishType)
-              /p:PB_PublishBlobFeedUrl=$(_PublishBlobFeedUrl)
-              /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
-              /p:SignType=$(_SignType)
-    name: Build_Publish
-    displayName: Build / Publish
-    env:
-      OfficialBuildId: $(BUILD.BUILDNUMBER)
-  # Copy build logs to a staging directory
-  - task: CopyFiles@2
-    displayName: Gather Logs
-    inputs:
-      SourceFolder: '$(Build.SourcesDirectory)\artifacts'
-      Contents: '**\*log'
-      TargetFolder: '$(Build.StagingDirectory)\BuildLogs'
-    continueOnError: true
-    condition: succeededOrFailed()
-  # Publish build logs to VSTS  
-  - task: PublishBuildArtifacts@1
-    displayName: Publish Logs to VSTS
-    inputs:
-      PathtoPublish: '$(Build.StagingDirectory)\BuildLogs'
-      ArtifactName: Windows_$(Agent.JobName)
-      publishLocation: Container
-    continueOnError: true
-    condition: succeededOrFailed()
+  - template: eng/common/arcade.yaml
+    parameters:
+      buildSteps:
+      - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
+        displayName: Install MicroBuild plugin
+        inputs:
+          signType: '$(_SignType)'
+          zipSources: false
+          esrpSigning: '$(_UseEsrpSigning)'
+        env:
+          TeamName: $(_TeamName)
+        continueOnError: false
+        condition: and(succeeded(), in(variables._SignType, 'real', 'test'))
+      - task: AzureKeyVault@1
+        inputs:
+          azureSubscription: 'DotNet-VSTS'
+          KeyVaultName: EngKeyVault
+          SecretsFilter: 'dotnetfeed-storage-access-key-1'
+      # Build and Publish on the Release configuration
+      - script: eng\common\CIBuild.cmd -configuration $(_BuildConfig) -prepareMachine
+                  /p:PB_PublishType=$(_PublishType)
+                  /p:PB_PublishBlobFeedUrl=$(_PublishBlobFeedUrl)
+                  /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
+                  /p:SignType=$(_SignType)
+        name: Build_Publish
+        displayName: Build / Publish
+        env:
+          OfficialBuildId: $(BUILD.BUILDNUMBER)
+      # Copy build logs to a staging directory
+      - task: CopyFiles@2
+        displayName: Gather Logs
+        inputs:
+          SourceFolder: '$(Build.SourcesDirectory)\artifacts'
+          Contents: '**\*log'
+          TargetFolder: '$(Build.StagingDirectory)\BuildLogs'
+        continueOnError: true
+        condition: succeededOrFailed()
+      # Publish build logs to VSTS  
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Logs to VSTS
+        inputs:
+          PathtoPublish: '$(Build.StagingDirectory)\BuildLogs'
+          ArtifactName: Windows_$(Agent.JobName)
+          publishLocation: Container
+        continueOnError: true
+        condition: succeededOrFailed()
     
 - phase: Linux
   variables:
@@ -84,25 +87,28 @@ phases:
   - checkout: self
     clean: true
     fetchDepth: 1
-  - script: eng/common/cibuild.sh --configuration $(_BuildConfig) --preparemachine
-    name: Build
-    env:
-      OfficialBuildId: $(BUILD.BUILDNUMBER)
-  # Copy build logs to a staging directory
-  - task: CopyFiles@2
-    displayName: Gather Logs
-    inputs:
-      SourceFolder: '$(Build.SourcesDirectory)/artifacts'
-      Contents: '**/*log'
-      TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
-    continueOnError: true
-    condition: succeededOrFailed()
-  # Publish build logs to VSTS  
-  - task: PublishBuildArtifacts@1
-    displayName: Publish Logs to VSTS
-    inputs:
-      PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
-      ArtifactName: Linux_$(Agent.JobName)
-      publishLocation: Container
-    continueOnError: true
-    condition: succeededOrFailed()
+  - template: eng/common/arcade.yaml
+    parameters:
+      buildSteps:
+      - script: eng/common/cibuild.sh --configuration $(_BuildConfig) --preparemachine
+        name: Build
+        env:
+          OfficialBuildId: $(BUILD.BUILDNUMBER)
+      # Copy build logs to a staging directory
+      - task: CopyFiles@2
+        displayName: Gather Logs
+        inputs:
+          SourceFolder: '$(Build.SourcesDirectory)/artifacts'
+          Contents: '**/*log'
+          TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
+        continueOnError: true
+        condition: succeededOrFailed()
+      # Publish build logs to VSTS  
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Logs to VSTS
+        inputs:
+          PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
+          ArtifactName: Linux_$(Agent.JobName)
+          publishLocation: Container
+        continueOnError: true
+        condition: succeededOrFailed()

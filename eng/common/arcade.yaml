@@ -1,0 +1,49 @@
+
+parameters:
+  buildSteps: []
+
+steps:
+  # - task: DotNetCoreInstaller@0
+  #   displayName: Get Dotnet Cli
+  #   inputs:
+  #     version: ${{ parameters.dotnetCliVersion }}
+  #     packageType: sdk
+
+  - powershell: |
+      ./get-dotnet-cli.ps1
+    condition: in(variables['Agent.OS'], 'Windows_NT')
+    workingDirectory: $(Build.SourcesDirectory)/eng/common
+    displayName: Get Dotnet Cli
+
+  - bash: |
+      /bin/bash ./get-dotnet-cli.sh
+    condition: in(variables['Agent.OS'], 'Linux', 'Darwin')
+    workingDirectory: $(Build.SourcesDirectory)/eng/common
+    displayName: Get Dotnet Cli
+
+  - script: |
+      dotnet msbuild Helix.proj /t:StartBuildTelemetry
+    displayName: Send Build Start Telemetry
+    workingDirectory: $(Build.SourcesDirectory)/eng/common
+    env:
+      AccessToken: $(HelixAccessToken)
+      ConfigFile: $(Build.SourcesDirectory)/.helix.config
+      Source: $(HelixSource)
+      Type: $(HelixType)
+      Build: $(Build.BuildNumber)
+      QueueId: $(Agent.OS)
+      Attempt: 1
+      BuildUri: https://devdiv.visualstudio.com/DevDiv/_build/index?buildId=$(Build.BuildId)&_a=summary
+      Properties: operatingSystem=$(Agent.OS);configuration=$(_BuildConfig)
+
+  - ${{ parameters.buildSteps }}
+
+  - script: |
+      dotnet msbuild Helix.proj /t:EndBuildTelemetry
+    displayName: Send Build End Telemetry
+    workingDirectory: $(Build.SourcesDirectory)/eng/common
+    condition: always()
+    env:
+      AccessToken: $(HelixAccessToken)
+      ConfigFile: $(Build.SourcesDirectory)/.helix.config
+

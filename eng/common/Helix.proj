@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.DotNet.Helix.Sdk" InitialTargets="Debug">
+  <PropertyGroup Condition="'$(Agent_JobStatus)' == 'Succeeded' Or '$(Agent_JobStatus)' == 'PartiallySucceeded'">
+    <ErrorCount>0</ErrorCount>
+    <WarningCount>0</WarningCount>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Agent_JobStatus)' == 'Failed' Or '$(Agent_JobStatus)' == 'Canceled'">
+    <ErrorCount>1</ErrorCount>
+    <WarningCount>0</WarningCount>
+  </PropertyGroup>
+  <Target Name="Debug" Condition="'$(System_Debug)' == 'true'">
+    <Message Text="ErrorCount: $(ErrorCount)" Importance="High"/>
+    <Message Text="WarningCount: $(WarningCount)" Importance="High"/>
+  </Target>
+</Project>
