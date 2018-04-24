@@ -8,7 +8,7 @@ It is possible that the landscape will change w.r.t. available technologies, and
 
 ## Scope
 
-- Pre-CLI toolsets
+- CLI and Pre-CLI toolsets ()
 
 - Xcopy deployable native dependencies
 
@@ -37,6 +37,8 @@ It is possible that the landscape will change w.r.t. available technologies, and
   - All implementations of the dependency are packaged into a single unit.  ie, you can't just download the Windows dependency from the package unless you package it separately.  You would always bring down the Windows, Linux variants, and OSX implementations for a native dependency.
 
   - Native dependencies are not (yet) supported by CLI.  There is some work in progress by CLI team to support global tools with native dependencies (and also repo tools), but that work is not yet available and not expected until late in the .NET Core 2.2 timeframe.  We could create global tools with managed console apps that wrap native dependencies, but there is an investment there and it's throw-away work (ie, not something customers currently expect / do).
+
+  - If we used a nupkg format, we wouldn't actually be able to use nuget to download and extract them, they would be purely used as zip files.
 
 - X-Plat choco - beyond the scope of what's necessary for xcopy deployable native dependencies
 
