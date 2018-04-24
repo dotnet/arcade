@@ -20,7 +20,7 @@ steps:
     displayName: Send Build Start Telemetry
     workingDirectory: $(Build.SourcesDirectory)/eng/common
     env:
-      AccessToken: $(HelixAccessToken)
+      AccessToken: $(HelixApiAccessToken)
       ConfigFile: $(Build.SourcesDirectory)/.helix.config
       Source: $(HelixSource)
       Type: $(HelixType)
@@ -38,6 +38,6 @@ steps:
     workingDirectory: $(Build.SourcesDirectory)/eng/common
     condition: always()
     env:
-      AccessToken: $(HelixAccessToken)
+      AccessToken: $(HelixApiAccessToken)
       ConfigFile: $(Build.SourcesDirectory)/.helix.config
 
