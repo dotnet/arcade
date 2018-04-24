@@ -38,8 +38,8 @@ Native toolset assets will be placed in an Azure blob storage flat file structur
   - [flat file drop of zips, tarballs, etc...]
 \installers
   \[version] # semver2 format
-    \commonlibrary.zip
-    \commonlibrary.tar
+    \commonlibrary-[version].zip
+    \commonlibrary-[version].tar
     \[tool name]
       \[toolversion]
         \[OS]
