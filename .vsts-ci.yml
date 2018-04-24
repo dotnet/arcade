@@ -3,7 +3,7 @@ phases:
   # variables apply to every build configuration in the matrix
   variables: 
     _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
-    _SignType: test
+    _SignType: real
     _UseEsrpSigning: true
     _TeamName: DotNetCore
   queue:
@@ -17,7 +17,7 @@ phases:
         _PublishType: none
       Build_Release:
         _BuildConfig: Release
-        _PublishType: none
+        _PublishType: blob
   steps:
   - checkout: self
     clean: true

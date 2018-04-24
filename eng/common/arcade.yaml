@@ -3,12 +3,6 @@ parameters:
   buildSteps: []
 
 steps:
-  # - task: DotNetCoreInstaller@0
-  #   displayName: Get Dotnet Cli
-  #   inputs:
-  #     version: ${{ parameters.dotnetCliVersion }}
-  #     packageType: sdk
-
   - powershell: |
       ./get-dotnet-cli.ps1
     condition: in(variables['Agent.OS'], 'Windows_NT')
