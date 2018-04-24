@@ -75,8 +75,8 @@ It is possible that a native toolset will provide more than one shim.
   -python-3.7.0b3-embed-win32.zip
 \installers
   \1.0.0-preview1.08530.0+asdf34234
-    \commonlibrary.zip
-    \commonlibrary.sh
+    \commonlibrary-1.0.0-preview1.08530.0+asdf34234.zip
+    \commonlibrary-1.0.0-preview1.08530.0+asdf34234.sh
     \cmake
       \3.10.3
         \Windows
