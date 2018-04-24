@@ -13,7 +13,7 @@ Servicing (updating) packages and tools that are used in support of the build is
 ## Policy
 * All repos should "roll forward" to whatever the latest tool and package is wherever possible.  This includes product servicing branches.  In short, every (reasonable) effort should be made to stay on the latest version available.
 * All repos should be fully subscribed and getting automated updates.
-* Breaking changes from Arcade should be 1) rare, 2) have a very strong business case, and 3) have a clear migration/mitigation plan for all effected repos.
+* Breaking changes from Arcade should be 1) rare, 2) have a very strong business case, and 3) have a clear migration/mitigation plan for all affected repos.
   * In cases where very few repos are affected, updating the repo itself is a viable option.
   * In cases where no better option exists (last resort), the tools or package can fork or be quirked.
 * Only push a new CLI to the repos in the stack once it has been signed off by our consumer distros.
