@@ -23,6 +23,7 @@ Both types of versioning have advantages and disadvantages:
 **CONS:**
 - Some related infrastructure systems may not support the ingestion of multiple assets with the same name/version.  For example, MyGet, NuGet, or VSTS support overwriting to varying degrees. You're left to deal with these scenarios on a case-by-case basis.  For example:
   - Introduce a new meaningless commit to bump the version number
+  - Successive builds of the same sha, if they were to have different outputs (e.g. a checked vs. debug build) may require a clean of the cache.
   - Temporarily unlock a feed to enable re-publishing (may not be possible, and bad practice)
   - Add logic into all processes to gracefully understand and handle overwrite cases (e.g. are bits the same? then okay)
   - Telemetry systems must understand reruns of the same build.
@@ -33,6 +34,7 @@ Both types of versioning have advantages and disadvantages:
 **PROS:**
 - Respins are easier.  No overwriting except for stable versions at the end of the product cycle.  Stable versions at the end of the cycle typically avoid external overwrite-averse systems.
 - Non-standard builds (e.g. different input parameters) do not collide with standard builds at the same sha when dealing with external systems.
+- File versions must be ever increasing to correctly layout new files for servicing (MSI requirement)
 
 **CONS:**
 - Requires orchestration to produce a coherent set of versions across multiple build legs
