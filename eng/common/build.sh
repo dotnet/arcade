@@ -138,7 +138,7 @@ function ReadJson {
 }
 
 function InstallDotNetCli {
-  bash "$scriptroot/get-dotnet-cli.sh"
+  . "$scriptroot/get-dotnet-cli.sh"
 }
 
 # This is a temporary workaround for https://github.com/Microsoft/msbuild/issues/2095 and
