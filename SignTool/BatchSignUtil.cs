@@ -385,7 +385,7 @@ namespace SignTool
                     if (!_batchData.FileNames.Any(x => FilePathComparer.Equals(x.Name, name)))
                     {
                         allGood = false;
-                        textWriter.WriteLine($"signtool : error : Zip Container '{zipFileName}' has part '{name}' which is not listed in the sign or external list");
+                        textWriter.WriteLine($"signtool : error : Zip Container '{zipFileName}' has part '{relativeName}' which is not listed in the sign or external list");
                         continue;
                     }
 
@@ -397,14 +397,14 @@ namespace SignTool
                         if (!contentMap.TryGetFileName(checksum, out var checksumName))
                         {
                             allGood = false;
-                            textWriter.WriteLine($"signtool : error : {zipFileName} has part {name} which does not match the content in the binaries directory");
+                            textWriter.WriteLine($"signtool : error : {zipFileName} has part {relativeName} which does not match the content in the binaries directory");
                             continue;
                         }
 
                         if (!FilePathComparer.Equals(checksumName.Name, name))
                         {
                             allGood = false;
-                            textWriter.WriteLine($"signtool : error : {zipFileName} has part {name} with a different name in the binaries directory: {checksumName}");
+                            textWriter.WriteLine($"signtool : error : {zipFileName} has part {relativeName} with a different name in the binaries directory: {checksumName}");
                             continue;
                         }
 
