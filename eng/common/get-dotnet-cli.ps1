@@ -12,7 +12,7 @@ try {
   $here = Split-Path -Parent $MyInvocation.MyCommand.Definition
   $repoRoot = Resolve-Path (Join-Path $here "../..")
   $globalJsonFile = Join-Path $repoRoot global.json
-  $globalJson = Get-Content $globalJsonFile | ConvertFrom-Json
+  $globalJson = Get-Content $globalJsonFile -Raw | ConvertFrom-Json
 
   $Path = Join-Path $repoRoot ".dotnet"
   $Version = $globalJson.sdk.version
