@@ -1,4 +1,6 @@
-<Project Sdk="Microsoft.DotNet.Helix.Sdk" InitialTargets="Debug">
+<Project InitialTargets="Debug">
+  <Sdk Name="Microsoft.DotNet.Helix.Sdk" Version="1.0.0-prerelease-62823-01" />
+
   <PropertyGroup Condition="'$(Agent_JobStatus)' == 'Succeeded' Or '$(Agent_JobStatus)' == 'PartiallySucceeded'">
     <ErrorCount>0</ErrorCount>
     <WarningCount>0</WarningCount>
