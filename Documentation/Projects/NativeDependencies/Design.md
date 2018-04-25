@@ -41,10 +41,8 @@ Native toolset assets will be placed in an Azure blob storage flat file structur
     \commonlibrary-[version].zip
     \commonlibrary-[version].tar
     \[tool name]
-      \[toolversion]
-        \[OS]
-          \[arch]
-            -install.[extension] # installer
+      \[tool version]
+        -install-[tool name]-[tool version]-[OS]-[Arch].[extension] # installer
 ```
 
 ### nativeassets
@@ -79,15 +77,9 @@ It is possible that a native toolset will provide more than one shim.
     \commonlibrary-1.0.0-preview1.08530.0+asdf34234.sh
     \cmake
       \3.10.3
-        \Windows
-          \x64
-            -install.ps1
-        \Linux
-          \x64
-            -install.sh
-        \OSX
-          \x64
-            -install.sh
+        -install-cmake-3.10.3-Windows-x64.ps1
+        -install-cmake-3.10.3-Linux-x64.sh
+        -install-cmake-3.10.3-OSX-x64.sh
 ```
 
 ## Questions
