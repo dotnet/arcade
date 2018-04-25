@@ -5,12 +5,15 @@ parameters:
 steps:
   - powershell: |
       ./get-dotnet-cli.ps1
+      if ($LASTEXITCODE -ne 0) {
+        exit $LASTEXITCODE
+      }
     condition: in(variables['Agent.OS'], 'Windows_NT')
     workingDirectory: $(Build.SourcesDirectory)/eng/common
     displayName: Get Dotnet Cli
 
   - bash: |
-      /bin/bash ./get-dotnet-cli.sh
+      /bin/bash ./get-dotnet-cli.sh || exit 1
     condition: in(variables['Agent.OS'], 'Linux', 'Darwin')
     workingDirectory: $(Build.SourcesDirectory)/eng/common
     displayName: Get Dotnet Cli

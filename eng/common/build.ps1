@@ -64,6 +64,9 @@ function CreateDirectory([string[]] $path) {
 
 function InstallDotNetCli {
   & "$PSScriptRoot\get-dotnet-cli.ps1"
+  if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+  }
 }
 
 # This is a temporary workaround for https://github.com/Microsoft/msbuild/issues/2095 and
