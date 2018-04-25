@@ -64,10 +64,10 @@ Historically, there have been a few places where versioning shows up that we wan
 The dependency description is comprised of two types of assets:
 - **1 Dependency Details File** - XML file containing a set of information for each input dependency:
   - Dependency Name – Unique, typically the package name, but it is not required that individual packages be listed.  For example, a repo which ingests 10 assets with the same version could group all under a single dependency.
-  -Version – Version of dependency
-  - URL – URL of repository (typically) that dependency the asset.
+  - Version – Version of dependency
+  - URL – URL of repository (typically) that produced the asset.
   - SHA – Git SHA at which the dependency was produced
-  - Dependency Class – Build or Product
+  - Dependency Class – Either 'Build' or 'Product'.  'Build' dependencies are those that are used to produce the product, 'Product' dependencies are effectively everything else.  It is useful to differentiate between these so that we know how we are building (e.g. what CLI SDKs are in use across all repositories).  Defined another way, two successive builds of a Build dependency on the same sha could produce two different tools (version-wise) with the same functionality.  Using either of thse different build dependencies would produce no bit difference in the output product.
 - **N Dependency Expression Files** – Places where dependencies are expressed.  These are well known locations and formats.  The version expressions are listed below.
   - Version Props File – The props file
   - Global Json – Global json file (e.g. CLI SDK version)
@@ -77,9 +77,8 @@ The dependency description is comprised of two types of assets:
   - Build Tools Version – Build tools version text file and associated version in the props file
   - Dot Net CLI Version – CLI version text file and other associated versions.
 
-  The expression file corresponding to a dependency is implied by the dependency name and type.
-  - Product dependencies are always expressed in the version props file.
-  - Build dependencies either have specially handled names, which implies that other files expression the version, or they have an non-special name name, which implies that the version props file expresses the version. The following special names are in use:
+  The expression file corresponding to a dependency is implied by the dependency name.  Build or product dependencies can have well known names, implying an expression in a specific form (e.g. global.json + repository scripting), or any other generic name, implying the version is expressed in the version.props file in the repository.  Examples:
+    - AspNetCoreAllVersion - Product input of aspnet, expressed in version.props
     - DotNetSDKVersion – CLI SDK, expressed in global.json
     - ArcadeSDKVersion – Arcade SDK, expressed global.json and repository scripting
     - BuildToolsVersion – Legacy BuildToolsVersion.txt
