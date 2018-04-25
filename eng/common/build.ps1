@@ -64,7 +64,7 @@ function CreateDirectory([string[]] $path) {
 
 function InstallDotNetCli {
   & "$PSScriptRoot\get-dotnet-cli.ps1"
-  if ($LASTEXITCODE -ne 0) {
+  if ($LASTEXITCODE -ne 0 -or -not $?) {
     exit $LASTEXITCODE
   }
 }

@@ -32,7 +32,7 @@ try {
 
   Write-Verbose "Installing dotnet cli"
   & $installScriptPath -Version $Version -InstallDir $Path
-  if ($LASTEXITCODE -ne 0) {
+  if ($LASTEXITCODE -ne 0 -or -not $?) {
     Write-Error "Failed to install dotnet cli (exit code $LASTEXITCODE)";
   }
 
