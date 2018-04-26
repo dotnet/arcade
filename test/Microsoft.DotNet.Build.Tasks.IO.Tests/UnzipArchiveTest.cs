@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
             {
                 File = dest,
                 DestinationFolder = outDir,
-                BuildEngine = new MockEngine(),
+                BuildEngine = new TestsUtil.MockEngine(),
             };
 
             Assert.True(task.Execute(), "The task failed but should have passed.");
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
             {
                 File = dest,
                 DestinationFolder = outDir,
-                BuildEngine = new MockEngine(),
+                BuildEngine = new TestsUtil.MockEngine(),
             };
 
             Assert.True(task.Execute(), "The task failed but should have passed.");
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
             {
                 File = dest,
                 DestinationFolder = outDir,
-                BuildEngine = new MockEngine(),
+                BuildEngine = new TestsUtil.MockEngine(),
                 Overwrite = true
             };
 
@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
             {
                 File = dest,
                 DestinationFolder = outDir,
-                BuildEngine = new MockEngine(),
+                BuildEngine = new TestsUtil.MockEngine(),
                 Overwrite = false
             };
 
@@ -160,7 +160,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
             var dest = CreateZip(files);
             var outDir = Path.Combine(_tempDir, "out");
 
-            var engine = new MockEngine();
+            var engine = new TestsUtil.MockEngine();
             var task = new UnzipArchive
             {
                 File = dest,
@@ -191,7 +191,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
 
         public void Dispose()
         {
-            TestHelpers.DeleteDirectory(_tempDir);
+            TestsUtil.TestHelpers.DeleteDirectory(_tempDir);
         }
     }
 }

@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.DotNet.Build.Tasks.SemVer\Microsoft.DotNet.Build.Tasks.SemVer.csproj" />
-    <ProjectReference Include="..\Microsoft.DotNet.Build.Tasks.IO.Tests\Microsoft.DotNet.Build.Tasks.IO.Tests.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.TestsUtil\Microsoft.DotNet.TestsUtil.csproj" />
   </ItemGroup>
 
 </Project>

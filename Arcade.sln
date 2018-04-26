@@ -18,13 +18,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.Clie
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.Sdk", "src\Microsoft.DotNet.Helix\Sdk\Microsoft.DotNet.Helix.Sdk.csproj", "{86DC4DC7-DCEE-44AC-A7E3-B6D5A909422C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Build.Tasks.SemVer", "src\Microsoft.DotNet.Build.Tasks.SemVer\Microsoft.DotNet.Build.Tasks.SemVer.csproj", "{7F6296CD-A60F-4B7C-BBBE-DCB936441680}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.SemVer", "src\Microsoft.DotNet.Build.Tasks.SemVer\Microsoft.DotNet.Build.Tasks.SemVer.csproj", "{7F6296CD-A60F-4B7C-BBBE-DCB936441680}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Build.Tasks.SemVer.Tests", "test\Microsoft.DotNet.Build.Tasks.SemVer.Tests\Microsoft.DotNet.Build.Tasks.SemVer.Tests.csproj", "{116DC73F-BA59-4CE2-A15C-AA708952156B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.SemVer.Tests", "test\Microsoft.DotNet.Build.Tasks.SemVer.Tests\Microsoft.DotNet.Build.Tasks.SemVer.Tests.csproj", "{116DC73F-BA59-4CE2-A15C-AA708952156B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Build.Tasks.Git", "src\Microsoft.DotNet.Build.Tasks.Git\Microsoft.DotNet.Build.Tasks.Git.csproj", "{F34E40C4-9615-4D7D-8892-E55D5225FB12}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Git", "src\Microsoft.DotNet.Build.Tasks.Git\Microsoft.DotNet.Build.Tasks.Git.csproj", "{F34E40C4-9615-4D7D-8892-E55D5225FB12}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Build.Tasks.Git.Tests", "test\Microsoft.DotNet.Build.Tasks.Git.Tests\Microsoft.DotNet.Build.Tasks.Git.Tests.csproj", "{ACA98E40-8039-4B5B-A0F8-5012B380B26A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Git.Tests", "test\Microsoft.DotNet.Build.Tasks.Git.Tests\Microsoft.DotNet.Build.Tasks.Git.Tests.csproj", "{ACA98E40-8039-4B5B-A0F8-5012B380B26A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.TestsUtil", "test\Microsoft.DotNet.TestsUtil\Microsoft.DotNet.TestsUtil.csproj", "{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -144,6 +146,18 @@ Global
 		{ACA98E40-8039-4B5B-A0F8-5012B380B26A}.Release|x64.Build.0 = Release|Any CPU
 		{ACA98E40-8039-4B5B-A0F8-5012B380B26A}.Release|x86.ActiveCfg = Release|Any CPU
 		{ACA98E40-8039-4B5B-A0F8-5012B380B26A}.Release|x86.Build.0 = Release|Any CPU
+		{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}.Debug|x64.Build.0 = Debug|Any CPU
+		{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}.Debug|x86.Build.0 = Debug|Any CPU
+		{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}.Release|x64.ActiveCfg = Release|Any CPU
+		{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}.Release|x64.Build.0 = Release|Any CPU
+		{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}.Release|x86.ActiveCfg = Release|Any CPU
+		{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -159,6 +173,7 @@ Global
 		{116DC73F-BA59-4CE2-A15C-AA708952156B} = {7900BB3A-3FCC-4A0E-908D-14155048E6B6}
 		{F34E40C4-9615-4D7D-8892-E55D5225FB12} = {730AF68A-22FD-4372-9341-5F67D7701DA7}
 		{ACA98E40-8039-4B5B-A0F8-5012B380B26A} = {7900BB3A-3FCC-4A0E-908D-14155048E6B6}
+		{C40E4CDD-1E98-412E-9C32-708B4D9D15DD} = {7900BB3A-3FCC-4A0E-908D-14155048E6B6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {06E6CFF5-C54E-4623-9587-71A9E3F041D9}

@@ -10,7 +10,7 @@ using Microsoft.Build.Framework;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Microsoft.DotNet.Build.Tasks.IO.Tests
+namespace Microsoft.DotNet.TestsUtil
 {
     public class MockEngine : IBuildEngine5
     {

@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using Xunit;
@@ -40,7 +44,7 @@ namespace Microsoft.DotNet.Build.Tasks.SemVer.Tests
                 ShortSHA = sha
             };
 
-            task.BuildEngine = new IO.Tests.MockEngine();
+            task.BuildEngine = new TestsUtil.MockEngine();
 
             Assert.True(task.Execute());
             Assert.Equal(ExpectedOutput, task.Version);
@@ -61,7 +65,7 @@ namespace Microsoft.DotNet.Build.Tasks.SemVer.Tests
                 ShortSHA = sha
             };
 
-            task.BuildEngine = new IO.Tests.MockEngine();
+            task.BuildEngine = new TestsUtil.MockEngine();
 
             Assert.ThrowsAny<Exception>(() => task.Execute());
         }

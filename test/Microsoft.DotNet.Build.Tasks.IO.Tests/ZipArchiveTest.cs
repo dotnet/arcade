@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
                     SourceFiles = new[] { linkItem },
                     BaseDirectory = Path.Combine(_tempDir, "temp"),
                     OutputPath = dest,
-                    BuildEngine = new MockEngine(),
+                    BuildEngine = new TestsUtil.MockEngine(),
                 };
                 Assert.True(task.Execute());
 
@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
                 IncludeSourceDirectory = includeBaseDirectory,
                 OutputPath = dest,
                 Overwrite = true,
-                BuildEngine = new MockEngine(),
+                BuildEngine = new TestsUtil.MockEngine(),
             };
 
             Assert.True(task.Execute());
@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
                 BaseDirectory = _tempDir,
                 OutputPath = dest,
                 Overwrite = true,
-                BuildEngine = new MockEngine(),
+                BuildEngine = new TestsUtil.MockEngine(),
             };
 
             Assert.True(task.Execute());
@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
                 BaseDirectory = _tempDir,
                 OutputPath = dest,
                 Overwrite = false,
-                BuildEngine = new MockEngine { ContinueOnError = true },
+                BuildEngine = new TestsUtil.MockEngine { ContinueOnError = true },
             };
 
             Assert.False(task.Execute(), "Task should fail");
@@ -167,7 +167,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
                 SourceDirectory = _tempDir,
                 OutputPath = Path.Combine(_tempDir, "test.zip"),
                 Overwrite = false,
-                BuildEngine = new MockEngine { ContinueOnError = true },
+                BuildEngine = new TestsUtil.MockEngine { ContinueOnError = true },
             };
 
             Assert.False(task.Execute(), "Task should fail");
@@ -196,7 +196,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
                 SourceFiles = CreateItems(files1),
                 BaseDirectory = _tempDir,
                 OutputPath = dest,
-                BuildEngine = new MockEngine(),
+                BuildEngine = new TestsUtil.MockEngine(),
             };
 
             Assert.True(task.Execute());
@@ -208,7 +208,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
                 BaseDirectory = _tempDir,
                 OutputPath = dest,
                 Overwrite = true,
-                BuildEngine = new MockEngine(),
+                BuildEngine = new TestsUtil.MockEngine(),
             };
 
             Assert.True(task.Execute());
@@ -232,7 +232,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
             try
             {
                 File.WriteAllText(inputFile, "");
-                var mock = new MockEngine { ContinueOnError = true };
+                var mock = new TestsUtil.MockEngine { ContinueOnError = true };
                 var task = new ZipArchive
                 {
                     SourceFiles = new[] { linkItem },
@@ -274,7 +274,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
 
         public void Dispose()
         {
-            TestHelpers.DeleteDirectory(_tempDir);
+            TestsUtil.TestHelpers.DeleteDirectory(_tempDir);
         }
     }
 }
