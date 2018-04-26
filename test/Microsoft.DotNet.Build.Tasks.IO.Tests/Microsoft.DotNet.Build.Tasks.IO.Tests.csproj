@@ -4,8 +4,6 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
-
-    <AssemblyOriginatorKeyFile>C:\Users\disoares\.nuget\packages\roslyntools.repotoolset\1.0.0-beta2-62719-04\tools\35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
