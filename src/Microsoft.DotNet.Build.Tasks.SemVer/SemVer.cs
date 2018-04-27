@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -10,44 +12,50 @@ namespace Microsoft.DotNet.Build.Tasks.SemVer
 {
     public class SemVer : Task
     {
-        [Required]
-        public Int16 Major { get; set; }
-        [Required]
-        public Int16 Minor { get; set; }
-        [Required]
-        public Int16 Patch { get; set; }
+        private Dictionary<string, string> formats = new Dictionary<string, string> {
+                                    {"dev", "{major}.{minor}.{patch}-{prerelease}.{shortdate}.{builds}+{shortsha}"},
+                                    {"stable", "{major}.{minor}.{patch}-{prerelease}"},
+                                    {"final", "{major}.{minor}.{patch}"}};
 
-        public string Prerelease { get; set; }
-        public Int16 ShortDate { get; set; }
-        public Int16 Builds { get; set; }
-        public string ShortSHA { get; set; }
+        [Required]
+        public string FormatString { get; set; }
 
         [Output]
-        public String Version { get; set; }
+        public String VersionString { get; set; }
+
+        public UInt16 Major { get; set; }
+        public UInt16 Minor { get; set; }
+        public UInt16 Patch { get; set; }
+        public string Prerelease { get; set; }
+        public string ShortDate { get; set; }
+        public UInt16 Builds { get; set; }
+        public string ShortSHA { get; set; }
 
         public override bool Execute()
         {
-            if (Major <= 0)
+            VersionString = FormatString.ToLower();
+
+            if (formats.ContainsKey(VersionString))
             {
-                Log.LogError("Major version cannot be zero.");
+                VersionString = formats[VersionString];
+            }
+
+            if ((VersionString.Contains("{major}") && Major == 0) ||
+                (VersionString.Contains("{prerelease}") && String.IsNullOrEmpty(Prerelease)) ||
+                (VersionString.Contains("{shortdate}") && String.IsNullOrEmpty(ShortDate)) ||
+                (VersionString.Contains("{shortsha}") && String.IsNullOrEmpty(ShortSHA)))
+            {
+                Log.LogError("Invalid format string or parameters. All parameters referenced in the format string must be informed.");
                 return false;
             }
 
-            // If Prerelease isn't specified then any of the other prerelease fields shouldn't
-            if (String.IsNullOrEmpty(Prerelease))
-            {
-                if (ShortDate > 0 || Builds > 0 || !String.IsNullOrEmpty(ShortSHA))
-                {
-                    Log.LogError("Invalid prerelease parameters.");
-                    return false;
-                }
-
-                Version = $"{Major}.{Minor}.{Patch} (stabilized)";
-                return true;
-            }
-
-            // So far we know that these first four fields aren't empty
-            Version = $"{Major}.{Minor}.{Patch}-{Prerelease}.{ShortDate:00000}.{Builds}+{ShortSHA}";
+            VersionString = VersionString.Replace("{major}", Major.ToString());
+            VersionString = VersionString.Replace("{minor}", Minor.ToString());
+            VersionString = VersionString.Replace("{patch}", Patch.ToString());
+            VersionString = VersionString.Replace("{prerelease}", Prerelease);
+            VersionString = VersionString.Replace("{shortdate}", ShortDate);
+            VersionString = VersionString.Replace("{builds}", Builds.ToString());
+            VersionString = VersionString.Replace("{shortsha}", ShortSHA);
 
             return true;
         }
