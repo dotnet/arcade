@@ -258,17 +258,20 @@ namespace XliffTasks.Model
             return dictionary;
         }
 
-        public int GetUntranslatedResourceCount()
+        public ISet<string> GetUntranslatedResourceIDs()
         {
             XNamespace ns = _document.Root.Name.Namespace;
 
-            int untranslatedResourceCount =
+            var untranslatedResourceIDs =
                 (_document.Descendants(ns + "trans-unit")
-                 .Select(tu => tu.Element(ns + "target"))
-                 .Where(target => target.Attribute("state").Value != "translated"))
-                .Count();
+                 .Where(tu =>
+                 {
+                     var target = tu.Element(ns + "target");
+                     return target.Attribute("state").Value != "translated";
+                 })
+                 .Select(tu => tu.Attribute("id").Value));
 
-            return untranslatedResourceCount;
+            return new HashSet<string>(untranslatedResourceIDs, StringComparer.Ordinal);
         }
     }
 }
