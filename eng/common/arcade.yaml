@@ -34,7 +34,7 @@ steps:
   #     Properties: operatingSystem=$(Agent.OS);configuration=$(_BuildConfig)
 
   - bash: |
-      /bin/bash ./telemetry/start-job.sh --source "$Source" --type "$Type" --build "$Build" -p "operatingSystem=$OperatingSystem" -p "configuration=$Configuration"
+      /bin/bash ./telemetry/start-job.sh --source "$Source" --type "$Type" --build "$Build" --queue-id "$QueueId" --attempt "$Attempt" -p "operatingSystem=$OperatingSystem" -p "configuration=$Configuration"
     condition: in(variables['Agent.OS'], 'Linux', 'Darwin')
     workingDirectory: $(Build.SourcesDirectory)/eng/common
     displayName: Send Job Start Telemetry
@@ -49,7 +49,7 @@ steps:
       Configuration: $(_BuildConfig)
 
   - powershell: |
-      ./telemetry/start-job.ps1 -Source $env:Source -Type $env:Type -Build $env:Build -Attempt $env:Attempt -Properties @{ operatingSystem=$env:OperatingSystem; configuration=$env:Configuration } -Verbose
+      ./telemetry/start-job.ps1 -Source $env:Source -Type $env:Type -Build $env:Build -QueueId $env:QueueId -Attempt $env:Attempt -Properties @{ operatingSystem=$env:OperatingSystem; configuration=$env:Configuration } -Verbose
       if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
       }
