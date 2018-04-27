@@ -28,7 +28,7 @@ try {
 
   $env:Helix_JobToken = $jobToken
   if ($env:Build_BuildNumber) {
-    Write-Host "##vso[task.setvariable variable=Helix_JobToken]$env:Helix_JobToken"
+    Write-Host "##vso[task.setvariable variable=Helix_JobToken;issecret=true;]$env:Helix_JobToken"
   }
 }
 catch {

@@ -78,7 +78,7 @@ fi
 export Helix_JobToken=`echo $curlResult | xargs echo` # Strip Quotes
 
 if [ ! -z $BUILD_BUILDNUMBER ]; then
-  echo "##vso[task.setvariable variable=Helix_JobToken]$Helix_JobToken"
+  echo "##vso[task.setvariable variable=Helix_JobToken;issecret=true;]$Helix_JobToken"
 else
   echo "export Helix_JobToken=$Helix_JobToken"
 fi

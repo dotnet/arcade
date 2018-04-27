@@ -73,6 +73,7 @@ steps:
     displayName: Send Build Start Telemetry
     env:
       BuildUri: https://devdiv.visualstudio.com/DevDiv/_build/index?buildId=$(Build.BuildId)&_a=summary
+      Helix_JobToken: $(Helix_JobToken)
 
   - powershell: |
       ./telemetry/build/start.ps1 -BuildUri $env:BuildUri
@@ -84,6 +85,7 @@ steps:
     displayName: Send Build Start Telemetry
     env:
       BuildUri: https://devdiv.visualstudio.com/DevDiv/_build/index?buildId=$(Build.BuildId)&_a=summary
+      Helix_JobToken: $(Helix_JobToken)
 
   - ${{ parameters.buildSteps }}
 
@@ -97,6 +99,8 @@ steps:
     condition: in(variables['Agent.OS'], 'Linux', 'Darwin')
     workingDirectory: $(Build.SourcesDirectory)/eng/common
     displayName: Send Build End Telemetry
+    env:
+      Helix_JobToken: $(Helix_JobToken)
 
   - powershell: |
       if (($env:Agent_JobStatus -eq 'Succeeded') -or ($env:Agent_JobStatus -eq 'PartiallySucceeded')) {
@@ -111,6 +115,8 @@ steps:
     condition: in(variables['Agent.OS'], 'Windows_NT')
     workingDirectory: $(Build.SourcesDirectory)/eng/common
     displayName: Send Build End Telemetry
+    env:
+      Helix_JobToken: $(Helix_JobToken)
 
   # - script: |
   #     dotnet msbuild Helix.proj /t:EndBuildTelemetry
