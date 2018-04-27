@@ -1,8 +1,10 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Build.Framework;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using Microsoft.Build.Framework;
 using XliffTasks.Model;
 
 namespace XliffTasks.Tasks
@@ -21,6 +23,8 @@ namespace XliffTasks.Tasks
             {
                 string sourceDocumentPath = item.GetMetadataOrDefault(MetadataKey.SourceDocumentPath, item.ItemSpec);
 
+                var untranslatedResourceSet = new SortedSet<string>(StringComparer.Ordinal);
+
                 foreach (var language in Languages)
                 {
                     string xlfPath = GetXlfPath(sourceDocumentPath, language);
@@ -37,11 +41,13 @@ namespace XliffTasks.Tasks
                         continue;
                     }
 
-                    int untranslatedResourceCount = xlfDocument.GetUntranslatedResourceCount();
-                    if (untranslatedResourceCount > 0)
-                    {
-                        Log.LogError($"Xliff file '{xlfPath}' has {untranslatedResourceCount} untranslated resources.");
-                    }
+                    untranslatedResourceSet.UnionWith(xlfDocument.GetUntranslatedResourceIDs());
+                }
+
+                if (untranslatedResourceSet.Count > 0)
+                {
+                    string untranslatedResourceNames = string.Join(Environment.NewLine, untranslatedResourceSet);
+                    Log.LogError($"File '{sourceDocumentPath}' has {untranslatedResourceSet.Count} untranslated resource(s):{Environment.NewLine}{untranslatedResourceNames}");
                 }
             }
         }

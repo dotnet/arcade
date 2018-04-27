@@ -1,6 +1,8 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
 using System.IO;
 using XliffTasks.Model;
 using Xunit;
@@ -306,7 +308,8 @@ namespace XliffTasks.Tests
   </file>
 </xliff>";
 
-            Assert.Equal(expected: 0, actual: UntranslatedResourceCount(xliff));
+            var untranslatedResources = UntranslatedResources(xliff);
+            Assert.Equal(expected: 0, actual: untranslatedResources.Count);
         }
 
         [Fact]
@@ -335,7 +338,10 @@ namespace XliffTasks.Tests
   </file>
 </xliff>";
 
-            Assert.Equal(expected: 2, actual: UntranslatedResourceCount(xliff));
+            var untranslatedResources = UntranslatedResources(xliff);
+            Assert.Contains("Goodbye", untranslatedResources, StringComparer.Ordinal);
+            Assert.Contains("Hello", untranslatedResources, StringComparer.Ordinal);
+            Assert.DoesNotContain("Apple", untranslatedResources, StringComparer.Ordinal);
         }
 
         private static string Sort(string xliff)
@@ -372,12 +378,12 @@ namespace XliffTasks.Tests
             return writer.ToString();
         }
 
-        private static int UntranslatedResourceCount(string xliff)
+        private static ISet<string> UntranslatedResources(string xliff)
         {
             var xliffDocument = new XlfDocument();
             xliffDocument.Load(new StringReader(xliff));
 
-            return xliffDocument.GetUntranslatedResourceCount();
+            return xliffDocument.GetUntranslatedResourceIDs();
         }
     }
 }
