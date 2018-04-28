@@ -8,6 +8,18 @@ Arcade will provide a set of common installation libraries which will be bootstr
 
 Repo's will be provided a local bootstrapping file (both an ps1 and an sh file which they can also acquire from the Arcade repo).  The bootstrapper acquires the common libraries which are used to install native toolset dependencies.
 
+## Definitions
+
+Tool - a native toolset dependency (cmake, python, etc...)
+
+Native Asset - Packaged native artifact, also known as a tool but specifically related to the asset as provided by the publisher of the tool.  ie, in the case of cmake, one of the zip or tar files from https://cmake.org/download/
+
+Installer - a script(s) used to deploy a native asset
+
+Shim - wrapper script which is deployed to a platform that is referenced to execute the provided tool
+
+Common Library - set of libraries available for native asset deployment to a platform
+
 ## Common libraries
 
 The common libraries will be used to acquire individual [native tool installers](#native-tool-installers).  They will be written in commonly supported formats (ps1 or bash).  When a repo "bootstraps" itself, it downloads and extracts a version of the common libraries from blob storage.  These common libraries will be used to determine what native component needs to be installed, retrieve the installer / component from blob storage, and install the component.
@@ -38,16 +50,14 @@ Native toolset assets will be placed in an Azure blob storage flat file structur
   - [flat file drop of zips, tarballs, etc...]
 \installers
   \[version] # semver2 format
-    \commonlibrary-[version].zip
-    \commonlibrary-[version].tar
-    \[tool name]
-      \[tool version]
-        -install-[tool name]-[tool version]-[OS]-[Arch].[extension] # installer
+    -commonlibrary-[version].zip
+    -commonlibrary-[version].tar
+    -install-[tool name]-[tool version].[extension] # installer
 ```
 
 ### nativeassets
 
-The `nativeassets` folder is a flat file dump of all dependencies.  This is assuming that the tools are distributed with versioned filenames.
+The `nativeassets` folder is a flat file dump of all dependencies.  This is assuming that the tools are distributed with versioned filenames.  These are zips / tarballs / etc... provided by a tool publisher which we have republished into Azure blob storage.
 
 ### installers
 
@@ -73,13 +83,10 @@ It is possible that a native toolset will provide more than one shim.
   -python-3.7.0b3-embed-win32.zip
 \installers
   \1.0.0-preview1.08530.0+asdf34234
-    \commonlibrary-1.0.0-preview1.08530.0+asdf34234.zip
-    \commonlibrary-1.0.0-preview1.08530.0+asdf34234.sh
-    \cmake
-      \3.10.3
-        -install-cmake-3.10.3-Windows-x64.ps1
-        -install-cmake-3.10.3-Linux-x64.sh
-        -install-cmake-3.10.3-OSX-x64.sh
+    -commonlibrary-1.0.0-preview1.08530.0+asdf34234.zip
+    -commonlibrary-1.0.0-preview1.08530.0+asdf34234.sh
+    -install-cmake-3.10.3.ps1
+    -install-cmake-3.10.3.sh
 ```
 
 ## Questions
