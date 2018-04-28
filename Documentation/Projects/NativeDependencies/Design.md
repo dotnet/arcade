@@ -69,7 +69,7 @@ The "installer" is responsible for downloading the native asset and laying it ou
 
 "Shims" are used to execute the native toolset.  Since there is no enforced structure on the file layout for a native asset, shims bridge the gap so that we have a single well-known entry point that can be used for our native toolset.  Having shims allows us to put all of them in a single folder (in a given repo) so that we can use them to access the tools rather than managing path access to every known toolset.
 
-It is possible that a native toolset will provide more than one shim.
+It is possible that a native toolset will require more than one shim.
 
 ## Example - Azure blob storage container
 
