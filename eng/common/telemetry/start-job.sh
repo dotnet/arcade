@@ -61,7 +61,7 @@ JobListStuff
 
 curlResult=`
   cat $jobInfo |\
-  $scriptroot/curl.sh \
+  /bin/bash $scriptroot/curl.sh \
     -H 'Content-Type: application/json' \
     -X POST "https://helix.dot.net/api/2018-03-14/telemetry/job?access_token=$HelixApiAccessToken" -d @-`
 curlStatus=$?

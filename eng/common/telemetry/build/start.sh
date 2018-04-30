@@ -25,7 +25,7 @@ done
 
 
 curlResult=`
-$scriptroot/../curl.sh \
+/bin/bash $scriptroot/../curl.sh \
   -H 'Content-Type: application/json' \
   -H "X-Helix-Job-Token: $Helix_JobToken" \
   -H 'Content-Length: 0' \
