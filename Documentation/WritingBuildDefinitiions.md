@@ -1,5 +1,5 @@
 # Writing VSTS Build Definitions
-The purpose of this document is to detail how VSTS YAML build definitions should be written to integrate into the .NET Core Ecosystem and take advantage of the scaffolding availabe in the Aracde repository.
+The purpose of this document is to detail how VSTS YAML build definitions should be written to integrate into the .NET Core Ecosystem and take advantage of the scaffolding availabe in the Arcade repository.
 
 ## General Goals For Build Definitions
 Build definitions for the .NET Core Ecosystem should be written with the following goals in mind:
@@ -12,7 +12,7 @@ Build definitions for the .NET Core Ecosystem should be written with the followi
 - **A build definition can be used for both OSS and internal development** - To reduce the cost of developing in both the open and closed worlds, sharing the same build definition logic is ideal.  A definition should be able to be run in both OSS and internal contexts and produce results accordingly (e.g. an internal run signs, an OSS run doesn't).  The definition should also be usable in both CI and Official builds (open or closed).
 - **A build definition results are easy to reproduce locally** - Build definitions, especially when being viewed through the context of a recent build log, should be able to be reproduced locally (if possible).  Ambient state dependencies should be minimized where possible.
 - **A build definition can be serviced and altered globally to maintain consistency across the .NET Core ecosystem** - The number of build definitions is large, and making extensive changes across the ecosystem must be efficient.  For example, changes or rollout of new telemetry should be relatively painless.
-- **A build definition change must be testable in an isolated environment** - A build defniition change should be testable without altering the state of other in-progress changes.
+- **A build definition change must be testable in an isolated environment** - A build definition change should be testable without altering the state of other in-progress changes.
 - **A build definition should branch with the code it serves and maintain its functionality over the servicing lifetime of the code** - Ensure that not only does the build definition not drift from the source it serves, but also does not become non-functional over time due to changes in external systems.
 
 ## General Rules
