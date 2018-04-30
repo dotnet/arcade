@@ -90,7 +90,7 @@ steps:
   - ${{ parameters.buildSteps }}
 
   - bash: |
-      if [ $AGENT_JOBSTATUS -eq 'Succeeded' ] || [ $AGENT_JOBSTATUS -eq 'PartiallySucceeded' ]; then
+      if [ "$AGENT_JOBSTATUS" = "Succeeded" ] || [ "$AGENT_JOBSTATUS" = "PartiallySucceeded" ]; then
         errorCount=0
       else
         errorCount=1
