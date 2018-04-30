@@ -67,9 +67,10 @@ The dependency description is comprised of two types of assets:
   - Version – Version of dependency
   - URL – URL of repository (typically) that produced the asset.
   - SHA – Git SHA at which the dependency was produced
-  - Dependency Class – Either 'Build' or 'Product'.  'Build' dependencies are those that are used to produce the product, 'Product' dependencies are effectively everything else.  It is useful to differentiate between these so that we know how we are building (e.g. what CLI SDKs are in use across all repositories).  Defined another way, two successive builds of a Build dependency on the same sha could produce two different tools (version-wise) with the same functionality.  Using either of thse different build dependencies would produce no bit difference in the output product.
-- **N Dependency Expression Files** – Places where dependencies are expressed.  These are well known locations and formats.  The version expressions are listed below.
-  - Version Props File – The props file
+  - Dependency Class – Either 'Toolset' or 'Product'.  'Toolset' dependencies are those that are used to produce the product, 'Product' dependencies are effectively everything else.  It is useful to differentiate between these so that we know how we are building (e.g. what CLI SDKs are in use across all repositories).  Defined another way, two successive builds of a Toolset dependency on the same sha could produce two different tools (version-wise) with the same functionality.  Using either of thse different build dependencies would produce no bit difference in the output product. **Note that this set could be extended in the future if needed.  E.g. a set of test-only dependencies might be added**
+- **N Dependency Expression Files** - Places where dependencies are expressed.  These are well known locations and formats.  The version expressions are listed below.
+  - Version Props File – The props file, typically for dependencies acquired via nuget and msbuild
+  - NativeToolsVersions.txt - Native toolsets acquired outside of msbuild
   - Global Json – Global json file (e.g. CLI SDK version)
   - Arcade Version – MSBuild SDK in the global.json file and associated checked in scripting.
 
@@ -77,7 +78,7 @@ The dependency description is comprised of two types of assets:
   - Build Tools Version – Build tools version text file and associated version in the props file
   - Dot Net CLI Version – CLI version text file and other associated versions.
 
-  The expression file corresponding to a dependency is implied by the dependency name.  Build or product dependencies can have well known names, implying an expression in a specific form (e.g. global.json + repository scripting), or any other generic name, implying the version is expressed in the version.props file in the repository.  Examples:
+  The expression file corresponding to a dependency is implied by the dependency name.  Toolset or Product dependencies can have well known names, implying an expression in a specific form (e.g. global.json + repository scripting), or any other generic name, implying the version is expressed in the version.props file in the repository.  Examples:
     - AspNetCoreAllVersion - Product input of aspnet, expressed in version.props
     - DotNetSDKVersion – CLI SDK, expressed in global.json
     - ArcadeSDKVersion – Arcade SDK, expressed global.json and repository scripting
@@ -108,8 +109,8 @@ The dependency description is comprised of two types of assets:
         </Dependency>
     </ProductDependencies>
 
-    <!-- Elements contains all build dependencies -->
-    <BuildDependencies>
+    <!-- Elements contains all toolset dependencies -->
+    <ToolsetDependencies>
         <-- Non well-known dependency.  Expressed in Version.props -->
         <Dependency Name="DependencyB" Version="2.100.3-1234">
             <SourceUri>https://github.com/dotnet/atoolsrepo</SourceUri>
@@ -126,7 +127,7 @@ The dependency description is comprised of two types of assets:
             <SourceUri>https://github.com/dotnet/arcade</SourceUri>
             <SourceSha>132412342341234234</SourceSha>
         </Dependency>
-    </BuildDependencies>
+    </ToolsetDependencies>
 </Dependencies>
 ```
 
