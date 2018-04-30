@@ -101,6 +101,7 @@ steps:
     displayName: Send Build End Telemetry
     env:
       Helix_JobToken: $(Helix_JobToken)
+      Helix_WorkItemId: $(Helix_WorkItemId)
 
   - powershell: |
       if (($env:Agent_JobStatus -eq 'Succeeded') -or ($env:Agent_JobStatus -eq 'PartiallySucceeded')) {
@@ -117,6 +118,7 @@ steps:
     displayName: Send Build End Telemetry
     env:
       Helix_JobToken: $(Helix_JobToken)
+      Helix_WorkItemId: $(Helix_WorkItemId)
 
   # - script: |
   #     dotnet msbuild Helix.proj /t:EndBuildTelemetry
