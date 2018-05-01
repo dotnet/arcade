@@ -9,23 +9,12 @@ while [[ -h "$source" ]]; do
 done
 scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
-while (($# > 0)); do
-  lowerI="$(echo $1 | awk '{print tolower($0)}')"
-  case $lowerI in
-    --error-count)
-      errorCount=$2
-      shift 2
-      ;;
-    --warning-count)
-      warningCount=$2
-      shift 2
-      ;;
-    *)
-      echo "Unknown Arg '$1'"
-      exit 1
-      ;;
-  esac
-done
+if [ "$AGENT_JOBSTATUS" = "Succeeded" ] || [ "$AGENT_JOBSTATUS" = "PartiallySucceeded" ]; then
+  errorCount=0
+else
+  errorCount=1
+fi
+warningCount=0
 
 curlResult=`
 /bin/bash $scriptroot/../curl.sh \

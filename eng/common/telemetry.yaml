@@ -3,39 +3,9 @@ parameters:
   buildSteps: []
 
 steps:
-  # - powershell: |
-  #     ./get-dotnet-cli.ps1
-  #     if ($LASTEXITCODE -ne 0) {
-  #       exit $LASTEXITCODE
-  #     }
-  #   condition: in(variables['Agent.OS'], 'Windows_NT')
-  #   workingDirectory: $(Build.SourcesDirectory)/eng/common
-  #   displayName: Get Dotnet Cli
-
-  # - bash: |
-  #     /bin/bash ./get-dotnet-cli.sh || exit 1
-  #   condition: in(variables['Agent.OS'], 'Linux', 'Darwin')
-  #   workingDirectory: $(Build.SourcesDirectory)/eng/common
-  #   displayName: Get Dotnet Cli
-
-  # - script: |
-  #     dotnet msbuild Helix.proj /t:StartBuildTelemetry
-  #   displayName: Send Build Start Telemetry
-  #   workingDirectory: $(Build.SourcesDirectory)/eng/common
-  #   env:
-  #     AccessToken: $(HelixApiAccessToken)
-  #     ConfigFile: $(Build.SourcesDirectory)/.helix.config
-  #     Source: $(HelixSource)
-  #     Type: $(HelixType)
-  #     Build: $(Build.BuildNumber)
-  #     QueueId: $(Agent.OS)
-  #     Attempt: 1
-  #     BuildUri: https://devdiv.visualstudio.com/DevDiv/_build/index?buildId=$(Build.BuildId)&_a=summary
-  #     Properties: operatingSystem=$(Agent.OS);configuration=$(_BuildConfig)
-
   - bash: |
       /bin/bash ./telemetry/start-job.sh --source "$Source" --type "$Type" --build "$Build" --queue-id "$QueueId" --attempt "$Attempt" -p "operatingSystem=$OperatingSystem" -p "configuration=$Configuration"
-    condition: in(variables['Agent.OS'], 'Linux', 'Darwin')
+    condition: not(in(variables['Agent.OS'], 'Windows_NT'))
     workingDirectory: $(Build.SourcesDirectory)/eng/common
     displayName: Send Job Start Telemetry
     env:
@@ -68,7 +38,7 @@ steps:
 
   - bash: |
       /bin/bash ./telemetry/build/start.sh --build-uri "$BuildUri"
-    condition: in(variables['Agent.OS'], 'Linux', 'Darwin')
+    condition: not(in(variables['Agent.OS'], 'Windows_NT'))
     workingDirectory: $(Build.SourcesDirectory)/eng/common
     displayName: Send Build Start Telemetry
     env:
@@ -90,13 +60,8 @@ steps:
   - ${{ parameters.buildSteps }}
 
   - bash: |
-      if [ "$AGENT_JOBSTATUS" = "Succeeded" ] || [ "$AGENT_JOBSTATUS" = "PartiallySucceeded" ]; then
-        errorCount=0
-      else
-        errorCount=1
-      fi
-      /bin/bash ./telemetry/build/end.sh --error-count $errorCount --warning-count 0
-    condition: in(variables['Agent.OS'], 'Linux', 'Darwin')
+      /bin/bash ./telemetry/build/end.sh
+    condition: not(in(variables['Agent.OS'], 'Windows_NT'))
     workingDirectory: $(Build.SourcesDirectory)/eng/common
     displayName: Send Build End Telemetry
     env:
@@ -104,12 +69,7 @@ steps:
       Helix_WorkItemId: $(Helix_WorkItemId)
 
   - powershell: |
-      if (($env:Agent_JobStatus -eq 'Succeeded') -or ($env:Agent_JobStatus -eq 'PartiallySucceeded')) {
-        $errorCount = 0
-      } else {
-        $errorCount = 1
-      }
-      ./telemetry/build/end.ps1 -ErrorCount $errorCount -WarningCount 0
+      ./telemetry/build/end.ps1
       if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
       }
@@ -119,13 +79,4 @@ steps:
     env:
       Helix_JobToken: $(Helix_JobToken)
       Helix_WorkItemId: $(Helix_WorkItemId)
-
-  # - script: |
-  #     dotnet msbuild Helix.proj /t:EndBuildTelemetry
-  #   displayName: Send Build End Telemetry
-  #   workingDirectory: $(Build.SourcesDirectory)/eng/common
-  #   condition: always()
-  #   env:
-  #     AccessToken: $(HelixApiAccessToken)
-  #     ConfigFile: $(Build.SourcesDirectory)/.helix.config
 
