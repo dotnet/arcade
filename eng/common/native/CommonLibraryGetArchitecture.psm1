@@ -1,3 +1,7 @@
+<#
+  Returns 'x64' on 64 bit machines
+  Returns 'x86' on 32 bit machines
+#>
 function CommonLibraryGetArchitecture {
     $ProcessorArchitecture = $Env:PROCESSOR_ARCHITECTURE
     $ProcessorArchitectureW6432 = $Env:PROCESSOR_ARCHITEW6432

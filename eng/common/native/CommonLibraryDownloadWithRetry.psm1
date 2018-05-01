@@ -19,9 +19,6 @@ Wait time between retry attempts in seconds
 
 .PARAMETER Force
 Overwrite existing file if present
-
-.NOTES
-General notes
 #>
 function CommonLibraryDownloadWithRetry {
     [CmdletBinding(PositionalBinding=$false)]
