@@ -22,7 +22,7 @@ phases:
   - checkout: self
     clean: true
     fetchDepth: 1
-  - template: eng/common/arcade.yaml
+  - template: eng/common/telemetry.yaml
     parameters:
       buildSteps:
       - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
@@ -74,10 +74,11 @@ phases:
     # set _PREVIEW_VSTS_DOCKER_IMAGE to the docker image you want to automatically run in a container
     _PREVIEW_VSTS_DOCKER_IMAGE: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
   queue:
-    name: Hosted Linux Preview
+    name: DotNetCore-Test
     parallel: 2
     demands:
     - agent.os -equals linux
+    - docker -equals 18.03.1-ce
     matrix:
       Build_Debug:
         _BuildConfig: Debug
@@ -87,7 +88,7 @@ phases:
   - checkout: self
     clean: true
     fetchDepth: 1
-  - template: eng/common/arcade.yaml
+  - template: eng/common/telemetry.yaml
     parameters:
       buildSteps:
       - script: eng/common/cibuild.sh --configuration $(_BuildConfig) --preparemachine

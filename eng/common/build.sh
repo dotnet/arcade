@@ -138,7 +138,68 @@ function ReadJson {
 }
 
 function InstallDotNetCli {
-  . "$scriptroot/get-dotnet-cli.sh"
+  local dotnetinstallverbosity=''
+
+  ReadJson "$globaljsonfile" "version"
+  local dotnetcliversion="$readjsonvalue"
+
+  if [[ -z "$DOTNET_INSTALL_DIR" ]]; then
+    export DOTNET_INSTALL_DIR="$reporoot/artifacts/.dotnet/$dotnetcliversion"
+  fi
+
+  local dotnetroot="$DOTNET_INSTALL_DIR"
+  local dotnetinstallscript="$dotnetroot/dotnet-install.sh"
+
+  if [[ ! -a "$dotnetinstallscript" ]]; then
+    mkdir -p "$dotnetroot"
+
+    # Use curl if available, otherwise use wget
+    if command -v curl > /dev/null; then
+      curl "https://dot.net/v1/dotnet-install.sh" -sSL --retry 10 --create-dirs -o "$dotnetinstallscript"
+    else
+      wget -q -O "$dotnetinstallscript" "https://dot.net/v1/dotnet-install.sh"
+    fi
+  fi
+
+  if [[ "$(echo $verbosity | awk '{print tolower($0)}')" == 'diagnostic' ]]; then
+    dotnetinstallverbosity="--verbose"
+  fi
+
+  # Install a stage 0
+  local sdkinstalldir="$dotnetroot/sdk/$dotnetcliversion"
+
+  if [[ ! -d "$sdkinstalldir" ]]; then
+    bash "$dotnetinstallscript" --version $dotnetcliversion $dotnetinstallverbosity
+    local lastexitcode=$?
+
+    if [[ $lastexitcode != 0 ]]; then
+      echo "Failed to install stage0"
+      ExitWithExitCode $lastexitcode
+    fi
+  fi
+
+  # Install 1.0 shared framework
+  local netcoreappversion='1.0.5'
+  local netcoreapp10dir="$dotnetroot/shared/Microsoft.NETCore.App/$netcoreappversion"
+
+  if [[ ! -d "$netcoreapp10dir" ]]; then
+    bash "$dotnetinstallscript" --channel "Preview" --version $netcoreappversion --shared-runtime $dotnetinstallverbosity
+    lastexitcode=$?
+
+    if [[ $lastexitcode != 0 ]]; then
+      echo "Failed to install 1.0 shared framework"
+      ExitWithExitCode $lastexitcode
+    fi
+  fi
+
+  # Put the stage 0 on the path
+  export PATH="$dotnetroot:"$PATH""
+
+  # Disable first run since we want to control all package sources
+  export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+
+  # Don't resolve runtime, shared framework, or SDK from other locations
+  export DOTNET_MULTILEVEL_LOOKUP=0
 }
 
 # This is a temporary workaround for https://github.com/Microsoft/msbuild/issues/2095 and

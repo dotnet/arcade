@@ -63,9 +63,15 @@ function CreateDirectory([string[]] $path) {
 }
 
 function InstallDotNetCli {
-  & "$PSScriptRoot\get-dotnet-cli.ps1"
-  if ($LASTEXITCODE -ne 0 -or -not $?) {
-    exit $LASTEXITCODE
+  $installScript = "$DotNetRoot\dotnet-install.ps1"
+  if (!(Test-Path $installScript)) { 
+    CreateDirectory $DotNetRoot
+    Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile $installScript
+  }
+  
+  & $installScript -Version $GlobalJson.sdk.version -InstallDir $DotNetRoot
+  if ($lastExitCode -ne 0) {
+    throw "Failed to install dotnet cli (exit code '$lastExitCode')."
   }
 }
 
