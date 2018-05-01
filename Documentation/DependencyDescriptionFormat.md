@@ -67,7 +67,7 @@ The dependency description is comprised of two types of assets:
   - Version – Version of dependency
   - URL – URL of repository (typically) that produced the asset.
   - SHA – Git SHA at which the dependency was produced
-  - Dependency Class – Either 'Toolset' or 'Product'.  'Toolset' dependencies are those that are used to produce the product, 'Product' dependencies are effectively everything else.  It is useful to differentiate between these so that we know how we are building (e.g. what CLI SDKs are in use across all repositories).  Defined another way, two successive builds of a Toolset dependency on the same sha could produce two different tools (version-wise) with the same functionality.  Using either of thse different build dependencies would produce no bit difference in the output product. **Note that this set could be extended in the future if needed.  E.g. a set of test-only dependencies might be added**
+  - Dependency Class – Either 'Toolset' or 'Product'.  'Toolset' dependencies are those that are used to produce the product, 'Product' dependencies are effectively everything else.  It is useful to differentiate between these so that we know how we are building (e.g. what CLI SDKs are in use across all repositories).  Defined another way, two successive builds of a Toolset dependency on the same sha could produce two different tools (version-wise) with the same functionality.  Using either of the different toolset dependencies would produce no bit difference in the output product. **Note that this set could be extended in the future if needed.  E.g. a set of test-only dependencies might be added**
 - **N Dependency Expression Files** - Places where dependencies are expressed.  These are well known locations and formats.  The version expressions are listed below.
   - Version Props File – The props file, typically for dependencies acquired via nuget and msbuild
   - NativeToolsVersions.txt - Native toolsets acquired outside of msbuild
@@ -96,16 +96,16 @@ The dependency description is comprised of two types of assets:
     <ProductDependencies>
         <-- All product dependencies are contained in Version.Props -->
         <Dependency Name="DependencyA" Version="1.2.3-45">
-            <SourceUri>https://github.com/dotnet/arepo</SourceUri>
-            <SourceSha>23498123740982349182340981234</SourceSha>
+            <Uri>https://github.com/dotnet/arepo</Uri>
+            <Sha>23498123740982349182340981234</Sha>
         </Dependency>
         <Dependency Name="DependencyB" Version="1.2.3-45">
-            <SourceUri>https://github.com/dotnet/arepo</SourceUri>
-            <SourceSha>13242134123412341465</SourceSha>
+            <Uri>https://github.com/dotnet/arepo</Uri>
+            <Sha>13242134123412341465</Sha>
         </Dependency>
         <Dependency Name="DependencyC" Version="1.2.3-45">
-            <SourceUri>https://github.com/dotnet/arepo</SourceUri>
-            <SourceSha>789789789789789789789789</SourceSha>
+            <Uri>https://github.com/dotnet/arepo</Uri>
+            <Sha>789789789789789789789789</Sha>
         </Dependency>
     </ProductDependencies>
 
@@ -113,19 +113,19 @@ The dependency description is comprised of two types of assets:
     <ToolsetDependencies>
         <-- Non well-known dependency.  Expressed in Version.props -->
         <Dependency Name="DependencyB" Version="2.100.3-1234">
-            <SourceUri>https://github.com/dotnet/atoolsrepo</SourceUri>
-            <SourceSha>203409823586523490823498234</SourceSha>
+            <Uri>https://github.com/dotnet/atoolsrepo</Uri>
+            <Sha>203409823586523490823498234</Sha>
             <Expression>VersionProps</Expression>
         </Dependency>
         <-- Well-known dependency.  Expressed in global.json -->
         <Dependency Name="DotNetSdkVersion" Version="2.200.0">
-            <SourceUri>https://github.com/dotnet/cli</SourceUri>
-            <SourceSha>1234123412341234</SourceSha>
+            <Uri>https://github.com/dotnet/cli</Uri>
+            <Sha>1234123412341234</Sha>
         </Dependency>
         <-- Well-known dependency.  Expressed in global.json -->
         <Dependency Name="Arcade.Sdk" Version="1.0.0">
-            <SourceUri>https://github.com/dotnet/arcade</SourceUri>
-            <SourceSha>132412342341234234</SourceSha>
+            <Uri>https://github.com/dotnet/arcade</Uri>
+            <Sha>132412342341234234</Sha>
         </Dependency>
     </ToolsetDependencies>
 </Dependencies>
