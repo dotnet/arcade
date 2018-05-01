@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="Versioning">
+
+    <ItemGroup Condition="'@(FormatStrings)'==''">
+      <FormatStrings Include="dev">
+        <Format>$(major).$(minor).$(patch)-$(prerelease).$(shortdate).$(builds)+$(shortsha)</Format>
+      </FormatStrings>
+
+      <FormatStrings Include="stable">
+        <Format>$(major).$(minor).$(patch)-$(prerelease)</Format>
+      </FormatStrings>
+
+      <FormatStrings Include="final">
+        <Format>$(major).$(minor).$(patch)</Format>
+      </FormatStrings>
+    </ItemGroup>
+    
+    <PropertyGroup>
+      <VersionString Condition="'%(FormatStrings.Identity)'=='$(FormatName)'">%(FormatStrings.Format)</VersionString>
+      
+      <VersioningError Condition="'$(VersionString)'!=''">false</VersioningError>
+      <VersioningError Condition="'$(VersionString)'==''">true</VersioningError>
+    </PropertyGroup>
+    
+  </Target>
+
+</Project>
