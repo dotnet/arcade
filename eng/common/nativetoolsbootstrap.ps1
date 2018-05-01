@@ -44,6 +44,7 @@ Import-Module -Name (Join-Path $PSScriptRoot "native\CommonLibraryGetTempPath.ps
 try {
     # Define verbose switch if undefined
     $Verbose = $VerbosePreference -Eq "Continue"
+
     $RepoRoot = Convert-Path -Path (Join-Path $PSScriptRoot "..\..\")
     $EngCommonBaseDir = Join-Path $PSScriptRoot "native\"
     $ArtifactsNativeBaseDir = Join-Path $RepoRoot "artifacts\native\"

@@ -38,10 +38,8 @@ function CommonLibraryDownloadAndExtract {
         [int] $DownloadRetries = 5,
         [int] $RetryWaitTimeInSeconds = 30
     )
-    # If Verbose switch is undefined, explicitly set it to false
-    if (-Not (Get-Variable 'Verbose' -ErrorAction 'SilentlyContinue')) {
-        $Verbose = $False
-    }
+    # Define verbose switch if undefined
+    $Verbose = $VerbosePreference -Eq "Continue"
     
     $TempDir = CommonLibraryGetTempPath
     $ToolFilename = Split-Path $Url -leaf
