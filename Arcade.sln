@@ -18,11 +18,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.Clie
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.Sdk", "src\Microsoft.DotNet.Helix\Sdk\Microsoft.DotNet.Helix.Sdk.csproj", "{86DC4DC7-DCEE-44AC-A7E3-B6D5A909422C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.SemVer", "src\Microsoft.DotNet.Build.Tasks.SemVer\Microsoft.DotNet.Build.Tasks.SemVer.csproj", "{7F6296CD-A60F-4B7C-BBBE-DCB936441680}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Versioning", "src\Microsoft.DotNet.Build.Tasks.Versioning\Microsoft.DotNet.Build.Tasks.Versioning.csproj", "{7F6296CD-A60F-4B7C-BBBE-DCB936441680}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.SemVer.Tests", "test\Microsoft.DotNet.Build.Tasks.SemVer.Tests\Microsoft.DotNet.Build.Tasks.SemVer.Tests.csproj", "{116DC73F-BA59-4CE2-A15C-AA708952156B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Versioning.Tests", "test\Microsoft.DotNet.Build.Tasks.Versioning.Tests\Microsoft.DotNet.Build.Tasks.Versioning.Tests.csproj", "{116DC73F-BA59-4CE2-A15C-AA708952156B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.TestsUtil", "test\Microsoft.DotNet.TestsUtil\Microsoft.DotNet.TestsUtil.csproj", "{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.TestsUtil", "test\Microsoft.DotNet.TestsUtil\Microsoft.DotNet.TestsUtil.csproj", "{C40E4CDD-1E98-412E-9C32-708B4D9D15DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

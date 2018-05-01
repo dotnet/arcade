@@ -3,18 +3,17 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Microsoft.DotNet.Build.Tasks.SemVer
+namespace Microsoft.DotNet.Build.Tasks.Versioning
 {
-    public class SemVer : Task
+    public class Versioning : Task
     {
         private Dictionary<string, string> formats = new Dictionary<string, string> {
                                     {"dev", "{major}.{minor}.{patch}-{prerelease}.{shortdate}.{builds}+{shortsha}"},
-                                    {"stable", "{major}.{minor}.{patch}-{prerelease}"},
+                                    {"stable-prerelease", "{major}.{minor}.{patch}-{prerelease}"},
                                     {"final", "{major}.{minor}.{patch}"}};
 
         [Required]
@@ -40,6 +39,12 @@ namespace Microsoft.DotNet.Build.Tasks.SemVer
                 VersionString = formats[VersionString];
             }
 
+            if (ValidateFormatString(VersionString) == false)
+            {
+                Log.LogError("Invalid format string or parameters. All parameters referenced in the format string must be informed.");
+                return false;
+            }
+
             if ((VersionString.Contains("{major}") && Major == 0) ||
                 (VersionString.Contains("{prerelease}") && String.IsNullOrEmpty(Prerelease)) ||
                 (VersionString.Contains("{shortdate}") && String.IsNullOrEmpty(ShortDate)) ||
@@ -58,6 +63,25 @@ namespace Microsoft.DotNet.Build.Tasks.SemVer
             VersionString = VersionString.Replace("{shortsha}", ShortSHA);
 
             return true;
+        }
+
+        private bool ValidateFormatString(String VersionString)
+        {
+            var status = 0;
+            var valid = false;
+
+            foreach (var c in VersionString)
+            {
+                if (c == '{') status++;
+                else if (c == '}') status--;
+
+                valid = valid || (status != 0);
+
+                if (status < 0) return false;
+                if (status > 1) return false;
+            }
+
+            return valid && (status == 0);
         }
     }
 }
