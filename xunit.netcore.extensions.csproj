@@ -20,6 +20,7 @@
     <Compile Include="Attributes\ActiveIssueAttribute.cs" />
     <Compile Include="Attributes\PlatformSpecificAttribute.cs" />
     <Compile Include="Attributes\SkipOnTargetFrameworkAttribute.cs" />
+    <Compile Include="Attributes\TestCategoryAttribute.cs" />
     <Compile Include="Discoverers\ConditionalFactDiscoverer.cs" />
     <Compile Include="Discoverers\ConditionalTestDiscoverer.cs" />
     <Compile Include="Discoverers\ConditionalTheoryDiscoverer.cs" />
@@ -28,6 +29,7 @@
     <Compile Include="Discoverers\OuterLoopTestsDiscoverer.cs" />
     <Compile Include="Discoverers\PlatformSpecificDiscoverer.cs" />
     <Compile Include="Discoverers\SkipOnTargetFrameworkDiscoverer.cs" />
+    <Compile Include="Discoverers\TestCategoryDiscoverer.cs" />
     <Compile Include="SkippedTestCase.cs" />
     <Compile Include="TargetFrameworkMonikers.cs" />
     <Compile Include="TestPlatforms.cs" />
