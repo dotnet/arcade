@@ -10,7 +10,7 @@ MAJOR, MINOR, and PATCH versions are rigid in their requirements.  Please refer 
 
 ## Stable vs. Date-Varying Build Versioning
 
-In the context of the .NET Core product, a stable build version number is stable if successive builds produce produce the same build version numbers at the same input sha. Historically, .NET Core has had repositories that implement stable versioning, via build numbers that increment based on commit depth, as well as repositories that base their build number off of the date and number of builds prior on the day (date based versioning)
+In the context of the .NET Core product, a stable build version number is stable if successive builds produce the same build version numbers at the same input sha. Historically, .NET Core has had repositories that implement stable versioning, via build numbers that increment based on commit depth, as well as repositories that base their build number off of the date and number of builds prior on the day (date based versioning)
 
 Both types of versioning have advantages and disadvantages:
 ### Stable Versioning
@@ -29,6 +29,7 @@ Both types of versioning have advantages and disadvantages:
   - Telemetry systems must understand reruns of the same build.
 - Most of the .NET Core builds aren't bit-for-bit identical at the same commit given the same inputs.  If they were, then a partial-respin can gracefully handle dealing with overwrites.
 - Stable version doesn't encode inputs (e.g. checked build vs. release build).  This can make it tricky to run 'non-standard' build scenarios if they interact with external systems.
+- Generating the same package version in multiple builds with different outputs bits means that package caches must be cleared.
 
 ### Date-Varying Versioning
 **PROS:**
@@ -45,6 +46,13 @@ Both types of versioning have advantages and disadvantages:
 
 Stable version is more hassle than it's worth, though having the sha in the output package version is also useful.  We should combine a sha in the build metadata with the build date+revision (short data + number of builds so far today) to generate a non-stable, unique, identifiable build.
 
+## Versioning States
+
+Versioning comes in 3 states, depending on the point in the product cycle:
+- **Daily/Dev** - Versions should include all fields - pre-release tag, shortdate, number of builds, etc.
+- **Stable PreRelease** - Versions should include MAJOR, MINOR, PATCH, and PRERELEASE tag but no SHORTDATE, BUILDS, or SHORTSHA
+- **Stable Final** - Versions should include MAJOR, MINOR, PATCH
+
 ## Versioning Details
 
 We will use the following form:
@@ -58,7 +66,18 @@ Where:
 - **MINOR** - Minor version
 - **PATCH** - Patch version
 - **PRERELEASE** - alphanumeric prerelease version like `preview1`, `preview3` or `beta2`
-- **SHORTDATE** - shortened date (5 digits)
+- **SHORTDATE** - Generated as a 5 digit string based on a comparison date:
+```
+  generateShortDate(seedDate) {
+    if (comparisonDate == "") {
+      comparisonDate = 1996/04/01 (UTC)
+    }
+    if (seeDate < comparisonDate) { error }
+    months = (seedDate.Year-comparisonDate.Year)*12 + (seedDate.Month - comparisonDate.Month)
+    days = seedDate.Day
+    return (3 digits padded of months) + (2 digits padded of days)
+  }
+```
 - **BUILDS** - Number of builds already started today, starting at 0.  No leading 0s
 - **SHORTSHA** - shortened sha
 
