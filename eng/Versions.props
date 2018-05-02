@@ -2,12 +2,13 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <!-- This repo version -->
-    <VersionBase>1.0.0</VersionBase>
+    <VersionPrefix>1.0.0</VersionPrefix>
     <PreReleaseVersionLabel>prerelease</PreReleaseVersionLabel>
 
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
     <UsingToolMicrosoftNetCompilers>false</UsingToolMicrosoftNetCompilers>
+    <UsingToolNetFrameworkReferenceAssemblies>true</UsingToolNetFrameworkReferenceAssemblies>
 
     <!-- Libs -->
     <MicrosoftBuildTasksCoreVersion>14.3.0</MicrosoftBuildTasksCoreVersion>
@@ -19,6 +20,9 @@
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <SleetLibVersion>2.2.24</SleetLibVersion>
+    <MicrosoftRestClientRuntimeVersion>3.0.3</MicrosoftRestClientRuntimeVersion>
+    <MicrosoftBuildFrameworkVersion>15.1.548</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>15.1.548</MicrosoftBuildUtilitiesCoreVersion>
   </PropertyGroup>
 
   <PropertyGroup>

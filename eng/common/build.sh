@@ -18,15 +18,15 @@ configuration='Debug'
 help=false
 log=false
 pack=false
-prepareMachine=false
+preparemachine=false
 rebuild=false
 restore=false
 sign=false
-solution=''
+projects=''
 test=false
 verbosity='minimal'
 properties=''
-reporoot="$scriptroot/.."
+reporoot="$scriptroot/../.."
 artifactsdir="$reporoot/artifacts"
 artifactsconfigurationdir="$artifactsdir/$configuration"
 logdir="$artifactsconfigurationdir/log"
@@ -68,10 +68,10 @@ while (($# > 0)); do
       echo "  --pack           Package build outputs into NuGet packages and Willow components"
       echo ""
       echo "Advanced settings:"
-      echo "  --solution <value>     Path to solution to build"
+      echo "  --projects <value>     Semi-colon delimited list of sln/proj's to build. Globbing is supported (*.sln)"
       echo "  --ci           Set when running on CI server"
       echo "  --log          Enable logging (by default on CI)"
-      echo "  --prepareMachine     Prepare machine for CI run"
+      echo "  --preparemachine     Prepare machine for CI run"
       echo ""
       echo "Command line arguments not listed above are passed through to MSBuild."
       exit 0
@@ -84,8 +84,8 @@ while (($# > 0)); do
       pack=true
       shift 1
       ;;
-    --prepareMachine)
-      prepareMachine=true
+    --preparemachine)
+      preparemachine=true
       shift 1
       ;;
     --rebuild)
@@ -100,8 +100,8 @@ while (($# > 0)); do
       sign=true
       shift 1
       ;;
-    --solution)
-      solution=$2
+    --projects)
+      projects=$2
       shift 2
       ;;
     --test)
@@ -237,7 +237,7 @@ function InstallToolset {
 function Build {
   InstallDotNetCli
 
-  if [[ "$prepareMachine" == true ]]; then
+  if [[ "$preparemachine" == true ]]; then
     mkdir -p "$nugetpackageroot"
     dotnet nuget locals all --clear
     local lastexitcode=$?
@@ -260,12 +260,12 @@ function Build {
     logcmd="/bl:$logdir/Build.binlog"
   fi
 
-  if [[ -z $solution ]]; then
-    solution="$reporoot/Arcade.sln"
+  if [[ -z $projects ]]; then
+    projects="$reporoot/*.sln"
   fi
 
   dotnet msbuild $toolsetbuildproj /m /nologo /clp:Summary /warnaserror \
-    /v:$verbosity $logcmd /p:Configuration=$configuration /p:SolutionPath=$solution \
+    /v:$verbosity $logcmd /p:Configuration=$configuration /p:RepoRoot=$reporoot /p:Projects=$projects \
     /p:Restore=$restore /p:Build=$build /p:Rebuild=$rebuild /p:Deploy=$deploy /p:Test=$test /p:Sign=$sign /p:Pack=$pack /p:CIBuild=$ci \
     "/p:RestorePackagesPath=$nugetpackageroot/" "/p:NuGetPackageRoot=$nugetpackageroot/" \
     $properties
@@ -278,7 +278,7 @@ function Build {
 }
 
 function ExitWithExitCode {
-  if [[ "$ci" == true && "$prepareMachine" == true ]]; then
+  if [[ "$ci" == true && "$preparemachine" == true ]]; then
     StopProcesses
   fi
   exit $1

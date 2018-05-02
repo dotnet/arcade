@@ -1,7 +1,7 @@
 [CmdletBinding(PositionalBinding=$false)]
 Param(
   [string] $configuration = "Debug",
-  [string] $solution = "",
+  [string] $projects = "",
   [string] $verbosity = "minimal",
   [switch] $restore,
   [switch] $deployDeps,
@@ -42,7 +42,7 @@ function Print-Usage() {
     Write-Host ""
 
     Write-Host "Advanced settings:"
-    Write-Host "  -solution <value>       Path to solution to build"
+    Write-Host "  -projects <value>       Semi-colon delimited list of sln/proj's to build. Globbing is supported (*.sln)"
     Write-Host "  -ci                     Set when running on CI server"
     Write-Host "  -log                    Enable logging (by default on CI)"
     Write-Host "  -prepareMachine         Prepare machine for CI run"
@@ -112,7 +112,7 @@ function Build {
     $logCmd = ""
   }
 
-  & $DotNetExe msbuild $ToolsetBuildProj /m /nologo /clp:Summary /warnaserror /v:$verbosity $logCmd /p:Configuration=$configuration /p:SolutionPath=$solution /p:Restore=$restore /p:DeployDeps=$deployDeps /p:Build=$build /p:Rebuild=$rebuild /p:Deploy=$deploy /p:Test=$test /p:IntegrationTest=$integrationTest /p:Sign=$sign /p:Pack=$pack /p:CIBuild=$ci /p:RestorePackagesPath=$NuGetPackageRoot /p:NuGetPackageRoot=$NuGetPackageRoot $properties
+  & $DotNetExe msbuild $ToolsetBuildProj /m /nologo /clp:Summary /warnaserror /v:$verbosity $logCmd /p:Configuration=$configuration /p:RepoRoot=$RepoRoot /p:Projects=$projects /p:Restore=$restore /p:DeployDeps=$deployDeps /p:Build=$build /p:Rebuild=$rebuild /p:Deploy=$deploy /p:Test=$test /p:IntegrationTest=$integrationTest /p:Sign=$sign /p:Pack=$pack /p:CIBuild=$ci /p:RestorePackagesPath=$NuGetPackageRoot /p:NuGetPackageRoot=$NuGetPackageRoot $properties
 }
 
 function Stop-Processes() {
@@ -122,7 +122,7 @@ function Stop-Processes() {
 }
 
 try {
-  $RepoRoot = Join-Path $PSScriptRoot "..\"
+  $RepoRoot = Join-Path $PSScriptRoot "..\..\"
   $DotNetRoot = Join-Path $RepoRoot ".\.dotnet"
   $DotNetExe = Join-Path $DotNetRoot "dotnet.exe"
   $ArtifactsDir = Join-Path $RepoRoot "artifacts"
@@ -136,8 +136,8 @@ try {
     $OfficialBuild = $true
   }
 
-  if ($solution -eq "") {
-    $solution = @(Get-ChildItem(Join-Path $RepoRoot "*.sln"))[0]
+  if ($projects -eq "") {
+    $projects = Join-Path $RepoRoot "**\*.sln"
   }
 
   if ($env:NUGET_PACKAGES -ne $null) {

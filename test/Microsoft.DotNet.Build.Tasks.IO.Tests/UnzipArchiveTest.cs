@@ -191,7 +191,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
 
         public void Dispose()
         {
-            Directory.Delete(_tempDir, recursive: true);
+            TestHelpers.DeleteDirectory(_tempDir);
         }
     }
 }
