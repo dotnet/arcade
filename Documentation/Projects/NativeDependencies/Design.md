@@ -4,9 +4,9 @@ This document is intended to provide insight into the design of native toolset b
 
 ## Overview
 
-Arcade will provide a set of common installation libraries which will be bootstrapped by participating repos from Azure blob storage.  The common libraries will be used to acquire "installers" for native components.
+Arcade will provide a set of common installation libraries which will be provided to partipating repos via Maestro.  The common libraries will be used to acquire "installers" for native components.
 
-Repo's will be provided a local bootstrapping file (both an ps1 and an sh file which they can also acquire from the Arcade repo).  The bootstrapper acquires the common libraries which are used to install native toolset dependencies.
+Repo's will be provided a local bootstrapping file (both an ps1 and an sh file).  The bootstrapper uses the common libraries to install native toolset dependencies.
 
 ## Definitions
 
@@ -20,9 +20,23 @@ Shim - wrapper script which is deployed to a platform that is referenced to exec
 
 Common Library - set of libraries available for native asset deployment to a platform
 
-## Common libraries
+## Arcade toolset libraries
 
-The common libraries will be used to acquire individual [native tool installers](#native-tool-installers).  They will be written in commonly supported formats (ps1 or bash).  When a repo "bootstraps" itself, it downloads and extracts a version of the common libraries from blob storage.  These common libraries will be used to determine what native component needs to be installed, retrieve the installer / component from blob storage, and install the component.
+Arcade will provide a set of libraries which will be used to install native tools.  These libraries will include [entry point scripts](#entry-point-scripts), the [common libraries](#common-library-scripts), and [tool-specific install scripts](#native-tool-installers). **The Arcade toolset libraries will be distributed via Maestro updates.**
+
+### Entry-point scripts
+
+The entry-point scripts are the scripts which repos will use to bootstrap their defined native toolset dependencies.  The entry-point scripts will read the repo's `NativeToolsVersions.txt` file to determine which tool(s) and version to install.  Only one version of each tool should be defined, though there is not (yet) logic to detect multiple tool versions being installed (currently if this occurs, last one installed will win).
+
+Entry-point scripts are:
+
+- nativetoolsbootstrap.cmd
+
+- nativetoolsbootstrap.sh
+
+### Common libraries
+
+The common libraries will be used to determine which individual [native tool installers](#native-tool-installers) are required by the repo and will execute the installers.  They will be written in commonly supported formats (ps1 or bash).
 
 ### Common library scripts
 
@@ -31,45 +45,35 @@ Development will show which common libraries will actually be required, but some
 - Parse dependency requirements
 - Install Xcopy Toolset
 - Generate shims
-- TBD
+- Download a file
+- Extract an archive
+- Determine current architecture
+- Determine current OS
 
-## Native tool installers
+### Native tool installers
 
-The Arcade repo will define the installers for each supported native tool.  These installers will be published to Azure blob storage in a versioned location.  The native tool installer will define how to install a tool locally (from blob storage).  Certain, common install scenarios (xcopy deployable) may use a common library to perform the install.
+The Arcade repo will define the installers for each supported native tool.  The native tool installer will define how to install a tool locally (from blob storage).  Certain, common install scenarios (xcopy deployable) may use a common library to perform the install.  The install scripts will (initially) be generic install scripts (per tool) used to install any version of the native asset which has been published to Azure storage.  If tool install formats noticeably change from version to version, we may need to adjust the install scripts accordingly (while maintaining backward compatability).
+
+#### shims
+
+Most [native tools](#native-tools-installers) will need to provide a "shim" via the common library scripts.  "Shims" are used to execute the native toolset.  Since there is no enforced structure on the file layout for a native asset, shims bridge the gap so that we have a single well-known entry point that can be used for our native toolset.  Having shims allows us to put all of them in a single folder (in a given repo) so that we can use them to access the tools rather than managing path access to every known toolset.
+
+It is possible that a native toolset will require more than one shim.
 
 ## Azure Blob Storage Format
 
-Note: naming of scripts / folders / etc... may change
-
-Native toolset assets will be placed in an Azure blob storage flat file structure.  Installers (common libraries, individual native tool installers), will be published from the Arcade repo into the "installers" folder.
+Native toolset assets will be placed in an Azure blob storage flat file structure.
 
 ## Blob storage layout
 
 ```Text
 \nativeassets
   - [flat file drop of zips, tarballs, etc...]
-\installers
-  \[version] # semver2 format
-    -commonlibrary-[version].zip
-    -commonlibrary-[version].tar
-    -install-[tool name]-[tool version].[extension] # installer
 ```
 
 ### nativeassets
 
-The `nativeassets` folder is a flat file dump of all dependencies.  This is assuming that the tools are distributed with versioned filenames.  These are zips / tarballs / etc... provided by a tool publisher which we have republished into Azure blob storage.
-
-### installers
-
-The `installers` folder is the common entry point where the common libraries used to acquire toolsets and the native tool specifc installers are located.  The "installers" define how to acquire the corresponding tool (it may use common libraries for some install operations).
-
-The "installer" is responsible for downloading the native asset and laying it out in the folder specified.
-
-### shims
-
-"Shims" are used to execute the native toolset.  Since there is no enforced structure on the file layout for a native asset, shims bridge the gap so that we have a single well-known entry point that can be used for our native toolset.  Having shims allows us to put all of them in a single folder (in a given repo) so that we can use them to access the tools rather than managing path access to every known toolset.
-
-It is possible that a native toolset will require more than one shim.
+The `nativeassets` folder is a flat file dump of all dependencies.  This is assuming that the tools are distributed with versioned filenames.  These are zips / tarballs / etc... provided by a tool publisher which we have republished into Azure blob storage. It is the current hope, that we do not have to repackage the assets to include additional metadata that would make them different from the originally published asset.
 
 ## Example - Azure blob storage container
 
@@ -93,21 +97,21 @@ It is possible that a native toolset will require more than one shim.
 
 **How will we handle installers if there are distro specific requirements?**
 
-This will likely come up very quickly and deserves consideration.  I have a couple of ideas, but haven't settled on anything as this isn't yet a specific requirement.
+This will likely come up very quickly and deserves consideration.  The current plan is to allow each installer to handle this as needed.
 
 **How do you determine which version of the common libraries / installers to use?**
 
-We'll define the native toolset version in global.json
+Maestro will provide updates to the scripts.
 
 **How do you determine which native tools to install?**
 
-Implementation detail that is still TBD.  Parsable text file would be simplest..
+The current format is a parsable text file
 
 Example:
 
 ```Text
-CMake 3.11.1
-Python 3.6.5
+CMake=3.11.1
+Python=3.6.5
 ```
 
 **Why is each native dependency required to have an "installer", why isn't the local repo handling unzipping and laying out the assets?**
