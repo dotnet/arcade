@@ -15,10 +15,8 @@ Prerelease      | string      | Prerelease label. E.g. "beta", "preview", etc.
 ShortDate       | string      | Date to be used in the version string.
 Builds          | string      | Number of builds for current date.
 ShortSha        | string      | SHA of the repo last commit.
-
 FormatName      | string      | The name of the format string you want to use. Defaults are "dev", "stable" and "final".
 FormatStrings   | ItemGroup   | Your custom format strings.
-
 VersioningError | boolean     | **Output** Indicate whether an error happened.
 VersionString   | string      | **Output** Version string produced.
 
