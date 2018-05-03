@@ -85,12 +85,6 @@ The `nativeassets` folder is a flat file dump of all dependencies.  This is assu
   -cmake-3.11.1-win64-x64.zip
   -python-3.6.5-embed-amd64.zip
   -python-3.7.0b3-embed-win32.zip
-\installers
-  \1.0.0-preview1.08530.0+asdf34234
-    -commonlibrary-1.0.0-preview1.08530.0+asdf34234.zip
-    -commonlibrary-1.0.0-preview1.08530.0+asdf34234.sh
-    -install-cmake-3.10.3.ps1
-    -install-cmake-3.10.3.sh
 ```
 
 ## Questions
