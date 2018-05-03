@@ -21,6 +21,9 @@ Total number of retry attempts
 .PARAMETER RetryWaitTimeInSeconds
 Wait time between retry attempts in seconds
 
+.PARAMETER ToolsVersionsFile
+File path to tools versions file
+
 .NOTES
 #>
 [CmdletBinding(PositionalBinding=$false)]
@@ -29,7 +32,8 @@ Param (
     [switch] $Clean = $False,
     [switch] $Force = $False,
     [int] $DownloadRetries = 5,
-    [int] $RetryWaitTimeInSeconds = 30
+    [int] $RetryWaitTimeInSeconds = 30,
+    [string] $ToolsVersionsFile = "$PSScriptRoot\..\..\eng\NativeToolsVersions.txt"
 )
 
 Set-StrictMode -version 2.0
@@ -63,13 +67,12 @@ try {
     }
 
     # Process tools list
-    $ToolsForInstallFile = Join-Path $RepoRoot "eng\NativeToolsVersions.txt"
-    Write-Host "Processing $ToolsForInstallFile"
-    If (-Not (Test-Path $ToolsForInstallFile)) {
-        Write-Host "No native tool dependencies are defined in '$ToolsForInstallFile'"
+    Write-Host "Processing $ToolsVersionsFile"
+    If (-Not (Test-Path $ToolsVersionsFile)) {
+        Write-Host "No native tool dependencies are defined in '$ToolsVersionsFile'"
         exit 0
     }
-    $ToolsList = ((Get-Content $ToolsForInstallFile) -replace ',','=') -join "`n" | ConvertFrom-StringData
+    $ToolsList = ((Get-Content $ToolsVersionsFile) -replace ',','=') -join "`n" | ConvertFrom-StringData
 
     Write-Verbose "Required native tools:"
     $ToolsList.GetEnumerator() | ForEach-Object {
