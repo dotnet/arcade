@@ -175,7 +175,7 @@ function New-ScriptShim {
         [Parameter(Mandatory=$True)]
         [string] $ShimPath,
         [Parameter(Mandatory=$True)]
-        [string] $AssemblyPath,
+        [string] $ToolFilePath,
         [switch] $Force
     )
     try {
@@ -186,8 +186,8 @@ function New-ScriptShim {
             return $False
         }
 
-        if (-Not (Test-Path $AssemblyPath)){
-            Write-Error "Specified AssemblyPath '$AssemblyPath' does not exist"
+        if (-Not (Test-Path $ToolFilePath)){
+            Write-Error "Specified tool file path '$ToolFilePath' does not exist"
             return $False
         }
 
@@ -195,7 +195,7 @@ function New-ScriptShim {
         $ShimContents += "setlocal enableextensions enabledelayedexpansion`n"
         $ShimContents += "set SHIMARGS=`n"
         $ShimContents += "for %%x in (%*) do (set SHIMARGS=!SHIMARGS! `"%%~x`")`n"
-        $ShimContents += "$AssemblyPath %SHIMARGS%`n"
+        $ShimContents += "$ToolFilePath %SHIMARGS%`n"
         $ShimContents += "endlocal"
 
         # Write shim file

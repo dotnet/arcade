@@ -13,7 +13,7 @@ Base file directory or Url from which to acquire tool archives
 Switch specifying to not install anything, but cleanup native asset folders
 
 .PARAMETER Force
-Force install of tools even if they previously exist
+Clean and then install tools
 
 .PARAMETER DownloadRetries
 Total number of retry attempts

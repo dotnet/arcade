@@ -55,10 +55,10 @@ try {
         $ToolOs = "win32"
     }
     $ToolNameMoniker = "$ToolName-$Version-$ToolOs-$Arch"
-    $AssemblyPath = Join-Path $InstallPath "$ToolName\$Version\$ToolNameMoniker\bin\$ToolName.exe"
+    $ToolFilePath = Join-Path $InstallPath "$ToolName\$Version\$ToolNameMoniker\bin\$ToolName.exe"
 
     # Install tool
-    if ((Test-Path $AssemblyPath) -And (-Not $Force)) {
+    if ((Test-Path $ToolFilePath) -And (-Not $Force)) {
         Write-Verbose "$ToolName ($ToolVersion) already exists, skipping install (specify -Force to force install)"
     }
     else {
@@ -80,7 +80,7 @@ try {
     # Always rewrite shims so that we are referencing the expected version
     $ShimPath = Join-Path $InstallPath "$ToolName.cmd"
     $GenerateShimStatus = CommonLibrary\New-ScriptShim -ShimPath $ShimPath `
-                                                       -AssemblyPath $AssemblyPath `
+                                                       -ToolFilePath $ToolFilePath `
                                                        -Force `
                                                        -Verbose:$Verbose
 
