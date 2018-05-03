@@ -60,10 +60,18 @@ namespace Microsoft.DotNet.Build.Tasks.IO
 
         public override bool Execute()
         {
-            if (!Overwrite && IOFile.Exists(OutputPath))
+            if (IOFile.Exists(OutputPath))
             {
-                Log.LogError($"Zip file {OutputPath} already exists. Set Overwrite=true to replace it.");
-                return false;
+                if (Overwrite)
+                {
+                    Log.LogMessage(MessageImportance.Low, $"'{OutputPath}' already exists and Overwrite is '{Overwrite}', deleting before zipping...");
+                    IOFile.Delete(OutputPath);
+                }
+                else
+                {
+                    Log.LogError($"Zip file {OutputPath} already exists. Set {nameof(Overwrite)}=true to replace it.");
+                    return !Log.HasLoggedErrors;
+                }
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(OutputPath));

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <Target Name="_InitializeNuspecProperties"
-          BeforeTargets="GenerateNuSpec">
+          BeforeTargets="GenerateNuSpec"
+          Condition="'$(NuspecFile)' != ''">
     <PropertyGroup>
       <NuspecProperties>$(NuspecProperties);version=$(Version);licenseUrl=$(PackageLicenseUrl);repoUrl=$(RepositoryUrl);copyright=$(Copyright);ArtifactsBinDir=$(ArtifactsBinDir)</NuspecProperties>
     </PropertyGroup>

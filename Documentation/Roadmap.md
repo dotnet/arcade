@@ -16,14 +16,14 @@ Arcade exists and is useful for building and publishing shared packages.
 - [x] [Arcade building and publishing packages in the open](https://github.com/dotnet/arcade/issues/45)
 - [ ] ["Maestro" for Arcade scripts ](https://github.com/dotnet/arcade/issues/74)
 - [ ] [Arcade is serviceable](https://github.com/dotnet/arcade/issues/75)
-- [ ] [Publish initial "set" of shared packages](https://github.com/dotnet/arcade/issues/46)
 
 ## Phase II 
 Arcade builds itself and is largely converged with the other toolsets
 
 - [ ] [Arcade is building Arcade](https://github.com/dotnet/arcade/issues/72)
-- [ ] [Define and Implement Repo API](https://github.com/dotnet/arcade/issues/85)
 - [ ] [Bootstrap for native builds](https://github.com/dotnet/arcade/issues/73)
+- [ ] [Use arcade as a "canary" build](https://github.com/dotnet/arcade/issues/111)
+- [ ] [Define and Implement Repo API](https://github.com/dotnet/arcade/issues/85)
 - [ ] [Converge "kore-build" and Arcade](https://github.com/dotnet/arcade/issues/88)
 - [ ] [Converge "repotoolset" and Arcade](https://github.com/dotnet/arcade/issues/89)
 - [ ] [Converge "buildtools" and Arcade](https://github.com/dotnet/arcade/issues/90)
