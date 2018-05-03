@@ -8,11 +8,8 @@ Install cmake native tool from Azure blob storage
 .PARAMETER InstallPath
 Base directory to install native tool to
 
-.PARAMETER AzureStorageUrl
-Url to Azure blob storage containing native assets
-
-.PARAMETER AzureContainerName
-Container name in Azure blob storage containing native tool archives
+.PARAMETER BaseUri
+Base file directory or Url from which to acquire tool archives
 
 .PARAMETER CommonLibraryDirectory
 Path to folder containing common library modules
@@ -34,9 +31,7 @@ Param (
     [Parameter(Mandatory=$True)]
     [string] $InstallPath,
     [Parameter(Mandatory=$True)]
-    [string] $AzureStorageUrl,
-    [Parameter(Mandatory=$True)]
-    [string] $AzureContainerName,
+    [string] $BaseUri,
     [Parameter(Mandatory=$True)]
     [string] $Version,
     [string] $CommonLibraryDirectory = $PSScriptRoot,
@@ -46,7 +41,7 @@ Param (
 )
 
 # Import common library modules
-Import-Module -Name (Join-Path $CommonLibraryDirectory "CommonLibraryModules.psm1")
+Import-Module -Name (Join-Path $CommonLibraryDirectory "CommonLibrary.psm1")
 
 try {
     # Define verbose switch if undefined
@@ -55,21 +50,22 @@ try {
     $ToolName = "cmake"
 
     # defined in CommonLibraryGetArchitecture.psm1
-    $Arch = CommonLibraryGetArchitecture
+    $Arch = CommonLibrary\Get-Architecture
     $ToolOs = "win64"
     if($Arch -Eq "x32") {
         $ToolOs = "win32"
     }
     $ToolNameMoniker = "$ToolName-$Version-$ToolOs-$Arch"
+    $AssemblyPath = Join-Path $InstallPath "$ToolName\$Version\$ToolNameMoniker\bin\$ToolName.exe"
 
     # Install tool
-    if ((Test-Path $$AssemblyPath) -And (-Not $Force)) {
+    if ((Test-Path $AssemblyPath) -And (-Not $Force)) {
         Write-Verbose "$ToolName ($ToolVersion) already exists, skipping install (specify -Force to force install)"
     }
     else {
-        $Url = "$AzureStorageUrl/$AzureContainerName/nativeassets/$ToolNameMoniker.zip"
+        $Uri = "$BaseUri/$ToolNameMoniker.zip"
         $ToolInstallDirectory = Join-Path $InstallPath "$ToolName\$ToolVersion\"
-        $InstallStatus = CommonLibraryDownloadAndExtract -Url $Url `
+        $InstallStatus = CommonLibrary\DownloadAndExtract -Uri $Uri `
                                                          -InstallDirectory $ToolInstallDirectory `
                                                          -Force:$Force `
                                                          -DownloadRetries $DownloadRetries `
@@ -83,9 +79,8 @@ try {
     }
     # Generate shim
     # Always rewrite shims so that we are referencing the expected version
-    $AssemblyPath = Join-Path $InstallPath "$ToolName\$Version\$ToolNameMoniker\bin\$ToolName.exe"
     $ShimPath = Join-Path $InstallPath "$ToolName.cmd"
-    $GenerateShimStatus = CommonLibraryGenerateShim -ShimPath $ShimPath `
+    $GenerateShimStatus = CommonLibrary\New-Shim -ShimPath $ShimPath `
                                                     -AssemblyPath $AssemblyPath `
                                                     -Force `
                                                     -Verbose:$Verbose

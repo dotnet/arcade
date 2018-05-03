@@ -6,11 +6,8 @@ Entry point script for installing native tools
 Reads $RepoRoot\eng\NativeToolsVersion.txt file to determine native assets to install
 and executes installers for those tools
 
-.PARAMETER AzureStorageUrl
-Url to Azure blob storage containing native assets
-
-.PARAMETER AzureContainerName
-Container name in Azure blob storage containing native tool archives
+.PARAMETER BaseUri
+Base file directory or Url from which to acquire tool archives
 
 .PARAMETER Clean
 Switch specifying to not install anything, but cleanup native asset folders
@@ -28,8 +25,7 @@ Wait time between retry attempts in seconds
 #>
 [CmdletBinding(PositionalBinding=$false)]
 Param (
-    [string] $AzureStorageUrl = "https://dotnetfeed.blob.core.windows.net",
-    [string] $AzureContainerName = "chcosta-test",
+    [string] $BaseUri = "https://dotnetfeed.blob.core.windows.net/chcosta-test/nativeassets",
     [switch] $Clean = $False,
     [switch] $Force = $False,
     [int] $DownloadRetries = 5,
@@ -39,7 +35,7 @@ Param (
 Set-StrictMode -version 2.0
 $ErrorActionPreference="Stop"
 
-Import-Module -Name (Join-Path $PSScriptRoot "native\CommonLibraryGetTempPath.psm1")
+Import-Module -Name (Join-Path $PSScriptRoot "native\CommonLibrary.psm1")
 
 try {
     # Define verbose switch if undefined
@@ -55,7 +51,7 @@ try {
         if (Test-Path $ArtifactsNativeBaseDir) {
             Remove-Item $ArtifactsNativeBaseDir -Force -Recurse
         }
-        $TempDir = CommonLibraryGetTempPath
+        $TempDir = CommonLibrary\Get-TempPath
         Write-Host "Cleaning '$TempDir'"
         if (Test-Path $TempDir) {
             Remove-Item $TempDir -Force -Recurse
@@ -73,7 +69,7 @@ try {
         Write-Host "No native tool dependencies are defined in '$ToolsForInstallFile'"
         exit 0
     }
-    $ToolsList = ((Get-Content $ToolsForInstallFile) -replace ',', '=') -join "`n" | ConvertFrom-StringData
+    $ToolsList = ((Get-Content $ToolsForInstallFile) -replace ',','=') -join "`n" | ConvertFrom-StringData
 
     Write-Verbose "Required native tools:"
     $ToolsList.GetEnumerator() | ForEach-Object {
@@ -90,8 +86,7 @@ try {
         $InstallerFilename = "install-$ToolName.ps1"
         $LocalInstallerCommand = Join-Path $EngCommonBaseDir $InstallerFilename
         $LocalInstallerCommand += " -InstallPath $ArtifactsInstallBin"
-        $LocalInstallerCommand += " -AzureStorageUrl $AzureStorageUrl"
-        $LocalInstallerCommand += " -AzureContainerName $AzureContainerName"
+        $LocalInstallerCommand += " -BaseUri $BaseUri"
         $LocalInstallerCommand += " -CommonLibraryDirectory $EngCommonBaseDir"
         $LocalInstallerCommand += " -Version $ToolVersion"
 
