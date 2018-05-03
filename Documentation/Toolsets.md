@@ -1,7 +1,7 @@
 # Toolsets
 
 ## Overview
-Various tools exist that are not built in Arcade, but are still needed to support both bootstrapping (both managed and native), as well as various build related workloads needed by different repos.  This document attempts to address the requirements for acquiring these tools that will work for Arcade, and thus the rest of the repos in the .NET Core stack.
+Various tools exist that are not built in Arcade, but are still needed to support both bootstrapping (both managed and native), as well as various build related workloads needed by different repos.  This document attempts to address the requirements for acquiring these tools that will work for Arcade, and thus the rest of the repos in the .NET Core stack.  Please note that these tools may be either internal or externally owned.  This document applies to both.
 
 ## Requirements
 * Enable the toolset acquisition portion of 'clone' + 'build' (no prereqs)
@@ -18,6 +18,7 @@ Each tool/package not built by Arcade, but needed by .Net Core must have a clear
 * It must be clearly documented how to get needed updates or fixes done.
 * All documentation must be included with the tool
 * No breaking changes
+* It must be apparent what the current (latest) version is.  E.g., which version to use.
 
 ## Basic Mechanics
 At a high level, toolsets not built by Arcade are managed by:
