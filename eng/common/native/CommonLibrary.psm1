@@ -169,7 +169,7 @@ Parameter description
 .NOTES
 Returns $True if generating shim succeeds, $False otherwise
 #>
-function New-Shim {
+function New-ScriptShim {
     [CmdletBinding(PositionalBinding=$false)]
     Param (
         [Parameter(Mandatory=$True)]
@@ -181,8 +181,8 @@ function New-Shim {
     try {
         Write-Verbose "Generating '$ShimPath' shim"
 
-        if ((Test-Path $ShimPath) -And ($Force -Eq $False)) {
-            Write-Error "$ShimPath already exists, specify '-Force' to overwrite file"
+        if ((Test-Path $ShimPath) -And (-Not $Force)) {
+            Write-Error "$ShimPath already exists"
             return $False
         }
 
@@ -201,7 +201,7 @@ function New-Shim {
         # Write shim file
         $ShimContents | Out-File $ShimPath -Encoding "ASCII"
 
-        if ($? -Ne $True) {
+        if (-Not $?) {
             Write-Error "Failed to generate shim"
             return $False
         }
@@ -218,7 +218,7 @@ function New-Shim {
   Returns 'x64' on 64 bit machines
   Returns 'x86' on 32 bit machines
 #>
-function Get-Architecture {
+function Get-MachineArchitecture {
     $ProcessorArchitecture = $Env:PROCESSOR_ARCHITECTURE
     $ProcessorArchitectureW6432 = $Env:PROCESSOR_ARCHITEW6432
     if($ProcessorArchitecture -Eq "X86")
@@ -309,8 +309,8 @@ function Expand-Zip {
 }
 
 export-modulemember -function DownloadAndExtract
-export-modulemember -function Get-File
-export-modulemember -function New-Shim
-export-modulemember -function Get-Architecture
-export-modulemember -function Get-TempPath
 export-modulemember -function Expand-Zip
+export-modulemember -function Get-File
+export-modulemember -function Get-MachineArchitecture
+export-modulemember -function Get-TempPath
+export-modulemember -function New-ScriptShim

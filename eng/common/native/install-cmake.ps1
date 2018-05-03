@@ -49,8 +49,7 @@ try {
     
     $ToolName = "cmake"
 
-    # defined in CommonLibraryGetArchitecture.psm1
-    $Arch = CommonLibrary\Get-Architecture
+    $Arch = CommonLibrary\Get-MachineArchitecture
     $ToolOs = "win64"
     if($Arch -Eq "x32") {
         $ToolOs = "win32"
@@ -80,10 +79,10 @@ try {
     # Generate shim
     # Always rewrite shims so that we are referencing the expected version
     $ShimPath = Join-Path $InstallPath "$ToolName.cmd"
-    $GenerateShimStatus = CommonLibrary\New-Shim -ShimPath $ShimPath `
-                                                    -AssemblyPath $AssemblyPath `
-                                                    -Force `
-                                                    -Verbose:$Verbose
+    $GenerateShimStatus = CommonLibrary\New-ScriptShim -ShimPath $ShimPath `
+                                                       -AssemblyPath $AssemblyPath `
+                                                       -Force `
+                                                       -Verbose:$Verbose
 
     if ($GenerateShimStatus -Eq $False) {
         Write-Error "Generate shim failed"
