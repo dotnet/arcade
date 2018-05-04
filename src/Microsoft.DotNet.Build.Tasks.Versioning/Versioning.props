@@ -19,9 +19,9 @@
     
     <PropertyGroup>
       <VersionString Condition="'%(FormatStrings.Identity)'=='$(FormatName)'">%(FormatStrings.Format)</VersionString>
-      
-      <VersioningError Condition="'$(VersionString)'!=''">false</VersioningError>
-      <VersioningError Condition="'$(VersionString)'==''">true</VersioningError>
+
+      <ExitCode Condition="'$(VersionString)'!=''">0</ExitCode>
+      <ExitCode Condition="'$(VersionString)'==''">1</ExitCode>
     </PropertyGroup>
     
   </Target>

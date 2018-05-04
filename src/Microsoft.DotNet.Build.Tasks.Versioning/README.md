@@ -17,7 +17,7 @@ Builds          | string      | Number of builds for current date.
 ShortSha        | string      | SHA of the repo last commit.
 FormatName      | string      | The name of the format string you want to use. Defaults are "dev", "stable" and "final".
 FormatStrings   | ItemGroup   | Your custom format strings.
-VersioningError | boolean     | **Output** Indicate whether an error happened.
+ExitCode        | integer     | **Output** Indicate whether an error happened (1) or not (0).
 VersionString   | string      | **Output** Version string produced.
 
 ```xml
@@ -52,8 +52,8 @@ VersionString   | string      | **Output** Version string produced.
   </ItemGroup>
   
   <Target Name="TestIt" DependsOnTargets="Versioning">
-    <Message Text="Version string is: $(VersionString)" Condition="'$(VersioningError)'=='false'" />
-    <Message Text="Error creating version string." Condition="'$(VersioningError)'=='true'" />
+    <Message Text="Version string is: $(VersionString)" Condition="'$(ExitCode)'=='0'" />
+    <Message Text="Error creating version string." Condition="'$(ExitCode)'=='1'" />
   </Target>
 
   <Import Condition="Exists('Versioning.props')" Project="Versioning.props" />
