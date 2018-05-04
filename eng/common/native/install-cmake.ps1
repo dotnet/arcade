@@ -59,11 +59,11 @@ try {
 
     # Install tool
     if ((Test-Path $ToolFilePath) -And (-Not $Force)) {
-        Write-Verbose "$ToolName ($ToolVersion) already exists, skipping install (specify -Force to force install)"
+        Write-Verbose "$ToolName ($Version) already exists, skipping install (specify -Force to force install)"
     }
     else {
         $Uri = "$BaseUri/$ToolNameMoniker.zip"
-        $ToolInstallDirectory = Join-Path $InstallPath "$ToolName\$ToolVersion\"
+        $ToolInstallDirectory = Join-Path $InstallPath "$ToolName\$Version\"
         $InstallStatus = CommonLibrary\DownloadAndExtract -Uri $Uri `
                                                          -InstallDirectory $ToolInstallDirectory `
                                                          -Force:$Force `
