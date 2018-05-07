@@ -1,6 +1,3 @@
-variables:
-  HelixSource: official/dotnet/arcade
-  HelixType: build/product
 phases:
 - phase: Windows_NT
   # variables apply to every build configuration in the matrix
@@ -9,6 +6,8 @@ phases:
     _SignType: real
     _UseEsrpSigning: true
     _TeamName: DotNetCore
+    HelixSource: official/dotnet/arcade
+    HelixType: build/product
   queue:
     name: DotNetCore-Build
     parallel: 2
@@ -76,6 +75,8 @@ phases:
   variables:
     # set _PREVIEW_VSTS_DOCKER_IMAGE to the docker image you want to automatically run in a container
     _PREVIEW_VSTS_DOCKER_IMAGE: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
+    HelixSource: official/dotnet/arcade
+    HelixType: build/product
   queue:
     name: DotNetCore-Test
     parallel: 2
