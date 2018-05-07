@@ -1,3 +1,6 @@
+variables:
+  HelixSource: official/dotnet/arcade
+  HelixType: build/product
 phases:
 - phase: Windows_NT
   # variables apply to every build configuration in the matrix
@@ -6,8 +9,6 @@ phases:
     _SignType: real
     _UseEsrpSigning: true
     _TeamName: DotNetCore
-    HelixSource: official/dotnet/arcade
-    HelixType: build/product
   queue:
     name: DotNetCore-Build
     parallel: 2
