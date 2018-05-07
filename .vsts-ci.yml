@@ -6,6 +6,8 @@ phases:
     _SignType: real
     _UseEsrpSigning: true
     _TeamName: DotNetCore
+    HelixSource: official/dotnet/arcade
+    HelixType: build/product
   queue:
     name: DotNetCore-Build
     parallel: 2
