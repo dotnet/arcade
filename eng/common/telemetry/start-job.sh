@@ -69,7 +69,7 @@ curlStatus=$?
 if [ $curlStatus -ne 0 ]; then
   echo "Failed To Send Job Start information"
   echo $curlResult
-  if [ ! -z $BUILD_BUILDNUMBER ]; then
+  if /bin/bash "$scriptroot/../is-vsts.sh"; then
     echo "##vso[task.logissue type=error;sourcepath=telemetry/start-job.sh;code=1;]Failed to Send Job Start information: $curlResult"
   fi
   exit 1
@@ -77,7 +77,7 @@ fi
 
 export Helix_JobToken=`echo $curlResult | xargs echo` # Strip Quotes
 
-if [ ! -z $BUILD_BUILDNUMBER ]; then
+if /bin/bash "$scriptroot/../is-vsts.sh"; then
   echo "##vso[task.setvariable variable=Helix_JobToken;issecret=true;]$Helix_JobToken"
 else
   echo "export Helix_JobToken=$Helix_JobToken"

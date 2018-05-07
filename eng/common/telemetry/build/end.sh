@@ -30,7 +30,7 @@ curlStatus=$?
 if [ $curlStatus -ne 0 ]; then
   echo "Failed to Send Build Finish information"
   echo $curlResult
-  if [ ! -z $BUILD_BUILDNUMBER ]; then
+  if /bin/bash "$scriptroot/../../is-vsts.sh"; then
     echo "##vso[task.logissue type=error;sourcepath=telemetry/build/end.sh;code=1;]Failed to Send Build Finish information: $curlResult"
   fi
   exit 1

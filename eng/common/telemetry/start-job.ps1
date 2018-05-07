@@ -27,7 +27,7 @@ try {
   $jobToken = Invoke-RestMethod -Uri "https://helix.dot.net/api/2018-03-14/telemetry/job?access_token=$($env:HelixApiAccessToken)" -Method Post -ContentType "application/json" -Body $jobInfoJson
 
   $env:Helix_JobToken = $jobToken
-  if ($env:Build_BuildNumber) {
+  if (& "$PSScriptRoot/../is-vsts.ps1") {
     Write-Host "##vso[task.setvariable variable=Helix_JobToken;issecret=true;]$env:Helix_JobToken"
   }
 }

@@ -37,7 +37,7 @@ curlStatus=$?
 if [ $curlStatus -ne 0 ]; then
   echo "Failed to Send Build Start information"
   echo $curlResult
-  if [ ! -z $BUILD_BUILDNUMBER ]; then
+  if /bin/bash "$scriptroot/../../is-vsts.sh"; then
     echo "##vso[task.logissue type=error;sourcepath=telemetry/build/start.sh;code=1;]Failed to Send Build Start information: $curlResult"
   fi
   exit 1
@@ -45,7 +45,7 @@ fi
 
 export Helix_WorkItemId=`echo $curlResult | xargs echo` # Strip Quotes
 
-if [ ! -z $BUILD_BUILDNUMBER ]; then
+if /bin/bash "$scriptroot/../../is-vsts.sh"; then
   echo "##vso[task.setvariable variable=Helix_WorkItemId]$Helix_WorkItemId"
 else
   echo "export Helix_WorkItemId=$Helix_WorkItemId"

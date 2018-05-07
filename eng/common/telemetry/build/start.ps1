@@ -12,7 +12,7 @@ try {
     -Headers @{ 'X-Helix-Job-Token'=$env:Helix_JobToken }
 
   $env:Helix_WorkItemId = $workItemId
-  if ($env:Build_BuildNumber) {
+  if (& "$PSScriptRoot/../../is-vsts.ps1") {
     Write-Host "##vso[task.setvariable variable=Helix_WorkItemId]$env:Helix_WorkItemId"
   }
 }
