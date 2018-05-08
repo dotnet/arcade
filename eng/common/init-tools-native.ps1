@@ -9,6 +9,13 @@ and executes installers for those tools
 .PARAMETER BaseUri
 Base file directory or Url from which to acquire tool archives
 
+.PARAMETER InstallDirectory
+Directory to install native toolset.  This is a command-line override for the default
+Install directory precedence order:
+- InstallDirectory command-line override
+- COMMONLIBRARY_NATIVEINSTALLDIRECTORY environment variable
+- (default) %USERPROFILE%/.netcoreeng/native
+
 .PARAMETER Clean
 Switch specifying to not install anything, but cleanup native asset folders
 
@@ -29,6 +36,7 @@ File path to tools versions file
 [CmdletBinding(PositionalBinding=$false)]
 Param (
     [string] $BaseUri = "https://dotnetfeed.blob.core.windows.net/chcosta-test/nativeassets",
+    [string] $InstallDirectory,
     [switch] $Clean = $False,
     [switch] $Force = $False,
     [int] $DownloadRetries = 5,
@@ -45,20 +53,18 @@ try {
     # Define verbose switch if undefined
     $Verbose = $VerbosePreference -Eq "Continue"
 
-    $RepoRoot = Convert-Path -Path (Join-Path $PSScriptRoot "..\..\")
     $EngCommonBaseDir = Join-Path $PSScriptRoot "native\"
-    $ArtifactsNativeBaseDir = Join-Path $RepoRoot "artifacts\native\"
-    $ArtifactsInstallBin = Join-Path $ArtifactsNativeBaseDir "bin"
+    $NativeBaseDir = $InstallDirectory
+    if (!$NativeBaseDir) {
+      $NativeBaseDir = CommonLibrary\Get-NativeInstallDir
+    }
+    $Env:CommonLibrary_NativeInstallDir = $NativeBaseDir
+    $InstallBin = Join-Path $NativeBaseDir "bin"
 
     if ($Clean -Or $Force) {
-        Write-Host "Cleaning '$ArtifactsNativeBaseDir'"
-        if (Test-Path $ArtifactsNativeBaseDir) {
-            Remove-Item $ArtifactsNativeBaseDir -Force -Recurse
-        }
-        $TempDir = CommonLibrary\Get-TempPath
-        Write-Host "Cleaning '$TempDir'"
-        if (Test-Path $TempDir) {
-            Remove-Item $TempDir -Force -Recurse
+        Write-Host "Cleaning '$NativeBaseDir'"
+        if (Test-Path $NativeBaseDir) {
+            Remove-Item $NativeBaseDir -Force -Recurse
         }
 
         if ($Clean) {
@@ -88,7 +94,7 @@ try {
         $ToolVersion = $_.Value
         $InstallerFilename = "install-$ToolName.ps1"
         $LocalInstallerCommand = Join-Path $EngCommonBaseDir $InstallerFilename
-        $LocalInstallerCommand += " -InstallPath $ArtifactsInstallBin"
+        $LocalInstallerCommand += " -InstallPath $InstallBin"
         $LocalInstallerCommand += " -BaseUri $BaseUri"
         $LocalInstallerCommand += " -CommonLibraryDirectory $EngCommonBaseDir"
         $LocalInstallerCommand += " -Version $ToolVersion"
@@ -111,8 +117,8 @@ try {
         }
     }
 
-    if (Test-Path $ArtifactsInstallBin) {
-        Write-Host "Native tools are available from" (Convert-Path -Path $ArtifactsInstallBin)
+    if (Test-Path $InstallBin) {
+        Write-Host "Native tools are available from" (Convert-Path -Path $InstallBin)
     }
     else {
         Write-Error "Native tools install directory does not exist, installation failed"

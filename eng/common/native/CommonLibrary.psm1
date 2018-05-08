@@ -240,7 +240,16 @@ function Get-MachineArchitecture {
 }
 
 function Get-TempPath {
-    return Join-Path $Env:USERPROFILE ".netcoreeng/native/"
+    return Join-Path (Get-NativeInstallDir) "temp/"
+}
+
+function Get-NativeInstallDir {
+
+    $InstallDir = $Env:COMMONLIBRARY_NATIVEINSTALLDIRECTORY
+    if (!$InstallDir) {
+        $InstallDir = Join-Path $Env:USERPROFILE ".netcoreeng/native/"
+    }
+    return $InstallDir
 }
 
 <#
@@ -313,5 +322,6 @@ export-modulemember -function DownloadAndExtract
 export-modulemember -function Expand-Zip
 export-modulemember -function Get-File
 export-modulemember -function Get-MachineArchitecture
+export-modulemember -function Get-NativeInstallDir
 export-modulemember -function Get-TempPath
 export-modulemember -function New-ScriptShim
