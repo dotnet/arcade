@@ -7,15 +7,12 @@ The complete list of resolved issues is [here](./V1.0.1.md)
 ### Known Issues
 - [Blocking] Helix docker container Repro jobs are not supported. i.e. Alpine
 - [2006](https://github.com/dotnet/core-eng/issues/2006) Set password for Fedora machines not working.
-- [2551](https://github.com/dotnet/core-eng/issues/2551) Error when creating a OSX machine from Jenkins.
 - [1487](https://github.com/dotnet/core-eng/issues/1487) Delete a VM in Mission Control sometimes reports error.
-- [2464](https://github.com/dotnet/core-eng/issues/2464) Use SCL workaround to run Python 2.7 in repro-tool scenarios on Redhat 6.9.
-- [2466](https://github.com/dotnet/core-eng/issues/2466) Permission denied when running scriptrunner.py in MAC.
 - [1649](https://github.com/dotnet/core-eng/issues/1649) Jenkins is still running on windows after creating a snapshot and a VM.
 - [2358](https://github.com/dotnet/core-eng/issues/2358) Improve the status: error experience in MC.
 - [1694](https://github.com/dotnet/core-eng/issues/1694) Reconsider the user experience when clicking Repro in Jenkins.
 
-The complete list of issues in the baklog is located in the [Dev Test Failure Repro V2](https://github.com/dotnet/core-eng/issues/1988) Epic.
+The complete list of issues in the backlog is located in the [Dev Test Failure Repro V2](https://github.com/dotnet/core-eng/issues/1988) Epic.
 
 # What is the Repro Tool?
 When a job fails in [Jenkins] or [Helix], the developer may ask for a virtual machine or Mac machine with the sufficient data and access to connect and build the code that is located in the original machine to determine why the job failed.
@@ -33,7 +30,7 @@ go to [Mission Control] -> Repros. There should be a new entry representing
 the snapshot and/or Virtual Machine just created. 
 
 Use the `Connect` button on the far right of the VM detail line to download a 
-script to connect to the VM. To connect to a VM, you need to be on corpnet. 
+script to connect to the VM. To connect to a VM, you need to be on corpnet and use the user `dotnet-bot`.
 
  **Note:** There is a "known" problem with Azure and VPN - when accessing an Azure VM, your system uses the IP native to the system and not the corp address. The only way to access Azure systems through VPN is through a "jump box" (log into a system physically on corp and then TS/SSH into the system in Azure. One thing to try is to go into the VPN client options, there is an option to disable split tunneling that might work.
 
@@ -122,7 +119,7 @@ By default the user can see all the [Snapshots](https://github.com/dotnet/core-e
 
 Please note that the Virtual Machines are only available to the user that created the machine, so if you search for other users environment, there is no way to see their VMs.
 
-To access a machine, click on `Connect`. For Windows and Linux it will download a `.rdp` or `.sh` file and will display the password of the machine.
+To access a machine, click on `Connect`. For Windows and Linux it will download a `.rdp` or `.sh` file and will display the password of the machine. Note that the user for the machines is `dotnet-bot`.
 
 ![](./Images/ConnectToVM.PNG?raw=true)
 
