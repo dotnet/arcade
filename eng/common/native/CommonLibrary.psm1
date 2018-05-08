@@ -216,8 +216,12 @@ function New-ScriptShim {
 }
 
 <#
-  Returns 'x64' on 64 bit machines
-  Returns 'x86' on 32 bit machines
+.SYNOPSIS
+Returns the machine architecture of the host machine
+
+.NOTES
+Returns 'x64' on 64 bit machines
+ Returns 'x86' on 32 bit machines
 #>
 function Get-MachineArchitecture {
     $ProcessorArchitecture = $Env:PROCESSOR_ARCHITECTURE
@@ -236,14 +240,25 @@ function Get-MachineArchitecture {
         return "x64"
     }
     return "x86"
-    
 }
 
+<#
+.SYNOPSIS
+Get the name of a temporary folder under the native install directory
+#>
 function Get-TempPath {
-    return Join-Path (Get-NativeInstallDir) "temp/"
+    return Join-Path (Get-NativeInstallDirectory) "temp/"
 }
 
-function Get-NativeInstallDir {
+<#
+.SYNOPSIS
+Returns the base directory to use for native tool installation
+
+.NOTES
+Returns the value of the COMMONLIBRARY_NATIVEINSTALLDIRECTORY if that environment variable
+is set, or otherwise returns an install directory under the %USERPROFILE%
+#>
+function Get-NativeInstallDirectory {
 
     $InstallDir = $Env:COMMONLIBRARY_NATIVEINSTALLDIRECTORY
     if (!$InstallDir) {

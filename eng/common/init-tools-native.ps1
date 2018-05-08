@@ -56,7 +56,7 @@ try {
     $EngCommonBaseDir = Join-Path $PSScriptRoot "native\"
     $NativeBaseDir = $InstallDirectory
     if (!$NativeBaseDir) {
-      $NativeBaseDir = CommonLibrary\Get-NativeInstallDir
+      $NativeBaseDir = CommonLibrary\Get-NativeInstallDirectory
     }
     $Env:CommonLibrary_NativeInstallDir = $NativeBaseDir
     $InstallBin = Join-Path $NativeBaseDir "bin"
