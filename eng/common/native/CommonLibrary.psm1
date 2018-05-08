@@ -337,6 +337,6 @@ export-modulemember -function DownloadAndExtract
 export-modulemember -function Expand-Zip
 export-modulemember -function Get-File
 export-modulemember -function Get-MachineArchitecture
-export-modulemember -function Get-NativeInstallDir
+export-modulemember -function Get-NativeInstallDirectory
 export-modulemember -function Get-TempPath
 export-modulemember -function New-ScriptShim
