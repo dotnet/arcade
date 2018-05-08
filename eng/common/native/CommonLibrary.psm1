@@ -12,13 +12,13 @@ Uri of artifact to download
 Directory to extract artifact contents to
 
 .PARAMETER Force
-Force download / extraction if file or contents already exist
+Force download / extraction if file or contents already exist. Default = False
 
 .PARAMETER DownloadRetries
-Total number of retry attempts
+Total number of retry attempts. Default = 5
 
 .PARAMETER RetryWaitTimeInSeconds
-Wait time between retry attempts in seconds
+Wait time between retry attempts in seconds. Default = 30
 
 .NOTES
 Returns False if download or extraction fail, True otherwise
@@ -80,14 +80,15 @@ Uri of file to download. If Uri is a local path, the file will be copied instead
 .PARAMETER Path
 Path to download or copy uri file to
 
+.PARAMETER Force
+Overwrite existing file if present. Default = False
+
 .PARAMETER DownloadRetries
-Total number of retry attempts
+Total number of retry attempts. Default = 5
 
 .PARAMETER RetryWaitTimeInSeconds
-Wait time between retry attempts in seconds
+Wait time between retry attempts in seconds Default = 30
 
-.PARAMETER Force
-Overwrite existing file if present
 #>
 function Get-File {
     [CmdletBinding(PositionalBinding=$false)]
@@ -160,11 +161,11 @@ Creates a wrapper script (shim) that passes arguments forward to native tool ass
 .PARAMETER ShimPath
 Path to shim file
 
-.PARAMETER AssemblyPath
-Path to assembly that shim forwards to
+.PARAMETER ToolFilePath
+Path to file that shim forwards to
 
-.PARAMETER Overwrite
-Parameter description
+.PARAMETER Force
+Replace shim if already present.  Default = False
 
 .NOTES
 Returns $True if generating shim succeeds, $False otherwise
@@ -239,7 +240,7 @@ function Get-MachineArchitecture {
 }
 
 function Get-TempPath {
-    return Join-Path $Env:USERPROFILE ".net/native/installers/temp"
+    return Join-Path $Env:USERPROFILE ".netcoreeng/native/"
 }
 
 <#
