@@ -4,20 +4,20 @@
 
 ```MAJOR.MINOR.PATCH-PRERELEASE+BUILDMETADATA```
 
-MAJOR, MINOR, and PATCH versions are rigid in their requirements.  Please refer to the [SemVer2 documentation](https://semver.org) for details. PRERELEASE and BUILD are optional and leave a fair bit of room for organizations to implement what they want. The only caveat is that build metadata cannot be used to differentiate two different packages. Build metadata should not be used when determining version precedence. There are two primary questions:
+**MAJOR**, MINOR, and PATCH versions are rigid in their requirements.  Please refer to the [SemVer2 documentation](https://semver.org) for details. PRERELEASE and BUILD are optional and leave a fair bit of room for organizations to implement what they want. The only caveat is that build metadata cannot be used to differentiate two different packages. Build metadata should not be used when determining version precedence. There are two primary questions:
 - What goes in the PRERELEASE and BUILD fields and when are they used?
-- Should we use stable versioning vs. date varying versioning?
+- Should we use date agnostic versioning vs. date varying versioning?
 
-## Stable vs. Date-Varying Build Versioning
+## Date Agnostic vs. Date-Varying Build Versioning
 
-In the context of the .NET Core product, a stable build version number is stable if successive builds produce the same build version numbers at the same input sha. Historically, .NET Core has had repositories that implement stable versioning, via build numbers that increment based on commit depth, as well as repositories that base their build number off of the date and number of builds prior on the day (date based versioning)
+In the context of the .NET Core product, a build version number is date agnostic if successive builds of the same commit produce the same build version numbers. Historically, .NET Core has had repositories that implement date agnostic versioning through build numbers that increment based on commit depth, as well as repositories that base their build number off of the date and number of builds prior on the day (date based versioning).
 
 Both types of versioning have advantages and disadvantages:
-### Stable Versioning
+### Date Agnostic Versioning
 **PROS:**
 - Assets with identical version metadata can be reproduced without outside input (e.g. providing a build id)
 - Parallel, independent legs of the same build do not require parent orchestration and will generate coherent versioning.  Separate parts of the build can potentially be respun as required.
-- We already have 'stable' (but build metadata free) versioning at the end of a product cycle.
+- We already have 'date agnostic' versioning at the end of a product cycle.
 - Build metadata typically includes sha, which makes identification of the source of bits easy.
 
 **CONS:**
@@ -28,7 +28,7 @@ Both types of versioning have advantages and disadvantages:
   - Add logic into all processes to gracefully understand and handle overwrite cases (e.g. are bits the same? then okay)
   - Telemetry systems must understand reruns of the same build.
 - Most of the .NET Core builds aren't bit-for-bit identical at the same commit given the same inputs.  If they were, then a partial-respin can gracefully handle dealing with overwrites.
-- Stable version doesn't encode inputs (e.g. checked build vs. release build).  This can make it tricky to run 'non-standard' build scenarios if they interact with external systems.
+- Date agnostic version doesn't encode inputs (e.g. checked build vs. release build).  This can make it tricky to run 'non-standard' build scenarios if they interact with external systems.
 - Generating the same package version in multiple builds with different outputs bits means that package caches must be cleared.
 
 ### Date-Varying Versioning
@@ -36,6 +36,7 @@ Both types of versioning have advantages and disadvantages:
 - Respins are easier.  No overwriting except for stable versions at the end of the product cycle.  Stable versions at the end of the cycle typically avoid external overwrite-averse systems.
 - Non-standard builds (e.g. different input parameters) do not collide with standard builds at the same sha when dealing with external systems.
 - File versions must be ever increasing to correctly layout new files for servicing (MSI requirement)
+- Does not affect the determinism of the build. Input dates are just another build parameter (e.g. OfficialBuildId) and rerunning a build with the same input date should produce equivalent binaries.
 
 **CONS:**
 - Requires orchestration to produce a coherent set of versions across multiple build legs
@@ -44,30 +45,48 @@ Both types of versioning have advantages and disadvantages:
 
 ### Conclusion
 
-Stable version is more hassle than it's worth, though having the sha in the output package version is also useful.  We should combine a sha in the build metadata with the build date+revision (short data + number of builds so far today) to generate a non-stable, unique, identifiable build.
+Date agnostic versioning is more hassle than it's worth, though having the sha in the output version number is also useful.  We should combine a sha in the build metadata with the build date+revision (short data + number of builds so far today) to generate a date-varying, unique, identifiable build.
 
-## Versioning States
+## Version Fields
 
-Versioning comes in 3 states, depending on the point in the product cycle:
-- **Daily/Dev** - Versions should include all fields - pre-release tag, shortdate, number of builds, etc.
-- **Stable PreRelease** - Versions should include MAJOR, MINOR, PATCH, and PRERELEASE tag but no SHORTDATE, BUILDS, or SHORTSHA
-- **Stable Final** - Versions should include MAJOR, MINOR, PATCH
-
-## Versioning Details
-
-We will use the following form:
-
-```
-MAJOR.MINOR.PATCH-PRERELEASE.SHORTDATE.BUILDS+SHORTSHA
-```
-
-Where:
 - **MAJOR** - Major version
 - **MINOR** - Minor version
 - **PATCH** - Patch version
-- **PRERELEASE** - alphanumeric prerelease version like `preview1`, `preview3` or `beta2`
-- **SHORTDATE** - Generated as a 5 digit string based on a comparison date:
-```
+- **PRERELEASE** - Prerelease label
+- **BUILDS** - Number of official builds during the current day
+- **SHORTDATE** - 5 digit date
+- **SHORTSHA** - Shortened sha of current commit
+
+## Versioning States and Scenarios
+
+Versioning comes in 3 states, depending on the point in the product cycle:
+- **Dev/Daily** - Versions should include all fields - pre-release tag, shortdate, number of builds, etc.
+  ```
+  MAJOR.MINOR.PATCH-PRERELEASE.SHORTDATE.BUILDS+SHORTSHA
+  ```
+- **Final Prerelease** - Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **BUILDS**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'.final'`.  This avoids a common issue in nuget package resolution where `2.1.0-rc1` < `2.1.0-rc1.12345`. The intention is that the final build is resolved over the date-versioned build.
+  ```
+  MAJOR.MINOR.PATCH-PRERELEASE.final
+  ```
+- **Stable** - Versions should include **MAJOR**, **MINOR**, **PATCH**
+  ```
+  MAJOR.MINOR.PATCH
+  ```
+
+## Version Field Generation
+- **MAJOR** - Explicit in source, should default to `1`
+- **MINOR** - Explicit in source, should default to `0`
+- **PATCH** - Explicit in source, should default to `0`
+- **PRERELEASE** - Explicit in source, should default to `preview1`
+- **BUILDS** - Generated based on build scenario
+  - **Local dev builds** - Defaulted to 0
+  - **Official builds** - Supplied generally as part of the conventional, .NET Core specific `OfficialBuildId` or VSTS `Build.BuildNumber` built in parameters.
+- **SHORTDATE** - Generated based on build scenario
+  - **Local dev builds** - Date of current git HEAD
+  - **Official builds** - Supplied generally as part of the conventional, .NET Core specific `OfficialBuildId` or VSTS `Build.BuildNumber` built in parameters.
+  
+  The short date is generated based off the seed date:
+  ```
   generateShortDate(seedDate) {
     if (comparisonDate == "") {
       comparisonDate = 1996/04/01 (UTC)
@@ -77,18 +96,5 @@ Where:
     days = seedDate.Day
     return (3 digits padded of months) + (2 digits padded of days)
   }
-```
-- **BUILDS** - Number of builds already started today, starting at 0.  No leading 0s
-- **SHORTSHA** - shortened sha
-
-## Examples
-
-- 1.2.0-preview1.08530.0+asdf34234
-- 1.2.0-preview1 (stabilized)
-- 3.0.1-beta2.26405.10+asd34523
-- 3.0.1 (stabilized)
-
-## Version Number Generation
-MAJOR, MINOR, PRERELEASE and PATCH version fields are explicit in the source.  The rest of the fields are generated or supplied:
-
-**todo - add generation info**
+  ```
+- **SHORTSHA** - Parsed from the current git HEAD
