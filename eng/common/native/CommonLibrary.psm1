@@ -37,7 +37,7 @@ function DownloadAndExtract {
     # Define verbose switch if undefined
     $Verbose = $VerbosePreference -Eq "Continue"
     
-    $TempDir = CommonLibrary\Get-TempPath
+    $TempDir = CommonLibrary\Get-TempDirectory
     $ToolFilename = Split-Path $Uri -leaf
     $TempToolPath = Join-Path $TempDir $ToolFilename
 
@@ -246,7 +246,7 @@ function Get-MachineArchitecture {
 .SYNOPSIS
 Get the name of a temporary folder under the native install directory
 #>
-function Get-TempPath {
+function Get-TempDirectory {
     return Join-Path (Get-NativeInstallDirectory) "temp/"
 }
 
@@ -338,5 +338,5 @@ export-modulemember -function Expand-Zip
 export-modulemember -function Get-File
 export-modulemember -function Get-MachineArchitecture
 export-modulemember -function Get-NativeInstallDirectory
-export-modulemember -function Get-TempPath
+export-modulemember -function Get-TempDirectory
 export-modulemember -function New-ScriptShim
