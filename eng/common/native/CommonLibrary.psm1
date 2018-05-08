@@ -228,7 +228,7 @@ function Get-MachineArchitecture {
     $ProcessorArchitectureW6432 = $Env:PROCESSOR_ARCHITEW6432
     if($ProcessorArchitecture -Eq "X86")
     {
-        if(($ProcessorArchitectureW6432 -Eq "") -Or 
+        if(($ProcessorArchitectureW6432 -Eq "") -Or
            ($ProcessorArchitectureW6432 -Eq "X86")) {
             return "x86"
         }
