@@ -47,6 +47,10 @@ Both types of versioning have advantages and disadvantages:
 
 Date agnostic versioning is more hassle than it's worth, though having the sha in the output version number is also useful.  We should combine a sha in the build metadata with the build date+revision (short data + number of builds so far today) to generate a date-varying, unique, identifiable build.
 
+## Build Determinism
+
+  There is often concern around build determinism when date-varying versioning is used. It is important to note that date-varying versioning does not affect the abiliy to have deterministic builds in either the local dev or official build lab scenarios.  The date is either a provided parameter or obtained from git information, meaning that setting it to a specific value at a specific commit can enable the production of the same outputs over and over again.  Date varying versioning only says that **by default** this input varies from build to build.
+
 ## Version Fields
 
 - **MAJOR** - Major version
