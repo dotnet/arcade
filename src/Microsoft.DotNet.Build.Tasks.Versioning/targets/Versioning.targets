@@ -1,0 +1,57 @@
+<!-- Copyright (c) .NET Foundation. All rights reserved. -->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_MicrosoftDotNetBuildTasksVersioningTaskAssembly Condition="'$(MSBuildRuntimeType)'=='Core'">$(MSBuildThisFileDirectory)netcoreapp2.0\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
+    <_MicrosoftDotNetBuildTasksVersioningTaskAssembly Condition="'$(MSBuildRuntimeType)'!='Core'">$(MSBuildThisFileDirectory)net45\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
+  </PropertyGroup>
+
+  <Target Name="Versioning">
+    <!--
+      We are going to generate a new date when all these matches:
+        - The user specified that a date is needed on the versioning string;
+        - The ShrotDate was not specified as a parameter.
+        
+      This task will also try to extract the date from the BuildId.
+    -->
+    <GenerateVersioningDate Condition="'$(IncludeDate)'=='true' and '$(ShortDate)'==''" SeedDate="$(VersionSeedDate)" OfficialBuildId="$(OfficialBuildId)" ComparisonDate="$(VersionComparisonDate)" Padding="$(VersionPadding)">
+      <Output TaskParameter="GeneratedVersion" PropertyName="GeneratedVersion"  />
+      <Output TaskParameter="GeneratedDate" PropertyName="ShortDate"  />
+    </GenerateVersioningDate>
+
+    <!--
+      Eventually SHA computation will be handled by another MSBuild Task. 
+      As of now we rely on the user passing it as a parameter.
+    -->
+    <PropertyGroup Condition="'$(IncludeSha)'=='true'">
+      <sha>+$(ShortSha)</sha>
+    </PropertyGroup>
+    
+    <!--
+      We have three pre-defined version format strings. These will look like:
+      Dev              = 1.2.0-preview1.08530.0+asdf34234
+      final-prerelease = 1.2.0-preview1
+      stable           = 3.0.1-final
+    -->
+    <ItemGroup>
+      <FormatStrings Include="dev">
+        <Format>$(major).$(minor).$(patch)-$(prerelease).$(shortdate).$(builds)$(sha)</Format>
+      </FormatStrings>
+
+      <FormatStrings Include="final-prerelease">
+        <Format>$(major).$(minor).$(patch)-$(prerelease)</Format>
+      </FormatStrings>
+
+      <FormatStrings Include="stable">
+        <Format>$(major).$(minor).$(patch)-final</Format>
+      </FormatStrings>
+    </ItemGroup>
+    
+    <PropertyGroup>
+      <VersionString Condition="'%(FormatStrings.Identity)'=='$(FormatName)'">%(FormatStrings.Format)</VersionString>
+    </PropertyGroup>
+    
+    <Error Condition="'$(VersionString)'==''" Text="Unrecognized versioning format string: $(FormatName)" />
+  </Target>
+
+  <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.Versioning.GenerateVersioningDate" AssemblyFile="$(_MicrosoftDotNetBuildTasksVersioningTaskAssembly)" />
+</Project>

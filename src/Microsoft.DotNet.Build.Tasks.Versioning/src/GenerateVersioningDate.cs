@@ -4,13 +4,12 @@
 
 using System;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Microsoft.DotNet.Build.Tasks.Versioning
 {
-    public sealed class GenerateVersioningDate : Task
+    public class GenerateVersioningDate : BuildTask
     {
         /// <summary>
         /// The passed in date that will be used to generate a version. (yyyy-MM-dd format)
@@ -43,7 +42,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
         /// The Revision number that will be produced from the BuildNumber.
         /// </summary>
         [Output]
-        public string GeneratedRevision { get; set; }
+        public string GeneratedDate { get; set; }
 
         private const string DateFormat = "yyyy-MM-dd";
         private const string LastModifiedTimeDateFormat = "yyyy-MM-dd HH:mm:ss.FFFFFFF";
@@ -54,7 +53,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             // If OfficialBuildId is passed in, then use that to calculate the version and revision.
             if (string.IsNullOrEmpty(OfficialBuildId))
             {
-                GeneratedRevision = "0";
+                GeneratedDate = "0";
             }
             else
             {
@@ -68,7 +67,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             }
             else if (Padding < 5)
             {
-                Log.LogWarning("The specified Padding '{0}' has to be equal to or greater than 5. Using 5 as a default now.", Padding);
+                Log.LogWarning($"The specified Padding '{Padding}' has to be equal to or greater than 5. Using 5 as a default now.");
                 Padding = 5;
             }
 
@@ -109,7 +108,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
                 }
                 buildIdDate = buildIdDate.ToUniversalTime();
                 GeneratedVersion = GetCurrentVersionForDate(buildIdDate, ComparisonDate);
-                GeneratedRevision = match.Groups[2].Value;
+                GeneratedDate = match.Groups[2].Value;
                 return true;
             }
             Log.LogError("Error: Invalid OfficialBuildId was passed: '{0}'", buildId);
@@ -142,8 +141,11 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             {
                 return string.Format("{0}{1}", months.ToString("D" + (Padding - 2)), seedDate.Day.ToString("D2"));
             }
+            else
+            {
+                Log.LogError("Error: Comparison date is in the same month as the seed date");
+            }
             return string.Empty;
         }
-
     }
 }
