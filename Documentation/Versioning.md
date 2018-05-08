@@ -64,15 +64,26 @@ Versioning comes in 3 states, depending on the point in the product cycle:
   ```
   MAJOR.MINOR.PATCH-PRERELEASE.SHORTDATE.BUILDS+SHORTSHA
   ```
+  Example:
+  ```
+    1.0.0-preview1.25405.01+abcdef
+  ```
 - **Final Prerelease** - Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **BUILDS**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'.final'`.  This avoids a common issue in nuget package resolution where `2.1.0-rc1` < `2.1.0-rc1.12345`. The intention is that the final build is resolved over the date-versioned build.
   ```
   MAJOR.MINOR.PATCH-PRERELEASE.final
+  ```
+  Example:
+  ```
+    1.0.0-preview1.final
   ```
 - **Stable** - Versions should include **MAJOR**, **MINOR**, **PATCH**
   ```
   MAJOR.MINOR.PATCH
   ```
-
+  Example:
+  ```
+    1.0.0
+  ```
 ## Version Field Generation
 - **MAJOR** - Explicit in source, should default to `1`
 - **MINOR** - Explicit in source, should default to `0`
@@ -98,3 +109,33 @@ Versioning comes in 3 states, depending on the point in the product cycle:
   }
   ```
 - **SHORTSHA** - Parsed from the current git HEAD
+
+## SemVer1 Fallback
+
+In cases where SemVer2 cannot be used (e.g. old versions of nuget), we can fall back to [SemVer1](https://semver.org/spec/v1.0.0.html).  In Semver1, there is no built in build metadata, and the prerelease field may only contain [0-9A-Za-z-].  To comply, cases where + or . are used in SemVer2's prerelease field are replaced with -.
+
+Versioning comes in 3 states, depending on the point in the product cycle:
+- **Dev/Daily** - Versions should include all fields - pre-release tag, shortdate, number of builds, etc.
+  ```
+  MAJOR.MINOR.PATCH-PRERELEASE-SHORTDATE-BUILDS-SHORTSHA
+  ```
+  Example:
+  ```
+    1.0.0-preview1-25405-01-abcdef
+  ```
+- **Final Prerelease** - Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **BUILDS**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'-final'`.  This avoids a common issue in nuget package resolution where `2.1.0-rc1` < `2.1.0-rc1-12345`. The intention is that the final build is resolved over the date-versioned build.
+  ```
+  MAJOR.MINOR.PATCH-PRERELEASE-final
+  ```
+  Example:
+  ```
+    1.0.0-preview1-final
+  ```
+- **Stable** - Versions should include **MAJOR**, **MINOR**, **PATCH**
+  ```
+  MAJOR.MINOR.PATCH
+  ```
+  Example:
+  ```
+    1.0.0
+  ```
