@@ -4,5 +4,8 @@
     },
     "msbuild-sdks": {
         "RoslynTools.RepoToolset": "1.0.0-beta2-62719-04"
+    },
+    "native-tools": {
+        "cmake": "3.11.1"
     }
 }
