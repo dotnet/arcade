@@ -8,7 +8,7 @@ The main goal of this set of tools is to centralize the way we maintain the boot
 
 The process of reading and updating scripts in the repos will change depending on the environment where the operation is being executed, i.e. Maestro++ for remote, Darc for local. Darc and Maestro++ are responsible for obtaining repo inputs and handling outputs. The mechanics of querying, reading and updating versions will be contained in the DarcLib class library.
 
-![Diagram](Documentation/VersionQueryingAndUpdating.png)
+![Diagram](VersionQueryingAndUpdating.png)
 
 ## Scenarios
 
@@ -58,7 +58,7 @@ DarcLib will be able to:
 *  Query the reporting system for shas+repository that produced a package+version
 *  Query locations of official assets for a package+version
 
-You can find more information about dependency descriptions [here](Documentation/DependencyDescriptionFormat.md)
+You can find more information about dependency descriptions [here](DependencyDescriptionFormat.md)
 
 ### Darc
 
