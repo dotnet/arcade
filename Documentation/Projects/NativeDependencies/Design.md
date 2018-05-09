@@ -30,9 +30,9 @@ The entry-point scripts are the scripts which repos will use to bootstrap their 
 
 Entry-point scripts are:
 
-- nativetoolsbootstrap.cmd
+- init-tools-native.cmd
 
-- nativetoolsbootstrap.sh
+- init-tools-native.sh
 
 ### Common libraries
 
@@ -67,18 +67,18 @@ Native toolset assets will be placed in an Azure blob storage flat file structur
 ## Blob storage layout
 
 ```Text
-\nativeassets
+\native-assets
   - [flat file drop of zips, tarballs, etc...]
 ```
 
-### nativeassets
+### native-assets
 
-The `nativeassets` folder is a flat file dump of all dependencies.  This is assuming that the tools are distributed with versioned filenames.  These are zips / tarballs / etc... provided by a tool publisher which we have republished into Azure blob storage. It is the current hope, that we do not have to repackage the assets to include additional metadata that would make them different from the originally published asset.
+The `native-assets` folder is a flat file dump of all dependencies.  This is assuming that the tools are distributed with versioned filenames.  These are zips / tarballs / etc... provided by a tool publisher which we have republished into Azure blob storage. It is the current hope, that we do not have to repackage the assets to include additional metadata that would make them different from the originally published asset.
 
 ## Example - Azure blob storage container
 
 ```Text
-\nativeassets
+\native-assets
   -cmake-3.10.3-win32-x86.zip
   -cmake-3.10.3-win64-x64.zip
   -cmake-3.11.1-win32-x86.zip
