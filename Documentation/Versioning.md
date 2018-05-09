@@ -61,6 +61,8 @@ Date agnostic versioning is more hassle than it's worth, though having the sha i
 - **SHORTDATE** - 5 digit date
 - **SHORTSHA** - Shortened sha of current commit
 
+**Note that version fields should not be zero-padded**
+
 ## Versioning States and Scenarios
 
 Versioning comes in 3 states, depending on the point in the product cycle:
