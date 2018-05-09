@@ -44,6 +44,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
         [Output]
         public string GeneratedDate { get; set; }
 
+
         private const string DateFormat = "yyyy-MM-dd";
         private const string LastModifiedTimeDateFormat = "yyyy-MM-dd HH:mm:ss.FFFFFFF";
         private CultureInfo enUS = new CultureInfo("en-US");
@@ -93,31 +94,37 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             return true;
         }
 
-        public bool SetVersionAndRevisionFromBuildId(string buildId)
+        private bool SetVersionAndRevisionFromBuildId(string buildId)
         {
             Regex regex = new Regex(@"(\d{8})[\-\.](\d+)$");
-            string dateFormat = "yyyyMMdd";
             Match match = regex.Match(buildId);
+
             if (match.Success && match.Groups.Count > 2)
             {
-                DateTime buildIdDate;
-                if (!DateTime.TryParseExact(match.Groups[1].Value, dateFormat, enUS, DateTimeStyles.AssumeLocal, out buildIdDate))
+                string dateFormat = "yyyyMMdd";
+                DateTime dateFromBuildId;
+
+                if (!DateTime.TryParseExact(match.Groups[1].Value, dateFormat, enUS, DateTimeStyles.AssumeLocal, out dateFromBuildId))
                 {
                     Log.LogError("The OfficialBuildId doesn't follow the expected({0}.rr) format: '{1}'", dateFormat, match.Groups[1].Value);
                     return false;
                 }
-                buildIdDate = buildIdDate.ToUniversalTime();
-                GeneratedVersion = GetCurrentVersionForDate(buildIdDate, ComparisonDate);
+
+                dateFromBuildId = dateFromBuildId.ToUniversalTime();
+                GeneratedVersion = GetCurrentVersionForDate(dateFromBuildId, ComparisonDate);
                 GeneratedDate = match.Groups[2].Value;
+
                 return true;
             }
+
             Log.LogError("Error: Invalid OfficialBuildId was passed: '{0}'", buildId);
             return false;
         }
 
-        public string GetCurrentVersionForDate(DateTime seedDate, string comparisonDate)
+        private string GetCurrentVersionForDate(DateTime seedDate, string comparisonDate)
         {
             DateTime compareDate;
+
             if (string.IsNullOrEmpty(comparisonDate))
             {
                 /*
@@ -128,15 +135,17 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             }
             else
             {
-                bool isValidDate = DateTime.TryParseExact(comparisonDate, DateFormat, enUS, DateTimeStyles.AssumeLocal, out compareDate);
-                if (!isValidDate)
+                if (!DateTime.TryParseExact(comparisonDate, DateFormat, enUS, DateTimeStyles.AssumeLocal, out compareDate))
                 {
                     Log.LogError("The comparison date '{0}' is not valid. Please specify a date in the short format.({1})", comparisonDate, DateFormat);
                 }
+
                 //Convert to UTC to converge
                 compareDate = compareDate.ToUniversalTime();
             }
+
             int months = (seedDate.Year - compareDate.Year) * 12 + seedDate.Month - compareDate.Month;
+
             if (months > 0) //only allow dates after comparedate
             {
                 return string.Format("{0}{1}", months.ToString("D" + (Padding - 2)), seedDate.Day.ToString("D2"));
@@ -144,8 +153,8 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             else
             {
                 Log.LogError("Error: Comparison date is in the same month as the seed date");
+                return string.Empty;
             }
-            return string.Empty;
         }
     }
 }
