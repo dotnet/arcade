@@ -22,16 +22,16 @@ For each participant repo:
 
 1.	Dev uses Darc to update a dependency in current repo (the update itself is done through DarcLib)
 2.	Dev uses Darc to commit and push the update
-3.	“Magic” PR is approved and merged
+3.	Auto-PR is approved and merged
 
 #### How to update a package using Maestro++
 
-1.	Maestro++ is triggered (by something) and knows package P has been updated
-2.	Maestro++ uses Darc/DarcLib to determine which repos depend on package P
-3.	For each repo which depends on package P Maestro++:
+1.	Maestro++ is triggered by actions such as package publishing and/or GitHub webhooks monitoring changes in files like bootstrapping scripts or even a manually
+2.	Maestro++ uses Darc to determine which need to be updated
+3.	For each repo which needs the update Maestro++:
 a.	Uses Darc to update a dependency in current repo (the update itself is done through DarcLib)
 b.	Uses Darc to commit and push the update
-c.	“Magic” PR is approved and merged
+c.	Auto-PR is approved and merged
 
 #### How to find out who’s using package n, and what versions are out there
 
@@ -54,9 +54,9 @@ DarcLib will be able to:
 *  Query dependencies in description
 *  Query sha+repositories for dependencies in description
 *  Update a description to move a dependency to a new version
-*  Query the reporting system for shas+repositories in which a package+version was used
-*  Query the reporting system for shas+repository that produced a package+version
-*  Query locations of official assets for a package+version
+*  Query the reporting system for shas+repositories in which a versioned item was used
+*  Query the reporting system for shas+repository that produced a versioned item
+*  Query locations of official assets for a versioned item
 
 You can find more information about dependency descriptions [here](DependencyDescriptionFormat.md)
 
@@ -65,7 +65,7 @@ You can find more information about dependency descriptions [here](DependencyDes
 A command line tool which consumes DarcLib and which purpose is to query and update version information from repositories. Its functionality is:
 
 #### Input: local repository 
-*  Query packages+versions in repo dependency description (using DarcLib)
+*  Query versioned items in repo dependency description (using DarcLib)
 *  Query shas+repositories for dependencies in the repository dependency description (using DarcLib)
 *  Query shas+repositories for all downstream dependencies (using DarcLib)
 *  Alter the package+version+sha+repository information in the dependency description (using DarcLib)
@@ -74,8 +74,8 @@ A command line tool which consumes DarcLib and which purpose is to query and upd
     *  Remove dependency
 
 #### Input: sha+repo              
-*  Query reporting system for packages+versions produced by sha+repository (using DarcLib) 
-*  Query reporting system for packages+versions in which this sha+repository is referenced (using DarcLib) 
+*  Query reporting system for versioned items produced by sha+repository (using DarcLib) 
+*  Query reporting system for versioned items in which this sha+repository is referenced (using DarcLib) 
 *  Query reporting system for shas+repositories in which this sha+repository is referenced (using DarcLib) 
 
 #### Input: package+version
