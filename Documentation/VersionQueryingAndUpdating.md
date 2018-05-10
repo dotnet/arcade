@@ -51,9 +51,9 @@ Class library used by Darc, Maestro++, etc. to perform version operation on part
 
 DarcLib will be able to:
 
-*  Query dependencies in description
-*  Query sha+repositories for dependencies in description
-*  Update a description to move a dependency to a new version
+*  Query dependencies in `Version.Details.xml`
+*  Query sha+repositories for dependencies in `Version.Details.xml`
+*  Update an entry in `Version.Details.xml` to move a dependency to a new version
 *  Query the reporting system for shas+repositories in which a versioned item was used
 *  Query the reporting system for shas+repository that produced a versioned item
 *  Query locations of official assets for a versioned item
@@ -65,10 +65,10 @@ You can find more information about dependency descriptions [here](DependencyDes
 A command line tool which consumes DarcLib and which purpose is to query and update version information from repositories. Its functionality is:
 
 #### Input: local repository 
-*  Query versioned items in repo dependency description (using DarcLib)
-*  Query shas+repositories for dependencies in the repository dependency description (using DarcLib)
+*  Query versioned items in repo's `Version.Details.xml` (using DarcLib)
+*  Query shas+repositories for dependencies in the repo's `Version.Details.xml` (using DarcLib)
 *  Query shas+repositories for all downstream dependencies (using DarcLib)
-*  Alter the package+version+sha+repository information in the dependency description (using DarcLib)
+*  Alter the package+version+sha+repository information in `Version.Details.xml` (using DarcLib)
     *  Add new dependency 
     *  Change existing dependency 
     *  Remove dependency
@@ -97,4 +97,3 @@ for each participating repo depending on each repo’s subscriptions
 The main difference between these two is that Darc should be used in single local and Maestro++ when a change has to be applied to all participating repos. Maestro++’s role could also be done by Darc but since it is a manual work the dev would need to do the same in N repos where N represents the number of participating repos. 
 
 Also, Maestro++ could use Darc to deal with all the updates in which case the only notion Maestro++ has about the process is which repos to update and the subscriptions of each.
-
