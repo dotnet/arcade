@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
         /// The Major Version that will be produced given a SeedDate.
         /// </summary>
         [Output]
-        public string GeneratedVersion { get; set; }
+        public string GeneratedRevision { get; set; }
 
         /// <summary>
         /// The Revision number that will be produced from the BuildNumber.
@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             }
 
             DateTime date;
-            GeneratedVersion = string.Empty;
+            GeneratedRevision = string.Empty;
             if (!DateTime.TryParseExact(SeedDate, DateFormat, enUS, DateTimeStyles.AssumeLocal, out date))
             {
                 // Check if the timestamp matches the LastModifiedTimeDateFormat
@@ -85,8 +85,8 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             }
             //Convert Date to UTC to converge
             date = date.ToUniversalTime();
-            GeneratedVersion = GetCurrentVersionForDate(date, ComparisonDate);
-            if (string.IsNullOrEmpty(GeneratedVersion))
+            GeneratedRevision = GetCurrentVersionForDate(date, ComparisonDate);
+            if (string.IsNullOrEmpty(GeneratedRevision))
             {
                 Log.LogError("The date '{0}' is not valid. Please pass in a date after {1}.", SeedDate, ComparisonDate);
                 return false;
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
                 }
 
                 dateFromBuildId = dateFromBuildId.ToUniversalTime();
-                GeneratedVersion = GetCurrentVersionForDate(dateFromBuildId, ComparisonDate);
+                GeneratedRevision = GetCurrentVersionForDate(dateFromBuildId, ComparisonDate);
                 GeneratedDate = match.Groups[2].Value;
 
                 return true;

@@ -3,89 +3,82 @@
   <PropertyGroup>
     <_MicrosoftDotNetBuildTasksVersioningTaskAssembly Condition="'$(MSBuildRuntimeType)'=='Core'">$(MSBuildThisFileDirectory)netcoreapp2.0\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
     <_MicrosoftDotNetBuildTasksVersioningTaskAssembly Condition="'$(MSBuildRuntimeType)'!='Core'">$(MSBuildThisFileDirectory)net45\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
+    <VersioningCacheFile>$(MSBuildThisFileDirectory)VersioningCache.props</VersioningCacheFile>
+    
+    <ShouldCreateVersionFileDuringBuild Condition="Exists('$(VersioningCacheFile)')=='false'">true</ShouldCreateVersionFileDuringBuild>
   </PropertyGroup>
 
-  <Target Name="Versioning">
+  <!-- If VersioningCacheFile exists already then import it; If it doesn't we are going to create it. -->
+  <Import Condition="Exists('$(VersioningCacheFile)')" Project="$(VersioningCacheFile)" />
+
+  <Target Name="GenerateVersions" AfterTargets="CreateVersioningCacheFile">
     <!--
       We are going to generate a new date when all these matches:
         - The user specified that a date is needed on the versioning string;
         - The ShrotDate was not specified as a parameter.
         
-      This task will also try to extract the date from the BuildId.
+      The GenerateVersioningDate task will try to extract the date from the 
+      OfficialBuildId in case it is not empty. Otherwise, it will generate a 
+      new date.
     -->
-    <GenerateVersioningDate Condition="'$(IncludeDate)'=='true' and '$(ShortDate)'==''" SeedDate="$(VersionSeedDate)" OfficialBuildId="$(OfficialBuildId)" ComparisonDate="$(VersionComparisonDate)" Padding="$(VersionPadding)">
-      <Output TaskParameter="GeneratedVersion" PropertyName="GeneratedVersion"  />
+    <GenerateVersioningDate Condition="'$(IncludeDate)'=='true' and '$(ShortDate)'==''" SeedDate="$(VersionSeedDate)" OfficialBuildId="$(OfficialBuildId)" ComparisonDate="$(VersionComparisonDate)" Padding="$(Padding)">
+      <Output TaskParameter="GeneratedRevision" PropertyName="Builds"  />
       <Output TaskParameter="GeneratedDate" PropertyName="ShortDate"  />
     </GenerateVersioningDate>
-
+   
     <!--
-      Eventually SHA computation will be handled by another MSBuild Task. 
-      As of now we rely on the user passing it as a parameter.
-    -->
-    <PropertyGroup Condition="'$(IncludeSha)'=='true'">
-      <sha>+$(ShortSha)</sha>
-    </PropertyGroup>
-    
-    <!--
-      We have three pre-defined version format strings. These will look like:
-      Dev              = 1.2.0-preview1.08530.0+asdf34234
-      final-prerelease = 1.2.0-preview1
-      stable           = 3.0.1-final
-    -->
-    <ItemGroup>
-      <FormatStrings Include="dev">
-        <Format>$(major).$(minor).$(patch)-$(prerelease).$(shortdate).$(builds)$(sha)</Format>
-      </FormatStrings>
-
-      <FormatStrings Include="final-prerelease">
-        <Format>$(major).$(minor).$(patch)-$(prerelease)</Format>
-      </FormatStrings>
-
-      <FormatStrings Include="stable">
-        <Format>$(major).$(minor).$(patch)-final</Format>
-      </FormatStrings>
-    </ItemGroup>
-    
-    <PropertyGroup>
-      <VersionString Condition="'%(FormatStrings.Identity)'=='$(FormatName)'">%(FormatStrings.Format)</VersionString>
-    </PropertyGroup>
-    
-    <Error Condition="'$(VersionString)'==''" Text="Unrecognized versioning format string: $(FormatName)" />
-
-    <!--
-      Create a cache file so that other projects don't have to recompute these info on every build.
+      In effect we have three pre-defined version format strings. These look like:
+      stable           = 3.0.1
+      final-prerelease = 1.2.0-preview1.final
+      dev              = 1.2.0-preview1.08530.0+asdf34234
     -->
     <PropertyGroup>
-      <BuildVersionFile>$(MSBuildThisFileDirectory)BuildVersion.props</BuildVersionFile>
-    </PropertyGroup>
+      <!-- Common to all formats -->
+      <VersionString>$(Major).$(Minor).$(Patch)</VersionString>
 
+      <!-- Only the "stable" format doesn't have a PreRelease field. -->
+      <TrailingPart Condition="'$(FormatName)'!='stable'">-$(PreRelease)</TrailingPart>
+
+      <!-- Final label specific to the "final-prerelease" format. -->
+      <TrailingPart Condition="'$(FormatName)'=='final-prerelease'">$(TrailingPart).final</TrailingPart>
+
+      <!-- Specific fields to "dev" format. Inclusion of Date and Sha fields are optional. -->
+      <TrailingPart Condition="'$(FormatName)'=='dev' and '$(IncludeDate)'=='true'">$(TrailingPart).$(ShortDate)</TrailingPart>
+      <TrailingPart Condition="'$(FormatName)'=='dev'">$(TrailingPart).$(Builds)</TrailingPart>
+      <TrailingPart Condition="'$(FormatName)'=='dev' and '$(IncludeSha)'=='true'">$(TrailingPart)+$(ShortSha)</TrailingPart>
+
+      <!-- For SemVer 1.0 all '+' and '.' characters in the trailing part are replaced by '-'. -->
+      <TrailingPart Condition="'$(SemVerOne)'=='true'">$(TrailingPart.Replace('.', '-'))</TrailingPart>
+      <TrailingPart Condition="'$(SemVerOne)'=='true'">$(TrailingPart.Replace('+', '-'))</TrailingPart>
+
+      <VersionString>$(VersionString)$(TrailingPart)</VersionString>
+    </PropertyGroup>
+  </Target>
+
+
+  <Target Name="CreateVersioningCacheFile" Condition="'$(ShouldCreateVersionFileDuringBuild)'=='true'">
+    <Message Text="Creating versioning cache file at $(VersioningCacheFile)" />
+    
     <PropertyGroup>
       <VersionFileContent>
-<![CDATA[<?xml version="1.0" encoding="utf-8"?>
+        <![CDATA[
 <!-- This file was automatically generated by the MSBuild Versioning target. -->
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
   <PropertyGroup>
-    <VersionPropsImported>true</VersionPropsImported>
-    <BuildNumberMajor Condition="'%24(BuildNumberMajor)' == ''">$(major)</BuildNumberMajor>
-    <BuildNumberMinor Condition="'%24(BuildNumberMinor)' == ''">$(minor)</BuildNumberMinor>
-    <LatestCommit Condition="'%24(LatestCommit)' == ''">$(xxxx)</LatestCommit>
-    <BuiltByString Condition="'%24(BuiltByString)' == ''">$(yyyy)</BuiltByString>
+    <ShortDate>$(ShortDate)</ShortDate>
+    <Builds>$(Builds)</Builds>
+    <ShortSha>$(ShortSha)</ShortSha>
+    <Version>$(xxxx)</Version>
+    <FileVersion>$(yyyy)</FileVersion>
+    <InformationalVersion>$(zzzz)</InformationalVersion>
   </PropertyGroup>
 </Project>
 ]]>
       </VersionFileContent>
     </PropertyGroup>
 
-    <!-- Delete old BuildVersion.props files -->
-    <Delete Files="$(BuildVersionFile)" TreatErrorsAsWarnings="true"/>
-    
-    <WriteLinesToFile
-      ContinueOnError="WarnAndContinue"
-      Condition="!Exists('$(BuildVersionFile)')"
-      File="$(BuildVersionFile)"
-      Lines="$(VersionFileContent)"
-      Overwrite="true" />
+    <WriteLinesToFile ContinueOnError="WarnAndContinue" File="$(VersioningCacheFile)" Lines="$(VersionFileContent)" />
   </Target>
-
+  
   <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.Versioning.GenerateVersioningDate" AssemblyFile="$(_MicrosoftDotNetBuildTasksVersioningTaskAssembly)" />
 </Project>

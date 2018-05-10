@@ -33,6 +33,8 @@ ShortSha        | string      | SHA of the repo last commit.
 FormatName      | string      | The name of the format string you want to use. Options are "dev", "final-prerelease" and "stable".
 IncludeSha      | boolean     | Whether or not the repo SHA should be included in the version string. Default to false.
 IncludeDate     | boolean     | Whether or not the build date should be included in the version string. Default to false.
+SemVerOne       | boolean     | Whether to go back to Semantic Versioning 1.0. Default to false.
+Padding         | integer     | Minimum size of the date field in the versioning string. The field will be padded with leading zeros.
 VersionString   | string      | **Output** Version string produced.
 VersionSeedDate         | string | Still work in progres.
 OfficialBuildId         | string | Still work in progres.
@@ -48,7 +50,9 @@ To use this target override the needed parameters (see list above) and call the 
     <Major>1</Major>
     <Minor>2</Minor>
     <Patch>3</Patch>
+    
     <FormatName>stable</FormatName>
+    <Prerelease>preview1</Prerelease>
   </PropertyGroup>
 
   <Target Name="Build" DependsOnTargets="Versioning">
