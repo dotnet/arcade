@@ -22,7 +22,8 @@ For each participant repo:
 
 1.	Dev uses Darc to update a dependency in current repo (the update itself is done through DarcLib)
 2.	Dev uses Darc to commit and push the update
-3.	Auto-PR is approved and merged
+4.	Dev uses Darc to create the Auto-PR
+3.	Auto-PR is approved and merged by dev
 
 #### How to update a package using Maestro++
 
