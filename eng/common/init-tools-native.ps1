@@ -13,7 +13,7 @@ Base file directory or Url from which to acquire tool archives
 Directory to install native toolset.  This is a command-line override for the default
 Install directory precedence order:
 - InstallDirectory command-line override
-- COMMONLIBRARY_NATIVEINSTALLDIRECTORY environment variable
+- NETCOREENG_INSTALL_DIRECTORY environment variable
 - (default) %USERPROFILE%/.netcoreeng/native
 
 .PARAMETER Clean
@@ -61,17 +61,6 @@ try {
     $Env:CommonLibrary_NativeInstallDir = $NativeBaseDir
     $InstallBin = Join-Path $NativeBaseDir "bin"
 
-    if ($Clean -Or $Force) {
-        Write-Host "Cleaning '$NativeBaseDir'"
-        if (Test-Path $NativeBaseDir) {
-            Remove-Item $NativeBaseDir -Force -Recurse
-        }
-
-        if ($Clean) {
-            exit 0
-        }
-    }
-
     # Process tools list
     Write-Host "Processing $GlobalJsonFile"
     If (-Not (Test-Path $GlobalJsonFile)) {
@@ -100,6 +89,9 @@ try {
                     $LocalInstallerCommand += " -Force"
                 }
             }
+            if ($Clean) {
+                $LocalInstallerCommand += " -Clean"
+            }
 
             Write-Verbose "Installing $ToolName version $ToolVersion"
             Write-Verbose "Executing '$LocalInstallerCommand'"
@@ -115,6 +107,9 @@ try {
         exit 0
     }
 
+    if ($Clean) {
+        exit 0
+    }
     if (Test-Path $InstallBin) {
         Write-Host "Native tools are available from" (Convert-Path -Path $InstallBin)
     }

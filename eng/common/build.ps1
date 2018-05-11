@@ -90,6 +90,14 @@ function MakeGlobalSdkAvailableLocal {
     Copy-Item $RepoToolsetSource -Destination $RepoToolsetDestination -Recurse
   }
 }
+
+function InstallNativeTools {
+  $NativeToolsInstaller = Join-Path $PSScriptRoot "init-tools-native.ps1"
+
+  if (Test-Path $NativeToolsInstaller) {
+    & $NativeToolsInstaller
+  }
+}
 function InstallToolset {
   if (!(Test-Path $ToolsetBuildProj)) {
     CreateDirectory $TempDir
@@ -161,6 +169,7 @@ try {
   }
 
   if ($restore) {
+    InstallNativeTools
     InstallDotNetCli
     InstallToolset
   }

@@ -17,6 +17,9 @@ Path to folder containing common library modules
 .PARAMETER Force
 Force install of tools even if they previously exist
 
+.PARAMETER Clean
+Don't install the tool, just clean up the current install of the tool
+
 .PARAMETER DownloadRetries
 Total number of retry attempts
 
@@ -36,6 +39,7 @@ Param (
     [string] $Version,
     [string] $CommonLibraryDirectory = $PSScriptRoot,
     [switch] $Force = $False,
+    [switch] $Clean = $False,
     [int] $DownloadRetries = 5,
     [int] $RetryWaitTimeInSeconds = 30
 )
@@ -55,15 +59,33 @@ try {
         $ToolOs = "win32"
     }
     $ToolNameMoniker = "$ToolName-$Version-$ToolOs-$Arch"
-    $ToolFilePath = Join-Path $InstallPath "$ToolName\$Version\$ToolNameMoniker\bin\$ToolName.exe"
+    $ToolInstallDirectory = Join-Path $InstallPath "$ToolName\$Version\"
+    $ToolFilePath = Join-Path $ToolInstallDirectory "$ToolNameMoniker\bin\$ToolName.exe"
+    $ShimPath = Join-Path $InstallPath "$ToolName.cmd"
+    $Uri = "$BaseUri/$ToolNameMoniker.zip"
+
+    if ($Clean) {
+        Write-Host "Cleaning $ToolInstallDirectory"
+        if (Test-Path $ToolInstallDirectory) {
+            Remove-Item $ToolInstallDirectory -Force -Recurse
+        }
+        Write-Host "Cleaning $ShimPath"
+        if (Test-Path $ShimPath) {
+            Remove-Item $ShimPath -Force
+        }
+        $ToolTempPath = CommonLibrary\Get-TempPathFilename -Path $Uri
+        Write-Host "Cleaning $ToolTempPath"
+        if (Test-Path $ToolTempPath) {
+            Remove-Item $ToolTempPath -Force
+        }
+        exit 0
+    }
 
     # Install tool
     if ((Test-Path $ToolFilePath) -And (-Not $Force)) {
-        Write-Verbose "$ToolName ($Version) already exists, skipping install (specify -Force to force install)"
+        Write-Verbose "$ToolName ($Version) already exists, skipping install"
     }
     else {
-        $Uri = "$BaseUri/$ToolNameMoniker.zip"
-        $ToolInstallDirectory = Join-Path $InstallPath "$ToolName\$Version\"
         $InstallStatus = CommonLibrary\DownloadAndExtract -Uri $Uri `
                                                          -InstallDirectory $ToolInstallDirectory `
                                                          -Force:$Force `
@@ -78,7 +100,6 @@ try {
     }
     # Generate shim
     # Always rewrite shims so that we are referencing the expected version
-    $ShimPath = Join-Path $InstallPath "$ToolName.cmd"
     $GenerateShimStatus = CommonLibrary\New-ScriptShim -ShimPath $ShimPath `
                                                        -ToolFilePath $ToolFilePath `
                                                        -Force `

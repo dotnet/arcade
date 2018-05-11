@@ -37,9 +37,7 @@ function DownloadAndExtract {
     # Define verbose switch if undefined
     $Verbose = $VerbosePreference -Eq "Continue"
     
-    $TempDir = CommonLibrary\Get-TempDirectory
-    $ToolFilename = Split-Path $Uri -leaf
-    $TempToolPath = Join-Path $TempDir $ToolFilename
+    $TempToolPath = CommonLibrary\Get-TempPathFilename -Path $Uri
 
     # Download native tool
     $DownloadStatus = CommonLibrary\Get-File -Uri $Uri `
@@ -250,17 +248,29 @@ function Get-TempDirectory {
     return Join-Path (Get-NativeInstallDirectory) "temp/"
 }
 
+function Get-TempPathFilename {
+    [CmdletBinding(PositionalBinding=$false)]
+    Param (
+        [Parameter(Mandatory=$True)]
+        [string] $Path
+    )
+    $TempDir = CommonLibrary\Get-TempDirectory
+    $TempFilename = Split-Path $Path -leaf
+    $TempPath = Join-Path $TempDir $TempFilename
+    return $TempPath
+}
+
 <#
 .SYNOPSIS
 Returns the base directory to use for native tool installation
 
 .NOTES
-Returns the value of the COMMONLIBRARY_NATIVEINSTALLDIRECTORY if that environment variable
+Returns the value of the NETCOREENG_INSTALL_DIRECTORY if that environment variable
 is set, or otherwise returns an install directory under the %USERPROFILE%
 #>
 function Get-NativeInstallDirectory {
 
-    $InstallDir = $Env:COMMONLIBRARY_NATIVEINSTALLDIRECTORY
+    $InstallDir = $Env:NETCOREENG_INSTALL_DIRECTORY
     if (!$InstallDir) {
         $InstallDir = Join-Path $Env:USERPROFILE ".netcoreeng/native/"
     }
@@ -339,4 +349,5 @@ export-modulemember -function Get-File
 export-modulemember -function Get-MachineArchitecture
 export-modulemember -function Get-NativeInstallDirectory
 export-modulemember -function Get-TempDirectory
+export-modulemember -function Get-TempPathFilename
 export-modulemember -function New-ScriptShim
