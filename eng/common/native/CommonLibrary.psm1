@@ -194,7 +194,7 @@ function New-ScriptShim {
         $ShimContents += "setlocal enableextensions enabledelayedexpansion`n"
         $ShimContents += "set SHIMARGS=`n"
         $ShimContents += "for %%x in (%*) do (set SHIMARGS=!SHIMARGS! `"%%~x`")`n"
-        $ShimContents += "$ToolFilePath %SHIMARGS%`n"
+        $ShimContents += "`"$ToolFilePath`" %SHIMARGS%`n"
         $ShimContents += "endlocal"
 
         # Write shim file

@@ -35,7 +35,7 @@ File path to tools versions file
 #>
 [CmdletBinding(PositionalBinding=$false)]
 Param (
-    [string] $BaseUri = "https://dotnetfeed.blob.core.windows.net/chcosta-test/nativeassets",
+    [string] $BaseUri = "https://dotnetfeed.blob.core.windows.net/netcoreeng/native-assets",
     [string] $InstallDirectory,
     [switch] $Clean = $False,
     [switch] $Force = $False,
