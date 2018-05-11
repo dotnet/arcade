@@ -35,13 +35,13 @@ File path to tools versions file
 #>
 [CmdletBinding(PositionalBinding=$false)]
 Param (
-    [string] $BaseUri = "https://dotnetfeed.blob.core.windows.net/netcoreeng/native-assets",
-    [string] $InstallDirectory,
-    [switch] $Clean = $False,
-    [switch] $Force = $False,
-    [int] $DownloadRetries = 5,
-    [int] $RetryWaitTimeInSeconds = 30,
-    [string] $GlobalJsonFile = "$PSScriptRoot\..\..\global.json"
+  [string] $BaseUri = "https://dotnetfeed.blob.core.windows.net/netcoreeng/native-assets",
+  [string] $InstallDirectory,
+  [switch] $Clean = $False,
+  [switch] $Force = $False,
+  [int] $DownloadRetries = 5,
+  [int] $RetryWaitTimeInSeconds = 30,
+  [string] $GlobalJsonFile = "$PSScriptRoot\..\..\global.json"
 )
 
 Set-StrictMode -version 2.0
@@ -50,77 +50,77 @@ $ErrorActionPreference="Stop"
 Import-Module -Name (Join-Path $PSScriptRoot "native\CommonLibrary.psm1")
 
 try {
-    # Define verbose switch if undefined
-    $Verbose = $VerbosePreference -Eq "Continue"
+  # Define verbose switch if undefined
+  $Verbose = $VerbosePreference -Eq "Continue"
 
-    $EngCommonBaseDir = Join-Path $PSScriptRoot "native\"
-    $NativeBaseDir = $InstallDirectory
-    if (!$NativeBaseDir) {
-      $NativeBaseDir = CommonLibrary\Get-NativeInstallDirectory
-    }
-    $Env:CommonLibrary_NativeInstallDir = $NativeBaseDir
-    $InstallBin = Join-Path $NativeBaseDir "bin"
+  $EngCommonBaseDir = Join-Path $PSScriptRoot "native\"
+  $NativeBaseDir = $InstallDirectory
+  if (!$NativeBaseDir) {
+    $NativeBaseDir = CommonLibrary\Get-NativeInstallDirectory
+  }
+  $Env:CommonLibrary_NativeInstallDir = $NativeBaseDir
+  $InstallBin = Join-Path $NativeBaseDir "bin"
 
-    # Process tools list
-    Write-Host "Processing $GlobalJsonFile"
-    If (-Not (Test-Path $GlobalJsonFile)) {
-        Write-Host "Unable to find '$GlobalJsonFile'"
-        exit 0
-    }
-    $NativeTools = Get-Content($GlobalJsonFile) -Raw | 
-                        ConvertFrom-Json | 
-                        Select-Object -Expand "native-tools" -ErrorAction SilentlyContinue
-    if ($NativeTools) {
-        $NativeTools.PSObject.Properties | ForEach-Object {
-            $ToolName = $_.Name
-            $ToolVersion = $_.Value
-            $InstallerFilename = "install-$ToolName.ps1"
-            $LocalInstallerCommand = Join-Path $EngCommonBaseDir $InstallerFilename
-            $LocalInstallerCommand += " -InstallPath $InstallBin"
-            $LocalInstallerCommand += " -BaseUri $BaseUri"
-            $LocalInstallerCommand += " -CommonLibraryDirectory $EngCommonBaseDir"
-            $LocalInstallerCommand += " -Version $ToolVersion"
-
-            if ($Verbose) {
-                $LocalInstallerCommand += " -Verbose"
-            }
-            if (Get-Variable 'Force' -ErrorAction 'SilentlyContinue') {
-                if($Force) {
-                    $LocalInstallerCommand += " -Force"
-                }
-            }
-            if ($Clean) {
-                $LocalInstallerCommand += " -Clean"
-            }
-
-            Write-Verbose "Installing $ToolName version $ToolVersion"
-            Write-Verbose "Executing '$LocalInstallerCommand'"
-            Invoke-Expression "$LocalInstallerCommand"
-            if ($LASTEXITCODE -Ne "0") {
-                Write-Error "Execution failed"
-                exit 1
-            }
-        }
-    }
-    else {
-        Write-Host "No native tools defined in global.json"
-        exit 0
-    }
-
-    if ($Clean) {
-        exit 0
-    }
-    if (Test-Path $InstallBin) {
-        Write-Host "Native tools are available from" (Convert-Path -Path $InstallBin)
-    }
-    else {
-        Write-Error "Native tools install directory does not exist, installation failed"
-        exit 1
-    }
+  # Process tools list
+  Write-Host "Processing $GlobalJsonFile"
+  If (-Not (Test-Path $GlobalJsonFile)) {
+    Write-Host "Unable to find '$GlobalJsonFile'"
     exit 0
+  }
+  $NativeTools = Get-Content($GlobalJsonFile) -Raw | 
+                    ConvertFrom-Json | 
+                    Select-Object -Expand "native-tools" -ErrorAction SilentlyContinue
+  if ($NativeTools) {
+    $NativeTools.PSObject.Properties | ForEach-Object {
+      $ToolName = $_.Name
+      $ToolVersion = $_.Value
+      $InstallerFilename = "install-$ToolName.ps1"
+      $LocalInstallerCommand = Join-Path $EngCommonBaseDir $InstallerFilename
+      $LocalInstallerCommand += " -InstallPath $InstallBin"
+      $LocalInstallerCommand += " -BaseUri $BaseUri"
+      $LocalInstallerCommand += " -CommonLibraryDirectory $EngCommonBaseDir"
+      $LocalInstallerCommand += " -Version $ToolVersion"
+
+      if ($Verbose) {
+        $LocalInstallerCommand += " -Verbose"
+      }
+      if (Get-Variable 'Force' -ErrorAction 'SilentlyContinue') {
+        if($Force) {
+          $LocalInstallerCommand += " -Force"
+        }
+      }
+      if ($Clean) {
+        $LocalInstallerCommand += " -Clean"
+      }
+
+      Write-Verbose "Installing $ToolName version $ToolVersion"
+      Write-Verbose "Executing '$LocalInstallerCommand'"
+      Invoke-Expression "$LocalInstallerCommand"
+      if ($LASTEXITCODE -Ne "0") {
+        Write-Error "Execution failed"
+        exit 1
+      }
+    }
+  }
+  else {
+    Write-Host "No native tools defined in global.json"
+    exit 0
+  }
+
+  if ($Clean) {
+    exit 0
+  }
+  if (Test-Path $InstallBin) {
+    Write-Host "Native tools are available from" (Convert-Path -Path $InstallBin)
+  }
+  else {
+    Write-Error "Native tools install directory does not exist, installation failed"
+    exit 1
+  }
+  exit 0
 }
 catch {
-    Write-Host $_
-    Write-Host $_.Exception
-    exit 1    
+  Write-Host $_
+  Write-Host $_.Exception
+  exit 1
 }

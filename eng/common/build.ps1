@@ -23,32 +23,32 @@ set-strictmode -version 2.0
 $ErrorActionPreference = "Stop"
 
 function Print-Usage() {
-    Write-Host "Common settings:"
-    Write-Host "  -configuration <value>  Build configuration Debug, Release"
-    Write-Host "  -verbosity <value>      Msbuild verbosity (q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic])"
-    Write-Host "  -help                   Print help and exit"
-    Write-Host ""
+  Write-Host "Common settings:"
+  Write-Host "  -configuration <value>  Build configuration Debug, Release"
+  Write-Host "  -verbosity <value>      Msbuild verbosity (q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic])"
+  Write-Host "  -help                   Print help and exit"
+  Write-Host ""
 
-    Write-Host "Actions:"
-    Write-Host "  -restore                Restore dependencies"
-    Write-Host "  -build                  Build solution"
-    Write-Host "  -rebuild                Rebuild solution"
-    Write-Host "  -deploy                 Deploy built VSIXes"
-    Write-Host "  -deployDeps             Deploy dependencies (Roslyn VSIXes for integration tests)"
-    Write-Host "  -test                   Run all unit tests in the solution"
-    Write-Host "  -integrationTest        Run all integration tests in the solution"
-    Write-Host "  -sign                   Sign build outputs"
-    Write-Host "  -pack                   Package build outputs into NuGet packages and Willow components"
-    Write-Host ""
+  Write-Host "Actions:"
+  Write-Host "  -restore                Restore dependencies"
+  Write-Host "  -build                  Build solution"
+  Write-Host "  -rebuild                Rebuild solution"
+  Write-Host "  -deploy                 Deploy built VSIXes"
+  Write-Host "  -deployDeps             Deploy dependencies (Roslyn VSIXes for integration tests)"
+  Write-Host "  -test                   Run all unit tests in the solution"
+  Write-Host "  -integrationTest        Run all integration tests in the solution"
+  Write-Host "  -sign                   Sign build outputs"
+  Write-Host "  -pack                   Package build outputs into NuGet packages and Willow components"
+  Write-Host ""
 
-    Write-Host "Advanced settings:"
-    Write-Host "  -projects <value>       Semi-colon delimited list of sln/proj's to build. Globbing is supported (*.sln)"
-    Write-Host "  -ci                     Set when running on CI server"
-    Write-Host "  -log                    Enable logging (by default on CI)"
-    Write-Host "  -prepareMachine         Prepare machine for CI run"
-    Write-Host ""
-    Write-Host "Command line arguments not listed above are passed thru to msbuild."
-    Write-Host "The above arguments can be shortened as much as to be unambiguous (e.g. -co for configuration, -t for test, etc.)."
+  Write-Host "Advanced settings:"
+  Write-Host "  -projects <value>       Semi-colon delimited list of sln/proj's to build. Globbing is supported (*.sln)"
+  Write-Host "  -ci                     Set when running on CI server"
+  Write-Host "  -log                    Enable logging (by default on CI)"
+  Write-Host "  -prepareMachine         Prepare machine for CI run"
+  Write-Host ""
+  Write-Host "Command line arguments not listed above are passed thru to msbuild."
+  Write-Host "The above arguments can be shortened as much as to be unambiguous (e.g. -co for configuration, -t for test, etc.)."
 }
 
 if ($help -or (($properties -ne $null) -and ($properties.Contains("/help") -or $properties.Contains("/?")))) {
@@ -94,7 +94,8 @@ function MakeGlobalSdkAvailableLocal {
 function InstallNativeTools {
   $NativeToolsInstaller = Join-Path $PSScriptRoot "init-tools-native.ps1"
 
-  if (Test-Path $NativeToolsInstaller) {
+  $NativeTools = $GlobalJson | Select-Object -Expand "native-tools" -ErrorAction SilentlyContinue
+  if ($NativeTools) {
     & $NativeToolsInstaller
   }
 }

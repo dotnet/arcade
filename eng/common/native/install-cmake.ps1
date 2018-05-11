@@ -31,89 +31,89 @@ Returns 0 if install succeeds, 1 otherwise
 #>
 [CmdletBinding(PositionalBinding=$false)]
 Param (
-    [Parameter(Mandatory=$True)]
-    [string] $InstallPath,
-    [Parameter(Mandatory=$True)]
-    [string] $BaseUri,
-    [Parameter(Mandatory=$True)]
-    [string] $Version,
-    [string] $CommonLibraryDirectory = $PSScriptRoot,
-    [switch] $Force = $False,
-    [switch] $Clean = $False,
-    [int] $DownloadRetries = 5,
-    [int] $RetryWaitTimeInSeconds = 30
+  [Parameter(Mandatory=$True)]
+  [string] $InstallPath,
+  [Parameter(Mandatory=$True)]
+  [string] $BaseUri,
+  [Parameter(Mandatory=$True)]
+  [string] $Version,
+  [string] $CommonLibraryDirectory = $PSScriptRoot,
+  [switch] $Force = $False,
+  [switch] $Clean = $False,
+  [int] $DownloadRetries = 5,
+  [int] $RetryWaitTimeInSeconds = 30
 )
 
 # Import common library modules
 Import-Module -Name (Join-Path $CommonLibraryDirectory "CommonLibrary.psm1")
 
 try {
-    # Define verbose switch if undefined
-    $Verbose = $VerbosePreference -Eq "Continue"
-    
-    $ToolName = "cmake"
+  # Define verbose switch if undefined
+  $Verbose = $VerbosePreference -Eq "Continue"
+  
+  $ToolName = "cmake"
 
-    $Arch = CommonLibrary\Get-MachineArchitecture
-    $ToolOs = "win64"
-    if($Arch -Eq "x32") {
-        $ToolOs = "win32"
-    }
-    $ToolNameMoniker = "$ToolName-$Version-$ToolOs-$Arch"
-    $ToolInstallDirectory = Join-Path $InstallPath "$ToolName\$Version\"
-    $ToolFilePath = Join-Path $ToolInstallDirectory "$ToolNameMoniker\bin\$ToolName.exe"
-    $ShimPath = Join-Path $InstallPath "$ToolName.cmd"
-    $Uri = "$BaseUri/$ToolNameMoniker.zip"
+  $Arch = CommonLibrary\Get-MachineArchitecture
+  $ToolOs = "win64"
+  if($Arch -Eq "x32") {
+    $ToolOs = "win32"
+  }
+  $ToolNameMoniker = "$ToolName-$Version-$ToolOs-$Arch"
+  $ToolInstallDirectory = Join-Path $InstallPath "$ToolName\$Version\"
+  $ToolFilePath = Join-Path $ToolInstallDirectory "$ToolNameMoniker\bin\$ToolName.exe"
+  $ShimPath = Join-Path $InstallPath "$ToolName.cmd"
+  $Uri = "$BaseUri/$ToolNameMoniker.zip"
 
-    if ($Clean) {
-        Write-Host "Cleaning $ToolInstallDirectory"
-        if (Test-Path $ToolInstallDirectory) {
-            Remove-Item $ToolInstallDirectory -Force -Recurse
-        }
-        Write-Host "Cleaning $ShimPath"
-        if (Test-Path $ShimPath) {
-            Remove-Item $ShimPath -Force
-        }
-        $ToolTempPath = CommonLibrary\Get-TempPathFilename -Path $Uri
-        Write-Host "Cleaning $ToolTempPath"
-        if (Test-Path $ToolTempPath) {
-            Remove-Item $ToolTempPath -Force
-        }
-        exit 0
+  if ($Clean) {
+    Write-Host "Cleaning $ToolInstallDirectory"
+    if (Test-Path $ToolInstallDirectory) {
+      Remove-Item $ToolInstallDirectory -Force -Recurse
     }
-
-    # Install tool
-    if ((Test-Path $ToolFilePath) -And (-Not $Force)) {
-        Write-Verbose "$ToolName ($Version) already exists, skipping install"
+    Write-Host "Cleaning $ShimPath"
+    if (Test-Path $ShimPath) {
+      Remove-Item $ShimPath -Force
     }
-    else {
-        $InstallStatus = CommonLibrary\DownloadAndExtract -Uri $Uri `
-                                                         -InstallDirectory $ToolInstallDirectory `
-                                                         -Force:$Force `
-                                                         -DownloadRetries $DownloadRetries `
-                                                         -RetryWaitTimeInSeconds $RetryWaitTimeInSeconds `
-                                                         -Verbose:$Verbose
-
-        if ($InstallStatus -Eq $False) {
-            Write-Error "Installation failed"
-            exit 1
-        }
+    $ToolTempPath = CommonLibrary\Get-TempPathFilename -Path $Uri
+    Write-Host "Cleaning $ToolTempPath"
+    if (Test-Path $ToolTempPath) {
+      Remove-Item $ToolTempPath -Force
     }
-    # Generate shim
-    # Always rewrite shims so that we are referencing the expected version
-    $GenerateShimStatus = CommonLibrary\New-ScriptShim -ShimPath $ShimPath `
-                                                       -ToolFilePath $ToolFilePath `
-                                                       -Force `
-                                                       -Verbose:$Verbose
-
-    if ($GenerateShimStatus -Eq $False) {
-        Write-Error "Generate shim failed"
-        return 1
-    }
-    
     exit 0
+  }
+
+  # Install tool
+  if ((Test-Path $ToolFilePath) -And (-Not $Force)) {
+    Write-Verbose "$ToolName ($Version) already exists, skipping install"
+  }
+  else {
+    $InstallStatus = CommonLibrary\DownloadAndExtract -Uri $Uri `
+                                                      -InstallDirectory $ToolInstallDirectory `
+                                                      -Force:$Force `
+                                                      -DownloadRetries $DownloadRetries `
+                                                      -RetryWaitTimeInSeconds $RetryWaitTimeInSeconds `
+                                                      -Verbose:$Verbose
+
+    if ($InstallStatus -Eq $False) {
+      Write-Error "Installation failed"
+      exit 1
+    }
+  }
+  # Generate shim
+  # Always rewrite shims so that we are referencing the expected version
+  $GenerateShimStatus = CommonLibrary\New-ScriptShim -ShimPath $ShimPath `
+                                                     -ToolFilePath $ToolFilePath `
+                                                     -Force `
+                                                     -Verbose:$Verbose
+
+  if ($GenerateShimStatus -Eq $False) {
+    Write-Error "Generate shim failed"
+    return 1
+  }
+  
+  exit 0
 }
 catch {
-    Write-Host $_
-    Write-Host $_.Exception
-    exit 1    
+  Write-Host $_
+  Write-Host $_.Exception
+  exit 1    
 }
