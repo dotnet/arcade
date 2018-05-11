@@ -33,6 +33,12 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
         public string ComparisonDate { get; set; }
 
         /// <summary>
+        /// 'true' for Semantic Versioning 1.0 format. Leading zeros are allowed on fields.
+        /// 'false' that means that Semantic Versioning 2.0 will be used. No leading zeros on any field.
+        /// </summary>
+        public string SemVerOne { get; set; }
+
+        /// <summary>
         /// The Major Version that will be produced given a SeedDate.
         /// </summary>
         [Output]
@@ -61,15 +67,18 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
                 return SetVersionAndRevisionFromBuildId(OfficialBuildId);
             }
 
-            // Calculating GeneratedVersion
-            if (Padding == 0)
-            {
-                Padding = 5;
-            }
-            else if (Padding < 5)
-            {
-                Log.LogWarning($"The specified Padding '{Padding}' has to be equal to or greater than 5. Using 5 as a default now.");
-                Padding = 5;
+            // Leading zeros are only allowed in SemVer 1.0
+            if (SemVerOne.Equals("true", StringComparison.OrdinalIgnoreCase))
+            { 
+                if (Padding == 0)
+                {
+                    Padding = 5;
+                }
+                else if (Padding < 5)
+                {
+                    Log.LogWarning($"The specified Padding '{Padding}' has to be equal to or greater than 5. Using 5 as a default now.");
+                    Padding = 5;
+                }
             }
 
             DateTime date;
@@ -148,7 +157,14 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
 
             if (months > 0) //only allow dates after comparedate
             {
-                return string.Format("{0}{1}", months.ToString("D" + (Padding - 2)), seedDate.Day.ToString("D2"));
+                if (SemVerOne.Equals("true", StringComparison.OrdinalIgnoreCase))
+                {
+                    return string.Format("{0}{1}", months.ToString("D"), seedDate.Day.ToString("D2"));
+                }
+                else
+                {
+                    return string.Format("{0}{1}", months.ToString("D" + (Padding - 2)), seedDate.Day.ToString("D2"));
+                }
             }
             else
             {
