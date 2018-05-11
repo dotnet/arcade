@@ -26,13 +26,15 @@ Arcade will provide a set of libraries which will be used to install native tool
 
 ### Entry-point scripts
 
-The entry-point scripts are the scripts which repos will use to bootstrap their defined native toolset dependencies.  The entry-point scripts will read the repo's `NativeToolsVersions.txt` file to determine which tool(s) and version to install.  Only one version of each tool should be defined, though there is not (yet) logic to detect multiple tool versions being installed (currently if this occurs, last one installed will win).
+The entry-point scripts are the scripts which repos will use to bootstrap their defined native toolset dependencies.  The entry-point scripts will read the repo's `global.json` file to determine which tool(s) and version to install.  Only one version of each tool should be defined, though there is not (yet) logic to detect multiple tool versions being installed (currently if this occurs, last one installed will win).
 
 Entry-point scripts are:
 
 - init-tools-native.cmd
 
 - init-tools-native.sh
+
+These scripts will also be wired into the `eng\common\Build.ps1` and `eng\common\build.sh` scripts so that they will run as part of a repo's restore operations.
 
 ### Common libraries
 
@@ -53,6 +55,8 @@ Development will show which common libraries will actually be required, but some
 ### Native tool installers
 
 The Arcade repo will define the installers for each supported native tool.  The native tool installer will define how to install a tool locally (from blob storage).  Certain, common install scenarios (xcopy deployable) may use a common library to perform the install.  The install scripts will (initially) be generic install scripts (per tool) used to install any version of the native asset which has been published to Azure storage.  If tool install formats noticeably change from version to version, we may need to adjust the install scripts accordingly (while maintaining backward compatability).
+
+Native tool installers will be responsible for supporting an "install" operation and a "clean" (uninstall) operation.  See existing installers for examples of "clean". 
 
 #### shims
 
@@ -99,13 +103,22 @@ Maestro will provide updates to the scripts.
 
 **How do you determine which native tools to install?**
 
-The current format is a parsable text file
+The native tools will be defined in a `native-tools` section of the repo's `global.json` file.
 
 Example:
 
-```Text
-CMake=3.11.1
-Python=3.6.5
+```JSON
+{
+    "sdk": {
+        "version": "2.1.100-preview-007366"
+    },
+    "msbuild-sdks": {
+        "RoslynTools.RepoToolset": "1.0.0-beta2-62719-04"
+    },
+    "native-tools": {
+        "cmake": "3.11.1"
+    }
+}
 ```
 
 **Why is each native dependency required to have an "installer", why isn't the local repo handling unzipping and laying out the assets?**
