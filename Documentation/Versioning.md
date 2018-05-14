@@ -68,13 +68,13 @@ Date agnostic versioning is more hassle than it's worth, though having the sha i
 Versioning comes in 3 states, depending on the point in the product cycle:
 - **Dev/Daily** - Versions should include all fields - pre-release tag, shortdate, revision, etc.
   ```
-  MAJOR.MINOR.PATCH-PRERELEASE.SHORTDATE.BUILDS+SHORTSHA
+  MAJOR.MINOR.PATCH-PRERELEASE.SHORTDATE.REVISION+SHORTSHA
   ```
   Example:
   ```
     1.0.0-preview1.25405.01+abcdef
   ```
-- **Final Prerelease** - Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **BUILDS**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'.final'`.  This avoids a common issue in nuget package resolution where `2.1.0-rc1` < `2.1.0-rc1.12345`. The intention is that the final build is resolved over the date-versioned build.
+- **Final Prerelease** - Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **REVISION**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'.final'`.  This avoids a common issue in nuget package resolution where `2.1.0-rc1` < `2.1.0-rc1.12345`. The intention is that the final build is resolved over the date-versioned build.
   ```
   MAJOR.MINOR.PATCH-PRERELEASE.final
   ```
@@ -123,13 +123,13 @@ In cases where SemVer2 cannot be used (e.g. old versions of nuget), we can fall 
 Versioning comes in 3 states, depending on the point in the product cycle:
 - **Dev/Daily** - Versions should include all fields - pre-release tag, shortdate, revision, etc.
   ```
-  MAJOR.MINOR.PATCH-PRERELEASE-SHORTDATE-BUILDS-SHORTSHA
+  MAJOR.MINOR.PATCH-PRERELEASE-SHORTDATE-REVISION-SHORTSHA
   ```
   Example:
   ```
     1.0.0-preview1-25405-01-abcdef
   ```
-- **Final Prerelease** - Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **BUILDS**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'-final'`.  This avoids a common issue in nuget package resolution where `2.1.0-rc1` < `2.1.0-rc1-12345`. The intention is that the final build is resolved over the date-versioned build.
+- **Final Prerelease** - Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **REVISION**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'-final'`.  This avoids a common issue in nuget package resolution where `2.1.0-rc1` < `2.1.0-rc1-12345`. The intention is that the final build is resolved over the date-versioned build.
   ```
   MAJOR.MINOR.PATCH-PRERELEASE-final
   ```
