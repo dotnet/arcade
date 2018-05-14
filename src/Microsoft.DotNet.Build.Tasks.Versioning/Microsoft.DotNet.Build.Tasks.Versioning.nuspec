@@ -13,6 +13,7 @@
     <description>
       This package provides the following MSBuild target(s):
       - Versioning
+      - CreateVersioningCacheFile
       and task(s):
       - GenerateVersioningDate
     </description>

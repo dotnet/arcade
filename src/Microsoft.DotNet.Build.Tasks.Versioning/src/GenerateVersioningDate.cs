@@ -23,7 +23,13 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
         public string OfficialBuildId { get; set; }
 
         /// <summary>
-        /// Optional parameter that sets the Padding for the version number. Must be 5 or bigger.
+        /// 'true' for Semantic Versioning 1.0 format. Leading zeros are allowed on fields.
+        /// 'false' that means that Semantic Versioning 2.0 will be used. No leading zeros on any field.
+        /// </summary>
+        public bool IncludePadding { get; set; }
+
+        /// <summary>
+        /// Padding for the version number. Must be 5 or bigger.
         /// </summary>
         public int Padding { get; set; }
 
@@ -33,22 +39,16 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
         public string ComparisonDate { get; set; }
 
         /// <summary>
-        /// 'true' for Semantic Versioning 1.0 format. Leading zeros are allowed on fields.
-        /// 'false' that means that Semantic Versioning 2.0 will be used. No leading zeros on any field.
-        /// </summary>
-        public string SemVerOne { get; set; }
-
-        /// <summary>
         /// The Major Version that will be produced given a SeedDate.
         /// </summary>
         [Output]
-        public string GeneratedRevision { get; set; }
+        public string GeneratedShortDate { get; set; }
 
         /// <summary>
         /// The Revision number that will be produced from the BuildNumber.
         /// </summary>
         [Output]
-        public string GeneratedDate { get; set; }
+        public string GeneratedRevision { get; set; }
 
 
         private const string DateFormat = "yyyy-MM-dd";
@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             // If OfficialBuildId is passed in, then use that to calculate the version and revision.
             if (string.IsNullOrEmpty(OfficialBuildId))
             {
-                GeneratedDate = "0";
+                GeneratedRevision = "0";
             }
             else
             {
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             }
 
             // Leading zeros are only allowed in SemVer 1.0
-            if (SemVerOne.Equals("true", StringComparison.OrdinalIgnoreCase))
+            if (IncludePadding)
             { 
                 if (Padding == 0)
                 {
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             }
 
             DateTime date;
-            GeneratedRevision = string.Empty;
+            GeneratedShortDate = string.Empty;
             if (!DateTime.TryParseExact(SeedDate, DateFormat, enUS, DateTimeStyles.AssumeLocal, out date))
             {
                 // Check if the timestamp matches the LastModifiedTimeDateFormat
@@ -94,8 +94,8 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             }
             //Convert Date to UTC to converge
             date = date.ToUniversalTime();
-            GeneratedRevision = GetCurrentVersionForDate(date, ComparisonDate);
-            if (string.IsNullOrEmpty(GeneratedRevision))
+            GeneratedShortDate = CreateShortDate(date, ComparisonDate);
+            if (string.IsNullOrEmpty(GeneratedShortDate))
             {
                 Log.LogError("The date '{0}' is not valid. Please pass in a date after {1}.", SeedDate, ComparisonDate);
                 return false;
@@ -120,8 +120,8 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
                 }
 
                 dateFromBuildId = dateFromBuildId.ToUniversalTime();
-                GeneratedRevision = GetCurrentVersionForDate(dateFromBuildId, ComparisonDate);
-                GeneratedDate = match.Groups[2].Value;
+                GeneratedShortDate = CreateShortDate(dateFromBuildId, ComparisonDate);
+                GeneratedRevision = match.Groups[2].Value;
 
                 return true;
             }
@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             return false;
         }
 
-        private string GetCurrentVersionForDate(DateTime seedDate, string comparisonDate)
+        private string CreateShortDate(DateTime seedDate, string comparisonDate)
         {
             DateTime compareDate;
 
@@ -157,13 +157,13 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
 
             if (months > 0) //only allow dates after comparedate
             {
-                if (SemVerOne.Equals("true", StringComparison.OrdinalIgnoreCase))
+                if (IncludePadding)
                 {
-                    return string.Format("{0}{1}", months.ToString("D"), seedDate.Day.ToString("D2"));
+                    return string.Format("{0}{1}", months.ToString("D" + (Padding - 2)), seedDate.Day.ToString("D2"));
                 }
                 else
                 {
-                    return string.Format("{0}{1}", months.ToString("D" + (Padding - 2)), seedDate.Day.ToString("D2"));
+                    return string.Format("{0}{1}", months.ToString("D"), seedDate.Day.ToString("D2"));
                 }
             }
             else

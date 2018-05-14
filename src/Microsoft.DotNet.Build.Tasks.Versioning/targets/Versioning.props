@@ -6,9 +6,10 @@
     <Patch>0</Patch>
 
     <PreRelease>preview1</PreRelease>
-    <Builds>0</Builds>
+    <Revision>0</Revision>
 
     <SemVerOne>false</SemVerOne>
+    <Padding>0</Padding>
   </PropertyGroup>
 
 </Project>

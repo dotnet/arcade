@@ -28,7 +28,7 @@ Minor           | string      | Minor version number. Defaults to 0.
 Patch           | string      | Patch number. Default to 0.
 Prerelease      | string      | Prerelease label. E.g. "beta", "preview", etc.
 ShortDate       | string      | Date to be used in the version string.
-Builds          | string      | Number of builds for current date.
+Revision        | string      | Number of Revision for current date.
 ShortSha        | string      | SHA of the repo last commit.
 FormatName      | string      | The name of the format string you want to use. Options are "dev", "final-prerelease" and "stable".
 IncludeSha      | boolean     | Whether or not the repo SHA should be included in the version string. Default to false.
