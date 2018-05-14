@@ -57,7 +57,7 @@ Date agnostic versioning is more hassle than it's worth, though having the sha i
 - **MINOR** - Minor version
 - **PATCH** - Patch version
 - **PRERELEASE** - Prerelease label
-- **BUILDS** - Number of official builds during the current day
+- **REVISION** - Number of official builds during the current day
 - **SHORTDATE** - 5 digit date
 - **SHORTSHA** - Shortened sha of current commit
 
@@ -66,7 +66,7 @@ Date agnostic versioning is more hassle than it's worth, though having the sha i
 ## Versioning States and Scenarios
 
 Versioning comes in 3 states, depending on the point in the product cycle:
-- **Dev/Daily** - Versions should include all fields - pre-release tag, shortdate, number of builds, etc.
+- **Dev/Daily** - Versions should include all fields - pre-release tag, shortdate, revision, etc.
   ```
   MAJOR.MINOR.PATCH-PRERELEASE.SHORTDATE.BUILDS+SHORTSHA
   ```
@@ -95,7 +95,7 @@ Versioning comes in 3 states, depending on the point in the product cycle:
 - **MINOR** - Explicit in source, should default to `0`
 - **PATCH** - Explicit in source, should default to `0`
 - **PRERELEASE** - Explicit in source, should default to `preview1`
-- **BUILDS** - Generated based on build scenario
+- **REVISION** - Generated based on build scenario
   - **Local dev builds** - Defaulted to 0
   - **Official builds** - Supplied generally as part of the conventional, .NET Core specific `OfficialBuildId` or VSTS `Build.BuildNumber` built in parameters.
 - **SHORTDATE** - Generated based on build scenario
@@ -121,7 +121,7 @@ Versioning comes in 3 states, depending on the point in the product cycle:
 In cases where SemVer2 cannot be used (e.g. old versions of nuget), we can fall back to [SemVer1](https://semver.org/spec/v1.0.0.html).  In Semver1, there is no built in build metadata, and the prerelease field may only contain [0-9A-Za-z-].  To comply, cases where + or . are used in SemVer2's prerelease field are replaced with -.
 
 Versioning comes in 3 states, depending on the point in the product cycle:
-- **Dev/Daily** - Versions should include all fields - pre-release tag, shortdate, number of builds, etc.
+- **Dev/Daily** - Versions should include all fields - pre-release tag, shortdate, revision, etc.
   ```
   MAJOR.MINOR.PATCH-PRERELEASE-SHORTDATE-BUILDS-SHORTSHA
   ```
