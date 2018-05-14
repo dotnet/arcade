@@ -121,7 +121,7 @@ Versioning comes in 3 states, depending on the point in the product cycle:
 In cases where SemVer2 cannot be used (e.g. old versions of nuget), we can fall back to [SemVer1](https://semver.org/spec/v1.0.0.html).  In Semver1, there is no built in build metadata, and the prerelease field may only contain [0-9A-Za-z-].  To comply, cases where + or . are used in SemVer2's prerelease field are replaced with -.
 
 Versioning comes in 3 states, depending on the point in the product cycle:
-- **Dev/Daily** - Versions should include all fields - pre-release tag, shortdate, revision, etc.
+- **Dev/Daily** - Versions should include all fields - pre-release tag, shortdate, revision, etc.  **For SemVer1, the short date should be zero padded.**
   ```
   MAJOR.MINOR.PATCH-PRERELEASE-SHORTDATE-REVISION-SHORTSHA
   ```
