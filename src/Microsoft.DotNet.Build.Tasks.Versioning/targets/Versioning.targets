@@ -74,9 +74,6 @@
     <ShortDate>$(ShortDate)</ShortDate>
     <Revision>$(Revision)</Revision>
     <ShortSha>$(ShortSha)</ShortSha>
-    <Version>$(xxxx)</Version>
-    <FileVersion>$(yyyy)</FileVersion>
-    <InformationalVersion>$(zzzz)</InformationalVersion>
   </PropertyGroup>
 </Project>
 ]]>

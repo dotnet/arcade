@@ -40,7 +40,7 @@ Padding         | integer     | Minimum size of the date field in the versioning
 VersionString   | string      | **Output** Version string produced.
 VersionSeedDate         | date | Date of the current build. Format is: yyyy-MM-dd
 OfficialBuildId         | string | Optional parameter containing an Official Build Id. When informed, the revision number and short date will be extracted from it. Format is: (yyyyMMdd)[-.]([0-9]+)
-VersionComparisonDate   | date | Optional parameter containing base date for calculating the ShortDate string. Format: yyyy-MM-dd. Default is: 1996-04-01
+VersionComparisonDate   | string | Optional parameter containing base date for calculating the ShortDate string. Format: yyyy-MM-dd. Default is: 1996-04-01
 
 
 #### Usage
@@ -49,23 +49,86 @@ To use this target override the needed parameters (see list above) and call the 
 
 ```xml
   <PropertyGroup>
+    <!-- Specify that a "dev" format string should be generated. -->
+    <FormatName>dev</FormatName>
+
+    <!-- Input version numbers. -->
     <Major>1</Major>
     <Minor>2</Minor>
     <Patch>3</Patch>
-    
-    <FormatName>stable</FormatName>
-    <Prerelease>preview1</Prerelease>
+    <Revision>42</Revision>
+
+    <!-- The shortdate field should be included in the string. -->
+    <!-- The content of the ShortDate field is used "as-is" - no formatting is applied. -->
+    <IncludeDate>true</IncludeDate>
+    <ShortDate>514</ShortDate>
+
+    <!-- Label appended after the initial version numbers. -->
+    <PreRelease>prev1</PreRelease>
+
+    <!-- SHA of the repository commit should be included in the string. -->
+    <!-- The content of the ShortSha field is used "as-is" - no formatting is applied. -->
+    <IncludeSha>true</IncludeSha>
+    <ShortSha>badec0</ShortSha>
   </PropertyGroup>
 
   <Target Name="Build" DependsOnTargets="Versioning">
     <Message Text="Building version: $(VersionString)" /> 
-    <!-- Should produce: Building version: 1.2.3-final" -->
+    <!-- Should produce: Building version: 1.2.3-prev1.514.42+badec0" -->
   </Target>
 ```
+
+### `CreateVersioningCacheFile`
+
+Create a cache file called VersioningCache.props at the path pointed by $(BaseIntermediateOutputPath).
+
+#### Parameters
+
+Property        | Type        | Description
+----------------|-------------|--------------------------------------------------------------------------------
+ShortDate       | string      | Date to be used in the version string.
+Revision        | string      | Number of Revision for current date.
+ShortSha        | string      | SHA of the repo last commit.
+VersioningCacheFile | string | Path to the cache file. Includes name and extension.
+
+
+### `DeleteVersioningCacheFile`
+
+Delete the cache file VersioningCache.props at the path pointed by $(BaseIntermediateOutputPath).
+
+#### Parameters
+
+Property        | Type        | Description
+----------------|-------------|--------------------------------------------------------------------------------
+VersioningCacheFile | string | Path to the cache file. Includes name and extension.
 
 
 ## Tasks
 
 ### `GenerateVersioningDate`
 
-TBD
+Task used to generate a ShortDate string and Revision number given input parameters.
+If an OfficialBuildId is specified the ShortDate and Revision are extracted and returned from it.
+Otherwise, ShortDate is calculated as the concatenation of number of months between 
+SeedDate and ComparisonDate with the day informed in SeedDate.
+
+#### Parameters
+
+Property            | Type        | Description
+--------------------|-------------|--------------------------------------------------------------------------------
+SeedDate            | date        | Date of the current build. Format is: yyyy-MM-dd
+OfficialBuildId     | string      | Optional parameter containing an Official Build Id. When informed, the revision number and short date will be extracted from it. Format is: (yyyyMMdd)[-.]([0-9]+)
+IncludePadding      | boolean     | If the ShortDate field should be padded with zeros to match the size specified in Padding.
+Padding             | integer     | Minimum size of the date field in the versioning string. The field will be padded with leading zeros.
+ComparisonDate      | string      | Optional parameter containing base date for calculating the ShortDate string. Format: yyyy-MM-dd. Default is: 1996-04-01
+GeneratedShortDate  | string      | **Output** Generated short date.
+GeneratedRevision   | string      | **Output** Generated revision number.
+
+#### Usage
+
+```xml
+    <GenerateVersioningDate SeedDate="$(VersionSeedDate)" OfficialBuildId="$(OfficialBuildId)" ComparisonDate="$(VersionComparisonDate)" IncludePadding="$(ShouldSupportSemVerOne)" Padding="$(Padding)">
+      <Output TaskParameter="GeneratedRevision" PropertyName="Revision"  />
+      <Output TaskParameter="GeneratedShortDate" PropertyName="ShortDate"  />
+    </GenerateVersioningDate>
+```
