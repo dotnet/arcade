@@ -34,4 +34,13 @@
     <ProjectReference Include="..\Microsoft.DotNet.Build.Tasks.Util\Microsoft.DotNet.Build.Tasks.Util.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="targets\Versioning.props">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="targets\Versioning.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

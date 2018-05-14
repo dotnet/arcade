@@ -7,6 +7,8 @@ Two files are provided. One with the default values for the versioning, called V
 Targets in this package:
 
  - Versioning
+ - CreateVersioningCacheFile
+ - DeleteVersioningCacheFile
 
 Tasks in this package:
 
@@ -36,10 +38,10 @@ IncludeDate     | boolean     | Whether or not the build date should be included
 SemVerOne       | boolean     | Whether to go back to Semantic Versioning 1.0. Default to false.
 Padding         | integer     | Minimum size of the date field in the versioning string. The field will be padded with leading zeros.
 VersionString   | string      | **Output** Version string produced.
-VersionSeedDate         | string | Still work in progres.
-OfficialBuildId         | string | Still work in progres.
-VersionComparisonDate   | string | Still work in progres.
-VersionPadding          | string | Still work in progres.
+VersionSeedDate         | date | Date of the current build. Format is: yyyy-MM-dd
+OfficialBuildId         | string | Optional parameter containing an Official Build Id. When informed, the revision number and short date will be extracted from it. Format is: (yyyyMMdd)[-.]([0-9]+)
+VersionComparisonDate   | date | Optional parameter containing base date for calculating the ShortDate string. Format: yyyy-MM-dd. Default is: 1996-04-01
+
 
 #### Usage
 

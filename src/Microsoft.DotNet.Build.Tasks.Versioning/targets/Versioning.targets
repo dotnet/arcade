@@ -1,12 +1,13 @@
 <!-- Copyright (c) .NET Foundation. All rights reserved. -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_MicrosoftDotNetBuildTasksVersioningTaskAssembly Condition="'$(MSBuildRuntimeType)'=='Core'">$(MSBuildThisFileDirectory)netcoreapp2.0\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
-    <_MicrosoftDotNetBuildTasksVersioningTaskAssembly Condition="'$(MSBuildRuntimeType)'!='Core'">$(MSBuildThisFileDirectory)net45\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
+    <FrameworkLabel Condition="'$(MSBuildRuntimeType)'=='Core'">netcoreapp2.0</FrameworkLabel>
+    <FrameworkLabel Condition="'$(MSBuildRuntimeType)'!='Core'">net45</FrameworkLabel>
+    
+    <_MicrosoftDotNetBuildTasksVersioningTaskAssembly Condition="'$(VersioningTests)'==''">$(MSBuildThisFileDirectory)$(FrameworkLabel)\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
+    <_MicrosoftDotNetBuildTasksVersioningTaskAssembly Condition="'$(VersioningTests)'=='true'">$(BaseIntermediateOutputPath)Microsoft.DotNet.Build.Tasks.Versioning\$(FrameworkLabel)\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
 
-    <OutputDir Condition="'$(OutputDir)'==''">$(MSBuildThisFileDirectory)..\..\..\artifacts\obj\Microsoft.DotNet.Build.Tasks.Versioning\</OutputDir>
-
-    <VersioningCacheFile Condition="'$(VersioningCacheFile)'==''">$(OutputDir)VersioningCache.props</VersioningCacheFile>
+    <VersioningCacheFile Condition="'$(VersioningCacheFile)'==''">$(BaseIntermediateOutputPath)VersioningCache.props</VersioningCacheFile>
     
     <ShouldCreateVersionFileDuringBuild Condition="Exists('$(VersioningCacheFile)')=='false'">true</ShouldCreateVersionFileDuringBuild>
   </PropertyGroup>
@@ -24,7 +25,7 @@
       OfficialBuildId in case it is not empty. Otherwise, it will generate a 
       new date.
     -->
-    <GenerateVersioningDate Condition="'$(IncludeDate)'=='true' and '$(ShortDate)'==''" SeedDate="$(VersionSeedDate)" OfficialBuildId="$(OfficialBuildId)" ComparisonDate="$(VersionComparisonDate)" Padding="$(Padding)" SemVerOne="$(SemVerOne)">
+    <GenerateVersioningDate Condition="'$(IncludeDate)'=='true' and '$(ShortDate)'==''" SeedDate="$(VersionSeedDate)" OfficialBuildId="$(OfficialBuildId)" ComparisonDate="$(VersionComparisonDate)" IncludePadding="$(SemVerOne)" Padding="$(Padding)">
       <Output TaskParameter="GeneratedRevision" PropertyName="Revision"  />
       <Output TaskParameter="GeneratedShortDate" PropertyName="ShortDate"  />
     </GenerateVersioningDate>
@@ -83,6 +84,10 @@
     </PropertyGroup>
 
     <WriteLinesToFile ContinueOnError="WarnAndContinue" File="$(VersioningCacheFile)" Lines="$(VersionFileContent)" />
+  </Target>
+
+  <Target Name="DeleteVersioningCacheFile">
+    <Delete Files="$(VersioningCacheFile)" />
   </Target>
   
   <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.Versioning.GenerateVersioningDate" AssemblyFile="$(_MicrosoftDotNetBuildTasksVersioningTaskAssembly)" />
