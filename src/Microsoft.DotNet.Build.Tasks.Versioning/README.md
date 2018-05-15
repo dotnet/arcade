@@ -1,6 +1,6 @@
 # Microsoft.DotNet.Build.Tasks.Versioning
 
-Task package which handles generation of version strings. The versioning format that we use is described [here](../../Documentation/Versioning). See ["Task Packages"](../../Documentation/TaskPackages.md#usage) for guidance on installing this package.
+Task package which handles generation of version strings. The version string format that we use is described [here](../../Documentation/Versioning). See ["Task Packages"](../../Documentation/TaskPackages.md#usage) for guidance on installing this package.
 
 Two files are provided. One with the default values for the versioning, called Versioning.props, and another file with the targets, called Versioning.targets.
 
