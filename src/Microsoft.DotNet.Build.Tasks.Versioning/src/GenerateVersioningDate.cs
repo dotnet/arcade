@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             // If OfficialBuildId is passed in, then use that to calculate the version and revision.
             if (string.IsNullOrEmpty(OfficialBuildId))
             {
-                GeneratedRevision = "0";
+                GeneratedRevision = (IncludePadding) ? "00" : "0";
             }
             else
             {
@@ -100,6 +100,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
                 Log.LogError("The date '{0}' is not valid. Please pass in a date after {1}.", SeedDate, ComparisonDate);
                 return false;
             }
+
             return true;
         }
 
@@ -122,6 +123,11 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
                 dateFromBuildId = dateFromBuildId.ToUniversalTime();
                 GeneratedShortDate = CreateShortDate(dateFromBuildId, ComparisonDate);
                 GeneratedRevision = match.Groups[2].Value;
+
+                if (!IncludePadding)
+                {
+                    GeneratedRevision = int.Parse(GeneratedRevision).ToString();
+                }
 
                 return true;
             }
