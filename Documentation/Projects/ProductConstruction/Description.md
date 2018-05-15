@@ -10,6 +10,7 @@ Note that for the purposes of this document, the product is defined as: **The se
 - Must be able to trace the set of dependencies that has been shipped or integrated.
 - Must be able to quickly propagate changes from individual repos into the final product. 
 - Must be able to build individual components from source.
+- The Microsoft official build process and the build from source process should be as similar as possible.
 - Must be able to ship product components in multiple vehicles with potentially different shipping processes.
 - Must be able to service the product.
 - Must be able to determine the quality of the product and its components.
