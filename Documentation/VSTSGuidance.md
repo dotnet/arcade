@@ -11,8 +11,6 @@ There are two projects for use.  They are:
 
 We will have multiple build definitions, effectively a mirrored set in the public and internal. We will have one set of YAML which applies to both. This will allow for CI (PR testing) in both internal and OSS venues, and well as official build production on the internal side. 
  
-TODO: figure out the deal with default repo
-
 ## Teams
 
 In this context, teams pretty much only affect which level the kanban (or whatever) boards are at.  While permissions can be set at the team level, we're choosing not to do so.
@@ -56,7 +54,8 @@ To keep things as simple (manageable) as possible, we're going to manage permiss
 DotNet-Arcade-Internal
 ```
  
-### YML folders: (Still in discussion - not yet implemented  - [github PR](https://github.com/Microsoft/vsts-agent/pull/1430/files#diff-0e4df20b2155d804a6518e8089072a96R29))
+### YML folders: 
+(Still in discussion - not yet implemented  - [github PR](https://github.com/Microsoft/vsts-agent/pull/1430/files#diff-0e4df20b2155d804a6518e8089072a96R29))
 ```
 .vsts-pipelines
   builds/
