@@ -56,14 +56,14 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning.Tests
             var task = new GenerateVersioningDate
             {
                 ComparisonDate = "2017-01-01",
-                OfficialBuildId = "20180514-42",
+                OfficialBuildId = "20180514-02",
                 Padding = 7,
                 IncludePadding = true
             };
 
             Assert.True(task.Execute(), "Task should pass");
 
-            Assert.Equal("42", task.GeneratedRevision);
+            Assert.Equal("02", task.GeneratedRevision);
             Assert.Equal("0001614", task.GeneratedShortDate);
         }
 
@@ -73,14 +73,14 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning.Tests
             var task = new GenerateVersioningDate
             {
                 ComparisonDate = "2017-01-01",
-                OfficialBuildId = "20180514-42",
+                OfficialBuildId = "20180514-02",
                 Padding = 7,
                 IncludePadding = false
             };
 
             Assert.True(task.Execute(), "Task should pass");
 
-            Assert.Equal("42", task.GeneratedRevision);
+            Assert.Equal("2", task.GeneratedRevision);
             Assert.Equal("1614", task.GeneratedShortDate);
         }
     }

@@ -57,19 +57,9 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
 
         public override bool Execute()
         {
-            // If OfficialBuildId is passed in, then use that to calculate the version and revision.
-            if (string.IsNullOrEmpty(OfficialBuildId))
-            {
-                GeneratedRevision = (IncludePadding) ? "00" : "0";
-            }
-            else
-            {
-                return SetVersionAndRevisionFromBuildId(OfficialBuildId);
-            }
-
             // Leading zeros are only allowed in SemVer 1.0
             if (IncludePadding)
-            { 
+            {
                 if (Padding == 0)
                 {
                     Padding = 5;
@@ -79,6 +69,16 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
                     Log.LogWarning($"The specified Padding '{Padding}' has to be equal to or greater than 5. Using 5 as a default now.");
                     Padding = 5;
                 }
+            }
+
+            // If OfficialBuildId is passed in, then use that to calculate the version and revision.
+            if (string.IsNullOrEmpty(OfficialBuildId))
+            {
+                GeneratedRevision = "0";
+            }
+            else
+            {
+                return SetVersionAndRevisionFromBuildId(OfficialBuildId);
             }
 
             DateTime date;
@@ -126,7 +126,12 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
 
                 if (!IncludePadding)
                 {
-                    GeneratedRevision = int.Parse(GeneratedRevision).ToString();
+                    GeneratedRevision = GeneratedRevision.TrimStart(new Char[] { '0' });
+
+                    if (GeneratedRevision.Equals(""))
+                    {
+                        GeneratedRevision = "0";
+                    }
                 }
 
                 return true;
