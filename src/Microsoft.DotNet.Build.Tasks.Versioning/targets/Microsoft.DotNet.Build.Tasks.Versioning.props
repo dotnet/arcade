@@ -1,0 +1,15 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <Major>1</Major>
+    <Minor>0</Minor>
+    <Patch>0</Patch>
+
+    <PreRelease>preview1</PreRelease>
+    <Revision>0</Revision>
+
+    <SemVerOne>false</SemVerOne>
+    <Padding>0</Padding>
+  </PropertyGroup>
+
+</Project>

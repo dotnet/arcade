@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
             {
                 Uri = "http://example.org/index.html",
                 OutputPath = expectedPath,
-                BuildEngine = new MockEngine(_output),
+                BuildEngine = new TestsUtil.MockEngine(_output),
             };
 
             if (File.Exists(expectedPath))
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
         [Fact]
         public async Task ItFailsForFilesThatDoNotExist()
         {
-            var engine = new MockEngine(_output) { ContinueOnError = true };
+            var engine = new TestsUtil.MockEngine(_output) { ContinueOnError = true };
             var task = new DownloadFile
             {
                 Uri = "http://localhost/this/file/does/not/exist",
@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
         [Fact]
         public async Task ItFailsIfFileAlreadyExists()
         {
-            var engine = new MockEngine(_output) { ContinueOnError = true };
+            var engine = new TestsUtil.MockEngine(_output) { ContinueOnError = true };
             var expectedPath = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName());
             File.WriteAllText(expectedPath, "");
             var task = new DownloadFile

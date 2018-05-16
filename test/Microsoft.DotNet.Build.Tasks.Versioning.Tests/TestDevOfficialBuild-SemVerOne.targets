@@ -1,0 +1,32 @@
+<!-- Test for generation of versioning string for the "Dev" format. -->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <VersioningTests>true</VersioningTests>
+    <FormatName>dev</FormatName>
+
+    <Major>4</Major>
+    <Minor>5</Minor>
+    <Patch>6</Patch>
+    <Revision>7</Revision>
+
+    <PreRelease>prev1</PreRelease>
+
+    <IncludeDate>true</IncludeDate>
+    <ShortDate></ShortDate>
+
+    <IncludeSha>true</IncludeSha>
+    <ShortSha>cafebabe</ShortSha>
+
+    <SemVerOne>true</SemVerOne>
+    <OfficialBuildId>20180511-7</OfficialBuildId>
+    <VersionSeedDate>2018-05-12</VersionSeedDate>
+    <VersionComparisonDate>2018-04-12</VersionComparisonDate>
+    
+    <ExpectedString>$(Major).$(Minor).$(Patch)-$(PreRelease)-00111-$(Revision)-$(ShortSha)</ExpectedString>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)\TestCore.targets"/>
+
+</Project>

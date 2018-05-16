@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
             var task = new GetFileHash
             {
                 Files = new[] { new TaskItem(Path.Combine(AppContext.BaseDirectory, "TestResources", "lorem.bin")) },
-                BuildEngine = new MockEngine(),
+                BuildEngine = new TestsUtil.MockEngine(),
                 Algorithm = algoritm,
             };
             Assert.True(task.Execute(), "Task should pass");
@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
                     new TaskItem(Path.Combine(AppContext.BaseDirectory, "TestResources", "lorem.bin")),
                     new TaskItem(Path.Combine(AppContext.BaseDirectory, "TestResources", "lorem.bin")),
                 },
-                BuildEngine = new MockEngine(),
+                BuildEngine = new TestsUtil.MockEngine(),
                 Algorithm = algoritm,
             };
 
@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
             var task = new VerifyFileHash
             {
                 File = Path.Combine(AppContext.BaseDirectory, "TestResources", "lorem.bin"),
-                BuildEngine = new MockEngine { ContinueOnError = true },
+                BuildEngine = new TestsUtil.MockEngine { ContinueOnError = true },
                 Algorithm = algoritm,
                 Hash = hash,
             };
@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.Build.Tasks.IO.Tests
             var task = new VerifyFileHash
             {
                 File = Path.Combine(AppContext.BaseDirectory, "TestResources", "lorem.bin"),
-                BuildEngine = new MockEngine(),
+                BuildEngine = new TestsUtil.MockEngine(),
                 Algorithm = algoritm,
                 Hash = hash,
             };

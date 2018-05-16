@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace Microsoft.DotNet.Build.Tasks.IO.Tests
+namespace Microsoft.DotNet.TestsUtil
 {
     public class TestHelpers
     {
