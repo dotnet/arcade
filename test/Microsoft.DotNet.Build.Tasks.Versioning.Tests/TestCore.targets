@@ -5,6 +5,6 @@
     <Message Text="Expected output matches. Generated version string is %22$(VersionString)%22, expected was %22$(ExpectedString)%22." Importance="high" />
   </Target>
 
-  <Import Project="$(MSBuildThisFileDirectory)..\..\src\Microsoft.DotNet.Build.Tasks.Versioning\targets\Versioning.targets"/>
+  <Import Project="$(MSBuildThisFileDirectory)..\..\src\Microsoft.DotNet.Build.Tasks.Versioning\targets\Microsoft.DotNet.Build.Tasks.Versioning.targets"/>
   
 </Project>
