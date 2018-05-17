@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -35,19 +35,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.BuildManifest
 
             string sdkProductVersion = model.Builds
                 .FirstOrDefault(b => b.Name == "cli")
-                ?.BuildId;
+                ?.ProductVersion;
 
-            string runtimeProductVersion = blobFeed.Artifacts.Blobs
-                .FirstOrDefault(b =>
-                    b.Id.StartsWith("Runtime/") &&
-                    b.Id.EndsWith("/Microsoft.NET.CoreRuntime.2.1.appx"))
-                ?.Id.Split('/')[1];
+            string runtimeProductVersion = model.Builds
+                .FirstOrDefault(b => b.Name == "core-setup")
+                ?.ProductVersion;
 
-            string aspnetProductVersion = blobFeed.Artifacts.Blobs
-                .FirstOrDefault(b =>
-                    b.Id.StartsWith("Runtime/") &&
-                    b.Id.EndsWith("/aspnetcore_base_runtime.version"))
-                ?.Id.Split('/')[1];
+            string aspnetProductVersion = model.Builds
+                .FirstOrDefault(b => b.Name == "aspnet")
+                ?.ProductVersion;
 
             var builder = new StringBuilder();
 
@@ -80,6 +76,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.BuildManifest
                     feedAssetsRoot,
                     aspnetProductVersion));
             }
+
+            builder.AppendLine();
+            builder.AppendLine("### Isolated NuGet Blob Feed");
+            builder.AppendLine(blobFeed.Url);
 
             builder.AppendLine();
             builder.AppendLine("### Built Repositories");
