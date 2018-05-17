@@ -5,15 +5,16 @@
 The main goal of this set of tools is to centralize the way we maintain 
 the bootstrapping scripts in sync across participating repos and at the 
 same time have a single way of updating the dependencies on each repo, 
-keeping track of what’s in each product at all times. 
+know what's is any given product build at any time including versions, sha's,
+bits locations, etc. 
 
 ## Description 
 
-The process of reading and updating scripts in the repos will change 
-depending on the environment where the operation is being executed, i.e. 
-Maestro++ for remote, Darc for local. Darc and Maestro++ are responsible 
-for obtaining repo inputs and handling outputs. The mechanics of 
-querying, reading and updating versions will be contained in Darc. 
+Maestro++ and Darc will drive the operations in which versions and dependencies
+are maintained in sync across repos subscribed to arcade. Darc will serve commands 
+coming from Maestro++ as well as from a dev in a local repo. Maestro++ will call
+Darc when it is triggered by an action that could be: schedule, change in a file or
+manually.
 
 ![Diagram](VersionQueryingAndUpdating.png) 
 
@@ -22,8 +23,7 @@ querying, reading and updating versions will be contained in Darc.
 Here I list the top level scenarios which come to mind and try to 
 describe the required steps to accomplish them: 
 
-#### How to update arcade scripts across all repos without using 
-Maestro++ 
+#### How to update arcade scripts across all repos without using Maestro++ 
 
 Dev generates a change in arcade by adding, updating or removing a 
 script. Depending on the operation there is a version which needs to be 
@@ -40,9 +40,9 @@ For each participant repo:
 	
 1. Maestro++ is triggered by actions such as package publishing and/or 
 GitHub webhooks monitoring changes in files like bootstrapping scripts 
-or even a manually 
-2. Maestro++ uses Darc to determine which need to be updated 
-3. For each repo which needs the update Maestro++: 
+or even when manually triggered
+2. Maestro++ uses Darc to determine which files in which repos need to be updated 
+3. For each repo which needs the update, Maestro++: 
     1. Uses Darc to update a dependency in current repo
     2. Uses Darc to commit and push the update 
     3. Auto-PR is approved and merged. Initially even though a PR is
@@ -62,8 +62,9 @@ or even a manually
 
 ### Darc 
 
-A command line tool which perform version operations on participating .Net Core repos. 
-It contains the mechanics of reading and writing version information in a repo as well as to query 
+A command line tool which performs version operations on .Net Core repos subscribed to arcade. 
+Darc knows how to execute git commands on a repo, such as, clone, commit, push, create a PR, etc. And
+also the mechanics of reading and writing version information in a repo as well as to query 
 and update the global version reporting store.  Its functionality is: 
 
 #### Input: dependency data 
@@ -87,7 +88,7 @@ You can find more information about dependency descriptions [here](DependencyDes
     * Change existing dependency 
     * Remove dependency 
 
-#### Input: sha+repo 
+#### Input: sha+repository 
 * Query reporting system for versioned items produced by sha+repository
 * Query reporting system for versioned items in which this sha+repository is referenced 
 * Query reporting system for shas+repositories in which this sha+repository is referenced 
@@ -100,15 +101,13 @@ You can find more information about dependency descriptions [here](DependencyDes
 * Download product+tools of official build for matching versions, sha+repository, 
 package+version 
 
-### Maestro++ 
+### Darc Vs. Maestro++ 
+
+Mestro++ based on times or triggers (i.e. a change in a file) flows the new dependency
+into subscribed repos using Darc. Main Maestro++ scenario is:
+
 * Identify when there is an update in Arcade’s scripts/dependencies and 
     * Add new dependency (using Darc for versions) 
     * Change existing dependency (using Darc for versions) 
     * Remove dependency (using Darc for versions) 
 for each participating repo depending on each repo’s subscriptions 
-
-### Darc Vs. Maestro++ 
-
-Mestro++ based on times or triggers (i.e. a change in a file) flows the new dependency
-into subscribed repos using Darc. Darc makes the required updates, commits the changes
-and starts a new PR.
