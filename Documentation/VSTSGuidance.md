@@ -39,8 +39,8 @@ For repos in VSTS, the build defs should live:
 - After that, $(VSTSRepoName)/*.def
  
 ### Build definition file name convention:
-- kebab-case, No spaces, use dashes
-- Pattern: $(RepoName) - $Scenario - $Suffix
+- lower-case, No spaces, use dashes
+- Pattern: $(reponame) - $scenario - $suffix
   - Scenario: (optional)
     - code-coverage
     - slow-tests
@@ -54,7 +54,7 @@ For repos in VSTS, the build defs should live:
 ### Example:
 
 ```
-dotnet/arcade/DotNet-Arcade-Internal
+dotnet/arcade/dotnet-arcade-internal
 ```
  
 ### YML folders: 
@@ -64,7 +64,7 @@ dotnet/arcade/DotNet-Arcade-Internal
   builds/
     $(GitHubOrg)/
       $(GitHubRepoName)/
-        $(OrgName)-$(RepoName)-{Internal|Public}.yml
+        $(OrgName)-$(RepoName)-{internal|public}.yml
 ```
 
 ## Source Code
@@ -76,21 +76,21 @@ For now, everything should be in Dotnet-Internal and any code that is public sho
 -  Internal-only projects should only be in the DotNet-Internal project with no github equivalent
  
 ### Naming conventions
--  $(OrgName)-$(RepoName)-{Internal|Public*}   (we're not using 'trusted' anymore.  It's redundant)
+-  $(orgName)-$(repoName)-{internal|public*}   (we're not using 'trusted' anymore.  It's redundant)
 -  Again - *No plan to have public repos in VSTS at this time
 
 ### Example:
 ```
-DotNet-Public:
-DotNet\CoreFx\<BuildDefName>
-DotNet-Internal:
-DotNet\CoreFx\<BuildDefName>-Internal
+dotnet-public:
+dotnet\corefx\<BuildDefName>
+dotnet-internal:
+dotnet\corefx\<BuildDefName>-internal
 ```
 
 Both of these would point to the same yaml file in the forks of the repo:
 
 - GitHub: dotnet\corefx
-- VSTS: DotNet-CoreFx-Internal
+- VSTS: dotnet-corefx-internal
 - The only differences here are:
 
 Repo name (since they are different forks). The intention is to highlight that the VSTS fork is internal vs. public.
