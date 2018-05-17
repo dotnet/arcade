@@ -36,7 +36,7 @@ The pipebuild descriptions for the builds are held in https://devdiv.visualstudi
 
 ## Step-by-Step
 
-1. Update branding in required repos (repos changing + downstream, which are implicitly being serviced) to reflect the servicing event. This is somewhat repository dependent, but generally post-release, the pre-release label is updated in each of the servicing branches to 'servicing' (or something like that) and the patch version element is incremented. The `PB_VersionStamp` default should be changed on the build definition.
+1. Update branding in required repos to reflect the servicing event. How this is done is repository dependent, but generally post-release, the pre-release label is updated in each of the servicing branches to 'servicing' (or something like that) and the patch version element is incremented. The `PB_VersionStamp` default should be changed on the build definition.
 2. Check in fixes to required repositories.
 3. Update branch names in pipeline definition files if necessary.  This is typically only necessary if 2.1 branch names change for repos or for internal servicing where some branches come from internal repos.  This can be done via adding or updating the `Branch` element in `-Build` pipelines.  e.g. `CoreFx-Build` from `release/2.1` to `release/2.1-servicingfix`
 4. Perform **initial** validation builds with pre-release branding (e.g. date varying)
@@ -65,7 +65,7 @@ The pipebuild descriptions for the builds are held in https://devdiv.visualstudi
     2. **If internal** - Copy build outputs from internal storage account to dotnetfeed storage account.  This is typically done just by copying the whole build output directory (`$(PB_FeedBaseUrl)/$(ProductBuildId)/`) to another container (e.g. orchestrated-foo-bar-baz).  Then launch the **public** build definition with the following parameters:
         - `PB_PipelineRoots` - `Final` **note that Final is used here so that the final output feed is created correctly, as the feed contains internal uri references**
         - `ProductBuildId` - `ProductBuildId` of the build being released
-        -  `PB_VersionsRepoPath` - `build-info/dotnet/product/cli/release/2.1` or other path with triggers (see https://github.com/dotnet/versions/blob/master/Maestro/subscriptions.json)\
+        -  `PB_VersionsRepoPath` - `build-info/dotnet/product/cli/release/2.1` or other path with triggers (see https://github.com/dotnet/versions/blob/master/Maestro/subscriptions.json)
         - `PB_FeedBaseUrl` - `<path to container containing build>`
 
 ## Build Flow Diagram
@@ -74,6 +74,15 @@ The pipebuild descriptions for the builds are held in https://devdiv.visualstudi
 
 ## Things to pay attention to
 
-There are a few things to pay attention to here for internal builds to ensure that build outputs go to the right place, specifically to avoid two things:
-- Leaking internal assets prior to releae
-- Accidentially publishing non-final assets with final versionings
+There are a number of things that require attention to ensure a working product construction build, as well as avoiding leaks of internal assets or stabilized assets before the product is finalized for a servicing event.
+- What kind of changes have been made to the build definitions or repositories lately?  Prodcon v1 treats each repository's build infrastructure as a black box.  Each of them only needs to conform to the following contract:
+    - Versions for dependencies are obtained from `PB_PackageVersionPropsUrl`
+    - Restore sources should include `PB_RestoreSource`
+    - Results should be published to `PB_PublishBlobFeedUrl`
+    - Non-nuget assets should be pulled from `PB_AssetRootUrl`
+    - If `PB_IsStable=true` is passed, stable build numbers should be produced
+    - If `PB_PublishType` is `blob`, only publish assets to the `PB_PublishBlobFeedUrl` location (e.g. avoid myget, nuget.org, etc.).  `PB_PublishType=blob` is only passed for product construction builds, so some repos have chosen to use the existence of PB_PublishBlobFeedUrl as an equivalent marker.  The point is that outputs shouldn't be visible outside the isolated orchestrated blob feed.
+    
+    If significant changes have been made to build definitions or repo infrastructure code, ensuring that this contract is still abided by can ensure a proper isolated product build.
+- Did all repos update their branding properly?
+- Are intra-build storage accounts publicly visible?  Intra-build storage (typically only used in corefx, coreclr and core-setup) should not be publicly visible in internal build scenarios. 
