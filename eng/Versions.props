@@ -13,7 +13,7 @@
     <!-- Libs -->
     <MicrosoftBuildTasksCoreVersion>14.3.0</MicrosoftBuildTasksCoreVersion>
     <MicrosoftBuildVersion>14.3.0</MicrosoftBuildVersion>
-    <MicrosoftDotNetVersionToolsVersion>2.1.0-preview2-02521-02</MicrosoftDotNetVersionToolsVersion>
+    <MicrosoftDotNetVersionToolsVersion>2.2.0-preview1-02815-01</MicrosoftDotNetVersionToolsVersion>
     <MicrosoftNETTestSdkVersion>15.6.0</MicrosoftNETTestSdkVersion>
     <MonoPosixNETStandardVersion>1.0.0-beta5</MonoPosixNETStandardVersion>
     <MoqVersion>4.5.21</MoqVersion>
