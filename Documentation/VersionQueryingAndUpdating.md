@@ -1,12 +1,16 @@
 # Querying and updating repo dependencies 
 
+## Business Requirement
+
+Know what's is any given product build at any time including versions, sha's, bits locations, etc. 
+making the process as seamless as possible and usable by devs and other tools.
+
 ## Goal 
 
 The main goal of this set of tools is to centralize the way we maintain 
 the bootstrapping scripts in sync across participating repos and at the 
 same time have a single way of updating the dependencies on each repo, 
-know what's is any given product build at any time including versions, sha's,
-bits locations, etc. 
+keeping track of what’s in each product at all times. 
 
 ## Description 
 
