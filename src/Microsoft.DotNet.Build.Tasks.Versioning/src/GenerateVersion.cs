@@ -6,7 +6,6 @@ using System;
 using Microsoft.Build.Framework;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Versioning
 {
@@ -44,7 +43,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
                 gitInfo.BuildEngine = this.BuildEngine;
                 gitInfo.Execute();
 
-                var BuildIdParsedStatus = GetDateAndRevisionFromBuildId(OfficialBuildId, out var TempDate, out var TempRevision);
+                var BuildIdParsedCorrectly = GetDateAndRevisionFromBuildId(OfficialBuildId, out var TempDate, out var TempRevision);
 
                 if (emptySha)
                 {
@@ -53,21 +52,26 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
 
                 if (emptyDate)
                 {
-                    if (BuildIdParsedStatus) Date = TempDate;
-                    else if (gitInfo.HeadCommitDate != default(DateTime)) Date = CreateShortDate(gitInfo.HeadCommitDate);
-                    else Date = CreateShortDate(DateTime.UtcNow);
+                    if (BuildIdParsedCorrectly)
+                    {
+                        Date = TempDate;
+                    }
+                    else
+                    {
+                        Date = gitInfo.HeadCommitDate != default(DateTime) ? CreateShortDate(gitInfo.HeadCommitDate) : 
+                                                                             CreateShortDate(DateTime.UtcNow);
+                    }
                 }
 
                 if (emptyRevision)
                 {
-                    if (BuildIdParsedStatus) Revision = TempRevision;
-                    else Revision = "00";
+                    Revision = BuildIdParsedCorrectly ? TempRevision : "0";
                 }
             }
 
-            GeneratedShortDate = Date;
+            GeneratedShortDate = AdjustPadding(Date);
             GeneratedShortSha = SHA;
-            GeneratedRevision = Revision;
+            GeneratedRevision = AdjustPadding(Revision);
 
             return true;
         }
@@ -112,6 +116,31 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             {
                 Log.LogError("Error: Comparison date is in the same month as the seed date");
                 return string.Empty;
+            }
+        }
+
+        private string AdjustPadding(string input)
+        {
+            if (IncludePadding)
+            {
+                if (Padding < 5)
+                {
+                    Log.LogWarning($"The specified Padding '{Padding}' has to be equal to or greater than 5. Using 5 as a default now.");
+                    Padding = 5;
+                }
+
+                return input.PadLeft(Padding, '0');
+            }
+            else
+            {
+                var trimmed = input.TrimStart(new Char[] { '0' });
+
+                if (trimmed.Equals(""))
+                {
+                    trimmed = "0";
+                }
+
+                return trimmed;
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="RoslynTools.RepoToolset">
 
   <PropertyGroup>
@@ -34,12 +34,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Build.Tasks.Util\Microsoft.DotNet.Build.Tasks.Util.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="targets\Microsoft.DotNet.Build.Tasks.Versioning.props">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>
