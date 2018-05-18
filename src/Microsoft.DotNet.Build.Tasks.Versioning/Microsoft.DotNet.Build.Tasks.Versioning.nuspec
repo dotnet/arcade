@@ -11,11 +11,8 @@
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
     <repository url="$repoUrl$" />
     <description>
-      This package provides the following MSBuild target(s):
-      - Versioning
-      - CreateVersioningCacheFile
-      and task(s):
-      - GenerateVersioningDate
+      This package provides the following MSBuild Tasks:
+      - GenerateVersion
     </description>
     <copyright>Copyright © Microsoft Corporation</copyright>
     <packageTypes>

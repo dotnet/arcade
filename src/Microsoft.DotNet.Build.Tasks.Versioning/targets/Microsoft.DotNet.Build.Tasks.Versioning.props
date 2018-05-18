@@ -1,15 +1,8 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
+<Project ToolsVersVersioningn="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <Major>1</Major>
-    <Minor>0</Minor>
-    <Patch>0</Patch>
-
-    <PreRelease>preview1</PreRelease>
-    <Revision>0</Revision>
-
-    <SemVerOne>false</SemVerOne>
-    <Padding>0</Padding>
+    <_MicrosoftDotNetBuildTasksVersioningTaskAssembly ConditVersioningn=" '$(MSBuildRuntimeType)' == 'Core' ">$(MSBuildThisFileDirectory)netcoreapp2.0\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
+    <_MicrosoftDotNetBuildTasksVersioningTaskAssembly ConditVersioningn=" '$(MSBuildRuntimeType)' != 'Core' ">$(MSBuildThisFileDirectory)net45\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
   </PropertyGroup>
 
+  <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.Versioning.GenerateVersion" AssemblyFile="$(_MicrosoftDotNetBuildTasksVersioningTaskAssembly)" />
 </Project>

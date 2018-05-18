@@ -40,9 +40,6 @@
     <None Update="targets\Microsoft.DotNet.Build.Tasks.Versioning.props">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="targets\Microsoft.DotNet.Build.Tasks.Versioning.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>
