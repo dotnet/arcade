@@ -109,7 +109,7 @@ Project: Internal:
 Both of these would point to the same yaml file in the forks of the repo:
 
 - GitHub: dotnet\corefx
-- VSTS: dotNet-corefx
+- VSTS: dotnet-corefx
 - The only differences here are:
   - Repo name: Repos are top level objects in VSTS so we have an org prefix
   - Leaf folder/build def name (depending on how vsts's pipelines folder work goes)
