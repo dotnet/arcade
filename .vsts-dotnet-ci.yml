@@ -1,0 +1,25 @@
+phases:
+- template: /eng/build.yml
+  parameters:
+    agentOs: Windows_NT
+    queueName: Hosted VS2017
+    matrix:
+      Build_Debug:
+        buildConfig: Debug
+        publishType: none
+      Build_Release:
+        buildConfig: Release
+        publishType: blob
+
+- template: /eng/build.yml
+  parameters:
+    agentOs: Linux
+    queueName: DotNetCore-Linux
+    dockerImage: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
+    matrix:
+      Build_Debug:
+        buildConfig: Debug
+        publishType: none
+      Build_Release:
+        buildConfig: Release
+        publishType: blob

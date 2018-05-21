@@ -1,0 +1,106 @@
+# build.yml
+# Description: Defines the build phase
+# Parameters:
+#   agentOs: [Windows_NT (default), Linux, OSX] Used in templates to define variables which are OS specific
+#   dockerImage: If defined, specifies docker image to run build steps in
+#   matrix: build matrix
+#   queueName: agent pool name
+#   enableTelemetry: send telemetry if build is not a PR or CI build
+
+parameters:
+  agentOs: Windows_NT
+  matrix: 
+    Build_Debug:
+      buildConfig: Debug
+      publishType: none
+    Build_Release:
+      buildConfig: Release
+      publishType: none
+  queueName: ''
+  dockerImage: ''
+  enableTelemetry: true
+
+phases:
+- template: /eng/common/templates/phase/base.yml
+  parameters:
+    agentOs: ${{ parameters.agentOs }}
+    phaseName: ${{ parameters.agentOs }}
+    dockerImage: ${{ parameters.dockerImage }}
+    enableTelemetry: ${{ parameters.enableTelemetry }}
+    phase:
+      variables: 
+        _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
+        _SignType: test
+        _UseEsrpSigning: true
+        _TeamName: DotNetCore
+        HelixSource: official/dotnet/arcade/$(Build.SourceBranch)
+        HelixType: build/product
+        _agentOs: ${{ parameters.agentOs }}
+      queue:
+        name: ${{ parameters.queueName }}
+        matrix: ${{ parameters.matrix }}
+      steps:
+      - task: AzureKeyVault@1
+        inputs:
+          azureSubscription: 'DotNet-Engineering-Services_KeyVault'
+          KeyVaultName: EngKeyVault
+          SecretsFilter: 'dotnetfeed-storage-access-key-1'
+        condition: and(succeeded(), in(variables['Build.Reason'], 'Manual', 'Scheduled'))
+      - ${{ if eq(parameters.agentOs, 'Windows_NT') }}:
+        - script: eng\common\cibuild.cmd
+            -configuration $(buildConfig) 
+            -prepareMachine
+            /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
+            /p:PB_PublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
+            /p:PB_PublishType=$(publishType) 
+            /p:SignType=$(_SignType)
+          name: Build_Publish
+          displayName: Build / Publish
+          env:
+            OfficialBuildId: $(BUILD.BUILDNUMBER)
+          condition: and(succeeded(), in(variables['Build.Reason'], 'Manual', 'Scheduled'))
+      - ${{ if ne(parameters.agentOs, 'Windows_NT') }}:
+        - script: eng/common/cibuild.sh
+            --configuration $(buildConfig) 
+            --prepareMachine
+            /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
+            /p:PB_PublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
+            /p:PB_PublishType=$(publishType) 
+            /p:SignType=$(_SignType)
+          name: Build_Publish
+          displayName: Build / Publish
+          env:
+            OfficialBuildId: $(BUILD.BUILDNUMBER)
+          condition: and(succeeded(), in(variables['Build.Reason'], 'Manual', 'Scheduled'))
+      - ${{ if eq(parameters.agentOs, 'Windows_NT') }}:
+        - script: eng\common\cibuild.cmd -configuration $(buildConfig) -prepareMachine /p:SignType=$(_SignType)
+
+          name: Build_Publish_CI
+          displayName: Build / Publish
+          env:
+            OfficialBuildId: $(BUILD.BUILDNUMBER)
+            condition: and(succeededOrFailed(), notIn(variables['Build.Reason'], 'Manual', 'Scheduled'))
+      - ${{ if ne(parameters.agentOs, 'Windows_NT') }}:
+        - script: eng/common/cibuild.sh --configuration $(buildConfig) --prepareMachine /p:SignType=$(_SignType)
+
+          name: Build_Publish_CI
+          displayName: Build / Publish
+          env:
+            OfficialBuildId: $(BUILD.BUILDNUMBER)
+          condition: and(succeededOrFailed(), notIn(variables['Build.Reason'], 'Manual', 'Scheduled'))
+      - task: CopyFiles@2
+        displayName: Gather Logs
+        inputs:
+          SourceFolder: '$(Build.SourcesDirectory)/artifacts'
+          Contents: '**/*log'
+          TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
+        continueOnError: true
+        condition: and(succeededOrFailed(), in(variables['Build.Reason'], 'Manual', 'Scheduled'))
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Logs to VSTS
+        inputs:
+          PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
+          ArtifactName: $(_agentOs)_$(Agent.JobName)
+          PublishLocation: Container
+        continueOnError: true
+        condition: and(succeededOrFailed(), in(variables['Build.Reason'], 'Manual', 'Scheduled'))

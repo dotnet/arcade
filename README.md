@@ -11,6 +11,9 @@ Arcade is intended to provide well-understood and consistent mechanisms for cons
 |**Windows_NT**|[![Build Status](https://ci.dot.net/job/dotnet_arcade/job/master/job/Windows_NT_Debug/badge/icon)](https://ci.dot.net/job/dotnet_arcade/job/master/job/Windows_NT_Debug/)|[![Build Status](https://ci.dot.net/job/dotnet_arcade/job/master/job/Windows_NT_Release/badge/icon)](https://ci.dot.net/job/dotnet_arcade/job/master/job/Windows_NT_Release/)|
 |**Ubuntu 16.04**|[![Build Status](https://ci.dot.net/job/dotnet_arcade/job/master/job/Ubuntu16.04_Debug/badge/icon)](https://ci.dot.net/job/dotnet_arcade/job/master/job/Ubuntu16.04_Debug/)|[![Build Status](https://ci.dot.net/job/dotnet_arcade/job/master/job/Ubuntu16.04_Release/badge/icon)](https://ci.dot.net/job/dotnet_arcade/job/master/job/Ubuntu16.04_Release/)|
 
+VSTS [![Build Status](https://dotnet.visualstudio.com/_apis/public/build/definitions/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/2/badge
+)](https://dotnet.visualstudio.com/DotNet-Public/_build/index?definitionId=2&_a=completed)
+
 ## Getting Started
 
 Packages are published daily to our tools feed:
