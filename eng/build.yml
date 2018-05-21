@@ -21,7 +21,7 @@ parameters:
   enableTelemetry: true
 
 phases:
-- template: /eng/common/templates/phase/base.yml
+- template: /eng/common/templates/phases/base.yml
   parameters:
     agentOs: ${{ parameters.agentOs }}
     phaseName: ${{ parameters.agentOs }}
