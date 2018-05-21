@@ -41,7 +41,7 @@ The pipebuild descriptions for the builds are held in https://devdiv.visualstudi
 3. Update branch names in pipeline definition files if necessary.  This is typically only necessary if 2.1 branch names change for repos or for internal servicing where some branches come from internal repos.  This can be done via adding or updating the `Branch` element in `-Build` pipelines.  e.g. `CoreFx-Build` from `release/2.1` to `release/2.1-servicingfix`
 4. Perform **initial** validation builds with pre-release branding (e.g. date varying)
     - **If public** - Launch public servicing build definition with the default parameters and monitor progress.  Monitoring can be done via the VSTS console or mission control.
-    - **If internal** - Launch public servicing build definition with the default parameters and monitor progress.  Monitoring can be done via the VSTS console or mission control.
+    - **If internal** - Launch internal servicing build definition with the default parameters and monitor progress.  Monitoring can be done via the VSTS console or mission control.
 5. Perform any partial build respins as necessary (e.g. failures, new fixes, etc.) - New builds can be partially spun starting from a specific repo.  To do this, requeue the build definition with the following parameters:
     - `ProductBuildId` - `ProductBuildId` of the build being respun
     - `PB_PipelineRoots` - A comma separated list of the repos that need respinning.  These correspond to `Name` elements of the `Pipelines` array in the pipeline definition json. Typically, to respin a repo just type the repo name.  This corresponds to deletion of previous outputs prior to the build rerun.
