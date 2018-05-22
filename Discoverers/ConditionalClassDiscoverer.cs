@@ -53,7 +53,10 @@ namespace Xunit.NetCore.Extensions
                 if (string.IsNullOrWhiteSpace(entry)) continue;
 
                 MethodInfo conditionMethodInfo = ConditionalTestDiscoverer.LookupConditionalMethod(calleeType, entry);
-                Debug.Assert(conditionMethodInfo != null, $"Unable to get MethodInfo, please check input for {entry}.");
+                if (conditionMethodInfo == null)
+                {
+                    throw new InvalidOperationException($"Unable to get MethodInfo, please check input for {entry}.");
+                }
 
                 // If one of the conditions is false, then return the category failing trait.
                 if (!(bool)conditionMethodInfo.Invoke(null, null)) return false;
