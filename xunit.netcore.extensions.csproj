@@ -15,12 +15,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'" />
   <ItemGroup>
+    <Compile Include="Attributes\ConditionalClassAttribute.cs" />
     <Compile Include="Attributes\ConditionalFactAttribute.cs" />
     <Compile Include="Attributes\ConditionalTheoryAttribute.cs" />
     <Compile Include="Attributes\ActiveIssueAttribute.cs" />
     <Compile Include="Attributes\PlatformSpecificAttribute.cs" />
     <Compile Include="Attributes\SkipOnTargetFrameworkAttribute.cs" />
     <Compile Include="Attributes\TestCategoryAttribute.cs" />
+    <Compile Include="Discoverers\ConditionalClassDiscoverer.cs" />
     <Compile Include="Discoverers\ConditionalFactDiscoverer.cs" />
     <Compile Include="Discoverers\ConditionalTestDiscoverer.cs" />
     <Compile Include="Discoverers\ConditionalTheoryDiscoverer.cs" />

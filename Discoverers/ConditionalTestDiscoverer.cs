@@ -25,44 +25,14 @@ namespace Xunit.NetCore.Extensions
                                                         IEnumerable<IXunitTestCase> testCases,
                                                         object[] conditionArguments)
         {
-            // A null or empty list of conditionMemberNames is treated as "no conditions".
-            // and the test cases will not be skipped.
-            // Example: [ConditionalFact()]
-            if (conditionArguments == null || conditionArguments.Length == 0)
-            {
-                return testCases;
-            }
+            Type calleeType = null;
+            string[] conditionMemberNames = null;
 
-            string [] conditionMemberNames;
-
-            Type calleeType = conditionArguments[0] as Type;
-            if (calleeType != null)
-            {
-                if (conditionArguments.Length < 2)
-                {
-                    // [ConditionalFact(typeof(x))] no provided methods.
-                    return testCases;
-                }
-
-                // [ConditionalFact(typeof(x), "MethodName")]
-                conditionMemberNames = conditionArguments[1] as string[];
-            }
-            else
-            {
-                // [ConditionalFact("MethodName")]
-                conditionMemberNames = conditionArguments[0] as string[];
-            }
-
-            // [ConditionalFact((string[]) null)]
-            int conditionCount = conditionMemberNames == null ? 0 : conditionMemberNames.Count();
-            if (conditionCount == 0)
-            {
-                return testCases;
-            }
+            if (CheckInputToSkipExecution(conditionArguments, ref calleeType, ref conditionMemberNames, testMethod)) return testCases;
 
             MethodInfo testMethodInfo = testMethod.Method.ToRuntimeMethod();
             Type testMethodDeclaringType = testMethodInfo.DeclaringType;
-            List<string> falseConditions = new List<string>(conditionCount);
+            List<string> falseConditions = new List<string>(conditionMemberNames.Count());
 
             foreach (string entry in conditionMemberNames)
             {
@@ -159,6 +129,40 @@ namespace Xunit.NetCore.Extensions
                 return pi.GetMethod;
 
             return LookupConditionalMethod(ti.BaseType, name);
+        }
+
+        internal static bool CheckInputToSkipExecution(object[] conditionArguments, ref Type calleeType, ref string[] conditionMemberNames, ITestMethod testMethod = null)
+        {
+            // A null or empty list of conditionArguments is treated as "no conditions".
+            // and the test cases will be executed.
+            // Example: [ConditionalClass()]
+            if (conditionArguments == null || conditionArguments.Length == 0) return true;
+
+            calleeType = conditionArguments[0] as Type;
+            if (calleeType != null)
+            {
+                if (conditionArguments.Length < 2)
+                {
+                    // [ConditionalFact(typeof(x))] no provided methods.
+                    return true;
+                }
+
+                // [ConditionalFact(typeof(x), "MethodName")]
+                conditionMemberNames = conditionArguments[1] as string[];
+            }
+            else
+            {
+                // For [ConditionalClass], unable to get the Type info. All test cases will be executed.
+                if (testMethod == null) return true;
+
+                // [ConditionalFact("MethodName")]
+                conditionMemberNames = conditionArguments[0] as string[];
+            }
+
+            // [ConditionalFact((string[]) null)]
+            if (conditionMemberNames == null || conditionMemberNames.Count() == 0) return true;
+
+            return false;
         }
     }
 }
