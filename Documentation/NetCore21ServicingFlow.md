@@ -12,9 +12,10 @@ This document is intended to provide a practical servicing worflow for .NET Core
   4. Downstream repos are updated to reference those outputs
   5. Downstream repos are built
   6. Repeat 1-4 until all required repos are rebuilt (typically CLI, though could be CoreFX)
-- **Full Build**
-  1. Fixes are checked into required repos
-  2. Full product construction build is invoked from the root
+- **'Full' Build**
+  1. Modify ProdCon definition to reflect the minimal set of repos that must be built.
+  2. Fixes are checked into required repos
+  3. Full product construction build is invoked from the root
 
 The mechanics of servicing the 2.1 build hinge on two factors:
 - **The scope of servicing (number/which repos involved)** - This only really affects the efficiency of servicing mechanics.
@@ -38,26 +39,27 @@ The pipebuild descriptions for the builds are held in https://devdiv.visualstudi
 
 1. Update branding in required repos to reflect the servicing event. How this is done is repository dependent, but generally post-release, the pre-release label is updated in each of the servicing branches to 'servicing' (or something like that) and the patch version element is incremented. The `PB_VersionStamp` default should be changed on the build definition.
 2. Check in fixes to required repositories.
-3. Update branch names in pipeline definition files if necessary.  This is typically only necessary if 2.1 branch names change for repos or for internal servicing where some branches come from internal repos.  This can be done via adding or updating the `Branch` element in `-Build` pipelines.  e.g. `CoreFx-Build` from `release/2.1` to `release/2.1-servicingfix`
-4. Perform **initial** validation builds with pre-release branding (e.g. date varying)
+3. Modify ProdCon definition to reflect the minimal set of repos that must be built.  Specifically this means anything with changes or downstream of those changes.
+4. Update branch names in pipeline definition files if necessary.  This is typically only necessary if 2.1 branch names change for repos or for internal servicing where some branches come from internal repos.  This can be done via adding or updating the `Branch` element in `-Build` pipelines.  e.g. `CoreFx-Build` from `release/2.1` to `release/2.1-servicingfix`
+5. Perform **initial** validation builds with pre-release branding (e.g. date varying)
     - **If public** - Launch public servicing build definition with the default parameters and monitor progress.  Monitoring can be done via the VSTS console or mission control.
     - **If internal** - Launch internal servicing build definition with the default parameters and monitor progress.  Monitoring can be done via the VSTS console or mission control.
-5. Perform any partial build respins as necessary (e.g. failures, new fixes, etc.) - New builds can be partially spun starting from a specific repo.  To do this, requeue the build definition with the following parameters:
+6. Perform any partial build respins as necessary (e.g. failures, new fixes, etc.) - New builds can be partially spun starting from a specific repo.  To do this, requeue the build definition with the following parameters:
     - `ProductBuildId` - `ProductBuildId` of the build being respun
     - `PB_PipelineRoots` - A comma separated list of the repos that need respinning.  These correspond to `Name` elements of the `Pipelines` array in the pipeline definition json. Typically, to respin a repo just type the repo name.  This corresponds to deletion of previous outputs prior to the build rerun.
-6. Validate outputs based on build definition input parameters
+7. Validate outputs based on build definition input parameters
     - **If public** - Check dotnet/versions repo once build definition for README containing links to build outputs, including blob feed.  Raw outputs can be found in `$(PB_FeedBaseUrl)/$(ProductBuildId)/final`
         - Assets - `$(PB_FeedBaseUrl)/$(ProductBuildId)/final/assets`
         - Feed - `$(PB_FeedBaseUrl)/$(ProductBuildId)/final/index.json`
     - **If internal** - Find outputs in: $(PB_FeedBaseUrl)/$(ProductBuildId)/final/assets
         - Assets -  `$(PB_FeedBaseUrl)/$(ProductBuildId)/final/assets`
         - Feed - `$(PB_AuthenticatedFeedBaseUrl)/$(ProductBuildId)/final/index.json`
-7. Perform final stabilized build - Typically for public builds, outputs are published to public feeds post-build based on triggers in the versions repo.  For the final stabilized build this is not desirable, since any respins will need to overwrite those outputs.  Instead, the final build manifest is initially published to a different path in the versions repo which does not trigger the final publish steps.  For internal builds nothing changes. Parameters should be set as follows:
+8. Perform final stabilized build - Typically for public builds, outputs are published to public feeds post-build based on triggers in the versions repo.  For the final stabilized build this is not desirable, since any respins will need to overwrite those outputs.  Instead, the final build manifest is initially published to a different path in the versions repo which does not trigger the final publish steps.  For internal builds nothing changes. Parameters should be set as follows:
     - `PB_VersionStamp` - `<empty string>`
     - `PB_IsStable` - `true`
     - `PB_VersionsRepoPath` - `build-info/dotnet/product/cli/release/2.1-<servicing suffix>`
-8. Validate final stabilized build - **See step 6 for info.**
-9. Perform final release - In conjunction with normal tic-toc activities, final release can be done by publishing/re-publishing the final build manifest to a location in the versions repo that has triggers for final publishing. Final publishing pushes assets, symbols, etc. to desired output locations.
+9. Validate final stabilized build - **See step 6 for info.**
+10. Perform final release - In conjunction with normal tic-toc activities, final release can be done by publishing/re-publishing the final build manifest to a location in the versions repo that has triggers for final publishing. Final publishing pushes assets, symbols, etc. to desired output locations.
     1. **If public** - Relaunch final build with:
         - `PB_PipelineRoots` - `Final-PushOrchestratedBuildManifest`
         - `ProductBuildId` - `ProductBuildId` of the build being released
