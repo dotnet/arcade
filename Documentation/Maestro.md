@@ -14,7 +14,7 @@ Maestro++ is an automation of the work a Dev would do to flow dependencies acros
     - When to abort a flow of dependencies (i.e. what to do when test failed for a specific repo).
 - It must have the option to auto-merge PRs when all the checks are green.
 - It must signal when an Official Build is being built in order to produce signed bits.
--	Notify the result of the build triggered by maestro++. Did the target repo get the update? Does the source repo knows if the children were updated?
+-	Notify the result of the build triggered by maestro++. Did the target repo get the update? Does the source repo know if the children were updated?
 
 ## Considerations:
 - It must manage [speculative version flow](#Speculative-Version-Flow) (Once the product build is done, in parallel execute tests and queue product builds for the dependents).
