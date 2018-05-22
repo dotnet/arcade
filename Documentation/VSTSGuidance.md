@@ -87,7 +87,6 @@ internal project:
 For now, everything should be in 'internal' and any code that is public should be on GitHub
  
 ### VSTS repos should:
--   
 -  Be mirrored from GitHub, if not internal only.
 -  Internal-only projects should only be in the 'internal' project with no github equivalent
  
