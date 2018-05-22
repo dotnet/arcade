@@ -20,8 +20,8 @@ steps:
         displayName: Send Job Start Telemetry
         env:
           HelixApiAccessToken: $(HelixApiAccessToken)
-          Source: $(HelixSource)
-          Type: $(HelixType)
+          Source: $(_HelixSource)
+          Type: $(_HelixType)
           Build: $(Build.BuildNumber)
           QueueId: $(Agent.OS)
           Attempt: 1

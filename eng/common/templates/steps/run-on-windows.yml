@@ -1,5 +1,5 @@
 parameters:
-  agentOs: Windows_NT
+  agentOs: ''
   steps: []
 
 steps:

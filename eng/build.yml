@@ -33,9 +33,8 @@ phases:
         _SignType: test
         _UseEsrpSigning: true
         _TeamName: DotNetCore
-        HelixSource: official/dotnet/arcade/$(Build.SourceBranch)
-        HelixType: build/product
-        _agentOs: ${{ parameters.agentOs }}
+        _HelixSource: official/dotnet/arcade/$(Build.SourceBranch)
+        _HelixType: build/product
       queue:
         name: ${{ parameters.queueName }}
         matrix: ${{ parameters.matrix }}
