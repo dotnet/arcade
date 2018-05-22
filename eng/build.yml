@@ -78,7 +78,7 @@ phases:
           displayName: Build / Publish
           env:
             OfficialBuildId: $(BUILD.BUILDNUMBER)
-            condition: and(succeededOrFailed(), notIn(variables['Build.Reason'], 'Manual', 'Scheduled'))
+            condition: and(succeeded(), notIn(variables['Build.Reason'], 'Manual', 'Scheduled'))
       - ${{ if ne(parameters.agentOs, 'Windows_NT') }}:
         - script: eng/common/cibuild.sh --configuration $(buildConfig) --prepareMachine /p:SignType=$(_SignType)
 
@@ -86,7 +86,7 @@ phases:
           displayName: Build / Publish
           env:
             OfficialBuildId: $(BUILD.BUILDNUMBER)
-          condition: and(succeededOrFailed(), notIn(variables['Build.Reason'], 'Manual', 'Scheduled'))
+          condition: and(succeeded(), notIn(variables['Build.Reason'], 'Manual', 'Scheduled'))
       - task: CopyFiles@2
         displayName: Gather Logs
         inputs:
