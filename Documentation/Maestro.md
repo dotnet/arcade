@@ -1,18 +1,20 @@
 # Dependency flow automation => Maestro ++
 
-Maestro++ is an automation of the work a Dev would do to flow dependencies across repos using [Darc](darc doc).
+Maestro++ is an automation of the work a developer would do to flow dependencies across repos using [Darc](darc doc).
 
 ## Requirements:
 - Triggers:
     - Package publish
+    - Schedule task
     - Requested in a PR (i.e. @dotnet-bot test product build) by following a speculative product build.
     - Manual trigger
 - It must work for GitHub/VSTS and Public/Internal builds/repos (all combos).
 - Manage channels subscriptions for each repo.
 - It must be able to set policies for each repo:
-    - When to merge an auto-PR. (i.e. auto-merge when all the checks are green)      
+    - When to trigger Maestro++
+    - When to merge an auto-PR. (i.e. auto-merge when all the checks are green).
     - When to abort a flow of dependencies (i.e. what to do when test failed for a specific repo).
-- It must have the option to auto-merge PRs when all the checks are green.
+- It must have the option to auto-merge PRs when all the required checks are green.
 - It must signal when an Official Build is being built in order to produce signed bits.
 -	Notify the result of the build triggered by maestro++. Did the target repo get the update? Does the source repo know if the children were updated?
 
