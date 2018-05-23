@@ -10,11 +10,11 @@ VSTS [![Build Status](https://dotnet.visualstudio.com/_apis/public/build/definit
 )](https://dotnet.visualstudio.com/DotNet-Public/_build/index?definitionId=2&_a=completed)
 
 Jenkins
+
 |    | x64 Debug|x64 Release|
 |:--:|:--:|:--:|
 |**Windows_NT**|[![Build Status](https://ci.dot.net/job/dotnet_arcade/job/master/job/Windows_NT_Debug/badge/icon)](https://ci.dot.net/job/dotnet_arcade/job/master/job/Windows_NT_Debug/)|[![Build Status](https://ci.dot.net/job/dotnet_arcade/job/master/job/Windows_NT_Release/badge/icon)](https://ci.dot.net/job/dotnet_arcade/job/master/job/Windows_NT_Release/)|
 |**Ubuntu 16.04**|[![Build Status](https://ci.dot.net/job/dotnet_arcade/job/master/job/Ubuntu16.04_Debug/badge/icon)](https://ci.dot.net/job/dotnet_arcade/job/master/job/Ubuntu16.04_Debug/)|[![Build Status](https://ci.dot.net/job/dotnet_arcade/job/master/job/Ubuntu16.04_Release/badge/icon)](https://ci.dot.net/job/dotnet_arcade/job/master/job/Ubuntu16.04_Release/)|
-
 
 ## Getting Started
 
