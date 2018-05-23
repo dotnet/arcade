@@ -1,5 +1,5 @@
 # Maestro++ Roadmap
-In order to minimize disruption in the official builds with the implementation of Maestro++, Maestro++ is going to be in stages where it will depend on some functionalities of Maestro.
+In order to minimize disruption in the official builds with the implementation of Maestro++, Maestro++ is going to be developed in stages where it will depend on some functionalities of Maestro.
  Once we start adding new functionalities to Maestro++ we'll remove the dependency in Maestro until it is no longer needed.
 
  For this to happen, the following requirements are needed:
@@ -22,7 +22,11 @@ Once we have gathered feedback from the prototype, we can start adding functiona
 
 ## Policies to manage auto-merge
 The minimum policies we need to enable this functionality are:
-- Set the group of checks/validations that are needed in order to determine the PR is green and ready to merge.
+- Set the group of checks/validations that are needed in order to determine the PR is green and ready to merge. Note that each repo will have a different request on what goes into a group of checks, for example:
+    - Green CI on GitHub/VSTS PR
+    - No newer version updates have been merged
+    - No non-maestro bot commits have been added to the PR
+    - Would committing the PR results in an invalid dependency graph (e.g. aspnet's core-setup dependency is no longer matching CLI's core-setup dependency)
 - Turn on/off the ability to auto-merge a PR that has as owner Maestro++ (in the form of a Bot, for example).
 
 **Note** that policies are for each repository.
