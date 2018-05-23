@@ -2,7 +2,7 @@
 
 ## Business Requirement
 
-Know what's is any given product build at any time including versions, sha's, bits locations, etc. 
+Know what's in any given product build at any time including versions, sha's, bits locations, etc. 
 making the process as seamless as possible and usable by devs and other tools.
 
 ## Goal 
