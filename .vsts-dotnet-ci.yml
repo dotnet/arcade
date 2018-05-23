@@ -3,29 +3,35 @@ phases:
   parameters:
     agentOs: Windows_NT
     buildReason: IndividualCI
-    queueName: Hosted VS2017
-    matrix:
-      Build_Debug:
-        _BuildConfig: Debug
-        _PublishType: none
-        _SignType: test
-      Build_Release:
-        _BuildConfig: Release
-        _PublishType: none
-        _SignType: test
+    queue:
+      queueName: Hosted VS2017
+      demands:
+        - agent.os -equals Windows_NT
+      matrix:
+        Build_Debug:
+          _BuildConfig: Debug
+          _PublishType: none
+          _SignType: test
+        Build_Release:
+          _BuildConfig: Release
+          _PublishType: none
+          _SignType: test
 
 - template: /eng/build.yml
   parameters:
     agentOs: Linux
     buildReason: IndividualCI
-    queueName: DotNetCore-Linux
     dockerImage: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
-    matrix:
-      Build_Debug:
-        _BuildConfig: Debug
-        _PublishType: none
-        _SignType: test
-      Build_Release:
-        _BuildConfig: Release
-        _PublishType: none
-        _SignType: test
+    queue:
+      queueName: DotNetCore-Linux
+      demands:
+        - agent.os -equals Linux
+      matrix:
+        Build_Debug:
+          _BuildConfig: Debug
+          _PublishType: none
+          _SignType: test
+        Build_Release:
+          _BuildConfig: Release
+          _PublishType: none
+          _SignType: test

@@ -10,8 +10,7 @@
 parameters:
   agentOs: Windows_NT
   buildReason: IndividualCI
-  matrix: []
-  queueName: ''
+  queue: {}
   dockerImage: ''
   enableTelemetry: true
   useEsrpSigning: true
@@ -24,9 +23,7 @@ phases:
     dockerImage: ${{ parameters.dockerImage }}
     enableTelemetry: ${{ parameters.enableTelemetry }}
     phase:
-      queue:
-        name: ${{ parameters.queueName }}
-        matrix: ${{ parameters.matrix }}
+      queue: ${{ parameters.queue }}
 
       variables: 
         _HelixType: build/product
