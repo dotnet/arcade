@@ -4,7 +4,7 @@ phases:
     agentOs: Windows_NT
     buildReason: Internal
     queue:
-      queueName: Hosted VS2017
+      name: Hosted VS2017
       demands:
         - agent.os -eqauls Windows_NT
       matrix:
@@ -23,7 +23,7 @@ phases:
     buildReason: Internal
     dockerImage: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
     queue:
-      queueName: DotNetCore-Test
+      name: DotNetCore-Test
       demands:
       - agent.os -equals Linux
       matrix:

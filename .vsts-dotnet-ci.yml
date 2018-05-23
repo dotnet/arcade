@@ -1,10 +1,13 @@
 phases:
+- phase: foo
+  steps:
+  - script: echo foo
 - template: /eng/build.yml
   parameters:
     agentOs: Windows_NT
     buildReason: IndividualCI
-    queue:
-      queueName: Hosted VS2017
+    queue: 
+      name: Hosted VS2017
       demands:
         - agent.os -equals Windows_NT
       matrix:
@@ -22,8 +25,8 @@ phases:
     agentOs: Linux
     buildReason: IndividualCI
     dockerImage: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
-    queue:
-      queueName: DotNetCore-Linux
+    queue: 
+      name: DotNetCore-Linux
       demands:
         - agent.os -equals Linux
       matrix:
