@@ -1,0 +1,35 @@
+phases:
+- phase: foo
+  steps:
+  - script: echo foo
+
+- template: /eng/build.yml
+  parameters:
+    agentOs: Windows_NT
+    buildReason: Internal
+    queueName: Hosted VS2017
+    matrix:
+      Build_Debug:
+        _BuildConfig: Debug
+        _PublishType: none
+        _SignType: test
+      Build_Release:
+        _BuildConfig: Release
+        _PublishType: blob
+        _SignType: real
+
+- template: /eng/build.yml
+  parameters:
+    agentOs: Linux
+    buildReason: Internal
+    queueName: DotNetCore-Linux
+    dockerImage: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
+    matrix:
+      Build_Debug:
+        _BuildConfig: Debug
+        _PublishType: none
+        _SignType: test
+      Build_Release:
+        _BuildConfig: Release
+        _PublishType: blob
+        _SignType: real
