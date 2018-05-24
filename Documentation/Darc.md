@@ -3,7 +3,7 @@
 ## Description
 
 *  Darc is meant to be the **only** way developers and other tools like Maestro++ interact and alter version/dependency files 
-as well as bootstrapping files and scripts in a repo.
+as well as bootstrapping files and scripts in arcade participating repos.
 *  Darc's operations range from performing CRUD on version/dependency files to creating PRs in specified repos.
 *  Building parts or the whole product with changes in the local repo where the command is executed.
 
@@ -131,7 +131,7 @@ will include dependencies where the `<query-parameters>` were used.
       ...
 ]
 ```
-*  `[-s,--sha] <sha> [[-r, --repoUri] <repoUri>]`: --repo supports any git repository uri. If --repo is not provided returns the 
+*  `[-s,--sha] <sha> [[-r, --repoUri] <repoUri>]`: --repoUri supports any git repository uri. If --repoUri is not provided returns the 
 DependencyItems from the local repo's `version.details.xml` which match `<sha>`. If a --repoUri is given and is different 
 from the local, get the DependencyItems that match the sha+repo combination from the reporting store. 
     *  Example: `darc get -s 23498123740982349182340981234`
@@ -160,9 +160,9 @@ from the local, get the DependencyItems that match the sha+repo combination from
 	}
 ]
 ```
-*  `[-r, --repo] <repo>`: if --repo is different from local returns the DependencyItems matching the --repo from the reporting 
+*  `[-r, --repo] <repo>`: if --repoUri is different from local returns the DependencyItems matching the --repoUri from the reporting 
 store, if same, return the the collection from `version.details.xml`
-    *  Example: `darc get --repo https://github.com/dotnet/corefx`
+    *  Example: `darc get --repoUri https://github.com/dotnet/corefx`
 	*  Output Sample: 
 ```
 [
@@ -338,12 +338,12 @@ but using what is defined in Maestro++'s subscriptions
 	  	<File Origin="build.sh" Destination="build.sh" />
 	  	<File Origin="eng\common\build.ps1" Destination="eng\common\build\build.ps1" />
 	  	<File Origin="eng\common\native\*.*" Destination="eng\common\native\*.*" />
-	  <FileMapping>
+	  </FileMapping>
 		</Branch>
 		<Branch Name="rel/1.0.0">
 	  <FileMapping>
 	  	...
-	  <FileMapping>
+	  </FileMapping>
 		</Branch>
    </Repository>
    <Repository Name=”dotnet/corefx”>
