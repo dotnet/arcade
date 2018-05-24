@@ -4,7 +4,7 @@
 
 *  Darc is meant to be the **only** way developers and other tools like Maestro++ interact and alter version/dependency files 
 as well as bootstrapping files and scripts in arcade participating repos.
-*  Darc's operations range from performing CRUD on version/dependency files to creating PRs in specified repos.
+*  Darc's operations range from altering version/dependency files to creating PRs in specified repos.
 *  Building parts or the whole product with changes in the local repo where the command is executed.
 
 ## version/dependency files
@@ -84,7 +84,7 @@ For more information on dependencies please check [DependencyDescriptionFormat](
 
 ## The DependencyItem object
 
-When executing CRUD operations, Darc will parse information in the version/dependency files to DependencyItem objects.
+When dealing with version/dependency files, Darc will parse information in the version/dependency files to DependencyItem objects.
 
 The `DependencyItem` is composed by `Name`, `Version`, `RepoUri`, `Sha`, `Type` and `Location`.
 
@@ -336,8 +336,8 @@ but using what is defined in Maestro++'s subscriptions
     <Branch Name="master">
       <FileMapping>
         <File Source="build.sh" />
-        <File Source="eng\common\build.ps1" Destination="eng\common\build\" />
-        <File Source="eng\common\native\*.*" Destination="eng\common\native\nested\" />
+        <File Source="eng\common\build.ps1" Destination="eng\common\build\build_new.ps1" />
+        <File Source="eng\common\native\*.*" Destination="eng\common\native\nested\*.*" />
       </FileMapping>
     </Branch>
     <Branch Name="rel/1.0.0">
@@ -352,8 +352,9 @@ but using what is defined in Maestro++'s subscriptions
 </Repositories>
 ```
 
-File `Source` is the location of the file from which we'll take the contents to include in the PR. File `Destination` is an optional property that if set,
-determines the folder containing the file(s) to update in a repo+branch. If this is not set, the `Source` value will be used as default.
+File `Source` is the location of the file from which we'll take the contents from to include in the PR. File `Destination` is an optional property 
+that if set, determines the location of the file(s) to update in a repo+branch. While renaming the files is not a common scenario, this is supported
+by using a different name from that in `Source`. If `Destination` is not set, the `Source` value will be used as default.
 
 ### Example
 
