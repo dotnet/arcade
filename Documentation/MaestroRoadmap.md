@@ -7,7 +7,8 @@ In order to minimize disruption in the official builds with the implementation o
  - Repositories use Darc for dependency management.
  - Build for both CI and official builds happen in VSTS.
 
-This document outlines the main stages to implement Maestro++ according to the [requirements](link to requirements doc). First, will be to create a [prototype](#Prototype) and once validated, start [adding funcionalities](#Adding-functionalities) to it.
+This document outlines the main stages to implement Maestro++ according to the [requirements](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro.md).
+ First, will be to create a [prototype](#Prototype) and once validated, start [adding funcionalities](#Adding-functionalities) to it.
 
 # Prototype
 The main focus of the prototype is to make sure that Maestro++ uses Darc to update the dependencies during official builds.
@@ -48,3 +49,9 @@ The work here is:
 
 ## Mirror builds
 Currently, Maestro is in charge of this builds. Part of the work here is to define how those mirros are going to happen in this new world and eventually stop relying on Maestro to build .NET CORE 3.0.
+
+## Speculative version flow
+More information [here]( https://github.com/dotnet/arcade/blob/master/Documentation/Maestro.md#speculative-version-flow).
+
+## Speculative product build
+More information [here](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro.md#speculative-product-builds).
