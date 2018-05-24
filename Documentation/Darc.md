@@ -289,8 +289,8 @@ Output: `true` if succeeded, `false` if otherwise.
 
 ## remove
 
-Removes a dependency from `version.details.xml` matching a versioned item name. (Do we want to make this match other
-things than just name. i.e remove all dependencies from dotnet/coreclr or all versions 1.2.3? If this is the case I'll add `<inputs>`)
+Removes a dependency from `version.details.xml` matching a versioned item name and an optional version. If only the name is
+given all matching dependencies are removed. If version is also provided only the name+version matched dependencies are deleted.
 
 ### Usage
 
