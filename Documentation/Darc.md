@@ -85,7 +85,7 @@ For more information on dependencies please check [DependencyDescriptionFormat](
 
 When dealing with version/dependency files, Darc will parse information in the version/dependency files to DependencyItem objects.
 
-The `DependencyItem` is composed by `Name`, `Version`, `RepoUri`, `Sha`, `Type` and `Location`.
+The `DependencyItem` is composed by `Name`, `Version`, `RepoUri`, `Sha` and `Type`.
 
 ## Dependency operations
 
@@ -159,8 +159,7 @@ from the local, get the DependencyItems that match the sha+repo combination from
 	}
 ]
 ```
-*  `[-r, --repo] <repo>`: if --repoUri is different from local returns the DependencyItems matching the --repoUri from the reporting 
-store, if same, return the the collection from `version.details.xml`
+*  `[-r, --repoUri] <repoUri>`: returns the DependencyItems matching the --repoUri.
     *  Example: `darc get --repoUri https://github.com/dotnet/corefx`
 	*  Output Sample: 
 ```
@@ -210,7 +209,8 @@ store, if same, return the the collection from `version.details.xml`
 	  ...
 ]
 ```
-*  `[-b, --binary] <binary-name>`: returns the DependencyItems matching a binary/asset name. This queries the reporting store.
+*  `[-b, --binary] <binary-name>`: returns the DependencyItems which participated in building the binary/asset matching 
+`--binary`. This queries the reporting store.
     *  Example: `darc get --binary Microsoft.DotNet.Build.Tasks.Feed.1.0.0-prerelease-02201-02.nupkg`
 	*  Output Sample: 
 ```
@@ -251,13 +251,12 @@ Adds a new dependency to `version.details.xml` and in `version.props` and `globa
 
 ### inputs
 
-All the following inputs are required (probably except location depending on the discussion).
+All the following inputs are required.
 
 *  `[-n, --name] <name>`: the versioned item name
 *  `[-v, --version] <item-version>`: item's version
 *  `[-r, --repoUri] <repoUri>`: repo where the item is built
 *  `[-s,--sha] <sha>`: the sha which is built into this item
-*  `[-l, --location]`: the location of the built binary (should this be here?)
 
 ### Example
 
@@ -275,13 +274,12 @@ Updates a dependency in `version.details.xml` and in `version.props` and `global
 
 ### inputs
 
-Tha name and at least one input are required so we know what dependency to update with which value.
+The name and at least one input are required so we know what dependency to update with which value.
 
 *  `[-n, --name] <name>`: the versioned item name
 *  `[-v, --version] <item-version>`: item's version
 *  `[-r, --repoUri] <repoUri>`: repo where the item is built
 *  `[-s,--sha] <sha>`: the sha which is built into this item
-*  `[-l, --location]`: the location of the built binary (should this be here?)
 
 ### Example
 
@@ -296,11 +294,18 @@ things than just name. i.e remove all dependencies from dotnet/coreclr or all ve
 
 ### Usage
 
-`darc remove <name>`
+`darc remove <inputs>`
+
+### inputs
+
+`--name` is required, `--version` is optional
+
+*  `[-n, --name] <name>`: the versioned item name
+*  `[-v, --version] <item-version>`: item's version
 
 ### Example
 
-`darc remove Microsoft.DotNet.Build.Tasks.Feed`
+`darc remove -n Microsoft.DotNet.Build.Tasks.Feed`
 
 Output: `true` if succeeded, `false` if otherwise.
 
@@ -322,7 +327,7 @@ collection.
 
 *  `[-d, --dependencies]`: if this is specified the PR will only include version/dependency files and will be created only in the repo+branch
 where the command was executed
-*  `[[-r, --repos] <path-to-repos-file>]`: If --repos is set, we'll create the PR in the repo+branches defined in it including all the files defined
+*  `[[-r, --repoUris] <path-to-repos-file>]`: If --repoUris is set, we'll create the PR in the repo+branches defined in it including all the files defined
 in FileMapping. When a file is not modified git won't include it in the PR since there are no deltas. If it is not defined Darc will do the same
 but using what is defined in Maestro++'s subscriptions
 *  `[-t, --token]`: GitHub's personal access token
