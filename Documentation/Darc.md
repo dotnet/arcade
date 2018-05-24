@@ -332,25 +332,28 @@ but using what is defined in Maestro++'s subscriptions
 
 ```
 <Repositories>
-   <Repository Uri=”https://github.com/dotnet/cli”>
-		<Branch Name="master">
-	  <FileMapping>
-	  	<File Origin="build.sh" Destination="build.sh" />
-	  	<File Origin="eng\common\build.ps1" Destination="eng\common\build\build.ps1" />
-	  	<File Origin="eng\common\native\*.*" Destination="eng\common\native\*.*" />
-	  </FileMapping>
-		</Branch>
-		<Branch Name="rel/1.0.0">
-	  <FileMapping>
+  <Repository Uri=”https://github.com/dotnet/cli”>
+    <Branch Name="master">
+      <FileMapping>
+        <File Source="build.sh" />
+        <File Source="eng\common\build.ps1" Destination="eng\common\build\" />
+        <File Source="eng\common\native\*.*" Destination="eng\common\native\nested\" />
+      </FileMapping>
+    </Branch>
+    <Branch Name="rel/1.0.0">
+      <FileMapping>
 	  	...
-	  </FileMapping>
-		</Branch>
-   </Repository>
-   <Repository Name=”dotnet/corefx”>
+      </FileMapping>
+    </Branch>
+  </Repository>
+  <Repository Name=”dotnet/corefx”>
 		...
-   </Repository>
+  </Repository>
 </Repositories>
 ```
+
+File `Source` is the location of the file from which we'll take the contents to include in the PR. File `Destination` is an optional property that if set,
+determines the folder containing the file(s) to update in a repo+branch. If this is not set, the `Source` value will be used as default.
 
 ### Example
 
