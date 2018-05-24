@@ -11,9 +11,74 @@ as well as bootstrapping files and scripts in a repo.
 
 The version/dependency files define a set of versioned items which the repo depends on. These files are:
 
-*  eng\version.details.xml
-*  eng\version.props
-*  global.json
+#### eng\version.details.xml
+```
+<?xml version="1.0" encoding="utf-8"?>
+<Dependencies>
+    <!-- Elements contains all product dependencies -->
+    <ProductDependencies>
+        <-- All product dependencies are contained in Version.Props -->
+        <Dependency Name="DependencyA" Version="1.2.3-45">
+            <Uri>https://github.com/dotnet/arepo</Uri>
+            <Sha>23498123740982349182340981234</Sha>
+        </Dependency>
+        <Dependency Name="DependencyB" Version="1.2.3-45">
+            <Uri>https://github.com/dotnet/arepo</Uri>
+            <Sha>13242134123412341465</Sha>
+        </Dependency>
+        <Dependency Name="DependencyC" Version="1.2.3-45">
+            <Uri>https://github.com/dotnet/arepo</Uri>
+            <Sha>789789789789789789789789</Sha>
+        </Dependency>
+    </ProductDependencies>
+
+    <!-- Elements contains all toolset dependencies -->
+    <ToolsetDependencies>
+        <-- Non well-known dependency.  Expressed in Version.props -->
+        <Dependency Name="DependencyB" Version="2.100.3-1234">
+            <Uri>https://github.com/dotnet/atoolsrepo</Uri>
+            <Sha>203409823586523490823498234</Sha>
+            <Expression>VersionProps</Expression>
+        </Dependency>
+        <-- Well-known dependency.  Expressed in global.json -->
+        <Dependency Name="DotNetSdkVersion" Version="2.200.0">
+            <Uri>https://github.com/dotnet/cli</Uri>
+            <Sha>1234123412341234</Sha>
+        </Dependency>
+        <-- Well-known dependency.  Expressed in global.json -->
+        <Dependency Name="Arcade.Sdk" Version="1.0.0">
+            <Uri>https://github.com/dotnet/arcade</Uri>
+            <Sha>132412342341234234</Sha>
+        </Dependency>
+    </ToolsetDependencies>
+</Dependencies>
+```
+
+####  eng\version.props
+```
+<Project>
+  <PropertyGroup>
+    <!-- DependencyA, DependencyB, DependencyC substrings correspond to
+         DependencyName elements in Version.Details.xml file -->
+    <DependencyAPackageVersion>4.5.0-preview2-26403-05</DependencyAPackageVersion>
+    <DependencyBPackageVersion>4.5.0-preview2-26403-05</DependencyBPackageVersion>
+    <DependencyCPackageVersion>4.5.0-preview2-26403-05</DependencyCPackageVersion>
+    ...
+  </PropertyGroup>
+</Project>
+```
+
+####  global.json
+```
+{
+  "sdk": {
+    "version": "2.200.0"
+  },
+  "msbuild-sdks": {
+    "Arcade.Sdk": "1.0.0"
+  }
+}
+```
 
 For more information on dependencies please check [DependencyDescriptionFormat](DependencyDescriptionFormat.md)
 
@@ -21,7 +86,7 @@ For more information on dependencies please check [DependencyDescriptionFormat](
 
 When executing CRUD operations, Darc will parse information in the version/dependency files to DependencyItem objects.
 
-The `DependencyItem` is composed by `Name`, `Version`, `Repo`, `Sha` and `Location`.
+The `DependencyItem` is composed by `Name`, `Version`, `Repo`, `Sha`, `Type` and `Location`.
 
 ## Dependency operations
 
@@ -40,40 +105,150 @@ and dependency names.
 
 *  -p, --produced: return the dependencies that were produced by the `<query-parameters>`. If not set, the returned collection 
 will include dependencies where the `<query-parameters>` were used.
-*  --remote: data source is the reporting store
+*  --remote: if set, Darc will query the reporting store instead of local files.
 
 ### query-parameters
 
-*  "": returns all DependencyItems from the local repo's `Version.Details.xml`
+*  "": returns all DependencyItems from the local repo's `version.details.xml`
     *  Example: `darc get`
+	*  Output Sample: 
+```
+[
+	{
+		name: "DependencyA",
+		version: "1.2.3-45",
+		repo: "dotnet/arepo",
+		sha: "13242134123412341465",
+		type: "product"
+	},
+	{
+		name: "DotNetSdkVersion",
+		version: "2.200.0",
+		repo: "dotnet/cli",
+		sha: "1234123412341234",
+		type: "toolset"
+	},
+      ...
+]
+```
 *  `[-s,--sha] <sha> [[-r, --repo] <repo>]`: if --repo is not provided returns the DependencyItems from the local repo's 
-`Version.Details.xml` which match `<sha>`. If a --repo is given and is different from the local, get the DependencyItems that 
+`version.details.xml` which match `<sha>`. If a --repo is given and is different from the local, get the DependencyItems that 
 match the sha+repo combination from the reporting store. 
     *  Example: `darc get -s 23498123740982349182340981234`
+	*  Output Sample: 
+```
+[
+	{
+		name: "DependencyA",
+		version: "1.2.3-45",
+		repo: "dotnet/arepo",
+		sha: "23498123740982349182340981234",
+		type: "product"
+	}
+]
+```
     *  Example: `darc get -s 23498123740982349182340981234 -r dotnet/coreclr`
+	*  Output Sample: 
+```
+[
+	{
+		name: "DependencyA",
+		version: "1.2.3-45",
+		repo: "dotnet/coreclr",
+		sha: "23498123740982349182340981234",
+		type: "product"
+	}
+]
+```
 *  `[-r, --repo] <repo>`: if --repo is different from local returns the DependencyItems matching the --repo from the reporting 
-store, if same, return the the collection from `Version.Details.xml`
+store, if same, return the the collection from `version.details.xml`
     *  Example: `darc get --repo dotnet/corefx`
+	*  Output Sample: 
+```
+[
+	{
+		name: "DependencyA",
+		version: "1.2.3-45",
+		repo: "dotnet/corefx",
+		sha: "23498123740982349182340981234",
+		type: "product"
+	}
+]
+```
 *  `[-v, --version] <item-version>`: returns the DependencyItems matching `<item-version>`.
     *  Example: `darc get -v 1.2.3`
-*  `[-n, --name] <name>`: returns the DependencyItems matching a versioned item name.
-    *  Example: `darc get --name MyDependency`
-*  `[-b, --binary] <binary-name>`: returns the DependencyItems matching a binary/asset name.
+	*  Output Sample: 
+```
+[
+	{
+		name: "DependencyA",
+		version: "1.2.3",
+		repo: "dotnet/coreclr",
+		sha: "23498123740982349182340981234",
+		type: "product"
+	}
+]
+```
+*  `[-n, --name] <name>`: returns the DependencyItems matching a versioned item name. The use of wildcards is allowed
+    *  Example: `darc get --name Dependency?`
+	*  Output Sample: 
+```
+[
+	{
+		name: "DependencyA",
+		version: "1.2.3-45",
+		repo: "dotnet/arepo",
+		sha: "13242134123412341465",
+		type: "product"
+	},
+	{
+		name: "DependencyB",
+		version: "2.200.0",
+		repo: "dotnet/cli",
+		sha: "1234123412341234",
+		type: "toolset"
+	},
+	  ...
+]
+```
+*  `[-b, --binary] <binary-name>`: returns the DependencyItems matching a binary/asset name. This queries the reporting store.
     *  Example: `darc get --binary Microsoft.DotNet.Build.Tasks.Feed.1.0.0-prerelease-02201-02.nupkg`
+	*  Output Sample: 
+```
+[
+	{
+		name: "Microsoft.DotNet.Build.Tasks.Feed",
+		version: "1.0.0-prerelease-02201-02",
+		repo: "dotnet/buildtools",
+		sha: "23498123740982349182340981234",
+		type: "toolset"
+	}
+]
+```
 * We can also combine any of the query-parameters to get a reduced set of results:
-    *  Example: `darc get -rm --name Microsoft.DotNet.Build.Tasks.Feed -v 1.0.0-prerelease-02201-02`
+    *  Example: `darc get --remote --name Microsoft.DotNet.Build.Tasks.Feed -v 1.0.0-prerelease-02201-02`
+	*  Output Sample: 
+```
+[
+	{
+		name: "Microsoft.DotNet.Build.Tasks.Feed",
+		version: "1.0.0-prerelease-02201-02",
+		repo: "dotnet/buildtools",
+		sha: "23498123740982349182340981234",
+		type: "toolset"
+	}
+]
+```
     
 The returned collection will be a result of an AND join of the `<query-parameters>`.
 
-## put
+## add
 
-Add/update a dependency in `Version.Details.xml` (and in `Version.props` and `global.json` if needed). If the dependency name 
-passed as an input already exists in `Version.Details.xml` we'll update the entry with the rest of the inputs. If it doesn't exist a 
-new one is created.
+Adds a new dependency to `version.details.xml` and in `version.props` and `global.json` if needed.
 
-### Usage
+## Usage
 
-`darc put <inputs>`
+`darc add <inputs>`
 
 ### inputs
 
@@ -87,11 +262,37 @@ All the following inputs are required (probably except location depending on the
 
 ### Example
 
-`darc put -n Microsoft.DotNet.Build.Tasks.Feed -v 1.0.1 -r dotnet/buildtools -s 23498123740982349182340981234`
+`darc add -n Microsoft.DotNet.Build.Tasks.Feed -v 1.0.1 -r dotnet/buildtools -s 23498123740982349182340981234`
+
+Output: `true` if succeeded, `false` if otherwise.
+
+## put
+
+Updates a dependency in `version.details.xml` and in `version.props` and `global.json` if needed. 
+
+### Usage
+
+`darc put <inputs>`
+
+### inputs
+
+Tha name and at least one input are required so we know what dependency to update with which value.
+
+*  `[-n, --name] <name>`: the versioned item name
+*  `[-v, --version] <item-version>`: item's version
+*  `[-r, --repo] <repo>`: repo where the item is built
+*  `[-s,--sha] <sha>`: the sha which is built into this item
+*  `[-l, --location]`: the location of the built binary (should this be here?)
+
+### Example
+
+`darc put -n Microsoft.DotNet.Build.Tasks.Feed -s 23498123740982349182340981234`
+
+Output: `true` if succeeded, `false` if otherwise.
 
 ## remove
 
-Removes a dependency from `Version.Details.xml` matching a versioned item name. (Do we want to make this match other
+Removes a dependency from `version.details.xml` matching a versioned item name. (Do we want to make this match other
 things than just name. i.e remove all dependencies from dotnet/coreclr or all versions 1.2.3? If this is the case I'll add `<inputs>`)
 
 ### Usage
@@ -101,6 +302,8 @@ things than just name. i.e remove all dependencies from dotnet/coreclr or all ve
 ### Example
 
 `darc remove Microsoft.DotNet.Build.Tasks.Feed`
+
+Output: `true` if succeeded, `false` if otherwise.
 
 ## Non-dependency operation (find a better name)
 
@@ -131,16 +334,16 @@ but using what is defined in Maestro++'s subscriptions
 <Repositories>
    <Repository Name=”dotnet/cli”>
 		<Branch Name="master">
-			<FileMapping>
-				<File Origin="build.sh" Destination="build.sh" />
-				<File Origin="eng\common\build.ps1" Destination="eng\common\build\build.ps1" />
-				<File Origin="eng\common\native\*.*" Destination="eng\common\native\*.*" />
-			<FileMapping>
+	  <FileMapping>
+	  	<File Origin="build.sh" Destination="build.sh" />
+	  	<File Origin="eng\common\build.ps1" Destination="eng\common\build\build.ps1" />
+	  	<File Origin="eng\common\native\*.*" Destination="eng\common\native\*.*" />
+	  <FileMapping>
 		</Branch>
 		<Branch Name="rel/1.0.0">
-			<FileMapping>
-				...
-			<FileMapping>
+	  <FileMapping>
+	  	...
+	  <FileMapping>
 		</Branch>
    </Repository>
    <Repository Name=”dotnet/corefx”>
@@ -154,6 +357,28 @@ but using what is defined in Maestro++'s subscriptions
 *  `darc push -t 123f1234ed123ccc123f236e12b1234a456b987`
 *  `darc push -d -t 123f1234ed123ccc123f236e12b1234a456b987`
 *  `darc push -r "E:\myrepos.xml" -t 123f1234ed123ccc123f236e12b1234a456b987`
+
+Output: 
+```
+	[
+		{
+	  repo: "dotnet/corefx",
+	  branch: "master",
+	  prLink: "https://github.com/dotnet/corefx/pull/2660"
+		},
+		{
+	  repo: "dotnet/corefx",
+	  branch: "release/2.1",
+	  prLink: "https://github.com/dotnet/corefx/pull/2661"
+		},
+		{
+	  repo: "dotnet/corefx",
+	  branch: "release/1.1.0",
+	  prLink: "https://github.com/dotnet/corefx/pull/2662"
+		},
+		...
+	]
+```
 
 ## build
 
