@@ -5,7 +5,6 @@
 *  Darc is meant to be the **only** way developers and other tools like Maestro++ interact and alter version/dependency files 
 as well as bootstrapping files and scripts in arcade participating repos.
 *  Darc's operations range from altering version/dependency files to creating PRs in specified repos.
-*  Building parts or the whole product with changes in the local repo where the command is executed.
 
 ## version/dependency files
 
@@ -386,4 +385,5 @@ Output:
 
 ## build
 
-TBD
+Since the process of building the product or a part of the product is not an straight forward  operation it will be defined in a individual document
+and then linked here.
