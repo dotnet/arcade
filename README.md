@@ -44,4 +44,4 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 ### License
 
-.NET Core (including the Arcade repo) is licensed under the [MIT license](LICENSE.TXT).
+.NET Core (including the Arcade repo) is licensed under the [MIT license](LICENSE.TXT).  
