@@ -43,10 +43,17 @@ namespace XliffTasks.Tasks
                     {
                         xlfDocument = LoadXlfDocument(xlfPath, language, createIfNonExistent: AllowModification);
                     }
-                    catch (FileNotFoundException ex) when (ex.FileName == xlfPath)
+                    catch (FileNotFoundException fileNotFoundEx) when (fileNotFoundEx.FileName == xlfPath)
                     {
                         Release.Assert(!AllowModification);
                         throw new BuildErrorException($"'{xlfPath}' for '{sourcePath}' does not exist. {HowToUpdate}");
+                    }
+                    catch (System.Xml.XmlException xmlEx)
+                    {
+                        throw new BuildErrorException("Unable to load file.", xmlEx)
+                        {
+                            Data = { { BuildErrorException.RelatedFile, xlfPath } }
+                        };
                     }
 
                     bool updated = xlfDocument.Update(sourceDocument, sourceDocumentId);
