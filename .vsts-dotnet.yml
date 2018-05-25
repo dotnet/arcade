@@ -33,5 +33,5 @@ phases:
           _SignType: test
         Build_Release:
           _BuildConfig: Release
-          _PublishType: blob
+          _PublishType: none
           _SignType: real
