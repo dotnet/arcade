@@ -102,6 +102,7 @@ and dependency names.
 
 ### options
 
+*  -d, --dependOn: when set, returns the DependencyItems which depend on the `<input>`
 *  -p, --produced: return the dependencies that were produced by the `<query-parameters>`. If not set, the returned collection 
 will include dependencies where the `<query-parameters>` were used.
 *  --remote: if set, Darc will query the reporting store instead of local files.
@@ -173,6 +174,20 @@ from the local, get the DependencyItems that match the sha+repo combination from
 	}
 ]
 ```
+*  `[-b, --branch] <branch>`: returns the DependencyItems matching the --branch. This is a `--remote` only command.
+    *  Example: `darc get --repoUri https://github.com/dotnet/corefx -b master`
+	*  Output Sample: 
+```
+[
+	{
+		name: "DependencyA",
+		version: "1.2.3-45",
+		repoUri: "https://github.com/dotnet/corefx",
+		sha: "23498123740982349182340981234",
+		type: "product"
+	}
+]
+```
 *  `[-v, --version] <item-version>`: returns the DependencyItems matching `<item-version>`.
     *  Example: `darc get -v 1.2.3`
 	*  Output Sample: 
@@ -209,9 +224,9 @@ from the local, get the DependencyItems that match the sha+repo combination from
 	  ...
 ]
 ```
-*  `[-b, --binary] <binary-name>`: returns the DependencyItems which participated in building the binary/asset matching 
-`--binary`. This queries the reporting store.
-    *  Example: `darc get --binary Microsoft.DotNet.Build.Tasks.Feed.1.0.0-prerelease-02201-02.nupkg`
+*  `[-a, --asset] <asset-name>`: returns the DependencyItems which participated in building the binary/asset matching 
+`--asset`. This queries the reporting store.
+    *  Example: `darc get --asset Microsoft.DotNet.Build.Tasks.Feed.1.0.0-prerelease-02201-02.nupkg`
 	*  Output Sample: 
 ```
 [
@@ -388,7 +403,42 @@ Output:
 	]
 ```
 
-## build
+## Scenarios 
 
-Since the process of building the product or a part of the product is not an straight forward  operation it will be defined in a individual document
-and then linked here.
+### Arcade updating its Arcade dependency using Maestro++ and Darc
+
+1.  An Official Build for Arcade happens that i.e. creates XX package with vXY
+    a.	 At the end of the build, the Reporting Store gets updated with the information of the new package produced and its dependencies
+2.  Maestro++ trigger happens
+3.  Maestro++ uses Darc to ask who has a dependency on Arcade
+    a.  Maestro++ calls `get -d --remote -n arcade`
+4.  For each repo/branch that depends on Arcade, Maestro++ uses Darc to check the current version of that package in that repository
+    a.  Maestro++ calls `maestro get --remote -r repoUri -b branch`
+5.  Maestro++ determines if there is a need to update the dependency
+    a.  Maestro++ calls Darc asking to update the version of Arcade to vXY
+      1.  Darc creates a PR into the specified repository and assigns as owner Maestro++ user/bot
+      2.  Dev merges the PR
+
+### Dev updates a set of files that need to be pushed to master branch in repos A, B and C
+
+1.  Dev makes changes in files eng\common\F1, eng\F2 and eng\common\folder\F3
+2.  Dev creates a RepoFile.xml where repos A, B and C are defined and include F1, F2 and F3 in the FileMapping node
+3.  Dev executes the command `darc push -r "E:\RepoFile.xml" -t 123f1234ed123ccc123f236e12b1234a456b987`
+    a.  Darc creates a PR in the master branch of repos A, B and C
+	b.  Dev merges the PR
+
+### Dev updates a set of files that need to be pushed to default repos and branches
+
+1.  Dev makes changes in files eng\common\F1, eng\F2 and eng\common\folder\F3
+2.  Dev executes the command `darc push -t 123f1234ed123ccc123f236e12b1234a456b987`
+    a.  Darc pulls the default repos.xml file (still TBD)
+	a.  Darc creates a PR in the branches and repos defined in default repos.xml
+	b.  Dev merges the PR
+
+### Dev add a new dependency to master branch of coreclr
+
+1.  Dev executes `darc add -n Microsoft.DotNet.Build.Tasks.Feed -v 1.0.1 -r https://github.com/dotnet/buildtools -s 23498123740982349182340981234`
+2.  Since he only wants this change to be pushed to the same branch and repo he creates a repo.xml containing just this branch+repo
+3.  Dev executes the command `darc push -r "E:\RepoFile.xml" -t 123f1234ed123ccc123f236e12b1234a456b987`
+    a.  Darc creates a PR in the master branch of coreclr
+	b.  Dev merges the PR
