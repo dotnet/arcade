@@ -19,6 +19,7 @@ phases:
 - template: /eng/common/templates/phases/base.yml
   parameters:
     agentOs: ${{ parameters.agentOs }}
+    buildReason: ${{ parameters.buildReason }}
     phaseName: ${{ parameters.agentOs }}
     dockerImage: ${{ parameters.dockerImage }}
     enableTelemetry: ${{ parameters.enableTelemetry }}
