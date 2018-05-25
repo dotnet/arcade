@@ -105,6 +105,7 @@ and dependency names.
 *  -d, --dependOn: when set, returns the DependencyItems which depend on the `<input>`
 *  -p, --produced: return the dependencies that were produced by the `<query-parameters>`. If not set, the returned collection 
 will include dependencies where the `<query-parameters>` were used.
+*  -l, --latest: return the newest DependencyItems matching the `<input>`
 *  --remote: if set, Darc will query the reporting store instead of local files.
 
 ### query-parameters
@@ -413,7 +414,7 @@ Output:
 3.  Maestro++ uses Darc to ask who has a dependency on Arcade
     a.  Maestro++ calls `get -d --remote -n arcade`
 4.  For each repo/branch that depends on Arcade, Maestro++ uses Darc to check the current version of that package in that repository
-    a.  Maestro++ calls `maestro get --remote -r repoUri -b branch`
+    a.  Maestro++ calls `maestro get -l --remote -r repoUri -b branch`
 5.  Maestro++ determines if there is a need to update the dependency
     a.  Maestro++ calls Darc asking to update the version of Arcade to vXY
       1.  Darc creates a PR into the specified repository and assigns as owner Maestro++ user/bot
