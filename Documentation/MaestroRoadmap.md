@@ -11,18 +11,30 @@ This document outlines the main stages to implement Maestro++ according to the [
  First, will be to create a [prototype](#Prototype) and once validated, start [adding funcionalities](#Adding-functionalities) to it.
 
 # Prototype
-The main focus of the prototype is to make sure that Maestro++ uses Darc to update the dependencies during official builds.
+The main focus of the prototype is to make sure that Maestro++ uses Darc to update the dependencies after an official build of Arcade.
 
 This means:
 - Maestro++ lives in Arcade.
-- Maestro++ will use the channel subscription mechanism defined in the dotnet/versions repository in order to know what to update.
-- Maestro++ will keep using the dotnet/versions repository to know when packages have been updated.
+- Maestro++ uses Darc to update Arcade dependencies.
+
+Assumptions:
+- The trigger for the Arcade repo will be scheduled.
+- The PR created by Darc will need to be merged by a developer.
+- PRs won't be monitored by Maestro++.
 
 # Adding functionalities
-Once we have gathered feedback from the prototype, we can start adding functionalities to Maestro++ and therefore, start removing functionality from old Maestro.
+Once we have gathered feedback from the prototype, we can start adding functionalities to Maestro++.
 
-## Policies to manage auto-merge
-The minimum policies we need to enable this functionality are:
+## Implement Channel subscription mechanism to Arcade
+This involves:
+- Evaluate if the current model (manage the subscriptions in a repository with a JSON file) is sufficient.
+- Have the subsciptions in the Arcade repository.
+
+## Implement the ability to set policies.
+For triggers, PR and auto-merge management.
+
+### auto-merge
+The minimum set of policies we need to enable this functionality are:
 - Set the group of checks/validations that are needed in order to determine the PR is green and ready to merge. Note that each repo will have a different request on what goes into a group of checks, for example:
     - Green CI on GitHub/VSTS PR
     - No newer version updates have been merged
@@ -32,10 +44,13 @@ The minimum policies we need to enable this functionality are:
 
 **Note** that policies are for each repository.
 
-## Implement Channel subscription mechanism to Arcade
-This involves:
-- Evaluate if the current model (manage the subscriptions in a repository with a JSON file) is sufficient.
-- Maestro++ should start using this new mechanism, instead of the one managed by old Maestro.
+## Onboard other repositories to use Maestro++ for their official builds.
+It involves:
+- Add the repositories to the Maestro++ subscriptions mechanism.
+- Set policies inside the repositories.
+If Darc is not available in the particular repository:
+- Maestro++ will use the channel subscription mechanism defined in the dotnet/versions repository in order to know what to update.
+- Maestro++ will keep using the dotnet/versions repository to know when packages have been updated.
 
 ## Package publish trigger
 Currently, Maestro knows that dependencies need to flow because the dotnet/versions repo gets updated. In order to change this behavior, we need at least two things to happen:
@@ -48,7 +63,7 @@ The work here is:
 - Define how the telemetry sent by the build is going to generate a response from Maestro++ (how, where, etc)
 
 ## Mirror builds
-Currently, Maestro is in charge of this builds. Part of the work here is to define how those mirros are going to happen in this new world and eventually stop relying on Maestro to build .NET CORE 3.0.
+Currently, Maestro is in charge of this builds. Part of the work here is to define how those mirrors are going to happen in this new world and eventually stop relying on Maestro to build .NET CORE 3.0.
 
 ## Speculative version flow
 More information [here]( https://github.com/dotnet/arcade/blob/master/Documentation/Maestro.md#speculative-version-flow).
