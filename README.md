@@ -6,7 +6,7 @@ Arcade is intended to provide well-understood and consistent mechanisms for cons
 
 ## Build & Test Status
 
-VSTS [![Build Status](https://dotnet.visualstudio.com/_apis/public/build/definitions/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/2/badge
+VSTS [![Build Status](https://dotnet.visualstudio.com/_apis/public/build/definitions/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/12/badge
 )](https://dotnet.visualstudio.com/DotNet-Public/_build/index?definitionId=12&_a=completed)
 
 Jenkins
