@@ -7,6 +7,7 @@ phases:
       name: DotNetCore-Build
       demands:
       - agent.os -equals Windows_NT
+      parallel: 2
       matrix:
         Build_Debug:
           _BuildConfig: Debug
@@ -26,6 +27,7 @@ phases:
       name: DotNetCore-Test
       demands:
       - agent.os -equals Linux
+      parallel: 2
       matrix:
         Build_Debug:
           _BuildConfig: Debug
