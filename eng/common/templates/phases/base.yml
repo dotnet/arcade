@@ -18,7 +18,7 @@ parameters:
 phases:
 - phase: ${{ parameters.phaseName }}
   queue: ${{ parameters.phase.queue }}
-  ${{ if eq(parameters.dockerImage, '') }}:
+  ${{ if and(ne(parameters.phase.variables, ''), eq(parameters.dockerImage, '')) }}:
     variables: ${{ parameters.phase.variables }}
   ${{ if ne(parameters.dockerImage, '') }}:
     variables:
