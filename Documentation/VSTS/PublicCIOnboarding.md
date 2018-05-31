@@ -1,134 +1,111 @@
-# VSTS Guidance
+# Enabling Public CI and Pull Requests in VSTS
 
-## Projects
+## Project Guidance
 
-There are two projects for use.  They are:
+[Project guidance](./VSTSGuidance.md) - Covers guidance on naming conventions, folder structure, projects, build definitions, etc...
 
-- public (https://dotnet.visualstudio.com/public)
-  - Used for oss
-  - For build definitions only  (no source code - that's on github)
-  - Build definitions are allowed to pull source directly from GitHub
-- internal  (https://dotnet.visualstudio.com/internal)
-  - Build definitions are only allowed to pull source from internal repos
-  - Public github repos should be mirror here for official msft builds
+## VSTS Pull Request and CI Builds
 
-We will have multiple build definitions, effectively a mirrored set in the public and internal. We will have one set of YAML which applies to both. This will allow for CI (PR testing) in both internal and OSS venues, and well as official build production on the internal side.
+[VSTS Pull Request and CI builds](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts) - VSTS documentation for enabling VSTS public CI and Pull Request builds
 
-## Teams
+## Agent queues
 
-In this context, teams pretty much only affect which level the kanban (or whatever) boards are at.  While permissions can be set at the team level, we're choosing not to do so.
+Agent queue use / configuration / etc... is likely to change very soon, at the moment, agent queues are primarily relegated to Hosted machine pools.  When VSTS enables "bring your own cloud", we'll provide greater flexibility / capacity of machines.
 
-- $(GitHubOrg)
+A couple of notes:
 
-## Permissions
+- Space on [Hosted machines](https://docs.microsoft.com/en-us/vsts/pipelines/agents/hosted?view=vsts#capabilities-and-limitations) is only guaranteed to be at least 10 GB
 
-To keep things as simple (manageable) as possible, we're going to manage permissions coarsely at the project level - pointing directly to existing AD security groups managed in idweb.  **We should not be managing permission outside of this method**
+- For Linux, use the "DotNetCore-Linux" machine pool instead of "Hosted Linux Preview".  "Hosted Linux Preview" is not guaranteed to have docker installed. 
 
-- Permissions will point to existing security groups in AD which are managed in idweb.  This admin is done at the **project** level.  ([VSTS link](https://dotnet.visualstudio.com/internal/_admin/_security))
-- The bulk of folks will be in the 'contributers' group, with special additions for other groups (like admin)
-- There are VSTS permission groups that can be set out side of the project context. ([VSTS link](https://dotnet.visualstudio.com/_admin/_security))   **We're not going to use those**
-- It is also possible to set permissions at the team.  **We're not going to do that**
+## VSTS GitHub connection
 
-## Casing
+VSTS will require a GitHub Service Endpoint to communicate with github and setup web hooks.  Teams should use the `DotNet-Bot GitHub Connection` Service Endpoint.  The `DotNet-Bot GitHub Connection` requires that teams add the .Net Core owned [service account](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#github-service-account) as a [collaborator](https://help.github.com/articles/permission-levels-for-a-user-account-repository/#collaborator-access-on-a-repository-owned-by-a-user-account) (Admin access) on the GitHub repo.
 
-- Casing of projects/repos/build definitions/etc. should match as closely as possible our GitHub guidelines.  Generally, that means lower-case except where we have already used upper-case.  Examples:
-  - dotnet (org name/folder name)
-  - public (project name)
-  - internal (project name)
-  - Microsoft (folder name matching GitHub org name)
-  - dotnet-corefx (vsts repo name on internal project)
+For implementation details and managing information about `DotNet-Bot GitHub Connection` see the [documentation](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#vsts-service-endpoint)
 
-## Build Definitions
+## CI Badge link
 
-### Folder names for github repos
+The [VSTS CI Build guidance](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts#create-a-vsts-build-status-with-a-github-readme-file) describes how to determine the CI build badge link, but only for task based build definitions.  If you're using a YAML based build definition, then you can determine the badge link by either of these two methods.
 
-For those repos which are in github, the build definitions should live:
+- Edit the build definition and go to the "History" tab.  Select the most recent change, right-click, and select "Compare Differences".  Scroll through the json and look for the "_links" section to find the "badge" link.
 
-- $(GitHubOrg)/$(GitHubRepoName)/*.def
-
-### Folders for VSTS repos
-
-For repos in VSTS, the build defs should live:
-
-- lower-case, no spaces, use dashes
-- Put it where it makes sense (closest github org), just not top-level
-- Use the closest github org
-- Use the closet github repo name/vsts repo name without the prefix
-- *.def
-
-### Build definition file name convention
-
-- lower-case, No spaces, use dashes
-- Pattern: $scenario
-  - Scenario:
-    - code-coverage
-    - slow-tests
-    - fast-tests
-    - internal-tools (TBD -- Nate and Matt to investigate more)
-    - official
-    - ci
-
-### Example
-
-```TEXT
-public project:
-  dotnet/arcade/ci
-  dotnet/coreclr/jit-stress
-internal project:
-  dotnet/arcade/official
-  dotnet/coreclr/ci
-  dotnet/coreclr/jit-stress
+```JSON
+"_links": {
+  "self": {
+      "href": "https://dotnet.visualstudio.com/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_apis/build/Definitions/15?revision=4"
+  },
+  "web": {
+      "href": "https://dotnet.visualstudio.com/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_build/definition?definitionId=15"
+  },
+  "editor": {
+      "href": "https://dotnet.visualstudio.com/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_build/designer?id=15&_a=edit-build-definition"
+  },
+  "badge": {
+      "href": "https://dotnet.visualstudio.com/_apis/public/build/definitions/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/15/badge"
+  }
+},
 ```
 
-### YML folders
+- Use the method provided in the [CI Build Guidance](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts#create-a-vsts-build-status-with-a-github-readme-file) to discover the badge link for a task based build definition in the same project, then replace the build definition id with the build definition id of the yaml based build you are modifying.  The Url encoding follows this pattern...
 
-(Still in discussion - not yet implemented  - [github PR](https://github.com/Microsoft/vsts-agent/pull/1430/files#diff-0e4df20b2155d804a6518e8089072a96R29))
+  `https://[project collection]/_apis/[project name]/build/definitions/[project id]/[build definition id]/badge`
 
-```TEXT
-.vsts-pipelines
-  builds/
-    $(GitHubOrg)/
-      $(GitHubRepoName)/
-        scenario.yml
+It is recommended that you restrict the CI build status to a particular branch.  This will prevent the badge from reporting Pull Request build status.  Restrict to a branch by adding the `branchName` parameter to your query string.
+
+Example:
+
+```Text
+https://dotnet.visualstudio.com/DotNet-Public/_build/index?definitionId=17&branchName=master
 ```
 
-## Source Code
+## Security
 
-For now, everything should be in 'internal' and any code that is public should be on GitHub
+[Security documentation](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts#security-considerations)
 
-### VSTS repos should
+It is recommended that you do **NOT** enable the checkbox labeled "Make secrets available to builds of forks".
 
-- Be mirrored from GitHub, if not internal only.
-- Internal-only projects should only be in the 'internal' project with no github equivalent
+## Yaml
 
-### Naming conventions
+- Code reuse
 
-- $(orgName)-$(repoName)
-- Again - *No plan to have public repos in VSTS at this time
+  For *most* teams, it is recommended that you author your yaml to use the same yaml files for internal, CI, and Pull Request builds.  See https://github.com/dotnet/arcade/blob/master/eng/build.yml, for how this is being done in Arcade with build steps conditioned on "build reason".  Note that VSTS does not yet provide build reason in the template evaluation context, so it is currently explicitly provided via two entry points: [Internal builds entry point](https://github.com/dotnet/arcade/blob/master/.vsts-dotnet.yml#L5) and [CI / Pull Request builds entry point](https://github.com/dotnet/arcade/blob/master/.vsts-dotnet-ci.yml#L5)
 
-### Example
+  Expect build reason to be available for template evaluation by the end of June, 2018.  At that time, Arcade's `.vsts-dotnet.yml` and `.vsts-dotnet-ci.yml` files will be combined into a single file and the explicit "buildReason" variable will be removed.
 
-```TEXT
-Project: Public:
-  Repo: dotnet/corefx - Located in GitHub
-  Repo: dotnet/coreclr - Located in GitHub
-Project: Internal:
-  Repo: dotnet-corefx
-  Repo: dotnet-coreclr
-  Repo: Microsoft-visualfsharp
-```
+- Shared templates
 
-Both of these would point to the same yaml file in the forks of the repo:
+  Arcade currently provides a handful for [shared templates](https://github.com/dotnet/arcade/tree/master/eng/common/templates).  At the moment, it is only recommended that you add the `base` template to your yml phases ([example](https://github.com/dotnet/arcade/blob/master/eng/build.yml#L19)).  More templates will be provided when VSTS fixes some current bugs (see "Notes about templates")
 
-- GitHub: dotnet\corefx
-- VSTS: dotnet-corefx
-- The only differences here are:
-  - Repo name: Repos are top level objects in VSTS so we have an org prefix
-  - Leaf folder/build def name (depending on how vsts's pipelines folder work goes)
+  - [base.yml](https://github.com/dotnet/arcade/blob/master/eng/common/templates/phases/base.yml) defines docker variables, and enables telemetry to be sent for non-CI builds.
 
-## Terms
+- Variable groups
 
-From time to time, there are some terms you might encounter in documentation or otherwise.  Here's some I've run across so far and the interpretation.
+  Variable groups are not yet supported in Yaml.  They are scheduled to be available soon (June 2018), in the interim if you need to access a key vault secret, you can explicitly reference a key vault secret using the VSTS key vault task.
 
-- collection --> account --> instance (top level thing - e.g. devdiv.visualstudio.com)
-- team --> group of indivduals.  Largely is about the backlog, not much more.  In our case we're not using for permissions.
+Notes about templates:
+
+- Additional info about templates - https://github.com/Microsoft/vsts-agent/blob/master/docs/preview/yamlgettingstarted-templates.md
+
+- Currently, VSTS has a problem with multiple levels of templates where it will change the order of build steps you provide.  That means, for now, use templates judiciously, don't layer templates within templates, and always validate the step order via a CI build.
+
+## Troubleshooting
+
+### Queuing builds
+
+- YAML: "The array must contain at least one element. Parameter name: phases"
+
+  If your template doesn't compile, then it may prevent any of your "phase" elements from surfacing which leads to this error.  This error hides what the real error in the template is.  You can work around this error by providing a default phase.
+
+  ```YAML
+  phases:
+  - phase: foo
+    steps:
+    - script: echo foo
+  ```
+
+  With a default phase provided, when you queue a build, VSTS will now tell you the actual error you care about.  VSTS is hotfixing this issue so that the lower-level issue is surfaced.
+
+- "Resource not authorized"
+
+  If you made some change to a resource or changed resources, but everything else *appears* correct (from a permissions / authorization point of view), and you're seeing "resource not authorized" when you try to queue a build; it's possible that the resource is fine, but the build definition is not authorized to use it.  Edit the build definition and make some minor change, then save.  This will force the build definition to re-authorize and you can undo whatever minor change you made.
