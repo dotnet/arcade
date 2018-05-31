@@ -4,7 +4,8 @@ using System.Text;
 
 namespace Microsoft.DotNet.Darc
 {
-    class Local
+    public class DarcSettings
     {
+        public string PersonalAccessToken { get; set; }
     }
 }

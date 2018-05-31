@@ -11,9 +11,13 @@ namespace Darc
     {
         static void Main(string[] args)
         {
-            DependencyItem dependencyItem = Remote.GetLatestDependencyAsync("arcade.*").Result;
-            IEnumerable<DependencyItem> dependantItems = Remote.GetDependantAssetsAsync("Dependency*", type: DependencyType.Product).Result;
-            IEnumerable<DependencyItem> dependencyItems = Remote.GetDependencyAssetsAsync("*.sd*").Result;
+            DarcSettings settings = new DarcSettings {
+                PersonalAccessToken = "fdsadfdsfsdf",
+            };
+            DarcLib darc = new DarcLib(settings);
+            DependencyItem dependencyItem = darc.RemoteAction.GetLatestDependencyAsync("arcade.*").Result;
+            IEnumerable<DependencyItem> dependantItems = darc.RemoteAction.GetDependantAssetsAsync("Dependency*", type: DependencyType.Product).Result;
+            IEnumerable<DependencyItem> dependencyItems = darc.RemoteAction.GetDependencyAssetsAsync("*.sd*").Result;
         }
     }
 }

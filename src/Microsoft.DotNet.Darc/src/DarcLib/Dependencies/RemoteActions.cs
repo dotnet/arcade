@@ -12,19 +12,26 @@ using System.Threading.Tasks;
      */
 namespace Microsoft.DotNet.Darc
 {
-    public class Remote
+    public class RemoteActions : IRemote
     {
-        public static async Task<IEnumerable<DependencyItem>> GetDependantAssetsAsync(string assetName, string version = null, string repoUri = null, string branch = null, string sha = null, DependencyType type = DependencyType.Unknown)
+        private readonly DarcSettings darcSetings;
+        
+        public RemoteActions(DarcSettings settings)
+        {
+            darcSetings = settings;
+        }
+
+        public async Task<IEnumerable<DependencyItem>> GetDependantAssetsAsync(string assetName, string version = null, string repoUri = null, string branch = null, string sha = null, DependencyType type = DependencyType.Unknown)
         {
             return await GetAssetsAsync(assetName, RelationType.Dependant, "Getting assets which depend on", version, repoUri, branch, sha, type);
         }
 
-        public static async Task<IEnumerable<DependencyItem>> GetDependencyAssetsAsync(string assetName, string version = null, string repoUri = null, string branch = null, string sha = null, DependencyType type = DependencyType.Unknown)
+        public async Task<IEnumerable<DependencyItem>> GetDependencyAssetsAsync(string assetName, string version = null, string repoUri = null, string branch = null, string sha = null, DependencyType type = DependencyType.Unknown)
         {
             return await GetAssetsAsync(assetName, RelationType.Dependency, "Getting dependencies of", version, repoUri, branch, sha, type);
         }
 
-        public static async Task<DependencyItem> GetLatestDependencyAsync(string assetName)
+        public async Task<DependencyItem> GetLatestDependencyAsync(string assetName)
         {
             List<DependencyItem> dependencies = new List<DependencyItem>();
 
@@ -60,7 +67,17 @@ ORDER BY DateProduced DESC";
             }
         }
 
-        private static async Task<IEnumerable<DependencyItem>> GetAssetsAsync(string assetName, RelationType relationType, string logMessage, string version = null, string repoUri = null, string branch = null, string sha = null, DependencyType type = DependencyType.Unknown)
+        public Task<IEnumerable<DependencyItem>> GetRequiredUpdatesAsync(string repoUri, string branch)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> UpdateBranchAndRepoAsync(string dependencyName, string repoUri, string branch, string version)
+        {
+            throw new NotImplementedException();
+        }
+
+        private async Task<IEnumerable<DependencyItem>> GetAssetsAsync(string assetName, RelationType relationType, string logMessage, string version = null, string repoUri = null, string branch = null, string sha = null, DependencyType type = DependencyType.Unknown)
         {
             string conditionPrefix = relationType == RelationType.Dependant ? "Dependency" : null;
             string selectPrefix = conditionPrefix == null ? "Dependency" : null;
@@ -96,7 +113,7 @@ WHERE {queryParameters.whereConditions}";
             return dependencies;
         }
 
-        private static async Task<List<DependencyItem>> BuildDependencyItemCollectionAsync(SqlDataReader reader)
+        private async Task<List<DependencyItem>> BuildDependencyItemCollectionAsync(SqlDataReader reader)
         {
             List<DependencyItem> dependencies = new List<DependencyItem>();
 
@@ -128,7 +145,7 @@ WHERE {queryParameters.whereConditions}";
             return dependencies;
         }
 
-        private static QueryParameter CreateQueryParameters(string assetName, string version, string repoUri, string branch, string sha, DependencyType type, string prefix = null)
+        private QueryParameter CreateQueryParameters(string assetName, string version, string repoUri, string branch, string sha, DependencyType type, string prefix = null)
         {
             QueryParameter queryParameters = new QueryParameter();
             queryParameters.loggingConditions.Append($"{prefix}AssetName = '{assetName}'");
