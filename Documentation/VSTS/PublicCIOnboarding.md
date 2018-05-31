@@ -69,7 +69,7 @@ It is recommended that you do **NOT** enable the checkbox labeled "Make secrets 
 
 - Code reuse
 
-  For *most* teams, it is recommended that you author your yaml to use the same yaml files for internal, CI, and Pull Request builds.  See https://github.com/dotnet/arcade/blob/master/eng/build.yml, for how this is being done in Arcade with build steps conditioned on "build reason".  Note that VSTS does not yet provide build reason in the template evaluation context, so it is currently explicitly provided via two entry points: [Internal builds entry point](https://github.com/dotnet/arcade/blob/master/.vsts-dotnet.yml#L5) and [CI / Pull Request builds entry point](https://github.com/dotnet/arcade/blob/master/.vsts-dotnet-ci.yml#L5)
+  For *most* teams, it is recommended that you author your yaml to use the [same yaml files for internal, CI, and Pull Request builds](./WritingBuildDefinitions.md).  See https://github.com/dotnet/arcade/blob/master/eng/build.yml, for how this is being done in Arcade with build steps conditioned on "build reason".  Note that VSTS does not yet provide build reason in the template evaluation context, so it is currently explicitly provided via two entry points: [Internal builds entry point](https://github.com/dotnet/arcade/blob/master/.vsts-dotnet.yml#L5) and [CI / Pull Request builds entry point](https://github.com/dotnet/arcade/blob/master/.vsts-dotnet-ci.yml#L5)
 
   Expect build reason to be available for template evaluation by the end of June, 2018.  At that time, Arcade's `.vsts-dotnet.yml` and `.vsts-dotnet-ci.yml` files will be combined into a single file and the explicit "buildReason" variable will be removed.
 
