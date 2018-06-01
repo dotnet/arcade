@@ -15,10 +15,13 @@ namespace Microsoft.DotNet.Darc
     public class RemoteActions : IRemote
     {
         private readonly DarcSettings darcSetings;
+
+        private readonly DependencyFileManager fileManager;
         
         public RemoteActions(DarcSettings settings)
         {
             darcSetings = settings;
+            fileManager = new DependencyFileManager(darcSetings.PersonalAccessToken);
         }
 
         public async Task<IEnumerable<DependencyItem>> GetDependantAssetsAsync(string assetName, string version = null, string repoUri = null, string branch = null, string sha = null, DependencyType type = DependencyType.Unknown)
@@ -67,9 +70,33 @@ ORDER BY DateProduced DESC";
             }
         }
 
-        public Task<IEnumerable<DependencyItem>> GetRequiredUpdatesAsync(string repoUri, string branch)
+        public async Task<IEnumerable<DependencyItem>> GetRequiredUpdatesAsync(string repoUri, string branch)
         {
-            throw new NotImplementedException();
+            List<DependencyItem> toUpdate = new List<DependencyItem>();
+            IEnumerable<DependencyItem> dependencies = await fileManager.ReadVersionDetailsXmlAsync(repoUri, branch);
+
+            foreach (DependencyItem dependencyItem in dependencies)
+            {
+                DependencyItem latest = await GetLatestDependencyAsync(dependencyItem.Name);
+
+                if (latest != null)
+                {
+                    Version sourceVersion = new Version(dependencyItem.Version);
+                    Version storeVersion = new Version(latest.Version);
+
+                    if (storeVersion.CompareTo(sourceVersion) > 0)
+                    {
+                        dependencyItem.Version = latest.Version;
+                        toUpdate.Add(dependencyItem);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"No asset with name '{dependencyItem.Name}' found in store but it is defined in repo '{repoUri}' and branch '{branch}'.");
+                }
+            }
+
+            return toUpdate;
         }
 
         public Task<string> UpdateBranchAndRepoAsync(string dependencyName, string repoUri, string branch, string version)
