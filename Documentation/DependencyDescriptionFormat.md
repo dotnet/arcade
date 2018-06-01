@@ -112,7 +112,7 @@ The dependency description is comprised of two types of assets:
     <!-- Elements contains all toolset dependencies -->
     <ToolsetDependencies>
         <-- Non well-known dependency.  Expressed in Version.props -->
-        <Dependency Name="DependencyB" Version="2.100.3-1234">
+        <Dependency Name="DependencyD" Version="2.100.3-1234">
             <Uri>https://github.com/dotnet/atoolsrepo</Uri>
             <Sha>203409823586523490823498234</Sha>
             <Expression>VersionProps</Expression>
@@ -138,9 +138,10 @@ The dependency description is comprised of two types of assets:
   <PropertyGroup>
     <!-- DependencyA, DependencyB, DependencyC substrings correspond to
          DependencyName elements in Version.Details.xml file -->
-    <DependencyAPackageVersion>4.5.0-preview2-26403-05</DependencyAPackageVersion>
-    <DependencyBPackageVersion>4.5.0-preview2-26403-05</DependencyBPackageVersion>
-    <DependencyCPackageVersion>4.5.0-preview2-26403-05</DependencyCPackageVersion>
+    <DependencyAPackageVersion>1.2.3-45</DependencyAPackageVersion>
+    <DependencyBPackageVersion>1.2.3-45</DependencyBPackageVersion>
+    <DependencyCPackageVersion>1.2.3-45</DependencyCPackageVersion>
+    <DependencyDPackageVersion>2.100.3-1234</DependencyCPackageVersion>
     ...
   </PropertyGroup>
 </Project>
