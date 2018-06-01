@@ -15,4 +15,4 @@ phases:
             steps:
             - script: echo 3
         - script: echo 4
-  - script: echo 5
+    - script: echo 5
