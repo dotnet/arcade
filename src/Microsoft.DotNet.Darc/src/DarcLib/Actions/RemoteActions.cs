@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml;
 
 /*
  Prototype class. We'll need to: 
@@ -65,15 +66,19 @@ ORDER BY DateProduced DESC";
                 {
                     Console.WriteLine($"No dependencies were found matching {assetName}.");
                 }
-
-                return dependencies.FirstOrDefault();
             }
+
+            Console.WriteLine($"Getting latest dependency version for '{assetName}' in the reporting store succeeded!");
+
+            return dependencies.FirstOrDefault();
         }
 
         public async Task<IEnumerable<DependencyItem>> GetRequiredUpdatesAsync(string repoUri, string branch)
         {
+            Console.WriteLine($"Getting dependencies which need to be updated in repo '{repoUri}' and branch '{branch}'...");
+
             List<DependencyItem> toUpdate = new List<DependencyItem>();
-            IEnumerable<DependencyItem> dependencies = await fileManager.ReadVersionDetailsXmlAsync(repoUri, branch);
+            IEnumerable<DependencyItem> dependencies = await fileManager.ParseVersionDetailsXmlAsync(repoUri, branch);
 
             foreach (DependencyItem dependencyItem in dependencies)
             {
@@ -87,6 +92,7 @@ ORDER BY DateProduced DESC";
                     if (storeVersion.CompareTo(sourceVersion) > 0)
                     {
                         dependencyItem.Version = latest.Version;
+                        dependencyItem.Sha = latest.Sha;
                         toUpdate.Add(dependencyItem);
                     }
                 }
@@ -96,12 +102,24 @@ ORDER BY DateProduced DESC";
                 }
             }
 
+            Console.WriteLine($"Getting dependencies which need to be updated in repo '{repoUri}' and branch '{branch}' succeeded!");
+
             return toUpdate;
         }
 
-        public Task<string> UpdateBranchAndRepoAsync(string dependencyName, string repoUri, string branch, string version)
+        public Task<string> UpdateBranchAndRepoAsync(IEnumerable<DependencyItem> itemsToUpdate, string repoUri, string branch)
         {
-            throw new NotImplementedException();
+            Console.WriteLine($"Updating dependencies in repo '{repoUri}' and branch '{branch}'...");
+            string linkToPr = string.Empty;
+            
+            // Update version.details.xml
+            // If product, also update version.props, if toolset and known update global.json if not update version.props
+            //      Update version.props, check that the <{name}PackageVersion> exists and update
+            //      
+
+            Console.WriteLine($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
+
+            return null;
         }
 
         private async Task<IEnumerable<DependencyItem>> GetAssetsAsync(string assetName, RelationType relationType, string logMessage, string version = null, string repoUri = null, string branch = null, string sha = null, DependencyType type = DependencyType.Unknown)
