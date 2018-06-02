@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -11,8 +12,9 @@ namespace Microsoft.DotNet.Darc
     {
         private readonly GitHubClient gitHubClient;
         private const string VersionDetailsXmlPath = "eng/version.details.xml";
-        private const string VersionPropsPath = "eng/version.props";
+        private const string VersionPropsPath = "eng/Versions.props";
         private const string GlobalJsonPath = "global.json";
+        private const string VersionPropsExpression = "VersionProps";
 
         public DependencyFileManager(string accessToken)
         {
@@ -54,24 +56,31 @@ namespace Microsoft.DotNet.Darc
 
             if (document != null)
             {
-                BuildDependencies(document.SelectSingleNode("ProductDependencies"), DependencyType.Product);
-                BuildDependencies(document.SelectSingleNode("ToolsetDependencies"), DependencyType.Toolset);
+                BuildDependencies(document.DocumentElement.SelectSingleNode("ProductDependencies"), DependencyType.Product);
+                BuildDependencies(document.DocumentElement.SelectSingleNode("ToolsetDependencies"), DependencyType.Toolset);
 
                 void BuildDependencies(XmlNode node, DependencyType dependencyType)
                 {
-                    foreach (XmlNode childNode in node.ChildNodes)
+                    if (node != null)
                     {
-                        DependencyItem dependencyItem = new DependencyItem
+                        foreach (XmlNode childNode in node.ChildNodes)
                         {
-                            Branch = branch,
-                            Name = childNode.Attributes["Name"].Value,
-                            RepoUri = childNode.SelectSingleNode("Uri").InnerText,
-                            Sha = childNode.SelectSingleNode("Sha").InnerText,
-                            Version = childNode.Attributes["Version"].Value,
-                            Type = dependencyType
-                        };
+                            DependencyItem dependencyItem = new DependencyItem
+                            {
+                                Branch = branch,
+                                Name = childNode.Attributes["Name"].Value,
+                                RepoUri = childNode.SelectSingleNode("Uri").InnerText,
+                                Sha = childNode.SelectSingleNode("Sha").InnerText,
+                                Version = childNode.Attributes["Version"].Value,
+                                Type = dependencyType
+                            };
 
-                        dependencyItems.Add(dependencyItem);
+                            dependencyItems.Add(dependencyItem);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"No '{dependencyType}' defined in file.");
                     }
                 }
             }
@@ -94,11 +103,11 @@ namespace Microsoft.DotNet.Darc
 
             foreach (DependencyItem itemToUpdate in itemsToUpdate)
             {
-                XmlNodeList versionList = versionDetails.SelectNodes($"Dependency[@Name={itemToUpdate.Name}]");
-                // check for null or empty here as well
-                if (versionList == null || versionList.Count > 1)
+                XmlNodeList versionList = versionDetails.SelectNodes($"//Dependency[@Name='{itemToUpdate.Name}']");
+                
+                if (versionList.Count == 0 || versionList.Count > 1)
                 {
-                    if (versionList == null)
+                    if (versionList.Count == 0)
                     {
                         Console.WriteLine($"No dependencies named {itemToUpdate.Name} found.");
                     }
@@ -111,10 +120,10 @@ namespace Microsoft.DotNet.Darc
                 }
 
                 XmlNode parentNode = itemToUpdate.Type == DependencyType.Product
-                    ? versionDetails.SelectSingleNode("ProductDependencies")
-                    : versionDetails.SelectSingleNode("ToolsetDependencies");
+                    ? versionDetails.DocumentElement.SelectSingleNode("ProductDependencies")
+                    : versionDetails.DocumentElement.SelectSingleNode("ToolsetDependencies");
 
-                XmlNodeList nodesToUpdate = parentNode.SelectNodes($"Dependency[@Name={itemToUpdate.Name}]");
+                XmlNodeList nodesToUpdate = parentNode.SelectNodes($"//Dependency[@Name='{itemToUpdate.Name}']");
 
                 foreach (XmlNode dependencyToUpdate in nodesToUpdate)
                 {
@@ -122,15 +131,40 @@ namespace Microsoft.DotNet.Darc
                     dependencyToUpdate.SelectSingleNode("Sha").InnerText = itemToUpdate.Sha;
 
                     // If the dependency is of Product type we also have to update version.props
-                    // If the dependency is of Toolset type we have to check if it is a known type (exists in global.json), if this is the case we
-                    // update global.json, if not, we update version.props
+                    // If the dependency is of Toolset type and it has no <Expression> defined or not set to VersionProps we also update global.json
+                    // if not, we update version.props
                     if (itemToUpdate.Type == DependencyType.Product)
                     {
-                        versionProps.SelectSingleNode($"{itemToUpdate.Name}PackageVersion").InnerText = itemToUpdate.Version;
+                        XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"{itemToUpdate.Name}Version");
+
+                        if (versionNode != null)
+                        {
+                            versionNode.InnerText = itemToUpdate.Version;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"{itemToUpdate.Name}Version not found in '{VersionPropsPath}'.");
+                        }
                     }
                     else
                     {
+                        if (dependencyToUpdate.SelectSingleNode("Expression") != null && dependencyToUpdate.SelectSingleNode("Expression").InnerText == VersionPropsExpression)
+                        {
+                            XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"{itemToUpdate.Name}Version");
 
+                            if (versionNode != null)
+                            {
+                                versionNode.InnerText = itemToUpdate.Version;
+                            }
+                            else
+                            {
+                                Console.WriteLine($"{itemToUpdate.Name}Version not found in '{VersionPropsPath}'.");
+                            }
+                        }
+                        else
+                        {
+                            TryUpdateVersionInGlobalJson(itemToUpdate.Name, itemToUpdate.Version, globalJson);
+                        }
                     }
                 }
             }
@@ -142,7 +176,7 @@ namespace Microsoft.DotNet.Darc
         {
             Console.WriteLine($"Reading '{filePath}' in repo '{repoUri}' and branch '{branch}'...");
 
-            string fileContent = await gitHubClient.GetFileContentsAsync(VersionPropsPath, repoUri, branch);
+            string fileContent = await gitHubClient.GetFileContentsAsync(filePath, repoUri, branch);
             XmlDocument document = new XmlDocument();
 
             try
@@ -158,6 +192,11 @@ namespace Microsoft.DotNet.Darc
             Console.WriteLine($"Reading '{filePath}' from repo '{repoUri}' and branch '{branch}' succeeded!");
 
             return document;
+        }
+
+        private bool TryUpdateVersionInGlobalJson(string assetName, string version, JToken jsonContent)
+        {
+            return true;
         }
     }
 }

@@ -86,10 +86,7 @@ ORDER BY DateProduced DESC";
 
                 if (latest != null)
                 {
-                    Version sourceVersion = new Version(dependencyItem.Version);
-                    Version storeVersion = new Version(latest.Version);
-
-                    if (storeVersion.CompareTo(sourceVersion) > 0)
+                    if (string.Compare(latest.Version, dependencyItem.Version) == 1)
                     {
                         dependencyItem.Version = latest.Version;
                         dependencyItem.Sha = latest.Sha;
@@ -107,11 +104,12 @@ ORDER BY DateProduced DESC";
             return toUpdate;
         }
 
-        public Task<string> UpdateBranchAndRepoAsync(IEnumerable<DependencyItem> itemsToUpdate, string repoUri, string branch)
+        public async Task<string> UpdateBranchAndRepoAsync(IEnumerable<DependencyItem> itemsToUpdate, string repoUri, string branch)
         {
             Console.WriteLine($"Updating dependencies in repo '{repoUri}' and branch '{branch}'...");
             string linkToPr = string.Empty;
-            
+            var x = await fileManager.UpdateDependencyFiles(itemsToUpdate, repoUri, branch);
+
             // Update version.details.xml
             // If product, also update version.props, if toolset and known update global.json if not update version.props
             //      Update version.props, check that the <{name}PackageVersion> exists and update

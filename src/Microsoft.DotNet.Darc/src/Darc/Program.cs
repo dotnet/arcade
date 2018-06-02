@@ -16,10 +16,11 @@ namespace Darc
             };
 
             DarcLib darc = new DarcLib(settings);
-            DependencyItem dependencyItem = darc.RemoteAction.GetLatestDependencyAsync("arcade.*").Result;
-            IEnumerable<DependencyItem> dependantItems = darc.RemoteAction.GetDependantAssetsAsync("Dependency*", type: DependencyType.Product).Result;
-            IEnumerable<DependencyItem> dependencyItems = darc.RemoteAction.GetDependencyAssetsAsync("*.sd*").Result;
+            //DependencyItem dependencyItem = darc.RemoteAction.GetLatestDependencyAsync("arcade.*").Result;
+            //IEnumerable<DependencyItem> dependantItems = darc.RemoteAction.GetDependantAssetsAsync("Dependency*", type: DependencyType.Product).Result;
+            //IEnumerable<DependencyItem> dependencyItems = darc.RemoteAction.GetDependencyAssetsAsync("*.sd*").Result;
             IEnumerable<DependencyItem> dependenciesToUpdate = darc.RemoteAction.GetRequiredUpdatesAsync("https://github.com/jcagme/arcade/", "test").Result;
+            string x = darc.RemoteAction.UpdateBranchAndRepoAsync(dependenciesToUpdate, "https://github.com/jcagme/arcade/", "test").Result;
         }
     }
 }
