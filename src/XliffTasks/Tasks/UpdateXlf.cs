@@ -50,9 +50,9 @@ namespace XliffTasks.Tasks
                     }
                     catch (System.Xml.XmlException xmlEx)
                     {
-                        throw new BuildErrorException("Unable to load file.", xmlEx)
+                        throw new BuildErrorException($"Unable to load file: {xmlEx.Message}")
                         {
-                            Data = { { BuildErrorException.RelatedFile, xlfPath } }
+                            RelatedFile = xlfPath
                         };
                     }
 
