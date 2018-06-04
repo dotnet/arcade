@@ -20,7 +20,7 @@ namespace XliffTasks.Tasks
             }
             catch (BuildErrorException ex)
             {
-                Log.LogErrorFromException(ex, showStackTrace: false);
+                Log.LogErrorFromException(ex, showStackTrace: false, showDetail: false, file: ex.RelatedFile);
             }
 
             return !Log.HasLoggedErrors;
@@ -51,7 +51,10 @@ namespace XliffTasks.Tasks
             }
             else
             {
-                throw new BuildErrorException($"Unknown source file format '{format}'.");
+                throw new BuildErrorException($"Unknown source file format '{format}'.")
+                {
+                    RelatedFile = path
+                };
             }
 
             document.Load(path);
