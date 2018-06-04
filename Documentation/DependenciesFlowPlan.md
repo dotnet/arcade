@@ -16,22 +16,20 @@ The goal of the prototype is to validate the interaction proposed between Darc a
 We will showcase it by the end of S136.
 
 ## Conditions:
-- Darc and Maestro++ live in Arcade.
+- The code for both Darc and Maestro++ live in Arcade.
 - Maestro++ uses Darc to update Arcade dependencies.
 
 ## Scenario:
 1. A file gets updated in Arcade, that needs to go to other branches in Arcade.
-2. Maestro++ trigger happens.
-3. Maestro++ uses Darc to check the current version of that package XX in Arcade
-    Maestro++ calls `get -l --remote -r repoUri -b branch`
-4. Maestro++ determines if there is a need to update the dependency.
-5. Maestro++ calls Darc asking to update the version of package XX to vXY.
-6. Darc creates a PR in Arcade.
-7. Dev merges the PR.
+2. Maestro++ schedule trigger happens.
+3. Maestro++ asks Darc if there are any updates required for Arcade.
+4. Maestro++ calls Darc asking to update make an update.
+5. Darc creates a PR in Arcade.
+6. Dev merges the PR.
 
 ## Assumptions:
 - The trigger of Maestro++ for the Arcade repo will be scheduled.
-- Maestro knows Arcade depends on package XX.
+- Maestro++ has a the subscriptions hardcoded.
 - PR created will have one of the developers as owner.
 - The PR created by Darc will need to be merged by a developer.
 - PRs won't be monitored by Maestro++.
@@ -51,18 +49,16 @@ The Product Dependency Store is going to be used by:
 For V1, the minimun APIs needed are:
 - Add
 - Get
-- Update
 
 ## Darc
 ### Interaction with the Product Dependency Store
-Darc needs to do get, add, and push using the API of the Product Dependency Store
+Darc uses the GET API call from the Product Dependency Store
 
 ### Add the ability to set the owner of the PR
 By using GitHub tokens, be able to set the owner of the PR.
 
 ### Push to more than one repo
-Implement the functionality to be able to push changes to more than one repository.
-This means define and write logic to validate the `RepoFile.xml` and be able to do `darc push -r "E:\RepoFile.xml" -t <GitHub Token>`
+Define if we need this and how it should work.
 
 ## Maestro++
 ### Implement Channel subscription mechanism to Arcade
