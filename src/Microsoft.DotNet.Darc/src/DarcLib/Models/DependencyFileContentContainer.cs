@@ -13,6 +13,18 @@ namespace Microsoft.DotNet.Darc
         public DependencyFileContent VersionProps { get; set; }
 
         public DependencyFileContent GlobalJson { get; set; }
+
+        public Dictionary<string, GitHubCommit> GetFilesToCommitMap(string branch, string message = null)
+        {
+            Dictionary<string, GitHubCommit> gitHubCommitsMap = new Dictionary<string, GitHubCommit>
+            {
+                { VersionDetailsXml.FilePath, VersionDetailsXml.ToCommit(branch, message) },
+                { VersionProps.FilePath, VersionProps.ToCommit(branch, message) },
+                { GlobalJson.FilePath, GlobalJson.ToCommit(branch, message) }
+            };
+
+            return gitHubCommitsMap;
+        }
     }
 
     public class DependencyFileContent
@@ -22,7 +34,7 @@ namespace Microsoft.DotNet.Darc
         public string Content { get; set; }
 
         public DependencyFileContent(string filePath, XmlDocument xmlDocument)
-            : this(filePath, xmlDocument.OuterXml)
+            : this(filePath, System.Xml.Linq.XElement.Parse(xmlDocument.OuterXml).ToString())
         {
         }
 
@@ -41,6 +53,14 @@ namespace Microsoft.DotNet.Darc
         {
             byte[] content = System.Text.Encoding.UTF8.GetBytes(Content);
             Content = Convert.ToBase64String(content);
+        }
+
+        public GitHubCommit ToCommit(string branch, string message = null)
+        {
+            message = message ?? $"Darc update of '{FilePath}'";
+            Encode();
+            GitHubCommit commit = new GitHubCommit(message, Content, branch);
+            return commit;
         }
     }
 }

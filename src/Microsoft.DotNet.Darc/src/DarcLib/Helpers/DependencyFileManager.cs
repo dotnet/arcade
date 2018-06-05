@@ -15,6 +15,7 @@ namespace Microsoft.DotNet.Darc
         private const string VersionPropsPath = "eng/Versions.props";
         private const string GlobalJsonPath = "global.json";
         private const string VersionPropsExpression = "VersionProps";
+        private const string SdkVersionProperty = "version";
 
         public DependencyFileManager(string accessToken)
         {
@@ -135,41 +136,30 @@ namespace Microsoft.DotNet.Darc
                     // if not, we update version.props
                     if (itemToUpdate.Type == DependencyType.Product)
                     {
-                        XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"{itemToUpdate.Name}Version");
-
-                        if (versionNode != null)
-                        {
-                            versionNode.InnerText = itemToUpdate.Version;
-                        }
-                        else
-                        {
-                            Console.WriteLine($"{itemToUpdate.Name}Version not found in '{VersionPropsPath}'.");
-                        }
+                        UpdateVersionPropsDoc(versionProps, itemToUpdate);
                     }
                     else
                     {
                         if (dependencyToUpdate.SelectSingleNode("Expression") != null && dependencyToUpdate.SelectSingleNode("Expression").InnerText == VersionPropsExpression)
                         {
-                            XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"{itemToUpdate.Name}Version");
-
-                            if (versionNode != null)
-                            {
-                                versionNode.InnerText = itemToUpdate.Version;
-                            }
-                            else
-                            {
-                                Console.WriteLine($"{itemToUpdate.Name}Version not found in '{VersionPropsPath}'.");
-                            }
+                            UpdateVersionPropsDoc(versionProps, itemToUpdate);
                         }
                         else
                         {
-                            TryUpdateVersionInGlobalJson(itemToUpdate.Name, itemToUpdate.Version, globalJson);
+                            UpdateVersionGlobalJson(itemToUpdate.Name, itemToUpdate.Version, globalJson);
                         }
                     }
                 }
             }
 
-            return new DependencyFileContentContainer();
+            DependencyFileContentContainer fileContainer = new DependencyFileContentContainer
+            {
+                GlobalJson = new DependencyFileContent(GlobalJsonPath, globalJson),
+                VersionDetailsXml = new DependencyFileContent(VersionDetailsXmlPath, versionDetails),
+                VersionProps = new DependencyFileContent(VersionPropsPath, versionProps)
+            };
+
+            return fileContainer;
         }
 
         private async Task<XmlDocument> ReadXmlFileAsync(string filePath, string repoUri, string branch)
@@ -194,9 +184,46 @@ namespace Microsoft.DotNet.Darc
             return document;
         }
 
-        private bool TryUpdateVersionInGlobalJson(string assetName, string version, JToken jsonContent)
+        private void UpdateVersionPropsDoc(XmlDocument versionProps, DependencyItem itemToUpdate)
         {
-            return true;
+            string namespaceName = "ns";
+            XmlNamespaceManager namespaceManager = new XmlNamespaceManager(versionProps.NameTable);
+            namespaceManager.AddNamespace(namespaceName, versionProps.DocumentElement.Attributes["xmlns"].Value);
+
+            XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"//{namespaceName}:{itemToUpdate.Name}Version", namespaceManager);
+
+            if (versionNode != null)
+            {
+                versionNode.InnerText = itemToUpdate.Version;
+            }
+            else
+            {
+                Console.WriteLine($"{itemToUpdate.Name}Version not found in '{VersionPropsPath}'.");
+            }
+        }
+
+        private void UpdateVersionGlobalJson(string assetName, string version, JToken token)
+        {
+            foreach (JProperty child in token.Children<JProperty>())
+            {
+                if (child.Name == assetName)
+                {
+                    if (child.HasValues && child.Value.ToString().IndexOf(SdkVersionProperty, StringComparison.CurrentCultureIgnoreCase) > 0)
+                    {
+                        UpdateVersionGlobalJson(SdkVersionProperty, version, child.Value);
+                    }
+                    else
+                    {
+                        child.Value = new JValue(version);
+                    }
+
+                    break;
+                }
+                else
+                {
+                    UpdateVersionGlobalJson(assetName, version, child.Value);
+                }
+            }
         }
     }
 }

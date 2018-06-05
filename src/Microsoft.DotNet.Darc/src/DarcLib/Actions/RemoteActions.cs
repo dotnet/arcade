@@ -18,11 +18,15 @@ namespace Microsoft.DotNet.Darc
         private readonly DarcSettings darcSetings;
 
         private readonly DependencyFileManager fileManager;
-        
+
+        private readonly GitHubClient githubClient;
+
+
         public RemoteActions(DarcSettings settings)
         {
             darcSetings = settings;
             fileManager = new DependencyFileManager(darcSetings.PersonalAccessToken);
+            githubClient = new GitHubClient(darcSetings.PersonalAccessToken);
         }
 
         public async Task<IEnumerable<DependencyItem>> GetDependantAssetsAsync(string assetName, string version = null, string repoUri = null, string branch = null, string sha = null, DependencyType type = DependencyType.Unknown)
@@ -104,19 +108,24 @@ ORDER BY DateProduced DESC";
             return toUpdate;
         }
 
-        public async Task<string> UpdateBranchAndRepoAsync(IEnumerable<DependencyItem> itemsToUpdate, string repoUri, string branch)
+        public async Task<string> UpdateBranchAndRepoAsync(IEnumerable<DependencyItem> itemsToUpdate, string repoUri, string branch, string pullRequestBaseBranch = "darc", string pullRequestTitle = null, string pullRequestDescription = null)
         {
             Console.WriteLine($"Updating dependencies in repo '{repoUri}' and branch '{branch}'...");
-            string linkToPr = string.Empty;
-            var x = await fileManager.UpdateDependencyFiles(itemsToUpdate, repoUri, branch);
+            string linkToPr;
 
-            // Update version.details.xml
-            // If product, also update version.props, if toolset and known update global.json if not update version.props
-            //      Update version.props, check that the <{name}PackageVersion> exists and update
-            //      
+            if (await githubClient.CreateDarcBranchAsync(repoUri))
+            {
+                DependencyFileContentContainer fileContainer = await fileManager.UpdateDependencyFiles(itemsToUpdate, repoUri, branch);
 
-            Console.WriteLine($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
-
+                if (await githubClient.PushDependencyFiles(fileContainer.GetFilesToCommitMap(pullRequestBaseBranch), repoUri, branch))
+                {
+                    linkToPr = await githubClient.CreatePullRequestAsync(repoUri, branch, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
+                    Console.WriteLine($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
+                    return linkToPr;
+                }
+            }
+            
+            Console.WriteLine($"Failed to find or create a branch where Darc would commited the changes for the PR.");
             return null;
         }
 
