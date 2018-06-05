@@ -1,15 +1,14 @@
 # Dependencies Flow Plan
-The components needed in order to flow dependencies through different repositories are: Darc, Maestro++ and, using Darc, the Product Dependency Store.
+The components needed in order to flow dependencies through different repositories are: Darc, Maestro++, and the Build Asset Registry (using Darc)
 For more information take a look at [version querying and updating](./VersionQueryingAndUpdating.md).
 
 This document outlines the main stages to implement the work needed to accomplish the dependencies flow.
- First, we'll focus on [prototype](#Prototype) and once validated, we'll start adding funcionalities to each component.
-In order for this plan to be done, the following requirements are needed:
- - Product repositories use Arcade to build.
- - Repositories use Darc for dependency management.
- - Builds for both CI and official builds happen in VSTS.
+ First, we'll focus on [prototype](#Prototype) and once validated, we'll start adding functionalities to each component.
 
-**Note:** Repositories = at least CoreClr, CoreFx, CoreSetup, Roslyn, and CLI.
+In order for the dependency flow plan to be done, tier 1 product repositories need to:
+ - Use Darc for dependency management.
+ - Subscribe to Maestro++.
+ - Builds for both CI and official builds happen in VSTS.
 
 # Prototype
 The goal of the prototype is to validate the interaction proposed between Darc and Maestro++, as well as the boundaries of each.
@@ -33,26 +32,26 @@ We will showcase it by the end of S136.
 - PR created will have one of the developers as owner.
 - The PR created by Darc will need to be merged by a developer.
 - PRs won't be monitored by Maestro++.
-- We'll use a mock for the Product Dependency Store.
+- We'll use a mock for the Build Asset Registry.
 
 # Adding functionalities - V1
 Once we have gathered feedback from the prototype, we can start adding functionalities to create Dependencies Flow V1. Targeting 3 sprints (S139) of work that will include:
 
-## Product Dependency Store
-### Desing the model of the Product Dependency Store
-The Product Dependency Store is going to be used by:
-- Builds: As part of the post-build steps, once the assests produced during the build have been published, the build needs to tell the Product Dependency Store about what was produced and where it is located at.
-- Darc: Query and updates the Product Dependency Store.
+## Build Asset Registry
+### Desing the model of the Build Asset Registry
+The Build Asset Registry is going to be used by:
+- Builds: As part of the publish steps, once the assets produced during the build have been published, the build needs to tell the Build Asset Registry about what was produced and where it is located at.
+- Darc: Query and updates the Build Asset Registry.
 - Mission Control: Shows the information of the dependencies to users.
 
-### Implement API to access the Product Dependency Store
-For V1, the minimun APIs needed are:
+### Implement API to access the Build Asset Registry
+For V1, the minimum APIs needed are:
 - Add
 - Get
 
 ## Darc
-### Interaction with the Product Dependency Store
-Darc uses the GET API call from the Product Dependency Store
+### Interaction with the Build Asset Registry
+Darc uses the GET API call from the Build Asset Registry
 
 ### Add the ability to set the owner of the PR
 By using GitHub tokens, be able to set the owner of the PR.
@@ -76,28 +75,28 @@ The minimum set of policies we need to enable this functionality are:
     - No newer version updates have been merged
     - No non-maestro bot commits have been added to the PR
     - Would committing the PR results in an invalid dependency graph (e.g. aspnet's core-setup dependency is no longer matching CLI's core-setup dependency)
-- Turn on/off the ability to auto-merge a PR that has as owner Maestro++ (in the form of a Bot, for example). => at this point, this is not enabled and it is by default on the Dev
+- Turn on/off the ability to auto-merge a PR that has as owner Maestro++ (in the form of a Bot, for example). => at this point, this is not enabled and it is by default on the Dev.
 
 **Note** that policies are for each repository.
 
-## On board 1 repository to use Darc and Maestro++ for their official builds.
+## Onboard 1 repository to use Darc and Maestro++ for their official builds.
 It involves:
 - Define which repository.
 - Add the repository to the Maestro++ subscriptions mechanism.
 - Set Maestro++ policies for the repository.
-- Builds send information to the Product Dependency Store using the API to report on the assests produced, the location, and other Build information. 
+- Builds send information to the Build Asset Registry using the API to report on the assets produced, the location, and other Build information. 
 
 # Adding functionalities - V2
 ## Local work for Darc
 Make sure a dev can use Darc locally to update the dependencies of the repo, and other repos too. Targeting 2 sprints (S141) of work that will include:
 
-## Finish implementing Product Dependency Store APIs
+## Finish implementing Build Asset Registry APIs
 
 ## On board other repositories to use Darc and Maestro++ for their official builds.
 It involves:
 - Add the repositories to the Maestro++ subscriptions mechanism.
 - Set Maestro++ policies for each repository.
-- Builds send information to the Product Dependency Store using the API to report on the assests produced, the location, and other Build information.
+- Builds send information to the Build Asset Registry using the API to report on the assets produced, the location, and other Build information.
 
 # Adding functionalities - V3...
 ## Mirror builds using Maestro++
