@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.Darc
                         NullValueHandling = NullValueHandling.Ignore
                     };
                     string body = JsonConvert.SerializeObject(commit, serializerSettings);
-                    HttpResponseMessage response = await client.PutAsync($"repos/{ownerAndRepo}contents/{filePath}", new StringContent(body, Encoding.UTF8, "application/xml"));
+                    HttpResponseMessage response = await client.PutAsync($"repos/{ownerAndRepo}contents/{filePath}", new StringContent(body));
 
                     if (!response.IsSuccessStatusCode)
                     {

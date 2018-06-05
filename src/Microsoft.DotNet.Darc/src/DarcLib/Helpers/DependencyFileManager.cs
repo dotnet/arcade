@@ -1,8 +1,6 @@
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -40,11 +38,6 @@ namespace Microsoft.DotNet.Darc
 
             string fileContent = await gitHubClient.GetFileContentsAsync(GlobalJsonPath, repoUri, branch);
             JObject jsonContent = JObject.Parse(fileContent);
-            //var dict = jsonContent.Children()
-            //               .OfType<JProperty>()
-            //               .ToDictionary(x => x.Name, x => x.Value);
-
-            //int c = (int)dict["CONTRATE"];
             return jsonContent;
         }
 
