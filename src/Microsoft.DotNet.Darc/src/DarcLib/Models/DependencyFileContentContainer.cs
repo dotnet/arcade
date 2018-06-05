@@ -2,6 +2,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace Microsoft.DotNet.Darc
 {
@@ -33,7 +34,7 @@ namespace Microsoft.DotNet.Darc
         public string Content { get; set; }
 
         public DependencyFileContent(string filePath, XmlDocument xmlDocument)
-            : this(filePath, System.Xml.Linq.XElement.Parse(xmlDocument.OuterXml).ToString())
+            : this(filePath, GetIndentedXmlBody(xmlDocument))
         {
         }
 
@@ -60,6 +61,12 @@ namespace Microsoft.DotNet.Darc
             Encode();
             GitHubCommit commit = new GitHubCommit(message, Content, branch);
             return commit;
+        }
+
+        private static string GetIndentedXmlBody(XmlDocument xmlDocument)
+        {
+            XDocument doc = XDocument.Parse(xmlDocument.OuterXml);
+            return $"{doc.Declaration}\n{doc.ToString()}";
         }
     }
 }

@@ -47,9 +47,9 @@ namespace Microsoft.DotNet.Darc
             }
         }
 
-        public async Task<bool> CreateDarcBranchAsync(string repoUri)
+        public async Task<bool> CreateDarcBranchAsync(string repoUri, string branch)
         {
-            Console.WriteLine($"Verifying if '{DarcBranchName}' branch exist in repo '{repoUri}'. If not, we'll create it...");
+            Console.WriteLine($"Verifying if '{DarcBranchName}-{branch}' branch exist in repo '{repoUri}'. If not, we'll create it...");
 
             using (HttpClient client = new HttpClient())
             {
@@ -58,15 +58,15 @@ namespace Microsoft.DotNet.Darc
                 client.DefaultRequestHeaders.Add("Authorization", $"Token {personalAccessToken}");
                 client.DefaultRequestHeaders.Add("User-Agent", "DarcLib");
 
-                HttpResponseMessage response = await client.GetAsync($"repos/{ownerAndRepo}branches/{DarcBranchName}");
+                HttpResponseMessage response = await client.GetAsync($"repos/{ownerAndRepo}branches/{DarcBranchName}-{branch}");
 
                 if (!response.IsSuccessStatusCode)
                 {
                     if (response.StatusCode == HttpStatusCode.NotFound)
                     {
                         Console.WriteLine($"'{DarcBranchName}' branch doesn't exist. Creating it...");
-                        string latestSha = await GetLastCommitShaAsync(ownerAndRepo);
-                        GitHubRef githubRef = new GitHubRef($"refs/heads/{DarcBranchName}", latestSha);
+                        string latestSha = await GetLastCommitShaAsync(ownerAndRepo, branch);
+                        GitHubRef githubRef = new GitHubRef($"refs/heads/{DarcBranchName}-{branch}", latestSha);
 
                         JsonSerializerSettings serializerSettings = new JsonSerializerSettings
                         {
@@ -78,16 +78,16 @@ namespace Microsoft.DotNet.Darc
 
                         if (!response.IsSuccessStatusCode)
                         {
-                            Console.WriteLine($"Creating branch '{DarcBranchName}' in repo '{repoUri}' from branch 'master' failed with status code '{response.StatusCode}'");
+                            Console.WriteLine($"Creating branch '{DarcBranchName}-{branch}' in repo '{repoUri}' from branch 'master' failed with status code '{response.StatusCode}'");
                             response.EnsureSuccessStatusCode();
                         }
 
-                        Console.WriteLine($"Branch '{DarcBranchName}' created in repo '{repoUri}'!");
+                        Console.WriteLine($"Branch '{DarcBranchName}-{branch}' created in repo '{repoUri}'!");
                         return true;
                     }
                     else
                     {
-                        Console.WriteLine($"Checking if '{DarcBranchName}' branch existed in repo '{repoUri}' failed with code '{response.StatusCode}'");
+                        Console.WriteLine($"Checking if '{DarcBranchName}-{branch}' branch existed in repo '{repoUri}' failed with code '{response.StatusCode}'");
                         response.EnsureSuccessStatusCode();
                     }
                 }
@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Darc
             }
         }
 
-        public async Task<bool> PushDependencyFiles(Dictionary<string, GitHubCommit> filesToCommit, string repoUri, string branch)
+        public async Task<bool> PushDependencyFiles(Dictionary<string, GitHubCommit> filesToCommit, string repoUri, string pullRequestBaseBranch)
         {
             using (HttpClient client = new HttpClient())
             {
@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.Darc
                 foreach (string filePath in filesToCommit.Keys)
                 {
                     GitHubCommit commit = filesToCommit[filePath];
-                    string blobSha = await CheckIfFileExistsAsync(repoUri, filePath);
+                    string blobSha = await CheckIfFileExistsAsync(repoUri, filePath, pullRequestBaseBranch);
 
                     if (!string.IsNullOrEmpty(blobSha))
                     {
@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.Darc
             return linkToPullRquest;
         }
 
-        private async Task<string> CheckIfFileExistsAsync(string repoUri, string filePath)
+        private async Task<string> CheckIfFileExistsAsync(string repoUri, string filePath, string branch)
         {
             string sha = null;
 
@@ -180,7 +180,7 @@ namespace Microsoft.DotNet.Darc
                 client.DefaultRequestHeaders.Add("Authorization", $"Token {personalAccessToken}");
                 client.DefaultRequestHeaders.Add("User-Agent", "DarcLib");
 
-                HttpResponseMessage response = await client.GetAsync($"repos/{ownerAndRepo}contents/{filePath}?ref=darc");
+                HttpResponseMessage response = await client.GetAsync($"repos/{ownerAndRepo}contents/{filePath}?ref={branch}");
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -217,7 +217,7 @@ namespace Microsoft.DotNet.Darc
             return Encoding.UTF8.GetString(content);
         }
 
-        private async Task<string> GetLastCommitShaAsync(string ownerAndRepo)
+        private async Task<string> GetLastCommitShaAsync(string ownerAndRepo, string branch)
         {
             string sha;
 
@@ -227,11 +227,11 @@ namespace Microsoft.DotNet.Darc
                 client.DefaultRequestHeaders.Add("Authorization", $"Token {personalAccessToken}");
                 client.DefaultRequestHeaders.Add("User-Agent", "DarcLib");
 
-                HttpResponseMessage response = await client.GetAsync($"repos/{ownerAndRepo}commits/master");
+                HttpResponseMessage response = await client.GetAsync($"repos/{ownerAndRepo}commits/{branch}");
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"Getting the last commit from '{ownerAndRepo}master' failed with code '{response.StatusCode}'");
+                    Console.WriteLine($"Getting the last commit from '{ownerAndRepo}{branch}' failed with code '{response.StatusCode}'");
                     response.EnsureSuccessStatusCode();
                 }
 

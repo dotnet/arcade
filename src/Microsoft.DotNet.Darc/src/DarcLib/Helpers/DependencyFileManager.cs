@@ -1,6 +1,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -98,7 +99,7 @@ namespace Microsoft.DotNet.Darc
             foreach (DependencyItem itemToUpdate in itemsToUpdate)
             {
                 XmlNodeList versionList = versionDetails.SelectNodes($"//Dependency[@Name='{itemToUpdate.Name}']");
-                
+
                 if (versionList.Count == 0 || versionList.Count > 1)
                 {
                     if (versionList.Count == 0)
@@ -164,12 +165,20 @@ namespace Microsoft.DotNet.Darc
 
             try
             {
-                document.LoadXml(fileContent);
+                XmlReaderSettings readerSettings = new XmlReaderSettings
+                {
+                    IgnoreComments = true
+                };
+
+                using (XmlReader reader = XmlReader.Create(new StringReader(fileContent), readerSettings))
+                {
+                    document.Load(reader);
+                }
             }
             catch (Exception exc)
             {
                 Console.WriteLine($"There was an exception while loading '{filePath}'. Exception: {exc}");
-                return null;
+                throw;
             }
 
             Console.WriteLine($"Reading '{filePath}' from repo '{repoUri}' and branch '{branch}' succeeded!");

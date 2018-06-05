@@ -107,16 +107,18 @@ ORDER BY DateProduced DESC";
             return toUpdate;
         }
 
-        public async Task<string> UpdateBranchAndRepoAsync(IEnumerable<DependencyItem> itemsToUpdate, string repoUri, string branch, string pullRequestBaseBranch = "darc", string pullRequestTitle = null, string pullRequestDescription = null)
+        public async Task<string> UpdateBranchAndRepoAsync(IEnumerable<DependencyItem> itemsToUpdate, string repoUri, string branch, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
         {
             Console.WriteLine($"Updating dependencies in repo '{repoUri}' and branch '{branch}'...");
             string linkToPr;
 
-            if (await githubClient.CreateDarcBranchAsync(repoUri))
+            if (await githubClient.CreateDarcBranchAsync(repoUri, branch))
             {
+                pullRequestBaseBranch = pullRequestBaseBranch ?? $"darc-{branch}";
+
                 DependencyFileContentContainer fileContainer = await fileManager.UpdateDependencyFiles(itemsToUpdate, repoUri, branch);
 
-                if (await githubClient.PushDependencyFiles(fileContainer.GetFilesToCommitMap(pullRequestBaseBranch), repoUri, branch))
+                if (await githubClient.PushDependencyFiles(fileContainer.GetFilesToCommitMap(pullRequestBaseBranch), repoUri, pullRequestBaseBranch))
                 {
                     linkToPr = await githubClient.CreatePullRequestAsync(repoUri, branch, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
                     Console.WriteLine($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
