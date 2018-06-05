@@ -60,17 +60,20 @@ namespace Microsoft.DotNet.Darc
                     {
                         foreach (XmlNode childNode in node.ChildNodes)
                         {
-                            DependencyItem dependencyItem = new DependencyItem
+                            if (childNode.NodeType != XmlNodeType.Comment)
                             {
-                                Branch = branch,
-                                Name = childNode.Attributes["Name"].Value,
-                                RepoUri = childNode.SelectSingleNode("Uri").InnerText,
-                                Sha = childNode.SelectSingleNode("Sha").InnerText,
-                                Version = childNode.Attributes["Version"].Value,
-                                Type = dependencyType
-                            };
+                                DependencyItem dependencyItem = new DependencyItem
+                                {
+                                    Branch = branch,
+                                    Name = childNode.Attributes["Name"].Value,
+                                    RepoUri = childNode.SelectSingleNode("Uri").InnerText,
+                                    Sha = childNode.SelectSingleNode("Sha").InnerText,
+                                    Version = childNode.Attributes["Version"].Value,
+                                    Type = dependencyType
+                                };
 
-                            dependencyItems.Add(dependencyItem);
+                                dependencyItems.Add(dependencyItem);
+                            }
                         }
                     }
                     else
@@ -165,15 +168,7 @@ namespace Microsoft.DotNet.Darc
 
             try
             {
-                XmlReaderSettings readerSettings = new XmlReaderSettings
-                {
-                    IgnoreComments = true
-                };
-
-                using (XmlReader reader = XmlReader.Create(new StringReader(fileContent), readerSettings))
-                {
-                    document.Load(reader);
-                }
+                document.LoadXml(fileContent);
             }
             catch (Exception exc)
             {
