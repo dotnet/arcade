@@ -1,0 +1,33 @@
+<Project Sdk="RoslynTools.RepoToolset">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+
+    <!--
+      The Azure Functions Sdk isn't signed so we can't be signed
+    -->
+    <SignAssembly>false</SignAssembly>
+
+    <!--
+      Suppress 'Detected package version outside of dependency constraint' warning
+      The Azure Functions Sdk has a strict dependency on Newtonsoft.Json 10.0.3
+    -->
+    <NoWarn>NU1608</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="5.3.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
+    <PackageReference Include="Moq" Version="4.8.2" />
+    <PackageReference Include="xunit" Version="2.3.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Maestro\Maestro.csproj" />
+  </ItemGroup>
+
+</Project>
