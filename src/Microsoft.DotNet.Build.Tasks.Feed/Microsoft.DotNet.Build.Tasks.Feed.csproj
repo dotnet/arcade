@@ -32,8 +32,8 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
-    <PackageReference Include="NuGet.Versioning" Version="4.3.0" />
-    <PackageReference Include="NuGet.Packaging" Version="4.3.0" />
+    <PackageReference Include="NuGet.Versioning" Version="$(NuGetVersioningVersion)" />
+    <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersioningVersion)" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="System.Reflection.Metadata" Version="1.4.1" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.4.0-beta-24813-03" />
