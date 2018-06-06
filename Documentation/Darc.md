@@ -11,33 +11,33 @@ as well as bootstrapping files and scripts in arcade participating repos.
 ### Arcade updating its Arcade dependency using Maestro++ and Darc
 
 1.  An Official Build for Arcade happens that i.e. creates XX package with vXY
-    a.	 At the end of the build, the Reporting Store gets updated with the information of the new package produced and its dependencies
-	by a "publishing" task within the build definition.
+    1. At the end of the build, the Reporting Store gets updated with the information of the new package produced and its dependencies
+    by a "publishing" task within the build definition.
 2.  Maestro++ trigger happens
 3.  Maestro++ uses Darc to ask who has a dependency on Arcade
-    a.  Maestro++ calls `get -d --remote -n arcade`
+    1. Maestro++ calls `get -d --remote -n arcade`
 4.  For each repo/branch that depends on Arcade, Maestro++ uses Darc to check the current version of that package in that repository
-    a.  Maestro++ calls `get -l --remote -r repoUri -b branch`
+    1. Maestro++ calls `get -l --remote -r repoUri -b branch`
 5.  Maestro++ determines if there is a need to update the dependency
-    a.  Maestro++ calls Darc asking to update the version of Arcade to vXY
-      1.  Darc creates a PR into the specified repository and assigns as owner Maestro++ user/bot
-      2.  Dev/Maestro++ merges the PR
+    1. Maestro++ calls Darc asking to update the version of Arcade to vXY
+        1. Darc creates a PR into the specified repository and assigns as owner Maestro++ user/bot
+        2. Dev/Maestro++ merges the PR
 
 ### Dev updates a set of files that need to be pushed to master branch in repos A, B and C
 
 1.  Dev makes changes in files eng\common\F1, eng\F2 and eng\common\folder\F3
 2.  Dev creates a RepoFile.xml where repos A, B and C are defined and include F1, F2 and F3 in the FileMapping node
 3.  Dev executes the command `darc push -r "E:\RepoFile.xml" -t 123f1234ed123ccc123f236e12b1234a456b987`
-    a.  Darc creates a PR in the master branch of repos A, B and C
-	b.  Dev merges the PR
+    1. Darc creates a PR in the master branch of repos A, B and C
+    2. Dev merges the PR
 
 ### Dev updates a set of files that need to be pushed to default repos and branches
 
 1.  Dev makes changes in files eng\common\F1, eng\F2 and eng\common\folder\F3
 2.  Dev executes the command `darc push -t 123f1234ed123ccc123f236e12b1234a456b987`
-    a.  Darc pulls the default repos.xml file (still TBD)
-	a.  Darc creates a PR in the branches and repos defined in default repos.xml
-	b.  Dev merges the PR
+    a. Darc pulls the default repos.xml file (still TBD)
+        1. Darc creates a PR in the branches and repos defined in default repos.xml
+        2. Dev merges the PR
 
 ### Dev add a new dependency to master branch of coreclr
 
@@ -45,8 +45,8 @@ as well as bootstrapping files and scripts in arcade participating repos.
 2.  Since the developer only wants this change to be pushed to the same branch and repo the developer creates a repo.xml containing just 
 this branch+repo
 3.  Dev executes the command `darc push -r "E:\RepoFile.xml" -t 123f1234ed123ccc123f236e12b1234a456b987`
-    a.  Darc creates a PR in the master branch of coreclr
-	b.  Dev merges the PR
+    1. Darc creates a PR in the master branch of coreclr
+    2. Dev merges the PR
 
 ## version/dependency files
 
