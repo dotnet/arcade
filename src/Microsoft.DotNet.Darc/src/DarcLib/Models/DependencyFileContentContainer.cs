@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Darc
         }
 
         public DependencyFileContent(string filePath, JObject jsonObject)
-            : this(filePath, jsonObject.ToString())
+            : this(filePath, jsonObject.ToString(Newtonsoft.Json.Formatting.Indented))
         {
         }
 

@@ -107,27 +107,56 @@ ORDER BY DateProduced DESC";
             return toUpdate;
         }
 
-        public async Task<string> UpdateBranchAndRepoAsync(IEnumerable<DependencyItem> itemsToUpdate, string repoUri, string branch, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
+        public async Task<string> CreatePullRequestAsync(IEnumerable<DependencyItem> itemsToUpdate, string repoUri, string branch, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
         {
-            Console.WriteLine($"Updating dependencies in repo '{repoUri}' and branch '{branch}'...");
-            string linkToPr;
+            Console.WriteLine($"Create pull request to update dependencies in repo '{repoUri}' and branch '{branch}'...");
+            string linkToPr = null;
 
             if (await githubClient.CreateDarcBranchAsync(repoUri, branch))
             {
                 pullRequestBaseBranch = pullRequestBaseBranch ?? $"darc-{branch}";
 
-                DependencyFileContentContainer fileContainer = await fileManager.UpdateDependencyFiles(itemsToUpdate, repoUri, branch);
+                // Check for exsting PRs in the darc created branch. If there is one under the same user we fail fast before commiting files that won't be included in a PR. 
+                string existingPr = await githubClient.CheckForOpenedPullRequestsAsync(repoUri, pullRequestBaseBranch);
 
-                if (await githubClient.PushDependencyFiles(fileContainer.GetFilesToCommitMap(pullRequestBaseBranch), repoUri, pullRequestBaseBranch))
+                if (string.IsNullOrEmpty(existingPr))
                 {
-                    linkToPr = await githubClient.CreatePullRequestAsync(repoUri, branch, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
-                    Console.WriteLine($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
+                    DependencyFileContentContainer fileContainer = await fileManager.UpdateDependencyFiles(itemsToUpdate, repoUri, branch);
+
+                    if (await githubClient.PushDependencyFiles(fileContainer.GetFilesToCommitMap(pullRequestBaseBranch), repoUri, pullRequestBaseBranch))
+                    {
+                        linkToPr = await githubClient.CreatePullRequestAsync(repoUri, branch, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
+                        Console.WriteLine($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
+                        return linkToPr;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"PR with link '{existingPr}' is already opened in repo '{repoUri}' and branch '{pullRequestBaseBranch}' please update it instead of trying to create a new one");
                     return linkToPr;
                 }
             }
             
             Console.WriteLine($"Failed to find or create a branch where Darc would commited the changes for the PR.");
-            return null;
+            return linkToPr;
+        }
+
+        public async Task<string> UpdatePullRequestAsync(IEnumerable<DependencyItem> itemsToUpdate, string repoUri, string branch, int pullRequestId, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
+        {
+            Console.WriteLine($"Updating pull request '{pullRequestId}' in repo '{repoUri}' and branch '{branch}'...");
+            string linkToPr = null;
+
+            pullRequestBaseBranch = pullRequestBaseBranch ?? $"darc-{branch}";
+
+            DependencyFileContentContainer fileContainer = await fileManager.UpdateDependencyFiles(itemsToUpdate, repoUri, branch);
+
+            if (await githubClient.PushDependencyFiles(fileContainer.GetFilesToCommitMap(pullRequestBaseBranch), repoUri, pullRequestBaseBranch))
+            {
+                linkToPr = await githubClient.UpdatePullRequestAsync(repoUri, branch, pullRequestBaseBranch, pullRequestId, pullRequestTitle, pullRequestDescription);
+                Console.WriteLine($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
+            }
+
+            return linkToPr;
         }
 
         private async Task<IEnumerable<DependencyItem>> GetAssetsAsync(string assetName, RelationType relationType, string logMessage, string version = null, string repoUri = null, string branch = null, string sha = null, DependencyType type = DependencyType.Unknown)

@@ -13,6 +13,8 @@ namespace Microsoft.DotNet.Darc
 
         Task<IEnumerable<DependencyItem>> GetRequiredUpdatesAsync(string repoUri, string branch);
 
-        Task<string> UpdateBranchAndRepoAsync(IEnumerable<DependencyItem> itemsToUpdate, string repoUri, string branch, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
+        Task<string> CreatePullRequestAsync(IEnumerable<DependencyItem> itemsToUpdate, string repoUri, string branch, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
+
+        Task<string> UpdatePullRequestAsync(IEnumerable<DependencyItem> itemsToUpdate, string repoUri, string branch, int pullRequestId, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
     }
 }

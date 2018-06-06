@@ -21,7 +21,8 @@ namespace Darc
             IEnumerable<DependencyItem> dependantItems = darc.RemoteAction.GetDependantAssetsAsync("Dependency*", type: DependencyType.Product).Result;
             IEnumerable<DependencyItem> dependencyItems = darc.RemoteAction.GetDependencyAssetsAsync("*.sd*").Result;
             IEnumerable<DependencyItem> dependenciesToUpdate = darc.RemoteAction.GetRequiredUpdatesAsync("https://github.com/jcagme/arcade/", "test").Result;
-            string prLink = darc.RemoteAction.UpdateBranchAndRepoAsync(dependenciesToUpdate, "https://github.com/jcagme/arcade/", "test").Result;
+            string prLink = darc.RemoteAction.CreatePullRequestAsync(dependenciesToUpdate, "https://github.com/jcagme/arcade/", "test").Result;
+            //string prLink = darc.RemoteAction.UpdatePullRequestAsync(dependenciesToUpdate, "https://github.com/jcagme/arcade/", "test", 7).Result;
         }
     }
 }

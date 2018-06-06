@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -14,7 +15,7 @@ namespace Microsoft.DotNet.Darc
         private readonly string personalAccessToken;
         private const string GitHubApiUri = "https://api.github.com";
         private const string DarcBranchName = "darc";
-        private const string VersionPullRequestTitle = "Darc-Update global.json, version.props and version.details.xml";
+        private const string VersionPullRequestTitle = "[Darc-Update] global.json, version.props and version.details.xml";
         private const string VersionPullRequestDescription = "Darc is trying to update these files to the latest versions found in the Product Dependency Store";
 
         public GitHubClient(string accessToken)
@@ -26,12 +27,9 @@ namespace Microsoft.DotNet.Darc
         {
             Console.WriteLine($"Getting the contents of file '{filePath}' from repo '{repoUri}' in branch '{branch}'...");
 
-            using (HttpClient client = new HttpClient())
+            using (HttpClient client = CreateHttpClient())
             {
                 string ownerAndRepo = GetOwnerAndRepo(repoUri);
-                client.BaseAddress = new Uri(GitHubApiUri);
-                client.DefaultRequestHeaders.Add("Authorization", $"Token {personalAccessToken}");
-                client.DefaultRequestHeaders.Add("User-Agent", "DarcLib");
 
                 HttpResponseMessage response = await client.GetAsync($"repos/{ownerAndRepo}contents/{filePath}?ref={branch}");
 
@@ -51,12 +49,9 @@ namespace Microsoft.DotNet.Darc
         {
             Console.WriteLine($"Verifying if '{DarcBranchName}-{branch}' branch exist in repo '{repoUri}'. If not, we'll create it...");
 
-            using (HttpClient client = new HttpClient())
+            using (HttpClient client = CreateHttpClient())
             {
                 string ownerAndRepo = GetOwnerAndRepo(repoUri);
-                client.BaseAddress = new Uri(GitHubApiUri);
-                client.DefaultRequestHeaders.Add("Authorization", $"Token {personalAccessToken}");
-                client.DefaultRequestHeaders.Add("User-Agent", "DarcLib");
 
                 HttpResponseMessage response = await client.GetAsync($"repos/{ownerAndRepo}branches/{DarcBranchName}-{branch}");
 
@@ -98,12 +93,9 @@ namespace Microsoft.DotNet.Darc
 
         public async Task<bool> PushDependencyFiles(Dictionary<string, GitHubCommit> filesToCommit, string repoUri, string pullRequestBaseBranch)
         {
-            using (HttpClient client = new HttpClient())
+            using (HttpClient client = CreateHttpClient())
             {
                 string ownerAndRepo = GetOwnerAndRepo(repoUri);
-                client.BaseAddress = new Uri(GitHubApiUri);
-                client.DefaultRequestHeaders.Add("Authorization", $"Token {personalAccessToken}");
-                client.DefaultRequestHeaders.Add("User-Agent", "DarcLib");
 
                 foreach (string filePath in filesToCommit.Keys)
                 {
@@ -134,18 +126,51 @@ namespace Microsoft.DotNet.Darc
             return true;
         }
 
+        public async Task<string> CheckForOpenedPullRequestsAsync(string repoUri, string darcBranch)
+        {
+            string pullRequestLink = null;
+
+            using (HttpClient client = CreateHttpClient())
+            {
+                string ownerAndRepo = GetOwnerAndRepo(repoUri);
+                string user = await GetUserNameAsync();
+                HttpResponseMessage response = await client.GetAsync($"repos/{ownerAndRepo}pulls?head={user}:{darcBranch}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Looking for opened PRs by '{user}' in '{repoUri}' and branch '{darcBranch}' failed with code '{response.StatusCode}'");
+                    response.EnsureSuccessStatusCode();
+                }
+
+                List<dynamic> content = JsonConvert.DeserializeObject<List<dynamic>>(await response.Content.ReadAsStringAsync());
+                dynamic pr = content.Where(p => ((string)p.title).Contains("[Darc-Update]")).FirstOrDefault();
+
+                if (pr != null)
+                {
+                    pullRequestLink = pr.html_url;
+                }
+            }
+
+            return pullRequestLink;
+        }
+
         public async Task<string> CreatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
         {
             string linkToPullRquest;
 
-            using (HttpClient client = new HttpClient())
+            using (HttpClient client = CreateHttpClient())
             {
                 string ownerAndRepo = GetOwnerAndRepo(repoUri);
-                client.BaseAddress = new Uri(GitHubApiUri);
-                client.DefaultRequestHeaders.Add("Authorization", $"Token {personalAccessToken}");
-                client.DefaultRequestHeaders.Add("User-Agent", "DarcLib");
 
-                title = title ?? VersionPullRequestTitle;
+                if (!string.IsNullOrEmpty(title))
+                {
+                    title = $"[Darc-Update] {title}";
+                }
+                else
+                {
+                    title = VersionPullRequestTitle;
+                }
+                
                 description = description ?? VersionPullRequestDescription;
 
                 GitHubPullRequest pullRequest = new GitHubPullRequest(title, description, sourceBranch, mergeWithBranch);
@@ -169,17 +194,73 @@ namespace Microsoft.DotNet.Darc
             return linkToPullRquest;
         }
 
+        public async Task<string> UpdatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, int pullRequestId, string title = null, string description = null)
+        {
+            string linkToPullRquest;
+
+            using (HttpClient client = CreateHttpClient())
+            {
+                string ownerAndRepo = GetOwnerAndRepo(repoUri);
+
+                if (!string.IsNullOrEmpty(title))
+                {
+                    title = $"[Darc-Update] {title}";
+                }
+                else
+                {
+                    title = VersionPullRequestTitle;
+                }
+
+                description = description ?? VersionPullRequestDescription;
+
+                GitHubPullRequest pullRequest = new GitHubPullRequest(title, description, sourceBranch, mergeWithBranch);
+                JsonSerializerSettings serializerSettings = new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                };
+
+                string body = JsonConvert.SerializeObject(pullRequest, serializerSettings);
+                HttpMethod method = new HttpMethod("PATCH");
+                HttpRequestMessage message = new HttpRequestMessage(method, $"repos/{ownerAndRepo}pulls/{pullRequestId}")
+                {
+                    Content = new StringContent(body)
+                };
+
+                
+                HttpResponseMessage response = await client.SendAsync(message);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"There was an error while trying to create a pull request in '{repoUri}' between branch '{mergeWithBranch}' and '{sourceBranch}'");
+                    response.EnsureSuccessStatusCode();
+                }
+
+                dynamic content = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
+                linkToPullRquest = content.html_url;
+            }
+
+            return linkToPullRquest;
+        }
+
+        private HttpClient CreateHttpClient()
+        {
+            HttpClient client = new HttpClient
+            {
+                BaseAddress = new Uri(GitHubApiUri)
+            };
+            client.DefaultRequestHeaders.Add("Authorization", $"Token {personalAccessToken}");
+            client.DefaultRequestHeaders.Add("User-Agent", "DarcLib");
+
+            return client;
+        }
+
         private async Task<string> CheckIfFileExistsAsync(string repoUri, string filePath, string branch)
         {
             string sha = null;
 
-            using (HttpClient client = new HttpClient())
+            using (HttpClient client = CreateHttpClient())
             {
                 string ownerAndRepo = GetOwnerAndRepo(repoUri);
-                client.BaseAddress = new Uri(GitHubApiUri);
-                client.DefaultRequestHeaders.Add("Authorization", $"Token {personalAccessToken}");
-                client.DefaultRequestHeaders.Add("User-Agent", "DarcLib");
-
                 HttpResponseMessage response = await client.GetAsync($"repos/{ownerAndRepo}contents/{filePath}?ref={branch}");
 
                 if (!response.IsSuccessStatusCode)
@@ -221,12 +302,8 @@ namespace Microsoft.DotNet.Darc
         {
             string sha;
 
-            using (HttpClient client = new HttpClient())
+            using (HttpClient client = CreateHttpClient())
             {
-                client.BaseAddress = new Uri(GitHubApiUri);
-                client.DefaultRequestHeaders.Add("Authorization", $"Token {personalAccessToken}");
-                client.DefaultRequestHeaders.Add("User-Agent", "DarcLib");
-
                 HttpResponseMessage response = await client.GetAsync($"repos/{ownerAndRepo}commits/{branch}");
 
                 if (!response.IsSuccessStatusCode)
@@ -237,6 +314,27 @@ namespace Microsoft.DotNet.Darc
 
                 dynamic content = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
                 sha = content.sha;
+            }
+
+            return sha;
+        }
+
+        private async Task<string> GetUserNameAsync()
+        {
+            string sha;
+
+            using (HttpClient client = CreateHttpClient())
+            {
+                HttpResponseMessage response = await client.GetAsync("user");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Getting authenticated user name failed with code '{response.StatusCode}'");
+                    response.EnsureSuccessStatusCode();
+                }
+
+                dynamic content = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
+                sha = content.login;
             }
 
             return sha;
