@@ -1,30 +1,33 @@
 # VSTS Guidance
 
 ## Projects
-There are two projects for use.  They are:
--  public (https://dotnet.visualstudio.com/public)
-    -  Used for oss
-    -  For build definitions only  (no source code - that's on github)
-    -  Build definitions are allowed to pull source directly from GitHub
--  internal  (https://dotnet.visualstudio.com/internal)
-    -  Build definitions are only allowed to pull source from internal repos
-    -  Public github repos should be mirror here for official msft builds
 
-We will have multiple build definitions, effectively a mirrored set in the public and internal. We will have one set of YAML which applies to both. This will allow for CI (PR testing) in both internal and OSS venues, and well as official build production on the internal side. 
- 
+There are two projects for use.  They are:
+
+- public (https://dotnet.visualstudio.com/public)
+  - Used for oss
+  - For build definitions only  (no source code - that's on github)
+  - Build definitions are allowed to pull source directly from GitHub
+- internal  (https://dotnet.visualstudio.com/internal)
+  - Build definitions are only allowed to pull source from internal repos
+  - Public github repos should be mirror here for official msft builds
+
+We will have multiple build definitions, effectively a mirrored set in the public and internal. We will have one set of YAML which applies to both. This will allow for CI (PR testing) in both internal and OSS venues, and well as official build production on the internal side.
+
 ## Teams
 
 In this context, teams pretty much only affect which level the kanban (or whatever) boards are at.  While permissions can be set at the team level, we're choosing not to do so.
 
--  $(GitHubOrg)
+- $(GitHubOrg)
 
 ## Permissions
+
 To keep things as simple (manageable) as possible, we're going to manage permissions coarsely at the project level - pointing directly to existing AD security groups managed in idweb.  **We should not be managing permission outside of this method**
 
--  Permissions will point to existing security groups in AD which are managed in idweb.  This admin is done at the **project** level.  ([VSTS link](https://dotnet.visualstudio.com/internal/_admin/_security))
--  The bulk of folks will be in the 'contributers' group, with special additions for other groups (like admin)
--  There are VSTS permission groups that can be set out side of the project context. ([VSTS link](https://dotnet.visualstudio.com/_admin/_security))   **We're not going to use those**
--  It is also possible to set permissions at the team.  **We're not going to do that**
+- Permissions will point to existing security groups in AD which are managed in idweb.  This admin is done at the **project** level.  ([VSTS link](https://dotnet.visualstudio.com/internal/_admin/_security))
+- The bulk of folks will be in the 'contributers' group, with special additions for other groups (like admin)
+- There are VSTS permission groups that can be set out side of the project context. ([VSTS link](https://dotnet.visualstudio.com/_admin/_security))   **We're not going to use those**
+- It is also possible to set permissions at the team.  **We're not going to do that**
 
 ## Casing
 
@@ -37,19 +40,24 @@ To keep things as simple (manageable) as possible, we're going to manage permiss
 
 ## Build Definitions
 
-### Folder names for github repos: 
+### Folder names for github repos
+
 For those repos which are in github, the build definitions should live:
+
 - $(GitHubOrg)/$(GitHubRepoName)/*.def
- 
-### Folders for VSTS repos:
+
+### Folders for VSTS repos
+
 For repos in VSTS, the build defs should live:
+
 - lower-case, no spaces, use dashes
 - Put it where it makes sense (closest github org), just not top-level
 - Use the closest github org
 - Use the closet github repo name/vsts repo name without the prefix
 - *.def
- 
-### Build definition file name convention:
+
+### Build definition file name convention
+
 - lower-case, No spaces, use dashes
 - Pattern: $scenario
   - Scenario:
@@ -60,9 +68,9 @@ For repos in VSTS, the build defs should live:
     - official
     - ci
 
-### Example:
+### Example
 
-```
+```TEXT
 public project:
   dotnet/arcade/ci
   dotnet/coreclr/jit-stress
@@ -71,10 +79,12 @@ internal project:
   dotnet/coreclr/ci
   dotnet/coreclr/jit-stress
 ```
- 
-### YML folders: 
+
+### YML folders
+
 (Still in discussion - not yet implemented  - [github PR](https://github.com/Microsoft/vsts-agent/pull/1430/files#diff-0e4df20b2155d804a6518e8089072a96R29))
-```
+
+```TEXT
 .vsts-pipelines
   builds/
     $(GitHubOrg)/
@@ -85,17 +95,20 @@ internal project:
 ## Source Code
 
 For now, everything should be in 'internal' and any code that is public should be on GitHub
- 
-### VSTS repos should:
--  Be mirrored from GitHub, if not internal only.
--  Internal-only projects should only be in the 'internal' project with no github equivalent
- 
-### Naming conventions
--  $(orgName)-$(repoName)
--  Again - *No plan to have public repos in VSTS at this time
 
-### Example:
-```
+### VSTS repos should
+
+- Be mirrored from GitHub, if not internal only.
+- Internal-only projects should only be in the 'internal' project with no github equivalent
+
+### Naming conventions
+
+- $(orgName)-$(repoName)
+- Again - *No plan to have public repos in VSTS at this time
+
+### Example
+
+```TEXT
 Project: Public:
   Repo: dotnet/corefx - Located in GitHub
   Repo: dotnet/coreclr - Located in GitHub
@@ -116,5 +129,6 @@ Both of these would point to the same yaml file in the forks of the repo:
 ## Terms
 
 From time to time, there are some terms you might encounter in documentation or otherwise.  Here's some I've run across so far and the interpretation.
--  collection  --> account --> instance  (top level thing - e.g. devdiv.visualstudio.com)
--  team --> group of indivduals.  Largely is about the backlog, not much more.  In our case we're not using for permissions.
+
+- collection --> account --> instance (top level thing - e.g. devdiv.visualstudio.com)
+- team --> group of indivduals.  Largely is about the backlog, not much more.  In our case we're not using for permissions.
