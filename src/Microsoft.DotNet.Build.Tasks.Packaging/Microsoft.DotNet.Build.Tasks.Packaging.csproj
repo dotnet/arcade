@@ -1,11 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="RoslynTools.RepoToolset">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
-    <CopyLocalLockFileAssemblies Condition="'$(TargetFramework)' == 'netstandard2.0'">true</CopyLocalLockFileAssemblies>
-    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);GatherTFMSpecificDllsOnPackage</TargetsForTfmSpecificContentInPackage>
-    <GenerateNuspecDependsOn>$(GenerateNuspecDependsOn);ClearBuildOutputInPackage</GenerateNuspecDependsOn>
-    <TargetFilesLocation>$(MSBuildThisFileDirectory)build</TargetFilesLocation>
+    <IsPackable>true</IsPackable>
+    <NuspecFile>$(MSBuildProjectName).nuspec</NuspecFile>
+    <NuspecBasePath>$(MSBuildProjectDirectory)</NuspecBasePath>
   </PropertyGroup>
 
   <!-- Dependencies that are specific to netstandard2.0 -->
@@ -37,34 +36,6 @@
     <PackageReference Include="NuGet.Packaging" Version="4.7.0" />
     <PackageReference Include="NuGet.ProjectModel" Version="4.7.0" />
     <PackageReference Include="System.Reflection.Metadata" Version="1.6.0" />
-
-    <!-- Content data for packaging -->
-    <Content Include="$(TargetFilesLocation)\*.targets">
-      <PackagePath>build\%(Filename).targets</PackagePath>
-      <Pack>true</Pack>
-    </Content>
   </ItemGroup>
-
-  <!-- Gather all of the bin output and package it as a tool -->
-  <Target Name="GatherTFMSpecificDllsOnPackage" Returns="@(TfmSpecificPackageFile)">
-    <ItemGroup>
-      <_DllsToCopy Include="$(OutDir)\*.dll" />
-      <_PdbsToCopy Include="$(OutDir)\*.pdb" />
-      <TfmSpecificPackageFile Include="@(_DllsToCopy)">
-        <PackagePath>build/$(targetframework)/%(_DllsToCopy.Filename).dll</PackagePath>
-      </TfmSpecificPackageFile>
-      <TfmSpecificPackageFile Include="@(_PdbsToCopy)">
-        <PackagePath>build/$(targetframework)/%(_PdbsToCopy.Filename).pdb</PackagePath>
-      </TfmSpecificPackageFile>
-    </ItemGroup>
-  </Target>
-
-  <!-- Make sure that the resulting package won't contain lib/$(targetframework)\Microsoft.DotNet.Build.Tasks.Packaging.dll assets
-  since they will be placed on the tools folder. -->
-  <Target Name="ClearBuildOutputInPackage" AfterTargets="_WalkEachTargetPerFramework">
-    <ItemGroup>
-      <_BuildOutputInPackage Remove="@(_BuildOutputInPackage)" />
-    </ItemGroup>
-  </Target>
 
 </Project>

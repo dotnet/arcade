@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata minClientVersion="2.8.1">
+    <id>Microsoft.DotNet.Build.Tasks.Packaging</id>
+    <version>$version$</version>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <licenseUrl>$licenseUrl$</licenseUrl>
+    <projectUrl>$repoUrl$</projectUrl>
+    <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
+    <repository url="$repoUrl$" />
+    <description>This package provides the following MSBuild tasks:
+
+- ApplyBaseLine
+- ApplyMetaPackages
+- ApplyPreReleaseSuffix
+- CreateTrimDependencyGroups
+- FilterUnknownPackages
+- GenerateNetStandardSupportTable
+- GeneratePackageReport
+- GenerateRuntimeDependencies
+- GenerateRuntimeGraph
+- GetApplicableAssetsFromPackageReports
+- GetApplicableAssetsFromPackages
+- GetAssemblyReferences
+- GetInboxFrameworks
+- GetLastStablePackage
+- GetLayoutFiles
+- GetMinimumNETStandard
+- GetPackageDescription
+- GetPackageDestination
+- GetPackageFromModule
+- GetPackageVersion
+- GetSupportedPackagesFromPackageReports
+- HarvestPackage
+- NuGetPack
+- PromoteDependencies
+- SplitDependenciesBySupport
+- SplitReferences
+- UpdatePackageIndex
+- ValidationTask
+- VerifyClosure
+- VerifyTypes
+    </description>
+    <copyright>Copyright © Microsoft Corporation</copyright>
+    <tags></tags>
+    <dependencies>
+       <!-- Do not add any dependencies to this package as we want to install it versionless (i.e. -ExcludeVersion) and we don't want the dependencies to be installed that way -->
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\Microsoft.DotNet.Build.Tasks.Packaging.dll" target="build\net46\Microsoft.DotNet.Build.Tasks.Packaging.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\Newtonsoft.Json.dll" target="build\net46\Newtonsoft.Json.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\NuGet.Commands.dll" target="build\net46\NuGet.Commands.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\NuGet.Common.dll" target="build\net46\NuGet.Common.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\NuGet.Configuration.dll" target="build\net46\NuGet.Configuration.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\NuGet.Credentials.dll" target="build\net46\NuGet.Credentials.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\NuGet.DependencyResolver.Core.dll" target="build\net46\NuGet.DependencyResolver.Core.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\NuGet.Frameworks.dll" target="build\net46\NuGet.Frameworks.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\NuGet.LibraryModel.dll" target="build\net46\NuGet.LibraryModel.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\NuGet.Packaging.Core.dll" target="build\net46\NuGet.Packaging.Core.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\NuGet.Packaging.dll" target="build\net46\NuGet.Packaging.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\NuGet.ProjectModel.dll" target="build\net46\NuGet.ProjectModel.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\NuGet.Protocol.dll" target="build\net46\NuGet.Protocol.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\NuGet.Versioning.dll" target="build\net46\NuGet.Versioning.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\System.Collections.Immutable.dll" target="build\net46\System.Collections.Immutable.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\net46\System.Reflection.Metadata.dll" target="build\net46\System.Reflection.Metadata.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\Microsoft.Build.Framework.dll" target="build\netstandard2.0\Microsoft.Build.Framework.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\Microsoft.Build.Utilities.Core.dll" target="build\netstandard2.0\Microsoft.Build.Utilities.Core.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\Microsoft.DotNet.Build.Tasks.Packaging.dll" target="build\netstandard2.0\Microsoft.DotNet.Build.Tasks.Packaging.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\Newtonsoft.Json.dll" target="build\netstandard2.0\Newtonsoft.Json.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\NuGet.Commands.dll" target="build\netstandard2.0\NuGet.Commands.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\NuGet.Common.dll" target="build\netstandard2.0\NuGet.Common.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\NuGet.Configuration.dll" target="build\netstandard2.0\NuGet.Configuration.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\NuGet.Credentials.dll" target="build\netstandard2.0\NuGet.Credentials.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\NuGet.DependencyResolver.Core.dll" target="build\netstandard2.0\NuGet.DependencyResolver.Core.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\NuGet.Frameworks.dll" target="build\netstandard2.0\NuGet.Frameworks.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\NuGet.LibraryModel.dll" target="build\netstandard2.0\NuGet.LibraryModel.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\NuGet.Packaging.Core.dll" target="build\netstandard2.0\NuGet.Packaging.Core.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\NuGet.Packaging.dll" target="build\netstandard2.0\NuGet.Packaging.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\NuGet.ProjectModel.dll" target="build\netstandard2.0\NuGet.ProjectModel.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\NuGet.Protocol.dll" target="build\netstandard2.0\NuGet.Protocol.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\NuGet.Versioning.dll" target="build\netstandard2.0\NuGet.Versioning.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Collections.Immutable.dll" target="build\netstandard2.0\System.Collections.Immutable.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Dynamic.Runtime.dll" target="build\netstandard2.0\System.Dynamic.Runtime.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.IO.FileSystem.Primitives.dll" target="build\netstandard2.0\System.IO.FileSystem.Primitives.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Linq.dll" target="build\netstandard2.0\System.Linq.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Linq.Expressions.dll" target="build\netstandard2.0\System.Linq.Expressions.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.ObjectModel.dll" target="build\netstandard2.0\System.ObjectModel.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Reflection.Emit.dll" target="build\netstandard2.0\System.Reflection.Emit.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Reflection.Emit.ILGeneration.dll" target="build\netstandard2.0\System.Reflection.Emit.ILGeneration.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Reflection.Emit.Lightweight.dll" target="build\netstandard2.0\System.Reflection.Emit.Lightweight.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Reflection.Metadata.dll" target="build\netstandard2.0\System.Reflection.Metadata.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Reflection.TypeExtensions.dll" target="build\netstandard2.0\System.Reflection.TypeExtensions.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Runtime.InteropServices.RuntimeInformation.dll" target="build\netstandard2.0\System.Runtime.InteropServices.RuntimeInformation.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Runtime.Serialization.Formatters.dll" target="build\netstandard2.0\System.Runtime.Serialization.Formatters.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Runtime.Serialization.Primitives.dll" target="build\netstandard2.0\System.Runtime.Serialization.Primitives.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Security.Cryptography.Primitives.dll" target="build\netstandard2.0\System.Security.Cryptography.Primitives.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Text.Encoding.CodePages.dll" target="build\netstandard2.0\System.Text.Encoding.CodePages.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Threading.dll" target="build\netstandard2.0\System.Threading.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Threading.Thread.dll" target="build\netstandard2.0\System.Threading.Thread.dll" />
+    <file src="$ArtifactsBinDir$Microsoft.DotNet.Build.Tasks.Packaging\netstandard2.0\System.Threading.ThreadPool.dll" target="build\netstandard2.0\System.Threading.ThreadPool.dll" />
+    <file src="build\Microsoft.DotNet.Build.Tasks.Packaging.targets" target="build\Microsoft.DotNet.Build.Tasks.Packaging.targets" />
+    <file src="build\PackageLibs.targets" target="build\PackageLibs.targets" />
+    <file src="build\Packaging.common.targets" target="build\Packaging.common.targets" />
+    <file src="build\Packaging.targets" target="build\Packaging.targets" />
+    <file src="..\..\LICENSE.TXT" />
+    <file src="..\..\THIRD-PARTY-NOTICES.TXT" />
+  </files>
+</package>
