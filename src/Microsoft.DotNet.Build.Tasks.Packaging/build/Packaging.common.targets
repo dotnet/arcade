@@ -1,13 +1,13 @@
 <!-- Copyright (c) .NET Foundation. All rights reserved. -->
 <?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
   <PropertyGroup>
     <_PackagingCommonTargetsImported>true</_PackagingCommonTargetsImported>
   </PropertyGroup>
 
   <PropertyGroup>
-    <_TaskLibraryDir Condition="'$(RunningOnCore)' == 'true'">$(MSBuildThisFileDirectory)netstandard2.0/</_TaskLibraryDir>
-    <_TaskLibraryDir Condition="'$(RunningOnCore)' != 'true'">$(MSBuildThisFileDirectory)net46/</_TaskLibraryDir>
+    <_TaskLibraryDir Condition="'$(_TaskLibraryDir)' == '' AND '$(RunningOnCore)' == 'true'">$(MSBuildThisFileDirectory)netstandard2.0/</_TaskLibraryDir>
+    <_TaskLibraryDir Condition="'$(_TaskLibraryDir)' == '' AND '$(RunningOnCore)' != 'true'">$(MSBuildThisFileDirectory)net46/</_TaskLibraryDir>
     <RuntimeIdGraphDefinitionFile Condition="'$(RuntimeIdGraphDefinitionFile)' == '' AND Exists('$(ProjectDir)pkg/Microsoft.NETCore.Platforms/runtime.json')">$(ProjectDir)pkg/Microsoft.NETCore.Platforms/runtime.json</RuntimeIdGraphDefinitionFile>
     <RuntimeIdGraphDefinitionFile Condition="'$(RuntimeIdGraphDefinitionFile)' == ''">$(MSBuildThisFileDirectory)runtime.json</RuntimeIdGraphDefinitionFile>
 
