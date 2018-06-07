@@ -10,12 +10,12 @@
         "bin/Microsoft.DotNet.Build.Tasks.Feed/net45/*/Microsoft.DotNet.Build.Tasks.Feed.resources.dll",
         "bin/Microsoft.DotNet.Build.Tasks.IO/netcoreapp2.0/Microsoft.DotNet.Build.Tasks.IO.dll",
         "bin/Microsoft.DotNet.Build.Tasks.IO/net45/Microsoft.DotNet.Build.Tasks.IO.dll",
+        "bin/Microsoft.DotNet.Build.Tasks.Packaging/net46/Microsoft.DotNet.Build.Tasks.Packaging.dll",
+        "bin/Microsoft.DotNet.Build.Tasks.Packaging/netcoreapp2.0/Microsoft.DotNet.Build.Tasks.Packaging.dll",
         "bin/Microsoft.DotNet.Helix.Client/netstandard1.4/Microsoft.DotNet.Helix.Client.dll",
         "bin/Microsoft.DotNet.Helix.Client/net45/Microsoft.DotNet.Helix.Client.dll",
         "bin/Microsoft.DotNet.Helix.Sdk/netstandard2.0/Microsoft.DotNet.Helix.Sdk.dll",
-        "bin/Microsoft.DotNet.Helix.Sdk/net45/Microsoft.DotNet.Helix.Sdk.dll",
-        "bin/Microsoft.DotNet.Build.Tasks.Packaging/netstandard2.0/Microsoft.DotNet.Build.Tasks.Packaging.dll",
-        "bin/Microsoft.DotNet.Build.Tasks.Packaging/net46/Microsoft.DotNet.Build.Tasks.Packaging.dll"
+        "bin/Microsoft.DotNet.Helix.Sdk/net45/Microsoft.DotNet.Helix.Sdk.dll"
       ]
     },
     {
@@ -73,7 +73,6 @@
     "System.Reflection.TypeExtensions.dll",
     "System.Runtime.InteropServices.RuntimeInformation.dll",
     "System.Runtime.Numerics.dll",
-    "System.Runtime.Serialization.Formatters.dll",
     "System.Runtime.Serialization.Primitives.dll",
     "System.Security.Cryptography.Algorithms.dll",
     "System.Security.Cryptography.Cng.dll",

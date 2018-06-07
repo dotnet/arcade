@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackagingTaskDir Condition="'$(PackagingTaskDir)' == '' AND '$(RunningOnCore)' == 'true'">$(MSBuildThisFileDirectory)netstandard2.0/</PackagingTaskDir>
+    <PackagingTaskDir Condition="'$(PackagingTaskDir)' == '' AND '$(RunningOnCore)' == 'true'">$(MSBuildThisFileDirectory)netcoreapp2.0/</PackagingTaskDir>
     <PackagingTaskDir Condition="'$(PackagingTaskDir)' == '' AND '$(RunningOnCore)' != 'true'">$(MSBuildThisFileDirectory)net46/</PackagingTaskDir>
     <RuntimeIdGraphDefinitionFile Condition="'$(RuntimeIdGraphDefinitionFile)' == '' AND Exists('$(ProjectDir)pkg/Microsoft.NETCore.Platforms/runtime.json')">$(ProjectDir)pkg/Microsoft.NETCore.Platforms/runtime.json</RuntimeIdGraphDefinitionFile>
     <RuntimeIdGraphDefinitionFile Condition="'$(RuntimeIdGraphDefinitionFile)' == ''">$(MSBuildThisFileDirectory)runtime.json</RuntimeIdGraphDefinitionFile>
