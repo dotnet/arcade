@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
+    <CopyLocalLockFileAssemblies Condition="'$(TargetFramework)' == 'netstandard2.0'">true</CopyLocalLockFileAssemblies>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);GatherTFMSpecificDllsOnPackage</TargetsForTfmSpecificContentInPackage>
+    <GenerateNuspecDependsOn>$(GenerateNuspecDependsOn);ClearBuildOutputInPackage</GenerateNuspecDependsOn>
+    <TargetFilesLocation>$(MSBuildThisFileDirectory)build</TargetFilesLocation>
+  </PropertyGroup>
+
+  <!-- Dependencies that are specific to netstandard2.0 -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Build.framework" Version="15.7.179" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.7.179" />
+  </ItemGroup>
+
+  <!-- Dependencies that are specific to net46 -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
+    <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.Build.Utilities.v4.0" />
+    <Reference Include="System" />
+    <Reference Include="System.Collections" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.IO" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Reflection.Primitives" />
+    <Reference Include="System.Runtime" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <PackageReference Include="Microsoft.NETCore.Platforms" Version="2.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Common Reference -->
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="NuGet.Commands" Version="4.7.0" />
+    <PackageReference Include="NuGet.Packaging" Version="4.7.0" />
+    <PackageReference Include="NuGet.ProjectModel" Version="4.7.0" />
+    <PackageReference Include="System.Reflection.Metadata" Version="1.6.0" />
+
+    <!-- Content data for packaging -->
+    <Content Include="$(TargetFilesLocation)\*.targets">
+      <PackagePath>build\%(Filename).targets</PackagePath>
+      <Pack>true</Pack>
+    </Content>
+  </ItemGroup>
+
+  <!-- Gather all of the bin output and package it as a tool -->
+  <Target Name="GatherTFMSpecificDllsOnPackage" Returns="@(TfmSpecificPackageFile)">
+    <ItemGroup>
+      <_DllsToCopy Include="$(OutDir)\*.dll" />
+      <_PdbsToCopy Include="$(OutDir)\*.pdb" />
+      <TfmSpecificPackageFile Include="@(_DllsToCopy)">
+        <PackagePath>build/$(targetframework)/%(_DllsToCopy.Filename).dll</PackagePath>
+      </TfmSpecificPackageFile>
+      <TfmSpecificPackageFile Include="@(_PdbsToCopy)">
+        <PackagePath>build/$(targetframework)/%(_PdbsToCopy.Filename).pdb</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
+
+  <!-- Make sure that the resulting package won't contain lib/$(targetframework)\Microsoft.DotNet.Build.Tasks.Packaging.dll assets
+  since they will be placed on the tools folder. -->
+  <Target Name="ClearBuildOutputInPackage" AfterTargets="_WalkEachTargetPerFramework">
+    <ItemGroup>
+      <_BuildOutputInPackage Remove="@(_BuildOutputInPackage)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
