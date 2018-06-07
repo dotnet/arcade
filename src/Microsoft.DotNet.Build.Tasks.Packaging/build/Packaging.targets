@@ -1,3 +1,4 @@
+<!-- Copyright (c) .NET Foundation. All rights reserved. -->
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" TreatAsLocalProperty="BuildProjectReferences" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Condition="'$(_PackagingCommonTargetsImported)' != 'true'" Project="Packaging.common.targets"/>
