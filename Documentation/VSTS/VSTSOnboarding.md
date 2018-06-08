@@ -1,10 +1,25 @@
-# Enabling Public CI and Pull Requests in VSTS
+# Onboarding VSTS
+
+- [Project Guidance](#project-guidance)
+- [GitHub to DotNet Internal mirror](#github-to-dotnet-internal-mirror)
+- [VSTS Pull Request and CI builds](#vsts-pull-request-and-ci-builds)
+- [Agent Queues](#agent-queues)
+- [VSTS GitHub connection](#vsts-github-connection)
+- [CI badge link](#ci-badge-link)
+- [Signed builds](#signed-builds)
+- [Security](#security)
+- [Notes about YAML](#notes-about-yaml)
+- [Troubleshooting](#troubleshooting)
 
 ## Project Guidance
 
 [Project guidance](./VSTSGuidance.md) - Covers guidance on naming conventions, folder structure, projects, build definitions, etc...
 
-## VSTS Pull Request and CI Builds
+## GitHub to DotNet Internal mirror
+
+Instructions for setting up the GitHub to dotnet.visualstudio.com/internal mirror are available in the [Dotnet.visualstudio.com internal mirror documentation](./internal-mirror.md)
+
+## VSTS Pull Request and CI builds
 
 [VSTS Pull Request and CI builds](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts) - VSTS documentation for enabling VSTS public CI and Pull Request builds
 
@@ -14,9 +29,38 @@ Agent queue use / configuration / etc... is likely to change very soon, at the m
 
 A couple of notes:
 
-- Space on [Hosted machines](https://docs.microsoft.com/en-us/vsts/pipelines/agents/hosted?view=vsts#capabilities-and-limitations) is only guaranteed to be at least 10 GB
+- Space on [Hosted machines](https://docs.microsoft.com/en-us/vsts/pipelines/agents/hosted?view=vsts#capabilities-and-limitations) is only guaranteed to be at least 10 GB.  We have a "DotNetCore-Windows" machine pool which has greater disk space capacity.  This pool has a mix of two machine capabilities.  You can specify your machine requirements using demands.
 
-- For Linux, use the "DotNetCore-Linux" machine pool instead of "Hosted Linux Preview".  "Hosted Linux Preview" is not guaranteed to have docker installed. 
+  - **Visual Studio 2017 machine**
+
+    ```YAML
+    queue:
+      demands:
+      - VisualStudio_15.0 -exists
+    ```
+
+    Provides a machine with these capabilities:
+
+    - Windows Server 2016
+    - VisualStudio 2017
+    - MSBuild 15.0
+
+  - **Visual Studio 2015 machine**
+
+    ```YAML
+    queue:
+      demands:
+      - VisualStudio_14.0 -exists
+    ```
+
+    Provides a machine with these capabilities:
+
+    - Windows Server 2012 R2
+    - Visual Studio 2015
+    - MSBuild 14.0
+    - MSBuild 12.0
+
+- For Linux, use the "DotNetCore-Linux" machine pool instead of "Hosted Linux Preview".  "Hosted Linux Preview" is not guaranteed to have docker installed.
 
 ## VSTS GitHub connection
 
@@ -24,7 +68,7 @@ VSTS will require a GitHub Service Endpoint to communicate with github and setup
 
 For implementation details and managing information about `DotNet-Bot GitHub Connection` see the [documentation](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#vsts-service-endpoint)
 
-## CI Badge link
+## CI badge link
 
 The [VSTS CI Build guidance](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts#create-a-vsts-build-status-with-a-github-readme-file) describes how to determine the CI build badge link, but only for task based build definitions.  If you're using a YAML based build definition, then you can determine the badge link by either of these two methods.
 
@@ -59,13 +103,17 @@ Example:
 https://dotnet.visualstudio.com/DotNet-Public/_build/index?definitionId=17&branchName=master
 ```
 
+## Signed Builds
+
+Dotnet.visualstudio.com does not have support for signed builds.  Code should still be mirrored to dotnet.visualstudio.com/internal as outlined in the [VSTS Guidance](./VSTSGuidance.md#projects), but build definitions for signing should be created in devdiv.visualstudio.com, see the additional [signing documentation](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/signed-dotnet.visualstudio.com-builds.md)
+
 ## Security
 
 [Security documentation](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts#security-considerations)
 
 It is recommended that you do **NOT** enable the checkbox labeled "Make secrets available to builds of forks".
 
-## Yaml
+## Notes about Yaml
 
 - Code reuse
 
