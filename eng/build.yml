@@ -7,14 +7,6 @@
 #   queueName: agent pool name
 #   enableTelemetry: send telemetry if build is not a PR or CI build
 
-parameters:
-  agentOs: Windows_NT
-  buildReason: IndividualCI
-  queue: {}
-  dockerImage: ''
-  enableTelemetry: true
-  useEsrpSigning: true
-
 phases:
 - template: /eng/common/templates/phases/base.yml
   parameters:
