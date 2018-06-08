@@ -72,13 +72,13 @@ Specific infrastructure ecosystem requirements are implied from the set of produ
   - Affects Components
     - Repository Tooling
     - Repository Contracts
-- **Given a sha and repository that produced an asset, a functionally identical package should be producible by checking out that sha and building** - Reprodicuble builds are important, for servicing and development.
+- **Given a sha and repository that produced an asset, a functionally identical package should be producible by checking out that sha and building** - Reproducible builds are important, for servicing and development.
   - Implements Requirements
     - Must be able to service the product
     - Must be able to able to rapdily make changes to individual components. 
   - Affects Components
     - Repository Contracts
-- **For a repository, package dependencies should be described such that the package version, the repo and sha are all specified in source** - Developers must able to locate exactly what a repository depends on.
+- **For a repository, package dependencies should be described such that the package version, the repo and sha are all specified in source** - Developers must be able to locate exactly what a repository depends on.
   - Implements Requirements
     - Must be able to service the product
     - Must be able to determine the provenance of the product and its components
@@ -170,7 +170,6 @@ Given the infrastructure ecosystem requirements, this section identifies the set
 - **CI/Build Automation** – The set of software and services that automates the procurement of environments, scheduling of CI jobs, feedback to GitHub, etc.  Generally, this is VSTS with a set of additional functionality provided by .NET Core.
 - **Repository Tooling** – A set of standalone tooling that is used to interact with the repository.  Examples include tooling to read repository package information, tooling to update repository package info, etc.
 - **Repository API** – A set of primitive commands common to each repository used to perform typical repository actions.
-- **Dependency Flow Automation** – A set of tools and services used to automate the movement of dependencies among repositories based on configurable policies. Maestro# implements most of this functionality, utilizing the repository tooling.
-- **Visualization/Reporting System** – A set of services used to report the status of the product.  Currently implemented in Mission Control
-
+- **Dependency Flow Automation** – A set of tools and services used to automate the movement of dependencies among repositories based on configurable policies. Maestro++ implements most of this functionality, utilizing the repository tooling.
+- **Visualization/Reporting System** – A set of services used to report the status of the product.  Currently implemented in [Mission Control](https://mc.dot.net).
 
