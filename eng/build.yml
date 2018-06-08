@@ -41,11 +41,11 @@ phases:
           _PublishArgs: ''
 
       steps:
-      - ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-        - template: /eng/common/templates/steps/run-on-windows.yml
-          parameters:
-            agentOs: ${{ parameters.agentOs }} 
-            steps:
+      - template: /eng/common/templates/steps/run-on-windows.yml
+        parameters:
+          agentOs: ${{ parameters.agentOs }} 
+          steps:
+          - ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
             - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
               displayName: Install MicroBuild plugin
               inputs:
@@ -62,16 +62,16 @@ phases:
                 KeyVaultName: EngKeyVault
                 SecretsFilter: 'dotnetfeed-storage-access-key-1'
               condition: succeeded()
-            - script: eng\common\cibuild.cmd
-                -configuration $(_BuildConfig) 
-                -prepareMachine
-                /p:SignType=$(_SignType)
-                $(_PublishArgs)
-              name: Build_Publish
-              displayName: Build / Publish
-              env:
-                OfficialBuildId: $(BUILD.BUILDNUMBER)
-              condition: succeeded()
+          - script: eng\common\cibuild.cmd
+              -configuration $(_BuildConfig) 
+              -prepareMachine
+              /p:SignType=$(_SignType)
+              $(_PublishArgs)
+            name: Build_Publish
+            displayName: Build / Publish
+            env:
+              OfficialBuildId: $(BUILD.BUILDNUMBER)
+            condition: succeeded()
       - template: /eng/common/templates/steps/run-on-unix.yml
         parameters:
           agentOs: ${{ parameters.agentOs }}
