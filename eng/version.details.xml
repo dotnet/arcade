@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Dependencies>
+    <ProductDependencies>
+      <!-- All product dependencies are contained in Version.Props -->
+        <Dependency Name="DependencyA" Version="1.2.3-45">
+            <Uri>https://github.com/dotnet/arepo</Uri>
+            <Sha>23498123740982349182340981234</Sha>
+        </Dependency>
+        <Dependency Name="DependencyB" Version="1.2.3-45">
+            <Uri>https://github.com/dotnet/arepo</Uri>
+            <Sha>13242134123412341465</Sha>
+        </Dependency>
+        <Dependency Name="microsoft.private.corefx.uap" Version="4.6.0-rtm-26515-01">
+            <Uri>https://github.com/dotnet/corefx</Uri>
+            <Sha>6c934c21df759d4319e2006ef4add9e01068f648</Sha>
+        </Dependency>
+    </ProductDependencies>
+    <ToolsetDependencies>
+      <!-- All product dependencies are contained in Version.Props -->
+        <Dependency Name="DependencyD" Version="2.100.3-1234">
+            <Uri>https://github.com/dotnet/atoolsrepo</Uri>
+            <Sha>203409823586523490823498234</Sha>
+            <Expression>VersionProps</Expression>
+        </Dependency>
+        <!-- All product dependencies are contained in Version.Props -->
+        <Dependency Name="arcade.sdk" Version="1.1.0">
+            <Uri>https://github.com/dotnet/arcade</Uri>
+            <Sha>bfbdb870889f55c3c2694f4bf8914a8bb8af5e35</Sha>
+        </Dependency>
+    </ToolsetDependencies>
+</Dependencies>
