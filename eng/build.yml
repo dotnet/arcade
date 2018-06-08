@@ -74,7 +74,7 @@ phases:
               condition: succeeded()
       - template: /eng/common/templates/steps/run-on-unix.yml
         parameters:
-          agentOs: ${{ paraemters.agentOs }}
+          agentOs: ${{ parameters.agentOs }}
           steps:
           - script: eng/common/cibuild.sh
               --configuration $(_BuildConfig) 
