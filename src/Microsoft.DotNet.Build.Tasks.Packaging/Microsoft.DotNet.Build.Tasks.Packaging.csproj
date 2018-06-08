@@ -4,8 +4,44 @@
     <TargetFrameworks>netcoreapp2.0;net46</TargetFrameworks>
     <CopyLocalLockFileAssemblies Condition="'$(TargetFramework)' == 'netcoreapp2.0'">true</CopyLocalLockFileAssemblies>
     <IsPackable>true</IsPackable>
-    <NuspecFile>$(MSBuildProjectName).nuspec</NuspecFile>
-    <NuspecBasePath>$(MSBuildProjectDirectory)</NuspecBasePath>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PackageTfmSpecificAsATool</TargetsForTfmSpecificContentInPackage>
+
+    <!-- Package Properties -->
+    <Title>Packaging Targets and Tasks used by Dotnet repos</Title>
+    <MinClientVersion>2.8.1</MinClientVersion>
+    <PackageDescription>This package provides the following MSBuild tasks:
+
+- ApplyBaseLine
+- ApplyMetaPackages
+- ApplyPreReleaseSuffix
+- CreateTrimDependencyGroups
+- FilterUnknownPackages
+- GenerateNetStandardSupportTable
+- GeneratePackageReport
+- GenerateRuntimeDependencies
+- GenerateRuntimeGraph
+- GetApplicableAssetsFromPackageReports
+- GetApplicableAssetsFromPackages
+- GetAssemblyReferences
+- GetInboxFrameworks
+- GetLastStablePackage
+- GetLayoutFiles
+- GetMinimumNETStandard
+- GetPackageDescription
+- GetPackageDestination
+- GetPackageFromModule
+- GetPackageVersion
+- GetSupportedPackagesFromPackageReports
+- HarvestPackage
+- NuGetPack
+- PromoteDependencies
+- SplitDependenciesBySupport
+- SplitReferences
+- UpdatePackageIndex
+- ValidationTask
+- VerifyClosure
+- VerifyTypes</PackageDescription>
   </PropertyGroup>
 
   <!-- Dependencies that are specific to netcoreapp2.0 -->
@@ -37,6 +73,51 @@
     <PackageReference Include="NuGet.Packaging" Version="4.7.0" />
     <PackageReference Include="NuGet.ProjectModel" Version="4.7.0" />
     <PackageReference Include="System.Reflection.Metadata" Version="1.6.0" />
+
+    <!-- Package Content -->
+    <Content Include="$(MSBuildThisFileDirectory)build\*.targets">
+      <PackagePath>build\%(Filename).targets</PackagePath>
+      <Pack>true</Pack>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)..\..\LICENSE.TXT">
+      <PackagePath>LICENSE.TXT</PackagePath>
+      <Pack>true</Pack>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)..\..\THIRD-PARTY-NOTICES.TXT">
+      <PackagePath>THIRD-PARTY-NOTICES.TXT</PackagePath>
+      <Pack>true</Pack>
+    </Content>
   </ItemGroup>
+
+  <!-- When RAR runs it removes the metadata we set to mscorlib reference so that it does not get includded
+  as a Framework Assembly Reference in the package. This seems to only happen with mscorlib. For that
+  reason, as a workaround we readd the metadata back with this target after RAR runs. -->
+  <Target Name="RemoveMscorlibFromPackageReferences" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferencePath Update="@(ReferencePath)">
+        <Pack>false</Pack>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
+
+  <!-- Remove package references from package -->
+  <ItemGroup>
+    <PackageReference Update="@(PackageReference)">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <Reference Update="@(Reference)">
+      <Pack>false</Pack>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Gather all of the bin output and package it as a tool -->
+  <Target Name="PackageTfmSpecificAsATool" Returns="@(TfmSpecificPackageFile)">
+    <ItemGroup>
+      <_DllsToCopy Include="$(OutDir)\*.dll" />
+      <TfmSpecificPackageFile Include="@(_DllsToCopy)">
+        <PackagePath>build/$(targetframework)/%(_DllsToCopy.Filename).dll</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
 
 </Project>
