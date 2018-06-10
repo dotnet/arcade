@@ -1,0 +1,60 @@
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Used to restore global toolset packages.
+
+    Required parameters:
+      VersionsPropsPath             Versions.props path. 
+      FixedVersionsPropsPath        FixedVersions.props path.
+
+    Optional parameters:
+      ExternalRestoreSources
+      PublishingToBlobStorage
+  -->
+
+  <Import Project="BuildStep.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RestoreSources/>
+    <RestoreSources Condition="'$(ExternalRestoreSources)' != ''">
+      $(RestoreSources);
+      $(ExternalRestoreSources)
+    </RestoreSources>
+    <RestoreSources>
+      $(RestoreSources);
+      https://api.nuget.org/v3/index.json;
+      https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json
+    </RestoreSources>
+    <RestoreSources Condition="'$(UsingToolSymbolUploader)' == 'true'">
+      $(RestoreSources);
+      https://dotnet.myget.org/F/dotnet-buildtools/api/v3/index.json
+    </RestoreSources>
+    <RestoreSources Condition="'$(UsingToolPdbConverter)' == 'true' and $(MicrosoftDiaSymReaderPdb2PdbVersion.Contains('-'))">
+      $(RestoreSources);
+      https://dotnet.myget.org/F/symreader-converter/api/v3/index.json
+    </RestoreSources>
+    <RestoreSources Condition="'$(PublishingToBlobStorage)' == 'true'">
+      $(RestoreSources);
+      https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
+    </RestoreSources>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" />
+    <PackageReference Include="MicroBuild.Core.Sentinel" Version="1.0.0" />
+    <PackageReference Include="MicroBuild.Plugins.SwixBuild" Version="$(MicroBuildPluginsSwixBuildVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" />
+    <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="$(MicrosoftDiaSymReaderPdb2PdbVersion)" Condition="'$(UsingToolPdbConverter)' == 'true'" />
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" Condition="'$(PublishingToBlobStorage)' == 'true'" />
+    <PackageReference Include="RoslynTools.NuGetRepack.BuildTasks" Version="$(RoslynToolsNuGetRepackVersion)" Condition="'$(UsingToolNuGetRepack)' == 'true'" />
+    <PackageReference Include="RoslynTools.SignTool" Version="$(RoslynToolsSignToolVersion)" />
+    <PackageReference Include="RoslynTools.ModifyVsixManifest" Version="$(RoslynToolsModifyVsixManifestVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" />
+    <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" Condition="'$(UsingToolSymbolUploader)' == 'true'" />
+  </ItemGroup>
+
+  <!-- Repository extensibility point -->
+  <Import Project="$(RepositoryEngineeringDir)Tools.props" Condition="Exists('$(RepositoryEngineeringDir)Tools.props')" />
+
+</Project>
