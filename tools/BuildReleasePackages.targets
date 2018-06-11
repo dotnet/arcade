@@ -20,7 +20,7 @@
       <_BuiltPackages Include="$(PackageOutputPath)*.nupkg" />
     </ItemGroup>
     
-    <Roslyn.Tools.UpdatePackageVersionTask VersionKind="release" Packages="@(_BuiltPackages)" OutputDirectory="$(PackageOutputPath)Release" AllowPreReleaseDependency="true" />
+    <Roslyn.Tools.UpdatePackageVersionTask VersionKind="release" Packages="@(_BuiltPackages)" OutputDirectory="$(PackageOutputPath)Release" AllowPreReleaseDependencies="true" />
     <Roslyn.Tools.UpdatePackageVersionTask VersionKind="prerelease" Packages="@(_BuiltPackages)" OutputDirectory="$(PackageOutputPath)PreRelease" />
   </Target>
 
