@@ -127,7 +127,7 @@ For more information on dependencies please check [DependencyDescriptionFormat](
 
 When dealing with version/dependency files, Darc will parse information in the version/dependency files to DependencyItem objects.
 
-The `DependencyItem` is composed by `Name`, `Version`, `repo-uri`, `Sha` and `Type`.
+The `DependencyItem` is composed by `Name`, `Version`, `RepoUri`, `Sha` and `Type`.
 
 ## Dependency operations
 
@@ -144,7 +144,7 @@ and dependency names.
 
 ### options
 
-*  -d, --dependOn: returns the DependencyItems which depend on the `<query-parameters>`. Optional.
+*  -d, --depend-on: returns the DependencyItems which depend on the `<query-parameters>`. Optional.
 *  -p, --produced: return the dependencies that were produced by the `<query-parameters>`. If not set, the returned collection 
 will include dependencies where the `<query-parameters>` were used. Optional
 *  -l, --latest: return the newest DependencyItems matching the `<query-parameters>`. Optional
@@ -424,22 +424,22 @@ by using a different name from that in `Source`. If `Destination` is not set, th
 
 Output: 
 ```
-	[
-		{
-	  repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
-	  branch: "master",
-	  prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88066"
-		},
-		{
-	  repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
-	  branch: "release/2.1",
-	  prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88067"
-		},
-		{
-	  repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
-	  branch: "release/1.1.0",
-	  prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88067"
-		},
-		...
-	]
+[
+	{
+		repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
+		branch: "master",
+		prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88066"
+	},
+	{
+		repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
+		branch: "release/2.1",
+		prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88067"
+	},
+	{
+		repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
+		branch: "release/1.1.0",
+		prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88067"
+	},
+	...
+]
 ```
