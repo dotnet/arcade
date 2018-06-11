@@ -19,11 +19,6 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <OfficialBuild>false</OfficialBuild>
-    <OfficialBuild Condition="'$(BUILD_BUILDNUMBER)' != ''">true</OfficialBuild>
-  </PropertyGroup>
-
   <Choose>
     <When Condition="'$(OfficialBuild)' == 'true'">
       <PropertyGroup>

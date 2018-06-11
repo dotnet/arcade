@@ -11,8 +11,13 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
-  <Import Project="Version.props" />
+  <PropertyGroup>
+    <OfficialBuild>false</OfficialBuild>
+    <OfficialBuild Condition="'$(BUILD_BUILDNUMBER)' != ''">true</OfficialBuild>
+  </PropertyGroup>
+
   <Import Project="$(VersionsPropsPath)" />
+  <Import Project="Version.props" />
 
   <PropertyGroup>
     <!-- Opt-out features -->
