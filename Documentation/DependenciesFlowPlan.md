@@ -38,7 +38,7 @@ We will showcase it by the end of S136.
 Once we have gathered feedback from the prototype, we can start adding functionalities to create Dependencies Flow V1. Targeting 3 sprints (S139) of work that will include:
 
 ## Build Asset Registry
-### Desing the model of the Build Asset Registry
+### Design the model of the Build Asset Registry
 The Build Asset Registry is going to be used by:
 - Builds: As part of the publish steps, once the assets produced during the build have been published, the build needs to tell the Build Asset Registry about what was produced and where it is located at.
 - Darc: Query and updates the Build Asset Registry.
