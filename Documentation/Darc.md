@@ -14,12 +14,12 @@ as well as bootstrapping files and scripts in arcade participating repos.
     1. At the end of the build, the Reporting Store gets updated with the information of the new package produced and its dependencies
     by a "publishing" task within the build definition.
 2.  Maestro++ trigger happens
-3.  Maestro++ uses Darc to ask who has a dependency on Arcade
-    1. Maestro++ calls `get -d --remote -n arcade`
-4.  For each repo/branch that depends on Arcade, Maestro++ uses Darc to check the current version of that package in that repository
-    1. Maestro++ calls `get -l --remote -r repoUri -b branch`
+3.  Maestro++ uses Darc to ask who has a dependency on `arcade.sdk`
+    1. Maestro++ calls `get -d --remote -n arcade.sdk`
+4.  For each repo/branch that depends on `arcade.sdk`, Maestro++ uses Darc to check the current version of that package in that repository
+    1. Maestro++ calls `get -l --remote -r repo-uri -b branch`
 5.  Maestro++ determines if there is a need to update the dependency
-    1. Maestro++ calls Darc asking to update the version of Arcade to vXY
+    1. Maestro++ calls Darc asking to update the version of `arcade.sdk` to vXY
         1. Darc creates a PR into the specified repository and assigns as owner Maestro++ user/bot
         2. Dev/Maestro++ merges the PR
 
@@ -35,7 +35,7 @@ as well as bootstrapping files and scripts in arcade participating repos.
 
 1.  Dev makes changes in files eng\common\F1, eng\F2 and eng\common\folder\F3
 2.  Dev executes the command `darc push -t 123f1234ed123ccc123f236e12b1234a456b987`
-    a. Darc pulls the default repos.xml file (still TBD)
+    1. Darc pulls the default repos.xml file (still TBD)
         1. Darc creates a PR in the branches and repos defined in default repos.xml
         2. Dev merges the PR
 
@@ -144,10 +144,10 @@ and dependency names.
 
 ### options
 
-*  -d, --dependOn: returns the DependencyItems which depend on the `<input>`. Optional.
+*  -d, --depend-on: returns the DependencyItems which depend on the `<query-parameters>`. Optional.
 *  -p, --produced: return the dependencies that were produced by the `<query-parameters>`. If not set, the returned collection 
 will include dependencies where the `<query-parameters>` were used. Optional
-*  -l, --latest: return the newest DependencyItems matching the `<input>`. Optional
+*  -l, --latest: return the newest DependencyItems matching the `<query-parameters>`. Optional
 *  --remote: if set, Darc will query the reporting store instead of local files. Optional.
 
 ### query-parameters
@@ -160,72 +160,72 @@ will include dependencies where the `<query-parameters>` were used. Optional
 	{
 		name: "DependencyA",
 		version: "1.2.3-45",
-		repoUri: "https://github.com/dotnet/arepo",
+		repo-uri: "https://github.com/dotnet/arepo",
 		sha: "13242134123412341465",
 		type: "product"
 	},
 	{
 		name: "DotNetSdkVersion",
 		version: "2.200.0",
-		repoUri: "https://github.com/dotnet/cli",
+		repo-uri: "https://github.com/dotnet/cli",
 		sha: "1234123412341234",
 		type: "toolset"
 	},
       ...
 ]
 ```
-*  `[-s,--sha] <sha> [[-r, --repoUri] <repoUri>]`: --repoUri supports any git repository uri. If --repoUri is not provided returns the 
-DependencyItems from the local repo's `version.details.xml` which match `<sha>`. If a --repoUri is given and is different 
+*  `[-s,--sha] <sha> [[-r, --repo-uri] <repo-uri>]`: --repo-uri supports any git repository uri. If --repo-uri is not provided returns the 
+DependencyItems from the local repo's `version.details.xml` which match `<sha>`. If a --repo-uri is given and is different 
 from the local, get the DependencyItems that match the sha+repo combination from the reporting store. 
     *  Example: `darc get -s 23498123740982349182340981234`
-	*  Output Sample: 
+        * Output Sample: 
 ```
 [
 	{
 		name: "DependencyA",
 		version: "1.2.3-45",
-		repoUri: "https://github.com/dotnet/arepo",
+		repo-uri: "https://github.com/dotnet/arepo",
 		sha: "23498123740982349182340981234",
 		type: "product"
 	}
 ]
 ```
-    *  Example: `darc get -s 23498123740982349182340981234 -r https://github.com/dotnet/coreclr`
-	*  Output Sample: 
+   *  Example: `darc get -s 23498123740982349182340981234 -r https://github.com/dotnet/coreclr`
+        * Output Sample: 
 ```
 [
 	{
 		name: "DependencyA",
 		version: "1.2.3-45",
-		repoUri: "https://github.com/dotnet/coreclr",
+		repo-uri: "https://github.com/dotnet/coreclr",
 		sha: "23498123740982349182340981234",
 		type: "product"
 	}
 ]
 ```
-*  `[-r, --repoUri] <repoUri>`: returns the DependencyItems matching the --repoUri.
-    *  Example: `darc get --repoUri https://github.com/dotnet/corefx`
+*  `[-r, --repo-uri] <repo-uri>`: returns the DependencyItems matching the --repo-uri.
+    *  Example: `darc get --repo-uri https://github.com/dotnet/corefx`
 	*  Output Sample: 
 ```
 [
 	{
 		name: "DependencyA",
 		version: "1.2.3-45",
-		repoUri: "https://github.com/dotnet/corefx",
+		repo-uri: "https://github.com/dotnet/corefx",
 		sha: "23498123740982349182340981234",
 		type: "product"
 	}
 ]
 ```
 *  `[-b, --branch] <branch>`: returns the DependencyItems matching the --branch. This is a `--remote` only command.
-    *  Example: `darc get --repoUri https://github.com/dotnet/corefx -b master`
+    *  Example: `darc get --repo-uri https://github.com/dotnet/corefx -b master`
 	*  Output Sample: 
 ```
 [
 	{
 		name: "DependencyA",
 		version: "1.2.3-45",
-		repoUri: "https://github.com/dotnet/corefx",
+		repo-uri: "https://github.com/dotnet/corefx",
 		sha: "23498123740982349182340981234",
 		type: "product"
 	}
@@ -239,7 +239,7 @@ from the local, get the DependencyItems that match the sha+repo combination from
 	{
 		name: "DependencyA",
 		version: "1.2.3",
-		repoUri: "https://github.com/dotnet/coreclr",
+		repo-uri: "https://github.com/dotnet/coreclr",
 		sha: "23498123740982349182340981234",
 		type: "product"
 	}
@@ -253,14 +253,14 @@ from the local, get the DependencyItems that match the sha+repo combination from
 	{
 		name: "DependencyA",
 		version: "1.2.3-45",
-		repoUri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
+		repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
 		sha: "13242134123412341465",
 		type: "product"
 	},
 	{
 		name: "DependencyB",
 		version: "2.200.0",
-		repoUri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreCLR-Trusted",
+		repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreCLR-Trusted",
 		sha: "1234123412341234",
 		type: "toolset"
 	},
@@ -276,7 +276,7 @@ from the local, get the DependencyItems that match the sha+repo combination from
 	{
 		name: "Microsoft.DotNet.Build.Tasks.Feed",
 		version: "1.0.0-prerelease-02201-02",
-		repoUri: "https://github.com/dotnet/buildtools",
+		repo-uri: "https://github.com/dotnet/buildtools",
 		sha: "23498123740982349182340981234",
 		type: "toolset"
 	}
@@ -290,7 +290,7 @@ from the local, get the DependencyItems that match the sha+repo combination from
 	{
 		name: "Microsoft.DotNet.Build.Tasks.Feed",
 		version: "1.0.0-prerelease-02201-02",
-		repoUri: "https://github.com/dotnet/buildtools",
+		repo-uri: "https://github.com/dotnet/buildtools",
 		sha: "23498123740982349182340981234",
 		type: "toolset"
 	}
@@ -311,7 +311,7 @@ Adds a new dependency to `version.details.xml` and in `version.props` and `globa
 
 *  `[-n, --name] <name>`: the versioned item name. Required.
 *  `[-v, --version] <item-version>`: item's version. Required.
-*  `[-r, --repoUri] <repoUri>`: repo where the item is built. Optional, if not provided this will be fetched from the reporting store.
+*  `[-r, --repo-uri] <repo-uri>`: repo where the item is built. Optional, if not provided this will be fetched from the reporting store.
 *  `[-s,--sha] <sha>`: the sha which is built into this item. Optional, if not provided this will be fetched from the reporting store.
 
 ### Example
@@ -334,7 +334,7 @@ The name and at least one input are required so we know what dependency to updat
 
 *  `[-n, --name] <name>`: the versioned item name
 *  `[-v, --version] <item-version>`: item's version
-*  `[-r, --repoUri] <repoUri>`: repo where the item is built
+*  `[-r, --repo-uri] <repo-uri>`: repo where the item is built
 *  `[-s,--sha] <sha>`: the sha which is built into this item
 
 ### Example
@@ -383,7 +383,7 @@ collection.
 
 *  `[-d, --dependencies]`: if this is specified the PR will only include version/dependency files and will be created only in the repo+branch
 where the command was executed. Optional
-*  `[[-r, --repoUris] <path-to-repos-file>]`: If --repoUris is set, we'll create the PR in the repo+branches defined in it including all the files defined
+*  `[[-r, --repo-uris] <path-to-repos-file>]`: If --repo-uris is set, we'll create the PR in the repo+branches defined in it including all the files defined
 in FileMapping. When a file is not modified git won't include it in the PR since there are no deltas. If it is not defined Darc will do the same
 but using what is defined in Maestro++'s subscriptions. Optional
 *  `[-t, --token]`: GitHub's personal access token. Required
@@ -424,22 +424,22 @@ by using a different name from that in `Source`. If `Destination` is not set, th
 
 Output: 
 ```
-	[
-		{
-	  repoUri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
-	  branch: "master",
-	  prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88066"
-		},
-		{
-	  repoUri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
-	  branch: "release/2.1",
-	  prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88067"
-		},
-		{
-	  repoUri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
-	  branch: "release/1.1.0",
-	  prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88067"
-		},
-		...
-	]
+[
+	{
+		repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
+		branch: "master",
+		prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88066"
+	},
+	{
+		repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
+		branch: "release/2.1",
+		prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88067"
+	},
+	{
+		repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
+		branch: "release/1.1.0",
+		prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88067"
+	},
+	...
+]
 ```
