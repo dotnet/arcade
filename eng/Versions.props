@@ -4,12 +4,10 @@
     <!-- This repo version -->
     <VersionPrefix>1.0.0</VersionPrefix>
     <PreReleaseVersionLabel>prerelease</PreReleaseVersionLabel>
-
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
     <UsingToolMicrosoftNetCompilers>false</UsingToolMicrosoftNetCompilers>
     <UsingToolNetFrameworkReferenceAssemblies>true</UsingToolNetFrameworkReferenceAssemblies>
-
     <!-- Libs -->
     <MicrosoftBuildTasksCoreVersion>14.3.0</MicrosoftBuildTasksCoreVersion>
     <MicrosoftBuildVersion>14.3.0</MicrosoftBuildVersion>
@@ -25,10 +23,9 @@
     <MicrosoftBuildUtilitiesCoreVersion>15.1.548</MicrosoftBuildUtilitiesCoreVersion>
     <DependencyAVersion>1.2.3-45</DependencyAVersion>
     <DependencyBVersion>1.2.3-45</DependencyBVersion>
-    <microsoft.private.corefx.uapVersion>4.6.0-rtm-26515-01</microsoft.private.corefx.uapVersion>
-    <DependencyDVersion>2.100.3-1234</DependencyDVersion>
+    <microsoft.private.corefx.uapVersion>4.6.0-rtm-26515-02</microsoft.private.corefx.uapVersion>
+    <DependencyDVersion>2.100.3-1235</DependencyDVersion>
   </PropertyGroup>
-
   <PropertyGroup>
     <RestoreSources>
       $(RestoreSources);
