@@ -157,3 +157,15 @@ Notes about templates:
 - "Resource not authorized"
 
   If you made some change to a resource or changed resources, but everything else *appears* correct (from a permissions / authorization point of view), and you're seeing "resource not authorized" when you try to queue a build; it's possible that the resource is fine, but the build definition is not authorized to use it.  Edit the build definition and make some minor change, then save.  This will force the build definition to re-authorize and you can undo whatever minor change you made.
+
+  Note that [resource authorization](https://github.com/Microsoft/vsts-agent/blob/d792192875381ea770f09f3740ed8d1051f4f456/docs/preview/yamlgettingstarted-authz.md) happens on Push, not for Pull Requests.  If you have some changes to resources that you want to make and submit via a PR.  You must (currently) authorize the build definition first (otherwise the PR will fail).
+
+  1. Push your changes to a branch of the dotnet repository (not your fork)
+  2. Edit the build definition
+  3. Take note of the "Default branch for manual and scheduled builds"
+  4. Change "Default branch for manual and scheduled builds" to the branch you just pushed
+  5. Save the build definition.  This will force reauthorization of the "default" branch resoures.
+  6. Edit the build definition
+  7. Change the "default branch for manual and scheduled builds" back to the value you noted in step 3.
+  8. Save the build definition
+  9. Now the resources should be authorized and you can submit your changes via a PR or direct push
