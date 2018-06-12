@@ -9,6 +9,7 @@
 
 parameters:
   agentOs: Windows_NT
+  buildReason: IndividualCI
   dockerImage: ''
   enableTelemetry: ''
   phaseName: ''
@@ -27,10 +28,13 @@ phases:
   - checkout: self
     clean: true
     fetchDepth: 5
-  - ${{ if eq(parameters.enableTelemetry, 'true') }}:
-    - template: /eng/common/templates/steps/telemetry.yml
-      parameters:
-        agentOs: ${{ parameters.agentOs }}
-        steps: ${{ parameters.phase.steps }}
-  - ${{ if not(eq(parameters.enableTelemetry, 'true')) }}:
-    - ${{ parameters.phase.steps }}
+  - ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+    - ${{ if eq(parameters.enableTelemetry, 'true') }}:
+      - template: /eng/common/templates/steps/telemetry.yml
+        parameters:
+          agentOs: ${{ parameters.agentOs }}
+          steps: ${{ parameters.phase.steps }}
+    - ${{ if not(eq(parameters.enableTelemetry, 'true')) }}:
+      - ${{ parameters.phase.steps }}          
+  - ${{ if in(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+    - ${{ parameters.phase.steps }}          
