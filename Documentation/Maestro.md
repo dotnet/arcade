@@ -1,6 +1,6 @@
 # Dependency flow automation => Maestro ++
 
-Maestro++ is an automation of the work a developer would do to flow dependencies across repos using [Darc](darc doc).
+Maestro++ is an automation of the work a developer would do to flow dependencies across repos using [Darc](./Darc.md).
 
 ## Requirements:
 - Triggers:
