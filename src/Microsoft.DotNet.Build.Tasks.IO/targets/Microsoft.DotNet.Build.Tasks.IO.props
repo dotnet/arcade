@@ -6,9 +6,6 @@
     </PropertyGroup>
 
     <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.IO.Chmod" AssemblyFile="$(_MicrosoftDotNetBuildTasksIOTaskAssembly)" />
-    <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.IO.DownloadFile" AssemblyFile="$(_MicrosoftDotNetBuildTasksIOTaskAssembly)" />
     <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.IO.GetFileHash" AssemblyFile="$(_MicrosoftDotNetBuildTasksIOTaskAssembly)" />
-    <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.IO.UnzipArchive" AssemblyFile="$(_MicrosoftDotNetBuildTasksIOTaskAssembly)" />
     <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.IO.VerifyFileHash" AssemblyFile="$(_MicrosoftDotNetBuildTasksIOTaskAssembly)" />
-    <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.IO.ZipArchive" AssemblyFile="$(_MicrosoftDotNetBuildTasksIOTaskAssembly)" />
 </Project>

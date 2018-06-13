@@ -8,88 +8,12 @@ See ["Task Packages"](../../Documentation/TaskPackages.md#usage) for guidance on
 Tasks in this package
 
  - Chmod
- - DownloadFile
  - GetFileHash
- - UnzipArchive
  - VerifyFileHash
- - ZipArchive
 
 ## Tasks
 
 This package contains the following MSBuild tasks.
-
-### `UnzipArchive`
-
-Unzips a .zip archive file.
-
-Task parameter     | Type        | Description
--------------------|-------------|--------------------------------------------------------------------------------
-File               | string      | **[Required]** The path to the file to unzip.
-DestinationFolder  | string      | **[Required]** The directory where files will be unzipped.
-Overwrite          | boolean     | Overwrite files if they exists already in DestinationFolder. Defaults to false.
-OutputFiles        | ITaskItem[] | **[Output]** The files that were unzipped.
-
-```xml
-<UnzipArchive File="myapp.zip" DestinationFolder="$(OutDir)" />
-```
-
-### `ZipArchive`
-
-Creates a .zip archive file
-
-#### Common parameters
-Task parameter     | Type    | Description
--------------------|---------|---------------------------------------------------------------
-OutputPath         | string  | **[Required]**  The path where the zip file should be created. The containing directory will be created if it doesn't already exist.
-Overwrite          | boolean | Overwrite output path if it exists
-
-There are two valid usages: a list of files, or an entire directory
-
-#### Parameter set - files
-
-Task parameter     | Type        | Description
--------------------|-------------|----------------------------------------------------------------------------------------------------------------------------------
-SourceFiles        | ITaskItem[] | **[Required]** Files to be included in the zip. <br> The `Link` metadata item can be set to explicitly set the zip entry path.
-BaseDirectory      | string      | **[Required]** The directory to use as the base directory. The entry path for each item in SourceFiles is relative to this.
-
-```xml
-<ItemGroup>
-   <JsFiles Include="$(PublishDir)**\*.js" >
-   <JsFiles Include="../webpack.js" Link="webpack.js" >
-</ItemGroup>
-
-<ZipArchive OutputPath="myapp.js.zip" SourceFiles="@(JsFiles)" BaseDirectory="$(PublishDir)" />
-```
-
-
-#### Parameter set - directory
-
-Task parameter         | Type    | Description
------------------------|---------|-------------
-SourceDirectory        | string  | **[Required]** Creates a zip for an entire directory.
-IncludeSourceDirectory | bool    | Include the source directory in the zip. Defaults to false.
-
-Example:
-```xml
-<ZipArchive OutputPath="myapp.zip" SourceDirectory="$(PublishDir)" />
-```
-
-
-### `DownloadFile`
-
-Downloads a file.
-
-Task parameter     | Type    | Description
--------------------|---------|-------------
-Uri                | string  | **[Required]** The file to download. Can be prefixed with `file://` for local file paths (results in a copy).
-OutputPath         | string  | **[Required]** The full file path destination for the downloaded file, including file name. The containing directory will be created if it doesn't already exist.
-Overwrite          | boolean | Overwrite output path if it exists
-TimeoutSeconds     | int     | The maximum amount of time (in seconds) to allow for downloading the file. Defaults to 15 minutes.
-
-Example:
-```xml
-<DownloadFile Uri="https://contoso.com/mytools.1.2.3.zip" OutputPath="$(OutputDir)mytools.1.2.3.zip" />
-```
 
 ### `GetFileHash`
 
