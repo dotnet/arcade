@@ -20,6 +20,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.Sdk"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Packaging", "src\Microsoft.DotNet.Build.Tasks.Packaging\Microsoft.DotNet.Build.Tasks.Packaging.csproj", "{A31D6804-9AF4-4618-8D73-16B76E3F8347}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.GitSync.CommitManager", "src\Microsoft.DotNet.GitSync.CommitManager\Microsoft.DotNet.GitSync.CommitManager.csproj", "{ABCA58DD-8F77-457D-AC9A-D22227F51756}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -102,6 +104,18 @@ Global
 		{A31D6804-9AF4-4618-8D73-16B76E3F8347}.Release|x64.Build.0 = Release|Any CPU
 		{A31D6804-9AF4-4618-8D73-16B76E3F8347}.Release|x86.ActiveCfg = Release|Any CPU
 		{A31D6804-9AF4-4618-8D73-16B76E3F8347}.Release|x86.Build.0 = Release|Any CPU
+		{ABCA58DD-8F77-457D-AC9A-D22227F51756}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABCA58DD-8F77-457D-AC9A-D22227F51756}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABCA58DD-8F77-457D-AC9A-D22227F51756}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{ABCA58DD-8F77-457D-AC9A-D22227F51756}.Debug|x64.Build.0 = Debug|Any CPU
+		{ABCA58DD-8F77-457D-AC9A-D22227F51756}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{ABCA58DD-8F77-457D-AC9A-D22227F51756}.Debug|x86.Build.0 = Debug|Any CPU
+		{ABCA58DD-8F77-457D-AC9A-D22227F51756}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABCA58DD-8F77-457D-AC9A-D22227F51756}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABCA58DD-8F77-457D-AC9A-D22227F51756}.Release|x64.ActiveCfg = Release|Any CPU
+		{ABCA58DD-8F77-457D-AC9A-D22227F51756}.Release|x64.Build.0 = Release|Any CPU
+		{ABCA58DD-8F77-457D-AC9A-D22227F51756}.Release|x86.ActiveCfg = Release|Any CPU
+		{ABCA58DD-8F77-457D-AC9A-D22227F51756}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
