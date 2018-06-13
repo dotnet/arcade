@@ -109,4 +109,4 @@ phases:
           continueOnError: true
           condition: succeededOrFailed()
           env:
-            agentOs: ${{ parameters.agentOs }}
+            ${{ insert }}: agentOs: ${{ parameters.agentOs }}
