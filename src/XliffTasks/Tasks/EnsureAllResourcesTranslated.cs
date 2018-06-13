@@ -46,8 +46,8 @@ namespace XliffTasks.Tasks
 
                 if (untranslatedResourceSet.Count > 0)
                 {
-                    string untranslatedResourceNames = string.Join(Environment.NewLine, untranslatedResourceSet);
-                    Log.LogError($"File '{sourceDocumentPath}' has {untranslatedResourceSet.Count} untranslated resource(s):{Environment.NewLine}{untranslatedResourceNames}");
+                    string untranslatedResourceNames = string.Join(", ", untranslatedResourceSet);
+                    Log.LogErrorInFile(sourceDocumentPath, $"Found {untranslatedResourceSet.Count} untranslated resource(s): {untranslatedResourceNames}");
                 }
             }
         }
