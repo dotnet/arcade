@@ -32,7 +32,6 @@ phases:
       queue: ${{ parameters.queue }}
       variables: 
         _HelixType: build/product
-        ArtifactName: ${{ parameters.agentOs }} $(Agent.JobName)
         ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
           _TeamName: DotNetCore
