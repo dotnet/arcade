@@ -108,6 +108,3 @@ phases:
             PublishLocation: Container
           continueOnError: true
           condition: succeededOrFailed()
-          env:
-            ArtifactName: $(ArtifactName)
-          
