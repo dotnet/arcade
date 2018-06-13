@@ -105,6 +105,8 @@ phases:
           inputs:
             PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
             PublishLocation: Container
+            # Should be able to use a single definition of ArtifactName here instead of conditioned on 
+            # agentOs once variables are available in the template evaluation context.  
             ${{ if eq(parameters.agentOs, 'Windows_NT') }}:
               ArtifactName: Windows_NT_$(Agent.JobName)
             ${{ if ne(parameters.agentOs, 'Windows_NT') }}:
