@@ -44,6 +44,6 @@ phases:
           helixType: ${{ parameters.helixType }}
           steps: ${{ parameters.phase.steps }}
     - ${{ if not(eq(parameters.enableTelemetry, 'true')) }}:
-      - ${{ parameters.phase.steps }}          
+      - ${{ parameters.phase.steps }}
   - ${{ if in(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-    - ${{ parameters.phase.steps }}          
+    - ${{ parameters.phase.steps }}
