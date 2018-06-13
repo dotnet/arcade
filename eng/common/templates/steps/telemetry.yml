@@ -88,7 +88,7 @@ steps:
         displayName: Send Build Start Telemetry
         env:
           BuildUri: https://devdiv.visualstudio.com/DevDiv/_build/index?buildId=$(Build.BuildId)&_a=summary
-          # defined via VSTS variables in start-job.sh
+          # defined via VSTS variables in start-job.ps1
           Helix_JobToken: $(Helix_JobToken)
         condition: always()
 
@@ -102,7 +102,7 @@ steps:
         workingDirectory: $(Build.SourcesDirectory)/eng/common
         displayName: Send Build End Telemetry
         env:
-          # defined via VSTS variables in start-job.sh
+          # defined via VSTS variables in start-job.ps1
           Helix_JobToken: $(Helix_JobToken)
           Helix_WorkItemId: $(Helix_WorkItemId)
         condition: always()
