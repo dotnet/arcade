@@ -10,6 +10,7 @@
 parameters:
   agentOs: Windows_NT
   buildReason: IndividualCI
+  buildConfig: ''
   dockerImage: ''
   enableTelemetry: ''
   helixSource: ''
@@ -35,6 +36,7 @@ phases:
       - template: /eng/common/templates/steps/telemetry.yml
         parameters:
           agentOs: ${{ parameters.agentOs }}
+          buildConfig: ${{ parameters.buildConfig }}
           helixSource: ${{ parameters.helixSource }}
           helixType: ${{ parameters.helixType }}
           steps: ${{ parameters.phase.steps }}

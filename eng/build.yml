@@ -20,6 +20,7 @@ phases:
   parameters:
     agentOs: ${{ parameters.agentOs }}
     buildReason: ${{ parameters.buildReason }}
+    buildConfig: $(_BuildConfig)
     phaseName: ${{ parameters.agentOs }}
     dockerImage: ${{ parameters.dockerImage }}
     enableTelemetry: ${{ parameters.enableTelemetry }}
