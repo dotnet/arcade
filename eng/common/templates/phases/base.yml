@@ -12,6 +12,8 @@ parameters:
   buildReason: IndividualCI
   dockerImage: ''
   enableTelemetry: ''
+  helixSource: ''
+  helixType: ''
   phaseName: ''
   phase: {}
 
@@ -33,6 +35,8 @@ phases:
       - template: /eng/common/templates/steps/telemetry.yml
         parameters:
           agentOs: ${{ parameters.agentOs }}
+          helixSource: ${{ parameters.helixSource }}
+          helixType: ${{ parameters.helixType }}
           steps: ${{ parameters.phase.steps }}
     - ${{ if not(eq(parameters.enableTelemetry, 'true')) }}:
       - ${{ parameters.phase.steps }}          

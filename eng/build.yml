@@ -10,9 +10,9 @@
 parameters:
   agentOs: Windows_NT
   buildReason: IndividualCI
-  queue: {}
   dockerImage: ''
   enableTelemetry: true
+  queue: {}
   useEsrpSigning: true
 
 phases:
@@ -23,21 +23,24 @@ phases:
     phaseName: ${{ parameters.agentOs }}
     dockerImage: ${{ parameters.dockerImage }}
     enableTelemetry: ${{ parameters.enableTelemetry }}
+    helixSource: official/dotnet/arcade/$(Build.SourceBranch)
+    ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+      helixType: build/product          
+    ${{ if in(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+      helixType: pr/dotnet/arcade/$(Build.SourceBranch)
     phase:
       queue: ${{ parameters.queue }}
-
       variables: 
         _HelixType: build/product
         ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
           _TeamName: DotNetCore
           _UseEsrpSigning: ${{ parameters.useEsrpSigning }}
-          _HelixSource: official/dotnet/arcade/$(Build.SourceBranch)
+        ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           _PublishArgs: /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
             /p:PB_PublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
             /p:PB_PublishType=$(_PublishType) 
         ${{ if in(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-          _HelixSource: pr/dotnet/arcade/$(Build.SourceBranch)
           _PublishArgs: ''
 
       steps:
@@ -100,7 +103,7 @@ phases:
           displayName: Publish Logs to VSTS
           inputs:
             PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
-            ArtifactName: $(_agentOs)_$(Agent.JobName)
+            ArtifactName: ${{ parameters.agentOs }}_$(Agent.JobName)
             PublishLocation: Container
           continueOnError: true
           condition: succeededOrFailed()
