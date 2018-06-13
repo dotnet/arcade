@@ -32,7 +32,7 @@ phases:
       queue: ${{ parameters.queue }}
       variables: 
         _HelixType: build/product
-        ${{ insert }}: ArtifactName: ${{ parameters.agentOs }}_$(Agent.JobName)
+        ArtifactName: ${{ parameters.agentOs }} $(Agent.JobName)
         ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
           _TeamName: DotNetCore
@@ -104,8 +104,10 @@ phases:
           displayName: Publish Logs to VSTS
           inputs:
             PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
-            ArtifactName: $(ArtifactName)
+            ArtifactName: ${{ parameters.agentOs }} $(Agent.JobName)
             PublishLocation: Container
           continueOnError: true
           condition: succeededOrFailed()
+          env:
+            ArtifactName: $(ArtifactName)
           
