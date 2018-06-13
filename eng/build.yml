@@ -103,7 +103,7 @@ phases:
           displayName: Publish Logs to VSTS
           inputs:
             PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
-            ArtifactName: ${{ parameters.agentOs }}_$(Agent.JobName)
+            ${{ insert }}: ArtifactName: ${{ parameters.agentOs }}_$(Agent.JobName)
             PublishLocation: Container
           continueOnError: true
           condition: succeededOrFailed()
