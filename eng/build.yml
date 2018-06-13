@@ -104,9 +104,10 @@ phases:
           displayName: Publish Logs to VSTS
           inputs:
             PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
-            ArtifactName: $(agentOs)_$(Agent.JobName)
             PublishLocation: Container
+            ${{ if eq(parameters.agentOs, 'Windows_NT') }}:
+              ArtifactName: Windows_NT_$(Agent.JobName)
+            ${{ if ne(parameters.agentOs, 'Windows_NT') }}:
+              ArtifactName: Linux_$(Agent.JobName)
           continueOnError: true
           condition: succeededOrFailed()
-          env:
-            ${{ insert }}: agentOs: ${{ parameters.agentOs }}
