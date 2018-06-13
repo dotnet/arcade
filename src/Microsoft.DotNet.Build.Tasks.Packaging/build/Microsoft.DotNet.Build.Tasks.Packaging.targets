@@ -7,4 +7,4 @@
   <Import Project="Packaging.common.targets"/>
   <Import Project="Packaging.targets" Condition="'$(ImportPackagingTargets)' == 'true'" />
   <Import Project="PackageLibs.targets"/>
-</Project>A
+</Project>
