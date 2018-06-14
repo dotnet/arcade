@@ -8,25 +8,25 @@ namespace Microsoft.DotNet.GitSync.CommitManager
 {
     internal class CommandLineOptions
     {
-        [Option('k', Required = true, HelpText = "Azure Account Key")]
+        [Option('k', "azureKey", Required = true, HelpText = "Azure Account Key")]
         public string Key { get; set; }
 
-        [Option('u', Required = true, HelpText = "Azure Account Name")]
+        [Option('u', "azureAccount", Required = true, HelpText = "Azure Account Name")]
         public string Username { get; set; }
 
-        [Option('r', Required = true, HelpText = "Repo to which commit was made")]
+        [Option('r', "repo", Required = true, HelpText = "Repo to which commit was made")]
         public string Repository { get; set; }
 
-        [Option('b', Required = true, HelpText = "Branch to Mirror")]
+        [Option('b', "branch", Required = true, HelpText = "Branch to Mirror")]
         public string Branch { get; set; }
 
-        [Option('c', Required = true, HelpText = "Sha of the Commit")]
+        [Option('c', "commit", Required = true, HelpText = "Sha of the Commit")]
         public string Commit { get; set; }
 
-        [Option('m', Required = true, HelpText = "Commit Message")]
+        [Option('m', "message", Required = true, HelpText = "Commit Message")]
         public string Message { get; set; }
 
-        [Option('a', Default = "dotnet-bot", HelpText = "Author")]
+        [Option('a', "author", Default = "dotnet-bot", HelpText = "Author")]
         public string Author { get; set; }
     }
 }

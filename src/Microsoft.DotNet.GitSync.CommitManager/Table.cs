@@ -13,9 +13,9 @@ namespace Microsoft.DotNet.GitSync.CommitManager
         {
             CloudStorageAccount storageAccount = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=" + accountName + ";AccountKey=" + accountKey + ";TableEndpoint=https://" + accountName + ".table.cosmosdb.azure.com:443/;");
             CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
-            CTable = tableClient.GetTableReference(tableName);
+            CommitTable = tableClient.GetTableReference(tableName);
         }
 
-        public CloudTable CTable { get; set; }
+        public CloudTable CommitTable { get; set; }
     }
 }

@@ -2,21 +2,13 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <NETCoreAppMaximumVersion>2.1</NETCoreAppMaximumVersion>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
-    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.2.1" />
-    <PackageReference Include="WindowsAzure.Storage" Version="9.2.0" />
+    <PackageReference Include="WindowsAzure.Storage" Version="8.5.0" />
   </ItemGroup>
 
 </Project>
