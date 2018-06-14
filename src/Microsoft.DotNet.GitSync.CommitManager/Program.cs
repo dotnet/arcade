@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using CommandLine;
 using Microsoft.WindowsAzure.Storage.Table;
 
@@ -15,10 +16,10 @@ namespace Microsoft.DotNet.GitSync.CommitManager
         private static Table s_table { get; set; }
         private static Dictionary<string, List<string>> s_repos { get; set; } = new Dictionary<string, List<string>>();
 
-        public static async System.Threading.Tasks.Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            var myOptions = new CommandLineOptions();
-            Parser.Default.ParseArguments<CommandLineOptions>(args).WithParsed(opts => myOptions = opts).WithNotParsed( _ => myOptions = null);
+            CommandLineOptions myOptions = null;
+            Parser.Default.ParseArguments<CommandLineOptions>(args).WithParsed(opts => myOptions = opts);
 
             if (myOptions != null && !IsMirrorCommit(myOptions.Message, myOptions.Author))
             {
@@ -27,7 +28,7 @@ namespace Microsoft.DotNet.GitSync.CommitManager
             }
         }
 
-        private static async System.Threading.Tasks.Task SetupAsync(string username, string key)
+        private static async Task SetupAsync(string username, string key)
         {
             s_repos.Add("corefx", new List<string> { "coreclr", "corefx" });
             s_repos.Add("coreclr", new List<string> { "corefx", "corert" });
@@ -39,7 +40,7 @@ namespace Microsoft.DotNet.GitSync.CommitManager
 
         private static bool IsMirrorCommit(string message, string author) => message.Contains($"Signed-off-by: {author} <{author}@microsoft.com>");
 
-        private static async System.Threading.Tasks.Task InsertCommitsAsync(string sourceRepo, string commitId, string branch)
+        private static async Task InsertCommitsAsync(string sourceRepo, string commitId, string branch)
         {
             foreach (string repo in s_repos[sourceRepo])
             {
