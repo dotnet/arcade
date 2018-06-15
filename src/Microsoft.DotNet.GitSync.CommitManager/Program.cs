@@ -30,9 +30,9 @@ namespace Microsoft.DotNet.GitSync.CommitManager
 
         private static async Task SetupAsync(string username, string key)
         {
-            s_repos.Add("corefx", new List<string> { "coreclr", "corefx" });
+            s_repos.Add("corefx", new List<string> { "coreclr", "corert" });
             s_repos.Add("coreclr", new List<string> { "corefx", "corert" });
-            s_repos.Add("corert", new List<string> { "coreclr", "corert" });
+            s_repos.Add("corert", new List<string> { "coreclr", "corefx" });
 
             s_table = new Table(username, key, _cloudTableName);
             await s_table.CommitTable.CreateIfNotExistsAsync();
