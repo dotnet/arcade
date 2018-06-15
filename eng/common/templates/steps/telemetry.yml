@@ -1,8 +1,8 @@
 
 parameters:
   agentOs: Windows_NT
-  helixSource: ''
-  helixType: ''
+  helixSource: 'undefined_defaulted_in_telemetry.yml'
+  helixType: 'undefined_defaulted_in_telemetry.yml'
   buildConfig: ''
   steps: []
 
