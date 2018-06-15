@@ -36,7 +36,7 @@ steps:
         workingDirectory: $(Build.SourcesDirectory)/eng/common
         displayName: Send Build Start Telemetry
         env:
-          BuildUri: https://devdiv.visualstudio.com/DevDiv/_build/index?buildId=$(Build.BuildId)&_a=summary
+          BuildUri: $(System.TaskDefinitionsUri)$(System.TeamProject)/_build/index?buildId=$(Build.BuildId)&_a=summary
           # defined via VSTS variables in start-job.sh
           Helix_JobToken: $(Helix_JobToken)
         condition: always()
