@@ -22,11 +22,5 @@ namespace Microsoft.DotNet.GitSync.CommitManager
 
         [Option('c', "commit", Required = true, HelpText = "Sha of the Commit")]
         public string Commit { get; set; }
-
-        [Option('m', "message", Required = true, HelpText = "Commit Message")]
-        public string Message { get; set; }
-
-        [Option('a', "author", Default = "dotnet-bot", HelpText = "Author")]
-        public string Author { get; set; }
     }
 }
