@@ -28,11 +28,10 @@ phases:
     ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
       helixSource: official/dotnet/arcade/$(Build.SourceBranch)
     ${{ if in(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-      helixType: pr/dotnet/arcade/$(Build.SourceBranch)
+      helixSource: pr/dotnet/arcade/$(Build.SourceBranch)
     phase:
       queue: ${{ parameters.queue }}
       variables: 
-        _HelixType: build/product
         ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
           _TeamName: DotNetCore
