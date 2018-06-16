@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.GitSync.CommitManager
         [Option('b', "branch", Required = true, HelpText = "Branch to Mirror")]
         public string Branch { get; set; }
 
-        [Option('c', "commits", Required = true, HelpText = "Sha of the Commit or Sha of multiple Commits concatenated by semicolon")]
+        [Option('c', "commits", Required = true, HelpText = "Sha of commit(s) concatenated by ;")]
         public string Commit { get; set; }
     }
 }
