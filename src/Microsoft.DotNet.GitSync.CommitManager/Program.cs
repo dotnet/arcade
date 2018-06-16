@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.GitSync.CommitManager
             CommandLineOptions myOptions = null;
             Parser.Default.ParseArguments<CommandLineOptions>(args).WithParsed(opts => myOptions = opts);
 
-            if (myOptions != null && !IsMirrorCommit(myOptions.Message, myOptions.Author))
+            if (myOptions != null)
             {
                 await SetupAsync(myOptions.Username, myOptions.Key);
                 await InsertCommitsAsync(myOptions.Repository, myOptions.Commit, myOptions.Branch);
@@ -38,16 +38,18 @@ namespace Microsoft.DotNet.GitSync.CommitManager
             await s_table.CommitTable.CreateIfNotExistsAsync();
         }
 
-        private static bool IsMirrorCommit(string message, string author) => message.Contains($"Signed-off-by: {author} <{author}@microsoft.com>");
-
-        private static async Task InsertCommitsAsync(string sourceRepo, string commitId, string branch)
+        private static async Task InsertCommitsAsync(string sourceRepoFullname, string commitList, string branch)
         {
+            string sourceRepo = sourceRepoFullname.Split("/")[1];
             foreach (string repo in s_repos[sourceRepo])
             {
-                CommitEntity entry = new CommitEntity(sourceRepo, repo, commitId, branch);
-                TableOperation insertOperation = TableOperation.Insert(entry);
-                await s_table.CommitTable.ExecuteAsync(insertOperation);
-                Console.WriteLine($"Commit {commitId} added to table to get mirrored from {sourceRepo} to {repo}");
+                foreach (var commitId in commitList.Split(";"))
+                {
+                    CommitEntity entry = new CommitEntity(sourceRepo, repo, commitId, branch);
+                    TableOperation insertOperation = TableOperation.Insert(entry);
+                    await s_table.CommitTable.ExecuteAsync(insertOperation);
+                    Console.WriteLine($"Commit {commitId} added to table to get mirrored from {sourceRepo} to {repo}");
+                }
             }
         }
     }
