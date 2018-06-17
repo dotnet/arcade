@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.GitSync.CommitManager
             this.PartitionKey = targetRepo;
             this.RowKey = commitId;
             this.Branch = branch;
+            this.PR = string.Empty;
         }
 
         public CommitEntity() { }
