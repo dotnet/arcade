@@ -79,6 +79,9 @@ steps:
           OperatingSystem: ${{ parameters.agentOs }}
           Configuration: ${{ parameters.buildConfig }}
         condition: always()
+      - script: echo %BuildUri%
+        env:
+          BuildUri: $(System.TaskDefinitionsUri)$(System.TeamProject)/_build/index?buildId=$(Build.BuildId)&_a=summary
       - powershell: |
           ./telemetry/build/start.ps1 -BuildUri $env:BuildUri
           if ($LASTEXITCODE -ne 0) {
