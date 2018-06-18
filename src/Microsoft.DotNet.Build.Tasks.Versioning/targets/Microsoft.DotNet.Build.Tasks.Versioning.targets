@@ -1,0 +1,11 @@
+<Project ToolsVersVersioningn="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="GenerateVersion">
+    <GenerateVersion OfficialBuildId="$(OfficialBuildId)" BaselineDate="$(BaselineDate)" IncludePadding="$(IncludePadding)">
+      <Output TaskParameter="GeneratedShortDate" ItemName="ShortDate" />
+      <Output TaskParameter="GeneratedRevision" ItemName="Revision" />
+      <Output TaskParameter="GeneratedShortSha" ItemName="ShortSha" />
+    </GenerateVersion>
+  </Target>
+  
+</Project>

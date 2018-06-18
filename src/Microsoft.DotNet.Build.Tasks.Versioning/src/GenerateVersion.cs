@@ -3,23 +3,47 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using Microsoft.Build.Framework;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+
 namespace Microsoft.DotNet.Build.Tasks.Versioning
 {
-    public class GenerateVersion : BuildTask
+    public class GenerateVersion : Task
     {
-        public static string SHA = String.Empty;
-        public static string Date = String.Empty;
-        public static string Revision = String.Empty;
+        /// <summary>
+        /// We use these fields as a form of caching for the generated
+        /// output fields. That's why they are static properties.
+        /// </summary>
+        private static string s_shortSha = String.Empty;
+        private static string s_shortDate = String.Empty;
+        private static string s_revision = String.Empty;
 
+        /// <summary>
+        /// The size of the padding for the GeneratedShortDate and GeneratedRevision fields.
+        /// </summary>
+        private readonly int datePadding = 5;
+        private readonly int revisionPadding = 2;
+
+        /// <summary>
+        ///  Optional parameter. When informed must be on the format yyyymmdd[-.]dd.
+        ///  For instance, 20180618-01, 20180618-13, etc.
+        /// </summary>
         public string OfficialBuildId { get; set; } = String.Empty;
-        public DateTime BaselineDate { get; set; } = new DateTime(1996, 4, 1, 0, 0, 0, DateTimeKind.Utc);
-        public int Padding { get; set; } = 5;
-        public bool IncludePadding { get; set; } = false;
 
+        /// <summary>
+        /// The GeneratedShortDate includes the number of months between current 
+        /// date and a base date. BaselineDate is the base date to compute that.
+        /// </summary>
+        public DateTime BaselineDate { get; set; } = new DateTime(1996, 4, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        /// <summary>
+        /// Specify whether to include padding on GenerateShortDate and GeneratedRevision. By default
+        /// no padding is used. Currently padding size is fixed on 5 and 2, respectively.
+        /// </summary>
+        public bool IncludePadding { get; set; } = false;
 
         [Output]
         public string GeneratedShortDate { get; set; }
@@ -30,12 +54,11 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
         [Output]
         public string GeneratedShortSha { get; set; }
 
-
         public override bool Execute()
         {
-            bool emptySha = String.IsNullOrEmpty(SHA);
-            bool emptyDate = String.IsNullOrEmpty(Date);
-            bool emptyRevision = String.IsNullOrEmpty(Revision);
+            bool emptySha = String.IsNullOrEmpty(s_shortSha);
+            bool emptyDate = String.IsNullOrEmpty(s_shortDate);
+            bool emptyRevision = String.IsNullOrEmpty(s_revision);
 
             if (emptySha || emptyDate || emptyRevision)
             {
@@ -43,55 +66,55 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
                 gitInfo.BuildEngine = this.BuildEngine;
                 gitInfo.Execute();
 
-                var BuildIdParsedCorrectly = GetDateAndRevisionFromBuildId(OfficialBuildId, out var TempDate, out var TempRevision);
+                var buildIdParsedCorrectly = GetDateAndRevisionFromBuildId(OfficialBuildId, out var tempDate, out var tempRevision);
 
                 if (emptySha)
                 {
-                    SHA = !String.IsNullOrEmpty(gitInfo.HeadCommitSHA) ? gitInfo.HeadCommitSHA : "NOSHA";
+                    s_shortSha = !String.IsNullOrEmpty(gitInfo.HeadCommitSHA) ? gitInfo.HeadCommitSHA : "NOSHA";
                 }
 
                 if (emptyDate)
                 {
-                    if (BuildIdParsedCorrectly)
+                    if (buildIdParsedCorrectly)
                     {
-                        Date = TempDate;
+                        s_shortDate = tempDate;
                     }
                     else
                     {
-                        Date = gitInfo.HeadCommitDate != default(DateTime) ? CreateShortDate(gitInfo.HeadCommitDate) : 
+                        s_shortDate = gitInfo.HeadCommitDate != default(DateTime) ? CreateShortDate(gitInfo.HeadCommitDate) : 
                                                                              CreateShortDate(DateTime.UtcNow);
                     }
                 }
 
                 if (emptyRevision)
                 {
-                    Revision = BuildIdParsedCorrectly ? TempRevision : "0";
+                    s_revision = buildIdParsedCorrectly ? tempRevision : "0";
                 }
             }
 
-            GeneratedShortDate = AdjustPadding(Date);
-            GeneratedShortSha = SHA;
-            GeneratedRevision = AdjustPadding(Revision);
+            GeneratedShortDate = AdjustPadding(s_shortDate, datePadding);
+            GeneratedShortSha = s_shortSha;
+            GeneratedRevision = AdjustPadding(s_revision, revisionPadding);
 
             return true;
         }
 
-        private bool GetDateAndRevisionFromBuildId(string buildId, out string Date, out string Revision)
+        private bool GetDateAndRevisionFromBuildId(string buildId, out string date, out string revision)
         {
-            Regex regex = new Regex(@"(\d{8})[\-\.](\d+)$");
-            Match match = regex.Match(buildId);
-
-            Date = String.Empty;
-            Revision = String.Empty;
+            date = String.Empty;
+            revision = String.Empty;
 
             if (String.IsNullOrEmpty(buildId)) return false;
 
-            if (match.Success && match.Groups.Count > 2)
+            Regex regex = new Regex(@"(\d{8})[\-\.](\d+)$");
+            Match match = regex.Match(buildId);
+
+            if (match.Success)
             {
                 if (DateTime.TryParseExact(match.Groups[1].Value, "yyyyMMdd", new CultureInfo("en-US"), DateTimeStyles.AdjustToUniversal, out DateTime dateFromBuildId))
                 {
-                    Date = CreateShortDate(dateFromBuildId);
-                    Revision = match.Groups[2].Value;
+                    date = CreateShortDate(dateFromBuildId);
+                    revision = match.Groups[2].Value;
 
                     return true;
                 }
@@ -102,15 +125,13 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             return false;
         }
 
-        private string CreateShortDate(DateTime BuildDate)
+        private string CreateShortDate(DateTime buildDate)
         {
-            int months = (BuildDate.Year - BaselineDate.Year) * 12 + BuildDate.Month - BaselineDate.Month;
+            int months = (buildDate.Year - BaselineDate.Year) * 12 + buildDate.Month - BaselineDate.Month;
 
             if (months > 0)
             {
-                return IncludePadding
-                    ? string.Format("{0}{1}", months.ToString("D" + (Padding - 2)), BuildDate.Day.ToString("D2"))
-                    : string.Format("{0}{1}", months.ToString("D"), BuildDate.Day.ToString("D2"));
+                return string.Format("{0}{1}", months, buildDate.Day.ToString("D2"));
             }
             else
             {
@@ -119,28 +140,17 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             }
         }
 
-        private string AdjustPadding(string input)
+        private string AdjustPadding(string input, int padding)
         {
+            var trimmed = input.TrimStart(new Char[] { '0' });
+
             if (IncludePadding)
             {
-                if (Padding < 5)
-                {
-                    Log.LogWarning($"The specified Padding '{Padding}' has to be equal to or greater than 5. Using 5 as a default now.");
-                    Padding = 5;
-                }
-
-                return input.PadLeft(Padding, '0');
+                return input.PadLeft(padding, '0');
             }
             else
             {
-                var trimmed = input.TrimStart(new Char[] { '0' });
-
-                if (trimmed.Equals(""))
-                {
-                    trimmed = "0";
-                }
-
-                return trimmed;
+                return trimmed.Equals("") ? "0" : trimmed;
             }
         }
     }

@@ -8,7 +8,7 @@ using System;
 
 namespace Microsoft.DotNet.Build.Tasks.Versioning
 {
-    public class GitInfo : ToolTask
+    internal class GitInfo : ToolTask
     {
         protected override string ToolName { get; } = "git";
 
