@@ -16,13 +16,8 @@ parameters:
   buildConfig: ''
   dockerImage: ''
   enableTelemetry: ''
-<<<<<<< HEAD
   helixSource: 'undefined_defaulted_in_base.yml'
   helixType: 'undefined_defaulted_in_base.yml'
-=======
-  helixSource: ''
-  helixType: ''
->>>>>>> dc7b3a38b2115c2033af0c46b178bbf3ade05411
   phaseName: ''
   phase: {}
 

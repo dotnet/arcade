@@ -24,19 +24,11 @@ phases:
     phaseName: ${{ parameters.agentOs }}
     dockerImage: ${{ parameters.dockerImage }}
     enableTelemetry: ${{ parameters.enableTelemetry }}
-<<<<<<< HEAD
     helixType: build/product
     ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
       helixSource: official/dotnet/arcade/$(Build.SourceBranch)
     ${{ if in(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
       helixSource: pr/dotnet/arcade/$(Build.SourceBranch)
-=======
-    helixSource: official/dotnet/arcade/$(Build.SourceBranch)
-    ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-      helixType: build/product          
-    ${{ if in(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-      helixType: pr/dotnet/arcade/$(Build.SourceBranch)
->>>>>>> dc7b3a38b2115c2033af0c46b178bbf3ade05411
     phase:
       queue: ${{ parameters.queue }}
       variables: 
@@ -112,11 +104,8 @@ phases:
           inputs:
             PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
             PublishLocation: Container
-<<<<<<< HEAD
             # Should be able to use a single definition of ArtifactName here instead of conditioned on 
             # agentOs once variables are available in the template evaluation context.  
-=======
->>>>>>> dc7b3a38b2115c2033af0c46b178bbf3ade05411
             ${{ if eq(parameters.agentOs, 'Windows_NT') }}:
               ArtifactName: Windows_NT_$(Agent.JobName)
             ${{ if ne(parameters.agentOs, 'Windows_NT') }}:
