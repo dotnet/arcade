@@ -45,10 +45,20 @@ namespace Microsoft.DotNet.GitSync.CommitManager
             {
                 foreach (var commitId in commitList.Split(";"))
                 {
-                    CommitEntity entry = new CommitEntity(sourceRepo, repo, commitId, branch);
-                    TableOperation insertOperation = TableOperation.Insert(entry);
-                    await s_table.CommitTable.ExecuteAsync(insertOperation);
-                    Console.WriteLine($"Commit {commitId} added to table to get mirrored from {sourceRepo} to {repo}");
+                    TableOperation checkEntity = TableOperation.Retrieve(repo, commitId);
+                    TableResult commits = await s_table.CommitTable.ExecuteAsync(checkEntity);
+
+                    if (commits.Result == null)
+                    {
+                        CommitEntity entry = new CommitEntity(sourceRepo, repo, commitId, branch);
+                        TableOperation insertOperation = TableOperation.Insert(entry);
+                        await s_table.CommitTable.ExecuteAsync(insertOperation);
+                        Console.WriteLine($"Commit {commitId} added to table to get mirrored from {sourceRepo} to {repo}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Commit {commitId} already exists in the table for {repo}");
+                    }
                 }
             }
         }
