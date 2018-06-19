@@ -1,12 +1,37 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="RoslynTools.RepoToolset">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.0;$(NetFxTfm)</TargetFrameworks>
 
     <IsPackable>true</IsPackable>
+
+    <!-- Package Properties -->
+    <Title>Packaging Targets and Tasks used to create versioning information</Title>
+    <MinClientVersion>2.5.0</MinClientVersion>
+    <PackageDescription>
+      This package provides the following MSBuild tasks:
+
+      - GenerateVersion
+
+      This package provides the following MSBuild targets:
+
+      - GenerateVersion
+    </PackageDescription>
   </PropertyGroup>
 
+  <ItemGroup>
+		<Content Include="$(MSBuildThisFileDirectory)build\*.targets">
+		  <PackagePath>build\%(Filename).targets</PackagePath>
+		  <Pack>true</Pack>
+		</Content>
+
+		<Content Include="$(MSBuildThisFileDirectory)build\*.props">
+		  <PackagePath>build\%(Filename).props</PackagePath>
+		  <Pack>true</Pack>
+		</Content>
+  </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="14.3.0" />
     <PackageReference Include="Microsoft.Build.Framework" Version="14.3.0" />

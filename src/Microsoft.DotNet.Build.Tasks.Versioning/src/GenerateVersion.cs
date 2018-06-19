@@ -24,8 +24,8 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
         /// <summary>
         /// The size of the padding for the GeneratedShortDate and GeneratedRevision fields.
         /// </summary>
-        private readonly int datePadding = 5;
-        private readonly int revisionPadding = 2;
+        private readonly int _datePadding = 5;
+        private readonly int _revisionPadding = 2;
 
         /// <summary>
         ///  Optional parameter. When informed must be on the format yyyymmdd[-.]dd.
@@ -62,15 +62,28 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
 
             if (emptySha || emptyDate || emptyRevision)
             {
-                GitInfo gitInfo = new GitInfo();
-                gitInfo.BuildEngine = this.BuildEngine;
-                gitInfo.Execute();
+                var HeadCommitSHA = "NOSHA";
+                var HeadCommitDate = DateTime.UtcNow;
+
+                try
+                {
+                    GitInfo gitInfo = new GitInfo();
+                    gitInfo.BuildEngine = this.BuildEngine;
+                    gitInfo.Execute();
+
+                    HeadCommitSHA = gitInfo.HeadCommitSHA;
+                    HeadCommitDate = gitInfo.HeadCommitDate;
+                }
+                catch (Exception ex)
+                {
+                    Log.LogError($"Problems retrieving branch information from Git: {ex.Message}. Defaults for SHA and Commit date will be used.");
+                }
 
                 var buildIdParsedCorrectly = GetDateAndRevisionFromBuildId(OfficialBuildId, out var tempDate, out var tempRevision);
 
                 if (emptySha)
                 {
-                    s_shortSha = !String.IsNullOrEmpty(gitInfo.HeadCommitSHA) ? gitInfo.HeadCommitSHA : "NOSHA";
+                    s_shortSha = HeadCommitSHA;
                 }
 
                 if (emptyDate)
@@ -81,8 +94,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
                     }
                     else
                     {
-                        s_shortDate = gitInfo.HeadCommitDate != default(DateTime) ? CreateShortDate(gitInfo.HeadCommitDate) : 
-                                                                             CreateShortDate(DateTime.UtcNow);
+                        s_shortDate = CreateShortDate(HeadCommitDate);
                     }
                 }
 
@@ -92,9 +104,9 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
                 }
             }
 
-            GeneratedShortDate = AdjustPadding(s_shortDate, datePadding);
+            GeneratedShortDate = AdjustPadding(s_shortDate, _datePadding);
             GeneratedShortSha = s_shortSha;
-            GeneratedRevision = AdjustPadding(s_revision, revisionPadding);
+            GeneratedRevision = AdjustPadding(s_revision, _revisionPadding);
 
             return true;
         }
@@ -106,6 +118,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
 
             if (String.IsNullOrEmpty(buildId)) return false;
 
+            // We might need to loosen the "8" at some point to allow for other formats.
             Regex regex = new Regex(@"(\d{8})[\-\.](\d+)$");
             Match match = regex.Match(buildId);
 
@@ -127,6 +140,11 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
 
         private string CreateShortDate(DateTime buildDate)
         {
+            if (buildDate != default(DateTime))
+            {
+                buildDate = DateTime.UtcNow;
+            }
+
             int months = (buildDate.Year - BaselineDate.Year) * 12 + buildDate.Month - BaselineDate.Month;
 
             if (months > 0)
