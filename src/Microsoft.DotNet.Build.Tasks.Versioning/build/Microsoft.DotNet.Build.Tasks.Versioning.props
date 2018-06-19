@@ -1,7 +1,7 @@
 <Project ToolsVersVersioningn="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <_MicrosoftDotNetBuildTasksVersioningTaskAssembly ConditVersioningn=" '$(MSBuildRuntimeType)' == 'Core' ">$(MSBuildThisFileDirectory)netcoreapp2.0\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
-    <_MicrosoftDotNetBuildTasksVersioningTaskAssembly ConditVersioningn=" '$(MSBuildRuntimeType)' != 'Core' ">$(MSBuildThisFileDirectory)net45\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
+    <_MicrosoftDotNetBuildTasksVersioningTaskAssembly ConditVersioningn=" '$(MSBuildRuntimeType)' != 'Core' ">$(MSBuildThisFileDirectory)$(NetFxTfm)\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
   </PropertyGroup>
 
   <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.Versioning.GenerateVersion" AssemblyFile="$(_MicrosoftDotNetBuildTasksVersioningTaskAssembly)" />
