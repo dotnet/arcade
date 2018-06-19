@@ -35,22 +35,22 @@ We will showcase it by the end of S136.
 - We'll use a mock for the Build Asset Registry.
 
 # Adding functionalities - V1
-Once we have gathered feedback from the prototype, we can start adding functionalities to create Dependencies Flow V1. Targeting 3 sprints (S139) of work that will include:
+Once we have gathered feedback from the prototype, we can start adding functionalities to create Dependencies Flow V1. Targeting 3 sprints (S139 - June 8th) of work that will include:
 
 ## Build Asset Registry
-### Design the model of the Build Asset Registry (S137)
+### Design the model of the Build Asset Registry (S137 - June 29th)
 The Build Asset Registry is going to be used by:
 - Builds: As part of the publish steps, once the assets produced during the build have been published, the build needs to tell the Build Asset Registry about what was produced and where it is located at.
 - Darc: Query and updates the Build Asset Registry.
 - Mission Control: Shows the information of the dependencies to users.
 
-### Implement API to access the Build Asset Registry (S138)
+### Implement API to access the Build Asset Registry (S138 - July 20th)
 For V1, the minimum APIs needed are:
 - Add
 - Get
 
 ## Darc
-### Interaction with the Build Asset Registry (S138)
+### Interaction with the Build Asset Registry (S138 - July 20th)
 Darc uses the GET API call from the Build Asset Registry
 
 ### Add the ability to set the owner of the PR
@@ -60,12 +60,12 @@ By using GitHub tokens, be able to set the owner of the PR.
 Define if we need this and how it should work.
 
 ## Maestro++
-### Implement Channel subscription mechanism to Arcade (S137)
+### Implement Channel subscription mechanism to Arcade (S137 - June 29th)
 This involves:
 - Evaluate if the current model (manage the subscriptions in a repository with a JSON file) is sufficient.
 - Have the subscriptions in the Arcade repository.
 
-### Implement the ability to set policies. (S138 - S139)
+### Implement the ability to set policies. (S138 - S139 - July 20th)
 For triggers, PR and auto-merge management.
 
 **auto-merge**
@@ -79,7 +79,7 @@ The minimum set of policies we need to enable this functionality are:
 
 **Note** that policies are for each repository.
 
-## Onboard 1 repository to use Darc and Maestro++ for their official builds. (S139)
+## Onboard 1 repository to use Darc and Maestro++ for their official builds. (S139 - August 10th)
 It involves:
 - Define which repository.
 - Add the repository to the Maestro++ subscriptions mechanism.
@@ -87,7 +87,7 @@ It involves:
 - Builds send information to the Build Asset Registry using the API to report on the assets produced, the location, and other Build information. 
 
 # Adding functionalities - V2
-Targeting 2 sprints (S141) of work that will include:
+Targeting 2 sprints (S141 - Sept 21st) of work that will include:
 
 ## Local work for Darc
 Make sure a dev can use Darc locally to update the dependencies of the repo, and other repos too. 
