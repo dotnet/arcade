@@ -7,6 +7,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommandLine;
 using Microsoft.WindowsAzure.Storage.Table;
+using NLog;
+using NLog.Config;
+using NLog.Targets;
 
 namespace Microsoft.DotNet.GitSync.CommitManager
 {
@@ -15,6 +18,7 @@ namespace Microsoft.DotNet.GitSync.CommitManager
         private const string _cloudTableName = "CommitHistory";
         private static Table s_table { get; set; }
         private static Dictionary<string, List<string>> s_repos { get; set; } = new Dictionary<string, List<string>>();
+        private static Logger logger = LogManager.GetCurrentClassLogger();
 
         public static async Task Main(string[] args)
         {
@@ -30,6 +34,12 @@ namespace Microsoft.DotNet.GitSync.CommitManager
 
         private static async Task SetupAsync(string username, string key)
         {
+            LoggingConfiguration config = new LoggingConfiguration();
+            ConsoleTarget consoleTarget = new ConsoleTarget();
+            consoleTarget.Layout = @"${date:format=HH\:mm\:ss}  ${level:uppercase=true}  ${message} ${exception:format=tostring}";
+            config.AddRule(LogLevel.Info, LogLevel.Fatal, consoleTarget);
+            LogManager.Configuration = config;
+
             s_repos.Add("corefx", new List<string> { "coreclr", "corert" });
             s_repos.Add("coreclr", new List<string> { "corefx", "corert" });
             s_repos.Add("corert", new List<string> { "coreclr", "corefx" });
@@ -45,19 +55,21 @@ namespace Microsoft.DotNet.GitSync.CommitManager
             {
                 foreach (var commitId in commitList.Split(";"))
                 {
-                    TableOperation checkEntity = TableOperation.Retrieve(repo, commitId);
-                    TableResult commits = await s_table.CommitTable.ExecuteAsync(checkEntity);
+                    CommitEntity entry = new CommitEntity(sourceRepo, repo, commitId, branch);
+                    TableOperation insertOperation = TableOperation.Insert(entry);
 
-                    if (commits.Result == null)
+                    try
                     {
-                        CommitEntity entry = new CommitEntity(sourceRepo, repo, commitId, branch);
-                        TableOperation insertOperation = TableOperation.Insert(entry);
                         await s_table.CommitTable.ExecuteAsync(insertOperation);
-                        Console.WriteLine($"Commit {commitId} added to table to get mirrored from {sourceRepo} to {repo}");
+                        logger.Info($"Commit {commitId} added to table to get mirrored from {sourceRepo} to {repo}");
                     }
-                    else
+                    catch (WindowsAzure.Storage.StorageException)
                     {
-                        Console.WriteLine($"Commit {commitId} already exists in the table for {repo}");
+                        logger.Warn($"The commit {commitId} already exists in {repo}");
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Warn($"Insert Operation for commit {commitId} for {repo}\n" + ex.Message);
                     }
                 }
             }
