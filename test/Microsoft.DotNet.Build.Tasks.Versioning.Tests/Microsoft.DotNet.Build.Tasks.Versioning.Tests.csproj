@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="RoslynTools.RepoToolset">
 
   <PropertyGroup>
@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageReference Include="Mono.Posix.NETStandard" Version="$(MonoPosixNETStandardVersion)" />
     <PackageReference Include="xunit" Version="$(XunitVersion)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="$(XunitVersion)" />
     <PackageReference Include="Microsoft.Build" Version="15.7.179" />

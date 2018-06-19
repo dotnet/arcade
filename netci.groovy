@@ -70,7 +70,8 @@ static addBuildSteps(def job, def projectName, def os, def configName, def isPR)
       }
 
       addArchival(myJob, filesToArchive, filesToExclude)
-      addXUnitDotNETResults(myJob, configName)
+      // TODO: restore this once there are test projects
+      // addXUnitDotNETResults(myJob, configName)
 
       Utilities.setMachineAffinity(myJob, os, machineAffinity)
 
