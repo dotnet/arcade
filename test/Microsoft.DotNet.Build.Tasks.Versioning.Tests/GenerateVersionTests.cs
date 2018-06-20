@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning.Tests
 
             string expectedDate = string.Format("{0}{1}", months.ToString("D"), BuildDate.Day.ToString("D2"));
 
-            var task = new GenerateVersion
+            var task = new GenerateVersionComponents
             {
                 BuildEngine = new MockEngine()
             };

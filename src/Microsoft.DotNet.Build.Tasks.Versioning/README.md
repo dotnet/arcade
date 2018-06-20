@@ -35,11 +35,10 @@ VersionSuffix   | string      | **Output** Only the suffix of the version string
 
 #### Usage
 
-As mentioned above, this target will always execute before a target called `GetAssemblyVersion`. The following shows an example of how to use this target to obtain the version string.
+As mentioned above, this target will always execute before a target called `GetAssemblyVersion`. Assuming that the package was added as a NuGet dependence, the following shows an example of how to use this target to obtain the version string.
 
 ```xml
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(PackagePath)\Microsoft.DotNet.Build.Tasks.Versioning.props" />
 
   <PropertyGroup>
     <!-- Set the properties to your custom values -->
@@ -54,6 +53,5 @@ As mentioned above, this target will always execute before a target called `GetA
     <Message Text="Produced version is: $(Version)" />
   </Target>
 
-  <Import Project="$(PackagePath)\Microsoft.DotNet.Build.Tasks.Versioning.targets" />
 </Project>
 ```
