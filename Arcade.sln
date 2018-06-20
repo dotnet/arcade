@@ -6,6 +6,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Task
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{730AF68A-22FD-4372-9341-5F67D7701DA7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{7900BB3A-3FCC-4A0E-908D-14155048E6B6}"	
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft.DotNet.Helix", "Microsoft.DotNet.Helix", "{6BE49638-F842-4329-BE8A-30C0F30CCAA5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.Client", "src\Microsoft.DotNet.Helix\Client\CSharp\Microsoft.DotNet.Helix.Client.csproj", "{3A9C8374-D433-459F-81C5-C49715CD9C33}"
