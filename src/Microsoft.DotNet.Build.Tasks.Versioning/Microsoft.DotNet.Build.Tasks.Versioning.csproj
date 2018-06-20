@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="RoslynTools.RepoToolset">
 
   <PropertyGroup>
@@ -9,7 +9,7 @@
     <!-- Package Properties -->
     <Title>Packaging Targets and Tasks used to create versioning information</Title>
     <MinClientVersion>2.5.0</MinClientVersion>
-    <PackageDescription>
+    <Description>
       This package provides the following MSBuild tasks:
 
       - GenerateVersion
@@ -17,7 +17,7 @@
       This package provides the following MSBuild targets:
 
       - GenerateVersion
-    </PackageDescription>
+    </Description>
   </PropertyGroup>
 
   <ItemGroup>
