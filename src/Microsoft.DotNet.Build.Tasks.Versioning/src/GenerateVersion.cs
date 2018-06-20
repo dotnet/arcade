@@ -76,10 +76,10 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
                 }
                 catch (Exception ex)
                 {
-                    Log.LogError($"Problems retrieving branch information from Git: {ex.Message}. Defaults for SHA and Commit date will be used.");
+                    Log.LogMessage($"Problems retrieving branch information from Git: {ex.Message}. Defaults for SHA and Commit date will be used.");
                 }
 
-                var buildIdParsedCorrectly = GetDateAndRevisionFromBuildId(OfficialBuildId, out var tempDate, out var tempRevision);
+                bool buildIdParsedCorrectly = GetDateAndRevisionFromBuildId(OfficialBuildId, out string tempDate, out string tempRevision);
 
                 if (emptySha)
                 {
@@ -140,7 +140,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
 
         private string CreateShortDate(DateTime buildDate)
         {
-            if (buildDate != default(DateTime))
+            if (buildDate == default(DateTime))
             {
                 buildDate = DateTime.UtcNow;
             }
@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             }
             else
             {
-                Log.LogError("Error: Comparison date is in the same month as the seed date");
+                Log.LogError("Error: Baseline date is in the same month as the seed date");
                 return string.Empty;
             }
         }

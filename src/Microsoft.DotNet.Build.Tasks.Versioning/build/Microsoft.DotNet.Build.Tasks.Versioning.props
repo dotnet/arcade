@@ -1,7 +1,24 @@
-<Project ToolsVersVersioningn="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_MicrosoftDotNetBuildTasksVersioningTaskAssembly ConditVersioningn=" '$(MSBuildRuntimeType)' == 'Core' ">$(MSBuildThisFileDirectory)netcoreapp2.0\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
-    <_MicrosoftDotNetBuildTasksVersioningTaskAssembly ConditVersioningn=" '$(MSBuildRuntimeType)' != 'Core' ">$(MSBuildThisFileDirectory)$(NetFxTfm)\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
+    <_MicrosoftDotNetBuildTasksVersioningTaskAssembly Condition=" '$(MSBuildRuntimeType)' == 'Core' ">$(MSBuildThisFileDirectory)..\lib\netcoreapp2.0\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
+    <_MicrosoftDotNetBuildTasksVersioningTaskAssembly Condition=" '$(MSBuildRuntimeType)' != 'Core' ">$(MSBuildThisFileDirectory)..\lib\$(NetFxTfm)\Microsoft.DotNet.Build.Tasks.Versioning.dll</_MicrosoftDotNetBuildTasksVersioningTaskAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OfficialBuildId>$(BUILD_BUILDNUMBER)</OfficialBuildId>
+
+    <!-- The default prefix assumes Major=1, Minor=0 and Patch=0 -->
+    <VersionPrefix>1.0.0</VersionPrefix>
+    
+    <!-- 
+      We use Semantic Versioning 2.0 which doesn't require padding on identifiers. 
+      However, it's possible to rever to SemVer 1.0 and padding is required.
+    -->
+    <IncludePadding>false</IncludePadding>
+
+    <ShortDate></ShortDate>
+    <Revision></Revision>
+    <ShortSha></ShortSha>
   </PropertyGroup>
 
   <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.Versioning.GenerateVersion" AssemblyFile="$(_MicrosoftDotNetBuildTasksVersioningTaskAssembly)" />
