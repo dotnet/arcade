@@ -5,6 +5,7 @@
 #   buildConfig: buildConfiguration property provided to telemetry
 #   dockerImage: If defined, specifies docker image to run build steps in
 #   enableTelemetry: send telemetry if build is not a PR or CI build
+#   fetchDepth: Limit fetching to the specified number of commits from the tip of each remote branch history
 #   helixSource: telemetry source to report
 #   helixType: telemetry type to report
 #   phaseName: name of phase
@@ -16,6 +17,7 @@ parameters:
   buildConfig: ''
   dockerImage: ''
   enableTelemetry: ''
+  fetchDepth: ''
   helixSource: 'undefined_defaulted_in_base.yml'
   helixType: 'undefined_defaulted_in_base.yml'
   phaseName: ''
@@ -33,7 +35,8 @@ phases:
   steps:
   - checkout: self
     clean: true
-    fetchDepth: 5
+    ${{ if ne(parameters.fetchDepth, '') }}:
+      fetchDepth: ${{ parameters.fetchDepth }}
   - ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
     - ${{ if eq(parameters.enableTelemetry, 'true') }}:
       - template: /eng/common/templates/steps/telemetry.yml
