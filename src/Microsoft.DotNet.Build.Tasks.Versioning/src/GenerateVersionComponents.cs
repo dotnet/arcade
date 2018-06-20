@@ -11,7 +11,7 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Versioning
 {
-    public class GenerateVersion : Task
+    public class GenerateVersionComponents : Task
     {
         /// <summary>
         /// We use these fields as a form of caching for the generated

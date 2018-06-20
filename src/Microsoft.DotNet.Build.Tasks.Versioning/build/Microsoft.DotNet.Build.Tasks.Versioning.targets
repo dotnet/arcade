@@ -1,6 +1,6 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Target Name="GenerateVersionComponents" BeforeTargets="GetAssemblyVersion">
+  <Target Name="GenerateVersionString" BeforeTargets="GetAssemblyVersion">
     <GenerateVersion OfficialBuildId="$(OfficialBuildId)" BaselineDate="$(BaselineDate)" IncludePadding="$(IncludePadding)">
       <Output TaskParameter="GeneratedShortDate" PropertyName="ShortDate" />
       <Output TaskParameter="GeneratedRevision" PropertyName="Revision" />
