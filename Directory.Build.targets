@@ -4,7 +4,15 @@
           BeforeTargets="GenerateNuSpec"
           Condition="'$(NuspecFile)' != ''">
     <PropertyGroup>
-      <NuspecProperties>$(NuspecProperties);version=$(Version);licenseUrl=$(PackageLicenseUrl);repoUrl=$(RepositoryUrl);copyright=$(Copyright);ArtifactsBinDir=$(ArtifactsBinDir)</NuspecProperties>
+      <NuspecProperties>$(NuspecProperties);version=$(Version);licenseUrl=$(PackageLicenseUrl);repoUrl=$(RepositoryUrl);copyright=$(Copyright);ArtifactsBinDir=$(OutputPath)</NuspecProperties>
     </PropertyGroup>
   </Target>
+
+  <ItemGroup>
+    <None Include="$(RepositoryRoot)LICENSE.TXT;$(RepositoryRoot)THIRD-PARTY-NOTICES.TXT" Pack="true" PackagePath="%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)eng\sdk-tools\Sdk.targets" Condition="'$(IsSdk)' == 'true'"/>
+
+  <Import Project="$(MSBuildThisFileDirectory)\src\Microsoft.DotNet.Arcade.Sdk\Package.targets"/>
 </Project>

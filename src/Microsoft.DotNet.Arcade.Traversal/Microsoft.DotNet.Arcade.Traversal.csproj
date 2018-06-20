@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsSdk>true</IsSdk>
+    <IncludePublishOutput>false</IncludePublishOutput>
+    <TargetFrameworks>netstandard2.0;$(NetFxTfm)</TargetFrameworks>
+    <Description>This package is an sdk used for traversal projects in a repository consuming https://github.com/dotnet/arcade.</Description>
+  </PropertyGroup>
+</Project>

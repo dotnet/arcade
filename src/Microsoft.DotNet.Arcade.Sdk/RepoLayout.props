@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BuildArtifactDirectory Condition="'$(BuildArtifactDirectory)' == ''">$(RepositoryRoot)artifacts\</BuildArtifactDirectory>
+    <ProjectRelativePath>$([MSBuild]::MakeRelative('$(RepositoryRoot)', '$(MSBuildProjectDirectory)\$(MSBuildProjectName)\'))</ProjectRelativePath>
+
+    <BaseIntermediateOutputPath>$(BuildArtifactDirectory)obj\$(ProjectRelativePath)</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(BuildArtifactDirectory)bin\$(ProjectRelativePath)</BaseOutputPath>
+
+    <PackageOutputPath>$(BuildArtifactDirectory)packages\</PackageOutputPath>
+  </PropertyGroup>
+</Project>

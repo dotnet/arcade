@@ -1,4 +1,4 @@
-<Project Sdk="RoslynTools.RepoToolset">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard1.4;$(NetFxTfm)</TargetFrameworks>
@@ -9,10 +9,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="$(MicrosoftRestClientRuntimeVersion)" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="$(RepoRoot)LICENSE.TXT;$(RepoRoot)THIRD-PARTY-NOTICES.TXT" Pack="true" PackagePath="%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

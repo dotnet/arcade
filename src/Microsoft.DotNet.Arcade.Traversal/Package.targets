@@ -1,0 +1,66 @@
+<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="2.2.0-preview1-02719-02" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(EnableDefaultItems)' != 'false'">
+    <ProjectReference Include="**\*.csproj" />
+    <ProjectReference Include="**\*.vbproj" />
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.Build.Traversal" />
+
+  <PropertyGroup>
+    <PackDependsOn>
+      Build
+    </PackDependsOn>
+  </PropertyGroup>
+
+  <Target Name="Pack"
+          DependsOnTargets="$(PackDependsOn)">
+    <MSBuild Projects="@(PreTraversalProject)"
+             Targets="Pack"
+             Properties="$(PreTraversalGlobalProperties)"
+             Condition=" '@(PreTraversalProject)' != '' "
+             BuildInParallel="$(BuildInParallel)"
+             SkipNonexistentProjects="$(SkipNonexistentProjects)"
+             SkipNonexistentTargets="$(SkipNonexistentTargets)" />
+
+    <MSBuild Projects="@(PreTraversalPackProject)"
+             Targets="Pack"
+             Properties="$(PreTraversalPackGlobalProperties)"
+             Condition=" '@(PreTraversalPackProject)' != '' "
+             BuildInParallel="$(BuildInParallel)"
+             SkipNonexistentProjects="$(SkipNonexistentProjects)"
+             SkipNonexistentTargets="$(SkipNonexistentTargets)" />
+
+    <MSBuild Projects="@(_MSBuildProjectReferenceExistent)"
+             Targets="Pack"
+             Properties="$(TraversalGlobalProperties);$(TraversalPackGlobalProperties)"
+             BuildInParallel="$(BuildInParallel)"
+             SkipNonexistentProjects="$(SkipNonexistentProjects)"
+             SkipNonexistentTargets="$(SkipNonexistentTargets)" />
+
+    <MSBuild Projects="@(PostTraversalPackProject)"
+             Targets="Pack"
+             Properties="$(PostTraversalPackGlobalProperties)"
+             Condition=" '@(PostTraversalPackProject)' != '' "
+             BuildInParallel="$(BuildInParallel)"
+             SkipNonexistentProjects="$(SkipNonexistentProjects)"
+             SkipNonexistentTargets="$(SkipNonexistentTargets)" />
+
+    <MSBuild Projects="@(PostTraversalProject)"
+             Targets="Pack"
+             Properties="$(PostTraversalGlobalProperties)"
+             Condition=" '@(PostTraversalProject)' != '' "
+             BuildInParallel="$(BuildInParallel)"
+             SkipNonexistentProjects="$(SkipNonexistentProjects)"
+             SkipNonexistentTargets="$(SkipNonexistentTargets)" />
+  </Target>
+
+  <Import Project="$(MSBuildThisFileDirectory)Publish.targets" />
+</Project>

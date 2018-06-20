@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <Target Name="Sign">
+    <!-- TODO: Add signing -->
+    <Message Text="TODO: Add signing" Importance="High" />
+  </Target>
+</Project>

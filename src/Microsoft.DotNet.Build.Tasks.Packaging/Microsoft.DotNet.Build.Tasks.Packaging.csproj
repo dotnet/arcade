@@ -1,4 +1,4 @@
-<Project Sdk="RoslynTools.RepoToolset">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.0;net46</TargetFrameworks>
@@ -132,14 +132,6 @@
     <!-- Package Content -->
     <Content Include="$(MSBuildThisFileDirectory)build\*.targets">
       <PackagePath>build\%(Filename).targets</PackagePath>
-      <Pack>true</Pack>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)..\..\LICENSE.TXT">
-      <PackagePath>LICENSE.TXT</PackagePath>
-      <Pack>true</Pack>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)..\..\THIRD-PARTY-NOTICES.TXT">
-      <PackagePath>THIRD-PARTY-NOTICES.TXT</PackagePath>
       <Pack>true</Pack>
     </Content>
   </ItemGroup>

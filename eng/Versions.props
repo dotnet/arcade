@@ -21,11 +21,4 @@
     <MicrosoftBuildFrameworkVersion>15.1.548</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildUtilitiesCoreVersion>15.1.548</MicrosoftBuildUtilitiesCoreVersion>
   </PropertyGroup>
-
-  <PropertyGroup>
-    <RestoreSources>
-      $(RestoreSources);
-      https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
-    </RestoreSources>
-  </PropertyGroup>
 </Project>
