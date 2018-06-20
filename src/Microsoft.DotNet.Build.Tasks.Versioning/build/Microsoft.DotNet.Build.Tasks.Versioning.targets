@@ -1,11 +1,31 @@
-<Project ToolsVersVersioningn="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Target Name="GenerateVersion">
+  <Target Name="GenerateVersionComponents" BeforeTargets="GetAssemblyVersion">
     <GenerateVersion OfficialBuildId="$(OfficialBuildId)" BaselineDate="$(BaselineDate)" IncludePadding="$(IncludePadding)">
-      <Output TaskParameter="GeneratedShortDate" ItemName="ShortDate" />
-      <Output TaskParameter="GeneratedRevision" ItemName="Revision" />
-      <Output TaskParameter="GeneratedShortSha" ItemName="ShortSha" />
+      <Output TaskParameter="GeneratedShortDate" PropertyName="ShortDate" />
+      <Output TaskParameter="GeneratedRevision" PropertyName="Revision" />
+      <Output TaskParameter="GeneratedShortSha" PropertyName="ShortSha" />
     </GenerateVersion>
+
+    <PropertyGroup>
+      <!-- This handles the Dev/Daily case of the versioning plan. -->
+      <VersionSuffix Condition="'$(PB_IsStable)' == 'false'">$(PB_VersionStamp).$(ShortDate).$(Revision)+$(ShortSha)</VersionSuffix>
+
+      <!-- This handles the 'Final Prerelease' case of the versioning plan. -->
+      <VersionSuffix Condition="'$(PB_IsStable)' == 'true' and '$(PB_VersionStamp)' != ''">$(PB_VersionStamp).final</VersionSuffix>
+
+      <!-- This handles the 'Stable' case of the versioning plan. -->
+      <!-- For this case the version suffix is empty. -->
+      <VersionSuffix Condition="'$(PB_IsStable)' == 'true' and '$(PB_VersionStamp)' == ''"></VersionSuffix>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <!-- IncludePadding also means that we are using SemVer1.0 format. -->
+      <VersionSuffix Condition="'$(IncludePadding)' == 'true'">$(VersionSuffix.Replace('+', '-').Replace('.', '-'))</VersionSuffix>
+      
+      <Version>$(VersionPrefix)</Version>
+      <Version Condition="'$(VersionSuffix)' != ''">$(Version)-$(VersionSuffix)</Version>
+    </PropertyGroup>
   </Target>
   
 </Project>
