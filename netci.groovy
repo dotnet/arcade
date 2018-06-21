@@ -54,8 +54,8 @@ static addBuildSteps(def job, def projectName, def os, def configName, def isPR)
       def osBase = os
       def machineAffinity = 'latest-or-auto'
 
-      def filesToArchive = "**/artifacts/${configName}/**"
-      def filesToExclude = "**/artifacts/${configName}/obj/**"
+      def filesToArchive = "**/artifacts/**"
+      def filesToExclude = "**/artifacts/obj/**"
 
       def jobName = getJobName(os, configName)
       def fullJobName = Utilities.getFullJobName(projectName, jobName, isPR)
