@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
-    <PackageReference Include="Microsoft.SourceLink.$(SourceLinkProvider)" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.SourceLink.$(SourceLinkProvider)" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
 </Project>

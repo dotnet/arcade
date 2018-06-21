@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="XliffTasks" Version="$(XliffTasksVersion)" PrivateAssets="all"/>
+    <PackageReference Include="XliffTasks" Version="$(XliffTasksVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
 </Project>
