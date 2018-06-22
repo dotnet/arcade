@@ -84,7 +84,7 @@ class Build {
     string BuildNumber;
     DateTimeOffset DateProduced;
     List<Channel> Channels;
-    List<AssetIdentifier> Assets;
+    List<Asset> Assets;
     List<Build> Dependencies;
 }
 ```
