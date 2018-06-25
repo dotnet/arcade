@@ -23,8 +23,11 @@ The database containing build asset version information, channels, and subscript
 1. Get repositories that subscribe to updates from a [Repository] intended for a [Channel]
     * Used by [Darc] to flow dependencies when a [Build] is assigned to a [Channel]
 
-1. Get dependencies of a build
-    * Used by [MC] to show dependency tree for a build
+1. Get a Specific [Build]
+    * Used by [MC]
+
+1. Get dependencies of a [Build]
+    * Used by [MC] to show dependency tree for a [Build]
 
 ### Add
 
@@ -71,6 +74,7 @@ A Channel contains a set of builds
 ```csharp
 class Channel {
     string Name;
+    string Classification; // "Official", "DevBuild", "PR Validation", ...
     List<Build> Builds;
 }
 ```
@@ -105,6 +109,7 @@ A feed or other publish mechanism where a specific [Asset] can be found.
 ```csharp
 class AssetLocation {
     string Location;
+    LocationType Type; // "NuGet Feed", "Blob Container", ...
 }
 ```
 
