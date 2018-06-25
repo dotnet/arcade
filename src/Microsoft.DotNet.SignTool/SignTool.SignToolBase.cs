@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using static SignTool.PathUtil;
+using static Microsoft.DotNet.SignTool.PathUtil;
 
-namespace SignTool
+namespace Microsoft.DotNet.SignTool
 {
     internal static partial class SignToolFactory
     {

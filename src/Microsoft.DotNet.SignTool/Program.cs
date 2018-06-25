@@ -8,9 +8,9 @@ using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SignTool.Json;
+using Microsoft.DotNet.SignTool.Json;
 
-namespace SignTool
+namespace Microsoft.DotNet.SignTool
 {
     internal static class Program
     {

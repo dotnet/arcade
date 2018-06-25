@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SignTool
+namespace Microsoft.DotNet.SignTool
 {
     internal sealed class FileSignInfo
     {

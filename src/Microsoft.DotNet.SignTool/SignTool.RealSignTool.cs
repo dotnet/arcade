@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SignTool
+namespace Microsoft.DotNet.SignTool
 {
     internal static partial class SignToolFactory
     {

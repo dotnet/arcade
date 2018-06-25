@@ -2,7 +2,7 @@
 
 using System.Collections.Immutable;
 
-namespace SignTool
+namespace Microsoft.DotNet.SignTool
 {
     /// <summary>
     /// Data for a zip container. Can refer to any zip format such as VSIX or nupkg
