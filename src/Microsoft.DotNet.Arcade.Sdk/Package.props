@@ -10,6 +10,6 @@
     <NoWarn>NU5105</NoWarn>
   </PropertyGroup>
 
-  <Import Project="$(MSBuildThisFileDirectory)RepoLayout.props" />
-  <Import Project="$(MSBuildThisFileDirectory)ProjectDefaults.props" />
+  <Import Project="RepoLayout.props" />
+  <Import Project="ProjectDefaults.props" />
 </Project>
