@@ -7,9 +7,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using SignTool.Json;
+using Microsoft.DotNet.SignTool.Json;
 
-namespace SignTool
+namespace Microsoft.DotNet.SignTool
 {
     /// <summary>
     /// Represents all of the input to the batch signing process.

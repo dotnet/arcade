@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 
-namespace SignTool
+namespace Microsoft.DotNet.SignTool
 {
     internal sealed class ContentUtil
     {

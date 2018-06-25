@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SignTool
+namespace Microsoft.DotNet.SignTool
 {
     /// <summary>
     /// Maintains the mapping between <see cref="FileName"/> instances and their checksum values

@@ -9,10 +9,10 @@ using System.IO.Compression;
 using System.IO.Packaging;
 using System.Linq;
 using Newtonsoft.Json;
-using SignTool.Json;
-using static SignTool.PathUtil;
+using Microsoft.DotNet.SignTool.Json;
+using static Microsoft.DotNet.SignTool.PathUtil;
 
-namespace SignTool
+namespace Microsoft.DotNet.SignTool
 {
     internal sealed class BatchSignUtil
     {

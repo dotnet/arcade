@@ -3,9 +3,9 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using SignTool.Json;
+using Microsoft.DotNet.SignTool.Json;
 
-namespace SignTool
+namespace Microsoft.DotNet.SignTool
 {
     /// <summary>
     /// Represents a preprocessed version of all of the input to the batch signing process.

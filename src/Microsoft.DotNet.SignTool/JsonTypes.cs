@@ -2,7 +2,7 @@
 
 using Newtonsoft.Json;
 
-namespace SignTool.Json
+namespace Microsoft.DotNet.SignTool.Json
 {
     internal sealed class FileJson
     {

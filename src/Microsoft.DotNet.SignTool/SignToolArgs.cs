@@ -1,4 +1,4 @@
-namespace SignTool
+namespace Microsoft.DotNet.SignTool
 {
     internal readonly struct SignToolArgs
     {

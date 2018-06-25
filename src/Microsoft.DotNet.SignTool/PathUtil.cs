@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace SignTool
+namespace Microsoft.DotNet.SignTool
 {
     internal static class PathUtil
     {

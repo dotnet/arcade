@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.IO;
 
-namespace SignTool
+namespace Microsoft.DotNet.SignTool
 {
     internal interface IHost
     {
