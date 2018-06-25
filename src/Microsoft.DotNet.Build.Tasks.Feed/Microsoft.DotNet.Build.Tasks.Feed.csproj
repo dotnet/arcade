@@ -14,6 +14,8 @@
     <!-- We hit package version conflicts due to assembly version mismatches, we are expecting those and ignore them for this project. -->
     <NoWarn>$(NoWarn);NU1605</NoWarn>
     <ResolveAssemblyReferencesSilent>True</ResolveAssemblyReferencesSilent>
+
+    <Description>This package provides support for publishing assets to a nuget protocol based feed.</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
