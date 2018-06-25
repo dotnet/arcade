@@ -16,7 +16,6 @@
         "bin/Microsoft.DotNet.Helix.Sdk/net45/Microsoft.DotNet.Helix.Sdk.dll",
         "bin/Microsoft.DotNet.SignTool/net461/Microsoft.DotNet.SignTool.exe",
         "bin/Microsoft.DotNet.SignTool/netcoreapp2.0/Microsoft.DotNet.SignTool.dll",
-        "bin/Microsoft.DotNet.SignTool.Tests/net461/Microsoft.DotNet.SignTool.Tests.dll",
         "bin/Microsoft.DotNet.SignTool.Tests/netcoreapp2.0/Microsoft.DotNet.SignTool.Tests.dll"
       ]
     },
