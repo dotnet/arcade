@@ -85,9 +85,10 @@ namespace Microsoft.DotNet.SignTool.Tests
             [Fact]
             public void OutputPath()
             {
-                var args = Parse("-test", @"e:\temp");
-                Assert.Equal(@"e:\temp", args.OutputPath);
-                Assert.Equal(@"e:\Obj", args.IntermediateOutputPath);
+                var temp = @"e:\temp";
+                var args = Parse("-test", temp);
+                Assert.Equal(temp, args.OutputPath);
+                Assert.Equal(Path.Combine(Path.GetDirectoryName(temp), "Obj"), args.IntermediateOutputPath);
             }
 
             [Fact]
