@@ -22,16 +22,15 @@ preparemachine=false
 rebuild=false
 restore=false
 sign=false
-projects=''
 test=false
+publish=false
 verbosity='minimal'
-properties=''
+properties=()
 reporoot="$scriptroot/../.."
 artifactsdir="$reporoot/artifacts"
-artifactsconfigurationdir="$artifactsdir/$configuration"
-logdir="$artifactsconfigurationdir/log"
+logdir="$artifactsdir/log"
 globaljsonfile="$reporoot/global.json"
-tempdir="$artifactsconfigurationdir/tmp"
+tempdir="$artifactsdir/tmp"
 officialbuild=false
 
 if [[ ! -z $OfficialBuildId ]]; then
@@ -66,9 +65,9 @@ while (($# > 0)); do
       echo "  --test           Run all unit tests in the solution"
       echo "  --sign           Sign build outputs"
       echo "  --pack           Package build outputs into NuGet packages and Willow components"
+      echo "  --publish        Publish built packages"
       echo ""
       echo "Advanced settings:"
-      echo "  --projects <value>     Semi-colon delimited list of sln/proj's to build. Globbing is supported (*.sln)"
       echo "  --ci           Set when running on CI server"
       echo "  --log          Enable logging (by default on CI)"
       echo "  --preparemachine     Prepare machine for CI run"
@@ -82,6 +81,10 @@ while (($# > 0)); do
       ;;
     --pack)
       pack=true
+      shift 1
+      ;;
+    --publish)
+      publish=true
       shift 1
       ;;
     --preparemachine)
@@ -100,10 +103,6 @@ while (($# > 0)); do
       sign=true
       shift 1
       ;;
-    --projects)
-      projects=$2
-      shift 2
-      ;;
     --test)
       test=true
       shift 1
@@ -113,7 +112,7 @@ while (($# > 0)); do
       shift 2
       ;;
     *)
-      properties="$properties $1"
+      properties+=($1)
       shift 1
       ;;
   esac
@@ -144,7 +143,7 @@ function InstallDotNetCli {
   local dotnetcliversion="$readjsonvalue"
 
   if [[ -z "$DOTNET_INSTALL_DIR" ]]; then
-    export DOTNET_INSTALL_DIR="$reporoot/artifacts/.dotnet/$dotnetcliversion"
+    export DOTNET_INSTALL_DIR="$reporoot/.dotnet/$dotnetcliversion"
   fi
 
   local dotnetroot="$DOTNET_INSTALL_DIR"
@@ -202,38 +201,6 @@ function InstallDotNetCli {
   export DOTNET_MULTILEVEL_LOOKUP=0
 }
 
-# This is a temporary workaround for https://github.com/Microsoft/msbuild/issues/2095 and
-# https://github.com/dotnet/cli/issues/6589
-# Currently, SDK's always get resolved to the global location, but we want our packages
-# to all be installed into a local folder (prevent machine contamination from global state).
-#
-# We are restoring all of our packages locally and setting nugetpackageroot to reference the
-# local location, but this breaks Custom SDK's which are expecting the SDK to be available
-# from the global user folder.
-function MakeGlobalSdkAvailableLocal {
-  local repotoolsetsource="$defaultnugetpackageroot/roslyntools.repotoolset/$toolsetversion/"
-  local repotoolsetdestination="$nugetpackageroot/roslyntools.repotoolset/$toolsetversion/"
-  if [[ ! -d "$repotoolsetdestination" ]]; then
-    cp -r $repotoolsetsource $repotoolsetdestination
-  fi
-}
-
-function InstallToolset {
-  if [[ ! -d "$toolsetbuildproj" ]]; then
-    local toolsetproj="$tempdir/_restore.csproj"
-    mkdir -p "$tempdir"
-    echo '<Project Sdk="RoslynTools.RepoToolset"><Target Name="NoOp"/></Project>' > $toolsetproj
-
-    dotnet msbuild $toolsetproj /t:NoOp /m /nologo /clp:Summary /warnaserror "/p:NuGetPackageRoot=$nugetpackageroot/" /v:$verbosity
-    local lastexitcode=$?
-
-    if [[ $lastexitcode != 0 ]]; then
-      echo "Failed to build $toolsetproj"
-      ExitWithExitCode $lastexitcode
-    fi
-  fi
-}
-
 function Build {
   InstallDotNetCli
 
@@ -248,27 +215,56 @@ function Build {
     fi
   fi
 
-  InstallToolset
+  local msbuildArgs=()
+  msbuildArgs+=("$reporoot/build.proj")
+  msbuildArgs+=("/m")
+  msbuildArgs+=("/nologo")
+  msbuildArgs+=("/clp:Summary")
+  msbuildArgs+=("/warnaserror")
+  msbuildArgs+=("/v:$verbosity")
+  msbuildArgs+=("/p:Configuration=$configuration")
+  msbuildArgs+=("/p:CIBuild=$ci")
 
-  if [[ "$officialbuild" == true ]]; then
-    MakeGlobalSdkAvailableLocal
-  fi
-
-  local logcmd=''
   if [[ "$ci" == true || "$log" == true ]] ; then
     mkdir -p $logdir
-    logcmd="/bl:$logdir/Build.binlog"
+    msbuildArgs+=("/bl:$logdir/Build.binlog")
   fi
 
-  if [[ -z $projects ]]; then
-    projects="$reporoot/*.sln"
+  local targets=()
+
+  if [[ "$rebuild" == true ]] ; then
+    targets+=("Rebuild")
+  elif [[ "$build" == true ]] ; then
+    targets+=("Build")
   fi
 
-  dotnet msbuild $toolsetbuildproj /m /nologo /clp:Summary /warnaserror \
-    /v:$verbosity $logcmd /p:Configuration=$configuration /p:RepoRoot=$reporoot /p:Projects=$projects \
-    /p:Restore=$restore /p:Build=$build /p:Rebuild=$rebuild /p:Deploy=$deploy /p:Test=$test /p:Sign=$sign /p:Pack=$pack /p:CIBuild=$ci \
-    "/p:RestorePackagesPath=$nugetpackageroot/" "/p:NuGetPackageRoot=$nugetpackageroot/" \
-    $properties
+  if [[ "$test" == true ]] ; then
+    targets+=("Test")
+  fi
+
+  if [[ "$pack" == true ]] ; then
+    targets+=("Pack")
+  fi
+
+  if [[ "$sign" == true ]] ; then
+    targets+=("Sign")
+  fi
+
+  if [[ "$publish" == true ]] ; then
+    targets+=("Publish")
+  fi
+
+  targets=$(IFS=\; ; echo "${targets[*]}")
+
+  if [[ "$restore" == true ]] ; then
+    if [ -z "$targets" ] ; then
+      targets="Restore"
+    else
+      msbuildArgs+=("/restore")
+    fi
+  fi
+
+  dotnet msbuild "/t:$targets" "${msbuildArgs[@]}" "${properties[@]}"
   local lastexitcode=$?
 
   if [[ $lastexitcode != 0 ]]; then
@@ -302,21 +298,6 @@ function Main {
     export TEMP="$tempdir"
     export TMP="$tempdir"
   fi
-  
-  if [[ -z $NUGET_PACKAGES ]]; then
-    if [[ "$officialbuild" == true ]]; then
-      export NUGET_PACKAGES="$reporoot/packages"
-    else
-      export NUGET_PACKAGES="$HOME/.nuget/packages"
-    fi
-  fi
-  nugetpackageroot=$NUGET_PACKAGES
-  defaultnugetpackageroot="$HOME/.nuget/packages"
-
-  ReadJson $globaljsonfile "RoslynTools.RepoToolset"
-  toolsetversion=$readjsonvalue
-
-  toolsetbuildproj="$nugetpackageroot/roslyntools.repotoolset/$toolsetversion/tools/Build.proj"
 
   Build
   ExitWithExitCode $?

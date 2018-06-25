@@ -1,0 +1,4 @@
+<Project>
+  <Import Project="src\Microsoft.DotNet.Arcade.Traversal\Package.props"/>
+  <Import Project="src\Microsoft.DotNet.Arcade.Traversal\Package.targets"/>
+</Project>

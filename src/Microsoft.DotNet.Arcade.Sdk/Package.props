@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Temporary Versioning until @JohnTortugo finishes the versioning package -->
+    <VersionSuffix>$([System.DateTime]::Now.Ticks)</VersionSuffix>
+    <VersionSuffix>$(VersionSuffix.Substring(0, 10))</VersionSuffix>
+    <NoWarn>NU5105</NoWarn>
+  </PropertyGroup>
+
+  <Import Project="RepoLayout.props" />
+  <Import Project="ProjectDefaults.props" />
+</Project>

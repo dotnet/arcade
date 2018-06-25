@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+
+    <IsTraversal>true</IsTraversal>
+    <SkipNonexistentTargets>true</SkipNonexistentTargets>
+  </PropertyGroup>
+  <Import Project="Sdk.props" Sdk="Microsoft.Build.Traversal" />
+</Project>

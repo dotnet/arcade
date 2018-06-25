@@ -1,0 +1,114 @@
+<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageType>MSBuildSdk</PackageType>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Framework" Version="14.3.0" Publish="false" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="14.3.0" Publish="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="**/*.props;**/*.targets" Pack="true">
+      <PackagePath>tools/%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="@(PackageReference)">
+      <PrivateAssets>All</PrivateAssets>
+      <Publish Condition=" '%(PackageReference.Publish)' != 'false' ">true</Publish>
+    </PackageReference>
+    <ProjectReference Update="@(ProjectReference)">
+      <PrivateAssets>All</PrivateAssets>
+      <Publish Condition=" '%(ProjectReference.Publish)' != 'false' ">true</Publish>
+    </ProjectReference>
+    <Reference Update="@(Reference)">
+      <Pack>false</Pack>
+    </Reference>
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(IncludePublishOutput)' != 'false'">
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CollectAssets</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+  <Target Name="CollectAssets" DependsOnTargets="Publish">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="@(ResolvedFileToPublish->'$([MSBuild]::NormalizeDirectory($(PublishDir)))%(RelativePath)')">
+        <PackagePath>tools/$(TargetFramework)/any/%(ResolvedFileToPublish.RelativePath)</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <GeneratedPackageContent Include="$(IntermediateOutputPath)Sdk.props">
+      <PackagePath>sdk/Sdk.props</PackagePath>
+      <Content>
+<![CDATA[<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>%24(MSBuildAllProjects)%3B%24(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+  <Import Project="%24(MSBuildThisFileDirectory)..\tools\Package.props" />
+</Project>]]>
+      </Content>
+    </GeneratedPackageContent>
+    <GeneratedPackageContent Include="$(IntermediateOutputPath)Sdk.targets">
+      <PackagePath>sdk/Sdk.targets</PackagePath>
+      <Content>
+<![CDATA[<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>%24(MSBuildAllProjects)%3B%24(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+  <Import Project="%24(MSBuildThisFileDirectory)..\tools\Package.targets" />
+</Project>]]>
+      </Content>
+    </GeneratedPackageContent>
+    <GeneratedPackageContent Include="$(IntermediateOutputPath)%24(PackageId).props" Pack="true">
+      <PackagePath>build/$(PackageId).props</PackagePath>
+      <Content>
+<![CDATA[<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>%24(MSBuildAllProjects)%3B%24(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+  <Import Project="%24(MSBuildThisFileDirectory)..\tools\Package.props" />
+</Project>]]>
+      </Content>
+    </GeneratedPackageContent>
+    <GeneratedPackageContent Include="$(IntermediateOutputPath)%24(PackageId).targets" Pack="true">
+      <PackagePath>build/$(PackageId).targets</PackagePath>
+      <Content>
+<![CDATA[<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>%24(MSBuildAllProjects)%3B%24(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+  <Import Project="%24(MSBuildThisFileDirectory)..\tools\Package.targets" />
+</Project>]]>
+      </Content>
+    </GeneratedPackageContent>
+  </ItemGroup>
+
+  <Target Name="GeneratePackageContent" Inputs="$(MSBuildAllProjects);$(MSBuildProjectFullPath)" Outputs="%(GeneratedPackageContent.Identity)">
+    <WriteLinesToFile
+      File="@(GeneratedPackageContent)"
+      Lines="%(GeneratedPackageContent.Content)"
+      Overwrite="true"
+      Encoding="UTF-8"/>
+  </Target>
+
+  <Target Name="GetPackageContent"
+          DependsOnTargets="GeneratePackageContent"
+          BeforeTargets="_GetPackageFiles">
+    <ItemGroup>
+      <None Include="@(GeneratedPackageContent)" Pack="true"/>
+    </ItemGroup>
+  </Target>
+
+</Project>

@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <Target Name="Publish">
+    <ItemGroup>
+      <PackagesToPublish Include="$(PackageOutputPath)*.nupkg"/>
+    </ItemGroup>
+
+    <PushToBlobFeed
+      ExpectedFeedUrl="$(BlobFeedUrl)"
+      AccountKey="$(BlobFeedKey)"
+      ItemsToPush="@(PackagesToPublish)"/>
+  </Target>
+</Project>

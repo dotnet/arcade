@@ -38,9 +38,8 @@ phases:
           _TeamName: DotNetCore
           _UseEsrpSigning: ${{ parameters.useEsrpSigning }}
         ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-          _PublishArgs: /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
-            /p:PB_PublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
-            /p:PB_PublishType=$(_PublishType) 
+          _PublishArgs: /p:BlobFeedKey=$(dotnetfeed-storage-access-key-1) 
+            /p:BlobFeedUrl=$(_PublishBlobFeedUrl) 
         ${{ if in(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           _PublishArgs: ''
 

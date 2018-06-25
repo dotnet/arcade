@@ -1,0 +1,42 @@
+<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <Authors>Microsoft</Authors>
+    <Serviceable>true</Serviceable>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+
+    <!-- By default do not build nuget package for a project. Project may override. -->
+    <IsPackable>false</IsPackable>
+
+    <!-- 
+      Official build:
+       - Build standalone Portable PDBs to reduce the size of the binaries.
+       - Convert Portable PDBs to Windows PDBs and publish the converted PDBs to Symbol Store to allow WinDBG, 
+         Watson and other tools to find symbol format they understand.
+        
+      Jenkins build:
+       - Embed PDBs to make it easier to debug Jenkins crash dumps.
+       
+      Developer build:
+       - Embed PDBs to be consistent with Jenkins builds.
+
+      TODO:
+      - Live Unit Testing doesn't support embedded PDBs:
+         https://github.com/dotnet/testimpact/issues/1877      
+    -->
+    <DebugType>portable</DebugType>
+    <DebugType Condition="'$(OfficialBuild)' != 'true' and '$(BuildingForLiveUnitTesting)' != 'true'">embedded</DebugType>
+
+    <EnableSourceLink Condition="'$(CIBuild)' == 'true'">true</EnableSourceLink>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != '' AND $(TargetFramework.StartsWith('net4'))">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0-alpha-003" PrivateAssets="All" />
+  </ItemGroup>
+</Project>
