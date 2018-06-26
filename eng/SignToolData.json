@@ -13,7 +13,9 @@
         "bin/Microsoft.DotNet.Helix.Client/netstandard1.4/Microsoft.DotNet.Helix.Client.dll",
         "bin/Microsoft.DotNet.Helix.Client/net45/Microsoft.DotNet.Helix.Client.dll",
         "bin/Microsoft.DotNet.Helix.Sdk/netstandard2.0/Microsoft.DotNet.Helix.Sdk.dll",
-        "bin/Microsoft.DotNet.Helix.Sdk/net45/Microsoft.DotNet.Helix.Sdk.dll"
+        "bin/Microsoft.DotNet.Helix.Sdk/net45/Microsoft.DotNet.Helix.Sdk.dll",
+        "bin/Microsoft.DotNet.Arcade.Sdk/net461/Microsoft.DotNet.Arcade.Sdk.dll",
+        "bin/Microsoft.DotNet.Arcade.Sdk/netcoreapp2.0/Microsoft.DotNet.Arcade.Sdk.dll"
       ]
     },
     {
@@ -26,7 +28,9 @@
   ],
   "exclude": [
     "Microsoft.Azure.KeyVault.Core.dll",
+    "Microsoft.Build.dll",
     "Microsoft.Build.Framework.dll",
+    "Microsoft.Build.Tasks.Core.dll",
     "Microsoft.Build.Utilities.Core.dll",
     "Microsoft.CSharp.dll",
     "Microsoft.Data.Edm.dll",
@@ -89,6 +93,7 @@
     "System.Threading.ThreadPool.dll",
     "System.Xml.ReaderWriter.dll",
     "System.Xml.XDocument.dll",
-    "System.Xml.XmlDocument.dll"
+    "System.Xml.XmlDocument.dll",
+    "vswhere.exe"
   ]
 }

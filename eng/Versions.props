@@ -11,6 +11,7 @@
     <UsingToolNetFrameworkReferenceAssemblies>true</UsingToolNetFrameworkReferenceAssemblies>
 
     <!-- Libs -->
+    <SystemNetHttpVersion>4.3.3</SystemNetHttpVersion>
     <MicrosoftBuildTasksCoreVersion>14.3.0</MicrosoftBuildTasksCoreVersion>
     <MicrosoftBuildVersion>14.3.0</MicrosoftBuildVersion>
     <MicrosoftDotNetVersionToolsVersion>2.2.0-preview1-02815-01</MicrosoftDotNetVersionToolsVersion>

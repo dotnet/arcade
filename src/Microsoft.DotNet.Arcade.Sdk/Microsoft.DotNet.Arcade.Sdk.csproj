@@ -6,26 +6,24 @@
     <ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
 
     <IsPackable>true</IsPackable>
-    <NuspecFile>$(MSBuildProjectName).nuspec</NuspecFile>
-    <NuspecBasePath>$(OutputPath)</NuspecBasePath>
 
     <Description>Common toolset for repositories</Description>
     <PackageTags>Roslyn Build Repository Toolset MSBuild SDK</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
+
+    <IsSdk>true</IsSdk>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <EnableGeneratedPackageContent>false</EnableGeneratedPackageContent>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)" />
-    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Show .*proj files in solution explorer, which are excluded by default -->
-    <None Include="tools\*.*proj" />
-
-    <!--
-      Include build tasks directly in the RepoToolset package.
-      The tasks are needed in Build.proj before tools are restored.
-    -->
-    <Compile Include="$(RepoRoot)src\BuildTasks\*.cs" />
+    <None Include="sdk/Sdk.props;sdk/Sdk.targets" Pack="true">
+      <PackagePath>sdk/%(Filename)%(Extension)</PackagePath>
+    </None>
+    <None Include="tools/*.*" Pack="true">
+      <PackagePath>tools/%(Filename)%(Extension)</PackagePath>
+    </None>
   </ItemGroup>
 </Project>

@@ -2,6 +2,8 @@
 <Project>
   <Import Project="Sdk.targets" Sdk="RoslynTools.RepoToolset" />
 
+  <Import Project="eng\Sdk.targets" Condition="'$(IsSdk)' == 'true'" />
+
   <Target Name="_InitializeNuspecProperties"
           BeforeTargets="GenerateNuSpec"
           Condition="'$(NuspecFile)' != ''">

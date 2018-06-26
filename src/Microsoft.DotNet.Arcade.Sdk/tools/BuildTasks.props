@@ -5,7 +5,7 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
   <PropertyGroup>
-    <RoslynToolsBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)tasks\net461\RoslynTools.RepoToolset.dll</RoslynToolsBuildTasksAssembly>
-    <RoslynToolsBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)tasks\netcoreapp2.0\RoslynTools.RepoToolset.dll</RoslynToolsBuildTasksAssembly>
+    <RoslynToolsBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)net461\Microsoft.DotNet.Arcade.Sdk.dll</RoslynToolsBuildTasksAssembly>
+    <RoslynToolsBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)netcoreapp2.0\Microsoft.DotNet.Arcade.Sdk.dll</RoslynToolsBuildTasksAssembly>
   </PropertyGroup>
 </Project>
