@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
         /// Specify whether to include padding on GenerateShortDate and GeneratedRevision. By default
         /// no padding is used. Currently padding size is fixed on 5 and 2, respectively.
         /// </summary>
-        public bool IncludePadding { get; set; } = false;
+        public bool SemanticVersioningV1 { get; set; } = false;
 
         [Output]
         public string GeneratedShortDate { get; set; }
@@ -62,8 +62,8 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
 
             if (emptySha || emptyDate || emptyRevision)
             {
-                var HeadCommitSHA = "NOSHA";
-                var HeadCommitDate = DateTime.UtcNow;
+                string HeadCommitSHA = "NOSHA";
+                DateTime HeadCommitDate = DateTime.UtcNow;
 
                 try
                 {
@@ -160,9 +160,9 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
 
         private string AdjustPadding(string input, int padding)
         {
-            var trimmed = input.TrimStart(new Char[] { '0' });
+            string trimmed = input.TrimStart(new Char[] { '0' });
 
-            if (IncludePadding)
+            if (SemanticVersioningV1)
             {
                 return input.PadLeft(padding, '0');
             }

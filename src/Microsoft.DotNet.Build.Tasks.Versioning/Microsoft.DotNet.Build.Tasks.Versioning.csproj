@@ -8,7 +8,6 @@
 
     <!-- Package Properties -->
     <Title>Packaging Targets and Tasks used to create versioning information</Title>
-    <MinClientVersion>2.5.0</MinClientVersion>
     <Description>
       This package provides the following MSBuild tasks:
 
@@ -21,15 +20,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-		<Content Include="$(MSBuildThisFileDirectory)build\*.targets">
-		  <PackagePath>build\%(Filename).targets</PackagePath>
-		  <Pack>true</Pack>
-		</Content>
+    <Content Include="build\*.targets">
+      <PackagePath>build\%(Filename).targets</PackagePath>
+      <Pack>true</Pack>
+    </Content>
 
-		<Content Include="$(MSBuildThisFileDirectory)build\*.props">
-		  <PackagePath>build\%(Filename).props</PackagePath>
-		  <Pack>true</Pack>
-		</Content>
+    <Content Include="build\*.props">
+      <PackagePath>build\%(Filename).props</PackagePath>
+      <Pack>true</Pack>
+    </Content>
   </ItemGroup>
   
   <ItemGroup>

@@ -5,21 +5,11 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <OfficialBuildId>$(BUILD_BUILDNUMBER)</OfficialBuildId>
+    <MajorVersion Condition="'$(MajorVersion)' == ''">1</MajorVersion>
+    <MinorVersion Condition="'$(MinorVersion)' == ''">0</MinorVersion>
 
-    <!-- The default prefix assumes Major=1, Minor=0 and Patch=0 -->
-    <VersionPrefix>1.0.0</VersionPrefix>
-    
-    <!-- 
-      We use Semantic Versioning 2.0 which doesn't require padding on identifiers. 
-      However, it's possible to rever to SemVer 1.0 and padding is required.
-    -->
-    <IncludePadding>false</IncludePadding>
-
-    <ShortDate></ShortDate>
-    <Revision></Revision>
-    <ShortSha></ShortSha>
+    <VersionPrefix Condition="'$(VersionPrefix)' == ''">$(MajorVersion).$(MinorVersion).0</VersionPrefix>
   </PropertyGroup>
 
-  <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.Versioning.GenerateVersion" AssemblyFile="$(_MicrosoftDotNetBuildTasksVersioningTaskAssembly)" />
+  <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.Versioning.GenerateVersionComponents" AssemblyFile="$(_MicrosoftDotNetBuildTasksVersioningTaskAssembly)" />
 </Project>
