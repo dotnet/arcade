@@ -19,29 +19,29 @@ phases:
 - template: /eng/common/templates/phases/base.yml
   parameters:
     agentOs: ${{ parameters.agentOs }}
-    buildReason: ${{ parameters.buildReason }}
+    buildReason: ${{ variables['build.Reason'] }}
     buildConfig: $(_BuildConfig)
     phaseName: ${{ parameters.agentOs }}
     dockerImage: ${{ parameters.dockerImage }}
     enableTelemetry: ${{ parameters.enableTelemetry }}
     fetchDepth: 5
     helixType: build/product
-    ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+    ${{ if notIn(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
       helixSource: official/dotnet/arcade/$(Build.SourceBranch)
-    ${{ if in(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+    ${{ if in(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
       helixSource: pr/dotnet/arcade/$(Build.SourceBranch)
     phase:
       queue: ${{ parameters.queue }}
       variables: 
-        ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+        ${{ if notIn(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
           _TeamName: DotNetCore
           _UseEsrpSigning: ${{ parameters.useEsrpSigning }}
-        ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+        ${{ if notIn(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           _PublishArgs: /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
             /p:PB_PublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
             /p:PB_PublishType=$(_PublishType) 
-        ${{ if in(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+        ${{ if in(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           _PublishArgs: ''
 
       steps:
@@ -49,7 +49,7 @@ phases:
         parameters:
           agentOs: ${{ parameters.agentOs }} 
           steps:
-          - ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+          - ${{ if notIn(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
             - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
               displayName: Install MicroBuild plugin
               inputs:
@@ -91,7 +91,7 @@ phases:
               OfficialBuildId: $(BUILD.BUILDNUMBER)
             condition: succeeded()
 
-      - ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+      - ${{ if notIn(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
         - task: CopyFiles@2
           displayName: Gather Logs
           inputs:
