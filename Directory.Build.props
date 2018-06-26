@@ -1,18 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <ImportNetSdkFromRepoToolset>false</ImportNetSdkFromRepoToolset>
-    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
   </PropertyGroup>
 
   <Import Project="Sdk.props" Sdk="RoslynTools.RepoToolset" />
-
-  <PropertyGroup>
-    <RepositoryUrl>https://github.com/dotnet/arcade</RepositoryUrl>
-    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
-    <PackageLicenseUrl>$(RepositoryUrl)/LICENSE.txt</PackageLicenseUrl>
-  </PropertyGroup>
 
   <PropertyGroup>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
