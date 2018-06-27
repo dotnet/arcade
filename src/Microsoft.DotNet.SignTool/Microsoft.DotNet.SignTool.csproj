@@ -14,6 +14,9 @@
     <DevelopmentDependency>true</DevelopmentDependency>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="build.log" />
+  </ItemGroup>
+  <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.DotNet.SignTool.Tests" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(DynamicProxyGenAsm2Key)" />
   </ItemGroup>
