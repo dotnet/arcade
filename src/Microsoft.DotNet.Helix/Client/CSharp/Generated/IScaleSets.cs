@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Helix.Client
         /// </exception>
         Task<HttpOperationResponse<IList<DetailedVMScalingHistory>>> GetDetailedVMScalingHistoryWithHttpMessagesAsync(System.DateTimeOffset date, string scaleSet = default(string), Dictionary<string, List<string>> customHeaders = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
         /// <summary>
-        /// Retrieves the aggregated machines counts for all scaleSets from the
+        /// Retrieves the aggregated machine counts for all scaleSets from the
         /// ActiveMachines table for a given time period.
         /// This API returns historical data about the total message Counts and
         /// VMCounts at intervals of 15 minutes. It it limited to a maximum of
