@@ -154,7 +154,7 @@ Notes about templates:
 
   With a default phase provided, when you queue a build, VSTS will now tell you the actual error you care about.  VSTS is hotfixing this issue so that the lower-level issue is surfaced.
 
-- "Resource not authorized"
+- "Resource not authorized" or "The service endpoint does not exist or has not been authorized for use"
 
   If you made some change to a resource or changed resources, but everything else *appears* correct (from a permissions / authorization point of view), and you're seeing "resource not authorized" when you try to queue a build; it's possible that the resource is fine, but the build definition is not authorized to use it.  Edit the build definition and make some minor change, then save.  This will force the build definition to re-authorize and you can undo whatever minor change you made.
 
