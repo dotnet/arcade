@@ -6,3 +6,4 @@ Dotnet.visualstudio.com does not have support for signed builds.  Code should st
 2. Change the Connection to "New Service Endpoint"
     - User name: dotnet-bot@microsoft.com
     - Password / Token Key: Listed in "EngKeyVault" as "dn-bot-dotnet-build-rw-code-rw"
+      - You can get Read access to "EngKeyVault" by joining the "DncEngKvRead" [security group](https://idweb/identitymanagement/aspx/groups/AllGroups.aspx)
