@@ -1185,7 +1185,7 @@
         "tags": [
           "ScaleSets"
         ],
-        "summary": "Retrieves the aggregated machines counts for all scaleSets from the ActiveMachines table for a given time period.\r\nThis API returns historical data about the total message Counts and VMCounts at intervals of 15 minutes. It it limited to a maximum of 30 days.",
+        "summary": "Retrieves the aggregated machine counts for all scaleSets from the ActiveMachines table for a given time period.\r\nThis API returns historical data about the total message Counts and VMCounts at intervals of 15 minutes. It it limited to a maximum of 30 days.",
         "operationId": "ScaleSets_GetAggregatedVMScalingHistory",
         "consumes": [],
         "produces": [
@@ -1213,6 +1213,125 @@
             }
           }
         }
+      }
+    },
+    "/api/2018-03-14/storage": {
+      "get": {
+        "tags": [
+          "Storage"
+        ],
+        "summary": "This API requires authentication. \r\nList of the containers associated with a specified user, optionally freshly generating read/write tokens for their use.",
+        "operationId": "Storage_List",
+        "consumes": [],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "getSasTokens",
+            "in": "query",
+            "description": "Optional: Generate fresh SAS tokens for provided containers",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ContainerInformation"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "access_token": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Storage"
+        ],
+        "summary": "This API requires authentication. \r\nCreate a new drop container in the Helix-managed storage accounts.",
+        "description": "POST body should be empty or contain a JSON blob. \r\n\r\nIf JSON is specified, it may contain the following:\r\nExpirationTimeUtc - Requested time for expiration of the container (after which it will be deleted)\r\nDesiredName - Name of container if this does not already exist.\r\n\r\nCreator field will be set to the authenticated user",
+        "operationId": "Storage_New",
+        "consumes": [
+          "application/json",
+          "text/json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "newContainer",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ContainerCreationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "schema": {
+              "$ref": "#/definitions/ContainerInformation"
+            }
+          }
+        },
+        "security": [
+          {
+            "access_token": []
+          }
+        ]
+      }
+    },
+    "/api/2018-03-14/storage/renew": {
+      "post": {
+        "tags": [
+          "Storage"
+        ],
+        "summary": "This API requires authentication. \r\nExtend the lifespan of a container, in days, up to the maximum allowed lifespan of a new container relative to UtcNow",
+        "description": "POST body should contain a JSON blob matching ContainerExtensionRequest type\r\n\r\nIf JSON is specified, it may contain the following:\r\n\r\nExtensionInDays - Days to increment expiration time\r\nContainerName - Name of container (must be created by user)\r\nStorageAccountName - Storage account name for container.",
+        "operationId": "Storage_ExtendExpiration",
+        "consumes": [
+          "application/json",
+          "text/json"
+        ],
+        "produces": [
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "extensionRequest",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ContainerExtensionRequest"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "schema": {
+              "$ref": "#/definitions/ContainerInformation"
+            }
+          }
+        },
+        "security": [
+          {
+            "access_token": []
+          }
+        ]
       }
     },
     "/api/2018-03-14/telemetry/job": {
@@ -2781,6 +2900,80 @@
           "format": "int32",
           "description": "Toal Number of VMs that are provisioned during snapshot",
           "type": "integer"
+        }
+      }
+    },
+    "ContainerInformation": {
+      "required": [
+        "Created",
+        "Expiration",
+        "Creator",
+        "ContainerName",
+        "StorageAccountName"
+      ],
+      "type": "object",
+      "properties": {
+        "Created": {
+          "format": "date-time",
+          "description": "UTC DateTimeOffset representing when this container was created",
+          "type": "string"
+        },
+        "Expiration": {
+          "format": "date-time",
+          "description": "UTC DateTime representing when this container may be automatedly cleaned up \r\nCleanup is not guaranteed on the exact moment of expiration but any tool \r\nthat does cleanup will use this value, and SAS tokens will no longer be granted",
+          "type": "string"
+        },
+        "ReadToken": {
+          "description": "If the user requesting this information is the same who created it, we'll provide a read-only \r\nSAS token to this storage container which expires up to a max time determined by the Expiration date.",
+          "type": "string"
+        },
+        "WriteToken": {
+          "description": "If the user requesting this information is the same who created it, we'll provide a write\r\nSAS token to this storage container which expires up to a max time determined by the expiration.",
+          "type": "string"
+        },
+        "Creator": {
+          "description": "User who originally created this container.",
+          "type": "string"
+        },
+        "ContainerName": {
+          "description": "Name of container being used in this request.",
+          "type": "string"
+        },
+        "StorageAccountName": {
+          "description": "Name of provided storage account",
+          "type": "string"
+        }
+      }
+    },
+    "ContainerCreationRequest": {
+      "type": "object",
+      "properties": {
+        "ExpirationInDays": {
+          "format": "double",
+          "description": "Utc value of requested expiration for container that is created for the user.\r\nIf this time exceeds maximum allowed, it will be shortened in the result.",
+          "type": "number"
+        },
+        "DesiredName": {
+          "description": "Requested name for the container;  will be used if possible.",
+          "type": "string"
+        }
+      }
+    },
+    "ContainerExtensionRequest": {
+      "type": "object",
+      "properties": {
+        "ExtensionInDays": {
+          "format": "double",
+          "description": "Days to request extension on this container",
+          "type": "number"
+        },
+        "ContainerName": {
+          "description": "Name of existing container to update",
+          "type": "string"
+        },
+        "StorageAccountName": {
+          "description": "While the generated container names should always be distinct, we'll only do work if the\r\nuser also know this information.",
+          "type": "string"
         }
       }
     },

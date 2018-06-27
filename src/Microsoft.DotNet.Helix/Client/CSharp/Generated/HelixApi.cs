@@ -79,6 +79,11 @@ namespace Microsoft.DotNet.Helix.Client
         public virtual IScaleSets ScaleSets { get; private set; }
 
         /// <summary>
+        /// Gets the IStorage.
+        /// </summary>
+        public virtual IStorage Storage { get; private set; }
+
+        /// <summary>
         /// Gets the ITelemetry.
         /// </summary>
         public virtual ITelemetry Telemetry { get; private set; }
@@ -295,6 +300,7 @@ namespace Microsoft.DotNet.Helix.Client
             Job = new Job(this);
             Repository = new Repository(this);
             ScaleSets = new ScaleSets(this);
+            Storage = new Storage(this);
             Telemetry = new Telemetry(this);
             WorkItem = new WorkItem(this);
             BaseUri = new System.Uri("https://helix.dot.net");
