@@ -139,6 +139,10 @@ Notes about templates:
 
 ## Troubleshooting
 
+### Known issues
+
+For a list of known VSTS issues we are tracking, please go [here](https://dotnet.visualstudio.com/internal/_queries/query/7275f17c-c42f-44b8-9798-9c2426bf8395/)
+
 ### Queuing builds
 
 - YAML: "The array must contain at least one element. Parameter name: phases"
