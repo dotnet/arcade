@@ -5,4 +5,4 @@ Dotnet.visualstudio.com does not have support for signed builds.  Code should st
 1. Select a source: External Git
 2. Change the Connection to "New Service Endpoint"
     - User name: dotnet-bot@microsoft.com
-    - Password / Token Key: Listed in "EnvKeyVault" as "dn-bot-dotnet-build-rw-code-rw"
+    - Password / Token Key: Listed in "EngKeyVault" as "dn-bot-dotnet-build-rw-code-rw"
