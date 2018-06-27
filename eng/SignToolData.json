@@ -13,7 +13,10 @@
         "bin/Microsoft.DotNet.Helix.Client/netstandard1.4/Microsoft.DotNet.Helix.Client.dll",
         "bin/Microsoft.DotNet.Helix.Client/net45/Microsoft.DotNet.Helix.Client.dll",
         "bin/Microsoft.DotNet.Helix.Sdk/netstandard2.0/Microsoft.DotNet.Helix.Sdk.dll",
-        "bin/Microsoft.DotNet.Helix.Sdk/net45/Microsoft.DotNet.Helix.Sdk.dll"
+        "bin/Microsoft.DotNet.Helix.Sdk/net45/Microsoft.DotNet.Helix.Sdk.dll",
+        "bin/Microsoft.DotNet.SignTool/net461/Microsoft.DotNet.SignTool.exe",
+        "bin/Microsoft.DotNet.SignTool/netcoreapp2.0/Microsoft.DotNet.SignTool.dll",
+        "bin/Microsoft.DotNet.SignTool.Tests/netcoreapp2.0/Microsoft.DotNet.SignTool.Tests.dll"
       ]
     },
     {
