@@ -12,6 +12,7 @@
         "bin/Microsoft.DotNet.Build.Tasks.Packaging/netcoreapp2.0/Microsoft.DotNet.Build.Tasks.Packaging.dll",
         "bin/Microsoft.DotNet.Helix.Client/netstandard1.4/Microsoft.DotNet.Helix.Client.dll",
         "bin/Microsoft.DotNet.Helix.Client/net45/Microsoft.DotNet.Helix.Client.dll",
+        "bin/Microsoft.DotNet.Helix.JobSender/netstandard2.0/Microsoft.DotNet.Helix.JobSender.dll",
         "bin/Microsoft.DotNet.Helix.Sdk/netstandard2.0/Microsoft.DotNet.Helix.Sdk.dll",
         "bin/Microsoft.DotNet.Helix.Sdk/net45/Microsoft.DotNet.Helix.Sdk.dll",
         "bin/Microsoft.DotNet.SignTool/net461/Microsoft.DotNet.SignTool.exe",
