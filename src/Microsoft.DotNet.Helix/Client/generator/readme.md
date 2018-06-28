@@ -7,6 +7,10 @@ New client library code can be generated with `npm start`
 > see https://aka.ms/autorest
 
 ```yaml
+# Fix versions of autorest extensions
+use:
+- '@microsoft.azure/autorest.csharp@2.2.51'
+
 input-file: https://helix.dot.net/swagger/docs
 sync-methods: none
 add-credentials: true
