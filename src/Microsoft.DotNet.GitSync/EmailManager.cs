@@ -1,22 +1,25 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 using CredentialManagement;
+using log4net;
 using System;
 using System.Net;
 using System.Net.Mail;
 
-namespace gitsync
+namespace Microsoft.DotNet.GitSync
 {
     internal class EmailManager
     {
         private string _sender;
         private string _destinations;
-        private SmtpClient _client { get; set; }
+        private SmtpClient _client;
+        private ILog _logger;
 
-        public EmailManager(string server, string destinations)
+        public EmailManager(string server, string destinations, ILog logger)
         {
+            _logger = logger;
             using (var cred = new Credential())
             {
                 cred.Target = "email";
@@ -28,11 +31,11 @@ namespace gitsync
                     _client.Credentials = new NetworkCredential(cred.Username, cred.Password);
                     _client.EnableSsl = true;
                     _destinations = destinations;
-                    Program.logger.Info("Email Manager is configured correctly");
+                    _logger.Info("Email Manager is configured correctly");
                 }
                 else
                 {
-                    Program.logger.Info("Email Manager is not able to find the correct configuration to use");
+                    _logger.Info("Email Manager is not able to find the correct configuration to use");
                 }
             }
         }
@@ -44,16 +47,16 @@ namespace gitsync
                 if (_client != null)
                 {
                     _client.Send(_sender, _destinations, subject, body);
-                    Program.logger.Info("email send");
+                    _logger.Info("email send");
                 }
                 else
                 {
-                    Program.logger.Info("Email Manager is not able to find the correct configuration to use");
+                    _logger.Info("Email Manager is not able to find the correct configuration to use");
                 }
             }
             catch (Exception ex)
             {
-                Program.logger.Info("Sending email failed due to " + ex.Message);
+                _logger.Info("Sending email failed due to " + ex.Message);
             }
         }
     }

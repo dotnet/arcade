@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -10,7 +10,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using LibGit2Sharp;
 using log4net;
 using log4net.Config;
@@ -18,10 +17,10 @@ using Octokit;
 using Commit = LibGit2Sharp.Commit;
 using Credentials = Octokit.Credentials;
 using Repository = LibGit2Sharp.Repository;
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.CosmosDB.Table;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Table;
 
-namespace gitsync
+namespace Microsoft.DotNet.GitSync
 {
     internal class Program
     {
@@ -32,14 +31,14 @@ namespace gitsync
         private static Lazy<GitHubClient> _lazyClient;
         private static EmailManager s_emailManager;
         private static GitHubClient Client => _lazyClient.Value;
-        private static string _mirrorSignatureUserName;
-        internal static readonly ILog logger = LogManager.GetLogger(typeof(Program));
+        private static string s_mirrorSignatureUserName;
+        private static readonly ILog s_logger = LogManager.GetLogger(typeof(Program));
 
         private Program(string[] args)
         {
             var dbFile = args.Length >= 1 ? args[0] : "settings.json";
             dbFile = Path.GetFullPath(dbFile);
-            ConfigFile = new ConfigFile(dbFile);
+            ConfigFile = new ConfigFile(dbFile, s_logger);
             XmlConfigurator.Configure();
         }
 
@@ -48,13 +47,13 @@ namespace gitsync
             var config = ConfigFile.Get();
             if (config == null)
             {
-                logger.Error("Config File does not exist, Configuring.");
+                s_logger.Error("Config File does not exist, Configuring.");
                 Configure(ConfigFile);
                 config = ConfigFile.Get();
             }
             Setup(config.ConnectionString, config.Server, config.Destinations);
 
-            _mirrorSignatureUserName = config.MirrorSignatureUser;
+            s_mirrorSignatureUserName = config.MirrorSignatureUser;
             _lazyClient =
                 new Lazy<GitHubClient>(
                     () => new GitHubClient(new ProductHeaderValue("DotNetGitHubMirrorService", "1.0"))
@@ -72,14 +71,14 @@ namespace gitsync
                 try
                 {
                     Step(cts.Token);
-                    logger.Info("Waiting");
+                    s_logger.Info("Waiting");
                     Task.Delay(new TimeSpan(0, 5, 0), cts.Token).Wait();
                 }
 
                 catch (RateLimitExceededException ex)
                 {
-                    logger.Error(ex.Message);
-                    logger.Info("Restarting Mirror after 30 minutes");
+                    s_logger.Error(ex.Message);
+                    s_logger.Info("Restarting Mirror after 30 minutes");
                     s_emailManager.Email("RateLimitExceeded Exception", string.Empty);
                     Task.Delay(new TimeSpan(0, 30, 0), cts.Token).Wait();
                 }
@@ -146,7 +145,7 @@ namespace gitsync
                         else
                         {
                             UpdateEntities(GetCommitsToMirror(repo, prBranch), "Commits are already Mirrored");
-                            logger.Info($"Commit Entries modififed to show mirrored in the azure table");
+                            s_logger.Info($"Commit Entries modififed to show mirrored in the azure table");
                         }
                     }
 
@@ -164,11 +163,11 @@ namespace gitsync
             var targetRepo = newChanges.TargetRepository;
             var branchName =
                 $"mirror-merge-{(long)DateTime.Now.Subtract(new DateTime(2000, 1, 1, 0, 0, 0)).TotalMinutes}";
-            logger.Info($"Creating branch {prBranch} in {targetRepo} to merge changes into {prBranch}");
+            s_logger.Info($"Creating branch {prBranch} in {targetRepo} to merge changes into {prBranch}");
             using (var repo = new Repository(targetRepo.Path))
             {
                 var branch = repo.CreateBranch(branchName);
-                logger.Info("Checking out PR branch");
+                s_logger.Info("Checking out PR branch");
                 Commands.Checkout(repo, branch);
                 OriginalSha = branch.Tip.ToString();
             }
@@ -185,13 +184,13 @@ namespace gitsync
                             && commit.Parents.Count() == 1
                             )
                         {
-                            logger.Info($"Applying {change}");
+                            s_logger.Info($"Applying {change}");
                             var patch = FormatPatch(sourceRepository, change);
                             if (string.IsNullOrWhiteSpace(patch))
                             {
                                 continue;
                             }
-                            logger.Debug($"Patch:\n{patch}");
+                            s_logger.Debug($"Patch:\n{patch}");
                             ApplyPatch(sourceRepository, newChanges.TargetRepository, patch, commit);
                         }
                     }
@@ -201,7 +200,7 @@ namespace gitsync
             {
                 if (repo.Head.Tip.ToString() == OriginalSha)
                 {
-                    logger.Info($"No new commits To add into this branch");
+                    s_logger.Info($"No new commits To add into this branch");
                     return null;
                 }
             }
@@ -213,7 +212,7 @@ namespace gitsync
         private static string FormatPatch(RepositoryInfo sourceRepository, string sha)
         {
             var result = Runner.RunCommand("git",
-                $"-C \"{sourceRepository.Path}\" show -p -m --first-parent --format=email {sha} -- \"{sourceRepository.SharedPath}\"");
+                $"-C \"{sourceRepository.Path}\" show -p -m --first-parent --format=email {sha} -- \"{sourceRepository.SharedPath}\"", s_logger);
             return string.Join("\n", result.Output.Split(new[] { '\r', '\n' }, StringSplitOptions.None).Select(l => FixupPRReference(sourceRepository, l)));
         }
 
@@ -236,13 +235,13 @@ namespace gitsync
         {
             var sourceSlashIgnore = 1 + sourceRepository.SharedPath.Count(c => c == '\\') + 1;
             var result = Runner.RunCommand("git",
-                $"-c \"user.name={_mirrorSignatureUserName}\" -C \"{targetRepository.Path}\" am --signoff -p{sourceSlashIgnore} --directory=\"{targetRepository.SharedPath.Replace('\\', '/')}\"",
-                patch);
-            logger.Debug(result.Output);
+                $"-c \"user.name={s_mirrorSignatureUserName}\" -C \"{targetRepository.Path}\" am --signoff -p{sourceSlashIgnore} --directory=\"{targetRepository.SharedPath.Replace('\\', '/')}\"",
+                s_logger, patch);
+            s_logger.Debug(result.Output);
             if (result.ExitCode != 0)
             {
-                logger.Error($"The commit being applied is ${commit.Sha} ${commit.MessageShort} {commit.Author}");
-                logger.Error(
+                s_logger.Error($"The commit being applied is ${commit.Sha} ${commit.MessageShort} {commit.Author}");
+                s_logger.Error(
                     $"patching failed, please open '{targetRepository.Path}' and resolve the conflicts then press any key");
                 s_emailManager.Email("Merge Conflicts", $"Merge Conflicts in {targetRepository.Name} while applying commit {commit} from repo {sourceRepository.Name}");
                 Console.ReadKey();
@@ -253,7 +252,7 @@ namespace gitsync
         {
             using (var repository = new Repository(newChanges.TargetRepository.Path))
             {
-                logger.Debug($"Pushing {branch} to {newChanges.TargetRepository} to update {prBranch}");
+                s_logger.Debug($"Pushing {branch} to {newChanges.TargetRepository} to update {prBranch}");
                 var origin = repository.Network.Remotes["origin"];
                 repository.Network.Push(origin, new[] { "refs/heads/" + branch }, new PushOptions
                 {
@@ -270,11 +269,11 @@ namespace gitsync
             {
                 Body = $"This PR contains mirrored changes from { targetRepo.Configuration.UpstreamOwner }/{string.Join(",", newChanges.changes.Keys)}\n\n\n**Please REBASE this PR when merging**"
             };
-            logger.Debug($"Creating pull request in {newChanges.TargetRepository.Configuration.UpstreamOwner}");
+            s_logger.Debug($"Creating pull request in {newChanges.TargetRepository.Configuration.UpstreamOwner}");
             var pr = await Client.PullRequest.Create(targetRepo.Configuration.UpstreamOwner, targetRepo.Name, newPr);
-            logger.Debug($"Adding the commits");
+            s_logger.Debug($"Adding the commits");
             var commits = await Client.Repository.PullRequest.Commits(targetRepo.Configuration.UpstreamOwner, targetRepo.Name, pr.Number);
-            logger.Debug($"Getting Assignees");
+            s_logger.Debug($"Getting Assignees");
             var additionalAssignees = await Task.WhenAll(commits.Select(c => GetAuthorAsync(targetRepo, c.Sha)));
             try
             {
@@ -288,9 +287,9 @@ namespace gitsync
             {
                 Number = pr.Number,
             };
-            logger.Info($"Pull request #{pr.Number} created for {prBranch}");
+            s_logger.Info($"Pull request #{pr.Number} created for {prBranch}");
             UpdateEntities(GetCommitsToMirror(targetRepo, prBranch), pr.Url.ToString());
-            logger.Info($"Commit Entries modififed to show mirrored in the azure table");
+            s_logger.Info($"Commit Entries modififed to show mirrored in the azure table");
             ConfigFile.Save(targetRepo.Configuration);
         }
 
@@ -310,7 +309,7 @@ namespace gitsync
             var listCommits = GetCommitsToMirror(targetRepo, branch);
             if (listCommits.Count() != 0)
             {
-                logger.Info($"Commits to mirror for {targetRepo}/{branch}");
+                s_logger.Info($"Commits to mirror for {targetRepo}/{branch}");
                 var result = new NewChanges(targetRepo);
                 foreach (var commit in listCommits)
                 {
@@ -322,7 +321,7 @@ namespace gitsync
                 }
                 return result;
             }
-            logger.Info($"No new commits to mirror for {targetRepo}/{branch}");
+            s_logger.Info($"No new commits to mirror for {targetRepo}/{branch}");
             return null;
         }
 
@@ -353,12 +352,12 @@ namespace gitsync
             var pr = await client.PullRequest.Get(repo.Configuration.UpstreamOwner, repo.Name, prNum);
             if (pr.State == ItemState.Open)
             {
-                logger.Info($"{repo}/{branch} has pending pull request {prNum}");
+                s_logger.Info($"{repo}/{branch} has pending pull request {prNum}");
                 return false;
             }
             if (pr.State == ItemState.Closed && pr.Merged)
             {
-                logger.Info($"{repo}/{branch} has merged pull request {prNum}");
+                s_logger.Info($"{repo}/{branch} has merged pull request {prNum}");
                 repo.PendingPRs[branch] = null;
                 ConfigFile.Save(repo.Configuration);
                 return true;
@@ -372,14 +371,14 @@ namespace gitsync
         {
             foreach (var repo in repos)
             {
-                logger.Debug($"Updating {repo}\\{branch} to latest version.");
+                s_logger.Debug($"Updating {repo}\\{branch} to latest version.");
                 using (var repository = new Repository(repo.Path))
                 {
-                    logger.Info($"Fetching new changes for {repo}\\{branch} from upstream");
+                    s_logger.Info($"Fetching new changes for {repo}\\{branch} from upstream");
                     Commands.Fetch(repository, "upstream", new[] { $"{branch}:{branch}" }, new FetchOptions(), $"fetch {branch}");
-                    logger.Info($"Checking out upstream  {repo}\\{branch}");
+                    s_logger.Info($"Checking out upstream  {repo}\\{branch}");
                     Commands.Checkout(repository, $"upstream/{branch}");
-                    logger.Info($"Hard Reset to Head");
+                    s_logger.Info($"Hard Reset to Head");
                     repository.Reset(ResetMode.Hard, "HEAD");
                 }
             }
@@ -394,7 +393,7 @@ namespace gitsync
             foreach (var repo in repos)
             {
                 var repoPath = repo.Path;
-                logger.Info($"Verifying repository {repo} at {repo.Path}");
+                s_logger.Info($"Verifying repository {repo} at {repo.Path}");
                 if (!Directory.Exists(repoPath) || !Repository.IsValid(repoPath))
                 {
                     if (Directory.Exists(repoPath))
@@ -402,7 +401,7 @@ namespace gitsync
                         Directory.Delete(repoPath, true);
                     }
 
-                    logger.Info($"Cloning the repo from {repo.CloneUrl}");
+                    s_logger.Info($"Cloning the repo from {repo.CloneUrl}");
                     Repository.Clone(repo.CloneUrl, repoPath);
                 }
                 using (var repository = new Repository(repoPath))
@@ -531,12 +530,12 @@ namespace gitsync
             CloudStorageAccount storageAccount = CloudStorageAccount.Parse(connectionString);
             s_table = storageAccount.CreateCloudTableClient().GetTableReference(TableName);
             s_table.CreateIfNotExists();
-            logger.Info("Connected with azure table Successfully");
+            s_logger.Info("Connected with azure table Successfully");
             s_repos.Add("corefx", new List<string> { "coreclr", "corert" });
             s_repos.Add("coreclr", new List<string> { "corefx", "corert" });
             s_repos.Add("corert", new List<string> { "coreclr", "corefx" });
-            s_emailManager = new EmailManager(server, destinations);
-            logger.Info("Setup Completed");
+            s_emailManager = new EmailManager(server, destinations, s_logger);
+            s_logger.Info("Setup Completed");
         }
 
         private static IEnumerable<DynamicTableEntity> GetCommitsToMirror(RepositoryInfo targetRepo, string branch)
@@ -577,7 +576,7 @@ namespace gitsync
         {
             using (var repo = new Repository(repository.Path))
             {
-                logger.Info($"Running sanity check for {repository.Name}/{branch}");
+                s_logger.Info($"Running sanity check for {repository.Name}/{branch}");
                 var lastLookedAtCommit = repo.Lookup<Commit>(repository.LastSynchronizedCommits[branch]);
                 var remoteBranch = repo.Refs[$"refs/heads/{branch}"];
 
@@ -610,7 +609,7 @@ namespace gitsync
                     }
                 }
                 UpdateLastSynchronizedCommit(repository, commitList.Last().Sha, branch);
-                logger.Info($"sanity check Completed for {repository.Name}/{branch}");
+                s_logger.Info($"sanity check Completed for {repository.Name}/{branch}");
             }
         }
 
@@ -618,7 +617,7 @@ namespace gitsync
         {
             var oldCommit = repo.LastSynchronizedCommits[branch];
             repo.LastSynchronizedCommits[branch] = sha;
-            logger.Info($"{repo.Owner}/{repo.Name}/{branch} updated {oldCommit} -> {repo.LastSynchronizedCommits[branch]}");
+            s_logger.Info($"{repo.Owner}/{repo.Name}/{branch} updated {oldCommit} -> {repo.LastSynchronizedCommits[branch]}");
             ConfigFile.Save(repo.Configuration);
         }
 
@@ -634,7 +633,6 @@ namespace gitsync
             return files.ToList();
         }
 
-        [ContractAnnotation("=> halt")]
         private static void Error(string message)
         {
             Console.Error.WriteLine(message);

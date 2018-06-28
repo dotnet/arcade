@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace gitsync
+namespace Microsoft.DotNet.GitSync
 {
     public class PullRequestInfo
     {

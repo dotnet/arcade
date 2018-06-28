@@ -5,7 +5,7 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
 
-namespace gitsync
+namespace Microsoft.DotNet.GitSync
 {
     public class Configuration
     {

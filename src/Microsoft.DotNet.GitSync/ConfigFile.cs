@@ -5,17 +5,20 @@
 using System;
 using System.IO;
 using CredentialManagement;
+using log4net;
 using Newtonsoft.Json;
 
-namespace gitsync
+namespace Microsoft.DotNet.GitSync
 {
     internal class ConfigFile
     {
         private readonly string _path;
+        private readonly ILog _logger;
 
-        public ConfigFile(string path)
+        public ConfigFile(string path, ILog logger)
         {
             _path = path;
+            _logger = logger;
         }
 
         public Configuration Get()
@@ -55,7 +58,7 @@ namespace gitsync
                     ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
                     PreserveReferencesHandling = PreserveReferencesHandling.All
                 }));
-            Program.logger.Info("Configuration file updated");
+            _logger.Info("Configuration file updated");
         }
     }
 }

@@ -2,17 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using log4net;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 
-namespace gitsync
+namespace Microsoft.DotNet.GitSync
 {
     internal static class Runner
     {
-        public static string SearchPath([NotNull] string exe)
+        public static string SearchPath(string exe)
         {
             if (exe == null) throw new ArgumentNullException(nameof(exe));
             if (Path.IsPathRooted(exe))
@@ -33,9 +33,9 @@ namespace gitsync
             return null;
         }
 
-        public static RunResult RunCommand(string exe, string args, string input = null)
+        public static RunResult RunCommand(string exe, string args, ILog logger, string input = null)
         {
-            Program.logger.Info($"{exe} {args}");
+            logger.Info($"{exe} {args}");
             exe = SearchPath(exe);
             var psi = new ProcessStartInfo(exe, args)
             {
