@@ -22,7 +22,7 @@
   <ItemGroup Condition="'$(EnableDefaultItems)' != 'false'">
     <None Condition="'$(EnableDefaultNoneItems)' != 'false'"
           Include="**/*.props;**/*.targets" Pack="true">
-      <PackagePath>tools/%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
+      <PackagePath>%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
     </None>
   </ItemGroup>
 
@@ -50,68 +50,4 @@
       </TfmSpecificPackageFile>
     </ItemGroup>
   </Target>
-
-  <ItemGroup Condition="'$(EnableGeneratedPackageContent)' != 'false'">
-    <GeneratedPackageContent Include="$(IntermediateOutputPath)Sdk.props">
-      <PackagePath>sdk/Sdk.props</PackagePath>
-      <Content>
-<![CDATA[<Project>
-  <PropertyGroup>
-    <MSBuildAllProjects>%24(MSBuildAllProjects)%3B%24(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-  <Import Project="%24(MSBuildThisFileDirectory)..\tools\Package.props" />
-</Project>]]>
-      </Content>
-    </GeneratedPackageContent>
-    <GeneratedPackageContent Include="$(IntermediateOutputPath)Sdk.targets">
-      <PackagePath>sdk/Sdk.targets</PackagePath>
-      <Content>
-<![CDATA[<Project>
-  <PropertyGroup>
-    <MSBuildAllProjects>%24(MSBuildAllProjects)%3B%24(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-  <Import Project="%24(MSBuildThisFileDirectory)..\tools\Package.targets" />
-</Project>]]>
-      </Content>
-    </GeneratedPackageContent>
-    <GeneratedPackageContent Include="$(IntermediateOutputPath)%24(PackageId).props" Pack="true">
-      <PackagePath>build/$(PackageId).props</PackagePath>
-      <Content>
-<![CDATA[<Project>
-  <PropertyGroup>
-    <MSBuildAllProjects>%24(MSBuildAllProjects)%3B%24(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-  <Import Project="%24(MSBuildThisFileDirectory)..\tools\Package.props" />
-</Project>]]>
-      </Content>
-    </GeneratedPackageContent>
-    <GeneratedPackageContent Include="$(IntermediateOutputPath)%24(PackageId).targets" Pack="true">
-      <PackagePath>build/$(PackageId).targets</PackagePath>
-      <Content>
-<![CDATA[<Project>
-  <PropertyGroup>
-    <MSBuildAllProjects>%24(MSBuildAllProjects)%3B%24(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-  <Import Project="%24(MSBuildThisFileDirectory)..\tools\Package.targets" />
-</Project>]]>
-      </Content>
-    </GeneratedPackageContent>
-  </ItemGroup>
-
-  <Target Name="GeneratePackageContent" Inputs="$(MSBuildAllProjects);$(MSBuildProjectFullPath)" Outputs="%(GeneratedPackageContent.Identity)">
-    <WriteLinesToFile
-      File="@(GeneratedPackageContent)"
-      Lines="%(GeneratedPackageContent.Content)"
-      Overwrite="true"
-      Encoding="UTF-8"/>
-  </Target>
-
-  <Target Name="GetPackageContent"
-          DependsOnTargets="GeneratePackageContent"
-          BeforeTargets="_GetPackageFiles">
-    <ItemGroup>
-      <None Include="@(GeneratedPackageContent)" Pack="true"/>
-    </ItemGroup>
-  </Target>
-
 </Project>
