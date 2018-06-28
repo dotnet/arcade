@@ -75,7 +75,6 @@ A Channel contains a set of builds
 class Channel {
     string Name;
     string Classification; // "Official", "DevBuild", "PR Validation", ...
-    List<Build> Builds;
 }
 ```
 
