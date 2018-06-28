@@ -8,7 +8,7 @@ Performs a set of actions to enable a repo in VSTS.
 - Adds a folder structure on internal and public vsts for build definitions
 
 .PARAMETER GitHubRepoName
-Repository name of the github repo to onboard, in org/repo form.=
+Repository name of the github repo to onboard, in org/repo form.
 
 .PARAMETER GitHubPat
 PAT used to make github hook modifications.  If UseKeyVault is passed, may be ommitted
@@ -60,13 +60,15 @@ function Create-VSTS-Folder {
     if ($existingFoldersJson.count -ne 0) {
         Write-Output "Folder $folderName already exists in ${vstsInstance}, skipping creation"
     } else {
-        try {
-            Invoke-WebRequest -Method Put -ContentType "application/json" -Headers $vstsAuthHeader -Uri "${vstsInstance}/_apis/build/folders/${folderName}?api-version=4.1-preview.1" -Body "{}" | Out-Null
-            Write-Output "Successfully created folder $folderName at $vstsInstance"
-        } catch {
-            Write-Error "Failed to create folder $folderName at $vstsInstance"
-            Write-Error "$_.Exception"
-            exit
+        if (!$DryRun) {
+            try {
+                Invoke-WebRequest -Method Put -ContentType "application/json" -Headers $vstsAuthHeader -Uri "${vstsInstance}/_apis/build/folders/${folderName}?api-version=4.1-preview.1" -Body "{}" | Out-Null
+                Write-Output "Successfully created folder $folderName at $vstsInstance"
+            } catch {
+                Write-Error "Failed to create folder $folderName at $vstsInstance"
+                Write-Error "$_.Exception"
+                exit
+            }
         }
     }
 }
@@ -164,9 +166,6 @@ if ($alreadyHasHook) {
     }
 }
 
-# Create folders in the public project and internal project
 Write-Output "Creating folders in public and internal projects"
-if (!$DryRun) {
-    Create-VSTS-Folder "$githubOrg/$githubRepo" $vstsInternalInstance
-    Create-VSTS-Folder "$githubOrg/$githubRepo" $vstsPublicInstance
-}
+Create-VSTS-Folder "$githubOrg/$githubRepo" $vstsInternalInstance
+Create-VSTS-Folder "$githubOrg/$githubRepo" $vstsPublicInstance
