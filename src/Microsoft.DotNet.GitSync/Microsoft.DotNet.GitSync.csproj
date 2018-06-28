@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net461</TargetFramework>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CredentialManagement" Version="$(CredentialManagementVersion)" />
+    <PackageReference Include="LibGit2Sharp" Version="$(LibGit2SharpVersion)" />
+    <PackageReference Include="log4net" Version="$(log4netVersion)" />
+    <PackageReference Include="WindowsAzure.Storage" Version="$(WindowsAzureStorageVersion)" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
+    <PackageReference Include="Octokit" Version="$(OctokitVersion)" />
+  </ItemGroup>
+</Project>
