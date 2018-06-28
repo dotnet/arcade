@@ -83,7 +83,7 @@ Identifies a specific build of a repository.
 ```csharp
 class Build {
     string Repository;
-    string Committish;
+    string Commit;
     string BuildNumber;
     DateTimeOffset DateProduced;
     List<Channel> Channels;
