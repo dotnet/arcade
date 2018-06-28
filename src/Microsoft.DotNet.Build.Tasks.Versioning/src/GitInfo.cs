@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
 
         protected override string GenerateCommandLineCommands()
         {
-            return "log -1 --format=\"%h %ci\"";
+            return "log -1 --format=\"%h %cI\"";
         }
 
         protected override void LogEventsFromTextOutput(string singleLine, MessageImportance messageImportance)

@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             GeneratedShortSha = s_shortSha;
             GeneratedRevision = AdjustPadding(s_revision, _revisionPadding);
 
-            return true;
+            return !Log.HasLoggedErrors;
         }
 
         private bool GetDateAndRevisionFromBuildId(string buildId, out string date, out string revision)
@@ -119,8 +119,8 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             if (String.IsNullOrEmpty(buildId)) return false;
 
             // We might need to loosen the "8" at some point to allow for other formats.
-            Regex regex = new Regex(@"(\d{8})[\-\.](\d+)$");
-            Match match = regex.Match(buildId);
+            Regex officialBuildIdPattern = new Regex(@"(\d{8})[\-\.](\d+)$");
+            Match match = officialBuildIdPattern.Match(buildId);
 
             if (match.Success)
             {
@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
                 }
             }
 
-            Log.LogError("Error: Invalid OfficialBuildId was passed: '{0}'. Expected format is '{1}'.", buildId, regex.ToString());
+            Log.LogError("Error: Invalid OfficialBuildId was passed: '{0}'. Expected format is '{1}'.", buildId, officialBuildIdPattern.ToString());
 
             return false;
         }
@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.Build.Tasks.Versioning
             }
             else
             {
-                Log.LogError("Error: Baseline date is in the same month as the seed date");
+                Log.LogError($"Error: Baseline date {BaselineDate} is in the same month as the build date {buildDate}.");
                 return string.Empty;
             }
         }
