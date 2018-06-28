@@ -76,6 +76,11 @@ namespace Microsoft.DotNet.Helix.Client
         IScaleSets ScaleSets { get; }
 
         /// <summary>
+        /// Gets the IStorage.
+        /// </summary>
+        IStorage Storage { get; }
+
+        /// <summary>
         /// Gets the ITelemetry.
         /// </summary>
         ITelemetry Telemetry { get; }

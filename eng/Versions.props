@@ -15,13 +15,25 @@
     <MicrosoftBuildTasksCoreVersion>14.3.0</MicrosoftBuildTasksCoreVersion>
     <MicrosoftBuildVersion>14.3.0</MicrosoftBuildVersion>
     <MicrosoftDotNetVersionToolsVersion>2.2.0-preview1-02815-01</MicrosoftDotNetVersionToolsVersion>
-    <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
-    <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
-    <SleetLibVersion>2.2.24</SleetLibVersion>
     <MicrosoftRestClientRuntimeVersion>3.0.3</MicrosoftRestClientRuntimeVersion>
     <MicrosoftBuildFrameworkVersion>15.1.548</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildUtilitiesCoreVersion>15.1.548</MicrosoftBuildUtilitiesCoreVersion>
-  </PropertyGroup>
+    <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
+    <MicrosoftNetTestSdkVersion>15.7.2</MicrosoftNetTestSdkVersion>
+    <MoqVersion>4.8.3</MoqVersion>
+    <NewtonsoftJsonVersion>11.0.2</NewtonsoftJsonVersion>
+    <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
+    <SleetLibVersion>2.2.24</SleetLibVersion>
+    <SystemCollectionsImmutableVersion>1.3.1</SystemCollectionsImmutableVersion>
+    <SystemIOPackagingVersion>4.5.0</SystemIOPackagingVersion>
+    <SystemReflectionMetadataVersion>1.4.2</SystemReflectionMetadataVersion>
+    <XUnitVersion>2.3.1</XUnitVersion>
+    <XUnitVSRunnerVersion>2.3.1</XUnitVSRunnerVersion>
+
+    <!-- 3rd Part Packages Public Keys -->
+    <DynamicProxyGenAsm2Key>0024000004800000940000000602000000240000525341310004000001000100c547cac37abd99c8db225ef2f6c8a3602f3b3606cc9891605d02baa56104f4cfc0734aa39b93bf7852f7d9266654753cc297e7d2edfe0bac1cdcf9f717241550e0a7b191195b7667bb4f64bcb8e2121380fd1d9d46ad2d92d2d15605093924cceaf74c4861eff62abf69b9291ed0a340e113be11e6a7d3113e92484cf7045cc7</DynamicProxyGenAsm2Key>
+  
+</PropertyGroup>
 
   <PropertyGroup>
     <RestoreSources>
