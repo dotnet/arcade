@@ -139,6 +139,10 @@ Notes about templates:
 
 ## Troubleshooting
 
+### Known issues
+
+For a list of known VSTS issues we are tracking, please go [here](https://dotnet.visualstudio.com/internal/_queries/query/7275f17c-c42f-44b8-9798-9c2426bf8395/)
+
 ### Queuing builds
 
 - YAML: "The array must contain at least one element. Parameter name: phases"
@@ -154,7 +158,7 @@ Notes about templates:
 
   With a default phase provided, when you queue a build, VSTS will now tell you the actual error you care about.  VSTS is hotfixing this issue so that the lower-level issue is surfaced.
 
-- "Resource not authorized"
+- "Resource not authorized" or "The service endpoint does not exist or has not been authorized for use"
 
   If you made some change to a resource or changed resources, but everything else *appears* correct (from a permissions / authorization point of view), and you're seeing "resource not authorized" when you try to queue a build; it's possible that the resource is fine, but the build definition is not authorized to use it.  Edit the build definition and make some minor change, then save.  This will force the build definition to re-authorize and you can undo whatever minor change you made.
 
