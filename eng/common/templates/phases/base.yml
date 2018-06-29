@@ -37,20 +37,20 @@ phases:
     clean: ${{ parameters.clean }}
     ${{ if ne(parameters.fetchDepth, '') }}:
       fetchDepth: ${{ parameters.fetchDepth }}
-  - template: /eng/common/templates/steps/build-reason.yml
-    parameters:
-      condition: not IndividualCI,BatchedCI,PullRequest
-      steps:
-      - ${{ if eq(parameters.enableTelemetry, 'true') }}:
-        - template: /eng/common/templates/steps/telemetry.yml
-          parameters:
-            agentOs: ${{ parameters.agentOs }}
-            buildConfig: ${{ parameters.buildConfig }}
-            helixSource: ${{ parameters.helixSource }}
-            helixType: ${{ parameters.helixType }}
-            steps: ${{ parameters.phase.steps }}
-      - ${{ if not(eq(parameters.enableTelemetry, 'true')) }}:
-        - ${{ parameters.phase.steps }}
+#  - template: /eng/common/templates/steps/build-reason.yml
+#    parameters:
+#      condition: not IndividualCI,BatchedCI,PullRequest
+#      steps:
+#      - ${{ if eq(parameters.enableTelemetry, 'true') }}:
+#        - template: /eng/common/templates/steps/telemetry.yml
+#          parameters:
+#            agentOs: ${{ parameters.agentOs }}
+#            buildConfig: ${{ parameters.buildConfig }}
+#            helixSource: ${{ parameters.helixSource }}
+#            helixType: ${{ parameters.helixType }}
+#            steps: ${{ parameters.phase.steps }}
+#      - ${{ if not(eq(parameters.enableTelemetry, 'true')) }}:
+#        - ${{ parameters.phase.steps }}
   - template: /eng/common/templates/steps/build-reason.yml
     parameters:
       condition: IndividualCI,BatchedCI,PullRequest

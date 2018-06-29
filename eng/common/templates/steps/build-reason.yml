@@ -1,3 +1,6 @@
+# build-reason.yml
+# Description: runs steps if build.reason condition is valid.  conditions is a string of valid build reasons 
+# to include steps (',' separated).  
 parameters:
   conditions: ''
   steps: []
@@ -7,3 +10,5 @@ steps:
     - ${{ parameters.steps }}
   - ${{ if and( startsWith(parameters.conditions, 'not'), not(contains(parameters.condition, variables['build.reason'])) }}:
     - ${{ parameters.steps }}
+
+    
