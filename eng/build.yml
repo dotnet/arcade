@@ -46,26 +46,23 @@ phases:
         parameters:
           agentOs: ${{ parameters.agentOs }} 
           steps:
-          - template: /eng/common/templates/steps/build-reason.yml
-            parameters:
-              condition: not IndividualCI,BatchedCI,PullRequest
-              steps:
-              - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
-                displayName: Install MicroBuild plugin
-                inputs:
-                  signType: $(_SignType)
-                  zipSources: false
-                  esrpSigning: $(_UseEsrpSigning)
-                env:
-                  TeamName: $(_TeamName)
-                continueOnError: false
-                condition: and(succeeded(), in(variables._SignType, 'real', 'test'))
-              - task: AzureKeyVault@1
-                inputs:
-                  azureSubscription: 'DotNet-Engineering-Services_KeyVault'
-                  KeyVaultName: EngKeyVault
-                  SecretsFilter: 'dotnetfeed-storage-access-key-1'
-                condition: succeeded()
+          - ${{ if notIn(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+            - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
+              displayName: Install MicroBuild plugin
+              inputs:
+                signType: $(_SignType)
+                zipSources: false
+                esrpSigning: $(_UseEsrpSigning)
+              env:
+                TeamName: $(_TeamName)
+              continueOnError: false
+              condition: and(succeeded(), in(variables._SignType, 'real', 'test'))
+            - task: AzureKeyVault@1
+              inputs:
+                azureSubscription: 'DotNet-Engineering-Services_KeyVault'
+                KeyVaultName: EngKeyVault
+                SecretsFilter: 'dotnetfeed-storage-access-key-1'
+              condition: succeeded()
           - script: eng\common\cibuild.cmd
               -configuration $(_BuildConfig) 
               -prepareMachine
@@ -91,28 +88,25 @@ phases:
               OfficialBuildId: $(BUILD.BUILDNUMBER)
             condition: succeeded()
 
-      - template: /eng/common/templates/steps/build-reason.yml
-        parameters:
-          condition: not IndividualCI,BatchedCI,PullRequest
-          steps:
-          - task: CopyFiles@2
-            displayName: Gather Logs
-            inputs:
-              SourceFolder: '$(Build.SourcesDirectory)/artifacts'
-              Contents: '**/*log'
-              TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
-            continueOnError: true
-            condition: succeededOrFailed()
-          - task: PublishBuildArtifacts@1
-            displayName: Publish Logs to VSTS
-            inputs:
-              PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
-              PublishLocation: Container
-              # Should be able to use a single definition of ArtifactName here instead of conditioned on 
-              # agentOs once variables are available in the template evaluation context.  
-              ${{ if eq(parameters.agentOs, 'Windows_NT') }}:
-                ArtifactName: Windows_NT_$(Agent.JobName)
-              ${{ if ne(parameters.agentOs, 'Windows_NT') }}:
-                ArtifactName: Linux_$(Agent.JobName)
-            continueOnError: true
-            condition: succeededOrFailed()
+      - ${{ if notIn(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+        - task: CopyFiles@2
+          displayName: Gather Logs
+          inputs:
+            SourceFolder: '$(Build.SourcesDirectory)/artifacts'
+            Contents: '**/*log'
+            TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
+          continueOnError: true
+          condition: succeededOrFailed()
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Logs to VSTS
+          inputs:
+            PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
+            PublishLocation: Container
+            # Should be able to use a single definition of ArtifactName here instead of conditioned on 
+            # agentOs once variables are available in the template evaluation context.  
+            ${{ if eq(parameters.agentOs, 'Windows_NT') }}:
+              ArtifactName: Windows_NT_$(Agent.JobName)
+            ${{ if ne(parameters.agentOs, 'Windows_NT') }}:
+              ArtifactName: Linux_$(Agent.JobName)
+          continueOnError: true
+          condition: succeededOrFailed()
