@@ -3,7 +3,8 @@ phases:
     parameters:
       agentOs: Windows_NT
       queue: 
-        name: Hosted VS2017
+        ${{ if in(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+          name: Hosted VS2017
         ${{ if notIn(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           name: DotNetCore-Build
         demands:
@@ -24,7 +25,8 @@ phases:
       agentOs: Linux
       dockerImage: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
       queue:
-        name: DotNetCore-Linux
+        ${{ if in(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+          name: DotNetCore-Linux
         ${{ if notIn(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           name: DotNetCore-Test
         demands:

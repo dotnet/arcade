@@ -24,14 +24,15 @@ phases:
     enableTelemetry: ${{ parameters.enableTelemetry }}
     fetchDepth: 5
     helixType: build/product
-    helixSource: pr/dotnet/arcade/$(Build.SourceBranch)
-    
+    ${{ if in(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+      helixSource: pr/dotnet/arcade/$(Build.SourceBranch)
     ${{ if notIn(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
       helixSource: official/dotnet/arcade/$(Build.SourceBranch)
     phase:
       queue: ${{ parameters.queue }}
       variables: 
-        _PublishArgs: ''
+        ${{ if in(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+          _PublishArgs: ''
         ${{ if notIn(variables['build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
           _TeamName: DotNetCore
