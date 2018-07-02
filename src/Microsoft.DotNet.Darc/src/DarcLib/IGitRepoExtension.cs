@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -9,9 +10,7 @@ namespace Microsoft.DotNet.Darc
 {
     public static class IGitRepoExtension
     {
-
-
-        public static async Task<HttpResponseMessage> ExecuteGitCommand(this IGitRepo gitRepo, HttpMethod method, string requestUri, string body = null, string versionOverride = null)
+        public static async Task<HttpResponseMessage> ExecuteGitCommand(this IGitRepo gitRepo, HttpMethod method, string requestUri, ILogger logger, string body = null, string versionOverride = null)
         {
             HttpResponseMessage response;
 
@@ -28,7 +27,7 @@ namespace Microsoft.DotNet.Darc
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"There was an error executing method '{method}' against URI '{requestUri}'. Request failed with error code: '{response.StatusCode}'");
+                    logger.LogError($"There was an error executing method '{method}' against URI '{requestUri}'. Request failed with error code: '{response.StatusCode}'");
                     response.EnsureSuccessStatusCode();
                 }
             }

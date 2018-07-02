@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,8 @@ namespace Microsoft.DotNet.Darc
 {
     public class DependencyFileManager
     {
-        private readonly IGitRepo gitClient;
+        private readonly IGitRepo _gitClient;
+        private readonly ILogger _logger;
         private const string VersionPropsExpression = "VersionProps";
         private const string SdkVersionProperty = "version";
 
@@ -25,9 +27,10 @@ namespace Microsoft.DotNet.Darc
             }
         }
 
-        public DependencyFileManager(IGitRepo gitRepo)
+        public DependencyFileManager(IGitRepo gitRepo, ILogger logger)
         {
-            gitClient = gitRepo;
+            _gitClient = gitRepo;
+            _logger = logger;
         }
 
         public async Task<XmlDocument> ReadVersionDetailsXmlAsync(string repoUri, string branch)
@@ -44,9 +47,9 @@ namespace Microsoft.DotNet.Darc
 
         public async Task<JObject> ReadGlobalJsonAsync(string repoUri, string branch)
         {
-            Console.WriteLine($"Reading '{DependencyFilePath.GlobalJson}' in repo '{repoUri}' and branch '{branch}'...");
+            _logger.LogInformation($"Reading '{DependencyFilePath.GlobalJson}' in repo '{repoUri}' and branch '{branch}'...");
 
-            string fileContent = await gitClient.GetFileContentsAsync(DependencyFilePath.GlobalJson, repoUri, branch);
+            string fileContent = await _gitClient.GetFileContentsAsync(DependencyFilePath.GlobalJson, repoUri, branch);
 
             JObject jsonContent = JObject.Parse(fileContent);
 
@@ -55,7 +58,7 @@ namespace Microsoft.DotNet.Darc
 
         public async Task<IEnumerable<BuildAsset>> ParseVersionDetailsXmlAsync(string repoUri, string branch)
         {
-            Console.WriteLine($"Getting a collection of BuildAsset objects from '{DependencyFilePath.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}'...");
+            _logger.LogInformation($"Getting a collection of BuildAsset objects from '{DependencyFilePath.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}'...");
 
             List<BuildAsset> BuildAssets = new List<BuildAsset>();
             XmlDocument document = await ReadVersionDetailsXmlAsync(repoUri, branch);
@@ -89,18 +92,18 @@ namespace Microsoft.DotNet.Darc
                     }
                     else
                     {
-                        Console.WriteLine($"No '{dependencyType}' defined in file.");
+                        _logger.LogWarning($"No '{dependencyType}' defined in file.");
                     }
                 }
             }
             else
             {
-                Console.WriteLine($"There was an error while reading '{DependencyFilePath.VersionDetailsXml}' and it came back empty. Look for exceptions above.");
+                _logger.LogError($"There was an error while reading '{DependencyFilePath.VersionDetailsXml}' and it came back empty. Look for exceptions above.");
 
                 return BuildAssets;
             }
 
-            Console.WriteLine($"Getting a collection of BuildAsset objects from '{DependencyFilePath.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}' succeeded!");
+            _logger.LogInformation($"Getting a collection of BuildAsset objects from '{DependencyFilePath.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}' succeeded!");
 
             return BuildAssets;
         }
@@ -119,11 +122,11 @@ namespace Microsoft.DotNet.Darc
                 {
                     if (versionList.Count == 0)
                     {
-                        Console.WriteLine($"No dependencies named '{itemToUpdate.Name}' found.");
+                        _logger.LogError($"No dependencies named '{itemToUpdate.Name}' found.");
                     }
                     else
                     {
-                        Console.WriteLine("The use of the same asset, even with a different version, is currently not supported.");
+                        _logger.LogError("The use of the same asset, even with a different version, is currently not supported.");
                     }
 
                     return null;
@@ -173,9 +176,9 @@ namespace Microsoft.DotNet.Darc
 
         private async Task<XmlDocument> ReadXmlFileAsync(string filePath, string repoUri, string branch)
         {
-            Console.WriteLine($"Reading '{filePath}' in repo '{repoUri}' and branch '{branch}'...");
+            _logger.LogInformation($"Reading '{filePath}' in repo '{repoUri}' and branch '{branch}'...");
 
-            string fileContent = await gitClient.GetFileContentsAsync(filePath, repoUri, branch);
+            string fileContent = await _gitClient.GetFileContentsAsync(filePath, repoUri, branch);
             XmlDocument document = new XmlDocument();
 
             try
@@ -185,11 +188,11 @@ namespace Microsoft.DotNet.Darc
             }
             catch (Exception exc)
             {
-                Console.WriteLine($"There was an exception while loading '{filePath}'. Exception: {exc}");
+                _logger.LogError($"There was an exception while loading '{filePath}'. Exception: {exc}");
                 throw;
             }
 
-            Console.WriteLine($"Reading '{filePath}' from repo '{repoUri}' and branch '{branch}' succeeded!");
+            _logger.LogInformation($"Reading '{filePath}' from repo '{repoUri}' and branch '{branch}' succeeded!");
 
             return document;
         }
@@ -208,7 +211,7 @@ namespace Microsoft.DotNet.Darc
             }
             else
             {
-                Console.WriteLine($"'{itemToUpdate.Name}Version' not found in '{DependencyFilePath.VersionProps}'.");
+                _logger.LogError($"'{itemToUpdate.Name}Version' not found in '{DependencyFilePath.VersionProps}'.");
             }
         }
 

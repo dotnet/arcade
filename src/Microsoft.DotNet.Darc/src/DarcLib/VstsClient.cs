@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -16,6 +17,7 @@ namespace Microsoft.DotNet.Darc
     {
         private const string DefaultApiVersion = "5.0-preview.1";
         private readonly string personalAccessToken;
+        private readonly ILogger _logger;
 
         private string VstsApiUri { get; set; }
 
@@ -25,20 +27,21 @@ namespace Microsoft.DotNet.Darc
 
         private string VstsPrUri { get; set; }
 
-        public VstsClient(string accessToken)
+        public VstsClient(string accessToken, ILogger logger)
         {
             personalAccessToken = accessToken;
+            _logger = logger;
         }
 
         public async Task<string> GetFileContentsAsync(string filePath, string repoUri, string branch)
         {
-            Console.WriteLine($"Getting the contents of file '{filePath}' from repo '{repoUri}' in branch '{branch}'...");
+            _logger.LogInformation($"Getting the contents of file '{filePath}' from repo '{repoUri}' in branch '{branch}'...");
 
             string repoName = SetApiUriAndGetRepoName(repoUri);
 
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/items?path={filePath}&version={branch}&includeContent=true");
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/items?path={filePath}&version={branch}&includeContent=true", _logger);
 
-            Console.WriteLine($"Getting the contents of file '{filePath}' from repo '{repoUri}' in branch '{branch}' succeeded!");
+            _logger.LogInformation($"Getting the contents of file '{filePath}' from repo '{repoUri}' in branch '{branch}' succeeded!");
 
             dynamic responseContent = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
 
@@ -47,7 +50,7 @@ namespace Microsoft.DotNet.Darc
 
         public async Task CreateDarcBranchAsync(string repoUri, string branch)
         {
-            Console.WriteLine($"Verifying if 'darc-{branch}' branch exist in repo '{repoUri}'. If not, we'll create it...");
+            _logger.LogInformation($"Verifying if 'darc-{branch}' branch exist in repo '{repoUri}'. If not, we'll create it...");
 
             string repoName = SetApiUriAndGetRepoName(repoUri);
             string body;
@@ -64,13 +67,13 @@ namespace Microsoft.DotNet.Darc
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
 
-            response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/refs/heads/darc-{branch}");
+            response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/refs/heads/darc-{branch}", _logger);
             dynamic responseContent = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
 
             // VSTS doesn't fail with a 404 if a branch does not exist, it just returns an empty response object...
             if (responseContent.count == 0)
             {
-                Console.WriteLine($"'darc-{branch}' branch doesn't exist. Creating it...");
+                _logger.LogInformation($"'darc-{branch}' branch doesn't exist. Creating it...");
 
                 vstsRef = new VstsRef($"refs/heads/darc-{branch}", latestSha);
                 vstsRefs.Add(vstsRef);
@@ -78,7 +81,7 @@ namespace Microsoft.DotNet.Darc
             }
             else
             {
-                Console.WriteLine($"Branch 'darc-{branch}' exists, making sure it is in sync with '{branch}'...");
+                _logger.LogInformation($"Branch 'darc-{branch}' exists, making sure it is in sync with '{branch}'...");
 
                 string oldSha = await GetLastCommitShaAsync(repoName, $"darc-{branch}");
 
@@ -88,15 +91,17 @@ namespace Microsoft.DotNet.Darc
             }
 
             body = JsonConvert.SerializeObject(vstsRefs, serializerSettings);
-            await this.ExecuteGitCommand(HttpMethod.Post, $"repositories/{repoName}/refs", body);
+            await this.ExecuteGitCommand(HttpMethod.Post, $"repositories/{repoName}/refs", _logger, body);
 
-            Console.WriteLine($"Branch 'darc-{branch}' {operation} repo '{repoUri}'!");
+            _logger.LogInformation($"Branch 'darc-{branch}' {operation} repo '{repoUri}'!");
 
             return;
         }
 
         public async Task PushFilesAsync(Dictionary<string, GitCommit> filesToCommit, string repoUri, string pullRequestBaseBranch)
         {
+            _logger.LogInformation($"Pushing files to '{pullRequestBaseBranch}'...");
+
             List<VstsChange> changes = new List<VstsChange>();
             string repoName = SetApiUriAndGetRepoName(repoUri);
 
@@ -131,7 +136,9 @@ namespace Microsoft.DotNet.Darc
             string body = JsonConvert.SerializeObject(vstsPush, serializerSettings);
 
             // VSTS' contents API is only supported in version 5.0-preview.2
-            await this.ExecuteGitCommand(HttpMethod.Post, $"repositories/{repoName}/pushes", body, "5.0-preview.2");
+            await this.ExecuteGitCommand(HttpMethod.Post, $"repositories/{repoName}/pushes", _logger, body, "5.0-preview.2");
+
+            _logger.LogInformation($"Pushing files to '{pullRequestBaseBranch}' succeeded!");
         }
 
         public async Task<string> CheckForOpenPullRequestsAsync(string repoUri, string darcBranch)
@@ -139,7 +146,7 @@ namespace Microsoft.DotNet.Darc
             string pullRequestLink = null;
             string repoName = SetApiUriAndGetRepoName(repoUri);
 
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/pullrequests?searchCriteria.targetRefName={darcBranch}");
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/pullrequests?searchCriteria.targetRefName={darcBranch}", _logger);
 
             dynamic content = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
             List<dynamic> values = JsonConvert.DeserializeObject<List<dynamic>>(Convert.ToString(content.value));
@@ -156,30 +163,28 @@ namespace Microsoft.DotNet.Darc
 
         public async Task<string> CreatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
         {
-            Console.WriteLine($"Creating pull request from '{sourceBranch}' to '{mergeWithBranch}'...");
+            _logger.LogInformation($"Creating pull request from '{sourceBranch}' to '{mergeWithBranch}'...");
 
             string linkToPullRquest = await CreateOrUpdatePullRequestAsync(repoUri, mergeWithBranch, sourceBranch, HttpMethod.Post, 0, title, description);
 
-            Console.WriteLine($"Creating pull request from '{sourceBranch}' to '{mergeWithBranch}' succeeded. Link to the PR is: {linkToPullRquest}");
+            _logger.LogInformation($"Creating pull request from '{sourceBranch}' to '{mergeWithBranch}' succeeded. Link to the PR is: {linkToPullRquest}");
 
             return linkToPullRquest;
         }
 
         public async Task<string> UpdatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, int pullRequestId, string title = null, string description = null)
         {
-            Console.WriteLine($"Updating pull request with id '{pullRequestId}' from '{sourceBranch}' to '{mergeWithBranch}'...");
+            _logger.LogInformation($"Updating pull request with id '{pullRequestId}' from '{sourceBranch}' to '{mergeWithBranch}'...");
 
             string linkToPullRquest = await CreateOrUpdatePullRequestAsync(repoUri, mergeWithBranch, sourceBranch, new HttpMethod("PATCH"), pullRequestId, title, description);
 
-            Console.WriteLine($"Updating pull request from '{sourceBranch}' to '{mergeWithBranch}' succeeded. Link to the PR is: {linkToPullRquest}");
+            _logger.LogInformation($"Updating pull request from '{sourceBranch}' to '{mergeWithBranch}' succeeded. Link to the PR is: {linkToPullRquest}");
 
             return linkToPullRquest;
         }
 
         public async Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string sha, string branch, string path = "eng")
         {
-            Console.WriteLine($"Getting the contents of file/files in '{path}' of repo '{repoUri}' in sha '{sha}'");
-
             Dictionary<string, GitCommit> commits = new Dictionary<string, GitCommit>();
 
             await GetCommitMapForPathAsync(repoUri, sha, branch, commits, path);
@@ -189,11 +194,11 @@ namespace Microsoft.DotNet.Darc
 
         public async Task GetCommitMapForPathAsync(string repoUri, string sha, string branch, Dictionary<string, GitCommit> commits, string path = "eng")
         {
-            Console.WriteLine($"Getting the contents of file/files in '{path}' of repo '{repoUri}' in sha '{sha}'");
+            _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' in sha '{sha}'");
 
             string repoName = SetApiUriAndGetRepoName(repoUri);
 
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/items?scopePath={path}&version={sha}&includeContent=true&versionType=commit&recursionLevel=full");
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/items?scopePath={path}&version={sha}&includeContent=true&versionType=commit&recursionLevel=full", _logger);
 
             dynamic content = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
             List<VstsItem> items = JsonConvert.DeserializeObject<List<VstsItem>>(Convert.ToString(content.value));
@@ -212,14 +217,14 @@ namespace Microsoft.DotNet.Darc
                 }
             }
 
-            Console.WriteLine($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at sha '{sha}' succeeded!");
+            _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at sha '{sha}' succeeded!");
         }
 
         public async Task<string> GetFileContentAsync(string repo, string path)
         {
             string encodedContent;
 
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repo}/items?path={path}&includeContent=true");
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repo}/items?path={path}&includeContent=true", _logger);
 
             dynamic file = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
             encodedContent = file.content;
@@ -229,7 +234,7 @@ namespace Microsoft.DotNet.Darc
 
         public async Task<string> GetLastCommitShaAsync(string repo, string branch)
         {
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repo}/commits?branch={branch}");
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repo}/commits?branch={branch}", _logger);
 
             dynamic content = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
 
@@ -262,7 +267,7 @@ namespace Microsoft.DotNet.Darc
 
             try
             {
-                response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/items?path={filePath}&versionDescriptor[version]={branch}");
+                response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/items?path={filePath}&versionDescriptor[version]={branch}", _logger);
             }
             catch (HttpRequestException exc)
             {
@@ -343,7 +348,7 @@ namespace Microsoft.DotNet.Darc
                 requestUri = $"repositories/{repoName}/pullrequests/{pullRequestId}";
             }
 
-            HttpResponseMessage response = await this.ExecuteGitCommand(method, requestUri, body);
+            HttpResponseMessage response = await this.ExecuteGitCommand(method, requestUri, _logger, body);
 
             dynamic content = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
             linkToPullRquest = $"{VstsPrUri}{content.pullRequestId}";
