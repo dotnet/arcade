@@ -54,7 +54,7 @@
   <Target Name="CollectAssets" DependsOnTargets="Publish">
     <ItemGroup>
       <TfmSpecificPackageFile Include="@(ResolvedFileToPublish->'$([MSBuild]::NormalizeDirectory($(PublishDir)))%(RelativePath)')">
-        <PackagePath>tools/$(TargetFramework)/any/%(ResolvedFileToPublish.RelativePath)</PackagePath>
+        <PackagePath>tools/$(TargetFramework)/%(ResolvedFileToPublish.RelativePath)</PackagePath>
       </TfmSpecificPackageFile>
     </ItemGroup>
   </Target>
