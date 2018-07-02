@@ -4,8 +4,8 @@ namespace Microsoft.DotNet.Helix.Client
 {
     public interface IWorkItemDefinitionWithPayload
     {
-        IWorkItemDefinitionWithCorrelationPayload WithPayloadUri(Uri payloadUri);
-        IWorkItemDefinitionWithCorrelationPayload WithFiles(params string[] files);
-        IWorkItemDefinitionWithCorrelationPayload WithEmptyPayload();
+        IWorkItemDefinition WithPayloadUri(Uri payloadUri);
+        IWorkItemDefinition WithFiles(params string[] files);
+        IWorkItemDefinition WithEmptyPayload();
     }
 }

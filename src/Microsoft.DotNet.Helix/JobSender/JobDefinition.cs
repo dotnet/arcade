@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.Rest;
@@ -37,6 +38,7 @@ namespace Microsoft.DotNet.Helix.Client
         public string Build { get; private set; }
         public string TargetQueueId { get; private set; }
         public string Creator { get; private set; }
+        public IList<IPayload> CorrelationPayloads { get; } = new List<IPayload>();
         public string StorageAccountConnectionString { get; private set; }
         public string TargetContainerName { get; set; } = DefaultContainerName;
         public static string DefaultContainerName => $"helix-job-{Environment.UserName}";
@@ -44,6 +46,21 @@ namespace Microsoft.DotNet.Helix.Client
         public IWorkItemDefinitionWithCommand DefineWorkItem(string workItemName)
         {
             return new WorkItemDefinition(this, workItemName);
+        }
+
+        public IJobDefinition WithCorrelationPayloadUris(params Uri[] payloadUris)
+        {
+            foreach (Uri uri in payloadUris)
+            {
+                CorrelationPayloads.Add(new UriPayload(uri));
+            }
+            return this;
+        }
+
+        public IJobDefinition WithCorrelationPayloadFiles(params string[] files)
+        {
+            CorrelationPayloads.Add(new AdhocPayload(files));
+            return this;
         }
 
         public IJobDefinition WithProperty(string key, string value)
@@ -84,9 +101,15 @@ namespace Microsoft.DotNet.Helix.Client
 
             IBlobContainer storageContainer = await storage.GetContainerAsync(TargetContainerName);
             var jobList = new List<JobListEntry>();
+
+            List<string> correlationPayloadUris =
+                (await Task.WhenAll(CorrelationPayloads.Select(p => p.UploadAsync(storageContainer)))).ToList();
+
             foreach (WorkItemDefinition workItem in _workItems)
             {
-                jobList.Add(await workItem.SendAsync(storageContainer, TargetContainerName));
+                JobListEntry entry = await workItem.SendAsync(storageContainer, TargetContainerName);
+                entry.CorrelationPayloadUris = correlationPayloadUris;
+                jobList.Add(entry);
             }
 
             string jobListJson = JsonConvert.SerializeObject(jobList);

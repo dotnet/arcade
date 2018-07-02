@@ -7,7 +7,6 @@ namespace Microsoft.DotNet.Helix.Client
 {
     internal class WorkItemDefinition : IWorkItemDefinitionWithCommand,
         IWorkItemDefinitionWithPayload,
-        IWorkItemDefinitionWithCorrelationPayload,
         IWorkItemDefinition
     {
         public WorkItemDefinition(JobDefinition jobDefinition, string workItemName)
@@ -23,7 +22,6 @@ namespace Microsoft.DotNet.Helix.Client
         public string WorkItemName { get; private set; }
         public TimeSpan Timeout { get; private set; }
         public IPayload Payload { get; private set; }
-        public IList<IPayload> CorrelationPayloads { get; } = new List<IPayload>();
 
         public IWorkItemDefinitionWithPayload WithCommand(string command)
         {
@@ -31,24 +29,9 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
-        public IWorkItemDefinitionWithCorrelationPayload WithTimeout(TimeSpan timeout)
+        public IWorkItemDefinition WithTimeout(TimeSpan timeout)
         {
             Timeout = timeout;
-            return this;
-        }
-
-        public IWorkItemDefinitionWithCorrelationPayload WithCorrelationPayloadUris(params Uri[] payloadUris)
-        {
-            foreach (Uri uri in payloadUris)
-            {
-                CorrelationPayloads.Add(new UriPayload(uri));
-            }
-            return this;
-        }
-
-        public IWorkItemDefinitionWithCorrelationPayload WithCorrelationPayloadFiles(params string[] files)
-        {
-            CorrelationPayloads.Add(new AdhocPayload(files));
             return this;
         }
 
@@ -58,19 +41,19 @@ namespace Microsoft.DotNet.Helix.Client
             return JobDefinition;
         }
 
-        public IWorkItemDefinitionWithCorrelationPayload WithPayloadUri(Uri payloadUri)
+        public IWorkItemDefinition WithPayloadUri(Uri payloadUri)
         {
             Payload = new UriPayload(payloadUri);
             return this;
         }
 
-        public IWorkItemDefinitionWithCorrelationPayload WithFiles(params string[] files)
+        public IWorkItemDefinition WithFiles(params string[] files)
         {
             Payload = new AdhocPayload(files);
             return this;
         }
 
-        public IWorkItemDefinitionWithCorrelationPayload WithEmptyPayload()
+        public IWorkItemDefinition WithEmptyPayload()
         {
             Payload = EmptyPayload.Instance;
             return this;
@@ -84,9 +67,6 @@ namespace Microsoft.DotNet.Helix.Client
                 Command = Command,
                 TimeoutInSeconds = (int) Timeout.TotalSeconds,
                 PayloadUri = await Payload.UploadAsync(payloadStorage),
-                CorrelationPayloadUris =
-                    (await Task.WhenAll(CorrelationPayloads.Select(p => p.UploadAsync(payloadStorage))))
-                    .ToList()
             };
         }
     }
