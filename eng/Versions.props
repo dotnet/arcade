@@ -11,6 +11,9 @@
     <UsingToolNetFrameworkReferenceAssemblies>true</UsingToolNetFrameworkReferenceAssemblies>
 
     <!-- Libs -->
+    <CredentialManagementVersion>1.0.2</CredentialManagementVersion>
+    <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
+    <log4netVersion>2.0.8</log4netVersion>
     <SystemNetHttpVersion>4.3.3</SystemNetHttpVersion>
     <MicrosoftBuildVersion>14.3.0</MicrosoftBuildVersion>
     <MicrosoftBuildFrameworkVersion>14.3.0</MicrosoftBuildFrameworkVersion>
@@ -23,10 +26,12 @@
     <MoqVersion>4.8.3</MoqVersion>
     <NewtonsoftJsonVersion>11.0.2</NewtonsoftJsonVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
+    <OctokitVersion>0.30.0</OctokitVersion>
     <SleetLibVersion>2.2.24</SleetLibVersion>
     <SystemCollectionsImmutableVersion>1.3.1</SystemCollectionsImmutableVersion>
     <SystemIOPackagingVersion>4.5.0</SystemIOPackagingVersion>
     <SystemReflectionMetadataVersion>1.4.2</SystemReflectionMetadataVersion>
+    <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.3.1</XUnitVersion>
     <XUnitVSRunnerVersion>2.3.1</XUnitVSRunnerVersion>
 
