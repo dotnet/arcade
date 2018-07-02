@@ -2,8 +2,6 @@
 <Project>
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
-  <Import Project="eng\Sdk.targets" Condition="'$(IsSdk)' == 'true'" />
-
   <Target Name="_InitializeNuspecProperties"
           BeforeTargets="GenerateNuSpec"
           Condition="'$(NuspecFile)' != ''">

@@ -9,16 +9,10 @@
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="14.3.0" Publish="false" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="14.3.0" Publish="false" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="14.3.0" Publish="false" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="14.3.0" Publish="false" />
-  </ItemGroup>
-
-  <ItemGroup>
-  </ItemGroup>
-
+  <!--
+    Default to including all *.props and *.targets files
+    from the project directory into the nuget package root
+  -->
   <ItemGroup Condition="'$(EnableDefaultItems)' != 'false'">
     <None Condition="'$(EnableDefaultNoneItems)' != 'false'"
           Include="**/*.props;**/*.targets" Pack="true">
@@ -27,6 +21,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      Update all PackageReference and ProjectReference Items to have
+      PrivateAssets="All" and default Publish to true
+      This removes the dependency nodes from the generated nuspec and
+      forces the publish output to contain the dlls.
+     -->
     <PackageReference Update="@(PackageReference)">
       <PrivateAssets>All</PrivateAssets>
       <Publish Condition=" '%(PackageReference.Publish)' != 'false' ">true</Publish>
@@ -35,11 +35,19 @@
       <PrivateAssets>All</PrivateAssets>
       <Publish Condition=" '%(ProjectReference.Publish)' != 'false' ">true</Publish>
     </ProjectReference>
+    <!--
+      Update all Reference items to have Pack="false"
+      This removes the frameworkDependency nodes from the generated nuspec
+    -->
     <Reference Update="@(Reference)">
       <Pack>false</Pack>
     </Reference>
   </ItemGroup>
 
+  <!--
+    if $(IncludePublishOutput) it not 'false' add Publish as a dependency to Pack
+    and include TfmSpecificPackageFile items for all published files
+  -->
   <PropertyGroup Condition="'$(IncludePublishOutput)' != 'false'">
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CollectAssets</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
