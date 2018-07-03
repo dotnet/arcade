@@ -1,0 +1,18 @@
+﻿<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+  <Import Project="BuildStep.props" />
+
+  <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
+  <Target Name="Clean" />
+  <Target Name="Build" />
+  <Target Name="Test" />
+  <Target Name="Pack" />
+  <Target Name="IntegrationTest" />
+  <Target Name="PerformanceTest" />
+
+  <Import Project="BuildReleasePackages.targets" Condition="'$(UsingToolNuGetRepack)' == 'true'" />
+
+  <!-- Repository extension point -->
+  <Import Project="$(RepositoryEngineeringDir)AfterSolutionBuild.targets" Condition="Exists('$(RepositoryEngineeringDir)AfterSolutionBuild.targets')"/>
+
+</Project>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+
+  <!--
+
+  Optional properties:
+    OfficialBuild               "true" if this is an official build
+    CIBuild                     "true" if this is a CI build
+    UseShippingAssemblyVersion  "true" to set assembly version in a dev build to a shipping one instead of 42.42.42.42
+
+  -->
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <Target Name="_InitializeAssemblyVersion" BeforeTargets="GetAssemblyVersion">
+    <PropertyGroup Condition="'$(OfficialBuild)' == 'true'">
+      <FileVersion>$(VersionPrefix).$(_BuildNumberFiveDigitDateStamp)</FileVersion>
+      <InformationalVersion>$(Version)</InformationalVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(OfficialBuild)' != 'true'">
+      <AssemblyVersion Condition="'$(UseShippingAssemblyVersion)' != 'true' and '$(CIBuild)' != 'true'">42.42.42.42</AssemblyVersion>
+      <FileVersion>42.42.42.42</FileVersion>
+      <InformationalVersion>$(FileVersion)</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+  
+</Project>

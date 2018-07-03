@@ -14,12 +14,13 @@
     <CredentialManagementVersion>1.0.2</CredentialManagementVersion>
     <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
     <log4netVersion>2.0.8</log4netVersion>
-    <MicrosoftBuildTasksCoreVersion>14.3.0</MicrosoftBuildTasksCoreVersion>
-    <MicrosoftBuildVersion>14.3.0</MicrosoftBuildVersion>
+    <SystemNetHttpVersion>4.3.3</SystemNetHttpVersion>
+    <MicrosoftBuildVersion>15.7.179</MicrosoftBuildVersion>
+    <MicrosoftBuildFrameworkVersion>15.7.179</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildTasksCoreVersion>15.7.179</MicrosoftBuildTasksCoreVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>15.7.179</MicrosoftBuildUtilitiesCoreVersion>
     <MicrosoftDotNetVersionToolsVersion>2.2.0-preview1-02815-01</MicrosoftDotNetVersionToolsVersion>
     <MicrosoftRestClientRuntimeVersion>3.0.3</MicrosoftRestClientRuntimeVersion>
-    <MicrosoftBuildFrameworkVersion>15.1.548</MicrosoftBuildFrameworkVersion>
-    <MicrosoftBuildUtilitiesCoreVersion>15.1.548</MicrosoftBuildUtilitiesCoreVersion>
     <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
     <MicrosoftNetTestSdkVersion>15.7.2</MicrosoftNetTestSdkVersion>
     <MoqVersion>4.8.3</MoqVersion>

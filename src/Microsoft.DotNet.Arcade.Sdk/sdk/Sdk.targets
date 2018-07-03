@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildThisFileFullPath);$(MSBuildAllProjects)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <!--
+    If a project specifies ExcludeFromSourceBuild=true during a source build suppress all targets and emulate a no-op
+    (empty common targets like Restore, Build, Pack, etc.).
+  -->
+  <PropertyGroup>
+    <_SuppressAllTargets>false</_SuppressAllTargets>
+    <_SuppressAllTargets Condition="'$(DotNetBuildFromSource)' == 'true' and '$(ExcludeFromSourceBuild)' == 'true'">true</_SuppressAllTargets>
+  </PropertyGroup>
+
+  <!-- 
+    Output the location of the Build.proj so that the build driver can find where it was restored.
+    Ideally we would have msbuild API to do that for an SDK: https://github.com/Microsoft/msbuild/issues/2992
+  -->
+  <Target Name="__WriteToolsetLocation" Outputs="$(__ToolsetLocationOutputFile)" Condition="'$(__ToolsetLocationOutputFile)' != ''">
+    <WriteLinesToFile File="$(__ToolsetLocationOutputFile)" Lines="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\tools\Build.proj'))" Overwrite="true"/>
+    <ItemGroup>
+      <FileWrites Include="$(__ToolsetLocationOutputFile)" />
+    </ItemGroup>
+  </Target>
+
+  <Import Project="..\tools\Imports.targets" Condition="!$(_SuppressSdkImports) and !$(_SuppressAllTargets)" />
+  <Import Project="..\tools\Empty.targets" Condition="!$(_SuppressSdkImports) and $(_SuppressAllTargets)"/>
+</Project>
