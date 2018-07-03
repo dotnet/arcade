@@ -99,17 +99,16 @@
 
     <ItemGroup>
       <!-- 
-        Publish Windows PDBs produced by SymStore.targets (only shipping PDBs are placed there).
+        Publish Windows PDBs produced by SymStore.targets (by default, only shipping PDBs are placed there).
         SymbolUploader doesn't support embedded PDBs yet, so let SymStore.targets do the conversion for now.
         https://github.com/dotnet/core-eng/issues/3645
       -->
       <FilesToPublishToSymbolServer Include="$(ArtifactsSymStoreDirectory)**\*.pdb"/>
 
       <!--
-        Publish Portable PDBs contained in the shipping symbol packages.
+        Publish Portable PDBs contained in symbol packages.
       -->
-      <PackagesToPublishToSymbolServer Include="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" 
-                                       Condition="%(IsShipping)"/>
+      <PackagesToPublishToSymbolServer Include="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)"/>
     </ItemGroup>
 
     <PropertyGroup>
