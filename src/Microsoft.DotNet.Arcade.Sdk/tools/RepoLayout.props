@@ -69,7 +69,9 @@
     <ArtifactsTmpDir>$(ArtifactsConfigurationDir)tmp\</ArtifactsTmpDir>
     <ArtifactsTestResultsDir>$(ArtifactsConfigurationDir)TestResults\</ArtifactsTestResultsDir>
     <ArtifactsSymStoreDirectory>$(ArtifactsConfigurationDir)SymStore\</ArtifactsSymStoreDirectory>
-    <PackageOutputPath>$(ArtifactsConfigurationDir)packages\</PackageOutputPath>
+    <ArtifactsPackagesDir>$(ArtifactsConfigurationDir)packages\</ArtifactsPackagesDir>
+    <ArtifactsShippingPackagesDir>$(ArtifactsPackagesDir)Shipping\</ArtifactsShippingPackagesDir>
+    <ArtifactsNonShippingPackagesDir>$(ArtifactsPackagesDir)NonShipping\</ArtifactsNonShippingPackagesDir>
     <VisualStudioSetupOutputPath>$(ArtifactsConfigurationDir)VSSetup\</VisualStudioSetupOutputPath>
     <VisualStudioSetupInsertionPath>$(VisualStudioSetupOutputPath)Insertion\</VisualStudioSetupInsertionPath>
     <VisualStudioSetupIntermediateOutputPath>$(ArtifactsConfigurationDir)VSSetup.obj\</VisualStudioSetupIntermediateOutputPath>

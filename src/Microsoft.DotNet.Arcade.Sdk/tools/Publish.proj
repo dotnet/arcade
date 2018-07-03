@@ -39,20 +39,24 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ExistingSymbolPackages Include="$(PackageOutputPath)*.symbols.nupkg" />
+      <ExistingSymbolPackages Include="$(ArtifactsShippingPackagesDir)*.symbols.nupkg" IsShipping="true" />
+      <ExistingSymbolPackages Include="$(ArtifactsNonShippingPackagesDir)*.symbols.nupkg" IsShipping="false" />
 
-      <PackagesToPublish Include="$(PackageOutputPath)*.nupkg" />
+      <PackagesToPublish Include="$(ArtifactsShippingPackagesDir)*.nupkg" IsShipping="true" />
+      <PackagesToPublish Include="$(ArtifactsNonShippingPackagesDir)*.nupkg" IsShipping="false" />
       <PackagesToPublish Remove="@(ExistingSymbolPackages)" />
+
       <PackagesToPublish Update="@(PackagesToPublish)">
         <SymbolPackageToGenerate Condition="!Exists('%(RootDir)%(Directory)%(Filename).symbols.nupkg')">$(SymbolPackagesDir)%(Filename).symbols.nupkg</SymbolPackageToGenerate>
       </PackagesToPublish>
 
       <SymbolPackagesToGenerate Include="@(PackagesToPublish->'%(SymbolPackageToGenerate)')" Condition="'%(PackagesToPublish.SymbolPackageToGenerate)' != ''">
         <OriginalPackage>%(PackagesToPublish.Identity)</OriginalPackage>
+        <IsShipping>%(PackagesToPublish.IsShipping)</IsShipping>
       </SymbolPackagesToGenerate>
     </ItemGroup>
 
-    <!--
+    <!-- 
       If a symbol package doesn't exist yet we assume that the regular package contains Portable PDBs.
       Such packages can act as symbol packages since they have the same structure.
       We just need to copy them to *.symbols.nupkg.
@@ -61,9 +65,15 @@
     <Copy SourceFiles="@(SymbolPackagesToGenerate->'%(OriginalPackage)')" DestinationFiles="@(SymbolPackagesToGenerate)" />
 
     <!-- Orchestrated Build blob storage -->
+    <ItemGroup>
+      <ItemsToPushToBlobFeed Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)">
+        <ManifestArtifactData Condition="!%(IsShipping)">NonShipping=true</ManifestArtifactData>
+      </ItemsToPushToBlobFeed>
+    </ItemGroup>
+
     <PushToBlobFeed ExpectedFeedUrl="$(AzureFeedUrl)"
                     AccountKey="$(AzureAccountKey)"
-                    ItemsToPush="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)"
+                    ItemsToPush="@(ItemsToPushToBlobFeed)"
                     ManifestName="$(BUILD_REPOSITORY_NAME)"
                     ManifestBranch="$(BUILD_SOURCEBRANCH)"
                     ManifestBuildId="$(BUILD_BUILDNUMBER)"
@@ -87,23 +97,29 @@
       <DotNetSymbolServerTokenMsdl>DryRunPTA</DotNetSymbolServerTokenMsdl>
     </PropertyGroup>
 
-    <!-- 
-      Publish Windows PDBs produced by SymStore.targets.
-      SymbolUploader doesn't support embedded PDBs yet, so let SymStore.targets do the conversion for now.
-      https://github.com/dotnet/core-eng/issues/3645
-    -->
     <ItemGroup>
-      <FilesToPublish Include="$(ArtifactsSymStoreDirectory)**\*.pdb"/>
+      <!-- 
+        Publish Windows PDBs produced by SymStore.targets (only shipping PDBs are placed there).
+        SymbolUploader doesn't support embedded PDBs yet, so let SymStore.targets do the conversion for now.
+        https://github.com/dotnet/core-eng/issues/3645
+      -->
+      <FilesToPublishToSymbolServer Include="$(ArtifactsSymStoreDirectory)**\*.pdb"/>
+
+      <!--
+        Publish Portable PDBs contained in the shipping symbol packages.
+      -->
+      <PackagesToPublishToSymbolServer Include="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" 
+                                       Condition="%(IsShipping)"/>
     </ItemGroup>
 
     <PropertyGroup>
-      <PublishToSymbolServer Condition="'@(FilesToPublish)' == '' and '@(ExistingSymbolPackages)' == '' and '@(SymbolPackagesToGenerate)' == ''">false</PublishToSymbolServer>
+      <PublishToSymbolServer Condition="'@(FilesToPublishToSymbolServer)' == '' and '@(PackagesToPublishToSymbolServer)' == ''">false</PublishToSymbolServer>
     </PropertyGroup>
 
     <!-- Symbol Uploader: MSDL -->
     <Message Importance="High" Text="Publishing symbol packages to MSDL ..." />
-    <PublishSymbols PackagesToPublish="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)"
-                    FilesToPublish="@(FilesToPublish)"
+    <PublishSymbols PackagesToPublish="@(PackagesToPublishToSymbolServer)"
+                    FilesToPublish="@(FilesToPublishToSymbolServer)"
                     PersonalAccessToken="$(DotNetSymbolServerTokenMsdl)"
                     SymbolServerPath="https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection"
                     ExpirationInDays="$(DotNetSymbolExpirationInDays)"
@@ -119,8 +135,8 @@
       Currently we need to call the task twice (https://github.com/dotnet/core-eng/issues/3489).
     -->
     <Message Importance="High" Text="Publishing symbol packages to SymWeb ..." />
-    <PublishSymbols PackagesToPublish="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)"
-                    FilesToPublish="@(FilesToPublish)"
+    <PublishSymbols PackagesToPublish="@(PackagesToPublishToSymbolServer)"
+                    FilesToPublish="@(FilesToPublishToSymbolServer)"
                     PersonalAccessToken="$(DotNetSymbolServerTokenSymWeb)"
                     SymbolServerPath="https://microsoft.artifacts.visualstudio.com/DefaultCollection"
                     ExpirationInDays="$(DotNetSymbolExpirationInDays)"
