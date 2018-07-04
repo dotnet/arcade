@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+
+  <!--
+    Generates a class source for EmbeddedResource whose GenerateSource property is set to true.
+    The source file is generated to intermediate output dir to avoid polluting the source tree.
+    See https://github.com/dotnet/sdk/issues/94 that tracks productization of this code.
+  -->
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <UsingTask TaskName="RoslynTools.GenerateResxSource" AssemblyFile="$(RoslynToolsBuildTasksAssembly)" />
+  
+  <!-- Set the Generator metadata so that VS triggers design-time build whenever the .resx file is saved -->
+  <ItemGroup>
+    <EmbeddedResource Update="@(EmbeddedResource)">
+      <Generator Condition="'%(GenerateSource)' == 'true'">MSBuild:_GenerateResxSource</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <Target Name="_GenerateResxSource"
+          BeforeTargets="CoreCompile"
+          DependsOnTargets="PrepareResourceNames;
+                            _GetEmbeddedResourcesWithSourceGeneration;
+                            _BatchGenerateResxSource">
+    <ItemGroup>
+      <GeneratedResxSource Include="@(EmbeddedResourceSG->'%(SourceOutputPath)')" />
+      <FileWrites Include="@(GeneratedResxSource)" />
+      <Compile Include="@(GeneratedResxSource)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CustomizeResourceNames"
+          BeforeTargets="PrepareResourceNames">
+    <ItemGroup>
+      <EmbeddedResource>
+        <ManifestResourceName Condition="'%(EmbeddedResource.Namespace)' != ''">%(EmbeddedResource.Namespace).%(EmbeddedResource.Filename)</ManifestResourceName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_BatchGenerateResxSource"
+          Inputs="@(EmbeddedResourceSG)"
+          Outputs="%(EmbeddedResourceSG.SourceOutputPath)">
+
+    <GenerateResxSource Language="$(Language)"
+                        ResourceFile="%(EmbeddedResourceSG.FullPath)"
+                        ResourceName="%(EmbeddedResourceSG.ManifestResourceName)"
+                        OutputPath="%(EmbeddedResourceSG.SourceOutputPath)" />
+  </Target>
+
+  <Target Name="_GetEmbeddedResourcesWithSourceGeneration">
+    <PropertyGroup>
+      <_EmbeddedResourceSourceExtension Condition="'$(Language)' == 'C#'">cs</_EmbeddedResourceSourceExtension>
+      <_EmbeddedResourceSourceExtension Condition="'$(Language)' == 'VB'">vb</_EmbeddedResourceSourceExtension>
+      <_EmbeddedResourceSourceExtension Condition="'$(Language)' == 'F#'">fs</_EmbeddedResourceSourceExtension>
+    </PropertyGroup>
+    <Error Text="GenerateResxSource doesn't support language: '$(Language)'" Condition="'$(_EmbeddedResourceSourceExtension)' == ''"/>
+    <ItemGroup>
+      <EmbeddedResourceSG Include="@(EmbeddedResource)" Condition="'%(EmbeddedResource.GenerateSource)' == 'true' and '%(EmbeddedResource.XlfLanguage)' == ''" />
+      <EmbeddedResourceSG Condition="'$(Language)' != 'F#'">
+        <SourceOutputPath>$(IntermediateOutputPath)%(EmbeddedResourceSG.ManifestResourceName).$(_EmbeddedResourceSourceExtension)</SourceOutputPath>
+      </EmbeddedResourceSG>
+    </ItemGroup>
+  </Target>
+
+</Project>

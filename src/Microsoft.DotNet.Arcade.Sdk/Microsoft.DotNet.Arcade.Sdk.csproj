@@ -1,0 +1,34 @@
+﻿<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
+    
+    <ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
+
+    <IsPackable>true</IsPackable>
+
+    <Description>Common toolset for repositories</Description>
+    <PackageTags>Roslyn Build Repository Toolset MSBuild SDK</PackageTags>
+    <DevelopmentDependency>true</DevelopmentDependency>
+
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <EnableGeneratedPackageContent>false</EnableGeneratedPackageContent>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" Publish="false" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" Publish="false" />
+    <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="sdk/Sdk.props;sdk/Sdk.targets" Pack="true">
+      <PackagePath>sdk/%(Filename)%(Extension)</PackagePath>
+    </None>
+    <None Include="tools/*.*" Pack="true">
+      <PackagePath>tools/%(Filename)%(Extension)</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <Import Project="$(RepoRoot)eng\Sdk.targets" />
+</Project>

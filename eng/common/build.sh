@@ -220,7 +220,7 @@ function GetDotNetInstallScript {
 }
 
 function InitializeToolset {
-  ReadJson $global_json_file "RoslynTools.RepoToolset"
+  ReadJson $global_json_file "Microsoft.DotNet.Arcade.Sdk"
   local toolset_version=$readjsonvalue
   local toolset_location_file="$toolset_dir/$toolset_version.txt"
 
@@ -239,7 +239,7 @@ function InitializeToolset {
   
   local proj="$toolset_dir/restore.proj"
 
-  echo '<Project Sdk="RoslynTools.RepoToolset"/>' > $proj
+  echo '<Project Sdk="Microsoft.DotNet.Arcade.Sdk"/>' > $proj
   "$build_driver" msbuild $proj /t:__WriteToolsetLocation /m /nologo /clp:None /warnaserror /bl:$toolset_restore_log /v:$verbosity /p:__ToolsetLocationOutputFile=$toolset_location_file 
   local lastexitcode=$?
 

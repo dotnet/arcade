@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+
+    <ImportNetSdkFromRepoToolset Condition="'$(ImportNetSdkFromRepoToolset)' == ''">true</ImportNetSdkFromRepoToolset>
+  </PropertyGroup>
+
+  <Import Project="BuildTasks.props" />
+  <Import Project="ProjectLayout.props" />
+  <Import Project="DefaultVersions.props"/>
+  <Import Project="StrongName.props"/>
+  <Import Project="ProjectDefaults.props"/>
+  <Import Project="Tests.props" />
+  
+  <Import Project="Compiler.props" Condition="'$(UsingToolMicrosoftNetCompilers)' == 'true'" />  
+  <Import Project="Localization.props" Condition="'$(UsingToolXliff)' == 'true'"/>
+  <Import Project="XUnit.props" Condition="'$(UsingToolXUnit)' == 'true' and ('$(IsUnitTestProject)' == 'true' or '$(IsIntegrationTestProject)' == 'true' or '$(IsPerformanceTestProject)' == 'true')"/>
+  <Import Project="VisualStudio.props" Condition="'$(UsingToolVSSDK)' == 'true'"/>
+
+  <!-- Directory.Build.props are imported next by .NET SDK (via Common.targets) -->
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition="'$(ImportNetSdkFromRepoToolset)' == 'true'" />
+</Project>
