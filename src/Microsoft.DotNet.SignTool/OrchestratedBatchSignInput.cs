@@ -3,7 +3,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using Microsoft.DotNet.SignTool.Json;
 
 namespace Microsoft.DotNet.SignTool
 {
