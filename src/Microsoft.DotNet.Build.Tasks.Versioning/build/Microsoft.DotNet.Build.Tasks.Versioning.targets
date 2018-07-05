@@ -1,0 +1,36 @@
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="GenerateVersionString" BeforeTargets="GetAssemblyVersion">
+    <GenerateVersionComponents OfficialBuildId="$(OfficialBuildId)" BaselineDate="$(BaselineDate)" SemanticVersioningV1="$(SemanticVersioningV1)">
+      <Output TaskParameter="GeneratedShortDate" PropertyName="_ShortDate" />
+      <Output TaskParameter="GeneratedRevision" PropertyName="_Revision" />
+      <Output TaskParameter="GeneratedShortSha" PropertyName="_ShortSha" />
+    </GenerateVersionComponents>
+
+    <PropertyGroup>
+      <PreReleaseLabel Condition="'$(PB_VersionStamp)' != ''">$(PB_VersionStamp)</PreReleaseLabel>
+      <PreReleaseLabel Condition="'$(PreReleaseLabel)' == ''">dev</PreReleaseLabel>
+      
+      <!-- This handles the Dev/Daily case of the versioning plan. -->
+      <VersionSuffix Condition="'$(PB_IsStable)' != 'true'">$(PreReleaseLabel).$(_ShortDate).$(_Revision)+$(_ShortSha)</VersionSuffix>
+
+      <!-- This handles the 'Final Prerelease' case of the versioning plan. -->
+      <VersionSuffix Condition="'$(PB_IsStable)' == 'true' and '$(PB_VersionStamp)' != ''">$(PB_VersionStamp).final</VersionSuffix>
+
+      <!-- This handles the 'Stable' case of the versioning plan. -->
+      <!-- For this case the version suffix is empty. -->
+      <VersionSuffix Condition="'$(PB_IsStable)' == 'true' and '$(PB_VersionStamp)' == ''"></VersionSuffix>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <VersionSuffix Condition="'$(SemanticVersioningV1)' == 'true'">$(VersionSuffix.Replace('+', '-').Replace('.', '-'))</VersionSuffix>
+
+      <FileVersion>$(MajorVersion).$(MinorVersion).$(_ShortDate).$(_Revision)</FileVersion>
+
+      <Version Condition="'$(VersionSuffix)' != ''">$(Version)-$(VersionSuffix)</Version>
+
+      <PackageVersion>$(Version)</PackageVersion>
+    </PropertyGroup>
+  </Target>
+  
+</Project>

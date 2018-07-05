@@ -10,6 +10,8 @@
         "bin/Microsoft.DotNet.Build.Tasks.Feed/net461/*/Microsoft.DotNet.Build.Tasks.Feed.resources.dll",
         "bin/Microsoft.DotNet.Build.Tasks.Packaging/net46/Microsoft.DotNet.Build.Tasks.Packaging.dll",
         "bin/Microsoft.DotNet.Build.Tasks.Packaging/netcoreapp2.0/Microsoft.DotNet.Build.Tasks.Packaging.dll",
+        "bin/Microsoft.DotNet.Build.Tasks.Versioning/netcoreapp2.0/Microsoft.DotNet.Build.Tasks.Versioning.dll",
+        "bin/Microsoft.DotNet.Build.Tasks.Versioning/net45/Microsoft.DotNet.Build.Tasks.Versioning.dll",
         "bin/Microsoft.DotNet.Helix.Client/netstandard1.4/Microsoft.DotNet.Helix.Client.dll",
         "bin/Microsoft.DotNet.Helix.Client/net461/Microsoft.DotNet.Helix.Client.dll",
         "bin/Microsoft.DotNet.Helix.Sdk/netstandard2.0/Microsoft.DotNet.Helix.Sdk.dll",

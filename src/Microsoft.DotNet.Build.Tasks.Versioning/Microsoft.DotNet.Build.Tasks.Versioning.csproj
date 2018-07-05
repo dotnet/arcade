@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.0;$(NetFxTfm)</TargetFrameworks>
+
+    <IsPackable>true</IsPackable>
+
+    <!-- Package Properties -->
+    <Title>Packaging Targets and Tasks used to create versioning information</Title>
+    <Description>
+      This package provides the following MSBuild tasks:
+
+      - GenerateVersion
+
+      This package provides the following MSBuild targets:
+
+      - GenerateVersion
+    </Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="build\*.targets">
+      <PackagePath>build\%(Filename).targets</PackagePath>
+      <Pack>true</Pack>
+    </Content>
+
+    <Content Include="build\*.props">
+      <PackagePath>build\%(Filename).props</PackagePath>
+      <Pack>true</Pack>
+    </Content>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="14.3.0" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="14.3.0" />
+  </ItemGroup>
+
+</Project>
