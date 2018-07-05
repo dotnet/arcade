@@ -50,7 +50,7 @@
     <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="$(MicrosoftDiaSymReaderPdb2PdbVersion)" Condition="'$(UsingToolPdbConverter)' == 'true'" />
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" Condition="'$(PublishingToBlobStorage)' == 'true'" />
     <PackageReference Include="RoslynTools.NuGetRepack.BuildTasks" Version="$(RoslynToolsNuGetRepackVersion)" Condition="'$(UsingToolNuGetRepack)' == 'true'" />
-    <PackageReference Include="Microsoft.DotNet.SignTool" Version="$(RoslynToolsSignToolVersion)" />
+    <PackageReference Include="Microsoft.DotNet.SignTool" Version="$(MicrosoftDotNetSignToolVersion)" />
     <PackageReference Include="RoslynTools.ModifyVsixManifest" Version="$(RoslynToolsModifyVsixManifestVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" />
     <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" Condition="'$(UsingToolSymbolUploader)' == 'true'" />
   </ItemGroup>
