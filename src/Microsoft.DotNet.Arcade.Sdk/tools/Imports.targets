@@ -41,6 +41,7 @@
 
   <Import Project="XUnit.targets" Condition="'$(UsingToolXUnit)' == 'true'"/>
   <Import Project="Performance.targets" />
+  <Import Project="Localization.targets" Condition="'$(UsingToolXliff)' == 'true'"/>
   <Import Project="VisualStudio.targets" Condition="'$(UsingToolVSSDK)' == 'true' and '$(DesignTimeBuild)' != 'true' and '$(BuildingForLiveUnitTesting)' != 'true' and '$(MSBuildRuntimeType)' != 'Core'"/>
   <Import Project="OptimizationData.targets" Condition="'$(UsingToolIbcOptimization)' == 'true' and '$(IbcOptimizationDataDir)' != ''"/>
   <Import Project="SymStore.targets" Condition="'$(CIBuild)' == 'true' and '$(OS)' == 'Windows_NT'"/>
