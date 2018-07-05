@@ -1,3 +1,5 @@
+using System;
+
 namespace Microsoft.DotNet.SignTool
 {
     internal readonly struct SignToolArgs
@@ -36,6 +38,16 @@ namespace Microsoft.DotNet.SignTool
             Test = test;
             TestSign = testSign;
             OrchestrationManifestPath = orchestrationManifestPath;
+
+            if (String.IsNullOrEmpty(OutputPath))
+            {
+                throw new ArgumentException("Need a value for OutputPath.");
+            }
+
+            if (!test && String.IsNullOrEmpty(MSBuildPath))
+            {
+                throw new ArgumentException("msbuildpath argument must be specified unless running in validation-only (test) mode.");
+            }
         }
     }
 }
