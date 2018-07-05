@@ -65,7 +65,7 @@
     Project that produce tools packages use .nuspec file in order to include all the needed dependencies.
     This target translates common msbuild properties to NuSpec properties.
   -->
-  <Target Name="_InitializeStandardNuspecProperties" 
+  <Target Name="InitializeStandardNuspecProperties" 
           BeforeTargets="GenerateNuspec"
           DependsOnTargets="_InitializeNuspecRepositoryInformationPropertiesWorkaround"
           Condition="'$(NuspecFile)' != '' and '$(NuspecProperties)' == ''">
@@ -78,26 +78,26 @@
     <Error Text="PackageProjectUrl must be specified" Condition="'$(PackageProjectUrl)' == ''"/>
 
     <ItemGroup>
-      <_Prop Include="PackageId=$(PackageId)"/>
-      <_Prop Include="Authors=$(Authors)"/>
-      <_Prop Include="Description=$(Description)"/>    
-      <_Prop Include="Copyright=$(Copyright)"/>
-      <_Prop Include="Version=$(Version)"/>
-      <_Prop Include="Serviceable=$(Serviceable)"/>    
-      <_Prop Include="DevelopmentDependency=$(DevelopmentDependency)"/>                        
-      <_Prop Include="RequireLicenseAcceptance=$(PackageRequireLicenseAcceptance)"/>                                     
-      <_Prop Include="PackageLicenseUrl=$(PackageLicenseUrl)"/>                
-      <_Prop Include="PackageProjectUrl=$(PackageProjectUrl)"/>                
-      <_Prop Include="PackageIconUrl=$(PackageIconUrl)" Condition="'$(PackageIconUrl)' != ''" />          
-      <_Prop Include="PackageReleaseNotes=$(PackageReleaseNotes)" Condition="'$(PackageReleaseNotes)' != ''" />                    
-      <_Prop Include="PackageTags=$(PackageTags)" Condition="'$(PackageTags)' != ''" />    
-      <_Prop Include="RepositoryUrl=$(RepositoryUrl)" Condition="'$(RepositoryUrl)' != ''" />        
-      <_Prop Include="RepositoryType=$(RepositoryType)" Condition="'$(RepositoryType)' != ''" />          
-      <_Prop Include="RepositoryCommit=$(RepositoryCommit)" Condition="'$(RepositoryCommit)' != ''" />              
-      <_Prop Include="ProjectDirectory=$(MSBuildProjectDirectory)"/>                     
+      <NuSpecProperty Include="PackageId=$(PackageId)"/>
+      <NuSpecProperty Include="Authors=$(Authors)"/>
+      <NuSpecProperty Include="Description=$(Description)"/>    
+      <NuSpecProperty Include="Copyright=$(Copyright)"/>
+      <NuSpecProperty Include="Version=$(Version)"/>
+      <NuSpecProperty Include="Serviceable=$(Serviceable)"/>    
+      <NuSpecProperty Include="DevelopmentDependency=$(DevelopmentDependency)"/>                        
+      <NuSpecProperty Include="RequireLicenseAcceptance=$(PackageRequireLicenseAcceptance)"/>                                     
+      <NuSpecProperty Include="PackageLicenseUrl=$(PackageLicenseUrl)"/>                
+      <NuSpecProperty Include="PackageProjectUrl=$(PackageProjectUrl)"/>                
+      <NuSpecProperty Include="PackageIconUrl=$(PackageIconUrl)" Condition="'$(PackageIconUrl)' != ''" />          
+      <NuSpecProperty Include="PackageReleaseNotes=$(PackageReleaseNotes)" Condition="'$(PackageReleaseNotes)' != ''" />                    
+      <NuSpecProperty Include="PackageTags=$(PackageTags)" Condition="'$(PackageTags)' != ''" />    
+      <NuSpecProperty Include="RepositoryUrl=$(RepositoryUrl)" Condition="'$(RepositoryUrl)' != ''" />        
+      <NuSpecProperty Include="RepositoryType=$(RepositoryType)" Condition="'$(RepositoryType)' != ''" />          
+      <NuSpecProperty Include="RepositoryCommit=$(RepositoryCommit)" Condition="'$(RepositoryCommit)' != ''" />              
+      <NuSpecProperty Include="ProjectDirectory=$(MSBuildProjectDirectory)"/>                     
     </ItemGroup>
     <PropertyGroup>
-      <NuspecProperties>@(_Prop, ';')</NuspecProperties>
+      <NuspecProperties>@(NuSpecProperty, ';')</NuspecProperties>
     </PropertyGroup>
   </Target>
 
