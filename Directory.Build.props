@@ -12,7 +12,7 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
     <PackageReference Include="Microsoft.SourceLink.Vsts.Git" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" />
   </ItemGroup>
 
