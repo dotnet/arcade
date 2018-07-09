@@ -45,7 +45,7 @@
     <ItemGroup>
       <_FilesToCopy Include="$(OutDir)\*" />
       <TfmSpecificPackageFile Include="@(_FilesToCopy)">
-        <PackagePath>build/$(targetframework)/%(_FilesToCopy.Filename).%(_FilesToCopy.Extension)</PackagePath>
+        <PackagePath>build/$(targetframework)/%(_FilesToCopy.Filename)%(_FilesToCopy.Extension)</PackagePath>
       </TfmSpecificPackageFile>
     </ItemGroup>
   </Target>
