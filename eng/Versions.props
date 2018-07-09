@@ -24,7 +24,7 @@
     <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
     <MicrosoftNetTestSdkVersion>15.7.2</MicrosoftNetTestSdkVersion>
     <MoqVersion>4.8.3</MoqVersion>
-    <NewtonsoftJsonVersion>10.0.1</NewtonsoftJsonVersion>
+    <NewtonsoftJsonVersion>11.0.2</NewtonsoftJsonVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <OctokitVersion>0.30.0</OctokitVersion>
     <SleetLibVersion>2.2.24</SleetLibVersion>
