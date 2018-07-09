@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <MicrosoftDotNetSignToolTaskAssembly Condition=" '$(MSBuildRuntimeType)' == 'Core' ">$(MSBuildThisFileDirectory)..\lib\netcoreapp2.0\Microsoft.DotNet.SignTool.dll</MicrosoftDotNetSignToolTaskAssembly>
-    <MicrosoftDotNetSignToolTaskAssembly Condition=" '$(MSBuildRuntimeType)' != 'Core' ">$(MSBuildThisFileDirectory)..\lib\net472\Microsoft.DotNet.SignTool.exe</MicrosoftDotNetSignToolTaskAssembly>
+    <MicrosoftDotNetSignToolTaskAssembly Condition=" '$(MSBuildRuntimeType)' == 'Core' ">$(MSBuildThisFileDirectory)netcoreapp2.0\Microsoft.DotNet.SignTool.dll</MicrosoftDotNetSignToolTaskAssembly>
+    <MicrosoftDotNetSignToolTaskAssembly Condition=" '$(MSBuildRuntimeType)' != 'Core' ">$(MSBuildThisFileDirectory)net461\Microsoft.DotNet.SignTool.exe</MicrosoftDotNetSignToolTaskAssembly>
   </PropertyGroup>
 
   <PropertyGroup>

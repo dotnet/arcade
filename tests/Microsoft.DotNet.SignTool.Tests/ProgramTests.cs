@@ -6,7 +6,6 @@ using Xunit;
 
 namespace Microsoft.DotNet.SignTool.Tests
 {
-    /*
     public class ProgramTests
     {
         public class ReadConfigFileTests : ProgramTests
@@ -117,5 +116,4 @@ namespace Microsoft.DotNet.SignTool.Tests
             }
         }
     }
-    */
 }
