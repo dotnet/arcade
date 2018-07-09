@@ -1,0 +1,46 @@
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project DefaultTargets="Sign">
+  <!--
+    Required parameters:
+      VersionsPropsPath             Versions.props path. 
+      FixedVersionsPropsPath        FixedVersions.props path.
+      ConfigFile                    SigntToolData.json path.
+      RealSign                      "true" to send binaries to the signing service, "false" to only validate signing configuration.
+
+    Optional parameters:
+      OutputConfigFile              If specified, output a manifest similar to SignToolData.json but with checksums of all relevant files included 
+                                    for reassembly later when only zip archives are available.  If this file is later used as the '-config' file, 
+                                    SignTool will attempt to unpack all zips provided and match on checksums for any missing files.
+  -->
+
+  <Import Project="Microsoft.DotNet.SignTool.props" />
+
+  <Target Name="Sign">
+    <Exec Command='"$(MSBuildProjectDirectory)\vswhere.exe" -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild'
+          Condition="'$(RealSign)' == 'true'"
+          ConsoleToMsBuild="true"
+          StandardErrorImportance="high">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_VsInstallDir" />
+    </Exec>
+
+    <ItemGroup>
+      <IsTest Condition="'$(RealSign)' != 'true'">true</IsTest>
+      <TestSign Condition="'$(RealSign)' == 'true'">false</TestSign>
+      <MSBuildPath Condition="'$(RealSign)' == 'true'">"$(_VsInstallDir)\MSBuild\15.0\Bin\msbuild.exe"</MSBuildPath>
+      <OutputConfig Condition="'$(OutputConfigFile)' != ''">"$(OutputConfigFile)"</OutputConfig>
+    </ItemGroup>
+
+    <SignToolTask 
+      Test='$(IsTest)'
+      TestSign="$(TestSign)"
+      NuGetPackagesPath='$(NuGetPackageRoot)'
+      IntermediateOutputPath='"$(ArtifactsObjDir)\"'
+      ConfigFilePath='$(ConfigFile)'
+      MSBuildPath='$(MSBuildPath)'
+      OutputPath='"$(ArtifactsConfigurationDir)\"'
+      OrchestrationManifestPath="$(OutputConfig)"
+      AppBaseDirectory="$(AppBaseDir)"
+      MSBuildBinaryLogFilePath="$(msbuildBinaryLogFilePath)"/>
+  </Target>
+
+</Project>

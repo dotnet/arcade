@@ -3,7 +3,6 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
-    <CopyLocalLockFileAssemblies Condition="'$(TargetFramework)' == 'netcoreapp2.0'">true</CopyLocalLockFileAssemblies>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>7.2</LangVersion>
     <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -45,7 +44,7 @@
     <ItemGroup>
       <_FilesToCopy Include="$(OutDir)\*" />
       <TfmSpecificPackageFile Include="@(_FilesToCopy)">
-        <PackagePath>build/$(targetframework)/%(_FilesToCopy.Filename).%(_FilesToCopy.Extension)</PackagePath>
+        <PackagePath>build/$(targetframework)/%(_FilesToCopy.Filename)%(_FilesToCopy.Extension)</PackagePath>
       </TfmSpecificPackageFile>
     </ItemGroup>
   </Target>

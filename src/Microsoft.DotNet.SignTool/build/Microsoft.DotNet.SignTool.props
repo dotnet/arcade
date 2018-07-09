@@ -5,6 +5,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <IsTest>false</IsTest>
+    <TestSign>true</TestSign>
   </PropertyGroup>
 
   <UsingTask TaskName="Microsoft.DotNet.SignTool.SignToolTask" AssemblyFile="$(MicrosoftDotNetSignToolTaskAssembly)" />
