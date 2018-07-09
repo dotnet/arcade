@@ -1,11 +1,18 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Target Name="SignIt" AfterTargets="Build">
-    <Message Text="Starting SignIt..." Importance="high" />
+  <Target Name="SignIt">
 
-    <SignToolTask Test="true" OutputPath="c:\" />
+    <SignToolTask Test="$(Test)" 
+                  TestSign="$(TestSign)"
+                  NuGetPackagesPath="$(nugetPackagesPath)"
+                  OrchestrationManifestPath="$(orchestrationManifestPath)"
+                  ConfigFilePath="$(configFilePath)"
+                  AppBaseDirectory="$(appBaseDirectory)"
+                  IntermediateOutputPath="$(intermediateOutputPath)"
+                  MSBuildBinaryLogFilePath="$(msbuildBinaryLogFilePath)"
+                  MSBuildPath="$(msbuildPath)"
+                  OutputPath="$(OutputPath)"/>
     
-    <Message Text="Ended SignIt..." Importance="high" />
   </Target>
   
 </Project>

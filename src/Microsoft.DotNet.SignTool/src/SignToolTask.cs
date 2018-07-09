@@ -12,32 +12,32 @@ namespace Microsoft.DotNet.SignTool
         private const bool ExitWithFailure = false;
 
         public bool Test { get; set; }
-        public bool testsign { get; set; }
+        public bool TestSign { get; set; }
 
-        public string nugetPackagesPath { get; set; }
-        public string orchestrationManifestPath { get; set; }
-        public string configFilePath { get; set; }
-        public string appBaseDirectory { get; set; }
-        public string intermediateOutputPath { get; set; }
-        public string msbuildBinaryLogFilePath { get; set; }
-        public string msbuildPath { get; set; }
-        public string outputPath { get; set; }
+        public string NuGetPackagesPath { get; set; }
+        public string OrchestrationManifestPath { get; set; }
+        public string ConfigFilePath { get; set; }
+        public string AppBaseDirectory { get; set; }
+        public string IntermediateOutputPath { get; set; }
+        public string MSBuildBinaryLogFilePath { get; set; }
+        public string MSBuildPath { get; set; }
+        public string OutputPath { get; set; }
 
         public override bool Execute()
         {
             try
             {
                 var signToolArgs = new SignToolArgs(
-                    outputPath: outputPath,
-                    msbuildPath: msbuildPath,
-                    msbuildBinaryLogFilePath: msbuildBinaryLogFilePath,
-                    intermediateOutputPath: intermediateOutputPath,
-                    nugetPackagesPath: nugetPackagesPath,
-                    appPath: appBaseDirectory,
-                    configFile: configFilePath,
+                    outputPath: OutputPath,
+                    msbuildPath: MSBuildPath,
+                    msbuildBinaryLogFilePath: MSBuildBinaryLogFilePath,
+                    intermediateOutputPath: IntermediateOutputPath,
+                    nugetPackagesPath: NuGetPackagesPath,
+                    appPath: AppBaseDirectory,
+                    configFile: ConfigFilePath,
                     test: Test,
-                    testSign: testsign,
-                    orchestrationManifestPath: orchestrationManifestPath);
+                    testSign: TestSign,
+                    orchestrationManifestPath: OrchestrationManifestPath);
 
                 BatchSignInput batchData;
                 var signTool = SignToolFactory.Create(signToolArgs);
