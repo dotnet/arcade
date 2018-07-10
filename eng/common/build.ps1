@@ -181,7 +181,7 @@ function GetBuildCommand() {
 }
 
 function InitializeToolset([string] $buildDriver, [string]$buildArgs) {
-  $toolsetVersion = $GlobalJson.'msbuild-sdks'.'RoslynTools.RepoToolset'
+  $toolsetVersion = $GlobalJson.'msbuild-sdks'.'Microsoft.DotNet.Arcade.Sdk'
   $toolsetLocationFile = Join-Path $ToolsetDir "$toolsetVersion.txt"
 
   if (Test-Path $toolsetLocationFile) {
@@ -199,7 +199,7 @@ function InitializeToolset([string] $buildDriver, [string]$buildArgs) {
 
   $proj = Join-Path $ToolsetDir "restore.proj"  
 
-  '<Project Sdk="RoslynTools.RepoToolset"/>' | Set-Content $proj
+  '<Project Sdk="Microsoft.DotNet.Arcade.Sdk"/>' | Set-Content $proj
   & $buildDriver $buildArgs $proj /t:__WriteToolsetLocation /m /nologo /clp:None /warnaserror /bl:$ToolsetRestoreLog /v:$verbosity /p:__ToolsetLocationOutputFile=$toolsetLocationFile
     
   if ($lastExitCode -ne 0) {

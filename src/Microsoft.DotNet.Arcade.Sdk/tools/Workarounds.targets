@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <!--
+    Workaround for incorrect implementation of _LoadPackInputItems target in NuGet.Build.Tasks.Pack.targets.
+    The target was fixed in 15.3 but we need to support 15.1 until MicroBuild upgrades.
+  -->
+  <PropertyGroup Condition="'$(PackProjectInputFile)' == ''">
+    <PackProjectInputFile>$(MSBuildProjectFullPath)</PackProjectInputFile>
+  </PropertyGroup>
+
+  <!-- Workaround for https://github.com/Microsoft/msbuild/issues/1310 -->
+  <Target Name="ForceGenerationOfBindingRedirects"
+          AfterTargets="ResolveAssemblyReferences"
+          BeforeTargets="GenerateBindingRedirects"
+          Condition="'$(AutoGenerateBindingRedirects)' == 'true'">
+    <PropertyGroup>
+      <!-- Needs to be set in a target because it has to be set after the initial evaluation in the common targets -->
+      <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    </PropertyGroup>
+  </Target>
+
+  <!--
+    Workaround to fix IntelliSense file generation for XAML projects
+    https://github.com/dotnet/project-system/issues/2488
+  -->
+  <Target Name="WorkaroundForXamlIntelliSenseBuildIssue" AfterTargets="_CheckCompileDesignTimePrerequisite">
+    <PropertyGroup>
+      <BuildingProject>false</BuildingProject>
+    </PropertyGroup>
+  </Target>
+
+  <!--
+    XAML targets create a temp project with OutDir set, which makes the SDK create an empty directory for it,
+    polluting the output dir. Avoid creating these directories.
+    https://github.com/dotnet/sdk/issues/1367
+  -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.tmp_proj'">
+    <OutDir/>
+  </PropertyGroup>
+
+  <!--
+    Workaround for a race condition https://github.com/Microsoft/msbuild/issues/1479.
+  -->
+  <PropertyGroup>
+    <TargetFrameworkMonikerAssemblyAttributesPath>$(IntermediateOutputPath)$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)</TargetFrameworkMonikerAssemblyAttributesPath>
+  </PropertyGroup>
+
+  <!-- Portable PDBs are not included by default -->
+  <PropertyGroup Condition="'$(DebugType)' == 'portable'">
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+
+  <!--
+    Workarounds for insufficient support for tools packages by NuGet Pack: https://github.com/NuGet/Home/issues/6321.
+    
+    Project that produce tools packages use .nuspec file in order to include all the needed dependencies.
+    This target translates common msbuild properties to NuSpec properties.
+  -->
+  <Target Name="_InitializeStandardNuspecProperties" 
+          BeforeTargets="GenerateNuspec"
+          DependsOnTargets="_InitializeNuspecRepositoryInformationPropertiesWorkaround"
+          Condition="'$(NuspecFile)' != '' and '$(NuspecProperties)' == ''">
+
+    <PropertyGroup>
+      <PackageProjectUrl Condition="'$(PackageProjectUrl)' == ''">$(RepositoryUrl)</PackageProjectUrl>
+    </PropertyGroup>
+
+    <Error Text="Description must be specified" Condition="'$(Description)' == ''"/>
+    <Error Text="PackageProjectUrl must be specified" Condition="'$(PackageProjectUrl)' == ''"/>
+
+    <ItemGroup>
+      <_Prop Include="PackageId=$(PackageId)"/>
+      <_Prop Include="Authors=$(Authors)"/>
+      <_Prop Include="Description=$(Description)"/>    
+      <_Prop Include="Copyright=$(Copyright)"/>
+      <_Prop Include="Version=$(Version)"/>
+      <_Prop Include="Serviceable=$(Serviceable)"/>    
+      <_Prop Include="DevelopmentDependency=$(DevelopmentDependency)"/>                        
+      <_Prop Include="RequireLicenseAcceptance=$(PackageRequireLicenseAcceptance)"/>                                     
+      <_Prop Include="PackageLicenseUrl=$(PackageLicenseUrl)"/>                
+      <_Prop Include="PackageProjectUrl=$(PackageProjectUrl)"/>                
+      <_Prop Include="PackageIconUrl=$(PackageIconUrl)" Condition="'$(PackageIconUrl)' != ''" />          
+      <_Prop Include="PackageReleaseNotes=$(PackageReleaseNotes)" Condition="'$(PackageReleaseNotes)' != ''" />                    
+      <_Prop Include="PackageTags=$(PackageTags)" Condition="'$(PackageTags)' != ''" />    
+      <_Prop Include="RepositoryUrl=$(RepositoryUrl)" Condition="'$(RepositoryUrl)' != ''" />        
+      <_Prop Include="RepositoryType=$(RepositoryType)" Condition="'$(RepositoryType)' != ''" />          
+      <_Prop Include="RepositoryCommit=$(RepositoryCommit)" Condition="'$(RepositoryCommit)' != ''" />              
+      <_Prop Include="ProjectDirectory=$(MSBuildProjectDirectory)"/>                     
+    </ItemGroup>
+    <PropertyGroup>
+      <NuspecProperties>@(_Prop, ';')</NuspecProperties>
+    </PropertyGroup>
+  </Target>
+
+  <!--
+    Initialize Repository* properties from properties set by a source control package, if available in the project.
+  -->
+  <Target Name="_InitializeNuspecRepositoryInformationPropertiesWorkaround"
+          DependsOnTargets="InitializeSourceControlInformation"
+          Condition="'$(SourceControlInformationFeatureSupported)' == 'true'">
+    <PropertyGroup>
+      <!-- The project must specify PublishRepositoryUrl=true in order to publish the URL, in order to prevent inadvertent leak of internal URL. -->
+      <RepositoryUrl Condition="'$(RepositoryUrl)' == '' and '$(PublishRepositoryUrl)' == 'true'">$(PrivateRepositoryUrl)</RepositoryUrl>
+      <RepositoryCommit Condition="'$(RepositoryCommit)' == ''">$(SourceRevisionId)</RepositoryCommit>
+    </PropertyGroup>
+  </Target>
+
+  <!-- 
+    Publish before packaging (see https://github.com/NuGet/Home/issues/6321).
+    Note: TargetFrameworkIdentifier is defined by the .NET SDK imported before these targets
+  -->
+  <PropertyGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(NuspecFile)' != ''">
+    <TargetsForTfmSpecificContentInPackage>Publish;$(TargetsForTfmSpecificContentInPackage)</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <!--
+    Workaround for not having VS 15.7 on MicroBuild machines.
+    Remove when machines are upgraded.
+  -->
+  <Target Name="InitializeSourceControlInformation" />
+  <PropertyGroup>
+    <SourceControlInformationFeatureSupported>true</SourceControlInformationFeatureSupported>
+  </PropertyGroup>
+
+</Project>

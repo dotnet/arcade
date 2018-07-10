@@ -18,7 +18,7 @@
     <Description>This package provides support for publishing assets to a nuget protocol based feed.</Description>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
+  <PropertyGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'">
       <NuGetRuntimeIdentifier>win7-x64</NuGetRuntimeIdentifier>
       <PackageTargetFallback>$(PackageTargetFallback);net46</PackageTargetFallback>
   </PropertyGroup>
@@ -33,10 +33,10 @@
     <PackageReference Include="SleetLib" Version="$(SleetLibVersion)" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+  <ItemGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'">
     <PackageReference Include="NuGet.Versioning" Version="$(NuGetVersioningVersion)" />
     <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersioningVersion)" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="System.Reflection.Metadata" Version="1.4.1" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.4.0-beta-24813-03" />
   </ItemGroup>
@@ -50,7 +50,7 @@
     <PackageReference Include="WindowsAzure.Storage" Version="8.5.0" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+  <ItemGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'">
     <Reference Include="Microsoft.Build.Tasks.v4.0" />
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.Build.Utilities.v4.0" />
