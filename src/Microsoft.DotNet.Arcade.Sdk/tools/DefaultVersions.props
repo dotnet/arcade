@@ -41,7 +41,7 @@
     <UsingToolSymbolUploader Condition="'$(UsingToolSymbolUploader)' == ''">false</UsingToolSymbolUploader>
 
     <!-- Default versions -->
-    <MicroBuildPluginsSwixBuildVersion Condition="'$(MicroBuildPluginsSwixBuildVersion)' == ''">1.0.147</MicroBuildPluginsSwixBuildVersion>
+    <MicroBuildPluginsSwixBuildVersion Condition="'$(MicroBuildPluginsSwixBuildVersion)' == ''">1.0.422</MicroBuildPluginsSwixBuildVersion>
     <MicroBuildCoreVersion Condition="'$(MicroBuildCoreVersion)' == ''">0.2.0</MicroBuildCoreVersion>
     <MicrosoftDotNetIBCMergeVersion Condition="'$(MicrosoftDotNetIBCMergeVersion)' == ''">4.7.1-alpha-00001</MicrosoftDotNetIBCMergeVersion>
     <MicrosoftNetCompilersVersion Condition="'$(MicrosoftNetCompilersVersion)' == ''">2.8.0</MicrosoftNetCompilersVersion>
