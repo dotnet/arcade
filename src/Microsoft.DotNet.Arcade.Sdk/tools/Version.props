@@ -9,11 +9,8 @@
     <PreReleaseLabel Condition="'$(CIBuild)' == 'true'">ci</PreReleaseLabel>
     <PreReleaseLabel Condition="'$(PreReleaseLabel)' == ''">dev</PreReleaseLabel>
 
-    <!-- First 8 chars from the SHA -->
-    <ShortSha>$(SourceRevisionId.Substring(0, 8))</ShortSha>
-
-    <BuildId Condition="'$(OfficialBuild)' == 'true'">$(OfficialBuildId)</BuildId>
-    <BuildId Condition="'$(OfficialBuild)' != 'true'">$([System.DateTime]::Now.ToString(yyyyMMdd)).0</BuildId>
+    <BuildId>$(OfficialBuildId)</BuildId>
+    <BuildId Condition="'$(BuildId)' == ''">$([System.DateTime]::Now.ToString(yyyyMMdd)).0</BuildId>
 
     <!--
         Split the build parts out from the BuildNumber which is given to us by MicroBuild in the format of yyyymmdd.nn

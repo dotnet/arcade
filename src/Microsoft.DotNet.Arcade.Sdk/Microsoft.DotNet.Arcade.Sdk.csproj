@@ -13,6 +13,7 @@
 
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
     <EnableGeneratedPackageContent>false</EnableGeneratedPackageContent>
+    <Version>1.10.1-dev</Version>
   </PropertyGroup>
 
   <ItemGroup>

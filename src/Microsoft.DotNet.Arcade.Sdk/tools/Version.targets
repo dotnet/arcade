@@ -3,12 +3,11 @@
 <Project>
 
   <!--
-
   Optional properties:
-    OfficialBuild               "true" if this is an official build
+    OfficialBuildId             Contains the build id if this is an official build, otherwise must be empty.
     CIBuild                     "true" if this is a CI build
     UseShippingAssemblyVersion  "true" to set assembly version in a dev build to a shipping one instead of 42.42.42.42
-
+    UseShippingFileVersion      "true" to set file version in a dev build to a shipping one instead of 42.42.42.42
   -->
 
   <PropertyGroup>
@@ -16,20 +15,26 @@
   </PropertyGroup>
 
   <Target Name="_InitializeAssemblyVersion" BeforeTargets="GetAssemblyVersion">
-    <PropertyGroup Condition="'$(OfficialBuild)' == 'true'">
+    <PropertyGroup Condition="'$(OfficialBuildId)' != ''">
       <FileVersion>$(VersionPrefix).$(_BuildNumberFiveDigitDateStamp)</FileVersion>
       <InformationalVersion>$(Version)</InformationalVersion>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(OfficialBuild)' != 'true'">
+    <PropertyGroup Condition="'$(OfficialBuildId)' == ''">
       <AssemblyVersion Condition="'$(UseShippingAssemblyVersion)' != 'true' and '$(CIBuild)' != 'true'">42.42.42.42</AssemblyVersion>
-      <FileVersion>42.42.42.42</FileVersion>
-      <InformationalVersion>$(FileVersion)</InformationalVersion>
+      <FileVersion Condition="'$(UseShippingFileVersion)' != 'true' and '$(CIBuild)' != 'true'">42.42.42.42</FileVersion>
+      <InformationalVersion>42.42.42.42</InformationalVersion>
     </PropertyGroup>
   </Target>
 
   <Target Name="_InitializePackageVersion" BeforeTargets="GenerateNuSpec" DependsOnTargets="InitializeSourceControlInformation">
-    <PackageVersion>$(Version)+$(ShortSha)</PackageVersion>
+    <PropertyGroup>
+      <!-- First 8 chars from the SHA -->
+      <ShortSha>$(SourceRevisionId)</ShortSha>
+      <ShortSha Condition="$(SourceRevisionId.Length) &gt; 7">$(SourceRevisionId.Substring(0, 8))</ShortSha>
+
+      <PackageVersion>$(Version)+$(ShortSha)</PackageVersion>
+    </PropertyGroup>
   </Target>
   
 </Project>
