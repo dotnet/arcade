@@ -27,5 +27,9 @@
       <InformationalVersion>$(FileVersion)</InformationalVersion>
     </PropertyGroup>
   </Target>
+
+  <Target Name="_InitializePackageVersion" BeforeTargets="GenerateNuSpec" DependsOnTargets="InitializeSourceControlInformation">
+    <PackageVersion>$(Version)+$(ShortSha)</PackageVersion>
+  </Target>
   
 </Project>
