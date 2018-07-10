@@ -26,6 +26,7 @@ Packages which are always included when consuming the SDK. Functionality of thes
 * Publishing
 * Helix related
 * Versioning
+
 // TODO: add missing. Also I know there has been some talks about making Versioning non-mandatory
 
 ### Level 2
@@ -55,4 +56,4 @@ The SDK supports the concept of "graduation" where if a package in a lower level
 ## Requirements
 
 Each package in the SDK is and will be governed by the same set of requirements all packages under Arcade currently are. You can find more details about these requirements
-[here](https://github.com/dotnet/arcade/blob/master/Documentation/Overview.md#toolset-nuget-package-requirements)
+[here](https://github.com/dotnet/arcade/blob/master/Documentation/Overview.md#toolset-nuget-package-requirements).
