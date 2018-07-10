@@ -1,4 +1,4 @@
-﻿<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project DefaultTargets="Sign">
   <!--
     Required parameters:
@@ -8,12 +8,15 @@
       RealSign                      "true" to send binaries to the signing service, "false" to only validate signing configuration.
 
     Optional parameters:
+      UseSigningExecutable          Whether to use the executable or MSBuild task version of the SignTool.
       OutputConfigFile              If specified, output a manifest similar to SignToolData.json but with checksums of all relevant files included 
                                     for reassembly later when only zip archives are available.  If this file is later used as the '-config' file, 
                                     SignTool will attempt to unpack all zips provided and match on checksums for any missing files.
   -->
 
   <Import Project="BuildStep.props" />
+
+  <Import Project="$(NuGetPackageRoot)microsoft.dotnet.signtool\$(MicrosoftDotNetSignToolVersion)\build\Microsoft.DotNet.SignTool.props" />
 
   <Target Name="Sign">
     <Exec Command='"$(MSBuildProjectDirectory)\vswhere.exe" -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild'
@@ -23,6 +26,15 @@
       <Output TaskParameter="ConsoleOutput" PropertyName="_VsInstallDir" />
     </Exec>
 
+    <!-- Arguments for the Task version. -->
+    <ItemGroup>
+      <IsTest Condition="'$(RealSign)' != 'true'">true</IsTest>
+      <TestSign Condition="'$(RealSign)' == 'true'">false</TestSign>
+      <MSBuildPath Condition="'$(RealSign)' == 'true'">"$(_VsInstallDir)\MSBuild\15.0\Bin\msbuild.exe"</MSBuildPath>
+      <OutputConfig Condition="'$(OutputConfigFile)' != ''">"$(OutputConfigFile)"</OutputConfig>
+    </ItemGroup>
+
+    <!-- Arguments for the executable version. -->
     <ItemGroup>
       <SignToolArgs Include='-outputconfig "$(OutputConfigFile)"' Condition="'$(OutputConfigFile)' != ''" />      
       <SignToolArgs Include='-nugetPackagesPath "$(NuGetPackageRoot)\"' />
@@ -32,9 +44,24 @@
       <SignToolArgs Include='-msbuildpath "$(_VsInstallDir)\MSBuild\15.0\Bin\msbuild.exe"' Condition="'$(RealSign)' == 'true'"/>
       <SignToolArgs Include='"$(ArtifactsConfigurationDir)\"' />
     </ItemGroup>
-    
-    <Exec Command="$(NuGetPackageRoot)roslyntools.signtool\$(RoslynToolsSignToolVersion)\tools\SignTool.exe @(SignToolArgs, ' ')"
+
+    <Exec Condition="'$(UseSigningExecutable)' == 'true'" 
+          Command="$(NuGetPackageRoot)microsoft.dotnet.signtool\$(MicrosoftDotNetSignToolVersion)\build\net461\Microsoft.DotNet.SignTool.exe @(SignToolArgs, ' ')" 
           LogStandardErrorAsError="true" />
+
+    <SignToolTask
+          Condition="'$(UseSigningExecutable)' != 'true'"
+          Test='$(IsTest)'
+          TestSign="$(TestSign)"
+          NuGetPackagesPath='$(NuGetPackageRoot)'
+          IntermediateOutputPath='"$(ArtifactsObjDir)\"'
+          ConfigFilePath='$(ConfigFile)'
+          MSBuildPath='$(MSBuildPath)'
+          OutputPath='"$(ArtifactsConfigurationDir)\"'
+          OrchestrationManifestPath="$(OutputConfig)"
+          AppBaseDirectory="$(AppBaseDir)"
+          MSBuildBinaryLogFilePath="$(msbuildBinaryLogFilePath)"/>
+    
   </Target>
 
 </Project>
