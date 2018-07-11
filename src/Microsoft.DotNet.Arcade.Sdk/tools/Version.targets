@@ -3,11 +3,12 @@
 <Project>
 
   <!--
-  Optional properties:
-    OfficialBuildId             Contains the build id if this is an official build, otherwise must be empty.
-    CIBuild                     "true" if this is a CI build
-    UseShippingAssemblyVersion  "true" to set assembly version in a dev build to a shipping one instead of 42.42.42.42
-    UseShippingFileVersion      "true" to set file version in a dev build to a shipping one instead of 42.42.42.42
+    Properties:
+      OfficialBuildId             Contains the build id if this is an official build, otherwise must be empty.
+      SourceRevisionId            Contains the SHA of the repo being built.
+      CIBuild                     "true" if this is a CI build
+      UseShippingAssemblyVersion  "true" to set assembly version in a dev build to a shipping one instead of 42.42.42.42
+      UseShippingFileVersion      "true" to set file version in a dev build to a shipping one instead of 42.42.42.42
   -->
 
   <PropertyGroup>
@@ -33,8 +34,10 @@
       <ShortSha>$(SourceRevisionId)</ShortSha>
       <ShortSha Condition="$(SourceRevisionId.Length) &gt; 7">$(SourceRevisionId.Substring(0, 8))</ShortSha>
 
-      <PackageVersion>$(Version)+$(ShortSha)</PackageVersion>
+      <!-- We support SemanticVersioning 1.0; For that we need to replace {'.', '+'} by {'-'} -->
+      <PackageVersion Condition="'$(SemanticVersioningV1)' != 'true'">$(Version)+$(ShortSha)</PackageVersion>
+      <PackageVersion Condition="'$(SemanticVersioningV1)' == 'true'">$(Version)-$(ShortSha)</PackageVersion>
     </PropertyGroup>
   </Target>
-  
+
 </Project>
