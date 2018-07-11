@@ -313,7 +313,7 @@ namespace Microsoft.DotNet.GitSync
                 var result = new NewChanges(targetRepo);
                 foreach (var commit in listCommits)
                 {
-                    string key = commit.Properties["SourceRepo"].ToString();
+                    string key = commit.Properties["SourceRepo"].StringValue;
                     if (result.changes.ContainsKey(key))
                         result.changes[key].Add(commit.RowKey);
                     else
@@ -546,7 +546,7 @@ namespace Microsoft.DotNet.GitSync
                 TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, targetRepo.Name)));
 
             var commits = s_table.ExecuteQuery(rangeQuery);
-            commits = commits.Where(t => t.Properties["Branch"].ToString() == branch);
+            commits = commits.Where(t => t.Properties["Branch"].StringValue == branch);
 
             return commits;
         }
@@ -627,8 +627,8 @@ namespace Microsoft.DotNet.GitSync
             var parent = commit.Parents.First();
             foreach (var change in repo.Diff.Compare<TreeChanges>(parent.Tree, commit.Tree))
             {
-                files.Add(change.Path);
-                files.Add(change.OldPath);
+                files.Add(Path.GetFullPath(change.Path));
+                files.Add(Path.GetFullPath(change.OldPath));
             }
             return files.ToList();
         }
