@@ -3,10 +3,13 @@
 <Project>
 
   <!--
-    Note, the plan to implement this was discussed here: https://github.com/dotnet/arcade/pull/108
+    https://github.com/dotnet/arcade/pull/108
     
     Properties:
-      PB_IsStable                 Tells whether this is a stable build or not.
+      PB_IsStable                 If specified then NuGet package version suffixes used by the repo are overridden by the orchestrated build like so:
+                                     if 'true' then version suffixes have format '{base version}.{PB_VersionStamp}', 
+                                     if 'false' then version suffixes have format '{base version}.{PB_VersionStamp}.{build number}'
+                                     For SemanticVersioning 1.0 dots ('.') are replaced by dashes ('-').
       PB_VersionStamp             NuGet package pre-release version label e.g. 'beta', 'preview1', etc. May be empty.
       OfficialBuildId             Contains the build id if this is an official build, otherwise must be empty.
   -->
@@ -14,12 +17,13 @@
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
 
+    <_PreReleaseLabel>$(PreReleaseVersionLabel)</_PreReleaseLabel>
     <_PreReleaseLabel Condition="'$(PB_VersionStamp)' != ''">$(PB_VersionStamp)</_PreReleaseLabel>
     <_PreReleaseLabel Condition="'$(CIBuild)' == 'true'">ci</_PreReleaseLabel>
     <_PreReleaseLabel Condition="'$(_PreReleaseLabel)' == ''">dev</_PreReleaseLabel>
 
-    <_BuildId>$(OfficialBuildId)</_BuildId>
-    <_BuildId Condition="'$(_BuildId)' == ''">$([System.DateTime]::Now.ToString(yyyyMMdd)).1</_BuildId>
+    <_BuildNumber>$(OfficialBuildId)</_BuildNumber>
+    <_BuildNumber Condition="'$(_BuildNumber)' == ''">$([System.DateTime]::Now.ToString(yyyyMMdd)).1</_BuildNumber>
 
     <!--
         Split the build parts out from the BuildNumber which is given to us by MicroBuild in the format of yyyymmdd.nn
@@ -32,23 +36,23 @@
         in the case of 20160615, we will set BuildNumberFiveDigitDateStamp to 60615. Further, if this would result in a number like 71201 or 81201, we
         decrement the year and add 12 to the month to extend the time. 
     -->
-    <_BuildNumberFiveDigitDateStamp>$([MSBuild]::Subtract($(_BuildId.Split($([System.Convert]::ToString(`.`).ToCharArray())).GetValue($([System.Convert]::ToInt32(0)))), 20100000))</_BuildNumberFiveDigitDateStamp>
+    <_BuildNumberFiveDigitDateStamp>$([MSBuild]::Subtract($(_BuildNumber.Split($([System.Convert]::ToString(`.`).ToCharArray())).GetValue($([System.Convert]::ToInt32(0)))), 20100000))</_BuildNumberFiveDigitDateStamp>
     <_BuildNumberFiveDigitDateStampYearsToOffset>$([System.Math]::Max($([System.Convert]::ToInt32($([MSBuild]::Subtract($([MSBuild]::Divide($(_BuildNumberFiveDigitDateStamp), 10000)), 6)))), 0))</_BuildNumberFiveDigitDateStampYearsToOffset>
     <_BuildNumberFiveDigitDateStamp>$([MSBuild]::Subtract($([System.Convert]::ToInt32($(_BuildNumberFiveDigitDateStamp))), $([MSBuild]::Multiply($(_BuildNumberFiveDigitDateStampYearsToOffset), 8800))))</_BuildNumberFiveDigitDateStamp>
-    <_BuildNumberBuildOfTheDayPadded>$(_BuildId.Split($([System.Convert]::ToString(`.`).ToCharArray())).GetValue($([System.Convert]::ToInt32(1))).PadLeft($([System.Convert]::ToInt32(2)), $([System.Convert]::ToChar(`0`))))</_BuildNumberBuildOfTheDayPadded>
+    <_BuildNumberBuildOfTheDayPadded>$(_BuildNumber.Split($([System.Convert]::ToString(`.`).ToCharArray())).GetValue($([System.Convert]::ToInt32(1))).PadLeft($([System.Convert]::ToInt32(2)), $([System.Convert]::ToChar(`0`))))</_BuildNumberBuildOfTheDayPadded>
     
-    <!-- This handles the Dev/Daily case of the versioning plan. -->
+    <!-- This handles the Dev/Daily case of the versioning specification. -->
     <VersionSuffix Condition="'$(PB_IsStable)' != 'true'">$(_PreReleaseLabel).$(_BuildNumberFiveDigitDateStamp).$(_BuildNumberBuildOfTheDayPadded)</VersionSuffix>
 
-    <!-- This handles the 'Final Prerelease' case of the versioning plan. -->
+    <!-- This handles the 'Final Prerelease' case of the versioning specification. -->
     <VersionSuffix Condition="'$(PB_IsStable)' == 'true' and '$(PB_VersionStamp)' != ''">$(PB_VersionStamp).final</VersionSuffix>
 
-    <!-- This handles the 'Stable' case of the versioning plan. -->
+    <!-- This handles the 'Stable' case of the versioning specification. -->
     <!-- For this case the version suffix is empty. -->
     <VersionSuffix Condition="'$(PB_IsStable)' == 'true' and '$(PB_VersionStamp)' == ''"></VersionSuffix>
 
     <!-- We support SemanticVersioning 1.0; For that we need to replace {'.', '+'} by {'-'} -->
-    <VersionSuffix Condition="'$(SemanticVersioningV1)' == 'true'">$(VersionSuffix.Replace('.', '-'))</VersionSuffix>
+    <VersionSuffix Condition="'$(DotNetSemanticVersioningV1)' == 'true'">$(VersionSuffix.Replace('.', '-'))</VersionSuffix>
   </PropertyGroup>
 
 </Project>
