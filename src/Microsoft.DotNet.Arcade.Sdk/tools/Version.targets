@@ -3,11 +3,12 @@
 <Project>
 
   <!--
-  Optional properties:
-    OfficialBuildId             Contains the build id if this is an official build, otherwise must be empty.
-    CIBuild                     "true" if this is a CI build
-    UseShippingAssemblyVersion  "true" to set assembly version in a dev build to a shipping one instead of 42.42.42.42
-    UseShippingFileVersion      "true" to set file version in a dev build to a shipping one instead of 42.42.42.42
+    Properties:
+      OfficialBuildId             Contains the build id if this is an official build, otherwise must be empty.
+      SourceRevisionId            Contains the SHA of the repo being built.
+      CIBuild                     "true" if this is a CI build
+      UseShippingAssemblyVersion  "true" to set assembly version in a dev build to a shipping one instead of 42.42.42.42
+      UseShippingFileVersion      "true" to set file version in a dev build to a shipping one instead of 42.42.42.42
   -->
 
   <PropertyGroup>
@@ -30,11 +31,13 @@
   <Target Name="_InitializePackageVersion" BeforeTargets="GenerateNuSpec" DependsOnTargets="InitializeSourceControlInformation">
     <PropertyGroup>
       <!-- First 8 chars from the SHA -->
-      <ShortSha>$(SourceRevisionId)</ShortSha>
-      <ShortSha Condition="$(SourceRevisionId.Length) &gt; 7">$(SourceRevisionId.Substring(0, 8))</ShortSha>
+      <_ShortSha>$(SourceRevisionId)</_ShortSha>
+      <_ShortSha Condition="$(SourceRevisionId.Length) &gt; 7">$(SourceRevisionId.Substring(0, 8))</_ShortSha>
 
-      <PackageVersion>$(Version)+$(ShortSha)</PackageVersion>
+      <!-- We support SemanticVersioning 1.0; For that we need to replace {'.', '+'} by {'-'} -->
+      <PackageVersion Condition="'$(SemanticVersioningV1)' != 'true'">$(Version)+$(_ShortSha)</PackageVersion>
+      <PackageVersion Condition="'$(SemanticVersioningV1)' == 'true'">$(Version)-$(_ShortSha)</PackageVersion>
     </PropertyGroup>
   </Target>
-  
+
 </Project>
