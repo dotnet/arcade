@@ -20,7 +20,10 @@ If the provided functionality will only work for a couple of repos then these wi
 * VSIX extension creation
 * Unit tests
 
-The SDK supports the concept of "graduation" where if an optional package starts to be used more by more repos then it will be "promoted" to mandatory.
+If an optional package gets to be used by all tier 1 repos then it will be "promoted" to mandatory.
+
+All the packages contained in the SDK are just `PackageReference`s and not the actual package bits. We should maintain this approach
+unless there is no way to just reference the package.
 
 ## Requirements
 
