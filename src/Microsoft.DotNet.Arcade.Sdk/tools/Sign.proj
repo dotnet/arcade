@@ -19,23 +19,16 @@
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.signtool\$(MicrosoftDotNetSignToolVersion)\build\Microsoft.DotNet.SignTool.props" />
 
   <Target Name="Sign">
-    <Exec Command='"$(MSBuildProjectDirectory)\vswhere.exe" -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild'
-          Condition="'$(RealSign)' == 'true'"
+    <!-- We only need this if we are going to use the executable version. -->
+    <Exec Condition="'$(UseSigningExecutable)' == 'true' and '$(RealSign)' == 'true'"
+          Command='"$(MSBuildProjectDirectory)\vswhere.exe" -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild'
           ConsoleToMsBuild="true"
           StandardErrorImportance="high">
       <Output TaskParameter="ConsoleOutput" PropertyName="_VsInstallDir" />
     </Exec>
 
-    <!-- Arguments for the Task version. -->
-    <ItemGroup>
-      <IsTest Condition="'$(RealSign)' != 'true'">true</IsTest>
-      <TestSign Condition="'$(RealSign)' == 'true'">false</TestSign>
-      <MSBuildPath Condition="'$(RealSign)' == 'true'">"$(_VsInstallDir)\MSBuild\15.0\Bin\msbuild.exe"</MSBuildPath>
-      <OutputConfig Condition="'$(OutputConfigFile)' != ''">"$(OutputConfigFile)"</OutputConfig>
-    </ItemGroup>
-
     <!-- Arguments for the executable version. -->
-    <ItemGroup>
+    <ItemGroup Condition="'$(UseSigningExecutable)' == 'true'">
       <SignToolArgs Include='-outputconfig "$(OutputConfigFile)"' Condition="'$(OutputConfigFile)' != ''" />      
       <SignToolArgs Include='-nugetPackagesPath "$(NuGetPackageRoot)\"' />
       <SignToolArgs Include='-intermediateOutputPath "$(ArtifactsObjDir)\"' />
@@ -49,18 +42,20 @@
           Command="$(NuGetPackageRoot)microsoft.dotnet.signtool\$(MicrosoftDotNetSignToolVersion)\build\net461\Microsoft.DotNet.SignTool.exe @(SignToolArgs, ' ')" 
           LogStandardErrorAsError="true" />
 
+    <!-- Arguments for the task version. -->
+    <PropertyGroup>
+      <IsTest Condition="'$(RealSign)' != 'true'">true</IsTest>
+      <TestSign Condition="'$(RealSign)' == 'true'">false</TestSign>
+      <OutputConfig Condition="'$(OutputConfigFile)' != ''">"$(OutputConfigFile)"</OutputConfig>
+    </PropertyGroup>
+
     <SignToolTask
           Condition="'$(UseSigningExecutable)' != 'true'"
           Test='$(IsTest)'
           TestSign="$(TestSign)"
-          NuGetPackagesPath='$(NuGetPackageRoot)'
-          IntermediateOutputPath='"$(ArtifactsObjDir)\"'
           ConfigFilePath='$(ConfigFile)'
-          MSBuildPath='$(MSBuildPath)'
           OutputPath='"$(ArtifactsConfigurationDir)\"'
-          OrchestrationManifestPath="$(OutputConfig)"
-          AppBaseDirectory="$(AppBaseDir)"
-          MSBuildBinaryLogFilePath="$(msbuildBinaryLogFilePath)"/>
+          OrchestrationManifestPath="$(OutputConfig)" />
     
   </Target>
 

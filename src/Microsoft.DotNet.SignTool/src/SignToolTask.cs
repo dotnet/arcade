@@ -13,14 +13,8 @@ namespace Microsoft.DotNet.SignTool
 
         public bool Test { get; set; }
         public bool TestSign { get; set; }
-
-        public string NuGetPackagesPath { get; set; }
         public string OrchestrationManifestPath { get; set; }
         public string ConfigFilePath { get; set; }
-        public string AppBaseDirectory { get; set; }
-        public string IntermediateOutputPath { get; set; }
-        public string MSBuildBinaryLogFilePath { get; set; }
-        public string MSBuildPath { get; set; }
         public string OutputPath { get; set; }
 
         public override bool Execute()
@@ -29,11 +23,6 @@ namespace Microsoft.DotNet.SignTool
             {
                 var signToolArgs = new SignToolArgs(
                     outputPath: OutputPath,
-                    msbuildPath: MSBuildPath,
-                    msbuildBinaryLogFilePath: MSBuildBinaryLogFilePath,
-                    intermediateOutputPath: IntermediateOutputPath,
-                    nugetPackagesPath: NuGetPackagesPath,
-                    appPath: AppBaseDirectory,
                     configFile: ConfigFilePath,
                     test: Test,
                     testSign: TestSign,

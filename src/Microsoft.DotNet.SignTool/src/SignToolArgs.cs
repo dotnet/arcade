@@ -49,5 +49,19 @@ namespace Microsoft.DotNet.SignTool
                 throw new ArgumentException("msbuildpath argument must be specified unless running in validation-only (test) mode.");
             }
         }
+
+        internal SignToolArgs(string outputPath, string configFile, bool test, bool testSign, string orchestrationManifestPath) : this(outputPath,
+            null,
+            null,
+            null,
+            null,
+            null,
+            configFile,
+            test,
+            testSign,
+            orchestrationManifestPath)
+        {
+
+        }
     }
 }
