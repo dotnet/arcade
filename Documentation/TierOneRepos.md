@@ -5,18 +5,28 @@ The primary driving business requirement is the ability to build .NET Core 3�
 
 ## The List
 
-| Repo                        | Branch        | Owner       |
-| --------------------------- |:-------------:| -----------:| 
-| dotnet/cli                  | master        | licavalc    |
-| dotnet/sdk                  | master        | licavalc    |
-| dotnet/templating           | master        |   |
-| Microsoft/visualfsharp      | master        |   |
-| aspnet/websdk               | master        |   |
-| dotnet/roslyn               | master        |   |
-| dotnet/CliCommandLineParser | master        |   |
-| dotnet/cli-migrate          | master        |   |
-| Microsoft/msbuild           | master        |   |
-| dotnet/core-setup           | master        |   |
-| dotnet/corefx               | master        |   |
-| dotnet/coreclr              | master        |   |
-| Aspnet/Universe             | master        |   |
+| Repo                        | Branch        | Owner           |
+| --------------------------- |:-------------:| ---------------:| 
+| arcade                      | master        |  @markwilkie    |
+| aspnet/Universe             | master        |  @natemcmaster  |
+| aspnet/websdk               | master        |  @natemcmaster  |
+| dotnet/cli                  | master        |  @livarcocc     |
+| dotnet/CliCommandLineParser | master        |  @livarcocc     |
+| dotnet/cli-migrate          | master        |  @livarcocc     |
+| dotnet/coreclr              | master        |  @RussKeldorph  |
+| dotnet/corefx               | master        |  @danmosemsft   |
+| dotnet/core-sdk             | master        |  @livarcocc     |
+| dotnet/core-setup           | master        |  @weshaggard    |
+| dotnet/roslyn               | master        |  @jaredpar      |
+| dotnet/sdk                  | master        |  @livarcocc     |
+| dotnet/symreader            | master        |  @tmat          |
+| dotnet/symreader-portable   | master        |  @tmat          |
+| Microsoft/msbuild           | master        |  @AndyGerlicher |
+| Microsoft/visualfsharp      | master        |  @brettfo       |
+| winforms                    | master        |  |
+| wpf                         | master        |  |
+
+
+
+
+
