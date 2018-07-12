@@ -12,6 +12,7 @@
                                      For SemanticVersioning 1.0 dots ('.') are replaced by dashes ('-').
       PB_VersionStamp             NuGet package pre-release version label e.g. 'beta', 'preview1', etc. May be empty.
       OfficialBuildId             Contains the build id if this is an official build, otherwise must be empty.
+      CIBuild                     "true" if this is a CI build.
   -->
     
   <PropertyGroup>
@@ -19,8 +20,8 @@
 
     <_PreReleaseLabel>$(PreReleaseVersionLabel)</_PreReleaseLabel>
     <_PreReleaseLabel Condition="'$(PB_VersionStamp)' != ''">$(PB_VersionStamp)</_PreReleaseLabel>
-    <_PreReleaseLabel Condition="'$(CIBuild)' == 'true'">ci</_PreReleaseLabel>
-    <_PreReleaseLabel Condition="'$(_PreReleaseLabel)' == ''">dev</_PreReleaseLabel>
+    <_PreReleaseLabel Condition="'$(OfficialBuildId)' == '' and '$(CIBuild)' == 'true'">ci</_PreReleaseLabel>
+    <_PreReleaseLabel Condition="'$(OfficialBuildId)' == '' and '$(CIBuild)' != 'true'">dev</_PreReleaseLabel>
 
     <_BuildNumber>$(OfficialBuildId)</_BuildNumber>
     <_BuildNumber Condition="'$(_BuildNumber)' == ''">$([System.DateTime]::Now.ToString(yyyyMMdd)).1</_BuildNumber>
