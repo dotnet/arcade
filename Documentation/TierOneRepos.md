@@ -25,8 +25,3 @@ The primary driving business requirement is the ability to build .NET Core 3�
 | Microsoft/visualfsharp      | master        |  @brettfo       |
 | winforms                    | master        |  |
 | wpf                         | master        |  |
-
-
-
-
-
