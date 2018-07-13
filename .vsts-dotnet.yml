@@ -2,8 +2,10 @@ phases:
 - template: /eng/build.yml
   parameters:
     agentOs: Windows_NT
-    queue: 
-      name: Hosted VS2017
+    queue:
+      name: DotNetCore-Build
+      demands:
+      - agent.os -equals Windows_NT
       parallel: 2
       matrix:
         Build_Debug:
@@ -12,18 +14,17 @@ phases:
           _SignType: test
         Build_Release:
           _BuildConfig: Release
-          _PublishType: none
-          _SignType: test
-
+          _PublishType: blob
+          _SignType: real
 
 - template: /eng/build.yml
   parameters:
     agentOs: Linux
     dockerImage: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
-    queue: 
-      name: DotNetCore-Linux
+    queue:
+      name: DotNetCore-Test
       demands:
-        - agent.os -equals Linux
+      - agent.os -equals Linux
       parallel: 2
       matrix:
         Build_Debug:
@@ -33,4 +34,4 @@ phases:
         Build_Release:
           _BuildConfig: Release
           _PublishType: none
-          _SignType: test
+          _SignType: real
