@@ -2,7 +2,7 @@ variables:
 - name: myName
   value: Chris
 phases:
-  phase:
+- phase:
     queue: Hosted VS2017
     steps:
       - script: echo Hello %username%!
