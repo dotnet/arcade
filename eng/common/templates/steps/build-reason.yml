@@ -6,7 +6,7 @@ parameters:
   steps: []
 
 steps:
-  - ${{ if and( not(startsWith, parameters.conditions, 'not')), contains(parameters.conditions, variables['build.reason'])) }}:
+  - ${{ if and( not(startsWith(parameters.conditions, 'not')), contains(parameters.conditions, variables['build.reason'])) }}:
     - ${{ parameters.steps }}
-  - ${{ if and( startsWith(parameters.conditions, 'not'), not(contains(parameters.conditions, variables['build.reason'])) }}:
+  - ${{ if and( startsWith(parameters.conditions, 'not'), not(contains(parameters.conditions, variables['build.reason']))) }}:
     - ${{ parameters.steps }}
