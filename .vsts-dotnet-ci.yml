@@ -18,22 +18,23 @@ phases:
           _PublishType: none
           _SignType: test
 
-- template: /eng/build.yml
-  parameters:
-    agentOs: Linux
-    buildReason: IndividualCI
-    dockerImage: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
-    queue: 
-      name: DotNetCore-Linux
-      demands:
-        - agent.os -equals Linux
-      parallel: 2
-      matrix:
-        Build_Debug:
-          _BuildConfig: Debug
-          _PublishType: none
-          _SignType: test
-        Build_Release:
-          _BuildConfig: Release
-          _PublishType: none
-          _SignType: test
+# DotNetCore-Linux pool is not available in dotnet-stage
+#- template: /eng/build.yml
+#  parameters:
+#    agentOs: Linux
+#    buildReason: IndividualCI
+#    dockerImage: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
+#    queue: 
+#      name: DotNetCore-Linux
+#      demands:
+#        - agent.os -equals Linux
+#      parallel: 2
+#      matrix:
+#        Build_Debug:
+#          _BuildConfig: Debug
+#          _PublishType: none
+#          _SignType: test
+#        Build_Release:
+#          _BuildConfig: Release
+#          _PublishType: none
+#          _SignType: test
