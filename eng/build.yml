@@ -26,7 +26,7 @@ phases:
     helixType: build/product
     ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
       helixSource: official/dotnet/arcade/$(Build.SourceBranch)
-    ${{ if in(variables['Build.Reason], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+    ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
       helixSource: pr/dotnet/arcade/$(Build.SourceBranch)
     phase:
       queue: ${{ parameters.queue }}
