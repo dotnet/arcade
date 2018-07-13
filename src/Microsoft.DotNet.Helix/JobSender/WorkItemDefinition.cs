@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -50,6 +51,30 @@ namespace Microsoft.DotNet.Helix.Client
         public IWorkItemDefinition WithFiles(params string[] files)
         {
             Payload = new AdhocPayload(files);
+            return this;
+        }
+
+        public IWorkItemDefinition WithDirectoryPayload(string directory)
+        {
+            Payload = new DirectoryPayload(directory);
+            return this;
+        }
+
+        public IWorkItemDefinition WithSingleFilePayload(string name, string content)
+        {
+            Payload = new SingleFilePayload(name, content);
+            return this;
+        }
+
+        public IWorkItemDefinition WithSingleFilePayload(string name, string content, Encoding encoding)
+        {
+            Payload = new SingleFilePayload(name, content, encoding);
+            return this;
+        }
+
+        public IWorkItemDefinition WithSingleFilePayload(string name, byte[] content)
+        {
+            Payload = new SingleFilePayload(name, content);
             return this;
         }
 

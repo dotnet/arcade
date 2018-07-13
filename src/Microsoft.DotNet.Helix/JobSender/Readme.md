@@ -1,8 +1,8 @@
 # Microsoft.DotNet.Helix.JobSender
-This Package provides advanced Helix Job sending functionality allowing sending jobs to helix with a minimal amount of C# code.
+This Package provides simple Helix Job sending functionality allowing sending jobs to helix with a minimal amount of C# code.
 
 ## Examples
-All of the following examples are C# code that in inserted in the following template.
+All of the following examples are C# code that is inserted in the following template.
 ```csharp
 using System;
 using Microsoft.DotNet.Helix.Client;

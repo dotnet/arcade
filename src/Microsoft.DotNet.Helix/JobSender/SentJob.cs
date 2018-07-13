@@ -12,11 +12,11 @@ namespace Microsoft.DotNet.Helix.Client
         public SentJob(IJob jobApi, JobCreationResult newJob)
         {
             JobApi = jobApi;
-            Name = newJob.Name;
+            CorrelationId = newJob.Name;
         }
 
         public IJob JobApi { get; }
-        public string Name { get; }
+        public string CorrelationId { get; }
 
         public async Task WaitAsync()
         {
@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 try
                 {
-                    await JobApi.WaitAsync(Name);
+                    await JobApi.WaitAsync(CorrelationId);
                     Console.WriteLine("Job's done!");
                     return;
                 }

@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Helix.Client
         public IList<IPayload> CorrelationPayloads { get; } = new List<IPayload>();
         public string StorageAccountConnectionString { get; private set; }
         public string TargetContainerName { get; set; } = DefaultContainerName;
-        public static string DefaultContainerName => $"helix-job-{Environment.UserName}";
+        public static string DefaultContainerName => $"helix-job-{Guid.NewGuid()}";
 
         public IWorkItemDefinitionWithCommand DefineWorkItem(string workItemName)
         {

@@ -4,7 +4,7 @@ namespace Microsoft.DotNet.Helix.Client
 {
     public interface ISentJob
     {
-        string Name { get; }
+        string CorrelationId { get; }
         Task WaitAsync();
     }
 }
