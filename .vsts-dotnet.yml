@@ -2,7 +2,6 @@ phases:
 - template: /eng/build.yml
   parameters:
     agentOs: Windows_NT
-    buildReason: Internal
     queue:
       name: DotNetCore-Build
       demands:
@@ -21,7 +20,6 @@ phases:
 - template: /eng/build.yml
   parameters:
     agentOs: Linux
-    buildReason: Internal
     dockerImage: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
     queue:
       name: DotNetCore-Test
