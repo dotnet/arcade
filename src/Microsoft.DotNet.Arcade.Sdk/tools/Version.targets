@@ -9,6 +9,7 @@
       CIBuild                     "true" if this is a CI build
       UseShippingAssemblyVersion  "true" to set assembly version in a dev build to a shipping one instead of 42.42.42.42
       UseShippingFileVersion      "true" to set file version in a dev build to a shipping one instead of 42.42.42.42
+      DotNetSemanticVersioningV1  "true" if the Version needs to respect SemVer 1.0. Default is false, which means format following SemVer 2.0.
   -->
 
   <PropertyGroup>

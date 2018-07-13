@@ -13,6 +13,7 @@
       PB_VersionStamp             NuGet package pre-release version label e.g. 'beta', 'preview1', etc. May be empty.
       OfficialBuildId             Contains the build id if this is an official build, otherwise must be empty.
       CIBuild                     "true" if this is a CI build.
+      DotNetSemanticVersioningV1  "true" if the Version needs to respect SemVer 1.0. Default is false, which means format following SemVer 2.0.
   -->
     
   <PropertyGroup>
@@ -40,7 +41,10 @@
     <_BuildNumberFiveDigitDateStamp>$([MSBuild]::Subtract($(_BuildNumber.Split($([System.Convert]::ToString(`.`).ToCharArray())).GetValue($([System.Convert]::ToInt32(0)))), 20100000))</_BuildNumberFiveDigitDateStamp>
     <_BuildNumberFiveDigitDateStampYearsToOffset>$([System.Math]::Max($([System.Convert]::ToInt32($([MSBuild]::Subtract($([MSBuild]::Divide($(_BuildNumberFiveDigitDateStamp), 10000)), 6)))), 0))</_BuildNumberFiveDigitDateStampYearsToOffset>
     <_BuildNumberFiveDigitDateStamp>$([MSBuild]::Subtract($([System.Convert]::ToInt32($(_BuildNumberFiveDigitDateStamp))), $([MSBuild]::Multiply($(_BuildNumberFiveDigitDateStampYearsToOffset), 8800))))</_BuildNumberFiveDigitDateStamp>
-    <_BuildNumberBuildOfTheDayPadded>$(_BuildNumber.Split($([System.Convert]::ToString(`.`).ToCharArray())).GetValue($([System.Convert]::ToInt32(1))).PadLeft($([System.Convert]::ToInt32(2)), $([System.Convert]::ToChar(`0`))))</_BuildNumberBuildOfTheDayPadded>
+
+    <!-- The padding is only needed on SemVer 1.0 -->
+    <_BuildNumberBuildOfTheDayPadded>$(_BuildNumber.Split($([System.Convert]::ToString(`.`).ToCharArray())).GetValue($([System.Convert]::ToInt32(1))))</_BuildNumberBuildOfTheDayPadded>
+    <_BuildNumberBuildOfTheDayPadded Condition="'$(DotNetSemanticVersioningV1)' == 'true'">$(_BuildNumberBuildOfTheDayPadded.PadLeft($([System.Convert]::ToInt32(2)), $([System.Convert]::ToChar(`0`))))</_BuildNumberBuildOfTheDayPadded>
     
     <!-- This handles the Dev/Daily case of the versioning specification. -->
     <VersionSuffix Condition="'$(PB_IsStable)' != 'true'">$(_PreReleaseLabel).$(_BuildNumberFiveDigitDateStamp).$(_BuildNumberBuildOfTheDayPadded)</VersionSuffix>
