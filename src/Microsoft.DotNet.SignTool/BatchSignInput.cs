@@ -216,4 +216,3 @@ namespace Microsoft.DotNet.SignTool
         }
     }
 }
-

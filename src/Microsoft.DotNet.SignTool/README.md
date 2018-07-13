@@ -1,6 +1,6 @@
 # Sign Tool
 
-This is a batch signing and verification tool for Microbuild environments.  The tool is run as a post-build step and driven by a declarative configuration file.  The high level features of the tool are:
+This is a batch signing and verification tool for MicroBuild environments.  The tool is run as a post-build step and driven by a declarative configuration file.  The high level features of the tool are:
 
 - Performance: The tool operates as a post-build step and uses the minimum number of requests possible.  This can have a dramatic performance improvement over the typical implementation which signs as a post-compile step.  For example, in Roslyn it took build + sign times down from 1-2 hours to 8 minutes. 
 - Verification: Using the `-test` argument the tool can be run as part of a CI leg to verify the consistency of the configuration file.  This enables developers to catch many build and packaging errors that normally would cause a signed build to break post check-in.

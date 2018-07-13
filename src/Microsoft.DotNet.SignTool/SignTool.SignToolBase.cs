@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using static Microsoft.DotNet.SignTool.PathUtil;
 
 namespace Microsoft.DotNet.SignTool
 {

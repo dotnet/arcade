@@ -5,17 +5,12 @@
     <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>7.2</LangVersion>
-
-    <!-- Using an explicit nuspec file since NuGet Pack target currently doesn't support including dependencies in tools packages -->
     <IsPackable>true</IsPackable>
-
     <Description>Build artifact signing tool</Description>
     <PackageTags>Arcade Build Tool Signing</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="build.log" />
-  </ItemGroup>
+
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.DotNet.SignTool.Tests" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(DynamicProxyGenAsm2Key)" />
