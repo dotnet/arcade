@@ -1,11 +1,11 @@
-# Tier 1 Repos
+# Tier 1 Repositories
 
-A tier 1 repo is a repo which requires the dependency flow and composition that is provided by Arcade.  Tier 1 repos fully participate in all shared tooling and infrastructure areas.
-The primary driving business requirement is the ability to build .NET Core 3 transparently, quickly, reliably, and in a serviceable form.
+A tier 1 repository is a repository which requires the dependency flow and composition that is provided by Arcade.  Tier 1 repositories fully participate in all shared tooling and infrastructure areas.
+The primary driving business requirement is the ability to build .NET Core 3.0 transparently, quickly, reliably, and in a serviceable form.
 
-## Tier 1 Repo table
+## Tier 1 Repositories table
 
-| Repo                        | Branch        | Owner           |
+| Repository                  | Branch        | Owner           |
 | --------------------------- |:-------------:| ---------------:| 
 | aspnet/scaffolding          | master        |  |
 | aspnet/templating           | master        |  @mlorbetske    |
