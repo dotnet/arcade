@@ -5,8 +5,6 @@ phases:
     buildReason: IndividualCI
     queue: 
       name: Hosted VS2017
-      demands:
-        - agent.os -equals Windows_NT
       parallel: 2
       matrix:
         Build_Debug:
