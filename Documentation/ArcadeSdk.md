@@ -1,17 +1,17 @@
 # Arcade SDK
 
-The primary goal of the SDK is to provide a set of tools which are shared across all participating repos. It is mandatory for [Tier 1 Repos](https://github.com/dotnet/arcade/blob/master/Documentation/TierOneRepos.md) to
+The primary goal of the SDK is to provide a set of tools which are shared across all participating repos. It is mandatory for [Tier 1 Repos](TierOneRepos.md) to
 consume the SDK.
 
 ## Origin
 
-The initial version of the SDK is a port from [RepoToolset](https://github.com/dotnet/roslyn-tools/tree/master/src/RepoToolset) but will be changing as we add more packages and functionality to it.
+The initial version of the SDK is a port from [RepoToolset](../../../../roslyn-tools/tree/master/src/RepoToolset) but will be changing as we add more packages and functionality to it.
 
 ## What shared tools should be part of the SDK and which should not?
 
 ### Required
 
-If a tool provides functionality which is meant to be used by all of the [Tier 1 Repos](https://github.com/dotnet/arcade/blob/master/Documentation/TierOneRepos.md) then we should add it to the SDK. 
+If a tool provides functionality which is meant to be used by all of the [Tier 1 Repos](TierOneRepos.md) then we should add it to the SDK. 
 
 ### Optional
 
@@ -40,4 +40,4 @@ needed in that repo. Included are:
 ## Requirements
 
 Each package in the SDK complies with the same set of requirements as all packages under Arcade. You can find more details about these requirements
-[here](https://github.com/dotnet/arcade/blob/master/Documentation/Overview.md#toolset-nuget-package-requirements).
+[here](Overview.md#toolset-nuget-package-requirements).
