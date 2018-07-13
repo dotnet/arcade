@@ -1,8 +1,3 @@
-using Microsoft.ServiceFabric.Services.Runtime;
-using System;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.DotNet.ServiceFabric.ServiceHost;
 
 namespace Maestro.Web
@@ -15,7 +10,7 @@ namespace Maestro.Web
         private static void Main()
         {
             ServiceHost.Run(
-                host => { host.RegisterStatelessWebService<Startup>("Maestro.WebType"); });
+              host => host.RegisterStatelessWebService<Startup>("Maestro.WebType"));
         }
     }
 }
