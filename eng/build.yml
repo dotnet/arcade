@@ -46,7 +46,7 @@ phases:
         parameters:
           agentOs: ${{ parameters.agentOs }} 
           steps:
-            template: /eng/common/templates/steps/build-reason.yml
+          - template: /eng/common/templates/steps/build-reason.yml
             parameters:
               conditions: not IndividualCI,BatchedCI,PullRequest
               steps:
