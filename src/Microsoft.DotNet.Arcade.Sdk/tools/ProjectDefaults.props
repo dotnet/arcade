@@ -22,6 +22,9 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <ContinuousIntegrationBuild>$(CIBuild)</ContinuousIntegrationBuild>
 
+    <!-- Disable the message indicating we are using a preview SDK. That is understood and by design -->
+    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+
     <!-- By default do not build nuget package for a project. Project may override. -->
     <IsPackable>false</IsPackable>
 
@@ -133,7 +136,7 @@
     Implements proposal https://github.com/dotnet/designs/pull/33.
   -->
   <ItemGroup Condition="'$(UsingToolNetFrameworkReferenceAssemblies)' == 'true'">
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="$(MicrosoftNetFrameworkReferenceAssembliesVersion)" PrivateAssets="all"/>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="$(MicrosoftNetFrameworkReferenceAssembliesVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
 </Project>

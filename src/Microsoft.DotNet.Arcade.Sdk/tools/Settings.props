@@ -16,7 +16,6 @@
   <Import Project="Tests.props" />
   
   <Import Project="Compiler.props" Condition="'$(UsingToolMicrosoftNetCompilers)' == 'true'" />  
-  <Import Project="Localization.props" Condition="'$(UsingToolXliff)' == 'true'"/>
   <Import Project="XUnit.props" Condition="'$(UsingToolXUnit)' == 'true' and ('$(IsUnitTestProject)' == 'true' or '$(IsIntegrationTestProject)' == 'true' or '$(IsPerformanceTestProject)' == 'true')"/>
   <Import Project="VisualStudio.props" Condition="'$(UsingToolVSSDK)' == 'true'"/>
 

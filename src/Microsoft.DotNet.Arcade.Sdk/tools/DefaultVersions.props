@@ -41,7 +41,7 @@
     <UsingToolSymbolUploader Condition="'$(UsingToolSymbolUploader)' == ''">false</UsingToolSymbolUploader>
 
     <!-- Default versions -->
-    <MicroBuildPluginsSwixBuildVersion Condition="'$(MicroBuildPluginsSwixBuildVersion)' == ''">1.0.147</MicroBuildPluginsSwixBuildVersion>
+    <MicroBuildPluginsSwixBuildVersion Condition="'$(MicroBuildPluginsSwixBuildVersion)' == ''">1.0.422</MicroBuildPluginsSwixBuildVersion>
     <MicroBuildCoreVersion Condition="'$(MicroBuildCoreVersion)' == ''">0.2.0</MicroBuildCoreVersion>
     <MicrosoftDotNetIBCMergeVersion Condition="'$(MicrosoftDotNetIBCMergeVersion)' == ''">4.7.1-alpha-00001</MicrosoftDotNetIBCMergeVersion>
     <MicrosoftNetCompilersVersion Condition="'$(MicrosoftNetCompilersVersion)' == ''">2.8.0</MicrosoftNetCompilersVersion>
@@ -59,7 +59,7 @@
     <XUnitRunnerConsoleVersion Condition="'$(XUnitRunnerConsoleVersion)' == ''">$(XUnitVersion)</XUnitRunnerConsoleVersion>
     <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">$(XUnitVersion)</XUnitRunnerVisualStudioVersion>
     <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">2.2.0-prerelease-02431-01</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftSourceLinkVersion Condition="'$(MicrosoftSourceLinkVersion)' == ''">1.0.0-beta-63001-01</MicrosoftSourceLinkVersion>
+    <MicrosoftSourceLinkVersion Condition="'$(MicrosoftSourceLinkVersion)' == ''">1.0.0-beta-63102-01</MicrosoftSourceLinkVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion Condition="'$(MicrosoftSymbolUploaderBuildTaskVersion)' == ''">1.0.0-beta-63008-01</MicrosoftSymbolUploaderBuildTaskVersion>
   </PropertyGroup>
 

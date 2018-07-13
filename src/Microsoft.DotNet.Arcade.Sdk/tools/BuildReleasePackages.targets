@@ -17,11 +17,11 @@
     <Message Text="Building release versions of NuGet packages" Importance="high" />
 
     <ItemGroup>
-      <_BuiltPackages Include="$(PackageOutputPath)*.nupkg" />
+      <_BuiltPackages Include="$(ArtifactsShippingPackagesDir)*.nupkg" />
     </ItemGroup>
-    
-    <Roslyn.Tools.UpdatePackageVersionTask VersionKind="release" Packages="@(_BuiltPackages)" OutputDirectory="$(PackageOutputPath)Release" AllowPreReleaseDependencies="true" />
-    <Roslyn.Tools.UpdatePackageVersionTask VersionKind="prerelease" Packages="@(_BuiltPackages)" OutputDirectory="$(PackageOutputPath)PreRelease" />
+
+    <Roslyn.Tools.UpdatePackageVersionTask VersionKind="release" Packages="@(_BuiltPackages)" OutputDirectory="$(ArtifactsPackagesDir)Release" AllowPreReleaseDependencies="true" />
+    <Roslyn.Tools.UpdatePackageVersionTask VersionKind="prerelease" Packages="@(_BuiltPackages)" OutputDirectory="$(ArtifactsPackagesDir)PreRelease" />
   </Target>
 
 </Project>

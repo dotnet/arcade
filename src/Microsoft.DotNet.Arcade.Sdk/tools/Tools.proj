@@ -46,13 +46,13 @@
   <ItemGroup>
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" />
     <PackageReference Include="MicroBuild.Core.Sentinel" Version="1.0.0" />
-    <PackageReference Include="MicroBuild.Plugins.SwixBuild" Version="$(MicroBuildPluginsSwixBuildVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" />
-    <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="$(MicrosoftDiaSymReaderPdb2PdbVersion)" Condition="'$(UsingToolPdbConverter)' == 'true'" />
-    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" Condition="'$(PublishingToBlobStorage)' == 'true'" />
-    <PackageReference Include="RoslynTools.NuGetRepack.BuildTasks" Version="$(RoslynToolsNuGetRepackVersion)" Condition="'$(UsingToolNuGetRepack)' == 'true'" />
-    <PackageReference Include="RoslynTools.SignTool" Version="$(RoslynToolsSignToolVersion)" />
-    <PackageReference Include="RoslynTools.ModifyVsixManifest" Version="$(RoslynToolsModifyVsixManifestVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" />
-    <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" Condition="'$(UsingToolSymbolUploader)' == 'true'" />
+    <PackageReference Include="MicroBuild.Plugins.SwixBuild" Version="$(MicroBuildPluginsSwixBuildVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="$(MicrosoftDiaSymReaderPdb2PdbVersion)" Condition="'$(UsingToolPdbConverter)' == 'true'" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" Condition="'$(PublishingToBlobStorage)' == 'true'" IsImplicitlyDefined="true" />
+    <PackageReference Include="RoslynTools.NuGetRepack.BuildTasks" Version="$(RoslynToolsNuGetRepackVersion)" Condition="'$(UsingToolNuGetRepack)' == 'true'" IsImplicitlyDefined="true" />
+    <PackageReference Include="RoslynTools.SignTool" Version="$(RoslynToolsSignToolVersion)" IsImplicitlyDefined="true" />
+    <PackageReference Include="RoslynTools.ModifyVsixManifest" Version="$(RoslynToolsModifyVsixManifestVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" Condition="'$(UsingToolSymbolUploader)' == 'true'" IsImplicitlyDefined="true" />
   </ItemGroup>
 
   <!-- Repository extensibility point -->
