@@ -7,7 +7,7 @@ The primary driving business requirement is the ability to build .NET Core 3.
 
 | Repository                  | Branch        | Owner           |
 | --------------------------- |:-------------:| ---------------:| 
-| aspnet/scaffolding          | master        |  |
+| aspnet/scaffolding          | master        |  @mlorbetske    |
 | aspnet/templating           | master        |  @mlorbetske    |
 | aspnet/universe             | master        |  @natemcmaster  |
 | aspnet/websdk               | master        |  @natemcmaster  |
