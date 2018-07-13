@@ -3,12 +3,13 @@
 <Project>
 
   <!--
-
-  Optional properties:
-    OfficialBuild               "true" if this is an official build
-    CIBuild                     "true" if this is a CI build
-    UseShippingAssemblyVersion  "true" to set assembly version in a dev build to a shipping one instead of 42.42.42.42
-
+    Properties:
+      OfficialBuildId             Contains the build id if this is an official build, otherwise must be empty.
+      SourceRevisionId            Contains the SHA of the repo being built.
+      CIBuild                     "true" if this is a CI build
+      UseShippingAssemblyVersion  "true" to set assembly version in a dev build to a shipping one instead of 42.42.42.42
+      UseShippingFileVersion      "true" to set file version in a dev build to a shipping one instead of 42.42.42.42
+      DotNetSemanticVersioningV1  "true" if the Version needs to respect SemVer 1.0. Default is false, which means format following SemVer 2.0.
   -->
 
   <PropertyGroup>
@@ -16,16 +17,28 @@
   </PropertyGroup>
 
   <Target Name="_InitializeAssemblyVersion" BeforeTargets="GetAssemblyVersion">
-    <PropertyGroup Condition="'$(OfficialBuild)' == 'true'">
+    <PropertyGroup Condition="'$(OfficialBuildId)' != ''">
       <FileVersion>$(VersionPrefix).$(_BuildNumberFiveDigitDateStamp)</FileVersion>
       <InformationalVersion>$(Version)</InformationalVersion>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(OfficialBuild)' != 'true'">
+    <PropertyGroup Condition="'$(OfficialBuildId)' == ''">
       <AssemblyVersion Condition="'$(UseShippingAssemblyVersion)' != 'true' and '$(CIBuild)' != 'true'">42.42.42.42</AssemblyVersion>
       <FileVersion>42.42.42.42</FileVersion>
-      <InformationalVersion>$(FileVersion)</InformationalVersion>
+      <InformationalVersion>42.42.42.42</InformationalVersion>
     </PropertyGroup>
   </Target>
-  
+
+  <Target Name="_InitializePackageVersion" BeforeTargets="GenerateNuSpec" DependsOnTargets="InitializeSourceControlInformation">
+    <PropertyGroup>
+      <!-- First 8 chars from the SHA -->
+      <_ShortSha>$(SourceRevisionId)</_ShortSha>
+      <_ShortSha Condition="$(SourceRevisionId.Length) &gt; 7">$(SourceRevisionId.Substring(0, 8))</_ShortSha>
+
+      <!-- We support SemanticVersioning 1.0; For that we need to replace {'.', '+'} by {'-'} -->
+      <PackageVersion Condition="'$(DotNetSemanticVersioningV1)' != 'true'">$(Version)+$(_ShortSha)</PackageVersion>
+      <PackageVersion Condition="'$(DotNetSemanticVersioningV1)' == 'true'">$(Version)-$(_ShortSha)</PackageVersion>
+    </PropertyGroup>
+  </Target>
+
 </Project>
