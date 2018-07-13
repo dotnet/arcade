@@ -16,7 +16,8 @@ parameters:
 
 phases:
   variables:
-    myName: Chris
+    - name: myName
+      value: Chris
   phase:
     queue: Hosted VS2017
     steps:
