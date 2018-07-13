@@ -14,10 +14,10 @@ parameters:
   queue: {}
   useEsrpSigning: true
 
+variables:
+- name: myName
+  value: Chris
 phases:
-  variables:
-    - name: myName
-      value: Chris
   phase:
     queue: Hosted VS2017
     steps:
