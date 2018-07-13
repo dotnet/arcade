@@ -1,19 +1,15 @@
+variables:
+- name: myName
+  value: Chris
 phases:
-- template: /eng/build.yml
-  parameters:
-    agentOs: Windows_NT
-    queue: 
-      name: Hosted VS2017
-      parallel: 2
-      matrix:
-        Build_Debug:
-          _BuildConfig: Debug
-          _PublishType: none
-          _SignType: test
-        Build_Release:
-          _BuildConfig: Release
-          _PublishType: none
-          _SignType: test
+  phase:
+    queue: Hosted VS2017
+    steps:
+      - script: echo Hello %username%!
+        name: greeting
+        env:
+          username: $(myName)
+  
 
 # DotNetCore-Linux pool is not available in dotnet-stage
 #- template: /eng/build.yml
