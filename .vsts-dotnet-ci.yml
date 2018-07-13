@@ -2,13 +2,13 @@ variables:
 - name: myName
   value: Chris
 phases:
-- phase:
-    queue: Hosted VS2017
-    steps:
-      - script: echo Hello %username%!
-        name: greeting
-        env:
-          username: $(myName)
+- phase: First
+  queue: Hosted VS2017
+  steps:
+  - script: echo Hello %username%!
+    name: greeting
+    env:
+      username: $(myName)
   
 
 # DotNetCore-Linux pool is not available in dotnet-stage
