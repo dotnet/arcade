@@ -4,10 +4,5 @@
     <MicrosoftDotNetSignToolTaskAssembly Condition=" '$(MSBuildRuntimeType)' != 'Core' ">$(MSBuildThisFileDirectory)net461\Microsoft.DotNet.SignTool.exe</MicrosoftDotNetSignToolTaskAssembly>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <IsTest>false</IsTest>
-    <TestSign>true</TestSign>
-  </PropertyGroup>
-
   <UsingTask TaskName="Microsoft.DotNet.SignTool.SignToolTask" AssemblyFile="$(MicrosoftDotNetSignToolTaskAssembly)" />
 </Project>
