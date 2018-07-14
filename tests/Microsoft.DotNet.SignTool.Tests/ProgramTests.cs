@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             {
                 host = host ?? new Mock<IHost>(MockBehavior.Default).Object;
                 SignToolArgs signToolArgs;
-                Assert.True(Program.ParseCommandLineArguments(host, args, out signToolArgs));
+                Assert.True(ParametersParsing.ParseCommandLineArguments(host, args, out signToolArgs));
                 return signToolArgs;
             }
 
