@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard1.0</TargetFrameworks>
+    <ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
+    <IsPackable>true</IsPackable>
+    <Description>This package provides support for building IL projects.</Description>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <EnableGeneratedPackageContent>false</EnableGeneratedPackageContent>
+    <IncludePublishOutput>false</IncludePublishOutput>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="sdk/*.*" Pack="true" PackagePath="sdk/%(Filename)%(Extension)" />
+    <None Include="build/*.*" Pack="true" PackagePath="build/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <Import Project="$(RepoRoot)eng\Sdk.targets" />
+
+</Project>
