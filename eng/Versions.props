@@ -33,7 +33,7 @@
     <SystemIOPackagingVersion>4.5.0</SystemIOPackagingVersion>
     <SystemReflectionMetadataVersion>1.4.2</SystemReflectionMetadataVersion>
     <SystemValueTupleVersion>4.4.0</SystemValueTupleVersion>
-    <WindowsAzureStorageVersion>9.1.0</WindowsAzureStorageVersion>
+    <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.3.1</XUnitVersion>
     <XUnitVSRunnerVersion>2.3.1</XUnitVSRunnerVersion>
 
