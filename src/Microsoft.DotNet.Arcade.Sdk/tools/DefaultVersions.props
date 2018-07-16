@@ -13,7 +13,7 @@
 
   <PropertyGroup>
     <OfficialBuild>false</OfficialBuild>
-    <OfficialBuild Condition="'$(BUILD_BUILDNUMBER)' != ''">true</OfficialBuild>
+    <OfficialBuild Condition="'$(OfficialBuildId)' != ''">true</OfficialBuild>
   </PropertyGroup>
 
   <Import Project="$(VersionsPropsPath)" />

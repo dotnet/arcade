@@ -6,6 +6,11 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <VsixVersion Condition="'$(VersionSuffixDateStamp)' != ''">$(VersionPrefix).$(VersionSuffixDateStamp)$(VersionSuffixBuildOfTheDayPadded)</VsixVersion>
+    <VsixVersion Condition="'$(VersionSuffixDateStamp)' == ''">42.42.42.9999999</VsixVersion>
+  </PropertyGroup>
+  
   <!-- VSIX settings -->
   <PropertyGroup>
     <VsixSourceManifestPath>$(MSBuildProjectDirectory)\source.extension.vsixmanifest</VsixSourceManifestPath>

@@ -1,4 +1,4 @@
-﻿<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
 <Project>
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
@@ -16,7 +16,6 @@
   <Target Name="GenerateVisualStudioInsertionManifests"
           AfterTargets="Pack"
           Outputs="%(_StubDirs.Identity)"
-          DependsOnTargets="GetVsixVersion"
           Condition="'@(_StubDirs)' != ''">
     <PropertyGroup>
       <_ComponentDir>%(_StubDirs.Identity)</_ComponentDir>
@@ -28,7 +27,7 @@
       <_Args Include="SetupOutputPath=$(VisualStudioSetupInsertionPath)"/>
       <_Args Include="ComponentIntermediateOutputPath=$(VisualStudioSetupIntermediateOutputPath)$(_ComponentName)\"/>
       <_Args Include="SwixBuildPath=$(NuGetPackageRoot)microbuild.plugins.swixbuild\$(MicroBuildPluginsSwixBuildVersion)\"/>
-      <_Args Include="ManifestBuildVersion=$(_VsixVersion)" />
+      <_Args Include="ManifestBuildVersion=$(VsixVersion)" />
     </ItemGroup>
 
     <Message Text="Generating manifest for VS component '$(_ComponentName)'" Importance="high"/>

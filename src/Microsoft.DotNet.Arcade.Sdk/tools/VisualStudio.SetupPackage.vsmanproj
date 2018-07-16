@@ -31,7 +31,7 @@
     <MergeManifest Include="@(_PackageStubFiles->'$(SetupOutputPath)%(Filename).json')"/>
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(BUILD_BUILDNUMBER)' == ''">
+  <PropertyGroup Condition="'$(OfficialBuild)' != 'true'">
     <FinalizeManifest>false</FinalizeManifest>
   </PropertyGroup>
 
