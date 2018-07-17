@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net46</TargetFramework>
+    <Platforms>x86</Platforms>
+    <Configurations>Release</Configurations>
+  </PropertyGroup>
+  <PropertyGroup Label="Nuget Package Settings">
+    <IsTool>true</IsTool>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="NuGet.Common" Version="4.7.0" />
+    <PackageReference Include="NuGet.Frameworks" Version="4.7.0" />
+    <PackageReference Include="NuGet.Packaging" Version="4.7.0" />
+    <PackageReference Include="NuGet.Packaging.Core" Version="4.7.0" />
+    <PackageReference Include="NuGet.Versioning" Version="4.7.0" />
+    <PackageReference Include="System.IO.Packaging" Version="4.5.0" />
+    <PackageReference Include="WiX" Version="3.11.1" />
+    <!--    <PackageReference Include="NerdBank.GitVersioning" Version="2.1.17" /> -->
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Resources.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Compression.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Compression.Cab.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.Package.dll" />
+    <Reference Include="$(WixInstallPath)\wix.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(WixInstallPath)\winterop.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

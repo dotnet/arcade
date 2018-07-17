@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net46</TargetFramework>
+    <OutputType>EXE</OutputType>
+    <Platforms>x86</Platforms>
+    <IsTool>True</IsTool>
+    <Configurations>Release</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Nuget Package Settings">
+    <IsTool>true</IsTool>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.2.0" />
+    <PackageReference Include="NerdBank.GitVersioning" Version="2.1.17" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.SignCheck\Microsoft.SignCheck.csproj">
+      <Private>true</Private>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(OutputPath)\*.dll">
+      <PackagePath>tools/</PackagePath>
+      <Pack>true</Pack>
+    </None>
+  </ItemGroup>
+</Project>
