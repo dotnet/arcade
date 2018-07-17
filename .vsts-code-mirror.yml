@@ -6,7 +6,6 @@ phases:
 - template: /eng/common/templates/phases/base.yml
   parameters:
     agentsOS: Windows_NT
-    buildReason: IndividualCI
     phaseName: Mirror_GitHub_to_VSTS
     phase:
       queue:
