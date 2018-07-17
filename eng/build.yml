@@ -92,21 +92,25 @@ phases:
             env:
               OfficialBuildId: $(BUILD.BUILDNUMBER)
             condition: succeeded()
-      - task: CopyFiles@2
-        displayName: Gather Logs
-        inputs:
-          SourceFolder: '$(Build.SourcesDirectory)/artifacts'
-          TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
-        continueOnError: true
-        condition: succeededOrFailed()
-      - task: PublishBuildArtifacts@1
-        displayName: Publish Logs to VSTS
-        inputs:
-          PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
-          PublishLocation: Container
-          ${{ if eq(parameters.agentOs, 'Windows_NT') }}:
-            ArtifactName: Windows_NT_$(Agent.JobName)
-          ${{ if ne(parameters.agentOs, 'Windows_NT') }}:
-            ArtifactName: Linux_$(Agent.JobName)
-        continueOnError: true
-        condition: succeededOrFailed()
+      - template: /eng/common/templates/steps/build-reason.yml
+        parameters:
+          conditions: not IndividualCI,BatchedCI,PullRequest
+          steps:
+          - task: CopyFiles@2
+            displayName: Gather Logs
+            inputs:
+              SourceFolder: '$(Build.SourcesDirectory)/artifacts'
+              TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: PublishBuildArtifacts@1
+            displayName: Publish Logs to VSTS
+            inputs:
+              PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
+              PublishLocation: Container
+              ${{ if eq(parameters.agentOs, 'Windows_NT') }}:
+                ArtifactName: Windows_NT_$(Agent.JobName)
+              ${{ if ne(parameters.agentOs, 'Windows_NT') }}:
+                ArtifactName: Linux_$(Agent.JobName)
+            continueOnError: true
+            condition: succeededOrFailed()
