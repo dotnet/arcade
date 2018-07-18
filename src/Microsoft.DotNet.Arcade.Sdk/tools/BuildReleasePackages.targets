@@ -12,16 +12,18 @@
 
   <UsingTask TaskName="Roslyn.Tools.UpdatePackageVersionTask" AssemblyFile="$(_NuGetRepackAssembly)" />
 
-  <Target Name="PackageReleasePackages" AfterTargets="Pack" Condition="'$(PB_IsStable)' == ''">
-    <Error Text="PreReleaseVersionLabel must be non-empty when using NuGet Repack tool." Condition="'$(PreReleaseVersionLabel)' == ''" />
+  <Target Name="PackageReleasePackages" AfterTargets="Pack" Condition="'$(DotNetFinalVersionKind)' == ''">
     <Message Text="Building release versions of NuGet packages" Importance="high" />
 
+    <Error Text="PreReleaseVersionLabel must be non-empty when using NuGet Repack tool." Condition="'$(PreReleaseVersionLabel)' == ''" />
+    <Error Text="NuGet Repack tool does not support SemVer2" Condition="'$(SemanticVersioningV1)' != 'true'"/>
+
     <ItemGroup>
-      <_BuiltPackages Include="$(PackageOutputPath)*.nupkg" />
+      <_BuiltPackages Include="$(ArtifactsShippingPackagesDir)*.nupkg" />
     </ItemGroup>
-    
-    <Roslyn.Tools.UpdatePackageVersionTask VersionKind="release" Packages="@(_BuiltPackages)" OutputDirectory="$(PackageOutputPath)Release" AllowPreReleaseDependencies="true" />
-    <Roslyn.Tools.UpdatePackageVersionTask VersionKind="prerelease" Packages="@(_BuiltPackages)" OutputDirectory="$(PackageOutputPath)PreRelease" />
+
+    <Roslyn.Tools.UpdatePackageVersionTask VersionKind="release" Packages="@(_BuiltPackages)" OutputDirectory="$(ArtifactsPackagesDir)Release" AllowPreReleaseDependencies="true" />
+    <Roslyn.Tools.UpdatePackageVersionTask VersionKind="prerelease" Packages="@(_BuiltPackages)" OutputDirectory="$(ArtifactsPackagesDir)PreRelease" />
   </Target>
 
 </Project>

@@ -246,11 +246,10 @@
   <!--
     Export VSIX version. This target is to be used in vsixmanifest files.
   -->
-  <Target Name="GetVsixVersion" Outputs="$(_VsixVersion)">
-    <PropertyGroup>
-      <_VsixVersion Condition="'$(OfficialBuild)' == 'true'">$(VersionPrefix).$(_BuildNumberFiveDigitDateStamp)$(_BuildNumberBuildOfTheDayPadded)</_VsixVersion>
-      <_VsixVersion Condition="'$(OfficialBuild)' != 'true'">42.42.42.42</_VsixVersion>
-    </PropertyGroup>
+  <Target Name="GetVsixVersion" Outputs="$(VsixVersion)">
+    <Error Text="Invalid format of OfficialBuildId: '$(OfficialBuildId)'"
+           Condition="$(VersionSuffixDateStamp) != '' and ($(VersionSuffixDateStamp.Length) != 5 or $(VersionSuffixBuildOfTheDayPadded.Length) != 2)"/>
+
   </Target>
 
 </Project>

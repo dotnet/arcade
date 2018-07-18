@@ -9,7 +9,6 @@
 
 parameters:
   agentOs: Windows_NT
-  buildReason: IndividualCI
   dockerImage: ''
   enableTelemetry: true
   queue: {}
@@ -19,53 +18,54 @@ phases:
 - template: /eng/common/templates/phases/base.yml
   parameters:
     agentOs: ${{ parameters.agentOs }}
-    buildReason: ${{ parameters.buildReason }}
     buildConfig: $(_BuildConfig)
     phaseName: ${{ parameters.agentOs }}
     dockerImage: ${{ parameters.dockerImage }}
     enableTelemetry: ${{ parameters.enableTelemetry }}
     fetchDepth: 5
     helixType: build/product
-    ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+    ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
       helixSource: official/dotnet/arcade/$(Build.SourceBranch)
-    ${{ if in(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+    ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
       helixSource: pr/dotnet/arcade/$(Build.SourceBranch)
     phase:
       queue: ${{ parameters.queue }}
       variables: 
-        ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+        ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
           _TeamName: DotNetCore
           _UseEsrpSigning: ${{ parameters.useEsrpSigning }}
-        ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+        ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           _PublishArgs: /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
             /p:PB_PublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
             /p:PB_PublishType=$(_PublishType) 
-        ${{ if in(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+        ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
           _PublishArgs: ''
-
       steps:
       - template: /eng/common/templates/steps/run-on-windows.yml
         parameters:
           agentOs: ${{ parameters.agentOs }} 
           steps:
-          - ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-            - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
-              displayName: Install MicroBuild plugin
-              inputs:
-                signType: $(_SignType)
-                zipSources: false
-                esrpSigning: $(_UseEsrpSigning)
-              env:
-                TeamName: $(_TeamName)
-              continueOnError: false
-              condition: and(succeeded(), in(variables._SignType, 'real', 'test'))
-            - task: AzureKeyVault@1
-              inputs:
-                azureSubscription: 'DotNet-Engineering-Services_KeyVault'
-                KeyVaultName: EngKeyVault
-                SecretsFilter: 'dotnetfeed-storage-access-key-1'
-              condition: succeeded()
+          - template: /eng/common/templates/steps/build-reason.yml
+            parameters:
+              conditions: not IndividualCI,BatchedCI,PullRequest
+              steps:
+              - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
+                displayName: Install MicroBuild plugin
+                inputs:
+                  signType: $(_SignType)
+                  zipSources: false
+                  esrpSigning: $(_UseEsrpSigning)
+                env:
+                  TeamName: $(_TeamName)
+                continueOnError: false
+                condition: and(succeeded(), in(variables._SignType, 'real', 'test'))
+              - task: AzureKeyVault@1
+                inputs:
+                  azureSubscription: 'DotNet-Engineering-Services_KeyVault'
+                  KeyVaultName: EngKeyVault
+                  SecretsFilter: 'dotnetfeed-storage-access-key-1'
+                condition: succeeded()
           - script: eng\common\cibuild.cmd
               -configuration $(_BuildConfig) 
               -prepareMachine
@@ -90,26 +90,25 @@ phases:
             env:
               OfficialBuildId: $(BUILD.BUILDNUMBER)
             condition: succeeded()
-
-      - ${{ if notIn(parameters.buildReason, 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-        - task: CopyFiles@2
-          displayName: Gather Logs
-          inputs:
-            SourceFolder: '$(Build.SourcesDirectory)/artifacts'
-            Contents: '**/*log'
-            TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
-          continueOnError: true
-          condition: succeededOrFailed()
-        - task: PublishBuildArtifacts@1
-          displayName: Publish Logs to VSTS
-          inputs:
-            PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
-            PublishLocation: Container
-            # Should be able to use a single definition of ArtifactName here instead of conditioned on 
-            # agentOs once variables are available in the template evaluation context.  
-            ${{ if eq(parameters.agentOs, 'Windows_NT') }}:
-              ArtifactName: Windows_NT_$(Agent.JobName)
-            ${{ if ne(parameters.agentOs, 'Windows_NT') }}:
-              ArtifactName: Linux_$(Agent.JobName)
-          continueOnError: true
-          condition: succeededOrFailed()
+      - template: /eng/common/templates/steps/build-reason.yml
+        parameters:
+          conditions: not IndividualCI,BatchedCI,PullRequest
+          steps:
+          - task: CopyFiles@2
+            displayName: Gather Logs
+            inputs:
+              SourceFolder: '$(Build.SourcesDirectory)/artifacts'
+              TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
+            continueOnError: true
+            condition: succeededOrFailed()
+          - task: PublishBuildArtifacts@1
+            displayName: Publish Logs to VSTS
+            inputs:
+              PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
+              PublishLocation: Container
+              ${{ if eq(parameters.agentOs, 'Windows_NT') }}:
+                ArtifactName: Windows_NT_$(Agent.JobName)
+              ${{ if ne(parameters.agentOs, 'Windows_NT') }}:
+                ArtifactName: Linux_$(Agent.JobName)
+            continueOnError: true
+            condition: succeededOrFailed()

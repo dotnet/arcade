@@ -63,10 +63,6 @@
     PB_PublishBlobFeedUrl          {''|URL}                       Target feed URL.
     PB_PublishBlobFeedKey          {''|string}                    Account key.
     PB_SigningOrchestrationConfig  {''|string}                    Path to output Json for orchestrated-type signing (produce manifest that can be consumed later.)
-    PB_IsStable                    {''|'true'|'false'}            If specified then NuGet package version suffixes used by the repo are overridden by the orchestrated build like so:
-                                                                  if 'true' then version suffixes have format '{base version}-{PB_VersionStamp}', 
-                                                                  if 'false' then version suffixes have format '{base version}-{PB_VersionStamp}-{build number}'
-    PB_VersionStamp                {''|string}                    NuGet package pre-release version label e.g. 'beta', 'preview1', etc. May be empty.
   -->
   <PropertyGroup>
     <RealSign>false</RealSign>

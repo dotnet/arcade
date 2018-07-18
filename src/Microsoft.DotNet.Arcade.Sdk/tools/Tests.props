@@ -35,8 +35,8 @@
   </ItemGroup>
 
   <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
-    <!-- Do not publish test assemblies and symbols to SymStore. -->
-    <PublishOutputToSymStore Condition="'$(PublishOutputToSymStore)' == ''">false</PublishOutputToSymStore>
+    <!-- Treat test assemblies as non-shipping (do not publish or sign them). -->
+    <IsShipping Condition="'$(IsShipping)' == ''">false</IsShipping>
   </PropertyGroup>
 
 </Project>

@@ -173,3 +173,11 @@ For a list of known VSTS issues we are tracking, please go [here](https://dotnet
   7. Change the "default branch for manual and scheduled builds" back to the value you noted in step 3.
   8. Save the build definition
   9. Now the resources should be authorized and you can submit your changes via a PR or direct push
+
+- "Repository self references endpoint"
+
+  If you see an error like this
+  
+  `An error occurred while loading the YAML build definition. Repository self references endpoint 6510879c-eddc-458b-b083-f8150e06ada5 which does not exist or is not authorized for use`
+  
+  The problem is the yaml file had a parse error when the definition was originally created. When the definition is created, parse errors are saved with the definition and are supposed to be shown in the definition editor. That regressed in the UI. VSTS is also making a change so that even if there are errors parsing the file, they go ahead and save the repository endpoint as authorized.  In the mean time, you have to track down your YAML parse error.
