@@ -18,14 +18,14 @@ For the start of a more complete requirements list, please read the rest of this
 ### Requirements
 - *Dev must have Microsoft credentials that we can manage
 - Be able to choose a specific hash, or latest from a given repo
-- Button where the dev saw the failure (for example, Mission Control) OR single command line to request 
+- Button where the dev saw the failure (for example, Mission Control) OR single command line to request
 - VSTS git hashes are currently a non-requirement
 
 # Aquiring machines
 
 ### Requirements
 - *Common interface to "check out" a machine (VM or otherwise)
-- *Checking out a machine comes with sufficient data and access to connect and configure 
+- *Checking out a machine comes with sufficient data and access to connect and configure
 - *The machine should be delivered in a known state which can reasonably be setup to repro
 - Devs needs the ability to list all environments they've asked for, including current state (e.gl. if they're ready or not)
 - Dev should have the ability to give other devs access
@@ -44,7 +44,7 @@ Once a machine is aquired, additional setup is still required in order to suppor
 
 ### Misc reference material
 - dotnet-ci jumping off point: https://github.com/dotnet/dotnet-ci
-- buildtools groovy example: https://github.com/dotnet/buildtools/blob/master/netci.groovy 
+- buildtools groovy example: https://github.com/dotnet/buildtools/blob/master/netci.groovy
 
 # Product and Tests are Built
 
@@ -90,4 +90,4 @@ AE is a tool (originally from Office) which manages inventory in "pools", allowi
 - Our pool is \STB\DevDiv\DotNet
 - Web services url is http://aee/ws
 - To install the AE client is http://aee/installae.  IE is needed to install the client.
-- Contact: Dale Hirt in DDIT
+- Contact: Dale Hirt in DDFUN

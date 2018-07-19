@@ -102,9 +102,9 @@ Take-aways:
 
 As we continued to grow in the number of repos that we built and docker based linux variants we supported, we started to see build failures on a regular (~ every 3 weeks builds would start to fail across the board) because machine disk space would fill up and VSTS didn't provide the level of cleanup that we required when dealing with hundreds of builds a day in a fixed machine pool shared across products.  
 
-To address disk space issues we invested in infrastructure that we could run on every build to cleanup the VSTS agent working directories which contained builds older than a day, and also to cleanup docker images / containers which began accumulating on machines and taking up precious space.  The compromise of only deleting day old builds arose because we couldn't cleanup every build (though we wanted to) due to repos failing but holding locked processes that would cause cleanup to fail.  The workaround of ignoring those cases wasn't acceptable because it meant that every build we ran reported the same warning of a failed cleanup task and eternally "yellow" builds is not as pleasant as seeing "green" builds. 
+To address disk space issues we invested in infrastructure that we could run on every build to cleanup the VSTS agent working directories which contained builds older than a day, and also to cleanup docker images / containers which began accumulating on machines and taking up precious space.  The compromise of only deleting day old builds arose because we couldn't cleanup every build (though we wanted to) due to repos failing but holding locked processes that would cause cleanup to fail.  The workaround of ignoring those cases wasn't acceptable because it meant that every build we ran reported the same warning of a failed cleanup task and eternally "yellow" builds is not as pleasant as seeing "green" builds.
 
-Cleanup is actually a major thing as every time a machines disk drive fills, it requires someone to investigate the issue then manually clean it up or enlist the help of DDIT.  It's even worse because machines (obviously) fill up disk space faster under heavy usage which tends to happen when products are preparing to ship and you really don't want to see random infrastructure failures. 
+Cleanup is actually a major thing as every time a machines disk drive fills, it requires someone to investigate the issue then manually clean it up or enlist the help of DDFUN.  It's even worse because machines (obviously) fill up disk space faster under heavy usage which tends to happen when products are preparing to ship and you really don't want to see random infrastructure failures. 
 
 ### Feature 6 - Checked in definitions
 
@@ -119,7 +119,7 @@ One other minor win we had with checked in definitions, was associating the buil
 Checked in definitions are clearly superior for DotNet teams because of their branching nature, but there are certainly some downsides to our current iteration
 - We never invested in a clean flow for modifying checked in definitions.  The JSON dump style works, but it includes a bunch of extra data which devs don't care about, or understand.  I wrote a tool that launches a web browser and loads the local JSON into a new build definition so that it can be iterated on via the standard VSTS definition editing process.  After making changes via the web UI, you can use the same tool to download the code again locally.  The tool was never truly invested in though, and often the code you downloaded from VSTS would look vastly different because of back-end formatting changes which would add additional metadata or change GUIDs (devs never understood Task GUIDs).
 - The JSON build definitions contained too much extra metadata and it was nearly impossible for any dev to manually make a change to the definition with a text editor unless it was changing a variable name / value.
-- Secrets became confusing because they couldn't be defined by the JSON, they were provided by the PipeBuild orchestrator. 
+- Secrets became confusing because they couldn't be defined by the JSON, they were provided by the PipeBuild orchestrator.
 
 ### Feature 7 - Conditional build legs
 
@@ -130,8 +130,8 @@ I'll be brief on this topic because VSTS now provides custom conditions.  Prior 
 Secret management started to become more and more of an issue.  Whether it was a PAT expiring or (and I'm guilty of this on one occassion) an unintended secret getting leaked, when you had to update a secret in VSTS, it became a nightmare.  
 
 - Multiple product teams owning their own builds meant that the same secret was defined by differently named variables in different repos
-- Multiple devs working on builds meant that sometimes secrets were unintentionally duplicated with different variables 
-- You can't read the secrets (duh), so, without careful monitoring, it became nearly impossible to know which variable applied to which secret. 
+- Multiple devs working on builds meant that sometimes secrets were unintentionally duplicated with different variables
+- You can't read the secrets (duh), so, without careful monitoring, it became nearly impossible to know which variable applied to which secret.
 
 Secrets were defined all over the place!  Updating them was a nightmare.  Thankfully, we were following the practice of keeping our secrets in Azure Key Vault so that we could retrieve them if necessary; for example, when bringing up a new orchestrated build.  There was still no connection between key vault and the VSTS build definition, so if we had to update a secret it fell on one of two or three devs that were familiar with the system to go through and manually update all of the numerous build definitions.
 
@@ -153,7 +153,7 @@ As a reminder, the .NET Core Engineering team never wanted to own a build orches
 
 - PipeBuild was never versioned.  Every official build in every branch of every product, uses the same code base (HEAD).  That meant breaking changes were not possible though they happened on occassion at great expense.  Some times a breaking change wouldn't be discovered to have occurred until a dormant servicing branch was spun up to produce a servicing fix.  The cost at that point is prohibitive both because spinning builds in a servicing branch can be difficult, and because knowledge of how that branch worked could be lost.
 
-- Clean PipeBuild output. Our PipeBuild output just periodically queries VSTS for build status and dumps the output to the UI console. Tracking down a failing build leg while the build was in progress was difficult as its status would just scroll off the screen if you weren't diligent.  If you waited until the build completed, you would get a dump of the failing build legs, but you had to scroll to the bottom of a lengthy output and doing this on a mobile device was an exercisein extreme patience. 
+- Clean PipeBuild output. Our PipeBuild output just periodically queries VSTS for build status and dumps the output to the UI console. Tracking down a failing build leg while the build was in progress was difficult as its status would just scroll off the screen if you weren't diligent.  If you waited until the build completed, you would get a dump of the failing build legs, but you had to scroll to the bottom of a lengthy output and doing this on a mobile device was an exercisein extreme patience.
 
 - Dev workflow for modifying definitions.  Checked in definitions were great, but never fully supported after implementation.  It was difficult to reason about the JSON defintions, and editing them required every dev to ping me for access to the hacky tool I had written and mentioned above.  Merging two JSON blobs representing different VSTS api versions was very arduous.
 
