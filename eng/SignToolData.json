@@ -8,6 +8,8 @@
         "bin/Microsoft.DotNet.Build.Tasks.Feed/netstandard1.5/*/Microsoft.DotNet.Build.Tasks.Feed.resources.dll",
         "bin/Microsoft.DotNet.Build.Tasks.Feed/net461/Microsoft.DotNet.Build.Tasks.Feed.dll",
         "bin/Microsoft.DotNet.Build.Tasks.Feed/net461/*/Microsoft.DotNet.Build.Tasks.Feed.resources.dll",
+        "bin/Microsoft.DotNet.Build.Tasks.Links/net461/Microsoft.DotNet.Build.Tasks.Links.dll",
+        "bin/Microsoft.DotNet.Build.Tasks.Links/netcoreapp2.0/Microsoft.DotNet.Build.Tasks.Links.dll",
         "bin/Microsoft.DotNet.Build.Tasks.Packaging/net46/Microsoft.DotNet.Build.Tasks.Packaging.dll",
         "bin/Microsoft.DotNet.Build.Tasks.Packaging/netcoreapp2.0/Microsoft.DotNet.Build.Tasks.Packaging.dll",
         "bin/Microsoft.DotNet.Helix.Client/netstandard1.4/Microsoft.DotNet.Helix.Client.dll",
