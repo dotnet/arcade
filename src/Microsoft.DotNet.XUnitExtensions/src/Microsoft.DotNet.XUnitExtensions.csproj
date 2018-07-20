@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <AssemblyName>Microsoft.DotNet.XUnitExtensions</AssemblyName>
+    <IsPackable>true</IsPackable>
+    
+    <PackageId>Microsoft.DotNet.XUnitExtensions</PackageId>
+    <VersionPrefix>2.4.0</VersionPrefix>
+    <Description>This package provides things like various traits and discovers like OuterLoop/ActiveIssue that are used by .NET Core framework test projects.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="$(XUnitVersion)" />
+  </ItemGroup>
+
+</Project>

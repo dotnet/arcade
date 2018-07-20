@@ -5,7 +5,7 @@
 using System;
 using Xunit.Sdk;
 
-namespace Xunit.NetCore.Extensions
+namespace Microsoft.DotNet.XUnitExtensions
 {
     public struct XunitConstants
     {

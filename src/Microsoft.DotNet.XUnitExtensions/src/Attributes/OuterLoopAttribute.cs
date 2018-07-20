@@ -10,7 +10,7 @@ namespace Xunit
     /// <summary>
     /// Apply this attribute to your test method to specify a outer-loop category.
     /// </summary>
-    [TraitDiscoverer("Xunit.NetCore.Extensions.OuterLoopTestsDiscoverer", "Xunit.NetCore.Extensions")]
+    [TraitDiscoverer("Microsoft.DotNet.XUnitExtensions.OuterLoopTestsDiscoverer", "Microsoft.DotNet.XUnitExtensions")]
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
     public class OuterLoopAttribute : Attribute, ITraitAttribute
     {

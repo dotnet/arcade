@@ -9,7 +9,7 @@ using System.Reflection;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Xunit.NetCore.Extensions
+namespace Microsoft.DotNet.XUnitExtensions
 {
     // Internal helper class for code common to conditional test discovery through
     // [ConditionalFact] and [ConditionalTheory]

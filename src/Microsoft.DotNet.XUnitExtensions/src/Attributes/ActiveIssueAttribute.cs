@@ -10,7 +10,7 @@ namespace Xunit
     /// <summary>
     /// Apply this attribute to your test method to specify an active issue.
     /// </summary>
-    [TraitDiscoverer("Xunit.NetCore.Extensions.ActiveIssueDiscoverer", "Xunit.NetCore.Extensions")]
+    [TraitDiscoverer("Microsoft.DotNet.XUnitExtensions.ActiveIssueDiscoverer", "Microsoft.DotNet.XUnitExtensions")]
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
     public class ActiveIssueAttribute : Attribute, ITraitAttribute
     {

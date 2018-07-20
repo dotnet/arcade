@@ -5,7 +5,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Xunit.NetCore.Extensions
+namespace Microsoft.DotNet.XUnitExtensions
 {
     /// <summary>
     /// Trace Listener for corefx Desktop test execution to avoid showing assert pop-ups and making the test fail when an Assert fails.

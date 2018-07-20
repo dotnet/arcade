@@ -8,7 +8,7 @@ using System.Linq;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Xunit.NetCore.Extensions
+namespace Microsoft.DotNet.XUnitExtensions
 {
     public class ConditionalFactDiscoverer : FactDiscoverer
     {

@@ -10,7 +10,7 @@ using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Xunit.NetCore.Extensions
+namespace Microsoft.DotNet.XUnitExtensions
 {
     /// <summary>Wraps another test case that should be skipped.</summary>
     internal sealed class SkippedTestCase : LongLivedMarshalByRefObject, IXunitTestCase
