@@ -7,20 +7,20 @@ using Xunit.Sdk;
 
 namespace Xunit
 {
-    [XunitTestCaseDiscoverer("Xunit.NetCore.Extensions.ConditionalFactDiscoverer", "Xunit.NetCore.Extensions")]
+    [XunitTestCaseDiscoverer("Microsoft.DotNet.XUnitExtensions.ConditionalTheoryDiscoverer", "Microsoft.DotNet.XUnitExtensions")]
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class ConditionalFactAttribute : FactAttribute
+    public sealed class ConditionalTheoryAttribute : TheoryAttribute
     {
         public Type     CalleeType { get; private set; }
         public string[] ConditionMemberNames { get; private set; }
 
-        public ConditionalFactAttribute(Type calleeType, params string[] conditionMemberNames)
+        public ConditionalTheoryAttribute(Type calleeType, params string[] conditionMemberNames)
         {
             CalleeType = calleeType;
             ConditionMemberNames = conditionMemberNames;
         }
 
-        public ConditionalFactAttribute(params string[] conditionMemberNames)
+        public ConditionalTheoryAttribute(params string[] conditionMemberNames)
         {
             ConditionMemberNames = conditionMemberNames;
         }

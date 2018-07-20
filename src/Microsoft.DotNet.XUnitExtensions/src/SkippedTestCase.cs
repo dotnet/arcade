@@ -10,13 +10,17 @@ using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Xunit.NetCore.Extensions
+namespace Microsoft.DotNet.XUnitExtensions
 {
     /// <summary>Wraps another test case that should be skipped.</summary>
     internal sealed class SkippedTestCase : LongLivedMarshalByRefObject, IXunitTestCase
     {
         private readonly IXunitTestCase _testCase;
         private readonly string _skippedReason;
+
+        public SkippedTestCase()
+        {
+        }
 
         internal SkippedTestCase(IXunitTestCase testCase, string skippedReason)
         {
@@ -39,6 +43,10 @@ namespace Xunit.NetCore.Extensions
         public Dictionary<string, List<string>> Traits { get { return _testCase.Traits; } }
 
         public string UniqueID { get { return _testCase.UniqueID; } }
+
+        public Exception InitializationException { get { return null; } }
+
+        public int Timeout { get { return 0; } }
 
         public void Deserialize(IXunitSerializationInfo info) { _testCase.Deserialize(info); }
 

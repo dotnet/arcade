@@ -19,7 +19,7 @@ using Xunit.Sdk;
 /// <code>-trait "Category=BVT"</code> for example that will only run the tests with [TestCategory("BVT")] on it.
 /// </summary>
 
-namespace Xunit.NetCore.Extensions
+namespace Microsoft.DotNet.XUnitExtensions
 {
     public class TestCategoryDiscoverer : ITraitDiscoverer
     {

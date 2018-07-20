@@ -9,7 +9,7 @@ using System.Reflection;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Xunit.NetCore.Extensions
+namespace Microsoft.DotNet.XUnitExtensions
 {
     // Internal helper class for code common to conditional test discovery through
     // [ConditionalFact] and [ConditionalTheory]
@@ -33,6 +33,8 @@ namespace Xunit.NetCore.Extensions
             MethodInfo testMethodInfo = testMethod.Method.ToRuntimeMethod();
             Type testMethodDeclaringType = testMethodInfo.DeclaringType;
             List<string> falseConditions = new List<string>(conditionMemberNames.Count());
+            TestMethodDisplay defaultMethodDisplay = discoveryOptions.MethodDisplayOrDefault();
+            TestMethodDisplayOptions defaultMethodDisplayOptions = discoveryOptions.MethodDisplayOptionsOrDefault();
 
             foreach (string entry in conditionMemberNames)
             {
@@ -73,7 +75,8 @@ namespace Xunit.NetCore.Extensions
                     {
                         new ExecutionErrorTestCase(
                             diagnosticMessageSink,
-                            discoveryOptions.MethodDisplayOrDefault(),
+                            defaultMethodDisplay,
+                            defaultMethodDisplayOptions,
                             testMethod,
                             GetFailedLookupString(conditionMemberName, declaringType))
                     };

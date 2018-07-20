@@ -10,7 +10,7 @@ namespace Xunit
     /// <summary>
     /// Apply this attribute to your test method to specify this is a platform specific test.
     /// </summary>
-    [TraitDiscoverer("Xunit.NetCore.Extensions.SkipOnTargetFrameworkDiscoverer", "Xunit.NetCore.Extensions")]
+    [TraitDiscoverer("Microsoft.DotNet.XUnitExtensions.SkipOnTargetFrameworkDiscoverer", "Microsoft.DotNet.XUnitExtensions")]
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
     public class SkipOnTargetFrameworkAttribute : Attribute, ITraitAttribute
     {

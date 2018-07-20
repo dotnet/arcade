@@ -7,7 +7,7 @@ using Xunit.Sdk;
 
 namespace Xunit
 {
-    [TraitDiscoverer("Xunit.NetCore.Extensions.ConditionalClassDiscoverer", "Xunit.NetCore.Extensions")]
+    [TraitDiscoverer("Microsoft.DotNet.XUnitExtensions.ConditionalClassDiscoverer", "Microsoft.DotNet.XUnitExtensions")]
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public sealed class ConditionalClassAttribute : Attribute, ITraitAttribute
     {

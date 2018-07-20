@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Xunit.NetCore.Extensions
+namespace Microsoft.DotNet.XUnitExtensions
 {
     /// <summary>
     /// This class discovers all of the tests and test classes that have
