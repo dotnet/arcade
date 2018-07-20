@@ -21,9 +21,8 @@
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
     <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="$(MicrosoftExtensionsFileSystemGlobbingVersion)" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" Publish="false" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" Publish="false" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" Publish="false" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" ExcludeAssets="runtime" />
   </ItemGroup>
 
   <!-- Just copy the .props and .target to the build folder. -->
@@ -49,10 +48,6 @@
 
     <ItemGroup>
       <_Files Include="$(_Dir)*" />
-
-      <!-- Exclude msbuild binaries -->
-      <_Files Remove="$(_Dir)Microsoft.Build.*.dll" />
-      <_Files Remove="$(_Dir)Microsoft.VisualStudio.*.dll" />
 
       <TfmSpecificPackageFile Include="@(_Files)">
         <PackagePath>tools/$(TargetFramework)/%(_Files.Filename)%(_Files.Extension)</PackagePath>

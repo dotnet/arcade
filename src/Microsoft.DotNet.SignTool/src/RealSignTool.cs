@@ -39,13 +39,7 @@ namespace Microsoft.DotNet.SignTool
 
         public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath)
         {
-            var msbuildTask = new MSBuild()
-            {
-                BuildEngine = buildEngine,
-                Projects = new[] { new TaskItem(projectFilePath) }
-            };
-
-            return msbuildTask.Execute();
+            return buildEngine.BuildProjectFile(projectFilePath, null, null, null);
         }
 
         /// <summary>
