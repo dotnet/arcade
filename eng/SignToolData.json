@@ -19,7 +19,8 @@
         "bin/Microsoft.DotNet.SignTool/netcoreapp2.0/Microsoft.DotNet.SignTool.dll",
         "bin/Microsoft.DotNet.SignTool.Tests/netcoreapp2.0/Microsoft.DotNet.SignTool.Tests.dll",
         "bin/Microsoft.DotNet.Arcade.Sdk/net461/Microsoft.DotNet.Arcade.Sdk.dll",
-        "bin/Microsoft.DotNet.Arcade.Sdk/netcoreapp2.0/Microsoft.DotNet.Arcade.Sdk.dll"
+        "bin/Microsoft.DotNet.Arcade.Sdk/netcoreapp2.0/Microsoft.DotNet.Arcade.Sdk.dll",
+        "bin/Microsoft.DotNet.XUnitExtensions/netstandard2.0/Microsoft.DotNet.XUnitExtensions.dll"
       ]
     },
     {
