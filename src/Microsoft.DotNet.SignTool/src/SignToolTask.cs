@@ -1,58 +1,73 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
+// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
+using System.IO;
 
 namespace Microsoft.DotNet.SignTool
 {
     public class SignToolTask : Task
     {
-        private const bool ExitWithFailure = false;
+        /// <summary>
+        /// Perform validation but do not actually send signing request to the server.
+        /// </summary>
+        public bool DryRun { get; set; }
 
-        public bool Test { get; set; }
+        /// <summary>
+        /// True to test sign, otherwise real sign.
+        /// </summary>
         public bool TestSign { get; set; }
-        public string OrchestrationManifestPath { get; set; }
+
+        /// <summary>
+        ///  Path to SignToolData.json.
+        /// </summary>
+        [Required]
         public string ConfigFilePath { get; set; }
+
+        /// <summary>
+        /// Directory containing binaries produced by the build.
+        /// </summary>
+        [Required]
         public string OutputPath { get; set; }
 
+        /// <summary>
+        /// Working directory used for storing files created during signing.
+        /// </summary>
+        [Required]
+        public string TempPath { get; set; }
+
+        /// <summary>
+        /// Path to MicroBuild.Core package directory.
+        /// </summary>
+        [Required]
+        public string MicroBuildCorePath { get; set; }
+
         public override bool Execute()
+        {
+            ExecuteImpl();
+            return !Log.HasLoggedErrors;
+        }
+
+        private void ExecuteImpl()
         {
             try
             {
                 var signToolArgs = new SignToolArgs(
                     outputPath: OutputPath,
-                    configFile: ConfigFilePath,
-                    test: Test,
-                    testSign: TestSign,
-                    orchestrationManifestPath: OrchestrationManifestPath);
+                    tempPath: TempPath,
+                    microBuildCorePath: MicroBuildCorePath,
+                    testSign: TestSign);
 
-                BatchSignInput batchData;
-                var signTool = SignToolFactory.Create(signToolArgs);
-                string configFileKind = Program.GetConfigFileKind(signToolArgs.ConfigFile);
+                var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
+                var batchData = Configuration.ReadConfigFile(signToolArgs.OutputPath, ConfigFilePath, Log);
+                var util = new BatchSignUtil(BuildEngine, Log, signTool, batchData, null);
 
-                switch (configFileKind.ToLower())
-                {
-                    case "default":
-                        batchData = Program.ReadConfigFile(signToolArgs.OutputPath, signToolArgs.ConfigFile);
-                        break;
-                    case "orchestration":
-                        batchData = Program.ReadOrchestrationConfigFile(signToolArgs.OutputPath, signToolArgs.ConfigFile);
-                        break;
-                    default:
-                        Log.LogError($"signtool : error : Don't know how to deal with manifest kind '{configFileKind}'");
-                        return ExitWithFailure;
-                }
-
-                var util = new BatchSignUtil(signTool, batchData, signToolArgs.OrchestrationManifestPath);
-
-                return util.Go(Console.Out) ? !Log.HasLoggedErrors : ExitWithFailure;
+                util.Go();
             }
             catch (Exception e)
             {
-                Log.LogErrorFromException(e);
-                return ExitWithFailure;
+                Log.LogErrorFromException(e, showStackTrace: true);
             }
         }
     }
