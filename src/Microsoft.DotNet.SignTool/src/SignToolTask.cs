@@ -51,24 +51,17 @@ namespace Microsoft.DotNet.SignTool
 
         private void ExecuteImpl()
         {
-            try
-            {
-                var signToolArgs = new SignToolArgs(
-                    outputPath: OutputPath,
-                    tempPath: TempPath,
-                    microBuildCorePath: MicroBuildCorePath,
-                    testSign: TestSign);
+            var signToolArgs = new SignToolArgs(
+                outputPath: OutputPath,
+                tempPath: TempPath,
+                microBuildCorePath: MicroBuildCorePath,
+                testSign: TestSign);
 
-                var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
-                var batchData = Configuration.ReadConfigFile(signToolArgs.OutputPath, ConfigFilePath, Log);
-                var util = new BatchSignUtil(BuildEngine, Log, signTool, batchData, null);
+            var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
+            var batchData = Configuration.ReadConfigFile(signToolArgs.OutputPath, ConfigFilePath, Log);
+            var util = new BatchSignUtil(BuildEngine, Log, signTool, batchData, null);
 
-                util.Go();
-            }
-            catch (Exception e)
-            {
-                Log.LogErrorFromException(e, showStackTrace: true);
-            }
+            util.Go();
         }
     }
 }
