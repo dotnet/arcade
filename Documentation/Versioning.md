@@ -66,8 +66,11 @@ Date agnostic versioning is more hassle than it's worth, though having the sha i
 ## Package Version Kinds
 
 Package versions come in 3 kinds, depending on the point in the product cycle:
+
 - **Dev/Daily** 
+
   Versions should include all fields - pre-release tag, shortdate, revision, etc.
+  
   ```
   MAJOR.MINOR.PATCH-PRERELEASE.SHORTDATE.REVISION+SHORTSHA
   ```
@@ -76,7 +79,10 @@ Package versions come in 3 kinds, depending on the point in the product cycle:
     1.0.0-preview1.25405.01+abcdef
   ```
   
-- **Final Prerelease** - Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **REVISION**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'.final'`.  This avoids a common issue in nuget package resolution where `2.1.0-rc1` < `2.1.0-rc1.12345`. The intention is that the final build is resolved over the date-versioned build.
+- **Final Prerelease** 
+  
+   Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **REVISION**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'.final'`.  This avoids a common issue in nuget package resolution where `2.1.0-rc1` < `2.1.0-rc1.12345`. The intention is that the final build is resolved over the date-versioned build.
+   
   ```
   MAJOR.MINOR.PATCH-PRERELEASE.final
   ```
@@ -85,7 +91,10 @@ Package versions come in 3 kinds, depending on the point in the product cycle:
     1.0.0-preview1.final
   ```
   
-- **Release** - Versions should include **MAJOR**, **MINOR**, **PATCH**
+- **Release** 
+
+  Versions should include **MAJOR**, **MINOR**, **PATCH**.
+  
   ```
   MAJOR.MINOR.PATCH
   ```
@@ -130,7 +139,7 @@ MAJOR.MINOR.FILEPATCH.FILEREVISION
   Explict in source using `VersionPrefix` variable.
 - **FILEPATCH**
   Set to PATCH * 100 + `yy`
-- **FILE-REVISION**
+- **FILEREVISION**
   Set to (50 * `mm` + `dd`) * 100 + `r`
 
 The values of `yy`, `mm`, `dd`, and `r` are derived from `OfficialBuildId` or the current date (same as when calculating Package Version).
