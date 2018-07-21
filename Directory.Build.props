@@ -17,8 +17,10 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <!-- 'NetFxTfm' is the standard desktop Target Framework Moniker which this repo's packages are targeting
-         ie.  Place 'NetFxTfm' in the 'TargetFramework' property of a csproj like <TargetFrameworks>netcoreapp2.0;$(NetFxTfm)</TargetFrameworks> -->
+    <!-- 
+      'NetFxTfm' is the standard desktop Target Framework Moniker which this repo's packages are targeting
+      ie.  Place 'NetFxTfm' in the 'TargetFramework' property of a csproj like <TargetFrameworks>$(NetFxTfm);netcoreapp2.0</TargetFrameworks> 
+    -->
     <NetFxTfm>net461</NetFxTfm>
   </PropertyGroup>
 </Project>
