@@ -113,18 +113,21 @@ The format of package versions produced by the build is determined based on `Dot
   
 ## Package Version Generation
 
-- **MAJOR**, **MINOR**, **PATCH**
+- **MAJOR**, **MINOR**, **PATCH**:
   Specified in source using `VersionPrefix` .NET Core SDK property, defaults to `1.0.0`.
-- **PRERELEASE** 
+  
+- **PRERELEASE**: 
   Specified in source using `PreReleaseVersionLabel` property.
-- **REVISION**, **SHORTDATE** 
+  
+- **REVISION**, **SHORTDATE**: 
   - In official builds the values are derived from build parameter `OfficialBuildId` with format `20yymmdd.r` like so:
     - REVISION is set to `r` component of `OfficialBuildId`
     - SHORTDATE is set to `yy` * 1000 + 50 * `mm` + `dd`. In year 2018 the value is in range [`18051`,`18631`].
   - In CI and local dev builds REVISION and SHORTDATE are not included in the package version,
     unless `DotNetUseShippingVersion` is `true`, in which case the values of `yy`, `mm` and `dd` are derived from the current date
     and `r` = 1.
-- **SHORTSHA** 
+
+- **SHORTSHA**:
   - The first 8 characters for the current git HEAD commit SHA
 
 ## File Version Generation
@@ -135,13 +138,11 @@ File version has 4 parts and need to increase every official build. This is espe
 MAJOR.MINOR.FILEPATCH.FILEREVISION
 ```
 
-- **MAJOR** and **MINOR** 
-  Specified in `VersionPrefix` variable.
-  
-- **FILEPATCH**
+- **MAJOR** and **MINOR**: 
+  Specified in `VersionPrefix` variable.   
+- **FILEPATCH**: 
   Set to PATCH * 100 + `yy`
-  
-- **FILEREVISION**
+- **FILEREVISION**: 
   Set to (50 * `mm` + `dd`) * 100 + `r`
 
 The values of `yy`, `mm`, `dd`, and `r` are derived from `OfficialBuildId` or the current date (same as when calculating Package Version).
