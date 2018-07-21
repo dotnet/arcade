@@ -76,7 +76,7 @@ Package versions come in 3 kinds, depending on the point in the product cycle:
   ```
   Example:
   ```
-    1.0.0-preview1.25405.01+abcdef
+    1.0.0-preview1.25405.1+abcdef
   ```
   
 - **Final Prerelease** 
@@ -158,3 +158,4 @@ Examples of SemVer1 package versions:
 | "prerelease"             | "1.2.3-beta-final-abcdef"   |
 | "release"                | "1.2.3"                     |
 
+Note that the REVISION number is zero-padded to two characters.
