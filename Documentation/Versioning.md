@@ -136,10 +136,15 @@ MAJOR.MINOR.FILEPATCH.FILEREVISION
 ```
 
 - **MAJOR** and **MINOR** 
-  Explict in source using `VersionPrefix` variable.
+
+  Specified in `VersionPrefix` variable.
+  
 - **FILEPATCH**
+
   Set to PATCH * 100 + `yy`
+  
 - **FILEREVISION**
+
   Set to (50 * `mm` + `dd`) * 100 + `r`
 
 The values of `yy`, `mm`, `dd`, and `r` are derived from `OfficialBuildId` or the current date (same as when calculating Package Version).
