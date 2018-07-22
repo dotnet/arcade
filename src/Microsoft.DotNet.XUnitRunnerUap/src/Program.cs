@@ -1,36 +1,35 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Windows.UI.Xaml;
+using Windows.Storage;
 using Xunit;
-using Xunit.ConsoleClient;
-using Xunit.Shared;
 
-namespace XUnit.Runner.Uap
+namespace Microsoft.DotNet.XUnitRunnerUap
 {
-    class XunitTestRunner
+    class Program
     {
         volatile static bool cancel = false;
 
-        private static StreamWriter log;
-
-        public async void RunTests(string arguments)
+        static void Main(string[] args)
         {
-            log = await Helpers.GetFileStreamWriterInLocalStorageAsync("stdout.txt");
-
-            string[] args = arguments.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-            log.WriteLine(arguments);
+            // Setup
+            Windows.UI.Xaml.Application.Current.UnhandledException += OnUnhandledException;
+            Console.WriteLine(args);
 
             var commandLine = CommandLine.Parse(args);
             if (commandLine.Debug)
             {
                 Debugger.Launch();
             }
+
             var completionMessages = new ConcurrentDictionary<string, ExecutionSummary>();
             var assembliesElement = new XElement("assemblies");
 
@@ -40,6 +39,7 @@ namespace XUnit.Runner.Uap
                 {
                     return;
                 }
+
                 assembly.Configuration.PreEnumerateTheories = false;
                 assembly.Configuration.DiagnosticMessages |= commandLine.DiagnosticMessages;
                 assembly.Configuration.AppDomain = AppDomainSupport.Denied;
@@ -54,7 +54,7 @@ namespace XUnit.Runner.Uap
                     {
                         string assemblyName = Path.GetFileNameWithoutExtension(assembly.AssemblyFilename);
                         // Discover & filter the tests
-                        log.WriteLine($"Discovering: {assemblyName}");
+                        Console.WriteLine($"Discovering: {assemblyName}");
                         xunit.Find(false, discoveryVisitor, discoveryOptions);
                         discoveryVisitor.Finished.WaitOne();
 
@@ -62,12 +62,12 @@ namespace XUnit.Runner.Uap
                         var filteredTestCases = discoveryVisitor.TestCases.Where(commandLine.Project.Filters.Filter).ToList();
                         var testCasesToRun = filteredTestCases.Count;
 
-                        log.WriteLine($"Discovered: {assemblyName}");
+                        Console.WriteLine($"Discovered: {assemblyName}");
 
                         // Run the filtered tests
                         if (testCasesToRun == 0)
                         {
-                            log.WriteLine($"Info:        {assemblyName} has no tests to run");
+                            Console.WriteLine($"Info:        {assemblyName} has no tests to run");
                         }
                         else
                         {
@@ -78,7 +78,7 @@ namespace XUnit.Runner.Uap
 
                             var assemblyElement = new XElement("assembly");
 
-                            StandardUapVisitor resultsVisitor = new StandardUapVisitor(assemblyElement, () => cancel, log, completionMessages, commandLine.ShowProgress, commandLine.FailSkips);
+                            StandardUapVisitor resultsVisitor = new StandardUapVisitor(assemblyElement, () => cancel, completionMessages, commandLine.ShowProgress, commandLine.FailSkips);
 
                             xunit.RunTests(filteredTestCases, resultsVisitor, executionOptions);
 
@@ -86,7 +86,7 @@ namespace XUnit.Runner.Uap
 
                             assembliesElement.Add(assemblyElement);
 
-                            log.WriteLine($"{Path.GetFileNameWithoutExtension(assembly.AssemblyFilename)}  Total: {resultsVisitor.ExecutionSummary.Total}, Errors: {resultsVisitor.ExecutionSummary.Errors}, Failed: {resultsVisitor.ExecutionSummary.Failed}, Skipped: {resultsVisitor.ExecutionSummary.Skipped}, Time: {resultsVisitor.ExecutionSummary.Time}");
+                            Console.WriteLine($"{Path.GetFileNameWithoutExtension(assembly.AssemblyFilename)}  Total: {resultsVisitor.ExecutionSummary.Total}, Errors: {resultsVisitor.ExecutionSummary.Errors}, Failed: {resultsVisitor.ExecutionSummary.Failed}, Skipped: {resultsVisitor.ExecutionSummary.Skipped}, Time: {resultsVisitor.ExecutionSummary.Time}");
                         }
                     }
                 }
@@ -94,27 +94,33 @@ namespace XUnit.Runner.Uap
                 {
                     assembliesElement = new XElement("error");
                     assembliesElement.Add(e);
-                    log.WriteLine(e);
+                    Console.WriteLine(e);
                 }
                 finally
                 {
-                    await WriteResults(Path.GetFileName(assembly.AssemblyFilename), assembliesElement);
-                    log.Dispose();
+                    WriteResults(Path.GetFileName(assembly.AssemblyFilename), assembliesElement).GetAwaiter().GetResult();
                 }
             }
 
-            Application.Current.Exit();
+            Windows.UI.Xaml.Application.Current.Exit();
         }
-
 
         static async Task WriteResults(string test, XElement data)
         {
-            var file = await Helpers.GetStorageFileAsync($"{test}.xml");
+            StorageFolder folder = await KnownFolders.DocumentsLibrary.CreateFolderAsync("TestResults", CreationCollisionOption.OpenIfExists);
+            StorageFile file = await folder.CreateFileAsync(test + ".xml", CreationCollisionOption.ReplaceExisting);
+
             using (var stream = await file.OpenStreamForWriteAsync())
             {
                 data.Save(stream);
                 stream.Flush();
             }
+        }
+
+        static void OnUnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
+        {
+            Console.WriteLine(e?.Exception.ToString() ?? "Error of unknown type thrown in application domain");
+            Windows.UI.Xaml.Application.Current.Exit();
         }
     }
 }

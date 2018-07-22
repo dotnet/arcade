@@ -1,40 +1,37 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Text;
 using System.Xml.Linq;
+using Xunit;
 using Xunit.Abstractions;
 
-namespace Xunit.ConsoleClient
+namespace Microsoft.DotNet.XUnitRunnerUap
 {
-    public class StandardUapVisitor : XmlTestExecutionVisitor
+    internal class StandardUapVisitor : XmlTestExecutionVisitor
     {
         private string _assemblyName;
         private readonly ConcurrentDictionary<string, ExecutionSummary> _completionMessages;
-        private readonly StreamWriter _log;
         private readonly bool _showProgress;
         private readonly bool _failSkips;
 
-        public StandardUapVisitor(XElement assemblyElement,
-                                     Func<bool> cancelThunk,
-                                     StreamWriter log,
-                                     ConcurrentDictionary<string, ExecutionSummary> completionMessages,
-                                     bool showProgress,
-                                     bool failSkips)
+        public StandardUapVisitor(XElement assemblyElement, Func<bool> cancelThunk,
+            ConcurrentDictionary<string, ExecutionSummary> completionMessages, bool showProgress, bool failSkips)
             : base(assemblyElement, cancelThunk)
         {
             _completionMessages = completionMessages;
-            _log = log;
             _showProgress = showProgress;
             _failSkips = failSkips;
         }
 
-        public ExecutionSummary ExecutionSummary 
+        public ExecutionSummary ExecutionSummary
         {
-            get 
+            get
             {
-                ExecutionSummary summary;
-                if (_completionMessages.TryGetValue(_assemblyName, out summary))
+                if (_completionMessages.TryGetValue(_assemblyName, out ExecutionSummary summary))
                 {
                     return summary;
                 }
@@ -47,7 +44,7 @@ namespace Xunit.ConsoleClient
         {
             _assemblyName = Path.GetFileNameWithoutExtension(assemblyStarting.TestAssembly.Assembly.AssemblyPath);
 
-            _log.WriteLine($"Starting:    {_assemblyName}");
+            Console.WriteLine($"Starting:    {_assemblyName}");
 
             return base.Visit(assemblyStarting);
         }
@@ -57,7 +54,7 @@ namespace Xunit.ConsoleClient
             // Base class does computation of results, so call it first.
             var result = base.Visit(assemblyFinished);
 
-            _log.WriteLine($"Finished:    {_assemblyName}");
+            Console.WriteLine($"Finished:    {_assemblyName}");
 
             _completionMessages.TryAdd(_assemblyName, new ExecutionSummary
             {
@@ -73,8 +70,8 @@ namespace Xunit.ConsoleClient
 
         protected override bool Visit(ITestFailed testFailed)
         {
-            _log.WriteLine($"   {XmlEscape(testFailed.Test.DisplayName)} [FAIL]");
-            _log.WriteLine($"      {ExceptionUtility.CombineMessages(testFailed).Replace(Environment.NewLine, Environment.NewLine + "      ")}");
+            Console.WriteLine($"   {XmlEscape(testFailed.Test.DisplayName)} [FAIL]");
+            Console.WriteLine($"      {ExceptionUtility.CombineMessages(testFailed).Replace(Environment.NewLine, Environment.NewLine + "      ")}");
 
             WriteStackTrace(ExceptionUtility.CombineStackTraces(testFailed));
 
@@ -93,8 +90,8 @@ namespace Xunit.ConsoleClient
                 return Visit(new TestFailed(testSkipped.Test, 0M, "", new[] { "FAIL_SKIP" }, new[] { testSkipped.Reason }, new[] { "" }, new[] { -1 }));
             }
 
-            _log.WriteLine($"   {XmlEscape(testSkipped.Test.DisplayName)} [SKIP]");
-            _log.WriteLine($"      {XmlEscape(testSkipped.Reason)}");
+            Console.WriteLine($"   {XmlEscape(testSkipped.Test.DisplayName)} [SKIP]");
+            Console.WriteLine($"      {XmlEscape(testSkipped.Reason)}");
 
             return base.Visit(testSkipped);
         }
@@ -103,7 +100,7 @@ namespace Xunit.ConsoleClient
         {
             if (_showProgress)
             {
-                _log.WriteLine($"   {XmlEscape(testStarting.Test.DisplayName)} [STARTING]");
+                Console.WriteLine($"   {XmlEscape(testStarting.Test.DisplayName)} [STARTING]");
             }
             return base.Visit(testStarting);
         }
@@ -112,7 +109,7 @@ namespace Xunit.ConsoleClient
         {
             if (_showProgress)
             {
-                _log.WriteLine($"   {XmlEscape(testFinished.Test.DisplayName)} [FINISHED] Time: {testFinished.ExecutionTime}s");
+                Console.WriteLine($"   {XmlEscape(testFinished.Test.DisplayName)} [FINISHED] Time: {testFinished.ExecutionTime}s");
             }
             return base.Visit(testFinished);
         }
@@ -168,22 +165,22 @@ namespace Xunit.ConsoleClient
 
         protected void WriteError(string failureName, IFailureInformation failureInfo)
         {
-            _log.WriteLine($"   [{failureName}] {XmlEscape(failureInfo.ExceptionTypes[0])}");
-            _log.WriteLine($"      {XmlEscape(ExceptionUtility.CombineMessages(failureInfo))}");
+            Console.WriteLine($"   [{failureName}] {XmlEscape(failureInfo.ExceptionTypes[0])}");
+            Console.WriteLine($"      {XmlEscape(ExceptionUtility.CombineMessages(failureInfo))}");
 
             WriteStackTrace(ExceptionUtility.CombineStackTraces(failureInfo));
         }
 
         void WriteStackTrace(string stackTrace)
         {
-            if (String.IsNullOrWhiteSpace(stackTrace))
+            if (string.IsNullOrWhiteSpace(stackTrace))
                 return;
 
-            _log.WriteLine("      Stack Trace:");
+            Console.WriteLine("      Stack Trace:");
 
             foreach (var stackFrame in stackTrace.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
             {
-                _log.WriteLine($"         {StackFrameTransformer.TransformFrame(stackFrame, Directory.GetCurrentDirectory())}");
+                Console.WriteLine($"         {StackFrameTransformer.TransformFrame(stackFrame, Directory.GetCurrentDirectory())}");
             }
         }
     }
