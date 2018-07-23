@@ -27,7 +27,7 @@ There are currently a couple of different sources for various repo toolsets.
 
 Shared toolset packages will be published to a single location so that consumption / [discoverability](#gallery) is simplified.
 
-Toolset package feed: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
+Toolset package feed: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
 
 ## Core Tools SDK
 
@@ -164,7 +164,7 @@ Example of common `Toolset.proj`
 <Project Sdk="DotNet.Tools.Internal.Sdk">
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
-    <RestoreSources>https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json</RestoreSources>
+    <RestoreSources>https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</RestoreSources>
   </PropertyGroup>
 </PropertyGroup>
 ```
@@ -177,7 +177,7 @@ Example of tools as SDK's usage (less common usage)
 <Project Sdk="DotNet.Tools.Internal.Sdk;SignTool;Microsoft.DotNet.Build.Tasks.Feed">
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
-    <RestoreSources>https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json</RestoreSources>
+    <RestoreSources>https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</RestoreSources>
   </PropertyGroup>
 </PropertyGroup>
 ```
