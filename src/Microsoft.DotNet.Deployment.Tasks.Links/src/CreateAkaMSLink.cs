@@ -31,6 +31,12 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
 
         public override bool Execute()
         {
+            ExecuteImpl();
+            return !Log.HasLoggedErrors;
+        }
+
+        private void ExecuteImpl()
+        {
             try
             {
                 using (HttpClient client = GetClient())
@@ -107,20 +113,19 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
                             response.StatusCode != System.Net.HttpStatusCode.NoContent)
                         {
                             Log.LogError($"Error updating aka.ms/{ShortUrl}->{TargetUrl} link: {response.Content.ReadAsStringAsync().Result}");
-                            return false;
+                            return;
                         }
                         else
                         {
                             Log.LogMessage(MessageImportance.Normal, $"aka.ms/{ShortUrl} was updated to target {TargetUrl}.");
-                            return true;
+                            return;
                         }
                     }
                 }
             }
             catch (Exception e)
             {
-                Log.LogError($"Error creating/updating aka.ms/{ShortUrl}->{TargetUrl} link: {e.ToString()}");
-                return false;
+                Log.LogErrorFromException(e, showStackTrace: true);
             }
         }
     }

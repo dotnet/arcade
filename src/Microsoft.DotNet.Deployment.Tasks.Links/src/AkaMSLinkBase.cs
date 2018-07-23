@@ -12,8 +12,8 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
 {
     public abstract class AkaMSLinkBase : Microsoft.Build.Utilities.Task
     {
-        const string ApiProdUrl = "https://redirectionapi.trafficmanager.net/api/aka";
-        const string EndpointProdUrl = "https://microsoft.onmicrosoft.com/redirectionapi";
+        private const string ApiProdUrl = "https://redirectionapi.trafficmanager.net/api/aka";
+        private const string EndpointProdUrl = "https://microsoft.onmicrosoft.com/redirectionapi";
 
         [Required]
         // Authentication data

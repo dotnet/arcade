@@ -10,6 +10,9 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" Publish="false" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" Publish="false" />
+    <Description>Aka.ms link manager</Description>
+    <PackageTags>Arcade aka.ms</PackageTags>
+    <DevelopmentDependency>true</DevelopmentDependency>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'">
@@ -23,4 +26,37 @@
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="$(MicrosoftIdentityModelClientsActiveDirectoryVersion)" />
   </ItemGroup>
+  
+  <!-- Just copy the .props and .target to the build folder. -->
+  <ItemGroup>
+    <Content Include="build\*" PackagePath="build\" />
+  </ItemGroup>
+
+  <!-- 
+    Specify binaries to include in NuGet package 
+  -->
+  <PropertyGroup>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_PublishCore;_GetFilesToPackage</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <Target Name="_PublishCore" DependsOnTargets="Publish" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
+
+  <Target Name="_GetFilesToPackage" Returns="@(TfmSpecificPackageFile)">
+    <PropertyGroup>
+      <_Dir>$(OutDir)</_Dir>
+      <_Dir Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">$(PublishDir)</_Dir>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_Files Include="$(_Dir)*" />
+
+      <!-- Exclude msbuild binaries -->
+      <_Files Remove="$(_Dir)Microsoft.Build.*.dll" />
+
+      <TfmSpecificPackageFile Include="@(_Files)">
+        <PackagePath>tools/$(TargetFramework)/%(_Files.Filename)%(_Files.Extension)</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
 </Project>

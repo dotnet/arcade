@@ -17,6 +17,12 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
 
         public override bool Execute()
         {
+            ExecuteImpl();
+            return !Log.HasLoggedErrors;
+        }
+
+        public override bool Execute()
+        {
             try
             {
                 var response = GetClient().DeleteAsync($"{apiTargetUrl}/{ShortUrl}").Result;
@@ -36,8 +42,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
             }
             catch (Exception e)
             {
-                Log.LogError($"Error deleting aka.ms/{ShortUrl}: {e.ToString()}");
-                return false;
+                Log.LogErrorFromException(e, showStackTrace: true);
             }
         }
     }
