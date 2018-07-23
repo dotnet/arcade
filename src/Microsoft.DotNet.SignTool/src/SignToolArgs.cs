@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+
 using System;
 
 namespace Microsoft.DotNet.SignTool
@@ -5,63 +7,20 @@ namespace Microsoft.DotNet.SignTool
     internal readonly struct SignToolArgs
     {
         internal string OutputPath { get; }
-        internal string IntermediateOutputPath { get; }
-        internal string NuGetPackagesPath { get; }
-        internal string AppPath { get; }
-        internal string MSBuildPath { get; }
-        internal string MSBuildBinaryLogFilePath { get; }
-        internal string ConfigFile { get; }
-        internal bool Test { get; }
+        internal string TempPath { get; }
+        internal string MicroBuildCorePath { get; }
         internal bool TestSign { get; }
-        internal string OrchestrationManifestPath { get; }
 
         internal SignToolArgs(
             string outputPath,
-            string intermediateOutputPath,
-            string appPath,
-            string msbuildPath,
-            string msbuildBinaryLogFilePath,
-            string nugetPackagesPath,
-            string configFile,
-            bool test,
-            bool testSign,
-            string orchestrationManifestPath
-            )
+            string tempPath,
+            string microBuildCorePath,
+            bool testSign)
         {
             OutputPath = outputPath;
-            IntermediateOutputPath = intermediateOutputPath;
-            AppPath = appPath;
-            MSBuildPath = msbuildPath;
-            MSBuildBinaryLogFilePath = msbuildBinaryLogFilePath;
-            NuGetPackagesPath = nugetPackagesPath;
-            ConfigFile = configFile;
-            Test = test;
+            TempPath = tempPath;
+            MicroBuildCorePath = microBuildCorePath;
             TestSign = testSign;
-            OrchestrationManifestPath = orchestrationManifestPath;
-
-            if (String.IsNullOrEmpty(OutputPath))
-            {
-                throw new ArgumentException("Need a value for OutputPath.");
-            }
-
-            if (!test && String.IsNullOrEmpty(MSBuildPath))
-            {
-                throw new ArgumentException("msbuildpath argument must be specified unless running in validation-only (test) mode.");
-            }
-        }
-
-        internal SignToolArgs(string outputPath, string configFile, bool test, bool testSign, string orchestrationManifestPath) : this(outputPath,
-            null,
-            null,
-            null,
-            null,
-            null,
-            configFile,
-            test,
-            testSign,
-            orchestrationManifestPath)
-        {
-
         }
     }
 }

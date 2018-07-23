@@ -17,11 +17,12 @@
         "bin/Microsoft.DotNet.Helix.JobSender/netstandard2.0/Microsoft.DotNet.Helix.JobSender.dll",
         "bin/Microsoft.DotNet.Helix.Sdk/netstandard2.0/Microsoft.DotNet.Helix.Sdk.dll",
         "bin/Microsoft.DotNet.Helix.Sdk/net461/Microsoft.DotNet.Helix.Sdk.dll",
-        "bin/Microsoft.DotNet.SignTool/net461/Microsoft.DotNet.SignTool.exe",
-        "bin/Microsoft.DotNet.SignTool/netcoreapp2.0/Microsoft.DotNet.SignTool.dll",
+        "bin/Microsoft.DotNet.SignTool/net461/Microsoft.DotNet.SignTool.dll",
+        "bin/Microsoft.DotNet.SignTool/netcoreapp2.0/publish/Microsoft.DotNet.SignTool.dll",
         "bin/Microsoft.DotNet.SignTool.Tests/netcoreapp2.0/Microsoft.DotNet.SignTool.Tests.dll",
         "bin/Microsoft.DotNet.Arcade.Sdk/net461/Microsoft.DotNet.Arcade.Sdk.dll",
-        "bin/Microsoft.DotNet.Arcade.Sdk/netcoreapp2.0/Microsoft.DotNet.Arcade.Sdk.dll"
+        "bin/Microsoft.DotNet.Arcade.Sdk/netcoreapp2.0/Microsoft.DotNet.Arcade.Sdk.dll",
+        "bin/Microsoft.DotNet.XUnitExtensions/netstandard2.0/Microsoft.DotNet.XUnitExtensions.dll"
       ]
     },
     {
