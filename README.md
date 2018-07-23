@@ -30,7 +30,7 @@ Packages are published daily to our tools feed:
 
 Arcade tools may be consumed by following the guidelines defined in the [Task Packages](./Documentation/TaskPackages.md) documentation.
 
-You can view the available Arcade produced packages by adding the Arcade [package feed](https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json), to your [Visual Studio package source](https://docs.microsoft.com/en-us/nuget/tools/package-manager-ui).
+You can view the available Arcade produced packages by adding the Arcade [package feed](#getting-started), to your [Visual Studio package source](https://docs.microsoft.com/en-us/nuget/tools/package-manager-ui).
 
 ### How to contribute
 
