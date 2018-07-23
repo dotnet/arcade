@@ -2,16 +2,7 @@
 <Project DefaultTargets="Sign">
   <!--
     Required parameters:
-      VersionsPropsPath             Versions.props path. 
-      FixedVersionsPropsPath        FixedVersions.props path.
-      ConfigFile                    SigntToolData.json path.
-      RealSign                      "true" to send binaries to the signing service, "false" to only validate signing configuration.
-
-    Optional parameters:
-      UseSigningExecutable          Whether to use the executable or MSBuild task version of the SignTool.
-      OutputConfigFile              If specified, output a manifest similar to SignToolData.json but with checksums of all relevant files included 
-                                    for reassembly later when only zip archives are available.  If this file is later used as the '-config' file, 
-                                    SignTool will attempt to unpack all zips provided and match on checksums for any missing files.
+      ConfigFilePath                    SigntToolData.json path.
   -->
 
   <Import Project="BuildStep.props" />
@@ -19,44 +10,24 @@
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.signtool\$(MicrosoftDotNetSignToolVersion)\build\Microsoft.DotNet.SignTool.props" />
 
   <Target Name="Sign">
-    <!-- We only need this if we are going to use the executable version. -->
-    <Exec Condition="'$(UseSigningExecutable)' == 'true' and '$(RealSign)' == 'true'"
-          Command='"$(MSBuildProjectDirectory)\vswhere.exe" -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild'
-          ConsoleToMsBuild="true"
-          StandardErrorImportance="high">
-      <Output TaskParameter="ConsoleOutput" PropertyName="_VsInstallDir" />
-    </Exec>
+    <Error Text="The value of DotNetSignType is invalid: '$(DotNetSignType)'"
+           Condition="'$(DotNetSignType)' != 'real' and '$(DotNetSignType)' != 'test' and '$(DotNetSignType)' != ''" />
 
-    <!-- Arguments for the executable version. -->
-    <ItemGroup Condition="'$(UseSigningExecutable)' == 'true'">
-      <SignToolArgs Include='-outputconfig "$(OutputConfigFile)"' Condition="'$(OutputConfigFile)' != ''" />      
-      <SignToolArgs Include='-nugetPackagesPath "$(NuGetPackageRoot)\"' />
-      <SignToolArgs Include='-intermediateOutputPath "$(ArtifactsObjDir)\"' />
-      <SignToolArgs Include='-config "$(ConfigFile)"' />
-      <SignToolArgs Include='-test' Condition="'$(RealSign)' != 'true'" />
-      <SignToolArgs Include='-msbuildpath "$(_VsInstallDir)\MSBuild\15.0\Bin\msbuild.exe"' Condition="'$(RealSign)' == 'true'"/>
-      <SignToolArgs Include='"$(ArtifactsConfigurationDir)\"' />
-    </ItemGroup>
-
-    <Exec Condition="'$(UseSigningExecutable)' == 'true'" 
-          Command="$(NuGetPackageRoot)microsoft.dotnet.signtool\$(MicrosoftDotNetSignToolVersion)\build\net461\Microsoft.DotNet.SignTool.exe @(SignToolArgs, ' ')" 
-          LogStandardErrorAsError="true" />
-
-    <!-- Arguments for the task version. -->
     <PropertyGroup>
-      <IsTest Condition="'$(RealSign)' != 'true'">true</IsTest>
-      <TestSign Condition="'$(RealSign)' == 'true'">false</TestSign>
-      <OutputConfig Condition="'$(OutputConfigFile)' != ''">"$(OutputConfigFile)"</OutputConfig>
+      <DryRun>true</DryRun>
+      <DryRun Condition="'$(OfficialBuild)' == 'true'">false</DryRun>
+
+      <TestSign>false</TestSign>
+      <TestSign Condition="'$(DotNetSignType)' == 'test'">true</TestSign>
     </PropertyGroup>
 
-    <SignToolTask
-          Condition="'$(UseSigningExecutable)' != 'true'"
-          Test='$(IsTest)'
-          TestSign="$(TestSign)"
-          ConfigFilePath='$(ConfigFile)'
-          OutputPath='"$(ArtifactsConfigurationDir)\"'
-          OrchestrationManifestPath="$(OutputConfig)" />
-    
+    <Microsoft.DotNet.SignTool.SignToolTask
+       DryRun="$(DryRun)"
+       TestSign="$(TestSign)"
+       ConfigFilePath="$(ConfigFilePath)"
+       OutputPath="$(ArtifactsConfigurationDir)"
+       TempPath="$(ArtifactsTmpDir)"
+       MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"/>
   </Target>
 
 </Project>
