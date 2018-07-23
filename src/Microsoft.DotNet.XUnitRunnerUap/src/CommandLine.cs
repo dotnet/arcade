@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -105,11 +105,6 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                     break;
 
                 var assemblyFile = arguments.Pop();
-                if (IsConfigFile(assemblyFile))
-                    throw new ArgumentException($"expecting assembly, got config file: {assemblyFile}");
-
-                if (!fileExists(assemblyFile))
-                    throw new ArgumentException($"file not found: {assemblyFile}");
 
                 string configFile = null;
                 if (arguments.Count > 0)

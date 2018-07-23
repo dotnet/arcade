@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
@@ -54,12 +54,29 @@
       </uap:VisualElements>
 
       <Extensions>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="xml">
+            <uap:DisplayName>xml</uap:DisplayName>
+            <uap:SupportedFileTypes>
+              <uap:FileType>.xml</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="logs">
+            <uap:DisplayName>Log file</uap:DisplayName>
+            <uap:SupportedFileTypes>
+              <uap:FileType>.txt</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+
         <uap5:Extension 
           Category="windows.appExecutionAlias" 
 	        Executable="Microsoft.DotNet.XUnitRunnerUap.exe" 
           EntryPoint="Microsoft.DotNet.XUnitRunnerUap.Program">
           <uap5:AppExecutionAlias desktop4:Subsystem="console" iot2:Subsystem="console">
-            <uap5:ExecutionAlias Alias="Microsoft.DotNet.XUnitRunnerUap.exe" />
+            <uap5:ExecutionAlias Alias="XUnitRunnerUap.exe" />
           </uap5:AppExecutionAlias>
         </uap5:Extension>
       </Extensions>
@@ -82,5 +99,10 @@
     <uap:Capability Name="appointments" />
     <uap:Capability Name="contacts" />
     <uap:Capability Name="userAccountInformation" />
+    <DeviceCapability Name="serialcommunication">
+      <Device Id="any">
+        <Function Type="name:serialPort" />
+      </Device>
+    </DeviceCapability>
   </Capabilities>
 </Package>

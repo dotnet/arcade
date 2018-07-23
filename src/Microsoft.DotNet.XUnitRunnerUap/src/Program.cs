@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -18,11 +18,13 @@ namespace Microsoft.DotNet.XUnitRunnerUap
     {
         volatile static bool cancel = false;
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
-            // Setup
-            Windows.UI.Xaml.Application.Current.UnhandledException += OnUnhandledException;
-            Console.WriteLine(args);
+            // Handle RemoteExecutor
+            if (args.Length > 0 && args[0] == "remote")
+            {
+                return RemoteExecutor.Execute(args.Skip(1).ToArray());
+            }
 
             var commandLine = CommandLine.Parse(args);
             if (commandLine.Debug)
@@ -37,7 +39,7 @@ namespace Microsoft.DotNet.XUnitRunnerUap
             {
                 if (cancel)
                 {
-                    return;
+                    break;
                 }
 
                 assembly.Configuration.PreEnumerateTheories = false;
@@ -62,7 +64,7 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                         var filteredTestCases = discoveryVisitor.TestCases.Where(commandLine.Project.Filters.Filter).ToList();
                         var testCasesToRun = filteredTestCases.Count;
 
-                        Console.WriteLine($"Discovered: {assemblyName}");
+                        Console.WriteLine($"Discovered:  {assemblyName}");
 
                         // Run the filtered tests
                         if (testCasesToRun == 0)
@@ -102,7 +104,7 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                 }
             }
 
-            Windows.UI.Xaml.Application.Current.Exit();
+            return 0;
         }
 
         static async Task WriteResults(string test, XElement data)
@@ -115,12 +117,6 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                 data.Save(stream);
                 stream.Flush();
             }
-        }
-
-        static void OnUnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
-        {
-            Console.WriteLine(e?.Exception.ToString() ?? "Error of unknown type thrown in application domain");
-            Windows.UI.Xaml.Application.Current.Exit();
         }
     }
 }
