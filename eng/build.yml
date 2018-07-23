@@ -97,7 +97,7 @@ phases:
           - task: CopyFiles@2
             displayName: Gather Logs
             inputs:
-              SourceFolder: '$(Build.SourcesDirectory)/artifacts'
+              SourceFolder: '$(Build.SourcesDirectory)/artifacts/$(_BuildConfig)/log'
               TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
             continueOnError: true
             condition: succeededOrFailed()
