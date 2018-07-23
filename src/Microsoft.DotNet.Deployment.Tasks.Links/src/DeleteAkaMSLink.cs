@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
             return !Log.HasLoggedErrors;
         }
 
-        public override bool Execute()
+        private void ExecuteImpl()
         {
             try
             {
@@ -32,12 +32,12 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
                     response.StatusCode != System.Net.HttpStatusCode.Accepted)
                 {
                     Log.LogError($"Failed to delete aka.ms/{ShortUrl}: {response.Content.ReadAsStringAsync().Result}");
-                    return true;
+                    return;
                 }
                 else
                 {
                     Log.LogMessage(MessageImportance.Normal, $"Deleted aka.ms/{ShortUrl}");
-                    return true;
+                    return;
                 }
             }
             catch (Exception e)

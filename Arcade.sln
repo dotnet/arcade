@@ -29,6 +29,7 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.JobSender", "src\Microsoft.DotNet.Helix\JobSender\Microsoft.DotNet.Helix.JobSender.csproj", "{D6FFE1CC-98D6-425F-95D2-E40122D96E80}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Deployment.Tasks.Links", "src\Microsoft.DotNet.Deployment.Tasks.Links\Microsoft.DotNet.Deployment.Tasks.Links.csproj", "{40286528-B257-4DAC-AC7C-C4021DE957DC}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XUnitExtensions", "src\Microsoft.DotNet.XUnitExtensions\src\Microsoft.DotNet.XUnitExtensions.csproj", "{F8E7FEC3-B9E0-4A08-8608-F48379204F3A}"
 EndProject
 Global

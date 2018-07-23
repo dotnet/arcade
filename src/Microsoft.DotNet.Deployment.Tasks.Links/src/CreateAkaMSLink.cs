@@ -51,14 +51,14 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
                             if (!existsCheck.IsSuccessStatusCode)
                             {
                                 Log.LogError($"aka.ms GET api returned unexpected result: {existsCheck.Content.ReadAsStringAsync().Result}");
-                                return false;
+                                return;
                             }
 
                             var existingLink = Newtonsoft.Json.Linq.JObject.Parse(existsCheck.Content.ReadAsStringAsync().Result);
                             if ((string)existingLink["targetUrl"] == TargetUrl)
                             {
                                 Log.LogMessage(MessageImportance.Low, $"aka.ms/{ShortUrl} already targets {TargetUrl}, skipping update.");
-                                return true;
+                                return;
                             }
                             else
                             {
@@ -87,12 +87,12 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
                         if (response.StatusCode != System.Net.HttpStatusCode.Created)
                         {
                             Log.LogError($"Error creating aka.ms/{ShortUrl}->{TargetUrl} link: {response.Content.ReadAsStringAsync().Result}");
-                            return false;
+                            return;
                         }
                         else
                         {
                             Log.LogMessage(MessageImportance.Normal, $"Created aka.ms/{ShortUrl}->{TargetUrl} link.");
-                            return true;
+                            return;
                         }
                     }
                     else
