@@ -1,0 +1,9 @@
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MicrosoftDotNetDeploymentTasksLinksTaskAssembly Condition=" '$(MSBuildRuntimeType)' == 'Core' ">$(MSBuildThisFileDirectory)netcoreapp2.0\Microsoft.DotNet.Deployment.Tasks.Links.dll</MicrosoftDotNetDeploymentTasksLinksTaskAssembly>
+    <MicrosoftDotNetDeploymentTasksLinksTaskAssembly Condition=" '$(MSBuildRuntimeType)' != 'Core' ">$(MSBuildThisFileDirectory)net461\Microsoft.DotNet.Build.Deployment.Links.dll</MicrosoftDotNetDeploymentTasksLinksTaskAssembly>
+  </PropertyGroup>
+
+  <UsingTask TaskName="CreateAkaMSLink" AssemblyFile="$(MicrosoftDotNetDeploymentTasksLinksTaskAssembly)" />
+  <UsingTask TaskName="DeleteAkaMSLink" AssemblyFile="$(MicrosoftDotNetDeploymentTasksLinksTaskAssembly)" />
+</Project>

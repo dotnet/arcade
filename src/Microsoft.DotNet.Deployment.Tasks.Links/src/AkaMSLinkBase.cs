@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
-namespace Microsoft.DotNet.Build.Tasks.Links
+namespace Microsoft.DotNet.Deployment.Tasks.Links
 {
     public abstract class AkaMSLinkBase : Microsoft.Build.Utilities.Task
     {

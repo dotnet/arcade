@@ -1,4 +1,4 @@
-Microsoft.DotNet.Build.Tasks.Links
+Microsoft.DotNet.Deployment.Tasks.Links
 ===============================
 
 Contains tasks that manages aka.ms links.

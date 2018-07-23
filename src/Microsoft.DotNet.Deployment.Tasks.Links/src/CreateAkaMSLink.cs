@@ -9,7 +9,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Build.Tasks.Links
+namespace Microsoft.DotNet.Deployment.Tasks.Links
 {
     /// <summary>
     /// Computes the checksum for a single file.

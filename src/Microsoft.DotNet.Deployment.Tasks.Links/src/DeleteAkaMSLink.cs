@@ -8,7 +8,7 @@ using System.Text;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 
-namespace Microsoft.DotNet.Build.Tasks.Links
+namespace Microsoft.DotNet.Deployment.Tasks.Links
 {
     public class DeleteAkaMSLink : AkaMSLinkBase
     {
