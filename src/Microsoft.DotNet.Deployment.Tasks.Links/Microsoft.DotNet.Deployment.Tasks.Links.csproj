@@ -46,7 +46,7 @@
       <_Files Remove="$(_Dir)Microsoft.Build.*.dll" />
 
       <TfmSpecificPackageFile Include="@(_Files)">
-        <PackagePath>tools/$(TargetFramework)/%(_Files.Filename)%(_Files.Extension)</PackagePath>
+        <PackagePath>build/$(TargetFramework)/%(_Files.Filename)%(_Files.Extension)</PackagePath>
       </TfmSpecificPackageFile>
     </ItemGroup>
   </Target>

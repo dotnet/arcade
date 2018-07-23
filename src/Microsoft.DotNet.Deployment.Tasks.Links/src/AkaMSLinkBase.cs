@@ -12,8 +12,9 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
 {
     public abstract class AkaMSLinkBase : Microsoft.Build.Utilities.Task
     {
-        private const string ApiProdUrl = "https://redirectionapi.trafficmanager.net/api/aka";
-        private const string EndpointProdUrl = "https://microsoft.onmicrosoft.com/redirectionapi";
+        private const string ApiBaseUrl = "https://redirectionapi.trafficmanager.net/api/aka";
+        private const string Endpoint = "https://microsoft.onmicrosoft.com/redirectionapi";
+        private const string Authority = "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/authorize";
 
         [Required]
         // Authentication data
@@ -22,13 +23,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
         // Authentication data
         public string ClientSecret { get; set; }
         [Required]
-        public string Authority { get; set; } = "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/authorize";
-        [Required]
-        public string Endpoint { get; set; } = EndpointProdUrl;
-        [Required]
         public string Tenant { get; set; }
-        [Required]
-        public string ApiBaseUrl { get; set; } = ApiProdUrl;
         protected string apiTargetUrl => $"{ApiBaseUrl}/1/{Tenant}";
 
         protected HttpClient GetClient()
