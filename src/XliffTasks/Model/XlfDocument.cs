@@ -172,6 +172,8 @@ namespace XliffTasks.Model
                     {
                         targetElement.Value = sourceNode.Source;
                         stateAttribute.Value = "new";
+
+                        changed = true;
                     }
                 }
 
