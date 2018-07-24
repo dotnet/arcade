@@ -27,28 +27,28 @@ namespace XliffTasks
         ///    minus sign, followed by one or more decimal digits.
         ///
         /// (\:[^\}]+)?
-        ///    The optional "format string" componet. This is a colon, followed by one or more
+        ///    The optional "format string" component. This is a colon, followed by one or more
         ///    characters that aren't close curly braces.
         ///
         /// \}
         ///    The close curly brace indicates the end of the placeholder.
         /// </summary>
-        private static Regex s_placeHolderRegex = new Regex(@"\{(\d+)(\,\-?\d+)?(\:[^\}]+)?\}", RegexOptions.Compiled);
+        private static Regex s_placeholderRegex = new Regex(@"\{(\d+)(\,\-?\d+)?(\:[^\}]+)?\}", RegexOptions.Compiled);
 
         /// <summary>
         /// Returns the number of replacement strings needed to properly format the given text.
         /// </summary>
         public static int GetReplacementCount(this string text)
         {
-            int placeHolderCount = 0;
+            int replacementCount = 0;
 
-            foreach (Match placeHolder in s_placeHolderRegex.Matches(text))
+            foreach (Match placeholder in s_placeholderRegex.Matches(text))
             {
-                var index = int.Parse(placeHolder.Groups[1].Value);
-                placeHolderCount = Math.Max(placeHolderCount, index + 1);
+                var index = int.Parse(placeholder.Groups[1].Value);
+                replacementCount = Math.Max(replacementCount, index + 1);
             }
 
-            return placeHolderCount;
+            return replacementCount;
         }
     }
 }
