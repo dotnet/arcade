@@ -163,6 +163,8 @@ namespace XliffTasks.Model
                 // target string is likely to produce misleading (or outright meaningless) text. In
                 // either case we lose nothing by just reverting the string until it can be localized
                 // again.
+                // Note we don't limit this check to when the source has changed in the original
+                // document because we also want to catch errors introduced during translation.
                 var sourceReplacementCount = sourceElement.Value.GetReplacementCount();
                 var targetReplacementCount = targetElement.Value.GetReplacementCount();
 
