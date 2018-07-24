@@ -23,26 +23,19 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
 
         private void ExecuteImpl()
         {
-            try
+            var response = GetClient().DeleteAsync($"{apiTargetUrl}/{ShortUrl}").Result;
+            // Success if it's 202, 204, 404
+            if (response.StatusCode != System.Net.HttpStatusCode.NoContent &&
+                response.StatusCode != System.Net.HttpStatusCode.NotFound &&
+                response.StatusCode != System.Net.HttpStatusCode.Accepted)
             {
-                var response = GetClient().DeleteAsync($"{apiTargetUrl}/{ShortUrl}").Result;
-                // Success if it's 202, 204, 404
-                if (response.StatusCode != System.Net.HttpStatusCode.NoContent &&
-                    response.StatusCode != System.Net.HttpStatusCode.NotFound &&
-                    response.StatusCode != System.Net.HttpStatusCode.Accepted)
-                {
-                    Log.LogError($"Failed to delete aka.ms/{ShortUrl}: {response.Content.ReadAsStringAsync().Result}");
-                    return;
-                }
-                else
-                {
-                    Log.LogMessage(MessageImportance.Normal, $"Deleted aka.ms/{ShortUrl}");
-                    return;
-                }
+                Log.LogError($"Failed to delete aka.ms/{ShortUrl}: {response.Content.ReadAsStringAsync().Result}");
+                return;
             }
-            catch (Exception e)
+            else
             {
-                Log.LogErrorFromException(e, showStackTrace: true);
+                Log.LogMessage(MessageImportance.Normal, $"Deleted aka.ms/{ShortUrl}");
+                return;
             }
         }
     }
