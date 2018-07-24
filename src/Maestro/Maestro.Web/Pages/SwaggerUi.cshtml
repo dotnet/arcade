@@ -1,0 +1,70 @@
+@page "/swagger/ui/index.html"
+@using Microsoft.AspNetCore.ApiVersioning
+@{
+    Layout = null;
+}
+
+@inject VersionedControllerProvider Vcp
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Swagger UI</title>
+    <link rel="stylesheet" type="text/css" href="./swagger-ui.css"/>
+    <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32"/>
+    <link rel="icon" type="image/png" href="./favicon-16x16.png" sizes="16x16"/>
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+
+        *,
+        *:before,
+        *:after { box-sizing: inherit; }
+
+        body {
+            background: #fafafa;
+            margin: 0;
+        }
+    </style>
+    <script src="./swagger-ui-bundle.js"> </script>
+    <script src="./swagger-ui-standalone-preset.js"> </script>
+</head>
+
+<body>
+<div id="swagger-ui"></div>
+<script>
+    window.onload = function() {
+
+        // Build a system
+        var ui = SwaggerUIBundle({
+            urls: [
+                @foreach (string api in Vcp.Versions.Keys)
+                {
+                    @:{
+                    @:url: "/api/@api/swagger.json",
+                    @:name: "Version @api",
+                    @:},
+                }
+            ],
+            dom_id: '#swagger-ui',
+            deepLinking: true,
+            jsonEditor: true,
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset
+            ],
+            plugins: [
+                SwaggerUIBundle.plugins.DownloadUrl
+            ],
+            layout: "StandaloneLayout",
+        })
+
+        window.ui = ui
+    }
+</script>
+</body>
+</html>

@@ -2,9 +2,8 @@
 <ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="MaestroApplicationType" ApplicationTypeVersion="1.0.0" xmlns="http://schemas.microsoft.com/2011/01/fabric">
   <Parameters>
     <Parameter Name="Maestro.Web_InstanceCount" DefaultValue="-1" />
-    <Parameter Name="WebPort" DefaultValue="8080" />
-    <Parameter Name="WebProtocol" DefaultValue="http" />
     <Parameter Name="WebCertThumbprint" DefaultValue="" />
+    <Parameter Name="Environment" DefaultValue="Development" />
   </Parameters>
   <!-- Import the ServiceManifest from the ServicePackage. The ServiceManifestName and ServiceManifestVersion 
        should match the Name and Version attributes of the ServiceManifest element defined in the 
@@ -14,12 +13,14 @@
     <ConfigOverrides />
     <ResourceOverrides>
       <Endpoints>
-        <Endpoint Name="ServiceEndpoint" Port="[WebPort]" Protocol="[WebProtocol]" />
+        <Endpoint Name="ServiceEndpoint" Port="4430" Protocol="https" />
       </Endpoints>
     </ResourceOverrides>
+    <EnvironmentOverrides CodePackageRef="Code">
+      <EnvironmentVariable Name="ASPNETCORE_ENVIRONMENT" Value="[Environment]" />
+    </EnvironmentOverrides>
     <Policies>
-      <!-- TODO: Uncomment out this EndpointBindingPolicy when publishing to non-local clusters -->
-      <!--<EndpointBindingPolicy CertificateRef="WebSslCert" EndpointRef="ServiceEndpoint"/>-->
+      <EndpointBindingPolicy EndpointRef="ServiceEndpoint" CertificateRef="WebSslCert" />
     </Policies>
   </ServiceManifestImport>
   <DefaultServices>

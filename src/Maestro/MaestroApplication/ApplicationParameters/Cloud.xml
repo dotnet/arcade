@@ -2,7 +2,5 @@
 <Application xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="fabric:/MaestroApplication" xmlns="http://schemas.microsoft.com/2011/01/fabric">
   <Parameters>
     <Parameter Name="Maestro.Web_InstanceCount" Value="-1" />
-    <Parameter Name="WebPort" Value="4430" />
-    <Parameter Name="WebProtocol" Value="https" />
   </Parameters>
 </Application>

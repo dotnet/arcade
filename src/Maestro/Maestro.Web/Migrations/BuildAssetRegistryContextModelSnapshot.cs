@@ -19,128 +19,11 @@ namespace Maestro.Web.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("BuildAssetRegistryModel.Asset", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int?>("BuildId");
-
-                    b.Property<string>("Name");
-
-                    b.Property<string>("Version");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BuildId");
-
-                    b.ToTable("Assets");
-                });
-
-            modelBuilder.Entity("BuildAssetRegistryModel.AssetLocation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int?>("AssetId");
-
-                    b.Property<string>("Location");
-
-                    b.Property<int>("Type");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssetId");
-
-                    b.ToTable("AssetLocations");
-                });
-
-            modelBuilder.Entity("BuildAssetRegistryModel.Build", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("BuildNumber");
-
-                    b.Property<string>("Commit");
-
-                    b.Property<DateTimeOffset>("DateProduced");
-
-                    b.Property<int?>("DependencyBuildId");
-
-                    b.Property<string>("Repository");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DependencyBuildId");
-
-                    b.ToTable("Builds");
-                });
-
-            modelBuilder.Entity("BuildAssetRegistryModel.Channel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int?>("BuildId");
-
-                    b.Property<string>("Classification");
-
-                    b.Property<string>("Name");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BuildId");
-
-                    b.ToTable("Channels");
-                });
-
-            modelBuilder.Entity("BuildAssetRegistryModel.Subscription", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("ChannelName");
-
-                    b.Property<int?>("PolicyId");
-
-                    b.Property<string>("SourceRepository");
-
-                    b.Property<string>("TargetBranch");
-
-                    b.Property<string>("TargetRepository");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PolicyId");
-
-                    b.ToTable("Subscriptions");
-                });
-
-            modelBuilder.Entity("BuildAssetRegistryModel.SubscriptionPolicy", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("MergePolicy");
-
-                    b.Property<int>("UpdateFrequency");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SubscriptionPolicies");
-                });
-
             modelBuilder.Entity("Maestro.Web.ApplicationUser", b =>
                 {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<int>("AccessFailedCount");
 
@@ -151,6 +34,8 @@ namespace Maestro.Web.Migrations
                         .HasMaxLength(256);
 
                     b.Property<bool>("EmailConfirmed");
+
+                    b.Property<string>("FullName");
 
                     b.Property<bool>("LockoutEnabled");
 
@@ -188,10 +73,144 @@ namespace Maestro.Web.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+            modelBuilder.Entity("Maestro.Web.ApplicationUserPersonalAccessToken", b =>
                 {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("ApplicationUserId");
+
+                    b.Property<DateTimeOffset>("Created");
+
+                    b.Property<string>("Hash");
+
+                    b.Property<string>("Name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId", "Name")
+                        .IsUnique()
+                        .HasFilter("[Name] IS NOT NULL");
+
+                    b.ToTable("AspNetUserPersonalAccessTokens");
+                });
+
+            modelBuilder.Entity("Maestro.Web.Data.Models.Asset", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("BuildId");
+
+                    b.Property<string>("Name");
+
+                    b.Property<string>("Version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuildId");
+
+                    b.ToTable("Assets");
+                });
+
+            modelBuilder.Entity("Maestro.Web.Data.Models.AssetLocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int?>("AssetId");
+
+                    b.Property<string>("Location");
+
+                    b.Property<int>("Type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssetId");
+
+                    b.ToTable("AssetLocations");
+                });
+
+            modelBuilder.Entity("Maestro.Web.Data.Models.Build", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("BuildNumber");
+
+                    b.Property<string>("Commit");
+
+                    b.Property<DateTimeOffset>("DateProduced");
+
+                    b.Property<int?>("DependencyBuildId");
+
+                    b.Property<string>("Repository");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DependencyBuildId");
+
+                    b.ToTable("Builds");
+                });
+
+            modelBuilder.Entity("Maestro.Web.Data.Models.BuildChannel", b =>
+                {
+                    b.Property<int>("BuildId");
+
+                    b.Property<int>("ChannelId");
+
+                    b.HasKey("BuildId", "ChannelId");
+
+                    b.HasIndex("ChannelId");
+
+                    b.ToTable("BuildChannels");
+                });
+
+            modelBuilder.Entity("Maestro.Web.Data.Models.Channel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Classification");
+
+                    b.Property<string>("Name");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Channels");
+                });
+
+            modelBuilder.Entity("Maestro.Web.Data.Models.Subscription", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("ChannelId");
+
+                    b.Property<string>("SourceRepository");
+
+                    b.Property<string>("TargetBranch");
+
+                    b.Property<string>("TargetRepository");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChannelId");
+
+                    b.ToTable("Subscriptions");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken();
@@ -212,7 +231,7 @@ namespace Maestro.Web.Migrations
                     b.ToTable("AspNetRoles");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -222,8 +241,7 @@ namespace Maestro.Web.Migrations
 
                     b.Property<string>("ClaimValue");
 
-                    b.Property<string>("RoleId")
-                        .IsRequired();
+                    b.Property<int>("RoleId");
 
                     b.HasKey("Id");
 
@@ -232,7 +250,7 @@ namespace Maestro.Web.Migrations
                     b.ToTable("AspNetRoleClaims");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -242,8 +260,7 @@ namespace Maestro.Web.Migrations
 
                     b.Property<string>("ClaimValue");
 
-                    b.Property<string>("UserId")
-                        .IsRequired();
+                    b.Property<int>("UserId");
 
                     b.HasKey("Id");
 
@@ -252,7 +269,7 @@ namespace Maestro.Web.Migrations
                     b.ToTable("AspNetUserClaims");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
                     b.Property<string>("LoginProvider");
 
@@ -260,8 +277,7 @@ namespace Maestro.Web.Migrations
 
                     b.Property<string>("ProviderDisplayName");
 
-                    b.Property<string>("UserId")
-                        .IsRequired();
+                    b.Property<int>("UserId");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -270,11 +286,11 @@ namespace Maestro.Web.Migrations
                     b.ToTable("AspNetUserLogins");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
-                    b.Property<string>("UserId");
+                    b.Property<int>("UserId");
 
-                    b.Property<string>("RoleId");
+                    b.Property<int>("RoleId");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -283,9 +299,9 @@ namespace Maestro.Web.Migrations
                     b.ToTable("AspNetUserRoles");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
-                    b.Property<string>("UserId");
+                    b.Property<int>("UserId");
 
                     b.Property<string>("LoginProvider");
 
@@ -298,50 +314,66 @@ namespace Maestro.Web.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
-            modelBuilder.Entity("BuildAssetRegistryModel.Asset", b =>
+            modelBuilder.Entity("Maestro.Web.ApplicationUserPersonalAccessToken", b =>
                 {
-                    b.HasOne("BuildAssetRegistryModel.Build")
-                        .WithMany("Assets")
-                        .HasForeignKey("BuildId");
+                    b.HasOne("Maestro.Web.ApplicationUser", "ApplicationUser")
+                        .WithMany("PersonalAccessTokens")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("BuildAssetRegistryModel.AssetLocation", b =>
+            modelBuilder.Entity("Maestro.Web.Data.Models.Asset", b =>
                 {
-                    b.HasOne("BuildAssetRegistryModel.Asset")
+                    b.HasOne("Maestro.Web.Data.Models.Build")
+                        .WithMany("Assets")
+                        .HasForeignKey("BuildId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Maestro.Web.Data.Models.AssetLocation", b =>
+                {
+                    b.HasOne("Maestro.Web.Data.Models.Asset")
                         .WithMany("Locations")
                         .HasForeignKey("AssetId");
                 });
 
-            modelBuilder.Entity("BuildAssetRegistryModel.Build", b =>
+            modelBuilder.Entity("Maestro.Web.Data.Models.Build", b =>
                 {
-                    b.HasOne("BuildAssetRegistryModel.Build")
+                    b.HasOne("Maestro.Web.Data.Models.Build")
                         .WithMany("Dependencies")
                         .HasForeignKey("DependencyBuildId");
                 });
 
-            modelBuilder.Entity("BuildAssetRegistryModel.Channel", b =>
+            modelBuilder.Entity("Maestro.Web.Data.Models.BuildChannel", b =>
                 {
-                    b.HasOne("BuildAssetRegistryModel.Build")
-                        .WithMany("Channels")
-                        .HasForeignKey("BuildId");
+                    b.HasOne("Maestro.Web.Data.Models.Build", "Build")
+                        .WithMany("BuildChannels")
+                        .HasForeignKey("BuildId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Maestro.Web.Data.Models.Channel", "Channel")
+                        .WithMany("BuildChannels")
+                        .HasForeignKey("ChannelId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("BuildAssetRegistryModel.Subscription", b =>
+            modelBuilder.Entity("Maestro.Web.Data.Models.Subscription", b =>
                 {
-                    b.HasOne("BuildAssetRegistryModel.SubscriptionPolicy", "Policy")
+                    b.HasOne("Maestro.Web.Data.Models.Channel", "Channel")
                         .WithMany()
-                        .HasForeignKey("PolicyId");
+                        .HasForeignKey("ChannelId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole")
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>")
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
                     b.HasOne("Maestro.Web.ApplicationUser")
                         .WithMany()
@@ -349,7 +381,7 @@ namespace Maestro.Web.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
                     b.HasOne("Maestro.Web.ApplicationUser")
                         .WithMany()
@@ -357,9 +389,9 @@ namespace Maestro.Web.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole")
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>")
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -370,7 +402,7 @@ namespace Maestro.Web.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
                     b.HasOne("Maestro.Web.ApplicationUser")
                         .WithMany()

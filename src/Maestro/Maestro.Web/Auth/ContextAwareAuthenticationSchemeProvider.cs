@@ -1,28 +1,31 @@
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
-using System.Threading.Tasks;
 
 namespace Maestro.Web
 {
     public class ContextAwareAuthenticationSchemeProvider : AuthenticationSchemeProvider
     {
         private readonly IHttpContextAccessor _contextAccessor;
-        public HttpContext Context => _contextAccessor.HttpContext;
 
-        public ContextAwareAuthenticationSchemeProvider(IOptions<AuthenticationOptions> options, IHttpContextAccessor contextAccessor) : base(options)
+        public ContextAwareAuthenticationSchemeProvider(
+            IOptions<AuthenticationOptions> options,
+            IHttpContextAccessor contextAccessor) : base(options)
         {
             _contextAccessor = contextAccessor;
         }
+
+        public HttpContext Context => _contextAccessor.HttpContext;
 
         private Task<AuthenticationScheme> GetDefaultSchemeAsync()
         {
             if (Context.Request.Path.StartsWithSegments("/api"))
             {
-                return GetSchemeAsync(JwtBearerDefaults.AuthenticationScheme);
+                return GetSchemeAsync(PersonalAccessTokenDefaults.AuthenticationScheme);
             }
+
             return GetSchemeAsync(IdentityConstants.ApplicationScheme);
         }
 
