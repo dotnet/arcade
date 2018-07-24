@@ -20,7 +20,10 @@
         "bin/Microsoft.DotNet.SignTool.Tests/netcoreapp2.0/Microsoft.DotNet.SignTool.Tests.dll",
         "bin/Microsoft.DotNet.Arcade.Sdk/net461/Microsoft.DotNet.Arcade.Sdk.dll",
         "bin/Microsoft.DotNet.Arcade.Sdk/netcoreapp2.0/Microsoft.DotNet.Arcade.Sdk.dll",
-        "bin/Microsoft.DotNet.XUnitExtensions/netstandard2.0/Microsoft.DotNet.XUnitExtensions.dll"
+        "bin/Microsoft.DotNet.XUnitExtensions/netstandard2.0/Microsoft.DotNet.XUnitExtensions.dll",
+        "bin/Microsoft.AspNetCore.ApiVersioning/netstandard2.0/Microsoft.AspNetCore.ApiVersioning.dll",
+        "bin/Microsoft.AspNetCore.ApiVersioning.Analyzers/netstandard1.3/Microsoft.AspNetCore.ApiVersioning.Analyzers.dll",
+        "bin/Microsoft.AspNetCore.ApiVersioning.Swashbuckle/netstandard2.0/Microsoft.AspNetCore.ApiVersioning.Swashbuckle.dll"
       ]
     },
     {

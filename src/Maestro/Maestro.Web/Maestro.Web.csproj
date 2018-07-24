@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
@@ -9,6 +9,10 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Net.Http, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include=".config\settings.Development.json">
@@ -68,14 +72,6 @@
       <OutputItemType>Analyzer</OutputItemType>
       <SetPlatform>Platform=AnyCPU</SetPlatform>
     </ProjectReferenceWithConfiguration>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Configuration\" />
   </ItemGroup>
 
 </Project>
