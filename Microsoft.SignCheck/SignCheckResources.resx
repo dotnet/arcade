@@ -150,6 +150,12 @@
   <data name="DetailTimestampSkipped" xml:space="preserve">
     <value>Timestamp: skipped</value>
   </data>
+  <data name="DetailXmlMultipleSignatures" xml:space="preserve">
+    <value>Multiple signatures found ({0}), only the first signature is checked.</value>
+  </data>
+  <data name="DetailXmlNoSignature" xml:space="preserve">
+    <value>No Signature element found.</value>
+  </data>
   <data name="DiagCheckingStrongName" xml:space="preserve">
     <value>Checking strong name signature.</value>
   </data>

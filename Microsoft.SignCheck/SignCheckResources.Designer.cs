@@ -160,6 +160,24 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Multiple signatures found ({0}), only the first signature is checked..
+        /// </summary>
+        internal static string DetailXmlMultipleSignatures {
+            get {
+                return ResourceManager.GetString("DetailXmlMultipleSignatures", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Signature element found..
+        /// </summary>
+        internal static string DetailXmlNoSignature {
+            get {
+                return ResourceManager.GetString("DetailXmlNoSignature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Checking strong name signature..
         /// </summary>
         internal static string DiagCheckingStrongName {

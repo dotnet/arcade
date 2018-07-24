@@ -4,12 +4,15 @@ using Microsoft.SignCheck.Interop;
 using Microsoft.SignCheck.Logging;
 using Microsoft.Tools.WindowsInstallerXml;
 using System;
+using System.Xml;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.IO.Packaging;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography.Xml;
 
 namespace Microsoft.SignCheck.Verification
 {
@@ -131,12 +134,14 @@ namespace Microsoft.SignCheck.Verification
             Verifiers.Add(".exe", VerifyExe);
             Verifiers.Add(".js", VerifyAuthentiCode);
             Verifiers.Add(".msi", VerifyMsi);
+            Verifiers.Add(".msp", VerifyMsp);
             Verifiers.Add(".nupkg", VerifyNupkg);
             Verifiers.Add(".psd1", VerifyAuthentiCode);
             Verifiers.Add(".psm1", VerifyAuthentiCode);
             Verifiers.Add(".ps1", VerifyAuthentiCode);
             Verifiers.Add(".ps1xml", VerifyAuthentiCode);
             Verifiers.Add(".vsix", VerifyVsix);
+            Verifiers.Add(".xml", VerifyXml);
             Verifiers.Add(".zip", VerifyZip);
         }
 
@@ -409,6 +414,13 @@ namespace Microsoft.SignCheck.Verification
             return result;
         }
 
+        public SignatureVerificationResult VerifyMsp(string path, string parent)
+        {
+            var result = VerifyAuthentiCode(path, parent);
+
+            return result;
+        }
+
         public SignatureVerificationResult VerifyZip(string path, string parent)
         {
             var result = new SignatureVerificationResult(path, Exclusions, parent);
@@ -478,6 +490,15 @@ namespace Microsoft.SignCheck.Verification
                     DeleteDirectory(tempPath);
                 }
             }
+
+            return result;
+        }
+
+        public SignatureVerificationResult VerifyXml(string path, string parent)
+        {
+            var result = new SignatureVerificationResult(path, Exclusions, parent);
+            X509Certificate2 xmlCertificate;
+            result.IsSigned = Xml.IsSigned(result.FullPath, out xmlCertificate);
 
             return result;
         }
