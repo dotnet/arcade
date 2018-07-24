@@ -13,8 +13,8 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="$(MicrosoftIdentityModelClientsActiveDirectoryVersion)" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" Publish="false" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" Publish="false" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" Publish="false" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" Publish="false" ExcludeAssets="runtime" />
     <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)" />
   </ItemGroup>
   
@@ -41,9 +41,6 @@
 
     <ItemGroup>
       <_Files Include="$(_Dir)*" />
-
-      <!-- Exclude msbuild binaries -->
-      <_Files Remove="$(_Dir)Microsoft.Build.*.dll" />
 
       <TfmSpecificPackageFile Include="@(_Files)">
         <PackagePath>build/$(TargetFramework)/%(_Files.Filename)%(_Files.Extension)</PackagePath>
