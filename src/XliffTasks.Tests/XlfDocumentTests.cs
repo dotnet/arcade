@@ -344,6 +344,77 @@ namespace XliffTasks.Tests
             Assert.DoesNotContain("Apple", untranslatedResources, StringComparer.Ordinal);
         }
 
+        [Fact]
+        public void ResetTranslationOnMismatchedPlaceholders()
+        {
+            // Dev has just added additional placeholders to items Alpha and Beta.
+            // Gamma already had a placeholder and is not being changed.
+
+            string resx =
+@"<root>
+  <data name=""Alpha"">
+    <value>Alpha {0}</value>
+  </data>
+  <data name=""Beta"">
+    <value>Beta {0} {1}</value>
+  </data>
+  <data name=""Gamma"">
+    <value>Gamma {0}</value>
+  </data>
+</root>";
+
+            string xliffBeforeUpdate =
+@"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
+  <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
+    <body>
+      <trans-unit id=""Alpha"">
+        <source>Alpha</source>
+        <target state=""translated"">Translated Alpha</target>
+        <note />
+      </trans-unit>
+      <trans-unit id=""Beta"">
+        <source>Beta {0}</source>
+        <target state=""translated"">Translated Beta {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id=""Gamma"">
+        <source>Gamma {0}</source>
+        <target state=""translated"">Translated Gamma {0}</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>";
+
+            string xliffAfterUpdate =
+@"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
+  <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
+    <body>
+      <trans-unit id=""Alpha"">
+        <source>Alpha {0}</source>
+        <target state=""new"">Alpha {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id=""Beta"">
+        <source>Beta {0} {1}</source>
+        <target state=""new"">Beta {0} {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id=""Gamma"">
+        <source>Gamma {0}</source>
+        <target state=""translated"">Translated Gamma {0}</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>";
+
+            AssertEx.EqualIgnoringLineEndings(
+                xliffAfterUpdate,
+                Update(xliff: xliffBeforeUpdate, resx: resx));
+
+        }
+
         private static string Sort(string xliff)
         {
             var xliffDocument = new XlfDocument();
