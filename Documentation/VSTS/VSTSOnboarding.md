@@ -17,6 +17,8 @@
 
 ## GitHub to DotNet Internal mirror
 
+If your repository has internal builds, you will need to set up a DotNet Internal mirror. This is *only necessary* for internal builds; if your repository only does PR or public CI builds, you can skip this step.
+
 Instructions for setting up the GitHub to dotnet.visualstudio.com/internal mirror are available in the [Dotnet.visualstudio.com internal mirror documentation](./internal-mirror.md)
 
 ## VSTS Pull Request and CI builds
@@ -148,7 +150,7 @@ For a list of known VSTS issues we are tracking, please go [here](https://dotnet
 - "Repository self references endpoint"
 
   If you see an error like this
-  
+
   `An error occurred while loading the YAML build definition. Repository self references endpoint 6510879c-eddc-458b-b083-f8150e06ada5 which does not exist or is not authorized for use`
-  
+
   The problem is the yaml file had a parse error when the definition was originally created. When the definition is created, parse errors are saved with the definition and are supposed to be shown in the definition editor. That regressed in the UI. VSTS is also making a change so that even if there are errors parsing the file, they go ahead and save the repository endpoint as authorized.  In the mean time, you have to track down your YAML parse error.
