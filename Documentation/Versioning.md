@@ -65,12 +65,30 @@ Date agnostic versioning is more hassle than it's worth, though having the sha i
 
 ## Package Version Kinds
 
-Package versions come in 3 kinds, depending on the point in the product cycle:
+Package versions come in the following kinds, depending on the point in the product cycle:
 
-- **Dev/Daily** 
-
-  Versions should include all fields - pre-release tag, shortdate, revision, etc.
+- **Local developer build default** 
   
+  ```
+  MAJOR.MINOR.PATCH-dev+SHORTSHA
+  ```
+  Example:
+  ```
+    1.0.0-dev+abcdef
+  ```
+
+- **PR validation build** 
+  
+  ```
+  MAJOR.MINOR.PATCH-ci+SHORTSHA
+  ```
+  Example:
+  ```
+    1.0.0-ci+abcdef
+  ```
+  
+- **Daily official build** 
+
   ```
   MAJOR.MINOR.PATCH-PRERELEASE.SHORTDATE.REVISION+SHORTSHA
   ```
@@ -79,7 +97,7 @@ Package versions come in 3 kinds, depending on the point in the product cycle:
     1.0.0-preview1.25405.1+abcdef
   ```
   
-- **Final Prerelease** 
+- **Final pre-release build** 
   
    Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **REVISION**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'.final'`.  This avoids a common issue in nuget package resolution where `2.1.0-rc1` < `2.1.0-rc1.12345`. The intention is that the final build is resolved over the date-versioned build.
    
@@ -91,7 +109,7 @@ Package versions come in 3 kinds, depending on the point in the product cycle:
     1.0.0-preview1.final
   ```
   
-- **Release** 
+- **Release build** 
 
   Versions should include **MAJOR**, **MINOR**, **PATCH**.
   
@@ -103,11 +121,11 @@ Package versions come in 3 kinds, depending on the point in the product cycle:
     1.0.0
   ```
 
-The format of package versions produced by the build is determined based on `DotNetFinalVersionKind` variable:
+The format of package versions produced by the build is determined based on the value of variable `DotNetFinalVersionKind`:
 
-| DotNetFinalVersionKind   | example                     |
+| DotNetFinalVersionKind   | examples                    |
 |--------------------------|-----------------------------|
-| ""                       | "1.2.3-beta.12345.1+abcdef"|
+| ""                       | "1.2.3-dev+abcdef", "1.2.3-ci+abcdef", "1.2.3-beta.12345.1+abcdef" |
 | "prerelease"             | "1.2.3-beta.final+abcdef"   |
 | "release"                | "1.2.3"                     |
   
@@ -115,10 +133,11 @@ The format of package versions produced by the build is determined based on `Dot
 
 - **MAJOR**, **MINOR**, **PATCH**:
   Specified in source using `VersionPrefix` .NET Core SDK property, defaults to `1.0.0`.
-  
+
 - **PRERELEASE**: 
-  Specified in source using `PreReleaseVersionLabel` property.
-  
+  Property `PreReleaseVersionLabel` specifies the label for an official build.
+  Label `dev` is used for developer build and `ci` for PR validation build.
+   
 - **REVISION**, **SHORTDATE**: 
   - In official builds the values are derived from build parameter `OfficialBuildId` with format `20yymmdd.r` like so:
     - REVISION is set to `r` component of `OfficialBuildId`
@@ -128,7 +147,7 @@ The format of package versions produced by the build is determined based on `Dot
     and `r` = 1.
 
 - **SHORTSHA**:
-  - The first 8 characters for the current git HEAD commit SHA
+  - The first 8 characters for the current git HEAD commit SHA. The commit SHA is read from `SourceRevisionId` property.
 
 ## File Version Generation
 
@@ -139,11 +158,11 @@ MAJOR.MINOR.FILEPATCH.FILEREVISION
 ```
 
 - **MAJOR** and **MINOR**: 
-  Specified in `VersionPrefix` variable.   
-- **FILEPATCH**: 
-  Set to PATCH * 100 + `yy`
-- **FILEREVISION**: 
-  Set to (50 * `mm` + `dd`) * 100 + `r`
+  Specified in the first two parts of `VersionPrefix` property.
+- **FILEPATCH**:
+  Set to PATCH * 100 + `yy`. PATCH is specified in the third part of `VersionPrefix` property.
+- **FILEREVISION**:
+  Set to (50 * `mm` + `dd`) * 100 + `r`. This algorithm makes it easy to parse the month and date from FILEREVISION.
 
 The values of `yy`, `mm`, `dd`, and `r` are derived from `OfficialBuildId` or the current date (same as when calculating Package Version).
 
@@ -155,9 +174,9 @@ The repository opts into SemVer1 fallback by setting `SemanticVersioningV1` prop
 
 Examples of SemVer1 package versions:
 
-| DotNetFinalVersionKind   | example                     |
+| DotNetFinalVersionKind   | examples                     |
 |--------------------------|-----------------------------|
-| ""                       | "1.2.3-beta-12345-01-abcdef"|
+| ""                       | "1.2.3-dev-abcdef", "1.2.3-ci-abcdef", "1.2.3-beta-12345-01-abcdef"|
 | "prerelease"             | "1.2.3-beta-final-abcdef"   |
 | "release"                | "1.2.3"                     |
 
