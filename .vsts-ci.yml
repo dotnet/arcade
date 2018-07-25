@@ -11,7 +11,7 @@ resources:
     ref: refs/heads/templates
 
 phases:
-- template: /eng/common/templates/phases/arcade-public-ci.yml@arcade-templates
+- template: /eng/common/templates/phases/base.yml@arcade-templates
   parameters:
     # name of phase
     name: Windows_NT
@@ -46,7 +46,7 @@ phases:
         mergeTestResults: true 
       condition: always() 
 
-- template: /eng/common/templates/phases/arcade-public-ci.yml@arcade-templates
+- template: /eng/common/templates/phases/base.yml@arcade-templates
   parameters:
     # name of phase
     name: Linux
