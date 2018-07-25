@@ -1,9 +1,6 @@
 resources:
   repositories:
   # shared library repository
-  # Eventually this will be replaced by Darc / Maestro script management, but
-  # for now we are using VSTS reusable repositories to manage shared library
-  # templates.
   - repository: arcade-templates
     type: github
     endpoint: DotNet-Bot GitHub Connection
