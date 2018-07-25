@@ -15,7 +15,7 @@
     <NoWarn>$(NoWarn);NU1605</NoWarn>
     <ResolveAssemblyReferencesSilent>True</ResolveAssemblyReferencesSilent>
 
-    <Description>This package provides support for publishing assets to a nuget protocol based feed.</Description>
+    <Description>This package provides support for publishing assets to a NuGet protocol based feed.</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'">

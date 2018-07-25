@@ -11,7 +11,7 @@
 
   <!--
     Default to including all *.props and *.targets files
-    from the project directory into the nuget package root
+    from the project directory into the NuGet package root
   -->
   <ItemGroup Condition="'$(EnableDefaultItems)' != 'false'">
     <None Condition="'$(EnableDefaultNoneItems)' != 'false'"

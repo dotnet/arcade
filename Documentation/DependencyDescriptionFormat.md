@@ -69,7 +69,7 @@ The dependency description is comprised of two types of assets:
   - SHA – Git SHA at which the dependency was produced
   - Dependency Class – Either 'Toolset' or 'Product'.  'Toolset' dependencies are those that are used to produce the product, 'Product' dependencies are effectively everything else.  It is useful to differentiate between these so that we know how we are building (e.g. what CLI SDKs are in use across all repositories).  Defined another way, two successive builds of a Toolset dependency on the same SHA could produce two different tools (version-wise) with the same functionality.  Using either of the different toolset dependencies would produce no bit difference in the output product. **Note that this set could be extended in the future if needed.  E.g. a set of test-only dependencies might be added**
 - **N Dependency Expression Files** - Places where dependencies are expressed.  These are well known locations and formats.  The version expressions are listed below.
-  - Version Props File – The props file, typically for dependencies acquired via nuget and msbuild
+  - Version Props File – The props file, typically for dependencies acquired via NuGet and msbuild
   - NativeToolsVersions.txt - Native toolsets acquired outside of msbuild
   - Global Json – Global json file (e.g. CLI SDK version)
   - Arcade Version – MSBuild SDK in the global.json file and associated checked in scripting.

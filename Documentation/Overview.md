@@ -11,11 +11,11 @@ This approach publishes what amounts to “public surface area” for the shared
 
 ### Methods for Consuming the .NET Core Shared Infrastructure Components
 
-- MSBuild tasks/targets as Nuget packages
+- MSBuild tasks/targets as NuGet packages
 - Known "entry points" (repo API) in each repo to build, test, package, sign, and publish
 - VSTS extensions  (check the box in VSTS)
 - Hosted services with REST end points which are owned by the Engineering Services
-- Toolsets (think compilers, training tools, etc) as binaries in their own setup or Nuget packages
+- Toolsets (think compilers, training tools, etc) as binaries in their own setup or NuGet packages
 - Machine (VM) images and/or Docker containers
 - "Resources" as planned by VSTS.
 
@@ -32,8 +32,8 @@ This approach publishes what amounts to “public surface area” for the shared
 -  Control and ownership.  Repo owners/devs can manage _what_ tools are needed (and which aren't), as well as _when_ they take it.  This includes not only new functionality, but almost more importantly, updates to existing.
 -  Dev work flow.  Allows devs to "plug and play" when modifying or bringing up new functionality in the build without having to re-invent the wheel.  In addition, the _how_ of build tools is largely understood - even across repos.
 
-### Toolset Nuget Package Requirements
--	If used by the build, the tool should be packaged, deployed, and consumed as a Nuget package.  (compilers, training tools, etc are out of scope.  See above list)
+### Toolset NuGet Package Requirements
+-	If used by the build, the tool should be packaged, deployed, and consumed as a NuGet package.  (compilers, training tools, etc are out of scope.  See above list)
 -	Every package must be versioned.  (Proposal: https://github.com/AArnott/Nerdbank.GitVersioning)
 - There needs to be a clear and easy way to bootstrap (get started and/or add a package).  (Proposal: https://github.com/chcosta/roslyn-tools/blob/bootstrap/docs/Toolset-Bootstrap.md)
 - A dev should be able to clone, then build without worrying about VM config or other prereqs.  (It's understood that this may not be 100% achievable today, but it should be the north star.)

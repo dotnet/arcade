@@ -53,7 +53,7 @@ For repos in VSTS, the build defs should live:
 - lower-case, no spaces, use dashes
 - Put it where it makes sense (closest GitHub org), just not top-level
 - Use the closest GitHub org
-- Use the closet GitHub repo name/vsts repo name without the prefix
+- Use the closet GitHub repo name/VSTS repo name without the prefix
 - *.def
 
 ### Build definition file name convention
