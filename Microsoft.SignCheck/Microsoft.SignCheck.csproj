@@ -9,6 +9,9 @@
     <IsTool>true</IsTool>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Verification\JavaArchive.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="NuGet.Common" Version="4.7.0" />
     <PackageReference Include="NuGet.Frameworks" Version="4.7.0" />

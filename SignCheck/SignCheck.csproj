@@ -1,4 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'build\ResxWorkaround.props'))\build\ResxWorkaround.props" />
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
     <OutputType>EXE</OutputType>
@@ -27,5 +28,24 @@
       <PackagePath>tools/</PackagePath>
       <Pack>true</Pack>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Net" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="SignCheckResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SignCheckResources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="SignCheckResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>SignCheckResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

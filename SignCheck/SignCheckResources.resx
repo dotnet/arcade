@@ -123,8 +123,14 @@
   <data name="scCannotFindFile" xml:space="preserve">
     <value>Unable to find {0}.</value>
   </data>
+  <data name="scDeleteExistingFile" xml:space="preserve">
+    <value>{0} already exists. Deleting...</value>
+  </data>
   <data name="scDetailFileStatusSetting" xml:space="preserve">
     <value>Setting --file-status to {0}.</value>
+  </data>
+  <data name="scDownloading" xml:space="preserve">
+    <value>Downloading {0} to {1}.</value>
   </data>
   <data name="scErrorCannotFindExclusionFile" xml:space="preserve">
     <value>Cannot find exclusion file: {0}.</value>

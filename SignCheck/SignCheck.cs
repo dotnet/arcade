@@ -4,14 +4,21 @@ using Microsoft.SignCheck.Logging;
 using Microsoft.SignCheck.Verification;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace SignCheck
 {
     internal class SignCheck
     {
         private static readonly char[] _wildcards = new char[] { '*', '?' };
+        private WebClient _webClient;
+
+        // Location where files can be downloaded
+        private static readonly string _appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SignCheck");
 
         internal List<string> _inputFiles;
 
@@ -93,6 +100,19 @@ namespace SignCheck
             set;
         }
 
+        public WebClient WebClient
+        {
+            get
+            {
+                if (_webClient == null)
+                {
+                    _webClient = new WebClient();
+                }
+
+                return _webClient;
+            }
+        }
+
         public SignCheck(string[] args)
         {
             Options = new Options();
@@ -136,6 +156,11 @@ namespace SignCheck
             {
                 ProcessExclusions(Options.ExclusionsFile);
             }
+
+            if (!Directory.Exists(_appData))
+            {
+                Directory.CreateDirectory(_appData);
+            }
         }
 
         private void HandleErrors(IEnumerable<Error> errors)
@@ -146,10 +171,19 @@ namespace SignCheck
         private List<string> GetInputFilesFromOptions()
         {
             var inputFiles = new List<string>();
+            var downloadFiles = new List<Uri>();
 
             foreach (var inputFile in Options.InputFiles)
             {
-                if (inputFile.IndexOfAny(_wildcards) > -1)
+                Uri uriResult;
+
+                if ((Uri.TryCreate(inputFile, UriKind.Absolute, out uriResult)) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
+                {
+                    var downloadPath = Path.Combine(_appData, Path.GetFileName(uriResult.LocalPath));
+                    inputFiles.Add(downloadPath);
+                    downloadFiles.Add(uriResult);
+                }
+                else if (inputFile.IndexOfAny(_wildcards) > -1)
                 {
                     var fileSearchOptions = Options.TraverseSubFolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
                     var fileSearchPath = Path.GetDirectoryName(inputFile);
@@ -210,6 +244,11 @@ namespace SignCheck
                         Log.WriteError(String.Format(SignCheckResources.scInputFileDoesNotExist, inputFile));
                     }
                 }
+            }
+
+            if (downloadFiles.Count > 0)
+            {
+                DownloadFilesAsync(downloadFiles).Wait();
             }
 
             return inputFiles;
@@ -348,6 +387,35 @@ namespace SignCheck
             }
 
             return Log.HasLoggedErrors ? -1 : 0;
+        }
+
+        private async Task DownloadFileAsync(Uri uri)
+        {
+            try
+            {
+                using (var wc = new WebClient())
+                {
+                    var downloadPath = Path.Combine(_appData, Path.GetFileName(uri.LocalPath));
+
+                    if (File.Exists(downloadPath))
+                    {
+                        Log.WriteMessage(LogVerbosity.Detailed, SignCheckResources.scDeleteExistingFile, downloadPath);
+                        File.Delete(downloadPath);
+                    }
+
+                    Log.WriteMessage(LogVerbosity.Detailed, SignCheckResources.scDownloading, uri.AbsoluteUri, downloadPath);
+                    await wc.DownloadFileTaskAsync(uri, downloadPath);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.WriteError(e.Message);
+            }
+        }
+
+        private async Task DownloadFilesAsync(IEnumerable<Uri> uris)
+        {
+            await Task.WhenAll(uris.Select(u => DownloadFileAsync(u)));
         }
 
         static void Main(string[] args)
