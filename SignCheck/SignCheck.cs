@@ -15,7 +15,6 @@ namespace SignCheck
     internal class SignCheck
     {
         private static readonly char[] _wildcards = new char[] { '*', '?' };
-        private WebClient _webClient;
 
         // Location where files can be downloaded
         private static readonly string _appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SignCheck");
@@ -98,19 +97,6 @@ namespace SignCheck
         {
             get;
             set;
-        }
-
-        public WebClient WebClient
-        {
-            get
-            {
-                if (_webClient == null)
-                {
-                    _webClient = new WebClient();
-                }
-
-                return _webClient;
-            }
         }
 
         public SignCheck(string[] args)
