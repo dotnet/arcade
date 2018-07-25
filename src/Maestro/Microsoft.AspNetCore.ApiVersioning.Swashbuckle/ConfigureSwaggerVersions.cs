@@ -1,4 +1,7 @@
-﻿using JetBrains.Annotations;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+using JetBrains.Annotations;
 using Microsoft.AspNetCore.ApiVersioning.Schemes;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Controllers;
