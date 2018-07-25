@@ -47,8 +47,7 @@ The [VSTS CI Build guidance](https://docs.microsoft.com/en-us/vsts/build-release
 
 - Edit the build definition and go to the "History" tab.  Select the most recent change, right-click, and select "Compare Differences".  Scroll through the json and look for the "\_links" section to find the "badge" link.
 
-```
-JSON
+```JSON
 "_links": {
   "self": {
       "href": "https://dotnet.visualstudio.com/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_apis/build/Definitions/15?revision=4"
@@ -73,8 +72,7 @@ It is recommended that you restrict the CI build status to a particular branch. 
 
 Example:
 
-```
-Text
+```Text
 https://dotnet.visualstudio.com/DotNet-Public/_build/index?definitionId=17&branchName=master
 ```
 
@@ -124,8 +122,7 @@ For a list of known VSTS issues we are tracking, please go [here](https://dotnet
 
   If your template doesn't compile, then it may prevent any of your "phase" elements from surfacing which leads to this error.  This error hides what the real error in the template is.  You can work around this error by providing a default phase.
 
-  ```
-  YAML
+  ```YAML
   phases:
   - phase: foo
     steps:
