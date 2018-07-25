@@ -2,7 +2,7 @@
 
 ## Business Requirement
 
-Know what's in any given product build at any time including versions, sha's, bits locations, etc.
+Know what's in any given product build at any time including versions, SHAs, bits locations, etc.
 making the process as seamless as possible and usable by devs and other tools.
 
 ## Goal
@@ -74,35 +74,35 @@ and update the global version reporting store.  Its functionality is:
 #### Input: dependency data
 
 * Query dependencies in `Version.Details.xml`
-* Query sha+repositories for dependencies in `Version.Details.xml`
+* Query SHA+repositories for dependencies in `Version.Details.xml`
 * Update an entry in `Version.Details.xml` to move a dependency to a new version
-* Query the reporting system for shas+repositories in which a versioned item was
+* Query the reporting system for SHAs+repositories in which a versioned item was
 used
-* Query the reporting system for shas+repository that produced a versioned item
+* Query the reporting system for SHAs+repository that produced a versioned item
 * Query locations of official assets for a versioned item
 
 You can find more information about dependency descriptions [here](DependencyDescriptionFormat.md)
 
 #### Input: local repository
 * Query versioned items in repo's `Version.Details.xml`
-* Query shas+repositories for dependencies in the repo's `Version.Details.xml`
-* Query shas+repositories for all downstream dependencies
-* Alter the package+version+sha+repository information in `Version.Details.xml`
+* Query SHAs+repositories for dependencies in the repo's `Version.Details.xml`
+* Query SHAs+repositories for all downstream dependencies
+* Alter the package+version+SHA+repository information in `Version.Details.xml`
     * Add new dependency
     * Change existing dependency
     * Remove dependency
 
-#### Input: sha+repository
-* Query reporting system for versioned items produced by sha+repository
-* Query reporting system for versioned items in which this sha+repository is referenced
-* Query reporting system for shas+repositories in which this sha+repository is referenced
+#### Input: SHA+repository
+* Query reporting system for versioned items produced by SHA+repository
+* Query reporting system for versioned items in which this SHA+repository is referenced
+* Query reporting system for SHAs+repositories in which this SHA+repository is referenced
 
 #### Input: package+version
-* Query binary (if known format) for sha+repository
+* Query binary (if known format) for SHA+repository
 
 #### Common functionality
 * Create source layout for matching versions in repo dependency tree.
-* Download product+tools of official build for matching versions, sha+repository,
+* Download product+tools of official build for matching versions, SHA+repository,
 package+version
 
 ### Darc Vs. Maestro++

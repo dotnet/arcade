@@ -5,7 +5,7 @@ This document describes the format by which dependencies are specified in a .NET
 ## Requirements
 - Support tool-able version query and alteration without the need to execute any code in the repository
 - Support versioning of various assets referenced through MSBuild, including SDKs, packages, etc.
-- Provide additional data for darc and associated tools to query (sha, repo)
+- Provide additional data for darc and associated tools to query (SHA, repo)
 - Separate out toolset and runtime dependencies.
 
 ## Existing Expressions of Dependencies
@@ -54,7 +54,7 @@ Historically, there have been a few places where versioning shows up that we wan
             "version": "2.1.100-preview-007366"
         },
         "msbuild-sdks": {
-            // If build produced at SHA 12345, scripts in repo are obtained from sha
+            // If build produced at SHA 12345, scripts in repo are obtained from SHA
             // 12345
             "RoslynTools.RepoToolset": "1.0.0-beta2-62628-01"
         }
@@ -67,7 +67,7 @@ The dependency description is comprised of two types of assets:
   - Version – Version of dependency
   - URL – URL of repository (typically) that produced the asset.
   - SHA – Git SHA at which the dependency was produced
-  - Dependency Class – Either 'Toolset' or 'Product'.  'Toolset' dependencies are those that are used to produce the product, 'Product' dependencies are effectively everything else.  It is useful to differentiate between these so that we know how we are building (e.g. what CLI SDKs are in use across all repositories).  Defined another way, two successive builds of a Toolset dependency on the same sha could produce two different tools (version-wise) with the same functionality.  Using either of the different toolset dependencies would produce no bit difference in the output product. **Note that this set could be extended in the future if needed.  E.g. a set of test-only dependencies might be added**
+  - Dependency Class – Either 'Toolset' or 'Product'.  'Toolset' dependencies are those that are used to produce the product, 'Product' dependencies are effectively everything else.  It is useful to differentiate between these so that we know how we are building (e.g. what CLI SDKs are in use across all repositories).  Defined another way, two successive builds of a Toolset dependency on the same SHA could produce two different tools (version-wise) with the same functionality.  Using either of the different toolset dependencies would produce no bit difference in the output product. **Note that this set could be extended in the future if needed.  E.g. a set of test-only dependencies might be added**
 - **N Dependency Expression Files** - Places where dependencies are expressed.  These are well known locations and formats.  The version expressions are listed below.
   - Version Props File – The props file, typically for dependencies acquired via nuget and msbuild
   - NativeToolsVersions.txt - Native toolsets acquired outside of msbuild

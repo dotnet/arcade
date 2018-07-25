@@ -135,7 +135,7 @@ The commands/operations that Darc can perform against version/dependency files i
 
 ## get
 
-Query for a collection of DependencyItems, based on a set of query-parameters including shas, repositories, versions, binaries 
+Query for a collection of DependencyItems, based on a set of query-parameters including SHAs, repositories, versions, binaries 
 and dependency names.
 
 ### Usage
@@ -176,7 +176,7 @@ will include dependencies where the `<query-parameters>` were used. Optional
 ```
 *  `[-s,--sha] <sha> [[-r, --repo-uri] <repo-uri>]`: --repo-uri supports any git repository uri. If --repo-uri is not provided returns the 
 DependencyItems from the local repo's `version.details.xml` which match `<sha>`. If a --repo-uri is given and is different 
-from the local, get the DependencyItems that match the sha+repo combination from the reporting store. 
+from the local, get the DependencyItems that match the SHA+repo combination from the reporting store. 
     *  Example: `darc get -s 23498123740982349182340981234`
         * Output Sample: 
 ```
@@ -312,7 +312,7 @@ Adds a new dependency to `version.details.xml` and in `version.props` and `globa
 *  `[-n, --name] <name>`: the versioned item name. Required.
 *  `[-v, --version] <item-version>`: item's version. Required.
 *  `[-r, --repo-uri] <repo-uri>`: repo where the item is built. Optional, if not provided this will be fetched from the reporting store.
-*  `[-s,--sha] <sha>`: the sha which is built into this item. Optional, if not provided this will be fetched from the reporting store.
+*  `[-s,--sha] <sha>`: the SHA which is built into this item. Optional, if not provided this will be fetched from the reporting store.
 
 ### Example
 
@@ -335,7 +335,7 @@ The name and at least one input are required so we know what dependency to updat
 *  `[-n, --name] <name>`: the versioned item name
 *  `[-v, --version] <item-version>`: item's version
 *  `[-r, --repo-uri] <repo-uri>`: repo where the item is built
-*  `[-s,--sha] <sha>`: the sha which is built into this item
+*  `[-s,--sha] <sha>`: the SHA which is built into this item
 
 ### Example
 
