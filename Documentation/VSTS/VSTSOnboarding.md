@@ -26,6 +26,7 @@ Instructions for setting up the GitHub to dotnet.visualstudio.com/internal mirro
 VSTS has detailed documentation on how to create builds that are linked from GitHub repositories which can be found [here](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts); however, before going through those steps, keep in mind that our process differs from the steps in the official documentation in a few key places:
 
 * The documentation defaults to showing the process for creating a build using the Designer. The Arcade standard is to use **YAML**, so make sure to click that tab under the "Set up CI for your GitHub repository" header.
+* The YAML tutorial links to a .NET Core sample repository for an example of a simple `.vsts-ci.yml` file. Instead of using that repository, use [our sample repository](https://github.com/dotnet/arcade-minimalci-sample).
 * VSTS will require a GitHub Service Endpoint to communicate with github and setup web hooks.  Teams should use the `DotNet-Bot GitHub Connection` Service Endpoint.  The `DotNet-Bot GitHub Connection` requires that teams add the .NET Core owned [service account](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#github-service-account) as a [collaborator](https://help.github.com/articles/permission-levels-for-a-user-account-repository/#collaborator-access-on-a-repository-owned-by-a-user-account) (Admin access) on the GitHub repo.
 
 For implementation details and managing information about `DotNet-Bot GitHub Connection` see the [documentation](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#vsts-service-endpoint)
@@ -46,7 +47,8 @@ The [VSTS CI Build guidance](https://docs.microsoft.com/en-us/vsts/build-release
 
 - Edit the build definition and go to the "History" tab.  Select the most recent change, right-click, and select "Compare Differences".  Scroll through the json and look for the "\_links" section to find the "badge" link.
 
-```JSON
+```
+JSON
 "_links": {
   "self": {
       "href": "https://dotnet.visualstudio.com/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_apis/build/Definitions/15?revision=4"
@@ -71,7 +73,8 @@ It is recommended that you restrict the CI build status to a particular branch. 
 
 Example:
 
-```Text
+```
+Text
 https://dotnet.visualstudio.com/DotNet-Public/_build/index?definitionId=17&branchName=master
 ```
 
@@ -121,7 +124,8 @@ For a list of known VSTS issues we are tracking, please go [here](https://dotnet
 
   If your template doesn't compile, then it may prevent any of your "phase" elements from surfacing which leads to this error.  This error hides what the real error in the template is.  You can work around this error by providing a default phase.
 
-  ```YAML
+  ```
+  YAML
   phases:
   - phase: foo
     steps:
