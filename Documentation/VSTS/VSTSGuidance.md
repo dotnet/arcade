@@ -36,7 +36,7 @@ To keep things as simple (manageable) as possible, we're going to manage permiss
   - public (project name)
   - internal (project name)
   - Microsoft (folder name matching GitHub org name)
-  - dotnet-corefx (vsts repo name on internal project)
+  - dotnet-corefx (VSTS repo name on internal project)
 
 ## Build Definitions
 
@@ -124,7 +124,7 @@ Both of these would point to the same yaml file in the forks of the repo:
 - VSTS: dotnet-corefx
 - The only differences here are:
   - Repo name: Repos are top level objects in VSTS so we have an org prefix
-  - Leaf folder/build def name (depending on how vsts's pipelines folder work goes)
+  - Leaf folder/build def name (depending on how VSTS's pipelines folder work goes)
 
 ## Terms
 

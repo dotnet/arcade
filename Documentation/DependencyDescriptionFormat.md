@@ -5,7 +5,7 @@ This document describes the format by which dependencies are specified in a .NET
 ## Requirements
 - Support tool-able version query and alteration without the need to execute any code in the repository
 - Support versioning of various assets referenced through MSBuild, including SDKs, packages, etc.
-- Provide additional data for darc and associated tools to query (SHA, repo)
+- Provide additional data for Darc and associated tools to query (SHA, repo)
 - Separate out toolset and runtime dependencies.
 
 ## Existing Expressions of Dependencies

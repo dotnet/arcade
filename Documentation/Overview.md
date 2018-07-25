@@ -49,7 +49,7 @@ This approach publishes what amounts to “public surface area” for the shared
 - New toolset packages should generally be extensively used in one repo, then if warranted, promoted to become more generally available.
 
 ### Arcade building repos Requirements
-- Arcade builds, tests, packages, signs, and publishes itself using itself and the shipping sdk/cli
+- Arcade builds, tests, packages, signs, and publishes itself using itself and the shipping SDK/CLI
 - Arcade itself must build from source.  This does not necessarily apply to the packages hosted by Arcade, but building from source should always be kept in mind.
 - All tools bootstrapped in, getting as close as technically possible to 'clone and build' on a clean machine
 - A repo level API is explicitly defined and implemented, not just implied

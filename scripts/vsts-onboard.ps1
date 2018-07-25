@@ -5,7 +5,7 @@ Performs a set of actions to enable a repo in VSTS.
 .DESCRIPTION
 - Makes an internal repo on dotnet.visualstudio.com for the GitHub repo
 - Adds a Maestro webhook
-- Adds a folder structure on internal and public vsts for build definitions
+- Adds a folder structure on internal and public VSTS for build definitions
 
 .PARAMETER GitHubRepoName
 Repository name of the GitHub repo to onboard, in org/repo form.
@@ -14,7 +14,7 @@ Repository name of the GitHub repo to onboard, in org/repo form.
 PAT used to make GitHub hook modifications.  If UseKeyVault is passed, may be ommitted
 
 .PARAMETER VSTSPat
-PAT used to make vsts modifications.  If UseKeyVault is passed, may be ommitted
+PAT used to make VSTS modifications.  If UseKeyVault is passed, may be ommitted
 
 .PARAMETER MaestroSecret
 Secret for Maestro webhooks.  If UseKeyVault is passed, may be ommitted

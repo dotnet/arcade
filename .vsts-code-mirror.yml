@@ -28,7 +28,7 @@ phases:
               Write-Error "Expected valid branch and GitHub repo in the form of owner/repo"
             }
             Write-Host "##vso[task.setvariable variable=VstsRepoName]$vstsRepo"
-            Write-Host "Mirroring branch '$branch' from GitHub repo '$repo' to vsts repo '$vstsRepo'."
+            Write-Host "Mirroring branch '$branch' from GitHub repo '$repo' to VSTS repo '$vstsRepo'."
       - script: |
           git clone https://dotnet-maestro-bot:$(BotAccount-dotnet-maestro-bot-PAT)@github.com/$(GithubRepo) $(WorkingDirectoryName) -b $(BranchToMirror)
         displayName: Clone GitHub repo

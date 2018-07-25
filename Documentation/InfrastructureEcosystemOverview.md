@@ -43,7 +43,7 @@ The hard part is that an attempt to solve these problems often brings in the nee
 Creating a coherent product or set of products from isolated repos connected requires understanding the repository dependency graph. Simply taking the head of the master branch of each repository, then building and publishing will not always result in a coherent product.  The product is not a collection of repositories viewed at a point in time (as a monolithic repo might be).  Instead, there is a two level versioning scheme that defines the product, expressed as a series of git changes in each repository, some of which alter the inter-repo dependency state.
 
 For example, since corefx has a dependency on coreclr, we can say that in effect a particular SHA in corefx contains the state of coreclr at the SHA that was built into the version of coreclr that corefx references. If we lay out all inter-dependencies of those repositories that make up the product, we create a set of graphs.  These graphs can then be used to determine what makes up .NET Core or subsection of .NET Core at any repository SHA, by walking nodes (connected by version edges) that implicitly reference that SHA.  The graph has the following properties:
-- Beginning at a root (e.g. cli) at a SHA and walking forward on all edges (X depends on Y) will always produce a full coherent product.
+- Beginning at a root (e.g. CLI) at a SHA and walking forward on all edges (X depends on Y) will always produce a full coherent product.
 - Beginning at a non-root node at a SHA and walking forward (X depends on Y) on any number of edges will always produce a coherent sub-product.
 - It is possible to evaluate the graph backwards, effectively asking what SHAs at X depend on a specific SHA at Y.
 
