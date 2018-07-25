@@ -1,0 +1,36 @@
+parameters:
+  # Optional: Clean sources before building
+  clean: true
+
+  # Optional: Git fetch depth
+  fetchDepth: ''
+
+  # Optional: name of the phase (not specifying phase name may cause name collisions)
+  name: default
+
+  # Required: A defined YAML queue
+  queue: {}
+
+  # Required: build steps
+  steps: []
+
+  # Optional: variables
+  variables: {}
+
+phases:
+- phase: ${{ parameters.name }}
+
+  queue: ${{ parameters.queue }}
+
+  ${{ if ne(parameters.variables, '') }}:
+    variables: ${{ parameters.variables }}
+
+  steps:
+    # Initialization
+  - checkout: self
+    clean: ${{ parameters.clean }}
+    ${{ if ne(parameters.fetchDepth, '') }}:
+      fetchDepth: ${{ parameters.fetchDepth }}
+
+    # Execute build steps
+  - ${{ parameters.steps }}
