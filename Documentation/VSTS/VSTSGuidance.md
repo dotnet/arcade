@@ -82,7 +82,7 @@ internal project:
 
 ### YML folders
 
-(Still in discussion - not yet implemented  - [GitHub PR](https://github.com/Microsoft/vsts-agent/pull/1430/files#diff-0e4df20b2155d804a6518e8089072a96R29))
+(Still in discussion - not yet implemented - [GitHub PR](https://github.com/Microsoft/vsts-agent/pull/1430/files#diff-0e4df20b2155d804a6518e8089072a96R29))
 
 ```TEXT
 .vsts-pipelines
