@@ -1,10 +1,11 @@
 using System;
+using JetBrains.Annotations;
 
 namespace Maestro.Web.Api.v2018_07_16.Models
 {
     public class Channel
     {
-        public Channel(Data.Models.Channel other)
+        public Channel([NotNull] Data.Models.Channel other)
         {
             if (other == null)
             {

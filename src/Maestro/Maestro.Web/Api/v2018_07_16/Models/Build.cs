@@ -1,13 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace Maestro.Web.Api.v2018_07_16.Models
 {
     public class Build
     {
-        public Build(Data.Models.Build other)
+        public Build([NotNull] Data.Models.Build other)
         {
+            if (other == null)
+            {
+                throw new ArgumentNullException(nameof(other));
+            }
+
             Id = other.Id;
             Repository = other.Repository;
             Commit = other.Commit;

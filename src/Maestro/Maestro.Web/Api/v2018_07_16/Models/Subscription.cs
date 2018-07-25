@@ -1,10 +1,11 @@
 using System;
+using JetBrains.Annotations;
 
 namespace Maestro.Web.Api.v2018_07_16.Models
 {
     public class Subscription
     {
-        public Subscription(Data.Models.Subscription other)
+        public Subscription([NotNull] Data.Models.Subscription other)
         {
             if (other == null)
             {

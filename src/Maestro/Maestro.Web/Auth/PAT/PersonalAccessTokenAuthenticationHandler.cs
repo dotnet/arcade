@@ -13,9 +13,9 @@ using Microsoft.Extensions.Options;
 
 namespace Maestro.Web
 {
-    public class
-        PersonalAccessTokenAuthenticationHandler<TUser> : AuthenticationHandler<
-            PersonalAccessTokenAuthenticationOptions<TUser>> where TUser : class
+    public class PersonalAccessTokenAuthenticationHandler<TUser> :
+        AuthenticationHandler<PersonalAccessTokenAuthenticationOptions<TUser>>
+        where TUser : class
     {
         public PersonalAccessTokenAuthenticationHandler(
             IOptionsMonitor<PersonalAccessTokenAuthenticationOptions<TUser>> options,
@@ -50,8 +50,10 @@ namespace Maestro.Web
         private byte[] GeneratePassword()
         {
             var bytes = new byte[Options.PasswordSize];
-            RandomNumberGenerator rng = RandomNumberGenerator.Create();
-            rng.GetBytes(bytes);
+            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(bytes);
+            }
             return bytes;
         }
 

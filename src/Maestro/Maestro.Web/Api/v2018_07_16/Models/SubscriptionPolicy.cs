@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 
 namespace Maestro.Web.Api.v2018_07_16.Models
 {
@@ -8,7 +9,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         {
         }
 
-        public SubscriptionPolicy(Data.Models.SubscriptionPolicy other)
+        public SubscriptionPolicy([NotNull] Data.Models.SubscriptionPolicy other)
         {
             if (other == null)
             {

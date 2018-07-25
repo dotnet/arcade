@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace Maestro.Web.Api.v2018_07_16.Models
 {
     public class Asset
     {
-        public Asset(Data.Models.Asset other)
+        public Asset([NotNull] Data.Models.Asset other)
         {
             if (other == null)
             {
