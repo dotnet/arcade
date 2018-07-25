@@ -17,7 +17,7 @@
 
 ## GitHub to DotNet Internal mirror
 
-If your repository has internal builds, you will need to set up a DotNet Internal mirror. This is *only necessary* for internal builds; if your repository only does PR or public CI builds, you can skip this step.
+If your repository has internal builds, you will need to set up a DotNet Internal mirror. This is *required* for internal builds; if your repository only does PR or public CI builds, you can skip this step.
 
 Instructions for setting up the GitHub to dotnet.visualstudio.com/internal mirror are available in the [Dotnet.visualstudio.com internal mirror documentation](./internal-mirror.md)
 
