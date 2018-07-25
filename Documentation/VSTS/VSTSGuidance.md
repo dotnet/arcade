@@ -6,11 +6,11 @@ There are two projects for use.  They are:
 
 - public (https://dotnet.visualstudio.com/public)
   - Used for oss
-  - For build definitions only  (no source code - that's on github)
+  - For build definitions only  (no source code - that's on GitHub)
   - Build definitions are allowed to pull source directly from GitHub
 - internal  (https://dotnet.visualstudio.com/internal)
   - Build definitions are only allowed to pull source from internal repos
-  - Public github repos should be mirror here for official msft builds
+  - Public GitHub repos should be mirror here for official msft builds
 
 We will have multiple build definitions, effectively a mirrored set in the public and internal. We will have one set of YAML which applies to both. This will allow for CI (PR testing) in both internal and OSS venues, and well as official build production on the internal side.
 
@@ -40,9 +40,9 @@ To keep things as simple (manageable) as possible, we're going to manage permiss
 
 ## Build Definitions
 
-### Folder names for github repos
+### Folder names for GitHub repos
 
-For those repos which are in github, the build definitions should live:
+For those repos which are in GitHub, the build definitions should live:
 
 - $(GitHubOrg)/$(GitHubRepoName)/*.def
 
@@ -51,9 +51,9 @@ For those repos which are in github, the build definitions should live:
 For repos in VSTS, the build defs should live:
 
 - lower-case, no spaces, use dashes
-- Put it where it makes sense (closest github org), just not top-level
-- Use the closest github org
-- Use the closet github repo name/vsts repo name without the prefix
+- Put it where it makes sense (closest GitHub org), just not top-level
+- Use the closest GitHub org
+- Use the closet GitHub repo name/vsts repo name without the prefix
 - *.def
 
 ### Build definition file name convention
@@ -82,7 +82,7 @@ internal project:
 
 ### YML folders
 
-(Still in discussion - not yet implemented  - [github PR](https://github.com/Microsoft/vsts-agent/pull/1430/files#diff-0e4df20b2155d804a6518e8089072a96R29))
+(Still in discussion - not yet implemented  - [GitHub PR](https://github.com/Microsoft/vsts-agent/pull/1430/files#diff-0e4df20b2155d804a6518e8089072a96R29))
 
 ```TEXT
 .vsts-pipelines
@@ -99,7 +99,7 @@ For now, everything should be in 'internal' and any code that is public should b
 ### VSTS repos should
 
 - Be mirrored from GitHub, if not internal only.
-- Internal-only projects should only be in the 'internal' project with no github equivalent
+- Internal-only projects should only be in the 'internal' project with no GitHub equivalent
 
 ### Naming conventions
 
