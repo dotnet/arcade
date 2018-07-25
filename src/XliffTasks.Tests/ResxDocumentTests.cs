@@ -84,5 +84,6 @@ namespace XliffTasks.Tests
             AssertEx.EqualIgnoringLineEndings(expectedTranslation, writer.ToString());
         }
 
+        
     }
 }

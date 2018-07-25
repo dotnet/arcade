@@ -155,6 +155,27 @@ namespace XliffTasks.Model
                     changed = true;
                 }
 
+                // If the source and target require different numbers of formatting items then reset
+                // the target string completely. This avoids problems when the source has been updated
+                // to remove formatting items--when formatting the target string we won't have as many
+                // replacement items as it calls for, leading to an exception.
+                // And if the source string is updated to use _more_ items then formatting with the
+                // target string is likely to produce misleading (or outright meaningless) text. In
+                // either case we lose nothing by just reverting the string until it can be localized
+                // again.
+                // Note we don't limit this check to when the source has changed in the original
+                // document because we also want to catch errors introduced during translation.
+                var sourceReplacementCount = sourceElement.Value.GetReplacementCount();
+                var targetReplacementCount = targetElement.Value.GetReplacementCount();
+
+                if (targetReplacementCount != sourceReplacementCount)
+                {
+                    targetElement.Value = sourceNode.Source;
+                    stateAttribute.Value = "new";
+
+                    changed = true;
+                }
+
                 // signal to loop below that this node is not new
                 nodesById.Remove(id);
             }
