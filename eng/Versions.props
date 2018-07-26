@@ -27,7 +27,6 @@
     <MicrosoftNetTestSdkVersion>15.7.2</MicrosoftNetTestSdkVersion>
     <MoqVersion>4.8.3</MoqVersion>
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
-    <NLogVersion>4.5.6</NLogVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <OctokitVersion>0.30.0</OctokitVersion>
     <SleetLibVersion>2.2.24</SleetLibVersion>

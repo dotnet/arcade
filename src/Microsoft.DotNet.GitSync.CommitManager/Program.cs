@@ -4,12 +4,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using CommandLine;
+using log4net;
+using log4net.Config;
 using Microsoft.WindowsAzure.Storage.Table;
-using NLog;
-using NLog.Config;
-using NLog.Targets;
 
 namespace Microsoft.DotNet.GitSync.CommitManager
 {
@@ -18,7 +19,7 @@ namespace Microsoft.DotNet.GitSync.CommitManager
         private const string _cloudTableName = "CommitHistory";
         private static Table s_table { get; set; }
         private static Dictionary<string, List<string>> s_repos { get; set; } = new Dictionary<string, List<string>>();
-        private static Logger logger = LogManager.GetCurrentClassLogger();
+        private static ILog s_logger = LogManager.GetLogger(typeof(Program));
 
         public static async Task Main(string[] args)
         {
@@ -34,11 +35,8 @@ namespace Microsoft.DotNet.GitSync.CommitManager
 
         private static async Task SetupAsync(string username, string key)
         {
-            LoggingConfiguration config = new LoggingConfiguration();
-            ConsoleTarget consoleTarget = new ConsoleTarget();
-            consoleTarget.Layout = @"${date:format=HH\:mm\:ss}  ${level:uppercase=true}  ${message} ${exception:format=tostring}";
-            config.AddRule(LogLevel.Info, LogLevel.Fatal, consoleTarget);
-            LogManager.Configuration = config;
+            var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+            XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
 
             s_repos.Add("corefx", new List<string> { "coreclr", "corert" });
             s_repos.Add("coreclr", new List<string> { "corefx", "corert" });
@@ -61,15 +59,15 @@ namespace Microsoft.DotNet.GitSync.CommitManager
                     try
                     {
                         await s_table.CommitTable.ExecuteAsync(insertOperation);
-                        logger.Info($"Commit {commitId} added to table to get mirrored from {sourceRepo} to {repo}");
+                        s_logger.Info($"Commit {commitId} added to table to get mirrored from {sourceRepo} to {repo}");
                     }
                     catch (WindowsAzure.Storage.StorageException)
                     {
-                        logger.Warn($"The commit {commitId} already exists in {repo}");
+                        s_logger.Warn($"The commit {commitId} already exists in {repo}");
                     }
                     catch (Exception ex)
                     {
-                        logger.Warn($"Insert Operation for commit {commitId} for {repo}\n" + ex.Message);
+                        s_logger.Warn($"Insert Operation for commit {commitId} for {repo}\n" + ex.Message);
                     }
                 }
             }
