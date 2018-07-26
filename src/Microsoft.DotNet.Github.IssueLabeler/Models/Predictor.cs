@@ -9,19 +9,20 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.GitHub.IssueLabeler
 {
-    internal class Predictor
+    internal static class Predictor
     {
         private static string ModelPath => @"model\GitHubIssueLabelerModel.zip";
         
-        public static async Task<string> PredictAsync(GitHubIssue issue)
+        public static async Task<string> PredictAsync(GitHubIssue issue, ILogger logger)
         {
             PredictionModel<GitHubIssue, GitHubIssuePrediction> model = await PredictionModel.ReadAsync<GitHubIssue, GitHubIssuePrediction>(ModelPath);
             GitHubIssuePrediction prediction = model.Predict(issue);
       
             float[] probabilities = prediction.Probabilities;
-            WebhookIssueController.Logger.LogInformation($"Label for {issue.ID} is predicted with confidence {probabilities.Max().ToString()}");
+            float maxProbability = probabilities.Max();
+            logger.LogInformation($"Label for {issue.ID} is predicted with confidence {maxProbability.ToString()}");
 
-            return probabilities.Max() > 0.8 ? prediction.Area : null;
+            return maxProbability > 0.8 ? prediction.Area : null;
         }
     }
 }

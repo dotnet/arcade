@@ -12,8 +12,8 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
     [Route("api/WebhookIssue")]
     public class WebhookIssueController : Controller
     {
-        public static Labeler Issuelabeler { get; set; }
-        public static ILogger Logger { get; set; }
+        private Labeler Issuelabeler { get; set; }
+        private ILogger Logger { get; set; }
 
         public WebhookIssueController(Labeler labeler, ILogger<WebhookIssueController> logger)
         {
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
                 string body = issue.Description;
                 Logger.LogInformation($"A {number.ToString()} issue with {title} has been opened.");
 
-                await Issuelabeler.PredictAndApplyLabelAsync(number, title, body);
+                await Issuelabeler.PredictAndApplyLabelAsync(number, title, body, Logger);
                 Logger.LogInformation("Labeling completed");
             }
             else

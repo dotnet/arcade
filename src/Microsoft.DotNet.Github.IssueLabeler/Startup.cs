@@ -15,7 +15,6 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
 {
     public class Startup
     {
-
         public IConfiguration Configuration { get; }
 
         public Startup(IConfiguration configuration)

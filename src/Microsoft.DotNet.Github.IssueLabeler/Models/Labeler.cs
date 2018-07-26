@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             };
         }
 
-        public async Task PredictAndApplyLabelAsync(int number, string title, string body)
+        public async Task PredictAndApplyLabelAsync(int number, string title, string body, ILogger logger)
         {
             var corefxIssue = new GitHubIssue
             {
@@ -34,18 +34,18 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
                 Description = body
             };
 
-            string label = await Predictor.PredictAsync(corefxIssue);
+            string label = await Predictor.PredictAsync(corefxIssue, logger);
             if (label != null)
             {
                 var issueUpdate = new IssueUpdate();
                 issueUpdate.AddLabel(label);
 
                 await _client.Issue.Update(_repoOwner, _repoName, number, issueUpdate);
-                WebhookIssueController.Logger.LogInformation($"Issue {corefxIssue.ID} : \"{corefxIssue.Title}\" was labeled as: {label}");
+                logger.LogInformation($"Issue {corefxIssue.ID} : \"{corefxIssue.Title}\" was labeled as: {label}");
             }
             else
             {
-                WebhookIssueController.Logger.LogInformation($"The Model is not able to assign the label to the Issue {corefxIssue.ID} confidently.");
+                logger.LogInformation($"The Model is not able to assign the label to the Issue {corefxIssue.ID} confidently.");
             }
         }
     }
