@@ -1,10 +1,10 @@
 # .NET Core Ecosystem v2 - Versioning
 
-.NET Core repositories should use [SemVer2](https://semver.org) for their asset versioning scheme. Versions take the general form of:
+.NET Core repositories should use [SemVer2](https://semver.org) for their asset versioning scheme. Package versions take the general form of:
 
 ```MAJOR.MINOR.PATCH-PRERELEASE+BUILDMETADATA```
 
-**MAJOR**, MINOR, and PATCH versions are rigid in their requirements.  Please refer to the [SemVer2 documentation](https://semver.org) for details. PRERELEASE and BUILD are optional and leave a fair bit of room for organizations to implement what they want. The only caveat is that build metadata cannot be used to differentiate two different packages. Build metadata should not be used when determining version precedence. There are two primary questions:
+MAJOR, MINOR, and PATCH versions are rigid in their requirements.  Please refer to the [SemVer2 documentation](https://semver.org) for details. PRERELEASE and BUILD are optional and leave a fair bit of room for organizations to implement what they want. The only caveat is that build metadata cannot be used to differentiate two different packages. Build metadata should not be used when determining version precedence. There are two primary questions:
 - What goes in the PRERELEASE and BUILD fields and when are they used?
 - Should we use date agnostic versioning vs. date varying versioning?
 
@@ -33,7 +33,7 @@ Both types of versioning have advantages and disadvantages:
 
 ### Date-Varying Versioning
 **PROS:**
-- Respins are easier.  No overwriting except for stable versions at the end of the product cycle.  Stable versions at the end of the cycle typically avoid external overwrite-averse systems.
+- Respins are easier.  No overwriting except for release versions at the end of the product cycle.  Release versions at the end of the cycle typically avoid external overwrite-averse systems.
 - Non-standard builds (e.g. different input parameters) do not collide with standard builds at the same sha when dealing with external systems.
 - File versions must be ever increasing to correctly layout new files for servicing (MSI requirement)
 - Does not affect the determinism of the build. Input dates are just another build parameter (e.g. OfficialBuildId) and rerunning a build with the same input date should produce equivalent binaries.
@@ -51,7 +51,7 @@ Date agnostic versioning is more hassle than it's worth, though having the sha i
 
   There is often concern around build determinism when date-varying versioning is used. It is important to note that date-varying versioning does not affect the abiliy to have deterministic builds in either the local dev or official build lab scenarios.  The date is either a provided parameter or obtained from git information, meaning that setting it to a specific value at a specific commit can enable the production of the same outputs over and over again.  Date varying versioning only says that **by default** this input varies from build to build.
 
-## Version Fields
+## Package Version Fields
 
 - **MAJOR** - Major version
 - **MINOR** - Minor version
@@ -63,18 +63,44 @@ Date agnostic versioning is more hassle than it's worth, though having the sha i
 
 **Note that version fields should not be zero-padded**
 
-## Versioning States and Scenarios
+## Package Version Kinds
 
-Versioning comes in 3 states, depending on the point in the product cycle:
-- **Dev/Daily** - Versions should include all fields - pre-release tag, shortdate, revision, etc.
+Package versions come in the following kinds, depending on the point in the product cycle:
+
+- **Local developer build default** 
+  
+  ```
+  MAJOR.MINOR.PATCH-dev+SHORTSHA
+  ```
+  Example:
+  ```
+    1.0.0-dev+abcdef
+  ```
+
+- **PR validation build** 
+  
+  ```
+  MAJOR.MINOR.PATCH-ci+SHORTSHA
+  ```
+  Example:
+  ```
+    1.0.0-ci+abcdef
+  ```
+  
+- **Daily official build** 
+
   ```
   MAJOR.MINOR.PATCH-PRERELEASE.SHORTDATE.REVISION+SHORTSHA
   ```
   Example:
   ```
-    1.0.0-preview1.25405.01+abcdef
+    1.0.0-preview1.25405.1+abcdef
   ```
-- **Final Prerelease** - Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **REVISION**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'.final'`.  This avoids a common issue in nuget package resolution where `2.1.0-rc1` < `2.1.0-rc1.12345`. The intention is that the final build is resolved over the date-versioned build.
+  
+- **Final pre-release build** 
+  
+   Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **REVISION**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'.final'`.  This avoids a common issue in nuget package resolution where `2.1.0-rc1` < `2.1.0-rc1.12345`. The intention is that the final build is resolved over the date-versioned build.
+   
   ```
   MAJOR.MINOR.PATCH-PRERELEASE.final
   ```
@@ -82,7 +108,11 @@ Versioning comes in 3 states, depending on the point in the product cycle:
   ```
     1.0.0-preview1.final
   ```
-- **Stable** - Versions should include **MAJOR**, **MINOR**, **PATCH**
+  
+- **Release build** 
+
+  Versions should include **MAJOR**, **MINOR**, **PATCH**.
+  
   ```
   MAJOR.MINOR.PATCH
   ```
@@ -90,58 +120,64 @@ Versioning comes in 3 states, depending on the point in the product cycle:
   ```
     1.0.0
   ```
-## Version Field Generation
-- **MAJOR** - Explicit in source, should default to `1`
-- **MINOR** - Explicit in source, should default to `0`
-- **PATCH** - Explicit in source, should default to `0`
-- **PRERELEASE** - Explicit in source, should default to `preview1`
-- **REVISION** - Generated based on build scenario
-  - **Local dev builds** - Defaulted to 0
-  - **Official builds** - Supplied generally as part of the conventional, .NET Core specific `OfficialBuildId` or VSTS `Build.BuildNumber` built in parameters.
-- **SHORTDATE** - Generated based on build scenario
-  - **Local dev builds** - Date of current git HEAD
-  - **Official builds** - Supplied generally as part of the conventional, .NET Core specific `OfficialBuildId` or VSTS `Build.BuildNumber` built in parameters.
+
+The format of package versions produced by the build is determined based on the value of variable `DotNetFinalVersionKind`:
+
+| DotNetFinalVersionKind   | examples                    |
+|--------------------------|-----------------------------|
+| ""                       | "1.2.3-dev+abcdef", "1.2.3-ci+abcdef", "1.2.3-beta.12345.1+abcdef" |
+| "prerelease"             | "1.2.3-beta.final+abcdef"   |
+| "release"                | "1.2.3"                     |
   
-  The short date is generated based off the seed date:
-  ```
-  generateShortDate(seedDate) {
-    if (comparisonDate == "") {
-      comparisonDate = 1996/04/01 (UTC)
-    }
-    if (seeDate < comparisonDate) { error }
-    months = (seedDate.Year-comparisonDate.Year)*12 + (seedDate.Month - comparisonDate.Month)
-    days = seedDate.Day
-    return (3 digits padded of months) + (2 digits padded of days)
-  }
-  ```
-- **SHORTSHA** - Parsed from the current git HEAD
+## Package Version Generation
+
+- **MAJOR**, **MINOR**, **PATCH**:
+  Specified in source using `VersionPrefix` .NET Core SDK property, defaults to `1.0.0`.
+
+- **PRERELEASE**: 
+  Property `PreReleaseVersionLabel` specifies the label for an official build.
+  Label `dev` is used for developer build and `ci` for PR validation build.
+   
+- **REVISION**, **SHORTDATE**: 
+  - In official builds the values are derived from build parameter `OfficialBuildId` with format `20yymmdd.r` like so:
+    - REVISION is set to `r` component of `OfficialBuildId`
+    - SHORTDATE is set to `yy` * 1000 + 50 * `mm` + `dd`. In year 2018 the value is in range [18051, 18631].
+  - In CI and local dev builds REVISION and SHORTDATE are not included in the package version,
+    unless `DotNetUseShippingVersion` is `true`, in which case the values of `yy`, `mm` and `dd` are derived from the current date
+    and `r` = 1.
+
+- **SHORTSHA**:
+  - The first 8 characters for the current git HEAD commit SHA. The commit SHA is read from `SourceRevisionId` property.
+
+## File Version Generation
+
+File version has 4 parts and need to increase every official build. This is especially important when building MSIs. 
+
+```
+MAJOR.MINOR.FILEPATCH.FILEREVISION
+```
+
+- **MAJOR** and **MINOR**: 
+  Specified in the first two parts of `VersionPrefix` property.
+- **FILEPATCH**:
+  Set to PATCH * 100 + `yy`. PATCH is specified in the third part of `VersionPrefix` property.
+- **FILEREVISION**:
+  Set to (50 * `mm` + `dd`) * 100 + `r`. This algorithm makes it easy to parse the month and date from FILEREVISION while staying in the range of a short which is what a version element uses.
+
+The values of `yy`, `mm`, `dd`, and `r` are derived from `OfficialBuildId` or the current date (same as when calculating Package Version).
 
 ## SemVer1 Fallback
 
-In cases where SemVer2 cannot be used (e.g. old versions of nuget), we can fall back to [SemVer1](https://semver.org/spec/v1.0.0.html).  In Semver1, there is no built in build metadata, and the prerelease field may only contain [0-9A-Za-z-].  To comply, cases where + or . are used in SemVer2's prerelease field are replaced with -.
+In cases where SemVer2 cannot be used (e.g. old versions of nuget), we can fall back to [SemVer1](https://semver.org/spec/v1.0.0.html).  In SemVer1, there is no built in build metadata, and the pre-release field may only contain [0-9A-Za-z-].  To comply, cases where + or . are used in SemVer2's prerelease field are replaced with -.
 
-Versioning comes in 3 states, depending on the point in the product cycle:
-- **Dev/Daily** - Versions should include all fields - pre-release tag, shortdate, revision, etc.  **For SemVer1, the short date should be zero padded.**
-  ```
-  MAJOR.MINOR.PATCH-PRERELEASE-SHORTDATE-REVISION-SHORTSHA
-  ```
-  Example:
-  ```
-    1.0.0-preview1-25405-01-abcdef
-  ```
-- **Final Prerelease** - Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **REVISION**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'-final'`.  This avoids a common issue in nuget package resolution where `2.1.0-rc1` < `2.1.0-rc1-12345`. The intention is that the final build is resolved over the date-versioned build.
-  ```
-  MAJOR.MINOR.PATCH-PRERELEASE-final
-  ```
-  Example:
-  ```
-    1.0.0-preview1-final
-  ```
-- **Stable** - Versions should include **MAJOR**, **MINOR**, **PATCH**
-  ```
-  MAJOR.MINOR.PATCH
-  ```
-  Example:
-  ```
-    1.0.0
-  ```
+The repository opts into SemVer1 fallback by setting `SemanticVersioningV1` property to `true`.
+
+Examples of SemVer1 package versions:
+
+| DotNetFinalVersionKind   | examples                     |
+|--------------------------|-----------------------------|
+| ""                       | "1.2.3-dev-abcdef", "1.2.3-ci-abcdef", "1.2.3-beta-12345-01-abcdef"|
+| "prerelease"             | "1.2.3-beta-final-abcdef"   |
+| "release"                | "1.2.3"                     |
+
+Note that the REVISION number is zero-padded to two characters.
