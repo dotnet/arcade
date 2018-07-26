@@ -1,0 +1,23 @@
+parameters:
+  parameter1: ''
+  parameter2: ''
+  ifScript: ''
+  elseScript: ''
+  name: Script
+  displayName: ${{ parameters.name }}
+  env: {}
+  condition: ''
+
+steps:
+- ${{ if eq(parameters.parameter1, parameters.parameter2) }}:
+  - script: ${{ parameters.ifScript }}
+    name: ${{ parameters.name }}
+    displayName: ${{ parameters.displayName }}
+    env: ${{ parameters.env }}
+    condition: ${{ parameters.condition }}
+- ${{ if ne(parameters.parameter1, parameters.parameter2) }}:
+  - script: ${{ parameters.elseScript }}
+    name: ${{ parameters.name }}
+    displayName: ${{ parameters.displayName }}
+    env: ${{ parameters.env }}
+    condition: ${{ parameters.condition }}
