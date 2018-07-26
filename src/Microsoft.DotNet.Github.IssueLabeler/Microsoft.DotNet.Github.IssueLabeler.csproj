@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <SignAssembly>false</SignAssembly>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="$(MicrosoftAspNetCoreAllVersion)" />
+    <PackageReference Include="Microsoft.Azure.Services.AppAuthentication" Version="$(MicrosoftAzureServicesAppAuthenticationVersion)" />
+    <PackageReference Include="Microsoft.ML" Version="$(MicrosoftMLVersion)" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="$(MicrosoftVisualStudioWebCodeGenerationDesignVersion)" />
+    <PackageReference Include="Octokit" Version="$(OctokitVersion)" />
+    <PackageReference Include="Microsoft.DotNet.GitHubIssueLabeler.Assets" Version="$(MicrosoftDotNetGitHubIssueLabelerAssetsVersion)" />
+  </ItemGroup>
+</Project>
