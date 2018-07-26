@@ -2,29 +2,26 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Extensions.Logging;
 using Microsoft.ML;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Github.IssueLabeler
+namespace Microsoft.DotNet.GitHub.IssueLabeler
 {
     internal class Predictor
     {
-        private static string ModelPath => Path.Combine(Directory.GetCurrentDirectory(), "GitHubLabelerModel.zip");
-        private static PredictionModel<GitHubIssue, GitHubIssuePrediction> _model;
-
+        private static string ModelPath => @"model\GitHubIssueLabelerModel.zip";
+        
         public static async Task<string> PredictAsync(GitHubIssue issue)
         {
-            if (_model == null)
-            {
-                _model = await PredictionModel.ReadAsync<GitHubIssue, GitHubIssuePrediction>(ModelPath);
-            }
+            PredictionModel<GitHubIssue, GitHubIssuePrediction> model = await PredictionModel.ReadAsync<GitHubIssue, GitHubIssuePrediction>(ModelPath);
+            GitHubIssuePrediction prediction = model.Predict(issue);
+      
+            float[] probabilities = prediction.Probabilities;
+            WebhookIssueController.Logger.LogInformation($"Label for {issue.ID} is predicted with confidence {probabilities.Max().ToString()}");
 
-            GitHubIssuePrediction prediction = _model.Predict(issue);
-            float[] probs = prediction.Probs;
-
-            return probs.Max() > 0.1 ? prediction.Area : null;
+            return probabilities.Max() > 0.8 ? prediction.Area : null;
         }
     }
 }

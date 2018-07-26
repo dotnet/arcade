@@ -3,57 +3,44 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.KeyVault;
-using Microsoft.Azure.KeyVault.Models;
-using Microsoft.Azure.Services.AppAuthentication;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
-using Serilog;
-using System.IO;
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Github.IssueLabeler
+namespace Microsoft.DotNet.GitHub.IssueLabeler
 {
     [Route("api/WebhookIssue")]
     public class WebhookIssueController : Controller
     {
-        public static IConfiguration Configuration { get; set; }
+        public static Labeler Issuelabeler { get; set; }
+        public static ILogger Logger { get; set; }
+
+        public WebhookIssueController(Labeler labeler, ILogger<WebhookIssueController> logger)
+        {
+            Issuelabeler = labeler;
+            Logger = logger;
+        }
 
         [HttpPost]
-        public async void Post([FromBody] string body)
-        {    
-            dynamic data = JsonConvert.DeserializeObject(body);
-            string Action = data?.action;
-            dynamic issue = data?.issue;
-            dynamic labels = issue?.labels;
+        public async Task PostAsync([FromBody]IssueEventPayload data)
+        {
+            GitHubIssue issue = data.Issue;
+            List<object> labels = issue.Labels;
 
-            if (Action == "opened" && labels.Count == 0)
+            if (data.Action == "opened" && labels.Count == 0)
             {
-                string title = issue?.title;
-                int number = issue?.number;
-                string body1 = issue?.body;
-                Log.Information($"A {number.ToString()} issue with {title} has been opened.");
+                string title = issue.Title;
+                int number = issue.Number;
+                string body = issue.Description;
+                Logger.LogInformation($"A {number.ToString()} issue with {title} has been opened.");
 
-                Configuration = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("appsettings.json").Build();
-
-                var labeler = new Labeler(Configuration["GitHubRepoOwner"], Configuration["GitHubRepoName"], await GetPasswordAsync(Configuration["GitHubSecretUri"]));
-
-                await labeler.PredictAndApplyLabelAsync(number, title, body1);
-                Log.Information("Labeling completed");
+                await Issuelabeler.PredictAndApplyLabelAsync(number, title, body);
+                Logger.LogInformation("Labeling completed");
             }
             else
             {
-                Log.Information("The issue is already opened or it already has a label");
+                Logger.LogInformation($"The issue {issue.Number.ToString()} is already opened or it already has a label");
             }
-        }
-
-        public async Task<string> GetPasswordAsync(string secretUri)
-        {
-            var kv = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(new AzureServiceTokenProvider().KeyVaultTokenCallback));
-            SecretBundle bundle = await kv.GetSecretAsync(secretUri);
-            return bundle.Value;
         }
     }
 }

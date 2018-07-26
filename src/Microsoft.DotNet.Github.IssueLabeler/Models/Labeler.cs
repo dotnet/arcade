@@ -2,13 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Extensions.Logging;
 using Octokit;
-using Serilog;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Github.IssueLabeler
+namespace Microsoft.DotNet.GitHub.IssueLabeler
 {
-    internal class Labeler
+    public class Labeler
     {
         private readonly GitHubClient _client;
         private readonly string _repoOwner;
@@ -41,11 +41,11 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                 issueUpdate.AddLabel(label);
 
                 await _client.Issue.Update(_repoOwner, _repoName, number, issueUpdate);
-                Log.Information($"Issue {corefxIssue.ID} : \"{corefxIssue.Title}\" was labeled as: {label}");
+                WebhookIssueController.Logger.LogInformation($"Issue {corefxIssue.ID} : \"{corefxIssue.Title}\" was labeled as: {label}");
             }
             else
             {
-                Log.Information($"The Model is not able to assign the label to the Issue {corefxIssue.ID} confidently.");
+                WebhookIssueController.Logger.LogInformation($"The Model is not able to assign the label to the Issue {corefxIssue.ID} confidently.");
             }
         }
     }

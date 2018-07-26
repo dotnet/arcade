@@ -4,20 +4,13 @@
 
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Serilog;
 
-namespace Microsoft.DotNet.Github.IssueLabeler
+namespace Microsoft.DotNet.GitHub.IssueLabeler
 {
     public class Program
     {
         public static void Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-                            .MinimumLevel.Information()
-                            .Enrich.FromLogContext()
-                            .WriteTo.Console()
-                            .WriteTo.File("log.txt", rollOnFileSizeLimit: true)
-                            .CreateLogger();
             BuildWebHost(args).Run();
         }
 
@@ -25,7 +18,7 @@ namespace Microsoft.DotNet.Github.IssueLabeler
         {
             return WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .UseSerilog()
+                .UseApplicationInsights()
                 .Build();
         }
     }

@@ -3,21 +3,32 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.ML.Runtime.Api;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
 
-namespace Microsoft.DotNet.Github.IssueLabeler
+namespace Microsoft.DotNet.GitHub.IssueLabeler
 {
     public class GitHubIssue
     {
         [Column(ordinal: "0")]
         public string ID;
 
+        [JsonIgnore]
         [Column(ordinal: "1")]
         public string Area;
 
         [Column(ordinal: "2")]
         public string Title;
 
+        [DataMember(Name = "body")]
         [Column(ordinal: "3")]
         public string Description;
+
+        [DataMember(Name = "labels")]
+        public List<object> Labels { get; set; }
+
+        [DataMember(Name = "number")]
+        public int Number { get; set; }
     }
 }

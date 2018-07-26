@@ -2,16 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.ML.Runtime.Api;
+using System.Runtime.Serialization;
 
 namespace Microsoft.DotNet.GitHub.IssueLabeler
 {
-    public class GitHubIssuePrediction
+    public class IssueEventPayload
     {
-        [ColumnName("PredictedLabel")]
-        public string Area;
+        [DataMember(Name = "action")]
+        public string Action { set; get; }
 
-        [ColumnName("Score")]
-        public float[] Probabilities;
+        [DataMember(Name = "issue")]
+        public GitHubIssue Issue { set; get; }
     }
 }
