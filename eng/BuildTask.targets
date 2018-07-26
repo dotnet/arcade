@@ -61,7 +61,9 @@
       <Output TaskParameter="Filtered" ItemName="FilteredFileToPublish"/>
     </RemoveDuplicates>
     <ItemGroup>
-      <TfmSpecificPackageFile Include="@(FilteredFileToPublish->'$([MSBuild]::NormalizeDirectory($(PublishDir)))%(RelativePath)')">
+      <TfmSpecificPackageFile
+        Include="@(FilteredFileToPublish->'$([MSBuild]::NormalizeDirectory($(PublishDir)))%(RelativePath)')"
+        Condition="'%(FilteredFileToPublish.AssetType)' != 'resources'">
         <PackagePath>tools/$(TargetFramework)/%(FilteredFileToPublish.RelativePath)</PackagePath>
       </TfmSpecificPackageFile>
     </ItemGroup>
