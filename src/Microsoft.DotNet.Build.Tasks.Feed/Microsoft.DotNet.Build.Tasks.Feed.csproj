@@ -8,6 +8,7 @@
 
     <Description>This package provides support for publishing assets to a nuget protocol based feed.</Description>
     <DevelopmentDependency>true</DevelopmentDependency>
+    <PackageType>MSBuildSdk</PackageType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,5 +21,5 @@
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" Publish="false" />
   </ItemGroup>
 
-  <Import Project="$(RepoRoot)eng\Sdk.targets" />
+  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>
