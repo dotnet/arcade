@@ -25,7 +25,7 @@
     <!-- Disable the message indicating we are using a preview SDK. That is understood and by design -->
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
 
-    <!-- By default do not build nuget package for a project. Project may override. -->
+    <!-- By default do not build NuGet package for a project. Project may override. -->
     <IsPackable>false</IsPackable>
 
     <!-- 

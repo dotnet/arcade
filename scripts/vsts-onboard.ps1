@@ -3,18 +3,18 @@
 Performs a set of actions to enable a repo in VSTS.
 
 .DESCRIPTION
-- Makes an internal repo on dotnet.visualstudio.com for the github repo
+- Makes an internal repo on dotnet.visualstudio.com for the GitHub repo
 - Adds a Maestro webhook
-- Adds a folder structure on internal and public vsts for build definitions
+- Adds a folder structure on internal and public VSTS for build definitions
 
 .PARAMETER GitHubRepoName
-Repository name of the github repo to onboard, in org/repo form.
+Repository name of the GitHub repo to onboard, in org/repo form.
 
 .PARAMETER GitHubPat
-PAT used to make github hook modifications.  If UseKeyVault is passed, may be ommitted
+PAT used to make GitHub hook modifications.  If UseKeyVault is passed, may be ommitted
 
 .PARAMETER VSTSPat
-PAT used to make vsts modifications.  If UseKeyVault is passed, may be ommitted
+PAT used to make VSTS modifications.  If UseKeyVault is passed, may be ommitted
 
 .PARAMETER MaestroSecret
 Secret for Maestro webhooks.  If UseKeyVault is passed, may be ommitted
@@ -77,7 +77,7 @@ $vstsInternalInstance = "https://dotnet.visualstudio.com/internal"
 $vstsPublicInstance = "https://dotnet.visualstudio.com/public"
 
 Write-Output "This script will create the basic set of primitives for onboarding a repo onto dotnet.visualstudio.com:"
-Write-Output "  - An internal copy of the github repo."
+Write-Output "  - An internal copy of the GitHub repo."
 Write-Output "  - A webhook to ensure mirror the repo."
 Write-Output "  - Folder structure for public and internal CI."
 Write-Output ""
