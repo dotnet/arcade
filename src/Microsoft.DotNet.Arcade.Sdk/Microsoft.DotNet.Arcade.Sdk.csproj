@@ -10,6 +10,7 @@
     <Description>Common toolset for repositories</Description>
     <PackageTags>Roslyn Build Repository Toolset MSBuild SDK</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
+    <PackageType>MSBuildSdk</PackageType>
 
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
     <EnableGeneratedPackageContent>false</EnableGeneratedPackageContent>
@@ -30,5 +31,5 @@
     </None>
   </ItemGroup>
 
-  <Import Project="$(RepoRoot)eng\Sdk.targets" />
+  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>
