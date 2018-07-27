@@ -6,14 +6,14 @@ Various tools exist that are not built in [Arcade](Documentation/Overview.md), b
 ## Requirements
 * Enable the toolset acquisition portion of 'clone' + 'build' (no prereqs)
 * Each tool must have a clear owner (see 'ownership' section below)
-* Works for all supported OS's 
+* Works for all supported OS's
 * Ability to specify (or override default) which version of a tool is needed
-* Updates are only made after there is reasonable confidence they won't break 
+* Updates are only made after there is reasonable confidence they won't break
 * Both managed and native tools (including any dependencies) must be supported
 * It should be possible to reasonably get required tools for new platform bring up.  (distros not yet supported by core)
 
 ## Ownership
-Each tool/package not built by Arcade, but needed by .Net Core must have a clear owner.  This section describes what it means to own a tool which is used by the .NET core stack.
+Each tool/package not built by Arcade, but needed by .NET Core must have a clear owner.  This section describes what it means to own a tool which is used by the .NET core stack.
 * Current documentation sufficient to onboard and use the tool for the main supported scenarios
 * It must be clearly documented how to get needed updates or fixes done.
 * All documentation must be included with the tool
@@ -31,5 +31,5 @@ At a high level, toolsets not built by Arcade are managed by:
 ## Servicing
 * See the ["Servicing" document](Documentation/Servicing.md) for a broader discussion of servicing and its policies
 * New tools and tool versions are added to the Azure blob location.  (no replacements, only adds)
-* Script updates are deployed to each repo using automation 
+* Script updates are deployed to each repo using automation
 * When absolutely necessary, a repo can "pin" to a specific "channel", or branch/fork.  (see "servicing" document for policy around this)

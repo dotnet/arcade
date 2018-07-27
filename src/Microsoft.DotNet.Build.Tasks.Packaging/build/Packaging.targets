@@ -69,7 +69,7 @@
     <Tags></Tags>
     <RequireLicenseAcceptance Condition="'$(RequireLicenseAcceptance)' == ''">false</RequireLicenseAcceptance>
     <Serviceable Condition="'$(Serviceable)' == ''">true</Serviceable>
-    <!-- we depend on nuget v2.12 / v3.4 behavior NuGet doesn't support two different min client versions
+    <!-- we depend on NuGet v2.12 / v3.4 behavior NuGet doesn't support two different min client versions
          so we declare 2.12 and mention in package description that when using 3.x we require 3.4 or later -->
     <MinClientVersion3 Condition="'$(MinClientVersion3)' == '' and '$(MinClientVersion)' == ''">3.4</MinClientVersion3>
     <MinClientVersion Condition="'$(MinClientVersion)' == ''">2.12</MinClientVersion>
@@ -507,9 +507,9 @@
       </PackageSources>
       <PackageFile Include="@(PackageSources)" />
 
-      <!-- Nuget will treat TargetPath as a directory if the extensions dont match,
+      <!-- NuGet will treat TargetPath as a directory if the extensions dont match,
            however we need to package files without an extension (Unix exectuables).
-           As such nuget will always consider TargetPath to be a file path for these
+           As such NuGet will always consider TargetPath to be a file path for these
            files.  Ensure that the TargetPath is the file path for these files. -->
       <PackageFile Condition="'%(Extension)' == ''">
         <TargetPath>%(PackageFile.TargetPath)/%(FileName)</TargetPath>
@@ -565,7 +565,7 @@
       <Dependency Remove="@(RuntimeDependency)"/>
     </ItemGroup>
 
-    <Error Text="Packages that are constrained by runtime should not have runtime dependencies.  They will be ignored by nuget"
+    <Error Text="Packages that are constrained by runtime should not have runtime dependencies.  They will be ignored by NuGet"
            Condition="'$(PackageTargetRuntime)' != '' AND '@(RuntimeDependency)' != ''" />
 
     <!-- determine if there is a file to be updated, and setup the output file -->
@@ -806,7 +806,7 @@
 
   <Target Name="EnsureEmptyPackage"
           DependsOnTargets="DetermineRuntimeDependencies;GetPackageFiles">
-    <!-- Nuget will include all files when nuspec is empty, ensure we have at least one file to avoid that -->
+    <!-- NuGet will include all files when nuspec is empty, ensure we have at least one file to avoid that -->
     <ItemGroup Condition="'@(PackageFile)' == ''">
       <PackageFile Include="$(PlaceholderFile)">
         <PackageId>$(Id)</PackageId>

@@ -467,7 +467,7 @@ namespace Microsoft.DotNet.GitSync
 
         private void Configure(ConfigFile configFile)
         {
-            string userName = Prompt("Enter github username:");
+            string userName = Prompt("Enter GitHub username:");
             string password = GetPassword("Enter password:");
             string firstRepoOwner = Prompt("Enter the first repository owner:");
             string firstRepoName = Prompt("Enter the first repository name:");

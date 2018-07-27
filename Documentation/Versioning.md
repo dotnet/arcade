@@ -18,12 +18,12 @@ Both types of versioning have advantages and disadvantages:
 - Assets with identical version metadata can be reproduced without outside input (e.g. providing a build id)
 - Parallel, independent legs of the same build do not require parent orchestration and will generate coherent versioning.  Separate parts of the build can potentially be respun as required.
 - We already have 'date agnostic' versioning at the end of a product cycle.
-- Build metadata typically includes sha, which makes identification of the source of bits easy.
+- Build metadata typically includes SHA, which makes identification of the source of bits easy.
 
 **CONS:**
 - Some related infrastructure systems may not support the ingestion of multiple assets with the same name/version.  For example, MyGet, NuGet, or VSTS support overwriting to varying degrees. You're left to deal with these scenarios on a case-by-case basis.  For example:
   - Introduce a new meaningless commit to bump the version number
-  - Successive builds of the same sha, if they were to have different outputs (e.g. a checked vs. debug build) may require a clean of the cache.
+  - Successive builds of the same SHA, if they were to have different outputs (e.g. a checked vs. debug build) may require a clean of the cache.
   - Temporarily unlock a feed to enable re-publishing (may not be possible, and bad practice)
   - Add logic into all processes to gracefully understand and handle overwrite cases (e.g. are bits the same? then okay)
   - Telemetry systems must understand reruns of the same build.
@@ -34,18 +34,18 @@ Both types of versioning have advantages and disadvantages:
 ### Date-Varying Versioning
 **PROS:**
 - Respins are easier.  No overwriting except for release versions at the end of the product cycle.  Release versions at the end of the cycle typically avoid external overwrite-averse systems.
-- Non-standard builds (e.g. different input parameters) do not collide with standard builds at the same sha when dealing with external systems.
+- Non-standard builds (e.g. different input parameters) do not collide with standard builds at the same SHA when dealing with external systems.
 - File versions must be ever increasing to correctly layout new files for servicing (MSI requirement)
 - Does not affect the determinism of the build. Input dates are just another build parameter (e.g. OfficialBuildId) and rerunning a build with the same input date should produce equivalent binaries.
 
 **CONS:**
 - Requires orchestration to produce a coherent set of versions across multiple build legs
 - More difficult to reproduce version identical bits (need to know input parameters)
-- Source sha not easily identifiable based on asset version.
+- Source SHA not easily identifiable based on asset version.
 
 ### Conclusion
 
-Date agnostic versioning is more hassle than it's worth, though having the sha in the output version number is also useful.  We should combine a sha in the build metadata with the build date+revision (short data + number of builds so far today) to generate a date-varying, unique, identifiable build.
+Date agnostic versioning is more hassle than it's worth, though having the SHA in the output version number is also useful.  We should combine a SHA in the build metadata with the build date+revision (short data + number of builds so far today) to generate a date-varying, unique, identifiable build.
 
 ## Build Determinism
 
@@ -59,7 +59,7 @@ Date agnostic versioning is more hassle than it's worth, though having the sha i
 - **PRERELEASE** - Prerelease label
 - **REVISION** - Number of official builds during the current day
 - **SHORTDATE** - 5 digit date
-- **SHORTSHA** - Shortened sha of current commit
+- **SHORTSHA** - Shortened SHA of current commit
 
 **Note that version fields should not be zero-padded**
 
@@ -99,7 +99,7 @@ Package versions come in the following kinds, depending on the point in the prod
   
 - **Final pre-release build** 
   
-   Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **REVISION**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'.final'`.  This avoids a common issue in nuget package resolution where `2.1.0-rc1` < `2.1.0-rc1.12345`. The intention is that the final build is resolved over the date-versioned build.
+   Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **REVISION**, or **SHORTSHA**.  **PRERELEASE** should be suffixed with `'.final'`.  This avoids a common issue in NuGet package resolution where `2.1.0-rc1` < `2.1.0-rc1.12345`. The intention is that the final build is resolved over the date-versioned build.
    
   ```
   MAJOR.MINOR.PATCH-PRERELEASE.final
@@ -168,7 +168,7 @@ The values of `yy`, `mm`, `dd`, and `r` are derived from `OfficialBuildId` or th
 
 ## SemVer1 Fallback
 
-In cases where SemVer2 cannot be used (e.g. old versions of nuget), we can fall back to [SemVer1](https://semver.org/spec/v1.0.0.html).  In SemVer1, there is no built in build metadata, and the pre-release field may only contain [0-9A-Za-z-].  To comply, cases where + or . are used in SemVer2's prerelease field are replaced with -.
+In cases where SemVer2 cannot be used (e.g. old versions of NuGet), we can fall back to [SemVer1](https://semver.org/spec/v1.0.0.html).  In SemVer1, there is no built in build metadata, and the pre-release field may only contain [0-9A-Za-z-].  To comply, cases where + or . are used in SemVer2's prerelease field are replaced with -.
 
 The repository opts into SemVer1 fallback by setting `SemanticVersioningV1` property to `true`.
 

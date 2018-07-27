@@ -6,7 +6,7 @@
 
     <VersionPrefix>2.2.0</VersionPrefix>
 
-    <Description>This package provides support for publishing assets to a nuget protocol based feed.</Description>
+    <Description>This package provides support for publishing assets to a NuGet protocol based feed.</Description>
     <DevelopmentDependency>true</DevelopmentDependency>
     <PackageType>MSBuildSdk</PackageType>
   </PropertyGroup>

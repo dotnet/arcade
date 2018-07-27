@@ -83,7 +83,7 @@ There are a number of things that require attention to ensure a working product 
     - Results should be published to `PB_PublishBlobFeedUrl`
     - Non-nuget assets should be pulled from `PB_AssetRootUrl`
     - If `PB_IsStable=true` is passed, stable build numbers should be produced
-    - If `PB_PublishType` is `blob`, only publish assets to the `PB_PublishBlobFeedUrl` location (e.g. avoid myget, nuget.org, etc.).  `PB_PublishType=blob` is only passed for product construction builds, so some repos have chosen to use the existence of PB_PublishBlobFeedUrl as an equivalent marker.  The point is that outputs shouldn't be visible outside the isolated orchestrated blob feed.
+    - If `PB_PublishType` is `blob`, only publish assets to the `PB_PublishBlobFeedUrl` location (e.g. avoid myget, NuGet.org, etc.).  `PB_PublishType=blob` is only passed for product construction builds, so some repos have chosen to use the existence of PB_PublishBlobFeedUrl as an equivalent marker.  The point is that outputs shouldn't be visible outside the isolated orchestrated blob feed.
     
     If significant changes have been made to build definitions or repo infrastructure code, ensuring that this contract is still abided by can ensure a proper isolated product build.
 - Did all repos update their branding properly?
