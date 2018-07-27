@@ -1,6 +1,6 @@
 {
     "sdk": {
-        "version": "2.1.300"
+        "version": "2.1.302"
     },
     "msbuild-sdks": {
         "Microsoft.DotNet.Arcade.Sdk": "1.0.0-bootstrap-1"
