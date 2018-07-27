@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
       
             float[] probabilities = prediction.Probabilities;
             float maxProbability = probabilities.Max();
-            logger.LogInformation($"Label for {issue.ID} is predicted with confidence {maxProbability.ToString()}");
+            logger.LogInformation($"Label {prediction.Area} for {issue.ID} is predicted with confidence {maxProbability.ToString()}");
 
             return maxProbability > 0.8 ? prediction.Area : null;
         }
