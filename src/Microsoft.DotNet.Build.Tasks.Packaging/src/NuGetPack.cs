@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         /// Nuspec files can contain properties that are substituted with values at pack time
         /// This task property passes through the nuspect properties.
         /// Each item is a string with the syntax <key>=<value>
-        /// String validation for <key> and <value> is deffered to the Nuget APIs
+        /// String validation for <key> and <value> is deffered to the NuGet APIs
         /// </summary>
         public ITaskItem[] NuspecProperties
         {
@@ -310,7 +310,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 {
                     packageType = "packed";
                 }
-                Log.LogError($"Error when creating nuget {packageType} package from {nuspecPath}. {e}");
+                Log.LogError($"Error when creating NuGet {packageType} package from {nuspecPath}. {e}");
             }
         }
 
