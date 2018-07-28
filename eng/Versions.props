@@ -47,7 +47,6 @@
   
   <PropertyGroup>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
-    <MicrosoftAzureServicesAppAuthenticationVersion>1.0.3</MicrosoftAzureServicesAppAuthenticationVersion>
     <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.0.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
     <MicrosoftMLVersion>0.3.0</MicrosoftMLVersion>
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>

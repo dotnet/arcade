@@ -4,12 +4,8 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Azure.KeyVault;
-using Microsoft.Azure.KeyVault.Models;
-using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.GitHub.IssueLabeler
 {
@@ -25,7 +21,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.AddSingleton(new Labeler(Configuration["GitHubRepoOwner"], Configuration["GitHubRepoName"], GetPasswordAsync(Configuration["GitHubSecretUri"]).Result));
+            services.AddSingleton(new Labeler(Configuration["GitHubRepoOwner"], Configuration["GitHubRepoName"], Configuration["GitHubAccessToken"]));
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -36,13 +32,6 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             }
 
             app.UseMvc();
-        }
-
-        private async Task<string> GetPasswordAsync(string secretUri)
-        {
-            var kv = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(new AzureServiceTokenProvider().KeyVaultTokenCallback));
-            SecretBundle bundle = await kv.GetSecretAsync(secretUri);
-            return bundle.Value;
         }
     }
 }
