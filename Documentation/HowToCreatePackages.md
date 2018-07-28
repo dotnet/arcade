@@ -1,6 +1,6 @@
 # How to Create an Arcade Package
 
-One of the goals of Arcade is to be a vehicle to provide code sharing. One of the ways that this goal is implemented by through NuGet packages. This document assumes that you are adding a package called `ProjectOne` to Arcade and provides a list of things you should check when while doing that.
+One of the goals of Arcade is to be a vehicle to provide code sharing. One of the ways to accomplish this is to pack each tool into its own NuGet package. This document assumes that you are adding a package called `ProjectOne` to Arcade and provides a list of things you should check while doing that.
 
 ## Things to Check
 
@@ -16,7 +16,7 @@ One of the goals of Arcade is to be a vehicle to provide code sharing. One of th
 
   `src/Microsoft.DotNet.ProjectOne/tests`
 
-- It would be great if you could include a `README.md` file on the root of the package.
+- You should include a `README.md` file on the root of the package.
 
 - Make sure the namespace prefix of the package follows the name of the project. For instance:
 
@@ -24,7 +24,7 @@ One of the goals of Arcade is to be a vehicle to provide code sharing. One of th
 
 - Include the package on the `Arcade.sln` file. This way it will be compiled automatically when the solution is built.
 
-- Make sure that library dependencies of the new package use the Arcade defined version of the library. The versions are defined in the `eng\Version.props` file. For instance, if the project has a dependence on Newtonsoft.Json you must add it as follows:
+- Make sure that library dependencies of the new package use the Arcade defined version of the library. The versions are defined in the [`eng\Version.props`](https://github.com/dotnet/arcade/blob/master/eng/Versions.props) file. For instance, if the project has a dependence on Newtonsoft.Json you must add it as follows:
 
   `<PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />`
 
@@ -37,3 +37,11 @@ One of the goals of Arcade is to be a vehicle to provide code sharing. One of th
   `<TargetFrameworks>$(NetFxTfm);netcoreapp2.0</TargetFrameworks>`
 
 - There is no requirement to create a separate `.nuspec` file for the package. The package information will be automatically extracted from the `.csproj` file.
+
+## Further References
+
+- https://github.com/dotnet/arcade/blob/master/Documentation/Overview.md#toolset-nuget-package-requirements
+
+- https://github.com/dotnet/arcade/blob/master/eng/Versions.props
+
+  
