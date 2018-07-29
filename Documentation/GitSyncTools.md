@@ -11,3 +11,5 @@ It runs on maestro triggers. It adds commits that need to be ported to the azure
 It runs as a background service. It does the following jobs.
 - It reads records from the azure table and does a series of further checks to confirm if the commit needs to be mirrored.
 - It then opens up the PR in the respective repositories, adds the assignees and waits for new candidates.
+- It makes periodic checks (after every 10 minutes) to the azure table to get the list of commits that has not been mirrored yet. After that it marks those entries as mirrored.
+- The logging is made to console as well as to a log file to make debugging of the failures easy.

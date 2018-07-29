@@ -1,6 +1,9 @@
 # Microsoft.DotNet.GitSync
 
-This tool reads records from the table and does a series of further checks to confirm if the commit needs to be mirrored. It then opens up the PR in the respective repositories, adds the assignees and waits for new candidates.
+This tool reads records from the table and does a series of further checks to determine if the commit needs to be mirrored.
+The first check is whether the commit is a merged commit. If yes, then we skip this commit as we have already ported the individual commits from that push event.
+The second check is whether the commit is a mirrored commit (Commit that is made through GitSync Tool). If yes, we skip this too.
+It then opens up the PR in the respective repositories, adds the assignees and waits for new candidates.
 
 ## Configuration File
 The configuration file has many sections. Some of them are described below
