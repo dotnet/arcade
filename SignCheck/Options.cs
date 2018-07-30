@@ -32,7 +32,7 @@ namespace SignCheck
         }
 
         [Option('i', "input-files",
-            HelpText = "A list of files to scan. Wildcards (* and ?) are supported. For example, you can specify a group of files as C:\\Dir1\\Dir*\\File?.EXE")]
+            HelpText = "A list of files to scan. Wildcards (* and ?) are supported. You can specify groups of files, e.g. C:\\Dir1\\Dir*\\File?.EXE or a URL (http or https).")]
         public IEnumerable<string> InputFiles
         {
             get;
@@ -42,6 +42,14 @@ namespace SignCheck
         [Option('l', "log-file",
             HelpText = "Output results to the specified log file. If the file already exists it will be overwritten.")]
         public string LogFile
+        {
+            get;
+            set;
+        }
+
+        [Option('m', "verify-xml",
+            HelpText = "Enable XML signature verification. By default, .xml files are not verified.")]
+        public bool EnableXmlSignatureVerification
         {
             get;
             set;
@@ -63,9 +71,9 @@ namespace SignCheck
             set;
         }        
 
-        [Option('s', "skip-strongname",
-            HelpText = "Skip strongname checks for managed code files (.exe and .dll)")]
-        public bool SkipStrongname
+        [Option('s', "verify-strongname",
+            HelpText = "Enable strongname checks for managed code files (.exe and .dll)")]
+        public bool VerifyStrongName
         {
             get;
             set;
@@ -80,7 +88,7 @@ namespace SignCheck
         }
 
         [Option('v', "verbosity",
-            HelpText = "Set the verbosity level: Minimum, Normal, Detailed, Diagnostic")]
+            HelpText = "Set the verbosity level: Minimum, Normal, Detailed, Diagnostic.")]
         public LogVerbosity Verbosity
         {
             get;
@@ -88,12 +96,11 @@ namespace SignCheck
         }
 
         [Option('x', "exclusions-file",
-            HelpText = "Path to a file containing a list of files to ignore when verification fails. Exclusions are not reported as errors")]
+            HelpText = "Path to a file containing a list of files to ignore when verification fails. Exclusions are not reported as errors.")]
         public string ExclusionsFile
         {
             get;
             set;
         }
-
     }
 }

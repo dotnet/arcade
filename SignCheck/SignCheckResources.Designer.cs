@@ -160,7 +160,7 @@ namespace SignCheck {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Total Files: {0} Signed: {1} Unsigned: {2} Skipped: {3} Excluded: {4}.
+        ///   Looks up a localized string similar to Total Files: {0}, Signed: {1}, Unsigned: {2}, Skipped: {3}, Excluded: {4}.
         /// </summary>
         internal static string scStats {
             get {

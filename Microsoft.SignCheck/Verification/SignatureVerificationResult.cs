@@ -2,21 +2,32 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Microsoft.SignCheck.Verification
 {
     public class SignatureVerificationResult
     {
-        private string _tempPath;
+        private Dictionary<string, string> _detail;
         private List<SignatureVerificationResult> _nestedResults;
+        private string _tempPath;
+        private List<Timestamp> _timestamps;
 
         /// <summary>
-        /// A string containing the details of a verificaiton operation.
+        /// A dictionary containing detailed information about the verification results. The dictionary keys are used to group related information.
+        /// See <see cref="DetailKeys"/> for a list of keys.
         /// </summary>
-        public string Detail
+        public Dictionary<string, string> Detail
         {
-            get;
-            private set;
+            get
+            {
+                if (_detail == null)
+                {
+                    _detail = new Dictionary<string, string>();
+                }
+
+                return _detail;
+            }
         }
 
         /// <summary>
@@ -25,16 +36,31 @@ namespace Microsoft.SignCheck.Verification
         public string ExclusionEntry
         {
             get;
-            private set;
+            set;
         }
 
+        /// <summary>
+        /// The filename, including the extension, associated with the result.
+        /// </summary>
         public string Filename
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// The full path of the file associated with the result.
+        /// </summary>
         public string FullPath
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// True if the file has a valid AuthentiCode signature.
+        /// </summary>
+        public bool IsAuthentiCodeSigned
         {
             get;
             set;
@@ -57,11 +83,20 @@ namespace Microsoft.SignCheck.Verification
             get;
             set;
         }
-        
+
         /// <summary>
-        /// True if signature verification was skipped, false otherwise. Files are skipped when the file type (base on the extension) is unknown.
+        /// Returns true if signature verification was skipped, false otherwise. 
         /// </summary>
         public bool IsSkipped
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// True if the file has a valid StrongName signature.
+        /// </summary>
+        public bool IsStrongNameSigned
         {
             get;
             set;
@@ -88,12 +123,32 @@ namespace Microsoft.SignCheck.Verification
             }
         }
 
+        /// <summary>
+        /// A collection of <see cref="Timestamp"/>s associated with the AuthentiCode signature(s). 
+        /// </summary>
+        public ICollection<Timestamp> Timestamps
+        {
+            get
+            {
+                if (_timestamps == null)
+                {
+                    _timestamps = new List<Timestamp>();
+                }
+                return _timestamps;
+            }
+            set
+            {
+                _timestamps = value.ToList();
+            }
+        }
+
+
         public string TempPath
         {
             get
             {
                 if (String.IsNullOrEmpty(_tempPath))
-                    {
+                {
                     _tempPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                 }
 
@@ -101,7 +156,7 @@ namespace Microsoft.SignCheck.Verification
             }
         }
 
-        public SignatureVerificationResult(string path, Dictionary<string, Exclusion> exclusions, string parent)
+        public SignatureVerificationResult(string path, string parent)
         {
             if (String.IsNullOrEmpty(path))
             {
@@ -110,36 +165,70 @@ namespace Microsoft.SignCheck.Verification
 
             Filename = Path.GetFileName(path);
             FullPath = Path.GetFullPath(path);
-            AddDetail(SignCheckResources.DetailFile, Filename);
 
-            ExclusionEntry = String.Join(";", Filename, parent, SignCheckResources.ExclusionYourComment);
-
-            if (exclusions != null)
-            {
-                string exclusionComment = SignCheckResources.NA;
-                if (Exclusion.IsExcluded(Filename, exclusions, parent, out exclusionComment))
-                {
-                    IsExcluded = true;
-                    AddDetail(SignCheckResources.DetailExcluded, exclusionComment);
-                }
-            }
+            AddDetail(DetailKeys.File, Filename);
         }
 
-        public void AddDetail(string detail)
+        /// <summary>
+        /// Add detail to the result, classified under the <paramref name="key"/>.
+        /// </summary>
+        /// <param name="key">The key under which the detail will be classified.</param>
+        /// <param name="detail">A string containing information about the result.</param>
+        public void AddDetail(string key, string detail)
         {
-            if (String.IsNullOrEmpty(Detail))
+            string currentValue;
+
+            if (Detail.TryGetValue(key, out currentValue))
             {
-                Detail = detail;
+                if (String.IsNullOrEmpty(currentValue))
+                {
+                    Detail[key] = detail;
+                }
+                else
+                {
+                    Detail[key] = String.Join(", ", currentValue, detail);
+                }
             }
             else
             {
-                Detail += ", " + detail;
+                Detail[key] = detail;
             }
         }
 
-        public void AddDetail(string detail, params object[] values)
+        /// <summary>
+        /// Add formated detail to the result, classified under the <paramref name="key"/>.
+        /// </summary>
+        /// <param name="key">The key under which the detail will be classified.</param>
+        /// <param name="format">A string containing information about the result that will be formatted based on its format specifiers and <paramref name="values"/>.</param>
+        /// <param name="values">The parameters to format.</param>
+        public void AddDetail(string key, string format, params object[] values)
         {
-            AddDetail(String.Format(detail, values));
+            AddDetail(key, String.Format(format, values));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="detailKeys"></param>
+        /// <returns></returns>
+        public string ToString(string[] detailKeys)
+        {
+            var sb = new StringBuilder();
+
+            foreach (var key in detailKeys)
+            {
+                string value;
+
+                if (Detail.TryGetValue(key, out value))
+                {
+                    if (sb.Length > 0)
+                    {
+                        sb.Append(" ");
+                    }
+                    sb.Append(String.Format("[{0}] {1}", key, value));
+                }
+            }
+
+            return sb.ToString();
         }
 
         /// <summary>
@@ -147,14 +236,14 @@ namespace Microsoft.SignCheck.Verification
         /// </summary>
         /// <param name="path">The path to the file that was skipped.</param>
         /// <returns>A <see cref="SignatureVerificationResult"/> that indicates the file verification was skipped.</returns>
-        public static SignatureVerificationResult SkippedResult(string path)
+        public static SignatureVerificationResult SkippedResult(string path, string parent)
         {
-            var signatureVerificationResult = new SignatureVerificationResult(path, exclusions: null, parent: null)
+            var signatureVerificationResult = new SignatureVerificationResult(path, parent)
             {
                 IsSkipped = true
             };
 
-            signatureVerificationResult.AddDetail(SignCheckResources.DetailSigned, SignCheckResources.DetailSkippedUnsupportedFileType);
+            signatureVerificationResult.AddDetail(DetailKeys.File, SignCheckResources.DetailSkippedUnsupportedFileType);
 
             return signatureVerificationResult;
         }

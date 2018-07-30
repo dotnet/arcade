@@ -1,14 +1,13 @@
-﻿using CommandLine;
-using Microsoft.SignCheck;
-using Microsoft.SignCheck.Logging;
-using Microsoft.SignCheck.Verification;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using CommandLine;
+using Microsoft.SignCheck;
+using Microsoft.SignCheck.Logging;
+using Microsoft.SignCheck.Verification;
 
 namespace SignCheck
 {
@@ -21,13 +20,19 @@ namespace SignCheck
 
         internal List<string> _inputFiles;
 
-        internal Dictionary<string, Exclusion> Exclusions
+        internal Exclusions Exclusions
         {
             get;
             set;
         }
 
         internal bool HasArgErrors
+        {
+            get;
+            set;
+        }
+
+        internal string[] ResultDetails
         {
             get;
             set;
@@ -102,7 +107,9 @@ namespace SignCheck
         public SignCheck(string[] args)
         {
             Options = new Options();
-            var parseResult = Parser.Default.ParseArguments<Options>(args).WithParsed(options => HandleOptions(options)).WithNotParsed<Options>(errors => HandleErrors(errors));
+            var parseResult = Parser.Default.ParseArguments<Options>(args).
+                WithParsed(options => HandleOptions(options)).
+                WithNotParsed<Options>(errors => HandleErrors(errors));
         }
 
         private void HandleOptions(Options options)
@@ -123,7 +130,7 @@ namespace SignCheck
                     }
                     else
                     {
-                        Console.Error.WriteLine(String.Format(SignCheckResources.scErrorUnknownFileStatus, v));
+                        Log.WriteError(LogVerbosity.Minimum, SignCheckResources.scErrorUnknownFileStatus, v);
                     }
                 }
 
@@ -141,6 +148,10 @@ namespace SignCheck
             if (!String.IsNullOrEmpty(Options.ExclusionsFile))
             {
                 ProcessExclusions(Options.ExclusionsFile);
+            }
+            else
+            {
+                Exclusions = new Exclusions();
             }
 
             if (!Directory.Exists(_appData))
@@ -243,7 +254,7 @@ namespace SignCheck
         private void ProcessExclusions(string exclusionsFile)
         {
             Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.scProcessExclusions);
-            Exclusions = Exclusion.GetExclusionsFromFile(exclusionsFile);
+            Exclusions = new Exclusions(exclusionsFile);
         }
 
         private void ProcessResults(IEnumerable<SignatureVerificationResult> results, int indent)
@@ -276,14 +287,11 @@ namespace SignCheck
                 if (((result.IsSkipped) && ((FileStatus & FileStatus.SkippedFiles) != 0)) ||
                     ((result.IsSigned) && ((FileStatus & FileStatus.SignedFiles) != 0)) ||
                     ((result.IsExcluded) && ((FileStatus & FileStatus.ExcludedFiles) != 0)) ||
-                    (result.NestedResults.Count() > 0) ||
-                    ((FileStatus & FileStatus.AllFiles) == FileStatus.AllFiles))
+                    ((result.NestedResults.Count() > 0) && (Options.Recursive)) ||
+                    ((FileStatus & FileStatus.AllFiles) == FileStatus.AllFiles) ||
+                    ((!result.IsSigned) && (!result.IsSkipped) && ((FileStatus & FileStatus.UnsignedFiles) != 0)))
                 {
-                    Log.WriteMessage(LogVerbosity.Minimum, String.Empty.PadLeft(indent) + result.Detail);
-                }
-                else if ((!result.IsSigned) && (!result.IsSkipped) && ((FileStatus & FileStatus.UnsignedFiles) != 0))
-                {
-                    Log.WriteMessage(LogVerbosity.Minimum, String.Empty.PadLeft(indent) + result.Detail);
+                    Log.WriteMessage(LogVerbosity.Minimum, String.Empty.PadLeft(indent) + result.ToString(ResultDetails));
                 }
 
                 if ((!result.IsSigned) && (!(result.IsSkipped || result.IsExcluded)))
@@ -320,10 +328,13 @@ namespace SignCheck
             {
                 var signatureVerifier = new SignatureVerifier(Options.Verbosity, Exclusions, Log)
                 {
-                    SkipStrongName = Options.SkipStrongname,
+                    EnableXmlSignatureVerification = Options.EnableXmlSignatureVerification,
+                    Recursive = Options.Recursive,
                     SkipAuthentiCodeTimestamp = Options.SkipTimestamp,
-                    Recursive = Options.Recursive
+                    VerifyStrongName = Options.VerifyStrongName
                 };
+
+                ResultDetails = Options.Verbosity > LogVerbosity.Normal ? DetailKeys.ResultKeysVerbose : DetailKeys.ResultKeysNormal;
 
                 if (InputFiles.Count() > 0)
                 {

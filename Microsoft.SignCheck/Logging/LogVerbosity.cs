@@ -2,6 +2,7 @@
 {
     public enum LogVerbosity
     {
+        
         Minimum = 0,
         Normal,
         Detailed,

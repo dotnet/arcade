@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security;
 
-namespace Microsoft.SignCheck.Interop
+namespace Microsoft.SignCheck.Verification
 {
     [ComConversionLoss, Guid(StrongName.IID_ICLRStrongName), InterfaceType(ComInterfaceType.InterfaceIsIUnknown), SecurityCritical]
     [ComImport]

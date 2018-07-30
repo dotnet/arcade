@@ -117,9 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="DetailAuthentiCode" xml:space="preserve">
-    <value>AuthentiCode: {0}</value>
-  </data>
   <data name="DetailExcluded" xml:space="preserve">
     <value>Excluded: Yes ({0})</value>
   </data>
@@ -129,26 +126,35 @@
   <data name="DetailFullName" xml:space="preserve">
     <value>Full Name: {0}</value>
   </data>
-  <data name="DetailNoTimetamp" xml:space="preserve">
-    <value>N/A (failed to retrieve)</value>
+  <data name="DetailHResult" xml:space="preserve">
+    <value>hresult={0:x8}</value>
+  </data>
+  <data name="DetailPublicKeyToken" xml:space="preserve">
+    <value>Public key = {0}</value>
   </data>
   <data name="DetailSigned" xml:space="preserve">
     <value>Signed: {0}</value>
   </data>
+  <data name="DetailSignedAuthentiCode" xml:space="preserve">
+    <value>AuthentiCode signed: {0}</value>
+  </data>
+  <data name="DetailSignedStrongName" xml:space="preserve">
+    <value>StrongName signed: {0}</value>
+  </data>
   <data name="DetailSkipped" xml:space="preserve">
-    <value>Skipped -unsupported</value>
+    <value>Skipped</value>
   </data>
   <data name="DetailSkippedUnsupportedFileType" xml:space="preserve">
-    <value>Skipped - unsupported file type</value>
-  </data>
-  <data name="DetailStrongName" xml:space="preserve">
-    <value>Strong Name: {0} ({1})</value>
+    <value>Skipped (unsupported file type)</value>
   </data>
   <data name="DetailTimestamp" xml:space="preserve">
     <value>Timestamp: {0:MM/dd/yy H:mm:ss} ({1})</value>
   </data>
+  <data name="DetailTimestampError" xml:space="preserve">
+    <value>Timestamp: Error retrieving timestamp</value>
+  </data>
   <data name="DetailTimestampSkipped" xml:space="preserve">
-    <value>Timestamp: skipped</value>
+    <value>Timestmap: Skipped</value>
   </data>
   <data name="DetailXmlMultipleSignatures" xml:space="preserve">
     <value>Multiple signatures found ({0}), only the first signature is checked.</value>
@@ -170,6 +176,9 @@
   </data>
   <data name="DiagExtractingFileContents" xml:space="preserve">
     <value>Extracting file contents to {0}</value>
+  </data>
+  <data name="DiagGenerateExclusion" xml:space="preserve">
+    <value>Generating exclusion for {0}: {1}</value>
   </data>
   <data name="DiagSectionHeader" xml:space="preserve">
     <value>Found section header '{0}'.</value>

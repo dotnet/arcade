@@ -151,7 +151,7 @@
     <value>Results</value>
   </data>
   <data name="scStats" xml:space="preserve">
-    <value>Total Files: {0} Signed: {1} Unsigned: {2} Skipped: {3} Excluded: {4}</value>
+    <value>Total Files: {0}, Signed: {1}, Unsigned: {2}, Skipped: {3}, Excluded: {4}</value>
   </data>
   <data name="scSummary" xml:space="preserve">
     <value />

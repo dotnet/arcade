@@ -61,15 +61,6 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AuthentiCode: {0}.
-        /// </summary>
-        internal static string DetailAuthentiCode {
-            get {
-                return ResourceManager.GetString("DetailAuthentiCode", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Excluded: Yes ({0}).
         /// </summary>
         internal static string DetailExcluded {
@@ -97,11 +88,20 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to N/A (failed to retrieve).
+        ///   Looks up a localized string similar to hresult={0:x8}.
         /// </summary>
-        internal static string DetailNoTimetamp {
+        internal static string DetailHResult {
             get {
-                return ResourceManager.GetString("DetailNoTimetamp", resourceCulture);
+                return ResourceManager.GetString("DetailHResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Public key = {0}.
+        /// </summary>
+        internal static string DetailPublicKeyToken {
+            get {
+                return ResourceManager.GetString("DetailPublicKeyToken", resourceCulture);
             }
         }
         
@@ -115,7 +115,25 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skipped -unsupported.
+        ///   Looks up a localized string similar to AuthentiCode signed: {0}.
+        /// </summary>
+        internal static string DetailSignedAuthentiCode {
+            get {
+                return ResourceManager.GetString("DetailSignedAuthentiCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to StrongName signed: {0}.
+        /// </summary>
+        internal static string DetailSignedStrongName {
+            get {
+                return ResourceManager.GetString("DetailSignedStrongName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skipped.
         /// </summary>
         internal static string DetailSkipped {
             get {
@@ -124,20 +142,11 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skipped - unsupported file type.
+        ///   Looks up a localized string similar to Skipped (unsupported file type).
         /// </summary>
         internal static string DetailSkippedUnsupportedFileType {
             get {
                 return ResourceManager.GetString("DetailSkippedUnsupportedFileType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Strong Name: {0} ({1}).
-        /// </summary>
-        internal static string DetailStrongName {
-            get {
-                return ResourceManager.GetString("DetailStrongName", resourceCulture);
             }
         }
         
@@ -151,7 +160,16 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Timestamp: skipped.
+        ///   Looks up a localized string similar to Timestamp: Error retrieving timestamp.
+        /// </summary>
+        internal static string DetailTimestampError {
+            get {
+                return ResourceManager.GetString("DetailTimestampError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestmap: Skipped.
         /// </summary>
         internal static string DetailTimestampSkipped {
             get {
@@ -219,6 +237,15 @@ namespace Microsoft.SignCheck {
         internal static string DiagExtractingFileContents {
             get {
                 return ResourceManager.GetString("DiagExtractingFileContents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Generating exclusion for {0}: {1}.
+        /// </summary>
+        internal static string DiagGenerateExclusion {
+            get {
+                return ResourceManager.GetString("DiagGenerateExclusion", resourceCulture);
             }
         }
         

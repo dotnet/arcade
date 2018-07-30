@@ -1,16 +1,33 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.IO;
 
 namespace Microsoft.SignCheck
 {
+    /// <summary>
+    /// Represents an exclusion describing
+    /// </summary>
     public class Exclusion
     {
         private string[] _exclusionParts;
-        private const int FilenameIndex = 0;
-        private const int ParentFileIndex = 1;
+        private const int FilePatternsIndex = 0;
+        private const int ParentFilesIndex = 1;
         private const int CommentIndex = 2;
-        
+
+        /// <summary>
+        /// Creates a new <see cref="Exclusion"/>.
+        /// </summary>
+        /// <param name="exclusion">A string representation of a file exclusion. An exclusion contains a number of fields, separate by
+        /// a ';'. The entry is formated as FILE_PATTERNS;PARENT_FILES;COMMENT. Additional fields are ignored and fields may be left
+        /// empty, e.g. ";B.txt" indicates an exclusion with no file patterns and one parent file.
+        ///
+        /// The FILE_PATTERNS and PARENT_FILES fields may contain multiple values separated by a '|'.
+        ///
+        /// For example: "A.txt|C:\Dir1\B.txt;C.zip;" indicates an exclusion with two file patterns ("A.txt" and "C:\Dir1\B.txt") and one
+        /// parent file ("C.zip").
+        /// </param>
         public Exclusion(string exclusion)
         {
             if (!String.IsNullOrEmpty(exclusion))
@@ -27,78 +44,31 @@ namespace Microsoft.SignCheck
             }
         }
 
-        public string Filename
+        /// <summary>
+        /// Returns an array of file patterns or null if there are no entries. Each file pattern is separated by '|'.
+        /// </summary>
+        public string[] FilePatterns
         {
             get
             {
-                return GetExclusionPart(FilenameIndex);
-            }
-        }
-
-        public string ParentFile
-        {
-            get
-            {
-                return GetExclusionPart(ParentFileIndex);
+                return GetExclusionPart(FilePatternsIndex).Split('|');
             }
         }
 
         /// <summary>
-        /// Check if a file is excluded from verification.
+        /// Returns an array of parent files or null if there are no entries. Each parent file is spearated by '|'.
         /// </summary>
-        /// <param name="filename">The filename to check.</param>
-        /// <param name="exclusions">A set of exclusions to check.</param>
-        /// <param name="parent">The parent associated with the exclusion.</param>
-        /// <param name="comment">Returns.</param>
-        /// <returns>Returns true if the filename or filename and parent is found in the set of exclusions, otherwise returns false.</returns>
-        public static bool IsExcluded(string filename, Dictionary<string, Exclusion> exclusions, string parent, out string comment)
+        public string[] ParentFiles
         {
-            comment = SignCheckResources.NA;
-
-            if (exclusions.ContainsKey(filename))
+            get
             {
-                var parentFile = exclusions[filename].ParentFile;
-
-                if ((String.IsNullOrEmpty(parentFile)) || (String.Equals(parentFile, parent, StringComparison.OrdinalIgnoreCase)))
-                {
-                    comment = exclusions[filename].Comment;
-                    return true;
-                }                
+                return GetExclusionPart(ParentFilesIndex).Split('|');
             }
-
-            return false;
         }
 
-        /// <summary>
-        /// Creates a dictionary of exclusions using the entries in a given file.
-        /// </summary>
-        /// <param name="path">Path to the file containing the exclusions.</param>
-        /// <returns>A dictionary of exclusions. The keys contain the filenames. Returns null if the exclusion file does not exist.</returns>
-        public static Dictionary<string, Exclusion> GetExclusionsFromFile(string path)
+        public override string ToString()
         {
-            var exclusions = new Dictionary<string, Exclusion>();
-
-            if (!File.Exists(path))
-            {
-                return exclusions;
-            }
-
-            using (var sr = File.OpenText(path))
-            {
-                var line = sr.ReadLine();
-
-                while (line != null)
-                {
-                    if (!String.IsNullOrEmpty(line))
-                    {
-                        var exclusion = new Exclusion(line);
-                        exclusions.Add(exclusion.Filename, exclusion);
-                    }
-                    line = sr.ReadLine();
-                }
-            }
-
-            return exclusions;
+            return String.Format("FilePattern: {0} | Parent: {1} | Comment: {2}", FilePatterns, ParentFiles, Comment);
         }
 
         private string GetExclusionPart(int index)

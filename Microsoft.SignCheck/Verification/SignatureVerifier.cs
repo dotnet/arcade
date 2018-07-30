@@ -1,10 +1,4 @@
-﻿using Microsoft.Deployment.WindowsInstaller;
-using Microsoft.Deployment.WindowsInstaller.Package;
-using Microsoft.SignCheck.Interop;
-using Microsoft.SignCheck.Logging;
-using Microsoft.Tools.WindowsInstallerXml;
-using System;
-using System.Xml;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -12,7 +6,11 @@ using System.IO.Packaging;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Security.Cryptography.Xml;
+using Microsoft.Deployment.WindowsInstaller;
+using Microsoft.Deployment.WindowsInstaller.Package;
+using Microsoft.SignCheck.Interop;
+using Microsoft.SignCheck.Logging;
+using Microsoft.Tools.WindowsInstallerXml;
 
 namespace Microsoft.SignCheck.Verification
 {
@@ -30,6 +28,15 @@ namespace Microsoft.SignCheck.Verification
         private Dictionary<string, VerifyByFileExtension> _verifiers;
 
         /// <summary>
+        /// Enable signature verification for .xml files.
+        /// </summary>
+        public bool EnableXmlSignatureVerification
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// An instance of <see cref="Log"/>.
         /// </summary>
         public Log Log
@@ -41,7 +48,7 @@ namespace Microsoft.SignCheck.Verification
         /// <summary>
         /// A set of files to exclude from signature verification.
         /// </summary>
-        public Dictionary<string, Exclusion> Exclusions
+        public Exclusions Exclusions
         {
             get;
             private set;
@@ -74,9 +81,9 @@ namespace Microsoft.SignCheck.Verification
         }
 
         /// <summary>
-        /// When set to true, strongname verification of managed code files will be skipped.
+        /// Enables verification of strong name signatures when set to true.
         /// </summary>
-        public bool SkipStrongName
+        public bool VerifyStrongName
         {
             get;
             set;
@@ -123,7 +130,7 @@ namespace Microsoft.SignCheck.Verification
             }
         }
 
-        public SignatureVerifier(LogVerbosity verbosity, Dictionary<string, Exclusion> exclusions, Log log)
+        public SignatureVerifier(LogVerbosity verbosity, Exclusions exclusions, Log log)
         {
             Exclusions = exclusions;
             Log = log;
@@ -141,8 +148,12 @@ namespace Microsoft.SignCheck.Verification
             Verifiers.Add(".ps1", VerifyAuthentiCode);
             Verifiers.Add(".ps1xml", VerifyAuthentiCode);
             Verifiers.Add(".vsix", VerifyVsix);
-            Verifiers.Add(".xml", VerifyXml);
             Verifiers.Add(".zip", VerifyZip);
+
+            if (EnableXmlSignatureVerification)
+            {
+                Verifiers.Add(".xml", VerifyXml);
+            }
         }
 
         /// <summary>
@@ -168,128 +179,141 @@ namespace Microsoft.SignCheck.Verification
         /// <returns>The verification result.</returns>
         public SignatureVerificationResult VerifyFile(string path, string parent)
         {
-            var extension = Path.GetExtension(path);
+            Log.WriteMessage(LogVerbosity.Detailed, String.Format(SignCheckResources.ProcessingFile, Path.GetFileName(path), String.IsNullOrEmpty(parent) ? SignCheckResources.NA : parent));
 
-            if (!String.IsNullOrEmpty(parent))
+            var extension = Path.GetExtension(path);
+            VerifyByFileExtension verifierDelegate;
+            SignatureVerificationResult result;
+
+            if (Verifiers.TryGetValue(extension, out verifierDelegate))
             {
-                Log.WriteMessage(LogVerbosity.Detailed, String.Format(SignCheckResources.ProcessingFile, Path.GetFileName(path), parent));
+                result = verifierDelegate(path, parent);
+                result.IsExcluded = Exclusions.IsParentExcluded(parent) | Exclusions.IsFileExcluded(path);
             }
             else
             {
-                Log.WriteMessage(LogVerbosity.Detailed, String.Format(SignCheckResources.ProcessingFile, Path.GetFileName(path), SignCheckResources.NA));
+                result = SignatureVerificationResult.SkippedResult(path, parent);
             }
 
-            VerifyByFileExtension verifierDelegate;
-            if (Verifiers.TryGetValue(extension, out verifierDelegate))
-            {
-                return verifierDelegate(path, parent);
-            }
-
-            return SignatureVerificationResult.SkippedResult(path);
+            return result;
         }
 
         public SignatureVerificationResult VerifyAuthentiCode(string path, string parent)
         {
-            var signatureVerificationResult = new SignatureVerificationResult(path, Exclusions, parent);
-            var isAuthentiCodeSigned = AuthentiCode.IsAuthentiCodeSigned(signatureVerificationResult.FullPath);
+            SignatureVerificationResult svr = new SignatureVerificationResult(path, parent);
+            svr.IsAuthentiCodeSigned = AuthentiCode.IsSigned(path);
+            svr.IsSigned = svr.IsAuthentiCodeSigned;
 
-            signatureVerificationResult.AddDetail(SignCheckResources.DetailAuthentiCode, Convert.ToString(isAuthentiCodeSigned));
-
-            // If we are checking timestamps this result may change
-            signatureVerificationResult.IsSigned = isAuthentiCodeSigned;
-
-            if (isAuthentiCodeSigned && !SkipAuthentiCodeTimestamp)
+            if (!SkipAuthentiCodeTimestamp)
             {
-                IEnumerable<Timestamp> timestamps = null;
-                Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagCheckingTimestamps);
-
                 try
                 {
-                    timestamps = AuthentiCode.GetTimestamps(path);
+                    svr.Timestamps = AuthentiCode.GetTimestamps(path).ToList();
 
-                    foreach (var timestamp in timestamps)
+                    foreach (var timestamp in svr.Timestamps)
                     {
-                        signatureVerificationResult.AddDetail(SignCheckResources.DetailTimestamp, timestamp.SignedOn, timestamp.SignatureAlgorithm);
+                        svr.AddDetail(DetailKeys.AuthentiCode, SignCheckResources.DetailTimestamp, timestamp.SignedOn, timestamp.SignatureAlgorithm);
+                        svr.IsAuthentiCodeSigned &= timestamp.IsValid;
                     }
                 }
                 catch
                 {
-                    signatureVerificationResult.AddDetail(SignCheckResources.DetailNoTimetamp);
+                    svr.AddDetail(DetailKeys.AuthentiCode, SignCheckResources.DetailTimestampError);
+                    svr.IsSigned = false;
                 }
-
-                bool hasValidTimestamps = timestamps.All(o => o.IsValid);
-
-                signatureVerificationResult.IsSigned &= hasValidTimestamps;
             }
             else
             {
-                signatureVerificationResult.AddDetail(SignCheckResources.DetailTimestampSkipped);
+                svr.AddDetail(DetailKeys.AuthentiCode, SignCheckResources.DetailTimestampSkipped);
             }
 
-            return signatureVerificationResult;
+            svr.AddDetail(DetailKeys.AuthentiCode, SignCheckResources.DetailSignedAuthentiCode, svr.IsAuthentiCodeSigned);
+
+            return svr;
+        }
+
+        public void VerifyStrongNameSignature(SignatureVerificationResult svr)
+        {
+            if (StrongName.IsManagedCode(svr.FullPath))
+            {
+                if (VerifyStrongName)
+                {
+                    string publicToken = StrongName.GetStrongNameTokenFromAssembly(svr.FullPath);
+                    svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailPublicKeyToken, publicToken);
+
+                    bool wasVerified = false;
+                    int hresult = StrongName.ClrStrongName.StrongNameSignatureVerificationEx(svr.FullPath, fForceVerification: true, pfWasVerified: out wasVerified);
+                    svr.IsStrongNameSigned = hresult == StrongName.S_OK;
+
+                    // Crossgen'd asemblies return bad image format results.
+                    if (hresult != StrongName.S_OK)
+                    {
+                        svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailHResult, hresult);
+                    }
+                    else
+                    {
+                        svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailSignedStrongName, svr.IsStrongNameSigned);
+                    }
+                }
+                else
+                {
+                    svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailSkipped);
+                }
+            }
         }
 
         public SignatureVerificationResult VerifyCab(string path, string parent)
         {
-            var signatureVerificationResult = VerifyAuthentiCode(path, parent);
-            signatureVerificationResult.AddDetail(SignCheckResources.DetailSigned, Convert.ToString(signatureVerificationResult.IsSigned));
+            var svr = VerifyAuthentiCode(path, parent);
+            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
+            return svr;
+        }
 
-            return signatureVerificationResult;
+        public SignatureVerificationResult VerifyDll(string path, string parent)
+        {
+            SignatureVerificationResult svr = VerifyAuthentiCode(path, parent);
+            VerifyStrongNameSignature(svr);
+
+            svr.IsSigned = svr.IsAuthentiCodeSigned & ((svr.IsStrongNameSigned) || (!VerifyStrongName));
+            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
+
+            return svr;
         }
 
         public SignatureVerificationResult VerifyExe(string path, string parent)
         {
-            var signatureVerificationResult = VerifyAuthentiCode(path, parent);
+            SignatureVerificationResult svr = VerifyAuthentiCode(path, parent);
+            VerifyStrongNameSignature(svr);
 
-            if (StrongName.IsManagedCode(signatureVerificationResult.FullPath))
-            {
-                if (!SkipStrongName)
-                {
-                    Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagCheckingStrongName);
-                    var isStrongNameSigned = StrongName.IsStrongNameSigned(signatureVerificationResult.FullPath);
-                    signatureVerificationResult.IsSigned &= isStrongNameSigned;
-
-                    var snToken = StrongName.GetStrongNameTokenFromAssembly(signatureVerificationResult.FullPath);
-
-                    signatureVerificationResult.AddDetail(SignCheckResources.DetailSigned, Convert.ToString(signatureVerificationResult.IsSigned));
-                    signatureVerificationResult.AddDetail(SignCheckResources.DetailStrongName, Convert.ToString(isStrongNameSigned),
-                        String.IsNullOrEmpty(snToken) ? "null" : snToken,
-                        StrongName.GetStrongNameTokenFromAssembly(signatureVerificationResult.FullPath));
-                }
-                else
-                {
-                    Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagSkippingStrongName);
-                    signatureVerificationResult.AddDetail(SignCheckResources.DetailSigned, Convert.ToString(signatureVerificationResult.IsSigned));
-                    signatureVerificationResult.AddDetail(SignCheckResources.DetailStrongName, "Skipped", "n/a");
-                }
-            }
+            svr.IsSigned = svr.IsAuthentiCodeSigned & ((svr.IsStrongNameSigned) || (!VerifyStrongName));
+            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
 
             if (Recursive)
             {
-                var exeImage = new PortableExecutableImage(signatureVerificationResult.FullPath);
+                var exeImage = new PortableExecutableImage(svr.FullPath);
 
                 if (exeImage.SectionHeaders.Select(s => s.SectionName).Contains(".wixburn"))
                 {
                     Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagSectionHeader, ".wixburn");
-                    Log.WriteMessage(LogVerbosity.Detailed, SignCheckResources.WixBundle, signatureVerificationResult.FullPath);
+                    Log.WriteMessage(LogVerbosity.Detailed, SignCheckResources.WixBundle, svr.FullPath);
                     Unbinder unbinder = null;
 
                     try
                     {
-                        Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagExtractingFileContents, signatureVerificationResult.TempPath);
+                        Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagExtractingFileContents, svr.TempPath);
                         unbinder = new Unbinder();
                         unbinder.Message += UnbinderEventHandler;
-                        var o = unbinder.Unbind(signatureVerificationResult.FullPath, OutputType.Bundle, signatureVerificationResult.TempPath);
+                        var o = unbinder.Unbind(svr.FullPath, OutputType.Bundle, svr.TempPath);
 
-                        if (Directory.Exists(signatureVerificationResult.TempPath))
+                        if (Directory.Exists(svr.TempPath))
                         {
-                            foreach (var file in Directory.EnumerateFiles(signatureVerificationResult.TempPath, "*.*", SearchOption.AllDirectories))
+                            foreach (var file in Directory.EnumerateFiles(svr.TempPath, "*.*", SearchOption.AllDirectories))
                             {
-                                signatureVerificationResult.NestedResults.Add(VerifyFile(Path.GetFullPath(file), signatureVerificationResult.Filename));
+                                svr.NestedResults.Add(VerifyFile(Path.GetFullPath(file), svr.Filename));
                             }
                         }
 
-                        Directory.Delete(signatureVerificationResult.TempPath, recursive: true);
+                        Directory.Delete(svr.TempPath, recursive: true);
                     }
                     finally
                     {
@@ -300,51 +324,22 @@ namespace Microsoft.SignCheck.Verification
 
             // TODO: Check for SFXCAB, IronMan, etc.
 
-            return signatureVerificationResult;
-        }
-
-        public SignatureVerificationResult VerifyDll(string path, string parent)
-        {
-            var signatureVerificationResult = VerifyAuthentiCode(path, parent);
-
-            if (StrongName.IsManagedCode(signatureVerificationResult.FullPath))
-            {
-                if (!SkipStrongName)
-                {
-                    Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagCheckingStrongName);
-                    var isStrongNameSigned = StrongName.IsStrongNameSigned(signatureVerificationResult.FullPath);
-                    signatureVerificationResult.IsSigned &= isStrongNameSigned;
-                    var snToken = StrongName.GetStrongNameTokenFromAssembly(signatureVerificationResult.FullPath);
-
-                    signatureVerificationResult.AddDetail(SignCheckResources.DetailSigned, Convert.ToString(signatureVerificationResult.IsSigned));
-                    signatureVerificationResult.AddDetail(SignCheckResources.DetailStrongName, Convert.ToString(isStrongNameSigned),
-                        String.IsNullOrEmpty(snToken) ? "null" : snToken,
-                        StrongName.GetStrongNameTokenFromAssembly(signatureVerificationResult.FullPath));
-                }
-                else
-                {
-                    Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagSkippingStrongName);
-                    signatureVerificationResult.AddDetail(SignCheckResources.DetailSigned, Convert.ToString(signatureVerificationResult.IsSigned));
-                    signatureVerificationResult.AddDetail(SignCheckResources.DetailStrongName, "Skipped", "n/a");
-                }
-            }
-
-            return signatureVerificationResult;
+            return svr;
         }
 
         public SignatureVerificationResult VerifyNupkg(string path, string parent)
         {
-            var result = new SignatureVerificationResult(path, Exclusions, parent);
-            var fullPath = result.FullPath;
+            SignatureVerificationResult svr = new SignatureVerificationResult(path, parent);
+            var fullPath = svr.FullPath;
 
-            result.IsSigned = NuGetPackage.IsSigned(fullPath);
-            result.AddDetail(SignCheckResources.DetailSigned, Convert.ToString(result.IsSigned));
+            svr.IsSigned = NuGetPackage.IsSigned(fullPath);
+            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
 
             if (Recursive)
             {
                 using (var zipArchive = ZipFile.OpenRead(fullPath))
                 {
-                    var tempPath = result.TempPath;
+                    var tempPath = svr.TempPath;
                     CreateDirectory(tempPath);
                     Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagExtractingFileContents, tempPath);
 
@@ -356,31 +351,38 @@ namespace Microsoft.SignCheck.Verification
                         var aliasFullName = Path.Combine(tempPath, aliasFileName);
 
                         archiveEntry.ExtractToFile(aliasFullName);
-                        var archiveEntryResult = VerifyFile(aliasFullName, result.Filename);
+                        var archiveEntryResult = VerifyFile(aliasFullName, svr.Filename);
+
+                        // VerifyFile will set IsExcluded if the filename or parent matches, but it's possible the exclusion was
+                        // based on the archive entry's full path.
+                        CheckAndUpdateExclusion(archiveEntryResult, aliasFileName, archiveEntry.FullName, svr.Filename);
 
                         // Tag the full path into the result detail
-                        archiveEntryResult.AddDetail(SignCheckResources.DetailFullName, archiveEntry.FullName);
+                        archiveEntryResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, archiveEntry.FullName);
 
-                        result.NestedResults.Add(archiveEntryResult);
+                        svr.NestedResults.Add(archiveEntryResult);
                     }
 
                     DeleteDirectory(tempPath);
                 }
             }
 
-            return result;
+            return svr;
         }
 
         public SignatureVerificationResult VerifyMsi(string path, string parent)
         {
-            var result = VerifyAuthentiCode(path, parent);
+            SignatureVerificationResult svr = VerifyAuthentiCode(path, parent);
+            svr.IsSigned = svr.IsAuthentiCodeSigned;
+            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
 
             if (Recursive)
             {
-                CreateDirectory(result.TempPath);
-                Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagExtractingFileContents, result.TempPath);
+                CreateDirectory(svr.TempPath);
+                Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagExtractingFileContents, svr.TempPath);
 
-                using (var installPackage = new InstallPackage(result.FullPath, DatabaseOpenMode.Transact, sourceDir: null, workingDir: result.TempPath))
+                // TODO: Fix for MSIs with external CABs that are not present.
+                using (var installPackage = new InstallPackage(svr.FullPath, DatabaseOpenMode.Transact, sourceDir: null, workingDir: svr.TempPath))
                 {
                     var files = installPackage.Files;
                     var originalFiles = new Dictionary<string, string>();
@@ -391,7 +393,7 @@ namespace Microsoft.SignCheck.Verification
                     {
                         originalFiles[key] = installPackage.Files[key].TargetPath;
                         var name = key + Path.GetExtension(installPackage.Files[key].TargetName);
-                        var targetPath = Path.Combine(result.TempPath, name);
+                        var targetPath = Path.Combine(svr.TempPath, name);
                         installPackage.Files[key].TargetName = name;
                         installPackage.Files[key].SourceName = name;
                         installPackage.Files[key].SourcePath = targetPath;
@@ -402,28 +404,84 @@ namespace Microsoft.SignCheck.Verification
 
                     foreach (var key in installPackage.Files.Keys)
                     {
-                        var packageFileResult = VerifyFile(installPackage.Files[key].TargetPath, result.Filename);
-                        packageFileResult.AddDetail(SignCheckResources.DetailFullName, originalFiles[key]);
-                        result.NestedResults.Add(packageFileResult);
+                        var packageFileResult = VerifyFile(installPackage.Files[key].TargetPath, svr.Filename);
+                        //packageFileResult.AddDetail(SignCheckResources.DetailFullName, originalFiles[key]);
+                        CheckAndUpdateExclusion(packageFileResult, packageFileResult.Filename, originalFiles[key], svr.Filename);
+                        svr.NestedResults.Add(packageFileResult);
                     }
                 }
 
-                DeleteDirectory(result.TempPath);
+                DeleteDirectory(svr.TempPath);
             }
 
-            return result;
+            return svr;
         }
 
         public SignatureVerificationResult VerifyMsp(string path, string parent)
         {
-            var result = VerifyAuthentiCode(path, parent);
+            var svr = VerifyAuthentiCode(path, parent);
+            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
+            return svr;
+        }
 
-            return result;
+        public SignatureVerificationResult VerifyVsix(string path, string parent)
+        {
+
+            var svr = new SignatureVerificationResult(path, parent);
+            var fullPath = svr.FullPath;
+            PackageDigitalSignature packageSignature;
+
+            svr.IsSigned = VsixPackage.IsSigned(fullPath, out packageSignature);
+            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
+
+            if (Recursive)
+            {
+                using (var zipArchive = ZipFile.OpenRead(fullPath))
+                {
+                    var tempPath = svr.TempPath;
+                    CreateDirectory(tempPath);
+
+                    foreach (var archiveEntry in zipArchive.Entries)
+                    {
+                        // Generate an alias for the actual file that has the same extension. We do this to avoid path too long errors so that
+                        // containers can be flattened
+                        var aliasFileName = Utils.GetHash(archiveEntry.FullName, HashAlgorithmName.MD5.Name) + Path.GetExtension(archiveEntry.FullName);
+                        var aliasFullName = Path.Combine(tempPath, aliasFileName);
+
+                        archiveEntry.ExtractToFile(aliasFullName);
+                        var archiveEntryResult = VerifyFile(aliasFullName, svr.Filename);
+
+                        // Tag the full path into the result detail
+                        archiveEntryResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, archiveEntry.FullName);
+                        CheckAndUpdateExclusion(archiveEntryResult, aliasFileName, archiveEntry.FullName, svr.Filename);
+                        svr.NestedResults.Add(archiveEntryResult);
+                    }
+
+                    DeleteDirectory(tempPath);
+                }
+            }
+
+            return svr;
+        }
+
+        public SignatureVerificationResult VerifyXml(string path, string parent)
+        {
+            if (EnableXmlSignatureVerification)
+            {
+                X509Certificate2 xmlCertificate;
+                var svr = new SignatureVerificationResult(path, parent);
+                svr.IsSigned = Xml.IsSigned(svr.FullPath, out xmlCertificate);
+                svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
+
+                return svr;
+            }
+
+            return SignatureVerificationResult.SkippedResult(path, parent);
         }
 
         public SignatureVerificationResult VerifyZip(string path, string parent)
         {
-            var result = new SignatureVerificationResult(path, Exclusions, parent);
+            var result = new SignatureVerificationResult(path, parent);
             var fullPath = result.FullPath;
 
             if (Recursive)
@@ -445,7 +503,8 @@ namespace Microsoft.SignCheck.Verification
                         var archiveEntryResult = VerifyFile(aliasFullName, result.Filename);
 
                         // Tag the full path into the result detail
-                        archiveEntryResult.AddDetail(SignCheckResources.DetailFullName, archiveEntry.FullName);
+                        archiveEntryResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, archiveEntry.FullName);
+                        CheckAndUpdateExclusion(archiveEntryResult, aliasFileName, archiveEntry.FullName, result.Filename);
                         result.NestedResults.Add(archiveEntryResult);
                     }
 
@@ -456,56 +515,13 @@ namespace Microsoft.SignCheck.Verification
             return result;
         }
 
-        public SignatureVerificationResult VerifyVsix(string path, string parent)
+
+        private void CheckAndUpdateExclusion(SignatureVerificationResult result, string alias, string fullName, string parent)
         {
-            var result = new SignatureVerificationResult(path, Exclusions, parent);
-            var fullPath = result.FullPath;
-            PackageDigitalSignature packageSignature;
+            result.IsExcluded |= Exclusions.IsFileExcluded(fullName);
+            result.ExclusionEntry = String.Join(";", String.Join("|", alias, fullName), parent, String.Empty);
 
-            result.IsSigned = VsixPackage.IsSigned(fullPath, out packageSignature);
-            result.AddDetail(SignCheckResources.DetailSigned, Convert.ToString(result.IsSigned));
-
-            if (Recursive)
-            {
-                using (var zipArchive = ZipFile.OpenRead(fullPath))
-                {
-                    var tempPath = result.TempPath;
-                    CreateDirectory(tempPath);
-
-                    foreach (var archiveEntry in zipArchive.Entries)
-                    {
-                        // Generate an alias for the actual file that has the same extension. We do this to avoid path too long errors so that
-                        // containers can be flattened
-                        var aliasFileName = Utils.GetHash(archiveEntry.FullName, HashAlgorithmName.MD5.Name) + Path.GetExtension(archiveEntry.FullName);
-                        var aliasFullName = Path.Combine(tempPath, aliasFileName);
-
-                        archiveEntry.ExtractToFile(aliasFullName);
-                        var archiveEntryResult = VerifyFile(aliasFullName, result.Filename);
-
-                        // Tag the full path into the result detail
-                        archiveEntryResult.AddDetail(SignCheckResources.DetailFullName, archiveEntry.FullName);
-                        result.NestedResults.Add(archiveEntryResult);
-                    }
-
-                    DeleteDirectory(tempPath);
-                }
-            }
-
-            return result;
-        }
-
-        public SignatureVerificationResult VerifyXml(string path, string parent)
-        {
-            var result = new SignatureVerificationResult(path, Exclusions, parent);
-            X509Certificate2 xmlCertificate;
-            result.IsSigned = Xml.IsSigned(result.FullPath, out xmlCertificate);
-
-            return result;
-        }
-
-        private void UnbinderEventHandler(object sender, MessageEventArgs e)
-        {
-            Log.WriteMessage(LogVerbosity.Detailed, String.Format("{0}|{1}|{2}|{3}", e.Id, e.Level, e.ResourceName, e.SourceLineNumbers));
+            Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagGenerateExclusion, result.Filename, result.ExclusionEntry);
         }
 
         private void CreateDirectory(string path)
@@ -518,6 +534,11 @@ namespace Microsoft.SignCheck.Verification
         {
             Log.WriteMessage(LogVerbosity.Diagnostic, String.Format(SignCheckResources.DiagDeletingFolder, path));
             Directory.Delete(path, recursive: true);
+        }
+
+        private void UnbinderEventHandler(object sender, MessageEventArgs e)
+        {
+            Log.WriteMessage(LogVerbosity.Detailed, String.Format("{0}|{1}|{2}|{3}", e.Id, e.Level, e.ResourceName, e.SourceLineNumbers));
         }
     }
 }

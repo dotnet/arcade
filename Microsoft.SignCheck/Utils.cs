@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace Microsoft.SignCheck
 {
@@ -30,6 +27,11 @@ namespace Microsoft.SignCheck
             var hashString = sb.ToString();
 
             return hashString;
-        }        
+        }
+
+        public static string ConvertToRegexPattern(string pattern)
+        {
+            return Regex.Escape(pattern).Replace(@"\*", ".*").Replace(@"\?", ".");
+        }
     }
 }

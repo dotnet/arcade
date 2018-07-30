@@ -1,5 +1,6 @@
 ﻿using Microsoft.SignCheck.Interop;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -11,7 +12,7 @@ namespace Microsoft.SignCheck.Verification
 {
     public static class AuthentiCode
     {
-        public static bool IsAuthentiCodeSigned(string path)
+        public static bool IsSigned(string path)
         {
             WinTrustFileInfo fileInfo = new WinTrustFileInfo()
             {
@@ -195,5 +196,6 @@ namespace Microsoft.SignCheck.Verification
 
             return timestamps;
         }
+        
     }
 }

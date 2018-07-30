@@ -2,7 +2,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.SignCheck.Interop
+namespace Microsoft.SignCheck.Verification
 {
     public static class StrongName
     {
@@ -11,7 +11,7 @@ namespace Microsoft.SignCheck.Interop
         public const string CLSID_CLRStrongName = "B79B0ACD-F5CD-409b-B5A5-A16244610B92";
         public const string IID_ICLRStrongName = "9FD93CCF-3280-4391-B3A9-96E1CDE77C8D";
 
-        internal const int S_OK = 0;
+        public const int S_OK = 0;
 
         internal static ICLRStrongName ClrStrongName = (ICLRStrongName)RuntimeEnvironment.GetRuntimeInterfaceAsObject(new Guid(CLSID_CLRStrongName), new Guid(IID_ICLRStrongName));
 
@@ -63,7 +63,7 @@ namespace Microsoft.SignCheck.Interop
         }
 
         /// <summary>
-        /// Get the strong name token from an assembly.
+        /// Retrieve the StrongName token from an assembly.
         /// </summary>
         /// <param name="path">The path of the assembly.</param>
         /// <returns>The strong name token of an assembly.</returns>
@@ -84,19 +84,6 @@ namespace Microsoft.SignCheck.Interop
             }
 
             return tokenStr;
-        }
-
-        /// <summary>
-        /// Check whether an assembly or executable contains a valid strong name signature. Verification is forced even if a file
-        /// was marked for verification skipping in the registry.
-        /// </summary>
-        /// <param name="path">The path of the file to check.</param>
-        /// <returns>true if a valid strong name signature is found, false otherwise.</returns>
-        public static bool IsStrongNameSigned(string path)
-        {
-            bool wasVerified = false;
-            int hresult = ClrStrongName.StrongNameSignatureVerificationEx(path, fForceVerification: true, pfWasVerified: out wasVerified);
-            return (hresult == S_OK);
         }
     }
 }
