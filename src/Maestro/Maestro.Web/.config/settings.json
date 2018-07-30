@@ -1,0 +1,9 @@
+{
+  "DataProtection": {
+    "KeyFileUri": "[vault(data-protection-key-file-uri)]",
+    "KeyIdentifier": "data-protection-encryption-key" 
+  },
+  "BuildAssetRegistry": {
+    "ConnectionString": "[vault(build-asset-registry-sql-connection-string)]"
+  }
+}
