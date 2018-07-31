@@ -19,6 +19,7 @@ namespace Maestro.Web.Data.Models
         internal Build(BuildData other)
         {
             Repository = other.Repository;
+            Branch = other.Branch;
             Commit = other.Commit;
             BuildNumber = other.BuildNumber;
             Assets = other.Assets.Select(ad => new Asset(ad)).ToList();
@@ -29,6 +30,8 @@ namespace Maestro.Web.Data.Models
         public int Id { get; set; }
 
         public string Repository { get; set; }
+
+        public string Branch { get; set; }
 
         public string Commit { get; set; }
 

@@ -143,6 +143,8 @@ namespace Maestro.Web.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<string>("Branch");
+
                     b.Property<string>("BuildNumber");
 
                     b.Property<string>("Commit");
@@ -186,6 +188,34 @@ namespace Maestro.Web.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Channels");
+                });
+
+            modelBuilder.Entity("Maestro.Web.Data.Models.DefaultChannel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Branch")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100);
+
+                    b.Property<int>("ChannelId");
+
+                    b.Property<string>("Repository")
+                        .IsRequired()
+                        .HasColumnType("varchar(300)")
+                        .HasMaxLength(300);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChannelId");
+
+                    b.HasIndex("Repository", "Branch")
+                        .IsUnique();
+
+                    b.ToTable("DefaultChannels");
                 });
 
             modelBuilder.Entity("Maestro.Web.Data.Models.Subscription", b =>
@@ -356,6 +386,14 @@ namespace Maestro.Web.Migrations
 
                     b.HasOne("Maestro.Web.Data.Models.Channel", "Channel")
                         .WithMany("BuildChannels")
+                        .HasForeignKey("ChannelId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Maestro.Web.Data.Models.DefaultChannel", b =>
+                {
+                    b.HasOne("Maestro.Web.Data.Models.Channel", "Channel")
+                        .WithMany("DefaultChannels")
                         .HasForeignKey("ChannelId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });

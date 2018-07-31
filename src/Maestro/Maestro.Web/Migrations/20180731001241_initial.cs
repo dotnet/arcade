@@ -60,6 +60,7 @@ namespace Maestro.Web.Migrations
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     Repository = table.Column<string>(nullable: true),
+                    Branch = table.Column<string>(nullable: true),
                     Commit = table.Column<string>(nullable: true),
                     BuildNumber = table.Column<string>(nullable: true),
                     DateProduced = table.Column<DateTimeOffset>(nullable: false),
@@ -264,6 +265,27 @@ namespace Maestro.Web.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "DefaultChannels",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    Repository = table.Column<string>(type: "varchar(300)", maxLength: 300, nullable: false),
+                    Branch = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
+                    ChannelId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DefaultChannels", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DefaultChannels_Channels_ChannelId",
+                        column: x => x.ChannelId,
+                        principalTable: "Channels",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Subscriptions",
                 columns: table => new
                 {
@@ -373,6 +395,17 @@ namespace Maestro.Web.Migrations
                 column: "DependencyBuildId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DefaultChannels_ChannelId",
+                table: "DefaultChannels",
+                column: "ChannelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DefaultChannels_Repository_Branch",
+                table: "DefaultChannels",
+                columns: new[] { "Repository", "Branch" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Subscriptions_ChannelId",
                 table: "Subscriptions",
                 column: "ChannelId");
@@ -403,6 +436,9 @@ namespace Maestro.Web.Migrations
 
             migrationBuilder.DropTable(
                 name: "BuildChannels");
+
+            migrationBuilder.DropTable(
+                name: "DefaultChannels");
 
             migrationBuilder.DropTable(
                 name: "Subscriptions");

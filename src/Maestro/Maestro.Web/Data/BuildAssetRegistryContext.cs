@@ -39,6 +39,7 @@ namespace Maestro.Web.Data
         public DbSet<Build> Builds { get; set; }
         public DbSet<BuildChannel> BuildChannels { get; set; }
         public DbSet<Channel> Channels { get; set; }
+        public DbSet<DefaultChannel> DefaultChannels { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -63,6 +64,10 @@ namespace Maestro.Web.Data
 
             builder.Entity<ApplicationUserPersonalAccessToken>()
                 .HasIndex(t => new {t.ApplicationUserId, t.Name})
+                .IsUnique();
+
+            builder.Entity<DefaultChannel>()
+                .HasIndex(dc => new {dc.Repository, dc.Branch})
                 .IsUnique();
         }
     }

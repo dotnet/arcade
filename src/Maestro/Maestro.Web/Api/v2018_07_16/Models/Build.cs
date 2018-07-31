@@ -22,7 +22,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
             Commit = other.Commit;
             BuildNumber = other.BuildNumber;
             DateProduced = other.DateProduced;
-            Channels = other.BuildChannels?.Select(bc => bc.Channel).Select(c => new Channel(c)).ToList();
+            Channels = other.BuildChannels?.Select(bc => bc.Channel).Where(c => c != null).Select(c => new Channel(c)).ToList();
             Assets = other.Assets?.Select(a => new Asset(a)).ToList();
             Dependencies = other.Dependencies?.Select(b => new BuildRef {Id = b.Id}).ToList();
         }
