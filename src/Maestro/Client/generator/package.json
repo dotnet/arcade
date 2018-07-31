@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "name": "generator",
+  "version": "1.0.0",
+  "description": "",
+  "author": "Microsoft",
+  "license": "MIT",
+  "devDependencies": {
+    "autorest": "^2.0.4262",
+    "rimraf": "^2.6.2"
+  },
+  "scripts": {
+    "prestart": "rimraf ../src/Generated",
+    "start": "autorest --version=2.0.4262"
+  }
+}
