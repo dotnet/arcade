@@ -6,8 +6,8 @@ namespace Microsoft.DotNet.SignTool
 {
     internal readonly struct SignToolArgs
     {
-        internal string OutputPath { get; }
-        internal string TempPath { get; }
+        internal string OutputDir { get; }
+        internal string TempDir { get; }
         internal string MicroBuildCorePath { get; }
         internal bool TestSign { get; }
 
@@ -17,8 +17,8 @@ namespace Microsoft.DotNet.SignTool
             string microBuildCorePath,
             bool testSign)
         {
-            OutputPath = outputPath;
-            TempPath = tempPath;
+            OutputDir = outputPath;
+            TempDir = tempPath;
             MicroBuildCorePath = microBuildCorePath;
             TestSign = testSign;
         }

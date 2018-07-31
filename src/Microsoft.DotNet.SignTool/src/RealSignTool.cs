@@ -1,18 +1,12 @@
 // Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Tasks;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -21,6 +15,9 @@ namespace Microsoft.DotNet.SignTool
     /// </summary>
     internal sealed class RealSignTool : SignTool
     {
+        private readonly string _msbuildPath;
+        private readonly string _logDir;
+
         /// <summary>
         /// The number of bytes from the start of the <see cref="CorHeader"/> to its <see cref="CorFlags"/>.
         /// </summary>
@@ -32,14 +29,33 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool TestSign { get; }
 
-        internal RealSignTool(SignToolArgs args) : base(args)
+        internal RealSignTool(SignToolArgs args, string msbuildPath, string logDir) : base(args)
         {
             TestSign = args.TestSign;
+            _msbuildPath = msbuildPath;
+            _logDir = logDir;
         }
 
-        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath)
+        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round)
         {
-            return buildEngine.BuildProjectFile(projectFilePath, null, null, null);
+            if (_msbuildPath == null)
+            {
+                return buildEngine.BuildProjectFile(projectFilePath, null, null, null);
+            }
+
+            Directory.CreateDirectory(_logDir);
+
+            var process = Process.Start(new ProcessStartInfo()
+            {
+                FileName = _msbuildPath,
+                Arguments = $@"/v:m ""{projectFilePath}"" /bl:""{Path.Combine(_logDir, $"Signing{round}.binlog")}""",
+                UseShellExecute = false,
+                WorkingDirectory = TempDir,
+            });
+
+            process.WaitForExit();
+
+            return process.ExitCode == 0;
         }
 
         /// <summary>
