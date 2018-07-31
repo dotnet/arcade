@@ -23,11 +23,12 @@ phases:
           ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
             _PublishType: blob
             _SignType: real
-            _UseEsrpSigning: true
+
 
 - template: /eng/build.yml
   parameters:
     agentOs: Linux
+    dockerImage: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
     queue: 
       ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
         name: DotNetCore-Linux
@@ -48,5 +49,3 @@ phases:
             _SignType: test
           ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
             _SignType: real
-    variables:
-      _PREVIEW_VSTS_DOCKER_IMAGE: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
