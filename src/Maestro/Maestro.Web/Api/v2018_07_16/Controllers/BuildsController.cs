@@ -161,6 +161,19 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 Dependencies = await _context.Builds.Where(b => build.Dependencies.Contains(b.Id)).ToListAsync()
             };
             await _context.Builds.AddAsync(buildModel);
+            var defaultChannels = await _context.DefaultChannels
+                .Where(dc => dc.Repository == buildModel.Repository && dc.Branch == buildModel.Branch)
+                .Select(dc => dc.ChannelId)
+                .ToListAsync();
+
+            foreach (var channelId in defaultChannels)
+            {
+                await _context.BuildChannels.AddAsync(new Data.Models.BuildChannel
+                {
+                    ChannelId = channelId,
+                    Build = buildModel,
+                });
+            }
             await _context.SaveChangesAsync();
             return CreatedAtRoute(new {action = "GetBuild", id = buildModel.Id}, new Build(buildModel));
         }
