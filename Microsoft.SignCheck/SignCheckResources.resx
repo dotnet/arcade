@@ -129,6 +129,9 @@
   <data name="DetailHResult" xml:space="preserve">
     <value>hresult={0:x8}</value>
   </data>
+  <data name="DetailNativeImage" xml:space="preserve">
+    <value>No StrongName signature (NGEN/CrossGen image).</value>
+  </data>
   <data name="DetailPublicKeyToken" xml:space="preserve">
     <value>Public key = {0}</value>
   </data>

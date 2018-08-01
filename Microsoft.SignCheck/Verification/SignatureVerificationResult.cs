@@ -75,6 +75,13 @@ namespace Microsoft.SignCheck.Verification
             set;
         }
 
+
+        public bool IsNativeImage
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// True if the file contains a valid signature, false otherwise.
         /// </summary>

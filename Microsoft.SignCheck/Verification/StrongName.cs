@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Microsoft.SignCheck.Interop.PortableExecutable;
 using System.Runtime.InteropServices;
 
 namespace Microsoft.SignCheck.Verification
@@ -15,10 +16,6 @@ namespace Microsoft.SignCheck.Verification
 
         internal static ICLRStrongName ClrStrongName = (ICLRStrongName)RuntimeEnvironment.GetRuntimeInterfaceAsObject(new Guid(CLSID_CLRStrongName), new Guid(IID_ICLRStrongName));
 
-        // See Section 2.2 in PE COFF spec at http://www.microsoft.com/whdc/system/platform/firmware/PECOFFdwn.mspx
-        private const int PE_OFFSET = 0x3c;
-        private const int PE_HEADER_SIZE = 0x14;
-
         /// <summary>
         /// Determine if an assembly or executable file contains managed code.
         /// </summary>
@@ -26,40 +23,19 @@ namespace Microsoft.SignCheck.Verification
         /// <returns>true if the file contains managed code, false otherwise.</returns>
         public static bool IsManagedCode(string path)
         {
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
-            {
-                using (BinaryReader br = new BinaryReader(fs))
-                {
-                    fs.Position = PE_OFFSET;
-                    uint headerOffset = br.ReadUInt32();
-                    // Skip over the signature and PE Header (0x18 bytes) - 4 bytes for the signature, 20 bytes for the header
-                    // (see http://blogs.msdn.com/b/kstanton/archive/2004/03/31/105060.aspx)
-                    fs.Position = headerOffset + PE_HEADER_SIZE + 4;
-                    UInt16 magicNumber = br.ReadUInt16();
-                    uint imageDataDirectoryOffset;
+            var header = new PortableExecutableHeader(path);
+            return header.CLRRuntimeHeader.Size > 0;
+        }
 
-                    switch (magicNumber)
-                    {
-                        case 0x10b:
-                            imageDataDirectoryOffset = 0x60;
-                            break;
-                        case 0x20b:
-                            // If it's a 64-bit image (PE32+), then the data directory is 16 bytes further.
-                            imageDataDirectoryOffset = 0x70;
-                            break;
-                        default:
-                            // Potentially a bad image. We'll just return and say it's not managed code.
-                            return false;
-                    }
-
-                    // Read the 15th entry's size field. Each directory entry is 8 bytes. The size is the last 4 bytes of the
-                    // entry, so 14*8+4 = 0x74
-                    fs.Position = headerOffset + PE_HEADER_SIZE + 4 + imageDataDirectoryOffset + 0x74;
-
-                    uint rva15 = br.ReadUInt32();
-                    return rva15 != 0;
-                }
-            }
+        /// <summary>
+        /// Determine whether the managed code binary contains IL code or native code (NGEN/CrossGen).
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns>True if the binary contains IL code.</returns>
+        public static bool IsILImage(string path)
+        {
+            var header = new PortableExecutableHeader(path);
+            return (header.ImageCor20Header.ManagedNativeHeader.Size == 0) && (header.ImageCor20Header.ManagedNativeHeader.VirtualAddress == 0);
         }
 
         /// <summary>

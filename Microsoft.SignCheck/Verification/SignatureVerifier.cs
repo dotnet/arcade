@@ -8,7 +8,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Deployment.WindowsInstaller;
 using Microsoft.Deployment.WindowsInstaller.Package;
-using Microsoft.SignCheck.Interop;
+using Microsoft.SignCheck.Interop.PortableExecutable;
 using Microsoft.SignCheck.Logging;
 using Microsoft.Tools.WindowsInstallerXml;
 
@@ -238,21 +238,29 @@ namespace Microsoft.SignCheck.Verification
             {
                 if (VerifyStrongName)
                 {
-                    string publicToken = StrongName.GetStrongNameTokenFromAssembly(svr.FullPath);
-                    svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailPublicKeyToken, publicToken);
-
-                    bool wasVerified = false;
-                    int hresult = StrongName.ClrStrongName.StrongNameSignatureVerificationEx(svr.FullPath, fForceVerification: true, pfWasVerified: out wasVerified);
-                    svr.IsStrongNameSigned = hresult == StrongName.S_OK;
-
-                    // Crossgen'd asemblies return bad image format results.
-                    if (hresult != StrongName.S_OK)
+                    svr.IsNativeImage = !StrongName.IsILImage(svr.FullPath);
+                    // NGEN/CrossGen don't preserve StrongName signatures.
+                    if (!svr.IsNativeImage)
                     {
-                        svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailHResult, hresult);
+                        string publicToken = StrongName.GetStrongNameTokenFromAssembly(svr.FullPath);
+                        svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailPublicKeyToken, publicToken);
+
+                        bool wasVerified = false;
+                        int hresult = StrongName.ClrStrongName.StrongNameSignatureVerificationEx(svr.FullPath, fForceVerification: true, pfWasVerified: out wasVerified);
+                        svr.IsStrongNameSigned = hresult == StrongName.S_OK;
+
+                        if (hresult != StrongName.S_OK)
+                        {
+                            svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailHResult, hresult);
+                        }
+                        else
+                        {
+                            svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailSignedStrongName, svr.IsStrongNameSigned);
+                        }
                     }
                     else
                     {
-                        svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailSignedStrongName, svr.IsStrongNameSigned);
+                        svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailNativeImage);
                     }
                 }
                 else
@@ -274,7 +282,7 @@ namespace Microsoft.SignCheck.Verification
             SignatureVerificationResult svr = VerifyAuthentiCode(path, parent);
             VerifyStrongNameSignature(svr);
 
-            svr.IsSigned = svr.IsAuthentiCodeSigned & ((svr.IsStrongNameSigned) || (!VerifyStrongName));
+            svr.IsSigned = svr.IsAuthentiCodeSigned & ((svr.IsStrongNameSigned) || (!VerifyStrongName) || svr.IsNativeImage);
             svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
 
             return svr;
@@ -290,9 +298,9 @@ namespace Microsoft.SignCheck.Verification
 
             if (Recursive)
             {
-                var exeImage = new PortableExecutableImage(svr.FullPath);
+                var exeImage = new PortableExecutableHeader(svr.FullPath);
 
-                if (exeImage.SectionHeaders.Select(s => s.SectionName).Contains(".wixburn"))
+                if (exeImage.ImageSectionHeaders.Select(s => s.SectionName).Contains(".wixburn"))
                 {
                     Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagSectionHeader, ".wixburn");
                     Log.WriteMessage(LogVerbosity.Detailed, SignCheckResources.WixBundle, svr.FullPath);
@@ -379,7 +387,6 @@ namespace Microsoft.SignCheck.Verification
             if (Recursive)
             {
                 CreateDirectory(svr.TempPath);
-                Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagExtractingFileContents, svr.TempPath);
 
                 // TODO: Fix for MSIs with external CABs that are not present.
                 using (var installPackage = new InstallPackage(svr.FullPath, DatabaseOpenMode.Transact, sourceDir: null, workingDir: svr.TempPath))
@@ -400,14 +407,22 @@ namespace Microsoft.SignCheck.Verification
                         installPackage.Files[key].TargetPath = targetPath;
                     }
 
-                    installPackage.ExtractFiles(installPackage.Files.Keys);
-
-                    foreach (var key in installPackage.Files.Keys)
+                    try
                     {
-                        var packageFileResult = VerifyFile(installPackage.Files[key].TargetPath, svr.Filename);
-                        //packageFileResult.AddDetail(SignCheckResources.DetailFullName, originalFiles[key]);
-                        CheckAndUpdateExclusion(packageFileResult, packageFileResult.Filename, originalFiles[key], svr.Filename);
-                        svr.NestedResults.Add(packageFileResult);
+                        Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagExtractingFileContents, svr.TempPath);
+                        installPackage.ExtractFiles(installPackage.Files.Keys);
+
+                        foreach (var key in installPackage.Files.Keys)
+                        {
+                            var packageFileResult = VerifyFile(installPackage.Files[key].TargetPath, svr.Filename);
+                            //packageFileResult.AddDetail(SignCheckResources.DetailFullName, originalFiles[key]);
+                            CheckAndUpdateExclusion(packageFileResult, packageFileResult.Filename, originalFiles[key], svr.Filename);
+                            svr.NestedResults.Add(packageFileResult);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log.WriteError(e.Message);
                     }
                 }
 

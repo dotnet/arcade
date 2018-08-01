@@ -97,6 +97,15 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No StrongName signature (NGEN/CrossGen image)..
+        /// </summary>
+        internal static string DetailNativeImage {
+            get {
+                return ResourceManager.GetString("DetailNativeImage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Public key = {0}.
         /// </summary>
         internal static string DetailPublicKeyToken {
