@@ -13,8 +13,8 @@ namespace Microsoft.DotNet.SignTool
     {
         private readonly SignToolArgs _args;
 
-        internal string OutputPath => _args.OutputPath;
-        internal string TempPath => _args.TempPath;
+        internal string OutputDir => _args.OutputDir;
+        internal string TempDir => _args.TempDir;
         internal string MicroBuildCorePath => _args.MicroBuildCorePath;
 
         internal SignTool(SignToolArgs args)
@@ -26,30 +26,31 @@ namespace Microsoft.DotNet.SignTool
 
         public abstract bool VerifySignedAssembly(Stream assemblyStream);
 
-        public abstract bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath);
+        public abstract bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round);
 
         public bool Sign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> filesToSign)
         {
-            var buildFilePath = Path.Combine(TempPath, $"_sign{round}.proj");
+            var signingDir = Path.Combine(TempDir, "Signing");
+            var buildFilePath = Path.Combine(signingDir, $"Round{round}.proj");
             var content = GenerateBuildFileContent(filesToSign);
 
-            Directory.CreateDirectory(TempPath);
+            Directory.CreateDirectory(signingDir);
             File.WriteAllText(buildFilePath, content);
 
-            return RunMSBuild(buildEngine, buildFilePath);
+            return RunMSBuild(buildEngine, buildFilePath, round);
         }
 
         private string GenerateBuildFileContent(IEnumerable<FileSignInfo> filesToSign)
         {
             var builder = new StringBuilder();
             AppendLine(builder, depth: 0, text: @"<?xml version=""1.0"" encoding=""utf-8""?>");
-            AppendLine(builder, depth: 0, text: @"<Project DefaultTargets=""AfterBuild"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">");
+            AppendLine(builder, depth: 0, text: @"<Project DefaultTargets=""AfterBuild"">");
 
             // Setup the code to get the NuGet package root.
             var signKind = _args.TestSign ? "test" : "real";
             AppendLine(builder, depth: 1, text: @"<PropertyGroup>");
-            AppendLine(builder, depth: 2, text: $@"<OutDir>{OutputPath}</OutDir>");
-            AppendLine(builder, depth: 2, text: $@"<IntermediateOutputPath>{TempPath}</IntermediateOutputPath>");
+            AppendLine(builder, depth: 2, text: $@"<OutDir>{OutputDir}</OutDir>");
+            AppendLine(builder, depth: 2, text: $@"<IntermediateOutputPath>{TempDir}</IntermediateOutputPath>");
             AppendLine(builder, depth: 2, text: $@"<SignType>{signKind}</SignType>");
             AppendLine(builder, depth: 1, text: @"</PropertyGroup>");
 

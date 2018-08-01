@@ -1,12 +1,6 @@
 // Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.DotNet.SignTool
@@ -29,7 +23,7 @@ namespace Microsoft.DotNet.SignTool
         public override bool VerifySignedAssembly(Stream assemblyStream) 
             => true;
 
-        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath)
+        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round)
             => true;
     }
 }

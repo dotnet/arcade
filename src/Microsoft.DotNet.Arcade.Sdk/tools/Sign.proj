@@ -19,14 +19,31 @@
 
       <TestSign>false</TestSign>
       <TestSign Condition="'$(DotNetSignType)' == 'test'">true</TestSign>
+
+      <DesktopMSBuildRequired>false</DesktopMSBuildRequired>
+      <DesktopMSBuildRequired Condition="'$(DryRun)' != 'true' and '$(MSBuildRuntimeType)' == 'Core'">true</DesktopMSBuildRequired>
+    </PropertyGroup>
+
+    <!-- We only need this if we are going to use the executable version. -->
+    <Exec Command='"$(NuGetPackageRoot)vswhere\tools\vswhere.exe" -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild'
+          ConsoleToMsBuild="true"
+          StandardErrorImportance="high"
+          Condition="$(DesktopMSBuildRequired)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="VSInstallDir" />
+    </Exec>
+
+    <PropertyGroup>
+      <DesktopMSBuildPath Condition="$(DesktopMSBuildRequired)">$(VSInstallDir)\MSBuild\15.0\Bin\msbuild.exe</DesktopMSBuildPath>
     </PropertyGroup>
 
     <Microsoft.DotNet.SignTool.SignToolTask
        DryRun="$(DryRun)"
        TestSign="$(TestSign)"
        ConfigFilePath="$(ConfigFilePath)"
-       OutputPath="$(ArtifactsConfigurationDir)"
-       TempPath="$(ArtifactsTmpDir)"
+       MSBuildPath="$(DesktopMSBuildPath)"
+       OutputDir="$(ArtifactsConfigurationDir)"
+       TempDir="$(ArtifactsTmpDir)"
+       LogDir="$(ArtifactsLogDir)"
        MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"/>
   </Target>
 
