@@ -142,7 +142,9 @@ namespace Microsoft.DotNet.SignTool
                 _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
                 foreach (var file in filesToSign)
                 {
-                    _log.LogMessage(MessageImportance.Low, $"File: '{file.FileName}'");
+                    _log.LogMessage(MessageImportance.Low,
+                        $"File '{file.FileName}' Certificate='{file.Certificate}'" + 
+                        (file.StrongName != null ? $" StrongName='{file.StrongName}'" : ""));
                 }
 
                 return _signTool.Sign(_buildEngine, round, filesToSign);

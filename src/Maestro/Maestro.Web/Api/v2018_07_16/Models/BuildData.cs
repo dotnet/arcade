@@ -11,6 +11,8 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         [Required]
         public string Repository { get; set; }
 
+        public string Branch { get; set; }
+
         [Required]
         public string Commit { get; set; }
 
