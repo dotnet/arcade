@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Darc
+namespace Microsoft.DotNet.DarcLib
 {
     public class VstsCommit
     {

@@ -3,7 +3,7 @@ using System;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Microsoft.DotNet.Darc
+namespace Microsoft.DotNet.DarcLib
 {
     public class DependencyFileContent
     {

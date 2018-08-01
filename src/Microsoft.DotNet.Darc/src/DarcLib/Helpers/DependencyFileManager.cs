@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace Microsoft.DotNet.Darc
+namespace Microsoft.DotNet.DarcLib
 {
     public class DependencyFileManager
     {
@@ -56,11 +56,11 @@ namespace Microsoft.DotNet.Darc
             return jsonContent;
         }
 
-        public async Task<IEnumerable<BuildAsset>> ParseVersionDetailsXmlAsync(string repoUri, string branch)
+        public async Task<IEnumerable<DependencyDetail>> ParseVersionDetailsXmlAsync(string repoUri, string branch)
         {
             _logger.LogInformation($"Getting a collection of BuildAsset objects from '{DependencyFilePath.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}'...");
 
-            List<BuildAsset> BuildAssets = new List<BuildAsset>();
+            List<DependencyDetail> BuildAssets = new List<DependencyDetail>();
             XmlDocument document = await ReadVersionDetailsXmlAsync(repoUri, branch);
 
             if (document != null)
@@ -76,12 +76,12 @@ namespace Microsoft.DotNet.Darc
                         {
                             if (childNode.NodeType != XmlNodeType.Comment && childNode.NodeType != XmlNodeType.Whitespace)
                             {
-                                BuildAsset BuildAsset = new BuildAsset
+                                DependencyDetail BuildAsset = new DependencyDetail
                                 {
                                     Branch = branch,
                                     Name = childNode.Attributes["Name"].Value,
                                     RepoUri = childNode.SelectSingleNode("Uri").InnerText,
-                                    Sha = childNode.SelectSingleNode("Sha").InnerText,
+                                    Commit = childNode.SelectSingleNode("Sha").InnerText,
                                     Version = childNode.Attributes["Version"].Value,
                                     Type = dependencyType
                                 };
@@ -108,13 +108,13 @@ namespace Microsoft.DotNet.Darc
             return BuildAssets;
         }
 
-        public async Task<DependencyFileContentContainer> UpdateDependencyFiles(IEnumerable<BuildAsset> itemsToUpdate, string repoUri, string branch)
+        public async Task<DependencyFileContentContainer> UpdateDependencyFiles(IEnumerable<DependencyDetail> itemsToUpdate, string repoUri, string branch)
         {
             XmlDocument versionDetails = await ReadVersionDetailsXmlAsync(repoUri, branch);
             XmlDocument versionProps = await ReadVersionPropsAsync(repoUri, branch);
             JObject globalJson = await ReadGlobalJsonAsync(repoUri, branch);
 
-            foreach (BuildAsset itemToUpdate in itemsToUpdate)
+            foreach (DependencyDetail itemToUpdate in itemsToUpdate)
             {
                 XmlNodeList versionList = versionDetails.SelectNodes($"//Dependency[@Name='{itemToUpdate.Name}']");
 
@@ -141,7 +141,7 @@ namespace Microsoft.DotNet.Darc
                 foreach (XmlNode dependencyToUpdate in nodesToUpdate)
                 {
                     dependencyToUpdate.Attributes["Version"].Value = itemToUpdate.Version;
-                    dependencyToUpdate.SelectSingleNode("Sha").InnerText = itemToUpdate.Sha;
+                    dependencyToUpdate.SelectSingleNode("Sha").InnerText = itemToUpdate.Commit;
 
                     // If the dependency is of Product type we also have to update version.props
                     // If the dependency is of Toolset type and it has no <Expression> defined or not set to VersionProps we also update global.json
@@ -197,7 +197,7 @@ namespace Microsoft.DotNet.Darc
             return document;
         }
 
-        private void UpdateVersionPropsDoc(XmlDocument versionProps, BuildAsset itemToUpdate)
+        private void UpdateVersionPropsDoc(XmlDocument versionProps, DependencyDetail itemToUpdate)
         {
             string namespaceName = "ns";
             XmlNamespaceManager namespaceManager = new XmlNamespaceManager(versionProps.NameTable);

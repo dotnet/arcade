@@ -11,7 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Darc
+namespace Microsoft.DotNet.DarcLib
 {
     public class VstsClient : IGitRepo
     {

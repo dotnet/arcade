@@ -8,7 +8,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Darc
+namespace Microsoft.DotNet.DarcLib
 {
     public class GitHubClient : IGitRepo
     {

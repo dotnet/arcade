@@ -1,20 +1,22 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Darc
+namespace Microsoft.DotNet.DarcLib
 {
     public interface IRemote
     {
-        Task<IEnumerable<BuildAsset>> GetDependantAssetsAsync(string assetName, string version = null, string repoUri = null, string branch = null, string sha = null, DependencyType type = DependencyType.Unknown);
+        Task<string> CreateChannelAsync(string name, string classification);
 
-        Task<IEnumerable<BuildAsset>> GetDependencyAssetsAsync(string assetName, string version = null, string repoUri = null, string branch = null, string sha = null, DependencyType type = DependencyType.Unknown);
+        Task<string> GetSubscriptionsAsync(string sourceRepo = null, string targetRepo = null, int? channelId = null);
 
-        Task<BuildAsset> GetLatestDependencyAsync(string assetName);
+        Task<string> GetSubscriptionAsync(int subscriptionId);
 
-        Task<IEnumerable<BuildAsset>> GetRequiredUpdatesAsync(string repoUri, string branch);
+        Task<string> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy);
 
-        Task<string> CreatePullRequestAsync(IEnumerable<BuildAsset> itemsToUpdate, string repoUri, string branch, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
+        Task<IEnumerable<DependencyDetail>> GetRequiredUpdatesAsync(string repoUri, string branch);
 
-        Task<string> UpdatePullRequestAsync(IEnumerable<BuildAsset> itemsToUpdate, string repoUri, string branch, int pullRequestId, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
+        Task<string> CreatePullRequestAsync(IEnumerable<DependencyDetail> itemsToUpdate, string repoUri, string branch, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
+
+        Task<string> UpdatePullRequestAsync(IEnumerable<DependencyDetail> itemsToUpdate, string repoUri, string branch, int pullRequestId, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
     }
 }

@@ -6,33 +6,18 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Darc
+namespace Microsoft.DotNet.DarcLib
 {
     public static class IGitRepoExtension
     {
         public static async Task<HttpResponseMessage> ExecuteGitCommand(this IGitRepo gitRepo, HttpMethod method, string requestUri, ILogger logger, string body = null, string versionOverride = null)
         {
-            HttpResponseMessage response;
-
             using (HttpClient client = gitRepo.CreateHttpClient(versionOverride))
             {
-                HttpRequestMessage message = new HttpRequestMessage(method, requestUri);
+                HttpRequestManager requestManager = new HttpRequestManager(client, method, requestUri, logger, body, versionOverride);
 
-                if (!string.IsNullOrEmpty(body))
-                {
-                    message.Content = new StringContent(body, Encoding.UTF8, "application/json");
-                }
-
-                response = await client.SendAsync(message);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    logger.LogError($"There was an error executing method '{method}' against URI '{requestUri}'. Request failed with error code: '{response.StatusCode}'");
-                    response.EnsureSuccessStatusCode();
-                }
+                return await requestManager.ExecuteAsync();
             }
-
-            return response;
         }
 
         public static string GetDecodedContent(this IGitRepo gitRepo, string encodedContent)
