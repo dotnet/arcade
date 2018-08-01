@@ -187,22 +187,22 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPullRquest;
         }
 
-        public async Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string sha, string branch, string path = "eng")
+        public async Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string path = "eng")
         {
             Dictionary<string, GitCommit> commits = new Dictionary<string, GitCommit>();
 
-            await GetCommitMapForPathAsync(repoUri, sha, branch, commits, path);
+            await GetCommitMapForPathAsync(repoUri, branch, assetsProducedInCommit, commits, path);
 
             return commits;
         }
 
-        public async Task GetCommitMapForPathAsync(string repoUri, string sha, string branch, Dictionary<string, GitCommit> commits, string path = "eng")
+        public async Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, Dictionary<string, GitCommit> commits, string path = "eng")
         {
-            _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' in sha '{sha}'");
+            _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{assetsProducedInCommit}'");
 
             string repoName = SetApiUriAndGetRepoName(repoUri);
 
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/items?scopePath={path}&version={sha}&includeContent=true&versionType=commit&recursionLevel=full", _logger);
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/items?scopePath={path}&version={assetsProducedInCommit}&includeContent=true&versionType=commit&recursionLevel=full", _logger);
 
             dynamic content = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
             List<VstsItem> items = JsonConvert.DeserializeObject<List<VstsItem>>(Convert.ToString(content.value));
@@ -215,13 +215,13 @@ namespace Microsoft.DotNet.DarcLib
                     {
                         string fileContent = await GetFileContentAsync(repoName, item.Path);
                         byte[] encodedBytes = Encoding.UTF8.GetBytes(fileContent);
-                        GitCommit commit = new GitCommit($"Updating contents of file '{item.Path}'", Convert.ToBase64String(encodedBytes), branch);
-                        commits.Add(item.Path, commit);
+                        GitCommit gitCommit = new GitCommit($"Updating contents of file '{item.Path}'", Convert.ToBase64String(encodedBytes), branch);
+                        commits.Add(item.Path, gitCommit);
                     }
                 }
             }
 
-            _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at sha '{sha}' succeeded!");
+            _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{assetsProducedInCommit}' succeeded!");
         }
 
         public async Task<string> GetFileContentAsync(string repo, string path)

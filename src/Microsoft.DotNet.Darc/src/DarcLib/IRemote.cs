@@ -17,10 +17,8 @@ namespace Microsoft.DotNet.DarcLib
 
         Task<string> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy);
 
-        Task<IEnumerable<DependencyDetail>> GetRequiredUpdatesAsync(string repoUri, string branch);
+        Task<string> CreatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<AssetData> assets, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
 
-        Task<string> CreatePullRequestAsync(IEnumerable<DependencyDetail> itemsToUpdate, string repoUri, string branch, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
-
-        Task<string> UpdatePullRequestAsync(IEnumerable<DependencyDetail> itemsToUpdate, string repoUri, string branch, int pullRequestId, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
+        Task<string> UpdatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<DependencyDetail> itemsToUpdate, int pullRequestId, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
     }
 }

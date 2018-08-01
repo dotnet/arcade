@@ -25,22 +25,6 @@ namespace Microsoft.DotNet.DarcLib
             _logger = logger;
         }
 
-        public async Task<string> GetLastestBuildAsync(string repoUri, string branch, string assetName)
-        {
-            using (HttpClient client = CreateHttpClient())
-            {
-                _logger.LogInformation($"Getting the latest commit that build asset '{assetName}' in repo '{repoUri}' and branch '{branch}'...");
-
-                HttpRequestManager requestManager = new HttpRequestManager(client, HttpMethod.Get, $"/builds?repository={repoUri}&branch={branch}&assetName={assetName}", _logger);
-
-                HttpResponseMessage response = await requestManager.ExecuteAsync();
-
-                _logger.LogInformation($"Getting the latest commit that build asset '{assetName}' in repo '{repoUri}' and branch '{branch}' succeeded!");
-
-                return await response.Content.ReadAsStringAsync();
-            }
-        }
-
         public async Task<string> CreateChannelAsync(string name, string classification)
         {
             _logger.LogInformation($"Creating new channel '{name}' with classification '{classification}'...");

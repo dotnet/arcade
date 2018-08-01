@@ -164,21 +164,21 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPullRquest;
         }
 
-        public async Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string sha, string branch, string path = "eng")
+        public async Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string path = "eng")
         {
             Dictionary<string, GitCommit> commits = new Dictionary<string, GitCommit>();
 
-            await GetCommitMapForPathAsync(repoUri, sha, branch, commits, path);
+            await GetCommitMapForPathAsync(repoUri, branch, assetsProducedInCommit, commits, path);
 
             return commits;
         }
 
-        public async Task GetCommitMapForPathAsync(string repoUri, string sha, string branch, Dictionary<string, GitCommit> commits, string path = "eng")
+        public async Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, Dictionary<string, GitCommit> commits, string path = "eng")
         {
-            _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' in sha '{sha}'");
+            _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{assetsProducedInCommit}'");
 
             string ownerAndRepo = GetOwnerAndRepo(repoUri);
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}contents/{path}?ref={sha}", _logger);
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}contents/{path}?ref={assetsProducedInCommit}", _logger);
 
             List<GitHubContent> contents = JsonConvert.DeserializeObject<List<GitHubContent>>(await response.Content.ReadAsStringAsync());
 
@@ -189,17 +189,17 @@ namespace Microsoft.DotNet.DarcLib
                     if (!DependencyFileManager.DependencyFiles.Contains(content.Path))
                     {
                         string fileContent = await GetFileContentAsync(ownerAndRepo, content.Path);
-                        GitCommit commit = new GitCommit($"Updating contents of file '{content.Path}'", fileContent, branch);
-                        commits.Add(content.Path, commit);
+                        GitCommit gitCommit = new GitCommit($"Updating contents of file '{content.Path}'", fileContent, branch);
+                        commits.Add(content.Path, gitCommit);
                     }
                 }
                 else
                 {
-                    await GetCommitMapForPathAsync(repoUri, sha, branch, commits, content.Path);
+                    await GetCommitMapForPathAsync(repoUri, branch, assetsProducedInCommit, commits, content.Path);
                 }
             }
 
-            _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at sha '{sha}' succeeded!");
+            _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{assetsProducedInCommit}' succeeded!");
         }
 
         public async Task<string> GetFileContentAsync(string ownerAndRepo, string path)
@@ -228,7 +228,7 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task<string> CheckIfFileExistsAsync(string repoUri, string filePath, string branch)
         {
-            string sha;
+            string commit;
             string ownerAndRepo = GetOwnerAndRepo(repoUri);
             HttpResponseMessage response;
 
@@ -247,9 +247,9 @@ namespace Microsoft.DotNet.DarcLib
             }
 
             dynamic content = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
-            sha = content.sha;
+            commit = content.sha;
 
-            return sha;
+            return commit;
         }
 
         public async Task<string> GetLastCommitShaAsync(string ownerAndRepo, string branch)

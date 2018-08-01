@@ -57,88 +57,48 @@ namespace Microsoft.DotNet.DarcLib
             return await _barClient.CreateSubscriptionAsync(channelName, sourceRepo, targetRepo, targetBranch, updateFrequency, mergePolicy);
         }
 
-        public async Task<IEnumerable<DependencyDetail>> GetRequiredUpdatesAsync(string repoUri, string branch)
-        {
-            _logger.LogInformation($"Getting dependencies which need to be updated in repo '{repoUri}' and branch '{branch}'...");
-
-            List<DependencyDetail> toUpdate = new List<DependencyDetail>();
-            IEnumerable<DependencyDetail> dependencyDetails = await _fileManager.ParseVersionDetailsXmlAsync(repoUri, branch);
-
-            foreach (DependencyDetail dependency in dependencyDetails)
-            {
-                string latestBuildContent = await _barClient.GetLastestBuildAsync(repoUri, branch, dependency.Name);
-
-                if (!string.IsNullOrEmpty(latestBuildContent))
-                {
-                    BuildData buildData = JsonConvert.DeserializeObject<BuildData>(latestBuildContent);
-
-                    if (buildData.Assets.Count == 0)
-                    {
-                        throw new Exception("A build eas returned but contained no assets.");
-                    }
-
-                    AssetData asset = buildData.Assets.Where(a => a.Name == dependency.Name).FirstOrDefault();
-
-                    if (asset == null)
-                    {
-                        throw new Exception($"No asset found matching name '{dependency.Name}' was found in the returned build object.");
-                    }
-
-                    if (string.Compare(asset.Version, dependency.Version) == 1)
-                    {
-                        dependency.Version = asset.Version;
-                        dependency.Commit = buildData.Commit;
-                        toUpdate.Add(dependency);
-                    }
-                }
-                else
-                {
-                    _logger.LogWarning($"No asset with name '{dependency.Name}' found in store but it is defined in repo '{repoUri}' and branch '{branch}'.");
-                }
-            }
-
-            _logger.LogInformation($"Getting dependencies which need to be updated in repo '{repoUri}' and branch '{branch}' succeeded!");
-
-            return toUpdate;
-        }
-
-        public async Task<string> CreatePullRequestAsync(IEnumerable<DependencyDetail> itemsToUpdate, string repoUri, string branch, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
+        public async Task<string> CreatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<AssetData> assets, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
         {
             _logger.LogInformation($"Create pull request to update dependencies in repo '{repoUri}' and branch '{branch}'...");
 
+            IEnumerable<DependencyDetail> itemsToUpdate = await GetRequiredUpdatesAsync(repoUri, branch, assetsProducedInCommit, assets);
+
             string linkToPr = null;
 
-            await _gitClient.CreateDarcBranchAsync(repoUri, branch);
-
-            pullRequestBaseBranch = pullRequestBaseBranch ?? $"darc-{branch}";
-
-            // Check for exsting PRs in the darc created branch. If there is one under the same user we fail fast before commiting files that won't be included in a PR. 
-            string existingPr = await _gitClient.CheckForOpenPullRequestsAsync(repoUri, pullRequestBaseBranch);
-
-            if (string.IsNullOrEmpty(existingPr))
+            if (itemsToUpdate.Any())
             {
-                await CommitFilesForPullRequest(itemsToUpdate, repoUri, branch, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
+                await _gitClient.CreateDarcBranchAsync(repoUri, branch);
 
-                linkToPr = await _gitClient.CreatePullRequestAsync(repoUri, branch, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
+                pullRequestBaseBranch = pullRequestBaseBranch ?? $"darc-{branch}";
 
-                _logger.LogInformation($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
+                // Check for existing PRs in the darc created branch. If there is one under the same user we fail fast before commiting files that won't be included in a PR. 
+                string existingPr = await _gitClient.CheckForOpenPullRequestsAsync(repoUri, pullRequestBaseBranch);
 
-                return linkToPr;
+                if (string.IsNullOrEmpty(existingPr))
+                {
+                    await CommitFilesForPullRequest(repoUri, branch, assetsProducedInCommit, itemsToUpdate,  pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
+
+                    linkToPr = await _gitClient.CreatePullRequestAsync(repoUri, branch, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
+
+                    _logger.LogInformation($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
+
+                    return linkToPr;
+                }
+
+                _logger.LogError($"PR with link '{existingPr}' is already opened in repo '{repoUri}' and branch '{pullRequestBaseBranch}' please update it instead of trying to create a new one");
             }
-
-            _logger.LogError($"PR with link '{existingPr}' is already opened in repo '{repoUri}' and branch '{pullRequestBaseBranch}' please update it instead of trying to create a new one");
 
             return linkToPr;
         }
 
-        public async Task<string> UpdatePullRequestAsync(IEnumerable<DependencyDetail> itemsToUpdate, string repoUri, string branch, int pullRequestId, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
+        public async Task<string> UpdatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<DependencyDetail> itemsToUpdate, int pullRequestId, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
         {
             _logger.LogInformation($"Updating pull request '{pullRequestId}' in repo '{repoUri}' and branch '{branch}'...");
             string linkToPr = null;
 
             pullRequestBaseBranch = pullRequestBaseBranch ?? $"darc-{branch}";
 
-            await CommitFilesForPullRequest(itemsToUpdate, repoUri, branch, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
+            await CommitFilesForPullRequest(repoUri, branch, assetsProducedInCommit, itemsToUpdate, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
 
             linkToPr = await _gitClient.UpdatePullRequestAsync(repoUri, branch, pullRequestBaseBranch, pullRequestId, pullRequestTitle, pullRequestDescription);
 
@@ -160,22 +120,48 @@ namespace Microsoft.DotNet.DarcLib
             }
         }
 
-        private async Task<Dictionary<string, GitCommit>> GetScriptCommitsAsync(string repoUri, string branch, string assetName = "Microsoft.DotNet.Arcade.Sdk")
+        private async Task<IEnumerable<DependencyDetail>> GetRequiredUpdatesAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<AssetData> assets)
+        {
+            _logger.LogInformation($"Check if repo '{repoUri}' and branch '{branch}' needs updates...");
+
+            List<DependencyDetail> toUpdate = new List<DependencyDetail>();
+            IEnumerable<DependencyDetail> dependencyDetails = await _fileManager.ParseVersionDetailsXmlAsync(repoUri, branch);
+
+            foreach (DependencyDetail dependency in dependencyDetails)
+            {
+                AssetData asset = assets.Where(a => a.Name == dependency.Name).FirstOrDefault();
+
+                if (asset == null)
+                {
+                    _logger.LogInformation($"Dependency '{dependency.Name}' not found in the updated assets...");
+                    continue;
+                }
+
+                if (string.Compare(asset.Version, dependency.Version) == 1)
+                {
+                    dependency.Version = asset.Version;
+                    dependency.Commit = assetsProducedInCommit;
+                    toUpdate.Add(dependency);
+                }
+            }
+
+            _logger.LogInformation($"Getting dependencies which need to be updated in repo '{repoUri}' and branch '{branch}' succeeded!");
+
+            return toUpdate;
+        }
+
+        private async Task<Dictionary<string, GitCommit>> GetScriptCommitsAsync(string repoUri, string branch, string assetsProducedInCommit)
         {
             _logger.LogInformation($"Generating commits for script files");
 
-            string latestBuildContent = await _barClient.GetLastestBuildAsync(repoUri, branch, assetName);
-
-            dynamic latestBuild = JsonConvert.DeserializeObject<dynamic>(latestBuildContent);
-
-            Dictionary<string, GitCommit> commits = await _gitClient.GetCommitsForPathAsync(repoUri, latestBuild.commit, branch);
+            Dictionary<string, GitCommit> commits = await _gitClient.GetCommitsForPathAsync(repoUri, branch, assetsProducedInCommit);
 
             _logger.LogInformation($"Generating commits for script files succeeded!");
 
             return commits;
         }
 
-        private async Task CommitFilesForPullRequest(IEnumerable<DependencyDetail> itemsToUpdate, string repoUri, string branch, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
+        private async Task CommitFilesForPullRequest(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<DependencyDetail> itemsToUpdate, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
         {
             DependencyFileContentContainer fileContainer = await _fileManager.UpdateDependencyFiles(itemsToUpdate, repoUri, branch);
             Dictionary<string, GitCommit> dependencyFilesToCommit = fileContainer.GetFilesToCommitMap(pullRequestBaseBranch);
@@ -187,7 +173,7 @@ namespace Microsoft.DotNet.DarcLib
 
             if (arcadeItem != null)
             {
-                await _gitClient.PushFilesAsync(await GetScriptCommitsAsync(repoUri, branch, assetName: arcadeItem.Name), repoUri, pullRequestBaseBranch);
+                await _gitClient.PushFilesAsync(await GetScriptCommitsAsync(repoUri, branch, assetsProducedInCommit), repoUri, pullRequestBaseBranch);
             }
         }
     }

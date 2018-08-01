@@ -33,8 +33,6 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             string repository,
             string commit,
             string buildNumber,
-            string branch,
-            string assetName,
             int? channelId,
             DateTimeOffset? notBefore,
             DateTimeOffset? notAfter,
@@ -44,8 +42,6 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 repository,
                 commit,
                 buildNumber,
-                branch,
-                assetName,
                 channelId,
                 notBefore,
                 notAfter,
@@ -58,8 +54,6 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             string repository,
             string commit,
             string buildNumber,
-            string branch,
-            string assetName,
             int? channelId,
             DateTimeOffset? notBefore,
             DateTimeOffset? notAfter,
@@ -79,16 +73,6 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             if (!string.IsNullOrEmpty(buildNumber))
             {
                 query = query.Where(b => b.BuildNumber == buildNumber);
-            }
-
-            if (!string.IsNullOrEmpty(branch))
-            {
-                query = query.Where(b => b.Branch == branch);
-            }
-
-            if (!string.IsNullOrEmpty(assetName))
-            {
-                query = query.Where(b => b.Assets.Any(a => a.Name == assetName));
             }
 
             if (!string.IsNullOrEmpty(buildNumber))
@@ -149,8 +133,6 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             string repository,
             string commit,
             string buildNumber,
-            string branch,
-            string assetName,
             int? channelId,
             DateTimeOffset? notBefore,
             DateTimeOffset? notAfter,
@@ -159,9 +141,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             IQueryable<Data.Models.Build> query = Query(
                 repository,
                 commit,
-                buildNumber,    
-                branch,
-                assetName,
+                buildNumber,
                 channelId,
                 notBefore,
                 notAfter,
