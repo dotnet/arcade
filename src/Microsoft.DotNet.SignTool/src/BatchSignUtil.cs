@@ -11,6 +11,8 @@ using System.Linq;
 using Newtonsoft.Json;
 using Microsoft.DotNet.SignTool.Json;
 using static Microsoft.DotNet.SignTool.PathUtil;
+using Microsoft.Build.Utilities;
+using Microsoft.Build.Framework;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -18,54 +20,65 @@ namespace Microsoft.DotNet.SignTool
     {
         internal static readonly StringComparer FilePathComparer = StringComparer.OrdinalIgnoreCase;
 
+        private readonly TaskLoggingHelper _log;
+        private readonly IBuildEngine _buildEngine;
         private readonly BatchSignInput _batchData;
-        private readonly ISignTool _signTool;
+        private readonly SignTool _signTool;
         private readonly ContentUtil _contentUtil = new ContentUtil();
         private readonly string _orchestrationManifestPath;
         private readonly string _unpackingDirectory;
 
-        internal BatchSignUtil(ISignTool signTool, BatchSignInput batchData, string orchestrationManifestPath)
+        internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool, BatchSignInput batchData, string orchestrationManifestPath)
         {
             _signTool = signTool;
             _batchData = batchData;
             _orchestrationManifestPath = orchestrationManifestPath;
+            _log = log;
+            _buildEngine = buildEngine;
+
             // TODO: Better path; for now making sure the relative paths are all in the same "OutputDirectory" value should help things work.
             _unpackingDirectory = Path.Combine(batchData.OutputPath, "ZipArchiveUnpackingDirectory");
         }
 
-        internal bool Go(TextWriter textWriter)
+        internal void Go()
         {
             // Build up all of our data structures. This will run a number of integrity checks to make sure the
             // data provided is correct / consistent.
-            var allGood = VerifyCertificates(textWriter);
-            var contentMap = BuildContentMap(textWriter, ref allGood);
-            var zipDataMap = BuildAllZipData(contentMap, textWriter, ref allGood);
+            VerifyCertificates(_log);
+            var contentMap = BuildContentMap(_log);
+            var zipDataMap = BuildAllZipData(contentMap, _log);
 
-            if (!allGood)
+            if (_log.HasLoggedErrors)
             {
-                return false;
+                return;
             }
+
             // At this point we trust the content we're about to sign.  We can now take the information from _batchData
             // and put any content and zipDataMap hash values into the new manifest.
             if (!string.IsNullOrEmpty(_orchestrationManifestPath))
             {
-                textWriter.WriteLine($"Writing updated SignTool Data Json information to '{_orchestrationManifestPath}'");
-                return GenerateOrchestrationManifest(textWriter, _batchData, contentMap, _orchestrationManifestPath);
+                GenerateOrchestrationManifest(_batchData, contentMap, _orchestrationManifestPath);
+                return;
             }
 
             // Next remove public signing from all of the assemblies; it can interfere with the signing process.
-            RemovePublicSign(textWriter);
+            RemovePublicSign();
 
             // Next sign all of the files
-            SignFiles(contentMap, zipDataMap, textWriter);
+            if (!SignFiles(contentMap, zipDataMap))
+            {
+                return;
+            }
 
             // Validate the signing worked and produced actual signed binaries in all locations.
-            return VerifyAfterSign(zipDataMap, textWriter);
+            VerifyAfterSign(zipDataMap, _log);
+
+            _log.LogMessage(MessageImportance.High, "Build artifacts signed and validated.");
         }
 
-        private bool GenerateOrchestrationManifest(TextWriter textWriter, BatchSignInput batchData, ContentMap contentMap, string outputPath)
+        private void GenerateOrchestrationManifest(BatchSignInput batchData, ContentMap contentMap, string outputPath)
         {
-            textWriter.WriteLine($"Generating orchestration file manifest into {outputPath}");
+            _log.LogMessage(MessageImportance.High, $"Generating orchestration file manifest into {outputPath}");
             OrchestratedFileJson fileJsonWithInfo = new OrchestratedFileJson
             {
                 ExcludeList = _batchData.ExternalFileNames.ToArray() ?? Array.Empty<string>()
@@ -96,19 +109,16 @@ namespace Microsoft.DotNet.SignTool
             {
                 file.Write(JsonConvert.SerializeObject(fileJsonWithInfo, Formatting.Indented));
             }
-
-            return true;
         }
 
-        private void RemovePublicSign(TextWriter textWriter)
+        private void RemovePublicSign()
         {
-            textWriter.WriteLine("Removing public signing");
             foreach (var name in _batchData.AssemblyNames)
             {
                 var fileSignInfo = _batchData.FileSignInfoMap[name];
                 if (fileSignInfo.StrongName != null)
                 {
-                    textWriter.WriteLine($"\t{name}");
+                    _log.LogMessage($"Removing public sign: '{name}'");
                     _signTool.RemovePublicSign(name.FullPath);
                 }
             }
@@ -117,7 +127,7 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// Actually sign all of the described files.
         /// </summary>
-        private void SignFiles(ContentMap contentMap, Dictionary<FileName, ZipData> zipDataMap, TextWriter textWriter)
+        private bool SignFiles(ContentMap contentMap, Dictionary<FileName, ZipData> zipDataMap)
         {
             // Generate the list of signed files in a deterministic order. Makes it easier to track down
             // bugs if repeated runs use the same ordering.
@@ -125,30 +135,28 @@ namespace Microsoft.DotNet.SignTool
             var round = 0;
             var signedSet = new HashSet<FileName>();
 
-            void signFiles(IEnumerable<FileName> files)
+            bool signFiles(IEnumerable<FileName> files)
             {
-                textWriter.WriteLine($"Signing Round {round}");
-                foreach (var name in files)
+                var filesToSign = files.Select(fileName => _batchData.FileSignInfoMap[fileName]).Where(info => !info.IsEmpty).ToArray();
+
+                _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
+                foreach (var file in filesToSign)
                 {
-                    textWriter.WriteLine($"\t{name}");
+                    _log.LogMessage(MessageImportance.Low,
+                        $"File '{file.FileName}' Certificate='{file.Certificate}'" + 
+                        (file.StrongName != null ? $" StrongName='{file.StrongName}'" : ""));
                 }
-                _signTool.Sign(files.Select(x => _batchData.FileSignInfoMap[x]).Where(x => !x.IsEmpty), textWriter);
+
+                return _signTool.Sign(_buildEngine, round, filesToSign);
             }
 
             void repackFiles(IEnumerable<FileName> files)
             {
-                var any = false;
                 foreach (var file in files)
                 {
                     if (file.IsZipContainer)
                     {
-                        if (!any)
-                        {
-                            textWriter.WriteLine("Repacking");
-                            any = true;
-                        }
-
-                        textWriter.WriteLine($"\t{file}");
+                        _log.LogMessage(MessageImportance.Low, $"Repacking container: '{file}'");
                         Repack(zipDataMap[file]);
                     }
                 }
@@ -195,14 +203,20 @@ namespace Microsoft.DotNet.SignTool
                 var list = extractNextGroup();
                 if (list.Count == 0)
                 {
-                    throw new Exception("No progress made on signing which indicates a bug");
+                    throw new InvalidOperationException("No progress made on signing which indicates a bug");
                 }
 
                 repackFiles(list);
-                signFiles(list);
+                if (!signFiles(list))
+                {
+                    return false;
+                }
+
                 round++;
                 list.ForEach(x => signedSet.Add(x));
             }
+
+            return true;
         }
 
         /// <summary>
@@ -253,7 +267,7 @@ namespace Microsoft.DotNet.SignTool
         /// Build up a table of checksum to <see cref="FileName"/> instance map. This will report errors if it
         /// is unable to read any of the files off of disk.
         /// </summary>
-        private ContentMap BuildContentMap(TextWriter textWriter, ref bool allGood)
+        private ContentMap BuildContentMap(TaskLoggingHelper log)
         {
             var contentMap = new ContentMap();
 
@@ -282,13 +296,12 @@ namespace Microsoft.DotNet.SignTool
                 {
                     if (!File.Exists(fileName.FullPath))
                     {
-                        textWriter.WriteLine($"signtool : error : Did not find {fileName} at {fileName.FullPath}");
+                        log.LogError($"Did not find {fileName} at {fileName.FullPath}");
                     }
                     else
                     {
-                        textWriter.WriteLine($"signtool : error : Unable to read content of {fileName.FullPath}: {ex.Message}");
+                        log.LogError($"Unable to read content of {fileName.FullPath}: {ex.Message}");
                     }
-                    allGood = false;
                 }
             }
 
@@ -299,9 +312,8 @@ namespace Microsoft.DotNet.SignTool
         /// Sanity check the certificates that are attached to the various items. Ensure we aren't using, say, a VSIX
         /// certificate on a DLL for example.
         /// </summary>
-        private bool VerifyCertificates(TextWriter textWriter)
+        private void VerifyCertificates(TaskLoggingHelper log)
         {
-            var allGood = true;
             foreach (var pair in _batchData.FileSignInfoMap.OrderBy(x => x.Key.RelativePath))
             {
                 var fileName = pair.Key;
@@ -312,43 +324,37 @@ namespace Microsoft.DotNet.SignTool
                 {
                     if (isVsixCert)
                     {
-                        textWriter.WriteLine($"signtool : error : Assembly {fileName} cannot be signed with a VSIX certificate");
-                        allGood = false;
+                        log.LogError($"Assembly {fileName} cannot be signed with a VSIX certificate");
                     }
                 }
                 else if (fileName.IsVsix)
                 {
                     if (!isVsixCert)
                     {
-                        textWriter.WriteLine($"signtool : error : VSIX {fileName} must be signed with a VSIX certificate");
-                        allGood = false;
+                        log.LogError($"VSIX {fileName} must be signed with a VSIX certificate");
                     }
 
                     if (fileSignInfo.StrongName != null)
                     {
-                        textWriter.WriteLine($"signtool : error : VSIX {fileName} cannot be strong name signed");
-                        allGood = false;
+                        log.LogError($"VSIX {fileName} cannot be strong name signed");
                     }
                 }
                 else if (fileName.IsNupkg)
                 {
                     if (fileSignInfo.StrongName != null || fileSignInfo.Certificate != null)
                     {
-                        textWriter.WriteLine($"signtool : error : Nupkg {fileName} cannot be strong name or certificate signed");
-                        allGood = false;
+                        log.LogError($"Nupkg {fileName} cannot be strong name or certificate signed");
                     }
                 }
             }
-
-            return allGood;
         }
 
-        private Dictionary<FileName, ZipData> BuildAllZipData(ContentMap contentMap, TextWriter textWriter, ref bool allGood)
+        private Dictionary<FileName, ZipData> BuildAllZipData(ContentMap contentMap, TaskLoggingHelper log)
         {
             var zipDataMap = new Dictionary<FileName, ZipData>();
             foreach (var zipName in _batchData.FileNames.Where(x => x.IsZipContainer))
             {
-                var data = BuildZipData(zipName, contentMap, textWriter, ref allGood);
+                var data = BuildZipData(zipName, contentMap, log);
                 zipDataMap[zipName] = data;
             }
 
@@ -359,7 +365,7 @@ namespace Microsoft.DotNet.SignTool
         /// Build up the <see cref="ZipData"/> instance for a given zip container. This will also report any consistency
         /// errors found when examining the zip archive.
         /// </summary>
-        private ZipData BuildZipData(FileName zipFileName, ContentMap contentMap, TextWriter textWriter, ref bool allGood)
+        private ZipData BuildZipData(FileName zipFileName, ContentMap contentMap, TaskLoggingHelper log)
         {
             Debug.Assert(zipFileName.IsZipContainer);
 
@@ -384,8 +390,7 @@ namespace Microsoft.DotNet.SignTool
 
                     if (!_batchData.FileNames.Any(x => FilePathComparer.Equals(x.Name, name)))
                     {
-                        allGood = false;
-                        textWriter.WriteLine($"signtool : error : Zip Container '{zipFileName}' has part '{relativeName}' which is not listed in the sign or external list");
+                        log.LogError($"Zip Container '{zipFileName}' has part '{relativeName}' which is not listed in the sign or external list");
                         continue;
                     }
 
@@ -396,15 +401,13 @@ namespace Microsoft.DotNet.SignTool
                         string checksum = _contentUtil.GetChecksum(stream);
                         if (!contentMap.TryGetFileName(checksum, out var checksumName))
                         {
-                            allGood = false;
-                            textWriter.WriteLine($"signtool : error : {zipFileName} has part {relativeName} which does not match the content in the binaries directory");
+                            log.LogError($"{zipFileName} has part {relativeName} which does not match the content in the binaries directory");
                             continue;
                         }
 
                         if (!FilePathComparer.Equals(checksumName.Name, name))
                         {
-                            allGood = false;
-                            textWriter.WriteLine($"signtool : error : {zipFileName} has part {relativeName} with a different name in the binaries directory: {checksumName}");
+                            log.LogError($"{zipFileName} has part {relativeName} with a different name in the binaries directory: {checksumName}");
                             continue;
                         }
 
@@ -427,9 +430,8 @@ namespace Microsoft.DotNet.SignTool
             return path;
         }
 
-        private bool VerifyAfterSign(Dictionary<FileName, ZipData> zipDataMap, TextWriter textWriter)
+        private void VerifyAfterSign(Dictionary<FileName, ZipData> zipDataMap, TaskLoggingHelper log)
         {
-            var allGood = true;
             foreach (var fileName in _batchData.FileNames)
             {
                 if (fileName.IsAssembly)
@@ -438,8 +440,7 @@ namespace Microsoft.DotNet.SignTool
                     {
                         if (!_signTool.VerifySignedAssembly(stream))
                         {
-                            textWriter.WriteLine($"signtool : error : Assembly {fileName} is not signed properly");
-                            allGood = false;
+                            log.LogError($"Assembly {fileName} is not signed properly");
                         }
                     }
                 }
@@ -461,16 +462,13 @@ namespace Microsoft.DotNet.SignTool
                             {
                                 if (!_signTool.VerifySignedAssembly(stream))
                                 {
-                                    textWriter.WriteLine($"signtool : error : Zip container {fileName} has part {relativeName} which is not signed.");
-                                    allGood = false;
+                                    log.LogError($"Zip container {fileName} has part {relativeName} which is not signed.");
                                 }
                             }
                         }
                     }
                 }
             }
-
-            return allGood;
         }
 
         private static bool IsVsixCertificate(string certificate) => certificate.StartsWith("Vsix", StringComparison.OrdinalIgnoreCase);

@@ -20,7 +20,7 @@ Jenkins
 
 Packages are published daily to our tools feed:
 
-> `https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json`
+> `https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json`
 
 ### Source Code
 

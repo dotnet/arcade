@@ -1,0 +1,133 @@
+@using System.Threading.Tasks
+@using Microsoft.AspNetCore.Identity
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <title>@ViewBag.Title - @ViewBag.Brand</title>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css"
+          integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B"
+          crossorigin="anonymous">
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap-reboot.min.css"
+          integrity="sha384-kUkJgW3Igb8fNZhTX7AcdVnxyiNvT4IjBH9dCiTa3x+JsQxI//QFpBZHcrWrTybx"
+          crossorigin="anonymous">
+    <script type="text/javascript"
+            src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+            integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+            crossorigin="anonymous"></script>
+    <script type="text/javascript"
+            src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/js/bootstrap.min.js"
+            integrity="sha384-o+RDsa0aLu++PJvFqy8fFScvbHFLtbvScb8AjopnFD+iEQ7wo/CG0xlczd+2O/em"
+            crossorigin="anonymous"></script>
+    <script type="text/javascript"
+            src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.17.0/jquery.validate.min.js"
+            integrity="sha384-rZfj/ogBloos6wzLGpPkkOr/gpkBNLZ6b6yLy4o+ok+t/SAKlL5mvXLr0OXNi1Hp"
+            crossorigin="anonymous"></script>
+    <script type="text/javascript"
+            src="https://ajax.aspnetcdn.com/ajax/mvc/5.2.3/jquery.validate.unobtrusive.min.js"
+            integrity="sha384-mq7cJ2/0DBBpfwa9Ta1iT5TPlKf/YcfHkgfM9fpaAt1j8Lo2s1TM6UgIKB9+nfAS"
+            crossorigin="anonymous"></script>
+    <style type="text/css">
+        a.disabled {
+            color: gray;
+            pointer-events: none;
+        }
+
+        div.loading {
+            -ms-border-radius: 100%;
+            animation: rotation .6s infinite linear;
+            border-bottom: 6px solid rgba(0, 174, 239, .15);
+            border-left: 6px solid rgba(0, 174, 239, .15);
+            border-radius: 100%;
+            border-right: 6px solid rgba(0, 174, 239, .15);
+            border-top: 6px solid rgba(0, 174, 239, .8);
+        }
+
+        @@keyframes rotation {
+            from { transform: rotate(0); }
+
+            to { transform: rotate(359deg); }
+        }
+
+        .listgroup {
+            border: 1px solid #E5E5E5;
+            border-radius: 3px;
+            list-style: none;
+        }
+
+        .listgroup-item {
+            border-bottom: 1px solid #E5E5E5;
+            color: #586069;
+            font-size: 13px;
+            line-height: 26px;
+            min-height: inherit;
+            padding: 10px;
+        }
+
+        .listgroup-item:before {
+            content: "";
+            display: table;
+        }
+
+        .listgroup-item:after {
+            clear: both;
+            content: "";
+            display: table;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-md navbar-light bg-light">
+    <a class="navbar-brand" href="/">@ViewBag.Brand</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#bs-navbar-collapse" aria-controls="bs-navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="bs-navbar-collapse">
+        <ul class="navbar-nav mr-auto" if="@User.Identity.IsAuthenticated">
+            <li class="nav-item" active-if-page="/Index">
+                <a class="nav-link" asp-page="/Index">Home<span class="sr-only" if-page="/Index"> (Current)</span></a>
+            </li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item dropdown" if="@User.Identity.IsAuthenticated">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    @await GetUserNameAsync() <span class="caret"></span>
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" asp-page="Account/Tokens">Tokens</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" asp-controller="Account" asp-action="SignOut">Sign Out</a>
+                </div>
+            </li>
+            <li class="nav-item" if-not="@User.Identity.IsAuthenticated">
+                <a class="nav-link" asp-controller="Account" asp-action="SignIn" asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString">Sign In</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div class="container-fluid">
+    @RenderBody()
+</div>
+</body>
+</html>
+
+@inject UserManager<ApplicationUser> UserManager
+
+@functions
+{
+
+    async Task<string> GetUserNameAsync()
+    {
+        ApplicationUser user = await UserManager.GetUserAsync(Context.User);
+        return user?.FullName;
+    }
+
+}

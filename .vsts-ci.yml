@@ -17,10 +17,11 @@ phases:
           _SignType: test
         Build_Release:
           _BuildConfig: Release
-          _PublishType: none
           ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+            _PublishType: none
             _SignType: test
           ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+            _PublishType: blob
             _SignType: real
 
 
@@ -44,4 +45,7 @@ phases:
         Build_Release:
           _BuildConfig: Release
           _PublishType: none
-          _SignType: test
+          ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+            _SignType: test
+          ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+            _SignType: real

@@ -22,7 +22,6 @@ phases:
     phaseName: ${{ parameters.agentOs }}
     dockerImage: ${{ parameters.dockerImage }}
     enableTelemetry: ${{ parameters.enableTelemetry }}
-    fetchDepth: 5
     helixType: build/product
     ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
       helixSource: official/dotnet/arcade/$(Build.SourceBranch)
@@ -32,7 +31,7 @@ phases:
       queue: ${{ parameters.queue }}
       variables: 
         ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-          _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json
+          _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
           _TeamName: DotNetCore
           _UseEsrpSigning: ${{ parameters.useEsrpSigning }}
         ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
@@ -97,7 +96,7 @@ phases:
           - task: CopyFiles@2
             displayName: Gather Logs
             inputs:
-              SourceFolder: '$(Build.SourcesDirectory)/artifacts'
+              SourceFolder: '$(Build.SourcesDirectory)/artifacts/$(_BuildConfig)/log'
               TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
             continueOnError: true
             condition: succeededOrFailed()

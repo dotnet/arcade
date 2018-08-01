@@ -16,7 +16,7 @@
   </Target>
 
   <PropertyGroup>
-    <!-- Resolve from pkgProjs before nuget packages -->
+    <!-- Resolve from pkgProjs before NuGet packages -->
     <ResolveNugetPackagesDependsOn>$(ResolveNugetPackagesDependsOn);ResolvePkgProjReferences</ResolveNugetPackagesDependsOn>
     <ResolvePkgProjReferencesDependsOn>$(ResolvePkgProjReferencesDependsOn);ResolveProjectReferences</ResolvePkgProjReferencesDependsOn>
   </PropertyGroup>
@@ -34,7 +34,7 @@
     </GetApplicableAssetsFromPackages>
   </Target>
 
-  <!-- Returns the set of files to be included in the nuget package
+  <!-- Returns the set of files to be included in the NuGet package
        with appropriate metadata.-->
   <Target Name="GetFilesToPackage"
           Returns="@(FilesToPackage)">

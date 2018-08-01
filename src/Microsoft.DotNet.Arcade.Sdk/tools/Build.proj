@@ -1,5 +1,5 @@
 <!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
-<Project DefaultTargets="Execute" TreatAsLocalProperty="RepoRoot;Sign;Test;IntegrationTest;PerformanceTest">
+<Project DefaultTargets="Execute" TreatAsLocalProperty="RepoRoot;Test;IntegrationTest;PerformanceTest">
   <!--
 
   Required parameters:
@@ -17,6 +17,7 @@
     DotNetSymbolServerTokenMsdl     Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.
     DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.
     DotNetSymbolExpirationInDays    Symbol expiration time in days (defaults to 10 years).
+    DotNetSignType                  Specifies the signing type: 'real' (default), 'test'.
 
     CIBuild                         "true" when building on CI server
     Restore                         "true" to restore toolset and solution
@@ -29,7 +30,6 @@
     PerformanceTest                 "true" to run performance tests
     Pack                            "true" to build NuGet packages and VS insertion manifests
     Sign                            "true" to sign built binaries
-    SignType                        "real" to send binaries to signing service, "test" to only validate signing configuration.
     Publish                         "true" to publish artifacts (e.g. symbols)
 
     SuppressPackageVersionRewrite   "true" to suppress rewrite of PackageVersions.props file. Temporary switch to allow repos to migrate to the official format of the version properties.
@@ -55,20 +55,14 @@
   <!--
     Orchestrated build environment overrides:
 
-    PB_SignType                    {''|'public'|'real'|'test'}    Disables signing if set to a value other than 'real' 
     PB_SkipTests                   {''|'true'|'false'}            Disables tests if set to 'true'.
     PB_RestoreSource               {''|URL}                       URL of pipe build package feed.
     PB_PackageVersionPropsUrl      {''|URL}                       URL of package version overrides props file.
     PB_PublishType                 {''|store1-store2-...-storeN}  List of stores where to publish assets to.
     PB_PublishBlobFeedUrl          {''|URL}                       Target feed URL.
     PB_PublishBlobFeedKey          {''|string}                    Account key.
-    PB_SigningOrchestrationConfig  {''|string}                    Path to output Json for orchestrated-type signing (produce manifest that can be consumed later.)
   -->
   <PropertyGroup>
-    <RealSign>false</RealSign>
-    <RealSign Condition="'$(SignType)' == 'real' or '$(PB_SignType)' == 'real'">true</RealSign>
-
-    <Sign Condition="('$(PB_SignType)' != '' and '$(PB_SignType)' != 'real') or '$(DotNetBuildFromSource)' == 'true'">false</Sign>
     <Test Condition="'$(PB_SkipTests)' == 'true'">false</Test>
     <IntegrationTest Condition="'$(PB_SkipTests)' == 'true'">false</IntegrationTest>
     <PerformanceTest Condition="'$(PB_SkipTests)' == 'true'">false</PerformanceTest>
@@ -230,7 +224,7 @@
       Sign artifacts.
     -->
     <MSBuild Projects="Sign.proj"
-             Properties="@(_CommonProps);RealSign=$(RealSign);ConfigFile=$(SignToolDataPath);OutputConfigFile=$(PB_SigningOrchestrationConfig)"
+             Properties="@(_CommonProps);ConfigFilePath=$(SignToolDataPath)"
              Targets="Sign"
              Condition="'$(Sign)' == 'true'"/>
 

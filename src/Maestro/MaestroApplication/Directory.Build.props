@@ -1,0 +1,5 @@
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project>
+  <!-- This is an empty Directory.Build.props file to prevent the Directory.Build.props file from the repo from being used
+       if the toolset package is restored to a subdirectory in the repo -->
+</Project>

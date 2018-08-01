@@ -27,7 +27,7 @@
     <RestoreSources>
       $(RestoreSources);
       https://api.nuget.org/v3/index.json;
-      https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json;
+      https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
       https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json
     </RestoreSources>
     <RestoreSources Condition="'$(UsingToolSymbolUploader)' == 'true'">
@@ -50,7 +50,7 @@
     <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="$(MicrosoftDiaSymReaderPdb2PdbVersion)" Condition="'$(UsingToolPdbConverter)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" Condition="'$(PublishingToBlobStorage)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="RoslynTools.NuGetRepack.BuildTasks" Version="$(RoslynToolsNuGetRepackVersion)" Condition="'$(UsingToolNuGetRepack)' == 'true'" IsImplicitlyDefined="true" />
-    <PackageReference Include="RoslynTools.SignTool" Version="$(RoslynToolsSignToolVersion)" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.DotNet.SignTool" Version="$(MicrosoftDotNetSignToolVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="RoslynTools.ModifyVsixManifest" Version="$(RoslynToolsModifyVsixManifestVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" Condition="'$(UsingToolSymbolUploader)' == 'true'" IsImplicitlyDefined="true" />
   </ItemGroup>

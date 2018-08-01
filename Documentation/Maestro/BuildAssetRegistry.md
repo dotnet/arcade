@@ -83,12 +83,23 @@ Identifies a specific build of a repository.
 ```csharp
 class Build {
     string Repository;
+    string Branch;
     string Commit;
     string BuildNumber;
     DateTimeOffset DateProduced;
     List<Channel> Channels;
     List<Asset> Assets;
     List<Build> Dependencies;
+}
+```
+
+### DefaultChannel
+Identifes a default channel that will be associated with new builds from a specific repository/branch.
+```csharp
+class DefaultChannel {
+    string Repository;
+    string Branch;
+    Channel Channel;
 }
 ```
 

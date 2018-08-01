@@ -9,13 +9,13 @@ The primary concept is to break the infrastructure into “pay for play” compo
 
 This approach publishes what amounts to “public surface area” for the shared engineering infrastructure.  These “contracts” then allow for the product teams to reason about how (or if) they participate and manage their engagement with the common infra over time.  In short, the product teams “pull” what is needed, when it’s needed.
 
-### Methods for Consuming the .Net Core Shared Infrastructure Components
+### Methods for Consuming the .NET Core Shared Infrastructure Components
 
-- MSBuild tasks/targets as Nuget packages
+- MSBuild tasks/targets as NuGet packages
 - Known "entry points" (repo API) in each repo to build, test, package, sign, and publish
 - VSTS extensions  (check the box in VSTS)
 - Hosted services with REST end points which are owned by the Engineering Services
-- Toolsets (think compilers, training tools, etc) as binaries in their own setup or Nuget packages
+- Toolsets (think compilers, training tools, etc) as binaries in their own setup or NuGet packages
 - Machine (VM) images and/or Docker containers
 - "Resources" as planned by VSTS.
 
@@ -28,13 +28,12 @@ This approach publishes what amounts to “public surface area” for the shared
 - When making a breaking change, compat switches or branching is required.  (largely due to servicing)
 
 ### Business Value (to remind us why we think we should do this)
--  Build on the success of others.  Namely, being able to _reasonably_ share functionality across teams and repos. 
+-  Build on the success of others.  Namely, being able to _reasonably_ share functionality across teams and repos.
 -  Control and ownership.  Repo owners/devs can manage _what_ tools are needed (and which aren't), as well as _when_ they take it.  This includes not only new functionality, but almost more importantly, updates to existing.
 -  Dev work flow.  Allows devs to "plug and play" when modifying or bringing up new functionality in the build without having to re-invent the wheel.  In addition, the _how_ of build tools is largely understood - even across repos.
- 
 
-### Toolset Nuget Package Requirements
--	If used by the build, the tool should be packaged, deployed, and consumed as a Nuget package.  (compilers, training tools, etc are out of scope.  See above list)
+### Toolset NuGet Package Requirements
+-	If used by the build, the tool should be packaged, deployed, and consumed as a NuGet package.  (compilers, training tools, etc are out of scope.  See above list)
 -	Every package must be versioned.  (Proposal: https://github.com/AArnott/Nerdbank.GitVersioning)
 - There needs to be a clear and easy way to bootstrap (get started and/or add a package).  (Proposal: https://github.com/chcosta/roslyn-tools/blob/bootstrap/docs/Toolset-Bootstrap.md)
 - A dev should be able to clone, then build without worrying about VM config or other prereqs.  (It's understood that this may not be 100% achievable today, but it should be the north star.)
@@ -50,9 +49,9 @@ This approach publishes what amounts to “public surface area” for the shared
 - New toolset packages should generally be extensively used in one repo, then if warranted, promoted to become more generally available.
 
 ### Arcade building repos Requirements
-- Arcade builds, tests, packages, signs, and publishes itself using itself and the shipping sdk/cli
+- Arcade builds, tests, packages, signs, and publishes itself using itself and the shipping SDK/CLI
 - Arcade itself must build from source.  This does not necessarily apply to the packages hosted by Arcade, but building from source should always be kept in mind.
 - All tools bootstrapped in, getting as close as technically possible to 'clone and build' on a clean machine
-- A repo level API is explicitly defined and implemented, not just implied 
+- A repo level API is explicitly defined and implemented, not just implied
 - Method exist to directly maintain and update Arcade in each participating repo
 - Arcade (and its packages) is reasonably serviceable

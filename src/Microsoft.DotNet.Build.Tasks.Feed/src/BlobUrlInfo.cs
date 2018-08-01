@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 throw new ArgumentException(string.Format("Blob URL path {0} should have a container and blob path", path));
             }
 
-            // TODO, for authenticated nuget feeds using traditional query strings, we should change this
+            // TODO, for authenticated NuGet feeds using traditional query strings, we should change this
             // to support recognition of the SAS token
             if (!String.IsNullOrEmpty(uri.Query))
             {

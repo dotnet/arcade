@@ -33,12 +33,6 @@ properties=''
 repo_root="$scriptroot/../.."
 eng_root="$scriptroot/.."
 artifacts_dir="$repo_root/artifacts"
-artifacts_configuration_dir="$artifacts_dir/$configuration"
-toolset_dir="$artifacts_dir/toolset"
-log_dir="$artifacts_configuration_dir/log"
-build_log="$log_dir/Build.binlog"
-toolset_restore_log="$log_dir/ToolsetRestore.binlog"
-temp_dir="$artifacts_configuration_dir/tmp"
 
 global_json_file="$repo_root/global.json"
 build_driver=""
@@ -131,6 +125,13 @@ while (($# > 0)); do
       ;;
   esac
 done
+
+artifacts_configuration_dir="$artifacts_dir/$configuration"
+toolset_dir="$artifacts_dir/toolset"
+log_dir="$artifacts_configuration_dir/log"
+build_log="$log_dir/Build.binlog"
+toolset_restore_log="$log_dir/ToolsetRestore.binlog"
+temp_dir="$artifacts_configuration_dir/tmp"
 
 # ReadJson [filename] [json key]
 # Result: Sets 'readjsonvalue' to the value of the provided json key

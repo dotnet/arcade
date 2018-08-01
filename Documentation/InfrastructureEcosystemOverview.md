@@ -26,7 +26,7 @@ When this scenario was being developed, it was a significant departure from .NET
 
 The original source build effort was done on an accelerated timeline, which made designing an overarching solution difficult. An attempt was made to augment the builds of the various repositories and then combine them into a single repository using submodules.  Effectively, source build was bolted onto the side of the existing process.  This causes a couple major issues:
 - The model of moving forward dependencies between repositories does not match the model used by individual repositories (selective pulling)
-- The toolset used by the source build may not match what the repository build in isolation was using at that sha.
+- The toolset used by the source build may not match what the repository build in isolation was using at that SHA.
 
 ### An Interconnected Ecosystem
 
@@ -42,9 +42,9 @@ The hard part is that an attempt to solve these problems often brings in the nee
 ## The Repository Dependency Graph
 Creating a coherent product or set of products from isolated repos connected requires understanding the repository dependency graph. Simply taking the head of the master branch of each repository, then building and publishing will not always result in a coherent product.  The product is not a collection of repositories viewed at a point in time (as a monolithic repo might be).  Instead, there is a two level versioning scheme that defines the product, expressed as a series of git changes in each repository, some of which alter the inter-repo dependency state.
 
-For example, since corefx has a dependency on coreclr, we can say that in effect a particular sha in corefx contains the state of coreclr at the sha that was built into the version of coreclr that corefx references. If we lay out all inter-dependencies of those repositories that make up the product, we create a set of graphs.  These graphs can then be used to determine what makes up .NET Core or subsection of .NET Core at any repository sha, by walking nodes (connected by version edges) that implicitly reference that sha.  The graph has the following properties:
-- Beginning at a root (e.g. cli) at a sha and walking forward on all edges (X depends on Y) will always produce a full coherent product.
-- Beginning at a non-root node at a sha and walking forward (X depends on Y) on any number of edges will always produce a coherent sub-product.
+For example, since corefx has a dependency on coreclr, we can say that in effect a particular SHA in corefx contains the state of coreclr at the SHA that was built into the version of coreclr that corefx references. If we lay out all inter-dependencies of those repositories that make up the product, we create a set of graphs.  These graphs can then be used to determine what makes up .NET Core or subsection of .NET Core at any repository SHA, by walking nodes (connected by version edges) that implicitly reference that SHA.  The graph has the following properties:
+- Beginning at a root (e.g. CLI) at a SHA and walking forward on all edges (X depends on Y) will always produce a full coherent product.
+- Beginning at a non-root node at a SHA and walking forward (X depends on Y) on any number of edges will always produce a coherent sub-product.
 - It is possible to evaluate the graph backwards, effectively asking what SHAs at X depend on a specific SHA at Y.
 
 ## Product Business Requirements
@@ -52,7 +52,7 @@ For example, since corefx has a dependency on coreclr, we can say that in effect
 The following are presented the high-level requirements for .NET Core. From these follows a set of infrastructure requirements necessary to achieve the product requirements.
 - **Must be able to independently develop and ship product components** – Some components of .NET Core are relatively useless outside of the ‘boxed’ product, but many components ship in multiple vehicles.  Thus, product components need to be independently developed.
 - **Must be able to rapidly make changes to product components** – Part of the reasoning behind the componentized model of the product is the desire to rapidly iterate on individual product components to improve overall product quality.
-- **Must be able to ship product components in multiple vehicles with potentially different shipping processes** – Some product components cannot be exclusively tied to .NET build and shipping processes. E.g. nuget.client is an integral part of the product, but their “#1” customer is Visual Studio. Some components may not even be controlled by Microsoft (e.g. newtonsoft.json) We must be able to easily work with these components.
+- **Must be able to ship product components in multiple vehicles with potentially different shipping processes** – Some product components cannot be exclusively tied to .NET build and shipping processes. E.g. NuGet.client is an integral part of the product, but their “#1” customer is Visual Studio. Some components may not even be controlled by Microsoft (e.g. newtonsoft.json) We must be able to easily work with these components.
 - **Must be able to trace what has been shipped or integrated** – We must be able to determine where source code changes/packages/assets flow.  For example, if a bug in corefx is discovered, we must be able to trace where the packages and assets built from that source went, what repositories took in those changes, and what shipping vehicles pulled in those sources.
 - **Must be able to rapidly makes changes to the product as a whole** – Because the product is a set of interconnected components (with several layers), it can take commits across several repos to propagate dependencies to have a change present in a product build.  This is a hindrance to development velocity, especially at the end of the product cycle. We must be able to quickly propagate changes from individual repos into the final product.
 - **Must be able to service the product** – We must be able to service the product, in both internal and OSS scenarios.
@@ -65,27 +65,27 @@ The following are presented the high-level requirements for .NET Core. From thes
 ## Infrastructure Ecosystem Requirements
 
 Specific infrastructure ecosystem requirements are implied from the set of product requirements.  The list below identifies the requirements as well as the components of the ecosystem involved in satisfying the requirement.
-- **Given an asset that is part of .NET Core, we must be able to determine the sha and repo at which that asset was produced** – After a product has shipped, it is often necessary to identify where an asset came from for the purposes of servicing or failure repro. Where possible, the sha and repo that produced the asset should be embedded within the asset.
+- **Given an asset that is part of .NET Core, we must be able to determine the SHA and repo at which that asset was produced** – After a product has shipped, it is often necessary to identify where an asset came from for the purposes of servicing or failure repro. Where possible, the SHA and repo that produced the asset should be embedded within the asset.
   - Implements Requirements
     - Must be able to trace what has been shipped or integrated
     - Must be able to service the product
   - Affects Components
     - Repository Tooling
     - Repository Contracts
-- **Given a sha and repository that produced an asset, a functionally identical package should be producible by checking out that sha and building** - Reproducible builds are important, for servicing and development.
+- **Given a SHA and repository that produced an asset, a functionally identical package should be producible by checking out that SHA and building** - Reproducible builds are important, for servicing and development.
   - Implements Requirements
     - Must be able to service the product
     - Must be able to able to rapdily make changes to individual components. 
   - Affects Components
     - Repository Contracts
-- **For a repository, package dependencies should be described such that the package version, the repo and sha are all specified in source** - Developers must be able to locate exactly what a repository depends on.
+- **For a repository, package dependencies should be described such that the package version, the repo and SHA are all specified in source** - Developers must be able to locate exactly what a repository depends on.
   - Implements Requirements
     - Must be able to service the product
     - Must be able to determine the provenance of the product and its components
     - Must be able to build the product from source
   - Affects Components
     - Repository Contracts
-- **Given a repository at a sha, we must be able to gather the transitive set of repositories+sha combinations that produce the assets referenced by that repository at the specified sha.** - We must know all sha/repo combinations that are needed to produce a repo's assets, for use in producing a source layout or tracking what commits a sha contains. 
+- **Given a repository at a SHA, we must be able to gather the transitive set of repositories+SHA combinations that produce the assets referenced by that repository at the specified SHA.** - We must know all sha/repo combinations that are needed to produce a repo's assets, for use in producing a source layout or tracking what commits a SHA contains. 
   - Implements Requirements
     - Must be able to trace what has been shipped or integrated
     - Must be able to service the product
@@ -93,7 +93,7 @@ Specific infrastructure ecosystem requirements are implied from the set of produ
   - Affects Components
      - Repository Contracts
      - Repository Tooling
-- **Given a sha or asset, we must be able to determine the set of sha/repository combinations that reference that sha/asset** - We must know where an asset has flowed, to determine the state of the product or what assets may needs servicing.
+- **Given a SHA or asset, we must be able to determine the set of sha/repository combinations that reference that sha/asset** - We must know where an asset has flowed, to determine the state of the product or what assets may needs servicing.
   - Implements Requirements
     - Must be able to trace what has been shipped or integrated
     - Must be able to service the product
