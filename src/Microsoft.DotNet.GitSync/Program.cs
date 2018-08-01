@@ -17,8 +17,8 @@ using Octokit;
 using Commit = LibGit2Sharp.Commit;
 using Credentials = Octokit.Credentials;
 using Repository = LibGit2Sharp.Repository;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Table;
+using Microsoft.Azure.Storage;
+using Microsoft.Azure.CosmosDB.Table;
 
 namespace Microsoft.DotNet.GitSync
 {

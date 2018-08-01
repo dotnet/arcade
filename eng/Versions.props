@@ -46,6 +46,11 @@
   </PropertyGroup>
   
   <PropertyGroup>
+    <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
+    <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
     <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.0.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
     <MicrosoftMLVersion>0.3.0</MicrosoftMLVersion>
