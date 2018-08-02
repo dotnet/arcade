@@ -1,9 +1,10 @@
 phases:
-  queue:
-    name: Hosted VS2017
-  steps:
-  - script: echo Environment build.reason - %Build.Reason%
-  - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-    - script: echo Template - PullRequest
-  - ${{ if eq(variables['Build.Reason'], 'IndividualCI') }}:
-    - script: Echo Template - IndividualCI
+- phase: Windows
+    queue:
+      name: Hosted VS2017
+    steps:
+    - script: echo Environment build.reason - %Build.Reason%
+    - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      - script: echo Template - PullRequest
+    - ${{ if eq(variables['Build.Reason'], 'IndividualCI') }}:
+      - script: Echo Template - IndividualCI
