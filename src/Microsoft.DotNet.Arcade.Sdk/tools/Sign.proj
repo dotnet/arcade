@@ -25,7 +25,7 @@
     </PropertyGroup>
 
     <!-- We only need this if we are going to use the executable version. -->
-    <Exec Command='"$(NuGetPackageRoot)vswhere\tools\vswhere.exe" -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild'
+    <Exec Command='"$(NuGetPackageRoot)vswhere\$(VSWhereVersion)\tools\vswhere.exe" -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild'
           ConsoleToMsBuild="true"
           StandardErrorImportance="high"
           Condition="$(DesktopMSBuildRequired)">
