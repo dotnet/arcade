@@ -15,6 +15,8 @@
         "bin/Microsoft.DotNet.Helix.JobSender/netstandard2.0/Microsoft.DotNet.Helix.JobSender.dll",
         "bin/Microsoft.DotNet.Helix.Sdk/netstandard2.0/Microsoft.DotNet.Helix.Sdk.dll",
         "bin/Microsoft.DotNet.Helix.Sdk/net461/Microsoft.DotNet.Helix.Sdk.dll",
+        "bin/Microsoft.DotNet.Maestro.Client/netstandard1.4/Microsoft.DotNet.Maestro.Client.dll",
+        "bin/Microsoft.DotNet.Maestro.Client/net461/Microsoft.DotNet.Maestro.Client.dll",
         "bin/Microsoft.DotNet.SignTool/net461/Microsoft.DotNet.SignTool.dll",
         "bin/Microsoft.DotNet.SignTool/netcoreapp2.0/publish/Microsoft.DotNet.SignTool.dll",
         "bin/Microsoft.DotNet.SignTool.Tests/netcoreapp2.0/Microsoft.DotNet.SignTool.Tests.dll",
