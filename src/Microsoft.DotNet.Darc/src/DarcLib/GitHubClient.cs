@@ -17,12 +17,12 @@ namespace Microsoft.DotNet.DarcLib
     public class GitHubClient : IGitRepo
     {
         private const string GitHubApiUri = "https://api.github.com";
-        private readonly string personalAccessToken;
+        private readonly string _personalAccessToken;
         private readonly ILogger _logger;
 
         public GitHubClient(string accessToken, ILogger logger)
         {
-            personalAccessToken = accessToken;
+            _personalAccessToken = accessToken;
             _logger = logger;
         }
 
@@ -220,7 +220,7 @@ namespace Microsoft.DotNet.DarcLib
             {
                 BaseAddress = new Uri(GitHubApiUri)
             };
-            client.DefaultRequestHeaders.Add("Authorization", $"Token {personalAccessToken}");
+            client.DefaultRequestHeaders.Add("Authorization", $"Token {_personalAccessToken}");
             client.DefaultRequestHeaders.Add("User-Agent", "DarcLib");
 
             return client;

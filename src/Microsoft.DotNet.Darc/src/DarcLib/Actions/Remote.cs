@@ -11,14 +11,14 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DarcLib
 {
-    public class RemoteActions : IRemote
+    public class Remote : IRemote
     {
         private readonly BuildAssetRegistryClient _barClient;
         private readonly DependencyFileManager _fileManager;
         private readonly IGitRepo _gitClient;
         private readonly ILogger _logger;
 
-        public RemoteActions(DarcSettings settings, ILogger logger)
+        public Remote(DarcSettings settings, ILogger logger)
         {
             ValidateSettings(settings);
 
@@ -37,24 +37,44 @@ namespace Microsoft.DotNet.DarcLib
             _barClient = new BuildAssetRegistryClient(settings.BuildAssetRegistryPassword, settings.BuildAssetRegistryBaseUri, _logger);
         }
 
-        public async Task<string> CreateChannelAsync(string name, string classification)
+        public async Task<string> CreateChannelAsync(string name, string classification, string barPassword)
         {
-            return await _barClient.CreateChannelAsync(name, classification);
+            if (string.IsNullOrEmpty(barPassword))
+            {
+                throw new ArgumentException("A B.A.R password is missing...");
+            }
+
+            return await _barClient.CreateChannelAsync(name, classification, barPassword);
         }
 
-        public async Task<string> GetSubscriptionsAsync(string sourceRepo = null, string targetRepo = null, int? channelId = null)
+        public async Task<string> GetSubscriptionsAsync(string barPassword, string sourceRepo = null, string targetRepo = null, int? channelId = null)
         {
-            return await _barClient.GetSubscriptionsAsync(sourceRepo, targetRepo, channelId);
+            if (string.IsNullOrEmpty(barPassword))
+            {
+                throw new ArgumentException("A B.A.R password is missing...");
+            }
+
+            return await _barClient.GetSubscriptionsAsync(barPassword, sourceRepo, targetRepo, channelId);
         }
 
-        public async Task<string> GetSubscriptionAsync(int subscriptionId)
+        public async Task<string> GetSubscriptionAsync(int subscriptionId, string barPassword)
         {
-            return await _barClient.GetSubscriptionAsync(subscriptionId);
+            if (string.IsNullOrEmpty(barPassword))
+            {
+                throw new ArgumentException("A B.A.R password is missing...");
+            }
+
+            return await _barClient.GetSubscriptionAsync(subscriptionId, barPassword);
         }
 
-        public async Task<string> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy)
+        public async Task<string> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy, string barPassword)
         {
-            return await _barClient.CreateSubscriptionAsync(channelName, sourceRepo, targetRepo, targetBranch, updateFrequency, mergePolicy);
+            if (string.IsNullOrEmpty(barPassword))
+            {
+                throw new ArgumentException("A B.A.R password is missing...");
+            }
+
+            return await _barClient.CreateSubscriptionAsync(channelName, sourceRepo, targetRepo, targetBranch, updateFrequency, mergePolicy, barPassword);
         }
 
         public async Task<string> CreatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<AssetData> assets, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
@@ -109,12 +129,7 @@ namespace Microsoft.DotNet.DarcLib
 
         private void ValidateSettings(DarcSettings settings)
         {
-            if (string.IsNullOrEmpty(settings.BuildAssetRegistryPassword))
-            {
-                throw new ArgumentException("A B.A.R password is mandatory for remote actions and is missing...");
-            }
-
-            if (string.IsNullOrEmpty(settings.BuildAssetRegistryPassword))
+            if (string.IsNullOrEmpty(settings.PersonalAccessToken))
             {
                 throw new ArgumentException("The personal access token is missing...");
             }

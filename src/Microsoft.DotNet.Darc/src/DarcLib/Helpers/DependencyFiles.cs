@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.DarcLib
 {
     public class DependencyFilePath
     {
-        public const string VersionDetailsXml = "eng/version.details.xml";
+        public const string VersionDetailsXml = "eng/Version.Details.xml";
         public const string VersionProps = "eng/Versions.props";
         public const string GlobalJson = "global.json";
     }

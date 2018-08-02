@@ -2,15 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Extensions.Logging;
+
 namespace Microsoft.DotNet.DarcLib
 {
     public class Local
     {
-        private readonly DarcSettings darcSetings;
-
-        public Local(DarcSettings settings)
+        public Local(DarcSettings settings, ILogger logger)
         {
-            darcSetings = settings;
         }
     }
 }

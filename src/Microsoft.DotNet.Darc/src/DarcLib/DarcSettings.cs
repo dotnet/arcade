@@ -6,12 +6,18 @@ namespace Microsoft.DotNet.DarcLib
 {
     public class DarcSettings
     {
+        public DarcSettings(GitRepoType gitType, string personalAccessToken)
+        {
+            GitType = gitType;
+            PersonalAccessToken = personalAccessToken;
+        }
+
         public string BuildAssetRegistryPassword { get; set; }
 
-        public string PersonalAccessToken { get; set; }
+        public string PersonalAccessToken { get; internal set; }
 
         public string BuildAssetRegistryBaseUri { get; set; }
 
-        public GitRepoType GitType { get; set; }
+        public GitRepoType GitType { get; internal set; }
     }
 }

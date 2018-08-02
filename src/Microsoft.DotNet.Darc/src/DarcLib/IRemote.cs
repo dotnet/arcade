@@ -9,13 +9,13 @@ namespace Microsoft.DotNet.DarcLib
 {
     public interface IRemote
     {
-        Task<string> CreateChannelAsync(string name, string classification);
+        Task<string> CreateChannelAsync(string name, string classification, string barPassword);
 
-        Task<string> GetSubscriptionsAsync(string sourceRepo = null, string targetRepo = null, int? channelId = null);
+        Task<string> GetSubscriptionsAsync(string barPassword, string sourceRepo = null, string targetRepo = null, int? channelId = null);
 
-        Task<string> GetSubscriptionAsync(int subscriptionId);
+        Task<string> GetSubscriptionAsync(int subscriptionId, string barPassword);
 
-        Task<string> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy);
+        Task<string> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy, string barPassword);
 
         Task<string> CreatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<AssetData> assets, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
 

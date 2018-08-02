@@ -14,22 +14,20 @@ namespace Microsoft.DotNet.DarcLib
 {
     public class BuildAssetRegistryClient
     {
-        private readonly string _password;
         private readonly string _barUri;
         private readonly ILogger _logger;
 
         public BuildAssetRegistryClient(string barPassword, string barUri, ILogger logger)
         {
-            _password = barPassword;
             _barUri = barUri;
             _logger = logger;
         }
 
-        public async Task<string> CreateChannelAsync(string name, string classification)
+        public async Task<string> CreateChannelAsync(string name, string classification, string barPassword)
         {
             _logger.LogInformation($"Creating new channel '{name}' with classification '{classification}'...");
 
-            using (HttpClient client = CreateHttpClient())
+            using (HttpClient client = CreateHttpClient(barPassword))
             {
                 Channel channel = new Channel
                 {
@@ -56,7 +54,7 @@ namespace Microsoft.DotNet.DarcLib
             }
         }
 
-        public async Task<string> GetSubscriptionsAsync(string sourceRepo = null, string targetRepo = null, int? channelId = null)
+        public async Task<string> GetSubscriptionsAsync(string barPassword, string sourceRepo = null, string targetRepo = null, int? channelId = null)
         {
             _logger.LogInformation("Querying subscriptions...");
 
@@ -77,16 +75,16 @@ namespace Microsoft.DotNet.DarcLib
                 queryParameters.Append($"channelId={channelId}");
             }
 
-            HttpResponseMessage response = await QuerySubscriptionsAsync(queryParameters.ToString());
+            HttpResponseMessage response = await QuerySubscriptionsAsync(queryParameters.ToString(), barPassword);
 
             _logger.LogInformation("Querying for subscriptions succeeded!");
 
             return await response.Content.ReadAsStringAsync();
         }
 
-        public async Task<string> GetSubscriptionAsync(int subscriptionId)
+        public async Task<string> GetSubscriptionAsync(int subscriptionId, string barPassword)
         {
-            using (HttpClient client = CreateHttpClient())
+            using (HttpClient client = CreateHttpClient(barPassword))
             {
                 _logger.LogInformation($"Querying for a subscription with id {subscriptionId}...");
 
@@ -100,7 +98,7 @@ namespace Microsoft.DotNet.DarcLib
             }
         }
 
-        public async Task<string> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy)
+        public async Task<string> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy, string barPassword)
         {
             _logger.LogInformation($"Creating new subscription with channel name '{channelName}', " +
                 $"source repo '{sourceRepo}', " +
@@ -125,7 +123,7 @@ namespace Microsoft.DotNet.DarcLib
                 throw new FormatException($"Failed to convert '{mergePolicy}' to MergePolicy.");
             }
 
-            using (HttpClient client = CreateHttpClient())
+            using (HttpClient client = CreateHttpClient(barPassword))
             {
                 SubscriptionData subscriptionData = new SubscriptionData
                 {
@@ -159,7 +157,7 @@ namespace Microsoft.DotNet.DarcLib
             }
         }
 
-        private HttpClient CreateHttpClient()
+        private HttpClient CreateHttpClient(string barPassword)
         {
             if (string.IsNullOrEmpty(_barUri))
             {
@@ -170,14 +168,14 @@ namespace Microsoft.DotNet.DarcLib
             {
                 BaseAddress = new Uri(_barUri)
             };
-            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_password}");
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {barPassword}");
 
             return client;
         }
 
-        private async Task<HttpResponseMessage> QuerySubscriptionsAsync(string queryParameter)
+        private async Task<HttpResponseMessage> QuerySubscriptionsAsync(string queryParameter, string barPassword)
         {
-            using (HttpClient client = CreateHttpClient())
+            using (HttpClient client = CreateHttpClient(barPassword))
             {
                 HttpRequestManager requestManager = new HttpRequestManager(client, HttpMethod.Get, $"/subscriptions?{queryParameter}", _logger);
                 return await requestManager.ExecuteAsync();
