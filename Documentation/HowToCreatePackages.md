@@ -4,17 +4,17 @@ One of the goals of Arcade is to be a vehicle to provide code sharing. One of th
 
 ## Things to Check
 
-- Package sources must go into the `src/` folder on the root of the repository.
+- Package sources must go into the `src\` folder on the root of the repository.
 
-- Inside the `src/` folder create a folder representing the project namespace: `src/Microsoft.DotNet.ProjectOne`.
+- Inside the `src\` folder create a folder representing the project namespace: `src\Microsoft.DotNet.ProjectOne`.
 
-- The main sources for the package must go into `src/` folder. That is:
+- The main sources for the package must go into `src\` folder. That is:
 
-  `src/Microsoft.DotNet.ProjectOne/src`
+  `src\Microsoft.DotNet.ProjectOne\src`
 
 - The sources for unit tests should go side-by-side with the main sources.
 
-  `src/Microsoft.DotNet.ProjectOne/tests`
+  `src\Microsoft.DotNet.ProjectOne\tests`
 
 - You should include a `README.md` file on the root of the package.
 
@@ -24,7 +24,7 @@ One of the goals of Arcade is to be a vehicle to provide code sharing. One of th
 
 - Include the package on the `Arcade.sln` file. This way it will be compiled automatically when the solution is built.
 
-- Make sure that library dependencies of the new package use the Arcade defined version of the library. The versions are defined in the [`../eng/Version.props`](..\eng\Versions.props) file. For instance, if the project has a dependence on Newtonsoft.Json you must add it as follows:
+- Make sure that library dependencies of the new package use the Arcade defined version of the library. The versions are defined in the [`..\eng\Version.props`](../eng/Versions.props) file. For instance, if the project has a dependence on Newtonsoft.Json you must add it as follows:
 
   `<PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />`
 
@@ -32,7 +32,7 @@ One of the goals of Arcade is to be a vehicle to provide code sharing. One of th
 
 - Patch the `eng\SignToolData.json` file with the list of build-time artifacts created by the package. 
 
-- If the package needs to target a version of .NET Framework we recommend(?) you to use the Arcade defined version, which is stored in the $(NetFxTfm) property. For instance:
+- If the package needs to target a version of .NET Framework we recommend you to use the Arcade defined version, which is stored in the $(NetFxTfm) property. For instance:
 
   `<TargetFrameworks>$(NetFxTfm);netcoreapp2.0</TargetFrameworks>`
 
@@ -42,6 +42,6 @@ One of the goals of Arcade is to be a vehicle to provide code sharing. One of th
 
 - [`Overview.md`](Overview.md)
 
-- [`../eng/Version.props`](..\eng\Versions.props)
+- [`..\eng\Version.props`](../eng/Versions.props)
 
   
