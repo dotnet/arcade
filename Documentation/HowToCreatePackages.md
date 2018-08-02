@@ -24,7 +24,7 @@ One of the goals of Arcade is to be a vehicle to provide code sharing. One of th
 
 - Include the package on the `Arcade.sln` file. This way it will be compiled automatically when the solution is built.
 
-- Make sure that library dependencies of the new package use the Arcade defined version of the library. The versions are defined in the [`eng\Version.props`](https://github.com/dotnet/arcade/blob/master/eng/Versions.props) file. For instance, if the project has a dependence on Newtonsoft.Json you must add it as follows:
+- Make sure that library dependencies of the new package use the Arcade defined version of the library. The versions are defined in the [`..\eng\Version.props`](..\eng\Versions.props) file. For instance, if the project has a dependence on Newtonsoft.Json you must add it as follows:
 
   `<PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />`
 
@@ -40,8 +40,8 @@ One of the goals of Arcade is to be a vehicle to provide code sharing. One of th
 
 ## Further References
 
-- https://github.com/dotnet/arcade/blob/master/Documentation/Overview.md#toolset-nuget-package-requirements
+- [`Overview.md`](Overview.md)
 
-- https://github.com/dotnet/arcade/blob/master/eng/Versions.props
+- [`..\eng\Version.props`](..\eng\Versions.props)
 
   
