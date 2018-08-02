@@ -605,6 +605,7 @@ namespace Microsoft.DotNet.GitSync
                             {
                                 RetrieveOrInsert(repository.Name, branch, commit.Sha, targetRepo);
                             }
+                            break;
                         }
                     }
                 }
