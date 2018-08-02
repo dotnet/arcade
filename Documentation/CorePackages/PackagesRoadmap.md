@@ -40,7 +40,7 @@ The following list provides a summary of the state of each package. For more inf
 - **When could start being consumed by other repositories**: S141 => 9/21
 
 ### Blob Feeds
-- **Goal**: Publish packages to internal sources to increase reliability in our internal Build systems.
+- **Goal**: Publish packages to internal sources to increase reliability in our internal build systems.
 - **Where we are**:
   - Transport feeds from Buildtools is now in Arcade.
 - **Principal TODOs**:
