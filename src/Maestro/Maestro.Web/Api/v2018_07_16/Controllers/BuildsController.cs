@@ -75,11 +75,6 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 query = query.Where(b => b.BuildNumber == buildNumber);
             }
 
-            if (!string.IsNullOrEmpty(buildNumber))
-            {
-                query = query.Where(b => b.BuildNumber == buildNumber);
-            }
-
             if (notBefore.HasValue)
             {
                 query = query.Where(b => b.DateProduced >= notBefore.Value);
