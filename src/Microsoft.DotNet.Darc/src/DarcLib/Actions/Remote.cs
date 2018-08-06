@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.DarcLib
             }
 
             _fileManager = new DependencyFileManager(_gitClient, _logger);
-            _barClient = new BuildAssetRegistryClient(settings.BuildAssetRegistryPassword, settings.BuildAssetRegistryBaseUri, _logger);
+            _barClient = new BuildAssetRegistryClient(settings.BuildAssetRegistryBaseUri, _logger);
         }
 
         public async Task<string> CreateChannelAsync(string name, string classification, string barPassword)
@@ -91,24 +91,32 @@ namespace Microsoft.DotNet.DarcLib
 
                 pullRequestBaseBranch = pullRequestBaseBranch ?? $"darc-{branch}";
 
-                // Check for existing PRs in the darc created branch. If there is one under the same user we fail fast before commiting files that won't be included in a PR. 
-                string existingPr = await _gitClient.CheckForOpenPullRequestsAsync(repoUri, pullRequestBaseBranch);
+                await CommitFilesForPullRequest(repoUri, branch, assetsProducedInCommit, itemsToUpdate, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
 
-                if (string.IsNullOrEmpty(existingPr))
-                {
-                    await CommitFilesForPullRequest(repoUri, branch, assetsProducedInCommit, itemsToUpdate,  pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
+                linkToPr = await _gitClient.CreatePullRequestAsync(repoUri, branch, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
 
-                    linkToPr = await _gitClient.CreatePullRequestAsync(repoUri, branch, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
+                _logger.LogInformation($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
 
-                    _logger.LogInformation($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
-
-                    return linkToPr;
-                }
-
-                _logger.LogError($"PR with link '{existingPr}' is already opened in repo '{repoUri}' and branch '{pullRequestBaseBranch}' please update it instead of trying to create a new one");
+                return linkToPr;
             }
 
             return linkToPr;
+        }
+
+        public async Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null)
+        {
+            return await _gitClient.SearchPullRequestsAsync(repoUri, pullRequestBranch, status, keyword, author);
+        }
+
+        public async Task<PrStatus> GetPullRequestStatusAsync(string repoUri, int pullRequestId)
+        {
+            _logger.LogInformation($"Getting the status of pull request '{pullRequestId}' in repo '{repoUri}'...");
+
+            PrStatus status = await _gitClient.GetPullRequestStatusAsync(repoUri, pullRequestId);
+
+            _logger.LogInformation($"Status of pull request '{pullRequestId}' in repo '{repoUri}' is '{status}'");
+
+            return status;
         }
 
         public async Task<string> UpdatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<DependencyDetail> itemsToUpdate, int pullRequestId, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
@@ -125,6 +133,24 @@ namespace Microsoft.DotNet.DarcLib
             _logger.LogInformation($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
 
             return linkToPr;
+        }
+
+        public async Task MergePullRequestAsync(string repoUri, int pullRequestId, string commit = null, string mergeMethod = null, string title = null, string message = null)
+        {
+            _logger.LogInformation($"Merging pull request '{pullRequestId}' in repo '{repoUri}'...");
+
+            await _gitClient.MergePullRequestAsync(repoUri, pullRequestId, commit, mergeMethod, title, message);
+
+            _logger.LogInformation($"Merging pull request '{pullRequestId}' in repo '{repoUri}' succeeded!");
+        }
+
+        public async Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message)
+        {
+            _logger.LogInformation($"Adding a comment to PR '{pullRequestId}' in repo '{repoUri}'...");
+
+            await _gitClient.CommentOnPullRequestAsync(repoUri, pullRequestId, message);
+
+            _logger.LogInformation($"Adding a comment to PR '{pullRequestId}' in repo '{repoUri}' succeeded!");
         }
 
         private void ValidateSettings(DarcSettings settings)
@@ -165,11 +191,11 @@ namespace Microsoft.DotNet.DarcLib
             return toUpdate;
         }
 
-        private async Task<Dictionary<string, GitCommit>> GetScriptCommitsAsync(string repoUri, string branch, string assetsProducedInCommit)
+        private async Task<Dictionary<string, GitCommit>> GetScriptCommitsAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch)
         {
             _logger.LogInformation($"Generating commits for script files");
 
-            Dictionary<string, GitCommit> commits = await _gitClient.GetCommitsForPathAsync(repoUri, branch, assetsProducedInCommit);
+            Dictionary<string, GitCommit> commits = await _gitClient.GetCommitsForPathAsync(repoUri, branch, assetsProducedInCommit, pullRequestBaseBranch);
 
             _logger.LogInformation($"Generating commits for script files succeeded!");
 
@@ -188,7 +214,7 @@ namespace Microsoft.DotNet.DarcLib
 
             if (arcadeItem != null)
             {
-                await _gitClient.PushFilesAsync(await GetScriptCommitsAsync(repoUri, branch, assetsProducedInCommit), repoUri, pullRequestBaseBranch);
+                await _gitClient.PushFilesAsync(await GetScriptCommitsAsync(repoUri, branch, assetsProducedInCommit, pullRequestBaseBranch), repoUri, pullRequestBaseBranch);
             }
         }
     }

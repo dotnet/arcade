@@ -4,12 +4,14 @@
 
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DarcLib
@@ -17,13 +19,21 @@ namespace Microsoft.DotNet.DarcLib
     public class GitHubClient : IGitRepo
     {
         private const string GitHubApiUri = "https://api.github.com";
+        private const string DarcLibVersion = "1.0.0";
+        private readonly string _userAgent = $"DarcLib-{DarcLibVersion}";
         private readonly string _personalAccessToken;
         private readonly ILogger _logger;
+        private readonly JsonSerializerSettings _serializerSettings;
 
         public GitHubClient(string accessToken, ILogger logger)
         {
             _personalAccessToken = accessToken;
             _logger = logger;
+            _serializerSettings = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                NullValueHandling = NullValueHandling.Ignore
+            };
         }
 
         public async Task<string> GetFileContentsAsync(string filePath, string repoUri, string branch)
@@ -36,9 +46,9 @@ namespace Microsoft.DotNet.DarcLib
 
             _logger.LogInformation($"Getting the contents of file '{filePath}' from repo '{repoUri}' in branch '{branch}' succeeded!");
 
-            dynamic responseContent = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
+            JObject responseContent = JObject.Parse(await response.Content.ReadAsStringAsync());
 
-            string content = Convert.ToString(responseContent.content);
+            string content = responseContent["content"].ToString();
 
             return this.GetDecodedContent(content);
         }
@@ -54,43 +64,29 @@ namespace Microsoft.DotNet.DarcLib
             GitHubRef githubRef = new GitHubRef($"refs/heads/darc-{branch}", latestSha);
             HttpResponseMessage response = null;
 
-            JsonSerializerSettings serializerSettings = new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            };
-
             try
             {
                 response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}branches/darc-{branch}", _logger);
             }
+            catch (HttpRequestException exc) when (exc.Message.Contains(((int)HttpStatusCode.NotFound).ToString()))
+            {
+                _logger.LogInformation($"'darc-{branch}' branch doesn't exist. Creating it...");
+
+                body = JsonConvert.SerializeObject(githubRef, _serializerSettings);
+                response = await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{ownerAndRepo}git/refs", _logger, body);
+
+                _logger.LogInformation($"Branch 'darc-{branch}' created in repo '{repoUri}'!");
+
+                return;
+            }
             catch (HttpRequestException exc)
             {
-                if (exc.Message.Contains(((int)HttpStatusCode.NotFound).ToString()))
-                {
-                    _logger.LogInformation($"'darc-{branch}' branch doesn't exist. Creating it...");
+                _logger.LogError($"Checking if 'darc-{branch}' branch existed in repo '{repoUri}' failed with '{exc.Message}'");
 
-                    body = JsonConvert.SerializeObject(githubRef, serializerSettings);
-                    response = await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{ownerAndRepo}git/refs", _logger, body);
-
-                    _logger.LogInformation($"Branch 'darc-{branch}' created in repo '{repoUri}'!");
-
-                    return;
-                }
-                else
-                {
-                    _logger.LogError($"Checking if 'darc-{branch}' branch existed in repo '{repoUri}' failed with '{exc.Message}'");
-
-                    throw;
-                }
+                throw;
             }
 
-            _logger.LogInformation($"Branch 'darc-{branch}' exists, making sure it is in sync with '{branch}'...");
-
-            githubRef.Force = true;
-            body = JsonConvert.SerializeObject(githubRef, serializerSettings);
-            response = await this.ExecuteGitCommand(new HttpMethod("PATCH"), $"repos/{ownerAndRepo}git/{githubRef.Ref}", _logger, body);
-
-            _logger.LogInformation($"Branch 'darc-{branch}' now in sync with'{branch}'.");
+            _logger.LogInformation($"Branch 'darc-{branch}' exists.");
         }
 
         public async Task PushFilesAsync(Dictionary<string, GitCommit> filesToCommit, string repoUri, string pullRequestBaseBranch)
@@ -109,13 +105,7 @@ namespace Microsoft.DotNet.DarcLib
                     commit.Sha = blobSha;
                 }
 
-                JsonSerializerSettings serializerSettings = new JsonSerializerSettings
-                {
-                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                    NullValueHandling = NullValueHandling.Ignore
-                };
-
-                string body = JsonConvert.SerializeObject(commit, serializerSettings);
+                string body = JsonConvert.SerializeObject(commit, _serializerSettings);
 
                 await this.ExecuteGitCommand(HttpMethod.Put, $"repos/{ownerAndRepo}contents/{filePath}", _logger, body);
 
@@ -123,57 +113,113 @@ namespace Microsoft.DotNet.DarcLib
             }
         }
 
-        public async Task<string> CheckForOpenPullRequestsAsync(string repoUri, string darcBranch)
+        public async Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null)
         {
-            string pullRequestLink = null;
             string ownerAndRepo = GetOwnerAndRepo(repoUri);
-            string user = await GetUserNameAsync();
+            StringBuilder query = new StringBuilder();
 
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}pulls?head={user}:{darcBranch}", _logger);
-
-            List<dynamic> content = JsonConvert.DeserializeObject<List<dynamic>>(await response.Content.ReadAsStringAsync());
-            dynamic pr = content.Where(p => ((string)p.title).Contains("[Darc-Update]")).FirstOrDefault();
-
-            if (pr != null)
+            if (!string.IsNullOrEmpty(keyword))
             {
-                pullRequestLink = pr.html_url;
+                query.Append(keyword);
+                query.Append("+");
             }
 
-            return pullRequestLink;
+            query.Append($"repo:{ownerAndRepo}+head:{pullRequestBranch}+type:pr+is:{status.ToString().ToLower()}");
+
+            if (!string.IsNullOrEmpty(author))
+            {
+                query.Append($"+author:{author}");
+            }
+
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"search/issues?q={query.ToString()}", _logger);
+
+            JObject responseContent = JObject.Parse(await response.Content.ReadAsStringAsync());
+            JArray items = JArray.Parse(responseContent["items"].ToString());
+
+            IEnumerable<int> prs = items.Select(r => r["number"].ToObject<int>());
+
+            return prs;
+        }
+
+        public async Task<PrStatus> GetPullRequestStatusAsync(string repoUri, int pullRequestId)
+        {
+            string ownerAndRepo = GetOwnerAndRepo(repoUri);
+
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}pulls/{pullRequestId}", _logger);
+
+            JObject responseContent = JObject.Parse(await response.Content.ReadAsStringAsync());
+
+            if (Enum.TryParse(responseContent["state"].ToString(), true, out PrStatus status))
+            {
+                if (status == PrStatus.Open)
+                {
+                    return status;
+                }
+
+                if (status == PrStatus.Closed)
+                {
+                    if (bool.TryParse(responseContent["merged"].ToString(), out bool merged))
+                    {
+                        if (merged)
+                        {
+                            return PrStatus.Merged;
+                        }
+                    }
+
+                    return PrStatus.Closed;
+                }
+            }
+
+            return PrStatus.None;
         }
 
         public async Task<string> CreatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
         {
-            _logger.LogInformation($"Creating pull request from '{sourceBranch}' to '{mergeWithBranch}'...");
-
             string linkToPullRquest = await CreateOrUpdatePullRequestAsync(repoUri, mergeWithBranch, sourceBranch, HttpMethod.Post, 0, title, description);
-
-            _logger.LogInformation($"Creating pull request from '{sourceBranch}' to '{mergeWithBranch}' succeeded. Link to the PR is: {linkToPullRquest}");
-
             return linkToPullRquest;
         }
 
         public async Task<string> UpdatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, int pullRequestId, string title = null, string description = null)
         {
-            _logger.LogInformation($"Updating pull request with id '{pullRequestId}' from '{sourceBranch}' to '{mergeWithBranch}'...");
-
             string linkToPullRquest = await CreateOrUpdatePullRequestAsync(repoUri, mergeWithBranch, sourceBranch, new HttpMethod("PATCH"), pullRequestId, title, description);
-
-            _logger.LogInformation($"Updating pull request from '{sourceBranch}' to '{mergeWithBranch}' succeeded. Link to the PR is: {linkToPullRquest}");
-
             return linkToPullRquest;
         }
 
-        public async Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string path = "eng")
+        public async Task MergePullRequestAsync(string repoUri, int pullRequestId, string commit = null, string mergeMethod = GitHubMergeMethod.Merge, string title = null, string message = null)
+        {
+            title = title ?? PullRequestProperties.AutoMergeTitle;
+            message = message ?? PullRequestProperties.AutoMergeMessage;
+
+            GitHubPullRequestMerge pullRequestMerge = new GitHubPullRequestMerge(title, message, commit, mergeMethod);
+
+            string body = JsonConvert.SerializeObject(pullRequestMerge, _serializerSettings);
+
+            string ownerAndRepo = GetOwnerAndRepo(repoUri);
+
+            await this.ExecuteGitCommand(HttpMethod.Put, $"repos/{ownerAndRepo}pulls/{pullRequestId}/merge", _logger, body);
+        }
+
+        public async Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message)
+        {
+            GitHubComment comment = new GitHubComment(message);
+
+            string body = JsonConvert.SerializeObject(comment, _serializerSettings);
+
+            string ownerAndRepo = GetOwnerAndRepo(repoUri);
+
+            await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{ownerAndRepo}issues/{pullRequestId}/comments", _logger, body);
+        }
+
+        public async Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng")
         {
             Dictionary<string, GitCommit> commits = new Dictionary<string, GitCommit>();
 
-            await GetCommitMapForPathAsync(repoUri, branch, assetsProducedInCommit, commits, path);
+            await GetCommitMapForPathAsync(repoUri, branch, assetsProducedInCommit, commits, pullRequestBaseBranch, path);
 
             return commits;
         }
 
-        public async Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, Dictionary<string, GitCommit> commits, string path = "eng")
+        public async Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, Dictionary<string, GitCommit> commits, string pullRequestBaseBranch, string path = "eng")
         {
             _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{assetsProducedInCommit}'");
 
@@ -189,13 +235,13 @@ namespace Microsoft.DotNet.DarcLib
                     if (!DependencyFileManager.DependencyFiles.Contains(content.Path))
                     {
                         string fileContent = await GetFileContentAsync(ownerAndRepo, content.Path);
-                        GitCommit gitCommit = new GitCommit($"Updating contents of file '{content.Path}'", fileContent, branch);
+                        GitCommit gitCommit = new GitCommit($"Updating contents of file '{content.Path}'", fileContent, pullRequestBaseBranch);
                         commits.Add(content.Path, gitCommit);
                     }
                 }
                 else
                 {
-                    await GetCommitMapForPathAsync(repoUri, branch, assetsProducedInCommit, commits, content.Path);
+                    await GetCommitMapForPathAsync(repoUri, branch, assetsProducedInCommit, commits, pullRequestBaseBranch, content.Path);
                 }
             }
 
@@ -208,8 +254,8 @@ namespace Microsoft.DotNet.DarcLib
 
             HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}contents/{path}", _logger);
 
-            dynamic file = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
-            encodedContent = file.content;
+            JObject file = JObject.Parse(await response.Content.ReadAsStringAsync());
+            encodedContent = file["content"].ToString();
 
             return encodedContent;
         }
@@ -221,7 +267,7 @@ namespace Microsoft.DotNet.DarcLib
                 BaseAddress = new Uri(GitHubApiUri)
             };
             client.DefaultRequestHeaders.Add("Authorization", $"Token {_personalAccessToken}");
-            client.DefaultRequestHeaders.Add("User-Agent", "DarcLib");
+            client.DefaultRequestHeaders.Add("User-Agent", _userAgent);
 
             return client;
         }
@@ -246,8 +292,8 @@ namespace Microsoft.DotNet.DarcLib
                 throw exc;
             }
 
-            dynamic content = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
-            commit = content.sha;
+            JObject content = JObject.Parse(await response.Content.ReadAsStringAsync());
+            commit = content["sha"].ToString();
 
             return commit;
         }
@@ -256,14 +302,14 @@ namespace Microsoft.DotNet.DarcLib
         {
             HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}commits/{branch}", _logger);
 
-            dynamic content = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
+            JObject content = JObject.Parse(await response.Content.ReadAsStringAsync());
 
             if (content == null)
             {
                 throw new Exception($"No commits found in branch '{branch}' of repo '{ownerAndRepo}'!");
             }
 
-            return content.sha;
+            return content["sha"].ToString();
         }
 
         private async Task<string> GetUserNameAsync()
@@ -272,8 +318,8 @@ namespace Microsoft.DotNet.DarcLib
 
             HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, "user", _logger);
 
-            dynamic content = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
-            user = content.login;
+            JObject content = JObject.Parse(await response.Content.ReadAsStringAsync());
+            user = content["login"].ToString();
 
             return user;
         }
@@ -295,12 +341,8 @@ namespace Microsoft.DotNet.DarcLib
             description = description ?? PullRequestProperties.Description;
 
             GitHubPullRequest pullRequest = new GitHubPullRequest(title, description, sourceBranch, mergeWithBranch);
-            JsonSerializerSettings serializerSettings = new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            };
 
-            string body = JsonConvert.SerializeObject(pullRequest, serializerSettings);
+            string body = JsonConvert.SerializeObject(pullRequest, _serializerSettings);
 
             if (method == HttpMethod.Post)
             {
@@ -313,8 +355,8 @@ namespace Microsoft.DotNet.DarcLib
 
             HttpResponseMessage response = await this.ExecuteGitCommand(method, requestUri, _logger, body);
 
-            dynamic content = JsonConvert.DeserializeObject<dynamic>(await response.Content.ReadAsStringAsync());
-            linkToPullRquest = content.html_url;
+            JObject content = JObject.Parse(await response.Content.ReadAsStringAsync());
+            linkToPullRquest = content["html_url"].ToString();
 
             return linkToPullRquest;
         }

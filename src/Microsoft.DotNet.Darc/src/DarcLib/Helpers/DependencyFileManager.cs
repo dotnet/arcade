@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.DarcLib
         private readonly IGitRepo _gitClient;
         private readonly ILogger _logger;
         private const string VersionPropsExpression = "VersionProps";
-        private const string SdkVersionProperty = "version";
+        private const string DotNetSdkVersionProperty = "dotnet";
 
         public static HashSet<string> DependencyFiles
         {
@@ -225,9 +225,9 @@ namespace Microsoft.DotNet.DarcLib
             {
                 if (child.Name == assetName)
                 {
-                    if (child.HasValues && child.Value.ToString().IndexOf(SdkVersionProperty, StringComparison.CurrentCultureIgnoreCase) > 0)
+                    if (child.HasValues && child.Value.ToString().IndexOf(DotNetSdkVersionProperty, StringComparison.CurrentCultureIgnoreCase) > 0)
                     {
-                        UpdateVersionGlobalJson(SdkVersionProperty, version, child.Value);
+                        UpdateVersionGlobalJson(DotNetSdkVersionProperty, version, child.Value);
                     }
                     else
                     {

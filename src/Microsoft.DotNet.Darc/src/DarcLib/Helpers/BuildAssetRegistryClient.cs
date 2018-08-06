@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.DarcLib
         private readonly string _barUri;
         private readonly ILogger _logger;
 
-        public BuildAssetRegistryClient(string barPassword, string barUri, ILogger logger)
+        public BuildAssetRegistryClient(string barUri, ILogger logger)
         {
             _barUri = barUri;
             _logger = logger;
