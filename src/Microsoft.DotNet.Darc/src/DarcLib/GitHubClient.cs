@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             _logger.LogInformation($"Getting the contents of file '{filePath}' from repo '{repoUri}' in branch '{branch}'...");
 
-            string ownerAndRepo = GetOwnerAndRepo(repoUri);
+            string ownerAndRepo = GetSegments(repoUri);
 
             HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}contents/{filePath}?ref={branch}", _logger);
 
@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             _logger.LogInformation($"Verifying if 'darc-{branch}' branch exist in repo '{repoUri}'. If not, we'll create it...");
 
-            string ownerAndRepo = GetOwnerAndRepo(repoUri);
+            string ownerAndRepo = GetSegments(repoUri);
             string latestSha = await GetLastCommitShaAsync(ownerAndRepo, branch);
             string body;
 
@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             _logger.LogInformation($"Pushing files to '{pullRequestBaseBranch}'...");
 
-            string ownerAndRepo = GetOwnerAndRepo(repoUri);
+            string ownerAndRepo = GetSegments(repoUri);
 
             foreach (string filePath in filesToCommit.Keys)
             {
@@ -115,7 +115,7 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null)
         {
-            string ownerAndRepo = GetOwnerAndRepo(repoUri);
+            string ownerAndRepo = GetSegments(repoUri);
             StringBuilder query = new StringBuilder();
 
             if (!string.IsNullOrEmpty(keyword))
@@ -141,11 +141,11 @@ namespace Microsoft.DotNet.DarcLib
             return prs;
         }
 
-        public async Task<PrStatus> GetPullRequestStatusAsync(string repoUri, int pullRequestId)
+        public async Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl)
         {
-            string ownerAndRepo = GetOwnerAndRepo(repoUri);
+            string[] segments = GetSegments(pullRequestUrl).Split('/');
 
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}pulls/{pullRequestId}", _logger);
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{segments[0]}/{segments[1]}/pulls/{segments[3]}", _logger);
 
             JObject responseContent = JObject.Parse(await response.Content.ReadAsStringAsync());
 
@@ -185,7 +185,7 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPullRquest;
         }
 
-        public async Task MergePullRequestAsync(string repoUri, int pullRequestId, string commit = null, string mergeMethod = GitHubMergeMethod.Merge, string title = null, string message = null)
+        public async Task MergePullRequestAsync(string pullRequestUrl, string commit = null, string mergeMethod = GitHubMergeMethod.Merge, string title = null, string message = null)
         {
             title = title ?? PullRequestProperties.AutoMergeTitle;
             message = message ?? PullRequestProperties.AutoMergeMessage;
@@ -194,9 +194,9 @@ namespace Microsoft.DotNet.DarcLib
 
             string body = JsonConvert.SerializeObject(pullRequestMerge, _serializerSettings);
 
-            string ownerAndRepo = GetOwnerAndRepo(repoUri);
+            string[] segments = GetSegments(pullRequestUrl).Split('/');
 
-            await this.ExecuteGitCommand(HttpMethod.Put, $"repos/{ownerAndRepo}pulls/{pullRequestId}/merge", _logger, body);
+            await this.ExecuteGitCommand(HttpMethod.Put, $"repos/{segments[0]}/{segments[1]}/pulls/{segments[3]}/merge", _logger, body);
         }
 
         public async Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message)
@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.DarcLib
 
             string body = JsonConvert.SerializeObject(comment, _serializerSettings);
 
-            string ownerAndRepo = GetOwnerAndRepo(repoUri);
+            string ownerAndRepo = GetSegments(repoUri);
 
             await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{ownerAndRepo}issues/{pullRequestId}/comments", _logger, body);
         }
@@ -223,7 +223,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{assetsProducedInCommit}'");
 
-            string ownerAndRepo = GetOwnerAndRepo(repoUri);
+            string ownerAndRepo = GetSegments(repoUri);
             HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}contents/{path}?ref={assetsProducedInCommit}", _logger);
 
             List<GitHubContent> contents = JsonConvert.DeserializeObject<List<GitHubContent>>(await response.Content.ReadAsStringAsync());
@@ -275,7 +275,7 @@ namespace Microsoft.DotNet.DarcLib
         public async Task<string> CheckIfFileExistsAsync(string repoUri, string filePath, string branch)
         {
             string commit;
-            string ownerAndRepo = GetOwnerAndRepo(repoUri);
+            string ownerAndRepo = GetSegments(repoUri);
             HttpResponseMessage response;
 
             try
@@ -324,7 +324,7 @@ namespace Microsoft.DotNet.DarcLib
             return user;
         }
 
-        private string GetOwnerAndRepo(string repoUri)
+        private string GetSegments(string repoUri)
         {
             repoUri = repoUri.Replace("https://github.com/", string.Empty);
             repoUri = repoUri.Last() != '/' ? $"{repoUri}/" : repoUri;
@@ -335,7 +335,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             string linkToPullRquest;
             string requestUri;
-            string ownerAndRepo = GetOwnerAndRepo(repoUri);
+            string ownerAndRepo = GetSegments(repoUri);
 
             title = !string.IsNullOrEmpty(title) ? $"{PullRequestProperties.TitleTag} {title}" : PullRequestProperties.Title;
             description = description ?? PullRequestProperties.Description;

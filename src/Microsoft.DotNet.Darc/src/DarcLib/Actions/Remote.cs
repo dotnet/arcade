@@ -108,13 +108,13 @@ namespace Microsoft.DotNet.DarcLib
             return await _gitClient.SearchPullRequestsAsync(repoUri, pullRequestBranch, status, keyword, author);
         }
 
-        public async Task<PrStatus> GetPullRequestStatusAsync(string repoUri, int pullRequestId)
+        public async Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl)
         {
-            _logger.LogInformation($"Getting the status of pull request '{pullRequestId}' in repo '{repoUri}'...");
+            _logger.LogInformation($"Getting the status of pull request '{pullRequestUrl}'...");
 
-            PrStatus status = await _gitClient.GetPullRequestStatusAsync(repoUri, pullRequestId);
+            PrStatus status = await _gitClient.GetPullRequestStatusAsync(pullRequestUrl);
 
-            _logger.LogInformation($"Status of pull request '{pullRequestId}' in repo '{repoUri}' is '{status}'");
+            _logger.LogInformation($"Status of pull request '{pullRequestUrl}' is '{status}'");
 
             return status;
         }
@@ -135,13 +135,13 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPr;
         }
 
-        public async Task MergePullRequestAsync(string repoUri, int pullRequestId, string commit = null, string mergeMethod = null, string title = null, string message = null)
+        public async Task MergePullRequestAsync(string pullRequestUrl, string commit = null, string mergeMethod = null, string title = null, string message = null)
         {
-            _logger.LogInformation($"Merging pull request '{pullRequestId}' in repo '{repoUri}'...");
+            _logger.LogInformation($"Merging pull request '{pullRequestUrl}'...");
 
-            await _gitClient.MergePullRequestAsync(repoUri, pullRequestId, commit, mergeMethod, title, message);
+            await _gitClient.MergePullRequestAsync(pullRequestUrl, commit, mergeMethod, title, message);
 
-            _logger.LogInformation($"Merging pull request '{pullRequestId}' in repo '{repoUri}' succeeded!");
+            _logger.LogInformation($"Merging pull request '{pullRequestUrl}' succeeded!");
         }
 
         public async Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message)

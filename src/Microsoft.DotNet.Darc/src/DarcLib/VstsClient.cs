@@ -196,11 +196,11 @@ namespace Microsoft.DotNet.DarcLib
             return pullRequestLink;
         }
 
-        public async Task<PrStatus> GetPullRequestStatusAsync(string repoUri, int pullRequestId)
+        public async Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl)
         {
-            string repoName = SetApiUriAndGetRepoName(repoUri);
+            string[] segments = SetApiUriAndGetRepoName(pullRequestUrl).Split('/');
 
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/pullrequests/{pullRequestId}", _logger);
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{segments[0]}/pullrequests/{segments[2]}", _logger);
 
             JObject responseContent = JObject.Parse(await response.Content.ReadAsStringAsync());
 
@@ -237,17 +237,19 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPullRquest;
         }
 
-        public async Task MergePullRequestAsync(string repoUri, int pullRequestId, string commit, string mergeMethod, string title = null, string message = null)
+        public async Task MergePullRequestAsync(string pullRequestUrl, string commit, string mergeMethod, string title = null, string message = null)
         {
+            string[] segments = SetApiUriAndGetRepoName(pullRequestUrl).Split('/');
+
             message = message ?? PullRequestProperties.AutoMergeMessage;
 
             VstsPullRequestMerge pullRequestMerge = new VstsPullRequestMerge(message, commit, true);
 
             string body = JsonConvert.SerializeObject(pullRequestMerge, _serializerSettings);
 
-            string repoName = SetApiUriAndGetRepoName(repoUri);
+            string repoName = SetApiUriAndGetRepoName(pullRequestUrl);
 
-            await this.ExecuteGitCommand(new HttpMethod("PATCH"), $"repositories/{repoName}/pullrequests/{pullRequestId}", _logger, body);
+            await this.ExecuteGitCommand(new HttpMethod("PATCH"), $"repositories/{segments[0]}/pullrequests/{segments[2]}", _logger, body);
         }
 
         public async Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message)
@@ -390,7 +392,7 @@ namespace Microsoft.DotNet.DarcLib
 
             if (projectAndRepoMatch.Success)
             {
-                projectName = projectAndRepoMatch.Groups["projectname"].Value;
+                projectName = projectAndRepoMatch.Groups["projectname"].Value.Replace("/_apis", string.Empty);
                 repoName = projectAndRepoMatch.Groups["reponame"].Value;
             }
             else
