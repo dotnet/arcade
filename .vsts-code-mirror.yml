@@ -6,41 +6,40 @@ phases:
 - template: /eng/common/templates/phases/base.yml
   parameters:
     agentsOS: Windows_NT
-    phaseName: Mirror_GitHub_to_VSTS
-    phase:
-      queue:
-        name: Hosted VS2017
-      variables:
-        WorkingDirectoryName: repo-dir
-      steps:
-      - task: PowerShell@1
-        displayName: Calculate Mirrored Branch Names
-        inputs:
-          scriptType: inlineScript
-          arguments: '$(GithubRepo) $(BranchToMirror)'
-          inlineScript: |
-            param([string]$repo, [string]$branch)
-          
-            $vstsRepo = $repo.Replace("/", "-");
-            # Check that the parameters look correct
-            if ($vstsRepo -eq "" -or $branch -eq "")
-            {
-              Write-Error "Expected valid branch and GitHub repo in the form of owner/repo"
-            }
-            Write-Host "##vso[task.setvariable variable=VstsRepoName]$vstsRepo"
-            Write-Host "Mirroring branch '$branch' from GitHub repo '$repo' to VSTS repo '$vstsRepo'."
-      - script: |
-          git clone https://dotnet-maestro-bot:$(BotAccount-dotnet-maestro-bot-PAT)@github.com/$(GithubRepo) $(WorkingDirectoryName) -b $(BranchToMirror)
-        displayName: Clone GitHub repo
-      - script: |
-          git remote add vsts-mirror https://dn-bot:$(dn-bot-dotnet-build-rw-code-rw)@dotnet.visualstudio.com/internal/_git/$(VstsRepoName)
-        displayName: Add VSTS remote
-        workingDirectory: $(WorkingDirectoryName)
-      - script: |
-          git reset --hard origin/$(BranchToMirror)
-        displayName: Hard reset local branch to GitHub branch
-        workingDirectory: $(WorkingDirectoryName)
-      - script: |
-          git push vsts-mirror $(BranchToMirror) $(ExtraPushArgs)
-        displayName: Push changes to VSTS repo
-        workingDirectory: $(WorkingDirectoryName)
+    name: Mirror_GitHub_to_VSTS
+    queue:
+      name: Hosted VS2017
+    variables:
+      WorkingDirectoryName: repo-dir
+    steps:
+    - task: PowerShell@1
+      displayName: Calculate Mirrored Branch Names
+      inputs:
+        scriptType: inlineScript
+        arguments: '$(GithubRepo) $(BranchToMirror)'
+        inlineScript: |
+          param([string]$repo, [string]$branch)
+        
+          $vstsRepo = $repo.Replace("/", "-");
+          # Check that the parameters look correct
+          if ($vstsRepo -eq "" -or $branch -eq "")
+          {
+            Write-Error "Expected valid branch and GitHub repo in the form of owner/repo"
+          }
+          Write-Host "##vso[task.setvariable variable=VstsRepoName]$vstsRepo"
+          Write-Host "Mirroring branch '$branch' from GitHub repo '$repo' to VSTS repo '$vstsRepo'."
+    - script: |
+        git clone https://dotnet-maestro-bot:$(BotAccount-dotnet-maestro-bot-PAT)@github.com/$(GithubRepo) $(WorkingDirectoryName) -b $(BranchToMirror)
+      displayName: Clone GitHub repo
+    - script: |
+        git remote add vsts-mirror https://dn-bot:$(dn-bot-dotnet-build-rw-code-rw)@dotnet.visualstudio.com/internal/_git/$(VstsRepoName)
+      displayName: Add VSTS remote
+      workingDirectory: $(WorkingDirectoryName)
+    - script: |
+        git reset --hard origin/$(BranchToMirror)
+      displayName: Hard reset local branch to GitHub branch
+      workingDirectory: $(WorkingDirectoryName)
+    - script: |
+        git push vsts-mirror $(BranchToMirror) $(ExtraPushArgs)
+      displayName: Push changes to VSTS repo
+      workingDirectory: $(WorkingDirectoryName)
