@@ -6,7 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Maestro.Web.Api.v2018_07_16.Models;
-using Maestro.Web.Data;
+using Maestro.Data;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -83,7 +83,8 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                         new[] {$"The channel '{subscription.ChannelName}' could not be found."}));
             }
 
-            var subscriptionModel = new Data.Models.Subscription(subscription) {Channel = channel};
+            var subscriptionModel = subscription.ToDb();
+            subscriptionModel.Channel = channel;
             await _context.Subscriptions.AddAsync(subscriptionModel);
             await _context.SaveChangesAsync();
             return CreatedAtRoute(

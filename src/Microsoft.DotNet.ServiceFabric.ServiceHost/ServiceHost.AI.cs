@@ -9,10 +9,10 @@ using System.Linq;
 using System.Reflection;
 using Autofac.Core;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
-using Microsoft.ApplicationInsights.Channel;
-using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
+#if NET461
 using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector;
+#endif
 using Microsoft.ApplicationInsights.ServiceFabric;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -68,6 +68,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
         private static void ConfigureApplicationInsights(IServiceCollection services)
         {
             services.AddApplicationInsightsTelemetry();
+#if NET461
             RemoveImplementations(services, typeof(PerformanceCollectorModule));
             services.AddSingleton<ITelemetryModule>(
                 provider =>
@@ -81,6 +82,8 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                     collector.DefaultCounters.Add(new PerformanceCounterCollectionRequest("\\Processor(_Total)\\% Processor Time", "\\Processor(_Total)\\% Processor Time"));
                     return collector;
                 });
+#endif
+
 
             services.AddSingleton<ITelemetryInitializer>(ConfigureFabricTelemetryInitializer);
             services.AddSingleton<ITelemetryInitializer>(new RichExceptionTelemetryInitializer());
@@ -96,28 +99,6 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
             options.InstrumentationKey = GetApplicationInsightsKey();
             options.EnableQuickPulseMetricStream = false;
             options.EnableAdaptiveSampling = false;
-        }
-    }
-
-    internal class RichExceptionTelemetryInitializer : ITelemetryInitializer
-    {
-        public void Initialize(ITelemetry telemetry)
-        {
-            if (telemetry is ExceptionTelemetry exceptionTelemetry)
-            {
-                var ex = exceptionTelemetry.Exception;
-                if (ex is Rest.HttpOperationException httpEx)
-                {
-                    var res = httpEx.Response;
-                    exceptionTelemetry.Properties["statusCode"] = ((int)res.StatusCode).ToString();
-                    var content = res.Content;
-                    if (content.Length > 512)
-                    {
-                        content = content.Substring(0, 512);
-                    }
-                    exceptionTelemetry.Properties["responseText"] = content;
-                }
-            }
         }
     }
 }
