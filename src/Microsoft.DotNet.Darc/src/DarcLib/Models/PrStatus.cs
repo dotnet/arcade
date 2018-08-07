@@ -4,13 +4,11 @@
 
 namespace Microsoft.DotNet.DarcLib
 {
-    public class GitHubComment
+    public enum PrStatus
     {
-        public GitHubComment(string commentBody)
-        {
-            Body = commentBody;
-        }
-
-        public string Body { get; set; }
+        None,
+        Open,
+        Closed,
+        Merged
     }
 }
