@@ -20,7 +20,7 @@ Example web hooks page url: https://github.com/dotnet/versions/settings/hooks/
 
 ## Web hook configuration
 
- * Payload URL: `http://maestro-prod.azurewebsites.net/CommitPushed`
+ * Payload URL: `https://maestro-prod.azurewebsites.net/CommitPushed`
  * Content Type: `application/json`
  * Secret: [Maestro-WebhookSecretToken on EngKeyVault](https://ms.portal.azure.com/#asset/Microsoft_Azure_KeyVault/Secret/https://engkeyvault.vault.azure.net/secrets/Maestro-WebhookSecretToken/e6b838f3a9ce420d8ef3f9bf97047020)
  * "Which events would you like to trigger this webhook?": `Just the push event.`
