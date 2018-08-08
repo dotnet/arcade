@@ -242,12 +242,11 @@ namespace Microsoft.SignCheck.Verification
                     // NGEN/CrossGen don't preserve StrongName signatures.
                     if (!svr.IsNativeImage)
                     {
-                        string publicToken = StrongName.GetStrongNameTokenFromAssembly(svr.FullPath);
-                        svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailPublicKeyToken, publicToken);
 
                         bool wasVerified = false;
                         int hresult = StrongName.ClrStrongName.StrongNameSignatureVerificationEx(svr.FullPath, fForceVerification: true, pfWasVerified: out wasVerified);
                         svr.IsStrongNameSigned = hresult == StrongName.S_OK;
+                        svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailSignedStrongName, svr.IsStrongNameSigned);
 
                         if (hresult != StrongName.S_OK)
                         {
@@ -255,7 +254,12 @@ namespace Microsoft.SignCheck.Verification
                         }
                         else
                         {
-                            svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailSignedStrongName, svr.IsStrongNameSigned);
+                            string publicToken;
+                            hresult = StrongName.GetStrongNameTokenFromAssembly(svr.FullPath, out publicToken);
+                            if (hresult == StrongName.S_OK)
+                            {
+                                svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailPublicKeyToken, publicToken);
+                            }                            
                         }
                     }
                     else

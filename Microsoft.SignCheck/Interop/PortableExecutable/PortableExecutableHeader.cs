@@ -36,6 +36,23 @@ namespace Microsoft.SignCheck.Interop.PortableExecutable
             }
         }
 
+        public IMAGE_FILE_HEADER FileHeader
+        {
+            get
+            {
+                if (IsPE32)
+                {
+                    return ImageNTHeaders32.FileHeader;
+                }
+                else if (IsPE64)
+                {
+                    return ImageNTHeaders64.FileHeader;
+                }
+
+                return new IMAGE_FILE_HEADER();
+            }
+        }
+
         /// <summary>
         /// The offset of the first <see cref="IMAGE_SECTION_HEADER"/>.
         /// </summary>
@@ -164,6 +181,22 @@ namespace Microsoft.SignCheck.Interop.PortableExecutable
             }
         }
 
+        public bool IsPE32
+        {
+            get
+            {
+                return OptionalHeaderMagic == ImageOptionalHeaderMagic.IMAGE_NT_OPTIONAL_HDR32_MAGIC;
+            }
+        }
+
+        public bool IsPE64
+        {
+            get
+            {
+                return OptionalHeaderMagic == ImageOptionalHeaderMagic.IMAGE_NT_OPTIONAL_HDR64_MAGIC;
+            }
+        }
+
         /// <summary>
         /// The number of <see cref="IMAGE_SECTION_HEADER"/> entries.
         /// </summary>
@@ -241,7 +274,7 @@ namespace Microsoft.SignCheck.Interop.PortableExecutable
             var sections = ImageSectionHeaders.ToArray();
 
             int i = 0;
-            while (i < ImageNTHeaders32.FileHeader.NumberOfSections)
+            while (i < FileHeader.NumberOfSections)
             {
                 if (rva < sections[i].VirtualAddress+AlignTo(sections[i].VirtualSize, SectionAlignment))
                 {
@@ -298,7 +331,7 @@ namespace Microsoft.SignCheck.Interop.PortableExecutable
 
         private static uint AlignTo(uint address, uint boundary)
         {
-            return address + (address % boundary);
+            return address + boundary - (address % boundary);
         }        
     }
 }

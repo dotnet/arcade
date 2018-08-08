@@ -43,11 +43,11 @@ namespace Microsoft.SignCheck.Verification
         /// </summary>
         /// <param name="path">The path of the assembly.</param>
         /// <returns>The strong name token of an assembly.</returns>
-        public static string GetStrongNameTokenFromAssembly(string path)
+        public static int GetStrongNameTokenFromAssembly(string path, out string tokenStr)
         {
             int tokenSize = 0;
             byte[] token = null;
-            string tokenStr = String.Empty;
+            tokenStr = String.Empty;
             IntPtr tokenPtr = IntPtr.Zero;
             int hresult = ClrStrongName.StrongNameTokenFromAssembly(path, out tokenPtr, out tokenSize);
 
@@ -59,7 +59,7 @@ namespace Microsoft.SignCheck.Verification
                 tokenStr = tokenStr.Replace("-", "");
             }
 
-            return tokenStr;
+            return hresult;
         }
     }
 }
