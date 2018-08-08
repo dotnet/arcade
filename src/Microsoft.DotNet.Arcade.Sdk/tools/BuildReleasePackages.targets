@@ -16,8 +16,7 @@
     <Message Text="Building release versions of NuGet packages" Importance="high" />
 
     <Error Text="PreReleaseVersionLabel must be non-empty when using NuGet Repack tool." Condition="'$(PreReleaseVersionLabel)' == ''" />
-    <Error Text="NuGet Repack tool does not support SemVer2" Condition="'$(SemanticVersioningV1)' != 'true'"/>
-
+    
     <ItemGroup>
       <_BuiltPackages Include="$(ArtifactsShippingPackagesDir)*.nupkg" />
     </ItemGroup>
