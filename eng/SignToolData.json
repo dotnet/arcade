@@ -26,8 +26,7 @@
         "bin/Microsoft.AspNetCore.ApiVersioning/netstandard2.0/Microsoft.AspNetCore.ApiVersioning.dll",
         "bin/Microsoft.AspNetCore.ApiVersioning.Analyzers/netstandard1.3/Microsoft.AspNetCore.ApiVersioning.Analyzers.dll",
         "bin/Microsoft.AspNetCore.ApiVersioning.Swashbuckle/netstandard2.0/Microsoft.AspNetCore.ApiVersioning.Swashbuckle.dll",
-        "bin/Microsoft.DotNet.DarcLib/net461/Microsoft.DotNet.DarcLib.dll",
-        "bin/Microsoft.DotNet.DarcLib/netcoreapp2.0/Microsoft.DotNet.DarcLib.dll"
+        "bin/Microsoft.DotNet.DarcLib/netstandard2.0/Microsoft.DotNet.DarcLib.dll"
       ]
     },
     {
