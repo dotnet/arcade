@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.SignTool
             var process = Process.Start(new ProcessStartInfo()
             {
                 FileName = _msbuildPath,
-                Arguments = $@"/v:m ""{projectFilePath}"" /bl:""{Path.Combine(_logDir, $"Signing{round}.binlog")}""",
+                Arguments = $@"""{projectFilePath}"" /bl:""{Path.Combine(_logDir, $"Signing{round}.binlog")}""",
                 UseShellExecute = false,
                 WorkingDirectory = TempDir,
             });
