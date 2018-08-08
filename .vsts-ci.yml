@@ -14,7 +14,7 @@ phases:
   steps:
     - script: echo config - %_BuildConfig%
 
-    - phase: MyDependentBuild
-      dependsOn: 'MyBuild Debug'
-      steps:
-      - script: echo dependent build Debug
+- phase: MyDependentBuild
+  dependsOn: 'MyBuild Debug'
+  steps:
+  - script: echo dependent build Debug
