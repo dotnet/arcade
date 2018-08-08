@@ -48,6 +48,14 @@ This approach publishes what amounts to “public surface area” for the shared
 - There is a "core" set of tool packages defined which every participating repo get.  Other packages produced by different product teams are also available, but these "curated" packages not automatically brought down by default.
 - New toolset packages should generally be extensively used in one repo, then if warranted, promoted to become more generally available.
 
+### What shared tools should be part of the Arcade SDK and which should not?
+
+- If a tool provides functionality which is meant to be used by all of the [Tier 1 Repos](TierOneRepos.md) then we should add it to the SDK. 
+- If the provided functionality will only work for a couple of repos then these won't be part of the SDK and will have to be manually referenced in a project.
+- The SDK comes with props and targets files that are imported to any repository using the SDK, or invoked by common build infrastructure.
+- These files automatically import required packages via `PackageReference` (e.g. Microsoft.DotNet.SignTool, MicroBuild.Core, etc.)
+- The SDK allows the repository to opt-into additional packages as needed (VSIX authoritng, XUnit testing etc)
+
 ### Arcade building repos Requirements
 - Arcade builds, tests, packages, signs, and publishes itself using itself and the shipping SDK/CLI
 - Arcade itself must build from source.  This does not necessarily apply to the packages hosted by Arcade, but building from source should always be kept in mind.
