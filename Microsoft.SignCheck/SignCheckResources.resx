@@ -192,6 +192,9 @@
   <data name="ExclusionYourComment" xml:space="preserve">
     <value>Add you comment here</value>
   </data>
+  <data name="FileAlreadyExists" xml:space="preserve">
+    <value>A file named {0} already exists. The duplicate entry will be ignored.</value>
+  </data>
   <data name="NA" xml:space="preserve">
     <value>N/A</value>
   </data>

@@ -5,7 +5,7 @@
     <OutputType>EXE</OutputType>
     <Platforms>x86</Platforms>
     <IsTool>True</IsTool>
-    <Configurations>Release</Configurations>
+    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Label="Nuget Package Settings">

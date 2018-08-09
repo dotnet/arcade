@@ -139,14 +139,14 @@ namespace Microsoft.SignCheck.Verification
             Verifiers.Add(".cab", VerifyCab);
             Verifiers.Add(".dll", VerifyDll);
             Verifiers.Add(".exe", VerifyExe);
-            Verifiers.Add(".js", VerifyAuthentiCode);
+            Verifiers.Add(".js", VerifyAuthentiCodeOnly);
             Verifiers.Add(".msi", VerifyMsi);
             Verifiers.Add(".msp", VerifyMsp);
             Verifiers.Add(".nupkg", VerifyNupkg);
-            Verifiers.Add(".psd1", VerifyAuthentiCode);
-            Verifiers.Add(".psm1", VerifyAuthentiCode);
-            Verifiers.Add(".ps1", VerifyAuthentiCode);
-            Verifiers.Add(".ps1xml", VerifyAuthentiCode);
+            Verifiers.Add(".psd1", VerifyAuthentiCodeOnly);
+            Verifiers.Add(".psm1", VerifyAuthentiCodeOnly);
+            Verifiers.Add(".ps1", VerifyAuthentiCodeOnly);
+            Verifiers.Add(".ps1xml", VerifyAuthentiCodeOnly);
             Verifiers.Add(".vsix", VerifyVsix);
             Verifiers.Add(".zip", VerifyZip);
 
@@ -232,6 +232,13 @@ namespace Microsoft.SignCheck.Verification
             return svr;
         }
 
+        public SignatureVerificationResult VerifyAuthentiCodeOnly(string path, string parent)
+        {
+            var svr = VerifyAuthentiCode(path, parent);
+            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
+            return svr;
+        }
+
         public void VerifyStrongNameSignature(SignatureVerificationResult svr)
         {
             if (StrongName.IsManagedCode(svr.FullPath))
@@ -259,7 +266,7 @@ namespace Microsoft.SignCheck.Verification
                             if (hresult == StrongName.S_OK)
                             {
                                 svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailPublicKeyToken, publicToken);
-                            }                            
+                            }
                         }
                     }
                     else
@@ -518,13 +525,20 @@ namespace Microsoft.SignCheck.Verification
                         var aliasFileName = Utils.GetHash(archiveEntry.FullName, HashAlgorithmName.MD5.Name) + Path.GetExtension(archiveEntry.FullName);
                         var aliasFullName = Path.Combine(tempPath, aliasFileName);
 
-                        archiveEntry.ExtractToFile(aliasFullName);
-                        var archiveEntryResult = VerifyFile(aliasFullName, result.Filename);
+                        if (File.Exists(aliasFullName))
+                        {
+                            Log.WriteMessage(LogVerbosity.Normal, SignCheckResources.FileAlreadyExists, aliasFullName);
+                        }
+                        else
+                        {
+                            archiveEntry.ExtractToFile(aliasFullName);
+                            var archiveEntryResult = VerifyFile(aliasFullName, result.Filename);
 
-                        // Tag the full path into the result detail
-                        archiveEntryResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, archiveEntry.FullName);
-                        CheckAndUpdateExclusion(archiveEntryResult, aliasFileName, archiveEntry.FullName, result.Filename);
-                        result.NestedResults.Add(archiveEntryResult);
+                            // Tag the full path into the result detail
+                            archiveEntryResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, archiveEntry.FullName);
+                            CheckAndUpdateExclusion(archiveEntryResult, aliasFileName, archiveEntry.FullName, result.Filename);
+                            result.NestedResults.Add(archiveEntryResult);
+                        }
                     }
 
                     DeleteDirectory(tempPath);
@@ -533,7 +547,6 @@ namespace Microsoft.SignCheck.Verification
 
             return result;
         }
-
 
         private void CheckAndUpdateExclusion(SignatureVerificationResult result, string alias, string fullName, string parent)
         {

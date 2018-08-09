@@ -286,6 +286,15 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A file named {0} already exists. The duplicate entry will be ignored..
+        /// </summary>
+        internal static string FileAlreadyExists {
+            get {
+                return ResourceManager.GetString("FileAlreadyExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to N/A.
         /// </summary>
         internal static string NA {

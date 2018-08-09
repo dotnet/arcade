@@ -93,7 +93,7 @@ namespace SignCheck
         {
             get;
             set;
-        }
+        } = LogVerbosity.Normal;
 
         [Option('x', "exclusions-file",
             HelpText = "Path to a file containing a list of files to ignore when verification fails. Exclusions are not reported as errors.")]
