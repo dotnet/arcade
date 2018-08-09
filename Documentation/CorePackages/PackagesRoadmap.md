@@ -30,6 +30,14 @@ The following list provides a summary of the state of each package. For more inf
   - Add documentation on how to consume the SignTool.
 - **When could start being consumed by other repositories**: S140 => 8/31
 
+### Blob Feeds
+- **Goal**: Publish packages to internal sources to increase reliability in our internal build systems.
+- **Where we are**:
+  - Transport feeds from Buildtools is now in Arcade.
+- **Principal TODOs**:
+  - Remove the dependency from VersionTools => Send information to Darc/Maestro.
+- **When could start being consumed by other repositories**: S140 => 8/31
+
 ### Publishing
 - **Goal**: Standardized the way to publish packages and symbols to the respective channels for all .NET Core 3.0 repositories.
 - **Where we are**: Arcade is consuming the Publishing package.
@@ -39,21 +47,13 @@ The following list provides a summary of the state of each package. For more inf
   - Add documentation to Arcade.
 - **When could start being consumed by other repositories**: S141 => 9/21
 
-### Blob Feeds
-- **Goal**: Publish packages to internal sources to increase reliability in our internal build systems.
-- **Where we are**:
-  - Transport feeds from Buildtools is now in Arcade.
-- **Principal TODOs**:
-  - Remove the dependency from VersionTools => Send information to Darc/Maestro.
-- **When could start being consumed by other repositories**: S140 => 8/31
-
 ### Packaging
 - **Goal**: Pack the binaries produced by the .NET Core 3.0 repositories in a unified way.
 - **Where we are**: Initial code is already part of Arcade SDK => only for NuGet packages.
 - **Principal TODOs**: 
   - Make sure what we currently have will work for most repositories. Refactor where necessary.
   - Add documentation.
-- **When could start being consumed by other repositories**: S139 => 8/10
+- **When could start being consumed by other repositories**: S142 => 10/12
 
 ### Telemetry
 - **Goal**: Provide telemetry about every task executed as part of building .NET Core 3.0.
@@ -61,4 +61,4 @@ The following list provides a summary of the state of each package. For more inf
 - **Principal TODOs**:
   - Make sure what we currently have will work for most repositories. Refactor where necessary.
   - Add documentation.
-- **When could start being consumed by other repositories**: S139 => 8/10
+- **When could start being consumed by other repositories**: S142 => 10/12

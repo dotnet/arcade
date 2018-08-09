@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DarcLib
@@ -119,16 +120,20 @@ namespace Microsoft.DotNet.DarcLib
             return status;
         }
 
-        public async Task<string> UpdatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<DependencyDetail> itemsToUpdate, int pullRequestId, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
+        public async Task<string> UpdatePullRequestAsync(string pullRequestUrl, string assetsProducedInCommit, string branch, IEnumerable<AssetData> assetsToUpdate, string pullRequestTitle = null, string pullRequestDescription = null)
         {
-            _logger.LogInformation($"Updating pull request '{pullRequestId}' in repo '{repoUri}' and branch '{branch}'...");
+            _logger.LogInformation($"Updating pull request '{pullRequestUrl}'...");
+
             string linkToPr = null;
 
-            pullRequestBaseBranch = pullRequestBaseBranch ?? $"darc-{branch}";
+            string repoUri = await _gitClient.GetPullRequestRepo( pullRequestUrl);
+            string pullRequestBaseBranch = $"darc-{branch}";
+
+            IEnumerable<DependencyDetail> itemsToUpdate = await GetRequiredUpdatesAsync(repoUri, branch, assetsProducedInCommit, assetsToUpdate);
 
             await CommitFilesForPullRequest(repoUri, branch, assetsProducedInCommit, itemsToUpdate, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
 
-            linkToPr = await _gitClient.UpdatePullRequestAsync(repoUri, branch, pullRequestBaseBranch, pullRequestId, pullRequestTitle, pullRequestDescription);
+            linkToPr = await _gitClient.UpdatePullRequestAsync(pullRequestUrl, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
 
             _logger.LogInformation($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
 
