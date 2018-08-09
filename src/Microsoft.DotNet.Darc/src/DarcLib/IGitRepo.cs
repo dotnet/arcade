@@ -20,6 +20,8 @@ namespace Microsoft.DotNet.DarcLib
 
         Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl);
 
+        Task<string> GetPullRequestRepo(string pullRequestUrl);
+
         Task<string> CreatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null);
 
         Task<string> UpdatePullRequestAsync(string pullRequestUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null);

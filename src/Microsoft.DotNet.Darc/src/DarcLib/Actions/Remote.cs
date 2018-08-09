@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.DarcLib
 
             string linkToPr = null;
 
-            string repoUri = GetRepoUriFromPrLink(pullRequestUrl);
+            string repoUri = await _gitClient.GetPullRequestRepo( pullRequestUrl);
             string pullRequestBaseBranch = $"darc-{branch}";
 
             IEnumerable<DependencyDetail> itemsToUpdate = await GetRequiredUpdatesAsync(repoUri, branch, assetsProducedInCommit, assetsToUpdate);
@@ -221,18 +221,6 @@ namespace Microsoft.DotNet.DarcLib
             {
                 await _gitClient.PushFilesAsync(await GetScriptCommitsAsync(repoUri, branch, assetsProducedInCommit, pullRequestBaseBranch), repoUri, pullRequestBaseBranch);
             }
-        }
-
-        private string GetRepoUriFromPrLink(string prLink)
-        {
-            Match linkMatch = Regex.Match(prLink, @"^(?<repoUri>.+?)(?=\/pull)");
-
-            if (linkMatch.Success)
-            {
-                return linkMatch.Groups["repoUri"].Value;
-            }
-
-            throw new Exception($"Not able to determine the repo URI from '{prLink}'");
         }
     }
 }

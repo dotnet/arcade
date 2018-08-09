@@ -143,9 +143,9 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl)
         {
-            string url = GetSegments(pullRequestUrl).Replace("pull", "pulls");
+            string url = GetPrPartialAbsolutePath(pullRequestUrl);
 
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos{url}", _logger);
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, url, _logger);
 
             JObject responseContent = JObject.Parse(await response.Content.ReadAsStringAsync());
 
@@ -173,6 +173,17 @@ namespace Microsoft.DotNet.DarcLib
             return PrStatus.None;
         }
 
+        public async Task<string> GetPullRequestRepo(string pullRequestUrl)
+        {
+            string url = GetPrPartialAbsolutePath(pullRequestUrl);
+
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, url, _logger);
+
+            JObject responseContent = JObject.Parse(await response.Content.ReadAsStringAsync());
+
+            return responseContent["repo"]["html_url"].ToString();
+        }
+
         public async Task<string> CreatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
         {
             string linkToPullRquest = await CreateOrUpdatePullRequestAsync(repoUri, mergeWithBranch, sourceBranch, HttpMethod.Post, title, description);
@@ -194,9 +205,9 @@ namespace Microsoft.DotNet.DarcLib
 
             string body = JsonConvert.SerializeObject(pullRequestMerge, _serializerSettings);
 
-            string url = GetSegments(pullRequestUrl).Replace("pulls", "pull");
+            string url = GetPrPartialAbsolutePath(pullRequestUrl);
 
-            await this.ExecuteGitCommand(HttpMethod.Put, $"repos{url}/merge", _logger, body);
+            await this.ExecuteGitCommand(HttpMethod.Put, url, _logger, body);
         }
 
         public async Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message)
@@ -333,7 +344,6 @@ namespace Microsoft.DotNet.DarcLib
 
         private async Task<string> CreateOrUpdatePullRequestAsync(string uri, string mergeWithBranch, string sourceBranch, HttpMethod method, string title = null, string description = null)
         {
-            string linkToPullRquest;
             string requestUri;
             string ownerAndRepo = GetSegments(uri);
 
@@ -350,16 +360,23 @@ namespace Microsoft.DotNet.DarcLib
             }
             else
             {
-                string url = ownerAndRepo.Replace("pull", "pulls");
-                requestUri = $"repos{url}";
+                requestUri = GetPrPartialAbsolutePath(uri);
             }
 
             HttpResponseMessage response = await this.ExecuteGitCommand(method, requestUri, _logger, body);
 
             JObject content = JObject.Parse(await response.Content.ReadAsStringAsync());
-            linkToPullRquest = content["html_url"].ToString();
 
-            return linkToPullRquest;
+            Console.WriteLine($"Browser ready link for this PR is: {content["html_url"].ToString()}");
+
+            return content["url"].ToString();
+        }
+
+        private string GetPrPartialAbsolutePath(string prLink)
+        {
+            Uri uri = new Uri(prLink);
+            string toRemove = $"{uri.Host}/repos/";
+            return prLink.Replace(toRemove, string.Empty);
         }
     }
 }
