@@ -5,9 +5,7 @@ The goal of the signing plan is to provide guidance on how the tier 1 (T1) produ
 - Leverage pre-existing solutions so that work isn't duplicated.
 - Where possible, avoid dependency on software installed on the machine to facilitate the consumtion of the tool accross the .NET Core repositories.
 - The consumption method of the SignTool should follow the [Methods for Consuming the .NET Core Shared Infrastructure Components](https://github.com/dotnet/arcade/blob/master/Documentation/Overview.md#methods-for-consuming-the-net-core-shared-infrastructure-components).
-- Signtool will need a manifest (list of files) in order to know what to sign. The manifest will be generated during the build (implicit).
-- SignTool should provide validation to guarantee that all assets that need signing are going to be signed, and also verify
-that the binaries were actually signed.
+- Signtool will need a list of containers in order to know what to sign.
 
 ## Roadmap
 1. (S137) Migrate SignTool from Repo tool set to Arcade.
@@ -15,8 +13,8 @@ that the binaries were actually signed.
 3. (S138) Arcade should sign its packages using the SignTool that is in the SDK.
 4. (S138 - S139) Refactor the SignTool to accomodate scenarios for other repositories. Examples of the changes are:
     - Convert to MsBuild task.
-    - Generate a manifest file during the build.
-    - Read the strong name from the metadata of a build.
+    - Accept a list of containers that need to be signed. Those containers will be expanded and nested assemblies signed. Current support will be to VSIX and NuGet packages.
+    - Read the strong name from the metadata of the file.
 5. (S140) Onboard one repository from T1 to use the SignTool from the SDK to sign its binaries.
 6. (S140) Once validated in a repository, start onboarding the other T1 repositories.
 
