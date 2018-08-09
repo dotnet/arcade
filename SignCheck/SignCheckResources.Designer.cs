@@ -88,15 +88,6 @@ namespace SignCheck {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Setting --file-status to {0}..
-        /// </summary>
-        internal static string scDetailFileStatusSetting {
-            get {
-                return ResourceManager.GetString("scDetailFileStatusSetting", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Downloading {0} to {1}..
         /// </summary>
         internal static string scDownloading {

@@ -156,7 +156,7 @@ namespace Microsoft.SignCheck.Verification
             {
                 if (String.IsNullOrEmpty(_tempPath))
                 {
-                    _tempPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                    _tempPath = Path.Combine(Path.GetTempPath(), "SignCheck", Path.GetRandomFileName());
                 }
 
                 return _tempPath;

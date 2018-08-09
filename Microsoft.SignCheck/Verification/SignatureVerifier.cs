@@ -509,6 +509,7 @@ namespace Microsoft.SignCheck.Verification
         {
             var result = new SignatureVerificationResult(path, parent);
             var fullPath = result.FullPath;
+            result.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, SignCheckResources.NA);
 
             if (Recursive)
             {

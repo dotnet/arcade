@@ -143,8 +143,6 @@ namespace SignCheck
                 FileStatus = FileStatus.UnsignedFiles;
             }
 
-            Log.WriteMessage(LogVerbosity.Diagnostic, String.Format(SignCheckResources.scDetailFileStatusSetting, FileStatus.ToString()));
-
             if (!String.IsNullOrEmpty(Options.ExclusionsFile))
             {
                 ProcessExclusions(Options.ExclusionsFile);
@@ -289,7 +287,7 @@ namespace SignCheck
                     ((result.IsExcluded) && ((FileStatus & FileStatus.ExcludedFiles) != 0)) ||
                     ((result.NestedResults.Count() > 0) && (Options.Recursive)) ||
                     ((FileStatus & FileStatus.AllFiles) == FileStatus.AllFiles) ||
-                    ((!result.IsSigned) && (!result.IsSkipped) && ((FileStatus & FileStatus.UnsignedFiles) != 0)))
+                    ((!result.IsSigned) && (!result.IsSkipped) && (!result.IsExcluded) && ((FileStatus & FileStatus.UnsignedFiles) != 0)))
                 {
                     Log.WriteMessage(LogVerbosity.Minimum, String.Empty.PadLeft(indent) + result.ToString(ResultDetails));
                 }
