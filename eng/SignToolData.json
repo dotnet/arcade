@@ -33,7 +33,7 @@
       "certificate": null,
       "strongName": null,
       "values": [
-        "packages/*.nupkg"
+        "packages/NonShipping/*.nupkg"
       ]
     }
   ],

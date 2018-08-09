@@ -69,17 +69,21 @@ phases:
         ifScript: eng\common\cibuild.cmd
           -configuration $(_BuildConfig) 
           -prepareMachine
-          /p:SignType=$(_SignType)
+          /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+          /p:DotNetSignType=$(_SignType)
+          /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+          /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
           $(_PublishArgs)
         elseScript: eng/common/cibuild.sh
           --configuration $(_BuildConfig) 
           --prepareMachine
-          /p:SignType=$(_SignType)
+          /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+          /p:DotNetSignType=$(_SignType)
+          /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+          /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
           $(_PublishArgs)
         name: Build_Publish
         displayName: Build / Publish
-        env:
-          OfficialBuildId: $(BUILD.BUILDNUMBER)
         condition: succeeded()
 
     # Internal only build steps (until publishing artifacts in public CI is supported)
