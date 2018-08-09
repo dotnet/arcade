@@ -227,13 +227,13 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task<string> CreatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
         {
-            string linkToPullRquest = await CreateOrUpdatePullRequestAsync(repoUri, mergeWithBranch, sourceBranch, HttpMethod.Post, 0, title, description);
+            string linkToPullRquest = await CreateOrUpdatePullRequestAsync(repoUri, mergeWithBranch, sourceBranch, HttpMethod.Post,title, description);
             return linkToPullRquest;
         }
 
-        public async Task<string> UpdatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, int pullRequestId, string title = null, string description = null)
+        public async Task<string> UpdatePullRequestAsync(string pullRequestUrl, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
         {
-            string linkToPullRquest = await CreateOrUpdatePullRequestAsync(repoUri, mergeWithBranch, sourceBranch, new HttpMethod("PATCH"), pullRequestId, title, description);
+            string linkToPullRquest = await CreateOrUpdatePullRequestAsync(pullRequestUrl, mergeWithBranch, sourceBranch, new HttpMethod("PATCH"), title, description);
             return linkToPullRquest;
         }
 
@@ -406,11 +406,11 @@ namespace Microsoft.DotNet.DarcLib
             return repoName;
         }
 
-        private async Task<string> CreateOrUpdatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, HttpMethod method, int pullRequestId = 0, string title = null, string description = null)
+        private async Task<string> CreateOrUpdatePullRequestAsync(string uri, string mergeWithBranch, string sourceBranch, HttpMethod method, string title = null, string description = null)
         {
             string linkToPullRequest;
             string requestUri;
-            string repoName = SetApiUriAndGetRepoName(repoUri);
+            string repoName = SetApiUriAndGetRepoName(uri);
 
             title = !string.IsNullOrEmpty(title) ? $"{PullRequestProperties.TitleTag} {title}" : PullRequestProperties.Title;
             description = description ?? PullRequestProperties.Description;
@@ -425,7 +425,8 @@ namespace Microsoft.DotNet.DarcLib
             }
             else
             {
-                requestUri = $"repositories/{repoName}/pullrequests/{pullRequestId}";
+                string url = repoName.Replace("pullrequest", "pullrequests");
+                requestUri = $"repositories{url}";
             }
 
             HttpResponseMessage response = await this.ExecuteGitCommand(method, requestUri, _logger, body);

@@ -143,9 +143,9 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl)
         {
-            string[] segments = GetSegments(pullRequestUrl).Split('/');
+            string url = GetSegments(pullRequestUrl).Replace("pull", "pulls");
 
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{segments[0]}/{segments[1]}/pulls/{segments[3]}", _logger);
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos{url}", _logger);
 
             JObject responseContent = JObject.Parse(await response.Content.ReadAsStringAsync());
 
@@ -175,13 +175,13 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task<string> CreatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
         {
-            string linkToPullRquest = await CreateOrUpdatePullRequestAsync(repoUri, mergeWithBranch, sourceBranch, HttpMethod.Post, 0, title, description);
+            string linkToPullRquest = await CreateOrUpdatePullRequestAsync(repoUri, mergeWithBranch, sourceBranch, HttpMethod.Post, title, description);
             return linkToPullRquest;
         }
 
-        public async Task<string> UpdatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, int pullRequestId, string title = null, string description = null)
+        public async Task<string> UpdatePullRequestAsync(string pullRequestUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
         {
-            string linkToPullRquest = await CreateOrUpdatePullRequestAsync(repoUri, mergeWithBranch, sourceBranch, new HttpMethod("PATCH"), pullRequestId, title, description);
+            string linkToPullRquest = await CreateOrUpdatePullRequestAsync(pullRequestUri, mergeWithBranch, sourceBranch, new HttpMethod("PATCH"), title, description);
             return linkToPullRquest;
         }
 
@@ -194,9 +194,9 @@ namespace Microsoft.DotNet.DarcLib
 
             string body = JsonConvert.SerializeObject(pullRequestMerge, _serializerSettings);
 
-            string[] segments = GetSegments(pullRequestUrl).Split('/');
+            string url = GetSegments(pullRequestUrl).Replace("pulls", "pull");
 
-            await this.ExecuteGitCommand(HttpMethod.Put, $"repos/{segments[0]}/{segments[1]}/pulls/{segments[3]}/merge", _logger, body);
+            await this.ExecuteGitCommand(HttpMethod.Put, $"repos{url}/merge", _logger, body);
         }
 
         public async Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message)
@@ -331,11 +331,11 @@ namespace Microsoft.DotNet.DarcLib
             return repoUri;
         }
 
-        private async Task<string> CreateOrUpdatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, HttpMethod method, int pullRequestId = 0, string title = null, string description = null)
+        private async Task<string> CreateOrUpdatePullRequestAsync(string uri, string mergeWithBranch, string sourceBranch, HttpMethod method, string title = null, string description = null)
         {
             string linkToPullRquest;
             string requestUri;
-            string ownerAndRepo = GetSegments(repoUri);
+            string ownerAndRepo = GetSegments(uri);
 
             title = !string.IsNullOrEmpty(title) ? $"{PullRequestProperties.TitleTag} {title}" : PullRequestProperties.Title;
             description = description ?? PullRequestProperties.Description;
@@ -350,7 +350,8 @@ namespace Microsoft.DotNet.DarcLib
             }
             else
             {
-                requestUri = $"repos/{ownerAndRepo}pulls/{pullRequestId}";
+                string url = ownerAndRepo.Replace("pull", "pulls");
+                requestUri = $"repos{url}";
             }
 
             HttpResponseMessage response = await this.ExecuteGitCommand(method, requestUri, _logger, body);
