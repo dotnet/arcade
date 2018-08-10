@@ -9,9 +9,11 @@ phases:
         _TestOnly: true
       Build_Release:
         _BuildConfig: Release
+  variables:
+    isTest: $(_TestOnly)        
   steps:
-  - ${{ if eq(variables['_TestOnly'], 'true') }}:
+  - ${{ if eq(variables['isTest'], 'true') }}:
     - script: echo _TestOnly is true for $(_BuildConfig)
-  - ${{ if ne(variables['_TestOnly'], 'true') }}:
+  - ${{ if ne(variables['isTest'], 'true') }}:
     - script: echo _TestOnly is NOT true for $(_BuildConfig)
   
