@@ -1,52 +1,24 @@
+variables:
+  system.debug: true
+
 phases:
-  - template: /eng/build.yml
-    parameters:
-      agentOs: Windows_NT
-      queue:
-        ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-          name: Hosted VS2017
-        ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:        
-          name: DotNetCore-Build
-          demands:
-          - agent.os -equals Windows_NT        
-        parallel: 2
-        matrix:
-          Build_Debug:
-            _BuildConfig: Debug
-            _PublishType: none
-            _SignType: test
-          Build_Release:
-            _BuildConfig: Release
-            ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _PublishType: none
-              _SignType: test
-            ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _PublishType: blob
-              _SignType: real
-              _UseEsrpSigning: true
+- phase: Foo
+  queue:
+    name: Hosted VS2017
+    parallel: 2
+    matrix:
+      Build_Debug:
+        _BuildConfig: Debug
+        _TestOnly: True
+      Build_Release:
+        _BuildConfig: Release
+  variables:
+    isTest: $(_TestOnly)        
+  steps:
+  - ${{ if eq(variables['isTest'], '$(_TestOnly)') }}:
+    - script: echo _TestOnly is true for $(_BuildConfig)
+  - ${{ if ne(variables['isTest'], 'True') }}:
+    - script: echo _TestOnly is NOT true for $(_BuildConfig), it's %_isTest%
+      env:
+        _isTest: $(isTest)
   
-  - template: /eng/build.yml
-    parameters:
-      agentOs: Linux
-      queue: 
-        ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-          name: DotNetCore-Linux
-        ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:        
-          name: DotNetCore-Test
-        demands:
-          - agent.os -equals Linux
-        parallel: 2
-        matrix:
-          Build_Debug:
-            _BuildConfig: Debug
-            _PublishType: none
-            _SignType: test
-          Build_Release:
-            _BuildConfig: Release
-            _PublishType: none
-            ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _SignType: test
-            ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _SignType: real
-      variables:
-        _PREVIEW_VSTS_DOCKER_IMAGE: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
