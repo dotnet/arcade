@@ -21,11 +21,19 @@ namespace Microsoft.SignCheck.Logging
         {
             if (!String.IsNullOrEmpty(messageFile))
             {
+                if (!Directory.Exists(messageFile))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(messageFile)));
+                }
                 MessageWriter = File.CreateText(messageFile);
             }
 
             if (!String.IsNullOrEmpty(errorFile))
             {
+                if (!Directory.Exists(errorFile))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(errorFile)));
+                }
                 ErrorWriter = File.CreateText(errorFile);
             }
         }

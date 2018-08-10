@@ -358,6 +358,10 @@ namespace SignCheck
                     // Generate an exclusions file for any unsigned files that were reported.
                     if (!String.IsNullOrEmpty(Options.ExclusionsOutput))
                     {
+                        if (!Directory.Exists(Options.ExclusionsOutput))
+                        {
+                            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(Options.ExclusionsOutput)));
+                        }
                         using (var exclusionsWriter = new StreamWriter(Options.ExclusionsOutput, append: false))
                         {
                             GenerateExclusionsFile(exclusionsWriter, results);
