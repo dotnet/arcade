@@ -1,3 +1,6 @@
+variables:
+  system.debug: true
+
 phases:
 - phase: Foo
   queue:
@@ -6,7 +9,7 @@ phases:
     matrix:
       Build_Debug:
         _BuildConfig: Debug
-        _TestOnly: true
+        _TestOnly: 'true'
       Build_Release:
         _BuildConfig: Release
   variables:
@@ -15,5 +18,7 @@ phases:
   - ${{ if eq(variables['isTest'], 'true') }}:
     - script: echo _TestOnly is true for $(_BuildConfig)
   - ${{ if ne(variables['isTest'], 'true') }}:
-    - script: echo _TestOnly is NOT true for $(_BuildConfig)
+    - script: echo _TestOnly is NOT true for $(_BuildConfig), it's %_isTest%
+      env:
+        _isTest: $(isTest)
   
