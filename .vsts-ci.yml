@@ -9,7 +9,7 @@ phases:
     matrix:
       Build_Debug:
         _BuildConfig: Debug
-        _TestOnly: 'true'
+        _TestOnly: true
       Build_Release:
         _BuildConfig: Release
   variables:
