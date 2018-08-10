@@ -2,7 +2,7 @@
 
 Arcade SDK is a set of msbuild props and targets files and packages that provide common build features used across multiple repos, such as CI integration, packaging, VSIX and VS setup authoring, testing, and signing via Microbuild.
 
-The infrastructure of each [repository that contributes to .NET Core 3.0 stack](TierOneRepos.md) is built on top of Arcade SDK. This allows us to orchestrate the build of the entire stack as well as built the stack from source. These repositories are expected to be on the latest version of the Arcade SDK.
+The infrastructure of each [repository that contributes to .NET Core 3.0 stack](TierOneRepos.md) is built on top of Arcade SDK. This allows us to orchestrate the build of the entire stack as well as build the stack from source. These repositories are expected to be on the latest version of the Arcade SDK.
 
 Repositories that do not participate in .NET Core 3.0 build may also use Arcade SDK in order to take advantage of the common  infrastructure.
 
@@ -25,7 +25,7 @@ The toolset has following requirements on the repository layout.
 
 ### Single build output
 All build outputs are located under a single directory called `artifacts`. 
-The RepoToolset defines the following output structure:
+The Arcade SDK defines the following output structure:
 
 ```
 artifacts
@@ -104,11 +104,11 @@ test.sh
 
 #### /eng/common/*
 
-The RepoToolset requires bootstrapper scripts to be present in the repo.
-The scripts in this directory shall be present and the same across all repositories using RepoToolset.
+The Arcade SDK requires bootstrapper scripts to be present in the repo.
+The scripts in this directory shall be present and the same across all repositories using Arcade SDK.
 
 #### /eng/SignToolData.json: Sign Tool configuration
-Teh file is present in the repo and describes how build outputs should be signed.
+The file is present in the repo and describes how build outputs should be signed.
 
 #### /eng/Versions.props: A single file listing component versions and used tools
 The file is present in the repo and defines versions of all dependencies used in the repository, the NuGet feeds they should be restored from and the version of the components produced by the repo build.
@@ -146,7 +146,7 @@ The toolset defines a set of tools (or features) that each repo can opt into or 
 
 The toolset also defines default versions for various tools and dependencies, such as MicroBuild, XUnit, VSSDK, etc. These defaults can be overridden in the Versions.props file.
 
-See [DefaultVersions](https://github.com/dotnet/roslyn-tools/blob/master/src/RepoToolset/DefaultVersions.props]) for a list of *UsingTool* properties and default versions.
+See [DefaultVersions](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/DefaultVersions.props]) for a list of *UsingTool* properties and default versions.
 
 #### /eng/FixedVersions.props (Orchestrated Build)
 
@@ -168,38 +168,40 @@ Targets executed in a step right after artifacts has been signed.
 
 #### /global.json, /nuget.config: SDK configuration
 
-`/global.json` file is present and specifies the version of the dotnet and `RoslynTools.RepoToolset` SDKs.
+`/global.json` file is present and specifies the version of the dotnet and `Microsoft.DotNet.Arcade.Sdk` SDKs.
 
 For example,
 
 ```json
 {
-  "sdk": {
-    "version": "2.1.300-rtm-008866"
+  "tools": {
+    "dotnet": "2.1.400-preview-009088"
   },
   "msbuild-sdks": {
-    "RoslynTools.RepoToolset": "1.0.0-beta2-63009-01"
+    "Microsoft.DotNet.Arcade.Sdk": "1.0.0-prerelease-63208-02"
   }
 }
 ```
 
-Include `vswhere` version if the repository should be built via desktop `msbuild` instead of dotnet cli:
+Include `vswhere` version under `tools` if the repository should be built via desktop `msbuild` instead of dotnet cli:
 
 ```json
-  "vswhere": {
-    "version": "2.2.7"
+{
+  "tools": {
+    "vswhere": "2.2.7"    
   }
+}
 ```
 
-`/nuget.config` file is present and specifies the MyGet feed to retrieve `RoslynTools.RepoToolset` SDK from like so:
+`/nuget.config` file is present and specifies the MyGet feed to retrieve Arcade SDK from like so:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
-  <!-- Only specify feed for RepoToolset SDK (see https://github.com/Microsoft/msbuild/issues/2982) -->
+  <!-- Only specify feed for Arcade SDK (see https://github.com/Microsoft/msbuild/issues/2982) -->
   <packageSources>
     <clear />
-    <add key="roslyn-tools" value="https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json" />
+    <add key="dotnet-core" value="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" />
   </packageSources>
 </configuration>
 ```
@@ -208,7 +210,7 @@ Include `vswhere` version if the repository should be built via desktop `msbuild
 
 #### /src/Directory.Build.props
 
-`Directory.Build.props` shall import RepoToolset SDK.
+`Directory.Build.props` shall import Arcade SDK.
 It may also specify public keys for `InternalsVisibleTo` project items and other properties applicable to all projects to the repository. 
 
 ```xml
@@ -217,7 +219,7 @@ It may also specify public keys for `InternalsVisibleTo` project items and other
     <ImportNetSdkFromRepoToolset>false</ImportNetSdkFromRepoToolset>
   </PropertyGroup>
 
-  <Import Project="Sdk.props" Sdk="RoslynTools.RepoToolset" />    
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />    
 
   <!-- Public keys used by InternalsVisibleTo project items -->
   <MoqPublicKey>00240000048000009400...</MoqPublicKey> 
@@ -226,11 +228,11 @@ It may also specify public keys for `InternalsVisibleTo` project items and other
 
 #### Directory.Build.targets
 
-`Directory.Build.targets` shall import RepoToolset SDK. It may specify additional targets applicable to all source projects.
+`Directory.Build.targets` shall import Arcade SDK. It may specify additional targets applicable to all source projects.
 
 ```xml
 <Project>
-  <Import Project="Sdk.targets" Sdk="RoslynTools.RepoToolset" />
+  <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 </Project>
 ```
 
@@ -258,7 +260,7 @@ It might be useful to create other top-level directories containing projects tha
 
 ### Building VSIX packages (optional)
 
-Building Visual Studio components is an opt-in feature of the RepoToolset. Property `UsingToolVSSDK` needs to be set to `true` in the `Versions.props` file.
+Building Visual Studio components is an opt-in feature of the Arcade SDK. Property `UsingToolVSSDK` needs to be set to `true` in the `Versions.props` file.
 
 Set `VSSDKTargetPlatformRegRootSuffix` property to specify the root suffix of the VS hive to deploy to.
 
@@ -266,7 +268,7 @@ If `source.extension.vsixmanifest` is present next to a project file the project
 A package reference to `Microsoft.VSSDK.BuildTools` is automatically added to such project. 
 A project that needs `Microsoft.VSSDK.BuildTools` for generating pkgdef file needs to include the PackageReference explicitly.
 
-RepoToolset include build target for generating VS Template VSIXes. Adding `VSTemplate` items to project will trigger the target.
+Arcade SDK include build target for generating VS Template VSIXes. Adding `VSTemplate` items to project will trigger the target.
 
 `source.extension.vsixmanifest` shall specify `Experimental="true"` attribute in `Installation` section. The experimental flag will be stripped from VSIXes inserted into Visual Studio.
 
@@ -279,7 +281,7 @@ Multiple VSIXes can specify the same component name, in which case their manifes
 
 The Visual Studio insertion manifests and VSIXes are generated during Pack task into `VSSetup\Insertion` directory, where they are picked by by MicroBuild VSTS publishing task during official builds.
 
-RepoToolset also enables building VS Setup Components from .swr files (as opposed to components comprised of one or more VSIXes).
+Arcade SDK also enables building VS Setup Components from .swr files (as opposed to components comprised of one or more VSIXes).
 
 Use `SwrProperty` and `SwrFile` items to define a property that will be substituted in .swr files for given value and the set of .swr files, respectively.
 
@@ -323,7 +325,7 @@ folder "InstallDir:MSBuild\Microsoft\VisualStudio\Managed"
 
 ### MicroBuild
 
-The repository shall define a YAML build definition to be used by MicroBuild (e.g. `.vsts-ci.yml`).
+The repository shall define a YAML build definition that uses MicroBuild (e.g. `.vsts-ci.yml`).
 
 The following step shall be included in the definition:
 
