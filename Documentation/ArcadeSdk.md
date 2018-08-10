@@ -82,6 +82,7 @@ eng
     build.sh
     CIBuild.cmd
     cibuild.sh
+    ...
   SignToolData.json
   Versions.props
   FixedVersions.props (optional)
@@ -117,7 +118,7 @@ The file is present in the repo and defines versions of all dependencies used in
 <Project>
   <PropertyGroup>
     <!-- Base three-part version used for all outputs of the repo (assemblies, packages, vsixes) -->
-    <VersionBase>1.0.0</VersionBase>
+    <VersionPrefix>1.0.0</VersionPrefix>
     <!-- Package pre-release suffix not including build number -->
     <PreReleaseVersionLabel>rc2</PreReleaseVersionLabel>
   
