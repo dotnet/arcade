@@ -15,7 +15,7 @@ phases:
   variables:
     isTest: $(_TestOnly)        
   steps:
-  - ${{ if eq(variables['isTest'], 'True') }}:
+  - ${{ if eq(variables['isTest'], '$(_TestOnly)') }}:
     - script: echo _TestOnly is true for $(_BuildConfig)
   - ${{ if ne(variables['isTest'], 'True') }}:
     - script: echo _TestOnly is NOT true for $(_BuildConfig), it's %_isTest%
