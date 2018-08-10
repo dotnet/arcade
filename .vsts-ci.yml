@@ -12,9 +12,13 @@ phases:
         _TestOnly: True
       Build_Release:
         _BuildConfig: Release
+  variables:
+    isTest: $(_TestOnly)        
   steps:
-  - script: echo _TestOnly is true for $(_BuildConfig)
-    condition: and(succeeded(), eq(variables['_TestOnly'], 'True'))
-  - script: echo _TestOnly is NOT true for $(_BuildConfig)
-    condition: and(succeeded(), ne(variables['_TestOnly'], 'True'))
+  - ${{ if eq(variables['isTest'], '$(_TestOnly)') }}:
+    - script: echo _TestOnly is true for $(_BuildConfig)
+  - ${{ if ne(variables['isTest'], 'True') }}:
+    - script: echo _TestOnly is NOT true for $(_BuildConfig), it's %_isTest%
+      env:
+        _isTest: $(isTest)
   
