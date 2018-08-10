@@ -507,7 +507,7 @@ namespace Microsoft.SignCheck.Verification
 
         public SignatureVerificationResult VerifyZip(string path, string parent)
         {
-            var result = new SignatureVerificationResult(path, parent);
+            var result = SignatureVerificationResult.SkippedResult(path, parent);
             var fullPath = result.FullPath;
             result.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, SignCheckResources.NA);
 

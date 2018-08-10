@@ -104,6 +104,12 @@ namespace SignCheck
             set;
         }
 
+        public int TotalSkippedExcludedFiles
+        {
+            get;
+            set;
+        }
+
         public SignCheck(string[] args)
         {
             Options = new Options();
@@ -261,11 +267,6 @@ namespace SignCheck
             {
                 TotalFiles++;
 
-                if (result.IsExcluded)
-                {
-                    TotalExcludedFiles++;
-                }
-
                 if (result.IsSigned)
                 {
                     TotalSignedFiles++;
@@ -275,9 +276,19 @@ namespace SignCheck
                     TotalUnsignedFiles++;
                 }
 
+                if (result.IsExcluded)
+                {
+                    TotalExcludedFiles++;
+                }
+
                 if (result.IsSkipped)
                 {
                     TotalSkippedFiles++;
+                }
+
+                if (result.IsSkipped && result.IsExcluded)
+                {
+                    TotalSkippedExcludedFiles++;
                 }
 
                 // Regardless of the file status reporting settings, a container file like an MSI or NuGet package
@@ -362,7 +373,9 @@ namespace SignCheck
                     {
                         Log.WriteError(LogVerbosity.Minimum, SignCheckResources.scUnsignedFiles);
                     }
-                    Log.WriteMessage(LogVerbosity.Minimum, String.Format(SignCheckResources.scStats, TotalFiles, TotalSignedFiles, TotalUnsignedFiles, TotalSkippedFiles, TotalExcludedFiles));
+
+                    Log.WriteMessage(LogVerbosity.Minimum, String.Format(SignCheckResources.scStats,
+                        TotalFiles, TotalSignedFiles, TotalUnsignedFiles, TotalSkippedFiles, TotalExcludedFiles, TotalSkippedExcludedFiles));
                 }
                 else
                 {

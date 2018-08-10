@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -31,7 +32,16 @@ namespace Microsoft.SignCheck
 
         public static string ConvertToRegexPattern(string pattern)
         {
-            return Regex.Escape(pattern).Replace(@"\*", ".*").Replace(@"\?", ".");
+            string escapedPattern = Regex.Escape(pattern).Replace(@"\*", ".*").Replace(@"\?", ".");
+
+            if ((pattern.EndsWith("*")) || (pattern.EndsWith("?")))
+            {
+                return escapedPattern;
+            }
+            else
+            {
+                return String.Concat(escapedPattern, "$");
+            }            
         }
     }
 }
