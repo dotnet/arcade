@@ -375,7 +375,7 @@ namespace Microsoft.DotNet.DarcLib
         private string GetPrPartialAbsolutePath(string prLink)
         {
             Uri uri = new Uri(prLink);
-            string toRemove = $"{uri.Host}/repos/";
+            string toRemove = $"{uri.Host}/";
             return prLink.Replace(toRemove, string.Empty);
         }
     }
