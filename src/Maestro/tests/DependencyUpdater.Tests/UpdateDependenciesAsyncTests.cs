@@ -3,11 +3,16 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Maestro.Data.Models;
+using Microsoft.DotNet.DarcLib;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Helix.ServiceHost;
 using Microsoft.ServiceFabric.Data;
 using Moq;
 using Xunit;
+using Channel = Maestro.Data.Models.Channel;
+using MergePolicy = Maestro.Data.Models.MergePolicy;
+using SubscriptionPolicy = Maestro.Data.Models.SubscriptionPolicy;
+using UpdateFrequency = Maestro.Data.Models.UpdateFrequency;
 
 namespace DependencyUpdater.Tests
 {
@@ -55,29 +60,38 @@ namespace DependencyUpdater.Tests
                 SourceRepository = "source.repo",
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
-                PolicyUpdateFrequency = UpdateFrequency.EveryBuild,
-                Policy = new SubscriptionPolicy
+                PolicyObject = new SubscriptionPolicy
                 {
                     MergePolicy = MergePolicy.Never,
                     UpdateFrequency = UpdateFrequency.EveryBuild
                 },
                 LastAppliedBuild = build
             };
+            var repoInstallation = new RepoInstallation
+            {
+                Repository = "target.repo",
+                InstallationId = 1,
+            };
             await Context.BuildChannels.AddRangeAsync(buildChannels);
             await Context.Subscriptions.AddAsync(subscription);
+            await Context.RepoInstallations.AddAsync(repoInstallation);
             await Context.SaveChangesAsync();
 
             var pr = "http://repo.pr/1";
             Darc.Setup(
-                    d => d.CreatePrAsync(
+                    d => d.CreatePullRequestAsync(
                         subscription.TargetRepository,
                         subscription.TargetBranch,
-                        It.IsAny<IList<DarcAsset>>()))
+                        newBuild.Commit,
+                        It.IsAny<IList<AssetData>>(),
+                        null,
+                        null,
+                        null))
                 .ReturnsAsync(
-                    (string repo, string branch, IList<DarcAsset> assets) =>
+                    (string repo, string branch, string commit, IList<AssetData> assets, string baseBranch, string title, string description) =>
                     {
                         assets.Should()
-                            .BeEquivalentTo(new DarcAsset(newAsset.Name, newAsset.Version, newBuild.Commit, location));
+                            .BeEquivalentTo(new AssetData {Name = newAsset.Name, Version = newAsset.Version});
                         return pr;
                     });
 

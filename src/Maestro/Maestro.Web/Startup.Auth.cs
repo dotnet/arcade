@@ -46,22 +46,8 @@ namespace Maestro.Web
                     GitHubScheme,
                     options =>
                     {
-                        IConfiguration ghAuthConfig;
-                        if (HostingEnvironment.IsDevelopment() && Program.RunningInServiceFabric())
-                        {
-                            ghAuthConfig = Configuration.GetSection("GitHubAuthentication-SvcFabDev");
-                        }
-                        else
-                        {
-                            ghAuthConfig = Configuration.GetSection("GitHubAuthentication");
-                        }
-
-                        options.ClientId = ghAuthConfig["ClientId"];
-                        options.ClientSecret = ghAuthConfig["ClientSecret"];
-                        options.SaveTokens = true;
-                        options.CallbackPath = "/signin/github";
-                        options.Scope.Add("user:email");
-                        options.Scope.Add("read:org");
+                        IConfigurationSection ghAuthConfig = Configuration.GetSection("GitHubAuthentication");
+                        ghAuthConfig.Bind(options);
                         options.Events = new OAuthEvents {OnCreatingTicket = AddOrganizationRoles};
                     })
                 .AddPersonalAccessToken<ApplicationUser>(

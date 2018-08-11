@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 using Microsoft.ApplicationInsights;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.ServiceFabric.Actors;
 using Microsoft.ServiceFabric.Services.Remoting;
 
 namespace Microsoft.DotNet.ServiceFabric.ServiceHost
@@ -59,6 +60,17 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
             builder.Register(c =>
                 ServiceHostProxy.Create<TService>(
                     new Uri(serviceUri),
+                    c.Resolve<TelemetryClient>(),
+                    c.Resolve<ServiceContext>()));
+            return builder;
+        }
+
+        public static ContainerBuilder AddServiceFabricActor<TActor>(this ContainerBuilder builder)
+            where TActor : class, IActor
+        {
+            builder.Register(
+                (c, args) => ServiceHostActorProxy.Create<TActor>(
+                    args.TypedAs<ActorId>(),
                     c.Resolve<TelemetryClient>(),
                     c.Resolve<ServiceContext>()));
             return builder;

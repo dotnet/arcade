@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 {
@@ -46,7 +48,13 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 
             foreach (var (key, value) in logDict)
             {
-                op.AddBaggage(key, value);
+                if (key == "{OriginalFormat}")
+                    continue;
+                // Fix up the format of key and value to not cause issues until
+                // https://github.com/dotnet/corefx/issues/31687 is fixed
+                var keyP = Regex.Replace(key, "[^a-zA-Z0-9]", "");
+                var valueP = JsonConvert.SerializeObject(value);
+                op.AddBaggage(keyP, valueP);
             }
 
             op.Start();

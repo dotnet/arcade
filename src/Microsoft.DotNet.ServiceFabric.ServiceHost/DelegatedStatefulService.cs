@@ -37,6 +37,9 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
             services.AddSingleton<ServiceContext>(Context);
             services.AddSingleton(Context);
             _configureServices(services);
+
+            services.AddSingleton(StateManager);
+
             var builder = new ContainerBuilder();
             builder.Populate(services);
             _configureContainer(builder);
@@ -91,7 +94,6 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                     impl.RunAsync(cancellationToken),
                     ScheduledService.RunScheduleAsync(impl, telemetryClient, cancellationToken, logger));
             }
-            
         }
     }
 }

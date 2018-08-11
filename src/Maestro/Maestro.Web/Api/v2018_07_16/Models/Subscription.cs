@@ -20,10 +20,10 @@ namespace Maestro.Web.Api.v2018_07_16.Models
             SourceRepository = other.SourceRepository;
             TargetRepository = other.TargetRepository;
             TargetBranch = other.TargetBranch;
-            Policy = new SubscriptionPolicy(other.Policy);
+            Policy = new SubscriptionPolicy(other.PolicyObject);
         }
 
-        public int Id { get; }
+        public Guid Id { get; }
 
         public Channel Channel { get; }
 

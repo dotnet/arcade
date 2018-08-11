@@ -24,6 +24,7 @@ namespace Microsoft.DotNet.DarcLib
         Task MergePullRequestAsync(string pullRequestUrl, string commit = null, string mergeMethod = null, string title = null, string message = null);
 
         Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl);
+        Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl);
 
         Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null);
     }

@@ -29,7 +29,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
                 SourceRepository = SourceRepository,
                 TargetRepository = TargetRepository,
                 TargetBranch = TargetBranch,
-                Policy = Policy.ToDb(),
+                PolicyObject = Policy.ToDb(),
             };
         }
     }

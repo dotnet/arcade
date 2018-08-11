@@ -4,11 +4,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Maestro.Data.Models;
+using Microsoft.DotNet.DarcLib;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Helix.ServiceHost;
 using Microsoft.ServiceFabric.Data;
 using Moq;
 using Xunit;
+using Channel = Maestro.Data.Models.Channel;
+using MergePolicy = Maestro.Data.Models.MergePolicy;
+using SubscriptionPolicy = Maestro.Data.Models.SubscriptionPolicy;
+using UpdateFrequency = Maestro.Data.Models.UpdateFrequency;
 
 namespace DependencyUpdater.Tests
 {
@@ -54,23 +59,28 @@ namespace DependencyUpdater.Tests
                 SourceRepository = "source.repo",
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
-                PolicyUpdateFrequency = UpdateFrequency.EveryDay,
-                Policy = new SubscriptionPolicy
+                PolicyObject = new SubscriptionPolicy
                 {
                     MergePolicy = MergePolicy.Never,
                     UpdateFrequency = UpdateFrequency.EveryDay
                 },
                 LastAppliedBuild = oldBuild
             };
+            var repoInstallation = new RepoInstallation
+            {
+                Repository = "target.repo",
+                InstallationId = 1,
+            };
+            await Context.RepoInstallations.AddAsync(repoInstallation);
             await Context.Subscriptions.AddAsync(subscription);
             await Context.BuildChannels.AddAsync(buildChannel);
             var pr = "https://pr.url/1";
             await Context.SaveChangesAsync();
-            Darc.Setup(d => d.CreatePrAsync("target.repo", "target.branch", It.IsAny<IList<DarcAsset>>()))
+            Darc.Setup(d => d.CreatePullRequestAsync("target.repo", "target.branch", build.Commit, It.IsAny<IList<AssetData>>(), null, null, null))
                 .ReturnsAsync(
-                    (string repo, string branch, IList<DarcAsset> assets) =>
+                    (string repo, string branch, string commit, IList<AssetData> assets, string baseBranch, string title, string description) =>
                     {
-                        assets.Should().BeEquivalentTo(new DarcAsset("source.asset", "1.0.1", "sha", location));
+                        assets.Should().BeEquivalentTo(new AssetData {Name = "source.asset", Version = "1.0.1"});
                         return pr;
                     });
 
@@ -134,18 +144,23 @@ namespace DependencyUpdater.Tests
                 SourceRepository = "source.repo",
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
-                PolicyUpdateFrequency = UpdateFrequency.EveryDay,
-                Policy = new SubscriptionPolicy
+                PolicyObject = new SubscriptionPolicy
                 {
                     MergePolicy = MergePolicy.Never,
                     UpdateFrequency = UpdateFrequency.EveryDay
                 },
                 LastAppliedBuild = oldBuild
             };
+            var repoInstallation = new RepoInstallation
+            {
+                Repository = "target.repo",
+                InstallationId = 1,
+            };
+            await Context.RepoInstallations.AddAsync(repoInstallation);
             await Context.Subscriptions.AddAsync(subscription);
             await Context.BuildChannels.AddAsync(buildChannel);
-            var pr = "https://pr.url/1";
             await Context.SaveChangesAsync();
+            var pr = "https://pr.url/1";
             using (ITransaction tx = StateManager.CreateTransaction())
             {
                 await PullRequests.AddAsync(
@@ -156,13 +171,13 @@ namespace DependencyUpdater.Tests
                 await tx.CommitAsync();
             }
 
-            Darc.Setup(d => d.UpdatePrAsync(pr, "target.repo", "target.branch", It.IsAny<IList<DarcAsset>>()))
-                .Callback(
-                    (string _, string __, string ___, IList<DarcAsset> assets) =>
+            Darc.Setup(d => d.UpdatePullRequestAsync(pr, build.Commit, "target.branch", It.IsAny<IList<AssetData>>(), null, null))
+                .ReturnsAsync(
+                    (string prUrl, string commit, string branch, IList<AssetData> assets, string title, string description) =>
                     {
-                        assets.Should().BeEquivalentTo(new DarcAsset("source.asset", "1.0.1", "sha", location));
-                    })
-                .Returns(Task.CompletedTask);
+                        assets.Should().BeEquivalentTo(new AssetData{Name = "source.asset", Version = "1.0.1"});
+                        return "";
+                    });
 
             var updater = ActivatorUtilities.CreateInstance<DependencyUpdater>(Scope.ServiceProvider);
             await updater.CheckSubscriptionsAsync(CancellationToken.None);
@@ -194,8 +209,7 @@ namespace DependencyUpdater.Tests
                 SourceRepository = "source.repo",
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
-                PolicyUpdateFrequency = UpdateFrequency.EveryDay,
-                Policy = new SubscriptionPolicy
+                PolicyObject = new SubscriptionPolicy
                 {
                     MergePolicy = MergePolicy.Never,
                     UpdateFrequency = UpdateFrequency.EveryBuild
@@ -232,8 +246,7 @@ namespace DependencyUpdater.Tests
                 SourceRepository = "source.repo",
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
-                PolicyUpdateFrequency = UpdateFrequency.EveryDay,
-                Policy = new SubscriptionPolicy
+                PolicyObject = new SubscriptionPolicy
                 {
                     MergePolicy = MergePolicy.Never,
                     UpdateFrequency = UpdateFrequency.EveryDay

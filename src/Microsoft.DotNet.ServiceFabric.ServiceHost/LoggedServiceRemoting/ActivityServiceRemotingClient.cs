@@ -48,8 +48,9 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                         Encoding.UTF8.GetBytes(current.Id));
                     if (current.Baggage.Any())
                     {
+                        var baggageObject = current.Baggage.ToList();
                         var baggageStr =
-                            JsonConvert.SerializeObject(current.Baggage.ToDictionary(p => p.Key, p => p.Value));
+                            JsonConvert.SerializeObject(baggageObject);
                         header.AddHeader(ActivityServiceRemoting.CorrelationContextHeaderName,
                             Encoding.UTF8.GetBytes(baggageStr));
                     }

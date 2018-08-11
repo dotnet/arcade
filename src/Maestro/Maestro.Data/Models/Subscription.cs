@@ -18,7 +18,7 @@ namespace Maestro.Data.Models
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         public int ChannelId { get; set; }
         public Channel Channel { get; set; }
@@ -29,16 +29,15 @@ namespace Maestro.Data.Models
 
         public string TargetBranch { get; set; }
 
-        private string _Policy { get; set; }
+        [Column("Policy")]
+        public string PolicyString { get; set; }
 
         [NotMapped]
-        public SubscriptionPolicy Policy
+        public SubscriptionPolicy PolicyObject
         {
-            get => _Policy == null ? null : JsonConvert.DeserializeObject<SubscriptionPolicy>(_Policy);
-            set => _Policy = value == null ? null : JsonConvert.SerializeObject(value);
+            get => PolicyString == null ? null : JsonConvert.DeserializeObject<SubscriptionPolicy>(PolicyString);
+            set => PolicyString = value == null ? null : JsonConvert.SerializeObject(value);
         }
-
-        public UpdateFrequency PolicyUpdateFrequency { get; set; }
 
         public int? LastAppliedBuildId { get; set; }
         public Build LastAppliedBuild { get; set; }

@@ -4,20 +4,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Castle.DynamicProxy;
-using Castle.DynamicProxy.Internal;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ServiceFabric.Actors;
+using Microsoft.ServiceFabric.Actors.Client;
 using Microsoft.ServiceFabric.Actors.Remoting.V2.FabricTransport.Client;
+using Microsoft.ServiceFabric.Actors.Remoting.V2.FabricTransport.Runtime;
 using Microsoft.ServiceFabric.Services.Client;
 using Microsoft.ServiceFabric.Services.Communication.Client;
-using Microsoft.ServiceFabric.Services.Communication.Runtime;
 using Microsoft.ServiceFabric.Services.Remoting;
 using Microsoft.ServiceFabric.Services.Remoting.Client;
+using Microsoft.ServiceFabric.Services.Remoting.FabricTransport;
 using Microsoft.ServiceFabric.Services.Remoting.Runtime;
 using Microsoft.ServiceFabric.Services.Remoting.V2.Client;
 using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Client;
 using Microsoft.ServiceFabric.Services.Remoting.V2.FabricTransport.Runtime;
-using Microsoft.ServiceFabric.Services.Runtime;
 
 namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 {
@@ -32,10 +33,11 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
             Type firstIface = ifaces[0];
             Type[] additionalIfaces = ifaces.Skip(1).ToArray();
             var gen = new ProxyGenerator();
-            var impl = (IService) gen.CreateInterfaceProxyWithoutTarget(
+            var impl = (IService) gen.CreateInterfaceProxyWithTargetInterface(
                 firstIface,
                 additionalIfaces,
-                new InvokeInNewScopeInterceptor<TImplementation>(container),
+                (object)null,
+                new InvokeInNewScopeInterceptor(container, typeof(TImplementation)),
                 new LoggingServiceInterceptor(context, client));
 
             return new FabricTransportServiceRemotingListener(
@@ -44,13 +46,39 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
         }
     }
 
+    public static class ServiceHostActorProxy
+    {
+        private static ActorProxyFactory CreateFactory()
+        {
+            return new ActorProxyFactory(
+                handler => new ActivityServiceRemotingClientFactory(
+                    new FabricTransportActorRemotingClientFactory(handler)));
+        }
+
+        public static T Create<T>(ActorId actorId, TelemetryClient telemetryClient, ServiceContext context)
+            where T : class, IActor
+        {
+            var actor = CreateFactory().CreateActorProxy<T>(actorId);
+            var serviceUri = actor.GetActorReference().ServiceUri;
+            var gen = new ProxyGenerator();
+            T proxy = gen.CreateInterfaceProxyWithTargetInterface(
+                actor,
+                new LoggingServiceProxyInterceptor(telemetryClient, context, serviceUri.ToString()));
+            return proxy;
+        }
+    }
+
     public static class ServiceHostProxy
     {
         private static ServiceProxyFactory CreateFactory()
         {
+            if (!FabricTransportRemotingSettings.TryLoadFrom("TransportSettings", out FabricTransportRemotingSettings transportSettings))
+            {
+                transportSettings = new FabricTransportRemotingSettings();
+            }
             return new ServiceProxyFactory(
                 handler => new ActivityServiceRemotingClientFactory(
-                    new FabricTransportActorRemotingClientFactory(handler)));
+                    new FabricTransportServiceRemotingClientFactory(transportSettings, handler)));
         }
 
         public static T Create<T>(
@@ -69,18 +97,30 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
         }
     }
 
-    internal class InvokeInNewScopeInterceptor<TImplementation> : AsyncInterceptor
+    internal class InvokeInNewScopeInterceptor : AsyncInterceptor
     {
         private readonly ILifetimeScope _outerScope;
+        private readonly Type _implementationType;
+        private readonly Action<ContainerBuilder> _configureScope;
 
-        public InvokeInNewScopeInterceptor(ILifetimeScope outerScope)
+        public InvokeInNewScopeInterceptor(ILifetimeScope outerScope, Type implementationType)
+            :this(outerScope, implementationType, builder => { })
+        {
+        }
+
+        public InvokeInNewScopeInterceptor(
+            ILifetimeScope outerScope,
+            Type implementationType,
+            Action<ContainerBuilder> configureScope)
         {
             _outerScope = outerScope;
+            _implementationType = implementationType;
+            _configureScope = configureScope;
         }
 
         protected override async Task InterceptAsync(IInvocation invocation, Func<Task> call)
         {
-            using (var scope = _outerScope.BeginLifetimeScope())
+            using (var scope = _outerScope.BeginLifetimeScope(_configureScope))
             {
                 var client = scope.Resolve<TelemetryClient>();
                 var context = scope.Resolve<ServiceContext>();
@@ -91,8 +131,8 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                     {
                         op.Telemetry.Url = new Uri(url);
 
-                        var instance = scope.Resolve<TImplementation>();
-                        ((IChangeProxyTarget) invocation).ChangeInvocationTarget(instance);
+                        var instance = scope.Resolve(_implementationType);
+                        ((IChangeProxyTarget)invocation).ChangeInvocationTarget(instance);
                         await call();
                     }
                     catch (Exception ex)
@@ -107,7 +147,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 
         protected override async Task<T> InterceptAsync<T>(IInvocation invocation, Func<Task<T>> call)
         {
-            using (var scope = _outerScope.BeginLifetimeScope())
+            using (var scope = _outerScope.BeginLifetimeScope(_configureScope))
             {
                 var client = scope.Resolve<TelemetryClient>();
                 var context = scope.Resolve<ServiceContext>();
@@ -118,7 +158,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                     {
                         op.Telemetry.Url = new Uri(url);
 
-                        var instance = scope.Resolve<TImplementation>();
+                        var instance = scope.Resolve(_implementationType);
                         ((IChangeProxyTarget) invocation).ChangeInvocationTarget(instance);
                         return await call();
                     }
@@ -134,7 +174,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 
         protected override T Intercept<T>(IInvocation invocation, Func<T> call)
         {
-            using (var scope = _outerScope.BeginLifetimeScope())
+            using (var scope = _outerScope.BeginLifetimeScope(_configureScope))
             {
                 var client = scope.Resolve<TelemetryClient>();
                 var context = scope.Resolve<ServiceContext>();
@@ -145,7 +185,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                     {
                         op.Telemetry.Url = new Uri(url);
 
-                        var instance = scope.Resolve<TImplementation>();
+                        var instance = scope.Resolve(_implementationType);
                         ((IChangeProxyTarget) invocation).ChangeInvocationTarget(instance);
                         return call();
                     }

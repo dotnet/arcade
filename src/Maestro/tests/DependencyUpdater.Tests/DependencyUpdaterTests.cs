@@ -1,6 +1,8 @@
 using System;
+using System.Threading.Tasks;
 using Maestro.Data;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.DotNet.DarcLib;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.ServiceFabric.Data;
@@ -13,7 +15,7 @@ namespace DependencyUpdater.Tests
     public class DependencyUpdaterTests : IDisposable
     {
         private readonly Lazy<BuildAssetRegistryContext> _context;
-        protected readonly Mock<IDarc> Darc;
+        protected readonly Mock<IRemote> Darc;
         protected readonly Mock<IHostingEnvironment> Env;
         protected readonly ServiceProvider Provider;
         protected readonly IReliableDictionary<string, InProgressPullRequest> PullRequests;
@@ -25,14 +27,16 @@ namespace DependencyUpdater.Tests
         {
             var services = new ServiceCollection();
             StateManager = new MockReliableStateManager();
-            Darc = new Mock<IDarc>(MockBehavior.Strict);
+            Darc = new Mock<IRemote>(MockBehavior.Strict);
             Env = new Mock<IHostingEnvironment>(MockBehavior.Strict);
             services.AddSingleton(Env.Object);
             services.AddSingleton<IReliableStateManager>(StateManager);
             services.AddLogging();
             services.AddDbContext<BuildAssetRegistryContext>(
                 options => { options.UseInMemoryDatabase("BuildAssetRegistry"); });
-            services.AddSingleton(Darc.Object);
+            services.AddSingleton(
+                Mock.Of<IDarcRemoteFactory>(
+                    f => f.CreateAsync(It.IsAny<string>(), It.IsAny<long>()) == Task.FromResult(Darc.Object)));
             Provider = services.BuildServiceProvider();
             Scope = Provider.CreateScope();
 

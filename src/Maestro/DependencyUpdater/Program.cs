@@ -1,6 +1,9 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Reflection;
+using Autofac;
+using Maestro.Contracts;
 using Maestro.Data;
+using Maestro.GitHub;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.ServiceFabric.ServiceHost;
 using Microsoft.EntityFrameworkCore;
@@ -19,10 +22,16 @@ namespace DependencyUpdater
             ServiceHost.Run(host =>
             {
                 host.RegisterStatefulService<DependencyUpdater>("DependencyUpdaterType");
+                host.ConfigureContainer(
+                    builder =>
+                    {
+                        builder.AddServiceFabricActor<ISubscriptionActor>();
+                    });
                 host.ConfigureServices(
                     services =>
                     {
-                        services.AddSingleton<IDarc>(new NullDarc());
+                        services.AddSingleton<IDarcRemoteFactory, DarcRemoteFactory>();
+                        services.AddGitHubTokenProvider();
                         services.AddSingleton(provider => ServiceHostConfiguration.Get(provider.GetRequiredService<IHostingEnvironment>()));
                         services.AddDbContext<BuildAssetRegistryContext>(
                             (provider, options) =>
@@ -30,36 +39,19 @@ namespace DependencyUpdater
                                 var config = provider.GetRequiredService<IConfigurationRoot>();
                                 options.UseSqlServer(config.GetSection("BuildAssetRegistry")["ConnectionString"]);
                             });
+                        services.Configure<GitHubTokenProviderOptions>(
+                            (options, provider) =>
+                            {
+                                var config = provider.GetRequiredService<IConfigurationRoot>();
+                                var section = config.GetSection("GitHub");
+                                section.Bind(options);
+                                options.ApplicationName = "Maestro";
+                                options.ApplicationVersion = Assembly.GetEntryAssembly()
+                                    .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                                    ?.InformationalVersion;
+                            });
                     });
             });
-        }
-    }
-
-    internal class NullDarc : IDarc
-    {
-        public Task<string> CreatePrAsync(string repository, string branch, IList<DarcAsset> assets)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Task UpdatePrAsync(string pullRequest, string repository, string branch, IList<DarcAsset> assets)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Task<PrStatus> GetPrStatusAsync(string pullRequest)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Task MergePrAsync(string pullRequest)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Task<IReadOnlyList<Check>> GetPrChecksAsync(string pullRequest)
-        {
-            throw new System.NotImplementedException();
         }
     }
 }

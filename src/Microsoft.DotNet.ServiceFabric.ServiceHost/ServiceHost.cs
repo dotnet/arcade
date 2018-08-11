@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Fabric;
 using System.Fabric.Health;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
@@ -13,10 +14,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.Services.AppAuthentication;
+using Microsoft.DotNet.ServiceFabric.ServiceHost.Actors;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.ServiceFabric.Actors;
+using Microsoft.ServiceFabric.Actors.Client;
+using Microsoft.ServiceFabric.Actors.Runtime;
 using Microsoft.ServiceFabric.Services.Runtime;
 using Newtonsoft.Json;
 
@@ -127,6 +132,62 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
             return ConfigureContainer(
                 builder =>
                 {
+                    builder.RegisterType<TService>().As<TService>().InstancePerDependency();
+                });
+        }
+
+        private void RegisterActorService<TService, TActor>(
+            Func<StatefulServiceContext, ActorTypeInformation, TService> ctor)
+            where TService : ActorService
+            where TActor : Actor
+        {
+            _serviceCallbacks.Add(() => ActorRuntime.RegisterActorAsync<TActor>(ctor));
+        }
+
+        private void RegisterStatefulActorService<TActor>(string actorName, Func<StatefulServiceContext, ActorTypeInformation, Func<ActorService, ActorId, ILifetimeScope, Action<ContainerBuilder>, ActorBase>, ActorService> ctor)
+            where TActor : IActor
+        {
+            var (actorType, actorFactory) = DelegatedActor.CreateActorTypeAndFactory(actorName, typeof(TActor));
+            // ReSharper disable once PossibleNullReferenceException
+            // The method search parameters are hard coded
+            var registerActorAsyncMethod = typeof(ActorRuntime).GetMethod(
+                "RegisterActorAsync",
+                new[]
+                {
+                    typeof(Func<StatefulServiceContext, ActorTypeInformation, ActorService>),
+                    typeof(TimeSpan),
+                    typeof(CancellationToken),
+                }).MakeGenericMethod(actorType);
+            _serviceCallbacks.Add(
+                () => (Task) registerActorAsyncMethod.Invoke(
+                    null,
+                    new object[]
+                    {
+                        (Func<StatefulServiceContext, ActorTypeInformation, ActorService>) ((context, info) =>
+                            ctor(context, info, actorFactory)),
+                        default(TimeSpan),
+                        default(CancellationToken),
+                    }));
+        }
+
+        public ServiceHost RegisterStatefulActorService<TService, TActor>(string actorName)
+            where TService : IServiceImplementation
+            where TActor : IActor
+        {
+            RegisterStatefulActorService<TActor>(actorName,
+                (context, info, actorFactory) =>
+                {
+                    return new DelegatedActorService<TService, TActor>(
+                        context,
+                        info,
+                        ApplyConfigurationToServices,
+                        ApplyConfigurationToContainer,
+                        actorFactory);
+                });
+            return ConfigureContainer(
+                builder =>
+                {
+                    builder.RegisterType<TActor>().As<TActor>().InstancePerDependency();
                     builder.RegisterType<TService>().As<TService>().InstancePerDependency();
                 });
         }

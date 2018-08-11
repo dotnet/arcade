@@ -1,8 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -90,6 +86,18 @@ namespace Maestro.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Channels", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RepoInstallations",
+                columns: table => new
+                {
+                    Repository = table.Column<string>(nullable: false),
+                    InstallationId = table.Column<long>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RepoInstallations", x => x.Repository);
                 });
 
             migrationBuilder.CreateTable(
@@ -290,13 +298,12 @@ namespace Maestro.Data.Migrations
                 name: "Subscriptions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    Id = table.Column<Guid>(nullable: false),
                     ChannelId = table.Column<int>(nullable: false),
                     SourceRepository = table.Column<string>(nullable: true),
                     TargetRepository = table.Column<string>(nullable: true),
                     TargetBranch = table.Column<string>(nullable: true),
-                    PolicyUpdateFrequency = table.Column<int>(nullable: false, computedColumnSql: "JSON_VALUE([Policy], 'lax $.UpdateFrequency')"),
+                    Policy = table.Column<string>(nullable: true),
                     LastAppliedBuildId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
@@ -453,6 +460,9 @@ namespace Maestro.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "DefaultChannels");
+
+            migrationBuilder.DropTable(
+                name: "RepoInstallations");
 
             migrationBuilder.DropTable(
                 name: "Subscriptions");

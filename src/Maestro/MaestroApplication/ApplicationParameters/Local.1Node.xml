@@ -7,5 +7,8 @@
     <Parameter Name="Maestro.Web_InstanceCount" Value="1" />
     <Parameter Name="WebCertThumbprint" Value="C4DFDCC47D95C1C64B55B42946CCEFDDF9E46FAB" />
     <Parameter Name="Environment" Value="Development" />
+    <Parameter Name="SubscriptionActorService_PartitionCount" Value="1" />
+    <Parameter Name="SubscriptionActorService_TargetReplicaSetSize" Value="1" />
+    <Parameter Name="SubscriptionActorService_MinReplicaSetSize" Value="1" />
   </Parameters>
 </Application>

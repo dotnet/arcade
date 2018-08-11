@@ -1,7 +1,13 @@
 {
+  "GitHubAuthentication": {
+    "ClientId": "[vault(github-oauth-id)]",
+    "ClientSecret": "[vault(github-oauth-secret)]",
+    "SaveTokens": true,
+    "CallbackPath": "/signin/github" 
+  },
   "DataProtection": {
     "KeyFileUri": "[vault(data-protection-key-file-uri)]",
-    "KeyIdentifier": "data-protection-encryption-key" 
+    "KeyIdentifier": "data-protection-encryption-key"
   },
   "BuildAssetRegistry": {
     "ConnectionString": "[vault(build-asset-registry-sql-connection-string)]"

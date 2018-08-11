@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                         out byte[] correlationContextBytes))
                     {
                         var correlationContextStr = Encoding.UTF8.GetString(correlationContextBytes);
-                        var baggage = JsonConvert.DeserializeObject<IDictionary<string, string>>(correlationContextStr);
+                        var baggage = JsonConvert.DeserializeObject<IList<KeyValuePair<string, string>>>(correlationContextStr);
                         foreach (var (key, value) in baggage)
                         {
                             activity.AddBaggage(key, value);

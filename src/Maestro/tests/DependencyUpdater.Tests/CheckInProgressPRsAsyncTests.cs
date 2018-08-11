@@ -5,12 +5,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Maestro.Data.Models;
+using Microsoft.DotNet.DarcLib;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Helix.ServiceHost;
 using Microsoft.ServiceFabric.Data;
 using Moq;
 using Xunit;
 using Xunit.Sdk;
+using Channel = Maestro.Data.Models.Channel;
+using MergePolicy = Maestro.Data.Models.MergePolicy;
+using SubscriptionPolicy = Maestro.Data.Models.SubscriptionPolicy;
+using UpdateFrequency = Maestro.Data.Models.UpdateFrequency;
 
 namespace DependencyUpdater.Tests
 {
@@ -38,12 +43,18 @@ namespace DependencyUpdater.Tests
                 SourceRepository = "source.repo",
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
-                Policy = new SubscriptionPolicy
+                PolicyObject = new SubscriptionPolicy
                 {
                     MergePolicy = MergePolicy.Never,
                     UpdateFrequency = UpdateFrequency.EveryBuild
                 }
             };
+            var repoInstallation = new RepoInstallation
+            {
+                Repository = "target.repo",
+                InstallationId = 1,
+            };
+            await Context.RepoInstallations.AddAsync(repoInstallation);
             await Context.BuildChannels.AddAsync(buildChannel);
             await Context.Subscriptions.AddAsync(subscription);
             await Context.SaveChangesAsync();
@@ -59,7 +70,7 @@ namespace DependencyUpdater.Tests
                 await tx.CommitAsync();
             }
 
-            Darc.Setup(d => d.GetPrStatusAsync(pr)).ReturnsAsync(status);
+            Darc.Setup(d => d.GetPullRequestStatusAsync(pr)).ReturnsAsync(status);
 
             var updater = ActivatorUtilities.CreateInstance<DependencyUpdater>(Scope.ServiceProvider);
             await updater.CheckInProgressPRsAsync(CancellationToken.None);
@@ -121,12 +132,18 @@ namespace DependencyUpdater.Tests
                 SourceRepository = "source.repo",
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
-                Policy = new SubscriptionPolicy
+                PolicyObject = new SubscriptionPolicy
                 {
                     MergePolicy = MergePolicy.BuildSucceeded,
                     UpdateFrequency = UpdateFrequency.EveryBuild
                 }
             };
+            var repoInstallation = new RepoInstallation
+            {
+                Repository = "target.repo",
+                InstallationId = 1,
+            };
+            await Context.RepoInstallations.AddAsync(repoInstallation);
             await Context.BuildChannels.AddAsync(buildChannel);
             await Context.Subscriptions.AddAsync(subscription);
             await Context.SaveChangesAsync();
@@ -142,7 +159,7 @@ namespace DependencyUpdater.Tests
                 await tx.CommitAsync();
             }
 
-            Darc.Setup(d => d.GetPrStatusAsync(pr)).ReturnsAsync(status);
+            Darc.Setup(d => d.GetPullRequestStatusAsync(pr)).ReturnsAsync(status);
 
             var updater = ActivatorUtilities.CreateInstance<DependencyUpdater>(Scope.ServiceProvider);
             await updater.CheckInProgressPRsAsync(CancellationToken.None);
@@ -188,12 +205,18 @@ namespace DependencyUpdater.Tests
                 SourceRepository = "source.repo",
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
-                Policy = new SubscriptionPolicy
+                PolicyObject = new SubscriptionPolicy
                 {
                     MergePolicy = MergePolicy.BuildSucceeded,
                     UpdateFrequency = UpdateFrequency.EveryBuild
                 }
             };
+            var repoInstallation = new RepoInstallation
+            {
+                Repository = "target.repo",
+                InstallationId = 1,
+            };
+            await Context.RepoInstallations.AddAsync(repoInstallation);
             await Context.BuildChannels.AddAsync(buildChannel);
             await Context.Subscriptions.AddAsync(subscription);
             await Context.SaveChangesAsync();
@@ -209,8 +232,8 @@ namespace DependencyUpdater.Tests
                 await tx.CommitAsync();
             }
 
-            Darc.Setup(d => d.GetPrStatusAsync(pr)).ReturnsAsync(PrStatus.Open);
-            Darc.Setup(d => d.GetPrChecksAsync(pr))
+            Darc.Setup(d => d.GetPullRequestStatusAsync(pr)).ReturnsAsync(PrStatus.Open);
+            Darc.Setup(d => d.GetPullRequestChecksAsync(pr))
                 .ReturnsAsync(
                     (string _) =>
                     {
@@ -231,7 +254,7 @@ namespace DependencyUpdater.Tests
                     });
             if (checksSuccessful)
             {
-                Darc.Setup(d => d.MergePrAsync(pr)).Returns(Task.CompletedTask);
+                Darc.Setup(d => d.MergePullRequestAsync(pr, null, null, null, null)).Returns(Task.CompletedTask);
             }
 
             var updater = ActivatorUtilities.CreateInstance<DependencyUpdater>(Scope.ServiceProvider);

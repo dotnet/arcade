@@ -11,14 +11,14 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
     /// </summary>
     public abstract class AsyncInterceptor : IInterceptor
     {
-        public void Intercept(IInvocation invocation)
+        public virtual void Intercept(IInvocation invocation)
         {
             var retType = invocation.Method.ReturnType;
             if (retType == typeof(Task))
             {
                 invocation.ReturnValue = InterceptAsync(invocation, () =>
                 {
-                    invocation.Proceed();
+                    Proceed(invocation);
                     return (Task)invocation.ReturnValue;
                 });
             }
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                 invocation.ReturnValue = s_interceptAsyncMethod.MakeGenericMethod(t).Invoke(this, new[]
                 {
                     invocation,
-                    s_makeCallAsyncMethodMethod.MakeGenericMethod(t).Invoke(null, new object[]
+                    s_makeCallAsyncMethodMethod.MakeGenericMethod(t).Invoke(this, new object[]
                     {
                         invocation
                     })
@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                 invocation.ReturnValue = s_interceptMethod.MakeGenericMethod(retType).Invoke(this, new[]
                 {
                     invocation,
-                    s_makeCallMethodMethod.MakeGenericMethod(retType).Invoke(null, new object[]
+                    s_makeCallMethodMethod.MakeGenericMethod(retType).Invoke(this, new object[]
                     {
                         invocation
                     })
@@ -61,6 +61,11 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
             return false;
         }
 
+        protected virtual void Proceed(IInvocation invocation)
+        {
+            invocation.Proceed();
+        }
+
         protected abstract Task InterceptAsync(IInvocation invocation, Func<Task> call);
 
         private static readonly MethodInfo s_interceptAsyncMethod = typeof(AsyncInterceptor)
@@ -78,11 +83,11 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
             .Where(m => m.GetParameters().Length == 1)
             .First(m => m.GetGenericArguments().Length == 1);
 
-        private static Func<Task<T>> MakeCallAsyncMethod<T>(IInvocation invocation)
+        private Func<Task<T>> MakeCallAsyncMethod<T>(IInvocation invocation)
         {
             return () =>
             {
-                invocation.Proceed();
+                Proceed(invocation);
                 return (Task<T>)invocation.ReturnValue;
             };
         }
@@ -101,11 +106,11 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
             .Where(m => m.GetParameters().Length == 1)
             .First(m => m.GetGenericArguments().Length == 1);
 
-        private static Func<T> MakeCallMethod<T>(IInvocation invocation)
+        private Func<T> MakeCallMethod<T>(IInvocation invocation)
         {
             return () =>
             {
-                invocation.Proceed();
+                Proceed(invocation);
                 return (T)invocation.ReturnValue;
             };
         }

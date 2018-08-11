@@ -7,10 +7,19 @@
     <Parameter Name="Maestro.Web_InstanceCount" DefaultValue="-1" />
     <Parameter Name="WebCertThumbprint" DefaultValue="" />
     <Parameter Name="Environment" DefaultValue="Development" />
+    <Parameter Name="SubscriptionActorService_PartitionCount" DefaultValue="10" />
+    <Parameter Name="SubscriptionActorService_MinReplicaSetSize" DefaultValue="3" />
+    <Parameter Name="SubscriptionActorService_TargetReplicaSetSize" DefaultValue="3" />
   </Parameters>
   <!-- Import the ServiceManifest from the ServicePackage. The ServiceManifestName and ServiceManifestVersion 
        should match the Name and Version attributes of the ServiceManifest element defined in the 
        ServiceManifest.xml file. -->
+  <ServiceManifestImport>
+    <ServiceManifestRef ServiceManifestName="SubscriptionActorServicePkg" ServiceManifestVersion="1.0.0" />
+    <EnvironmentOverrides CodePackageRef="Code">
+      <EnvironmentVariable Name="ASPNETCORE_ENVIRONMENT" Value="[Environment]" />
+    </EnvironmentOverrides>
+  </ServiceManifestImport>
   <ServiceManifestImport>
     <ServiceManifestRef ServiceManifestName="DependencyUpdaterPkg" ServiceManifestVersion="1.0.0" />
     <ConfigOverrides />
@@ -41,13 +50,19 @@
          The attribute ServiceTypeName below must match the name defined in the imported ServiceManifest.xml file. -->
     <Service Name="DependencyUpdater" ServicePackageActivationMode="ExclusiveProcess">
       <StatefulService ServiceTypeName="DependencyUpdaterType" TargetReplicaSetSize="[DependencyUpdater_TargetReplicaSetSize]" MinReplicaSetSize="[DependencyUpdater_MinReplicaSetSize]">
-        <UniformInt64Partition PartitionCount="[DependencyUpdater_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
+        <SingletonPartition />
+        <!--<UniformInt64Partition PartitionCount="[DependencyUpdater_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />-->
       </StatefulService>
     </Service>
     <Service Name="Maestro.Web" ServicePackageActivationMode="ExclusiveProcess">
       <StatelessService ServiceTypeName="Maestro.WebType" InstanceCount="[Maestro.Web_InstanceCount]">
         <SingletonPartition />
       </StatelessService>
+    </Service>
+    <Service Name="SubscriptionActorService" GeneratedIdRef="82792a84-735e-4f43-970a-18493cc68564|Persisted">
+      <StatefulService ServiceTypeName="SubscriptionActorServiceType" TargetReplicaSetSize="[SubscriptionActorService_TargetReplicaSetSize]" MinReplicaSetSize="[SubscriptionActorService_MinReplicaSetSize]">
+        <UniformInt64Partition PartitionCount="[SubscriptionActorService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
+      </StatefulService>
     </Service>
   </DefaultServices>
   <Certificates>

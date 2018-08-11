@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using EntityFrameworkCore.Triggers;
@@ -12,6 +14,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace Maestro.Data
 {
@@ -45,6 +48,7 @@ namespace Maestro.Data
         public DbSet<Channel> Channels { get; set; }
         public DbSet<DefaultChannel> DefaultChannels { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
+        public DbSet<RepoInstallation> RepoInstallations { get; set; }
 
         public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = new CancellationToken())
         {
@@ -79,12 +83,25 @@ namespace Maestro.Data
                 .HasIndex(dc => new {dc.Repository, dc.Branch})
                 .IsUnique();
 
-            builder.Entity<Subscription>()
-                .Property(s => s.PolicyUpdateFrequency)
-                .HasComputedColumnSql("JSON_VALUE([Policy], 'lax $.UpdateFrequency')");
-            builder.Entity<Subscription>()
-                .Property("_Policy")
-                .HasColumnName("Policy");
+            builder.HasDbFunction(() => JsonExtensions.JsonValue("", ""))
+                .HasName("JSON_VALUE")
+                .HasSchema("");
+        }
+
+        public Task<long> GetInstallationId(string repositoryUrl)
+        {
+            return RepoInstallations
+                .Where(ri => ri.Repository == repositoryUrl)
+                .Select(ri => ri.InstallationId)
+                .FirstAsync();
+        }
+    }
+
+    public static class JsonExtensions
+    {
+        public static string JsonValue(string column, [NotParameterized] string path)
+        {
+            throw new NotSupportedException();
         }
     }
 }
