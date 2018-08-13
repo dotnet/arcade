@@ -335,6 +335,7 @@ namespace SignCheck
         {
             try
             {
+                Log.WriteMessage(String.Format("{0} {1}", ThisAssembly.AssemblyName, ThisAssembly.AssemblyFileVersion));
                 var signatureVerifier = new SignatureVerifier(Options.Verbosity, Exclusions, Log)
                 {
                     EnableXmlSignatureVerification = Options.EnableXmlSignatureVerification,

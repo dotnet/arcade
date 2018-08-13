@@ -195,6 +195,12 @@ namespace Microsoft.SignCheck.Verification
                 result = SignatureVerificationResult.SkippedResult(path, parent);
             }
 
+            // Include the full path for top-level files
+            if (String.IsNullOrEmpty(parent))
+            {
+                result.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, result.FullPath);
+            }
+
             return result;
         }
 
@@ -447,6 +453,19 @@ namespace Microsoft.SignCheck.Verification
         {
             var svr = VerifyAuthentiCode(path, parent);
             svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
+
+            if (Recursive)
+            {
+                Interop.StructuredStorage.OpenAndExtractStorages(path, svr.TempPath);
+
+                foreach (var file in Directory.EnumerateFiles(svr.TempPath))
+                {
+                    svr.NestedResults.Add(VerifyFile(file, svr.Filename));
+                }
+
+                DeleteDirectory(svr.TempPath);
+            }
+
             return svr;
         }
 
