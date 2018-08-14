@@ -43,14 +43,14 @@ information (Certificate + Strong Name).
 
 # Arguments Metadata
 
-*StrongNameSignInfo* 
+**StrongNameSignInfo**
 
 This field assumes the following metadata/properties: `PublicKeyToken`, 
 `CertificateName` and the `Include` field is assumed to hold the StrongName. 
 This information will be used as the default certificate and strong name 
 information for all files that match the PublicKeyToken.
 
-*FileSignInfo* 
+**FileSignInfo**
 
 This field assumes the following metadata: `PublicKeyToken`, `CertificateName`, 
 `TargetFramework` and the `Include` field is assumed to hold a file name 
@@ -66,13 +66,36 @@ Public Key Token, Target Framework) will use overriding Certificate Name informe
 
 ## Example Usage
 
-- Certificate Name: name of the Authenticode certificate to use for signing.  
+**Certificate Name:** name of the Authenticode certificate to use for signing.  
 Valid values include Microsoft402, WindowsPhone623, MicrosoftSHA1Win8WinBlue 
 and VsixSHA2.  More are likely available.  This value must be specified.
 
-- Strong Name: name of the key to use when strong naming the binary. This 
+**Strong Name:** name of the key to use when strong naming the binary. This 
 can be `null` for values which do not require strong name signing such as VSIX files. 
 
-- Target Framework: `TargetFramework` field are: `.NETStandard,Version=v2.0`, 
+**Target Framework** `TargetFramework` field are: `.NETStandard,Version=v2.0`, 
 `.NETFramework,Version=v4.6.1`, `.NET Core,Version=v2.0`, etc.
 
+```xml
+<ItemGroup>
+    <ItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
+
+    <StrongNameSignInfo Include="StrongNameDef01" PublicKeyToken="31bf3856ad364e35" CertificateName="CertNameSHA2" />
+
+    <FileSignInfo Include="Microsoft.DotNet.John.Doe.dll" TargetFramework=".NETStandard,Version=v2.0" PublicKeyToken="31bf3856ad364e35" CertificateName="JohnDoeCert" />
+    <FileSignInfo Include="Microsoft.DotNet.Foo.Bar.dll" TargetFramework="All" PublicKeyToken="31bf3856ad364e35" CertificateName="FooBarCustomCert" />
+</ItemGroup>
+
+<Microsoft.DotNet.SignTool.SignToolTask
+    DryRun="$(DryRun)"
+    TestSign="$(TestSign)"
+    ItemsToSign="@(ItemsToSign)"
+    StrongNameSignInfo="@(StrongNameSignInfo)"
+    FileSignInfo="@(FileSignInfo)"
+    TempDir="$(ArtifactsTmpDir)"
+    LogDir="$(ArtifactsLogDir)"
+    PublishUrl="$(PublishUrl)"
+    OrchestrationManifestPath="$(OrchestrationManifestPath)"
+    MSBuildPath="$(DesktopMSBuildPath)"
+    MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"/>
+```
