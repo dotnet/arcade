@@ -2,27 +2,23 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-
 namespace Microsoft.DotNet.SignTool
 {
     internal readonly struct SignToolArgs
     {
-        internal string OutputDir { get; }
         internal string TempDir { get; }
         internal string MicroBuildCorePath { get; }
         internal bool TestSign { get; }
+        internal string MSBuildPath { get; }
+        internal string LogDir { get; }
 
-        internal SignToolArgs(
-            string outputPath,
-            string tempPath,
-            string microBuildCorePath,
-            bool testSign)
+        internal SignToolArgs(string tempPath, string microBuildCorePath, bool testSign, string msBuildPath, string logDir)
         {
-            OutputDir = outputPath;
             TempDir = tempPath;
             MicroBuildCorePath = microBuildCorePath;
             TestSign = testSign;
+            MSBuildPath = msBuildPath;
+            LogDir = logDir;
         }
     }
 }

@@ -9,12 +9,16 @@ namespace Microsoft.DotNet.SignTool
         internal string RelativeName { get; }
         internal FileName FileName { get; }
         internal string Checksum { get; }
+        internal SignInfo SignInfo { get; }
 
-        internal ZipPart(string relativeName, FileName fileName, string checksum)
+        internal bool ShouldBeSigned => SignInfo != null && SignInfo.ShouldSign;
+
+        internal ZipPart(string relativeName, FileName fileName, string checksum, SignInfo signInfo)
         {
             RelativeName = relativeName;
             FileName = fileName;
             Checksum = checksum;
+            SignInfo = signInfo;
         }
 
         public override string ToString() => $"{RelativeName} -> {FileName.RelativePath} -> {Checksum}";

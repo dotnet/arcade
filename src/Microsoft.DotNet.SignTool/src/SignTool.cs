@@ -15,7 +15,6 @@ namespace Microsoft.DotNet.SignTool
     {
         private readonly SignToolArgs _args;
 
-        internal string OutputDir => _args.OutputDir;
         internal string TempDir => _args.TempDir;
         internal string MicroBuildCorePath => _args.MicroBuildCorePath;
 
@@ -30,7 +29,7 @@ namespace Microsoft.DotNet.SignTool
 
         public abstract bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round);
 
-        public bool Sign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> filesToSign)
+        public bool Sign(IBuildEngine buildEngine, int round, IEnumerable<FileName> filesToSign)
         {
             var signingDir = Path.Combine(TempDir, "Signing");
             var buildFilePath = Path.Combine(signingDir, $"Round{round}.proj");
@@ -42,7 +41,7 @@ namespace Microsoft.DotNet.SignTool
             return RunMSBuild(buildEngine, buildFilePath, round);
         }
 
-        private string GenerateBuildFileContent(IEnumerable<FileSignInfo> filesToSign)
+        private string GenerateBuildFileContent(IEnumerable<FileName> filesToSign)
         {
             var builder = new StringBuilder();
             AppendLine(builder, depth: 0, text: @"<?xml version=""1.0"" encoding=""utf-8""?>");
@@ -51,7 +50,7 @@ namespace Microsoft.DotNet.SignTool
             // Setup the code to get the NuGet package root.
             var signKind = _args.TestSign ? "test" : "real";
             AppendLine(builder, depth: 1, text: @"<PropertyGroup>");
-            AppendLine(builder, depth: 2, text: $@"<OutDir>{OutputDir}</OutDir>");
+            AppendLine(builder, depth: 2, text: $@"<OutDir>{TempDir}</OutDir>");
             AppendLine(builder, depth: 2, text: $@"<IntermediateOutputPath>{TempDir}</IntermediateOutputPath>");
             AppendLine(builder, depth: 2, text: $@"<SignType>{signKind}</SignType>");
             AppendLine(builder, depth: 1, text: @"</PropertyGroup>");
@@ -62,11 +61,11 @@ namespace Microsoft.DotNet.SignTool
 
             foreach (var fileToSign in filesToSign)
             {
-                AppendLine(builder, depth: 2, text: $@"<FilesToSign Include=""{fileToSign.FileName.FullPath}"">");
-                AppendLine(builder, depth: 3, text: $@"<Authenticode>{fileToSign.Certificate}</Authenticode>");
-                if (fileToSign.StrongName != null)
+                AppendLine(builder, depth: 2, text: $@"<FilesToSign Include=""{fileToSign.FullPath}"">");
+                AppendLine(builder, depth: 3, text: $@"<Authenticode>{fileToSign.SignInfo.Certificate}</Authenticode>");
+                if (fileToSign.SignInfo.StrongName != null)
                 {
-                    AppendLine(builder, depth: 3, text: $@"<StrongName>{fileToSign.StrongName}</StrongName>");
+                    AppendLine(builder, depth: 3, text: $@"<StrongName>{fileToSign.SignInfo.StrongName}</StrongName>");
                 }
                 AppendLine(builder, depth: 2, text: @"</FilesToSign>");
             }

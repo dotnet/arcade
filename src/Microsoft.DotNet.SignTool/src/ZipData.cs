@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace Microsoft.DotNet.SignTool
@@ -19,18 +20,12 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// The parts inside this zip archive which need to be signed.
         /// </summary>
-        internal ImmutableArray<ZipPart> NestedParts;
+        internal ImmutableList<ZipPart> NestedParts { get; }
 
-        /// <summary>
-        /// Name of the external binaries this zip depends on.
-        /// </summary>
-        internal ImmutableArray<string> NestedExternalNames { get; }
-
-        internal ZipData(FileName name, ImmutableArray<ZipPart> nestedBinaryParts, ImmutableArray<string> nestedExternalNames)
+        internal ZipData(FileName name, ImmutableList<ZipPart> nestedBinaryParts)
         {
             Name = name;
             NestedParts = nestedBinaryParts;
-            NestedExternalNames = nestedExternalNames;
         }
 
         internal ZipPart? FindNestedBinaryPart(string relativeName)

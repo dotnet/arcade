@@ -2,19 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
-using System.IO.Packaging;
-using System.Linq;
-using Newtonsoft.Json;
 using Microsoft.DotNet.SignTool.Json;
-using static Microsoft.DotNet.SignTool.PathUtil;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Packaging;
+using System.Linq;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -28,7 +24,6 @@ namespace Microsoft.DotNet.SignTool
         private readonly SignTool _signTool;
         private readonly ContentUtil _contentUtil = new ContentUtil();
         private readonly string _orchestrationManifestPath;
-        private readonly string _unpackingDirectory;
 
         internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool, BatchSignInput batchData, string orchestrationManifestPath)
         {
@@ -37,18 +32,11 @@ namespace Microsoft.DotNet.SignTool
             _orchestrationManifestPath = orchestrationManifestPath;
             _log = log;
             _buildEngine = buildEngine;
-
-            // TODO: Better path; for now making sure the relative paths are all in the same "OutputDirectory" value should help things work.
-            _unpackingDirectory = Path.Combine(batchData.OutputPath, "ZipArchiveUnpackingDirectory");
         }
 
         internal void Go()
         {
-            // Build up all of our data structures. This will run a number of integrity checks to make sure the
-            // data provided is correct / consistent.
             VerifyCertificates(_log);
-            var contentMap = BuildContentMap(_log);
-            var zipDataMap = BuildAllZipData(contentMap, _log);
 
             if (_log.HasLoggedErrors)
             {
@@ -59,7 +47,7 @@ namespace Microsoft.DotNet.SignTool
             // and put any content and zipDataMap hash values into the new manifest.
             if (!string.IsNullOrEmpty(_orchestrationManifestPath))
             {
-                GenerateOrchestrationManifest(_batchData, contentMap, _orchestrationManifestPath);
+                GenerateOrchestrationManifest(_batchData, _orchestrationManifestPath);
                 return;
             }
 
@@ -67,34 +55,40 @@ namespace Microsoft.DotNet.SignTool
             RemovePublicSign();
 
             // Next sign all of the files
-            if (!SignFiles(contentMap, zipDataMap))
+            if (!SignFiles())
             {
                 return;
             }
 
             // Validate the signing worked and produced actual signed binaries in all locations.
-            VerifyAfterSign(zipDataMap, _log);
+            VerifyAfterSign(_log);
+
+            if (_log.HasLoggedErrors)
+            {
+                return;
+            }
 
             _log.LogMessage(MessageImportance.High, "Build artifacts signed and validated.");
         }
 
-        private void GenerateOrchestrationManifest(BatchSignInput batchData, ContentMap contentMap, string outputPath)
+        private void GenerateOrchestrationManifest(BatchSignInput batchData, string outputPath)
         {
             _log.LogMessage(MessageImportance.High, $"Generating orchestration file manifest into {outputPath}");
             OrchestratedFileJson fileJsonWithInfo = new OrchestratedFileJson
             {
-                ExcludeList = _batchData.ExternalFileNames.ToArray() ?? Array.Empty<string>()
+                ExcludeList = Array.Empty<string>()
             };
 
-            var distinctSigningCombos = batchData.FileSignInfoMap.Values.GroupBy(v => new { v.Certificate, v.StrongName });
+            var distinctSigningCombos = batchData.FilesToSign.GroupBy(fileToSign => new { fileToSign.SignInfo.Certificate, fileToSign.SignInfo.StrongName });
+            var contentUtil = new ContentUtil();
 
             List<OrchestratedFileSignData> newList = new List<OrchestratedFileSignData>();
             foreach (var combinationToSign in distinctSigningCombos)
             {
-                var filesInThisGroup = combinationToSign.Select(c => new FileSignDataEntry()
+                var filesInThisGroup = combinationToSign.Select(combination => new FileSignDataEntry()
                 {
-                    FilePath = c.FileName.RelativePath,
-                    SHA256Hash = contentMap.GetChecksum(c.FileName),
+                    FilePath = combination.FullPath,
+                    SHA256Hash = contentUtil.GetChecksum(combination.FullPath),
                     PublishToFeedUrl = batchData.PublishUri
                 });
                 newList.Add(new OrchestratedFileSignData()
@@ -115,10 +109,9 @@ namespace Microsoft.DotNet.SignTool
 
         private void RemovePublicSign()
         {
-            foreach (var name in _batchData.AssemblyNames)
+            foreach (var name in _batchData.FilesToSign.Where(x => x.IsPEFile()))
             {
-                var fileSignInfo = _batchData.FileSignInfoMap[name];
-                if (fileSignInfo.StrongName != null)
+                if (name.SignInfo.StrongName != null)
                 {
                     _log.LogMessage($"Removing public sign: '{name}'");
                     _signTool.RemovePublicSign(name.FullPath);
@@ -129,24 +122,24 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// Actually sign all of the described files.
         /// </summary>
-        private bool SignFiles(ContentMap contentMap, Dictionary<FileName, ZipData> zipDataMap)
+        private bool SignFiles()
         {
             // Generate the list of signed files in a deterministic order. Makes it easier to track down
             // bugs if repeated runs use the same ordering.
-            var toSignList = _batchData.FileNames.ToList();
+            var toSignList = _batchData.FilesToSign.ToList();
             var round = 0;
             var signedSet = new HashSet<FileName>();
 
             bool signFiles(IEnumerable<FileName> files)
             {
-                var filesToSign = files.Select(fileName => _batchData.FileSignInfoMap[fileName]).Where(info => !info.IsEmpty).ToArray();
+                var filesToSign = files.Where(info => !info.SignInfo.IsEmpty).ToArray();
 
                 _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
                 foreach (var file in filesToSign)
                 {
                     _log.LogMessage(MessageImportance.Low,
-                        $"File '{file.FileName}' Certificate='{file.Certificate}'" + 
-                        (file.StrongName != null ? $" StrongName='{file.StrongName}'" : ""));
+                        $"File '{file.FullPath}' Certificate='{file.SignInfo.Certificate}'" + 
+                        (file.SignInfo.StrongName != null ? $" StrongName='{file.SignInfo.StrongName}'" : ""));
                 }
 
                 return _signTool.Sign(_buildEngine, round, filesToSign);
@@ -156,10 +149,10 @@ namespace Microsoft.DotNet.SignTool
             {
                 foreach (var file in files)
                 {
-                    if (file.IsZipContainer)
+                    if (file.IsZipContainer())
                     {
-                        _log.LogMessage(MessageImportance.Low, $"Repacking container: '{file}'");
-                        Repack(zipDataMap[file]);
+                        _log.LogMessage($"Repacking container: '{file}'");
+                        Repack(_batchData.ZipDataMap[file]);
                     }
                 }
             }
@@ -168,13 +161,13 @@ namespace Microsoft.DotNet.SignTool
             // signed?
             bool isReadyToSign(FileName fileName)
             {
-                if (!fileName.IsZipContainer)
+                if (!fileName.IsZipContainer())
                 {
                     return true;
                 }
 
-                var zipData = zipDataMap[fileName];
-                return zipData.NestedParts.All(x => signedSet.Contains(x.FileName));
+                var zipData = _batchData.ZipDataMap[fileName];
+                return zipData.NestedParts.All(x => !x.ShouldBeSigned || signedSet.Contains(x.FileName));
             }
 
             // Extract the next set of files that should be signed. This is the set of files for which all of the
@@ -248,177 +241,47 @@ namespace Microsoft.DotNet.SignTool
         }
 
         /// <summary>
-        /// Return all the assembly and VSIX contents nested in the VSIX
-        /// </summary>
-        private List<string> GetVsixPartRelativeNames(FileName vsixName)
-        {
-            var list = new List<string>();
-            using (var package = Package.Open(vsixName.FullPath, FileMode.Open, FileAccess.Read))
-            {
-                foreach (var part in package.GetParts())
-                {
-                    var name = GetPartRelativeFileName(part);
-                    list.Add(name);
-                }
-            }
-
-            return list;
-        }
-
-        /// <summary>
-        /// Build up a table of checksum to <see cref="FileName"/> instance map. This will report errors if it
-        /// is unable to read any of the files off of disk.
-        /// </summary>
-        private ContentMap BuildContentMap(TaskLoggingHelper log)
-        {
-            var contentMap = new ContentMap();
-
-            foreach (var fileName in _batchData.FileNames)
-            {
-                try
-                {
-                    if (string.IsNullOrEmpty(fileName.SHA256Hash))
-                    {
-                        var checksum = _contentUtil.GetChecksum(fileName.FullPath);
-                        contentMap.Add(fileName, checksum);
-                    }
-                    else
-                    {
-                        if (File.Exists(fileName.FullPath))
-                        {
-                            contentMap.Add(fileName, fileName.SHA256Hash);
-                        }
-                        else
-                        {
-                            throw new FileNotFoundException();
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    if (!File.Exists(fileName.FullPath))
-                    {
-                        log.LogError($"Did not find {fileName} at {fileName.FullPath}");
-                    }
-                    else
-                    {
-                        log.LogError($"Unable to read content of {fileName.FullPath}: {ex.Message}");
-                    }
-                }
-            }
-
-            return contentMap;
-        }
-
-        /// <summary>
         /// Sanity check the certificates that are attached to the various items. Ensure we aren't using, say, a VSIX
         /// certificate on a DLL for example.
         /// </summary>
         private void VerifyCertificates(TaskLoggingHelper log)
         {
-            foreach (var pair in _batchData.FileSignInfoMap.OrderBy(x => x.Key.RelativePath))
+            foreach (var fileName in _batchData.FilesToSign.OrderBy(x => x.FullPath))
             {
-                var fileName = pair.Key;
-                var fileSignInfo = pair.Value;
-                var isVsixCert = !string.IsNullOrEmpty(fileSignInfo.Certificate) && IsVsixCertificate(fileSignInfo.Certificate);
+                var isVsixCert = !string.IsNullOrEmpty(fileName.SignInfo.Certificate) && IsVsixCertificate(fileName.SignInfo.Certificate);
 
-                if (fileName.IsAssembly)
+                if (fileName.IsPEFile())
                 {
                     if (isVsixCert)
                     {
                         log.LogError($"Assembly {fileName} cannot be signed with a VSIX certificate");
                     }
                 }
-                else if (fileName.IsVsix)
+                else if (fileName.IsVsix())
                 {
                     if (!isVsixCert)
                     {
                         log.LogError($"VSIX {fileName} must be signed with a VSIX certificate");
                     }
 
-                    if (fileSignInfo.StrongName != null)
+                    if (fileName.SignInfo.StrongName != null)
                     {
-                        log.LogError($"VSIX {fileName} cannot be strong name signed");
+                        log.LogError($"VSIX {fileName} cannot be strong name signed.");
                     }
                 }
-                else if (fileName.IsNupkg)
+                else if (fileName.IsNupkg())
                 {
-                    if (fileSignInfo.StrongName != null || fileSignInfo.Certificate != null)
+                    if (fileName.SignInfo.Certificate == null || !fileName.SignInfo.Certificate.Equals(SignToolConstants.Certificate_NuGet))
                     {
-                        log.LogError($"Nupkg {fileName} cannot be strong name or certificate signed");
+                        log.LogError($"Nupkg {fileName} should be signed with this certificate: {SignToolConstants.Certificate_NuGet}");
+                    }
+
+                    if (fileName.SignInfo.StrongName != null)
+                    {
+                        log.LogError($"Nupkg {fileName} cannot be strong name signed.");
                     }
                 }
             }
-        }
-
-        private Dictionary<FileName, ZipData> BuildAllZipData(ContentMap contentMap, TaskLoggingHelper log)
-        {
-            var zipDataMap = new Dictionary<FileName, ZipData>();
-            foreach (var zipName in _batchData.FileNames.Where(x => x.IsZipContainer))
-            {
-                var data = BuildZipData(zipName, contentMap, log);
-                zipDataMap[zipName] = data;
-            }
-
-            return zipDataMap;
-        }
-
-        /// <summary>
-        /// Build up the <see cref="ZipData"/> instance for a given zip container. This will also report any consistency
-        /// errors found when examining the zip archive.
-        /// </summary>
-        private ZipData BuildZipData(FileName zipFileName, ContentMap contentMap, TaskLoggingHelper log)
-        {
-            Debug.Assert(zipFileName.IsZipContainer);
-
-            var nestedExternalBinaries = new List<string>();
-            var nestedParts = new List<ZipPart>();
-            using (var package = Package.Open(zipFileName.FullPath, FileMode.Open, FileAccess.Read))
-            {
-                foreach (var part in package.GetParts())
-                {
-                    var relativeName = GetPartRelativeFileName(part);
-                    var name = Path.GetFileName(relativeName);
-                    if (!IsZipContainer(name) && !IsAssembly(name))
-                    {
-                        continue;
-                    }
-
-                    if (_batchData.ExternalFileNames.Contains(name))
-                    {
-                        nestedExternalBinaries.Add(name);
-                        continue;
-                    }
-
-                    if (!_batchData.FileNames.Any(x => FilePathComparer.Equals(x.Name, name)))
-                    {
-                        log.LogError($"Zip Container '{zipFileName}' has part '{relativeName}' which is not listed in the sign or external list");
-                        continue;
-                    }
-
-                    // This represents a binary that we need to sign.  Ensure the content in the VSIX is the same as the
-                    // content in the binaries directory by doing a checksum match.
-                    using (var stream = part.GetStream())
-                    {
-                        string checksum = _contentUtil.GetChecksum(stream);
-                        if (!contentMap.TryGetFileName(checksum, out var checksumName))
-                        {
-                            log.LogError($"{zipFileName} has part {relativeName} which does not match the content in the binaries directory");
-                            continue;
-                        }
-
-                        if (!FilePathComparer.Equals(checksumName.Name, name))
-                        {
-                            log.LogError($"{zipFileName} has part {relativeName} with a different name in the binaries directory: {checksumName}");
-                            continue;
-                        }
-
-                        nestedParts.Add(new ZipPart(relativeName, checksumName, checksum));
-                    }
-                }
-            }
-
-            return new ZipData(zipFileName, nestedParts.ToImmutableArray(), nestedExternalBinaries.ToImmutableArray());
         }
 
         private static string GetPartRelativeFileName(PackagePart part)
@@ -432,11 +295,11 @@ namespace Microsoft.DotNet.SignTool
             return path;
         }
 
-        private void VerifyAfterSign(Dictionary<FileName, ZipData> zipDataMap, TaskLoggingHelper log)
+        private void VerifyAfterSign(TaskLoggingHelper log)
         {
-            foreach (var fileName in _batchData.FileNames)
+            foreach (var fileName in _batchData.FilesToSign)
             {
-                if (fileName.IsAssembly)
+                if (fileName.IsPEFile())
                 {
                     using (var stream = File.OpenRead(fileName.FullPath))
                     {
@@ -446,16 +309,16 @@ namespace Microsoft.DotNet.SignTool
                         }
                     }
                 }
-                else if (fileName.IsZipContainer)
+                else if (fileName.IsZipContainer())
                 {
-                    var zipData = zipDataMap[fileName];
+                    var zipData = _batchData.ZipDataMap[fileName];
                     using (var package = Package.Open(fileName.FullPath, FileMode.Open, FileAccess.Read))
                     {
                         foreach (var part in package.GetParts())
                         {
                             var relativeName = GetPartRelativeFileName(part);
                             var zipPart = zipData.FindNestedBinaryPart(relativeName);
-                            if (!zipPart.HasValue || !zipPart.Value.FileName.IsAssembly)
+                            if (!zipPart.HasValue || !zipPart.Value.FileName.IsPEFile())
                             {
                                 continue;
                             }

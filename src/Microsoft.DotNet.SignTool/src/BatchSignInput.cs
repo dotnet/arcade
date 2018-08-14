@@ -2,14 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
+using System.IO.Packaging;
 using System.Linq;
-using System.Text;
-using Microsoft.DotNet.SignTool.Json;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
+using System.Runtime.Versioning;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -18,10 +21,7 @@ namespace Microsoft.DotNet.SignTool
     /// </summary>
     internal sealed class BatchSignInput
     {
-        /// <summary>
-        /// The path where the binaries are built to: e:\path\to\source\Binaries\Debug
-        /// </summary>
-        internal string OutputPath { get; }
+        private TaskLoggingHelper _log;
 
         /// <summary>
         /// Uri, to be consumed by later steps, which describes where these files get published to.
@@ -29,193 +29,300 @@ namespace Microsoft.DotNet.SignTool
         internal string PublishUri { get; }
 
         /// <summary>
-        /// The ordered names of the files to be signed. These are all relative paths off of the <see cref="OutputPath"/>
-        /// property.
+        /// This store content information for container files.
         /// </summary>
-        internal ImmutableArray<FileName> FileNames { get; }
+        internal Dictionary<FileName, ZipData> ZipDataMap { get; set; }
 
         /// <summary>
-        /// These are binaries which are included in our zip containers but are already signed. This list is used for 
-        /// validation purposes. These are all flat names and cannot be relative paths.
+        /// Path to where container files will be extracted.
         /// </summary>
-        internal ImmutableArray<string> ExternalFileNames { get; }
+        private readonly string _pathToContainerUnpackingDirectory;
 
         /// <summary>
-        /// Names of assemblies that need to be signed. This is a subset of <see cref="FileNames"/>
+        /// This enable the overriding of the default certificate for a given file+token+target_framework.
+        /// It also contains a SignToolConstants.IgnoreFileCertificateSentinel flag in the certificate name in case the file does not need to be signed
+        /// for that 
         /// </summary>
-        internal ImmutableArray<FileName> AssemblyNames { get; }
+        private readonly Dictionary<(string, string, string), string> _fileAndTokenToOverridingInfos;
 
         /// <summary>
-        /// Names of zip containers that need to be examined for signing. This is a subset of <see cref="FileNames"/>
+        /// Used to look for signing information when we have the PublicKeyToken of a file.
         /// </summary>
-        internal ImmutableArray<FileName> ZipContainerNames { get; }
+        private readonly Dictionary<string, SignInfo> _mapTokenToSignInfo;
 
         /// <summary>
-        /// Names of other file types which aren't specifically handled by the tool. This is a subset of <see cref="FileNames"/>
+        /// A list of all of the binaries that MUST be signed.
         /// </summary>
-        internal ImmutableArray<FileName> OtherNames { get; }
+        public List<FileName> FilesToSign = new List<FileName>();
 
-        /// <summary>
-        /// A map from all of the binaries that need to be signed to the actual signing data.
-        /// </summary>
-        internal ImmutableDictionary<FileName, FileSignInfo> FileSignInfoMap { get; }
-
-        private ContentUtil contentUtil = new ContentUtil();
-
-        internal BatchSignInput(string outputPath, Dictionary<string, SignInfo> fileSignDataMap, IEnumerable<string> externalFileNames, string publishUri)
+        internal BatchSignInput(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> mapPublicKeyTokenToSignInfo, Dictionary<(string, string, string), string> overridingSigningInfo, string publishUri, TaskLoggingHelper log)
         {
-            OutputPath = outputPath;
+            _pathToContainerUnpackingDirectory = Path.Combine(tempDir, "ZipArchiveUnpackingDirectory");
+            _log = log;
+            _mapTokenToSignInfo = mapPublicKeyTokenToSignInfo;
+            _fileAndTokenToOverridingInfos = overridingSigningInfo;
+
             PublishUri = publishUri;
-            // Use order by to make the output of this tool as predictable as possible.
-            var fileNames = fileSignDataMap.Keys;
-            FileNames = fileNames.OrderBy(x => x).Select(x => new FileName(outputPath, x)).ToImmutableArray();
-            ExternalFileNames = externalFileNames.OrderBy(x => x).ToImmutableArray();
+            ZipDataMap = new Dictionary<FileName, ZipData>();
 
-            AssemblyNames = FileNames.Where(x => x.IsAssembly).ToImmutableArray();
-            ZipContainerNames = FileNames.Where(x => x.IsZipContainer).ToImmutableArray();
-            OtherNames = FileNames.Where(x => !x.IsAssembly && !x.IsZipContainer).ToImmutableArray();
-
-            var builder = ImmutableDictionary.CreateBuilder<FileName, FileSignInfo>();
-            foreach (var name in FileNames)
+            foreach (var fileNameToSign in explicitSignList)
             {
-                var data = fileSignDataMap[name.RelativePath];
-                builder.Add(name, new FileSignInfo(name, data));
+                TrackFile(fileNameToSign);
             }
-            FileSignInfoMap = builder.ToImmutable();
         }
 
-        internal BatchSignInput(string outputPath, Dictionary<FileSignDataEntry, SignInfo> fileSignDataMap, IEnumerable<string> externalFileNames, string publishUri)
+        private FileName TrackFile(string fileFullPath)
         {
-            OutputPath = outputPath;
-            PublishUri = publishUri;
+            var signInfo = ExtractSignInfo(fileFullPath);
+            var fileName = new FileName(fileFullPath, signInfo);
 
-            List<FileName> fileNames = fileSignDataMap.Keys.Select(x => new FileName(outputPath, x.FilePath, x.SHA256Hash)).ToList();
-
-            // We need to tolerate not being able to find zips in the same path as they were in on the original machine.
-            // As long as we can find a FileName with the same hash for each one, we should be OK.
-            ResolveMissingZipArchives(ref fileNames);
-
-            ZipContainerNames = fileNames.Where(x => x.IsZipContainer).ToImmutableArray();
-            // If there's any files we can't find, recursively unpack the zip archives we just made a list of above.
-            UnpackMissingContent(ref fileNames);
-            // After this point, if the files are available execution should be as before.
-            // Use OrderBy to make the output of this tool as predictable as possible.
-            FileNames = fileNames.OrderBy(x => x.RelativePath).ToImmutableArray();
-            ExternalFileNames = externalFileNames.OrderBy(x => x).ToImmutableArray();
-            AssemblyNames = FileNames.Where(x => x.IsAssembly).ToImmutableArray();
-            OtherNames = FileNames.Where(x => !x.IsAssembly && !x.IsZipContainer).ToImmutableArray();
-
-            var builder = ImmutableDictionary.CreateBuilder<FileName, FileSignInfo>();
-            foreach (var name in FileNames)
+            if (signInfo.IsAlreadySigned)
             {
-                var data = fileSignDataMap.Keys.Where(k => k.SHA256Hash == name.SHA256Hash).Single();
-                builder.Add(name, new FileSignInfo(name, fileSignDataMap[data]));
+                _log.LogMessage($"Ignoring already signed file: {fileFullPath}");
             }
-            FileSignInfoMap = builder.ToImmutable();
-        }
-
-        private void ResolveMissingZipArchives(ref List<FileName> fileNames)
-        {
-            StringBuilder missingFiles = new StringBuilder();
-            List<FileName> missingZips = fileNames.Where(x => x.IsZipContainer && !File.Exists(x.FullPath)).ToList();
-            foreach (FileName missingZip in missingZips)
+            else if (signInfo.ShouldIgnore)
             {
-                // Throw if somehow the same missing zip is present more than once. May be OK to take FirstOrDefault.
-                var matchingFile = (from path in Directory.GetFiles(OutputPath, missingZip.Name, SearchOption.AllDirectories)
-                                    where contentUtil.GetChecksum(path).Equals(missingZip.SHA256Hash, StringComparison.OrdinalIgnoreCase)
-                                    select path).SingleOrDefault();
-
-                if (!string.IsNullOrEmpty(matchingFile))
+                _log.LogMessage($"Ignoring signing for this file: {fileFullPath}");
+            }
+            else
+            {
+                if (FileName.IsZipContainer(fileFullPath))
                 {
-                    fileNames.Remove(missingZip);
-                    string relativePath = (new Uri(OutputPath).MakeRelativeUri(new Uri(matchingFile))).OriginalString.Replace('/', Path.DirectorySeparatorChar);
-                    FileName updatedFileName = new FileName(OutputPath, relativePath, missingZip.SHA256Hash);
-                    fileNames.Add(updatedFileName);
+                    if (BuildZipData(fileName, out var zipData))
+                    {
+                        ZipDataMap[fileName] = zipData;
+                    }
+                }
+
+                FilesToSign.Add(fileName);
+
+                _log.LogMessage($"New file to sign: {fileName}");
+            }
+
+            return fileName;
+        }
+
+        private SignInfo ExtractSignInfo(string fileFullPath)
+        {
+            if (FileName.IsPEFile(fileFullPath))
+            {
+                using (var stream = File.OpenRead(fileFullPath))
+                {
+                    if (ContentUtil.IsAssemblyStrongNameSigned(stream))
+                    {
+                        return SignInfo.AlreadySigned;
+                    }
+                }
+
+                if (IsManaged(fileFullPath) == true)
+                {
+                    var fileAsm = System.Reflection.AssemblyName.GetAssemblyName(fileFullPath);
+                    var publicKeyToken = string.Join("", fileAsm.GetPublicKeyToken().Select(b => b.ToString("x2")));
+                    var targetFramework = GetTargetFrameworkName(fileFullPath).FullName;
+                    var justNameAndExtension = Path.GetFileName(fileFullPath);
+                    string overridingCertificate = null;
+
+                    var keyForAllTargets = (justNameAndExtension, publicKeyToken, SignToolConstants.AllTargetFrameworksSentinel);
+                    var keyForSpecificTarget = (justNameAndExtension, publicKeyToken, targetFramework);
+
+                    /// Do we need to override the default certificate this file ?
+                    if (_fileAndTokenToOverridingInfos.TryGetValue(keyForAllTargets, out overridingCertificate) ||
+                        _fileAndTokenToOverridingInfos.TryGetValue(keyForSpecificTarget, out overridingCertificate))
+                    {
+                        /// If has overriding info, is it for ignoring the file?
+                        if (overridingCertificate != null && overridingCertificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel))
+                        {
+                            return SignInfo.Ignore; // should ignore this file
+                        }
+                        /// Otherwise, just use the overriding info if present
+                    }
+                
+                    if (_mapTokenToSignInfo.ContainsKey(publicKeyToken))
+                    {
+                        var signInfo = new SignInfo(_mapTokenToSignInfo[publicKeyToken]);
+
+                        signInfo.Certificate = overridingCertificate ?? signInfo.Certificate;
+
+                        return signInfo;
+                    }
+                    else
+                    {
+                        _log.LogError($"SignInfo for Public Key Token {publicKeyToken} not found.");
+                        return SignInfo.Empty;
+                    }
                 }
                 else
                 {
-                    missingFiles.AppendLine($"File: {missingZip.Name} Hash: {missingZip.SHA256Hash}");
+                    return new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2, null);
                 }
             }
-            if (!(missingFiles.Length == 0))
+            else if (FileName.IsZipContainer(fileFullPath))
             {
-                throw new FileNotFoundException($"Could not find one or more Zip-archive files referenced:\n{missingFiles}");
+                return new SignInfo(FileName.IsNupkg(fileFullPath) ? SignToolConstants.Certificate_NuGet : SignToolConstants.Certificate_VsixSHA2, null);
+            }
+            else
+            {
+                _log.LogWarning($"Unidentified artifact type: {fileFullPath}");
+                return SignInfo.Ignore;
             }
         }
 
-        private void UnpackMissingContent(ref List<FileName> candidateFileNames)
+        private static bool? IsManaged(string filePath)
         {
-            bool success = true;
-            string unpackingDirectory = Path.Combine(OutputPath, "UnpackedZipArchives");
-            StringBuilder missingFiles = new StringBuilder();
-            Directory.CreateDirectory(unpackingDirectory);
-
-            var unpackNeeded = (from file in candidateFileNames
-                                where !File.Exists(file.FullPath)
-                                select file).ToList();
-
-            // Nothing to do
-            if (unpackNeeded.Count() == 0)
-                return;
-
-            // Get all Zip Archives in the manifest recursively.
-            Queue<FileName> allZipsWeKnowAbout = new Queue<FileName>(ZipContainerNames);
-
-            while (allZipsWeKnowAbout.Count > 0)
+            try
             {
-                FileName zipFile = allZipsWeKnowAbout.Dequeue();
-                string unpackFolder = Path.Combine(unpackingDirectory, zipFile.SHA256Hash);
+                System.Reflection.AssemblyName testAssembly = System.Reflection.AssemblyName.GetAssemblyName(filePath);
 
-                // Assumption:  If a zip with a given hash is already unpacked, it's probably OK.
-                if (!Directory.Exists(unpackFolder))
+                return true;
+            }
+            catch (System.BadImageFormatException)
+            {
+                return false;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private static FrameworkName GetTargetFrameworkName(string filePath)
+        {
+            using (var stream = File.OpenRead(filePath))
+            using (var pereader = new PEReader(stream))
+            {
+                if (pereader.HasMetadata)
                 {
-                    Directory.CreateDirectory(unpackFolder);
-                    ZipFile.ExtractToDirectory(zipFile.FullPath, unpackFolder);
-                }
-                // Add any zips we just unzipped.
-                foreach (string file in Directory.GetFiles(unpackFolder, "*", SearchOption.AllDirectories))
-                {
-                    if (PathUtil.IsZipContainer(file))
+                    MetadataReader metadataReader = pereader.GetMetadataReader();
+
+                    var attrs = metadataReader.GetAssemblyDefinition().GetCustomAttributes().Select(ah => metadataReader.GetCustomAttribute(ah));
+
+                    foreach (var attr in attrs)
                     {
-                        string relativePath = (new Uri(unpackingDirectory).MakeRelativeUri(new Uri(file))).OriginalString;
-                        allZipsWeKnowAbout.Enqueue(new FileName(unpackingDirectory, relativePath, contentUtil.GetChecksum(file)));
+                        var ctorHandle = attr.Constructor;
+                        if (ctorHandle.Kind != HandleKind.MemberReference)
+                        {
+                            continue;
+                        }
+
+                        var container = metadataReader.GetMemberReference((MemberReferenceHandle)ctorHandle).Parent;
+                        var name = metadataReader.GetTypeReference((TypeReferenceHandle)container).Name;
+                        if (!string.Equals(metadataReader.GetString(name), "TargetFrameworkAttribute"))
+                        {
+                            continue;
+                        }
+
+                        return new FrameworkName(GetFixedStringArguments(metadataReader, attr));
                     }
                 }
             }
-            // Lazy : Disks are fast, just calculate ALL hashes.  Could optimize by only files we intend to sign
-            Dictionary<string, string> existingHashLookup = new Dictionary<string, string>();
-            foreach (string file in Directory.GetFiles(unpackingDirectory, "*", SearchOption.AllDirectories))
+
+            return null;
+        }
+
+        private static string GetFixedStringArguments(MetadataReader reader, CustomAttribute attribute)
+        {
+            // Originally copied from here: https://github.com/Microsoft/msbuild/blob/a75c5a9e4f9ea6f2de24df4bfc2d60c09e684395/src/Tasks/AssemblyDependency/AssemblyInformation.cs#L353-L425
+
+            var signature = reader.GetMemberReference((MemberReferenceHandle)attribute.Constructor).Signature;
+            var signatureReader = reader.GetBlobReader(signature);
+            var valueReader = reader.GetBlobReader(attribute.Value);
+
+            var prolog = valueReader.ReadUInt16();
+            if (prolog != 1)
             {
-                existingHashLookup.Add(file, contentUtil.GetChecksum(file));
+                // Invalid custom attribute prolog
+                return null;
             }
 
-            Dictionary<FileName, FileName> fileNameUpdates = new Dictionary<FileName, FileName>();
-            // At this point, we've unpacked every Zip we can possibly pull out into folders named for the zip's hash into 'unpackingDirectory'
-            foreach (FileName missingFileWithHashToFind in unpackNeeded)
+            var header = signatureReader.ReadSignatureHeader();
+            if (header.Kind != SignatureKind.Method || header.IsGeneric)
             {
-                string matchFile = (from filePath in existingHashLookup.Keys
-                                    where Path.GetFileName(filePath).Equals(missingFileWithHashToFind.Name, StringComparison.OrdinalIgnoreCase)
-                                    where existingHashLookup[filePath] == missingFileWithHashToFind.SHA256Hash
-                                    select filePath).SingleOrDefault();
-                if (matchFile == null)
-                {
-                    success = false;
-                    missingFiles.AppendLine($"File: {missingFileWithHashToFind.Name} Hash: '{missingFileWithHashToFind.SHA256Hash}'");
-                }
-                else
-                {
-                    string relativePath = (new Uri(OutputPath).MakeRelativeUri(new Uri(matchFile))).OriginalString.Replace('/', Path.DirectorySeparatorChar);
-                    FileName updatedFileName = new FileName(OutputPath, relativePath, missingFileWithHashToFind.SHA256Hash);
-                    candidateFileNames.Remove(missingFileWithHashToFind);
-                    candidateFileNames.Add(updatedFileName);
-                }
+                // Invalid custom attribute constructor signature
+                return null;
             }
 
-            if (!success)
+            if (!signatureReader.TryReadCompressedInteger(out var parameterCount))
             {
-                throw new Exception($"Failure attempting to find one or more files:\n{missingFiles.ToString()}");
+                // Invalid custom attribute constructor signature
+                return null;
             }
+
+            var returnType = signatureReader.ReadSignatureTypeCode();
+            if (returnType != SignatureTypeCode.Void)
+            {
+                // Invalid custom attribute constructor signature
+                return null;
+            }
+
+            // Custom attribute constructor must take only strings
+            return valueReader.ReadSerializedString();
+        }
+
+        /// <summary>
+        /// Build up the <see cref="ZipData"/> instance for a given zip container. This will also report any consistency
+        /// errors found when examining the zip archive.
+        /// </summary>
+        private bool BuildZipData(FileName zipFileName, out ZipData zipData)
+        {
+            Debug.Assert(zipFileName.IsZipContainer());
+
+            Package package = null;
+
+            try
+            {
+                package = Package.Open(zipFileName.FullPath, FileMode.Open, FileAccess.Read);
+                var packageTempDir = Path.Combine(_pathToContainerUnpackingDirectory, Guid.NewGuid().ToString());
+                var nestedParts = new List<ZipPart>();
+
+                foreach (var part in package.GetParts())
+                {
+                    var relativePath = GetPartRelativeFileName(part);
+                    var packagePartTempName = Path.Combine(packageTempDir, relativePath);
+                    var packagePartTempDirectory = Path.GetDirectoryName(packagePartTempName);
+
+                    if (!FileName.IsZipContainer(packagePartTempName) && !FileName.IsPEFile(packagePartTempName))
+                    {
+                        continue;
+                    }
+
+                    Directory.CreateDirectory(packagePartTempDirectory);
+
+                    using (var tempFileStream = File.OpenWrite(packagePartTempName))
+                    {
+                        part.GetStream().CopyTo(tempFileStream);
+                        tempFileStream.Close();
+                    }
+
+                    var partFileName = TrackFile(packagePartTempName);
+
+                    nestedParts.Add(new ZipPart(relativePath, partFileName, null, partFileName.SignInfo));
+                }
+
+                zipData = new ZipData(zipFileName, nestedParts.ToImmutableList());
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                _log.LogErrorFromException(e);
+                zipData = null;
+                return false;
+            }
+            finally
+            {
+                package?.Close();
+            }
+        }
+
+        private static string GetPartRelativeFileName(PackagePart part)
+        {
+            var path = part.Uri.OriginalString;
+            if (!string.IsNullOrEmpty(path) && path[0] == '/')
+            {
+                path = path.Substring(1);
+            }
+
+            return path;
         }
     }
 }
-
