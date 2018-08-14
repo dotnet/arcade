@@ -19,15 +19,15 @@ parameters:
 
   ## Telemetry variables
 
-  # Required: determines whether to run cmd or sh telemetry files
-  agentOs: Windows_NT
-
   # Optional: enable sending telemetry
   #           if enabled, these "variables" must be specified in the variables object
   #             _HelixBuildConfig - differentiate between Debug, Release, other
   #             _HelixSource - Example: build/product
   #             _HelixType - Example: official/dotnet/arcade/$(Build.SourceBranch)
   enableTelemetry: false
+
+  # Build.Reason for anonymous builds - https://docs.microsoft.com/en-us/vsts/pipelines/build/variables?view=vsts#build-variables
+  publicBuildReasons: IndividualCI,BatchedCI,PullRequest
 
 phases:
 - phase: ${{ parameters.name }}
@@ -45,10 +45,9 @@ phases:
 
   - ${{ if eq(parameters.enableTelemetry, 'true') }}:
     # Remove this condition once telemetry can be sent from public CI
-    - ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+    - ${{ if not(contains(parameters.publicBuildReasons, variables['Build.Reason'] )) }}:
       - template: /eng/common/templates/steps/telemetry-start.yml
         parameters:
-          agentOs: ${{ parameters.agentOs }}
           buildConfig: ${{ parameters.variables._HelixBuildConfig }}
           helixSource: ${{ parameters.variables._HelixSource }}
           helixType: ${{ parameters.variables._HelixType }}
@@ -58,9 +57,8 @@ phases:
 
   - ${{ if eq(parameters.enableTelemetry, 'true') }}:
     # Remove this condition once telemetry can be sent from public CI
-    - ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+    - ${{ if not(contains(parameters.publicBuildReasons, variables['Build.Reason'] )) }}:
       - template: /eng/common/templates/steps/telemetry-end.yml
         parameters:
-          agentOs: ${{ parameters.agentOs }}
           helixSource: ${{ parameters.variables._HelixSource }}
           helixType: ${{ parameters.variables._HelixType }}

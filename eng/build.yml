@@ -1,6 +1,5 @@
 parameters:
-  # [Windows_NT (default), Linux, OSX] Used in templates to define variables which are OS specific
-  agentOs: Windows_NT
+  name: ''
   # send telemetry if build is not a PR or CI build  
   enableTelemetry: true
   # queue YAML object - https://github.com/Microsoft/vsts-agent/blob/master/docs/preview/yamlgettingstarted-schema.md#queue
@@ -11,11 +10,9 @@ parameters:
 phases:
 - template: /eng/common/templates/phases/base.yml
   parameters:
-    agentOs: ${{ parameters.agentOs }}
-
     enableTelemetry: ${{ parameters.enableTelemetry }}
 
-    name: ${{ parameters.agentOs }}
+    name: ${{ parameters.name }}
 
     queue: ${{ parameters.queue }}
 
@@ -40,51 +37,45 @@ phases:
       parameters:
         conditions: not IndividualCI,BatchedCI,PullRequest
         steps:
-        - template: /eng/common/templates/steps/run-on-windows.yml
-          parameters:
-            agentOs: ${{ parameters.agentOs }} 
-            steps:
-            - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
-              displayName: Install MicroBuild plugin
-              inputs:
-                signType: $(_SignType)
-                zipSources: false
-                esrpSigning: $(_UseEsrpSigning)
-              env:
-                TeamName: $(_TeamName)
-              continueOnError: false
-              condition: and(succeeded(), in(variables['_SignType'], 'real', 'test'))
-            - task: AzureKeyVault@1
-              inputs:
-                azureSubscription: 'DotNet-Engineering-Services_KeyVault'
-                KeyVaultName: EngKeyVault
-                SecretsFilter: 'dotnetfeed-storage-access-key-1'
-              condition: succeeded()
+        - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
+          displayName: Install MicroBuild plugin
+          inputs:
+            signType: $(_SignType)
+            zipSources: false
+            esrpSigning: $(_UseEsrpSigning)
+          env:
+            TeamName: $(_TeamName)
+          continueOnError: false
+          condition: and(succeeded(), in(variables['_SignType'], 'real', 'test'), eq(variables['Agent.Os'], 'Windows_NT'))
+        - task: AzureKeyVault@1
+          inputs:
+            azureSubscription: 'DotNet-Engineering-Services_KeyVault'
+            KeyVaultName: EngKeyVault
+            SecretsFilter: 'dotnetfeed-storage-access-key-1'
+          condition: and(succeeded(), eq(variables['Agent.Os'], 'Windows_NT'))
 
     # Use utility script to run script command dependent on agent OS
-    - template: /eng/common/templates/steps/run-script-ifequalelse.yml
-      parameters:
-        parameter1: Windows_NT
-        parameter2: ${{ parameters.agentOs }}
-        ifScript: eng\common\cibuild.cmd
-          -configuration $(_BuildConfig) 
-          -prepareMachine
-          /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-          /p:DotNetSignType=$(_SignType)
-          /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
-          /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
-          $(_PublishArgs)
-        elseScript: eng/common/cibuild.sh
-          --configuration $(_BuildConfig) 
-          --prepareMachine
-          /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-          /p:DotNetSignType=$(_SignType)
-          /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
-          /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
-          $(_PublishArgs)
-        name: Build_Publish
-        displayName: Build / Publish
-        condition: succeeded()
+    - script: eng\common\cibuild.cmd
+        -configuration $(_BuildConfig) 
+        -prepareMachine
+        /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+        /p:DotNetSignType=$(_SignType)
+        /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+        /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+        $(_PublishArgs)
+      displayName: Build / Publish
+      condition: and(succeeded(), eq(variables['Agent.Os'], 'Windows_NT'))
+        
+    - script: eng/common/cibuild.sh
+        --configuration $(_BuildConfig) 
+        --prepareMachine
+        /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+        /p:DotNetSignType=$(_SignType)
+        /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+        /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+        $(_PublishArgs)
+      displayName: Build / Publish
+      condition: and(succeeded(), ne(variables['Agent.Os'], 'Windows_NT'))
 
     # Internal only build steps (until publishing artifacts in public CI is supported)
     - template: /eng/common/templates/steps/build-reason.yml
@@ -103,9 +94,6 @@ phases:
           inputs:
             PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
             PublishLocation: Container
-            ${{ if eq(parameters.agentOs, 'Windows_NT') }}:
-              ArtifactName: Windows_NT_$(Agent.JobName)
-            ${{ if ne(parameters.agentOs, 'Windows_NT') }}:
-              ArtifactName: Linux_$(Agent.JobName)
+            ArtifactName: $(Agent.Os)_$(Agent.JobName)
           continueOnError: true
           condition: succeededOrFailed()
