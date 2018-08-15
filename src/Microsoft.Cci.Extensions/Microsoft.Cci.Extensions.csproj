@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
+  <PropertyGroup>
+    <!-- Make sure building in VS get chk by default -->
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Microsoft.Cci</RootNamespace>
+    <AssemblyName>Microsoft.Cci.Extensions</AssemblyName>
+    <DebugSymbols>true</DebugSymbols>
+    <NoWarn>$(NoWarn);649</NoWarn>
+    <CLSCompliant>false</CLSCompliant>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ProjectGuid>{2179F9B5-1DBA-4563-9402-A94DE75EA9FA}</ProjectGuid>
+    <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
+    <NuGetTargetMoniker>.NETStandard,Version=v1.3</NuGetTargetMoniker>
+    <LangVersion>6</LangVersion>
+  </PropertyGroup>
+  <!-- Default configurations to help VS understand the configurations -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
+  <ItemGroup>
+    <Compile Include="Comparers\ApiComparer.cs" />
+    <Compile Include="Dgml\DgmlExtensions.cs" />
+    <Compile Include="Differs\DifferenceRule.cs" />
+    <Compile Include="Differs\IDiffingService.cs" />
+    <Compile Include="Differs\IElementDifferenceFactory.cs" />
+    <Compile Include="Differs\Rules\TokenListDiffer.cs" />
+    <Compile Include="Differs\ExportDifferenceRuleAttribute.cs" />
+    <Compile Include="Extensions\AccessorType.cs" />
+    <Compile Include="Extensions\ApiKind.cs" />
+    <Compile Include="Extensions\ApiKindExtensions.cs" />
+    <Compile Include="Extensions\AssemblyIdentityHelpers.cs" />
+    <Compile Include="Extensions\FakeCustomAttribute.cs" />
+    <Compile Include="Filters\AttributeMarkedFilter.cs" />
+    <Compile Include="Filters\AttributesFilter.cs" />
+    <Compile Include="Filters\BaselineDifferenceFilter.cs" />
+    <Compile Include="Filters\CciFilterExtensions.AndFilter.cs" />
+    <Compile Include="Filters\CciFilterExtensions.cs" />
+    <Compile Include="Filters\CciFilterExtensions.NegatedFilter.cs" />
+    <Compile Include="Filters\CciFilterExtensions.OrFilter.cs" />
+    <Compile Include="Filters\CommonTypesMappingDifferenceFilter.cs" />
+    <Compile Include="Filters\DifferenceFilter.cs" />
+    <Compile Include="Filters\DocIdExcludeListFilter.cs" />
+    <Compile Include="Filters\DocIdIncludeListFilter.cs" />
+    <Compile Include="Filters\ExcludeAttributesFilter.cs" />
+    <Compile Include="Filters\ExcludeOverridesFilter.cs" />
+    <Compile Include="Filters\IDifferenceFilter.cs" />
+    <Compile Include="Filters\IncludeAllFilter.cs" />
+    <Compile Include="Filters\NotImplementedFilter.cs" />
+    <Compile Include="Filters\IntersectionFilter.cs" />
+    <Compile Include="Filters\PublicAndProtectedFilter.cs" />
+    <Compile Include="Filters\TypesOnlyMappingDifferenceFilter.cs" />
+    <Compile Include="Internal\DisposeAction.cs" />
+    <Compile Include="Extensions\DocIdExtensions.cs" />
+    <Compile Include="Mappings\AttributesMapping.cs" />
+    <Compile Include="Comparers\CciComparers.cs" />
+    <Compile Include="Comparers\AttributeComparer.cs" />
+    <Compile Include="Mappings\SimpleElementMapping.cs" />
+    <Compile Include="Comparers\ICciComparers.cs" />
+    <Compile Include="Comparers\StringKeyComparer.cs" />
+    <Compile Include="Mappings\MappingSettings.cs" />
+    <Compile Include="Traversers\DependencyTraverser.cs" />
+    <Compile Include="Traversers\DifferenceTraverser.cs" />
+    <Compile Include="Traversers\DocIdToTypeMappingTraverser.cs" />
+    <Compile Include="Traversers\AssemblyReferenceTraverser.cs" />
+    <Compile Include="Differs\Differences.cs" />
+    <Compile Include="Differs\ElementDifferenceFactory.cs" />
+    <Compile Include="Differs\ElementDiffer.cs" />
+    <Compile Include="Differs\IDifferenceRule.cs" />
+    <Compile Include="Differs\IDifferences.cs" />
+    <Compile Include="Differs\ListMerger.cs" />
+    <Compile Include="Differs\DifferenceType.cs" />
+    <Compile Include="Experimental\APIClosureTypeReferenceVisitor.cs" />
+    <Compile Include="Experimental\APIEmitter.cs" />
+    <Compile Include="Experimental\FilteredAssembly.cs" />
+    <Compile Include="Experimental\TrimAPIMutator.cs" />
+    <Compile Include="Filters\ICciFilter.cs" />
+    <Compile Include="Filters\IMappingDifferenceFilter.cs" />
+    <Compile Include="Filters\MappingDifferenceFilter.cs" />
+    <Compile Include="Filters\PublicOnlyCciFilter.cs" />
+    <Compile Include="Comparers\TypeDefinitionComparer.cs" />
+    <Compile Include="Traversers\FilteredMetadataTraverser.cs" />
+    <Compile Include="Mappings\AssemblyMapping.cs" />
+    <Compile Include="Mappings\AssemblySetMapping.cs" />
+    <Compile Include="Mappings\ElementMapping.cs" />
+    <Compile Include="Mappings\MemberMapping.cs" />
+    <Compile Include="Mappings\NamespaceMapping.cs" />
+    <Compile Include="Mappings\TypeMapping.cs" />
+    <Compile Include="Traversers\MappingsTypeMemberTraverser.cs" />
+    <Compile Include="Traversers\ResolveAllReferencesTraverser.cs" />
+    <Compile Include="Experimental\TypeReferenceSearcher.cs" />
+    <Compile Include="HostEnvironment.cs" />
+    <Compile Include="Traversers\SimpleTypeMemberTraverser.cs" />
+    <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="TypeDependencies.cs" />
+    <Compile Include="Experimental\TypeReferenceVisitor.cs" />
+    <Compile Include="Extensions\CSharp\CSharpCciExtensions.cs" />
+    <Compile Include="Writers\CSharp\CSDeclarationHelper.cs" />
+    <Compile Include="Writers\CSharp\CSDeclarationWriter.Attributes.cs" />
+    <Compile Include="Writers\CSharp\CSDeclarationWriter.cs" />
+    <Compile Include="Writers\CSharp\CSDeclarationWriter.Events.cs" />
+    <Compile Include="Writers\CSharp\CSDeclarationWriter.Fields.cs" />
+    <Compile Include="Writers\CSharp\CSDeclarationWriter.Generics.cs" />
+    <Compile Include="Writers\CSharp\CSDeclarationWriter.Methods.cs" />
+    <Compile Include="Writers\CSharp\CSDeclarationWriter.Namespaces.cs" />
+    <Compile Include="Writers\CSharp\CSDeclarationWriter.Properties.cs" />
+    <Compile Include="Writers\CSharp\CSDeclarationWriter.Types.cs" />
+    <Compile Include="Writers\CSharp\CSharpWriter.cs" />
+    <Compile Include="Writers\ICciDifferenceWriter.cs" />
+    <Compile Include="Writers\Syntax\UnifiedDiffSyntaxWriter.cs" />
+    <Compile Include="Writers\Syntax\HtmlSyntaxWriter.cs" />
+    <Compile Include="Writers\ICciDeclarationWriter.cs" />
+    <Compile Include="Writers\DocumentIdWriter.cs" />
+    <Compile Include="Writers\ICciWriter.cs" />
+    <Compile Include="Writers\Syntax\IndentionSyntaxWriter.cs" />
+    <Compile Include="Writers\IReviewCommentWriter.cs" />
+    <Compile Include="Writers\Syntax\ISyntaxWriter.cs" />
+    <Compile Include="Writers\Syntax\IStyleSyntaxWriter.cs" />
+    <Compile Include="Writers\Syntax\OpenXmlSyntaxWriter.cs" />
+    <Compile Include="Writers\Syntax\StyleHelper.cs" />
+    <Compile Include="Writers\Syntax\SyntaxStyle.cs" />
+    <Compile Include="Writers\Syntax\SyntaxToken.cs" />
+    <Compile Include="Writers\Syntax\SyntaxTokenType.cs" />
+    <Compile Include="Writers\Syntax\TextSyntaxWriter.cs" />
+    <Compile Include="Writers\Syntax\TokenSyntaxWriter.cs" />
+    <Compile Include="Writers\TypeForwardWriter.cs" />
+    <Compile Include="PortingHelpers.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="project.json" />
+  </ItemGroup>
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
+</Project>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- Hook both partial-facade-related targets into TargetsTriggeredByCompilation. This will cause them
+          to only be invoked upon a successful compilation; they can conceptualized as an extension
+          of the assembly compilation process.
+  -->
+  <PropertyGroup>
+    <TargetsTriggeredByCompilation Condition="'$(IsPartialFacadeAssembly)' == 'true'">
+      $(TargetsTriggeredByCompilation);FillPartialFacadeUsingExe
+    </TargetsTriggeredByCompilation>
+  </PropertyGroup>
+
+  <!-- FillPartialFacade
+       Inputs:
+         * An "input assembly"
+         * A contract assembly
+         * Seed assemblies
+
+       Fills the "input assembly" by finding types in the contract assembly that are missing from it, and adding type-forwards
+         to those matching types in the seed assemblies.
+  -->
+  <Target Name="FillPartialFacadeUsingExe" DependsOnTargets="$(FillPartialFacadeDependsOn)">
+
+    <ItemGroup>
+      <!-- References used for compilation are automatically included as seed assemblies -->
+      <GenFacadesSeeds Include="@(ReferencePath)" />
+    </ItemGroup>
+
+    <Error Text="No single matching contract found." Condition="'$(IsReferenceAssembly)' != 'true' AND '@(ResolvedMatchingContract->Count())' != '1'" />
+
+    <PropertyGroup Condition="'$(IsReferenceAssembly)' != 'true'">
+      <GenFacadesArgs>$(GenFacadesArgs) -partialFacadeAssemblyPath:"$(GenFacadesInputAssembly)"</GenFacadesArgs>
+      <GenFacadesArgs>$(GenFacadesArgs) -contracts:"%(ResolvedMatchingContract.Identity)"</GenFacadesArgs>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(IsReferenceAssembly)' == 'true'">
+      <GenFacadesArgs>$(GenFacadesArgs) -contracts:"$(GenFacadesInputAssembly)"</GenFacadesArgs>
+      <GenFacadesArgs>$(GenFacadesArgs) -buildPartialReferenceFacade</GenFacadesArgs>
+    </PropertyGroup>
+    <PropertyGroup>
+      <GenFacadesArgs>$(GenFacadesArgs) -seeds:"@(GenFacadesSeeds, ',')"</GenFacadesArgs>
+      <GenFacadesArgs>$(GenFacadesArgs) -facadePath:"$(GenFacadesOutputPath.TrimEnd('/'))"</GenFacadesArgs>
+      <GenFacadesArgs Condition="'$(DebugSymbols)' == 'false' OR '$(DebugType)'=='Portable'">$(GenFacadesArgs) -producePdb:false</GenFacadesArgs>
+      <GenFacadesArgs Condition="'@(SeedTypePreference)' != ''">$(GenFacadesArgs) -preferSeedType:"@(SeedTypePreference->'%(Identity)=%(Assembly)', ',')"</GenFacadesArgs>
+      <GenFacadesArgs Condition="'$(GenFacadesIgnoreMissingTypes)' == 'true'">$(GenFacadesArgs) -ignoreMissingTypes</GenFacadesArgs>
+      <GenFacadesArgs Condition="'$(GenFacadesIgnoreBuildAndRevisionMismatch)' == 'true'">$(GenFacadesArgs) -ignoreBuildAndRevisionMismatch</GenFacadesArgs>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(GenFacadesInputPath)" />
+    <WriteLinesToFile File="$(GenFacadesResponseFile)" Lines="$(GenFacadesArgs)" Overwrite="true" />
+
+    <!-- Move the assembly into a subdirectory for GenFacades -->
+    <Move SourceFiles="$(PartialFacadeAssemblyPath)"
+          DestinationFolder="$(GenFacadesInputPath)"
+    />
+
+    <!-- Move the PDB into a subdirectory for GenFacades if we are producing PDBs -->
+    <Move SourceFiles="$(PartialFacadeSymbols)"
+          DestinationFolder="$(GenFacadesInputPath)"
+          Condition="'$(DebugSymbols)' != 'false' AND '$(DebugType)'!='Portable'"
+    />
+
+    <PropertyGroup>
+      <GenFacadesCmd>$(ToolHostCmd) "$(ToolsDir)GenFacades.exe"</GenFacadesCmd>
+    </PropertyGroup>
+
+    <Exec Command="$(GenFacadesCmd) @&quot;$(GenFacadesResponseFile)&quot;" WorkingDirectory="$(ToolRuntimePath)" />
+
+    <ItemGroup>
+      <FileWrites Include="$(GenFacadesInputAssembly)" />
+      <FileWrites Include="$(GenFacadesInputSymbols)" />
+      <FileWrites Include="$(GenFacadesResponseFile)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

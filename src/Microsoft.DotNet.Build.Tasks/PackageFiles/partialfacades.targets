@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <FillPartialFacadeDependsOn>
+      EnsureBuildToolsRuntime
+    </FillPartialFacadeDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' != 'true'">
+    <!-- Tell ResolveMatchingContract to run and resolve contract to project reference -->
+    <ResolveMatchingContract>true</ResolveMatchingContract>
+    <FillPartialFacadeDependsOn>
+      $(FillPartialFacadeDependsOn);ResolveMatchingContract
+    </FillPartialFacadeDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' == 'true'">
+    <!-- reference facades will always have overlapping types so suppress compiler warnings -->
+    <NoWarn>$(NoWarn);0436</NoWarn>
+  </PropertyGroup>
+
+  <!-- Inputs and outputs of FillPartialFacade -->
+  <PropertyGroup Condition="'$(IsPartialFacadeAssembly)' == 'true'">
+    <PartialFacadeAssemblyPath>$(IntermediateOutputPath)$(TargetName)$(TargetExt)</PartialFacadeAssemblyPath>
+    <PartialFacadeSymbols>$(IntermediateOutputPath)$(TargetName).pdb</PartialFacadeSymbols>
+    <GenFacadesInputPath>$(IntermediateOutputPath)PreGenFacades/</GenFacadesInputPath>
+    <GenFacadesInputAssembly>$(GenFacadesInputPath)$(TargetName)$(TargetExt)</GenFacadesInputAssembly>
+    <GenFacadesInputSymbols>$(GenFacadesInputPath)$(TargetName).pdb</GenFacadesInputSymbols>
+    <GenFacadesOutputPath>$(IntermediateOutputPath)</GenFacadesOutputPath>
+    <GenFacadesResponseFile>$(GenFacadesInputPath)genfacades.rsp</GenFacadesResponseFile>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)partialfacades.task.targets" Condition="'$(UseLegacyGenFacadesExe)' != 'true'"/>
+  <Import Project="$(MSBuildThisFileDirectory)partialfacades.exe.targets" Condition="'$(UseLegacyGenFacadesExe)' == 'true'"/>
+</Project>

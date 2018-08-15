@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.props))\dir.props" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>GenFacades</RootNamespace>
+    <AssemblyName>GenFacades</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <ClsCompliant>false</ClsCompliant>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <NuGetRuntimeIdentifier>win7-x64</NuGetRuntimeIdentifier>
+    <CopyNuGetImplementations>true</CopyNuGetImplementations>
+  </PropertyGroup>
+
+  <!-- Default configurations to help VS understand the configurations -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
+
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+
+  <!-- Common command-line helper sources -->
+  <ItemGroup>
+    <Compile Include="$(CommonPath)\CommandLine.cs">
+      <Link>Common\CommandLine.cs</Link>
+    </Compile>
+    <Compile Include="$(CommonPath)\CommandLineTraceHandler.cs">
+      <Link>Common\CommandLineTraceHandler.cs</Link>
+    </Compile>
+    <Compile Include="$(CommonPath)\ConsoleTraceListener.cs">
+      <Link>Common\ConsoleTraceListener.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="project.json" />
+    <TargetingPackReference Include="System" />
+    <TargetingPackReference Include="System.Runtime" />
+    <ProjectReference Include="..\..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
+    <ProjectReference Include="..\GenFacades.Core\GenFacades.Core.csproj" />
+  </ItemGroup>
+
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
+</Project>
