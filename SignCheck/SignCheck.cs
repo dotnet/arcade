@@ -32,6 +32,12 @@ namespace SignCheck
             set;
         }
 
+        internal bool LoggedResults
+        {
+            get;
+            set;
+        }
+
         internal string[] ResultDetails
         {
             get;
@@ -300,6 +306,7 @@ namespace SignCheck
                     ((FileStatus & FileStatus.AllFiles) == FileStatus.AllFiles) ||
                     ((!result.IsSigned) && (!result.IsSkipped) && (!result.IsExcluded) && ((FileStatus & FileStatus.UnsignedFiles) != 0)))
                 {
+                    LoggedResults = true;
                     Log.WriteMessage(LogVerbosity.Minimum, String.Empty.PadLeft(indent) + result.ToString(ResultDetails));
                 }
 
@@ -348,7 +355,9 @@ namespace SignCheck
 
                 if (InputFiles.Count() > 0)
                 {
+                    var startTime = DateTime.Now;
                     var results = signatureVerifier.Verify(InputFiles);
+                    var endTime = DateTime.Now;
 
                     AllFilesSigned = true;
                     Log.WriteLine();
@@ -369,7 +378,11 @@ namespace SignCheck
                         }
                     }
 
-                    Log.WriteLine();
+                    if (LoggedResults)
+                    {
+                        Log.WriteLine();
+                    }
+
                     if (AllFilesSigned)
                     {
                         Log.WriteMessage(LogVerbosity.Minimum, SignCheckResources.scAllFilesSigned);
@@ -379,6 +392,8 @@ namespace SignCheck
                         Log.WriteError(LogVerbosity.Minimum, SignCheckResources.scUnsignedFiles);
                     }
 
+                    var totalTime = endTime - startTime;
+                    Log.WriteMessage(LogVerbosity.Minimum, String.Format(SignCheckResources.scTime, totalTime));
                     Log.WriteMessage(LogVerbosity.Minimum, String.Format(SignCheckResources.scStats,
                         TotalFiles, TotalSignedFiles, TotalUnsignedFiles, TotalSkippedFiles, TotalExcludedFiles, TotalSkippedExcludedFiles));
                 }

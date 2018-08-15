@@ -250,6 +250,15 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Checking {0} against the exclusion list..
+        /// </summary>
+        internal static string DiagFirstExclusion {
+            get {
+                return ResourceManager.GetString("DiagFirstExclusion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Generating exclusion for {0}: {1}.
         /// </summary>
         internal static string DiagGenerateExclusion {

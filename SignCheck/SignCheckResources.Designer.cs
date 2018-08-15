@@ -169,6 +169,15 @@ namespace SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total Time: {0:c}.
+        /// </summary>
+        internal static string scTime {
+            get {
+                return ResourceManager.GetString("scTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There are unsigned files..
         /// </summary>
         internal static string scUnsignedFiles {

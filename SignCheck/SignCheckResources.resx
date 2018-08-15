@@ -153,6 +153,9 @@
   <data name="scSummary" xml:space="preserve">
     <value />
   </data>
+  <data name="scTime" xml:space="preserve">
+    <value>Total Time: {0:c}</value>
+  </data>
   <data name="scUnsignedFiles" xml:space="preserve">
     <value>There are unsigned files.</value>
   </data>

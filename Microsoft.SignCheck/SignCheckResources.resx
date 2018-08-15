@@ -180,6 +180,9 @@
   <data name="DiagExtractingFileContents" xml:space="preserve">
     <value>Extracting file contents to {0}</value>
   </data>
+  <data name="DiagFirstExclusion" xml:space="preserve">
+    <value>Checking {0} against the exclusion list.</value>
+  </data>
   <data name="DiagGenerateExclusion" xml:space="preserve">
     <value>Generating exclusion for {0}: {1}</value>
   </data>

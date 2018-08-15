@@ -12,7 +12,7 @@ namespace Microsoft.SignCheck.Interop.PortableExecutable
         private IMAGE_DOS_HEADER _imageDosHeader;
         private IMAGE_NT_HEADERS32 _imageNTHeaders32;
         private IMAGE_NT_HEADERS64 _imageNTHeaders64;
-        private List<IMAGE_SECTION_HEADER> _imageSectionHeaders;        
+        private List<IMAGE_SECTION_HEADER> _imageSectionHeaders;
 
         /// <summary>
         /// The <see cref="IMAGE_DATA_DIRECTORY"/> entry pointing to the CLR header.
@@ -181,6 +181,22 @@ namespace Microsoft.SignCheck.Interop.PortableExecutable
             }
         }
 
+        public bool IsILImage
+        {
+            get
+            {
+                return (ImageCor20Header.ManagedNativeHeader.Size == 0) && (ImageCor20Header.ManagedNativeHeader.VirtualAddress == 0);
+            }
+        }
+
+        public bool IsManagedCode
+        {
+            get
+            {
+                return CLRRuntimeHeader.Size > 0;
+            }
+        }
+
         public bool IsPE32
         {
             get
@@ -260,7 +276,7 @@ namespace Microsoft.SignCheck.Interop.PortableExecutable
                     _imageCor20Header = IMAGE_COR20_HEADER.Read(Path, clrOffset);
                 }
             }
-        }        
+        }
 
         /// <summary>
         /// Locate the <see cref="IMAGE_SECTION_HEADER"/> that corresponds to the given RVA
@@ -276,7 +292,7 @@ namespace Microsoft.SignCheck.Interop.PortableExecutable
             int i = 0;
             while (i < FileHeader.NumberOfSections)
             {
-                if (rva < sections[i].VirtualAddress+AlignTo(sections[i].VirtualSize, SectionAlignment))
+                if (rva < sections[i].VirtualAddress + AlignTo(sections[i].VirtualSize, SectionAlignment))
                 {
                     if (rva < sections[i].VirtualAddress)
                     {
@@ -332,7 +348,7 @@ namespace Microsoft.SignCheck.Interop.PortableExecutable
         private static uint AlignTo(uint address, uint boundary)
         {
             return address + boundary - (address % boundary);
-        }        
+        }
     }
 }
 

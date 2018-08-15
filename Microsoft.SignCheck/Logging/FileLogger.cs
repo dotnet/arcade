@@ -17,6 +17,12 @@ namespace Microsoft.SignCheck.Logging
             set;
         }
 
+        internal long Lines
+        {
+            get;
+            set;
+        }
+
         public FileLogger(LogVerbosity verbosity, string messageFile, string errorFile) : base(verbosity)
         {
             if (!String.IsNullOrEmpty(messageFile))
@@ -35,7 +41,10 @@ namespace Microsoft.SignCheck.Logging
                     Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(errorFile)));
                 }
                 ErrorWriter = File.CreateText(errorFile);
+                ErrorWriter.AutoFlush = true;
             }
+
+            Lines = 0;
         }
 
         public override void Close()
@@ -58,6 +67,13 @@ namespace Microsoft.SignCheck.Logging
             if (MessageWriter != null)
             {
                 MessageWriter.WriteLine(message);
+                // periodically flush the log in case it's a large scan 
+                Lines++;
+
+                if (Lines % 10 == 0)
+                {
+                    MessageWriter.Flush();
+                }
             }
         }
 
@@ -83,6 +99,7 @@ namespace Microsoft.SignCheck.Logging
             if (ErrorWriter != null)
             {
                 ErrorWriter.WriteLine(message);
+                ErrorWriter.Flush();
             }
         }
 
@@ -107,6 +124,11 @@ namespace Microsoft.SignCheck.Logging
             if (MessageWriter != null)
             {
                 MessageWriter.WriteLine();
+                Lines++;
+                if (Lines % 10 == 0)
+                {
+                    MessageWriter.Flush();
+                }
             }
         }
     }

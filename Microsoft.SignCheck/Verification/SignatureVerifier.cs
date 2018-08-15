@@ -180,7 +180,6 @@ namespace Microsoft.SignCheck.Verification
         public SignatureVerificationResult VerifyFile(string path, string parent)
         {
             Log.WriteMessage(LogVerbosity.Detailed, String.Format(SignCheckResources.ProcessingFile, Path.GetFileName(path), String.IsNullOrEmpty(parent) ? SignCheckResources.NA : parent));
-
             var extension = Path.GetExtension(path);
             VerifyByFileExtension verifierDelegate;
             SignatureVerificationResult result;
@@ -188,7 +187,11 @@ namespace Microsoft.SignCheck.Verification
             if (Verifiers.TryGetValue(extension, out verifierDelegate))
             {
                 result = verifierDelegate(path, parent);
-                result.IsExcluded = Exclusions.IsParentExcluded(parent) | Exclusions.IsFileExcluded(path);
+                Log.WriteMessage(LogVerbosity.Diagnostic, String.Format(SignCheckResources.DiagFirstExclusion, path));
+                if (Exclusions.Count > 0)
+                {
+                    result.IsExcluded = Exclusions.IsParentExcluded(parent) | Exclusions.IsFileExcluded(path);
+                }
             }
             else
             {
@@ -245,44 +248,36 @@ namespace Microsoft.SignCheck.Verification
             return svr;
         }
 
-        public void VerifyStrongNameSignature(SignatureVerificationResult svr)
+        public void VerifyStrongNameSignature(SignatureVerificationResult svr, PortableExecutableHeader portableExecutableHeader)
         {
-            if (StrongName.IsManagedCode(svr.FullPath))
+            if (portableExecutableHeader.IsManagedCode)
             {
-                if (VerifyStrongName)
+                svr.IsNativeImage = !portableExecutableHeader.IsILImage;
+                // NGEN/CrossGen don't preserve StrongName signatures.
+                if (!svr.IsNativeImage)
                 {
-                    svr.IsNativeImage = !StrongName.IsILImage(svr.FullPath);
-                    // NGEN/CrossGen don't preserve StrongName signatures.
-                    if (!svr.IsNativeImage)
+                    bool wasVerified = false;
+                    int hresult = StrongName.ClrStrongName.StrongNameSignatureVerificationEx(svr.FullPath, fForceVerification: true, pfWasVerified: out wasVerified);
+                    svr.IsStrongNameSigned = hresult == StrongName.S_OK;
+                    svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailSignedStrongName, svr.IsStrongNameSigned);
+
+                    if (hresult != StrongName.S_OK)
                     {
-
-                        bool wasVerified = false;
-                        int hresult = StrongName.ClrStrongName.StrongNameSignatureVerificationEx(svr.FullPath, fForceVerification: true, pfWasVerified: out wasVerified);
-                        svr.IsStrongNameSigned = hresult == StrongName.S_OK;
-                        svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailSignedStrongName, svr.IsStrongNameSigned);
-
-                        if (hresult != StrongName.S_OK)
-                        {
-                            svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailHResult, hresult);
-                        }
-                        else
-                        {
-                            string publicToken;
-                            hresult = StrongName.GetStrongNameTokenFromAssembly(svr.FullPath, out publicToken);
-                            if (hresult == StrongName.S_OK)
-                            {
-                                svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailPublicKeyToken, publicToken);
-                            }
-                        }
+                        svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailHResult, hresult);
                     }
                     else
                     {
-                        svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailNativeImage);
+                        string publicToken;
+                        hresult = StrongName.GetStrongNameTokenFromAssembly(svr.FullPath, out publicToken);
+                        if (hresult == StrongName.S_OK)
+                        {
+                            svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailPublicKeyToken, publicToken);
+                        }
                     }
                 }
                 else
                 {
-                    svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailSkipped);
+                    svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailNativeImage);
                 }
             }
         }
@@ -297,7 +292,12 @@ namespace Microsoft.SignCheck.Verification
         public SignatureVerificationResult VerifyDll(string path, string parent)
         {
             SignatureVerificationResult svr = VerifyAuthentiCode(path, parent);
-            VerifyStrongNameSignature(svr);
+
+            if (VerifyStrongName)
+            {
+                var dllHeader = new PortableExecutableHeader(svr.FullPath);
+                VerifyStrongNameSignature(svr, dllHeader);
+            }
 
             svr.IsSigned = svr.IsAuthentiCodeSigned & ((svr.IsStrongNameSigned) || (!VerifyStrongName) || svr.IsNativeImage);
             svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
@@ -308,16 +308,20 @@ namespace Microsoft.SignCheck.Verification
         public SignatureVerificationResult VerifyExe(string path, string parent)
         {
             SignatureVerificationResult svr = VerifyAuthentiCode(path, parent);
-            VerifyStrongNameSignature(svr);
+            // Always retrieve the PE header of an EXE since we have multiple switches that might
+            // require access to the information
+            var exeHeader = new PortableExecutableHeader(svr.FullPath);
+            if (VerifyStrongName)
+            {
+                VerifyStrongNameSignature(svr, exeHeader);
+            }
 
             svr.IsSigned = svr.IsAuthentiCodeSigned & ((svr.IsStrongNameSigned) || (!VerifyStrongName));
             svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
 
             if (Recursive)
             {
-                var exeImage = new PortableExecutableHeader(svr.FullPath);
-
-                if (exeImage.ImageSectionHeaders.Select(s => s.SectionName).Contains(".wixburn"))
+                if (exeHeader.ImageSectionHeaders.Select(s => s.SectionName).Contains(".wixburn"))
                 {
                     Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagSectionHeader, ".wixburn");
                     Log.WriteMessage(LogVerbosity.Detailed, SignCheckResources.WixBundle, svr.FullPath);
@@ -432,7 +436,7 @@ namespace Microsoft.SignCheck.Verification
                         foreach (var key in installPackage.Files.Keys)
                         {
                             var packageFileResult = VerifyFile(installPackage.Files[key].TargetPath, svr.Filename);
-                            //packageFileResult.AddDetail(SignCheckResources.DetailFullName, originalFiles[key]);
+                            packageFileResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, originalFiles[key]);
                             CheckAndUpdateExclusion(packageFileResult, packageFileResult.Filename, originalFiles[key], svr.Filename);
                             svr.NestedResults.Add(packageFileResult);
                         }
@@ -471,7 +475,6 @@ namespace Microsoft.SignCheck.Verification
 
         public SignatureVerificationResult VerifyVsix(string path, string parent)
         {
-
             var svr = new SignatureVerificationResult(path, parent);
             var fullPath = svr.FullPath;
             PackageDigitalSignature packageSignature;
@@ -570,9 +573,12 @@ namespace Microsoft.SignCheck.Verification
 
         private void CheckAndUpdateExclusion(SignatureVerificationResult result, string alias, string fullName, string parent)
         {
-            result.IsExcluded |= Exclusions.IsFileExcluded(fullName);
-            result.ExclusionEntry = String.Join(";", String.Join("|", alias, fullName), parent, String.Empty);
+            if (Exclusions.Count > 0)
+            {
+                result.IsExcluded |= Exclusions.IsFileExcluded(fullName);
+            }
 
+            result.ExclusionEntry = String.Join(";", String.Join("|", alias, fullName), parent, String.Empty);
             Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagGenerateExclusion, result.Filename, result.ExclusionEntry);
         }
 
