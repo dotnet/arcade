@@ -30,20 +30,6 @@ prepare_machine=false
 verbosity='minimal'
 properties=''
 
-repo_root="$scriptroot/../.."
-eng_root="$scriptroot/.."
-artifacts_dir="$repo_root/artifacts"
-artifacts_configuration_dir="$artifacts_dir/$configuration"
-toolset_dir="$artifacts_dir/toolset"
-log_dir="$artifacts_configuration_dir/log"
-build_log="$log_dir/Build.binlog"
-toolset_restore_log="$log_dir/ToolsetRestore.binlog"
-temp_dir="$artifacts_configuration_dir/tmp"
-
-global_json_file="$repo_root/global.json"
-build_driver=""
-toolset_build_proj=""
-
 while (($# > 0)); do
   lowerI="$(echo $1 | awk '{print tolower($0)}')"
   case $lowerI in
@@ -131,6 +117,20 @@ while (($# > 0)); do
       ;;
   esac
 done
+
+repo_root="$scriptroot/../.."
+eng_root="$scriptroot/.."
+artifacts_dir="$repo_root/artifacts"
+artifacts_configuration_dir="$artifacts_dir/$configuration"
+toolset_dir="$artifacts_dir/toolset"
+log_dir="$artifacts_configuration_dir/log"
+build_log="$log_dir/Build.binlog"
+toolset_restore_log="$log_dir/ToolsetRestore.binlog"
+temp_dir="$artifacts_configuration_dir/tmp"
+
+global_json_file="$repo_root/global.json"
+build_driver=""
+toolset_build_proj=""
 
 # ReadVersionFromJson [json key]
 function ReadGlobalVersion {
