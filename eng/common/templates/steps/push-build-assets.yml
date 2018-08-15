@@ -1,0 +1,17 @@
+parameters:
+    dependsOn: {}
+    queue: {}
+    condition: ''
+phases:
+  - phase: download_manifests
+    queue: ${{ parameters.queue }}
+    condition: ${{ parameters.condition }}
+    steps:
+      -  task: DownloadBuildArtifacts@0
+         displayName: Download manifests
+         continueOnError: false
+         inputs:
+           artifactName: AssetManifest
+           downloadPath: '$(Build.StagingDirectory)/AssetManifestsToProcess'    
+           
+    
