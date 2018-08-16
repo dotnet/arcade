@@ -50,6 +50,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Github.Iss
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Maestro.Client", "src\Maestro\Client\src\Microsoft.DotNet.Maestro.Client.csproj", "{CBE5BE25-B3DE-4B73-AED5-644B7F752545}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Maestro.Tasks", "src\Microsoft.DotNet.Maestro.Tasks\Microsoft.DotNet.Maestro.Tasks.csproj", "{A89A17DE-2012-4CB0-83D2-128B297A7C05}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceFabricMocks", "src\Maestro\ServiceFabricMocks\ServiceFabricMocks.csproj", "{7D66C883-C833-4BBC-82E5-5B2766DC719F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Maestro.Data", "src\Maestro\Maestro.Data\Maestro.Data.csproj", "{1FB787F0-9AB6-44AC-801E-4274A37693A3}"
@@ -372,6 +374,18 @@ Global
 		{CBE5BE25-B3DE-4B73-AED5-644B7F752545}.Release|x64.Build.0 = Release|Any CPU
 		{CBE5BE25-B3DE-4B73-AED5-644B7F752545}.Release|x86.ActiveCfg = Release|Any CPU
 		{CBE5BE25-B3DE-4B73-AED5-644B7F752545}.Release|x86.Build.0 = Release|Any CPU
+		{A89A17DE-2012-4CB0-83D2-128B297A7C05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A89A17DE-2012-4CB0-83D2-128B297A7C05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A89A17DE-2012-4CB0-83D2-128B297A7C05}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A89A17DE-2012-4CB0-83D2-128B297A7C05}.Debug|x64.Build.0 = Debug|Any CPU
+		{A89A17DE-2012-4CB0-83D2-128B297A7C05}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A89A17DE-2012-4CB0-83D2-128B297A7C05}.Debug|x86.Build.0 = Debug|Any CPU
+		{A89A17DE-2012-4CB0-83D2-128B297A7C05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A89A17DE-2012-4CB0-83D2-128B297A7C05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A89A17DE-2012-4CB0-83D2-128B297A7C05}.Release|x64.ActiveCfg = Release|Any CPU
+		{A89A17DE-2012-4CB0-83D2-128B297A7C05}.Release|x64.Build.0 = Release|Any CPU
+		{A89A17DE-2012-4CB0-83D2-128B297A7C05}.Release|x86.ActiveCfg = Release|Any CPU
+		{A89A17DE-2012-4CB0-83D2-128B297A7C05}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -403,6 +417,7 @@ Global
 		{37184B58-835A-4D51-AA58-250430D283AA} = {AE791E26-78E1-4936-BCF4-1BF5152CBBD6}
 		{EAD09A54-78AA-41FF-95F7-375B751CC916} = {37184B58-835A-4D51-AA58-250430D283AA}
 		{CBE5BE25-B3DE-4B73-AED5-644B7F752545} = {AE791E26-78E1-4936-BCF4-1BF5152CBBD6}
+		{A89A17DE-2012-4CB0-83D2-128B297A7C05} = {AE791E26-78E1-4936-BCF4-1BF5152CBBD6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {06E6CFF5-C54E-4623-9587-71A9E3F041D9}
