@@ -4,120 +4,111 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Xunit;
 
 namespace Microsoft.DotNet.SignTool.Tests
 {
     public class SignToolTests
     {
-        private string _MicrobuildPath { get; }
-        private string _MSBuildPath { get; }
-        private string _PublishURL { get; }
-        private bool _TestSign { get; }
-        private bool _DryRun { get; }
-        private bool _IsWindows { get; }
+        private readonly string _microbuildPath;
+        private readonly string _publishURL;
+        private readonly bool _testSign;
+        private readonly bool _isWindows;
+        private readonly SignToolTask _task;
+        private readonly SignToolArgs _signToolArgs;
+        private readonly SignTool _signTool;
 
         public SignToolTests()
         {
-            var pathAttributes = Assembly.GetExecutingAssembly().GetCustomAttribute<PathConfiguration>();
-
-            _MicrobuildPath = pathAttributes.PackageInstallationPath;
-            _MSBuildPath = pathAttributes.MSBuildPath;
-            _PublishURL = null;
-            _TestSign = true;
-            _DryRun = String.IsNullOrWhiteSpace(_MSBuildPath);
+            _microbuildPath = string.Empty;
+            _publishURL = null;
+            _testSign = true;
 
             // As of now we don't have "mscoree.dll" on Linux. This DLL is used when checking
             // if the file is strong name signed: SignTool/ContentUtil.NativeMethods
             // Therefore, test cases won't execute in fully on non-Windows machines.
-            _IsWindows = System.Environment.OSVersion.VersionString.Contains("Windows");
-        }
+            _isWindows = System.Environment.OSVersion.VersionString.Contains("Windows");
 
-        private (SignToolTask, SignToolArgs, SignTool) TestCasePrologue()
-        {
-            var TestBasePath = Guid.NewGuid().ToString();
-            var TempPath = $@"{TestBasePath}/TestTempDir/";
-            var LogDir = $@"{TestBasePath}/TestLogDir/";
+            var testBasePath = Guid.NewGuid().ToString();
+            var tempPath = $@"{testBasePath}/TestTempDir/";
+            var logDir = $@"{testBasePath}/TestLogDir/";
 
-            var signToolArgs = new SignToolArgs(TempPath, _MicrobuildPath, _TestSign, _MSBuildPath, LogDir);
+            // The path to MSBuild will always be null in these tests, this will force
+            // the signing logic to call our FakeBuildEngine.BuildProjectFile with a path
+            // to the XML that store the content of the would be Microbuild sign request.
+            _signToolArgs = new SignToolArgs(tempPath, _microbuildPath, _testSign, null, logDir);
 
-            var signTool = _DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
+            _signTool = new ValidationOnlySignTool(_signToolArgs);
 
-            var task = new SignToolTask
+            _task = new SignToolTask
             {
                 BuildEngine = new FakeBuildEngine()
             };
-
-            return (task, signToolArgs, signTool);
         }
 
-        private void TestCaseEpilogue(SignToolTask task, SignTool signTool, SignToolArgs signToolArgs, string[] itemsToSign, 
-            Dictionary<string, SignInfo> strongNameSignInfo, Dictionary<(string, string, string), string> signingOverridingInfos,
-            List<FileName> expectedToBeSigned)
+        private void TestCaseEpilogue(string[] itemsToSign, Dictionary<string, SignInfo> strongNameSignInfo, 
+            Dictionary<ExplicitCertificateKey, string> signingOverridingInfos, List<FileName> expectedToBeSigned)
         {
-            if (!_IsWindows) return;
+            if (!_isWindows) return;
 
-            var signingInput = new BatchSignInput(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, _PublishURL, task.Log);
+            var signingInput = new BatchSignInput(_signToolArgs.TempDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, _publishURL, _task.Log);
 
-            /// Check that all files that were expected to be sent to signing were actually found and the 
-            /// signing information for them are correct.
+            // Check that all files that were expected to be discovered were actually found and the 
+            // signing information for them are correct.
             foreach (var expected in expectedToBeSigned)
             {
-                if (!signingInput.FilesToSign.Exists(candidate => candidate.FullPath.EndsWith(expected.FullPath) && 
-                    candidate.SignInfo.Certificate == expected.SignInfo.Certificate && 
-                    candidate.SignInfo.StrongName == expected.SignInfo.StrongName))
-                {
-                    task.Log.LogError($"Expected this file ({expected.FullPath}) to be signed with this " +
+                var validationCheck = signingInput.FilesToSign.Exists(candidate => 
+                    candidate.FullPath.EndsWith(expected.FullPath) &&
+                    candidate.SignInfo.Certificate == expected.SignInfo.Certificate &&
+                    candidate.SignInfo.StrongName == expected.SignInfo.StrongName);
+
+                Assert.True(validationCheck, $"Expected this file ({expected.FullPath}) to be signed with this " +
                         $"certificate ({expected.SignInfo.Certificate}) and this strong name ({expected.SignInfo.StrongName})");
-                }
             }
 
-            if (expectedToBeSigned.Count != signingInput.FilesToSign.Count)
-            {
-                task.Log.LogError($"Expected a signing list of {expectedToBeSigned.Count} items but got one with {signingInput.FilesToSign.Count} items.");
-            }
+            Assert.Equal(expectedToBeSigned.Count, signingInput.FilesToSign.Count);
  
-            var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput, null);
+            var util = new BatchSignUtil(_task.BuildEngine, _task.Log, _signTool, signingInput, null);
 
-            /// There is a validation inside this method that checks that the files where actually signed
-            /// so it's not duplicated here.
             util.Go();
 
-            if (task.Log.HasLoggedErrors)
+            // The list of files that would be signed was captured inside the FakeBuildEngine,
+            // here we check if that matches what we expected
+            var fakeEngine = (FakeBuildEngine)_task.BuildEngine;
+
+            foreach (var expected in expectedToBeSigned)
             {
-                foreach (var item in ((FakeBuildEngine)task.BuildEngine).LogErrorEvents)
-                {
-                    Console.WriteLine(item.Message);
-                }
+                var validationCheck = fakeEngine.filesSigned.Exists(candidate =>
+                    candidate.FullPath.EndsWith(expected.FullPath) &&
+                    candidate.SignInfo.Certificate == expected.SignInfo.Certificate &&
+                    candidate.SignInfo.StrongName == expected.SignInfo.StrongName);
+
+                Assert.True(validationCheck, $"Expected this file ({expected.FullPath}) to be signed with this " +
+                        $"certificate ({expected.SignInfo.Certificate}) and this strong name ({expected.SignInfo.StrongName})");
             }
 
-            Assert.False(task.Log.HasLoggedErrors);
+            Assert.False(_task.Log.HasLoggedErrors);
         }
 
         [Fact]
         public void EmptySigningList()
         {
-            (var task, var signToolArgs, _) = TestCasePrologue();
-
             var ExplicitSignItems = new string[1];
 
             var StrongNameSignInfo = new Dictionary<string, SignInfo>();
 
-            var FileSignInfo = new Dictionary<(string, string, string), string>();
+            var FileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            var signingInput = new BatchSignInput(signToolArgs.TempDir, ExplicitSignItems, StrongNameSignInfo, FileSignInfo, _PublishURL, task.Log);
+            var signingInput = new BatchSignInput(_signToolArgs.TempDir, ExplicitSignItems, StrongNameSignInfo, FileSignInfo, _publishURL, _task.Log);
 
             Assert.Empty(signingInput.FilesToSign);
             Assert.Empty(signingInput.ZipDataMap);
-            Assert.False(task.Log.HasLoggedErrors);
+            Assert.False(_task.Log.HasLoggedErrors);
         }
 
         [Fact]
         public void OnlyContainer()
         {
-            (var task, var signToolArgs, var signTool) = TestCasePrologue();
-
             // List of files to be considered for signing
             var itemsToSign = new string[] {
                 $@"Resources/ContainerOne.1.0.0.nupkg",
@@ -143,19 +134,54 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var signingOverridingINformation = new Dictionary<(string, string, string), string>();
+            var signingOverridingINformation = new Dictionary<ExplicitCertificateKey, string>();
 
-            TestCaseEpilogue(task, signTool, signToolArgs, itemsToSign, signingInformation, signingOverridingINformation, expectedSigningList);
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingINformation, expectedSigningList);
         }
 
         [Fact]
-        public void NestedContainer()
+        public void OnlyContainerAndOverriding()
         {
-            (var task, var signToolArgs, var signTool) = TestCasePrologue();
-
             // List of files to be considered for signing
             var itemsToSign = new string[] {
-                $@"Resources/ContainerTwo.1.0.0.nupkg",
+                $@"Resources/ContainerOne.1.0.0.nupkg",
+            };
+
+            // Default signing information
+            var signingInformation = new Dictionary<string, SignInfo>() {
+                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+            };
+
+            // Overriding information
+            var signingOverridingINformation = new Dictionary<ExplicitCertificateKey, string>() {
+                {new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", SignToolConstants.AllTargetFrameworksSentinel), "OverridedCertName" }
+            };
+
+            var overridingCert = new SignInfo("OverridedCertName", "ArcadeStrongTest");
+
+            var expectedAsmSignInfo = new SignInfo("ArcadeCertTest", "ArcadeStrongTest");
+            var expectedNugSignInfo = new SignInfo(SignToolConstants.Certificate_NuGet, null);
+            var expectedNatSignInfo = new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2, null);
+            var expectedSigningList = new List<FileName>()
+            {
+                new FileName("/ContainerOne.1.0.0.nupkg", expectedNugSignInfo),
+                new FileName("/netcoreapp2.0/ProjectOne.dll", overridingCert),
+                new FileName("/netcoreapp2.0/ContainerOne.dll", expectedAsmSignInfo),
+                new FileName("/netcoreapp2.1/ProjectOne.dll", overridingCert),
+                new FileName("/netstandard2.0/ProjectOne.dll", overridingCert),
+                new FileName("/net461/ProjectOne.dll", overridingCert),
+                new FileName("/native/NativeLibrary.dll", expectedNatSignInfo),
+            };
+
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingINformation, expectedSigningList);
+        }
+        
+        [Fact]
+        public void NestedContainer()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new string[] {
+                $@"Resources/NestedContainer.1.0.0.nupkg",
             };
 
             // Default signing information
@@ -168,7 +194,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var expectedNatSignInfo = new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2, null);
             var expectedSigningList = new List<FileName>()
             {
-                new FileName("ContainerTwo.1.0.0.nupkg", expectedNugSignInfo),
+                new FileName("/NestedContainer.1.0.0.nupkg", expectedNugSignInfo),
                 new FileName("ContainerOne.1.0.0.nupkg", expectedNugSignInfo),
                 new FileName("/netcoreapp2.0/ProjectOne.dll", expectedAsmSignInfo),
                 new FileName("/netcoreapp2.0/ProjectOne.dll", expectedAsmSignInfo),
@@ -185,9 +211,9 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var signingOverridingINformation = new Dictionary<(string, string, string), string>();
+            var signingOverridingINformation = new Dictionary<ExplicitCertificateKey, string>();
 
-            TestCaseEpilogue(task, signTool, signToolArgs, itemsToSign, signingInformation, signingOverridingINformation, expectedSigningList);
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingINformation, expectedSigningList);
         }
     }
 }

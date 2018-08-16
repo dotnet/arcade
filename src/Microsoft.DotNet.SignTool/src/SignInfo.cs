@@ -4,7 +4,7 @@
 
 namespace Microsoft.DotNet.SignTool
 {
-    internal class SignInfo
+    internal struct SignInfo
     {
         /// <summary>
         /// Used to flag the state when no information about signature is available.
@@ -26,42 +26,35 @@ namespace Microsoft.DotNet.SignTool
         /// in cases where we have a zip container where the contents are signed but not the actual
         /// container itself. This is the case when dealing with nupkg files.
         /// </summary>
-        internal string Certificate { get; set; }
+        internal string Certificate { get; }
 
         /// <summary>
         /// This will be null in the case a strong name signing is not required.
         /// </summary>
-        internal string StrongName { get; set; }
+        internal string StrongName { get; }
 
-        internal bool ShouldIgnore { get; private set; }
+        internal bool ShouldIgnore { get; }
 
-        internal bool IsAlreadySigned { get; private set; }
+        internal bool IsAlreadySigned { get; }
 
-        internal bool IsEmpty { get; private set; }
+        internal bool IsEmpty { get; }
 
         public bool ShouldSign => !IsEmpty && !IsAlreadySigned && !ShouldIgnore;
 
-        private SignInfo(bool empty, bool ignoreThisFile, bool alreadySigned)
+        public SignInfo(string certificate, string strongName, bool shouldIgnore, bool isEmpty, bool isAlreadySigned)
         {
-            ShouldIgnore = ignoreThisFile;
-            IsEmpty = empty;
-            IsAlreadySigned = alreadySigned;
-        }
-
-        internal SignInfo(string certificate, string strongName)
-        {
+            ShouldIgnore = shouldIgnore;
+            IsEmpty = isEmpty;
+            IsAlreadySigned = isAlreadySigned;
             Certificate = certificate;
             StrongName = strongName;
         }
 
-        internal SignInfo(SignInfo signInfo)
-        {
-            ShouldIgnore = signInfo.ShouldIgnore;
-            IsEmpty = signInfo.IsEmpty;
-            IsAlreadySigned = signInfo.IsAlreadySigned;
-            Certificate = signInfo.Certificate;
-            StrongName = signInfo.StrongName;
-        }
+        private SignInfo(bool empty, bool ignoreThisFile, bool alreadySigned) : this(null, null, ignoreThisFile, empty, alreadySigned)
+        { }
+
+        internal SignInfo(string certificate, string strongName) : this (certificate, strongName, false, false, false)
+        { }
 
         public override string ToString()
         {

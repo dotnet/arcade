@@ -43,24 +43,24 @@ namespace Microsoft.DotNet.SignTool
         /// It also contains a SignToolConstants.IgnoreFileCertificateSentinel flag in the certificate name in case the file does not need to be signed
         /// for that 
         /// </summary>
-        private readonly Dictionary<(string, string, string), string> _fileAndTokenToOverridingInfos;
+        private readonly Dictionary<ExplicitCertificateKey, string> _explicitCertificates;
 
         /// <summary>
         /// Used to look for signing information when we have the PublicKeyToken of a file.
         /// </summary>
-        private readonly Dictionary<string, SignInfo> _mapTokenToSignInfo;
+        private readonly Dictionary<string, SignInfo> _defaultSignInfoForPublicKeyToken;
 
         /// <summary>
         /// A list of all of the binaries that MUST be signed.
         /// </summary>
         public List<FileName> FilesToSign = new List<FileName>();
 
-        internal BatchSignInput(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> mapPublicKeyTokenToSignInfo, Dictionary<(string, string, string), string> overridingSigningInfo, string publishUri, TaskLoggingHelper log)
+        internal BatchSignInput(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> mapPublicKeyTokenToSignInfo, Dictionary<ExplicitCertificateKey, string> overridingSigningInfo, string publishUri, TaskLoggingHelper log)
         {
             _pathToContainerUnpackingDirectory = Path.Combine(tempDir, "ZipArchiveUnpackingDirectory");
             _log = log;
-            _mapTokenToSignInfo = mapPublicKeyTokenToSignInfo;
-            _fileAndTokenToOverridingInfos = overridingSigningInfo;
+            _defaultSignInfoForPublicKeyToken = mapPublicKeyTokenToSignInfo;
+            _explicitCertificates = overridingSigningInfo;
 
             PublishUri = publishUri;
             ZipDataMap = new Dictionary<FileName, ZipData>();
@@ -114,46 +114,44 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
 
-                if (IsManaged(fileFullPath) == true)
+                if (!IsManaged(fileFullPath))
+                {
+                    return new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2, null);
+                }
+                else
                 {
                     var fileAsm = System.Reflection.AssemblyName.GetAssemblyName(fileFullPath);
                     var publicKeyToken = string.Join("", fileAsm.GetPublicKeyToken().Select(b => b.ToString("x2")));
                     var targetFramework = GetTargetFrameworkName(fileFullPath).FullName;
-                    var justNameAndExtension = Path.GetFileName(fileFullPath);
+                    var fileName = Path.GetFileName(fileFullPath);
                     string overridingCertificate = null;
 
-                    var keyForAllTargets = (justNameAndExtension, publicKeyToken, SignToolConstants.AllTargetFrameworksSentinel);
-                    var keyForSpecificTarget = (justNameAndExtension, publicKeyToken, targetFramework);
+                    var keyForAllTargets = new ExplicitCertificateKey(fileName, publicKeyToken, SignToolConstants.AllTargetFrameworksSentinel);
+                    var keyForSpecificTarget = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework);
 
-                    /// Do we need to override the default certificate this file ?
-                    if (_fileAndTokenToOverridingInfos.TryGetValue(keyForAllTargets, out overridingCertificate) ||
-                        _fileAndTokenToOverridingInfos.TryGetValue(keyForSpecificTarget, out overridingCertificate))
+                    // Do we need to override the default certificate this file ?
+                    if (_explicitCertificates.TryGetValue(keyForSpecificTarget, out overridingCertificate) ||
+                        _explicitCertificates.TryGetValue(keyForAllTargets, out overridingCertificate))
                     {
-                        /// If has overriding info, is it for ignoring the file?
+                        // If has overriding info, is it for ignoring the file?
                         if (overridingCertificate != null && overridingCertificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel))
                         {
                             return SignInfo.Ignore; // should ignore this file
                         }
-                        /// Otherwise, just use the overriding info if present
+                        // Otherwise, just use the overriding info if present
                     }
                 
-                    if (_mapTokenToSignInfo.ContainsKey(publicKeyToken))
+                    if (_defaultSignInfoForPublicKeyToken.ContainsKey(publicKeyToken))
                     {
-                        var signInfo = new SignInfo(_mapTokenToSignInfo[publicKeyToken]);
+                        var signInfo = _defaultSignInfoForPublicKeyToken[publicKeyToken];
 
-                        signInfo.Certificate = overridingCertificate ?? signInfo.Certificate;
+                        var certificate = overridingCertificate ?? signInfo.Certificate;
 
-                        return signInfo;
+                        return new SignInfo(certificate, signInfo.StrongName, signInfo.ShouldIgnore, signInfo.IsEmpty, signInfo.IsAlreadySigned);
                     }
-                    else
-                    {
-                        _log.LogError($"SignInfo for Public Key Token {publicKeyToken} not found.");
-                        return SignInfo.Empty;
-                    }
-                }
-                else
-                {
-                    return new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2, null);
+
+                    _log.LogError($"SignInfo for Public Key Token {publicKeyToken} not found.");
+                    return SignInfo.Empty;
                 }
             }
             else if (FileName.IsZipContainer(fileFullPath))
@@ -167,7 +165,7 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        private static bool? IsManaged(string filePath)
+        private static bool IsManaged(string filePath)
         {
             try
             {
@@ -175,13 +173,9 @@ namespace Microsoft.DotNet.SignTool
 
                 return true;
             }
-            catch (System.BadImageFormatException)
-            {
-                return false;
-            }
             catch (Exception)
             {
-                return null;
+                return false;
             }
         }
 

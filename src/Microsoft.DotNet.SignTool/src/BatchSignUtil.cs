@@ -167,7 +167,7 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 var zipData = _batchData.ZipDataMap[fileName];
-                return zipData.NestedParts.All(x => !x.ShouldBeSigned || signedSet.Contains(x.FileName));
+                return zipData.NestedParts.All(x => !x.SignInfo.ShouldSign || signedSet.Contains(x.FileName));
             }
 
             // Extract the next set of files that should be signed. This is the set of files for which all of the

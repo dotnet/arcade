@@ -6,8 +6,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
-    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" IsImplicitlyDefined="true" />
-    <PackageReference Include="vswhere" Version="$(VSWhereVersion)" IsImplicitlyDefined="true" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.DotNet.SignTool\Microsoft.DotNet.SignTool.csproj" />
@@ -17,28 +15,4 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
-  <Target Name="SetPaths" BeforeTargets="Build">
-    <Exec Command='"$(NuGetPackageRoot)vswhere\$(VSWhereVersion)\tools\vswhere.exe" -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild'
-          ConsoleToMsBuild="true"
-          StandardErrorImportance="high"
-          Condition="'$(OS)' == 'Windows_NT'">
-      <Output TaskParameter="ConsoleOutput" PropertyName="_SignToolTests_VSInstallDir" />
-    </Exec>
-
-    <PropertyGroup>
-      <_SignToolTests_DesktopMSBuildPath Condition="'$(OS)' == 'Windows_NT'">$(_SignToolTests_VSInstallDir)\MSBuild\15.0\Bin\msbuild.exe</_SignToolTests_DesktopMSBuildPath>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <AssemblyAttributes Include="Microsoft.DotNet.SignTool.Tests.PathConfiguration">
-        <_Parameter1>$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)</_Parameter1>
-
-        <!-- If this turns out to be empty we are going to execute in DryRun mode. -->
-        <_Parameter2>$(_SignToolTests_DesktopMSBuildPath)</_Parameter2>
-      </AssemblyAttributes>
-    </ItemGroup>
-
-    <WriteCodeFragment Language="C#" OutputFile="Properties/AssemblyInfo.cs" AssemblyAttributes="@(AssemblyAttributes)" />
-  </Target>
 </Project>

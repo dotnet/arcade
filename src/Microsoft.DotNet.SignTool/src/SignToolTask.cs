@@ -7,6 +7,7 @@ using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Versioning;
 
 namespace Microsoft.DotNet.SignTool
@@ -89,30 +90,30 @@ namespace Microsoft.DotNet.SignTool
                 if (typeof(object).Assembly.GetName().Name != "mscorlib" && !File.Exists(MSBuildPath))
                 {
                     Log.LogError($"MSBuild was not found at this path: '{MSBuildPath}'.");
-                    return ;
+                    return;
                 }
 
                 if (String.IsNullOrEmpty(LogDir) || !Directory.Exists(LogDir))
                 {
                     Log.LogError($"Invalid LogDir informed: {LogDir}");
-                    return ;
+                    return;
                 }
             }
 
             var signInfos = ParseStrongNameSignInfo();
             var overridingSignInfos = ParseFileSignInfo();
 
-            if (Log.HasLoggedErrors) return ;
+            if (Log.HasLoggedErrors) return;
 
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
             var signingInput = new BatchSignInput(TempDir, ItemsToSign, signInfos, overridingSignInfos, PublishUrl, Log);
 
-            if (Log.HasLoggedErrors) return ;
+            if (Log.HasLoggedErrors) return;
 
             var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput, OrchestrationManifestPath);
 
-            if (Log.HasLoggedErrors) return ;
+            if (Log.HasLoggedErrors) return;
 
             util.Go();
         }
@@ -153,9 +154,9 @@ namespace Microsoft.DotNet.SignTool
             return mapTokenToSignInfo;
         }
 
-        private Dictionary<(string fileName, string publicKeyToken, string targetFramework), string> ParseFileSignInfo()
+        private Dictionary<ExplicitCertificateKey, string> ParseFileSignInfo()
         {
-            var mapOverridingSignInfos = new Dictionary<(string, string, string), string>();
+            var mapOverridingSignInfos = new Dictionary<ExplicitCertificateKey, string>();
 
             if (FileSignInfo != null)
             {
@@ -194,11 +195,11 @@ namespace Microsoft.DotNet.SignTool
                         return null;
                     }
 
-                    var outerKey = (fileName, publicKeyToken.ToLower(), targetFramework);
+                    var outerKey = new ExplicitCertificateKey(fileName, publicKeyToken.ToLower(), targetFramework);
 
                     if (mapOverridingSignInfos.TryGetValue(outerKey, out var existingCert))
                     {
-                        Log.LogWarning($"Ignoring attempt to duplicate signing override information for this combination ({fileName}, {publicKeyToken}, {targetFramework}). " +
+                        Log.LogError($"Ignoring attempt to duplicate signing override information for this combination ({fileName}, {publicKeyToken}, {targetFramework}). " +
                             $"Existing value {existingCert}, trying to add new value {certificateName}.");
                     }
                     else
@@ -230,7 +231,7 @@ namespace Microsoft.DotNet.SignTool
 
             if (pkt.Length != 16) return false;
 
-            return long.TryParse(pkt, out _);
+            return pkt.ToLower().All(c => (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z')); ;
         }
     }
 }

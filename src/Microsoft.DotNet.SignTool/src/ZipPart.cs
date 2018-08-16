@@ -11,8 +11,6 @@ namespace Microsoft.DotNet.SignTool
         internal string Checksum { get; }
         internal SignInfo SignInfo { get; }
 
-        internal bool ShouldBeSigned => SignInfo != null && SignInfo.ShouldSign;
-
         internal ZipPart(string relativeName, FileName fileName, string checksum, SignInfo signInfo)
         {
             RelativeName = relativeName;
