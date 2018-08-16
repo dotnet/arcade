@@ -7,7 +7,6 @@ using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -70,8 +69,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public async Task<bool> ExecuteAsync()
         {
-            Debugger.Launch();
-
             try
             {
                 Log.LogMessage(MessageImportance.High, "Performing feed push...");

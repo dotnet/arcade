@@ -31,6 +31,9 @@ namespace Microsoft.DotNet.Maestro.Tasks
 
         public string AssetLocationType { get; set; } = "Blob";
 
+        private static readonly CancellationTokenSource s_tokenSource = new CancellationTokenSource();
+        private static readonly CancellationToken s_cancellationToken = s_tokenSource.Token;
+
         public override bool Execute()
         {
             ExecuteAsync().GetAwaiter().GetResult();
@@ -38,6 +41,17 @@ namespace Microsoft.DotNet.Maestro.Tasks
         }
 
         public async Task ExecuteAsync()
+        {
+            if (s_cancellationToken.IsCancellationRequested)
+            {
+                Log.LogError("Task PushMetadataToBuildAssetRegistry was cancelled...");
+                s_cancellationToken.ThrowIfCancellationRequested();
+            }
+
+            await PushMetadataAsync();
+        }
+
+        public async Task<bool> PushMetadataAsync()
         {
             try
             {
