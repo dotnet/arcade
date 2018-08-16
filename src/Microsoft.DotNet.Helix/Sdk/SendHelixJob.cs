@@ -72,8 +72,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         protected override async Task ExecuteCore()
         {
-
-            var def = HelixApi.Job.Define()
+            IJobDefinition def = HelixApi.Job.Define()
                 .WithSource(Source)
                 .WithType(Type)
                 .WithBuild(Build)
@@ -81,7 +80,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (CorrelationPayloads != null)
             {
-                foreach (var correlationPayload in CorrelationPayloads)
+                foreach (ITaskItem correlationPayload in CorrelationPayloads)
                 {
                     def = AddCorrelationPayload(def, correlationPayload);
                 }
@@ -89,7 +88,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (WorkItems != null)
             {
-                foreach (var workItem in WorkItems)
+                foreach (ITaskItem workItem in WorkItems)
                 {
                     def = AddWorkItem(def, workItem);
                 }
@@ -99,14 +98,13 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogError("SendHelixJob given no WorkItems to send.");
             }
 
-
             // don't send the job if we have errors
             if (Log.HasLoggedErrors)
             {
                 return;
             }
 
-            var job = await def.SendAsync();
+            ISentJob job = await def.SendAsync();
             JobCorrelationId = job.CorrelationId;
         }
 
@@ -122,11 +120,10 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return def;
             }
 
-            var wiWithPayload = def.DefineWorkItem(name)
+            IWorkItemDefinitionWithPayload wiWithPayload = def.DefineWorkItem(name)
                 .WithCommand(command);
 
-
-            var payload = workItem.GetMetadata("PayloadDirectory");
+            string payload = workItem.GetMetadata("PayloadDirectory");
             IWorkItemDefinition wi;
             if (!string.IsNullOrEmpty(payload))
             {
@@ -137,7 +134,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 wi = wiWithPayload.WithEmptyPayload();
             }
 
-            var timeoutString = workItem.GetMetadata("Timeout");
+            string timeoutString = workItem.GetMetadata("Timeout");
             if (!string.IsNullOrEmpty(timeoutString))
             {
                 if (TimeSpan.TryParse(timeoutString, CultureInfo.InvariantCulture, out TimeSpan timeout))
@@ -167,7 +164,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private IJobDefinition AddCorrelationPayload(IJobDefinition def, ITaskItem correlationPayload)
         {
-            var path = correlationPayload.GetMetadata("FullPath");
+            string path = correlationPayload.GetMetadata("FullPath");
 
             if (!Directory.Exists(path))
             {
