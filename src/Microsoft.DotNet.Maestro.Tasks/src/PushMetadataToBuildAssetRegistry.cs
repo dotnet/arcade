@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
     public class PushMetadataToBuildAssetRegistry : MSBuild.Task
     {
         [Required]
-        public string ManifestsFilePath { get; set; }
+        public string ManifestZipFilePath { get; set; }
 
         [Required]
         public string BuildAssetRegistryToken { get; set; }
@@ -31,34 +31,21 @@ namespace Microsoft.DotNet.Maestro.Tasks
 
         public string AssetLocationType { get; set; } = "Blob";
 
-        private static readonly CancellationTokenSource TokenSource = new CancellationTokenSource();
-        private static readonly CancellationToken CancellationToken = TokenSource.Token;
-
         public override bool Execute()
         {
-            return ExecuteAsync().GetAwaiter().GetResult();
+            ExecuteAsync().GetAwaiter().GetResult();
+            return !Log.HasLoggedErrors;
         }
 
-        public async Task<bool> ExecuteAsync()
-        {
-            if (CancellationToken.IsCancellationRequested)
-            {
-                Log.LogError("Task PushMetadataToBuildAssetRegistry was cancelled...");
-                CancellationToken.ThrowIfCancellationRequested();
-            }
-
-            return await PushMetadataAsync();
-        }
-
-        public async Task<bool> PushMetadataAsync()
+        public async Task ExecuteAsync()
         {
             try
             {
-                Log.LogMessage(MessageImportance.High, "Starting build metadata push to the Build Asset Registry...");
+                Log.LogMessage("Starting build metadata push to the Build Asset Registry...");
 
-                if (!File.Exists(ManifestsFilePath))
+                if (!File.Exists(ManifestZipFilePath))
                 {
-                    Log.LogError($"Required file '{ManifestsFilePath}' does not exist.");
+                    Log.LogError($"Required file '{ManifestZipFilePath}' does not exist.");
                 }
                 else
                 {
@@ -75,7 +62,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
 
                         Directory.CreateDirectory(tmpManifestsPath);
 
-                        ZipFile.ExtractToDirectory(ManifestsFilePath, tmpManifestsPath);
+                        ZipFile.ExtractToDirectory(ManifestZipFilePath, tmpManifestsPath);
 
                         List<BuildData> buildsManifestMetadata = GetBuildManifestsMetadata(tmpManifestsPath);
 
@@ -85,7 +72,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
 
                         Builds buildAssetRegistryBuilds = new Builds(client);
 
-                        Client.Models.Build recordedBuild = await buildAssetRegistryBuilds.CreateAsync(finalBuild, CancellationToken);
+                        Client.Models.Build recordedBuild = await buildAssetRegistryBuilds.CreateAsync(finalBuild, s_cancellationToken);
 
                         Log.LogMessage($"Metadata has been pushed. Build id in the Build Asset Registry is '{recordedBuild.Id}'");
                     }
@@ -126,35 +113,35 @@ namespace Microsoft.DotNet.Maestro.Tasks
 
             foreach (string manifestPath in Directory.GetFiles(manifestsFolderPath))
             {
-                Manifest manifest = new Manifest();
-                XmlSerializer xmlSerializer = new XmlSerializer(manifest.GetType());
-                using (XmlWriter xmlWriter = XmlWriter.Create(manifestPath))
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(Manifest));
+                
+                using (FileStream stream = new FileStream(manifestPath, FileMode.Open))
                 {
-                    xmlSerializer.Serialize(xmlWriter, manifest);
-                }
+                    Manifest manifest = (Manifest)xmlSerializer.Deserialize(stream);
 
-                List<AssetData> assets = new List<AssetData>();
+                    List<AssetData> assets = new List<AssetData>();
 
-                foreach (Package package in manifest.Packages)
-                {
-                    AddAsset(assets, package.Id, package.Version, manifest.Location);
-                }
-
-                foreach (Blob blob in manifest.Blobs)
-                {
-                    string version = GetVersion(blob.Id);
-
-                    if (string.IsNullOrEmpty(version))
+                    foreach (Package package in manifest.Packages)
                     {
-                        Log.LogError($"Version could not be extracted from '{blob.Id}'");
+                        AddAsset(assets, package.Id, package.Version, manifest.Location);
                     }
-                    else
-                    {
-                        AddAsset(assets, blob.Id, version, manifest.Location);
-                    }
-                }
 
-                buildsManifestMetadata.Add(new BuildData(manifest.Name, manifest.Commit, manifest.BuildId, manifest.Branch, assets));
+                    foreach (Blob blob in manifest.Blobs)
+                    {
+                        string version = GetVersion(blob.Id);
+
+                        if (string.IsNullOrEmpty(version))
+                        {
+                            Log.LogError($"Version could not be extracted from '{blob.Id}'");
+                        }
+                        else
+                        {
+                            AddAsset(assets, blob.Id, version, manifest.Location);
+                        }
+                    }
+
+                    buildsManifestMetadata.Add(new BuildData(manifest.Name, manifest.Commit, manifest.BuildId, manifest.Branch, assets));
+                }
             }
 
             return buildsManifestMetadata;

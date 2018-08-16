@@ -7,11 +7,11 @@ using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public async Task<bool> ExecuteAsync()
         {
-            System.Diagnostics.Debugger.Launch();
+            Debugger.Launch();
 
             try
             {
@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IEnumerable<BlobArtifactModel> blobArtifacts,
             IEnumerable<PackageArtifactModel> packageArtifacts)
         {
-            Log.LogMessage(MessageImportance.High, $"Creating build manifest file '{AssetManifestPath}'...");
+            Log.LogMessage($"Creating build manifest file '{AssetManifestPath}'...");
 
             BuildModel buildModel = new BuildModel(
                     new BuildIdentity
@@ -155,10 +155,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             string dirPath = Path.GetDirectoryName(AssetManifestPath);
 
-            if (!Directory.Exists(dirPath))
-            {
-                Directory.CreateDirectory(dirPath);
-            }
+            Directory.CreateDirectory(dirPath);
 
             File.WriteAllText(AssetManifestPath, buildModel.ToXml().ToString());
         }
