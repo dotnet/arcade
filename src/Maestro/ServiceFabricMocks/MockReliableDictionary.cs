@@ -40,7 +40,6 @@ namespace ServiceFabricMocks
                 throw new InvalidOperationException("key already exists: " + key);
             }
 
-
             return Task.FromResult(true);
         }
 

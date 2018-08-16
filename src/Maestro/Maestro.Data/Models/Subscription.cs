@@ -16,6 +16,7 @@ namespace Maestro.Data.Models
         public Guid Id { get; set; }
 
         public int ChannelId { get; set; }
+
         public Channel Channel { get; set; }
 
         public string SourceRepository { get; set; }
