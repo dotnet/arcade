@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public int UploadTimeoutInMinutes { get; set; } = 5;
 
-        public string ManifestRepoUri { get; set; } = "anonymous";
+        public string ManifestRepoUri { get; set; }
 
         public string ManifestBuildId { get; set; } = "no build id provided";
 
