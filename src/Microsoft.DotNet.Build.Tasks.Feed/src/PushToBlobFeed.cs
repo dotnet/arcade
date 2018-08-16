@@ -11,7 +11,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
@@ -51,22 +50,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public int UploadTimeoutInMinutes { get; set; } = 5;
 
-        public bool SkipCreateManifest { get; set; }
+        public string ManifestRepoUri { get; set; }
 
-        public string ManifestName { get; set; } = "anonymous";
         public string ManifestBuildId { get; set; } = "no build id provided";
+
         public string ManifestBranch { get; set; }
+
         public string ManifestCommit { get; set; }
+
         public string ManifestBuildData { get; set; }
 
-        /// <summary>
-        /// When publishing build outputs to an orchestrated blob feed, do not change this property.
-        /// 
-        /// The virtual dir to place the manifest XML file in, under the assets/ virtual dir. The
-        /// default value is the well-known location that orchestration searches to find all
-        /// manifest XML files and combine them into the orchestrated build output manifest.
-        /// </summary>
-        public string ManifestAssetOutputDir { get; set; } = "orchestration-metadata/manifests/";
+        public string AssetManifestPath { get; set; }
 
         public override bool Execute()
         {
@@ -125,10 +119,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         blobArtifacts = ConcatBlobArtifacts(blobArtifacts, symbolItems);
                     }
 
-                    if (!SkipCreateManifest)
-                    {
-                        await PushBuildManifestAsync(blobFeedAction, blobArtifacts, packageArtifacts);
-                    }
+                    CreateBuildManifest(AssetManifestPath, blobArtifacts, packageArtifacts);
                 }
             }
             catch (Exception e)
@@ -139,80 +130,31 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return !Log.HasLoggedErrors;
         }
 
-        private async Task PushBuildManifestAsync(
-            BlobFeedAction blobFeedAction,
+        private void CreateBuildManifest(
+            string manifestPath,
             IEnumerable<BlobArtifactModel> blobArtifacts,
             IEnumerable<PackageArtifactModel> packageArtifacts)
         {
-            bool disabledByBlob = await blobFeedAction.feed.CheckIfBlobExistsAsync(
-                $"{blobFeedAction.feed.RelativePath}{DisableManifestPushConfigurationBlob}");
+            Log.LogMessage($"Creating build manifest file '{AssetManifestPath}'...");
 
-            if (disabledByBlob)
-            {
-                Log.LogMessage(
-                    MessageImportance.Normal,
-                    $"Skipping manifest push: feed has '{DisableManifestPushConfigurationBlob}'.");
-                return;
-            }
-
-            string blobPath = $"{AssetsVirtualDir}{ManifestAssetOutputDir}{ManifestName}.xml";
-
-            string existingStr = await blobFeedAction.feed.DownloadBlobAsStringAsync(
-                $"{blobFeedAction.feed.RelativePath}{blobPath}");
-
-            BuildModel buildModel;
-
-            if (existingStr != null)
-            {
-                buildModel = BuildModel.Parse(XElement.Parse(existingStr));
-            }
-            else
-            {
-                buildModel = new BuildModel(
+            BuildModel buildModel = new BuildModel(
                     new BuildIdentity
                     {
                         Attributes = ParseManifestMetadataString(ManifestBuildData),
-                        Name = ManifestName,
+                        Name = ManifestRepoUri,
                         BuildId = ManifestBuildId,
                         Branch = ManifestBranch,
                         Commit = ManifestCommit
                     });
-            }
 
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);
             buildModel.Artifacts.Packages.AddRange(packageArtifacts);
 
-            string tempFile = null;
-            try
-            {
-                tempFile = Path.GetTempFileName();
+            string dirPath = Path.GetDirectoryName(AssetManifestPath);
 
-                File.WriteAllText(tempFile, buildModel.ToXml().ToString());
+            Directory.CreateDirectory(dirPath);
 
-                var item = new MSBuild.TaskItem(tempFile, new Dictionary<string, string>
-                {
-                    ["RelativeBlobPath"] = blobPath
-                });
-
-                using (var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients))
-                {
-                    await blobFeedAction.UploadAssetAsync(
-                        item,
-                        clientThrottle,
-                        UploadTimeoutInMinutes,
-                        new PushOptions
-                        {
-                            AllowOverwrite = true
-                        });
-                }
-            }
-            finally
-            {
-                if (tempFile != null)
-                {
-                    File.Delete(tempFile);
-                }
-            }
+            File.WriteAllText(AssetManifestPath, buildModel.ToXml().ToString());
         }
 
         private async Task PublishToFlatContainerAsync(IEnumerable<ITaskItem> taskItems, BlobFeedAction blobFeedAction)
