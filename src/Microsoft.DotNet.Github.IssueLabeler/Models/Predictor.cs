@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             float maxProbability = probabilities.Max();
             logger.LogInformation($"Label {prediction.Area} for {issue.ID} is predicted with confidence {maxProbability.ToString()}");
 
-            return maxProbability > 0.8 ? prediction.Area : null;
+            return maxProbability > 0.7 ? prediction.Area : null;
         }
     }
 }
