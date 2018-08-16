@@ -13,6 +13,11 @@
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
 
+  <!-- Disable the service fabric actors build time logic on non windows because it has dependencies on windows -->
+  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
+    <UpdateServiceFabricManifestEnabled>false</UpdateServiceFabricManifestEnabled>
+  </PropertyGroup>
+
   <ItemGroup>
     <Content Include=".config\settings.Development.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
