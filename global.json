@@ -1,8 +1,8 @@
 {
-    "sdk": {
-        "version": "2.1.302"
-    },
-    "msbuild-sdks": {
-        "Microsoft.DotNet.Arcade.Sdk": "1.0.0-bootstrap-1"
-    }
+  "tools": {
+    "dotnet": "2.1.400-preview-009088"
+  },
+  "msbuild-sdks": {
+    "Microsoft.DotNet.Arcade.Sdk": "1.0.0-prerelease-63208-02"
+  }
 }

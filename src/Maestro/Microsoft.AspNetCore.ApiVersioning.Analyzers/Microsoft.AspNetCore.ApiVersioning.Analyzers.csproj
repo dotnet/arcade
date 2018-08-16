@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard1.3</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="2.0.0" PrivateAssets="All"/>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.0.0" PrivateAssets="All"/>
+    <PackageReference Include="JetBrains.Annotations" Version="10.4.0" PrivateAssets="All"/>
+    <PackageReference Update="NETStandard.Library" PrivateAssets="All"/>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+</Project>

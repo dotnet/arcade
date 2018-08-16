@@ -1,4 +1,6 @@
-// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -142,7 +144,9 @@ namespace Microsoft.DotNet.SignTool
                 _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
                 foreach (var file in filesToSign)
                 {
-                    _log.LogMessage(MessageImportance.Low, $"File: '{file.FileName}'");
+                    _log.LogMessage(MessageImportance.Low,
+                        $"File '{file.FileName}' Certificate='{file.Certificate}'" + 
+                        (file.StrongName != null ? $" StrongName='{file.StrongName}'" : ""));
                 }
 
                 return _signTool.Sign(_buildEngine, round, filesToSign);

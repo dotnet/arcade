@@ -1,4 +1,6 @@
-// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -29,19 +31,29 @@ namespace Microsoft.DotNet.SignTool
         /// Directory containing binaries produced by the build.
         /// </summary>
         [Required]
-        public string OutputPath { get; set; }
+        public string OutputDir { get; set; }
 
         /// <summary>
         /// Working directory used for storing files created during signing.
         /// </summary>
         [Required]
-        public string TempPath { get; set; }
+        public string TempDir { get; set; }
 
         /// <summary>
         /// Path to MicroBuild.Core package directory.
         /// </summary>
         [Required]
         public string MicroBuildCorePath { get; set; }
+
+        /// <summary>
+        /// Path to msbuild.exe. Required if <see cref="DryRun"/> is <c>false</c>.
+        /// </summary>
+        public string MSBuildPath { get; set; }
+
+        /// <summary>
+        /// Directory to write log to. Required if <see cref="DryRun"/> is <c>false</c>.
+        /// </summary>
+        public string LogDir { get; set; }
 
         public override bool Execute()
         {
@@ -51,14 +63,23 @@ namespace Microsoft.DotNet.SignTool
 
         private void ExecuteImpl()
         {
+            if (!DryRun && typeof(object).Assembly.GetName().Name != "mscorlib")
+            {
+                if (!File.Exists(MSBuildPath))
+                {
+                    Log.LogError($"File '{MSBuildPath}' not found.");
+                    return;
+                }
+            }
+
             var signToolArgs = new SignToolArgs(
-                outputPath: OutputPath,
-                tempPath: TempPath,
+                outputPath: OutputDir,
+                tempPath: TempDir,
                 microBuildCorePath: MicroBuildCorePath,
                 testSign: TestSign);
 
-            var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
-            var batchData = Configuration.ReadConfigFile(signToolArgs.OutputPath, ConfigFilePath, Log);
+            var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs, MSBuildPath, LogDir);
+            var batchData = Configuration.ReadConfigFile(signToolArgs.OutputDir, ConfigFilePath, Log);
             var util = new BatchSignUtil(BuildEngine, Log, signTool, batchData, null);
 
             util.Go();

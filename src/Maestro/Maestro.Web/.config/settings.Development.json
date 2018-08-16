@@ -1,0 +1,14 @@
+{
+  "KeyVaultUri": "https://maestrolocal.vault.azure.net/",
+  "GitHubAuthentication": {
+    "ClientId": "2d89f41837152801c8dd",
+    "ClientSecret": "[vault(github-application-secret)]"
+  },
+  "GitHubAuthentication-SvcFabDev": {
+    "ClientId": "28adeb2ffb32eee55f2b",
+    "ClientSecret": "[vault(github-ssl-application-secret)]"
+  },
+  "BuildAssetRegistry": {
+    "ConnectionString": "Data Source=(LocalDb)\\.\\SharedLocal;Initial Catalog=BuildAssetRegistry;Integrated Security=true"
+  }
+}

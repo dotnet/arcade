@@ -10,11 +10,12 @@
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <DebugType>embedded</DebugType>
     <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
 
-  <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
-    <PackageReference Include="Microsoft.SourceLink.Vsts.Git" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" />
-  </ItemGroup>
+    <!--
+      Tools and packages produced by this repository support infrastructure and are not shipping on NuGet or via any other official channel.
+    -->
+    <IsShipping>false</IsShipping>
+  </PropertyGroup>
 
   <PropertyGroup>
     <!-- 
