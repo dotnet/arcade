@@ -7,7 +7,6 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 
   <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <!--
       Set by Microsoft.Common.targets, some targets must be removed while others are left as standard extension mechanisms.
     -->

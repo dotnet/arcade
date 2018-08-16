@@ -7,8 +7,8 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
 
   <PropertyGroup Condition="'$(MicrosoftDotNetHelixSdkTasksAssembly)' == ''">
-    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)netstandard2.0/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
-    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)net45/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
+    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)netcoreapp2.1/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
+    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)net472/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
   </PropertyGroup>
 
   <UsingTask TaskName="SendHelixJob" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
