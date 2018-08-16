@@ -1,21 +1,22 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using Maestro.Contracts;
 using Maestro.Data;
 using Maestro.Data.Models;
 using Microsoft.DotNet.ServiceFabric.ServiceHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Helix.ServiceHost;
+using Microsoft.ServiceFabric.Actors;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
-using System;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.DotNet.DarcLib;
-using MergePolicy = Maestro.Data.Models.MergePolicy;
-using UpdateFrequency = Maestro.Data.Models.UpdateFrequency;
-using Microsoft.ServiceFabric.Actors;
 
 namespace DependencyUpdater
 {
@@ -30,21 +31,15 @@ namespace DependencyUpdater
     }
 
     /// <summary>
-    /// An instance of this class is created for each service replica by the Service Fabric runtime.
+    ///     An instance of this class is created for each service replica by the Service Fabric runtime.
     /// </summary>
     public sealed class DependencyUpdater : IServiceImplementation, IDependencyUpdater
     {
-        public IReliableStateManager StateManager { get; }
-        public ILogger<DependencyUpdater> Logger { get; }
-        public BuildAssetRegistryContext Context { get; }
-        public Func<ActorId, ISubscriptionActor> SubscriptionActorFactory { get; }
-
         public DependencyUpdater(
             IReliableStateManager stateManager,
             ILogger<DependencyUpdater> logger,
             BuildAssetRegistryContext context,
-            Func<ActorId, ISubscriptionActor> subscriptionActorFactory
-            )
+            Func<ActorId, ISubscriptionActor> subscriptionActorFactory)
         {
             StateManager = stateManager;
             Logger = logger;
@@ -52,20 +47,42 @@ namespace DependencyUpdater
             SubscriptionActorFactory = subscriptionActorFactory;
         }
 
+        public IReliableStateManager StateManager { get; }
+        public ILogger<DependencyUpdater> Logger { get; }
+        public BuildAssetRegistryContext Context { get; }
+        public Func<ActorId, ISubscriptionActor> SubscriptionActorFactory { get; }
+
+        public async Task StartUpdateDependenciesAsync(int buildId, int channelId)
+        {
+            IReliableConcurrentQueue<DependencyUpdateItem> queue =
+                await StateManager.GetOrAddAsync<IReliableConcurrentQueue<DependencyUpdateItem>>("queue");
+            using (ITransaction tx = StateManager.CreateTransaction())
+            {
+                await queue.EnqueueAsync(tx, new DependencyUpdateItem {BuildId = buildId, ChannelId = channelId});
+                await tx.CommitAsync();
+            }
+        }
+
         public async Task RunAsync(CancellationToken cancellationToken)
         {
-            IReliableConcurrentQueue<DependencyUpdateItem> queue = await StateManager.GetOrAddAsync<IReliableConcurrentQueue<DependencyUpdateItem>>("queue");
+            IReliableConcurrentQueue<DependencyUpdateItem> queue =
+                await StateManager.GetOrAddAsync<IReliableConcurrentQueue<DependencyUpdateItem>>("queue");
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
                     using (ITransaction tx = StateManager.CreateTransaction())
                     {
-                        ConditionalValue<DependencyUpdateItem> maybeItem = await queue.TryDequeueAsync(tx, cancellationToken);
+                        ConditionalValue<DependencyUpdateItem> maybeItem = await queue.TryDequeueAsync(
+                            tx,
+                            cancellationToken);
                         if (maybeItem.HasValue)
                         {
                             DependencyUpdateItem item = maybeItem.Value;
-                            using (Logger.BeginScope("Processing dependency update for build {buildId} in channel {channelId}", item.BuildId, item.ChannelId))
+                            using (Logger.BeginScope(
+                                "Processing dependency update for build {buildId} in channel {channelId}",
+                                item.BuildId,
+                                item.ChannelId))
                             {
                                 await UpdateDependenciesAsync(item.BuildId, item.ChannelId);
                             }
@@ -83,22 +100,8 @@ namespace DependencyUpdater
             }
         }
 
-        public async Task StartUpdateDependenciesAsync(int buildId, int channelId)
-        {
-            IReliableConcurrentQueue<DependencyUpdateItem> queue = await StateManager.GetOrAddAsync<IReliableConcurrentQueue<DependencyUpdateItem>>("queue");
-            using (ITransaction tx = StateManager.CreateTransaction())
-            {
-                await queue.EnqueueAsync(tx, new DependencyUpdateItem
-                {
-                    BuildId = buildId,
-                    ChannelId = channelId,
-                });
-                await tx.CommitAsync();
-            }
-        }
-
         /// <summary>
-        ///   Check "EveryDay" subscriptions every day at 5 AM
+        ///     Check "EveryDay" subscriptions every day at 5 AM
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
@@ -115,11 +118,10 @@ namespace DependencyUpdater
                         .FirstOrDefault()
                 where latestBuild != null
                 where sub.LastAppliedBuildId == null || sub.LastAppliedBuildId != latestBuild.Id
-                select new {subscription = sub, latestBuild};
+                select new {subscription = sub.Id, latestBuild = latestBuild.Id};
 
             foreach (var s in await subscriptionsToUpdate.ToListAsync(cancellationToken))
             {
-                await Context.Entry(s.latestBuild).Collection(b => b.Assets).LoadAsync(cancellationToken);
                 await UpdateSubscriptionAsync(s.subscription, s.latestBuild);
             }
         }
@@ -132,34 +134,30 @@ namespace DependencyUpdater
         /// <returns></returns>
         public async Task UpdateDependenciesAsync(int buildId, int channelId)
         {
-            var build = await Context.Builds.FindAsync(buildId);
-            var subscriptionsToUpdate = await (
-                from sub in Context.Subscriptions
+            Build build = await Context.Builds.FindAsync(buildId);
+            List<Subscription> subscriptionsToUpdate = await (from sub in Context.Subscriptions
                 where sub.ChannelId == channelId
                 where sub.SourceRepository == build.Repository
                 let updateFrequency = JsonExtensions.JsonValue(sub.PolicyString, "lax $.UpdateFrequency")
-                where updateFrequency == ((int)UpdateFrequency.EveryBuild).ToString()
+                where updateFrequency == ((int) UpdateFrequency.EveryBuild).ToString()
                 select sub).ToListAsync();
             if (!subscriptionsToUpdate.Any())
             {
                 return;
             }
 
-            var fullBuild = await Context.Builds.Include(b => b.Assets)
-                .ThenInclude(a => a.Locations)
-                .FirstAsync(b => b.Id == buildId);
-            await Task.WhenAll(subscriptionsToUpdate.Select(sub => UpdateSubscriptionAsync(sub, fullBuild)));
+            await Task.WhenAll(subscriptionsToUpdate.Select(sub => UpdateSubscriptionAsync(sub.Id, buildId)));
         }
 
-        private async Task UpdateSubscriptionAsync(Subscription subscription, Build build)
+        private async Task UpdateSubscriptionAsync(Guid subscriptionId, int buildId)
         {
             using (Logger.BeginScope(
                 "Updating subscription '{subscriptionId}' with build '{buildId}'",
-                subscription.Id,
-                build.Id))
+                subscriptionId,
+                buildId))
             {
-                var actor = SubscriptionActorFactory(new ActorId(subscription.Id));
-                await actor.UpdateAsync(build.Id);
+                ISubscriptionActor actor = SubscriptionActorFactory(new ActorId(subscriptionId));
+                await actor.UpdateAsync(buildId);
             }
         }
     }

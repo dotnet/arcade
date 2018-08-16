@@ -1,34 +1,38 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.ServiceFabric.Data;
+
 namespace ServiceFabricMocks
 {
-    using Microsoft.ServiceFabric.Data;
-    using System.Collections.Generic;
-    using System.Threading;
-    using System.Threading.Tasks;
-
     /// <summary>
-    /// Simple wrapper for a synchronous IEnumerable of T.
+    ///     Simple wrapper for a synchronous IEnumerable of T.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    internal class MockAsyncEnumerable<T> : Microsoft.ServiceFabric.Data.IAsyncEnumerable<T>
+    internal class MockAsyncEnumerable<T> : IAsyncEnumerable<T>
     {
-        private IEnumerable<T> enumerable;
+        private readonly IEnumerable<T> enumerable;
 
         public MockAsyncEnumerable(IEnumerable<T> enumerable)
         {
             this.enumerable = enumerable;
         }
 
-        public Microsoft.ServiceFabric.Data.IAsyncEnumerator<T> GetAsyncEnumerator()
+        public IAsyncEnumerator<T> GetAsyncEnumerator()
         {
-            return new MockAsyncEnumerator<T>(this.enumerable.GetEnumerator());
+            return new MockAsyncEnumerator<T>(enumerable.GetEnumerator());
         }
     }
 
     /// <summary>
-    /// Simply wrapper for a synchronous IEnumerator of T.
+    ///     Simply wrapper for a synchronous IEnumerator of T.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    internal class MockAsyncEnumerator<T> : Microsoft.ServiceFabric.Data.IAsyncEnumerator<T>
+    internal class MockAsyncEnumerator<T> : IAsyncEnumerator<T>
     {
         private readonly IEnumerator<T> enumerator;
 
@@ -38,28 +42,21 @@ namespace ServiceFabricMocks
         }
 
 
-        public T Current
-        {
-            get
-            {
-                return this.enumerator.Current;
-            }
-        }
+        public T Current => enumerator.Current;
 
         public void Dispose()
         {
-            this.enumerator.Dispose();
+            enumerator.Dispose();
         }
 
         public Task<bool> MoveNextAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult(this.enumerator.MoveNext());
+            return Task.FromResult(enumerator.MoveNext());
         }
 
         public void Reset()
         {
-            this.enumerator.Reset();
+            enumerator.Reset();
         }
     }
-
 }

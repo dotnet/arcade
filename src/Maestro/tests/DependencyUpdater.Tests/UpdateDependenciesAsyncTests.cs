@@ -1,18 +1,14 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Maestro.Data.Models;
-using Microsoft.DotNet.DarcLib;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Helix.ServiceHost;
-using Microsoft.ServiceFabric.Data;
-using Moq;
 using Xunit;
-using Channel = Maestro.Data.Models.Channel;
-using MergePolicy = Maestro.Data.Models.MergePolicy;
-using SubscriptionPolicy = Maestro.Data.Models.SubscriptionPolicy;
-using UpdateFrequency = Maestro.Data.Models.UpdateFrequency;
 
 namespace DependencyUpdater.Tests
 {
@@ -60,58 +56,26 @@ namespace DependencyUpdater.Tests
                 SourceRepository = "source.repo",
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
-                PolicyObject = new SubscriptionPolicy
-                {
-                    MergePolicy = MergePolicy.Never,
-                    UpdateFrequency = UpdateFrequency.EveryBuild
-                },
+                PolicyObject =
+                    new SubscriptionPolicy
+                    {
+                        MergePolicy = MergePolicy.Never,
+                        UpdateFrequency = UpdateFrequency.EveryBuild
+                    },
                 LastAppliedBuild = build
             };
-            var repoInstallation = new RepoInstallation
-            {
-                Repository = "target.repo",
-                InstallationId = 1,
-            };
+            var repoInstallation = new RepoInstallation {Repository = "target.repo", InstallationId = 1};
             await Context.BuildChannels.AddRangeAsync(buildChannels);
             await Context.Subscriptions.AddAsync(subscription);
             await Context.RepoInstallations.AddAsync(repoInstallation);
             await Context.SaveChangesAsync();
 
-            var pr = "http://repo.pr/1";
-            Darc.Setup(
-                    d => d.CreatePullRequestAsync(
-                        subscription.TargetRepository,
-                        subscription.TargetBranch,
-                        newBuild.Commit,
-                        It.IsAny<IList<AssetData>>(),
-                        null,
-                        null,
-                        null))
-                .ReturnsAsync(
-                    (string repo, string branch, string commit, IList<AssetData> assets, string baseBranch, string title, string description) =>
-                    {
-                        assets.Should()
-                            .BeEquivalentTo(new AssetData {Name = newAsset.Name, Version = newAsset.Version});
-                        return pr;
-                    });
+            SubscriptionActor.Setup(s => s.UpdateAsync(newBuild.Id)).Returns(Task.CompletedTask);
 
             var updater = ActivatorUtilities.CreateInstance<DependencyUpdater>(Scope.ServiceProvider);
             await updater.UpdateDependenciesAsync(newBuild.Id, channel.Id);
-            using (ITransaction tx = StateManager.CreateTransaction())
-            {
-                (await PullRequests.ToListAsync(tx)).Should()
-                    .BeEquivalentTo(
-                        KeyValuePair.Create(
-                            pr,
-                            new InProgressPullRequest
-                            {
-                                BuildId = newBuild.Id,
-                                SubscriptionId = subscription.Id,
-                                Url = pr
-                            }));
-                (await PullRequestsBySubscription.ToListAsync(tx)).Should()
-                    .BeEquivalentTo(KeyValuePair.Create(subscription.Id, pr));
-            }
+
+            ActorId.GetGuidId().Should().Be(subscription.Id);
         }
 
         [Fact]
@@ -144,11 +108,6 @@ namespace DependencyUpdater.Tests
 
             var updater = ActivatorUtilities.CreateInstance<DependencyUpdater>(Scope.ServiceProvider);
             await updater.UpdateDependenciesAsync(newBuild.Id, channel.Id);
-            using (ITransaction tx = StateManager.CreateTransaction())
-            {
-                Assert.Equal(0, await PullRequests.GetCountAsync(tx));
-                Assert.Equal(0, await PullRequestsBySubscription.GetCountAsync(tx));
-            }
         }
     }
 }

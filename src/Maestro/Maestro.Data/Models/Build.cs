@@ -17,22 +17,14 @@ namespace Maestro.Data.Models
         {
             Triggers<Build>.Inserting += entry =>
             {
-                var build = entry.Entity;
-                var context = (BuildAssetRegistryContext)entry.Context;
+                Build build = entry.Entity;
+                var context = (BuildAssetRegistryContext) entry.Context;
 
                 context.BuildChannels.AddRange(
                     from dc in context.DefaultChannels
                     where dc.Repository == build.Repository && dc.Branch == build.Branch
-                    select new BuildChannel
-                    {
-                        Channel = dc.Channel,
-                        Build = build,
-                    });
+                    select new BuildChannel {Channel = dc.Channel, Build = build});
             };
-        }
-
-        public Build()
-        {
         }
 
         [Key]

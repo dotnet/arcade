@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -21,7 +25,14 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
             _telemetryClient = telemetryClient;
         }
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        private static Dictionary<string, string> EmptyLogDict { get; } = new Dictionary<string, string>();
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception exception,
+            Func<TState, Exception, string> formatter)
         {
             _inner.Log(logLevel, eventId, state, exception, formatter);
         }
@@ -39,21 +50,24 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 
             if (state is IEnumerable<KeyValuePair<string, object>> enumerable)
             {
-                logDict = enumerable.ToDictionary(p => p.Key, p => Convert.ToString((object) p.Value));
+                logDict = enumerable.ToDictionary(p => p.Key, p => Convert.ToString(p.Value));
             }
             else
             {
                 logDict = EmptyLogDict;
             }
 
-            foreach (var (key, value) in logDict)
+            foreach ((string key, string value) in logDict)
             {
                 if (key == "{OriginalFormat}")
+                {
                     continue;
+                }
+
                 // Fix up the format of key and value to not cause issues until
                 // https://github.com/dotnet/corefx/issues/31687 is fixed
-                var keyP = Regex.Replace(key, "[^a-zA-Z0-9]", "");
-                var valueP = JsonConvert.SerializeObject(value);
+                string keyP = Regex.Replace(key, "[^a-zA-Z0-9]", "");
+                string valueP = JsonConvert.SerializeObject(value);
                 op.AddBaggage(keyP, valueP);
             }
 
@@ -61,8 +75,6 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
             _telemetryClient.TrackTrace($"Begin Scope: {logString}", SeverityLevel.Information, logDict);
             return new Scope(op, _telemetryClient);
         }
-
-        private static Dictionary<string, string> EmptyLogDict { get; } = new Dictionary<string, string>();
 
         private class Scope : IDisposable
         {

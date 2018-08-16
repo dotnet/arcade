@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Diagnostics;
 using System.Fabric;
@@ -6,26 +10,31 @@ using System.Threading.Tasks;
 using Castle.DynamicProxy;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ApplicationInsights.Extensibility;
 
 namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 {
     public class LoggingServiceProxyInterceptor : AsyncInterceptor
     {
-        private TelemetryClient TelemetryClient { get; }
-        private ServiceContext Context { get; }
-        private string ServiceUri { get; }
-
-        public LoggingServiceProxyInterceptor(TelemetryClient telemetryClient, ServiceContext context, string serviceUri)
+        public LoggingServiceProxyInterceptor(
+            TelemetryClient telemetryClient,
+            ServiceContext context,
+            string serviceUri)
         {
             TelemetryClient = telemetryClient;
             Context = context;
             ServiceUri = serviceUri;
         }
 
+        private TelemetryClient TelemetryClient { get; }
+        private ServiceContext Context { get; }
+        private string ServiceUri { get; }
+
         protected override async Task InterceptAsync(IInvocation invocation, Func<Task> call)
         {
-            var methodName = $"/{invocation.Method?.DeclaringType?.Name}/{invocation.Method?.Name}";
-            using (var op = TelemetryClient.StartOperation<DependencyTelemetry>($"RPC {ServiceUri}{methodName}"))
+            string methodName = $"/{invocation.Method?.DeclaringType?.Name}/{invocation.Method?.Name}";
+            using (IOperationHolder<DependencyTelemetry> op =
+                TelemetryClient.StartOperation<DependencyTelemetry>($"RPC {ServiceUri}{methodName}"))
             {
                 try
                 {
@@ -42,6 +51,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                     {
                         ex = ae.InnerException;
                     }
+
                     TelemetryClient.TrackException(ex);
                     ExceptionDispatchInfo.Capture(ex).Throw();
                 }
@@ -50,8 +60,9 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 
         protected override async Task<T> InterceptAsync<T>(IInvocation invocation, Func<Task<T>> call)
         {
-            var methodName = $"/{invocation.Method?.DeclaringType?.Name}/{invocation.Method?.Name}";
-            using (var op = TelemetryClient.StartOperation<DependencyTelemetry>($"RPC {ServiceUri}{methodName}"))
+            string methodName = $"/{invocation.Method?.DeclaringType?.Name}/{invocation.Method?.Name}";
+            using (IOperationHolder<DependencyTelemetry> op =
+                TelemetryClient.StartOperation<DependencyTelemetry>($"RPC {ServiceUri}{methodName}"))
             {
                 try
                 {
@@ -68,6 +79,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                     {
                         ex = ae;
                     }
+
                     TelemetryClient.TrackException(ex);
                     ExceptionDispatchInfo.Capture(ex).Throw();
                     // throw; is Required by the compiler because it doesn't know that ExceptionDispatchInfo.Throw throws
@@ -79,8 +91,9 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 
         protected override T Intercept<T>(IInvocation invocation, Func<T> call)
         {
-            var methodName = $"/{invocation.Method?.DeclaringType?.Name}/{invocation.Method?.Name}";
-            using (var op = TelemetryClient.StartOperation<DependencyTelemetry>($"RPC {ServiceUri}{methodName}"))
+            string methodName = $"/{invocation.Method?.DeclaringType?.Name}/{invocation.Method?.Name}";
+            using (IOperationHolder<DependencyTelemetry> op =
+                TelemetryClient.StartOperation<DependencyTelemetry>($"RPC {ServiceUri}{methodName}"))
             {
                 try
                 {

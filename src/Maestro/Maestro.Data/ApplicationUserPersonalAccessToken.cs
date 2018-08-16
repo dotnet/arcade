@@ -13,6 +13,7 @@ namespace Maestro.Data
     {
         [Key]
         public int Id { get; set; }
+
         public string Name { get; set; }
         public DateTimeOffset Created { get; set; }
         public string Hash { get; set; }

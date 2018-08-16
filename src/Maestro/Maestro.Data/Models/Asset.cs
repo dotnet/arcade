@@ -10,10 +10,6 @@ namespace Maestro.Data.Models
 {
     public class Asset
     {
-        public Asset()
-        {
-        }
-
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }

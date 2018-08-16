@@ -1,3 +1,8 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Fabric;
 using System.Linq;
@@ -38,20 +43,19 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 
         public Task<IServiceRemotingResponseMessage> RequestResponseAsync(IServiceRemotingRequestMessage requestMessage)
         {
-            var current = Activity.Current;
+            Activity current = Activity.Current;
             if (current != null)
             {
                 try
                 {
-                    var header = requestMessage.GetHeader();
-                    header.AddHeader(ActivityServiceRemoting.OperationIdHeaderName,
-                        Encoding.UTF8.GetBytes(current.Id));
+                    IServiceRemotingRequestMessageHeader header = requestMessage.GetHeader();
+                    header.AddHeader(ActivityServiceRemoting.OperationIdHeaderName, Encoding.UTF8.GetBytes(current.Id));
                     if (current.Baggage.Any())
                     {
-                        var baggageObject = current.Baggage.ToList();
-                        var baggageStr =
-                            JsonConvert.SerializeObject(baggageObject);
-                        header.AddHeader(ActivityServiceRemoting.CorrelationContextHeaderName,
+                        List<KeyValuePair<string, string>> baggageObject = current.Baggage.ToList();
+                        string baggageStr = JsonConvert.SerializeObject(baggageObject);
+                        header.AddHeader(
+                            ActivityServiceRemoting.CorrelationContextHeaderName,
                             Encoding.UTF8.GetBytes(baggageStr));
                     }
                 }
@@ -60,6 +64,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                     // ignore
                 }
             }
+
             return _inner.RequestResponseAsync(requestMessage);
         }
 

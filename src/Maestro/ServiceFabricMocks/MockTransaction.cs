@@ -1,7 +1,8 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.ServiceFabric.Data;
 
@@ -18,18 +19,9 @@ namespace ServiceFabricMocks
         {
         }
 
-        public long TransactionId
-        {
-            get { return 0L; }
-        }
+        public long TransactionId => 0L;
 
-        public long CommitSequenceNumber
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public long CommitSequenceNumber => throw new NotImplementedException();
 
         public void Dispose()
         {

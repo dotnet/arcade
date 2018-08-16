@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Fabric;
@@ -10,6 +11,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
+using JetBrains.Annotations;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.Azure.KeyVault;
@@ -20,7 +22,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.ServiceFabric.Actors;
-using Microsoft.ServiceFabric.Actors.Client;
 using Microsoft.ServiceFabric.Actors.Runtime;
 using Microsoft.ServiceFabric.Services.Runtime;
 using Newtonsoft.Json;
@@ -28,12 +29,24 @@ using Newtonsoft.Json;
 namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 {
     /// <summary>
-    /// A Service Fabric service host that supports activating services via dependency injection.
+    ///     A Service Fabric service host that supports activating services via dependency injection.
     /// </summary>
     public partial class ServiceHost
     {
+        private readonly List<Action<ContainerBuilder>> _configureContainerActions =
+            new List<Action<ContainerBuilder>> {ConfigureDefaultContainer};
+
+        private readonly List<Action<IServiceCollection>> _configureServicesActions =
+            new List<Action<IServiceCollection>> {ConfigureDefaultServices};
+
+        private readonly List<Func<Task>> _serviceCallbacks = new List<Func<Task>>();
+
+        private ServiceHost()
+        {
+        }
+
         /// <summary>
-        /// Configure and run a new ServiceHost
+        ///     Configure and run a new ServiceHost
         /// </summary>
         public static void Run(Action<ServiceHost> configure)
         {
@@ -56,25 +69,13 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                 packageActivationContext.ReportDeployedServicePackageHealth(
                     new HealthInformation("ServiceHost", "ServiceHost.Run", HealthState.Error)
                     {
-                        Description = $"Unhandled Exception: {ex}",
+                        Description = $"Unhandled Exception: {ex}"
                     },
                     new HealthReportSendOptions {Immediate = true});
                 Thread.Sleep(5000);
                 Environment.Exit(-1);
             }
         }
-
-        private ServiceHost()
-        {
-        }
-
-        private readonly List<Func<Task>> _serviceCallbacks = new List<Func<Task>>();
-
-        private readonly List<Action<ContainerBuilder>> _configureContainerActions =
-            new List<Action<ContainerBuilder>> {ConfigureDefaultContainer};
-
-        private readonly List<Action<IServiceCollection>> _configureServicesActions =
-            new List<Action<IServiceCollection>> {ConfigureDefaultServices};
 
         public ServiceHost ConfigureServices(Action<IServiceCollection> configure)
         {
@@ -106,16 +107,14 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 
         private void RegisterStatelessService<TService>(
             string serviceTypeName,
-            Func<StatelessServiceContext, TService> ctor)
-            where TService : StatelessService
+            Func<StatelessServiceContext, TService> ctor) where TService : StatelessService
         {
             _serviceCallbacks.Add(() => ServiceRuntime.RegisterServiceAsync(serviceTypeName, ctor));
         }
 
         private void RegisterStatefulService<TService>(
             string serviceTypeName,
-            Func<StatefulServiceContext, TService> ctor)
-            where TService : StatefulService
+            Func<StatefulServiceContext, TService> ctor) where TService : StatefulService
         {
             _serviceCallbacks.Add(() => ServiceRuntime.RegisterServiceAsync(serviceTypeName, ctor));
         }
@@ -130,34 +129,36 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                     ApplyConfigurationToServices,
                     ApplyConfigurationToContainer));
             return ConfigureContainer(
-                builder =>
-                {
-                    builder.RegisterType<TService>().As<TService>().InstancePerDependency();
-                });
+                builder => { builder.RegisterType<TService>().As<TService>().InstancePerDependency(); });
         }
 
         private void RegisterActorService<TService, TActor>(
             Func<StatefulServiceContext, ActorTypeInformation, TService> ctor)
-            where TService : ActorService
-            where TActor : Actor
+            where TService : ActorService where TActor : Actor
         {
             _serviceCallbacks.Add(() => ActorRuntime.RegisterActorAsync<TActor>(ctor));
         }
 
-        private void RegisterStatefulActorService<TActor>(string actorName, Func<StatefulServiceContext, ActorTypeInformation, Func<ActorService, ActorId, ILifetimeScope, Action<ContainerBuilder>, ActorBase>, ActorService> ctor)
+        private void RegisterStatefulActorService<TActor>(
+            string actorName,
+            Func<StatefulServiceContext, ActorTypeInformation,
+                Func<ActorService, ActorId, ILifetimeScope, Action<ContainerBuilder>, ActorBase>, ActorService> ctor)
             where TActor : IActor
         {
-            var (actorType, actorFactory) = DelegatedActor.CreateActorTypeAndFactory(actorName, typeof(TActor));
+            (Type actorType,
+                    Func<ActorService, ActorId, ILifetimeScope, Action<ContainerBuilder>, ActorBase> actorFactory) =
+                DelegatedActor.CreateActorTypeAndFactory(actorName, typeof(TActor));
             // ReSharper disable once PossibleNullReferenceException
             // The method search parameters are hard coded
-            var registerActorAsyncMethod = typeof(ActorRuntime).GetMethod(
-                "RegisterActorAsync",
-                new[]
-                {
-                    typeof(Func<StatefulServiceContext, ActorTypeInformation, ActorService>),
-                    typeof(TimeSpan),
-                    typeof(CancellationToken),
-                }).MakeGenericMethod(actorType);
+            MethodInfo registerActorAsyncMethod = typeof(ActorRuntime).GetMethod(
+                    "RegisterActorAsync",
+                    new[]
+                    {
+                        typeof(Func<StatefulServiceContext, ActorTypeInformation, ActorService>),
+                        typeof(TimeSpan),
+                        typeof(CancellationToken)
+                    })
+                .MakeGenericMethod(actorType);
             _serviceCallbacks.Add(
                 () => (Task) registerActorAsyncMethod.Invoke(
                     null,
@@ -166,15 +167,17 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                         (Func<StatefulServiceContext, ActorTypeInformation, ActorService>) ((context, info) =>
                             ctor(context, info, actorFactory)),
                         default(TimeSpan),
-                        default(CancellationToken),
+                        default(CancellationToken)
                     }));
         }
 
-        public ServiceHost RegisterStatefulActorService<TService, TActor>(string actorName)
-            where TService : IServiceImplementation
-            where TActor : IActor
+        public ServiceHost RegisterStatefulActorService<
+            [MeansImplicitUse(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature)]
+            TService, [MeansImplicitUse(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature)]
+            TActor>(string actorName) where TService : IServiceImplementation where TActor : IActor
         {
-            RegisterStatefulActorService<TActor>(actorName,
+            RegisterStatefulActorService<TActor>(
+                actorName,
                 (context, info, actorFactory) =>
                 {
                     return new DelegatedActorService<TService, TActor>(
@@ -192,17 +195,16 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                 });
         }
 
-        public ServiceHost RegisterStatelessWebService<TStartup>(string serviceTypeName)
-            where TStartup : class
+        public ServiceHost RegisterStatelessWebService<TStartup>(string serviceTypeName) where TStartup : class
         {
             RegisterStatelessService(
                 serviceTypeName,
-                context => new DelegatedStatelessWebService<TStartup>(context, ApplyConfigurationToServices, ApplyConfigurationToContainer));
+                context => new DelegatedStatelessWebService<TStartup>(
+                    context,
+                    ApplyConfigurationToServices,
+                    ApplyConfigurationToContainer));
             return ConfigureContainer(
-                builder =>
-                {
-                    builder.RegisterType<TStartup>().As<TStartup>().InstancePerDependency();
-                });
+                builder => { builder.RegisterType<TStartup>().As<TStartup>().InstancePerDependency(); });
         }
 
         private void Start()
@@ -233,9 +235,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 
         private static IHostingEnvironment InitializeEnvironment()
         {
-            var config = new ConfigurationBuilder()
-                .AddEnvironmentVariables(prefix: "ASPNETCORE_")
-                .Build();
+            IConfigurationRoot config = new ConfigurationBuilder().AddEnvironmentVariables("ASPNETCORE_").Build();
             var options = new WebHostOptions(config, GetApplicationName());
             var env = new HostingEnvironment();
             env.Initialize(AppContext.BaseDirectory, options);
@@ -264,8 +264,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 
         public static IConfigurationRoot Get(IHostingEnvironment env)
         {
-            IConfigurationRoot bootstrapConfig = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
+            IConfigurationRoot bootstrapConfig = new ConfigurationBuilder().SetBasePath(env.ContentRootPath)
                 .AddJsonFile(".config/settings.json")
                 .AddJsonFile($".config/settings.{env.EnvironmentName}.json")
                 .Build();
@@ -274,10 +273,11 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
             if (env.IsDevelopment() && RunningInServiceFabric())
             {
                 var tenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47";
-                string appId = "388be541-91ed-4771-8473-5791e071ed14";
-                string certThumbprint = "C4DFDCC47D95C1C64B55B42946CCEFDDF9E46FAB";
+                var appId = "388be541-91ed-4771-8473-5791e071ed14";
+                var certThumbprint = "C4DFDCC47D95C1C64B55B42946CCEFDDF9E46FAB";
 
-                string connectionString = $"RunAs=App;AppId={appId};TenantId={tenantId};CertificateThumbprint={certThumbprint};CertificateStoreLocation=LocalMachine";
+                string connectionString =
+                    $"RunAs=App;AppId={appId};TenantId={tenantId};CertificateThumbprint={certThumbprint};CertificateStoreLocation=LocalMachine";
                 clientFactory = () => GetKeyVaultClient(connectionString);
             }
             else

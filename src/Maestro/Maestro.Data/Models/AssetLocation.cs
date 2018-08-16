@@ -9,10 +9,6 @@ namespace Maestro.Data.Models
 {
     public class AssetLocation
     {
-        public AssetLocation()
-        {
-        }
-
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }

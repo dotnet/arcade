@@ -5,17 +5,12 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 
 namespace Maestro.Data.Models
 {
     public class Subscription
     {
-        public Subscription()
-        {
-        }
-
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }

@@ -4,11 +4,15 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.ServiceFabric.ServiceHost;
 
-namespace Microsoft.DotNet.ServiceFabric.ServiceHost
+namespace SubscriptionActorService
 {
-    public interface IServiceImplementation
+    public class SubscriptionService : IServiceImplementation
     {
-        Task RunAsync(CancellationToken cancellationToken);
+        public Task RunAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
     }
 }
