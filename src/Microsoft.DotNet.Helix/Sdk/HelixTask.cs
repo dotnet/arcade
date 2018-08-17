@@ -1,9 +1,9 @@
 using System;
-using System.IO;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
-using Newtonsoft.Json;
+using Microsoft.Rest;
 using Task = Microsoft.Build.Utilities.Task;
 
 namespace Microsoft.DotNet.Helix.Sdk
@@ -19,37 +19,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// The Helix Api Access Token
         /// </summary>
         public string AccessToken { get; set; }
-
-        [Required]
-        public string ConfigFile { get; set; }
-
-        protected HelixConfig GetHelixConfig()
-        {
-            if (File.Exists(ConfigFile))
-            {
-                return JsonConvert.DeserializeObject<HelixConfig>(
-                    File.ReadAllText(ConfigFile),
-                    Constants.SerializerSettings);
-            }
-            return new HelixConfig();
-        }
-
-        protected bool SetHelixConfig(HelixConfig config)
-        {
-            var dir = Path.GetDirectoryName(ConfigFile);
-            if (string.IsNullOrEmpty(dir))
-            {
-                Log.LogError($"Path '{ConfigFile}' doesn't exist in a directory");
-                return false;
-            }
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-
-            File.WriteAllText(ConfigFile, JsonConvert.SerializeObject(config, Constants.SerializerSettings));
-            return true;
-        }
 
         protected IHelixApi HelixApi { get; private set; }
 
@@ -70,15 +39,24 @@ namespace Microsoft.DotNet.Helix.Sdk
             try
             {
                 HelixApi = GetHelixApi();
-                return System.Threading.Tasks.Task.Run(ExecuteCore).GetAwaiter().GetResult();
+                System.Threading.Tasks.Task.Run(ExecuteCore).GetAwaiter().GetResult();
+            }
+            catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                Log.LogError("Helix operation returned 'Unauthorized'. Did you forget to set HelixAccessToken?");
+            }
+            catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Log.LogError("Helix operation returned 'Forbidden'.");
             }
             catch (Exception ex)
             {
                 Log.LogErrorFromException(ex, true, true, null);
-                return false;
             }
+
+            return !Log.HasLoggedErrors;
         }
 
-        protected abstract Task<bool> ExecuteCore();
+        protected abstract System.Threading.Tasks.Task ExecuteCore();
     }
 }

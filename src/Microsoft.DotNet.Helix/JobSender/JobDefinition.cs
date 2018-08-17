@@ -57,6 +57,12 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
+        public IJobDefinition WithCorrelationPayloadDirectory(string directory)
+        {
+            CorrelationPayloads.Add(new DirectoryPayload(directory));
+            return this;
+        }
+
         public IJobDefinition WithCorrelationPayloadFiles(params string[] files)
         {
             CorrelationPayloads.Add(new AdhocPayload(files));

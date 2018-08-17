@@ -13,8 +13,8 @@
         "bin/Microsoft.DotNet.Helix.Client/netstandard1.4/Microsoft.DotNet.Helix.Client.dll",
         "bin/Microsoft.DotNet.Helix.Client/net461/Microsoft.DotNet.Helix.Client.dll",
         "bin/Microsoft.DotNet.Helix.JobSender/netstandard2.0/Microsoft.DotNet.Helix.JobSender.dll",
-        "bin/Microsoft.DotNet.Helix.Sdk/netstandard2.0/Microsoft.DotNet.Helix.Sdk.dll",
-        "bin/Microsoft.DotNet.Helix.Sdk/net461/Microsoft.DotNet.Helix.Sdk.dll",
+        "bin/Microsoft.DotNet.Helix.Sdk/netcoreapp2.1/Microsoft.DotNet.Helix.Sdk.dll",
+        "bin/Microsoft.DotNet.Helix.Sdk/net472/Microsoft.DotNet.Helix.Sdk.dll",
         "bin/Microsoft.DotNet.Maestro.Client/netstandard1.4/Microsoft.DotNet.Maestro.Client.dll",
         "bin/Microsoft.DotNet.Maestro.Client/net461/Microsoft.DotNet.Maestro.Client.dll",
         "bin/Microsoft.DotNet.SignTool/net461/Microsoft.DotNet.SignTool.dll",
@@ -27,7 +27,7 @@
         "bin/Microsoft.AspNetCore.ApiVersioning.Analyzers/netstandard1.3/Microsoft.AspNetCore.ApiVersioning.Analyzers.dll",
         "bin/Microsoft.AspNetCore.ApiVersioning.Swashbuckle/netstandard2.0/Microsoft.AspNetCore.ApiVersioning.Swashbuckle.dll",
         "bin/Microsoft.DotNet.DarcLib/netstandard2.0/Microsoft.DotNet.DarcLib.dll",
-		"bin/Microsoft.DotNet.Maestro.Tasks/net461/Microsoft.DotNet.Maestro.Tasks.dll",
+        "bin/Microsoft.DotNet.Maestro.Tasks/net461/Microsoft.DotNet.Maestro.Tasks.dll",
         "bin/Microsoft.DotNet.Maestro.Tasks/netstandard2.0/Microsoft.DotNet.Maestro.Tasks.dll"
       ]
     },

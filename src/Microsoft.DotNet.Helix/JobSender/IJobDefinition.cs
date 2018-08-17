@@ -7,6 +7,7 @@ namespace Microsoft.DotNet.Helix.Client
     {
         IWorkItemDefinitionWithCommand DefineWorkItem(string workItemName);
         IJobDefinition WithCorrelationPayloadUris(params Uri[] payloadUris);
+        IJobDefinition WithCorrelationPayloadDirectory(string directory);
         IJobDefinition WithCorrelationPayloadFiles(params string[] files);
         IJobDefinition WithProperty(string key, string value);
         IJobDefinition WithCreator(string creator);

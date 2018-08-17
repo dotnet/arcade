@@ -1,59 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <!--
-    All Helix Tasks Have the Following Common Properties
-      AccessToken               Access Token for the Helix Api
-      BaseUri                   Helix Api Uri (only needed if sending telemetry to int)
-      ConfigFile    (Required)  Path to helix config file (used to preserve needed information between msbuild invocations)
-  -->
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
 
-  <!--
-    Target StartBuildTelemetry
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 
-      Sends telemetry signaling the start of a build
+  <PropertyGroup>
+    <!--
+      Set by Microsoft.Common.targets, some targets must be removed while others are left as standard extension mechanisms.
+    -->
+    <CoreBuildDependsOn>
+      BuildOnlySettings;
+      PrepareForBuild;
+      PreBuildEvent;
+      ResolveReferences;
+      PostBuildEvent
+    </CoreBuildDependsOn>
 
-    Properties:
-      Source        (Required)  The Job Source
-      Type          (Required)  The Job Type
-      Build         (Required)  The Build Number
-      QueueId       (Required)  The QueueId
-      Attempt                   Attempt identifier (newer attempts of the same build must have a lexicographically "higher" Attempt)
-      BuildUri                  Uri where build logs may be accessed
-      Properties                Additional Properties to send (key1=value1;key2=value2;...)
-  -->
-  <Target Name="StartBuildTelemetry">
-    <StartBuildTelemetry
-      AccessToken="$(AccessToken)"
-      BaseUri="$(BaseUri)"
-      ConfigFile="$(ConfigFile)"
-      Source="$(Source)"
-      Type="$(Type)"
-      Build="$(Build)"
-      QueueId="$(QueueId)"
-      Attempt="$(Attempt)"
-      BuildUri="$(BuildUri)"
-      Properties="$(Properties)"
-      />
-  </Target>
+    <PrepareForBuildDependsOn></PrepareForBuildDependsOn>
 
-  <!--
-    Target EndBuildTelemetry
+    <ResolveReferencesDependsOn>
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      AfterResolveReferences
+    </ResolveReferencesDependsOn>
 
-      Sends telemetry signaling the end of a build
+    <TestDependsOn>
+      Build
+    </TestDependsOn>
 
-      Note: ConfigFile must point to a config file used for a matching "StartBuildTelemetry" call
+    <CleanDependsOn>
+      BeforeClean;
+      UnmanagedUnregistration;
+      CoreClean;
+      PrepareProjectReferences;
+      CleanPublishFolder;
+      AfterClean
+    </CleanDependsOn>
+  </PropertyGroup>
 
-    Properties:
-      ErrorCount                The count of errors that occured in the build
-      WarningCount              The count of warnings that occured in the build
-  -->
-  <Target Name="EndBuildTelemetry">
-    <EndBuildTelemetry
-      AccessToken="$(AccessToken)"
-      BaseUri="$(BaseUri)"
-      ConfigFile="$(ConfigFile)"
-      ErrorCount="$(ErrorCount)"
-      WarningCount="$(WarningCount)"
-      />
+  <Target Name="Test"
+          DependsOnTargets="$(TestDependsOn)">
+    <SendHelixJob Source="$(HelixSource)"
+                  Type="$(HelixType)"
+                  Build="$(HelixBuild)"
+                  TargetQueue="$(HelixTargetQueue)"
+                  BaseUri="$(HelixBaseUri)"
+                  AccessToken="$(HelixAccessToken)"
+                  CorrelationPayloads="@(HelixCorrelationPayload)"
+                  WorkItems="@(HelixWorkItem)">
+      <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
+    </SendHelixJob>
+    <Message Text="Sent Helix Job $(HelixJobId)" Importance="High" />
   </Target>
 </Project>
