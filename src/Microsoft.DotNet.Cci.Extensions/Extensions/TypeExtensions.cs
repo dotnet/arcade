@@ -8,7 +8,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
 
-namespace Microsoft.Cci.Extensions
+namespace Microsoft.DotNet.Cci.Extensions
 {
     public static class TypeExtensions
     {

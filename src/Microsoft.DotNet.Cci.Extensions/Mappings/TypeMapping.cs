@@ -5,7 +5,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Cci.Differs;
-using Microsoft.Cci.Extensions;
+using Microsoft.DotNet.Cci.Extensions;
 
 namespace Microsoft.Cci.Mappings
 {

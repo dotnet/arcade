@@ -7,10 +7,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Cci;
-using Microsoft.Cci.Extensions;
+using Microsoft.DotNet.Cci.Extensions;
 using System.IO;
 
-namespace Microsoft.Cci.Extensions.Experimental
+namespace Microsoft.DotNet.Cci.Extensions.Experimental
 {
 #pragma warning disable 612,618
     internal class APIEmitter : BaseMetadataTraverser

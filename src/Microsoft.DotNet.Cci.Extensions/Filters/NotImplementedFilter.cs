@@ -4,7 +4,7 @@
 
 using System.Linq;
 
-using Microsoft.Cci.Extensions;
+using Microsoft.DotNet.Cci.Extensions;
 
 namespace Microsoft.Cci.Filters
 {

@@ -10,7 +10,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 
-namespace Microsoft.Cci.Extensions
+namespace Microsoft.DotNet.Cci.Extensions
 {
     public enum ErrorTreatment
     {

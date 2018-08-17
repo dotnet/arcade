@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.Cci.Extensions
+namespace Microsoft.DotNet.Cci.Extensions
 {
     public class FakeCustomAttribute : ICustomAttribute
     {

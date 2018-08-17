@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Cci.Extensions\Microsoft.DotNet.Cci.Extensions.csproj" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />

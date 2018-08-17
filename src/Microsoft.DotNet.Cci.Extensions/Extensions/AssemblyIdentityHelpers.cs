@@ -6,7 +6,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 
-namespace Microsoft.Cci.Extensions
+namespace Microsoft.DotNet.Cci.Extensions
 {
     public static class AssemblyIdentityHelpers
     {

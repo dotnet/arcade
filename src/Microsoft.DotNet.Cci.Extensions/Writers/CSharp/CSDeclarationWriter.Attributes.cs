@@ -8,7 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using Microsoft.Cci.Comparers;
-using Microsoft.Cci.Extensions;
+using Microsoft.DotNet.Cci.Extensions;
 using Microsoft.Cci.Writers.Syntax;
 
 namespace Microsoft.Cci.Writers.CSharp

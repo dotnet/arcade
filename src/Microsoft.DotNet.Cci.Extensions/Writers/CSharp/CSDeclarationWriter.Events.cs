@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Linq;
-using Microsoft.Cci.Extensions.CSharp;
+using Microsoft.DotNet.Cci.Extensions.CSharp;
 
 namespace Microsoft.Cci.Writers.CSharp
 {

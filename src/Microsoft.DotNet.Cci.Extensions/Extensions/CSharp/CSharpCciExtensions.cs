@@ -12,7 +12,7 @@ using Microsoft.Cci.Filters;
 using Microsoft.Cci.Writers.CSharp;
 using Microsoft.Cci.Writers.Syntax;
 
-namespace Microsoft.Cci.Extensions.CSharp
+namespace Microsoft.DotNet.Cci.Extensions.CSharp
 {
     public static class CSharpCciExtensions
     {

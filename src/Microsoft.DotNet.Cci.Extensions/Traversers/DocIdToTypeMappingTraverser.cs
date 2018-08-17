@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using Microsoft.Cci.Extensions;
+using Microsoft.DotNet.Cci.Extensions;
 
 namespace Microsoft.Cci.Traversers
 {

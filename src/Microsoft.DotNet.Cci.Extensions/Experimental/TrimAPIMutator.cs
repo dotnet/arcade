@@ -7,7 +7,7 @@
 //using System.Linq;
 //using System.Text;
 //using Microsoft.Cci;
-//using Microsoft.Cci.Extensions;
+//using Microsoft.DotNet.Cci.Extensions;
 //using Microsoft.Cci.MutableCodeModel;
 
 //namespace AsmDiff

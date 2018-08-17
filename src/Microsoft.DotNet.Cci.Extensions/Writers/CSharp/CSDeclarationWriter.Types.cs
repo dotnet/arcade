@@ -6,8 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using Microsoft.Cci.Extensions.CSharp;
-using Microsoft.Cci.Extensions;
+using Microsoft.DotNet.Cci.Extensions.CSharp;
+using Microsoft.DotNet.Cci.Extensions;
 
 namespace Microsoft.Cci.Writers.CSharp
 {

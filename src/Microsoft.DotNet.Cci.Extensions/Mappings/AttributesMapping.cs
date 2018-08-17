@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using Microsoft.Cci.Comparers;
-using Microsoft.Cci.Extensions;
+using Microsoft.DotNet.Cci.Extensions;
 using Microsoft.Cci.Filters;
 
 namespace Microsoft.Cci.Mappings

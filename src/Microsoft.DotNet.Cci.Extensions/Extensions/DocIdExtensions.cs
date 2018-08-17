@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 
-namespace Microsoft.Cci.Extensions
+namespace Microsoft.DotNet.Cci.Extensions
 {
     public static class DocIdExtensions
     {

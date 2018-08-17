@@ -7,9 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Cci;
-using Microsoft.Cci.Extensions;
+using Microsoft.DotNet.Cci.Extensions;
 
-namespace Microsoft.Cci.Extensions
+namespace Microsoft.DotNet.Cci.Extensions
 {
     public class TypeDependencies
     {

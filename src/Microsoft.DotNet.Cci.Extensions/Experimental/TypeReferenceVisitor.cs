@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics.Contracts;
 
-namespace Microsoft.Cci.Extensions
+namespace Microsoft.DotNet.Cci.Extensions
 {
 #pragma warning disable 612,618
     public class TypeReferenceVisitor : BaseMetadataTraverser

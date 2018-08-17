@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Cci.Comparers;
-using Microsoft.Cci.Extensions;
+using Microsoft.DotNet.Cci.Extensions;
 using Microsoft.Cci.Filters;
 using Microsoft.Cci.Mappings;
 using Microsoft.Cci.Differs;

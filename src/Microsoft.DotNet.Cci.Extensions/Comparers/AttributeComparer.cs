@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using Microsoft.Cci.Extensions;
+using Microsoft.DotNet.Cci.Extensions;
 using Microsoft.Cci.Filters;
 using Microsoft.Cci.Writers.CSharp;
 

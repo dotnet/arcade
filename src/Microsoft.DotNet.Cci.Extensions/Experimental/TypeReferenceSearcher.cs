@@ -9,7 +9,7 @@ using System.Text;
 using System.Diagnostics.Contracts;
 using System.Collections;
 
-namespace Microsoft.Cci.Extensions
+namespace Microsoft.DotNet.Cci.Extensions
 {
     public class TypeReferenceDependency
     {

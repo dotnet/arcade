@@ -4,7 +4,7 @@
 
 using System;
 
-namespace Microsoft.Cci.Extensions
+namespace Microsoft.DotNet.Cci.Extensions
 {
     public enum AccessorType
     {

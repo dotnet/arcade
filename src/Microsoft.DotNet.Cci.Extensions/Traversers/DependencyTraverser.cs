@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
-using Microsoft.Cci.Extensions;
+using Microsoft.DotNet.Cci.Extensions;
 
 namespace Microsoft.Cci.Traversers
 {

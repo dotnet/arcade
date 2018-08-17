@@ -6,9 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Microsoft.Cci.Extensions;
+using Microsoft.DotNet.Cci.Extensions;
 using System.IO;
-using Microsoft.Cci.Extensions.CSharp;
+using Microsoft.DotNet.Cci.Extensions.CSharp;
 
 namespace Microsoft.Cci.Filters
 {
