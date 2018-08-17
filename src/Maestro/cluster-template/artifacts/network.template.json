@@ -1,0 +1,375 @@
+
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "clusterName": {
+      "type": "string"
+    },
+    "sslEndpoints": {
+      "type": "array",
+      "defaultValue": [
+        {
+          "internalPort": "4430"
+        }
+      ]
+    },
+    "fabricTcpGatewayPort": {
+      "type": "int",
+      "defaultValue": 19000
+    },
+    "fabricHttpGatewayPort": {
+      "type": "int",
+      "defaultValue": 19080
+    }
+  },
+  "variables": {
+    "location": "[resourceGroup().location]",
+    "nsgName": "[concat(parameters('clusterName'), '-nsg')]",
+    "copy": [
+      {
+        "name": "sslSecurityRules",
+        "count": "[length(parameters('sslEndpoints'))]",
+        "input": {
+          "name": "[concat('SslEndpoint-', copyIndex('sslSecurityRules', 1))]",
+          "properties": {
+            "protocol": "Tcp",
+            "sourcePortRange": "*",
+            "destinationPortRange": "[parameters('sslEndpoints')[copyIndex('sslSecurityRules')].internalPort]",
+            "sourceAddressPrefix": "*",
+            "destinationAddressPrefix": "*",
+            "access": "Allow",
+            "priority": "[add(2000, copyIndex('sslSecurityRules', 1))]",
+            "direction": "Inbound"
+          }
+        }
+      },
+      {
+        "name": "sslEndpointDefs",
+        "count": "[length(parameters('sslEndpoints'))]",
+        "input": {
+          "publicIpName": "[concat('IP-', parameters('clusterName'), '-', copyIndex('sslEndpointDefs'))]",
+          "publicIpId": "[concat('Microsoft.Network/publicIPAddresses/IP-', parameters('clusterName'), if(equals(copyIndex('sslEndpointDefs'), 0), '', concat('-', copyIndex('sslEndpointDefs'))))]",
+          "publicIpDomainName": "[concat(parameters('clusterName'), if(equals(copyIndex('sslEndpointDefs'), 0), '', concat('-', copyIndex('sslEndpointDefs'))))]",
+          "backendPort": "[parameters('sslEndpoints')[copyIndex('sslEndpointDefs')].internalPort]"
+        }
+      },
+      {
+        "name": "sslLoadBalancingProbesAndRules",
+        "count": "[length(parameters('sslEndpoints'))]",
+        "input": {
+          "name": "[concat('App-', copyIndex('sslLoadBalancingProbesAndRules'), '-')]",
+          "backendPort": "[parameters('sslEndpoints')[copyIndex('sslLoadBalancingProbesAndRules')].internalPort]",
+          "frontendPort": "443",
+          "frontendIpName": "[concat('IP-', copyIndex('sslLoadBalancingProbesAndRules'))]"
+        }
+      }
+    ],
+    "serviceFabricSecurityRules": [
+      {
+        "name": "ServiceFabricTcp",
+        "properties": {
+          "protocol": "Tcp",
+          "sourcePortRange": "*",
+          "destinationPortRange": "[parameters('fabricTcpGatewayPort')]",
+          "sourceAddressPrefix": "*",
+          "destinationAddressPrefix": "*",
+          "access": "Allow",
+          "priority": 1000,
+          "direction": "Inbound"
+        }
+      },
+      {
+        "name": "ServiceFabricHttp",
+        "properties": {
+          "protocol": "Tcp",
+          "sourcePortRange": "*",
+          "destinationPortRange": "[parameters('fabricHttpGatewayPort')]",
+          "sourceAddressPrefix": "*",
+          "destinationAddressPrefix": "*",
+          "access": "Allow",
+          "priority": 1001,
+          "direction": "Inbound"
+        }
+      }
+    ],
+    "serviceFabricLoadBalancingProbesAndRules": [
+      {
+        "name": "FabricTcpGateway-",
+        "backendPort": "[parameters('fabricTcpGatewayPort')]",
+        "frontendPort": "[parameters('fabricTcpGatewayPort')]",
+        "frontendIpName": "IP-0"
+      },
+      {
+        "name": "FabricHttpGateway-",
+        "backendPort": "[parameters('fabricHttpGatewayPort')]",
+        "frontendPort": "[parameters('fabricHttpGatewayPort')]",
+        "frontendIpName": "IP-0"
+      }
+    ],
+    "loadBalancer": {
+      "copy": [
+        {
+          "name": "frontendIPConfigurations",
+          "count": "[length(parameters('sslEndpoints'))]",
+          "input": {
+            "name": "[concat('IP-', copyIndex('frontendIPConfigurations'))]",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat('IP-', parameters('clusterName'), '-', copyIndex('frontendIPConfigurations')))]"
+              }
+            }
+          }
+        }
+      ],
+      "probesAndRules": "[concat(variables('serviceFabricLoadBalancingProbesAndRules'), variables('sslLoadBalancingProbesAndRules'))]"
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-06-01",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('nsgName')]",
+      "location": "[variables('location')]",
+      "properties": {
+        "securityRules": "[concat(variables('serviceFabricSecurityRules'), variables('sslSecurityRules'))]",
+        "defaultSecurityRules": [
+          {
+            "name": "AllowVnetInBound",
+            "properties": {
+              "description": "Allow inbound traffic from all VMs in VNET",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 65000,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "AllowAzureLoadBalancerInBound",
+            "properties": {
+              "description": "Allow inbound traffic from azure load balancer",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "AzureLoadBalancer",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 65001,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "DenyAllInBound",
+            "properties": {
+              "description": "Deny all inbound traffic",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 65500,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "AllowVnetOutBound",
+            "properties": {
+              "description": "Allow outbound traffic from all VMs to all VMs in VNET",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "VirtualNetwork",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 65000,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "AllowInternetOutBound",
+            "properties": {
+              "description": "Allow outbound traffic from all VMs to Internet",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "Internet",
+              "access": "Allow",
+              "priority": 65001,
+              "direction": "Outbound"
+            }
+          },
+          {
+            "name": "DenyAllOutBound",
+            "properties": {
+              "description": "Deny all outbound traffic",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 65500,
+              "direction": "Outbound"
+            }
+          }
+        ]
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "copy": {
+        "name": "IP-loop",
+        "count": "[length(variables('sslEndpointDefs'))]",
+        "mode": "Parallel"
+      },
+      "apiVersion": "2017-08-01",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('sslEndpointDefs')[copyIndex('IP-loop')].publicIpName]",
+      "location": "[variables('location')]",
+      "properties": {
+        "dnsSettings": {
+          "domainNameLabel": "[variables('sslEndpointDefs')[copyIndex('IP-loop')].publicIpDomainName]"
+        },
+        "publicIPAllocationMethod": "Static"
+      },
+      "sku": {
+        "name": "Standard",
+        "tier": "Regional"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "2017-08-01",
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "[concat('LB-', parameters('clusterName'))]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "IP-loop"
+      ],
+      "sku": {
+        "name": "Standard",
+        "tier": "Regional"
+      },
+      "properties": {
+        "frontendIPConfigurations": "[variables('loadBalancer').frontendIPConfigurations]",
+        "backendAddressPools": [
+          {
+            "name": "LoadBalancerBEAddressPool",
+            "properties": {}
+          }
+        ],
+        "copy": [
+          {
+            "name": "loadBalancingRules",
+            "count": "[length(variables('loadBalancer').probesAndRules)]",
+            "input": {
+              "name": "[concat(variables('loadBalancer').probesAndRules[copyIndex('loadBalancingRules')].name, 'Rule')]",
+              "properties": {
+                "backendAddressPool": {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers', concat('LB-', parameters('clusterName'))), '/backendAddressPools/LoadBalancerBEAddressPool')]"
+                },
+                "backendPort": "[variables('loadBalancer').probesAndRules[copyIndex('loadBalancingRules')].backendPort]",
+                "enableFloatingIP": false,
+                "frontendIPConfiguration": {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers', concat('LB-', parameters('clusterName'))), '/frontendIPConfigurations/', variables('loadBalancer').probesAndRules[copyIndex('loadBalancingRules')].frontendIpName)]"
+                },
+                "frontendPort": "[variables('loadBalancer').probesAndRules[copyIndex('loadBalancingRules')].frontendPort]",
+                "idleTimeoutInMinutes": 5,
+                "probe": {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers', concat('LB-', parameters('clusterName'))), '/probes/', variables('loadBalancer').probesAndRules[copyIndex('loadBalancingRules')].name, 'Probe')]"
+                },
+                "protocol": "Tcp"
+              }
+            }
+          },
+          {
+            "name": "probes",
+            "count": "[length(variables('loadBalancer').probesAndRules)]",
+            "input": {
+              "name": "[concat(variables('loadBalancer').probesAndRules[copyIndex('probes')].name, 'Probe')]",
+              "properties": {
+                "intervalInSeconds": 5,
+                "numberOfProbes": 2,
+                "port": "[variables('loadBalancer').probesAndRules[copyIndex('probes')].backendPort]",
+                "protocol": "Tcp"
+              }
+            }
+          }
+        ],
+        "inboundNatPools": [
+        ]
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "2017-06-01",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[concat(parameters('clusterName'), '-vnet')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.0.0.0/16"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "Subnet",
+            "properties": {
+              "addressPrefix": "10.0.0.0/24",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+              }
+            }
+          }
+        ]
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    }
+  ],
+  "outputs": {
+    "nsg": { 
+      "type": "string",
+      "value" : "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+    },
+    "lb": {
+      "type": "object",
+      "value": {
+        "id": "[resourceId('Microsoft.Network/loadBalancers', concat('LB-', parameters('clusterName')))]",
+        "backendAddressPool": "[concat(resourceId('Microsoft.Network/loadBalancers', concat('LB-', parameters('clusterName'))), '/backendAddressPools/LoadBalancerBEAddressPool')]"
+      }
+    },
+    "vnet": {
+      "type": "object",
+      "value": {
+        "id": "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('clusterName'), '-vnet'))]",
+        "subnet": "[concat(resourceId('Microsoft.Network/virtualNetworks', concat(parameters('clusterName'), '-vnet')), '/subnets/Subnet')]"
+      }
+    },
+    "fqdn": {
+      "type": "string",
+      "value": "[reference(concat('IP-', parameters('clusterName'), '-0')).dnsSettings.fqdn]"
+    }
+  }
+}

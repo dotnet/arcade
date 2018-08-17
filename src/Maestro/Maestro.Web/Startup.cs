@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using Autofac;
 using EntityFrameworkCore.Triggers;
@@ -12,6 +13,7 @@ using FluentValidation.AspNetCore;
 using Maestro.Contracts;
 using Maestro.Data;
 using Maestro.Data.Models;
+using Maestro.GitHub;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
@@ -66,9 +68,14 @@ namespace Maestro.Web
             else
             {
                 IConfigurationSection dpConfig = Configuration.GetSection("DataProtection");
+
+                var vaultUri = Configuration["KeyVaultUri"];
+                var keyVaultKeyIdentifierName = dpConfig["KeyIdentifier"];
+                var kvClient = ServiceHostConfiguration.GetKeyVaultClient(HostingEnvironment);
+                var key = kvClient.GetKeyAsync(vaultUri, keyVaultKeyIdentifierName).GetAwaiter().GetResult();
                 services.AddDataProtection()
                     .PersistKeysToAzureBlobStorage(new Uri(dpConfig["KeyFileUri"]))
-                    .ProtectKeysWithAzureKeyVault(ServiceHostConfiguration.GetKeyVaultClient(null), dpConfig["KeyIdentifier"]);
+                    .ProtectKeysWithAzureKeyVault(kvClient, key.KeyIdentifier.ToString());
             }
 
             ConfigureApiServices(services);
@@ -94,7 +101,10 @@ namespace Maestro.Web
                     {
                         options.Conventions.AuthorizeFolder("/");
                         options.Conventions.AllowAnonymousToPage("/Index");
-                    });
+                    })
+                .AddGitHubWebHooks();
+
+            services.AddSingleton<IConfiguration>(Configuration);
 
             ConfigureAuthServices(services);
 
@@ -102,6 +112,18 @@ namespace Maestro.Web
             services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<BackgroundQueue>());
 
             services.AddServiceFabricService<IDependencyUpdater>("fabric:/MaestroApplication/DependencyUpdater");
+
+            services.AddGitHubTokenProvider();
+            services.Configure<GitHubTokenProviderOptions>(
+                (options, provider) =>
+                {
+                    IConfigurationSection section = Configuration.GetSection("GitHub");
+                    section.Bind(options);
+                    options.ApplicationName = "Maestro";
+                    options.ApplicationVersion = Assembly.GetEntryAssembly()
+                        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                        ?.InformationalVersion;
+                });
         }
 
         public void ConfigureContainer(ContainerBuilder builder)

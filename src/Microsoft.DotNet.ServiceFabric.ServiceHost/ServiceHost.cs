@@ -250,8 +250,27 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 
     public static class ServiceHostConfiguration
     {
-        public static KeyVaultClient GetKeyVaultClient(string connectionString)
+        private static string GetAzureServiceTokenProviderConnectionString(IHostingEnvironment env)
         {
+            if (env.IsDevelopment() && RunningInServiceFabric())
+            {
+                var tenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47";
+                var appId = "388be541-91ed-4771-8473-5791e071ed14";
+                var certThumbprint = "C4DFDCC47D95C1C64B55B42946CCEFDDF9E46FAB";
+
+                string connectionString =
+                    $"RunAs=App;AppId={appId};TenantId={tenantId};CertificateThumbprint={certThumbprint};CertificateStoreLocation=LocalMachine";
+                return connectionString;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public static KeyVaultClient GetKeyVaultClient(IHostingEnvironment env)
+        {
+            var connectionString = GetAzureServiceTokenProviderConnectionString(env);
             var provider = new AzureServiceTokenProvider(connectionString);
             return new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(provider.KeyVaultTokenCallback));
         }
@@ -269,24 +288,8 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                 .AddJsonFile($".config/settings.{env.EnvironmentName}.json")
                 .Build();
 
-            Func<KeyVaultClient> clientFactory;
-            if (env.IsDevelopment() && RunningInServiceFabric())
-            {
-                var tenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47";
-                var appId = "388be541-91ed-4771-8473-5791e071ed14";
-                var certThumbprint = "C4DFDCC47D95C1C64B55B42946CCEFDDF9E46FAB";
-
-                string connectionString =
-                    $"RunAs=App;AppId={appId};TenantId={tenantId};CertificateThumbprint={certThumbprint};CertificateStoreLocation=LocalMachine";
-                clientFactory = () => GetKeyVaultClient(connectionString);
-            }
-            else
-            {
-                clientFactory = () => GetKeyVaultClient(null);
-            }
-
+            Func<KeyVaultClient> clientFactory = () => GetKeyVaultClient(env);
             string keyVaultUri = bootstrapConfig["KeyVaultUri"];
-
 
             return new ConfigurationBuilder().SetBasePath(env.ContentRootPath)
                 .AddKeyVaultMappedJsonFile(".config/settings.json", keyVaultUri, clientFactory)

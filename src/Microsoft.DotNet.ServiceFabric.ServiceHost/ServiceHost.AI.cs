@@ -10,12 +10,9 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector;
 using Microsoft.ApplicationInsights.ServiceFabric;
 using Microsoft.Extensions.DependencyInjection;
-#if NET461
-using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector;
-
-#endif
 
 namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 {
@@ -76,7 +73,6 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
         private static void ConfigureApplicationInsights(IServiceCollection services)
         {
             services.AddApplicationInsightsTelemetry();
-#if NET461
             RemoveImplementations(services, typeof(PerformanceCollectorModule));
             services.AddSingleton<ITelemetryModule>(
                 provider =>
@@ -108,8 +104,6 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                             "\\Processor(_Total)\\% Processor Time"));
                     return collector;
                 });
-#endif
-
 
             services.AddSingleton<ITelemetryInitializer>(ConfigureFabricTelemetryInitializer);
             services.AddSingleton<ITelemetryInitializer>(new RichExceptionTelemetryInitializer());

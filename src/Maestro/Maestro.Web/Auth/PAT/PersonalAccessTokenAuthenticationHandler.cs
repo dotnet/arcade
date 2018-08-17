@@ -85,7 +85,8 @@ namespace Maestro.Web
             byte[] passwordBytes = GeneratePassword();
             string password = WebEncoders.Base64UrlEncode(passwordBytes);
             string hash = PasswordHasher.HashPassword(user, password);
-            int tokenId = await Events.NewToken(Context, user, name, hash);
+            var context = new SetTokenHashContext<TUser>(Context, user, name, hash);
+            int tokenId = await Events.SetTokenHash(context);
             return EncodeToken(tokenId, passwordBytes);
         }
 
@@ -99,13 +100,15 @@ namespace Maestro.Web
 
             (int tokenId, string password) = decoded.Value;
 
-            (string tokenHash, TUser user)? hashUser = await Events.GetTokenHash(Context, tokenId);
-            if (!hashUser.HasValue)
+            var context = new GetTokenHashContext<TUser>(Context, tokenId);
+            await Events.GetTokenHash(context);
+            if (!context.Succeeded)
             {
                 return null;
             }
 
-            (string hash, TUser user) = hashUser.Value;
+            string hash = context.Hash;
+            TUser user = context.User;
 
             PasswordVerificationResult result = PasswordHasher.VerifyHashedPassword(user, hash, password);
 
@@ -137,7 +140,13 @@ namespace Maestro.Web
 
                 ClaimsPrincipal principal = await SignInManager.CreateUserPrincipalAsync(user);
                 var ticket = new AuthenticationTicket(principal, Scheme.Name);
-                return AuthenticateResult.Success(ticket);
+                var context = new PersonalAccessTokenValidatePrincipalContext<TUser>(Context, Scheme, Options, ticket, user);
+                await Events.ValidatePrincipal(context);
+                if (context.Principal == null)
+                {
+                    return AuthenticateResult.Fail("No principal.");
+                }
+                return AuthenticateResult.Success(new AuthenticationTicket(context.Principal, context.Properties, Scheme.Name));
             }
             catch (Exception ex)
             {
