@@ -69,15 +69,13 @@ namespace Microsoft.DotNet.DarcLib
             {
                 response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}branches/darc-{branch}", _logger);
 
+                githubRef.Force = true;
+                body = JsonConvert.SerializeObject(githubRef, _serializerSettings);
                 await this.ExecuteGitCommand(
                     new HttpMethod("PATCH"),
                     $"repos/{ownerAndRepo}git/{gitRef}",
                     _logger,
-                    new JObject
-                    {
-                        ["sha"] = latestSha,
-                        ["force"] = true
-                    }.ToString());
+                    body);
             }
             catch (HttpRequestException exc) when (exc.Message.Contains(((int)HttpStatusCode.NotFound).ToString()))
             {
