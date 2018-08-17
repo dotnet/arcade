@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using Autofac.Extensions.DependencyInjection;
+using Maestro.Contracts;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.ServiceFabric.ServiceHost;
 using Microsoft.Extensions.Logging;

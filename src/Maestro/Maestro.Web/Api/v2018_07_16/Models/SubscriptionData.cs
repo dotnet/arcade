@@ -21,5 +21,16 @@ namespace Maestro.Web.Api.v2018_07_16.Models
 
         [Required]
         public SubscriptionPolicy Policy { get; set; }
+
+        public Data.Models.Subscription ToDb()
+        {
+            return new Data.Models.Subscription
+            {
+                SourceRepository = SourceRepository,
+                TargetRepository = TargetRepository,
+                TargetBranch = TargetBranch,
+                PolicyObject = Policy.ToDb(),
+            };
+        }
     }
 }

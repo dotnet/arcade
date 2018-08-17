@@ -7,8 +7,11 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using Autofac;
+using EntityFrameworkCore.Triggers;
 using FluentValidation.AspNetCore;
-using Maestro.Web.Data;
+using Maestro.Contracts;
+using Maestro.Data;
+using Maestro.Data.Models;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
@@ -18,62 +21,40 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.Services.AppAuthentication;
+using Microsoft.DotNet.ServiceFabric.ServiceHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace Maestro.Web
 {
     public partial class Startup
     {
+        static Startup()
+        {
+            Triggers<BuildChannel>.Inserted += entry =>
+            {
+                var entity = entry.Entity;
+                var context = entry.Context;
+                var queue = context.GetService<BackgroundQueue>();
+                var dependencyUpdater = context.GetService<IDependencyUpdater>();
+                queue.Post(() => dependencyUpdater.StartUpdateDependenciesAsync(entity.BuildId, entity.ChannelId));
+            };
+        }
+
         public Startup(IHostingEnvironment env)
         {
             HostingEnvironment = env;
-            Configuration = GetConfiguration(env);
+            Configuration = ServiceHostConfiguration.Get(env);
         }
 
         public IHostingEnvironment HostingEnvironment { get; set; }
         public IConfigurationRoot Configuration { get; }
-
-        public static KeyVaultClient GetKeyVaultClient(string connectionString)
-        {
-            var provider = new AzureServiceTokenProvider(connectionString);
-            return new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(provider.KeyVaultTokenCallback));
-        }
-
-        public static IConfigurationRoot GetConfiguration(IHostingEnvironment env)
-        {
-            IConfigurationRoot bootstrapConfig = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
-                .AddJsonFile(".config/settings.json")
-                .AddJsonFile($".config/settings.{env.EnvironmentName}.json")
-                .Build();
-
-            Func<KeyVaultClient> clientFactory;
-            if (env.IsDevelopment() && Program.RunningInServiceFabric())
-            {
-                var tenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47";
-                string appId = "388be541-91ed-4771-8473-5791e071ed14";
-                string certThumbprint = "C4DFDCC47D95C1C64B55B42946CCEFDDF9E46FAB";
-
-                string connectionString = $"RunAs=App;AppId={appId};TenantId={tenantId};CertificateThumbprint={certThumbprint};CertificateStoreLocation=LocalMachine";
-                clientFactory = () => GetKeyVaultClient(connectionString);
-            }
-            else
-            {
-                clientFactory = () => GetKeyVaultClient(null);
-            }
-
-            string keyVaultUri = bootstrapConfig["KeyVaultUri"];
-
-
-            return new ConfigurationBuilder().SetBasePath(env.ContentRootPath)
-                .AddKeyVaultMappedJsonFile(".config/settings.json", keyVaultUri, clientFactory)
-                .AddKeyVaultMappedJsonFile($".config/settings.{env.EnvironmentName}.json", keyVaultUri, clientFactory)
-                .Build();
-        }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -87,7 +68,7 @@ namespace Maestro.Web
                 IConfigurationSection dpConfig = Configuration.GetSection("DataProtection");
                 services.AddDataProtection()
                     .PersistKeysToAzureBlobStorage(new Uri(dpConfig["KeyFileUri"]))
-                    .ProtectKeysWithAzureKeyVault(GetKeyVaultClient(null), dpConfig["KeyIdentifier"]);
+                    .ProtectKeysWithAzureKeyVault(ServiceHostConfiguration.GetKeyVaultClient(null), dpConfig["KeyIdentifier"]);
             }
 
             ConfigureApiServices(services);
@@ -116,6 +97,11 @@ namespace Maestro.Web
                     });
 
             ConfigureAuthServices(services);
+
+            services.AddSingleton<BackgroundQueue>();
+            services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<BackgroundQueue>());
+
+            services.AddServiceFabricService<IDependencyUpdater>("fabric:/MaestroApplication/DependencyUpdater");
         }
 
         public void ConfigureContainer(ContainerBuilder builder)

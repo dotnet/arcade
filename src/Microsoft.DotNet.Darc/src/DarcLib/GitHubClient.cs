@@ -61,12 +61,21 @@ namespace Microsoft.DotNet.DarcLib
             string latestSha = await GetLastCommitShaAsync(ownerAndRepo, branch);
             string body;
 
-            GitHubRef githubRef = new GitHubRef($"refs/heads/darc-{branch}", latestSha);
+            string gitRef = $"refs/heads/darc-{branch}";
+            GitHubRef githubRef = new GitHubRef(gitRef, latestSha);
             HttpResponseMessage response = null;
 
             try
             {
                 response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}branches/darc-{branch}", _logger);
+
+                githubRef.Force = true;
+                body = JsonConvert.SerializeObject(githubRef, _serializerSettings);
+                await this.ExecuteGitCommand(
+                    new HttpMethod("PATCH"),
+                    $"repos/{ownerAndRepo}git/{gitRef}",
+                    _logger,
+                    body);
             }
             catch (HttpRequestException exc) when (exc.Message.Contains(((int)HttpStatusCode.NotFound).ToString()))
             {
@@ -181,7 +190,7 @@ namespace Microsoft.DotNet.DarcLib
 
             JObject responseContent = JObject.Parse(await response.Content.ReadAsStringAsync());
 
-            return responseContent["repo"]["html_url"].ToString();
+            return responseContent["base"]["repo"]["html_url"].ToString();
         }
 
         public async Task<string> CreatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
@@ -375,8 +384,7 @@ namespace Microsoft.DotNet.DarcLib
         private string GetPrPartialAbsolutePath(string prLink)
         {
             Uri uri = new Uri(prLink);
-            string toRemove = $"{uri.Host}/";
-            return prLink.Replace(toRemove, string.Empty);
+            return uri.PathAndQuery;
         }
     }
 }

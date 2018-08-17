@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace Maestro.Web.Api.v2018_07_16.Models
 {
@@ -22,5 +23,17 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         public List<AssetData> Assets { get; set; }
 
         public List<int> Dependencies { get; set; }
+
+        public Maestro.Data.Models.Build ToDb()
+        {
+            return new Data.Models.Build
+            {
+                Repository = Repository,
+                Branch = Branch,
+                Commit = Commit,
+                BuildNumber = BuildNumber,
+                Assets = Assets.Select(a => a.ToDb()).ToList(),
+            };
+        }
     }
 }

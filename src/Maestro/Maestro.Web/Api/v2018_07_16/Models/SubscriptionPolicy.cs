@@ -12,7 +12,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         {
         }
 
-        public SubscriptionPolicy([NotNull] Data.Models.SubscriptionPolicy other)
+        public SubscriptionPolicy([NotNull] Maestro.Data.Models.SubscriptionPolicy other)
         {
             if (other == null)
             {
@@ -26,5 +26,14 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         public UpdateFrequency UpdateFrequency { get; set; }
 
         public MergePolicy MergePolicy { get; set; }
+
+        public Data.Models.SubscriptionPolicy ToDb()
+        {
+            return new Data.Models.SubscriptionPolicy
+            {
+                MergePolicy = (Data.Models.MergePolicy) (int) MergePolicy,
+                UpdateFrequency = (Data.Models.UpdateFrequency) (int) UpdateFrequency,
+            };
+        }
     }
 }

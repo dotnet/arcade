@@ -7,5 +7,14 @@ namespace Maestro.Web.Api.v2018_07_16.Models
     {
         public string Location { get; set; }
         public LocationType Type { get; set; }
+
+        public Data.Models.AssetLocation ToDb()
+        {
+            return new Data.Models.AssetLocation
+            {
+                Location = Location,
+                Type = (Data.Models.LocationType)(int) Type,
+            };
+        }
     }
 }

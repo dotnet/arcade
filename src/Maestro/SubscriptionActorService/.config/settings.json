@@ -1,0 +1,9 @@
+{
+  "BuildAssetRegistry": {
+    "ConnectionString": "[vault(build-asset-registry-sql-connection-string)]"
+  },
+  "GitHub": {
+    "GitHubAppId": "[vault(github-application-id)]",
+    "PrivateKey": "[vault(github-application-private-key)]" 
+  }
+}

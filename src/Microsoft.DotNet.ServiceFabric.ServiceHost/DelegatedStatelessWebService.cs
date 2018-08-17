@@ -1,28 +1,30 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
+using System;
+using System.Collections.Generic;
+using System.Fabric;
+using System.IO;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.ServiceFabric.Services.Communication.AspNetCore;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
-using System;
-using System.Collections.Generic;
-using System.Fabric;
-using System.IO;
 using Microsoft.ServiceFabric.Services.Runtime;
 
 namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 {
-    public class DelegatedStatelessWebService<TStartup> : StatelessService
-        where TStartup : class
+    public class DelegatedStatelessWebService<TStartup> : StatelessService where TStartup : class
     {
-        private readonly Action<IServiceCollection> _configureServices;
         private readonly Action<ContainerBuilder> _configureContainer;
+        private readonly Action<IServiceCollection> _configureServices;
 
-        public DelegatedStatelessWebService(StatelessServiceContext context, Action<IServiceCollection> configureServices, Action<ContainerBuilder> configureContainer)
-            : base(context)
+        public DelegatedStatelessWebService(
+            StatelessServiceContext context,
+            Action<IServiceCollection> configureServices,
+            Action<ContainerBuilder> configureContainer) : base(context)
         {
             _configureServices = configureServices;
             _configureContainer = configureContainer;
@@ -38,8 +40,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                         return new HttpSysCommunicationListener(
                             context,
                             "ServiceEndpoint",
-                            (url, listener) => new WebHostBuilder()
-                                .UseHttpSys()
+                            (url, listener) => new WebHostBuilder().UseHttpSys()
                                 .UseContentRoot(Directory.GetCurrentDirectory())
                                 .ConfigureServices(
                                     services =>
@@ -53,7 +54,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                                 .UseServiceFabricIntegration(listener, ServiceFabricIntegrationOptions.None)
                                 .UseUrls(url)
                                 .Build());
-                    }),
+                    })
             };
         }
     }

@@ -102,6 +102,11 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPr;
         }
 
+        public Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl)
+        {
+            return Task.FromResult<IList<Check>>(Array.Empty<Check>());
+        }
+
         public async Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null)
         {
             return await _gitClient.SearchPullRequestsAsync(repoUri, pullRequestBranch, status, keyword, author);
@@ -131,7 +136,7 @@ namespace Microsoft.DotNet.DarcLib
 
             await CommitFilesForPullRequest(repoUri, branch, assetsProducedInCommit, itemsToUpdate, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
 
-            linkToPr = await _gitClient.UpdatePullRequestAsync(pullRequestUrl, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
+            linkToPr = await _gitClient.UpdatePullRequestAsync(pullRequestUrl, branch, pullRequestTitle, pullRequestDescription);
 
             _logger.LogInformation($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
 

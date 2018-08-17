@@ -1,12 +1,14 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Maestro.Web.Api.v2018_07_16.Models;
-using Maestro.Web.Data;
+using Maestro.Data;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -54,10 +56,9 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [HttpGet("{id}")]
         [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(Subscription))]
         [ValidateModelState]
-        public async Task<IActionResult> GetSubscription(int id)
+        public async Task<IActionResult> GetSubscription(Guid id)
         {
             Data.Models.Subscription subscription = await _context.Subscriptions.Where(sub => sub.Id == id)
-                .Include(sub => sub.Policy)
                 .FirstOrDefaultAsync();
 
             if (subscription == null)
@@ -83,7 +84,8 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                         new[] {$"The channel '{subscription.ChannelName}' could not be found."}));
             }
 
-            var subscriptionModel = new Data.Models.Subscription(subscription) {Channel = channel};
+            var subscriptionModel = subscription.ToDb();
+            subscriptionModel.Channel = channel;
             await _context.Subscriptions.AddAsync(subscriptionModel);
             await _context.SaveChangesAsync();
             return CreatedAtRoute(

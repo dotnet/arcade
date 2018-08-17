@@ -7,7 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Maestro.Web.Api.v2018_07_16.Models;
-using Maestro.Web.Data;
+using Maestro.Data;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -155,25 +155,10 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [ValidateModelState]
         public async Task<IActionResult> Create([FromBody] BuildData build)
         {
-            var buildModel = new Data.Models.Build(build)
-            {
-                DateProduced = DateTimeOffset.UtcNow,
-                Dependencies = await _context.Builds.Where(b => build.Dependencies.Contains(b.Id)).ToListAsync()
-            };
+            Data.Models.Build buildModel = build.ToDb();
+            buildModel.DateProduced = DateTimeOffset.UtcNow;
+            buildModel.Dependencies = await _context.Builds.Where(b => build.Dependencies.Contains(b.Id)).ToListAsync();
             await _context.Builds.AddAsync(buildModel);
-            var defaultChannels = await _context.DefaultChannels
-                .Where(dc => dc.Repository == buildModel.Repository && dc.Branch == buildModel.Branch)
-                .Select(dc => dc.ChannelId)
-                .ToListAsync();
-
-            foreach (var channelId in defaultChannels)
-            {
-                await _context.BuildChannels.AddAsync(new Data.Models.BuildChannel
-                {
-                    ChannelId = channelId,
-                    Build = buildModel,
-                });
-            }
             await _context.SaveChangesAsync();
             return CreatedAtRoute(new { action = "GetBuild", id = buildModel.Id }, new Build(buildModel));
         }
