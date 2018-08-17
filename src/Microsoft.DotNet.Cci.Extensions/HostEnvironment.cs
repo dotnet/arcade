@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using Microsoft.Cci;
 
 namespace Microsoft.DotNet.Cci.Extensions
 {

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci;
 
 namespace Microsoft.DotNet.Cci.Extensions
 {
