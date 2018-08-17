@@ -15,14 +15,20 @@ steps:
     res=`mktemp`
 
     curlResult=`
-      curl --silent --output $res\
+      curl --verbose --output $res --write-out "%{http_code}"\
       -H 'Content-Type: application/json' \
-      -H 'X-Helix-Job-Token: $Helix_JobToken' \
+      -H "X-Helix-Job-Token: $Helix_JobToken" \
       -H 'Content-Length: 0' \
       -X POST -G "https://helix.dot.net/api/2018-03-14/telemetry/job/build/$Helix_WorkItemId/finish" \
       --data-urlencode "errorCount=$errorCount" \
       --data-urlencode "warningCount=$warningCount"`
     curlStatus=$?
+
+    if [ $curlStatus -eq 0 ]; then
+      if [ $curlResult -gt 299 ] || [ $curlResult -lt 200 ]; then
+        curlStatus=$curlResult
+      fi
+    fi
 
     if [ $curlStatus -ne 0 ]; then
       echo "Failed to Send Build Finish information"

@@ -34,7 +34,7 @@ steps:
 
     curlResult=`
       cat $jobInfo |\
-      curl --silent --output $res --write-out "%{http_code}" \
+      curl --verbose --output $res --write-out "%{http_code}" \
       -H 'Content-Type: application/json' \
       -X POST "https://helix.dot.net/api/2018-03-14/telemetry/job?access_token=$HelixApiAccessToken" -d @-`
     curlStatus=$?
@@ -45,6 +45,8 @@ steps:
       fi
     fi
 
+    curlResult=`cat $res`
+    
     # validate status of curl command
     if [ $curlStatus -ne 0 ]; then
       echo "Failed To Send Job Start information"
@@ -71,13 +73,21 @@ steps:
 - bash: |
     res=`mktemp`
     curlResult=`
-      curl --silent --output $res\
+      curl --verbose --output $res --write-out "%{http_code}"\
       -H 'Content-Type: application/json' \
       -H "X-Helix-Job-Token: $Helix_JobToken" \
       -H 'Content-Length: 0' \
       -X POST -G "https://helix.dot.net/api/2018-03-14/telemetry/job/build" \
       --data-urlencode "buildUri=$BuildUri"`
     curlStatus=$?
+
+    if [ $curlStatus -eq 0 ]; then
+      if [ $curlResult -gt 299 ] || [ $curlResult -lt 200 ]; then
+        curlStatus=$curlResult
+      fi
+    fi
+
+    curlResult=`cat $res`
 
     # validate status of curl command
     if [ $curlStatus -ne 0 ]; then
@@ -92,7 +102,6 @@ steps:
   displayName: Send Build Start Telemetry
   env:
     BuildUri: $(System.TaskDefinitionsUri)$(System.TeamProject)/_build/index?buildId=$(Build.BuildId)&_a=summary
-    # defined via VSTS variables in start-job.sh
     Helix_JobToken: $(Helix_JobToken)
   condition: and(always(), ne(variables['Agent.Os'], 'Windows_NT'))
   
@@ -110,7 +119,6 @@ steps:
 
     Write-Host "Job Info: $jobInfoJson"
     $jobToken = Invoke-RestMethod -Uri "https://helix.dot.net/api/2018-03-14/telemetry/job?access_token=$($env:HelixApiAccessToken)" -Method Post -ContentType "application/json" -Body $jobInfoJson
-        
     $env:Helix_JobToken = $jobToken
     Write-Host "##vso[task.setvariable variable=Helix_JobToken;issecret=true;]$env:Helix_JobToken"
   displayName: Send Job Start Telemetry
@@ -133,6 +141,5 @@ steps:
   displayName: Send Build Start Telemetry
   env:
     BuildUri: $(System.TaskDefinitionsUri)$(System.TeamProject)/_build/index?buildId=$(Build.BuildId)&_a=summary
-    # defined via VSTS variables in start-job.ps1
     Helix_JobToken: $(Helix_JobToken)
   condition: and(always(), eq(variables['Agent.Os'], 'Windows_NT'))
