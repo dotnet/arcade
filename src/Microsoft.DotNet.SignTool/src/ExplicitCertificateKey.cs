@@ -4,11 +4,11 @@
 
 namespace Microsoft.DotNet.SignTool
 {
-    struct ExplicitCertificateKey
+    internal readonly struct ExplicitCertificateKey
     {
-        public string FileName;
-        public string PublicKeyToken;
-        public string TargetFramework;
+        public readonly string FileName;
+        public readonly string PublicKeyToken;
+        public readonly string TargetFramework;
 
         public ExplicitCertificateKey(string fileName, string publicKeyToken, string targetFramework)
         {

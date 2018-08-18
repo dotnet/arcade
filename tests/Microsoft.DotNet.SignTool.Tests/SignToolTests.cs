@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
 namespace Microsoft.DotNet.SignTool.Tests
@@ -51,22 +52,20 @@ namespace Microsoft.DotNet.SignTool.Tests
         {
             if (!_isWindows) return;
 
-            var signingInput = new BatchSignInput(_signToolArgs.TempDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, _publishURL, _task.Log);
+            var signingInput = new Configuration(_signToolArgs.TempDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, _publishURL, _task.Log).GenerateListOfFiles();
+
+            Assert.Equal(expectedToBeSigned.Count, signingInput.FilesToSign.Count());
 
             // Check that all files that were expected to be discovered were actually found and the 
             // signing information for them are correct.
-            foreach (var expected in expectedToBeSigned)
+            var signInfoCheck = signingInput.FilesToSign.All<FileName>(candidate =>
             {
-                var validationCheck = signingInput.FilesToSign.Exists(candidate => 
+                return expectedToBeSigned.Exists(expected =>
                     candidate.FullPath.EndsWith(expected.FullPath) &&
                     candidate.SignInfo.Certificate == expected.SignInfo.Certificate &&
                     candidate.SignInfo.StrongName == expected.SignInfo.StrongName);
-
-                Assert.True(validationCheck, $"Expected this file ({expected.FullPath}) to be signed with this " +
-                        $"certificate ({expected.SignInfo.Certificate}) and this strong name ({expected.SignInfo.StrongName})");
-            }
-
-            Assert.Equal(expectedToBeSigned.Count, signingInput.FilesToSign.Count);
+            });
+            Assert.True(signInfoCheck);
  
             var util = new BatchSignUtil(_task.BuildEngine, _task.Log, _signTool, signingInput, null);
 
@@ -78,12 +77,12 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             foreach (var expected in expectedToBeSigned)
             {
-                var validationCheck = fakeEngine.filesSigned.Exists(candidate =>
+                var signedInfoCheck = fakeEngine.filesSigned.Exists(candidate =>
                     candidate.FullPath.EndsWith(expected.FullPath) &&
                     candidate.SignInfo.Certificate == expected.SignInfo.Certificate &&
                     candidate.SignInfo.StrongName == expected.SignInfo.StrongName);
 
-                Assert.True(validationCheck, $"Expected this file ({expected.FullPath}) to be signed with this " +
+                Assert.True(signedInfoCheck, $"Expected this file ({expected.FullPath}) to be signed with this " +
                         $"certificate ({expected.SignInfo.Certificate}) and this strong name ({expected.SignInfo.StrongName})");
             }
 
@@ -99,7 +98,7 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             var FileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            var signingInput = new BatchSignInput(_signToolArgs.TempDir, ExplicitSignItems, StrongNameSignInfo, FileSignInfo, _publishURL, _task.Log);
+            var signingInput = new Configuration(_signToolArgs.TempDir, ExplicitSignItems, StrongNameSignInfo, FileSignInfo, _publishURL, _task.Log).GenerateListOfFiles();
 
             Assert.Empty(signingInput.FilesToSign);
             Assert.Empty(signingInput.ZipDataMap);

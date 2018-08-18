@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.SignTool
 
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
-            var signingInput = new BatchSignInput(TempDir, ItemsToSign, signInfos, overridingSignInfos, PublishUrl, Log);
+            var signingInput = new Configuration(TempDir, ItemsToSign, signInfos, overridingSignInfos, PublishUrl, Log).GenerateListOfFiles();
 
             if (Log.HasLoggedErrors) return;
 

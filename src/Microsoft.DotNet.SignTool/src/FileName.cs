@@ -7,12 +7,12 @@ using System.IO;
 
 namespace Microsoft.DotNet.SignTool
 {
-    internal class FileName : IEquatable<FileName>
+    internal readonly struct FileName : IEquatable<FileName>
     {
-        internal string Name { get; }
-        internal string FullPath { get; }
-        internal string RelativePath { get; }
-        internal SignInfo SignInfo { get; }
+        internal readonly string Name;
+        internal readonly string FullPath;
+        internal readonly string RelativePath;
+        internal readonly SignInfo SignInfo;
 
         internal static bool IsPEFile(string fileFullPath)
         {

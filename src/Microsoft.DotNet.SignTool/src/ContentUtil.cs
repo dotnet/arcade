@@ -14,8 +14,8 @@ namespace Microsoft.DotNet.SignTool
 {
     internal sealed class ContentUtil
     {
-        private readonly static Dictionary<string, string> _filePathCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        private readonly static SHA256 _sha256 = SHA256.Create();
+        private readonly Dictionary<string, string> _filePathCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private readonly SHA256 _sha256 = SHA256.Create();
 
         internal string GetChecksum(Stream stream)
         {
