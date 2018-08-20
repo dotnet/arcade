@@ -129,6 +129,9 @@
   <data name="DetailHResult" xml:space="preserve">
     <value>hresult={0:x8}</value>
   </data>
+  <data name="DetailMiscFileType" xml:space="preserve">
+    <value>File type: {0} (inferred)</value>
+  </data>
   <data name="DetailNativeImage" xml:space="preserve">
     <value>No StrongName signature (NGEN/CrossGen image).</value>
   </data>
@@ -180,6 +183,9 @@
   <data name="DiagExtractingFileContents" xml:space="preserve">
     <value>Extracting file contents to {0}</value>
   </data>
+  <data name="DiagFileHeaderIdentifyExtensionType" xml:space="preserve">
+    <value>File will be treated as {0}.</value>
+  </data>
   <data name="DiagFirstExclusion" xml:space="preserve">
     <value>Checking {0} against the exclusion list.</value>
   </data>
@@ -191,6 +197,9 @@
   </data>
   <data name="DiagSkippingStrongName" xml:space="preserve">
     <value>Skipping strong name signature check.</value>
+  </data>
+  <data name="DiagVerifyByFileHeader" xml:space="preserve">
+    <value>Examining file header to find applicable verifier.</value>
   </data>
   <data name="ExclusionYourComment" xml:space="preserve">
     <value>Add you comment here</value>

@@ -97,6 +97,15 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File type: {0} (inferred).
+        /// </summary>
+        internal static string DetailMiscFileType {
+            get {
+                return ResourceManager.GetString("DetailMiscFileType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No StrongName signature (NGEN/CrossGen image)..
         /// </summary>
         internal static string DetailNativeImage {
@@ -250,6 +259,15 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File will be treated as {0}..
+        /// </summary>
+        internal static string DiagFileHeaderIdentifyExtensionType {
+            get {
+                return ResourceManager.GetString("DiagFileHeaderIdentifyExtensionType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Checking {0} against the exclusion list..
         /// </summary>
         internal static string DiagFirstExclusion {
@@ -282,6 +300,15 @@ namespace Microsoft.SignCheck {
         internal static string DiagSkippingStrongName {
             get {
                 return ResourceManager.GetString("DiagSkippingStrongName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Examining file header to find applicable verifier..
+        /// </summary>
+        internal static string DiagVerifyByFileHeader {
+            get {
+                return ResourceManager.GetString("DiagVerifyByFileHeader", resourceCulture);
             }
         }
         

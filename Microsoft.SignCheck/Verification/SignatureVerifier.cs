@@ -140,6 +140,7 @@ namespace Microsoft.SignCheck.Verification
             Verifiers.Add(".dll", VerifyDll);
             Verifiers.Add(".exe", VerifyExe);
             Verifiers.Add(".js", VerifyAuthentiCodeOnly);
+            Verifiers.Add(".lzma", VerifyLzma);
             Verifiers.Add(".msi", VerifyMsi);
             Verifiers.Add(".msp", VerifyMsp);
             Verifiers.Add(".nupkg", VerifyNupkg);
@@ -148,12 +149,8 @@ namespace Microsoft.SignCheck.Verification
             Verifiers.Add(".ps1", VerifyAuthentiCodeOnly);
             Verifiers.Add(".ps1xml", VerifyAuthentiCodeOnly);
             Verifiers.Add(".vsix", VerifyVsix);
+            Verifiers.Add(".xml", VerifyXml);
             Verifiers.Add(".zip", VerifyZip);
-
-            if (EnableXmlSignatureVerification)
-            {
-                Verifiers.Add(".xml", VerifyXml);
-            }
         }
 
         /// <summary>
@@ -172,6 +169,90 @@ namespace Microsoft.SignCheck.Verification
         }
 
         /// <summary>
+        /// Identify a file by looking at potential headers to determine which built-in verifier to use.
+        /// </summary>
+        /// <param name="path">The path of the file to verify.</param>
+        /// <param name="parent">The parent container or null if this is a top-level file.</param>
+        /// <returns></returns>
+        public SignatureVerificationResult VerifyByFileHeader(string path, string parent)
+        {
+            Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagVerifyByFileHeader);
+
+            using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (BinaryReader reader = new BinaryReader(stream))
+            {
+                try
+                {
+                    // Test for 4-byte magic numbers
+                    if (stream.Length > 4)
+                    {
+                        uint magic4 = reader.ReadUInt32();
+                        if (magic4 == FileHeaders.Zip)
+                        {
+                            using (var zipArchive = ZipFile.OpenRead(path))
+                            {
+                                if (zipArchive.Entries.Any(z => String.Equals(Path.GetExtension(z.FullName), "nuspec", StringComparison.OrdinalIgnoreCase)))
+                                {
+                                    // NUPKGs use .zip format, but should have a .nuspec files inside
+                                    Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagFileHeaderIdentifyExtensionType, ".nupkg");
+                                    var result = VerifyNupkg(path, parent);
+                                    result.AddDetail(DetailKeys.Misc, SignCheckResources.DetailMiscFileType, "NUPKG");
+                                    return result;
+                                }
+                                else
+                                {
+                                    // Assume it's some sort of .zip file
+                                    Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagFileHeaderIdentifyExtensionType, ".zip");
+                                    var result = VerifyZip(path, parent);
+                                    result.AddDetail(DetailKeys.Misc, SignCheckResources.DetailMiscFileType, "ZIP");
+                                    return result;
+                                }
+                            }
+
+                        }
+                        else if (magic4 == FileHeaders.Cab)
+                        {
+                            var result = VerifyCab(path, parent);
+                            result.AddDetail(DetailKeys.Misc, SignCheckResources.DetailMiscFileType, "CAB");
+                            return result;
+                        }
+                    }
+
+                    reader.BaseStream.Seek(0, SeekOrigin.Begin);
+                    if (stream.Length > 2)
+                    {
+                        UInt16 magic2 = reader.ReadUInt16();
+                        if (magic2 == FileHeaders.Dos)
+                        {
+                            PortableExecutableHeader pe = new PortableExecutableHeader(path);
+
+                            if ((pe.FileHeader.Characteristics & ImageFileCharacteristics.IMAGe_FILE_DLL) != 0)
+                            {
+                                Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagFileHeaderIdentifyExtensionType, ".dll");
+                                var result = VerifyDll(path, parent);
+                                result.AddDetail(DetailKeys.Misc, SignCheckResources.DetailMiscFileType, "DLL");
+                                return result;
+                            }
+                            else if ((pe.FileHeader.Characteristics & ImageFileCharacteristics.IMAGE_FILE_EXECUTABLE_IMAGE) != 0)
+                            {
+                                Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagFileHeaderIdentifyExtensionType, ".exe");
+                                var result = VerifyExe(path, parent);
+                                result.AddDetail(DetailKeys.Misc, SignCheckResources.DetailMiscFileType, "EXE");
+                                return result;
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.WriteError(e.Message);
+                }
+            }
+
+            return SignatureVerificationResult.SkippedResult(path, parent);
+        }
+
+        /// <summary>
         /// Verify the signature of a single file.
         /// </summary>
         /// <param name="path">The path of the file to verify.</param>
@@ -187,15 +268,16 @@ namespace Microsoft.SignCheck.Verification
             if (Verifiers.TryGetValue(extension, out verifierDelegate))
             {
                 result = verifierDelegate(path, parent);
-                Log.WriteMessage(LogVerbosity.Diagnostic, String.Format(SignCheckResources.DiagFirstExclusion, path));
-                if (Exclusions.Count > 0)
-                {
-                    result.IsExcluded = Exclusions.IsParentExcluded(parent) | Exclusions.IsFileExcluded(path);
-                }
             }
             else
             {
-                result = SignatureVerificationResult.SkippedResult(path, parent);
+                result = VerifyByFileHeader(path, parent);
+            }
+
+            Log.WriteMessage(LogVerbosity.Diagnostic, String.Format(SignCheckResources.DiagFirstExclusion, path));
+            if (Exclusions.Count > 0)
+            {
+                result.IsExcluded = Exclusions.IsParentExcluded(parent) | Exclusions.IsFileExcluded(path);
             }
 
             // Include the full path for top-level files
@@ -352,6 +434,30 @@ namespace Microsoft.SignCheck.Verification
             }
 
             // TODO: Check for SFXCAB, IronMan, etc.
+
+            return svr;
+        }
+
+        public SignatureVerificationResult VerifyLzma(string path, string parent)
+        {
+            var svr = SignatureVerificationResult.SkippedResult(path, parent);
+            var fullPath = svr.FullPath;
+            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, SignCheckResources.NA);
+
+            if (Recursive)
+            {
+                var tempPath = svr.TempPath;
+                CreateDirectory(tempPath);
+                Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagExtractingFileContents, tempPath);
+
+                // Drop the LZMA extensions when decompressing so we don't process the uncompressed file as an LZMA file
+                var destinationFile = Path.Combine(tempPath, Path.GetFileNameWithoutExtension(path));
+
+                // LZMA files are just compressed streams. Decompress and then try to verify the file.
+                LZMAUtils.Decompress(fullPath, destinationFile);
+
+                svr.NestedResults.Add(VerifyFile(destinationFile, parent));
+            }
 
             return svr;
         }
@@ -529,15 +635,15 @@ namespace Microsoft.SignCheck.Verification
 
         public SignatureVerificationResult VerifyZip(string path, string parent)
         {
-            var result = SignatureVerificationResult.SkippedResult(path, parent);
-            var fullPath = result.FullPath;
-            result.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, SignCheckResources.NA);
+            var svr = SignatureVerificationResult.SkippedResult(path, parent);
+            var fullPath = svr.FullPath;
+            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, SignCheckResources.NA);
 
             if (Recursive)
             {
                 using (var zipArchive = ZipFile.OpenRead(fullPath))
                 {
-                    var tempPath = result.TempPath;
+                    var tempPath = svr.TempPath;
                     CreateDirectory(tempPath);
                     Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagExtractingFileContents, tempPath);
 
@@ -555,12 +661,12 @@ namespace Microsoft.SignCheck.Verification
                         else
                         {
                             archiveEntry.ExtractToFile(aliasFullName);
-                            var archiveEntryResult = VerifyFile(aliasFullName, result.Filename);
+                            var archiveEntryResult = VerifyFile(aliasFullName, svr.Filename);
 
                             // Tag the full path into the result detail
                             archiveEntryResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, archiveEntry.FullName);
-                            CheckAndUpdateExclusion(archiveEntryResult, aliasFileName, archiveEntry.FullName, result.Filename);
-                            result.NestedResults.Add(archiveEntryResult);
+                            CheckAndUpdateExclusion(archiveEntryResult, aliasFileName, archiveEntry.FullName, svr.Filename);
+                            svr.NestedResults.Add(archiveEntryResult);
                         }
                     }
 
@@ -568,7 +674,7 @@ namespace Microsoft.SignCheck.Verification
                 }
             }
 
-            return result;
+            return svr;
         }
 
         private void CheckAndUpdateExclusion(SignatureVerificationResult result, string alias, string fullName, string parent)

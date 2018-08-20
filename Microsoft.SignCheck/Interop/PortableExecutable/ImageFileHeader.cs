@@ -13,7 +13,7 @@ namespace Microsoft.SignCheck.Interop.PortableExecutable
         public UInt32 PointerToSymbolTable;
         public UInt32 NumberOfSymbols;
         public UInt16 SizeOfOptionalHeader;
-        public UInt16 Characteristics;
+        public ImageFileCharacteristics Characteristics;
     }
 
     public static class ImageFileHeader
@@ -33,7 +33,7 @@ namespace Microsoft.SignCheck.Interop.PortableExecutable
                 PointerToSymbolTable = reader.ReadUInt32(),
                 NumberOfSymbols = reader.ReadUInt32(),
                 SizeOfOptionalHeader = reader.ReadUInt16(),
-                Characteristics = reader.ReadUInt16()
+                Characteristics = (ImageFileCharacteristics)reader.ReadUInt16()
             };
 
             return imageFileHeader;
