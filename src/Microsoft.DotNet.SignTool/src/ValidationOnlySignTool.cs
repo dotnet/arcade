@@ -13,9 +13,12 @@ namespace Microsoft.DotNet.SignTool
     /// </summary>
     internal sealed class ValidationOnlySignTool : SignTool
     {
+        internal bool TestSign { get; }
+
         internal ValidationOnlySignTool(SignToolArgs args) 
             : base(args)
         {
+            TestSign = args.TestSign;
         }
 
         public override void RemovePublicSign(string assemblyPath)
@@ -26,6 +29,15 @@ namespace Microsoft.DotNet.SignTool
             => true;
 
         public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round)
-            => true;
+        {
+            if (TestSign)
+            {
+                return buildEngine.BuildProjectFile(projectFilePath, null, null, null);
+            }
+            else
+            {
+                return true;
+            }
+        }
     }
 }

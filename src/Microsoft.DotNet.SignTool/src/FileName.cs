@@ -3,39 +3,58 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.SignTool
 {
-    internal struct FileName : IEquatable<FileName>
+    internal readonly struct FileName : IEquatable<FileName>
     {
-        internal string Name { get; }
-        internal string FullPath { get; }
-        internal string RelativePath { get; }
-        internal string SHA256Hash { get; }
+        internal readonly string Name;
+        internal readonly string FullPath;
+        internal readonly string RelativePath;
+        internal readonly SignInfo SignInfo;
 
-        internal bool IsAssembly => PathUtil.IsAssembly(Name);
-        internal bool IsVsix => PathUtil.IsVsix(Name);
-        internal bool IsNupkg => PathUtil.IsVsix(Name);
-        internal bool IsZipContainer => PathUtil.IsZipContainer(Name);
-
-        internal FileName(string rootBinaryPath, string relativePath, string sha256Hash = null)
+        internal static bool IsPEFile(string fileFullPath)
         {
-            Name = Path.GetFileName(relativePath);
-            FullPath = Path.Combine(rootBinaryPath, relativePath);
-            RelativePath = relativePath;
-            SHA256Hash = sha256Hash;
+            return !String.IsNullOrWhiteSpace(fileFullPath) && (Path.GetExtension(fileFullPath) == ".exe" || Path.GetExtension(fileFullPath) == ".dll");
+        }
+
+        internal static bool IsVsix(string fileFullPath)
+        {
+            return !String.IsNullOrWhiteSpace(fileFullPath) && Path.GetExtension(fileFullPath).Equals(".vsix", StringComparison.OrdinalIgnoreCase);
+        }
+
+        internal static bool IsNupkg(string fileFullPath)
+        {
+            return !String.IsNullOrWhiteSpace(fileFullPath) && Path.GetExtension(fileFullPath).Equals(".nupkg", StringComparison.OrdinalIgnoreCase);
+        }
+
+        internal static bool IsZipContainer(string fileFullPath)
+        {
+            return IsVsix(fileFullPath) || IsNupkg(fileFullPath);
+        }
+
+        internal bool IsPEFile() => IsPEFile(Name);
+
+        internal bool IsVsix() => IsVsix(Name);
+
+        internal bool IsNupkg() => IsNupkg(Name);
+
+        internal bool IsZipContainer() => IsZipContainer(Name);
+
+        internal FileName(string fullPath, SignInfo signInfo)
+        {
+            Name = Path.GetFileName(fullPath);
+            FullPath = fullPath;
+            RelativePath = Name;
+            SignInfo = signInfo;
         }
 
         public static bool operator ==(FileName left, FileName right) => left.FullPath == right.FullPath;
         public static bool operator !=(FileName left, FileName right) => !(left == right);
         public bool Equals(FileName other) => this == other;
         public override int GetHashCode() => FullPath.GetHashCode();
-        public override string ToString() => RelativePath;
+        public override string ToString() => $"File: {FullPath}; SignInfo: {SignInfo}";
         public override bool Equals(object obj) => obj is FileName && Equals((FileName)obj);
     }
 }
