@@ -1,0 +1,20 @@
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project DefaultTargets="PushBuildAssets">
+  <!--
+    Required variables:
+      ManifestZipFilePath               Path to file containing manifest files.
+      BuildAssetRegistryToken           Token required to insert metadata into BAR.
+	  MaestroApiEndpoint            	Maestro's endpoint.
+
+    Optional variables:                 
+      AssetLocationType                 Type of location where the assets are stored. Default is 'Blob'.
+  -->
+
+  <Import Project="BuildStep.props" />
+
+  <Target Name="PushBuildAssets">
+    <PushMetadataToBuildAssetRegistry ManifestZipFilePath="$(ManifestZipFilePath)"
+                    BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
+                    MaestroApiEndpoint="@(MaestroApiEndpoint)" />
+  </Target>
+</Project>

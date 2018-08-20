@@ -72,6 +72,7 @@
     <ArtifactsPackagesDir>$(ArtifactsConfigurationDir)packages\</ArtifactsPackagesDir>
     <ArtifactsShippingPackagesDir>$(ArtifactsPackagesDir)Shipping\</ArtifactsShippingPackagesDir>
     <ArtifactsNonShippingPackagesDir>$(ArtifactsPackagesDir)NonShipping\</ArtifactsNonShippingPackagesDir>
+	<ArtifactsAssetManifestDir>$(ArtifactsConfigurationDir)AssetManifest\</ArtifactsAssetManifestDir>
     <VisualStudioSetupOutputPath>$(ArtifactsConfigurationDir)VSSetup\</VisualStudioSetupOutputPath>
     <VisualStudioSetupInsertionPath>$(VisualStudioSetupOutputPath)Insertion\</VisualStudioSetupInsertionPath>
     <VisualStudioSetupIntermediateOutputPath>$(ArtifactsConfigurationDir)VSSetup.obj\</VisualStudioSetupIntermediateOutputPath>

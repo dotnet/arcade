@@ -58,10 +58,11 @@
     <XUnitVersion Condition="'$(XUnitVersion)' == ''">2.3.1</XUnitVersion>
     <XUnitRunnerConsoleVersion Condition="'$(XUnitRunnerConsoleVersion)' == ''">$(XUnitVersion)</XUnitRunnerConsoleVersion>
     <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">$(XUnitVersion)</XUnitRunnerVisualStudioVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">2.2.0-prerelease-02431-01</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">2.2.0-beta.18418.1</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftSourceLinkVersion Condition="'$(MicrosoftSourceLinkVersion)' == ''">1.0.0-beta-63102-01</MicrosoftSourceLinkVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion Condition="'$(MicrosoftSymbolUploaderBuildTaskVersion)' == ''">1.0.0-beta-63008-01</MicrosoftSymbolUploaderBuildTaskVersion>
     <VSWhereVersion Condition="'$(VSWhereVersion)' == ''">2.5.2</VSWhereVersion>
+    <MicrosoftDotNetMaestroTasksVersion Condition="'$(MicrosoftDotNetMaestroTasksVersion)' == ''">1.0.0-beta.18415.5</MicrosoftDotNetMaestroTasksVersion>
   </PropertyGroup>
 
   <!-- Version overrides -->

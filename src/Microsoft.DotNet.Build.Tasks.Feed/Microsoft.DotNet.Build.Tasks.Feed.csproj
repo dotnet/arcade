@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.VersionTools" Version="$(MicrosoftDotNetVersionToolsVersion)" />
-    <PackageReference Include="SleetLib" Version="$(SleetLibVersion)" />
+    <PackageReference Include="DotNet.SleetLib" Version="$(SleetLibVersion)" />
   </ItemGroup>
 
   <ItemGroup>

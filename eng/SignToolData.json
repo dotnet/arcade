@@ -187,6 +187,8 @@
     "System.Xml.XmlSerializer.dll",
     "System.Xml.XPath.dll",
     "System.Xml.XPath.XDocument.dll",
-    "vswhere.exe"
+    "vswhere.exe",
+    "AWSSDK.Core.dll",
+    "AWSSDK.S3.dll"
   ]
 }

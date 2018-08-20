@@ -29,7 +29,7 @@
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <OctokitVersion>0.30.0</OctokitVersion>
-    <SleetLibVersion>2.2.24</SleetLibVersion>
+    <SleetLibVersion>2.2.73</SleetLibVersion>
     <SystemCollectionsImmutableVersion>1.3.1</SystemCollectionsImmutableVersion>
     <SystemIOCompressionVersion>4.3.0</SystemIOCompressionVersion>
     <SystemIOPackagingVersion>4.5.0</SystemIOPackagingVersion>
