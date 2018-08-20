@@ -14,7 +14,7 @@ For .NET Core 3, the engineering system must be able to support a number of core
 - Upstack builds on PRs.
 
 In Prodcon v2, there are a number of central principals that shape how the product is constructed:
-- The product is spread among many repositories, with inter-repo dependencies expressed as pointers to build assets.
+- The product is spread among many repositories, with inter-repo dependencies expressed as pointers to build assets.  The pointers normally take the form of version number and name of asset.
 - All product changes must be code changes.  These code changes are typically made in *Branches*.
 - Branches do not define the intention of the code in the branch.  This is defined by the *Channel* a build is assigned.
 - Alterations in product composition (new repo dependencies) are done via a pull model, pulling new assets based on the intended purpose of those assets.  These pulls are automated using *Subscriptions*
@@ -98,7 +98,7 @@ There are a variety of scenarios that require changes in channels, branches and 
 Onboarding of new repositories adds new nodes to the product dependency graph. Initially the number of nodes in the dependency graph is 0. There are no branches of any repos producing assets for any channel, and thus there are no subscriptions consuming those assets (because there would be no place to move them). Onboarding the initial repository involves the following:
 
 1. Define potential content - The dotnet/coreclr repo's master branch should be onboarded.
-2. Onboard dotnet/coreclr to Arcade style publishing.  Arcade publishing will push build artifacts to shared storage locations and notify the Build Asset Registry of new builds.
+2. Onboard dotnet/coreclr to Arcade style publishing.  Arcade publishing will push build assets to shared storage locations and notify the Build Asset Registry of new builds.
 3. Create content - Build dotnet/coreclr's master branch (let's say its ID is 'dotnet/coreclr#1')  Through arcade publishing a new entry for this build will be created in the BAR.  'dotnet/coreclr#1' will not initially have a channel..
 4. Create a new channel for content - Create '.NET Core 3.0.0' channel in the BAR
 5. Assign new dotnet/coreclr builds to the channel - dotnet/coreclr's master branch creates content for '.NET Core 3.0.0' channel, so use the BAR to assign 'dotnet/coreclr#1' to '.NET Core 3.0.0'
@@ -106,13 +106,13 @@ Onboarding of new repositories adds new nodes to the product dependency graph. I
 
 Once the repository graph has more than one node (or if there is a circular dependency, like in the case of dotnet/arcade), it becomes possible to create subscriptions.  Onboarding new repositories after the initial node involves the steps above with the follolwing alterations/additions:
 
-1. No new channel is necessary if repository/branch being onboarded is producing artifacts for an existing channel
+1. No new channel is necessary if repository/branch being onboarded is producing assets for an existing channel
 2. Repository can be onboarded onto the dependency description, enabling automated update of dependencies.
 
 Let's say dotnet/corefx's master branch is the second branch to be onboarded.  dotnet/corefx has a dependency on dotnet/coreclr's outputs
 
 1. Define potential content - The dotnet/corefx repo's master branch should be onboarded.
-2. Onboard dotnet/corefx to Arcade style publishing.  Arcade publishing will push build artifacts to shared storage locations and notify the Build Asset Registry (BAR) of new builds.
+2. Onboard dotnet/corefx to Arcade style publishing.  Arcade publishing will push build assets to shared storage locations and notify the Build Asset Registry (BAR) of new builds.
 3. Onboard dotnet/corefx to Arcade style dependency management - Create a Dependency.Versions.xml and associated dependency props files in the master branch.  Use Darc to add dependencies for specific dotnet/coreclr dependencies (e.g. Microsoft.NETCore.Runtime.Coreclr). These dependencies were produced by dotnet/coreclr builds and assigned to the '.NET Core 3.0.0' channel.
 4. Create content - Build dotnet/corefx's master branch (let's say its ID is 'dotnet/corefx#3')  Through arcade publishing a new entry for this build will be created in the BAR.  'dotnet/corefx#3' will not initially have a channel..
 6. Assign new dotnet/corefx build to the channel - dotnet/coreclr's master branch creates content for '.NET Core 3.0.0' channel, so use the BAR to assign 'dotnet/corefx#3' to '.NET Core 3.0.0'
@@ -172,7 +172,7 @@ dotnet/roslyn
 In branching for release, we want to isolate the input code from risky changes, allow mainline development to continue, etc.  This typically involves creating a release branches for each repository, like "release/3.0".  The outputs for .NET Core 3.0 switch to coming from this set of branches, and the original set of branches is now producing .NET Core 3.1 development bits.  Looking at this action from the perspective of channels and subscriptions, we are actually saying:
 - The .NET Core 3.0 Dev channel is now defunct (we are in release shutdown)
 - A .NET Core 3.0 release channel should produced from a set of yet-created branches.  These branches would be based off the branches producing .NET Core 3.0 Dev bits.
-- Subscriptions intaking .NET Core 3.0 artifacts should map onto new branches and flow in the same manner as the .NET Core 3.0 Dev subscriptions
+- Subscriptions intaking .NET Core 3.0 assets should map onto new branches and flow in the same manner as the .NET Core 3.0 Dev subscriptions
 - the .Net Core 3.1 Dev channel should be created and assigned as the default output channel of the original .NET Core 3.0 Dev channel.
 - Because fixes in the release branches should flow back into the mainline branches, there should be automatic merge PRs opened.
 
@@ -308,7 +308,7 @@ dotnet/roslyn
 
 Let's say a user wants to do work in core-setup and aspnet/universe on previously created branches for feature/foo.  Basically that means that they probably want to have the output of those branches appear in the SDK.  Remeber the Product Construction v2 rules:
 - Since all changes involve commits, that means that there must be a new branch of core-sdk that can take the output aspnet/universe and core-setup branches.
-- No more than one channel per input repo may flow input a repo+branch combo (e.g. cannot have dotnet/core-setup's .NET Core 3.0 and dotnet/core-setup's .NET Core 3.1 artifacts flow to dotnet/core-sdk master as there will be collisions)
+- No more than one channel per input repo may flow input a repo+branch combo (e.g. cannot have dotnet/core-setup's .NET Core 3.0 and dotnet/core-setup's .NET Core 3.1 assets flow to dotnet/core-sdk master as there will be collisions)
 - A single channel may not recieve input from two different branches in the same repo.
 
 This means that we need:
@@ -709,11 +709,11 @@ This operation is in two stages.  A confirmation/modification stage (present use
 
 **Determine input repo+branch list**
 
-1. In the BAR, find the latest build of each repo that has produced artifacts in the last N days for the existing channel.  N defaults to 7.
+1. In the BAR, find the latest build of each repo that has produced assets in the last N days for the existing channel.  N defaults to 7.
 2. Add each build's repo+branch to input repo+branch list
 3. For this set of builds:
     1. Determine unique set of input builds to that build.
-    2. For each of those builds, if build produced artifacts for the existing channel add to repo+branch list if not already in there.
+    2. For each of those builds, if build produced assets for the existing channel add to repo+branch list if not already in there.
 
 If a set of input repos has been presented, we need to filter from this list, any repo+branch combination that does not transitively depend on the input repos.  The analysis ends on back-edges (e.g. arcade depends on core-sdk).  For example:
 
@@ -781,11 +781,11 @@ darc channel edit <existing channel>
 
 **Determine input repo+branch list**
 
-1. In the BAR, find the latest build of each repo that has produced artifacts in the last N days for the existing channel.  N defaults to 7.
+1. In the BAR, find the latest build of each repo that has produced assets in the last N days for the existing channel.  N defaults to 7.
 2. Add each build's repo+branch to input repo+branch list
 3. For this set of builds:
     1. Determine unique set of input builds to that build.
-    2. For each of those builds, if build produced artifacts for the existing channel add to repo+branch list if not already in there.
+    2. For each of those builds, if build produced assets for the existing channel add to repo+branch list if not already in there.
 
 **Determine subscriptions, branches, channels**
 
@@ -815,7 +815,7 @@ For all elements (potentially filtered by repo, present the user with a way to e
 
 **Determine input repo+branch list**
 
-1. In the BAR, find the latest build of each repo that has produced artifacts in the last N days for any channel.  N defaults to 7.
+1. In the BAR, find the latest build of each repo that has produced assets in the last N days for any channel.  N defaults to 7.
 2. Add each build's repo+branch to input repo+branch list
 3. For this set of builds:
     1. Determine unique set of input builds to that build.
