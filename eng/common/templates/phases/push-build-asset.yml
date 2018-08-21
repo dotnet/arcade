@@ -1,29 +1,29 @@
 parameters:
   dependsOn: ''
-
+  conditions: ''
 phases:
   - phase: Push to B.A.R.
     dependsOn: ${{ parameters.dependsOn }}
-    condition: and(succeeded('Windows_NT'), succeeded('Linux'))
     queue:
       name: DotNetCore-Build
       demands:
         - agent.os -equals Windows_NT        
     steps:
-    - task: DownloadBuildArtifacts@0
-      displayName: Download artifact
-      inputs:
-        artifactName: AssetManifests    
-        downloadPath: '$(Build.StagingDirectory)/Download'
-      condition: succeeded()
-    - task: AzureKeyVault@1
-      inputs:
-        azureSubscription: 'DotNet-Engineering-Services_KeyVault'
-        KeyVaultName: EngKeyVault
-        SecretsFilter: 'bar-token'
-      condition: succeeded()
-    - script: eng\common\pushbuildassets.cmd
-        /p:ManifestZipFilePath='$(Build.StagingDirectory)/Download/AssetManifests'
-        /p:BuildAssetRegistryToken=$(bar-token)
-        /p:MaestroApiEndpoint=https://maestro.endpoint...
-      displayName: Push Build Assets
+    - ${{ if and( startsWith(parameters.conditions, 'not'), not(contains(parameters.conditions, variables['build.reason']))) }}:
+        - task: DownloadBuildArtifacts@0
+          displayName: Download artifact
+          inputs:
+            artifactName: AssetManifests    
+            downloadPath: '$(Build.StagingDirectory)/Download'
+          condition: succeeded()
+        - task: AzureKeyVault@1
+          inputs:
+            azureSubscription: 'DotNet-Engineering-Services_KeyVault'
+            KeyVaultName: EngKeyVault
+            SecretsFilter: 'bar-token'
+          condition: succeeded()
+        - script: eng\common\pushbuildassets.cmd
+            /p:ManifestZipFilePath='$(Build.StagingDirectory)/Download/AssetManifests'
+            /p:BuildAssetRegistryToken=$(bar-token)
+            /p:MaestroApiEndpoint=https://maestro.endpoint...
+          displayName: Push Build Assets

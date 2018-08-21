@@ -13,13 +13,17 @@
   <Import Project="BuildStep.props" />
 
   <Target Name="PushBuildAssets">
+    <Error Text="The ManifestZipFilePath  property must be set on the command line." Condition="'$(ManifestZipFilePath)' == ''" />
+    <Error Text="The BuildAssetRegistryToken property must be set on the command line." Condition="'$(BuildAssetRegistryToken)' == ''" />
+    <Error Text="The MaestroApiEndpoint property must be set on the command line." Condition="'$(MaestroApiEndpoint)' == ''" />
+    
     <PropertyGroup>
-        <AssetLocationTypeValue Condition=" '$(AssetLocationType)'=='' ">Blob</AssetLocationTypeValue>
+        <AssetLocationType Condition=" '$(AssetLocationType)'=='' ">Blob</AssetLocationType>
     </PropertyGroup>
     
     <PushMetadataToBuildAssetRegistry ManifestZipFilePath="$(ManifestZipFilePath)"
                     BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
                     MaestroApiEndpoint="$(MaestroApiEndpoint)" 
-                    AssetLocationType="@(AssetLocationTypeValue)"/>
+                    AssetLocationType="$(AssetLocationType)"/>
   </Target>
 </Project>

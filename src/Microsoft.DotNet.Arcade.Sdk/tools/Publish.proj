@@ -72,7 +72,7 @@
         <ManifestArtifactData Condition="!%(IsShipping)">NonShipping=true</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
     </ItemGroup>
-    
+
     <PushToBlobFeed ExpectedFeedUrl="$(AzureFeedUrl)"
                     AccountKey="$(AzureAccountKey)"
                     ItemsToPush="@(ItemsToPushToBlobFeed)"

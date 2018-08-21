@@ -103,14 +103,14 @@ phases:
         conditions: not IndividualCI,BatchedCI,PullRequest
         steps:
         - task: CopyFiles@2
-          displayName: Get Asset Manifests
+          displayName: Gather Asset Manifests
           inputs:
             SourceFolder: '$(Build.SourcesDirectory)/artifacts/$(_BuildConfig)/AssetManifest'
             TargetFolder: '$(Build.StagingDirectory)/AssetManifests'
           continueOnError: true
           condition: and(succeeded(), or(contains(variables['_PublishType'], 'blob'), contains(variables['_PublishType'], 'myget')))
         - task: PublishBuildArtifacts@1
-          displayName: Publish Asset Manifests to VSTS
+          displayName: Push Asset Manifests
           inputs:
             PathtoPublish: '$(Build.StagingDirectory)/AssetManifests'
             PublishLocation: Container
