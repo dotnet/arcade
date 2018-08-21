@@ -38,8 +38,8 @@
 
     <ItemGroup>
       <!-- List of container files that will be opened and checked for files that need to be signed. -->
-      <ItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg"></ItemsToSign>
-      <ItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix"></ItemsToSign>
+      <ItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
+      <ItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
     </ItemGroup>
 
     <ItemGroup>
