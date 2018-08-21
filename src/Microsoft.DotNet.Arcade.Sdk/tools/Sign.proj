@@ -45,7 +45,6 @@
     <ItemGroup>
       <!-- Default certificate/strong-name to be used for all files with PKT=="31bf3856ad364e35". -->
       <StrongNameSignInfo Include="MsSharedLib72" PublicKeyToken="31bf3856ad364e35" CertificateName="MicrosoftSHA2" />
-      <StrongNameSignInfo Include="MsSharedLib72" PublicKeyToken="xxxxxx" CertificateName="Microsoft402" />
     </ItemGroup>
 
     <Microsoft.DotNet.SignTool.SignToolTask
