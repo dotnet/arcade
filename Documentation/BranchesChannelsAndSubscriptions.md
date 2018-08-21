@@ -5,42 +5,45 @@ This document describes the concepts of channels, branches and subscriptions in 
 ## Introduction
 
 For .NET Core 3, the engineering system must be able to support a number of core construction scenarios, including:
-- Builds involving custom branches for various parts of the stack (e.g. long lived feature work)
-- Builds for a new release
-- Builds involving stabilized assets (that are only published after validation)
-- Internal only builds
-- Non-validated builds
-- Speculative builds (see https://github.com/dotnet/arcade/blob/master/Documentation/Maestro.md#speculative-version-flow)
+- Builds involving custom branches for various parts of the stack (e.g. long lived feature work).
+- Builds for a new release.
+- Builds involving stabilized assets (that are only published after validation).
+- Internal only builds.
+- Non-validated builds.
+- Speculative builds (see https://github.com/dotnet/arcade/blob/master/Documentation/Maestro.md#speculative-version-flow).
 - Upstack builds on PRs.
 
 In Prodcon v2, there are a number of central principals that shape how the product is constructed:
 - The product is spread among many repositories, with inter-repo dependencies expressed as pointers to build assets.  The pointers normally take the form of version number and name of asset.
-- All product changes must be code changes.  These code changes are typically made in *Branches*.
-- Branches do not define the intention of the code in the branch.  This is defined by the *Channel* a build is assigned.
+- All product changes must be commits.  These commits alter *Branches*.
+  
+  *In prodcon v1, inter-repo dependency updates were forced via a dependency info file that was passed into the build.*
+- If the inter-repo dependency graph has a maximal depth N, then N commits are required for a complete alteration of the product output.
+- Branches do not generally define the inteded use of the code in the branch.  This is defined by the *Channel* a build of that branch is assigned.
 - Alterations in product composition (new repo dependencies) are done via a pull model, pulling new assets based on the intended purpose of those assets.  These pulls are automated using *Subscriptions*
 
 ### Branches, Channels and Subscriptions, Explained
 
 #### Branches
 
-A Git branch is a moving pointer to commits that define *potential* product content.  Branches are created and destroyed based on the individual needs of a repository and thus are not consistent across the product stack. It is important to recognize that branches are primarily a way to improve developer productivity and understanding of a repository. The git repo is really just a set of commits, and these commits are what defines potential product content, not branches.
+A Git branch is a moving pointer to the head of a tree of commits that define *potential* product content.  Branches are created and destroyed based on the individual needs of a repository and thus are not consistent across the product stack. It is also important to recognize that branches are primarily a way to improve developer productivity and understanding of a repository. The git repo is really just a set of commits, and these commits are what defines potential product content, not branches.
 
 #### Channels
 
 A "tag" that defines the purpose of a set of build assets.  Whereas commits define *potential* content, a build *creates* content based on a commit, and channels define what the created content is intended for.
 
 Channels have the following characteristics:
-- Should be consistent across the product stack, though they may not necessarily apply to all repos.  For example, all repos may produce bits for a ".NET Core vNext" channel, but only some repos (e.g. core-sdk) might produce output for a ".NET SDK 3.0.1" channel
+- Should be consistent across the product stack, though they may not necessarily apply to all repos.  For example, all repos may produce bits for a ".NET Core 3.0.0" channel, but only some repos (e.g. core-sdk) might produce output for a ".NET SDK 3.0.1xx" channel
 - Channels are applied to a set of build assets after the build is done.  This may be manual or automatic.
 - A build may applied to multiple channels.
 - Channels may be public or private.
 
 #### Subscriptions
 
-Defines the desired rules of product transformation (creation of new commits). Inter-repo dependencies are expressed as dependencies on created content (e.g. core-sdk commit abcd depends on core-setup build asset Microsoft.NetCore.App.123456). Subscriptions define a set of rules under which those inter-repo dependencies should be altered in new commits, which are typically mapped into new *branches*.
+Defines the desired rules of product transformation (creation of new commits). Inter-repo dependencies are expressed as dependencies on created content (e.g. core-sdk commit `abcd` depends on core-setup build asset `Microsoft.NetCore.App.123456`). Subscriptions define a set of rules under which those inter-repo dependencies should be altered in new commits to a target branch.
 
 Subscriptions have the following characteristics:
-- Defines a mapping between produced assets and commits.  This mapping has the form:
+- Defines a mapping between produced assets and commits. This mapping has the form:
 
     `source repo (optional) + channel + asset (optional) -> target branch + target repo`
 
@@ -57,34 +60,49 @@ When a product repository can be viewed as self-contained, the branches, channel
   - "Dev15.6 produces Dev15.6"
 - Because a single commit describes all components at a *single* specific point in time, subscriptions are combined with branches.  When a new commit is made for some component in the stack, implicitly this new component is immediately referenced by all other components.  The subscription mapping seen int the previous section is complete at commit time:
     ```
+    Starting from:
+     
+    source repo (optional) + channel + asset (optional) -> target branch + target repo
+
     source repo = target repo
     channel = target branch
-    asset (implied in build logic)
+    asset = N/A
 
+    Gives:
+    
     target repo + target branch -> target branch + target repo
     ```
-- There are perhaps a few remaining 'subscriptions' for the remaining distributed components, but there are few enough that they tend to be manually dealt with. For example, in performing a toolset upgrade, a developer is implicitly taking part in the branches, channels and subscriptions workflow.
+- There are perhaps a few remaining 'subscriptions' for the remaining distributed components, but there are few enough that they tend to be manually dealt with and have little overhead.
   1. External team checks in lots of new commits into branch X (potential content)
   2. External team produces new toolset from branch X (created content)
   3. External team declares new toolset as for a specific channel (e.g. C++ Compiler 16.x LKG).  Much of the time this is done through human communication channels (e.g. email).
-  4. Product team infers quality level of new external toolset based on the channel it was presented in (LKG)
+  4. Product team infers quality level of new external toolset based on the channel (LKG)
   5. Product maps new toolset into their repository
 
-     ```
-     source repo = toolset team's repo
-     channel = C++ Compiler 16.x LKG
-     asset = new compiler exe
-     target branch = what branches needs a 16.x LKG compiler? E.g. Main because we need stable bits
-     target repo = product repo 
+        ```
+        Starting from:
 
-     toolset team's repo + C++ Compiler 16.x LKG + new compiler exe -> Main + product repo
+        source repo (optional) + channel + asset (optional) -> target branch + target repo
+
+        source repo = toolset team's repo
+        channel = C++ Compiler 16.x LKG
+        asset = new compiler exe
+        target branch = what branches needs a 16.x LKG compiler? E.g. Main because we need stable bits
+        target repo = product repo 
+
+        Gives:
+        
+        toolset team's repo + C++ Compiler 16.x LKG + new compiler exe -> Main + product repo
+        ```
+
   6. Product team decides whether to commit new toolset based on quality results on their repo.
 
 ## Need for automation and tooling
 
 After combining the product construction principals with the .NET Core 3 scenarios, it's clear that:
-- There will be lots of branches in each repo, some long lived, some short lived.
-- There will be lots of builds for various purposes.
+- There will be many branches in each repo, some long lived, some short lived.
+- There will be many commits required for product alteration.
+- There will be many builds for various purposes.
 - Managing product alteration cannot be manual.
 
 This increased complexity needs to be tooled where possible.
@@ -107,9 +125,9 @@ Onboarding of new repositories adds new nodes to the product dependency graph. I
 Once the repository graph has more than one node (or if there is a circular dependency, like in the case of dotnet/arcade), it becomes possible to create subscriptions.  Onboarding new repositories after the initial node involves the steps above with the follolwing alterations/additions:
 
 1. No new channel is necessary if repository/branch being onboarded is producing assets for an existing channel
-2. Repository can be onboarded onto the dependency description, enabling automated update of dependencies.
+2. Repository should be onboarded onto the formal [dependency description format](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md), enabling automated update of dependencies via Darc.
 
-Let's say dotnet/corefx's master branch is the second branch to be onboarded.  dotnet/corefx has a dependency on dotnet/coreclr's outputs
+Let's say dotnet/corefx's master branch is the second branch to be onboarded.  dotnet/corefx has a dependency on dotnet/coreclr's output assets.
 
 1. Define potential content - The dotnet/corefx repo's master branch should be onboarded.
 2. Onboard dotnet/corefx to Arcade style publishing.  Arcade publishing will push build assets to shared storage locations and notify the Build Asset Registry (BAR) of new builds.
@@ -173,7 +191,7 @@ In branching for release, we want to isolate the input code from risky changes, 
 - The .NET Core 3.0 Dev channel is now defunct (we are in release shutdown)
 - A .NET Core 3.0 release channel should produced from a set of yet-created branches.  These branches would be based off the branches producing .NET Core 3.0 Dev bits.
 - Subscriptions intaking .NET Core 3.0 assets should map onto new branches and flow in the same manner as the .NET Core 3.0 Dev subscriptions
-- the .Net Core 3.1 Dev channel should be created and assigned as the default output channel of the original .NET Core 3.0 Dev channel.
+- the .Net Core 3.1 Dev channel should be created and assigned as the default output channel of the branches that previously defaulted to the .NET Core 3.0 Dev channel.
 - Because fixes in the release branches should flow back into the mainline branches, there should be automatic merge PRs opened.
 
 The new .NET Core 3.0 graph then should look like:
@@ -260,7 +278,7 @@ To perform this operation, we want to do two operations: **channel branch**, the
 
   ```
   darc channel branch '.NET Core 3.0 Dev' '.NET Core 3.0'
-  darc channel rename '.NET Core 3.0 Dev' '.NET Core 3.1'
+  darc channel rename '.NET Core 3.0 Dev' '.NET Core 3.1 Dev'
   ```
 
 ### Dev Builds
@@ -765,7 +783,12 @@ Validate the configuration and then apply the configuration using the BAR REST A
 
 #### Channel Rename
 
-Renames one channel to another.  This effectively shunts all builds, subscriptions, etc. referencing the original channel onto the new channel.
+Renames one channel to another.  In the process of renaming A to B, the following should change:
+- Subscriptions referencing A should reference B.
+- Default build branch->channel mappings referencing A should reference B.
+
+The following should **not** change
+- Existing builds assigned to channel A should not change to B.
 
 `darc channel rename <existing channel name> <new channel name>`
 
