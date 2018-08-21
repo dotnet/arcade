@@ -1,10 +1,11 @@
 namespace Microsoft.DotNet.DarcLib
 {
-    public enum CheckStatus
+    public enum CheckState
     {
         None,
         Pending,
-        Failed,
-        Succeeded
+        Error,
+        Failure,
+        Success
     }
 }
