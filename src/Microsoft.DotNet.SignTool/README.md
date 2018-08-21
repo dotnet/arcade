@@ -14,21 +14,22 @@ This is a MSBuild custom task that provides batch signing and verification for M
 
 ## Arguments
 
-`MSBuildPath` and `LogDir` are only required if `DryRun == false`.
-
 | Name                      | Type      | Required | Description                                                  |
 | ------------------------- | --------- | -------- | ------------------------------------------------------------ |
-| DryRun                    | bool      | No       | When true the list of files to be signed will be created but won't be sent to the signing server. |
+| DryRun                    | bool      | No       | When true the list of files to be signed will be created but won't be sent to the signing server. Default is false. |
 | TestSign                  | bool      | No       | When true the binaries will be test signed. The default is to real sign. |
 | ItemsToSign               | Array     | **Yes**  | This is a list of *full path* to files that need to be signed. Container files will be expanded to look for nested files that need to be signed. |
 | StrongNameSignInfo        | Array     | **Yes**  | Should store the default certificate name and strong name to be used for a given Public Key Token. See details below. |
-| FileSignInfo              | Array     | No       | Used to override the default certificate information for specific files and target frameworks combinations. See details below. |
+| FileSignInfo              | Array     | No       | Used to override the default certificate information for specific files and target frameworks combinations. If not specified default information is used or error occurs. See details below. |
 | MicroBuildCorePath        | Dir Path  | **Yes**  | Path to MicroBuild.Core package directory.                   |
-| MSBuildPath               | Exe path  | !DryRun  | Path to the MSBuild.exe binary used to run the actual signing process on MicroBuild. |
+| MSBuildPath               | Exe path  | !DryRun  | Path to the MSBuild.exe binary used to run the signing process on MicroBuild. |
 | PublishUrl                | Http URL  | No       | The URL of the feed where the package will be published. This is only used as complimentary information on the orchestration manifest file. |
-| OrchestrationManifestPath | File path | No       | Path (including file name) to where to store a manifest file containing the list of files that would be signed and their respective signing information. |
+| OrchestrationManifestPath | File path | No       | Path (including file name) to where to store a manifest file containing the list of files that would be signed and their respective signing information. If empty no manifest will be produced. |
 | TempDir                   | Dir path  | **Yes**  | Used to store temporary files during the process of calling MicroBuild signing. |
 | LogDir                    | Dir path  | !DryRun  | MSBuild binary log information from the signing rounds will be stored in this directory. |
+
+**Note:** `MSBuildPath` and `LogDir` are only required if `DryRun == false`.
+
 
 # Arguments Metadata
 
@@ -50,18 +51,18 @@ All files that match the combination of (File Name, Public Key Token, Target Fra
 The Arcade SDK will include all container files from the `$(ArtifactsPackagesDir)` and `$(VisualStudioSetupOutputPath)` folders (these properties are set [here](../src/Microsoft.DotNet.Arcade.Sdk/tools/RepoLayout.props)) in the list of containers to be looked up for. Note that only projects marked with `<IsPackable>true</IsPackable>` will be packed and copied to this folder. Here is how the Arcade SDK does it:
 
 ```xml
-<PropertyGroup>
+<ItemGroup>
 	<ItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
 	<ItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
-</PropertyGroup>
+</ItemGroup>
 ```
 
 If you **need to** add additional file(s) make sure to add them to the `ItemsToSign` list. Default signing information (Certificate Name & Strong Name) will be looked up in the `StrongNameSignInfo` property based on the Public Key Token of the file. Therefore, make sure that `StrongNameSignInfo` contains a public key token covering the files that you add to `ItemsToSign`. Here's an example:
 
 ```xml
-<PropertyGroup>
+<ItemGroup>
 	<StrongNameSignInfo Include="StrongName1" PublicKeyToken="31bf3856ad364e35" CertificateName="CertificateName1" />
-</PropertyGroup>
+</ItemGroup>
 ```
 
 It is possible to override the default signing information or skip signing specific file(s). For that you need to use the `FileSignInfo` property. For instance, in the snippet below the certificate `MyCustomCert` will be used for `My.Library.dll` when it targets `.NETStandard,Version=v2.0` and has Public Key Token `31bf3856ad364e35`:
