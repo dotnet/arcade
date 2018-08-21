@@ -1,7 +1,8 @@
 # Publishing package
 
 Currently the majority of the [tier 1 repositories](..\TierOneRepos.md) that compose .Net Core 3.0 publish:
-- Packages in NuGet.
+- Shipping packages to NuGet Gallery.
+**Note:** Release publishing will not be covered in Arcade (publishing to NuGet).
 - Packages to MyGet and Azure blob feeds (public and private blob feed).
 - Blob (MSI, zip, Linux packages).
 - Linux packages to a package repository.
@@ -24,5 +25,3 @@ Work after S141 (09/21) is under the Epic [Publish core "set" of shared packages
 - Add validation for consistency between MyGet and Azure blob feeds.
 - Add validation to verify symbol packages upload completed.
 - Ask BAR for a storage account and a key for where to publish build assets.
-
-**Note:** Release publishing will not be covered in Arcade(publishing to NuGet).
