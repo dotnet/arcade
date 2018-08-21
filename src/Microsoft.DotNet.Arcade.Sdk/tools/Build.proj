@@ -31,7 +31,7 @@
     Pack                            "true" to build NuGet packages and VS insertion manifests
     Sign                            "true" to sign built binaries
     Publish                         "true" to publish artifacts (e.g. symbols)
-    Push                            "true" to push build and asset information to the Build Asset Registry
+    PushBuildAssets                 "true" to push build and asset information to the Build Asset Registry
 
     SuppressPackageVersionRewrite   "true" to suppress rewrite of PackageVersions.props file. Temporary switch to allow repos to migrate to the official format of the version properties.
   -->
@@ -71,6 +71,7 @@
     <!-- True if Orchetrated Build assets need to be published to a blob storage -->
     <_PublishToBlobStorage>false</_PublishToBlobStorage>
     <_PublishToBlobStorage Condition="$(PB_PublishType.Contains('blob'))">true</_PublishToBlobStorage>
+    
     <_DotNetOutputBlobFeedDir>$(DotNetOutputBlobFeedDir)</_DotNetOutputBlobFeedDir>
     <_DotNetOutputBlobFeedDir Condition="'$(_DotNetOutputBlobFeedDir)' != '' and !HasTrailingSlash('$(_DotNetOutputBlobFeedDir)')">$(_DotNetOutputBlobFeedDir)\</_DotNetOutputBlobFeedDir>
 
@@ -247,6 +248,7 @@
              
     <MSBuild Projects="PushBuildAssets.proj"
              Properties="@(_PushProps)"
-             Targets="PushBuildAssets" />
+             Targets="PushBuildAssets"
+             Condition="'$(PushBuildAssets)' == 'true'" />
   </Target>
 </Project>

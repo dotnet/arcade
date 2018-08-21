@@ -4,7 +4,7 @@
     Required variables:
       ManifestZipFilePath               Path to file containing manifest files.
       BuildAssetRegistryToken           Token required to insert metadata into BAR.
-	  MaestroApiEndpoint            	Maestro's endpoint.
+      MaestroApiEndpoint            	Maestro's endpoint.
 
     Optional variables:                 
       AssetLocationType                 Type of location where the assets are stored. Default is 'Blob'.
@@ -13,8 +13,13 @@
   <Import Project="BuildStep.props" />
 
   <Target Name="PushBuildAssets">
+    <PropertyGroup>
+        <AssetLocationTypeValue Condition=" '$(AssetLocationType)'=='' ">Blob</AssetLocationTypeValue>
+    </PropertyGroup>
+    
     <PushMetadataToBuildAssetRegistry ManifestZipFilePath="$(ManifestZipFilePath)"
                     BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
-                    MaestroApiEndpoint="@(MaestroApiEndpoint)" />
+                    MaestroApiEndpoint="$(MaestroApiEndpoint)" 
+                    AssetLocationType="@(AssetLocationTypeValue)"/>
   </Target>
 </Project>

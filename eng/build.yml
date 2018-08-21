@@ -108,7 +108,7 @@ phases:
             SourceFolder: '$(Build.SourcesDirectory)/artifacts/$(_BuildConfig)/AssetManifest'
             TargetFolder: '$(Build.StagingDirectory)/AssetManifests'
           continueOnError: true
-          condition: and(succeededOrFailed(), or(contains(variables['_PublishType'], 'blob'), contains(variables['_PublishType'], 'myget')))
+          condition: and(succeeded(), or(contains(variables['_PublishType'], 'blob'), contains(variables['_PublishType'], 'myget')))
         - task: PublishBuildArtifacts@1
           displayName: Publish Asset Manifests to VSTS
           inputs:
@@ -116,4 +116,4 @@ phases:
             PublishLocation: Container
             ArtifactName: AssetManifests
           continueOnError: true
-          condition: and(succeededOrFailed(), or(contains(variables['_PublishType'], 'blob'), contains(variables['_PublishType'], 'myget')))
+          condition: and(succeeded(), or(contains(variables['_PublishType'], 'blob'), contains(variables['_PublishType'], 'myget')))
