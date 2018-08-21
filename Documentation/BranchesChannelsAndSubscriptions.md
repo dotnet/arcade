@@ -9,7 +9,7 @@ For .NET Core 3, the engineering system must be able to support a number of core
 - Builds for a new release.
 - Builds involving stabilized assets (that are only published after validation).
 - Internal only builds.
-- Non-validated builds.
+- Non-validated builds (only requirement for producing a new product is that "it builds").
 - Speculative builds (see https://github.com/dotnet/arcade/blob/master/Documentation/Maestro.md#speculative-version-flow).
 - Upstack builds on PRs.
 
@@ -19,7 +19,7 @@ In Prodcon v2, there are a number of central principals that shape how the produ
   
   *In prodcon v1, inter-repo dependency updates were forced via a dependency info file that was passed into the build.*
 - If the inter-repo dependency graph has a maximal depth N, then N commits are required for a complete alteration of the product output.
-- Branches do not generally define the inteded use of the code in the branch.  This is defined by the *Channel* a build of that branch is assigned.
+- Branches do not generally define the intended use of the code in the branch.  This is defined by the *Channels* (one or more) a build of that branch is assigned.
 - Alterations in product composition (new repo dependencies) are done via a pull model, pulling new assets based on the intended purpose of those assets.  These pulls are automated using *Subscriptions*
 
 ### Branches, Channels and Subscriptions, Explained
@@ -36,7 +36,9 @@ Channels have the following characteristics:
 - Should be consistent across the product stack, though they may not necessarily apply to all repos.  For example, all repos may produce bits for a ".NET Core 3.0.0" channel, but only some repos (e.g. core-sdk) might produce output for a ".NET SDK 3.0.1xx" channel
 - Channels are applied to a set of build assets after the build is done.  This may be manual or automatic.
 - A build may applied to multiple channels.
-- Channels may be public or private.
+- Channels may be public or internal.  This differentiates what may be done with outputs from a build.  The following rules must be followed:
+    - Builds of internal, non public branches may **not** be assigned to public channels.
+    - Build assets that are assign to an internal channel may not publish/display outputs in a public location (e.g. nuget.org, dotnet.visualstudio.com/public)
 
 #### Subscriptions
 
@@ -52,13 +54,13 @@ Subscriptions have the following characteristics:
 
 ## Branches, Channels and Subscriptions in a Monolithic repo world
 
-Those who have worked in a monolothic repo world in the past can have trouble understanding the issues that a distributed repository world introduces (though it has other signficant benefits).  To better understand these issues, let's look at branches, channels and subscriptions in the monolithic world.  A mono repo world is one where the vast majority of changes do not cross repository lines.  Even in monolothic repositories, there are still some distributed qualities.  For example, an update of a checked in toolset effectively is a pull of an external content channel (like a build of a compiler).  However, these types of changes tend to be fewer, and thus the product repository can generally be viewed as self-contained.
+Those who have worked in a monolithic repo world in the past can have trouble understanding the issues that a distributed repository world introduces (though it has other signficant benefits).  To better understand these issues, let's look at branches, channels and subscriptions in the monolithic world.  A mono repo world is one where the vast majority of changes do not cross repository lines.  Even in monolithic repositories, there are still some distributed qualities.  For example, an update of a checked in toolset effectively is a pull of an external content channel (like a build of a compiler).  However, these types of changes tend to be fewer, and thus the product repository can generally be viewed as self-contained.
 
 When a product repository can be viewed as self-contained, the branches, channels and subscriptions concepts tend to blend together.
 - A single commmit (and moving branch head by extension) covers the entire product stack.  All components are versioned in a single atomic fashion. This makes it possible to imply a *channel* based on a *branch*:
   - "Main produces vNext"
   - "Dev15.6 produces Dev15.6"
-- Because a single commit describes all components at a *single* specific point in time, subscriptions are combined with branches.  When a new commit is made for some component in the stack, implicitly this new component is immediately referenced by all other components.  The subscription mapping seen int the previous section is complete at commit time:
+- Because a single commit describes all components at a *single* specific point in time, subscriptions are combined with branches.  When a new commit is made for some component in the stack, implicitly this new component is immediately referenced by all other components.  The subscription mapping seen in the previous section is complete at commit time:
     ```
     Starting from:
      
@@ -191,10 +193,10 @@ In branching for release, we want to isolate the input code from risky changes, 
 - The .NET Core 3.0 Dev channel is now defunct (we are in release shutdown)
 - A .NET Core 3.0 release channel should produced from a set of yet-created branches.  These branches would be based off the branches producing .NET Core 3.0 Dev bits.
 - Subscriptions intaking .NET Core 3.0 assets should map onto new branches and flow in the same manner as the .NET Core 3.0 Dev subscriptions
-- the .Net Core 3.1 Dev channel should be created and assigned as the default output channel of the branches that previously defaulted to the .NET Core 3.0 Dev channel.
+- The .Net Core 3.1 Dev channel should be created and assigned as the default output channel of the branches that previously defaulted to the .NET Core 3.0 Dev channel.
 - Because fixes in the release branches should flow back into the mainline branches, there should be automatic merge PRs opened.
 
-The new .NET Core 3.0 graph then should look like:
+The new .NET Core 3.0 graph should then look like:
 
 ```
 dotnet/core-sdk
@@ -324,7 +326,7 @@ dotnet/roslyn
         -none
 ```
 
-Let's say a user wants to do work in core-setup and aspnet/universe on previously created branches for feature/foo.  Basically that means that they probably want to have the output of those branches appear in the SDK.  Remeber the Product Construction v2 rules:
+Let's say a user wants to do work in core-setup and aspnet/universe on previously created branches for feature/foo.  Basically that means that they probably want to have the output of those branches appear in the SDK.  Remember the Product Construction v2 rules:
 - Since all changes involve commits, that means that there must be a new branch of core-sdk that can take the output aspnet/universe and core-setup branches.
 - No more than one channel per input repo may flow input a repo+branch combo (e.g. cannot have dotnet/core-setup's .NET Core 3.0 and dotnet/core-setup's .NET Core 3.1 assets flow to dotnet/core-sdk master as there will be collisions)
 - A single channel may not recieve input from two different branches in the same repo.
@@ -385,7 +387,7 @@ To perform this operation, we want to do a restricted **channel branch** operati
 
 ### Non-Validated Builds
 
-Non-validated builds are useful for getting an early read on quality or ensuring that the path between repos low in the stack flow bits as often as possible.  In this mode, there is no quality gate between the repos aside from whether the repo builds or not.  This effectively looks like a channel branch into a new channel with:
+Non-validated builds are useful for getting an early read on quality or ensuring that the path between repos deep in the stack flow bits as often as possible.  In this mode, there is no quality gate between the repos aside from whether the repo builds or not.  This effectively looks like a channel branch into a new channel with:
 - Subscriptions that do not gate on quality to move bits
 - Auto-merges between upstream branches and the new channel branches.
 
@@ -680,7 +682,7 @@ darc channel branch '.NET Core 3.0' '.NET Core 3.0 Internal' --internal
 
 ### Speculative Builds and Upstack Builds on PRs
 
-These two scenarios are very much like the previous scenarios (simple channel branch operations), though with different subscriptions. The primary difference is that the creation and deletion of these graphs is fully automated (no user interaction).  One way this might be done is to have the automated systemc call the darc tool, but have it output the configuration to a json file.  The bot would then alter the configuration as needed and submit.
+These two scenarios are very much like the previous scenarios (simple channel branch operations), though with different subscriptions. The primary difference is that the creation and deletion of these graphs is fully automated (no user interaction).  One way this might be done is to have the automated system call the darc tool, but have it output the configuration to a json file.  The bot would then alter the configuration as needed and submit.
 
 A speculative build is a typical channel branch with the following modifications:
 - Restricted channel branch (single repo)
