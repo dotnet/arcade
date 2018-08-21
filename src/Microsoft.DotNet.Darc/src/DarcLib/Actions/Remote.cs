@@ -102,9 +102,13 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPr;
         }
 
-        public Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl)
+        public async Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl)
         {
-            return Task.FromResult<IList<Check>>(Array.Empty<Check>());
+            _logger.LogInformation($"Getting status checks for pull request '{pullRequestUrl}'...");
+
+            IList<Check> checks = await _gitClient.GetPullRequestChecksAsync(pullRequestUrl);
+
+            return checks;
         }
 
         public async Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null)

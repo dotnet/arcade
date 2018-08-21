@@ -41,5 +41,7 @@ namespace Microsoft.DotNet.DarcLib
         Task<string> CheckIfFileExistsAsync(string repoUri, string filePath, string branch);
 
         HttpClient CreateHttpClient(string versionOverride = null);
+
+        Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl);
     }
 }

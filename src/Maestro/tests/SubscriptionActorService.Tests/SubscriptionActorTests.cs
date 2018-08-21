@@ -220,7 +220,7 @@ namespace SubscriptionActorService.Tests
                             new List<Check>
                             {
                                 new Check(
-                                    existingPrPassedChecks ? CheckStatus.Succeeded : CheckStatus.Failed,
+                                    existingPrPassedChecks ? CheckState.Success : CheckState.Failure,
                                     "check",
                                     "https://check.stuff/1")
                             });
@@ -369,7 +369,7 @@ namespace SubscriptionActorService.Tests
                                 new List<Check>
                                 {
                                     new Check(
-                                        existingPrPassedChecks ? CheckStatus.Succeeded : CheckStatus.Failed,
+                                        existingPrPassedChecks ? CheckState.Success : CheckState.Failure,
                                         "check",
                                         "https://check.stuff/1")
                                 });
