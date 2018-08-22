@@ -2,24 +2,21 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Diagnostics;
+
 namespace Microsoft.DotNet.SignTool
 {
-    internal struct SignInfo
+    internal readonly struct SignInfo
     {
-        /// <summary>
-        /// Used to flag the state when no information about signature is available.
-        /// </summary>
-        public static SignInfo Empty = new SignInfo(empty: true, ignoreThisFile: false, alreadySigned: false);
-
         /// <summary>
         /// Used to flag that the signing for the file is not necessary.
         /// </summary>
-        public static SignInfo Ignore = new SignInfo(empty: false, ignoreThisFile: true, alreadySigned: false);
+        public static readonly SignInfo Ignore = new SignInfo(ignoreThisFile: true, alreadySigned: false);
 
         /// <summary>
         /// Used to flag that the the file is already signed.
         /// </summary>
-        public static SignInfo AlreadySigned = new SignInfo(empty: false, ignoreThisFile: false, alreadySigned: true);
+        public static readonly SignInfo AlreadySigned = new SignInfo(ignoreThisFile: false, alreadySigned: true);
 
         /// <summary>
         /// The authenticode certificate which should be used to sign the binary. This can be null
@@ -37,28 +34,27 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool IsAlreadySigned { get; }
 
-        internal bool IsEmpty { get; }
+        internal bool IsDefault => Certificate == null && StrongName == null && !ShouldIgnore && !IsAlreadySigned;
 
-        public bool ShouldSign => !IsEmpty && !IsAlreadySigned && !ShouldIgnore;
+        public bool ShouldSign => !IsDefault && !IsAlreadySigned && !ShouldIgnore;
 
-        public SignInfo(string certificate, string strongName, bool shouldIgnore, bool isEmpty, bool isAlreadySigned)
+        public SignInfo(string certificate, string strongName, bool shouldIgnore, bool isAlreadySigned)
         {
             ShouldIgnore = shouldIgnore;
-            IsEmpty = isEmpty;
             IsAlreadySigned = isAlreadySigned;
             Certificate = certificate;
             StrongName = strongName;
         }
 
-        private SignInfo(bool empty, bool ignoreThisFile, bool alreadySigned) : this(null, null, ignoreThisFile, empty, alreadySigned)
-        { }
-
-        internal SignInfo(string certificate, string strongName) : this (certificate, strongName, false, false, false)
-        { }
-
-        public override string ToString()
+        private SignInfo(bool ignoreThisFile, bool alreadySigned) 
+            : this(certificate: null, strongName: null, ignoreThisFile, alreadySigned)
         {
-            return $"Empty: {IsEmpty}; ShouldSign: {ShouldSign}; IsAlreadySigned: {IsAlreadySigned}; ShouldIgnore: {ShouldIgnore}; StrongName: {StrongName}; Certificate: {Certificate}; ";
+        }
+
+        internal SignInfo(string certificate, string strongName = null)
+            : this(certificate, strongName, shouldIgnore: false, isAlreadySigned: false)
+        {
+            Debug.Assert(certificate != null);
         }
     }
 }

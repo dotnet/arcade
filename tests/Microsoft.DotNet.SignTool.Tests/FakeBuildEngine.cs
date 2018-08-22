@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         public List<BuildWarningEventArgs> LogWarningEvents =
             new List<BuildWarningEventArgs>();
 
-        public List<FileName> filesSigned = new List<FileName>();
+        public List<FileSignInfo> filesSigned = new List<FileSignInfo>();
 
         public bool BuildProjectFile(string projectFileName, string[] targetNames, IDictionary globalProperties, IDictionary targetOutputs)
         {
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                     var certificateName = item.Element("Authenticode").Value;
                     var strongName =  item.Element("StrongName")?.Value;
 
-                    filesSigned.Add(new FileName(fileName, new SignInfo(certificateName, strongName)));
+                    filesSigned.Add(new FileSignInfo(fileName, new SignInfo(certificateName, strongName)));
                 }
 
                 return true;

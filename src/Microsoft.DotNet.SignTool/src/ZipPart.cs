@@ -7,11 +7,11 @@ namespace Microsoft.DotNet.SignTool
     internal struct ZipPart
     {
         internal string RelativeName { get; }
-        internal FileName FileName { get; }
+        internal FileSignInfo FileName { get; }
         internal string Checksum { get; }
         internal SignInfo SignInfo { get; }
 
-        internal ZipPart(string relativeName, FileName fileName, string checksum, SignInfo signInfo)
+        internal ZipPart(string relativeName, FileSignInfo fileName, string checksum, SignInfo signInfo)
         {
             RelativeName = relativeName;
             FileName = fileName;
@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.SignTool
             SignInfo = signInfo;
         }
 
-        public override string ToString() => $"{RelativeName} -> {FileName.RelativePath} -> {Checksum}";
+        public override string ToString() => $"{RelativeName} -> {FileName.Name} -> {Checksum}";
     }
 }
 

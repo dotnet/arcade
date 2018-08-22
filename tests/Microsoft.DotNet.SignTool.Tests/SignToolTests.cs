@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         }
 
         private void TestCaseEpilogue(string[] itemsToSign, Dictionary<string, SignInfo> strongNameSignInfo, 
-            Dictionary<ExplicitCertificateKey, string> signingOverridingInfos, List<FileName> expectedToBeSigned)
+            Dictionary<ExplicitCertificateKey, string> signingOverridingInfos, List<FileSignInfo> expectedToBeSigned)
         {
             if (!_isWindows) return;
 
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             // Check that all files that were expected to be discovered were actually found and the 
             // signing information for them are correct.
-            var signInfoCheck = signingInput.FilesToSign.All<FileName>(candidate =>
+            var signInfoCheck = signingInput.FilesToSign.All<FileSignInfo>(candidate =>
             {
                 return expectedToBeSigned.Exists(expected =>
                     candidate.FullPath.EndsWith(expected.FullPath) &&
@@ -119,17 +119,17 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             var expectedAsmSignInfo = new SignInfo("ArcadeCertTest", "ArcadeStrongTest");
-            var expectedNugSignInfo = new SignInfo(SignToolConstants.Certificate_NuGet, null);
-            var expectedNatSignInfo = new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2, null);
-            var expectedSigningList = new List<FileName>()
+            var expectedNugSignInfo = new SignInfo(SignToolConstants.Certificate_NuGet);
+            var expectedNatSignInfo = new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2);
+            var expectedSigningList = new List<FileSignInfo>()
             {
-                new FileName("/ContainerOne.1.0.0.nupkg", expectedNugSignInfo),
-                new FileName("/netcoreapp2.0/ProjectOne.dll", expectedAsmSignInfo),
-                new FileName("/netcoreapp2.0/ContainerOne.dll", expectedAsmSignInfo),
-                new FileName("/netcoreapp2.1/ProjectOne.dll", expectedAsmSignInfo),
-                new FileName("/netstandard2.0/ProjectOne.dll", expectedAsmSignInfo),
-                new FileName("/net461/ProjectOne.dll", expectedAsmSignInfo),
-                new FileName("/native/NativeLibrary.dll", expectedNatSignInfo),
+                new FileSignInfo("/ContainerOne.1.0.0.nupkg", expectedNugSignInfo),
+                new FileSignInfo("/netcoreapp2.0/ProjectOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/netcoreapp2.0/ContainerOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/netcoreapp2.1/ProjectOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/netstandard2.0/ProjectOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/net461/ProjectOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/native/NativeLibrary.dll", expectedNatSignInfo),
             };
 
             // Overriding information
@@ -153,23 +153,23 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             // Overriding information
             var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>() {
-                {new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", SignToolConstants.AllTargetFrameworksSentinel), "OverridedCertName" }
+                {new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c"), "OverridedCertName" }
             };
 
             var overridingCert = new SignInfo("OverridedCertName", "ArcadeStrongTest");
 
             var expectedAsmSignInfo = new SignInfo("ArcadeCertTest", "ArcadeStrongTest");
-            var expectedNugSignInfo = new SignInfo(SignToolConstants.Certificate_NuGet, null);
-            var expectedNatSignInfo = new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2, null);
-            var expectedSigningList = new List<FileName>()
+            var expectedNugSignInfo = new SignInfo(SignToolConstants.Certificate_NuGet);
+            var expectedNatSignInfo = new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2);
+            var expectedSigningList = new List<FileSignInfo>()
             {
-                new FileName("/ContainerOne.1.0.0.nupkg", expectedNugSignInfo),
-                new FileName("/netcoreapp2.0/ProjectOne.dll", overridingCert),
-                new FileName("/netcoreapp2.0/ContainerOne.dll", expectedAsmSignInfo),
-                new FileName("/netcoreapp2.1/ProjectOne.dll", overridingCert),
-                new FileName("/netstandard2.0/ProjectOne.dll", overridingCert),
-                new FileName("/net461/ProjectOne.dll", overridingCert),
-                new FileName("/native/NativeLibrary.dll", expectedNatSignInfo),
+                new FileSignInfo("/ContainerOne.1.0.0.nupkg", expectedNugSignInfo),
+                new FileSignInfo("/netcoreapp2.0/ProjectOne.dll", overridingCert),
+                new FileSignInfo("/netcoreapp2.0/ContainerOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/netcoreapp2.1/ProjectOne.dll", overridingCert),
+                new FileSignInfo("/netstandard2.0/ProjectOne.dll", overridingCert),
+                new FileSignInfo("/net461/ProjectOne.dll", overridingCert),
+                new FileSignInfo("/native/NativeLibrary.dll", expectedNatSignInfo),
             };
 
             TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
@@ -179,23 +179,26 @@ namespace Microsoft.DotNet.SignTool.Tests
         public void EmptyPKT()
         {
             // List of files to be considered for signing
-            var itemsToSign = new string[] {
+            var itemsToSign = new[] 
+            {
                 $@"Resources/EmptyPKT.dll",
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>() {
+            var signingInformation = new Dictionary<string, SignInfo>()
+            {
                 { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>() {
-                {new ExplicitCertificateKey("EmptyPKT.dll", "", SignToolConstants.AllTargetFrameworksSentinel), "OverridedCertName" }
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>()
+            {
+                { new ExplicitCertificateKey("EmptyPKT.dll"), "OverridedCertName" }
             };
 
-            var expectedSigningList = new List<FileName>()
+            var expectedSigningList = new List<FileSignInfo>()
             {
-                new FileName("EmptyPKT.dll", new SignInfo("OverridedCertName", "")),
+                new FileSignInfo("EmptyPKT.dll", new SignInfo("OverridedCertName", "")),
             };
 
             TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
@@ -216,24 +219,24 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             var expectedAsmSignInfo = new SignInfo("ArcadeCertTest", "ArcadeStrongTest");
-            var expectedNugSignInfo = new SignInfo(SignToolConstants.Certificate_NuGet, null);
-            var expectedNatSignInfo = new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2, null);
-            var expectedSigningList = new List<FileName>()
+            var expectedNugSignInfo = new SignInfo(SignToolConstants.Certificate_NuGet);
+            var expectedNatSignInfo = new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2);
+            var expectedSigningList = new List<FileSignInfo>()
             {
-                new FileName("/NestedContainer.1.0.0.nupkg", expectedNugSignInfo),
-                new FileName("ContainerOne.1.0.0.nupkg", expectedNugSignInfo),
-                new FileName("/netcoreapp2.0/ProjectOne.dll", expectedAsmSignInfo),
-                new FileName("/netcoreapp2.0/ProjectOne.dll", expectedAsmSignInfo),
-                new FileName("/netcoreapp2.0/ContainerOne.dll", expectedAsmSignInfo),
-                new FileName("/netcoreapp2.0/ContainerTwo.dll", expectedAsmSignInfo),
-                new FileName("/netcoreapp2.1/ProjectOne.dll", expectedAsmSignInfo),
-                new FileName("/netcoreapp2.1/ProjectOne.dll", expectedAsmSignInfo),
-                new FileName("/netstandard2.0/ProjectOne.dll", expectedAsmSignInfo),
-                new FileName("/netstandard2.0/ProjectOne.dll", expectedAsmSignInfo),
-                new FileName("/net461/ProjectOne.dll", expectedAsmSignInfo),
-                new FileName("/net461/ProjectOne.dll", expectedAsmSignInfo),
-                new FileName("/native/NativeLibrary.dll", expectedNatSignInfo),
-                new FileName("/native/NativeLibrary.dll", expectedNatSignInfo),
+                new FileSignInfo("/NestedContainer.1.0.0.nupkg", expectedNugSignInfo),
+                new FileSignInfo("ContainerOne.1.0.0.nupkg", expectedNugSignInfo),
+                new FileSignInfo("/netcoreapp2.0/ProjectOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/netcoreapp2.0/ProjectOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/netcoreapp2.0/ContainerOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/netcoreapp2.0/ContainerTwo.dll", expectedAsmSignInfo),
+                new FileSignInfo("/netcoreapp2.1/ProjectOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/netcoreapp2.1/ProjectOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/netstandard2.0/ProjectOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/netstandard2.0/ProjectOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/net461/ProjectOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/net461/ProjectOne.dll", expectedAsmSignInfo),
+                new FileSignInfo("/native/NativeLibrary.dll", expectedNatSignInfo),
+                new FileSignInfo("/native/NativeLibrary.dll", expectedNatSignInfo),
             };
 
             // Overriding information

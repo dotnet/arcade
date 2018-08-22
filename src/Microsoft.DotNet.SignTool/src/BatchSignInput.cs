@@ -20,14 +20,15 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// The ordered names of the files to be signed.
         /// </summary>
-        internal ImmutableArray<FileName> FilesToSign { get; }
+        internal ImmutableArray<FileSignInfo> FilesToSign { get; }
 
         /// <summary>
         /// Holds information about each of the containers that will be signed.
+        /// The key is a full file path.
         /// </summary>
-        internal ImmutableDictionary<FileName, ZipData> ZipDataMap;
+        internal ImmutableDictionary<string, ZipData> ZipDataMap;
 
-        internal BatchSignInput(ImmutableList<FileName> fileSignDataMap, ImmutableDictionary<FileName, ZipData> zipDataMap ,string publishUri)
+        internal BatchSignInput(ImmutableList<FileSignInfo> fileSignDataMap, ImmutableDictionary<string, ZipData> zipDataMap ,string publishUri)
         {
             // Use order by to make the output of this tool as predictable as possible.
             FilesToSign = fileSignDataMap.OrderBy(x => x.FullPath).ToImmutableArray();

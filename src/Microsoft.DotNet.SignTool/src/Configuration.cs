@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Packaging;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.Versioning;
@@ -25,8 +26,9 @@ namespace Microsoft.DotNet.SignTool
 
         /// <summary>
         /// This store content information for container files.
+        /// Key is a full file path.
         /// </summary>
-        private Dictionary<FileName, ZipData> _zipDataMap;
+        private Dictionary<string, ZipData> _zipDataMap;
 
         /// <summary>
         /// Path to where container files will be extracted.
@@ -48,16 +50,16 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// A list of all of the binaries that MUST be signed.
         /// </summary>
-        private List<FileName> _filesToSign = new List<FileName>();
+        private List<FileSignInfo> _filesToSign = new List<FileSignInfo>();
 
-        public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> mapPublicKeyTokenToSignInfo, Dictionary<ExplicitCertificateKey, string> overridingSigningInfo, string publishUri, TaskLoggingHelper log)
+        public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, Dictionary<ExplicitCertificateKey, string> explicitCertificates, string publishUri, TaskLoggingHelper log)
         {
             _pathToContainerUnpackingDirectory = Path.Combine(tempDir, "ZipArchiveUnpackingDirectory");
             _log = log;
             _publishUri = publishUri;
-            _defaultSignInfoForPublicKeyToken = mapPublicKeyTokenToSignInfo;
-            _explicitCertificates = overridingSigningInfo;
-            _zipDataMap = new Dictionary<FileName, ZipData>();
+            _defaultSignInfoForPublicKeyToken = defaultSignInfoForPublicKeyToken;
+            _explicitCertificates = explicitCertificates;
+            _zipDataMap = new Dictionary<string, ZipData>();
             _explicitSignList = explicitSignList;
         }
 
@@ -71,62 +73,59 @@ namespace Microsoft.DotNet.SignTool
             return new BatchSignInput(_filesToSign.ToImmutableList(), _zipDataMap.ToImmutableDictionary(), _publishUri);
         }
 
-        private FileName TrackFile(string fileFullPath)
+        private FileSignInfo TrackFile(string fileFullPath)
         {
-            var signInfo = ExtractSignInfo(fileFullPath);
-            var fileName = new FileName(fileFullPath, signInfo);
+            var fileSignInfo = ExtractSignInfo(fileFullPath);
 
-            if (signInfo.IsAlreadySigned)
+            if (fileSignInfo.SignInfo.IsAlreadySigned)
             {
                 _log.LogMessage($"Ignoring already signed file: {fileFullPath}");
             }
-            else if (signInfo.ShouldIgnore)
+            else if (fileSignInfo.SignInfo.ShouldIgnore)
             {
                 _log.LogMessage($"Ignoring signing for this file: {fileFullPath}");
             }
             else
             {
-                if (FileName.IsZipContainer(fileFullPath))
+                if (FileSignInfo.IsZipContainer(fileFullPath))
                 {
-                    if (BuildZipData(fileName, out var zipData))
+                    if (BuildZipData(fileSignInfo, out var zipData))
                     {
-                        _zipDataMap[fileName] = zipData;
+                        _zipDataMap[fileFullPath] = zipData;
                     }
                 }
 
-                _filesToSign.Add(fileName);
-
-                _log.LogMessage($"New file to sign: {fileName}");
+                _filesToSign.Add(fileSignInfo);
             }
 
-            return fileName;
+            return fileSignInfo;
         }
 
-        private SignInfo ExtractSignInfo(string fileFullPath)
+        private FileSignInfo ExtractSignInfo(string fullPath)
         {
-            if (FileName.IsPEFile(fileFullPath))
+            if (FileSignInfo.IsPEFile(fullPath))
             {
-                using (var stream = File.OpenRead(fileFullPath))
+                using (var stream = File.OpenRead(fullPath))
                 {
                     if (ContentUtil.IsAuthenticodeSigned(stream))
                     {
-                        return SignInfo.AlreadySigned;
+                        return new FileSignInfo(fullPath, SignInfo.AlreadySigned);
                     }
                 }
 
-                if (!IsManaged(fileFullPath))
+                if (!IsManaged(fullPath))
                 {
-                    return new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2, null);
+                    return new FileSignInfo(fullPath, new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2));
                 }
                 else
                 {
-                    var fileAsm = System.Reflection.AssemblyName.GetAssemblyName(fileFullPath);
+                    var fileAsm = AssemblyName.GetAssemblyName(fullPath);
                     var pktBytes = fileAsm.GetPublicKeyToken();
                     var publicKeyToken = (pktBytes == null || pktBytes.Length == 0) ? string.Empty : string.Join("", pktBytes.Select(b => b.ToString("x2")));
-                    var targetFramework = GetTargetFrameworkName(fileFullPath).FullName;
-                    var fileName = Path.GetFileName(fileFullPath);
+                    var targetFramework = GetTargetFrameworkName(fullPath).FullName;
+                    var fileName = Path.GetFileName(fullPath);
 
-                    var keyForAllTargets = new ExplicitCertificateKey(fileName, publicKeyToken, SignToolConstants.AllTargetFrameworksSentinel);
+                    var keyForAllTargets = new ExplicitCertificateKey(fileName, publicKeyToken);
                     var keyForSpecificTarget = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework);
 
                     // Do we need to override the default certificate this file ?
@@ -136,7 +135,7 @@ namespace Microsoft.DotNet.SignTool
                         // If has overriding info, is it for ignoring the file?
                         if (overridingCertificate != null && overridingCertificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel))
                         {
-                            return SignInfo.Ignore; // should ignore this file
+                            return new FileSignInfo(fullPath, SignInfo.Ignore); // should ignore this file
                         }
                         // Otherwise, just use the overriding info if present
                     }
@@ -155,24 +154,23 @@ namespace Microsoft.DotNet.SignTool
                     if (_defaultSignInfoForPublicKeyToken.ContainsKey(publicKeyToken))
                     {
                         var signInfo = _defaultSignInfoForPublicKeyToken[publicKeyToken];
-
                         var certificate = overridingCertificate ?? signInfo.Certificate;
 
-                        return new SignInfo(certificate, signInfo.StrongName, signInfo.ShouldIgnore, signInfo.IsEmpty, signInfo.IsAlreadySigned);
+                        return new FileSignInfo(fullPath, new SignInfo(certificate, signInfo.StrongName, signInfo.ShouldIgnore, signInfo.IsAlreadySigned), targetFramework);
                     }
 
-                    _log.LogError($"SignInfo for file ({fileFullPath}) with Public Key Token {publicKeyToken} not found.");
-                    return SignInfo.Empty;
+                    _log.LogError($"SignInfo for file '{fullPath}' with PublicKeyToken='{publicKeyToken}' not found.");
+                    return default;
                 }
             }
-            else if (FileName.IsZipContainer(fileFullPath))
+            else if (FileSignInfo.IsZipContainer(fullPath))
             {
-                return new SignInfo(FileName.IsNupkg(fileFullPath) ? SignToolConstants.Certificate_NuGet : SignToolConstants.Certificate_VsixSHA2, null);
+                return new FileSignInfo(fullPath, new SignInfo(FileSignInfo.IsNupkg(fullPath) ? SignToolConstants.Certificate_NuGet : SignToolConstants.Certificate_VsixSHA2));
             }
             else
             {
-                _log.LogWarning($"Unidentified artifact type: {fileFullPath}");
-                return SignInfo.Ignore;
+                _log.LogWarning($"Unidentified artifact type: {fullPath}");
+                return new FileSignInfo(fullPath, SignInfo.Ignore);
             }
         }
 
@@ -180,8 +178,7 @@ namespace Microsoft.DotNet.SignTool
         {
             try
             {
-                System.Reflection.AssemblyName testAssembly = System.Reflection.AssemblyName.GetAssemblyName(filePath);
-
+                AssemblyName.GetAssemblyName(filePath);
                 return true;
             }
             catch (Exception)
@@ -267,15 +264,15 @@ namespace Microsoft.DotNet.SignTool
         /// Build up the <see cref="ZipData"/> instance for a given zip container. This will also report any consistency
         /// errors found when examining the zip archive.
         /// </summary>
-        private bool BuildZipData(FileName zipFileName, out ZipData zipData)
+        private bool BuildZipData(FileSignInfo zipFileSignInfo, out ZipData zipData)
         {
-            Debug.Assert(zipFileName.IsZipContainer());
+            Debug.Assert(zipFileSignInfo.IsZipContainer());
 
             Package package = null;
 
             try
             {
-                package = Package.Open(zipFileName.FullPath, FileMode.Open, FileAccess.Read);
+                package = Package.Open(zipFileSignInfo.FullPath, FileMode.Open, FileAccess.Read);
                 var packageTempDir = Path.Combine(_pathToContainerUnpackingDirectory, Guid.NewGuid().ToString());
                 var nestedParts = new List<ZipPart>();
 
@@ -285,7 +282,7 @@ namespace Microsoft.DotNet.SignTool
                     var packagePartTempName = Path.Combine(packageTempDir, relativePath);
                     var packagePartTempDirectory = Path.GetDirectoryName(packagePartTempName);
 
-                    if (!FileName.IsZipContainer(packagePartTempName) && !FileName.IsPEFile(packagePartTempName))
+                    if (!FileSignInfo.IsZipContainer(packagePartTempName) && !FileSignInfo.IsPEFile(packagePartTempName))
                     {
                         continue;
                     }
@@ -303,7 +300,7 @@ namespace Microsoft.DotNet.SignTool
                     nestedParts.Add(new ZipPart(relativePath, partFileName, null, partFileName.SignInfo));
                 }
 
-                zipData = new ZipData(zipFileName, nestedParts.ToImmutableList());
+                zipData = new ZipData(zipFileSignInfo, nestedParts.ToImmutableList());
 
                 return true;
             }

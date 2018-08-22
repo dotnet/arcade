@@ -109,12 +109,12 @@ namespace Microsoft.DotNet.SignTool
 
         private void RemovePublicSign()
         {
-            foreach (var name in _batchData.FilesToSign.Where(x => x.IsPEFile()))
+            foreach (var fileSignInfo in _batchData.FilesToSign.Where(x => x.IsPEFile()))
             {
-                if (name.SignInfo.StrongName != null)
+                if (fileSignInfo.SignInfo.StrongName != null)
                 {
-                    _log.LogMessage($"Removing public sign: '{name}'");
-                    _signTool.RemovePublicSign(name.FullPath);
+                    _log.LogMessage($"Removing public sign: '{fileSignInfo.Name}'");
+                    _signTool.RemovePublicSign(fileSignInfo.FullPath);
                 }
             }
         }
@@ -128,53 +128,55 @@ namespace Microsoft.DotNet.SignTool
             // bugs if repeated runs use the same ordering.
             var toSignList = _batchData.FilesToSign.ToList();
             var round = 0;
-            var signedSet = new HashSet<FileName>();
+            var signedSet = new HashSet<string>();
 
-            bool signFiles(IEnumerable<FileName> files)
+            bool signFiles(IEnumerable<FileSignInfo> files)
             {
-                var filesToSign = files.Where(info => !info.SignInfo.IsEmpty).ToArray();
+                var filesToSign = files.Where(info => !info.SignInfo.IsDefault).ToArray();
 
                 _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
                 foreach (var file in filesToSign)
                 {
                     _log.LogMessage(MessageImportance.Low,
-                        $"File '{file.FullPath}' Certificate='{file.SignInfo.Certificate}'" + 
+                        $"File '{file.Name}'" + 
+                        (file.TargetFramework != null ? $" TargetFramework='{file.TargetFramework}'" : "") +
+                        $" Certificate='{file.SignInfo.Certificate}'" + 
                         (file.SignInfo.StrongName != null ? $" StrongName='{file.SignInfo.StrongName}'" : ""));
                 }
 
                 return _signTool.Sign(_buildEngine, round, filesToSign);
             }
 
-            void repackFiles(IEnumerable<FileName> files)
+            void repackFiles(IEnumerable<FileSignInfo> files)
             {
                 foreach (var file in files)
                 {
                     if (file.IsZipContainer())
                     {
-                        _log.LogMessage($"Repacking container: '{file}'");
-                        Repack(_batchData.ZipDataMap[file]);
+                        _log.LogMessage($"Repacking container: '{file.Name}'");
+                        Repack(_batchData.ZipDataMap[file.FullPath]);
                     }
                 }
             }
 
             // Is this file ready to be signed? That is are all of the items that it depends on already
             // signed?
-            bool isReadyToSign(FileName fileName)
+            bool isReadyToSign(FileSignInfo fileName)
             {
                 if (!fileName.IsZipContainer())
                 {
                     return true;
                 }
 
-                var zipData = _batchData.ZipDataMap[fileName];
-                return zipData.NestedParts.All(x => !x.SignInfo.ShouldSign || signedSet.Contains(x.FileName));
+                var zipData = _batchData.ZipDataMap[fileName.FullPath];
+                return zipData.NestedParts.All(x => !x.SignInfo.ShouldSign || signedSet.Contains(x.FileName.FullPath));
             }
 
             // Extract the next set of files that should be signed. This is the set of files for which all of the
             // dependencies have been signed.
-            List<FileName> extractNextGroup()
+            List<FileSignInfo> extractNextGroup()
             {
-                var list = new List<FileName>();
+                var list = new List<FileSignInfo>();
                 var i = 0;
                 while (i < toSignList.Count)
                 {
@@ -208,7 +210,7 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 round++;
-                list.ForEach(x => signedSet.Add(x));
+                list.ForEach(x => signedSet.Add(x.FullPath));
             }
 
             return true;
@@ -219,7 +221,7 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         private void Repack(ZipData vsixData)
         {
-            using (var package = Package.Open(vsixData.Name.FullPath, FileMode.Open, FileAccess.ReadWrite))
+            using (var package = Package.Open(vsixData.FileSignInfo.FullPath, FileMode.Open, FileAccess.ReadWrite))
             {
                 foreach (var part in package.GetParts())
                 {
@@ -311,7 +313,7 @@ namespace Microsoft.DotNet.SignTool
                 }
                 else if (fileName.IsZipContainer())
                 {
-                    var zipData = _batchData.ZipDataMap[fileName];
+                    var zipData = _batchData.ZipDataMap[fileName.FullPath];
                     using (var package = Package.Open(fileName.FullPath, FileMode.Open, FileAccess.Read))
                     {
                         foreach (var part in package.GetParts())
