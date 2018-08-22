@@ -48,6 +48,7 @@ namespace Maestro.Web.Controllers
         }
 
         [GitHubWebHook(EventName = "installation")]
+        [ValidateModelState]
         public async Task<IActionResult> InstallationHandler(JObject data)
         {
             var ser = new SimpleJsonSerializer();
@@ -67,6 +68,7 @@ namespace Maestro.Web.Controllers
         }
 
         [GitHubWebHook(EventName = "installation_repositories")]
+        [ValidateModelState]
         public async Task<IActionResult> InstallationRepositoriesHandler(JObject data)
         {
             var ser = new SimpleJsonSerializer();
