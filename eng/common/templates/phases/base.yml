@@ -30,7 +30,6 @@ parameters:
   #           if 'true', these "variables" must be specified in the variables object or as part of the queue matrix
   #             _TeamName - the name of your team
   #             _SignType - 'test' or 'real'
-  #             _UseEsrpSigning - 'true' or 'false'
   enableMicrobuild: false
 
   # Build.Reason for anonymous builds - https://docs.microsoft.com/en-us/vsts/pipelines/build/variables?view=vsts#build-variables
