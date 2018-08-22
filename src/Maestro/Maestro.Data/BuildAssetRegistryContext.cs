@@ -92,7 +92,7 @@ namespace Maestro.Data
         {
             return RepoInstallations.Where(ri => ri.Repository == repositoryUrl)
                 .Select(ri => ri.InstallationId)
-                .FirstAsync();
+                .FirstOrDefaultAsync();
         }
     }
 

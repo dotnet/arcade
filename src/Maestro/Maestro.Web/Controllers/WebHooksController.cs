@@ -53,8 +53,25 @@ namespace Maestro.Web.Controllers
         {
             var ser = new SimpleJsonSerializer();
             var payload = ser.Deserialize<InstallationEvent>(data.ToString());
-            await SynchronizeInstallationRepositoriesAsync(payload.Installation.Id);
+            switch (payload.Action)
+            {
+                case "deleted":
+                    await RemoveInstallationRepositoriesAsync(payload.Installation.Id);
+                    break;
+                case "created":
+                    await SynchronizeInstallationRepositoriesAsync(payload.Installation.Id);
+                    break;
+                default:
+                    Logger.LogError("Received Unknown action '{action}' for installation event. Payload: {payload}", payload.Action, data.ToString());
+                    break;
+            }
             return Ok();
+        }
+
+        private async Task RemoveInstallationRepositoriesAsync(long installationId)
+        {
+            Context.RepoInstallations.RemoveRange(await Context.RepoInstallations.Where(ri => ri.InstallationId == installationId).ToListAsync());
+            await Context.SaveChangesAsync();
         }
 
         public class InstallationRepositoriesEvent
@@ -86,16 +103,35 @@ namespace Maestro.Web.Controllers
 
         private async Task SynchronizeInstallationRepositoriesAsync(long installationId)
         {
-            var token = await GitHubTokenProvider.GetTokenForInstallation(installationId);
+            string token = await GitHubTokenProvider.GetTokenForInstallation(installationId);
             IReadOnlyList<Repository> gitHubRepos = await GetAllInstallationRepositories(token);
-            var currentRepositories = gitHubRepos.Select(r => r.HtmlUrl).ToList();
-            var oldRepositories = await Context.RepoInstallations.Where(ri => ri.InstallationId == installationId).ToListAsync();
 
-            var toRemove = oldRepositories.Where(ri => !currentRepositories.Contains(ri.Repository));
-            var toAdd = currentRepositories.Where(r => oldRepositories.All(ri => ri.Repository != r))
-                .Select(r => new RepoInstallation {InstallationId = installationId, Repository = r});
-            Context.RepoInstallations.RemoveRange(toRemove);
-            Context.RepoInstallations.AddRange(toAdd);
+            HashSet<string> toRemove = (await Context.RepoInstallations.Where(ri => ri.InstallationId == installationId)
+                .Select(ri => ri.Repository)
+                .ToListAsync())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            foreach (Repository repo in gitHubRepos)
+            {
+                toRemove.Remove(repo.HtmlUrl);
+
+                RepoInstallation existing = await Context.RepoInstallations.FindAsync(repo.HtmlUrl);
+                if (existing == null)
+                {
+                    Context.RepoInstallations.Add(
+                        new RepoInstallation {Repository = repo.HtmlUrl, InstallationId = installationId});
+                }
+                else
+                {
+                    existing.InstallationId = installationId;
+                }
+            }
+
+            foreach (string repository in toRemove)
+            {
+                Context.RepoInstallations.Remove(await Context.RepoInstallations.FindAsync(repository));
+            }
+
             await Context.SaveChangesAsync();
         }
 

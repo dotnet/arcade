@@ -50,7 +50,7 @@ namespace Maestro.Web
                             OnCreatingTicket = async context =>
                             {
                                 var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Startup>>();
-                                logger.LogInformation("Reading user roles from github.");
+                                logger.LogInformation("Reading user roles from GitHub.");
                                 foreach (string role in await GetGithubRolesAsync(context.AccessToken))
                                 {
                                     context.Identity.AddClaim(
@@ -192,7 +192,7 @@ namespace Maestro.Web
             services.AddAuthorization(
                 options =>
                 {
-                    options.AddPolicy("msft", policy =>
+                    options.AddPolicy(MsftAuthorizationPolicyName, policy =>
                         {
                             policy.RequireAuthenticatedUser()
                                 .RequireRole("github:team:dotnet:dnceng");
@@ -202,9 +202,11 @@ namespace Maestro.Web
             services.Configure<MvcOptions>(
                 options =>
                 {
-                    options.Conventions.Add(new DefaultAuthorizeActionModelConvention("msft"));
+                    options.Conventions.Add(new DefaultAuthorizeActionModelConvention(MsftAuthorizationPolicyName));
                 });
         }
+
+        public const string MsftAuthorizationPolicyName = "msft";
 
         private bool ShouldUpdateUser(ApplicationUser user)
         {

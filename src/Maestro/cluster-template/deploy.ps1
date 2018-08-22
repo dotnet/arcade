@@ -8,6 +8,7 @@ param(
  [string]
  $subscriptionName,
 
+ [Parameter(Mandatory=$True)]
  [string]
  $location,
 

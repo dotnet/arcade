@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DependencyUpdater;
 using Maestro.Contracts;
 using Maestro.Data;
 using Maestro.Data.Models;
