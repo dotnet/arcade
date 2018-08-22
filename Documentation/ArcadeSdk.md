@@ -83,7 +83,6 @@ eng
     CIBuild.cmd
     cibuild.sh
     ...
-  SignToolData.json
   Versions.props
   FixedVersions.props (optional)
   Tools.props (optional)
@@ -107,9 +106,6 @@ test.sh
 
 The Arcade SDK requires bootstrapper scripts to be present in the repo.
 The scripts in this directory shall be present and the same across all repositories using Arcade SDK.
-
-#### /eng/SignToolData.json: Sign Tool configuration
-The file is present in the repo and describes how build outputs should be signed.
 
 #### /eng/Versions.props: A single file listing component versions and used tools
 The file is present in the repo and defines versions of all dependencies used in the repository, the NuGet feeds they should be restored from and the version of the components produced by the repo build.
