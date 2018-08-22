@@ -189,13 +189,13 @@ namespace Microsoft.DotNet.SignTool
                         return null;
                     }
 
-                    if (!IsValidPublicKeyToken(publicKeyToken))
+                    if (!string.IsNullOrEmpty(publicKeyToken) && !IsValidPublicKeyToken(publicKeyToken))
                     {
                         Log.LogError($"This PublicKeyToken metadata for FileSignInfo isn't valid: {publicKeyToken}");
                         return null;
                     }
 
-                    var outerKey = new ExplicitCertificateKey(fileName, publicKeyToken.ToLower(), targetFramework);
+                    var outerKey = new ExplicitCertificateKey(fileName, publicKeyToken?.ToLower(), targetFramework);
 
                     if (mapOverridingSignInfos.TryGetValue(outerKey, out var existingCert))
                     {
