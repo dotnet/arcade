@@ -133,9 +133,9 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var signingOverridingINformation = new Dictionary<ExplicitCertificateKey, string>();
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
 
-            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingINformation, expectedSigningList);
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
         }
 
         [Fact]
@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var signingOverridingINformation = new Dictionary<ExplicitCertificateKey, string>() {
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>() {
                 {new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", SignToolConstants.AllTargetFrameworksSentinel), "OverridedCertName" }
             };
 
@@ -172,7 +172,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 new FileName("/native/NativeLibrary.dll", expectedNatSignInfo),
             };
 
-            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingINformation, expectedSigningList);
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
         }
 
         [Fact]
@@ -189,7 +189,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var signingOverridingINformation = new Dictionary<ExplicitCertificateKey, string>() {
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>() {
                 {new ExplicitCertificateKey("EmptyPKT.dll", "", SignToolConstants.AllTargetFrameworksSentinel), "OverridedCertName" }
             };
 
@@ -198,7 +198,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 new FileName("EmptyPKT.dll", new SignInfo("OverridedCertName", "")),
             };
 
-            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingINformation, expectedSigningList);
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
         }
 
 
@@ -237,9 +237,9 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var signingOverridingINformation = new Dictionary<ExplicitCertificateKey, string>();
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
 
-            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingINformation, expectedSigningList);
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
         }
     }
 }
