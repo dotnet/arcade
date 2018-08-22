@@ -112,7 +112,7 @@ try {
   }
   if (Test-Path $InstallBin) {
     Write-Host "Native tools are available from" (Convert-Path -Path $InstallBin)
-    if (Test-Path env:BUILD_BUILDNUMBER) {
+    if ($env:BUILD_BUILDNUMBER) {
         Write-Host "##vso[task.prependpath]" (Convert-Path -Path $InstallBin)
     }
   }
