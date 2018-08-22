@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using DependencyUpdater;
 using FluentAssertions;
 using Maestro.Data;
 using Maestro.Data.Models;

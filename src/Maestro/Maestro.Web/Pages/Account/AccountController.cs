@@ -103,7 +103,7 @@ namespace Maestro.Web.Pages.Account
 
                 result = await UserManager.SetAuthenticationTokenAsync(
                     user,
-                    info.ProviderKey,
+                    info.LoginProvider,
                     "access_token",
                     accessToken);
                 if (!result.Succeeded)

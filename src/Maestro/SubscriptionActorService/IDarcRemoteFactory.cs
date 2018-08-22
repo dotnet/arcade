@@ -5,7 +5,7 @@
 using System.Threading.Tasks;
 using Microsoft.DotNet.DarcLib;
 
-namespace DependencyUpdater
+namespace SubscriptionActorService
 {
     public interface IDarcRemoteFactory
     {

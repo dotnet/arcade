@@ -93,6 +93,10 @@ namespace DependencyUpdater
 
                     await Task.Delay(1000, cancellationToken);
                 }
+                catch (TaskCanceledException tcex) when (tcex.CancellationToken == cancellationToken)
+                {
+                    // ignore
+                }
                 catch (Exception ex)
                 {
                     Logger.LogError(ex, "Processing queue messages");

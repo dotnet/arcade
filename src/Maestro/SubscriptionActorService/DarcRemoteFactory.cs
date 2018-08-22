@@ -8,7 +8,7 @@ using Microsoft.DotNet.DarcLib;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace DependencyUpdater
+namespace SubscriptionActorService
 {
     public class DarcRemoteFactory : IDarcRemoteFactory
     {
@@ -31,6 +31,10 @@ namespace DependencyUpdater
             var settings = new DarcSettings();
             if (repoUrl.Contains("github.com"))
             {
+                if (installationId == default)
+                {
+                    throw new SubscriptionException($"No installation is avaliable for repository '{repoUrl}'");
+                }
                 settings.GitType = GitRepoType.GitHub;
                 settings.PersonalAccessToken = await GitHubTokenProvider.GetTokenForInstallation(installationId);
             }

@@ -29,7 +29,9 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(List<DefaultChannel>))]
         public IActionResult List(string repository = null, string branch = null, int? channelId = null)
         {
-            IQueryable<Data.Models.DefaultChannel> query = _context.DefaultChannels.AsNoTracking();
+            IQueryable<Data.Models.DefaultChannel> query = _context.DefaultChannels
+                .Include(dc => dc.Channel)
+                .AsNoTracking();
 
             if (!string.IsNullOrEmpty(repository))
             {
