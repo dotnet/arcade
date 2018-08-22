@@ -174,7 +174,34 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingINformation, expectedSigningList);
         }
-        
+
+        [Fact]
+        public void EmptyPKT()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new string[] {
+                $@"Resources/EmptyPKT.dll",
+            };
+
+            // Default signing information
+            var signingInformation = new Dictionary<string, SignInfo>() {
+                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+            };
+
+            // Overriding information
+            var signingOverridingINformation = new Dictionary<ExplicitCertificateKey, string>() {
+                {new ExplicitCertificateKey("EmptyPKT.dll", "", SignToolConstants.AllTargetFrameworksSentinel), "OverridedCertName" }
+            };
+
+            var expectedSigningList = new List<FileName>()
+            {
+                new FileName("EmptyPKT.dll", new SignInfo("OverridedCertName", "")),
+            };
+
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingINformation, expectedSigningList);
+        }
+
+
         [Fact]
         public void NestedContainer()
         {

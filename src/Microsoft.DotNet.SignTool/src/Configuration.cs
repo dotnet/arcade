@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     var fileAsm = System.Reflection.AssemblyName.GetAssemblyName(fileFullPath);
                     var pktBytes = fileAsm.GetPublicKeyToken();
-                    var publicKeyToken = string.Join("", pktBytes.Select(b => b.ToString("x2")));
+                    var publicKeyToken = (pktBytes == null || pktBytes.Length == 0) ? string.Empty : string.Join("", pktBytes.Select(b => b.ToString("x2")));
                     var targetFramework = GetTargetFrameworkName(fileFullPath).FullName;
                     var fileName = Path.GetFileName(fileFullPath);
 
@@ -141,7 +141,7 @@ namespace Microsoft.DotNet.SignTool
                         // Otherwise, just use the overriding info if present
                     }
 
-                    if (string.IsNullOrEmpty(publicKeyToken))
+                    if (publicKeyToken == string.Empty)
                     {
                         if (string.IsNullOrEmpty(overridingCertificate))
                         {
