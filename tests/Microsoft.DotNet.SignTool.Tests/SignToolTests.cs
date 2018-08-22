@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         [Fact]
         public void EmptySigningList()
         {
-            var ExplicitSignItems = new string[1];
+            var ExplicitSignItems = new string[0];
 
             var StrongNameSignInfo = new Dictionary<string, SignInfo>();
 
@@ -198,7 +198,7 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             var expectedSigningList = new List<FileSignInfo>()
             {
-                new FileSignInfo("EmptyPKT.dll", new SignInfo("OverridedCertName", "")),
+                new FileSignInfo("EmptyPKT.dll", new SignInfo("OverridedCertName")),
             };
 
             TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);

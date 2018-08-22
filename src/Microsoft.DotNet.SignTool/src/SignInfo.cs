@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Diagnostics;
 
 namespace Microsoft.DotNet.SignTool
@@ -56,5 +57,8 @@ namespace Microsoft.DotNet.SignTool
         {
             Debug.Assert(certificate != null);
         }
+
+        internal SignInfo WithCertificateName(string value)
+            => new SignInfo(value, StrongName, ShouldIgnore, IsAlreadySigned);
     }
 }

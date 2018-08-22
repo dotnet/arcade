@@ -18,24 +18,16 @@ namespace Microsoft.DotNet.SignTool
         internal readonly string TargetFramework;
 
         internal static bool IsPEFile(string fileFullPath)
-        {
-            return !string.IsNullOrWhiteSpace(fileFullPath) && (Path.GetExtension(fileFullPath) == ".exe" || Path.GetExtension(fileFullPath) == ".dll");
-        }
+            => !string.IsNullOrWhiteSpace(fileFullPath) && (Path.GetExtension(fileFullPath) == ".exe" || Path.GetExtension(fileFullPath) == ".dll");
 
         internal static bool IsVsix(string fileFullPath)
-        {
-            return !string.IsNullOrWhiteSpace(fileFullPath) && Path.GetExtension(fileFullPath).Equals(".vsix", StringComparison.OrdinalIgnoreCase);
-        }
+            => !string.IsNullOrWhiteSpace(fileFullPath) && Path.GetExtension(fileFullPath).Equals(".vsix", StringComparison.OrdinalIgnoreCase);
 
         internal static bool IsNupkg(string fileFullPath)
-        {
-            return !string.IsNullOrWhiteSpace(fileFullPath) && Path.GetExtension(fileFullPath).Equals(".nupkg", StringComparison.OrdinalIgnoreCase);
-        }
+            => !string.IsNullOrWhiteSpace(fileFullPath) && Path.GetExtension(fileFullPath).Equals(".nupkg", StringComparison.OrdinalIgnoreCase);
 
         internal static bool IsZipContainer(string fileFullPath)
-        {
-            return IsVsix(fileFullPath) || IsNupkg(fileFullPath);
-        }
+            => IsVsix(fileFullPath) || IsNupkg(fileFullPath);
 
         internal bool IsPEFile() => IsPEFile(Name);
 

@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 var zipData = _batchData.ZipDataMap[fileName.FullPath];
-                return zipData.NestedParts.All(x => !x.SignInfo.ShouldSign || signedSet.Contains(x.FileName.FullPath));
+                return zipData.NestedParts.All(x => !x.FileSignInfo.SignInfo.ShouldSign || signedSet.Contains(x.FileSignInfo.FullPath));
             }
 
             // Extract the next set of files that should be signed. This is the set of files for which all of the
@@ -232,7 +232,7 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    using (var stream = File.OpenRead(vsixPart.Value.FileName.FullPath))
+                    using (var stream = File.OpenRead(vsixPart.Value.FileSignInfo.FullPath))
                     using (var partStream = part.GetStream(FileMode.Open, FileAccess.ReadWrite))
                     {
                         stream.CopyTo(partStream);
@@ -320,7 +320,7 @@ namespace Microsoft.DotNet.SignTool
                         {
                             var relativeName = GetPartRelativeFileName(part);
                             var zipPart = zipData.FindNestedBinaryPart(relativeName);
-                            if (!zipPart.HasValue || !zipPart.Value.FileName.IsPEFile())
+                            if (!zipPart.HasValue || !zipPart.Value.FileSignInfo.IsPEFile())
                             {
                                 continue;
                             }

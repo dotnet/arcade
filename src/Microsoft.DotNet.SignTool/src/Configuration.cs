@@ -54,6 +54,11 @@ namespace Microsoft.DotNet.SignTool
 
         public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, Dictionary<ExplicitCertificateKey, string> explicitCertificates, string publishUri, TaskLoggingHelper log)
         {
+            Debug.Assert(tempDir != null);
+            Debug.Assert(explicitSignList != null && !explicitSignList.Any(i => i == null));
+            Debug.Assert(defaultSignInfoForPublicKeyToken != null);
+            Debug.Assert(explicitCertificates != null);
+
             _pathToContainerUnpackingDirectory = Path.Combine(tempDir, "ZipArchiveUnpackingDirectory");
             _log = log;
             _publishUri = publishUri;
@@ -76,7 +81,6 @@ namespace Microsoft.DotNet.SignTool
         private FileSignInfo TrackFile(string fileFullPath)
         {
             var fileSignInfo = ExtractSignInfo(fileFullPath);
-
             if (fileSignInfo.SignInfo.IsAlreadySigned)
             {
                 _log.LogMessage($"Ignoring already signed file: {fileFullPath}");
@@ -113,67 +117,61 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
 
-                if (!IsManaged(fullPath))
+                GetPEInfo(fullPath, out var isManaged, out var publicKeyToken, out var targetFramework);
+
+                // Get the default sign info based on the PKT, if applicable:
+                if (!isManaged || !_defaultSignInfoForPublicKeyToken.TryGetValue(publicKeyToken, out var signInfo))
                 {
-                    return new FileSignInfo(fullPath, new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2));
+                    signInfo = new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2);
                 }
-                else
+
+                // Check if we have more specific sign info:
+                var fileName = Path.GetFileName(fullPath);
+                if (_explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out var overridingCertificate) ||
+                    _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out overridingCertificate) ||
+                    _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName), out overridingCertificate))
                 {
-                    var fileAsm = AssemblyName.GetAssemblyName(fullPath);
-                    var pktBytes = fileAsm.GetPublicKeyToken();
-                    var publicKeyToken = (pktBytes == null || pktBytes.Length == 0) ? string.Empty : string.Join("", pktBytes.Select(b => b.ToString("x2")));
-                    var targetFramework = GetTargetFrameworkName(fullPath);
-                    var fileName = Path.GetFileName(fullPath);
-
-                    var keyForAllTargets = new ExplicitCertificateKey(fileName, publicKeyToken);
-                    var keyForSpecificTarget = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework);
-
-                    // Do we need to override the default certificate this file ?
-                    if (_explicitCertificates.TryGetValue(keyForSpecificTarget, out var overridingCertificate) ||
-                        _explicitCertificates.TryGetValue(keyForAllTargets, out overridingCertificate))
+                    // If has overriding info, is it for ignoring the file?
+                    if (overridingCertificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel))
                     {
-                        // If has overriding info, is it for ignoring the file?
-                        if (overridingCertificate != null && overridingCertificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel))
-                        {
-                            return new FileSignInfo(fullPath, SignInfo.Ignore); // should ignore this file
-                        }
-                        // Otherwise, just use the overriding info if present
+                        return new FileSignInfo(fullPath, SignInfo.Ignore);
                     }
 
-                    if (_defaultSignInfoForPublicKeyToken.ContainsKey(publicKeyToken))
-                    {
-                        var signInfo = _defaultSignInfoForPublicKeyToken[publicKeyToken];
-                        var certificate = overridingCertificate ?? signInfo.Certificate;
-
-                        return new FileSignInfo(fullPath, new SignInfo(certificate, signInfo.StrongName, signInfo.ShouldIgnore, signInfo.IsAlreadySigned), targetFramework);
-                    }
-
-                    _log.LogError($"SignInfo for file '{fullPath}' with PublicKeyToken='{publicKeyToken}' not found.");
-                    return default;
+                    signInfo = signInfo.WithCertificateName(overridingCertificate);
                 }
+
+                return new FileSignInfo(fullPath, signInfo);
             }
-            else if (FileSignInfo.IsZipContainer(fullPath))
+
+            if (FileSignInfo.IsZipContainer(fullPath))
             {
                 return new FileSignInfo(fullPath, new SignInfo(FileSignInfo.IsNupkg(fullPath) ? SignToolConstants.Certificate_NuGet : SignToolConstants.Certificate_VsixSHA2));
             }
-            else
-            {
-                _log.LogWarning($"Unidentified artifact type: {fullPath}");
-                return new FileSignInfo(fullPath, SignInfo.Ignore);
-            }
+
+            _log.LogWarning($"Unidentified artifact type: {fullPath}");
+            return new FileSignInfo(fullPath, SignInfo.Ignore);
         }
 
-        private static bool IsManaged(string filePath)
+        private static void GetPEInfo(string fullPath, out bool isManaged, out string publicKeyToken, out string targetFramework)
         {
+            AssemblyName assemblyName;
             try
             {
-                AssemblyName.GetAssemblyName(filePath);
-                return true;
+                assemblyName = AssemblyName.GetAssemblyName(fullPath);
+                isManaged = true;
             }
-            catch (Exception)
+            catch
             {
-                return false;
+                isManaged = false;
+                publicKeyToken = string.Empty;
+                targetFramework = string.Empty;
+                return;
             }
+
+            var pktBytes = assemblyName.GetPublicKeyToken();
+
+            publicKeyToken = (pktBytes == null || pktBytes.Length == 0) ? string.Empty : string.Join("", pktBytes.Select(b => b.ToString("x2")));
+            targetFramework = GetTargetFrameworkName(fullPath);
         }
 
         private static string GetTargetFrameworkName(string filePath)
@@ -287,9 +285,8 @@ namespace Microsoft.DotNet.SignTool
                         tempFileStream.Close();
                     }
 
-                    var partFileName = TrackFile(packagePartTempName);
-
-                    nestedParts.Add(new ZipPart(relativePath, partFileName, null, partFileName.SignInfo));
+                    var fileSignInfo = TrackFile(packagePartTempName);
+                    nestedParts.Add(new ZipPart(relativePath, fileSignInfo, null));
                 }
 
                 zipData = new ZipData(zipFileSignInfo, nestedParts.ToImmutableList());
