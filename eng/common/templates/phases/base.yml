@@ -34,7 +34,7 @@ parameters:
   enableMicrobuild: false
 
   # Build.Reason for anonymous builds - https://docs.microsoft.com/en-us/vsts/pipelines/build/variables?view=vsts#build-variables
-  publicBuildReasons: IndividualCI,BatchedCI,PullRequest
+  publicBuildReasons: PullRequest
 
 phases:
 - phase: ${{ parameters.name }}
@@ -52,7 +52,7 @@ phases:
 
   - ${{ if eq(parameters.enableTelemetry, 'true') }}:
     # Remove this condition once telemetry can be sent from public CI
-    - ${{ if not(contains(parameters.publicBuildReasons, variables['Build.Reason'] )) }}:
+    - ${{ if and(not(eq(variables['System.TeamProject'], 'public'), not(contains(parameters.publicBuildReasons, variables['Build.Reason'] )) }}:
       - template: /eng/common/templates/steps/telemetry-start.yml
         parameters:
           buildConfig: ${{ parameters.variables._HelixBuildConfig }}
@@ -60,13 +60,12 @@ phases:
           helixType: ${{ parameters.variables._HelixType }}
 
   - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
-    - ${{ if not(contains(parameters.publicBuildReasons, variables['Build.Reason'] )) }}:
+    - ${{ if and(not(eq(variables['System.TeamProject'], 'public'), not(contains(parameters.publicBuildReasons, variables['Build.Reason'] )) }}:
       - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
         displayName: Install MicroBuild plugin
         inputs:
           signType: $(_SignType)
           zipSources: false
-          esrpSigning: $(_UseEsrpSigning)
         env:
           TeamName: $(_TeamName)
         continueOnError: false
@@ -76,7 +75,7 @@ phases:
   - ${{ parameters.steps }}
 
   - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
-    - ${{ if not(contains(parameters.publicBuildReasons, variables['Build.Reason'] )) }}:
+    - ${{ if and(not(eq(variables['System.TeamProject'], 'public'), not(contains(parameters.publicBuildReasons, variables['Build.Reason'] )) }}:
       - task: ms-vseng.MicroBuildTasks.521a94ea-9e68-468a-8167-6dcf361ea776.MicroBuildCleanup@1
         displayName: Execute Microbuild cleanup tasks  
         condition: and(always(), in(variables['_SignType'], 'real', 'test'), eq(variables['Agent.Os'], 'Windows_NT'))
@@ -85,7 +84,7 @@ phases:
 
   - ${{ if eq(parameters.enableTelemetry, 'true') }}:
     # Remove this condition once telemetry can be sent from public CI
-    - ${{ if not(contains(parameters.publicBuildReasons, variables['Build.Reason'] )) }}:
+    - ${{ if and(not(eq(variables['System.TeamProject'], 'public'), not(contains(parameters.publicBuildReasons, variables['Build.Reason'] )) }}:
       - template: /eng/common/templates/steps/telemetry-end.yml
         parameters:
           helixSource: ${{ parameters.variables._HelixSource }}
