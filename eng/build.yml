@@ -1,7 +1,9 @@
 parameters:
   name: ''
-  # send telemetry if build is not a PR or CI build  
+  # send telemetry if build is not a public build  
   enableTelemetry: true
+  # install Microbuild plugin if not a public build
+  enableMicrobuild: true
   # queue YAML object - https://github.com/Microsoft/vsts-agent/blob/master/docs/preview/yamlgettingstarted-schema.md#queue
   queue: {}
   # variables YAML object - https://github.com/Microsoft/vsts-agent/blob/master/docs/preview/yamlgettingstarted-schema.md#phase
@@ -11,6 +13,8 @@ phases:
 - template: /eng/common/templates/phases/base.yml
   parameters:
     enableTelemetry: ${{ parameters.enableTelemetry }}
+
+    enableMicrobuild: ${{ parameters.enableMicrobuild }}
 
     name: ${{ parameters.name }}
 
@@ -37,16 +41,6 @@ phases:
       parameters:
         conditions: not IndividualCI,BatchedCI,PullRequest
         steps:
-        - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
-          displayName: Install MicroBuild plugin
-          inputs:
-            signType: $(_SignType)
-            zipSources: false
-            esrpSigning: $(_UseEsrpSigning)
-          env:
-            TeamName: $(_TeamName)
-          continueOnError: false
-          condition: and(succeeded(), in(variables['_SignType'], 'real', 'test'), eq(variables['Agent.Os'], 'Windows_NT'))
         - task: AzureKeyVault@1
           inputs:
             azureSubscription: 'DotNet-Engineering-Services_KeyVault'
