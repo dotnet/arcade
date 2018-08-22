@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.SignTool
                     var fileAsm = AssemblyName.GetAssemblyName(fullPath);
                     var pktBytes = fileAsm.GetPublicKeyToken();
                     var publicKeyToken = (pktBytes == null || pktBytes.Length == 0) ? string.Empty : string.Join("", pktBytes.Select(b => b.ToString("x2")));
-                    var targetFramework = GetTargetFrameworkName(fullPath).FullName;
+                    var targetFramework = GetTargetFrameworkName(fullPath);
                     var fileName = Path.GetFileName(fullPath);
 
                     var keyForAllTargets = new ExplicitCertificateKey(fileName, publicKeyToken);
@@ -138,17 +138,6 @@ namespace Microsoft.DotNet.SignTool
                             return new FileSignInfo(fullPath, SignInfo.Ignore); // should ignore this file
                         }
                         // Otherwise, just use the overriding info if present
-                    }
-
-                    if (publicKeyToken == string.Empty)
-                    {
-                        if (string.IsNullOrEmpty(overridingCertificate))
-                        {
-                            _log.LogError($"SignInfo for file ({fileFullPath}) and empty PKT not found. Expected it to be informed in overriding infos.");
-                            return SignInfo.Empty;
-                        }
-
-                        return new SignInfo(overridingCertificate, string.Empty);
                     }
 
                     if (_defaultSignInfoForPublicKeyToken.ContainsKey(publicKeyToken))
@@ -187,33 +176,23 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        private static FrameworkName GetTargetFrameworkName(string filePath)
+        private static string GetTargetFrameworkName(string filePath)
         {
             using (var stream = File.OpenRead(filePath))
             using (var pereader = new PEReader(stream))
             {
                 if (pereader.HasMetadata)
                 {
-                    MetadataReader metadataReader = pereader.GetMetadataReader();
+                    var metadataReader = pereader.GetMetadataReader();
 
-                    var attrs = metadataReader.GetAssemblyDefinition().GetCustomAttributes().Select(ah => metadataReader.GetCustomAttribute(ah));
-
-                    foreach (var attr in attrs)
+                    var assemblyDef = metadataReader.GetAssemblyDefinition();
+                    foreach (var attributeHandle in assemblyDef.GetCustomAttributes())
                     {
-                        var ctorHandle = attr.Constructor;
-                        if (ctorHandle.Kind != HandleKind.MemberReference)
+                        var attribute = metadataReader.GetCustomAttribute(attributeHandle);
+                        if (QualifiedNameEquals(metadataReader, attribute, "System.Runtime.Versioning", "TargetFrameworkAttribute"))
                         {
-                            continue;
+                            return new FrameworkName(GetTargetFrameworkAttributeValue(metadataReader, attribute)).FullName;
                         }
-
-                        var container = metadataReader.GetMemberReference((MemberReferenceHandle)ctorHandle).Parent;
-                        var name = metadataReader.GetTypeReference((TypeReferenceHandle)container).Name;
-                        if (!string.Equals(metadataReader.GetString(name), "TargetFrameworkAttribute"))
-                        {
-                            continue;
-                        }
-
-                        return new FrameworkName(GetFixedStringArguments(metadataReader, attr));
                     }
                 }
             }
@@ -221,43 +200,56 @@ namespace Microsoft.DotNet.SignTool
             return null;
         }
 
-        private static string GetFixedStringArguments(MetadataReader reader, CustomAttribute attribute)
+        private static bool QualifiedNameEquals(MetadataReader reader, CustomAttribute attribute, string namespaceName, string typeName)
         {
-            // Originally copied from here: https://github.com/Microsoft/msbuild/blob/a75c5a9e4f9ea6f2de24df4bfc2d60c09e684395/src/Tasks/AssemblyDependency/AssemblyInformation.cs#L353-L425
+            bool qualifiedNameEquals(StringHandle nameHandle, StringHandle namespaceHandle)
+                => reader.StringComparer.Equals(nameHandle, typeName) && reader.StringComparer.Equals(namespaceHandle, namespaceName);
 
-            var signature = reader.GetMemberReference((MemberReferenceHandle)attribute.Constructor).Signature;
-            var signatureReader = reader.GetBlobReader(signature);
-            var valueReader = reader.GetBlobReader(attribute.Value);
-
-            var prolog = valueReader.ReadUInt16();
-            if (prolog != 1)
+            var ctorHandle = attribute.Constructor;
+            switch (ctorHandle.Kind)
             {
-                // Invalid custom attribute prolog
-                return null;
-            }
+                case HandleKind.MemberReference:
+                    var container = reader.GetMemberReference((MemberReferenceHandle)ctorHandle).Parent;
+                    switch (container.Kind)
+                    {
+                        case HandleKind.TypeReference:
+                            var containerRef = reader.GetTypeReference((TypeReferenceHandle)container);
+                            return qualifiedNameEquals(containerRef.Name, containerRef.Namespace);
 
-            var header = signatureReader.ReadSignatureHeader();
-            if (header.Kind != SignatureKind.Method || header.IsGeneric)
-            {
-                // Invalid custom attribute constructor signature
-                return null;
-            }
+                        case HandleKind.TypeDefinition:
+                            var containerDef = reader.GetTypeDefinition((TypeDefinitionHandle)container);
+                            return qualifiedNameEquals(containerDef.Name, containerDef.Namespace);
 
-            if (!signatureReader.TryReadCompressedInteger(out var parameterCount))
-            {
-                // Invalid custom attribute constructor signature
-                return null;
-            }
+                        default:
+                            return false;
+                    }
 
-            var returnType = signatureReader.ReadSignatureTypeCode();
-            if (returnType != SignatureTypeCode.Void)
-            {
-                // Invalid custom attribute constructor signature
-                return null;
-            }
+                case HandleKind.MethodDefinition:
+                    var typeDef = reader.GetTypeDefinition(reader.GetMethodDefinition((MethodDefinitionHandle)ctorHandle).GetDeclaringType());
+                    return qualifiedNameEquals(typeDef.Name, typeDef.Namespace);
 
-            // Custom attribute constructor must take only strings
-            return valueReader.ReadSerializedString();
+                default:
+                    return false;
+            }
+        }
+
+        private sealed class DummyCustomAttributeTypeProvider : ICustomAttributeTypeProvider<object>
+        {
+            public static readonly DummyCustomAttributeTypeProvider Instance = new DummyCustomAttributeTypeProvider();
+            public object GetPrimitiveType(PrimitiveTypeCode typeCode) => null;
+            public object GetSystemType() => null;
+            public object GetSZArrayType(object elementType) => null;
+            public object GetTypeFromDefinition(MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind) => null;
+            public object GetTypeFromReference(MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind) => null;
+            public object GetTypeFromSerializedName(string name) => null;
+            public PrimitiveTypeCode GetUnderlyingEnumType(object type) => default;
+            public bool IsSystemType(object type) => false;
+        }
+
+        private static string GetTargetFrameworkAttributeValue(MetadataReader reader, CustomAttribute attribute)
+        {
+            var value = attribute.DecodeValue(DummyCustomAttributeTypeProvider.Instance);
+            return (value.FixedArguments.Length == 1) ? value.FixedArguments[0].Value as string : null;
         }
 
         /// <summary>

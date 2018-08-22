@@ -204,6 +204,56 @@ namespace Microsoft.DotNet.SignTool.Tests
             TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
         }
 
+        [Fact]
+        public void DefaultCertificateForAssemblyWithoutStrongName()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                $@"Resources/EmptyPKT.dll",
+            };
+
+            var signingInformation = new Dictionary<string, SignInfo>()
+            {
+                { "", new SignInfo("DefaultCertificate") }
+            };
+
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>() { };
+
+            var expectedSigningList = new List<FileSignInfo>()
+            {
+                new FileSignInfo("EmptyPKT.dll", new SignInfo("DefaultCertificate")),
+            };
+
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
+        }
+
+        [Fact]
+        public void CustomTargetFrameworkAttribute()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                $@"Resources/CustomTargetFrameworkAttribute.dll",
+            };
+
+            var signingInformation = new Dictionary<string, SignInfo>()
+            {
+                {  "", new SignInfo("DefaultCertificate") }
+            };
+
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>()
+            {
+                { new ExplicitCertificateKey("CustomTargetFrameworkAttribute.dll", targetFramework: ".NETFramework,Version=v2.0"), "OverridedCertificate" }
+            };
+
+            var expectedSigningList = new List<FileSignInfo>()
+            {
+                new FileSignInfo("CustomTargetFrameworkAttribute.dll", new SignInfo("OverridedCertificate")),
+            };
+
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
+        }
 
         [Fact]
         public void NestedContainer()
