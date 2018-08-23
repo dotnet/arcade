@@ -241,5 +241,32 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
         }
+
+        [Fact]
+        public void AcceptAJarFile()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new string[] {
+                $@"Resources/Sample.jar",
+            };
+
+            // Default signing information
+            var signingInformation = new Dictionary<string, SignInfo>();
+
+            var signInfo = new SignInfo("CP-232612-Java", string.Empty);
+
+            // Overriding information
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>()
+            {
+                {new ExplicitCertificateKey("Sample.jar", string.Empty, SignToolConstants.AllTargetFrameworksSentinel), signInfo.Certificate }
+            };
+
+            var expectedSigningList = new List<FileName>()
+            {
+                new FileName("Sample.jar", signInfo),
+            };
+
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
+        }
     }
 }
