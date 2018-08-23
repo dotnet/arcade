@@ -1,8 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net461</TargetFrameworks>
+    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup >
+    <NoWarn>NU1701</NoWarn>
+    <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,7 +15,6 @@
     <PackageReference Include="Microsoft.Composition" Version="1.0.30" />
     <PackageReference Include="System.Diagnostics.Contracts" Version="4.0.0" />
     <PackageReference Include="System.Diagnostics.TraceSource" Version="4.0.0" />
-    <PackageReference Include="NETStandard.Library" Version="1.6.0" />
   </ItemGroup>
 
 </Project>
