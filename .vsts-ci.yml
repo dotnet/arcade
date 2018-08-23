@@ -3,9 +3,11 @@ phases:
   queue:
     name: Hosted VS2017
   variables:
-    isPublicProject: ${{ eq(variables['System.TeamProject'], 'public') }}
-    enableTelemetry: false
-      # ${{ not(variables[‘isPublicProject’]) }}
+    ${{ if eq(variables['System.TeamProject'], 'public') }}:    
+      isPublicProject: true
+    ${{ if ne(variables['System.TeamProject'], 'public') }}:    
+      isPublicProject: false
+    enableTelemetry: ${{ not(variables[‘isPublicProject’]) }}
   steps:
   - script: echo enableTelemetry - %enableTelem%
     env:
