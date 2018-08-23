@@ -39,29 +39,6 @@ namespace Microsoft.DotNet.SignTool
             return true;
         }
 
-        internal static bool Equals(byte[] left, int leftStart, byte[] right, int rightStart, int length)
-        {
-            if (left == null || right == null)
-            {
-                return ReferenceEquals(left, right);
-            }
-
-            if (ReferenceEquals(left, right) && leftStart == rightStart)
-            {
-                return true;
-            }
-
-            for (var i = 0; i < length; i++)
-            {
-                if (left[leftStart + i] != right[rightStart + i])
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         internal static bool Equals(byte[] left, byte[] right)
         {
             if (ReferenceEquals(left, right))

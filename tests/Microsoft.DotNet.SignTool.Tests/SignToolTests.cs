@@ -13,16 +13,10 @@ namespace Microsoft.DotNet.SignTool.Tests
 {
     public class SignToolTests : IDisposable
     {
-        private readonly bool _isWindows;
         private readonly string _tmpDir;
 
         public SignToolTests()
         {
-            // As of now we don't have "mscoree.dll" on Linux. This DLL is used when checking
-            // if the file is strong name signed: SignTool/ContentUtil.NativeMethods
-            // Therefore, test cases won't execute in fully on non-Windows machines.
-            _isWindows = Environment.OSVersion.VersionString.Contains("Windows");
-
             _tmpDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(_tmpDir);            
         }
@@ -57,8 +51,6 @@ namespace Microsoft.DotNet.SignTool.Tests
             Dictionary<ExplicitCertificateKey, string> signingOverridingInfos, 
             string[] expectedXmlElementsPerSingingRound)
         {
-            if (!_isWindows) return;
-
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
 
             // The path to MSBuild will always be null in these tests, this will force
@@ -89,8 +81,6 @@ namespace Microsoft.DotNet.SignTool.Tests
             Dictionary<ExplicitCertificateKey, string> signingOverridingInfos,
             string[] expected)
         {
-            if (!_isWindows) return;
-
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
             var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, publishUri: null, task.Log).GenerateListOfFiles();
 
