@@ -404,8 +404,7 @@ namespace SignCheck
             }
             catch (Exception e)
             {
-                Log.WriteError(e.Message);
-                Log.WriteError(e.StackTrace);
+                Log.WriteError(e.ToString());
             }
             finally
             {
@@ -447,13 +446,16 @@ namespace SignCheck
             await Task.WhenAll(uris.Select(u => DownloadFileAsync(u)));
         }
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
+            // Exit code 3 for help output
+            int retVal = 3;
             var sc = new SignCheck(args);
             if ((sc.Options != null) && (!sc.HasArgErrors))
             {
-                Environment.Exit(sc.Run());
+                retVal = sc.Run();
             }
+            return retVal;
         }
     }
 }
