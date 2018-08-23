@@ -31,7 +31,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <_MicrosoftDotNetGenFacadesTaskDir>$(MSBuildThisFileDirectory)../tools/netstandard2.0/</_MicrosoftDotNetBuildTasksFeedTaskDir>
+    <_MicrosoftDotNetGenFacadesTaskDir>$(MSBuildThisFileDirectory)../tools/netstandard2.0/</_MicrosoftDotNetGenFacadesTaskDir>
   </PropertyGroup>
 
   <UsingTask TaskName="GenFacadesTask" AssemblyFile="$(_MicrosoftDotNetGenFacadesTaskDir)Microsoft.DotNet.GenFacades.dll" />
