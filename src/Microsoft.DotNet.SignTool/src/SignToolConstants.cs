@@ -12,8 +12,6 @@ namespace Microsoft.DotNet.SignTool
 
         public const string StrongName_MsSharedLib72 = "MsSharedLib72";
 
-        public const string AllTargetFrameworksSentinel = null;
-
         public const string IgnoreFileCertificateSentinel = "None";
     }
 }

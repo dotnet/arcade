@@ -93,21 +93,21 @@ namespace Microsoft.DotNet.SignTool
                     return;
                 }
 
-                if (String.IsNullOrEmpty(LogDir) || !Directory.Exists(LogDir))
+                if (string.IsNullOrEmpty(LogDir) || !Directory.Exists(LogDir))
                 {
                     Log.LogError($"Invalid LogDir informed: {LogDir}");
                     return;
                 }
             }
 
-            var signInfos = ParseStrongNameSignInfo();
-            var overridingSignInfos = ParseFileSignInfo();
+            var defaultSignInfoForPublicKeyToken = ParseStrongNameSignInfo();
+            var explicitCertificates = ParseFileSignInfo();
 
             if (Log.HasLoggedErrors) return;
 
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
-            var signingInput = new Configuration(TempDir, ItemsToSign, signInfos, overridingSignInfos, PublishUrl, Log).GenerateListOfFiles();
+            var signingInput = new Configuration(TempDir, ItemsToSign, defaultSignInfoForPublicKeyToken, explicitCertificates, PublishUrl, Log).GenerateListOfFiles();
 
             if (Log.HasLoggedErrors) return;
 
@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.SignTool
 
         private Dictionary<string, SignInfo> ParseStrongNameSignInfo()
         {
-            var mapTokenToSignInfo = new Dictionary<string, SignInfo>(StringComparer.OrdinalIgnoreCase);
+            var map = new Dictionary<string, SignInfo>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var item in StrongNameSignInfo)
             {
@@ -128,35 +128,41 @@ namespace Microsoft.DotNet.SignTool
                 var publicKeyToken = item.GetMetadata("PublicKeyToken");
                 var certificateName = item.GetMetadata("CertificateName");
 
-                if (String.IsNullOrWhiteSpace(strongName))
+                if (string.IsNullOrWhiteSpace(strongName))
                 {
-                    Log.LogError($"An invalid strong name was informed in StrongNameSignInfo: {strongName}");
-                    return null;
+                    Log.LogError($"An invalid strong name was specified in {nameof(StrongNameSignInfo)}: '{strongName}'");
+                    continue;
                 }
 
                 if (!IsValidPublicKeyToken(publicKeyToken))
                 {
-                    Log.LogError($"This PublicKeyToken metadata for StrongNameSignInfo isn't valid: {publicKeyToken}");
-                    return null;
+                    Log.LogError($"PublicKeyToken metadata of {nameof(StrongNameSignInfo)} is invalid: '{publicKeyToken}'");
+                    continue;
                 }
 
-                if (String.IsNullOrWhiteSpace(certificateName))
+                if (string.IsNullOrWhiteSpace(certificateName))
                 {
-                    Log.LogError($"This CertificateName informed for FileSignInfo isn't valid: {certificateName}");
-                    return null;
+                    Log.LogError($"CertificateName metadata of {nameof(StrongNameSignInfo)} is invalid: '{certificateName}'");
+                    continue;
                 }
 
                 var signInfo = new SignInfo(certificateName, strongName);
 
-                mapTokenToSignInfo.Add(publicKeyToken, signInfo);
+                if (map.ContainsKey(publicKeyToken))
+                {
+                    Log.LogError($"Duplicate entries in {nameof(StrongNameSignInfo)} with the same key '{publicKeyToken}'.");
+                    continue;
+                }
+
+                map.Add(publicKeyToken, signInfo);
             }
 
-            return mapTokenToSignInfo;
+            return map;
         }
 
         private Dictionary<ExplicitCertificateKey, string> ParseFileSignInfo()
         {
-            var mapOverridingSignInfos = new Dictionary<ExplicitCertificateKey, string>();
+            var map = new Dictionary<ExplicitCertificateKey, string>();
 
             if (FileSignInfo != null)
             {
@@ -167,49 +173,42 @@ namespace Microsoft.DotNet.SignTool
                     var publicKeyToken = item.GetMetadata("PublicKeyToken");
                     var certificateName = item.GetMetadata("CertificateName");
 
-                    if (fileName.IndexOfAny(new char[]{'/', '\\'}) >= 0)
+                    if (fileName.IndexOfAny(new[] {'/', '\\'}) >= 0)
                     {
-                        Log.LogError($"FileSignInfo should include only file name and extension, not the full path to the file: {fileName}");
-                        return null;
+                        Log.LogError($"{nameof(FileSignInfo)} should specify file name and extension, not a full path: '{fileName}'");
+                        continue;
                     }
 
-                    if (String.IsNullOrEmpty(targetFramework))
+                    if (!string.IsNullOrEmpty(targetFramework) && !IsValidTargetFrameworkName(targetFramework))
                     {
-                        targetFramework = SignToolConstants.AllTargetFrameworksSentinel;
-                    }
-                    else if (!IsValidTargetFrameworkName(targetFramework))
-                    {
-                        Log.LogError($"This TargetFramework metadata for FileSignInfo isn't valid: {targetFramework}");
-                        return null;
+                        Log.LogError($"TargetFramework metadata of {nameof(FileSignInfo)} is invalid: '{targetFramework}'");
+                        continue;
                     }
 
-                    if (String.IsNullOrWhiteSpace(certificateName))
+                    if (string.IsNullOrWhiteSpace(certificateName))
                     {
-                        Log.LogError($"This CertificateName informed for FileSignInfo isn't valid: {certificateName}");
-                        return null;
+                        Log.LogError($"CertificateName metadata of {nameof(FileSignInfo)} is invalid: '{certificateName}'");
+                        continue;
                     }
 
                     if (!string.IsNullOrEmpty(publicKeyToken) && !IsValidPublicKeyToken(publicKeyToken))
                     {
-                        Log.LogError($"This PublicKeyToken metadata for FileSignInfo isn't valid: {publicKeyToken}");
-                        return null;
+                        Log.LogError($"PublicKeyToken metadata for {nameof(FileSignInfo)} is invalid: '{publicKeyToken}'");
+                        continue;
                     }
 
-                    var outerKey = new ExplicitCertificateKey(fileName, publicKeyToken?.ToLower(), targetFramework);
+                    var key = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework);
+                    if (map.TryGetValue(key, out var existingCert))
+                    {
+                        Log.LogError($"Duplicate entries in {nameof(FileSignInfo)} with the same key ('{fileName}', '{publicKeyToken}', '{targetFramework}'): '{existingCert}', '{certificateName}'.");
+                        continue;
+                    }
 
-                    if (mapOverridingSignInfos.TryGetValue(outerKey, out var existingCert))
-                    {
-                        Log.LogError($"Ignoring attempt to duplicate signing override information for this combination ({fileName}, {publicKeyToken}, {targetFramework}). " +
-                            $"Existing value {existingCert}, trying to add new value {certificateName}.");
-                    }
-                    else
-                    {
-                        mapOverridingSignInfos.Add(outerKey, certificateName);
-                    }
+                    map.Add(key, certificateName);
                 }
             }
 
-            return mapOverridingSignInfos;
+            return map;
         }
 
         private bool IsValidTargetFrameworkName(string tfn)
