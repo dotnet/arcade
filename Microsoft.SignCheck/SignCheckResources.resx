@@ -184,7 +184,7 @@
     <value>Extracting file contents to {0}</value>
   </data>
   <data name="DiagFileHeaderIdentifyExtensionType" xml:space="preserve">
-    <value>File will be treated as {0}.</value>
+    <value>File will be treated as '{0}'.</value>
   </data>
   <data name="DiagFirstExclusion" xml:space="preserve">
     <value>Checking {0} against the exclusion list.</value>

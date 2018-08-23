@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Deployment.WindowsInstaller;
 using Microsoft.Deployment.WindowsInstaller.Package;
+using Microsoft.SignCheck.Interop;
 using Microsoft.SignCheck.Interop.PortableExecutable;
 using Microsoft.SignCheck.Logging;
 using Microsoft.Tools.WindowsInstallerXml;
@@ -196,7 +197,15 @@ namespace Microsoft.SignCheck.Verification
                                     // NUPKGs use .zip format, but should have a .nuspec files inside
                                     Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagFileHeaderIdentifyExtensionType, ".nupkg");
                                     var result = VerifyNupkg(path, parent);
-                                    result.AddDetail(DetailKeys.Misc, SignCheckResources.DetailMiscFileType, "NUPKG");
+                                    result.AddDetail(DetailKeys.File, SignCheckResources.DetailMiscFileType, "NUPKG");
+                                    return result;
+                                }
+                                else if (zipArchive.Entries.Any(z => String.Equals(Path.GetExtension(z.FullName), "vsixmanifest", StringComparison.OrdinalIgnoreCase)))
+                                {
+                                    // If it's an SDK based VSIX there should be a vsixmanifest file
+                                    Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagFileHeaderIdentifyExtensionType, ".vsix");
+                                    var result = VerifyVsix(path, parent);
+                                    result.AddDetail(DetailKeys.File, SignCheckResources.DetailMiscFileType, "VSIX");
                                     return result;
                                 }
                                 else
@@ -204,16 +213,16 @@ namespace Microsoft.SignCheck.Verification
                                     // Assume it's some sort of .zip file
                                     Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagFileHeaderIdentifyExtensionType, ".zip");
                                     var result = VerifyZip(path, parent);
-                                    result.AddDetail(DetailKeys.Misc, SignCheckResources.DetailMiscFileType, "ZIP");
+                                    result.AddDetail(DetailKeys.File, SignCheckResources.DetailMiscFileType, "ZIP");
                                     return result;
                                 }
                             }
-
                         }
                         else if (magic4 == FileHeaders.Cab)
                         {
+                            Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagFileHeaderIdentifyExtensionType, ".cab");
                             var result = VerifyCab(path, parent);
-                            result.AddDetail(DetailKeys.Misc, SignCheckResources.DetailMiscFileType, "CAB");
+                            result.AddDetail(DetailKeys.File, SignCheckResources.DetailMiscFileType, "CAB");
                             return result;
                         }
                     }
@@ -230,14 +239,14 @@ namespace Microsoft.SignCheck.Verification
                             {
                                 Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagFileHeaderIdentifyExtensionType, ".dll");
                                 var result = VerifyDll(path, parent);
-                                result.AddDetail(DetailKeys.Misc, SignCheckResources.DetailMiscFileType, "DLL");
+                                result.AddDetail(DetailKeys.File, SignCheckResources.DetailMiscFileType, "DLL");
                                 return result;
                             }
                             else if ((pe.FileHeader.Characteristics & ImageFileCharacteristics.IMAGE_FILE_EXECUTABLE_IMAGE) != 0)
                             {
                                 Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagFileHeaderIdentifyExtensionType, ".exe");
                                 var result = VerifyExe(path, parent);
-                                result.AddDetail(DetailKeys.Misc, SignCheckResources.DetailMiscFileType, "EXE");
+                                result.AddDetail(DetailKeys.File, SignCheckResources.DetailMiscFileType, "EXE");
                                 return result;
                             }
                         }
@@ -546,11 +555,40 @@ namespace Microsoft.SignCheck.Verification
                             CheckAndUpdateExclusion(packageFileResult, packageFileResult.Filename, originalFiles[key], svr.Filename);
                             svr.NestedResults.Add(packageFileResult);
                         }
+
                     }
                     catch (Exception e)
                     {
                         Log.WriteError(e.Message);
                     }
+                }
+
+                // Extract files from the Binary table - this is where items such as custom actions are stored.
+                try
+                {
+                    List<string> binaryStreams = new List<string>();
+                    using (Database installDatabase = new Database(svr.FullPath, DatabaseOpenMode.ReadOnly))
+                    using (View view = installDatabase.OpenView("SELECT `Name`, `Data` FROM `Binary`"))
+                    {
+                        view.Execute();
+
+                        foreach (Record record in view)
+                        {
+                            binaryStreams.Add(Path.Combine(svr.TempPath, (string)record["Name"]));
+                            StructuredStorage.SaveStream(record, svr.TempPath);
+                        }
+
+                        foreach (var binary in binaryStreams)
+                        {
+                            var binaryStreamResult = VerifyFile(binary, svr.Filename);
+                            CheckAndUpdateExclusion(binaryStreamResult, binaryStreamResult.Filename, null, svr.Filename);
+                            svr.NestedResults.Add(binaryStreamResult);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.WriteError(e.Message);
                 }
 
                 DeleteDirectory(svr.TempPath);

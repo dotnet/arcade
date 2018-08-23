@@ -1,16 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'build\ResxWorkaround.props'))\build\ResxWorkaround.props" />
   <PropertyGroup>
-    <TargetFramework>net46</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <Platforms>x86</Platforms>
     <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
   <PropertyGroup Label="Nuget Package Settings">
     <IsTool>true</IsTool>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="Verification\JavaArchive.cs" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="LZMA-SDK" Version="18.1.0" />
     <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="7.10.6070" />

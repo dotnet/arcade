@@ -259,7 +259,7 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File will be treated as {0}..
+        ///   Looks up a localized string similar to File will be treated as &apos;{0}&apos;..
         /// </summary>
         internal static string DiagFileHeaderIdentifyExtensionType {
             get {

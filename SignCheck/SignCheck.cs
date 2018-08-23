@@ -404,6 +404,7 @@ namespace SignCheck
             }
             catch (Exception e)
             {
+                Log.WriteError(e.Message);
                 Log.WriteError(e.StackTrace);
             }
             finally

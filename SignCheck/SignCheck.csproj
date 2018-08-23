@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'build\ResxWorkaround.props'))\build\ResxWorkaround.props" />
   <PropertyGroup>
-    <TargetFramework>net46</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <OutputType>EXE</OutputType>
     <Platforms>x86</Platforms>
     <IsTool>True</IsTool>
