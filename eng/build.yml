@@ -91,23 +91,3 @@ phases:
             ArtifactName: $(Agent.Os)_$(Agent.JobName)
           continueOnError: true
           condition: succeededOrFailed()
-          
-    - template: /eng/common/templates/steps/build-reason.yml
-      parameters:
-        conditions: not IndividualCI,BatchedCI,PullRequest
-        steps:
-        - task: CopyFiles@2
-          displayName: Gather Asset Manifests
-          inputs:
-            SourceFolder: '$(Build.SourcesDirectory)/artifacts/$(_BuildConfig)/AssetManifest'
-            TargetFolder: '$(Build.StagingDirectory)/AssetManifests'
-          continueOnError: true
-          condition: and(succeeded(), or(contains(variables['_PublishType'], 'blob'), contains(variables['_PublishType'], 'myget')))
-        - task: PublishBuildArtifacts@1
-          displayName: Push Asset Manifests
-          inputs:
-            PathtoPublish: '$(Build.StagingDirectory)/AssetManifests'
-            PublishLocation: Container
-            ArtifactName: AssetManifests
-          continueOnError: true
-          condition: and(succeeded(), or(contains(variables['_PublishType'], 'blob'), contains(variables['_PublishType'], 'myget')))

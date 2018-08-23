@@ -67,6 +67,7 @@ phases:
           zipSources: false
         env:
           TeamName: $(_TeamName)
+          
         continueOnError: false
         condition: and(succeeded(), in(variables['_SignType'], 'real', 'test'), eq(variables['Agent.Os'], 'Windows_NT'))
 
@@ -88,3 +89,19 @@ phases:
         parameters:
           helixSource: ${{ parameters.variables._HelixSource }}
           helixType: ${{ parameters.variables._HelixType }}
+        
+  - ${{ if or(contains(variables['_PublishType'], 'blob'), contains(variables['_PublishType'], 'myget')) }}:  
+    - ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+      - task: CopyFiles@2
+        displayName: Gather Asset Manifests
+        inputs:
+          SourceFolder: '$(Build.SourcesDirectory)/artifacts/$(_BuildConfig)/AssetManifest'
+          TargetFolder: '$(Build.StagingDirectory)/AssetManifests'
+        continueOnError: false
+      - task: PublishBuildArtifacts@1
+        displayName: Push Asset Manifests
+        inputs:
+          PathtoPublish: '$(Build.StagingDirectory)/AssetManifests'
+          PublishLocation: Container
+          ArtifactName: AssetManifests
+        continueOnError: false
