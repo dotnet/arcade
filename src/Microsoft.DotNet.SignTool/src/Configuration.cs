@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 using (var stream = File.OpenRead(fileFullPath))
                 {
-                    if (ContentUtil.IsAssemblyStrongNameSigned(stream))
+                    if (ContentUtil.IsAuthenticodeSigned(stream))
                     {
                         return SignInfo.AlreadySigned;
                     }
