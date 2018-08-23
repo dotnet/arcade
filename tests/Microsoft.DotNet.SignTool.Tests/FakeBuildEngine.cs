@@ -27,7 +27,6 @@ namespace Microsoft.DotNet.SignTool.Tests
             new List<BuildWarningEventArgs>();
 
         public readonly List<ImmutableArray<XElement>> FilesToSign = new List<ImmutableArray<XElement>>();
-        private static readonly ImmutableArray<byte> s_dummyHash = ImmutableArray.Create(new byte[256 / 8]);
 
         public bool BuildProjectFile(string projectFileName, string[] targetNames, IDictionary globalProperties, IDictionary targetOutputs)
         {

@@ -87,14 +87,17 @@ namespace Microsoft.DotNet.SignTool
         {
             var fileSignInfo = ExtractSignInfo(fullPath, contentHash);
 
-            if (FileSignInfo.IsZipContainer(fullPath) && 
-                !_zipDataMap.ContainsKey(fileSignInfo.ContentHash) && 
-                TryBuildZipData(fileSignInfo, out var zipData))
+            if (fileSignInfo.SignInfo.ShouldSign)
             {
-                _zipDataMap[fileSignInfo.ContentHash] = zipData;
-            }
+                if (FileSignInfo.IsZipContainer(fullPath) && 
+                    !_zipDataMap.ContainsKey(fileSignInfo.ContentHash) && 
+                    TryBuildZipData(fileSignInfo, out var zipData))
+                {
+                    _zipDataMap[fileSignInfo.ContentHash] = zipData;
+                }
         
-            _filesToSign.Add(fileSignInfo);
+                _filesToSign.Add(fileSignInfo);
+            }
 
             if (!_filesByContentHash.ContainsKey(contentHash))
             {
@@ -131,7 +134,7 @@ namespace Microsoft.DotNet.SignTool
                     _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName), out overridingCertificate))
                 {
                     // If has overriding info, is it for ignoring the file?
-                    if (overridingCertificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel))
+                    if (overridingCertificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.OrdinalIgnoreCase))
                     {
                         return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
                     }
@@ -298,7 +301,10 @@ namespace Microsoft.DotNet.SignTool
                         fileSignInfo = TrackFile(tempPath, contentHash);
                     }
 
-                    nestedParts.Add(new ZipPart(relativePath, fileSignInfo));
+                    if (fileSignInfo.SignInfo.ShouldSign)
+                    {
+                        nestedParts.Add(new ZipPart(relativePath, fileSignInfo));
+                    }
                 }
 
                 zipData = new ZipData(zipFileSignInfo, nestedParts.ToImmutableArray());

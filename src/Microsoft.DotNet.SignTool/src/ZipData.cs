@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.SignTool
             NestedParts = nestedBinaryParts;
         }
 
-        internal ZipPart? FindNestedBinaryPart(string relativeName)
+        internal ZipPart? FindNestedPart(string relativeName)
         {
             foreach (var part in NestedParts)
             {

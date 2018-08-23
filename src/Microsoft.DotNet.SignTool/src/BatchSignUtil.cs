@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.SignTool
 
             bool signFiles(IEnumerable<FileSignInfo> files)
             {
-                var filesToSign = files.Where(info => !info.SignInfo.IsDefault).ToArray();
+                var filesToSign = files.ToArray();
 
                 _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
                 foreach (var file in filesToSign)
@@ -214,22 +214,22 @@ namespace Microsoft.DotNet.SignTool
         }
 
         /// <summary>
-        /// Repack the VSIX with the signed parts from the binaries directory.
+        /// Repack the zip container with the signed parts.
         /// </summary>
-        private void Repack(ZipData vsixData)
+        private void Repack(ZipData zipData)
         {
-            using (var package = Package.Open(vsixData.FileSignInfo.FullPath, FileMode.Open, FileAccess.ReadWrite))
+            using (var package = Package.Open(zipData.FileSignInfo.FullPath, FileMode.Open, FileAccess.ReadWrite))
             {
                 foreach (var part in package.GetParts())
                 {
                     var relativeName = GetPartRelativeFileName(part);
-                    var vsixPart = vsixData.FindNestedBinaryPart(relativeName);
-                    if (!vsixPart.HasValue)
+                    var signedPart = zipData.FindNestedPart(relativeName);
+                    if (!signedPart.HasValue)
                     {
                         continue;
                     }
 
-                    using (var stream = File.OpenRead(vsixPart.Value.FileSignInfo.FullPath))
+                    using (var stream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath))
                     using (var partStream = part.GetStream(FileMode.Open, FileAccess.ReadWrite))
                     {
                         stream.CopyTo(partStream);
@@ -316,7 +316,7 @@ namespace Microsoft.DotNet.SignTool
                         foreach (var part in package.GetParts())
                         {
                             var relativeName = GetPartRelativeFileName(part);
-                            var zipPart = zipData.FindNestedBinaryPart(relativeName);
+                            var zipPart = zipData.FindNestedPart(relativeName);
                             if (!zipPart.HasValue || !zipPart.Value.FileSignInfo.IsPEFile())
                             {
                                 continue;

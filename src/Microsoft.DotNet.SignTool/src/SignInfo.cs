@@ -35,9 +35,7 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool IsAlreadySigned { get; }
 
-        internal bool IsDefault => Certificate == null && StrongName == null && !ShouldIgnore && !IsAlreadySigned;
-
-        public bool ShouldSign => !IsDefault && !IsAlreadySigned && !ShouldIgnore;
+        public bool ShouldSign => !IsAlreadySigned && !ShouldIgnore;
 
         public SignInfo(string certificate, string strongName, bool shouldIgnore, bool isAlreadySigned)
         {
