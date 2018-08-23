@@ -21,7 +21,7 @@ phases:
               _PublishType: none
               _SignType: test
             ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _PublishType: blob
+              _PublishType: none
               _SignType: real
   
   - template: /eng/build.yml
