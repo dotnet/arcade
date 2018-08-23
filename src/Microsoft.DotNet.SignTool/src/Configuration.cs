@@ -165,6 +165,21 @@ namespace Microsoft.DotNet.SignTool
                     return SignInfo.Empty;
                 }
             }
+            else if (FileName.IsJar(fileFullPath))
+            {
+                var fileName = Path.GetFileName(fileFullPath);
+                var keyForJarFiles = new ExplicitCertificateKey(fileName, "", SignToolConstants.AllTargetFrameworksSentinel);
+
+                if (_explicitCertificates.TryGetValue(keyForJarFiles, out var certificate))
+                {
+                    return new SignInfo(certificate, string.Empty);
+                }
+                else
+                {
+                    _log.LogError($"SignInfo for JAR file ({fileFullPath}) not found in overriding infos.");
+                    return SignInfo.Empty;
+                }
+            }
             else if (FileName.IsZipContainer(fileFullPath))
             {
                 return new SignInfo(FileName.IsNupkg(fileFullPath) ? SignToolConstants.Certificate_NuGet : SignToolConstants.Certificate_VsixSHA2, null);

@@ -34,6 +34,11 @@ namespace Microsoft.DotNet.SignTool
             return IsVsix(fileFullPath) || IsNupkg(fileFullPath);
         }
 
+        internal static bool IsJar(string fileFullPath)
+        {
+            return !String.IsNullOrWhiteSpace(fileFullPath) && Path.GetExtension(fileFullPath) == ".jar";
+        }
+
         internal bool IsPEFile() => IsPEFile(Name);
 
         internal bool IsVsix() => IsVsix(Name);
