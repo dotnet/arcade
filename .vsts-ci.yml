@@ -1,51 +1,17 @@
 phases:
-  - template: /eng/build.yml
-    parameters:
-      name: Windows_NT
-      queue:
-        ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-          name: Hosted VS2017
-        ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:        
-          name: DotNetCore-Build
-          demands:
-          - agent.os -equals Windows_NT        
-        parallel: 2
-        matrix:
-          Build_Debug:
-            _BuildConfig: Debug
-            _PublishType: none
-            _SignType: test
-          Build_Release:
-            _BuildConfig: Release
-            ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _PublishType: none
-              _SignType: test
-            ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _PublishType: blob
-              _SignType: real
-  
-  - template: /eng/build.yml
-    parameters:
-      name: Linux
-      queue: 
-        ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-          name: DotNetCore-Linux
-        ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:        
-          name: DotNetCore-Test
-        demands:
-          - agent.os -equals Linux
-        parallel: 2
-        matrix:
-          Build_Debug:
-            _BuildConfig: Debug
-            _PublishType: none
-            _SignType: test
-          Build_Release:
-            _BuildConfig: Release
-            _PublishType: none
-            ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _SignType: test
-            ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _SignType: real
-      variables:
-        _PREVIEW_VSTS_DOCKER_IMAGE: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
+- phase: First
+  queue:
+    name: Hosted VS2017
+  variables:
+    ${{ if eq(variables['System.TeamProject'], 'public') }}:    
+      isPublicProject: true
+    ${{ if ne(variables['System.TeamProject'], 'public') }}:    
+      isPublicProject: false
+    ${{ if eq(variables['isPublicProject'], 'true') }}:
+      enableTelemetry: false
+    ${{ if ne(variables['isPublicProject'], 'true') }}:
+      enableTelemetry: true
+  steps:
+  - script: echo enableTelemetry - %enableTelem%
+    env:
+      enableTelem: $(enableTelemetry)
