@@ -6,7 +6,7 @@ using System;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.GenFacades;
-using Microsoft.DotNet.Cci.Extensions;
+using Microsoft.Cci.Extensions;
 using MSBuild = Microsoft.Build.Utilities;
 using System.Linq;
 using System.Diagnostics;

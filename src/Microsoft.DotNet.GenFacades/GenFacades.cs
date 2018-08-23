@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Cci;
-using Microsoft.DotNet.Cci.Extensions;
+using Microsoft.Cci.Extensions;
 using Microsoft.Cci.MutableCodeModel;
 using System.Globalization;
 using Microsoft.DiaSymReader.Tools;
