@@ -14,5 +14,4 @@ phases:
   steps:
   - script: echo enableTelemetry - %enableTelem%
     env:
-      envTelem: $(enableTelemetry)
-      pubProj: $(isPublicProject)
+      enableTelem: $(enableTelemetry)
