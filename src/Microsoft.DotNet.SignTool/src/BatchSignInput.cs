@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Microsoft.DotNet.SignTool
@@ -20,18 +21,20 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// The ordered names of the files to be signed.
         /// </summary>
-        internal ImmutableArray<FileName> FilesToSign { get; }
+        internal ImmutableArray<FileSignInfo> FilesToSign { get; }
 
         /// <summary>
         /// Holds information about each of the containers that will be signed.
+        /// The key is the content hash of the file.
         /// </summary>
-        internal ImmutableDictionary<FileName, ZipData> ZipDataMap;
+        internal ImmutableDictionary<ImmutableArray<byte>, ZipData> ZipDataMap;
 
-        internal BatchSignInput(ImmutableList<FileName> fileSignDataMap, ImmutableDictionary<FileName, ZipData> zipDataMap ,string publishUri)
+        internal BatchSignInput(ImmutableArray<FileSignInfo> filesToSign, ImmutableDictionary<ImmutableArray<byte>, ZipData> zipDataMap, string publishUri)
         {
-            // Use order by to make the output of this tool as predictable as possible.
-            FilesToSign = fileSignDataMap.OrderBy(x => x.FullPath).ToImmutableArray();
+            Debug.Assert(!filesToSign.IsDefault);
+            Debug.Assert(zipDataMap != null);
 
+            FilesToSign = filesToSign;
             ZipDataMap = zipDataMap;
             PublishUri = publishUri;
         }
