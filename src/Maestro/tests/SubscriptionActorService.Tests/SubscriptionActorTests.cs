@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using DependencyUpdater;
 using FluentAssertions;
 using Maestro.Data;
 using Maestro.Data.Models;
@@ -220,7 +219,7 @@ namespace SubscriptionActorService.Tests
                             new List<Check>
                             {
                                 new Check(
-                                    existingPrPassedChecks ? CheckStatus.Succeeded : CheckStatus.Failed,
+                                    existingPrPassedChecks ? CheckState.Success : CheckState.Failure,
                                     "check",
                                     "https://check.stuff/1")
                             });
@@ -369,7 +368,7 @@ namespace SubscriptionActorService.Tests
                                 new List<Check>
                                 {
                                     new Check(
-                                        existingPrPassedChecks ? CheckStatus.Succeeded : CheckStatus.Failed,
+                                        existingPrPassedChecks ? CheckState.Success : CheckState.Failure,
                                         "check",
                                         "https://check.stuff/1")
                                 });

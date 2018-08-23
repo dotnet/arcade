@@ -332,6 +332,32 @@ namespace Microsoft.DotNet.DarcLib
             return content["sha"].ToString();
         }
 
+        public async Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl)
+        {
+            string url = $"{GetPrPartialAbsolutePath(pullRequestUrl)}/commits";
+
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, url, _logger);
+            JArray content = JArray.Parse(await response.Content.ReadAsStringAsync());
+            JToken lastCommit = content.Last;
+            string lastCommitSha = lastCommit["sha"].ToString();
+
+            string ownerAndRepo = GetSegments(pullRequestUrl);
+            response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}statuses/{lastCommitSha}", _logger);
+
+            content = JArray.Parse(await response.Content.ReadAsStringAsync());
+
+            IList<Check> statuses = new List<Check>();
+            foreach (JToken status in content)
+            {
+                if (Enum.TryParse(status["state"].ToString(), true, out CheckState state))
+                {
+                    statuses.Add(new Check(state, status["context"].ToString(), status["url"].ToString()));
+                }
+            }
+
+            return statuses;
+        }
+
         private async Task<string> GetUserNameAsync()
         {
             string user;

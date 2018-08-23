@@ -133,9 +133,9 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var signingOverridingINformation = new Dictionary<ExplicitCertificateKey, string>();
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
 
-            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingINformation, expectedSigningList);
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
         }
 
         [Fact]
@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var signingOverridingINformation = new Dictionary<ExplicitCertificateKey, string>() {
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>() {
                 {new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", SignToolConstants.AllTargetFrameworksSentinel), "OverridedCertName" }
             };
 
@@ -172,9 +172,36 @@ namespace Microsoft.DotNet.SignTool.Tests
                 new FileName("/native/NativeLibrary.dll", expectedNatSignInfo),
             };
 
-            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingINformation, expectedSigningList);
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
         }
-        
+
+        [Fact]
+        public void EmptyPKT()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new string[] {
+                $@"Resources/EmptyPKT.dll",
+            };
+
+            // Default signing information
+            var signingInformation = new Dictionary<string, SignInfo>() {
+                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+            };
+
+            // Overriding information
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>() {
+                {new ExplicitCertificateKey("EmptyPKT.dll", "", SignToolConstants.AllTargetFrameworksSentinel), "OverridedCertName" }
+            };
+
+            var expectedSigningList = new List<FileName>()
+            {
+                new FileName("EmptyPKT.dll", new SignInfo("OverridedCertName", "")),
+            };
+
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
+        }
+
+
         [Fact]
         public void NestedContainer()
         {
@@ -210,9 +237,9 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var signingOverridingINformation = new Dictionary<ExplicitCertificateKey, string>();
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
 
-            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingINformation, expectedSigningList);
+            TestCaseEpilogue(itemsToSign, signingInformation, signingOverridingInformation, expectedSigningList);
         }
     }
 }

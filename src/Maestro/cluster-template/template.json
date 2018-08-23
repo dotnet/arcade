@@ -1,0 +1,531 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "clusterName": {
+      "type": "string",
+      "defaultValue": "Cluster",
+      "metadata": {
+        "description": "Name of your cluster - Between 3 and 23 characters. Letters and numbers only"
+      }
+    },
+    "adminUserName": {
+      "type": "string",
+      "defaultValue": "dotnet-bot",
+      "metadata": {
+        "description": "Remote desktop user Id"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Remote desktop user password. Must be a strong password"
+      }
+    },
+    "sslEndpoints": {
+      "type": "array",
+      "defaultValue": [
+        {
+          "internalPort": "4430"
+        }
+      ],
+      "metadata": {
+        "description": "Application Ssl Endpoints"
+      }
+    },
+    "clusterCertificateThumbprint": {
+      "type": "string",
+      "metadata": {
+        "description": "Certificate Thumbprint"
+      }
+    },
+    "secretSourceVaultResourceId": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource Id of the key vault, is should be in the format of /subscriptions/<Sub ID>/resourceGroups/<Resource group name>/providers/Microsoft.KeyVault/vaults/<vault name>"
+      }
+    },
+    "certificateUrls": {
+      "type": "array"
+    },
+    "adminClientCertificateThumbprint": {
+      "type": "string"
+    },
+    "fabricTcpGatewayPort": {
+      "type": "int",
+      "defaultValue": 19000
+    },
+    "fabricHttpGatewayPort": {
+      "type": "int",
+      "defaultValue": 19080
+    },
+    "applicationStartPort": {
+      "type": "int",
+      "defaultValue": 20000
+    },
+    "applicationEndPort": {
+      "type": "int",
+      "defaultValue": 30000
+    },
+    "ephemeralStartPort": {
+      "type": "int",
+      "defaultValue": 49152
+    },
+    "ephemeralEndPort": {
+      "type": "int",
+      "defaultValue": 65534
+    },
+    "storageAccountType": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS"
+      ],
+      "defaultValue": "Standard_LRS",
+      "metadata": {
+        "description": "Replication option for the VM image storage account"
+      }
+    },
+    "supportLogStorageAccountType": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS"
+      ],
+      "defaultValue": "Standard_LRS",
+      "metadata": {
+        "description": "Replication option for the support log storage account"
+      }
+    },
+    "supportLogStorageAccountName": {
+      "type": "string",
+      "defaultValue": "[toLower(concat('sflogs', uniqueString(resourceGroup().id), '2'))]",
+      "metadata": {
+        "description": "Name for the storage account that contains support logs from the cluster"
+      }
+    },
+    "applicationDiagnosticsStorageAccountType": {
+      "type": "string",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS"
+      ],
+      "defaultValue": "Standard_LRS",
+      "metadata": {
+        "description": "Replication option for the application diagnostics storage account"
+      }
+    },
+    "applicationDiagnosticsStorageAccountName": {
+      "type": "string",
+      "defaultValue": "[toLower(concat('sfdg', uniqueString(resourceGroup().id), '3' ))]",
+      "metadata": {
+        "description": "Name for the storage account that contains application diagnostics data from the cluster"
+      }
+    },
+    "_artifactsLocation": {
+      "type": "string"
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring"
+    },
+    "_artifactsLocationStorageAccountName": {
+      "type": "string"
+    },
+    "_artifactsLocationStorageAccountKey": {
+      "type": "securestring"
+    }
+  },
+  "variables": {
+    "nodeType0": {
+      "vmSize": "Standard_D4_v3",
+      "name": "Primary",
+      "instanceCount": 5,
+      "image": {
+        "publisher": "MicrosoftWindowsServer",
+        "offer": "WindowsServer",
+        "sku": "2016-Datacenter",
+        "version": "latest"
+      }
+    },
+    "clusterProtectionLevel": "EncryptAndSign",
+    "location": "[resourceGroup().location]",
+    "storageApiVersion": "2016-01-01",
+    "appInsightsResourceId": "[resourceId('Microsoft.Insights/components', parameters('clusterName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2014-04-01",
+      "type": "Microsoft.Insights/components",
+      "name": "[parameters('clusterName')]",
+      "kind": "web",
+      "location": "[variables('location')]",
+      "properties": {
+        "applicationId": "[parameters('clusterName')]"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "2017-06-01",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[parameters('supportLogStorageAccountName')]",
+      "location": "[variables('location')]",
+      "dependsOn": [],
+      "properties": {},
+      "kind": "Storage",
+      "sku": {
+        "name": "[parameters('supportLogStorageAccountType')]"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "2017-06-01",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[parameters('applicationDiagnosticsStorageAccountName')]",
+      "location": "[variables('location')]",
+      "dependsOn": [],
+      "properties": {},
+      "kind": "Storage",
+      "sku": {
+        "name": "[parameters('applicationDiagnosticsStorageAccountType')]"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "2017-05-10",
+      "name": "network",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/network.template.json', parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "clusterName": {
+            "value": "[parameters('clusterName')]"
+          },
+          "sslEndpoints": {
+            "value": "[parameters('sslEndpoints')]"
+          },
+          "fabricTcpGatewayPort": {
+            "value": "[parameters('fabricTcpGatewayPort')]"
+          },
+          "fabricHttpGatewayPort": {
+            "value": "[parameters('fabricHttpGatewayPort')]"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "2018-04-01",
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[concat(parameters('clusterName'), '-', variables('nodeType0').name)]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('supportLogStorageAccountName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('applicationDiagnosticsStorageAccountName'))]",
+        "[variables('appInsightsResourceId')]",
+        "network"
+      ],
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "overprovision": false,
+        "upgradePolicy": {
+          "mode": "Automatic"
+        },
+        "virtualMachineProfile": {
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "[concat(variables('nodeType0').name,'_ServiceFabricNode')]",
+                "properties": {
+                  "type": "ServiceFabricNode",
+                  "autoUpgradeMinorVersion": true,
+                  "protectedSettings": {
+                    "StorageAccountKey1": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('supportLogStorageAccountName')),'2015-05-01-preview').key1]",
+                    "StorageAccountKey2": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('supportLogStorageAccountName')),'2015-05-01-preview').key2]"
+                  },
+                  "publisher": "Microsoft.Azure.ServiceFabric",
+                  "settings": {
+                    "clusterEndpoint": "[reference(resourceId('Microsoft.ServiceFabric/clusters', parameters('clusterName'))).clusterEndpoint]",
+                    "nodeTypeRef": "[variables('nodeType0').name]",
+                    "dataPath": "D:\\\\SvcFab",
+                    "durabilityLevel": "Silver",
+                    "enableParallelJobs": true,
+                    "nicPrefixOverride": "10.0.0.0/24",
+                    "certificate": {
+                      "thumbprint": "[parameters('clusterCertificateThumbprint')]",
+                      "x509StoreName": "My"
+                    }
+                  },
+                  "typeHandlerVersion": "1.0"
+                }
+              },
+              {
+                "name": "[concat('VMDiagnosticsVmExt','_vmNodeType0Name')]",
+                "properties": {
+                  "type": "IaaSDiagnostics",
+                  "autoUpgradeMinorVersion": true,
+                  "protectedSettings": {
+                    "storageAccountName": "[parameters('applicationDiagnosticsStorageAccountName')]",
+                    "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('applicationDiagnosticsStorageAccountName')),'2015-05-01-preview').key1]",
+                    "storageAccountEndPoint": "https://core.windows.net/"
+                  },
+                  "publisher": "Microsoft.Azure.Diagnostics",
+                  "settings": {
+                    "WadCfg": {
+                      "DiagnosticMonitorConfiguration": {
+                        "overallQuotaInMB": "50000",
+                        "sinks": "applicationInsights",
+                        "EtwProviders": {
+                          "EtwEventSourceProviderConfiguration": [
+                            {
+                              "provider": "Microsoft-ServiceFabric-Actors",
+                              "scheduledTransferKeywordFilter": "1",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricReliableActorEventTable"
+                              }
+                            },
+                            {
+                              "provider": "Microsoft-ServiceFabric-Services",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricReliableServiceEventTable"
+                              }
+                            }
+                          ],
+                          "EtwManifestProviderConfiguration": [
+                            {
+                              "provider": "cbd93bc2-71e5-4566-b3a7-595d8eeca6e8",
+                              "scheduledTransferLogLevelFilter": "Information",
+                              "scheduledTransferKeywordFilter": "4611686018427387904",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricSystemEventTable"
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "SinksConfig": {
+                        "Sink": [
+                          {
+                            "name": "applicationInsights",
+                            "ApplicationInsights": "[reference(variables('appInsightsResourceId'), '2014-04-01').InstrumentationKey]"
+                          }
+                        ]
+                      }
+                    },
+                    "StorageAccount": "[parameters('applicationDiagnosticsStorageAccountName')]"
+                  },
+                  "typeHandlerVersion": "1.5"
+                }
+              },
+              {
+                "properties": {
+                  "publisher": "Microsoft.Compute",
+                  "type": "CustomScriptExtension",
+                  "typeHandlerVersion": "1.9",
+                  "autoUpgradeMinorVersion": true,
+                  "settings": {
+                    "fileUris": [
+                      "[concat(parameters('_artifactsLocation'), '/startup.ps1')]",
+                      "[concat(parameters('_artifactsLocation'), '/update-ciphers.reg')]"
+                    ],
+                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Bypass -NoProfile -Command ./startup.ps1 \"\"\"', reference(variables('appInsightsResourceId'), '2014-04-01').InstrumentationKey, '\"\"\"')]"
+                  },
+                  "protectedSettings": {
+                    "storageAccountName": "[parameters('_artifactsLocationStorageAccountName')]",
+                    "storageAccountKey": "[parameters('_artifactsLocationStorageAccountKey')]"
+                  }
+                },
+                "name": "SetEnvironment"
+              },
+              {
+                "properties": {
+                  "autoUpgradeMinorVersion": true,
+                  "settings": {
+                    "port": 50342
+                  },
+                  "publisher": "Microsoft.ManagedIdentity",
+                  "type": "ManagedIdentityExtensionForWindows",
+                  "typeHandlerVersion": "1.0"
+                },
+                "name": "ManagedIdentityExtensionForWindows"
+              }
+            ]
+          },
+          "networkProfile": {
+            "copy": [{
+              "name": "networkInterfaceConfigurations",
+              "count": 2,
+              "input": {
+                "name": "[concat('NIC-', variables('nodeType0').name, copyIndex('networkInterfaceConfigurations'))]",
+                "properties": {
+                  "ipConfigurations": [
+                    {
+                      "name": "[concat('NIC-', variables('nodeType0').name, copyIndex('networkInterfaceConfigurations'))]",
+                      "properties": {
+                        "loadBalancerBackendAddressPools": [
+                          {
+                            "id": "[reference('network').outputs.lb.value.backendAddressPool]"
+                          }
+                        ],
+                        "subnet": {
+                          "id": "[reference('network').outputs.vnet.value.subnet]"
+                        }
+                      }
+                    }
+                  ],
+                  "primary": "[if(equals(copyIndex('networkInterfaceConfigurations'), 0), 'true', 'false')]"
+                }
+              }
+            }]
+          },
+          "osProfile": {
+            "adminPassword": "[parameters('adminPassword')]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "computernamePrefix": "[variables('nodeType0').name]",
+            "secrets": [
+              {
+                "sourceVault": {
+                  "id": "[parameters('secretSourceVaultResourceId')]"
+                },
+                "copy": [
+                  {
+                    "name": "vaultCertificates",
+                    "count": "[length(parameters('certificateUrls'))]",
+                    "input": {
+                      "certificateStore": "My",
+                      "certificateUrl": "[parameters('certificateUrls')[copyIndex('vaultCertificates')]]"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "storageProfile": {
+            "imageReference": {
+              "publisher": "[variables('nodeType0').image.publisher]",
+              "offer": "[variables('nodeType0').image.offer]",
+              "sku": "[variables('nodeType0').image.sku]",
+              "version": "[variables('nodeType0').image.version]"
+            },
+            "osDisk": {
+              "caching": "ReadOnly",
+              "createOption": "FromImage",
+              "managedDisk": {
+                "storageAccountType": "[parameters('storageAccountType')]"
+              }
+            }
+          }
+        }
+      },
+      "sku": {
+        "name": "[variables('nodeType0').vmSize]",
+        "capacity": "[variables('nodeType0').instanceCount]",
+        "tier": "Standard"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "2017-07-01-preview",
+      "type": "Microsoft.ServiceFabric/clusters",
+      "name": "[parameters('clusterName')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('supportLogStorageAccountName'))]"
+      ],
+      "properties": {
+        "addonFeatures": [],
+        "certificate": {
+          "thumbprint": "[parameters('clusterCertificateThumbprint')]",
+          "x509StoreName": "My"
+        },
+        "clientCertificateCommonNames": [],
+        "clientCertificateThumbprints": [
+          {
+            "certificateThumbprint": "[parameters('adminClientCertificateThumbprint')]",
+            "isAdmin": true
+          }
+        ],
+        "clusterState": "Default",
+        "diagnosticsStorageAccountConfig": {
+          "blobEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', parameters('supportLogStorageAccountName')), variables('storageApiVersion')).primaryEndpoints.blob]",
+          "protectedAccountKeyName": "StorageAccountKey1",
+          "queueEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', parameters('supportLogStorageAccountName')), variables('storageApiVersion')).primaryEndpoints.queue]",
+          "storageAccountName": "[parameters('supportLogStorageAccountName')]",
+          "tableEndpoint": "[reference(concat('Microsoft.Storage/storageAccounts/', parameters('supportLogStorageAccountName')), variables('storageApiVersion')).primaryEndpoints.table]"
+        },
+        "fabricSettings": [
+          {
+            "parameters": [
+              {
+                "name": "ClusterProtectionLevel",
+                "value": "[variables('clusterProtectionLevel')]"
+              }
+            ],
+            "name": "Security"
+          },
+          {
+            "parameters": [
+              {
+                "name": "EnableDefaultServicesUpgrade",
+                "value": "true"
+              }
+            ],
+            "name": "ClusterManager"
+          }
+        ],
+        "managementEndpoint": "[concat('https://', reference('network').outputs.fqdn.value, ':' , parameters('fabricHttpGatewayPort'))]",
+        "nodeTypes": [
+          {
+            "name": "[variables('nodeType0').name]",
+            "applicationPorts": {
+              "endPort": "[parameters('applicationEndPort')]",
+              "startPort": "[parameters('applicationStartPort')]"
+            },
+            "clientConnectionEndpointPort": "[parameters('fabricTcpGatewayPort')]",
+            "durabilityLevel": "Silver",
+            "ephemeralPorts": {
+              "endPort": "[parameters('ephemeralEndPort')]",
+              "startPort": "[parameters('ephemeralStartPort')]"
+            },
+            "httpGatewayEndpointPort": "[parameters('fabricHttpGatewayPort')]",
+            "isPrimary": true,
+            "vmInstanceCount": "[variables('nodeType0').instanceCount]"
+          }
+        ],
+        "provisioningState": "Default",
+        "reliabilityLevel": "Silver",
+        "upgradeMode": "Automatic",
+        "vmImage": "Windows"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
+      }
+    }
+  ],
+  "outputs": {
+    "clusterProperties": {
+      "value": "[reference(resourceId('Microsoft.ServiceFabric/clusters', parameters('clusterName')))]",
+      "type": "object"
+    }
+  }
+}

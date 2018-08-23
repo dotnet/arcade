@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DependencyUpdater;
 using Maestro.Contracts;
 using Maestro.Data;
 using Maestro.Data.Models;
@@ -195,7 +194,7 @@ namespace SubscriptionActorService
                 return false; // Don't auto merge anything that has no checks.
             }
 
-            if (checks.All(c => c.Status == CheckStatus.Succeeded))
+            if (checks.All(c => c.Status == CheckState.Success))
             {
                 return true; // If every check succeeded merge the pr
             }

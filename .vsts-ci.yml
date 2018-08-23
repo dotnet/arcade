@@ -23,7 +23,6 @@ phases:
             ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
               _PublishType: blob
               _SignType: real
-              _UseEsrpSigning: true
   
   - template: /eng/build.yml
     parameters:

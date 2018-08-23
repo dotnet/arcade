@@ -319,6 +319,48 @@ namespace Microsoft.DotNet.DarcLib
             return values[0]["commitId"].ToString();
         }
 
+        public async Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl)
+        {
+            string url = $"{pullRequestUrl}/statuses";
+
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, url, _logger);
+
+            JObject content = JObject.Parse(await response.Content.ReadAsStringAsync());
+            JArray values = JArray.Parse(content["value"].ToString());
+
+            IList<Check> statuses = new List<Check>();
+            foreach (JToken status in values)
+            {
+                if (Enum.TryParse(status["state"].ToString(), true, out VstsCheckState state))
+                {
+                    CheckState checkState;
+
+                    switch (state)
+                    {
+                        case VstsCheckState.Error:
+                            checkState = CheckState.Error;
+                            break;
+                        case VstsCheckState.Failed:
+                            checkState = CheckState.Failure;
+                            break;
+                        case VstsCheckState.Pending:
+                            checkState = CheckState.Pending;
+                            break;
+                        case VstsCheckState.Succeeded:
+                            checkState = CheckState.Success;
+                            break;
+                        default:
+                            checkState = CheckState.None;
+                            break;
+                    }
+
+                    statuses.Add(new Check(checkState, status["context"]["name"].ToString(), $"{pullRequestUrl}/{status["id"]}".ToString()));
+                }
+            }
+
+            return statuses;
+        }
+
         public HttpClient CreateHttpClient(string versionOverride = null)
         {
             HttpClient client = new HttpClient

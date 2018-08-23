@@ -20,14 +20,20 @@ parameters:
   ## Telemetry variables
 
   # Optional: enable sending telemetry
-  #           if enabled, these "variables" must be specified in the variables object
+  #           if 'true', these "variables" must be specified in the variables object or as part of the queue matrix
   #             _HelixBuildConfig - differentiate between Debug, Release, other
   #             _HelixSource - Example: build/product
   #             _HelixType - Example: official/dotnet/arcade/$(Build.SourceBranch)
   enableTelemetry: false
 
+  # Optional: Enable installing Microbuild plugin
+  #           if 'true', these "variables" must be specified in the variables object or as part of the queue matrix
+  #             _TeamName - the name of your team
+  #             _SignType - 'test' or 'real'
+  enableMicrobuild: false
+
   # Build.Reason for anonymous builds - https://docs.microsoft.com/en-us/vsts/pipelines/build/variables?view=vsts#build-variables
-  publicBuildReasons: IndividualCI,BatchedCI,PullRequest
+  publicBuildReasons: PullRequest
 
 phases:
 - phase: ${{ parameters.name }}
@@ -45,19 +51,39 @@ phases:
 
   - ${{ if eq(parameters.enableTelemetry, 'true') }}:
     # Remove this condition once telemetry can be sent from public CI
-    - ${{ if not(contains(parameters.publicBuildReasons, variables['Build.Reason'] )) }}:
+    - ${{ if and(ne(variables['System.TeamProject'], 'public'), not(contains(parameters.publicBuildReasons, variables['Build.Reason'] ))) }}:
       - template: /eng/common/templates/steps/telemetry-start.yml
         parameters:
           buildConfig: ${{ parameters.variables._HelixBuildConfig }}
           helixSource: ${{ parameters.variables._HelixSource }}
           helixType: ${{ parameters.variables._HelixType }}
 
+  - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
+    - ${{ if and(ne(variables['System.TeamProject'], 'public'), not(contains(parameters.publicBuildReasons, variables['Build.Reason'] ))) }}:
+      - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
+        displayName: Install MicroBuild plugin
+        inputs:
+          signType: $(_SignType)
+          zipSources: false
+        env:
+          TeamName: $(_TeamName)
+        continueOnError: false
+        condition: and(succeeded(), in(variables['_SignType'], 'real', 'test'), eq(variables['Agent.Os'], 'Windows_NT'))
+
   # Run provided build steps
   - ${{ parameters.steps }}
 
+  - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
+    - ${{ if and(ne(variables['System.TeamProject'], 'public'), not(contains(parameters.publicBuildReasons, variables['Build.Reason'] ))) }}:
+      - task: ms-vseng.MicroBuildTasks.521a94ea-9e68-468a-8167-6dcf361ea776.MicroBuildCleanup@1
+        displayName: Execute Microbuild cleanup tasks  
+        condition: and(always(), in(variables['_SignType'], 'real', 'test'), eq(variables['Agent.Os'], 'Windows_NT'))
+        env:
+          TeamName: $(_TeamName)
+
   - ${{ if eq(parameters.enableTelemetry, 'true') }}:
     # Remove this condition once telemetry can be sent from public CI
-    - ${{ if not(contains(parameters.publicBuildReasons, variables['Build.Reason'] )) }}:
+    - ${{ if and(ne(variables['System.TeamProject'], 'public'), not(contains(parameters.publicBuildReasons, variables['Build.Reason'] ))) }}:
       - template: /eng/common/templates/steps/telemetry-end.yml
         parameters:
           helixSource: ${{ parameters.variables._HelixSource }}

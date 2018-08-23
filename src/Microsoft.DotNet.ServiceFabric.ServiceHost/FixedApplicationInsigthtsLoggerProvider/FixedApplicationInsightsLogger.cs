@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
             }
 
             op.Start();
-            _telemetryClient.TrackTrace($"Begin Scope: {logString}", SeverityLevel.Information, logDict);
+            _telemetryClient.TrackTrace($"Begin Scope: {logString}", SeverityLevel.Verbose, logDict);
             return new Scope(op, _telemetryClient);
         }
 

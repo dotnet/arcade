@@ -40,7 +40,9 @@
     <ProjectReference Include="..\SubscriptionActorService\SubscriptionActorService.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ApplicationParameters\Int.xml" />
     <Content Include="packages.config" />
+    <Content Include="PublishProfiles\Int.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
   <PropertyGroup>

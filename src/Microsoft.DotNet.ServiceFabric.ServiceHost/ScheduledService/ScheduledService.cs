@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -11,6 +11,7 @@ using Microsoft.ApplicationInsights;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using Quartz.Impl;
+using Quartz.Simpl;
 
 namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 {
@@ -115,10 +116,11 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
             ILogger logger)
         {
             IScheduler scheduler = null;
+            string name = Guid.NewGuid().ToString();
             try
             {
-                DirectSchedulerFactory.Instance.CreateVolatileScheduler(2);
-                scheduler = await DirectSchedulerFactory.Instance.GetScheduler(cancellationToken);
+                DirectSchedulerFactory.Instance.CreateScheduler(name, name, new DefaultThreadPool(), new RAMJobStore());
+                scheduler = await DirectSchedulerFactory.Instance.GetScheduler(name, cancellationToken);
                 foreach ((IJobDetail job, ITrigger trigger) in GetCronJobs(service, telemetryClient, logger))
                 {
                     await scheduler.ScheduleJob(job, trigger, cancellationToken);

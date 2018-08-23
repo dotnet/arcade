@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 using (var stream = File.OpenRead(fileFullPath))
                 {
-                    if (ContentUtil.IsAssemblyStrongNameSigned(stream))
+                    if (ContentUtil.IsAuthenticodeSigned(stream))
                     {
                         return SignInfo.AlreadySigned;
                     }
@@ -121,16 +121,16 @@ namespace Microsoft.DotNet.SignTool
                 else
                 {
                     var fileAsm = System.Reflection.AssemblyName.GetAssemblyName(fileFullPath);
-                    var publicKeyToken = string.Join("", fileAsm.GetPublicKeyToken().Select(b => b.ToString("x2")));
+                    var pktBytes = fileAsm.GetPublicKeyToken();
+                    var publicKeyToken = (pktBytes == null || pktBytes.Length == 0) ? string.Empty : string.Join("", pktBytes.Select(b => b.ToString("x2")));
                     var targetFramework = GetTargetFrameworkName(fileFullPath).FullName;
                     var fileName = Path.GetFileName(fileFullPath);
-                    string overridingCertificate = null;
 
                     var keyForAllTargets = new ExplicitCertificateKey(fileName, publicKeyToken, SignToolConstants.AllTargetFrameworksSentinel);
                     var keyForSpecificTarget = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework);
 
                     // Do we need to override the default certificate this file ?
-                    if (_explicitCertificates.TryGetValue(keyForSpecificTarget, out overridingCertificate) ||
+                    if (_explicitCertificates.TryGetValue(keyForSpecificTarget, out var overridingCertificate) ||
                         _explicitCertificates.TryGetValue(keyForAllTargets, out overridingCertificate))
                     {
                         // If has overriding info, is it for ignoring the file?
@@ -139,6 +139,17 @@ namespace Microsoft.DotNet.SignTool
                             return SignInfo.Ignore; // should ignore this file
                         }
                         // Otherwise, just use the overriding info if present
+                    }
+
+                    if (publicKeyToken == string.Empty)
+                    {
+                        if (string.IsNullOrEmpty(overridingCertificate))
+                        {
+                            _log.LogError($"SignInfo for file ({fileFullPath}) and empty PKT not found. Expected it to be informed in overriding infos.");
+                            return SignInfo.Empty;
+                        }
+
+                        return new SignInfo(overridingCertificate, string.Empty);
                     }
 
                     if (_defaultSignInfoForPublicKeyToken.ContainsKey(publicKeyToken))
@@ -150,7 +161,7 @@ namespace Microsoft.DotNet.SignTool
                         return new SignInfo(certificate, signInfo.StrongName, signInfo.ShouldIgnore, signInfo.IsEmpty, signInfo.IsAlreadySigned);
                     }
 
-                    _log.LogError($"SignInfo for Public Key Token {publicKeyToken} not found.");
+                    _log.LogError($"SignInfo for file ({fileFullPath}) with Public Key Token {publicKeyToken} not found.");
                     return SignInfo.Empty;
                 }
             }

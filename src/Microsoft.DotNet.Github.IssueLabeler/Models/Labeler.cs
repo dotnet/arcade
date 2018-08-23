@@ -41,11 +41,10 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
                 issueUpdate.AddLabel(label);
 
                 await _client.Issue.Update(_repoOwner, _repoName, number, issueUpdate);
-                logger.LogInformation($"Issue {corefxIssue.ID} : \"{corefxIssue.Title}\" was labeled as: {label}");
             }
             else
             {
-                logger.LogInformation($"The Model is not able to assign the label to the Issue {corefxIssue.ID} confidently.");
+                logger.LogInformation($"! The Model is not able to assign the label to the Issue {corefxIssue.ID} confidently.");
             }
         }
     }

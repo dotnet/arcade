@@ -36,15 +36,30 @@
       <DesktopMSBuildPath Condition="$(DesktopMSBuildRequired)">$(VSInstallDir)\MSBuild\15.0\Bin\msbuild.exe</DesktopMSBuildPath>
     </PropertyGroup>
 
+    <ItemGroup>
+      <!-- List of container files that will be opened and checked for files that need to be signed. -->
+      <ItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
+      <ItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- Default certificate/strong-name to be used for all files with PKT=="31bf3856ad364e35". -->
+      <StrongNameSignInfo Include="MsSharedLib72" PublicKeyToken="31bf3856ad364e35" CertificateName="MicrosoftSHA2" />
+    </ItemGroup>
+
     <Microsoft.DotNet.SignTool.SignToolTask
-       DryRun="$(DryRun)"
-       TestSign="$(TestSign)"
-       ConfigFilePath="$(ConfigFilePath)"
-       MSBuildPath="$(DesktopMSBuildPath)"
-       OutputDir="$(ArtifactsConfigurationDir)"
-       TempDir="$(ArtifactsTmpDir)"
-       LogDir="$(ArtifactsLogDir)"
-       MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"/>
+        DryRun="$(DryRun)"
+        TestSign="$(TestSign)"
+        ItemsToSign="@(ItemsToSign)"
+        StrongNameSignInfo="@(StrongNameSignInfo)"
+        FileSignInfo="@(FileSignInfo)"
+        TempDir="$(ArtifactsTmpDir)"
+        LogDir="$(ArtifactsLogDir)"
+        PublishUrl="$(PublishUrl)"
+        OrchestrationManifestPath="$(OrchestrationManifestPath)"
+        MSBuildPath="$(DesktopMSBuildPath)"
+        MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"/>
+       
   </Target>
 
 </Project>

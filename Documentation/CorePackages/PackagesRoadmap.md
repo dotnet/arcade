@@ -30,19 +30,13 @@ The following list provides a summary of the state of each package. For more inf
   - Add documentation on how to consume the SignTool.
 - **When could start being consumed by other repositories**: S140 => 8/31
 
-### Blob Feeds
-- **Goal**: Publish packages to internal sources to increase reliability in our internal build systems.
-- **Where we are**:
-  - Transport feeds from Buildtools is now in Arcade.
-- **Principal TODOs**:
-  - Remove the dependency from VersionTools => Send information to Darc/Maestro.
-- **When could start being consumed by other repositories**: S140 => 8/31
-
 ### Publishing
 - **Goal**: Standardized the way to publish packages and symbols to the respective channels for all .NET Core 3.0 repositories.
-- **Where we are**: Arcade is consuming the Publishing package.
+- **Where we are**: 
+  - Publishing plan [here](PublishingPlan.md)
+  - Arcade is consuming the Publishing package.
+  - Transport feeds from Buildtools is now in Arcade.
 - **Principal TODOs**:
-  - Add validation.
   - Send information to Darc/Maestro.
   - Add documentation to Arcade.
 - **When could start being consumed by other repositories**: S141 => 9/21
@@ -53,7 +47,7 @@ The following list provides a summary of the state of each package. For more inf
 - **Principal TODOs**: 
   - Make sure what we currently have will work for most repositories. Refactor where necessary.
   - Add documentation.
-- **When could start being consumed by other repositories**: S142 => 10/12
+- **When could start being consumed by other repositories**: S141 => 9/21
 
 ### Telemetry
 - **Goal**: Provide telemetry about every task executed as part of building .NET Core 3.0.
@@ -61,4 +55,4 @@ The following list provides a summary of the state of each package. For more inf
 - **Principal TODOs**:
   - Make sure what we currently have will work for most repositories. Refactor where necessary.
   - Add documentation.
-- **When could start being consumed by other repositories**: S142 => 10/12
+- **When could start being consumed by other repositories**: S141 => 9/21

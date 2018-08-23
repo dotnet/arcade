@@ -26,9 +26,11 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         public string Description;
 
         [DataMember(Name = "labels")]
+        [NoColumn]
         public List<object> Labels { get; set; }
 
         [DataMember(Name = "number")]
+        [NoColumn]
         public int Number { get; set; }
     }
 }
