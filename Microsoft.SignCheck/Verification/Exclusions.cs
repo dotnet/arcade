@@ -100,7 +100,6 @@ namespace Microsoft.SignCheck.Verification
             if (pattern.IndexOfAny(_wildCards) > -1)
             {
                 var regexPattern = Utils.ConvertToRegexPattern(pattern);
-                var m = Regex.IsMatch(value, pattern, RegexOptions.IgnoreCase);
                 return Regex.IsMatch(value, regexPattern, RegexOptions.IgnoreCase);
             }
             else
