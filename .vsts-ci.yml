@@ -7,7 +7,10 @@ phases:
       isPublicProject: true
     ${{ if ne(variables['System.TeamProject'], 'public') }}:    
       isPublicProject: false
-    enableTelemetry: ${{ not(variables[‘isPublicProject’]) }}
+    ${{ if eq(variables['isPublicProject'], 'true') }}:
+      enableTelemetry: false
+    ${{ if ne(variables['isPublicProject'], 'true') }}:
+      enableTelemetry: true
   steps:
   - script: echo enableTelemetry - %enableTelem%
     env:
