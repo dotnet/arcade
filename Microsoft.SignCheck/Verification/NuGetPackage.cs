@@ -1,8 +1,8 @@
-﻿using NuGet.Common;
+﻿using System.Collections.Generic;
+using System.Threading;
+using NuGet.Common;
 using NuGet.Packaging;
 using NuGet.Packaging.Signing;
-using System.Collections.Generic;
-using System.Threading;
 
 namespace Microsoft.SignCheck.Verification
 {

@@ -452,7 +452,7 @@ namespace SignCheck
             var sc = new SignCheck(args);
             if ((sc.Options != null) && (!sc.HasArgErrors))
             {
-                sc.Run();
+                Environment.Exit(sc.Run());
             }
         }
     }
