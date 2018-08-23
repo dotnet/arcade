@@ -5,6 +5,7 @@
 using Microsoft.Build.Framework;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 using Xunit;
@@ -25,7 +26,8 @@ namespace Microsoft.DotNet.SignTool.Tests
         public List<BuildWarningEventArgs> LogWarningEvents =
             new List<BuildWarningEventArgs>();
 
-        public List<FileSignInfo> filesSigned = new List<FileSignInfo>();
+        public readonly List<ImmutableArray<XElement>> FilesToSign = new List<ImmutableArray<XElement>>();
+        private static readonly ImmutableArray<byte> s_dummyHash = ImmutableArray.Create(new byte[256 / 8]);
 
         public bool BuildProjectFile(string projectFileName, string[] targetNames, IDictionary globalProperties, IDictionary targetOutputs)
         {
@@ -45,15 +47,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             }
             else
             {
-                foreach (var item in itemGroupNode.Descendants("FilesToSign"))
-                {
-                    var fileName = item.Attribute("Include").Value;
-                    var certificateName = item.Element("Authenticode").Value;
-                    var strongName =  item.Element("StrongName")?.Value;
-
-                    filesSigned.Add(new FileSignInfo(fileName, new SignInfo(certificateName, strongName)));
-                }
-
+                FilesToSign.Add(itemGroupNode.Descendants("FilesToSign").ToImmutableArray());
                 return true;
             }
         }

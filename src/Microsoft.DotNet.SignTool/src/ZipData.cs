@@ -20,9 +20,9 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// The parts inside this zip archive which need to be signed.
         /// </summary>
-        internal ImmutableList<ZipPart> NestedParts { get; }
+        internal ImmutableArray<ZipPart> NestedParts { get; }
 
-        internal ZipData(FileSignInfo fileSignInfo, ImmutableList<ZipPart> nestedBinaryParts)
+        internal ZipData(FileSignInfo fileSignInfo, ImmutableArray<ZipPart> nestedBinaryParts)
         {
             FileSignInfo = fileSignInfo;
             NestedParts = nestedBinaryParts;

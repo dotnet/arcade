@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.SignTool
             => obj is ExplicitCertificateKey key && Equals(key);
 
         public override int GetHashCode()
-            => FileName.GetHashCode() ^ PublicKeyToken.GetHashCode() ^ TargetFramework.GetHashCode();
+            => Hash.Combine(Hash.Combine(FileName.GetHashCode(), PublicKeyToken.GetHashCode()), TargetFramework.GetHashCode());
 
         bool IEquatable<ExplicitCertificateKey>.Equals(ExplicitCertificateKey other)
             => FileName == other.FileName && 

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 
@@ -10,42 +11,54 @@ namespace Microsoft.DotNet.SignTool
 {
     internal readonly struct FileSignInfo
     {
-        internal readonly string Name;
+        internal readonly string FileName;
         internal readonly string FullPath;
         internal readonly SignInfo SignInfo;
+        internal readonly ImmutableArray<byte> ContentHash;
 
         // optional file information that allows to disambiguate among multiple files with the same name:
         internal readonly string TargetFramework;
 
-        internal static bool IsPEFile(string fileFullPath)
-            => !string.IsNullOrWhiteSpace(fileFullPath) && (Path.GetExtension(fileFullPath) == ".exe" || Path.GetExtension(fileFullPath) == ".dll");
+        internal static bool IsPEFile(string path)
+            => Path.GetExtension(path) == ".exe" || Path.GetExtension(path) == ".dll";
 
-        internal static bool IsVsix(string fileFullPath)
-            => !string.IsNullOrWhiteSpace(fileFullPath) && Path.GetExtension(fileFullPath).Equals(".vsix", StringComparison.OrdinalIgnoreCase);
+        internal static bool IsVsix(string path)
+            => Path.GetExtension(path).Equals(".vsix", StringComparison.OrdinalIgnoreCase);
 
-        internal static bool IsNupkg(string fileFullPath)
-            => !string.IsNullOrWhiteSpace(fileFullPath) && Path.GetExtension(fileFullPath).Equals(".nupkg", StringComparison.OrdinalIgnoreCase);
+        internal static bool IsNupkg(string path)
+            => Path.GetExtension(path).Equals(".nupkg", StringComparison.OrdinalIgnoreCase);
 
-        internal static bool IsZipContainer(string fileFullPath)
-            => IsVsix(fileFullPath) || IsNupkg(fileFullPath);
+        internal static bool IsZipContainer(string path)
+            => IsVsix(path) || IsNupkg(path);
 
-        internal bool IsPEFile() => IsPEFile(Name);
+        internal static bool IsSignableFile(string path)
+            => IsZipContainer(path) || IsPEFile(path);
 
-        internal bool IsVsix() => IsVsix(Name);
+        internal bool IsPEFile() => IsPEFile(FileName);
 
-        internal bool IsNupkg() => IsNupkg(Name);
+        internal bool IsVsix() => IsVsix(FileName);
 
-        internal bool IsZipContainer() => IsZipContainer(Name);
+        internal bool IsNupkg() => IsNupkg(FileName);
 
-        internal FileSignInfo(string fullPath, SignInfo signInfo, string targetFramework = null)
+        internal bool IsZipContainer() => IsZipContainer(FileName);
+
+        internal FileSignInfo(string fullPath, ImmutableArray<byte> contentHash, SignInfo signInfo, string targetFramework = null)
         {
             Debug.Assert(fullPath != null);
+            Debug.Assert(!contentHash.IsDefault && contentHash.Length == 256 / 8);
             Debug.Assert(targetFramework != "");
 
-            Name = Path.GetFileName(fullPath);
+            FileName = Path.GetFileName(fullPath);
+            ContentHash = contentHash;
             FullPath = fullPath;
             SignInfo = signInfo;
             TargetFramework = targetFramework;
         }
+
+        public override string ToString()
+            => $"File '{FileName}'" +
+               (TargetFramework != null ? $" TargetFramework='{TargetFramework}'" : "") +
+               $" Certificate='{SignInfo.Certificate}'" +
+               (SignInfo.StrongName != null ? $" StrongName='{SignInfo.StrongName}'" : "");
     }
 }

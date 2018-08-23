@@ -25,18 +25,16 @@ namespace Microsoft.DotNet.SignTool
 
         /// <summary>
         /// Holds information about each of the containers that will be signed.
-        /// The key is a full file path.
+        /// The key is the content hash of the file.
         /// </summary>
-        internal ImmutableDictionary<string, ZipData> ZipDataMap;
+        internal ImmutableDictionary<ImmutableArray<byte>, ZipData> ZipDataMap;
 
-        internal BatchSignInput(ImmutableList<FileSignInfo> fileSignDataMap, ImmutableDictionary<string, ZipData> zipDataMap, string publishUri)
+        internal BatchSignInput(ImmutableArray<FileSignInfo> filesToSign, ImmutableDictionary<ImmutableArray<byte>, ZipData> zipDataMap, string publishUri)
         {
-            Debug.Assert(fileSignDataMap != null);
+            Debug.Assert(!filesToSign.IsDefault);
             Debug.Assert(zipDataMap != null);
 
-            // Use order by to make the output of this tool as predictable as possible.
-            FilesToSign = fileSignDataMap.OrderBy(x => x.FullPath).ToImmutableArray();
-
+            FilesToSign = filesToSign;
             ZipDataMap = zipDataMap;
             PublishUri = publishUri;
         }

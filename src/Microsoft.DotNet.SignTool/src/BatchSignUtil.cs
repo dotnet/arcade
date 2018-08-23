@@ -2,15 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.DotNet.SignTool.Json;
-using Microsoft.Build.Utilities;
-using Microsoft.Build.Framework;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.IO.Packaging;
 using System.Linq;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+using Microsoft.DotNet.SignTool.Json;
+using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -88,7 +89,7 @@ namespace Microsoft.DotNet.SignTool
                 var filesInThisGroup = combinationToSign.Select(combination => new FileSignDataEntry()
                 {
                     FilePath = combination.FullPath,
-                    SHA256Hash = contentUtil.GetChecksum(combination.FullPath),
+                    SHA256Hash = ContentUtil.HashToString(ContentUtil.GetContentHash(combination.FullPath)),
                     PublishToFeedUrl = batchData.PublishUri
                 });
                 newList.Add(new OrchestratedFileSignData()
@@ -113,7 +114,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 if (fileSignInfo.SignInfo.StrongName != null)
                 {
-                    _log.LogMessage($"Removing public sign: '{fileSignInfo.Name}'");
+                    _log.LogMessage($"Removing public sign: '{fileSignInfo.FileName}'");
                     _signTool.RemovePublicSign(fileSignInfo.FullPath);
                 }
             }
@@ -128,7 +129,7 @@ namespace Microsoft.DotNet.SignTool
             // bugs if repeated runs use the same ordering.
             var toSignList = _batchData.FilesToSign.ToList();
             var round = 0;
-            var signedSet = new HashSet<string>();
+            var signedSet = new HashSet<ImmutableArray<byte>>(ByteSequenceComparer.Instance);
 
             bool signFiles(IEnumerable<FileSignInfo> files)
             {
@@ -137,11 +138,7 @@ namespace Microsoft.DotNet.SignTool
                 _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
                 foreach (var file in filesToSign)
                 {
-                    _log.LogMessage(MessageImportance.Low,
-                        $"File '{file.Name}'" + 
-                        (file.TargetFramework != null ? $" TargetFramework='{file.TargetFramework}'" : "") +
-                        $" Certificate='{file.SignInfo.Certificate}'" + 
-                        (file.SignInfo.StrongName != null ? $" StrongName='{file.SignInfo.StrongName}'" : ""));
+                    _log.LogMessage(MessageImportance.Low, file.ToString());
                 }
 
                 return _signTool.Sign(_buildEngine, round, filesToSign);
@@ -153,23 +150,23 @@ namespace Microsoft.DotNet.SignTool
                 {
                     if (file.IsZipContainer())
                     {
-                        _log.LogMessage($"Repacking container: '{file.Name}'");
-                        Repack(_batchData.ZipDataMap[file.FullPath]);
+                        _log.LogMessage($"Repacking container: '{file.FileName}'");
+                        Repack(_batchData.ZipDataMap[file.ContentHash]);
                     }
                 }
             }
 
             // Is this file ready to be signed? That is are all of the items that it depends on already
             // signed?
-            bool isReadyToSign(FileSignInfo fileName)
+            bool isReadyToSign(FileSignInfo file)
             {
-                if (!fileName.IsZipContainer())
+                if (!file.IsZipContainer())
                 {
                     return true;
                 }
 
-                var zipData = _batchData.ZipDataMap[fileName.FullPath];
-                return zipData.NestedParts.All(x => !x.FileSignInfo.SignInfo.ShouldSign || signedSet.Contains(x.FileSignInfo.FullPath));
+                var zipData = _batchData.ZipDataMap[file.ContentHash];
+                return zipData.NestedParts.All(x => !x.FileSignInfo.SignInfo.ShouldSign || signedSet.Contains(x.FileSignInfo.ContentHash));
             }
 
             // Extract the next set of files that should be signed. This is the set of files for which all of the
@@ -210,7 +207,7 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 round++;
-                list.ForEach(x => signedSet.Add(x.FullPath));
+                list.ForEach(x => signedSet.Add(x.ContentHash));
             }
 
             return true;
@@ -299,22 +296,22 @@ namespace Microsoft.DotNet.SignTool
 
         private void VerifyAfterSign(TaskLoggingHelper log)
         {
-            foreach (var fileName in _batchData.FilesToSign)
+            foreach (var file in _batchData.FilesToSign)
             {
-                if (fileName.IsPEFile())
+                if (file.IsPEFile())
                 {
-                    using (var stream = File.OpenRead(fileName.FullPath))
+                    using (var stream = File.OpenRead(file.FullPath))
                     {
                         if (!_signTool.VerifySignedAssembly(stream))
                         {
-                            log.LogError($"Assembly {fileName} is not signed properly");
+                            log.LogError($"Assembly {file} is not signed properly");
                         }
                     }
                 }
-                else if (fileName.IsZipContainer())
+                else if (file.IsZipContainer())
                 {
-                    var zipData = _batchData.ZipDataMap[fileName.FullPath];
-                    using (var package = Package.Open(fileName.FullPath, FileMode.Open, FileAccess.Read))
+                    var zipData = _batchData.ZipDataMap[file.ContentHash];
+                    using (var package = Package.Open(file.FullPath, FileMode.Open, FileAccess.Read))
                     {
                         foreach (var part in package.GetParts())
                         {
@@ -329,7 +326,7 @@ namespace Microsoft.DotNet.SignTool
                             {
                                 if (!_signTool.VerifySignedAssembly(stream))
                                 {
-                                    log.LogError($"Zip container {fileName} has part {relativeName} which is not signed.");
+                                    log.LogError($"Zip container {file} has part {relativeName} which is not signed.");
                                 }
                             }
                         }
