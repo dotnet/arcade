@@ -4,7 +4,7 @@ phases:
     name: Hosted VS2017
   variables:
     isPublicProject: ${{ if eq(variables['System.TeamProject'], 'public') }}
-    enableTelemetry: ${{ not(variables[‘isPublicProject’]) }}
+    enableTelemetry: ${{ if not(variables[‘isPublicProject’]) }}
   steps:
   - script: echo enableTelemetry - %enableTelem%
     env:
