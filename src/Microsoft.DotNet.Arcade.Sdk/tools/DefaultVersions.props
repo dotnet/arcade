@@ -64,10 +64,6 @@
     <VSWhereVersion Condition="'$(VSWhereVersion)' == ''">2.5.2</VSWhereVersion>
   </PropertyGroup>
 
-  <!-- Version overrides -->
-  <Import Project="$(DotNetPackageVersionPropsPath)" Condition="'$(DotNetPackageVersionPropsPath)' != ''" />
-  <Import Project="$(FixedVersionsPropsPath)" Condition="'$(FixedVersionsPropsPath)' != ''"/>
-
   <!-- RestoreSources overrides - defines DotNetRestoreSources variable if available -->
   <Import Project="$(DotNetRestoreSourcePropsPath)" Condition="'$(DotNetRestoreSourcePropsPath)' != ''"/>
 

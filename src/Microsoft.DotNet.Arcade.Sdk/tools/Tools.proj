@@ -5,7 +5,6 @@
 
     Required parameters:
       VersionsPropsPath             Versions.props path. 
-      FixedVersionsPropsPath        FixedVersions.props path.
 
     Optional parameters:
       ExternalRestoreSources
