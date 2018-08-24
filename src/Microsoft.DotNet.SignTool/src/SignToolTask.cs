@@ -14,6 +14,9 @@ namespace Microsoft.DotNet.SignTool
 {
     public class SignToolTask : Task
     {
+#if NET461
+        static SignToolTask() => AssemblyResolution.Initialize();
+#endif
         /// <summary>
         /// Perform validation but do not actually send signing request to the server.
         /// </summary>
