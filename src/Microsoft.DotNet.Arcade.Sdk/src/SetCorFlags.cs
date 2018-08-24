@@ -9,7 +9,7 @@ using System.Reflection.PortableExecutable;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace RoslynTools
+namespace Microsoft.DotNet.Arcade.Sdk
 {
     public sealed class SetCorFlags : Task
     {

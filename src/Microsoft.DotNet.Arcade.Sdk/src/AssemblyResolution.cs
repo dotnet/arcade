@@ -8,7 +8,7 @@ using System;
 using System.Collections.Immutable;
 using System.Reflection;
 
-namespace RoslynTools
+namespace Microsoft.DotNet.Arcade.Sdk
 {
     internal static class AssemblyResolution
     {

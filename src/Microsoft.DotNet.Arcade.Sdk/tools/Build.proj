@@ -78,8 +78,8 @@
     <DotNetPackageVersionPropsPath Condition="'$(DotNetPackageVersionPropsPath)' == ''">$(_PackageVersionOverridesPath)</DotNetPackageVersionPropsPath>
   </PropertyGroup>
 
-  <UsingTask TaskName="RoslynTools.DownloadFile" AssemblyFile="$(RoslynToolsBuildTasksAssembly)" />
-  <UsingTask TaskName="RoslynTools.RewriteOrchestratedBuildPackageVersions" AssemblyFile="$(RoslynToolsBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.DownloadFile" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.RewriteOrchestratedBuildPackageVersions" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
 
   <Target Name="Execute">
     <Error Text="Property 'Projects' must be specified" Condition="'$(Projects)' == ''"/>
