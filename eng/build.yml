@@ -60,7 +60,7 @@ phases:
             KeyVaultName: EngKeyVault
             SecretsFilter: 'dotnetfeed-storage-access-key-1,microsoft-symbol-server-pat,symweb-symbol-server-pat'
 
-    # Use utility script to run script command dependent on agent OS
+    # Use utility script to run script command dependent on agent OS.
     - script: eng\common\cibuild.cmd
         -configuration $(_BuildConfig) 
         -prepareMachine
@@ -79,7 +79,7 @@ phases:
       displayName: Build / Publish
       condition: and(succeeded(), ne(variables['Agent.Os'], 'Windows_NT'))
 
-    # Internal only build steps (until publishing artifacts in public CI is supported
+    # Internal only build steps (until publishing artifacts in public CI is supported.
     - ${{ if ne(variables['System.TeamProject'], 'public') }}:
       - task: CopyFiles@2
         displayName: Gather Logs
