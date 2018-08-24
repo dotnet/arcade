@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Immutable;
+using System.IO;
 using System.Reflection;
 
 namespace Microsoft.DotNet.SignTool
@@ -23,7 +24,7 @@ namespace Microsoft.DotNet.SignTool
 
             if (name.Name.Equals("System.Collections.Immutable", StringComparison.OrdinalIgnoreCase))
             {
-                var sci = typeof(ImmutableArray).Assembly;
+                var sci = Assembly.LoadFile(Path.Combine(Path.GetDirectoryName(typeof(AssemblyResolution).Assembly.Location), "System.Collections.Immutable.dll"));
                 if (name.Version <= sci.GetName().Version)
                 {
                     return sci;
