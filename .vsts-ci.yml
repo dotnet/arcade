@@ -1,3 +1,8 @@
+resources:
+  containers:
+  - container: linuxContainer
+    image: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
+
 phases:
   - template: /eng/build.yml
     parameters:
@@ -23,7 +28,7 @@ phases:
             ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
               _PublishType: none
               _SignType: real
-  
+
   - template: /eng/build.yml
     parameters:
       name: Linux
@@ -34,6 +39,7 @@ phases:
           name: DotNetCore-Test
         demands:
           - agent.os -equals Linux
+        container: linuxContainer
         parallel: 2
         matrix:
           Build_Debug:
@@ -47,5 +53,3 @@ phases:
               _SignType: test
             ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
               _SignType: real
-      variables:
-        _PREVIEW_VSTS_DOCKER_IMAGE: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
