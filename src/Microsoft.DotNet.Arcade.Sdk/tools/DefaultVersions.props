@@ -31,7 +31,7 @@
       The local compilers are also precompiled and thus faster.
       Repo can set this property to true for local builds if it needs to use newer compiler than the one in the dotnet SDK.
     -->
-    <UsingToolMicrosoftNetCompilers Condition="'$(CIBuild)' == 'true'">true</UsingToolMicrosoftNetCompilers>
+    <UsingToolMicrosoftNetCompilers Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</UsingToolMicrosoftNetCompilers>
 
     <!-- Opt-in features -->
     <UsingToolVSSDK Condition="'$(UsingToolVSSDK)' == ''">false</UsingToolVSSDK>
