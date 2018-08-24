@@ -249,7 +249,7 @@ function Build([string] $buildDriver, [string]$buildArgs) {
     /p:PerformanceTest=$performanceTest `
     /p:Sign=$sign `
     /p:Publish=$publish `
-    /p:CIBuild=$ci `
+    /p:ContinuousIntegrationBuild=$ci `
     $properties
 
   if ($lastExitCode -ne 0) {

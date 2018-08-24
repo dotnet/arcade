@@ -19,7 +19,7 @@
     DotNetSymbolExpirationInDays    Symbol expiration time in days (defaults to 10 years).
     DotNetSignType                  Specifies the signing type: 'real' (default), 'test'.
 
-    CIBuild                         "true" when building on CI server
+    ContinuousIntegrationBuild      "true" when building on a CI server (PR build or official build)
     Restore                         "true" to restore toolset and solution
     QuietRestore                    "true" to suppress Restore output.
     Build                           "true" to build solution
@@ -93,7 +93,7 @@
 
     <PropertyGroup>
       <_QuietRestore>false</_QuietRestore>
-      <_QuietRestore Condition="'$(CIBuild)' != 'true' and '$(QuietRestore)' == 'true'">true</_QuietRestore>
+      <_QuietRestore Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(QuietRestore)' == 'true'">true</_QuietRestore>
 
       <!--
         Do not restore toolset tools when building from source.
@@ -116,7 +116,7 @@
 
     <ItemGroup>
       <_CommonProps Include="Configuration=$(Configuration)"/>
-      <_CommonProps Include="CIBuild=$(CIBuild)"/>
+      <_CommonProps Include="ContinuousIntegrationBuild=$(ContinuousIntegrationBuild)"/>
       <_CommonProps Include="RepoRoot=$(RepoRoot)"/>
       <_CommonProps Include="VersionsPropsPath=$(VersionsPropsPath)"/>
       <_CommonProps Include="FixedVersionsPropsPath=$(FixedVersionsPropsPath)" Condition="'$(FixedVersionsPropsPath)' != ''"/>
