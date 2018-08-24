@@ -79,7 +79,7 @@ phases:
       displayName: Build / Publish
       condition: and(succeeded(), ne(variables['Agent.Os'], 'Windows_NT'))
 
-    # Internal only build steps (until publishing artifacts in public CI is supported.
+    # Internal only build steps (until publishing artifacts in public CI is supported).
     - ${{ if ne(variables['System.TeamProject'], 'public') }}:
       - task: CopyFiles@2
         displayName: Gather Logs

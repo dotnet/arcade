@@ -50,13 +50,11 @@ phases:
       fetchDepth: ${{ parameters.fetchDepth }}
 
   - ${{ if eq(parameters.enableTelemetry, 'true') }}:
-    # Remove this condition once telemetry can be sent from public CI.
-    - ${{ if ne(variables['System.TeamProject'], 'public') }}:
-      - template: /eng/common/templates/steps/telemetry-start.yml
-        parameters:
-          buildConfig: ${{ parameters.variables._HelixBuildConfig }}
-          helixSource: ${{ parameters.variables._HelixSource }}
-          helixType: ${{ parameters.variables._HelixType }}
+    - template: /eng/common/templates/steps/telemetry-start.yml
+      parameters:
+        buildConfig: ${{ parameters.variables._HelixBuildConfig }}
+        helixSource: ${{ parameters.variables._HelixSource }}
+        helixType: ${{ parameters.variables._HelixType }}
 
   - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
     # Internal only resource, and Microbuild signing shouldn't be applied to PRs.
@@ -86,9 +84,7 @@ phases:
           TeamName: $(_TeamName)
 
   - ${{ if eq(parameters.enableTelemetry, 'true') }}:
-    # Remove this condition once telemetry can be sent from public CI.
-    - ${{ if ne(variables['System.TeamProject'], 'public') }}:
-      - template: /eng/common/templates/steps/telemetry-end.yml
-        parameters:
-          helixSource: ${{ parameters.variables._HelixSource }}
-          helixType: ${{ parameters.variables._HelixType }}
+    - template: /eng/common/templates/steps/telemetry-end.yml
+      parameters:
+        helixSource: ${{ parameters.variables._HelixSource }}
+        helixType: ${{ parameters.variables._HelixType }}

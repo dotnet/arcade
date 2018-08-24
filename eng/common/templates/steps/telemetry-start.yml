@@ -4,12 +4,13 @@ parameters:
   buildConfig: ''
 
 steps:
-- task: AzureKeyVault@1
-  inputs:
-    azureSubscription: 'HelixProd_KeyVault'
-    KeyVaultName: HelixProdKV
-    SecretsFilter: 'HelixApiAccessToken'
-  condition: always()
+- ${{ if not(eq(variables['System.TeamProject'], 'public')) }}:
+  - task: AzureKeyVault@1
+    inputs:
+      azureSubscription: 'HelixProd_KeyVault'
+      KeyVaultName: HelixProdKV
+      SecretsFilter: 'HelixApiAccessToken'
+    condition: always()
 - bash: |
     # create a temporary file
     jobInfo=`mktemp`
@@ -32,11 +33,16 @@ steps:
     # create a temporary file for curl output
     res=`mktemp`
 
+    accessTokenParameter=''
+    if [[ ! "$HelixApiAccessToken" == "" ]]; then
+      accessTokenParameter="?access_token=$HelixApiAccessToken"
+    fi
+
     curlResult=`
       cat $jobInfo |\
       curl --verbose --output $res --write-out "%{http_code}" \
       -H 'Content-Type: application/json' \
-      -X POST "https://helix.dot.net/api/2018-03-14/telemetry/job?access_token=$HelixApiAccessToken" -d @-`
+      -X POST "https://helix.dot.net/api/2018-03-14/telemetry/job$accessTokenParameter" -d @-`
     curlStatus=$?
 
     if [ $curlStatus -eq 0 ]; then
@@ -117,8 +123,11 @@ steps:
     
     $jobInfoJson = $jobInfo | ConvertTo-Json
 
+    if ($env:HelixApiAccessToken) {
+      $accessTokenParameter="?access_token=$($env:HelixApiAccessToken)"
+    }
     Write-Host "Job Info: $jobInfoJson"
-    $jobToken = Invoke-RestMethod -Uri "https://helix.dot.net/api/2018-03-14/telemetry/job?access_token=$($env:HelixApiAccessToken)" -Method Post -ContentType "application/json" -Body $jobInfoJson
+    $jobToken = Invoke-RestMethod -Uri "https://helix.dot.net/api/2018-03-14/telemetry/job$($accessTokenParameter)" -Method Post -ContentType "application/json" -Body $jobInfoJson
     $env:Helix_JobToken = $jobToken
     Write-Host "##vso[task.setvariable variable=Helix_JobToken;issecret=true;]$env:Helix_JobToken"
   displayName: Send Job Start Telemetry
