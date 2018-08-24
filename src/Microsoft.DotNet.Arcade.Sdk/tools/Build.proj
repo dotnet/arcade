@@ -13,6 +13,8 @@
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetBuildOffline              Building without access to NuGet servers.
     DotNetOutputBlobFeedDir         Directory to publish Source Build assets to (packages, symbol pacakges, installers, etc.).
+    DotNetPublishBlobFeedUrl        Target feed URL, or empty if not publishing to Azure blob feed.
+    DotNetPublishBlobFeedKey        Azure blob feed account key.
     DotNetSymbolServerTokenMsdl     Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.
     DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.
     DotNetSymbolExpirationInDays    Symbol expiration time in days (defaults to 10 years).
@@ -49,16 +51,9 @@
   <Import Project="BuildTasks.props"/>
   <Import Project="RepoLayout.props"/>
 
-  <!--
-    Orchestrated build environment overrides:
-
-    PB_RestoreSource               {''|URL}                       URL of pipe build package feed.
-    PB_PublishBlobFeedUrl          {''|URL}                       Target feed URL.
-    PB_PublishBlobFeedKey          {''|string}                    Account key.
-  -->
   <PropertyGroup>
     <_PublishToBlobStorage>false</_PublishToBlobStorage>
-    <_PublishToBlobStorage Condition="'$(PB_PublishBlobFeedUrl)' != ''">true</_PublishToBlobStorage>
+    <_PublishToBlobStorage Condition="'$(DotNetPublishBlobFeedUrl)' != ''">true</_PublishToBlobStorage>
 
     <_DotNetOutputBlobFeedDir>$(DotNetOutputBlobFeedDir)</_DotNetOutputBlobFeedDir>
     <_DotNetOutputBlobFeedDir Condition="'$(_DotNetOutputBlobFeedDir)' != '' and !HasTrailingSlash('$(_DotNetOutputBlobFeedDir)')">$(_DotNetOutputBlobFeedDir)\</_DotNetOutputBlobFeedDir>
@@ -114,20 +109,18 @@
       <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
       <_RestoreToolsProps Include="PublishingToBlobStorage=$(_PublishToBlobStorage)"/>
-      <_RestoreToolsProps Include="ExternalRestoreSources=$(PB_RestoreSource)" Condition="'$(PB_RestoreSource)' != ''"/>
     </ItemGroup>
 
     <ItemGroup>
       <_PublishProps Include="@(_CommonProps)"/>
-      <_PublishProps Include="AzureFeedUrl=$(PB_PublishBlobFeedUrl)" Condition="$(_PublishToBlobStorage)" />
-      <_PublishProps Include="AzureAccountKey=$(PB_PublishBlobFeedKey)" Condition="$(_PublishToBlobStorage)" />
+      <_PublishProps Include="AzureFeedUrl=$(DotNetPublishBlobFeedUrl)" Condition="$(_PublishToBlobStorage)" />
+      <_PublishProps Include="AzureAccountKey=$(DotNetPublishBlobFeedKey)" Condition="$(_PublishToBlobStorage)" />
       <_PublishProps Include="DotNetOutputBlobFeedDir=$(_DotNetOutputBlobFeedDir)" Condition="'$(_DotNetOutputBlobFeedDir)' != ''" />
     </ItemGroup>
 
     <ItemGroup>
       <_SolutionBuildProps Include="@(_CommonProps)"/>
       <_SolutionBuildProps Include="__DeployProjectOutput=$(Deploy)" Condition="'$(Deploy)' != ''"/>
-      <_SolutionBuildProps Include="__ExternalRestoreSources=$(PB_RestoreSource)" Condition="'$(PB_RestoreSource)' != ''"/>
     </ItemGroup>
 
     <ItemGroup>

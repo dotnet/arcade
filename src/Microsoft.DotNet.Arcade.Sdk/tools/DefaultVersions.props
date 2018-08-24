@@ -83,9 +83,6 @@
     <!-- Using a private build of Microsoft.Net.Test.SDK to work around issue https://github.com/Microsoft/vstest/issues/373 -->
     <RestoreSources Condition="'$(MicrosoftNETTestSdkVersion)' == '15.6.0-dev'">$(RestoreSources);https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json</RestoreSources>
 
-    <!-- Add externally defined NuGet package restore sources. This property is set by Build.proj. -->
-    <RestoreSources Condition="'$(__ExternalRestoreSources)' != ''">$(__ExternalRestoreSources);$(RestoreSources)</RestoreSources>
-
     <RestoreSources Condition="'$(DotNetRestoreSources)' != ''">$(DotNetRestoreSources);$(RestoreSources)</RestoreSources>
   </PropertyGroup>
 </Project>
