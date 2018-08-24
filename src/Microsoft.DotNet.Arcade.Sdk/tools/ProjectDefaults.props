@@ -50,6 +50,7 @@
       list as they will not be the same from machine to machine.
     -->
     <AssemblySearchPaths>
+      {HintPathFromItem};
       {TargetFrameworkDirectory};
       {RawFileName};
     </AssemblySearchPaths>    
