@@ -52,8 +52,9 @@ phases:
         _SignArgs: ''
         _HelixSource: pr/dotnet/arcade/$(Build.SourceBranch)
 
+    steps:
+    
     ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-      steps:
       - task: AzureKeyVault@1
         inputs:
           azureSubscription: 'DotNet-Engineering-Services_KeyVault'
