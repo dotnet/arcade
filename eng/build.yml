@@ -1,6 +1,6 @@
 parameters:
   name: ''
-  # send telemetry if build is not a public build  
+  # send telemetry
   enableTelemetry: true
   # install Microbuild plugin if not a public build
   enableMicrobuild: true
@@ -67,7 +67,7 @@ phases:
         $(_PublishArgs)
         $(_SignArgs)
         $(_OfficialBuildIdArgs)
-      displayName: Build / Publish
+      displayName: Windows Build / Publish
       condition: and(succeeded(), eq(variables['Agent.Os'], 'Windows_NT'))
         
     - script: eng/common/cibuild.sh
@@ -76,10 +76,10 @@ phases:
         $(_PublishArgs)
         $(_SignArgs)
         $(_OfficialBuildIdArgs)
-      displayName: Build / Publish
+      displayName: Unix Build / Publish
       condition: and(succeeded(), ne(variables['Agent.Os'], 'Windows_NT'))
 
-    # Internal only build steps (until publishing artifacts in public CI is supported.
+    # Internal only build steps (until publishing artifacts in public CI is supported).
     - ${{ if ne(variables['System.TeamProject'], 'public') }}:
       - task: CopyFiles@2
         displayName: Gather Logs
