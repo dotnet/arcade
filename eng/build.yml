@@ -36,8 +36,8 @@ phases:
         # This should be changed to an isolated blob feed per-build.
         # Right now a manual build of a random branch would get published alongside the normal branch artifacts.
         _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
-        TeamName: DotNetCore
-        _SignArgs: /p:DotNetSignType=$(_SignType)
+        _TeamName: DotNetCore
+        _SignArgs: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
         _PublishArgs: /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
           /p:PB_PublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
           /p:PB_PublishType=$(_PublishType)
