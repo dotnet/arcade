@@ -10,7 +10,6 @@ using System.IO.Packaging;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.DotNet.SignTool.Json;
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.SignTool
@@ -23,14 +22,11 @@ namespace Microsoft.DotNet.SignTool
         private readonly IBuildEngine _buildEngine;
         private readonly BatchSignInput _batchData;
         private readonly SignTool _signTool;
-        private readonly ContentUtil _contentUtil = new ContentUtil();
-        private readonly string _orchestrationManifestPath;
 
-        internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool, BatchSignInput batchData, string orchestrationManifestPath)
+        internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool, BatchSignInput batchData)
         {
             _signTool = signTool;
             _batchData = batchData;
-            _orchestrationManifestPath = orchestrationManifestPath;
             _log = log;
             _buildEngine = buildEngine;
         }
@@ -41,14 +37,6 @@ namespace Microsoft.DotNet.SignTool
 
             if (_log.HasLoggedErrors)
             {
-                return;
-            }
-
-            // At this point we trust the content we're about to sign.  We can now take the information from _batchData
-            // and put any content and zipDataMap hash values into the new manifest.
-            if (!string.IsNullOrEmpty(_orchestrationManifestPath))
-            {
-                GenerateOrchestrationManifest(_batchData, _orchestrationManifestPath);
                 return;
             }
 
@@ -70,42 +58,6 @@ namespace Microsoft.DotNet.SignTool
             }
 
             _log.LogMessage(MessageImportance.High, "Build artifacts signed and validated.");
-        }
-
-        private void GenerateOrchestrationManifest(BatchSignInput batchData, string outputPath)
-        {
-            _log.LogMessage(MessageImportance.High, $"Generating orchestration file manifest into {outputPath}");
-            OrchestratedFileJson fileJsonWithInfo = new OrchestratedFileJson
-            {
-                ExcludeList = Array.Empty<string>()
-            };
-
-            var distinctSigningCombos = batchData.FilesToSign.GroupBy(fileToSign => new { fileToSign.SignInfo.Certificate, fileToSign.SignInfo.StrongName });
-            var contentUtil = new ContentUtil();
-
-            List<OrchestratedFileSignData> newList = new List<OrchestratedFileSignData>();
-            foreach (var combinationToSign in distinctSigningCombos)
-            {
-                var filesInThisGroup = combinationToSign.Select(combination => new FileSignDataEntry()
-                {
-                    FilePath = combination.FullPath,
-                    SHA256Hash = ContentUtil.HashToString(ContentUtil.GetContentHash(combination.FullPath)),
-                    PublishToFeedUrl = batchData.PublishUri
-                });
-                newList.Add(new OrchestratedFileSignData()
-                {
-                    Certificate = combinationToSign.Key.Certificate,
-                    StrongName = combinationToSign.Key.StrongName,
-                    FileList = filesInThisGroup.ToArray()
-                });
-            }
-            fileJsonWithInfo.SignList = newList.ToArray();
-            fileJsonWithInfo.Kind = "orchestration";
-
-            using (StreamWriter file = File.CreateText(outputPath))
-            {
-                file.Write(JsonConvert.SerializeObject(fileJsonWithInfo, Formatting.Indented));
-            }
         }
 
         private void RemovePublicSign()

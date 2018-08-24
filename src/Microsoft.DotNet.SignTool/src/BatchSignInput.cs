@@ -14,11 +14,6 @@ namespace Microsoft.DotNet.SignTool
     internal sealed class BatchSignInput
     {
         /// <summary>
-        /// Uri, to be consumed by later steps, which describes where these files get published to.
-        /// </summary>
-        internal string PublishUri { get; }
-
-        /// <summary>
         /// The ordered names of the files to be signed.
         /// </summary>
         internal ImmutableArray<FileSignInfo> FilesToSign { get; }
@@ -29,14 +24,13 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         internal ImmutableDictionary<ImmutableArray<byte>, ZipData> ZipDataMap;
 
-        internal BatchSignInput(ImmutableArray<FileSignInfo> filesToSign, ImmutableDictionary<ImmutableArray<byte>, ZipData> zipDataMap, string publishUri)
+        internal BatchSignInput(ImmutableArray<FileSignInfo> filesToSign, ImmutableDictionary<ImmutableArray<byte>, ZipData> zipDataMap)
         {
             Debug.Assert(!filesToSign.IsDefault);
             Debug.Assert(zipDataMap != null);
 
             FilesToSign = filesToSign;
             ZipDataMap = zipDataMap;
-            PublishUri = publishUri;
         }
     }
 }
