@@ -15,20 +15,20 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// Name of the zip based package
         /// </summary>
-        internal FileName Name { get; }
+        internal FileSignInfo FileSignInfo { get; }
 
         /// <summary>
         /// The parts inside this zip archive which need to be signed.
         /// </summary>
-        internal ImmutableList<ZipPart> NestedParts { get; }
+        internal ImmutableArray<ZipPart> NestedParts { get; }
 
-        internal ZipData(FileName name, ImmutableList<ZipPart> nestedBinaryParts)
+        internal ZipData(FileSignInfo fileSignInfo, ImmutableArray<ZipPart> nestedBinaryParts)
         {
-            Name = name;
+            FileSignInfo = fileSignInfo;
             NestedParts = nestedBinaryParts;
         }
 
-        internal ZipPart? FindNestedBinaryPart(string relativeName)
+        internal ZipPart? FindNestedPart(string relativeName)
         {
             foreach (var part in NestedParts)
             {

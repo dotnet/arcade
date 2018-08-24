@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.SignTool
                 return true;
             }
 
-            return ContentUtil.IsAssemblyStrongNameSigned(assemblyStream);
+            return ContentUtil.IsAuthenticodeSigned(assemblyStream);
         }
     }
 }

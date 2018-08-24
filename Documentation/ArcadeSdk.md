@@ -29,14 +29,17 @@ The Arcade SDK defines the following output structure:
 
 ```
 artifacts
-  $(Configuration)
-    bin
-      $(MSBuildProjectName)    
-    packages
+  bin
+    $(MSBuildProjectName)    
+      $(Configuration)
+  packages
+    $(Configuration)
       $(MSBuildProjectName).$(PackageVersion).nupkg
-    TestResults
+  TestResults
+    $(Configuration)
       $(MSBuildProjectName)_$(TargetFramework)_$(TestArchitecture).(xml|html|log|error.log)
-    VSSetup
+  VSSetup
+    $(Configuration)
       Insertion
         $(VsixPackageId).json
         $(VsixPackageId).vsmand
@@ -45,13 +48,17 @@ artifacts
          
       $(VsixPackageId).json
       $(VsixContainerName).vsix
-    VSSetup.obj
+  VSSetup.obj
+    $(Configuration)
       $(VisualStudioInsertionComponent)
-    SymStore
+  SymStore
+    $(Configuration)
       $(MSBuildProjectName)
-    log
+  log
+    $(Configuration)
       Build.binlog
-    tmp
+  tmp
+    $(Configuration)
   obj
     $(MSBuildProjectName)
       $(Configuration)

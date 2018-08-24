@@ -32,14 +32,13 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
                 string title = issue.Title;
                 int number = issue.Number;
                 string body = issue.Description;
-                Logger.LogInformation($"A {number.ToString()} issue with {title} has been opened.");
 
                 await Issuelabeler.PredictAndApplyLabelAsync(number, title, body, Logger);
-                Logger.LogInformation("Labeling completed");
+                Logger.LogInformation("! Labeling completed");
             }
             else
             {
-                Logger.LogInformation($"The issue {issue.Number.ToString()} is already opened or it already has a label");
+                Logger.LogInformation($"! The issue {issue.Number.ToString()} is already opened or it already has a label");
             }
         }
     }

@@ -11,7 +11,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Tasks = System.Threading.Tasks;
 
-namespace RoslynTools
+namespace Microsoft.DotNet.Arcade.Sdk
 {
     public class DownloadFile : Task, ICancelableTask
     {

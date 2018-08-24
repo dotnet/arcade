@@ -9,40 +9,31 @@ using System.Security.Cryptography;
 using System.Runtime.InteropServices;
 using System.Reflection.PortableExecutable;
 using System.Reflection.Metadata;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace Microsoft.DotNet.SignTool
 {
-    internal sealed class ContentUtil
+    internal static class ContentUtil
     {
-        private readonly Dictionary<string, string> _filePathCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        private readonly SHA256 _sha256 = SHA256.Create();
-
-        internal string GetChecksum(Stream stream)
+        public static ImmutableArray<byte> GetContentHash(string fullPath)
         {
-            var hash = _sha256.ComputeHash(stream);
-            return HashBytesToString(hash);
-        }
-
-        internal string GetChecksum(string filePath)
-        {
-            string checksum;
-            if (!_filePathCache.TryGetValue(filePath, out checksum))
+            using (var stream = File.OpenRead(fullPath))
             {
-                using (var stream = File.OpenRead(filePath))
-                {
-                    checksum = GetChecksum(stream);
-                }
-                _filePathCache[filePath] = checksum;
+                return GetContentHash(stream);
             }
-
-            return checksum;
         }
 
-        private string HashBytesToString(byte[] hash)
+        public static ImmutableArray<byte> GetContentHash(Stream stream)
         {
-            var data = BitConverter.ToString(hash);
-            return data.Replace("-", "");
+            using (var sha2 = SHA256.Create())
+            {
+                return ImmutableArray.Create(sha2.ComputeHash(stream));
+            }
         }
+
+        public static string HashToString(ImmutableArray<byte> hash)
+            => BitConverter.ToString(hash.ToArray()).Replace("-", "");
 
         /// <summary>
         /// Returns true if the PE file meets all of the pre-conditions to be Open Source Signed.
@@ -65,36 +56,15 @@ namespace Microsoft.DotNet.SignTool
             return (header.Flags & CorFlags.StrongNameSigned) == CorFlags.StrongNameSigned;
         }
 
-        public static bool IsAssemblyStrongNameSigned(Stream assemblyStream)
+        public static bool IsAuthenticodeSigned(Stream assemblyStream)
         {
-            using (var memoryStream = new MemoryStream())
+            using (var peReader = new PEReader(assemblyStream))
             {
-                assemblyStream.CopyTo(memoryStream);
+                var headers = peReader.PEHeaders;
+                var entry = headers.PEHeader.CertificateTableDirectory;
 
-                var byteArray = memoryStream.ToArray();
-                unsafe
-                {
-                    fixed (byte* bytes = byteArray)
-                    {
-                        int outFlags;
-                        return NativeMethods.StrongNameSignatureVerificationFromImage(
-                            bytes,
-                            byteArray.Length,
-                            NativeMethods.SN_INFLAG_FORCE_VER, out outFlags) &&
-                            (outFlags & NativeMethods.SN_OUTFLAG_WAS_VERIFIED) == NativeMethods.SN_OUTFLAG_WAS_VERIFIED;
-                    }
-                }
+                return entry.Size > 0;
             }
-        }
-
-        private unsafe static class NativeMethods
-        {
-            public const int SN_INFLAG_FORCE_VER = 0x1;
-            public const int SN_OUTFLAG_WAS_VERIFIED = 0x1;
-
-            [DllImport("mscoree.dll", CharSet = CharSet.Unicode)]
-            [PreserveSig]
-            public static extern bool StrongNameSignatureVerificationFromImage(byte* bytes, int length, int inFlags, out int outFlags);
         }
     }
 }

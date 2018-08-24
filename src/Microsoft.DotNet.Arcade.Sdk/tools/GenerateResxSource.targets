@@ -12,7 +12,7 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
-  <UsingTask TaskName="RoslynTools.GenerateResxSource" AssemblyFile="$(RoslynToolsBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateResxSource" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
   
   <!-- Set the Generator metadata so that VS triggers design-time build whenever the .resx file is saved -->
   <ItemGroup>
@@ -46,10 +46,11 @@
           Inputs="@(EmbeddedResourceSG)"
           Outputs="%(EmbeddedResourceSG.SourceOutputPath)">
 
-    <GenerateResxSource Language="$(Language)"
-                        ResourceFile="%(EmbeddedResourceSG.FullPath)"
-                        ResourceName="%(EmbeddedResourceSG.ManifestResourceName)"
-                        OutputPath="%(EmbeddedResourceSG.SourceOutputPath)" />
+    <Microsoft.DotNet.Arcade.Sdk.GenerateResxSource 
+      Language="$(Language)"
+      ResourceFile="%(EmbeddedResourceSG.FullPath)"
+      ResourceName="%(EmbeddedResourceSG.ManifestResourceName)"
+      OutputPath="%(EmbeddedResourceSG.SourceOutputPath)" />
   </Target>
 
   <Target Name="_GetEmbeddedResourcesWithSourceGeneration">

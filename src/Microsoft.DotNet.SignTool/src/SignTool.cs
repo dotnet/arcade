@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.SignTool
 
         public abstract bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round);
 
-        public bool Sign(IBuildEngine buildEngine, int round, IEnumerable<FileName> filesToSign)
+        public bool Sign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> filesToSign)
         {
             var signingDir = Path.Combine(TempDir, "Signing");
             var buildFilePath = Path.Combine(signingDir, $"Round{round}.proj");
@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.SignTool
             return RunMSBuild(buildEngine, buildFilePath, round);
         }
 
-        private string GenerateBuildFileContent(IEnumerable<FileName> filesToSign)
+        private string GenerateBuildFileContent(IEnumerable<FileSignInfo> filesToSign)
         {
             var builder = new StringBuilder();
             AppendLine(builder, depth: 0, text: @"<?xml version=""1.0"" encoding=""utf-8""?>");
