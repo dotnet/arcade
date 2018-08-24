@@ -3,12 +3,12 @@ phases:
     parameters:
       name: Windows_NT
       queue:
-        ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+        # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
+        # Will eventually change this to two BYOC pools.
+        ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
           name: Hosted VS2017
-        ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:        
-          name: DotNetCore-Build
-          demands:
-          - agent.os -equals Windows_NT        
+        ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+          name: DotNetCore-Windows
         parallel: 2
         matrix:
           Build_Debug:
@@ -17,21 +17,23 @@ phases:
             _SignType: test
           Build_Release:
             _BuildConfig: Release
-            ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+            # PRs or external builds are not signed.
+            ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
               _PublishType: none
               _SignType: test
-            ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+            ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
               _PublishType: blob
               _SignType: real
   
   - template: /eng/build.yml
     parameters:
       name: Linux
-      queue: 
-        ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+      queue:
+        # Temporarily, use the linux pool while the hosted preview doesn't have docker support.
+        ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
           name: DotNetCore-Linux
-        ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:        
-          name: DotNetCore-Test
+        ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+          name: DotNetCore-Linux
         demands:
           - agent.os -equals Linux
         parallel: 2
@@ -39,13 +41,10 @@ phases:
           Build_Debug:
             _BuildConfig: Debug
             _PublishType: none
-            _SignType: test
+            _SignType: none
           Build_Release:
             _BuildConfig: Release
             _PublishType: none
-            ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _SignType: test
-            ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _SignType: real
+            _SignType: none
       variables:
         _PREVIEW_VSTS_DOCKER_IMAGE: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304

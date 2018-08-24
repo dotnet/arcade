@@ -9,6 +9,13 @@ parameters:
   # variables YAML object - https://github.com/Microsoft/vsts-agent/blob/master/docs/preview/yamlgettingstarted-schema.md#phase
   variables: {}
 
+# Common conditionals:  There are a number of common conditionals that are useful.  Generally these are used to decide what resources can be accessed,
+#                       or what logic should be applied based on the context the build is being run in.
+#   - eq/ne(variables['Agent.Os'], 'Windows_NT') - Running/not running on a windows machine
+#   - eq/ne(variables['System.TeamProject'], 'public') - Running/not running on the dotnet public VSTS project 
+#   - and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest') - Not running in public and not a pull request.
+#   - or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest') - Running in public or a pull request.
+
 phases:
 - template: /eng/common/templates/phases/base.yml
   parameters:
@@ -24,70 +31,68 @@ phases:
       ${{ insert }}: ${{ parameters.variables }}
       _HelixType: build/product
       _HelixBuildConfig: $(_BuildConfig)
-      ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+      # Only enable publishing in non-public, non PR scenarios.
+      ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+        # This should be changed to an isolated blob feed per-build.
+        # Right now a manual build of a random branch would get published alongside the normal branch artifacts.
         _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
         _TeamName: DotNetCore
+        _SignArgs: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
         _PublishArgs: /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
           /p:PB_PublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
-          /p:PB_PublishType=$(_PublishType) 
+          /p:PB_PublishType=$(_PublishType)
+          /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+          /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         _HelixSource: official/dotnet/arcade/$(Build.SourceBranch)
-      ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
+        _OfficialBuildIdArgs: /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+      # else
+      ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
         _PublishArgs: ''
+        _OfficialBuildIdArgs: ''
+        _SignArgs: ''
         _HelixSource: pr/dotnet/arcade/$(Build.SourceBranch)
 
     steps:
-    # Internal only build steps
-    - template: /eng/common/templates/steps/build-reason.yml
-      parameters:
-        conditions: not IndividualCI,BatchedCI,PullRequest
-        steps:
+    - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         - task: AzureKeyVault@1
           inputs:
             azureSubscription: 'DotNet-Engineering-Services_KeyVault'
             KeyVaultName: EngKeyVault
-            SecretsFilter: 'dotnetfeed-storage-access-key-1'
-          condition: and(succeeded(), eq(variables['Agent.Os'], 'Windows_NT'))
+            SecretsFilter: 'dotnetfeed-storage-access-key-1,microsoft-symbol-server-pat,symweb-symbol-server-pat'
 
-    # Use utility script to run script command dependent on agent OS
+    # Use utility script to run script command dependent on agent OS.
     - script: eng\common\cibuild.cmd
         -configuration $(_BuildConfig) 
         -prepareMachine
-        /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-        /p:DotNetSignType=$(_SignType)
-        /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
-        /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         $(_PublishArgs)
+        $(_SignArgs)
+        $(_OfficialBuildIdArgs)
       displayName: Build / Publish
       condition: and(succeeded(), eq(variables['Agent.Os'], 'Windows_NT'))
         
     - script: eng/common/cibuild.sh
         --configuration $(_BuildConfig) 
         --prepareMachine
-        /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-        /p:DotNetSignType=$(_SignType)
-        /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
-        /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         $(_PublishArgs)
+        $(_SignArgs)
+        $(_OfficialBuildIdArgs)
       displayName: Build / Publish
       condition: and(succeeded(), ne(variables['Agent.Os'], 'Windows_NT'))
 
-    # Internal only build steps (until publishing artifacts in public CI is supported)
-    - template: /eng/common/templates/steps/build-reason.yml
-      parameters:
-        conditions: not IndividualCI,BatchedCI,PullRequest
-        steps:
-        - task: CopyFiles@2
-          displayName: Gather Logs
-          inputs:
-            SourceFolder: '$(Build.SourcesDirectory)/artifacts/$(_BuildConfig)/log'
-            TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
-          continueOnError: true
-          condition: succeededOrFailed()
-        - task: PublishBuildArtifacts@1
-          displayName: Publish Logs to VSTS
-          inputs:
-            PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
-            PublishLocation: Container
-            ArtifactName: $(Agent.Os)_$(Agent.JobName)
-          continueOnError: true
-          condition: succeededOrFailed()
+    # Internal only build steps (until publishing artifacts in public CI is supported.
+    - ${{ if ne(variables['System.TeamProject'], 'public') }}:
+      - task: CopyFiles@2
+        displayName: Gather Logs
+        inputs:
+          SourceFolder: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+          TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
+        continueOnError: true
+        condition: succeededOrFailed()
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Logs to VSTS
+        inputs:
+          PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
+          PublishLocation: Container
+          ArtifactName: $(Agent.Os)_$(Agent.JobName)
+        continueOnError: true
+        condition: succeededOrFailed()
