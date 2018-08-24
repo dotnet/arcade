@@ -21,13 +21,13 @@
   <!--
     Set PackageOutputPath based on the IsShipping flag set by projects.
     This distinction allows signing and publishing tools to determine which assets to sign/publish and which to ignore.
-    
+
     Unless specified owtherwise project is assumed to produce binaries/package that ship.
     Test projects automatically set IsShipping to false.
   -->
   <PropertyGroup>
     <IsShipping Condition="'$(IsShipping)' == ''">true</IsShipping>
-    
+
     <PackageOutputPath Condition="'$(IsShipping)' == 'true'">$(ArtifactsShippingPackagesDir)</PackageOutputPath>
     <PackageOutputPath Condition="'$(IsShipping)' != 'true'">$(ArtifactsNonShippingPackagesDir)</PackageOutputPath>
   </PropertyGroup>
