@@ -1,6 +1,6 @@
 parameters:
   name: ''
-  # send telemetry if build is not a public build  
+  # send telemetry
   enableTelemetry: true
   # install Microbuild plugin if not a public build
   enableMicrobuild: true
