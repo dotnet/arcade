@@ -1,5 +1,5 @@
 <!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
-<Project DefaultTargets="Execute" TreatAsLocalProperty="RepoRoot;Test;IntegrationTest;PerformanceTest">
+<Project DefaultTargets="Execute" TreatAsLocalProperty="RepoRoot">
   <!--
 
   Required parameters:
@@ -55,7 +55,6 @@
   <!--
     Orchestrated build environment overrides:
 
-    PB_SkipTests                   {''|'true'|'false'}            Disables tests if set to 'true'.
     PB_RestoreSource               {''|URL}                       URL of pipe build package feed.
     PB_PackageVersionPropsUrl      {''|URL}                       URL of package version overrides props file.
     PB_PublishType                 {''|store1-store2-...-storeN}  List of stores where to publish assets to.
@@ -63,10 +62,6 @@
     PB_PublishBlobFeedKey          {''|string}                    Account key.
   -->
   <PropertyGroup>
-    <Test Condition="'$(PB_SkipTests)' == 'true'">false</Test>
-    <IntegrationTest Condition="'$(PB_SkipTests)' == 'true'">false</IntegrationTest>
-    <PerformanceTest Condition="'$(PB_SkipTests)' == 'true'">false</PerformanceTest>
-
     <!-- True if Orchetrated Build assets need to be published to a blob storage -->
     <_PublishToBlobStorage>false</_PublishToBlobStorage>
     <_PublishToBlobStorage Condition="$(PB_PublishType.Contains('blob'))">true</_PublishToBlobStorage>
