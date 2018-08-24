@@ -65,7 +65,7 @@ steps:
     # Set the Helix_JobToken variable
     export Helix_JobToken=`echo $curlResult | xargs echo` # Strip Quotes
     echo "##vso[task.setvariable variable=Helix_JobToken;issecret=true;]$Helix_JobToken"
-  displayName: Send Job Start Telemetry
+  displayName: Send Unix Job Start Telemetry
   env:
     HelixApiAccessToken: $(HelixApiAccessToken)
     Source: ${{ parameters.helixSource }}
@@ -105,7 +105,7 @@ steps:
 
     export Helix_WorkItemId=`echo $curlResult | xargs echo` # Strip Quotes
     echo "##vso[task.setvariable variable=Helix_WorkItemId]$Helix_WorkItemId"
-  displayName: Send Build Start Telemetry
+  displayName: Send Unix Build Start Telemetry
   env:
     BuildUri: $(System.TaskDefinitionsUri)$(System.TeamProject)/_build/index?buildId=$(Build.BuildId)&_a=summary
     Helix_JobToken: $(Helix_JobToken)
@@ -130,7 +130,7 @@ steps:
     $jobToken = Invoke-RestMethod -Uri "https://helix.dot.net/api/2018-03-14/telemetry/job$($accessTokenParameter)" -Method Post -ContentType "application/json" -Body $jobInfoJson
     $env:Helix_JobToken = $jobToken
     Write-Host "##vso[task.setvariable variable=Helix_JobToken;issecret=true;]$env:Helix_JobToken"
-  displayName: Send Job Start Telemetry
+  displayName: Send Windows Job Start Telemetry
   env:
     HelixApiAccessToken: $(HelixApiAccessToken)
     Source: ${{ parameters.helixSource }}
@@ -147,7 +147,7 @@ steps:
   
     $env:Helix_WorkItemId = $workItemId
     Write-Host "##vso[task.setvariable variable=Helix_WorkItemId]$env:Helix_WorkItemId"
-  displayName: Send Build Start Telemetry
+  displayName: Send Windows Build Start Telemetry
   env:
     BuildUri: $(System.TaskDefinitionsUri)$(System.TeamProject)/_build/index?buildId=$(Build.BuildId)&_a=summary
     Helix_JobToken: $(Helix_JobToken)
