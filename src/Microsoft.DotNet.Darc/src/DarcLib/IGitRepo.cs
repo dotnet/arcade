@@ -30,9 +30,9 @@ namespace Microsoft.DotNet.DarcLib
 
         Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message);
 
-        Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng");
+        Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng/common/");
 
-        Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, Dictionary<string, GitCommit> commits, string pullRequestBaseBranch, string path = "eng");
+        Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, Dictionary<string, GitCommit> commits, string pullRequestBaseBranch, string path = "eng/common/");
 
         Task<string> GetFileContentAsync(string ownerAndRepo, string path);
 

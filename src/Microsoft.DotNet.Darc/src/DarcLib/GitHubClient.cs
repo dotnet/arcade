@@ -12,6 +12,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DarcLib
@@ -230,7 +231,7 @@ namespace Microsoft.DotNet.DarcLib
             await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{ownerAndRepo}issues/{pullRequestId}/comments", _logger, body);
         }
 
-        public async Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng")
+        public async Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng/common/")
         {
             Dictionary<string, GitCommit> commits = new Dictionary<string, GitCommit>();
 
@@ -239,7 +240,7 @@ namespace Microsoft.DotNet.DarcLib
             return commits;
         }
 
-        public async Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, Dictionary<string, GitCommit> commits, string pullRequestBaseBranch, string path = "eng")
+        public async Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, Dictionary<string, GitCommit> commits, string pullRequestBaseBranch, string path = "eng/common/")
         {
             _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{assetsProducedInCommit}'");
 
@@ -341,7 +342,7 @@ namespace Microsoft.DotNet.DarcLib
             JToken lastCommit = content.Last;
             string lastCommitSha = lastCommit["sha"].ToString();
 
-            string ownerAndRepo = GetSegments(pullRequestUrl);
+            string ownerAndRepo = GetOwnerAndRepoFromPR(pullRequestUrl);
             response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}statuses/{lastCommitSha}", _logger);
 
             content = JArray.Parse(await response.Content.ReadAsStringAsync());
@@ -375,6 +376,18 @@ namespace Microsoft.DotNet.DarcLib
             repoUri = repoUri.Replace("https://github.com/", string.Empty);
             repoUri = repoUri.Last() != '/' ? $"{repoUri}/" : repoUri;
             return repoUri;
+        }
+
+        private string GetOwnerAndRepoFromPR(string prUri)
+        {
+            var uri = new UriBuilder(prUri);
+            var match = Regex.Match(uri.Path, @"^/repos/(?<owner>[^/]+)/(?<repo>[^/]+)/pulls/\d+$");
+            if (!match.Success)
+            {
+                return null;
+            }
+
+            return $"{match.Groups["owner"]}/{match.Groups["repo"]}/";
         }
 
         private async Task<string> CreateOrUpdatePullRequestAsync(string uri, string mergeWithBranch, string sourceBranch, HttpMethod method, string title = null, string description = null)

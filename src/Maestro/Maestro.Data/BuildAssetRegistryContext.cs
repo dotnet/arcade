@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.DotNet.EntityFrameworkCore.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Query;
@@ -23,7 +24,7 @@ namespace Maestro.Data
         public BuildAssetRegistryContext CreateDbContext(string[] args)
         {
             DbContextOptions options = new DbContextOptionsBuilder().UseSqlServer(
-                    @"Data Source=(LocalDb)\MSSQLLocalDB;Initial Catalog=BuildAssetRegistry;Integrated Security=true")
+                    @"Data Source=localhost\SQLEXPRESS;Initial Catalog=BuildAssetRegistry;Integrated Security=true")
                 .Options;
             return new BuildAssetRegistryContext(
                 new HostingEnvironment {EnvironmentName = EnvironmentName.Development},
@@ -48,6 +49,7 @@ namespace Maestro.Data
         public DbSet<Channel> Channels { get; set; }
         public DbSet<DefaultChannel> DefaultChannels { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
+        public DbSet<SubscriptionUpdate> SubscriptionUpdates { get; set; }
         public DbSet<RepoInstallation> RepoInstallations { get; set; }
 
         public override Task<int> SaveChangesAsync(
@@ -62,6 +64,7 @@ namespace Maestro.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            optionsBuilder.AddDotNetExtensions();
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -84,6 +87,19 @@ namespace Maestro.Data
                 .IsUnique();
 
             builder.Entity<DefaultChannel>().HasIndex(dc => new {dc.Repository, dc.Branch}).IsUnique();
+
+            builder.Entity<SubscriptionUpdate>()
+                .HasOne(su => su.Subscription)
+                .WithOne()
+                .HasForeignKey<SubscriptionUpdate>(su => su.SubscriptionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.ForSqlServerIsSystemVersioned<SubscriptionUpdate, SubscriptionUpdateHistory>("1 MONTHS");
+
+            builder.Entity<SubscriptionUpdateHistory>()
+                .HasIndex("SubscriptionId") // a clustered columnstore index can have no fields defined, but EF needs at least one
+                .ForSqlServerIsClustered()
+                .ForSqlServerIsColumnstore();
 
             builder.HasDbFunction(() => JsonExtensions.JsonValue("", "")).HasName("JSON_VALUE").HasSchema("");
         }
