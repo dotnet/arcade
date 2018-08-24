@@ -52,13 +52,13 @@ phases:
         _SignArgs: ''
         _HelixSource: pr/dotnet/arcade/$(Build.SourceBranch)
 
-    steps:
-    - task: AzureKeyVault@1
-      inputs:
-        azureSubscription: 'DotNet-Engineering-Services_KeyVault'
-        KeyVaultName: EngKeyVault
-        SecretsFilter: 'dotnetfeed-storage-access-key-1,microsoft-symbol-server-pat,symweb-symbol-server-pat'
-      condition: and(succeeded(), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'))
+    ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}
+      steps:
+      - task: AzureKeyVault@1
+        inputs:
+          azureSubscription: 'DotNet-Engineering-Services_KeyVault'
+          KeyVaultName: EngKeyVault
+          SecretsFilter: 'dotnetfeed-storage-access-key-1,microsoft-symbol-server-pat,symweb-symbol-server-pat'
 
     # Use utility script to run script command dependent on agent OS
     - script: eng\common\cibuild.cmd
@@ -79,19 +79,20 @@ phases:
       displayName: Build / Publish
       condition: and(succeeded(), ne(variables['Agent.Os'], 'Windows_NT'))
 
-    # Internal only build steps (until publishing artifacts in public CI is supported)
-    - task: CopyFiles@2
-      displayName: Gather Logs
-      inputs:
-        SourceFolder: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
-        TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
-      continueOnError: true
-      condition: and(succeededOrFailed(), ne(variables['System.TeamProject'], 'public'))
-    - task: PublishBuildArtifacts@1
-      displayName: Publish Logs to VSTS
-      inputs:
-        PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
-        PublishLocation: Container
-        ArtifactName: $(Agent.Os)_$(Agent.JobName)
-      continueOnError: true
-      condition: and(succeededOrFailed(), ne(variables['System.TeamProject'], 'public'))
+    # Internal only build steps (until publishing artifacts in public CI is supported
+    ${{ if ne(variables['System.TeamProject'], 'public') }}
+      - task: CopyFiles@2
+        displayName: Gather Logs
+        inputs:
+          SourceFolder: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+          TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
+        continueOnError: true
+        condition: succeededOrFailed()
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Logs to VSTS
+        inputs:
+          PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
+          PublishLocation: Container
+          ArtifactName: $(Agent.Os)_$(Agent.JobName)
+        continueOnError: true
+        condition: succeededOrFailed()
