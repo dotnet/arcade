@@ -60,6 +60,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string ManifestBuildData { get; set; }
 
+        /// <summary>
+        /// If the ExpectedFeedUrl includes an authentication token, this property is ignored.
+        /// </summary>
+        public bool MakeContainerPublic { get; set; } = true;
+
         public string AssetManifestPath { get; set; }
 
         public override bool Execute()
@@ -86,7 +91,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     if (!SkipCreateContainer)
                     {
-                        await blobFeedAction.CreateContainerAsync(BuildEngine, PublishFlatContainer);
+                        await blobFeedAction.CreateContainerAsync(BuildEngine, PublishFlatContainer, MakeContainerPublic);
                     }
 
                     if (PublishFlatContainer)
