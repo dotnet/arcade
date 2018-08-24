@@ -53,13 +53,12 @@ phases:
         _HelixSource: pr/dotnet/arcade/$(Build.SourceBranch)
 
     steps:
-    
-    ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-      - task: AzureKeyVault@1
-        inputs:
-          azureSubscription: 'DotNet-Engineering-Services_KeyVault'
-          KeyVaultName: EngKeyVault
-          SecretsFilter: 'dotnetfeed-storage-access-key-1,microsoft-symbol-server-pat,symweb-symbol-server-pat'
+      ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+        - task: AzureKeyVault@1
+          inputs:
+            azureSubscription: 'DotNet-Engineering-Services_KeyVault'
+            KeyVaultName: EngKeyVault
+            SecretsFilter: 'dotnetfeed-storage-access-key-1,microsoft-symbol-server-pat,symweb-symbol-server-pat'
 
     # Use utility script to run script command dependent on agent OS
     - script: eng\common\cibuild.cmd
