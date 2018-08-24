@@ -53,7 +53,7 @@ phases:
         _HelixSource: pr/dotnet/arcade/$(Build.SourceBranch)
 
     steps:
-      ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         - task: AzureKeyVault@1
           inputs:
             azureSubscription: 'DotNet-Engineering-Services_KeyVault'
@@ -80,7 +80,7 @@ phases:
       condition: and(succeeded(), ne(variables['Agent.Os'], 'Windows_NT'))
 
     # Internal only build steps (until publishing artifacts in public CI is supported
-    ${{ if ne(variables['System.TeamProject'], 'public') }}:
+    - ${{ if ne(variables['System.TeamProject'], 'public') }}:
       - task: CopyFiles@2
         displayName: Gather Logs
         inputs:
