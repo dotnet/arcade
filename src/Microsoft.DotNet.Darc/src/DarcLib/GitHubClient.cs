@@ -230,7 +230,7 @@ namespace Microsoft.DotNet.DarcLib
             await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{ownerAndRepo}issues/{pullRequestId}/comments", _logger, body);
         }
 
-        public async Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng")
+        public async Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng/common/")
         {
             Dictionary<string, GitCommit> commits = new Dictionary<string, GitCommit>();
 
@@ -239,7 +239,7 @@ namespace Microsoft.DotNet.DarcLib
             return commits;
         }
 
-        public async Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, Dictionary<string, GitCommit> commits, string pullRequestBaseBranch, string path = "eng")
+        public async Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, Dictionary<string, GitCommit> commits, string pullRequestBaseBranch, string path = "eng/common/")
         {
             _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{assetsProducedInCommit}'");
 
