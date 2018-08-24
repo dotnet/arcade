@@ -59,8 +59,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir);
 
             var signTool = new ValidationOnlySignTool(signToolArgs);
-            var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, publishUri: null, task.Log).GenerateListOfFiles();
-            var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput, null);
+            var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, task.Log).GenerateListOfFiles();
+            var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput);
 
             util.Go();
 
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             string[] expected)
         {
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
-            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, publishUri: null, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, task.Log).GenerateListOfFiles();
 
             AssertEx.Equal(expected, signingInput.FilesToSign.Select(f => f.ToString()));
             Assert.False(task.Log.HasLoggedErrors);
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var FileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
-            var signingInput = new Configuration(_tmpDir, ExplicitSignItems, StrongNameSignInfo, FileSignInfo, publishUri: null, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, ExplicitSignItems, StrongNameSignInfo, FileSignInfo, task.Log).GenerateListOfFiles();
 
             Assert.Empty(signingInput.FilesToSign);
             Assert.Empty(signingInput.ZipDataMap);
