@@ -3,7 +3,6 @@
   <!--
     Required variables:
       VersionsPropsPath                 Versions.props path.
-      FixedVersionsPropsPath            FixedVersions.props path.
 
     Optional variables:                 
       AzureFeedUrl                      Target Azure feed URL.

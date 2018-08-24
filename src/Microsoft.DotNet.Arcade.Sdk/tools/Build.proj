@@ -9,7 +9,6 @@
   Optional parameters:              
     Configuration                   Build configuration: "Debug", "Release", etc.
 
-    DotNetPackageVersionPropsPath   Package version overrides.
     DotNetRestoreSourcePropsPath    Overrides of ResourceSources (list of NuGet feeds to download dependencies from)
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetBuildOffline              Building without access to NuGet servers.
@@ -31,8 +30,6 @@
     Pack                            "true" to build NuGet packages and VS insertion manifests
     Sign                            "true" to sign built binaries
     Publish                         "true" to publish artifacts (e.g. symbols)
-
-    SuppressPackageVersionRewrite   "true" to suppress rewrite of PackageVersions.props file. Temporary switch to allow repos to migrate to the official format of the version properties.
   -->
 
   <!--
@@ -56,25 +53,16 @@
     Orchestrated build environment overrides:
 
     PB_RestoreSource               {''|URL}                       URL of pipe build package feed.
-    PB_PackageVersionPropsUrl      {''|URL}                       URL of package version overrides props file.
-    PB_PublishType                 {''|store1-store2-...-storeN}  List of stores where to publish assets to.
     PB_PublishBlobFeedUrl          {''|URL}                       Target feed URL.
     PB_PublishBlobFeedKey          {''|string}                    Account key.
   -->
   <PropertyGroup>
-    <!-- True if Orchetrated Build assets need to be published to a blob storage -->
     <_PublishToBlobStorage>false</_PublishToBlobStorage>
-    <_PublishToBlobStorage Condition="$(PB_PublishType.Contains('blob'))">true</_PublishToBlobStorage>
+    <_PublishToBlobStorage Condition="'$(PB_PublishBlobFeedUrl)' != ''">true</_PublishToBlobStorage>
 
     <_DotNetOutputBlobFeedDir>$(DotNetOutputBlobFeedDir)</_DotNetOutputBlobFeedDir>
     <_DotNetOutputBlobFeedDir Condition="'$(_DotNetOutputBlobFeedDir)' != '' and !HasTrailingSlash('$(_DotNetOutputBlobFeedDir)')">$(_DotNetOutputBlobFeedDir)\</_DotNetOutputBlobFeedDir>
-
-    <_PackageVersionOverridesPath Condition="'$(PB_PackageVersionPropsUrl)' != ''">$(ArtifactsToolsetDir)PackageVersionOverrides.props</_PackageVersionOverridesPath>
-    <DotNetPackageVersionPropsPath Condition="'$(DotNetPackageVersionPropsPath)' == ''">$(_PackageVersionOverridesPath)</DotNetPackageVersionPropsPath>
   </PropertyGroup>
-
-  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.DownloadFile" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
-  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.RewriteOrchestratedBuildPackageVersions" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
 
   <Target Name="Execute">
     <Error Text="Property 'Projects' must be specified" Condition="'$(Projects)' == ''"/>
@@ -114,8 +102,6 @@
       <_CommonProps Include="ContinuousIntegrationBuild=$(ContinuousIntegrationBuild)"/>
       <_CommonProps Include="RepoRoot=$(RepoRoot)"/>
       <_CommonProps Include="VersionsPropsPath=$(VersionsPropsPath)"/>
-      <_CommonProps Include="FixedVersionsPropsPath=$(FixedVersionsPropsPath)" Condition="'$(FixedVersionsPropsPath)' != ''"/>
-      <_CommonProps Include="DotNetPackageVersionPropsPath=$(DotNetPackageVersionPropsPath)"/>
       <!-- 
         When building from source we suppress restore for projects that set ExcludeFromSourceBuild=true.
         NuGet Restore task reports a warning for such projects, which we suppress here.
@@ -153,17 +139,6 @@
       <_SolutionBuildPropsCmdLine>@(_SolutionBuildPropsArgs, ' ')</_SolutionBuildPropsCmdLine>
       <_RestoreToolsPropsCmdLine>@(_RestoreToolsPropArgs, ' ')</_RestoreToolsPropsCmdLine>
     </PropertyGroup>
-
-    <!-- Download version overrides. -->
-    <DownloadFile Uri="$(PB_PackageVersionPropsUrl)" 
-                  DestinationPath="$(_PackageVersionOverridesPath)" 
-                  Condition="'$(Restore)' == 'true' and '$(PB_PackageVersionPropsUrl)' != ''"
-                  Overwrite="true"
-                  Retries="3" />
-
-    <!-- Replace -PackageVersion with -Version -->
-    <RewriteOrchestratedBuildPackageVersions File="$(_PackageVersionOverridesPath)" 
-                                             Condition="'$(Restore)' == 'true' and '$(PB_PackageVersionPropsUrl)' != '' and '$(SuppressPackageVersionRewrite)' != 'false'" />
 
     <!--
       Workaround for https://github.com/NuGet/Home/issues/4695.
