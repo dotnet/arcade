@@ -67,16 +67,6 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         public string LogDir { get; set; }
 
-        /// <summary>
-        /// The URL of the feed where the package will be published.
-        /// </summary>
-        public string PublishUrl { get; set; }
-
-        /// <summary>
-        /// Path to where to store a manifest file containing the list of files that WOULD be signed and their respective signing information.
-        /// </summary>
-        public string OrchestrationManifestPath { get; set; }
-
         public override bool Execute()
         {
             ExecuteImpl();
@@ -107,11 +97,11 @@ namespace Microsoft.DotNet.SignTool
 
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
-            var signingInput = new Configuration(TempDir, ItemsToSign, defaultSignInfoForPublicKeyToken, explicitCertificates, PublishUrl, Log).GenerateListOfFiles();
+            var signingInput = new Configuration(TempDir, ItemsToSign, defaultSignInfoForPublicKeyToken, explicitCertificates, Log).GenerateListOfFiles();
 
             if (Log.HasLoggedErrors) return;
 
-            var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput, OrchestrationManifestPath);
+            var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput);
 
             if (Log.HasLoggedErrors) return;
 
