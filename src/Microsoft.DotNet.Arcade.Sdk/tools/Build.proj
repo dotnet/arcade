@@ -1,5 +1,5 @@
 <!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
-<Project DefaultTargets="Execute" TreatAsLocalProperty="RepoRoot;Test;IntegrationTest;PerformanceTest">
+<Project DefaultTargets="Execute" TreatAsLocalProperty="RepoRoot">
   <!--
 
   Required parameters:
@@ -9,17 +9,18 @@
   Optional parameters:              
     Configuration                   Build configuration: "Debug", "Release", etc.
 
-    DotNetPackageVersionPropsPath   Package version overrides.
     DotNetRestoreSourcePropsPath    Overrides of ResourceSources (list of NuGet feeds to download dependencies from)
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetBuildOffline              Building without access to NuGet servers.
     DotNetOutputBlobFeedDir         Directory to publish Source Build assets to (packages, symbol pacakges, installers, etc.).
+    DotNetPublishBlobFeedUrl        Target feed URL, or empty if not publishing to Azure blob feed.
+    DotNetPublishBlobFeedKey        Azure blob feed account key.
     DotNetSymbolServerTokenMsdl     Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.
     DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.
     DotNetSymbolExpirationInDays    Symbol expiration time in days (defaults to 10 years).
     DotNetSignType                  Specifies the signing type: 'real' (default), 'test'.
 
-    CIBuild                         "true" when building on CI server
+    ContinuousIntegrationBuild      "true" when building on a CI server (PR build or official build)
     Restore                         "true" to restore toolset and solution
     QuietRestore                    "true" to suppress Restore output.
     Build                           "true" to build solution
@@ -53,34 +54,13 @@
   <Import Project="BuildTasks.props"/>
   <Import Project="RepoLayout.props"/>
 
-  <!--
-    Orchestrated build environment overrides:
-
-    PB_SkipTests                   {''|'true'|'false'}            Disables tests if set to 'true'.
-    PB_RestoreSource               {''|URL}                       URL of pipe build package feed.
-    PB_PackageVersionPropsUrl      {''|URL}                       URL of package version overrides props file.
-    PB_PublishType                 {''|store1-store2-...-storeN}  List of stores where to publish assets to.
-    PB_PublishBlobFeedUrl          {''|URL}                       Target feed URL.
-    PB_PublishBlobFeedKey          {''|string}                    Account key.
-  -->
   <PropertyGroup>
-    <Test Condition="'$(PB_SkipTests)' == 'true'">false</Test>
-    <IntegrationTest Condition="'$(PB_SkipTests)' == 'true'">false</IntegrationTest>
-    <PerformanceTest Condition="'$(PB_SkipTests)' == 'true'">false</PerformanceTest>
-
-    <!-- True if Orchetrated Build assets need to be published to a blob storage -->
     <_PublishToBlobStorage>false</_PublishToBlobStorage>
-    <_PublishToBlobStorage Condition="$(PB_PublishType.Contains('blob'))">true</_PublishToBlobStorage>
-    
+    <_PublishToBlobStorage Condition="'$(DotNetPublishBlobFeedUrl)' != ''">true</_PublishToBlobStorage>
+
     <_DotNetOutputBlobFeedDir>$(DotNetOutputBlobFeedDir)</_DotNetOutputBlobFeedDir>
     <_DotNetOutputBlobFeedDir Condition="'$(_DotNetOutputBlobFeedDir)' != '' and !HasTrailingSlash('$(_DotNetOutputBlobFeedDir)')">$(_DotNetOutputBlobFeedDir)\</_DotNetOutputBlobFeedDir>
-
-    <_PackageVersionOverridesPath Condition="'$(PB_PackageVersionPropsUrl)' != ''">$(ArtifactsToolsetDir)PackageVersionOverrides.props</_PackageVersionOverridesPath>
-    <DotNetPackageVersionPropsPath Condition="'$(DotNetPackageVersionPropsPath)' == ''">$(_PackageVersionOverridesPath)</DotNetPackageVersionPropsPath>
   </PropertyGroup>
-
-  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.DownloadFile" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
-  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.RewriteOrchestratedBuildPackageVersions" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
 
   <Target Name="Execute">
     <Error Text="Property 'Projects' must be specified" Condition="'$(Projects)' == ''"/>
@@ -94,7 +74,7 @@
 
     <PropertyGroup>
       <_QuietRestore>false</_QuietRestore>
-      <_QuietRestore Condition="'$(CIBuild)' != 'true' and '$(QuietRestore)' == 'true'">true</_QuietRestore>
+      <_QuietRestore Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(QuietRestore)' == 'true'">true</_QuietRestore>
 
       <!--
         Do not restore toolset tools when building from source.
@@ -117,11 +97,9 @@
 
     <ItemGroup>
       <_CommonProps Include="Configuration=$(Configuration)"/>
-      <_CommonProps Include="CIBuild=$(CIBuild)"/>
+      <_CommonProps Include="ContinuousIntegrationBuild=$(ContinuousIntegrationBuild)"/>
       <_CommonProps Include="RepoRoot=$(RepoRoot)"/>
       <_CommonProps Include="VersionsPropsPath=$(VersionsPropsPath)"/>
-      <_CommonProps Include="FixedVersionsPropsPath=$(FixedVersionsPropsPath)" Condition="'$(FixedVersionsPropsPath)' != ''"/>
-      <_CommonProps Include="DotNetPackageVersionPropsPath=$(DotNetPackageVersionPropsPath)"/>
       <!-- 
         When building from source we suppress restore for projects that set ExcludeFromSourceBuild=true.
         NuGet Restore task reports a warning for such projects, which we suppress here.
@@ -134,20 +112,18 @@
       <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
       <_RestoreToolsProps Include="PublishingToBlobStorage=$(_PublishToBlobStorage)"/>
-      <_RestoreToolsProps Include="ExternalRestoreSources=$(PB_RestoreSource)" Condition="'$(PB_RestoreSource)' != ''"/>
     </ItemGroup>
 
     <ItemGroup>
       <_PublishProps Include="@(_CommonProps)"/>
-      <_PublishProps Include="AzureFeedUrl=$(PB_PublishBlobFeedUrl)" Condition="$(_PublishToBlobStorage)" />
-      <_PublishProps Include="AzureAccountKey=$(PB_PublishBlobFeedKey)" Condition="$(_PublishToBlobStorage)" />
+      <_PublishProps Include="AzureFeedUrl=$(DotNetPublishBlobFeedUrl)" Condition="$(_PublishToBlobStorage)" />
+      <_PublishProps Include="AzureAccountKey=$(DotNetPublishBlobFeedKey)" Condition="$(_PublishToBlobStorage)" />
       <_PublishProps Include="DotNetOutputBlobFeedDir=$(_DotNetOutputBlobFeedDir)" Condition="'$(_DotNetOutputBlobFeedDir)' != ''" />
     </ItemGroup>
 
     <ItemGroup>
       <_SolutionBuildProps Include="@(_CommonProps)"/>
       <_SolutionBuildProps Include="__DeployProjectOutput=$(Deploy)" Condition="'$(Deploy)' != ''"/>
-      <_SolutionBuildProps Include="__ExternalRestoreSources=$(PB_RestoreSource)" Condition="'$(PB_RestoreSource)' != ''"/>
     </ItemGroup>
 
     
@@ -167,17 +143,6 @@
       <_SolutionBuildPropsCmdLine>@(_SolutionBuildPropsArgs, ' ')</_SolutionBuildPropsCmdLine>
       <_RestoreToolsPropsCmdLine>@(_RestoreToolsPropArgs, ' ')</_RestoreToolsPropsCmdLine>
     </PropertyGroup>
-
-    <!-- Download version overrides. -->
-    <DownloadFile Uri="$(PB_PackageVersionPropsUrl)" 
-                  DestinationPath="$(_PackageVersionOverridesPath)" 
-                  Condition="'$(Restore)' == 'true' and '$(PB_PackageVersionPropsUrl)' != ''"
-                  Overwrite="true"
-                  Retries="3" />
-
-    <!-- Replace -PackageVersion with -Version -->
-    <RewriteOrchestratedBuildPackageVersions File="$(_PackageVersionOverridesPath)" 
-                                             Condition="'$(Restore)' == 'true' and '$(PB_PackageVersionPropsUrl)' != '' and '$(SuppressPackageVersionRewrite)' != 'false'" />
 
     <!--
       Workaround for https://github.com/NuGet/Home/issues/4695.

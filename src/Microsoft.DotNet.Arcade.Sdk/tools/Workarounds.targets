@@ -44,7 +44,7 @@
   -->
   <PropertyGroup Condition="'$(IsWpfTempProject)' == 'true'">
     <OutDir/>
-    <DeterministicSourcePaths Condition="'$(IsWpfTempProject)' == 'true'">false</DeterministicSourcePaths>
+    <DeterministicSourcePaths>false</DeterministicSourcePaths>
   </PropertyGroup>
 
   <!--
@@ -61,43 +61,43 @@
 
   <!--
     Workarounds for insufficient support for tools packages by NuGet Pack: https://github.com/NuGet/Home/issues/6321.
-    
+
     Project that produce tools packages use .nuspec file in order to include all the needed dependencies.
     This target translates common msbuild properties to NuSpec properties.
   -->
-  <Target Name="InitializeStandardNuspecProperties" 
+  <Target Name="InitializeStandardNuspecProperties"
           BeforeTargets="GenerateNuspec"
-          DependsOnTargets="_InitializeNuspecRepositoryInformationPropertiesWorkaround"
+          DependsOnTargets="GetPackageVersion;_InitializeNuspecRepositoryInformationPropertiesWorkaround"
           Condition="'$(NuspecFile)' != '' and '$(NuspecProperties)' == ''">
 
     <PropertyGroup>
       <PackageProjectUrl Condition="'$(PackageProjectUrl)' == ''">$(RepositoryUrl)</PackageProjectUrl>
     </PropertyGroup>
 
-    <Error Text="Description must be specified" Condition="'$(Description)' == ''"/>
+    <Error Text="PackageDescription must be specified" Condition="'$(PackageDescription)' == ''"/>
     <Error Text="PackageProjectUrl must be specified" Condition="'$(PackageProjectUrl)' == ''"/>
 
     <ItemGroup>
-      <NuSpecProperty Include="PackageId=$(PackageId)"/>
-      <NuSpecProperty Include="Authors=$(Authors)"/>
-      <NuSpecProperty Include="Description=$(Description)"/>    
-      <NuSpecProperty Include="Copyright=$(Copyright)"/>
-      <NuSpecProperty Include="Version=$(Version)"/>
-      <NuSpecProperty Include="Serviceable=$(Serviceable)"/>    
-      <NuSpecProperty Include="DevelopmentDependency=$(DevelopmentDependency)"/>                        
-      <NuSpecProperty Include="RequireLicenseAcceptance=$(PackageRequireLicenseAcceptance)"/>                                     
-      <NuSpecProperty Include="PackageLicenseUrl=$(PackageLicenseUrl)"/>                
-      <NuSpecProperty Include="PackageProjectUrl=$(PackageProjectUrl)"/>                
-      <NuSpecProperty Include="PackageIconUrl=$(PackageIconUrl)" Condition="'$(PackageIconUrl)' != ''" />          
-      <NuSpecProperty Include="PackageReleaseNotes=$(PackageReleaseNotes)" Condition="'$(PackageReleaseNotes)' != ''" />                    
-      <NuSpecProperty Include="PackageTags=$(PackageTags)" Condition="'$(PackageTags)' != ''" />    
-      <NuSpecProperty Include="RepositoryUrl=$(RepositoryUrl)" Condition="'$(RepositoryUrl)' != ''" />        
-      <NuSpecProperty Include="RepositoryType=$(RepositoryType)" Condition="'$(RepositoryType)' != ''" />          
-      <NuSpecProperty Include="RepositoryCommit=$(RepositoryCommit)" Condition="'$(RepositoryCommit)' != ''" />              
-      <NuSpecProperty Include="ProjectDirectory=$(MSBuildProjectDirectory)"/>                     
+      <NuspecProperty Include="PackageId=$(PackageId)"/>
+      <NuspecProperty Include="Authors=$(Authors)"/>
+      <NuspecProperty Include="PackageDescription=$(PackageDescription)"/>
+      <NuspecProperty Include="Copyright=$(Copyright)"/>
+      <NuspecProperty Include="Version=$(PackageVersion)"/>
+      <NuspecProperty Include="Serviceable=$(Serviceable)"/>
+      <NuspecProperty Include="DevelopmentDependency=$(DevelopmentDependency)"/>
+      <NuspecProperty Include="RequireLicenseAcceptance=$(PackageRequireLicenseAcceptance)"/>
+      <NuspecProperty Include="PackageLicenseUrl=$(PackageLicenseUrl)"/>
+      <NuspecProperty Include="PackageProjectUrl=$(PackageProjectUrl)"/>
+      <NuspecProperty Include="PackageIconUrl=$(PackageIconUrl)" Condition="'$(PackageIconUrl)' != ''" />
+      <NuspecProperty Include="PackageReleaseNotes=$(PackageReleaseNotes)" Condition="'$(PackageReleaseNotes)' != ''" />
+      <NuspecProperty Include="PackageTags=$(PackageTags)" Condition="'$(PackageTags)' != ''" />
+      <NuspecProperty Include="RepositoryUrl=$(RepositoryUrl)" Condition="'$(RepositoryUrl)' != ''" />
+      <NuspecProperty Include="RepositoryType=$(RepositoryType)" Condition="'$(RepositoryType)' != ''" />
+      <NuspecProperty Include="RepositoryCommit=$(RepositoryCommit)" Condition="'$(RepositoryCommit)' != ''" />
+      <NuspecProperty Include="ProjectDirectory=$(MSBuildProjectDirectory)"/>
     </ItemGroup>
     <PropertyGroup>
-      <NuspecProperties>@(NuSpecProperty, ';')</NuspecProperties>
+      <NuspecProperties>@(NuspecProperty, ';')</NuspecProperties>
     </PropertyGroup>
   </Target>
 
@@ -114,21 +114,19 @@
     </PropertyGroup>
   </Target>
 
-  <!-- 
-    Publish before packaging (see https://github.com/NuGet/Home/issues/6321).
-    Note: TargetFrameworkIdentifier is defined by the .NET SDK imported before these targets
-  -->
-  <PropertyGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(NuspecFile)' != ''">
-    <TargetsForTfmSpecificContentInPackage>Publish;$(TargetsForTfmSpecificContentInPackage)</TargetsForTfmSpecificContentInPackage>
-  </PropertyGroup>
-
   <!--
-    Workaround for not having VS 15.7 on MicroBuild machines.
-    Remove when machines are upgraded.
+    NuGet Restore uses PackageId and project name in the same namespace, so that project reference can be interchanged with a package reference.
+    This causes issues however for leaf packages that are not to be referenced (such as analyzer or tools packages) when we want to name the package 
+    the same as an existing project in the solution. In that case we set PackageId to an invalid but unique value for Restore and override it for Pack
+    with the desired name stored in $(NuspecPackageId).
   -->
-  <Target Name="InitializeSourceControlInformation" />
-  <PropertyGroup>
-    <SourceControlInformationFeatureSupported>true</SourceControlInformationFeatureSupported>
+  <PropertyGroup Condition="'$(NuspecPackageId)' != ''">
+    <PackageId>*$(MSBuildProjectName)*</PackageId>
   </PropertyGroup>
 
+  <Target Name="_SetPackageId" BeforeTargets="InitializeStandardNuspecProperties;GenerateNuSpec" Condition="'$(NuspecPackageId)' != ''">
+    <PropertyGroup>
+      <PackageId>$(NuspecPackageId)</PackageId>
+    </PropertyGroup>
+  </Target>
 </Project>

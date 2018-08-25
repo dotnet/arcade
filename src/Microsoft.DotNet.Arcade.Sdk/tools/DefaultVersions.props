@@ -31,7 +31,7 @@
       The local compilers are also precompiled and thus faster.
       Repo can set this property to true for local builds if it needs to use newer compiler than the one in the dotnet SDK.
     -->
-    <UsingToolMicrosoftNetCompilers Condition="'$(CIBuild)' == 'true'">true</UsingToolMicrosoftNetCompilers>
+    <UsingToolMicrosoftNetCompilers Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</UsingToolMicrosoftNetCompilers>
 
     <!-- Opt-in features -->
     <UsingToolVSSDK Condition="'$(UsingToolVSSDK)' == ''">false</UsingToolVSSDK>
@@ -65,10 +65,6 @@
     <MicrosoftDotNetMaestroTasksVersion Condition="'$(MicrosoftDotNetMaestroTasksVersion)' == ''">1.0.0-beta.18415.5</MicrosoftDotNetMaestroTasksVersion>
   </PropertyGroup>
 
-  <!-- Version overrides -->
-  <Import Project="$(DotNetPackageVersionPropsPath)" Condition="'$(DotNetPackageVersionPropsPath)' != ''" />
-  <Import Project="$(FixedVersionsPropsPath)" Condition="'$(FixedVersionsPropsPath)' != ''"/>
-
   <!-- RestoreSources overrides - defines DotNetRestoreSources variable if available -->
   <Import Project="$(DotNetRestoreSourcePropsPath)" Condition="'$(DotNetRestoreSourcePropsPath)' != ''"/>
 
@@ -87,9 +83,6 @@
     
     <!-- Using a private build of Microsoft.Net.Test.SDK to work around issue https://github.com/Microsoft/vstest/issues/373 -->
     <RestoreSources Condition="'$(MicrosoftNETTestSdkVersion)' == '15.6.0-dev'">$(RestoreSources);https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json</RestoreSources>
-
-    <!-- Add externally defined NuGet package restore sources. This property is set by Build.proj. -->
-    <RestoreSources Condition="'$(__ExternalRestoreSources)' != ''">$(__ExternalRestoreSources);$(RestoreSources)</RestoreSources>
 
     <RestoreSources Condition="'$(DotNetRestoreSources)' != ''">$(DotNetRestoreSources);$(RestoreSources)</RestoreSources>
   </PropertyGroup>

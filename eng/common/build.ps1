@@ -251,8 +251,8 @@ function Build([string] $buildDriver, [string]$buildArgs) {
     /p:PerformanceTest=$performanceTest `
     /p:Sign=$sign `
     /p:Publish=$publish `
-    /p:PushBuildAssets=$pushBuildAssets `
-    /p:CIBuild=$ci `
+	/p:PushBuildAssets=$pushBuildAssets 
+    /p:ContinuousIntegrationBuild=$ci `
     $properties
 
   if ($lastExitCode -ne 0) {
