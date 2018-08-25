@@ -53,6 +53,12 @@ namespace SubscriptionActorService
         public const string PullRequestCheck = "pullRequestCheck";
         public const string PullRequest = "pullRequest";
 
+
+        /// <summary>
+        ///   Hook for tests to disable the catch (Exception) blocks to allow test exceptions out
+        /// </summary>
+        public static bool CatchAllExceptions = true;
+
         public SubscriptionActor(
             IActorStateManager stateManager,
             ActorId id,
@@ -140,7 +146,7 @@ namespace SubscriptionActorService
             {
                 await TrackSubscriptionUpdateFailure(subex.Message, action, nameof(UpdateAsync), buildId);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (CatchAllExceptions)
             {
                 Logger.LogError(ex, "Unknown error processing subscription update for subscription '{subscriptionId}' and build '{buildId}'.", SubscriptionId, buildId);
                 await TrackSubscriptionUpdateFailure("Unknown error processing update.", action, nameof(UpdateAsync), buildId);
