@@ -15,7 +15,5 @@ namespace Microsoft.DotNet.DarcLib
         public string RepoUri { get; set; }
 
         public string Commit { get; set; }
-
-        public DependencyType Type { get; set; }
     }
 }
