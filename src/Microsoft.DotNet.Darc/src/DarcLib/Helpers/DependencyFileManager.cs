@@ -15,8 +15,6 @@ namespace Microsoft.DotNet.DarcLib
     {
         private readonly IGitRepo _gitClient;
         private readonly ILogger _logger;
-        private const string VersionPropsExpression = "VersionProps";
-        private const string DotNetSdkVersionProperty = "dotnet";
 
         public static HashSet<string> DependencyFiles
         {
@@ -69,25 +67,23 @@ namespace Microsoft.DotNet.DarcLib
 
             if (document != null)
             {
-                BuildDependencies(document.DocumentElement.SelectSingleNode("ProductDependencies"), DependencyType.Product);
-                BuildDependencies(document.DocumentElement.SelectSingleNode("ToolsetDependencies"), DependencyType.Toolset);
+                BuildDependencies(document.DocumentElement.SelectNodes("//Dependency"));
 
-                void BuildDependencies(XmlNode node, DependencyType dependencyType)
+                void BuildDependencies(XmlNodeList dependencies)
                 {
-                    if (node != null)
+                    if (dependencies.Count > 0)
                     {
-                        foreach (XmlNode childNode in node.ChildNodes)
+                        foreach (XmlNode dependency in dependencies)
                         {
-                            if (childNode.NodeType != XmlNodeType.Comment && childNode.NodeType != XmlNodeType.Whitespace)
+                            if (dependency.NodeType != XmlNodeType.Comment && dependency.NodeType != XmlNodeType.Whitespace)
                             {
                                 DependencyDetail BuildAsset = new DependencyDetail
                                 {
                                     Branch = branch,
-                                    Name = childNode.Attributes["Name"].Value,
-                                    RepoUri = childNode.SelectSingleNode("Uri").InnerText,
-                                    Commit = childNode.SelectSingleNode("Sha").InnerText,
-                                    Version = childNode.Attributes["Version"].Value,
-                                    Type = dependencyType
+                                    Name = dependency.Attributes["Name"].Value,
+                                    RepoUri = dependency.SelectSingleNode("Uri").InnerText,
+                                    Commit = dependency.SelectSingleNode("Sha").InnerText,
+                                    Version = dependency.Attributes["Version"].Value
                                 };
 
                                 BuildAssets.Add(BuildAsset);
@@ -96,7 +92,7 @@ namespace Microsoft.DotNet.DarcLib
                     }
                     else
                     {
-                        _logger.LogWarning($"No '{dependencyType}' defined in file.");
+                        _logger.LogWarning("No dependencies defined in file.");
                     }
                 }
             }
@@ -122,7 +118,7 @@ namespace Microsoft.DotNet.DarcLib
             {
                 XmlNodeList versionList = versionDetails.SelectNodes($"//Dependency[@Name='{itemToUpdate.Name}']");
 
-                if (versionList.Count == 0 || versionList.Count > 1)
+                if (versionList.Count != 1)
                 {
                     if (versionList.Count == 0)
                     {
@@ -136,36 +132,10 @@ namespace Microsoft.DotNet.DarcLib
                     return null;
                 }
 
-                XmlNode parentNode = itemToUpdate.Type == DependencyType.Product
-                    ? versionDetails.DocumentElement.SelectSingleNode("ProductDependencies")
-                    : versionDetails.DocumentElement.SelectSingleNode("ToolsetDependencies");
-
-                XmlNodeList nodesToUpdate = parentNode.SelectNodes($"//Dependency[@Name='{itemToUpdate.Name}']");
-
-                foreach (XmlNode dependencyToUpdate in nodesToUpdate)
-                {
-                    dependencyToUpdate.Attributes["Version"].Value = itemToUpdate.Version;
-                    dependencyToUpdate.SelectSingleNode("Sha").InnerText = itemToUpdate.Commit;
-
-                    // If the dependency is of Product type we also have to update version.props
-                    // If the dependency is of Toolset type and it has no <Expression> defined or not set to VersionProps we also update global.json
-                    // if not, we update version.props
-                    if (itemToUpdate.Type == DependencyType.Product)
-                    {
-                        UpdateVersionPropsDoc(versionProps, itemToUpdate);
-                    }
-                    else
-                    {
-                        if (dependencyToUpdate.SelectSingleNode("Expression") != null && dependencyToUpdate.SelectSingleNode("Expression").InnerText == VersionPropsExpression)
-                        {
-                            UpdateVersionPropsDoc(versionProps, itemToUpdate);
-                        }
-                        else
-                        {
-                            UpdateVersionGlobalJson(itemToUpdate.Name, itemToUpdate.Version, globalJson);
-                        }
-                    }
-                }
+                XmlNode nodeToUpdate = versionDetails.DocumentElement.SelectSingleNode($"//Dependency[@Name='{itemToUpdate.Name}']");
+                nodeToUpdate.Attributes["Version"].Value = itemToUpdate.Version;
+                nodeToUpdate.SelectSingleNode("Sha").InnerText = itemToUpdate.Commit;
+                UpdateVersionFiles(versionProps, globalJson, itemToUpdate);
             }
 
             DependencyFileContentContainer fileContainer = new DependencyFileContentContainer
@@ -201,13 +171,15 @@ namespace Microsoft.DotNet.DarcLib
             return document;
         }
 
-        private void UpdateVersionPropsDoc(XmlDocument versionProps, DependencyDetail itemToUpdate)
+        private void UpdateVersionFiles(XmlDocument versionProps, JToken token, DependencyDetail itemToUpdate)
         {
             string namespaceName = "ns";
             XmlNamespaceManager namespaceManager = new XmlNamespaceManager(versionProps.NameTable);
             namespaceManager.AddNamespace(namespaceName, versionProps.DocumentElement.Attributes["xmlns"].Value);
 
-            XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"//{namespaceName}:{itemToUpdate.Name}Version", namespaceManager);
+            string versionedName = itemToUpdate.Name.Replace(".", string.Empty);
+
+            XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"//{namespaceName}:{versionedName}Version", namespaceManager);
 
             if (versionNode != null)
             {
@@ -215,30 +187,22 @@ namespace Microsoft.DotNet.DarcLib
             }
             else
             {
-                _logger.LogError($"'{itemToUpdate.Name}Version' not found in '{DependencyFilePath.VersionProps}'.");
+                UpdateVersionGlobalJson(itemToUpdate, token);
             }
         }
 
-        private void UpdateVersionGlobalJson(string assetName, string version, JToken token)
+        private void UpdateVersionGlobalJson(DependencyDetail itemToUpdate, JToken token)
         {
-            foreach (JProperty child in token.Children<JProperty>())
+            foreach (JProperty property in token.Children<JProperty>())
             {
-                if (child.Name == assetName)
+                if (property.Name == itemToUpdate.Name)
                 {
-                    if (child.HasValues && child.Value.ToString().IndexOf(DotNetSdkVersionProperty, StringComparison.CurrentCultureIgnoreCase) > 0)
-                    {
-                        UpdateVersionGlobalJson(DotNetSdkVersionProperty, version, child.Value);
-                    }
-                    else
-                    {
-                        child.Value = new JValue(version);
-                    }
-
+                    property.Value = new JValue(itemToUpdate.Version);
                     break;
                 }
                 else
                 {
-                    UpdateVersionGlobalJson(assetName, version, child.Value);
+                    UpdateVersionGlobalJson(itemToUpdate, property.Value);
                 }
             }
         }
