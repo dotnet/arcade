@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Pkcs;
 
 namespace Microsoft.SignCheck.Verification
@@ -66,7 +67,7 @@ namespace Microsoft.SignCheck.Verification
             SignedCms rfc3161Message = new SignedCms();
             rfc3161Message.Decode(rfc3161CounterSignature.RawData);
 
-            foreach (var rfc3161SignerInfo in rfc3161Message.SignerInfos)
+            foreach (SignerInfo rfc3161SignerInfo in rfc3161Message.SignerInfos)
             {
                 if (String.Equals(rfc3161Message.ContentInfo.ContentType.Value, WinCrypt.szOID_TIMESTAMP_TOKEN, StringComparison.OrdinalIgnoreCase))
                 {
@@ -128,7 +129,7 @@ namespace Microsoft.SignCheck.Verification
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
 
-            var vData = new byte[cbData];
+            byte[] vData = new byte[cbData];
             if (!WinCrypt.CryptMsgGetParam(msg, WinCrypt.CMSG_ENCODED_MESSAGE, 0, vData, ref cbData))
             {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
@@ -142,20 +143,20 @@ namespace Microsoft.SignCheck.Verification
             // Multiple authenticode signatures will store additional information as a nested signature
             // In the case of SHA2 signatures, we need to find and decode the timestamp token (RFC3161).
             // Luckily NuGet implemented a proper TST and DER parser to decode this
-            foreach (var signerInfo in signedCms.SignerInfos)
+            foreach (SignerInfo signerInfo in signedCms.SignerInfos)
             {
-                foreach (var unsignedAttribute in signerInfo.UnsignedAttributes)
+                foreach (CryptographicAttributeObject unsignedAttribute in signerInfo.UnsignedAttributes)
                 {
                     if (String.Equals(unsignedAttribute.Oid.Value, WinCrypt.szOID_RSA_counterSign, StringComparison.OrdinalIgnoreCase))
                     {
-                        foreach (var counterSign in signerInfo.CounterSignerInfos)
+                        foreach (SignerInfo counterSign in signerInfo.CounterSignerInfos)
                         {
-                            foreach (var signedAttribute in counterSign.SignedAttributes)
+                            foreach (CryptographicAttributeObject signedAttribute in counterSign.SignedAttributes)
                             {
                                 if (String.Equals(signedAttribute.Oid.Value, WinCrypt.szOID_RSA_signingTime, StringComparison.OrdinalIgnoreCase))
                                 {
-                                    Pkcs9SigningTime st = (Pkcs9SigningTime)signedAttribute.Values[0];
-                                    var cert = counterSign.Certificate;
+                                    var st = (Pkcs9SigningTime)signedAttribute.Values[0];
+                                    X509Certificate2 cert = counterSign.Certificate;
 
                                     var timeStamp = new Timestamp
                                     {
@@ -180,9 +181,9 @@ namespace Microsoft.SignCheck.Verification
                         SignedCms nestedSignatureMessage = new SignedCms();
                         nestedSignatureMessage.Decode(nestedSignature.RawData);
 
-                        foreach (var nestedSignerInfo in nestedSignatureMessage.SignerInfos)
+                        foreach (SignerInfo nestedSignerInfo in nestedSignatureMessage.SignerInfos)
                         {
-                            foreach (var nestedUnsignedAttribute in nestedSignerInfo.UnsignedAttributes)
+                            foreach (CryptographicAttributeObject nestedUnsignedAttribute in nestedSignerInfo.UnsignedAttributes)
                             {
                                 if (String.Equals(nestedUnsignedAttribute.Oid.Value, WinCrypt.szOID_RFC3161_counterSign, StringComparison.OrdinalIgnoreCase))
                                 {

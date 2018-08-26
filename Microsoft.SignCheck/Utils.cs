@@ -15,26 +15,29 @@ namespace Microsoft.SignCheck
         /// <returns>A string containing the hash result.</returns>
         public static string GetHash(string value, string hashName)
         {
-            var bytes = Encoding.UTF8.GetBytes(value);
-            var ha = HashAlgorithm.Create(hashName);
-            var hash = ha.ComputeHash(bytes);
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
+            HashAlgorithm ha = HashAlgorithm.Create(hashName);
+            byte[] hash = ha.ComputeHash(bytes);
 
             var sb = new StringBuilder();
-            foreach (var b in hash)
+            foreach (byte b in hash)
             {
                 sb.Append(b.ToString("x2"));
             }
 
-            var hashString = sb.ToString();
-
-            return hashString;
+            return sb.ToString();
         }
 
-        public static string ConvertToRegexPattern(string pattern)
+        /// <summary>
+        /// Converts a string containing wildcards (*, ?) into a regular expression pattern string.
+        /// </summary>
+        /// <param name="wildcardPattern">The string pattern.</param>
+        /// <returns>A string containing regular expression pattern.</returns>
+        public static string ConvertToRegexPattern(string wildcardPattern)
         {
-            string escapedPattern = Regex.Escape(pattern).Replace(@"\*", ".*").Replace(@"\?", ".");
+            string escapedPattern = Regex.Escape(wildcardPattern).Replace(@"\*", ".*").Replace(@"\?", ".");
 
-            if ((pattern.EndsWith("*")) || (pattern.EndsWith("?")))
+            if ((wildcardPattern.EndsWith("*")) || (wildcardPattern.EndsWith("?")))
             {
                 return escapedPattern;
             }

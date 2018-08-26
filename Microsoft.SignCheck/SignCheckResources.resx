@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ArgumentNullOrEmpty" xml:space="preserve">
+    <value>'{0}' cannot be null or empty.</value>
+  </data>
   <data name="DetailExcluded" xml:space="preserve">
     <value>Excluded: Yes ({0})</value>
   </data>
@@ -207,6 +210,9 @@
   <data name="FileAlreadyExists" xml:space="preserve">
     <value>A file named {0} already exists. The duplicate entry will be ignored.</value>
   </data>
+  <data name="FileExtractedFromBinaryTable" xml:space="preserve">
+    <value>File was extracted from Binary table.</value>
+  </data>
   <data name="NA" xml:space="preserve">
     <value>N/A</value>
   </data>
@@ -215,5 +221,8 @@
   </data>
   <data name="WixBundle" xml:space="preserve">
     <value>Processing {0} as a WiX bundle.</value>
+  </data>
+  <data name="XmlSignatureNodes" xml:space="preserve">
+    <value>Number of XML Signature nodes: {0}.</value>
   </data>
 </root>

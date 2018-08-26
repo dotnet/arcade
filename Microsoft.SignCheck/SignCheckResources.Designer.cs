@@ -61,6 +61,15 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; cannot be null or empty..
+        /// </summary>
+        internal static string ArgumentNullOrEmpty {
+            get {
+                return ResourceManager.GetString("ArgumentNullOrEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Excluded: Yes ({0}).
         /// </summary>
         internal static string DetailExcluded {
@@ -331,6 +340,15 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File was extracted from Binary table..
+        /// </summary>
+        internal static string FileExtractedFromBinaryTable {
+            get {
+                return ResourceManager.GetString("FileExtractedFromBinaryTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to N/A.
         /// </summary>
         internal static string NA {
@@ -354,6 +372,15 @@ namespace Microsoft.SignCheck {
         internal static string WixBundle {
             get {
                 return ResourceManager.GetString("WixBundle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of XML Signature nodes: {0}..
+        /// </summary>
+        internal static string XmlSignatureNodes {
+            get {
+                return ResourceManager.GetString("XmlSignatureNodes", resourceCulture);
             }
         }
     }

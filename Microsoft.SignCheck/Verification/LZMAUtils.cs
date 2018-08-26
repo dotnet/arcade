@@ -6,6 +6,11 @@ namespace Microsoft.SignCheck.Verification
 {
     public class LZMAUtils
     {
+        /// <summary>
+        /// Decompresses an LZMA stream.
+        /// </summary>
+        /// <param name="sourceFile">The file containing the LZMA compressed stream.</param>
+        /// <param name="destinationFile">The output file containing the decompressed LZMA stream.</param>
         public static void Decompress(string sourceFile, string destinationFile)
         {
             string destinationDir = Path.GetDirectoryName(destinationFile);
@@ -28,7 +33,7 @@ namespace Microsoft.SignCheck.Verification
                 long fileLength = BitConverter.ToInt64(fileLengthBytes, 0);
                 decoder.SetDecoderProperties(properties);
 
-                decoder.Code(inFile, outFile, inFile.Length, fileLength, null);
+                decoder.Code(inFile, outFile, inFile.Length, fileLength, progress: null);
             }
         }
     }

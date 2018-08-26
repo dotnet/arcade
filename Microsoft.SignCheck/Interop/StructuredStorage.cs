@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.InteropServices;
 using System.IO;
+using System.Runtime.InteropServices;
+using Microsoft.Deployment.WindowsInstaller;
 using Microsoft.VisualStudio.OLE.Interop;
 using STATSTG = Microsoft.VisualStudio.OLE.Interop.STATSTG;
-using Microsoft.Deployment.WindowsInstaller;
-using Microsoft.Deployment.WindowsInstaller.Package;
 
 namespace Microsoft.SignCheck.Interop
 {
@@ -87,12 +82,9 @@ namespace Microsoft.SignCheck.Interop
                             foreach (Record record in view)
                             {
                                 SaveStream(record, dir);
+                                record.Close();
                             }
                         }
-                    }
-                    catch (Exception e)
-                    {
-
                     }
                     finally
                     {

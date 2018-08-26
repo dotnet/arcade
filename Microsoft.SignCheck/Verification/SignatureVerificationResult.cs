@@ -239,11 +239,11 @@ namespace Microsoft.SignCheck.Verification
         }
 
         /// <summary>
-        /// Creates a <see cref="SignatureVerificationResult"/> for a file to indicate that verification was skipped.
+        /// Creates a SignatureVerificationResult for an unsupported file type or file extension.
         /// </summary>
-        /// <param name="path">The path to the file that was skipped.</param>
-        /// <returns>A <see cref="SignatureVerificationResult"/> that indicates the file verification was skipped.</returns>
-        public static SignatureVerificationResult SkippedResult(string path, string parent)
+        /// <param name="path">The path to the file that is unsupported</param>
+        /// <returns>A SignatureVerificationResult indicating the file is unsupported..</returns>
+        public static SignatureVerificationResult UnsupportedFileTypeResult(string path, string parent)
         {
             var signatureVerificationResult = new SignatureVerificationResult(path, parent)
             {

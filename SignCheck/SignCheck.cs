@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using CommandLine;
-using Microsoft.SignCheck;
 using Microsoft.SignCheck.Logging;
 using Microsoft.SignCheck.Verification;
 
@@ -119,7 +118,7 @@ namespace SignCheck
         public SignCheck(string[] args)
         {
             Options = new Options();
-            var parseResult = Parser.Default.ParseArguments<Options>(args).
+            ParserResult<Options> parseResult = Parser.Default.ParseArguments<Options>(args).
                 WithParsed(options => HandleOptions(options)).
                 WithNotParsed<Options>(errors => HandleErrors(errors));
         }
@@ -133,16 +132,16 @@ namespace SignCheck
             if (Options.FileStatus.Count() > 0)
             {
                 FileStatus = FileStatus.NoFiles;
-                foreach (var v in Options.FileStatus)
+                foreach (string value in Options.FileStatus)
                 {
                     FileStatus result;
-                    if (Enum.TryParse<FileStatus>(v, out result))
+                    if (Enum.TryParse<FileStatus>(value, out result))
                     {
                         FileStatus |= result;
                     }
                     else
                     {
-                        Log.WriteError(LogVerbosity.Minimum, SignCheckResources.scErrorUnknownFileStatus, v);
+                        Log.WriteError(LogVerbosity.Minimum, SignCheckResources.scErrorUnknownFileStatus, value);
                     }
                 }
 
@@ -180,21 +179,21 @@ namespace SignCheck
             var inputFiles = new List<string>();
             var downloadFiles = new List<Uri>();
 
-            foreach (var inputFile in Options.InputFiles)
+            foreach (string inputFile in Options.InputFiles)
             {
                 Uri uriResult;
 
                 if ((Uri.TryCreate(inputFile, UriKind.Absolute, out uriResult)) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
                 {
-                    var downloadPath = Path.Combine(_appData, Path.GetFileName(uriResult.LocalPath));
+                    string downloadPath = Path.Combine(_appData, Path.GetFileName(uriResult.LocalPath));
                     inputFiles.Add(downloadPath);
                     downloadFiles.Add(uriResult);
                 }
                 else if (inputFile.IndexOfAny(_wildcards) > -1)
                 {
-                    var fileSearchOptions = Options.TraverseSubFolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-                    var fileSearchPath = Path.GetDirectoryName(inputFile);
-                    var fileSearchPattern = Path.GetFileName(inputFile);
+                    SearchOption fileSearchOptions = Options.TraverseSubFolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                    string fileSearchPath = Path.GetDirectoryName(inputFile);
+                    string fileSearchPattern = Path.GetFileName(inputFile);
                     string[] matchedFiles = null;
 
                     if (String.IsNullOrEmpty(fileSearchPath))
@@ -208,11 +207,11 @@ namespace SignCheck
                         if (fileSearchPath.IndexOfAny(_wildcards) > -1)
                         {
                             // CASE 2: Path contains wildcards, e.g. "-i C:\Foo*\Bar.txt" or "-i C:\Foo*\Bar*.txt"
-                            var wildcardDirectories = Utils.GetDirectories(fileSearchPath, null, fileSearchOptions);
+                            string[] wildcardDirectories = Utils.GetDirectories(fileSearchPath, null, fileSearchOptions);
 
                             var _matchedFiles = new List<string>();
 
-                            foreach (var dir in wildcardDirectories)
+                            foreach (string dir in wildcardDirectories)
                             {
                                 _matchedFiles.AddRange(Directory.GetFiles(dir, fileSearchPattern, fileSearchOptions));
                             }
@@ -226,7 +225,7 @@ namespace SignCheck
                         }
                     }
 
-                    foreach (var file in matchedFiles)
+                    foreach (string file in matchedFiles)
                     {
                         inputFiles.Add(file);
                     }
@@ -235,9 +234,9 @@ namespace SignCheck
                 {
                     if (Directory.Exists(inputFile))
                     {
-                        var searchOption = Options.Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                        SearchOption searchOption = Options.Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
 
-                        foreach (var dirFile in Directory.GetFiles(inputFile, "*.*", searchOption))
+                        foreach (string dirFile in Directory.GetFiles(inputFile, "*.*", searchOption))
                         {
                             inputFiles.Add(dirFile);
                         }
@@ -269,7 +268,7 @@ namespace SignCheck
 
         private void ProcessResults(IEnumerable<SignatureVerificationResult> results, int indent)
         {
-            foreach (var result in results)
+            foreach (SignatureVerificationResult result in results)
             {
                 TotalFiles++;
 
@@ -324,7 +323,7 @@ namespace SignCheck
 
         public void GenerateExclusionsFile(StreamWriter writer, IEnumerable<SignatureVerificationResult> results)
         {
-            foreach (var result in results)
+            foreach (SignatureVerificationResult result in results)
             {
                 if ((!result.IsSigned) && (!result.IsSkipped))
                 {
@@ -343,21 +342,22 @@ namespace SignCheck
             try
             {
                 Log.WriteMessage(String.Format("{0} {1}", ThisAssembly.AssemblyName, ThisAssembly.AssemblyFileVersion));
-                var signatureVerifier = new SignatureVerifier(Options.Verbosity, Exclusions, Log)
-                {
-                    EnableXmlSignatureVerification = Options.EnableXmlSignatureVerification,
-                    Recursive = Options.Recursive,
-                    SkipAuthentiCodeTimestamp = Options.SkipTimestamp,
-                    VerifyStrongName = Options.VerifyStrongName
-                };
+
+                SignatureVerificationOptions options = SignatureVerificationOptions.None;
+                options |= Options.Recursive ? SignatureVerificationOptions.VerifyRecursive : SignatureVerificationOptions.None;
+                options |= Options.EnableXmlSignatureVerification ? SignatureVerificationOptions.VerifyXmlSignatures : SignatureVerificationOptions.None;
+                options |= Options.SkipTimestamp ? SignatureVerificationOptions.None : SignatureVerificationOptions.VerifyAuthentiCodeTimestamps;
+                options |= Options.VerifyStrongName ? SignatureVerificationOptions.VerifyStrongNameSignature : SignatureVerificationOptions.None;
+
+                var signatureVerificationManager = new SignatureVerificationManager(Exclusions, Log, options);
 
                 ResultDetails = Options.Verbosity > LogVerbosity.Normal ? DetailKeys.ResultKeysVerbose : DetailKeys.ResultKeysNormal;
 
                 if (InputFiles.Count() > 0)
                 {
-                    var startTime = DateTime.Now;
-                    var results = signatureVerifier.Verify(InputFiles);
-                    var endTime = DateTime.Now;
+                    DateTime startTime = DateTime.Now;
+                    IEnumerable<SignatureVerificationResult> results = signatureVerificationManager.VerifyFiles(InputFiles);
+                    DateTime endTime = DateTime.Now;
 
                     AllFilesSigned = true;
                     Log.WriteLine();
@@ -392,7 +392,7 @@ namespace SignCheck
                         Log.WriteError(LogVerbosity.Minimum, SignCheckResources.scUnsignedFiles);
                     }
 
-                    var totalTime = endTime - startTime;
+                    TimeSpan totalTime = endTime - startTime;
                     Log.WriteMessage(LogVerbosity.Minimum, String.Format(SignCheckResources.scTime, totalTime));
                     Log.WriteMessage(LogVerbosity.Minimum, String.Format(SignCheckResources.scStats,
                         TotalFiles, TotalSignedFiles, TotalUnsignedFiles, TotalSkippedFiles, TotalExcludedFiles, TotalSkippedExcludedFiles));
@@ -402,6 +402,7 @@ namespace SignCheck
                     Log.WriteMessage(LogVerbosity.Minimum, SignCheckResources.scNoFilesProcessed);
                 }
             }
+
             catch (Exception e)
             {
                 Log.WriteError(e.ToString());
@@ -423,7 +424,7 @@ namespace SignCheck
             {
                 using (var wc = new WebClient())
                 {
-                    var downloadPath = Path.Combine(_appData, Path.GetFileName(uri.LocalPath));
+                    string downloadPath = Path.Combine(_appData, Path.GetFileName(uri.LocalPath));
 
                     if (File.Exists(downloadPath))
                     {
