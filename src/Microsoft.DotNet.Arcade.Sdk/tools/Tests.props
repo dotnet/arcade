@@ -32,11 +32,16 @@
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
     <!-- VS TestExplorer uses this to identify a test project -->
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" IsImplicitlyDefined="true" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
     <!-- Treat test assemblies as non-shipping (do not publish or sign them). -->
     <IsShipping Condition="'$(IsShipping)' == ''">false</IsShipping>
+
+    <!-- Default test runner -->
+    <TestRunnerName Condition="'$(UsingToolXUnit)' == 'true'">XUnit</TestRunnerName>
   </PropertyGroup>
 
 </Project>

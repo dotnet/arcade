@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <AutoGenerateBindingRedirects Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">true</AutoGenerateBindingRedirects>
+    <_GetTestsToRunTarget Condition="'$(TargetFrameworks)' == ''">_InnerGetTestsToRun</_GetTestsToRunTarget>
+    <_GetTestsToRunTarget Condition="'$(TargetFrameworks)' != ''">_OuterGetTestsToRun</_GetTestsToRunTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TestArchitectures)' == ''">
+    <TestArchitectures>$(PlatformTarget)</TestArchitectures>
+    <TestArchitectures Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu'">x64</TestArchitectures>
+  </PropertyGroup>
+
+  <Target Name="Test" DependsOnTargets="$(_GetTestsToRunTarget);RunTests" Condition="'$(IsUnitTestProject)' == 'true' or '$(IsPerformanceTestProject)' == 'true'" />
+  <Target Name="IntegrationTest" DependsOnTargets="$(_GetTestsToRunTarget);RunTests" Condition="'$(IsIntegrationTestProject)' == 'true'" />
+
+  <ItemGroup>
+    <_TestArchitectureItems Include="$(TestArchitectures)" />
+  </ItemGroup>
+
+  <!-- Using Inputs/Outputs just to loop over test architectures -->
+  <Target Name="_InnerGetTestsToRun"
+          Inputs="*%(_TestArchitectureItems.Identity)"
+          Outputs="*%(_TestArchitectureItems.Identity)"
+          Returns="@(TestToRun)"
+          Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' or '$(OS)' == 'Windows_NT' or '$(MSBuildRuntimeType)' == 'Mono'">
+
+    <PropertyGroup>
+      <_TestArchitecture>%(_TestArchitectureItems.Identity)</_TestArchitecture>
+      <_TestOutPathNoExt>$(ArtifactsTestResultsDir)$(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture)</_TestOutPathNoExt>
+    </PropertyGroup>
+
+    <Error Text="Architecture specified in TestArchitectures is not supported: '$(_TestArchitecture)'" File="XUnit"
+           Condition="'$(_TestArchitecture)' != 'x64' and ('$(_TestArchitecture)' != 'x86' or '$(TargetFrameworkIdentifier)' == '.NETCoreApp')"/>
+
+    <ItemGroup>
+      <TestToRun Include="$(TargetPath)">
+        <TargetFramework>$(TargetFramework)</TargetFramework>
+        <TargetFrameworkIdentifier>$(TargetFrameworkIdentifier)</TargetFrameworkIdentifier>
+        <Architecture>$(_TestArchitecture)</Architecture>
+        <EnvironmentDisplay>$(TargetFramework)|$(_TestArchitecture)</EnvironmentDisplay>
+        <ResultsFilePathWithoutExtension>$(_TestOutPathNoExt)</ResultsFilePathWithoutExtension>
+        <ResultsStdOutPath>$(_TestOutPathNoExt).log</ResultsStdOutPath>
+        <ResultsXmlPath>$(_TestOutPathNoExt).xml</ResultsXmlPath>
+        <ResultsHtmlPath>$(_TestOutPathNoExt).html</ResultsHtmlPath>
+      </TestToRun>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_OuterGetTestsToRun" Returns="@(TestToRun)">
+    <ItemGroup>
+      <_TargetFramework Include="$(TargetFrameworks)" />
+    </ItemGroup>
+    <MSBuild Projects="$(MSBuildProjectFile)"
+             Condition="'$(TargetFrameworks)' != ''"
+             Targets="_InnerGetTestsToRun"
+             Properties="TargetFramework=%(_TargetFramework.Identity)">
+      <Output ItemName="TestToRun" TaskParameter="TargetOutputs" />
+    </MSBuild>
+  </Target>
+
+  <Import Project="XUnit.targets" Condition="'$(TestRunnerName)' == 'XUnit'"/>
+</Project>

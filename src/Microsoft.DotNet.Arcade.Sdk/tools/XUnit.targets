@@ -6,97 +6,59 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
-    <AutoGenerateBindingRedirects Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">true</AutoGenerateBindingRedirects>
-    <_TestTargetName Condition="'$(TargetFrameworks)' == ''">InnerTest</_TestTargetName>
-    <_TestTargetName Condition="'$(TargetFrameworks)' != ''">OuterTest</_TestTargetName>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TestArchitectures)' == ''">
-    <TestArchitectures>$(PlatformTarget)</TestArchitectures>
-    <TestArchitectures Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu'">x64</TestArchitectures>
-  </PropertyGroup>
-
-  <Target Name="Test" DependsOnTargets="$(_TestTargetName)" Condition="'$(IsUnitTestProject)' == 'true' or '$(IsPerformanceTestProject)' == 'true'" />
-  <Target Name="IntegrationTest" DependsOnTargets="$(_TestTargetName)" Condition="'$(IsIntegrationTestProject)' == 'true'" />
-
   <ItemGroup>
-    <_TestArchitectureItems Include="$(TestArchitectures)" />
+    <PackageReference Include="xunit" Version="$(XUnitVersion)" IsImplicitlyDefined="true" PrivateAssets="all"/>
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(XUnitRunnerVisualStudioVersion)" IsImplicitlyDefined="true" PrivateAssets="all"/>
+    <PackageReference Include="xunit.runner.console" Version="$(XUnitRunnerConsoleVersion)" IsImplicitlyDefined="true" PrivateAssets="all"/>
   </ItemGroup>
 
-  <!-- Using Inputs/Outputs just to loop over test architectures -->
-  <Target Name="InnerTest"
-          Inputs="*%(_TestArchitectureItems.Identity)"
-          Outputs="*%(_TestArchitectureItems.Identity)"
-          Returns="@(_FailedTestRuns)"
-          Condition="$(TargetFramework.StartsWith('netcoreapp')) or '$(OS)' == 'Windows_NT' or '$(MSBuildRuntimeType)' == 'Mono'">
+  <!-- 
+    Include '*' target to force running tests even if the input assemblies haven't changed and the outputs are present.
+    This matches the common expectations that test command always runs all tests in scope.
+  -->
+  <Target Name="RunTests"
+          Inputs="@(TestToRun);*"
+          Outputs="%(TestToRun.LogPath);%(TestToRun.ResultsXmlPath);%(TestToRun.ResultsHtmlPath)">
 
     <PropertyGroup>
-      <_TestArchitecture>%(_TestArchitectureItems.Identity)</_TestArchitecture>
-      <_TestEnvironment>$(TargetFramework)|$(_TestArchitecture)</_TestEnvironment>
-      <_TestOutPathNoExt>$(ArtifactsTestResultsDir)$(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture)</_TestOutPathNoExt>
-      <_TestStdOutPath>$(_TestOutPathNoExt).log</_TestStdOutPath>
-      <_TestResultsXmlPath>$(_TestOutPathNoExt).xml</_TestResultsXmlPath>
-      <_TestResultsHtmlPath>$(_TestOutPathNoExt).html</_TestResultsHtmlPath>
+      <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
+      <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
       <_RunOnCore>false</_RunOnCore>
-      <_RunOnCore Condition="$(TargetFramework.StartsWith('netcoreapp'))">true</_RunOnCore>
+      <_RunOnCore Condition="'%(TestToRun.TargetFrameworkIdentifier)' == '.NETCoreApp'">true</_RunOnCore>
     </PropertyGroup>
 
-    <Error Text="Architecture specified in TestArchitectures is not supported: '$(_TestArchitecture)'" File="XUnit"
-           Condition="'$(_TestArchitecture)' != 'x64' and ('$(_TestArchitecture)' != 'x86' or $(_RunOnCore))"/>
-
-    <PropertyGroup Condition="'$(_RunOnCore)' == 'true'">
-      <_TargetFileNameNoExt>$([System.IO.Path]::GetFileNameWithoutExtension('$(TargetFileName)'))</_TargetFileNameNoExt>
-      <_CoreRuntimeConfigPath>$(TargetDir)$(_TargetFileNameNoExt).runtimeconfig.json</_CoreRuntimeConfigPath>
-      <_CoreDepsPath>$(TargetDir)$(_TargetFileNameNoExt).deps.json</_CoreDepsPath>
-      <_TestRunnerCommand>"$(DotNetTool)" exec --depsfile "$(_CoreDepsPath)" --runtimeconfig "$(_CoreRuntimeConfigPath)" "$(NuGetPackageRoot)xunit.runner.console/$(XUnitVersion)/tools/netcoreapp2.0/xunit.console.dll" "$(TargetPath)" -noautoreporters -xml "$(_TestResultsXmlPath)" -html "$(_TestResultsHtmlPath)" $(XUnitRunnerAdditionalArguments)</_TestRunnerCommand>
-      <_TestResultsDisplayPath>$(_TestStdOutPath)</_TestResultsDisplayPath>
+    <PropertyGroup Condition="$(_RunOnCore)">
+      <_TargetFileNameNoExt>$([System.IO.Path]::GetFileNameWithoutExtension('$(_TestAssembly)'))</_TargetFileNameNoExt>
+      <_TargetDir>$([System.IO.Path]::GetDirectoryName('$(_TestAssembly)'))\</_TargetDir>
+      <_CoreRuntimeConfigPath>$(_TargetDir)$(_TargetFileNameNoExt).runtimeconfig.json</_CoreRuntimeConfigPath>
+      <_CoreDepsPath>$(_TargetDir)$(_TargetFileNameNoExt).deps.json</_CoreDepsPath>
+      <_TestRunnerCommand>"$(DotNetTool)" exec --depsfile "$(_CoreDepsPath)" --runtimeconfig "$(_CoreRuntimeConfigPath)" "$(NuGetPackageRoot)xunit.runner.console/$(XUnitVersion)/tools/netcoreapp2.0/xunit.console.dll" "$(_TestAssembly)" -noautoreporters -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)" $(XUnitRunnerAdditionalArguments)</_TestRunnerCommand>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(_RunOnCore)' != 'true'">
+    <PropertyGroup Condition="!$(_RunOnCore)">
       <_XUnitConsoleExe>xunit.console.exe</_XUnitConsoleExe>
-      <_XUnitConsoleExe Condition="'$(_TestArchitecture)' == 'x86'">xunit.console.x86.exe</_XUnitConsoleExe>
-      <_TestRunnerCommand>"$(NuGetPackageRoot)xunit.runner.console\$(XUnitVersion)\tools\net452\$(_XUnitConsoleExe)" "$(TargetPath)" -noshadow -xml "$(_TestResultsXmlPath)" -html "$(_TestResultsHtmlPath)" $(XUnitRunnerAdditionalArguments)</_TestRunnerCommand>
-      <_TestResultsDisplayPath>$(_TestResultsHtmlPath)</_TestResultsDisplayPath>
+      <_XUnitConsoleExe Condition="'%(TestToRun.Architecture)' == 'x86'">xunit.console.x86.exe</_XUnitConsoleExe>
+      <_TestRunnerCommand>"$(NuGetPackageRoot)xunit.runner.console\$(XUnitVersion)\tools\net452\$(_XUnitConsoleExe)" "$(_TestAssembly)" -noshadow -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)" $(XUnitRunnerAdditionalArguments)</_TestRunnerCommand>
     </PropertyGroup>
 
     <MakeDir Directories="$(ArtifactsTestResultsDir)"/>
-    <Delete Files="$(_TestOutPathNoExt).*" />
+    <Delete Files="%(TestToRun.ResultsFilePathWithoutExtension).*" />
 
-    <Message Text="Running tests: $(TargetPath) [$(_TestEnvironment)]" Importance="high"/>
+    <Message Text="Running tests: $(_TestAssembly) [$(_TestEnvironment)]" Importance="high"/>
 
     <!-- Note that xUnit outputs failure info to both STDOUT (stack trace, message) and STDERR (failed test name) -->
-    <Exec Command='$(_TestRunnerCommand) > "$(_TestStdOutPath)" 2>&amp;1'
+    <Exec Command='$(_TestRunnerCommand) > "%(TestToRun.ResultsStdOutPath)" 2>&amp;1'
           LogStandardErrorAsError="false"
-          WorkingDirectory="$(OutDir)"
+          WorkingDirectory="$(_TargetDir)"
           IgnoreExitCode="true">
 
       <Output TaskParameter="ExitCode" PropertyName="_TestErrorCode" />
     </Exec>
 
-    <WriteLinesToFile File="$(_TestStdOutPath)" Overwrite="false" Lines=";=== COMMAND LINE ===;$(_TestRunnerCommand)" />
+    <WriteLinesToFile File="%(TestToRun.ResultsStdOutPath)" Overwrite="false" Lines=";=== COMMAND LINE ===;$(_TestRunnerCommand)" />
 
-    <ItemGroup>
-      <_FailedTestRuns Include="$(_TestEnvironment)" Condition="'$(_TestErrorCode)' != '0'" />
-    </ItemGroup>
-
-    <Message Text="Tests succeeded: $(TargetPath) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' == '0'" Importance="high" />
-    <Warning Text="$(_TestResultsDisplayPath) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0' and '$(TargetFrameworks)' != ''" File="XUnit" />
-    <Error Text="$(_TestResultsDisplayPath) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0' and '$(TargetFrameworks)' == ''" File="XUnit" />
-  </Target>
-
-  <Target Name="OuterTest" Returns="@(InnerOutput)">
-    <ItemGroup>
-      <_TargetFramework Include="$(TargetFrameworks)" />
-    </ItemGroup>
-    <MSBuild Projects="$(MSBuildProjectFile)"
-             Condition="'$(TargetFrameworks)' != ''"
-             Targets="InnerTest"
-             Properties="TargetFramework=%(_TargetFramework.Identity)">
-      <Output ItemName="_FailedTestRuns" TaskParameter="TargetOutputs" />
-    </MSBuild>
-
-    <Error Text="Tests failed on platforms: @(_FailedTestRuns, ', ')" Condition="'@(_FailedTestRuns)' != ''" File="XUnit" />
+    <Message Text="Tests succeeded: $(_TestAssembly) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' == '0'" Importance="high" />
+    <Error Text="%(TestToRun.ResultsHtmlPath) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0'" File="XUnit" ContinueOnError="true" />
   </Target>
 
   <!-- Workaround for https://github.com/xunit/xunit/issues/1651 -->
