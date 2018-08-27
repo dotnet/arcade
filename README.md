@@ -10,7 +10,7 @@ VSTS [![Build Status](https://dotnet.visualstudio.com/_apis/public/build/definit
 )](https://dotnet.visualstudio.com/DotNet-Public/_build/index?definitionId=17&branchName=master)
 
 Jenkins
-
+ 
 |    | x64 Debug|x64 Release|
 |:--:|:--:|:--:|
 |**Windows_NT**|[![Build Status](https://ci.dot.net/job/dotnet_arcade/job/master/job/Windows_NT_Debug/badge/icon)](https://ci.dot.net/job/dotnet_arcade/job/master/job/Windows_NT_Debug/)|[![Build Status](https://ci.dot.net/job/dotnet_arcade/job/master/job/Windows_NT_Release/badge/icon)](https://ci.dot.net/job/dotnet_arcade/job/master/job/Windows_NT_Release/)|
