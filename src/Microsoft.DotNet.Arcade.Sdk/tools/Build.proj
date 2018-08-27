@@ -198,7 +198,7 @@
       Sign artifacts.
     -->
     <MSBuild Projects="Sign.proj"
-             Properties="@(_CommonProps);ConfigFilePath=$(SignToolDataPath)"
+             Properties="@(_CommonProps)"
              Targets="Sign"
              Condition="'$(Sign)' == 'true'"/>
 

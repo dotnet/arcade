@@ -21,7 +21,12 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.AddSingleton(new Labeler(Configuration["GitHubRepoOwner"], Configuration["GitHubRepoName"], Configuration["GitHubAccessToken"]));
+            services.AddSingleton(
+                new Labeler(
+                    Configuration["GitHubRepoOwner"],
+                    Configuration["GitHubRepoName"],
+                    Configuration["GitHubAccessToken"],
+                    double.Parse(Configuration["Threshold"])));
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)

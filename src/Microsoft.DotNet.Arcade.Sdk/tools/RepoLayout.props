@@ -9,17 +9,11 @@
     Repositories are required to follow the following conventions:
       
     - global.json file in the repository root
-      This file specifies the version of RepoToolset SDK like so:
-      "msbuild-sdks": { "RoslynTools.RepoToolset": "version" }
+      This file specifies the version of Arcade SDK like so:
+      "msbuild-sdks": { "Microsoft.DotNet.Arcade.Sdk": "version" }
       
     - build/Versions.props 
       Specifies versions of dependencies
-        
-    - build/FixedVersions.props (optional) 
-      Specifies versions that are not overriden by orchestrated build
-      
-    - build/SignToolData.json
-      Specifies how build outputs are signed.
   -->
 
   <PropertyGroup>
@@ -41,21 +35,22 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <RepoRoot Condition="'$(RepoRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'global.json'))\</RepoRoot>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <!-- Respect environment variable for the .NET install directory if set; otherwise, use the current default location -->
     <DotNetRoot Condition="'$(DotNetRoot)' == ''">$(DOTNET_INSTALL_DIR)</DotNetRoot>
     <DotNetRoot Condition="'$(DotNetRoot)' == ''">$(RepoRoot).dotnet\</DotNetRoot>
     <DotNetRoot Condition="!HasTrailingSlash('$(DotNetRoot)')">$(DotNetRoot)\</DotNetRoot>
   </PropertyGroup>
-  
-  <PropertyGroup>
-    <RepoRoot Condition="'$(RepoRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'global.json'))\</RepoRoot>
 
+  <PropertyGroup>
     <!-- TODO: remove condition once all repos update their dir structure (https://github.com/dotnet/roslyn-tools/issues/177) -->
     <RepositoryEngineeringDir Condition="Exists('$(RepoRoot)eng')">$(RepoRoot)eng\</RepositoryEngineeringDir>
     <RepositoryEngineeringDir Condition="'$(RepositoryEngineeringDir)' == ''">$(RepoRoot)build\</RepositoryEngineeringDir>
 
     <VersionsPropsPath>$(RepositoryEngineeringDir)Versions.props</VersionsPropsPath>
-    <SignToolDataPath>$(RepositoryEngineeringDir)SignToolData.json</SignToolDataPath>
 
     <DotNetTool>$(DotNetRoot)dotnet</DotNetTool>
     <DotNetTool Condition="'$(OS)' == 'Windows_NT'">$(DotNetTool).exe</DotNetTool>

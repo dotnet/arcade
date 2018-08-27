@@ -19,6 +19,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Maestro.Web
@@ -192,10 +193,15 @@ namespace Maestro.Web
             services.AddAuthorization(
                 options =>
                 {
-                    options.AddPolicy(MsftAuthorizationPolicyName, policy =>
+                    options.AddPolicy(
+                        MsftAuthorizationPolicyName,
+                        policy =>
                         {
-                            policy.RequireAuthenticatedUser()
-                                .RequireRole("github:team:dotnet:dnceng");
+                            policy.RequireAuthenticatedUser();
+                            if (!HostingEnvironment.IsDevelopment())
+                            {
+                                policy.RequireRole("github:team:dotnet:dnceng");
+                            }
                         });
                 });
 

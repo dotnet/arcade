@@ -12,6 +12,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DarcLib
@@ -40,7 +41,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             _logger.LogInformation($"Getting the contents of file '{filePath}' from repo '{repoUri}' in branch '{branch}'...");
 
-            string ownerAndRepo = GetSegments(repoUri);
+            string ownerAndRepo = GetOwnerAndRepoFromRepoUri(repoUri);
 
             HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}contents/{filePath}?ref={branch}", _logger);
 
@@ -57,7 +58,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             _logger.LogInformation($"Verifying if 'darc-{branch}' branch exist in repo '{repoUri}'. If not, we'll create it...");
 
-            string ownerAndRepo = GetSegments(repoUri);
+            string ownerAndRepo = GetOwnerAndRepoFromRepoUri(repoUri);
             string latestSha = await GetLastCommitShaAsync(ownerAndRepo, branch);
             string body;
 
@@ -102,7 +103,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             _logger.LogInformation($"Pushing files to '{pullRequestBaseBranch}'...");
 
-            string ownerAndRepo = GetSegments(repoUri);
+            string ownerAndRepo = GetOwnerAndRepoFromRepoUri(repoUri);
 
             foreach (string filePath in filesToCommit.Keys)
             {
@@ -124,7 +125,7 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null)
         {
-            string ownerAndRepo = GetSegments(repoUri);
+            string ownerAndRepo = GetOwnerAndRepoFromRepoUri(repoUri);
             StringBuilder query = new StringBuilder();
 
             if (!string.IsNullOrEmpty(keyword))
@@ -225,7 +226,7 @@ namespace Microsoft.DotNet.DarcLib
 
             string body = JsonConvert.SerializeObject(comment, _serializerSettings);
 
-            string ownerAndRepo = GetSegments(repoUri);
+            string ownerAndRepo = GetOwnerAndRepoFromRepoUri(repoUri);
 
             await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{ownerAndRepo}issues/{pullRequestId}/comments", _logger, body);
         }
@@ -243,7 +244,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{assetsProducedInCommit}'");
 
-            string ownerAndRepo = GetSegments(repoUri);
+            string ownerAndRepo = GetOwnerAndRepoFromRepoUri(repoUri);
             HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}contents/{path}?ref={assetsProducedInCommit}", _logger);
 
             List<GitHubContent> contents = JsonConvert.DeserializeObject<List<GitHubContent>>(await response.Content.ReadAsStringAsync());
@@ -295,21 +296,16 @@ namespace Microsoft.DotNet.DarcLib
         public async Task<string> CheckIfFileExistsAsync(string repoUri, string filePath, string branch)
         {
             string commit;
-            string ownerAndRepo = GetSegments(repoUri);
+            string ownerAndRepo = GetOwnerAndRepoFromRepoUri(repoUri);
             HttpResponseMessage response;
 
             try
             {
                 response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}contents/{filePath}?ref={branch}", _logger);
             }
-            catch (HttpRequestException exc)
+            catch (HttpRequestException exc) when (exc.Message.Contains(((int)HttpStatusCode.NotFound).ToString()))
             {
-                if (exc.Message.Contains(((int)HttpStatusCode.NotFound).ToString()))
-                {
-                    return null;
-                }
-
-                throw exc;
+                return null;
             }
 
             JObject content = JObject.Parse(await response.Content.ReadAsStringAsync());
@@ -341,7 +337,7 @@ namespace Microsoft.DotNet.DarcLib
             JToken lastCommit = content.Last;
             string lastCommitSha = lastCommit["sha"].ToString();
 
-            string ownerAndRepo = GetSegments(pullRequestUrl);
+            string ownerAndRepo = GetOwnerAndRepoFromPR(pullRequestUrl);
             response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}statuses/{lastCommitSha}", _logger);
 
             content = JArray.Parse(await response.Content.ReadAsStringAsync());
@@ -370,17 +366,35 @@ namespace Microsoft.DotNet.DarcLib
             return user;
         }
 
-        private string GetSegments(string repoUri)
+        private string GetOwnerAndRepo(string uri, Regex pattern)
         {
-            repoUri = repoUri.Replace("https://github.com/", string.Empty);
-            repoUri = repoUri.Last() != '/' ? $"{repoUri}/" : repoUri;
-            return repoUri;
+            var u = new UriBuilder(uri);
+            var match = pattern.Match(u.Path);
+            if (!match.Success)
+            {
+                return null;
+            }
+
+            return $"{match.Groups["owner"]}/{match.Groups["repo"]}/";
+        }
+
+        private static Regex repoUriPattern = new Regex(@"^/(?<owner>[^/]+)/(?<repo>[^/]+)/?$");
+
+        private string GetOwnerAndRepoFromRepoUri(string repoUri)
+        {
+            return GetOwnerAndRepo(repoUri, repoUriPattern);
+        }
+
+        private static Regex prUriPattern = new Regex(@"^/repos/(?<owner>[^/]+)/(?<repo>[^/]+)/pulls/\d+$");
+
+        private string GetOwnerAndRepoFromPR(string prUri)
+        {
+            return GetOwnerAndRepo(prUri, prUriPattern);
         }
 
         private async Task<string> CreateOrUpdatePullRequestAsync(string uri, string mergeWithBranch, string sourceBranch, HttpMethod method, string title = null, string description = null)
         {
             string requestUri;
-            string ownerAndRepo = GetSegments(uri);
 
             title = !string.IsNullOrEmpty(title) ? $"{PullRequestProperties.TitleTag} {title}" : PullRequestProperties.Title;
             description = description ?? PullRequestProperties.Description;
@@ -391,6 +405,7 @@ namespace Microsoft.DotNet.DarcLib
 
             if (method == HttpMethod.Post)
             {
+                string ownerAndRepo = GetOwnerAndRepoFromRepoUri(uri);
                 requestUri = $"repos/{ownerAndRepo}pulls";
             }
             else
