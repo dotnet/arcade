@@ -1,15 +1,15 @@
 parameters:
   dependsOn: ''
-  conditions: ''
+  queue: ''
 phases:
   - phase: Push to B.A.R.
     dependsOn: ${{ parameters.dependsOn }}
     queue:
-      name: DotNetCore-Build
+      name: ${{ parameters.queue }}
       demands:
         - agent.os -equals Windows_NT        
     steps:
-    - ${{ if and( startsWith(parameters.conditions, 'not'), not(contains(parameters.conditions, variables['build.reason']))) }}:
+      - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         - task: DownloadBuildArtifacts@0
           displayName: Download artifact
           inputs:

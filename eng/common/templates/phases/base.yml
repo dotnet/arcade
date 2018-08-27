@@ -68,7 +68,6 @@ phases:
           
         env:
           TeamName: $(_TeamName)
-          
         continueOnError: false
         condition: and(succeeded(), in(variables['_SignType'], 'real', 'test'), eq(variables['Agent.Os'], 'Windows_NT'))
 
