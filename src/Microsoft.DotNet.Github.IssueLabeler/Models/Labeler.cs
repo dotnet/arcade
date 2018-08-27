@@ -15,9 +15,6 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         private readonly string _repoName;
         private readonly double _threshold;
 
-        public Labeler(string repoOwner, string repoName, string accessToken)
-            : this(repoOwner, repoName, accessToken, 0.4) { }
-
         public Labeler(string repoOwner, string repoName, string accessToken, double threshold)
         {
             _repoOwner = repoOwner;
