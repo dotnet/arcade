@@ -64,26 +64,26 @@ namespace Microsoft.DotNet.DarcLib
             VstsRef vstsRef;
             HttpResponseMessage response = null;
 
-            string latestSha = await GetLastCommitShaAsync(repoName, newBranch);
+            string latestSha = await GetLastCommitShaAsync(repoName, baseBranch);
 
-            response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/refs/heads/darc-{newBranch}", _logger);
+            response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/refs/heads/{newBranch}", _logger);
             JObject responseContent = JObject.Parse(await response.Content.ReadAsStringAsync());
 
             // VSTS doesn't fail with a 404 if a branch does not exist, it just returns an empty response object...
             if (responseContent["count"].ToObject<int>() == 0)
             {
-                _logger.LogInformation($"'darc-{newBranch}' branch doesn't exist. Creating it...");
+                _logger.LogInformation($"'{newBranch}' branch doesn't exist. Creating it...");
 
-                vstsRef = new VstsRef($"refs/heads/darc-{newBranch}", latestSha);
+                vstsRef = new VstsRef($"refs/heads/{newBranch}", latestSha);
                 vstsRefs.Add(vstsRef);
             }
             else
             {
-                _logger.LogInformation($"Branch 'darc-{newBranch}' exists, making sure it is in sync with '{newBranch}'...");
+                _logger.LogInformation($"Branch '{newBranch}' exists, making sure it is in sync with '{baseBranch}'...");
 
-                string oldSha = await GetLastCommitShaAsync(repoName, $"darc-{newBranch}");
+                string oldSha = await GetLastCommitShaAsync(repoName, $"{newBranch}");
 
-                vstsRef = new VstsRef($"refs/heads/darc-{newBranch}", latestSha, oldSha);
+                vstsRef = new VstsRef($"refs/heads/{newBranch}", latestSha, oldSha);
                 vstsRefs.Add(vstsRef);
             }
 
