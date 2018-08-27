@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.DarcLib
     {
         Task<string> GetFileContentsAsync(string filePath, string repoUri, string branch);
 
-        Task CreateDarcBranchAsync(string repoUri, string branch);
+        Task CreateBranchAsync(string repoUri, string newBranch, string baseBranch);
 
         Task PushFilesAsync(Dictionary<string, GitCommit> filesToCommit, string repoUri, string pullRequestBaseBranch);
 
@@ -43,5 +43,7 @@ namespace Microsoft.DotNet.DarcLib
         HttpClient CreateHttpClient(string versionOverride = null);
 
         Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl);
+
+        Task<string> GetPullRequestBaseBranch(string pullRequestUrl);
     }
 }

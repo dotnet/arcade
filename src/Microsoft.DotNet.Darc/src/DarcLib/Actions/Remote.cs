@@ -86,9 +86,9 @@ namespace Microsoft.DotNet.DarcLib
 
             if (itemsToUpdate.Any())
             {
-                await _gitClient.CreateDarcBranchAsync(repoUri, branch);
+                pullRequestBaseBranch = pullRequestBaseBranch ?? $"darc-{branch}-{Guid.NewGuid()}"; // Base branch must be unique because darc could have multiple PRs open in the same repo at the same time
 
-                pullRequestBaseBranch = pullRequestBaseBranch ?? $"darc-{branch}";
+                await _gitClient.CreateBranchAsync(repoUri, pullRequestBaseBranch, branch);
 
                 await CommitFilesForPullRequest(repoUri, branch, assetsProducedInCommit, itemsToUpdate, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
 
@@ -133,14 +133,14 @@ namespace Microsoft.DotNet.DarcLib
 
             string linkToPr = null;
 
-            string repoUri = await _gitClient.GetPullRequestRepo( pullRequestUrl);
-            string pullRequestBaseBranch = $"darc-{branch}";
+            string repoUri = await _gitClient.GetPullRequestRepo(pullRequestUrl);
+            string pullRequestBaseBranch = await _gitClient.GetPullRequestBaseBranch(pullRequestUrl);
 
             IEnumerable<DependencyDetail> itemsToUpdate = await GetRequiredUpdatesAsync(repoUri, branch, assetsProducedInCommit, assetsToUpdate);
 
             await CommitFilesForPullRequest(repoUri, branch, assetsProducedInCommit, itemsToUpdate, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
 
-            linkToPr = await _gitClient.UpdatePullRequestAsync(pullRequestUrl, branch, pullRequestTitle, pullRequestDescription);
+            linkToPr = await _gitClient.UpdatePullRequestAsync(pullRequestUrl, branch, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
 
             _logger.LogInformation($"Updating dependencies in repo '{repoUri}' and branch '{branch}' succeeded! PR link is: {linkToPr}");
 

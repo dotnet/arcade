@@ -54,21 +54,21 @@ namespace Microsoft.DotNet.DarcLib
             return this.GetDecodedContent(content);
         }
 
-        public async Task CreateDarcBranchAsync(string repoUri, string branch)
+        public async Task CreateBranchAsync(string repoUri, string newBranch, string baseBranch)
         {
-            _logger.LogInformation($"Verifying if 'darc-{branch}' branch exist in repo '{repoUri}'. If not, we'll create it...");
+            _logger.LogInformation($"Verifying if '{newBranch}' branch exist in repo '{repoUri}'. If not, we'll create it...");
 
             string ownerAndRepo = GetOwnerAndRepoFromRepoUri(repoUri);
-            string latestSha = await GetLastCommitShaAsync(ownerAndRepo, branch);
+            string latestSha = await GetLastCommitShaAsync(ownerAndRepo, baseBranch);
             string body;
 
-            string gitRef = $"refs/heads/darc-{branch}";
+            string gitRef = $"refs/heads/{newBranch}";
             GitHubRef githubRef = new GitHubRef(gitRef, latestSha);
             HttpResponseMessage response = null;
 
             try
             {
-                response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}branches/darc-{branch}", _logger);
+                response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}branches/{newBranch}", _logger);
 
                 githubRef.Force = true;
                 body = JsonConvert.SerializeObject(githubRef, _serializerSettings);
@@ -80,23 +80,23 @@ namespace Microsoft.DotNet.DarcLib
             }
             catch (HttpRequestException exc) when (exc.Message.Contains(((int)HttpStatusCode.NotFound).ToString()))
             {
-                _logger.LogInformation($"'darc-{branch}' branch doesn't exist. Creating it...");
+                _logger.LogInformation($"'{newBranch}' branch doesn't exist. Creating it...");
 
                 body = JsonConvert.SerializeObject(githubRef, _serializerSettings);
                 response = await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{ownerAndRepo}git/refs", _logger, body);
 
-                _logger.LogInformation($"Branch 'darc-{branch}' created in repo '{repoUri}'!");
+                _logger.LogInformation($"Branch '{newBranch}' created in repo '{repoUri}'!");
 
                 return;
             }
             catch (HttpRequestException exc)
             {
-                _logger.LogError($"Checking if 'darc-{branch}' branch existed in repo '{repoUri}' failed with '{exc.Message}'");
+                _logger.LogError($"Checking if '{newBranch}' branch existed in repo '{repoUri}' failed with '{exc.Message}'");
 
                 throw;
             }
 
-            _logger.LogInformation($"Branch 'darc-{branch}' exists.");
+            _logger.LogInformation($"Branch '{newBranch}' exists.");
         }
 
         public async Task PushFilesAsync(Dictionary<string, GitCommit> filesToCommit, string repoUri, string pullRequestBaseBranch)
@@ -352,6 +352,16 @@ namespace Microsoft.DotNet.DarcLib
             }
 
             return statuses;
+        }
+
+        public async Task<string> GetPullRequestBaseBranch(string pullRequestUrl)
+        {
+            string url = GetPrPartialAbsolutePath(pullRequestUrl);
+
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, url, _logger);
+            JObject content = JObject.Parse(await response.Content.ReadAsStringAsync());
+
+            return content["head"]["ref"].ToString();
         }
 
         private async Task<string> GetUserNameAsync()
