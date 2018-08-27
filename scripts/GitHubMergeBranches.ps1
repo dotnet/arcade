@@ -217,6 +217,7 @@ try {
 
     $remoteName = 'origin'
     $prOwnerName = $RepoOwner
+    $prRepoName = $RepoName
 
     if ($Fork) {
         $remoteName = 'fork'
@@ -235,6 +236,7 @@ try {
 
             Invoke-Block { & git remote add fork "https://placeholderUser:${AuthToken}@github.com/$($forkData.Owner)/$($forkData.Name).git" }
             $prOwnerName = $forkData.Owner
+            $prRepoName = $forkData.Name
         }
     }
 
@@ -346,7 +348,7 @@ You can also do this on command line:
 ``````
 git checkout $BaseBranch
 git pull
-git fetch --force https://github.com/$prOwnerName/$RepoName ${mergeBranchName}:${mergeBranchName}
+git fetch --force https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}:${mergeBranchName}
 git merge ${mergeBranchName}
 git push
 ``````
@@ -357,7 +359,7 @@ git push
 You can do this [using GitHub](https://help.github.com/articles/resolving-a-merge-conflict-on-github/)
 or using the [command line](https://help.github.com/articles/resolving-a-merge-conflict-using-the-command-line/).
 
-Maintainers of this repo have permission to the branch '$mergeBranchName' on https://github.com/$prOwnerName/$RepoName.
+Maintainers of this repo have permission to the branch '$mergeBranchName' on https://github.com/$prOwnerName/$prRepoName.
 You can push changes to this branch to resolve conflicts or other issues in this pull request. The bot will attempt
 to update this branch as more changes are discovered on $HeadBranch.
 
