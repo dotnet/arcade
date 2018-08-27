@@ -148,7 +148,11 @@ namespace SubscriptionActorService
             }
             catch (Exception ex) when (CatchAllExceptions)
             {
-                Logger.LogError(ex, "Unknown error processing subscription update for subscription '{subscriptionId}' and build '{buildId}'.", SubscriptionId, buildId);
+                Logger.LogError(
+                    ex,
+                    "Unknown error processing subscription update for subscription '{subscriptionId}' and build '{buildId}'.",
+                    SubscriptionId,
+                    buildId);
                 await TrackSubscriptionUpdateFailure("Unknown error processing update.", action, nameof(UpdateAsync), buildId);
             }
         }
