@@ -141,7 +141,25 @@ namespace Microsoft.DotNet.SignTool
 
             if (FileSignInfo.IsZipContainer(fullPath))
             {
-                return new FileSignInfo(fullPath, hash, new SignInfo(FileSignInfo.IsNupkg(fullPath) ? SignToolConstants.Certificate_NuGet : SignToolConstants.Certificate_VsixSHA2));
+                string certificate = null;
+
+                if (FileSignInfo.IsVsix(fullPath))
+                {
+                    certificate = SignToolConstants.Certificate_VsixSHA2;
+                }
+                else if (FileSignInfo.IsNupkg(fullPath))
+                {
+                    certificate = SignToolConstants.Certificate_NuGet;
+                }
+                else if (FileSignInfo.IsZip(fullPath))
+                {
+                    certificate = SignToolConstants.Certificate_Zip;
+                }
+
+                if (certificate != null)
+                {
+                    return new FileSignInfo(fullPath, hash, new SignInfo(certificate));
+                }
             }
 
             _log.LogWarning($"Unidentified artifact type: {fullPath}");

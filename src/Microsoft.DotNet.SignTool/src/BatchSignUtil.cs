@@ -232,6 +232,18 @@ namespace Microsoft.DotNet.SignTool
                         log.LogError($"Nupkg {fileName} cannot be strong name signed.");
                     }
                 }
+                else if (fileName.IsZip())
+                {
+                    if (fileName.SignInfo.Certificate == null || !fileName.SignInfo.Certificate.Equals(SignToolConstants.Certificate_Zip))
+                    {
+                        log.LogError($"Zip {fileName} should be signed with this certificate: {SignToolConstants.Certificate_Zip}");
+                    }
+
+                    if (fileName.SignInfo.StrongName != null)
+                    {
+                        log.LogError($"Zip {fileName} cannot be strong name signed.");
+                    }
+                }
             }
         }
 

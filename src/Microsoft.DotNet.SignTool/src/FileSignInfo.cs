@@ -28,8 +28,11 @@ namespace Microsoft.DotNet.SignTool
         internal static bool IsNupkg(string path)
             => Path.GetExtension(path).Equals(".nupkg", StringComparison.OrdinalIgnoreCase);
 
+        internal static bool IsZip(string path)
+            => Path.GetExtension(path).Equals(".zip", StringComparison.OrdinalIgnoreCase);
+
         internal static bool IsZipContainer(string path)
-            => IsVsix(path) || IsNupkg(path);
+            => IsVsix(path) || IsNupkg(path) || IsZip(path);
 
         internal static bool IsSignableFile(string path)
             => IsZipContainer(path) || IsPEFile(path);
@@ -39,6 +42,8 @@ namespace Microsoft.DotNet.SignTool
         internal bool IsVsix() => IsVsix(FileName);
 
         internal bool IsNupkg() => IsNupkg(FileName);
+
+        internal bool IsZip() => IsZip(FileName);
 
         internal bool IsZipContainer() => IsZipContainer(FileName);
 
