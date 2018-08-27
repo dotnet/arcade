@@ -40,6 +40,7 @@ param(
     [Alias('a')]
     $AuthToken,
 
+    [Obsolete('Unused parameter. AuthToken is used to find the username.')]
     [Alias('u')]
     $Username,
 
