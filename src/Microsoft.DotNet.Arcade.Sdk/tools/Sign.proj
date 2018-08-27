@@ -1,10 +1,5 @@
 <!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project DefaultTargets="Sign">
-  <!--
-    Required parameters:
-      ConfigFilePath                    SigntToolData.json path.
-  -->
-
   <Import Project="BuildStep.props" />
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.signtool\$(MicrosoftDotNetSignToolVersion)\build\Microsoft.DotNet.SignTool.props" />
@@ -55,8 +50,6 @@
         FileSignInfo="@(FileSignInfo)"
         TempDir="$(ArtifactsTmpDir)"
         LogDir="$(ArtifactsLogDir)"
-        PublishUrl="$(PublishUrl)"
-        OrchestrationManifestPath="$(OrchestrationManifestPath)"
         MSBuildPath="$(DesktopMSBuildPath)"
         MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"/>
        
