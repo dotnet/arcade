@@ -69,6 +69,21 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             return Ok(new Subscription(subscription));
         }
 
+        [HttpGet("{id}/history")]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(List<SubscriptionHistoryItem>))]
+        public async Task<IActionResult> GetSubscriptionHistory(Guid id)
+        {
+            Data.Models.Subscription subscription = await _context.Subscriptions.Where(sub => sub.Id == id)
+                .FirstOrDefaultAsync();
+
+            if (subscription == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(await SubscriptionHistoryItem.GetAllForSubscription(id, _context));
+        }
+
         [HttpPost]
         [SwaggerResponse((int) HttpStatusCode.Created, Type = typeof(Subscription))]
         [ValidateModelState]
@@ -82,6 +97,22 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                     new ApiError(
                         "the request is invalid",
                         new[] {$"The channel '{subscription.ChannelName}' could not be found."}));
+            }
+
+            if (subscription.TargetRepository.Contains("github.com"))
+            {
+                var repoInstallation = await _context.RepoInstallations.FindAsync(subscription.TargetRepository);
+                if (repoInstallation == null)
+                {
+                    return BadRequest(
+                        new ApiError(
+                            "the request is invalid",
+                            new[]
+                            {
+                                $"The repository '{subscription.TargetRepository}' does not have an associated github installation. " +
+                                "The Maestro github application must be installed by the repository's owner and given access to the repository."
+                            }));
+                }
             }
 
             var subscriptionModel = subscription.ToDb();

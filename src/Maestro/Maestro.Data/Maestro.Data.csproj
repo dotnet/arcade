@@ -16,4 +16,8 @@
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.EntityFrameworkCore.Extensions\Microsoft.DotNet.EntityFrameworkCore.Extensions.csproj" />
+  </ItemGroup>
+
 </Project>
