@@ -37,14 +37,21 @@ phases:
         # Right now a manual build of a random branch would get published alongside the normal branch artifacts.
         _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
         _TeamName: DotNetCore
-        _SignArgs: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
-        _PublishArgs: /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
-          /p:PB_PublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
-          /p:PB_PublishType=$(_PublishType)
-          /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
-          /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         _HelixSource: official/dotnet/arcade/$(Build.SourceBranch)
         _OfficialBuildIdArgs: /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+        ${{ if ne(variables['_PublishType'], 'none') }}:
+          _PublishArgs: /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
+            /p:PB_PublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
+            /p:PB_PublishType=$(_PublishType)
+            /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+            /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+        ${{ if eq(variables['_PublishType'], 'none') }}:
+          _PublishArgs: ''
+        ${{ if ne(variables['_SignType'], 'none') }}:
+          _SignArgs: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
+        ${{ if eq(variables['_SignType'], 'none') }}:
+          _SignArgs: ''
+          
       # else
       ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
         _PublishArgs: ''
