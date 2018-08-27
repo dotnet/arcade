@@ -1,13 +1,10 @@
 parameters:
   dependsOn: ''
-  queue: ''
+  queue: {}
 phases:
   - phase: Push to B.A.R.
     dependsOn: ${{ parameters.dependsOn }}
-    queue:
-      name: ${{ parameters.queue }}
-      demands:
-        - agent.os -equals Windows_NT        
+    queue: ${{ parameters.queue }}
     steps:
       - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         - task: DownloadBuildArtifacts@0
