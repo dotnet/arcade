@@ -20,10 +20,10 @@ phases:
           inputs:
             azureSubscription: 'DotNet-Engineering-Services_KeyVault'
             KeyVaultName: EngKeyVault
-            SecretsFilter: 'bar-token'
+            SecretsFilter: 'MaestroAccessToken'
           condition: succeeded()
         - script: eng\common\pushbuildassets.cmd
             /p:ManifestZipFilePath='$(Build.StagingDirectory)/Download/AssetManifests'
-            /p:BuildAssetRegistryToken=$(bar-token)
-            /p:MaestroApiEndpoint=https://maestro.endpoint...
+            /p:BuildAssetRegistryToken=$(MaestroAccessToken)
+            /p:MaestroApiEndpoint=https://maestro-int.westus2.cloudapp.azure.com
           displayName: Push Build Assets

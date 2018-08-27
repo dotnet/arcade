@@ -162,13 +162,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 using (var clientThrottle = new SemaphoreSlim(this.MaxClients, this.MaxClients))
                 {
-                    Log.LogMessage($"Uploading {taskItems.Count()} items...");
+                    Log.LogMessage(MessageImportance.High, $"Uploading {taskItems.Count()} items:");
                     await Task.WhenAll(taskItems.Select(
-                        item => blobFeedAction.UploadAssetAsync(
-                            item,
-                            clientThrottle,
-                            UploadTimeoutInMinutes,
-                            CreatePushOptions())));
+                        item =>
+                        {
+                            Log.LogMessage(MessageImportance.High, $"Async uploading {item.ItemSpec}");
+                            return blobFeedAction.UploadAssetAsync(
+                                item,
+                                clientThrottle,
+                                UploadTimeoutInMinutes,
+                                CreatePushOptions());
+                        }
+                    ));
                 }
             }
         }

@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPullRquest;
         }
 
-        public async Task MergePullRequestAsync(string pullRequestUrl, string commit = null, string mergeMethod = GitHubMergeMethod.Merge, string title = null, string message = null)
+        public async Task MergePullRequestAsync(string pullRequestUrl, string commit = null, string mergeMethod = GitHubMergeMethod.Squash, string title = null, string message = null)
         {
             title = title ?? PullRequestProperties.AutoMergeTitle;
             message = message ?? PullRequestProperties.AutoMergeMessage;
