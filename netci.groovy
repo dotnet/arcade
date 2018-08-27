@@ -23,7 +23,7 @@ static addGithubPRTriggerForBranch(def job, def branchName, def jobName) {
 }
 
 static addXUnitDotNETResults(def job, def configName) {
-  def resultFilePattern = "**/artifacts/${configName}/TestResults/*.xml"
+  def resultFilePattern = "**/artifacts/TestResults/${configName}/*.xml"
   def skipIfNoTestFiles = false
 
   Utilities.addXUnitDotNETResults(job, resultFilePattern, skipIfNoTestFiles)
@@ -54,8 +54,8 @@ static addBuildSteps(def job, def projectName, def os, def configName, def isPR)
       def osBase = os
       def machineAffinity = 'latest-or-auto'
 
-      def filesToArchive = "**/artifacts/${configName}/**"
-      def filesToExclude = "**/artifacts/${configName}/obj/**"
+      def filesToArchive = "**/artifacts/**"
+      def filesToExclude = "**/artifacts/obj/**"
 
       def jobName = getJobName(os, configName)
       def fullJobName = Utilities.getFullJobName(projectName, jobName, isPR)
@@ -70,8 +70,7 @@ static addBuildSteps(def job, def projectName, def os, def configName, def isPR)
       }
 
       addArchival(myJob, filesToArchive, filesToExclude)
-      // TODO: restore this once there are test projects
-      // addXUnitDotNETResults(myJob, configName)
+      addXUnitDotNETResults(myJob, configName)
 
       Utilities.setMachineAffinity(myJob, os, machineAffinity)
 

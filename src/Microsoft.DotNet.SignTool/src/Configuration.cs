@@ -21,11 +21,6 @@ namespace Microsoft.DotNet.SignTool
         private readonly string[] _explicitSignList;
 
         /// <summary>
-        /// The URL of the feed where the package will be published.
-        /// </summary>
-        private readonly string _publishUri;
-
-        /// <summary>
         /// This store content information for container files.
         /// Key is the content hash of the file.
         /// </summary>
@@ -55,7 +50,7 @@ namespace Microsoft.DotNet.SignTool
 
         private readonly Dictionary<ImmutableArray<byte>, FileSignInfo> _filesByContentHash;
 
-        public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, Dictionary<ExplicitCertificateKey, string> explicitCertificates, string publishUri, TaskLoggingHelper log)
+        public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, Dictionary<ExplicitCertificateKey, string> explicitCertificates, TaskLoggingHelper log)
         {
             Debug.Assert(tempDir != null);
             Debug.Assert(explicitSignList != null && !explicitSignList.Any(i => i == null));
@@ -64,7 +59,6 @@ namespace Microsoft.DotNet.SignTool
 
             _pathToContainerUnpackingDirectory = Path.Combine(tempDir, "ContainerSigning");
             _log = log;
-            _publishUri = publishUri;
             _defaultSignInfoForPublicKeyToken = defaultSignInfoForPublicKeyToken;
             _explicitCertificates = explicitCertificates;
             _filesToSign = new List<FileSignInfo>();
@@ -80,7 +74,7 @@ namespace Microsoft.DotNet.SignTool
                 TrackFile(fullPath, ContentUtil.GetContentHash(fullPath));
             }
 
-            return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(), _publishUri);
+            return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary());
         }
 
         private FileSignInfo TrackFile(string fullPath, ImmutableArray<byte> contentHash)

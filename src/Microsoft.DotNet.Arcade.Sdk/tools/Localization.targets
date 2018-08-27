@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <UpdateXlfOnBuild Condition="'$(CIBuild)' != 'true'">true</UpdateXlfOnBuild>
+    <UpdateXlfOnBuild Condition="'$(ContinuousIntegrationBuild)' != 'true'">true</UpdateXlfOnBuild>
 
     <!-- 
       Use Satellite assembly generation task from Microsoft.NET.Sdk even when building with

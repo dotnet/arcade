@@ -21,13 +21,13 @@
   <!--
     Set PackageOutputPath based on the IsShipping flag set by projects.
     This distinction allows signing and publishing tools to determine which assets to sign/publish and which to ignore.
-    
+
     Unless specified owtherwise project is assumed to produce binaries/package that ship.
     Test projects automatically set IsShipping to false.
   -->
   <PropertyGroup>
     <IsShipping Condition="'$(IsShipping)' == ''">true</IsShipping>
-    
+
     <PackageOutputPath Condition="'$(IsShipping)' == 'true'">$(ArtifactsShippingPackagesDir)</PackageOutputPath>
     <PackageOutputPath Condition="'$(IsShipping)' != 'true'">$(ArtifactsNonShippingPackagesDir)</PackageOutputPath>
   </PropertyGroup>
@@ -44,7 +44,7 @@
   <Import Project="Localization.targets" Condition="'$(UsingToolXliff)' == 'true'"/>
   <Import Project="VisualStudio.targets" Condition="'$(UsingToolVSSDK)' == 'true' and '$(DesignTimeBuild)' != 'true' and '$(BuildingForLiveUnitTesting)' != 'true' and '$(MSBuildRuntimeType)' != 'Core'"/>
   <Import Project="OptimizationData.targets" Condition="'$(UsingToolIbcOptimization)' == 'true' and '$(IbcOptimizationDataDir)' != ''"/>
-  <Import Project="SymStore.targets" Condition="'$(CIBuild)' == 'true' and '$(OS)' == 'Windows_NT'"/>
+  <Import Project="SymStore.targets" Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OS)' == 'Windows_NT'"/>
 
   <!--
     By default the SDK sets RootNamespace to the name of the project. Clear it here to avoid prefixing our namespaces.

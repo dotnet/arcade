@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
   <!--
@@ -55,7 +55,6 @@
     <RepositoryEngineeringDir Condition="'$(RepositoryEngineeringDir)' == ''">$(RepoRoot)build\</RepositoryEngineeringDir>
 
     <VersionsPropsPath>$(RepositoryEngineeringDir)Versions.props</VersionsPropsPath>
-    <FixedVersionsPropsPath Condition="Exists('$(RepositoryEngineeringDir)FixedVersions.props')">$(RepositoryEngineeringDir)FixedVersions.props</FixedVersionsPropsPath>
     <SignToolDataPath>$(RepositoryEngineeringDir)SignToolData.json</SignToolDataPath>
 
     <DotNetTool>$(DotNetRoot)dotnet</DotNetTool>

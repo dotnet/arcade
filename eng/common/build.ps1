@@ -249,7 +249,7 @@ function Build([string] $buildDriver, [string]$buildArgs) {
     /p:PerformanceTest=$performanceTest `
     /p:Sign=$sign `
     /p:Publish=$publish `
-    /p:CIBuild=$ci `
+    /p:ContinuousIntegrationBuild=$ci `
     $properties
 
   if ($lastExitCode -ne 0) {
@@ -270,10 +270,10 @@ try {
   $EngRoot = Join-Path $PSScriptRoot ".."
   $ArtifactsDir = Join-Path $RepoRoot "artifacts"
   $ToolsetDir = Join-Path $ArtifactsDir "toolset"
-  $LogDir = Join-Path (Join-Path $ArtifactsDir $configuration) "log"
+  $LogDir = Join-Path (Join-Path $ArtifactsDir "log") $configuration
   $BuildLog = Join-Path $LogDir "Build.binlog"
   $ToolsetRestoreLog = Join-Path $LogDir "ToolsetRestore.binlog"
-  $TempDir = Join-Path (Join-Path $ArtifactsDir $configuration) "tmp"
+  $TempDir = Join-Path (Join-Path $ArtifactsDir "tmp") $configuration
   $GlobalJson = Get-Content -Raw -Path (Join-Path $RepoRoot "global.json") | ConvertFrom-Json
   
   if ($projects -eq "") {
