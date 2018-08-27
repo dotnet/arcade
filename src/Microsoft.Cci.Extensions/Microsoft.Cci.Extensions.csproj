@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <NoWarn>NU1701</NoWarn>
+    <AssetTargetFallback>$(AssetTargetFallback)portable-net45+win8;dnxcore50;</AssetTargetFallback>
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
   </PropertyGroup>
 
