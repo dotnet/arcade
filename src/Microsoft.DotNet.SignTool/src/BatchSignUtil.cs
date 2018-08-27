@@ -234,9 +234,9 @@ namespace Microsoft.DotNet.SignTool
                 }
                 else if (fileName.IsZip())
                 {
-                    if (fileName.SignInfo.Certificate == null || !fileName.SignInfo.Certificate.Equals(SignToolConstants.Certificate_Zip))
+                    if (fileName.SignInfo.Certificate != null)
                     {
-                        log.LogError($"Zip {fileName} should be signed with this certificate: {SignToolConstants.Certificate_Zip}");
+                        log.LogError($"Zip {fileName} should not be signed with this certificate: {fileName.SignInfo.Certificate}");
                     }
 
                     if (fileName.SignInfo.StrongName != null)

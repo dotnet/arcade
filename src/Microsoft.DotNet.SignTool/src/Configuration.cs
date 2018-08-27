@@ -151,15 +151,9 @@ namespace Microsoft.DotNet.SignTool
                 {
                     certificate = SignToolConstants.Certificate_NuGet;
                 }
-                else if (FileSignInfo.IsZip(fullPath))
-                {
-                    certificate = SignToolConstants.Certificate_Zip;
-                }
 
-                if (certificate != null)
-                {
-                    return new FileSignInfo(fullPath, hash, new SignInfo(certificate));
-                }
+                // certificate is null for zip files
+                return new FileSignInfo(fullPath, hash, new SignInfo(certificate));
             }
 
             _log.LogWarning($"Unidentified artifact type: {fullPath}");
