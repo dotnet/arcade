@@ -67,8 +67,7 @@
   -->
   <Target Name="InitializeStandardNuspecProperties"
           BeforeTargets="GenerateNuspec"
-          DependsOnTargets="GetPackageVersion;_InitializeNuspecRepositoryInformationPropertiesWorkaround"
-          Condition="'$(NuspecFile)' != '' and '$(NuspecProperties)' == ''">
+          DependsOnTargets="GetPackageVersion;_InitializeNuspecRepositoryInformationPropertiesWorkaround">
 
     <PropertyGroup>
       <PackageProjectUrl Condition="'$(PackageProjectUrl)' == ''">$(RepositoryUrl)</PackageProjectUrl>
@@ -77,7 +76,7 @@
     <Error Text="PackageDescription must be specified" Condition="'$(PackageDescription)' == ''"/>
     <Error Text="PackageProjectUrl must be specified" Condition="'$(PackageProjectUrl)' == ''"/>
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(NuspecFile)' != '' and '$(NuspecProperties)' == ''">
       <NuspecProperty Include="PackageId=$(PackageId)"/>
       <NuspecProperty Include="Authors=$(Authors)"/>
       <NuspecProperty Include="PackageDescription=$(PackageDescription)"/>
@@ -96,7 +95,7 @@
       <NuspecProperty Include="RepositoryCommit=$(RepositoryCommit)" Condition="'$(RepositoryCommit)' != ''" />
       <NuspecProperty Include="ProjectDirectory=$(MSBuildProjectDirectory)"/>
     </ItemGroup>
-    <PropertyGroup>
+    <PropertyGroup Condition="'$(NuspecFile)' != '' and '$(NuspecProperties)' == ''">
       <NuspecProperties>@(NuspecProperty, ';')</NuspecProperties>
     </PropertyGroup>
   </Target>
