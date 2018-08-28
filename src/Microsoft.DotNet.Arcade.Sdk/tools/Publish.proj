@@ -27,6 +27,7 @@
     
     <PublishToSymbolServer>false</PublishToSymbolServer>
     <PublishToSymbolServer Condition="'$(UsingToolSymbolUploader)' == 'true' and '$(AzureFeedUrl)' == '' and '$(ContinuousIntegrationBuild)' == 'true'">true</PublishToSymbolServer>
+    <AssetManifestFilePath>$(ArtifactsAssetManifestDir)\$(OS)-$(PlatformName)-asset-manifest.xml</AssetManifestFilePath>
   </PropertyGroup>
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets" Condition="$(PublishToAzure)"/>
@@ -73,10 +74,12 @@
     <PushToBlobFeed ExpectedFeedUrl="$(AzureFeedUrl)"
                     AccountKey="$(AzureAccountKey)"
                     ItemsToPush="@(ItemsToPushToBlobFeed)"
-                    ManifestName="$(BUILD_REPOSITORY_NAME)"
+                    ManifestBuildData="Location=$(AzureFeedUrl)"
+                    ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
                     ManifestBranch="$(BUILD_SOURCEBRANCH)"
                     ManifestBuildId="$(BUILD_BUILDNUMBER)"
                     ManifestCommit="$(BUILD_SOURCEVERSION)" 
+                    AssetManifestPath="$(AssetManifestFilePath)"
                     Condition="$(PublishToAzure)"/>
 
     <!-- Source Build local storage -->    

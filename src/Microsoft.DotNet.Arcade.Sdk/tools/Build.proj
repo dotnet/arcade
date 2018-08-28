@@ -32,6 +32,9 @@
     Pack                            "true" to build NuGet packages and VS insertion manifests
     Sign                            "true" to sign built binaries
     Publish                         "true" to publish artifacts (e.g. symbols)
+    PushBuildAssets                 "true" to push build and asset information to the Build Asset Registry
+
+    SuppressPackageVersionRewrite   "true" to suppress rewrite of PackageVersions.props file. Temporary switch to allow repos to migrate to the official format of the version properties.
   -->
 
   <!--
@@ -123,6 +126,14 @@
       <_SolutionBuildProps Include="__DeployProjectOutput=$(Deploy)" Condition="'$(Deploy)' != ''"/>
     </ItemGroup>
 
+    
+    <ItemGroup>
+      <_PushProps Include="@(_CommonProps)"/>
+      <_PushProps Include="ManifestZipFilePath=$(ManifestZipFilePath)"/>
+      <_PushProps Include="BuildAssetRegistryToken=$(BuildAssetRegistryToken)"/>
+      <_PushProps Include="MaestroApiEndpoint=$(MaestroApiEndpoint)"/>
+    </ItemGroup>
+    
     <ItemGroup>
       <_SolutionBuildPropsArgs Include="@(_SolutionBuildProps->'/p:%(Identity)')" />
       <_RestoreToolsPropArgs Include="@(_RestoreToolsProps->'/p:%(Identity)')" />
@@ -199,5 +210,10 @@
              Properties="@(_PublishProps)"
              Targets="Publish"
              Condition="'$(Publish)' == 'true'"/>
+             
+    <MSBuild Projects="PushBuildAssets.proj"
+             Properties="@(_PushProps)"
+             Targets="PushBuildAssets"
+             Condition="'$(PushBuildAssets)' == 'true'" />
   </Target>
 </Project>
