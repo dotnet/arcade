@@ -250,6 +250,7 @@ function Build([string] $buildDriver, [string]$buildArgs) {
     /p:Sign=$sign `
     /p:Publish=$publish `
     /p:ContinuousIntegrationBuild=$ci `
+    /p:CIBuild=$ci `
     $properties
 
   if ($lastExitCode -ne 0) {

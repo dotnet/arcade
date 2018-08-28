@@ -280,6 +280,7 @@ function Build {
     /p:Sign=$sign \
     /p:Publish=$publish \
     /p:ContinuousIntegrationBuild=$ci \
+    /p:CIBuild=$ci \
     $properties
   local lastexitcode=$?
 
