@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.DarcLib
             return responseContent["content"].ToString();
         }
 
-        public async Task CreateDarcBranchAsync(string repoUri, string branch)
+        public async Task CreateBranchAsync(string repoUri, string newBranch, string baseBranch)
         {
             string repoName = SetApiUriAndGetRepoName(repoUri);
             string body;
@@ -64,26 +64,26 @@ namespace Microsoft.DotNet.DarcLib
             VstsRef vstsRef;
             HttpResponseMessage response = null;
 
-            string latestSha = await GetLastCommitShaAsync(repoName, branch);
+            string latestSha = await GetLastCommitShaAsync(repoName, baseBranch);
 
-            response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/refs/heads/darc-{branch}", _logger);
+            response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/refs/heads/{newBranch}", _logger);
             JObject responseContent = JObject.Parse(await response.Content.ReadAsStringAsync());
 
             // VSTS doesn't fail with a 404 if a branch does not exist, it just returns an empty response object...
             if (responseContent["count"].ToObject<int>() == 0)
             {
-                _logger.LogInformation($"'darc-{branch}' branch doesn't exist. Creating it...");
+                _logger.LogInformation($"'{newBranch}' branch doesn't exist. Creating it...");
 
-                vstsRef = new VstsRef($"refs/heads/darc-{branch}", latestSha);
+                vstsRef = new VstsRef($"refs/heads/{newBranch}", latestSha);
                 vstsRefs.Add(vstsRef);
             }
             else
             {
-                _logger.LogInformation($"Branch 'darc-{branch}' exists, making sure it is in sync with '{branch}'...");
+                _logger.LogInformation($"Branch '{newBranch}' exists, making sure it is in sync with '{baseBranch}'...");
 
-                string oldSha = await GetLastCommitShaAsync(repoName, $"darc-{branch}");
+                string oldSha = await GetLastCommitShaAsync(repoName, $"{newBranch}");
 
-                vstsRef = new VstsRef($"refs/heads/darc-{branch}", latestSha, oldSha);
+                vstsRef = new VstsRef($"refs/heads/{newBranch}", latestSha, oldSha);
                 vstsRefs.Add(vstsRef);
             }
 
@@ -218,9 +218,9 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPullRquest;
         }
 
-        public async Task<string> UpdatePullRequestAsync(string pullRequestUrl, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
+        public async Task<string> UpdatePullRequestAsync(string pullRequestUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
         {
-            string linkToPullRquest = await CreateOrUpdatePullRequestAsync(pullRequestUrl, mergeWithBranch, sourceBranch, new HttpMethod("PATCH"), title, description);
+            string linkToPullRquest = await CreateOrUpdatePullRequestAsync(pullRequestUri, mergeWithBranch, sourceBranch, new HttpMethod("PATCH"), title, description);
             return linkToPullRquest;
         }
 
@@ -359,6 +359,20 @@ namespace Microsoft.DotNet.DarcLib
             }
 
             return statuses;
+        }
+
+        public async Task<string> GetPullRequestBaseBranch(string pullRequestUrl)
+        {
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, pullRequestUrl, _logger);
+
+            JObject content = JObject.Parse(await response.Content.ReadAsStringAsync());
+            var baseBranch = content["sourceRefName"].ToString();
+            const string refsHeads = "refs/heads/";
+            if (baseBranch.StartsWith(refsHeads))
+            {
+                baseBranch = baseBranch.Substring(refsHeads.Length);
+            }
+            return baseBranch;
         }
 
         public HttpClient CreateHttpClient(string versionOverride = null)

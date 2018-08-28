@@ -2,10 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Maestro.Contracts;
 using Maestro.Data;
 using Maestro.Data.Models;
@@ -17,6 +13,10 @@ using Microsoft.ServiceFabric.Actors;
 using Microsoft.ServiceFabric.Actors.Runtime;
 using Microsoft.ServiceFabric.Data;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using MergePolicy = Maestro.Data.Models.MergePolicy;
 
 namespace SubscriptionActorService
@@ -99,61 +99,84 @@ namespace SubscriptionActorService
         public async Task UpdateAsync(int buildId)
         {
             var action = $"Updating subscription '{SubscriptionId}' for build '{buildId}'";
-            try
+            using (Logger.BeginScope(
+                "Updating subscription '{subscriptionId}' for build '{buildId}'",
+                SubscriptionId,
+                buildId))
             {
-                await SynchronizeInProgressPRAsync();
-
-                Subscription subscription = await Context.Subscriptions.FindAsync(SubscriptionId);
-                Build build = await Context.Builds.Include(b => b.Assets)
-                    .ThenInclude(a => a.Locations)
-                    .FirstAsync(b => b.Id == buildId);
-
-                string targetRepository = subscription.TargetRepository;
-                string targetBranch = subscription.TargetBranch;
-                long installationId = await Context.GetInstallationId(subscription.TargetRepository);
-                IRemote darc = await DarcFactory.CreateAsync(targetRepository, installationId);
-                List<AssetData> assets = build.Assets.Select(a => new AssetData {Name = a.Name, Version = a.Version})
-                    .ToList();
-                string title = GetTitle(subscription, build);
-                string description = GetDescription(subscription, build, assets);
-
-                ConditionalValue<InProgressPullRequest> maybePr =
-                    await StateManager.TryGetStateAsync<InProgressPullRequest>(PullRequest);
-                string prUrl;
-                if (maybePr.HasValue)
+                try
                 {
-                    InProgressPullRequest pr = maybePr.Value;
-                    await darc.UpdatePullRequestAsync(pr.Url, build.Commit, targetBranch, assets, title, description);
-                    prUrl = pr.Url;
+                    await SynchronizeInProgressPRAsync();
+
+                    Subscription subscription = await Context.Subscriptions.FindAsync(SubscriptionId);
+                    Build build = await Context.Builds.Include(b => b.Assets)
+                        .ThenInclude(a => a.Locations)
+                        .FirstAsync(b => b.Id == buildId);
+
+                    string targetRepository = subscription.TargetRepository;
+                    string targetBranch = subscription.TargetBranch;
+                    long installationId = await Context.GetInstallationId(subscription.TargetRepository);
+                    IRemote darc = await DarcFactory.CreateAsync(targetRepository, installationId);
+                    List<AssetData> assets = build.Assets
+                        .Select(a => new AssetData {Name = a.Name, Version = a.Version})
+                        .ToList();
+                    string title = GetTitle(subscription, build);
+                    string description = GetDescription(subscription, build, assets);
+
+                    ConditionalValue<InProgressPullRequest> maybePr =
+                        await StateManager.TryGetStateAsync<InProgressPullRequest>(PullRequest);
+                    string prUrl;
+                    if (maybePr.HasValue)
+                    {
+                        InProgressPullRequest pr = maybePr.Value;
+                        await darc.UpdatePullRequestAsync(
+                            pr.Url,
+                            build.Commit,
+                            targetBranch,
+                            assets,
+                            title,
+                            description);
+                        prUrl = pr.Url;
+                    }
+                    else
+                    {
+                        prUrl = await darc.CreatePullRequestAsync(
+                            targetRepository,
+                            targetBranch,
+                            build.Commit,
+                            assets,
+                            pullRequestTitle: title,
+                            pullRequestDescription: description);
+                    }
+
+                    var newPr = new InProgressPullRequest {Url = prUrl, BuildId = build.Id};
+                    await StateManager.SetStateAsync(PullRequest, newPr);
+                    await Reminders.TryRegisterReminderAsync(
+                        PullRequestCheck,
+                        Array.Empty<byte>(),
+                        new TimeSpan(0, 5, 0),
+                        new TimeSpan(0, 5, 0));
+                    await StateManager.SaveStateAsync();
+                    await TrackSubscriptionUpdateSuccess(action);
                 }
-                else
+
+                catch (SubscriptionException subex)
                 {
-                    prUrl = await darc.CreatePullRequestAsync(targetRepository, targetBranch, build.Commit, assets, pullRequestTitle: title, pullRequestDescription: description);
+                    await TrackSubscriptionUpdateFailure(subex.Message, action, nameof(UpdateAsync), buildId);
                 }
-
-                var newPr = new InProgressPullRequest {Url = prUrl, BuildId = build.Id};
-                await StateManager.SetStateAsync(PullRequest, newPr);
-                await Reminders.TryRegisterReminderAsync(
-                    PullRequestCheck,
-                    Array.Empty<byte>(),
-                    new TimeSpan(0, 5, 0),
-                    new TimeSpan(0, 5, 0));
-                await StateManager.SaveStateAsync();
-                await TrackSubscriptionUpdateSuccess(action);
-            }
-
-            catch (SubscriptionException subex)
-            {
-                await TrackSubscriptionUpdateFailure(subex.Message, action, nameof(UpdateAsync), buildId);
-            }
-            catch (Exception ex) when (CatchAllExceptions)
-            {
-                Logger.LogError(
-                    ex,
-                    "Unknown error processing subscription update for subscription '{subscriptionId}' and build '{buildId}'.",
-                    SubscriptionId,
-                    buildId);
-                await TrackSubscriptionUpdateFailure("Unknown error processing update.", action, nameof(UpdateAsync), buildId);
+                catch (Exception ex) when (CatchAllExceptions)
+                {
+                    Logger.LogError(
+                        ex,
+                        "Unknown error processing update.",
+                        SubscriptionId,
+                        buildId);
+                    await TrackSubscriptionUpdateFailure(
+                        "Unknown error processing update.",
+                        action,
+                        nameof(UpdateAsync),
+                        buildId);
+                }
             }
         }
 
