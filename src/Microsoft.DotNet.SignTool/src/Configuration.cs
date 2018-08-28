@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.IO.Packaging;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.Versioning;
-using System.Security.Cryptography;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -261,41 +261,38 @@ namespace Microsoft.DotNet.SignTool
         {
             Debug.Assert(zipFileSignInfo.IsZipContainer());
 
-            Package package = null;
-
+            FileStream zipStream = null;
             try
             {
-                package = Package.Open(zipFileSignInfo.FullPath, FileMode.Open, FileAccess.Read);
+                // The stream needs to be read/write and the archive needs to be update so
+                // the below entry stream is seekable.
+                zipStream = File.Open(zipFileSignInfo.FullPath, FileMode.Open);
+                var archive = new ZipArchive(zipStream, ZipArchiveMode.Update, leaveOpen: true);
                 var nestedParts = new List<ZipPart>();
 
-                foreach (var part in package.GetParts())
+                foreach (ZipArchiveEntry entry in archive.Entries)
                 {
-                    var relativePath = GetPartRelativeFileName(part);
+                    string relativePath = entry.FullName;
 
                     if (!FileSignInfo.IsSignableFile(relativePath))
                     {
                         continue;
                     }
 
-                    var stream = part.GetStream();
-
-                    // copy the stream content, as the stream it doesn't support seek:
-                    var memoryStream = new MemoryStream();
-                    stream.CopyTo(memoryStream);
-
-                    memoryStream.Position = 0;
-                    var contentHash = ContentUtil.GetContentHash(memoryStream);
+                    Stream stream = entry.Open();
+                    stream.Position = 0;
+                    var contentHash = ContentUtil.GetContentHash(stream);
 
                     // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
                     if (!_filesByContentHash.TryGetValue(contentHash, out var fileSignInfo))
                     {
-                        var tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
-                        var tempPath = Path.Combine(tempDir, Path.GetFileName(relativePath));
+                        string tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
+                        string tempPath = Path.Combine(tempDir, Path.GetFileName(relativePath));
                         Directory.CreateDirectory(tempDir);
                         using (var tempFileStream = File.OpenWrite(tempPath))
                         {
-                            memoryStream.Position = 0;
-                            memoryStream.CopyTo(tempFileStream);
+                            stream.Position = 0;
+                            stream.CopyTo(tempFileStream);
                             tempFileStream.Close();
                         }
 
@@ -320,7 +317,7 @@ namespace Microsoft.DotNet.SignTool
             }
             finally
             {
-                package?.Close();
+                zipStream?.Close();
             }
         }
 

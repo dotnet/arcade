@@ -331,7 +331,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             {
                 "File 'NativeLibrary.dll' Certificate='MicrosoftSHA2'",
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'ContainerTwo.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
@@ -348,7 +348,7 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3D4466713F
   <Authenticode>ArcadeCertTest</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "9F8CCEE4CECF286C80916F13EAB8DF1FC6C9BED5F81E3AFF26747C008D265E5C", "ContainerOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "9F8CCEE4CECF286C80916F13EAB8DF1FC6C9BED5F81E3AFF26747C008D265E5C", "ContainerTwo.dll")}"">
   <Authenticode>ArcadeCertTest</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
@@ -396,7 +396,7 @@ $@"<FilesToSign Include=""{GetResourcePath("NestedContainer.1.0.0.nupkg")}"">
             ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='MicrosoftSHA2'",
-                "File 'SOS.NETCore.dll' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'"
+                "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='MicrosoftSHA2'"
             });
         }
     }
