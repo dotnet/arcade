@@ -197,19 +197,20 @@ The main entry point for the versioning implementation is the `_InitializeAssemb
 | Parameter                  | Scope  | Description                                                  |
 | -------------------------- | ------ | ------------------------------------------------------------ |
 | SemanticVersioningV1       | Arcade | Specify whether the version string should be in SemVer 1.0 format or not. |
-| DotNetUseShippingVersions  | Arcade | Set to `true` to produce shipping version strings in non-official builds. I.e., instead of fixed values like "42.42.42.42" for AssemblyVersion. |
+| DotNetUseShippingVersions  | Arcade | Set to `true` to produce shipping version strings in non-official builds. I.e., instead of fixed values like "42.42.42.42" for `AssemblyVersion`. |
 | OfficialBuild              | Arcade | Boolean indicating if the current build is official or not.  |
 | OfficialBuildId            | Arcade | ID of current build. The accepted format is "yyyyMMdd.r". If empty it will be computed following the logic explained in the versioning schema. |
 | ContinuousIntegrationBuild | Arcade | Specify whether the build is happening on a CI server (PR build or official build). |
-| DotNetFinalVersionKind     | Arcade | Specify the "kind" of version: "release", "prerelease" or "" |
+| DotNetFinalVersionKind     | Arcade | Specify the "kind" of version being generated: "release", "prerelease" or "" |
 | PreReleaseVersionLabel     | Arcade | Pre-release label to be used on the string. E.g., "ci", "dev", "beta", etc. |
-| VersionPrefix              | .NET   | The leading part of the version string. If empty the tool will try to compute it based on `$(MajorVersion).$(MinorVersion).0` |
+| VersionPrefix              | .NET   | The leading part of the version string. If empty the tool will try to compute it using `$(MajorVersion).$(MinorVersion).0` |
 
 ## Output
  This is the list of output properties from the Versioning package.
+
 | Name            | Scope | Description                                                  |
 | --------------- | ----- | ------------------------------------------------------------ |
-| PackageVersion  | .NET  | Append short commit SHA to PackageVersion. SemanticVersioningV1 controls the separator between the two fields. |
+| PackageVersion  | .NET  | PackageVersion plus the short commit SHA as suffix. `SemanticVersioningV1` controls the separator to be used. |
 | AssemblyVersion | .NET  | Set to "42.42.42.42" if empty and VersionSuffixDateStamp is also empty, otherwise leave as is. |
 | FileVersion     | .NET  | FileVersion string. If "VersionSuffixDateStamp" is empty FileVersion will be set to "42.42.42.42424". |
 | VersionPrefix   | .NET  | The leading part of the version string as specified in the Versioning schema. |
