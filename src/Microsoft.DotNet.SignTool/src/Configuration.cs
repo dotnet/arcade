@@ -81,15 +81,15 @@ namespace Microsoft.DotNet.SignTool
         {
             var fileSignInfo = ExtractSignInfo(fullPath, contentHash);
 
+            if (FileSignInfo.IsZipContainer(fullPath) && 
+                !_zipDataMap.ContainsKey(fileSignInfo.ContentHash) && 
+                TryBuildZipData(fileSignInfo, out var zipData))
+            {
+                _zipDataMap[fileSignInfo.ContentHash] = zipData;
+            }
+        
             if (fileSignInfo.SignInfo.ShouldSign)
             {
-                if (FileSignInfo.IsZipContainer(fullPath) && 
-                    !_zipDataMap.ContainsKey(fileSignInfo.ContentHash) && 
-                    TryBuildZipData(fileSignInfo, out var zipData))
-                {
-                    _zipDataMap[fileSignInfo.ContentHash] = zipData;
-                }
-        
                 _filesToSign.Add(fileSignInfo);
             }
 
@@ -141,22 +141,17 @@ namespace Microsoft.DotNet.SignTool
 
             if (FileSignInfo.IsZipContainer(fullPath))
             {
-                string certificate = null;
-
-                if (FileSignInfo.IsVsix(fullPath))
+                // Use SignInfo.Ignore for zip files
+                if (!FileSignInfo.IsZip(fullPath))
                 {
-                    certificate = SignToolConstants.Certificate_VsixSHA2;
+                    return new FileSignInfo(fullPath, hash, new SignInfo(FileSignInfo.IsNupkg(fullPath) ? SignToolConstants.Certificate_NuGet : SignToolConstants.Certificate_VsixSHA2));
                 }
-                else if (FileSignInfo.IsNupkg(fullPath))
-                {
-                    certificate = SignToolConstants.Certificate_NuGet;
-                }
-
-                // certificate is null for zip files
-                return new FileSignInfo(fullPath, hash, new SignInfo(certificate));
+            }
+            else
+            {
+                _log.LogWarning($"Unidentified artifact type: {fullPath}");
             }
 
-            _log.LogWarning($"Unidentified artifact type: {fullPath}");
             return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
         }
 

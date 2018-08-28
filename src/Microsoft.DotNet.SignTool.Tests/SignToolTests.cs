@@ -374,5 +374,30 @@ $@"<FilesToSign Include=""{GetResourcePath("NestedContainer.1.0.0.nupkg")}"">
 </FilesToSign>"
             });
         }
+
+        [Fact]
+        public void ZipFile()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("test.zip")
+            };
+
+            // Default signing information
+            var signingInformation = new Dictionary<string, SignInfo>()
+            {
+                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+            };
+
+            // Overriding information
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, new[]
+            {
+                "File 'NativeLibrary.dll' Certificate='MicrosoftSHA2'",
+                "File 'SOS.NETCore.dll' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'"
+            });
+        }
     }
 }
