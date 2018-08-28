@@ -70,6 +70,24 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Certificate chain appears valid..
+        /// </summary>
+        internal static string DetailCertChainValid {
+            get {
+                return ResourceManager.GetString("DetailCertChainValid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to build certificate chain..
+        /// </summary>
+        internal static string DetailErrorFailedToBuildCertChain {
+            get {
+                return ResourceManager.GetString("DetailErrorFailedToBuildCertChain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Excluded: Yes ({0}).
         /// </summary>
         internal static string DetailExcluded {
@@ -196,11 +214,29 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid timestamp.
+        /// </summary>
+        internal static string DetailTimestampInvalid {
+            get {
+                return ResourceManager.GetString("DetailTimestampInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Timestmap: Skipped.
         /// </summary>
         internal static string DetailTimestampSkipped {
             get {
                 return ResourceManager.GetString("DetailTimestampSkipped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multiple signatures found..
+        /// </summary>
+        internal static string DetailVsixMultipleSignatures {
+            get {
+                return ResourceManager.GetString("DetailVsixMultipleSignatures", resourceCulture);
             }
         }
         
@@ -322,6 +358,24 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to HRESULT: {0:x8} ({1}).
+        /// </summary>
+        internal static string ErrorHResult {
+            get {
+                return ResourceManager.GetString("ErrorHResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid or missing timestamp..
+        /// </summary>
+        internal static string ErrorInvalidOrMissingTimestamp {
+            get {
+                return ResourceManager.GetString("ErrorInvalidOrMissingTimestamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add you comment here.
         /// </summary>
         internal static string ExclusionYourComment {
@@ -363,6 +417,15 @@ namespace Microsoft.SignCheck {
         internal static string ProcessingFile {
             get {
                 return ResourceManager.GetString("ProcessingFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to build certificate chain..
+        /// </summary>
+        internal static string VsixChainBuildFailed {
+            get {
+                return ResourceManager.GetString("VsixChainBuildFailed", resourceCulture);
             }
         }
         

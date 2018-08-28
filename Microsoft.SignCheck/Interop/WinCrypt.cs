@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using FILETIME = System.Runtime.InteropServices.ComTypes.FILETIME;
 
 namespace Microsoft.SignCheck.Interop
 {
@@ -192,5 +193,121 @@ namespace Microsoft.SignCheck.Interop
             int dwIndex,
             [In, Out] byte[] pvData,
             ref int pcbData);
+
+        /// <summary>
+        /// Validate the timestamp signature on a specified array of bytes.
+        /// </summary>
+        /// <param name="pbTSContentInfo">A buffer containing the timestamp content.</param>
+        /// <param name="cbTSContentInfo">The size (in bytes) of the buffer (pbTSContentInfo).</param>
+        /// <param name="pbData">A buffer on which to validate the timestamp signature.</param>
+        /// <param name="cbData">The size (in bytes) of the buffer (pbData).</param>
+        /// <param name="hAdditionalStore">The handle of an additional store to search for TSA certificates and CTLs. Can be null if no additional store is to be searched.</param>
+        /// <param name="ppTsContext">Pointer to a <see cref="CRYPT_TIMESTAMP_CONTEXT"/> structure. Must be freed by calling CryptMemFree</param>
+        /// <param name="ppTSSigner">Pointer to a <see cref="CERT_CONTEXT"/> that receives the signer certificate. Must be freed by calling CertFreeCertificateContext.</param>
+        /// <param name="phStore">Point to a handle that receives the opened store. Must be freed by calling CertCloseStore.</param>
+        /// <returns></returns>
+        [DllImport("Crypt32.dll", CharSet = CharSet.Auto, SetLastError = true)]        
+        public static extern bool CryptVerifyTimeStampSignature(
+            [In] byte[] pbTSContentInfo,
+            uint cbTSContentInfo,
+            [In] byte[] pbData,
+            uint cbData,
+            IntPtr hAdditionalStore,
+            [Out] out IntPtr ppTsContext,
+            [Out] out IntPtr ppTSSigner,
+            [Out] out IntPtr phStore);
+
+        [DllImport("crypt32.dll")]
+        internal static extern void CryptMemFree([In] IntPtr pv);
+
+        [DllImport("crypt32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool CertFreeCertificateContext([In] IntPtr pCertContext);
+
+        [DllImport("crypt32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool CertCloseStore([In] IntPtr hCertStore, [In] uint dwFlags);
+    }
+
+    // https://msdn.microsoft.com/en-us/7a06eae5-96d8-4ece-98cb-cf0710d2ddbd
+    // This structure is heavily aliased based on its contextual use, so we'll just stick with a generic name
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CRYPT_INTEGER_BLOB
+    {
+        public uint cbData;
+        public IntPtr pbData;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CRYPT_ALGORITHM_IDENTIFIER
+    {
+        public string pszObjId;
+        public CRYPT_INTEGER_BLOB Parameters;
+    }
+
+    /// <summary>
+    /// A structure containing the encoded and decoded representations of a certificate. The structure must be
+    /// freed by calling CertFreeCertificateContext.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CERT_CONTEXT
+    {
+        /// <summary>
+        /// The type of encoding used. Message and certificate encoding types can be combined using bitwise-OR.
+        /// </summary>
+        public uint dwCertEncodingType;
+        /// <summary>
+        /// A buffer containing the encoded certificate.
+        /// </summary>
+        public byte[] pbCertEncoded;
+        /// <summary>
+        /// The size (in bytes) of the encoded certificate.
+        /// </summary>
+        public uint cbCertEncoded;
+        /// <summary>
+        /// 
+        /// </summary>
+        public IntPtr pCertInfo;
+        /// <summary>
+        /// A handle to the certificate store containing the certificate context 
+        /// </summary>
+        public IntPtr hCertStore;
+    }
+
+    /// <summary>
+    /// A structure containing both encoded and decoded representations of a time stamp token.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CRYPT_TIMESTAMP_CONTEXT
+    {
+        /// <summary>
+        /// The size (in bytes) of the buffer (pbEncoded).
+        /// </summary>
+        public uint cbEncoded;
+        /// <summary>
+        /// A buffer containing ASN.1 encoded content.
+        /// </summary>
+        public IntPtr pbEncoded;
+        /// <summary>
+        /// Point to a <see cref="CRYPT_TIMESTAMP_INFO"/> structure.
+        /// </summary>
+        public IntPtr pTimeStamp;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CRYPT_TIMESTAMP_INFO
+    {
+        public uint dwVersion;
+        public string pszTSAPolicyId;
+        public CRYPT_ALGORITHM_IDENTIFIER HashAlgorithm;
+        public CRYPT_INTEGER_BLOB HashedMessage;
+        public CRYPT_INTEGER_BLOB SerialNumber;
+        public FILETIME ftTime;
+        public IntPtr pvAccuracy;
+        public bool fOrdering;
+        public CRYPT_INTEGER_BLOB Nonce;
+        public CRYPT_INTEGER_BLOB Tsa;
+        public uint cExtension;
+        public IntPtr rgExtension;
     }
 }

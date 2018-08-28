@@ -13,7 +13,7 @@ namespace Microsoft.SignCheck.Verification
 {
     public static class AuthentiCode
     {
-        public static bool IsSigned(string path)
+        public static uint IsSigned(string path)
         {
             WinTrustFileInfo fileInfo = new WinTrustFileInfo()
             {
@@ -52,7 +52,7 @@ namespace Microsoft.SignCheck.Verification
             Marshal.FreeHGlobal(pGuid);
             Marshal.FreeHGlobal(pData);
 
-            return result == 0;
+            return result;
         }
 
         /// <summary>

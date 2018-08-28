@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.SignCheck.Interop.PortableExecutable;
 using Microsoft.SignCheck.Logging;
-using Microsoft.SignCheck.Interop.PortableExecutable;
 
 namespace Microsoft.SignCheck.Verification
 {
@@ -22,8 +17,7 @@ namespace Microsoft.SignCheck.Verification
         public PortableExecutableVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options, string fileExtension) :
             base(log, exclusions, options, fileExtension)
         {
-            FinalizeResult = false;
-            
+            FinalizeResult = false;            
         }
 
         /// <summary>

@@ -120,6 +120,12 @@
   <data name="ArgumentNullOrEmpty" xml:space="preserve">
     <value>'{0}' cannot be null or empty.</value>
   </data>
+  <data name="DetailCertChainValid" xml:space="preserve">
+    <value>Certificate chain appears valid.</value>
+  </data>
+  <data name="DetailErrorFailedToBuildCertChain" xml:space="preserve">
+    <value>Failed to build certificate chain.</value>
+  </data>
   <data name="DetailExcluded" xml:space="preserve">
     <value>Excluded: Yes ({0})</value>
   </data>
@@ -162,8 +168,14 @@
   <data name="DetailTimestampError" xml:space="preserve">
     <value>Timestamp: Error retrieving timestamp</value>
   </data>
+  <data name="DetailTimestampInvalid" xml:space="preserve">
+    <value>Invalid timestamp</value>
+  </data>
   <data name="DetailTimestampSkipped" xml:space="preserve">
     <value>Timestmap: Skipped</value>
+  </data>
+  <data name="DetailVsixMultipleSignatures" xml:space="preserve">
+    <value>Multiple signatures found.</value>
   </data>
   <data name="DetailXmlMultipleSignatures" xml:space="preserve">
     <value>Multiple signatures found ({0}), only the first signature is checked.</value>
@@ -204,6 +216,12 @@
   <data name="DiagVerifyByFileHeader" xml:space="preserve">
     <value>Examining file header to find applicable verifier.</value>
   </data>
+  <data name="ErrorHResult" xml:space="preserve">
+    <value>HRESULT: {0:x8} ({1})</value>
+  </data>
+  <data name="ErrorInvalidOrMissingTimestamp" xml:space="preserve">
+    <value>Invalid or missing timestamp.</value>
+  </data>
   <data name="ExclusionYourComment" xml:space="preserve">
     <value>Add you comment here</value>
   </data>
@@ -218,6 +236,9 @@
   </data>
   <data name="ProcessingFile" xml:space="preserve">
     <value>Processing {0} (parent: {1})</value>
+  </data>
+  <data name="VsixChainBuildFailed" xml:space="preserve">
+    <value>Failed to build certificate chain.</value>
   </data>
   <data name="WixBundle" xml:space="preserve">
     <value>Processing {0} as a WiX bundle.</value>

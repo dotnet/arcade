@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using Microsoft.SignCheck.Logging;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.SignCheck.Verification
 {
@@ -37,8 +39,16 @@ namespace Microsoft.SignCheck.Verification
         protected SignatureVerificationResult VerifyAuthentiCode(string path, string parent)
         {
             var svr = new SignatureVerificationResult(path, parent);
-            svr.IsAuthentiCodeSigned = AuthentiCode.IsSigned(path);
+            uint hresult = AuthentiCode.IsSigned(path);
+            svr.IsAuthentiCodeSigned = hresult == 0;
             svr.IsSigned = svr.IsAuthentiCodeSigned;
+
+            // Log non-zero HRESULTs
+            if (hresult != 0)
+            {
+                string errorMessage = new Win32Exception(Marshal.GetLastWin32Error()).Message;
+                svr.AddDetail(DetailKeys.Error, String.Format(SignCheckResources.ErrorHResult, hresult, errorMessage));
+            }
 
             // TODO: Should only check if there is a signature, even if it's invalid
             if (VerifyAuthenticodeTimestamps)
