@@ -221,7 +221,7 @@ dotnet/roslyn
         -none
 ```
 
-In branching for release, we want to isolate the input code from risky changes, allow mainline development to continue, etc.  This typically involves creating a release branch for each repository, like "release/3.0".  The outputs for .NET Core 3.0 switch to coming from this set of branches, and the original set of branches is now producing .NET Core 3.1 development bits.  Looking at this action from the perspective of channels and subscriptions, we are actually saying:
+In branching for release, we want to isolate the input code from risky changes, allow mainline development to continue, etc.  This typically involves creating a release branch for each repository, like "release/3.0".  The outputs for .NET Core 3.0 switch to coming from this set of branches, and the original set of branches is now producing .NET Core 3.1 development bits.  Looking at this action from the perspective of channels and subscriptions:
 - The .NET Core 3.0 Dev channel is now defunct (we are in release shutdown)
 - A .NET Core 3.0 release channel should produced from a set of yet-created branches.  These branches would be based off the branches producing .NET Core 3.0 Dev bits.
 - Subscriptions intaking .NET Core 3.0 assets should map onto new branches and flow in the same manner as the .NET Core 3.0 Dev subscriptions
