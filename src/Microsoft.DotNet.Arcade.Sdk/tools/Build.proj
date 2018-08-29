@@ -55,8 +55,7 @@
   <Import Project="RepoLayout.props"/>
 
   <PropertyGroup>
-    <_PublishToBlobStorage>false</_PublishToBlobStorage>
-    <_PublishToBlobStorage Condition="'$(DotNetPublishBlobFeedUrl)' != ''">true</_PublishToBlobStorage>
+    <_PublishToBlobStorage>$(Publish)</_PublishToBlobStorage>
 
     <_DotNetOutputBlobFeedDir>$(DotNetOutputBlobFeedDir)</_DotNetOutputBlobFeedDir>
     <_DotNetOutputBlobFeedDir Condition="'$(_DotNetOutputBlobFeedDir)' != '' and !HasTrailingSlash('$(_DotNetOutputBlobFeedDir)')">$(_DotNetOutputBlobFeedDir)\</_DotNetOutputBlobFeedDir>

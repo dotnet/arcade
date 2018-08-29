@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ServiceManifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="SubscriptionActorServicePkg" Version="1.0.8" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+<ServiceManifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="SubscriptionActorServicePkg" Version="1.0.13" xmlns="http://schemas.microsoft.com/2011/01/fabric">
   <ServiceTypes>
     <StatefulServiceType ServiceTypeName="SubscriptionActorServiceType" HasPersistedState="true">
       <Extensions>
@@ -16,7 +16,7 @@
       </Extensions>
     </StatefulServiceType>
   </ServiceTypes>
-  <CodePackage Name="Code" Version="1.0.8">
+  <CodePackage Name="Code" Version="1.0.13">
     <EntryPoint>
       <ExeHost>
         <Program>SubscriptionActorService.exe</Program>
@@ -26,7 +26,7 @@
       <EnvironmentVariable Name="ASPNETCORE_ENVIRONMENT" Value="Development" />
     </EnvironmentVariables>
   </CodePackage>
-  <ConfigPackage Name="Config" Version="1.0.8" />
+  <ConfigPackage Name="Config" Version="1.0.13" />
   <Resources>
     <Endpoints>
       <Endpoint Name="SubscriptionActorServiceEndpointV2" />

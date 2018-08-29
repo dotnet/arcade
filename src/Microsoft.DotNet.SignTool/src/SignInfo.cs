@@ -53,7 +53,6 @@ namespace Microsoft.DotNet.SignTool
         internal SignInfo(string certificate, string strongName = null)
             : this(certificate, strongName, shouldIgnore: false, isAlreadySigned: false)
         {
-            Debug.Assert(certificate != null);
         }
 
         internal SignInfo WithCertificateName(string value)

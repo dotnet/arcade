@@ -9,6 +9,7 @@ namespace Microsoft.DotNet.SignTool
         public const string Certificate_MicrosoftSHA2 = "MicrosoftSHA2";
         public const string Certificate_VsixSHA2 = "VsixSHA2";
         public const string Certificate_NuGet = "NuGet";
+        public const string Certificate_Zip = "Zip";
 
         public const string StrongName_MsSharedLib72 = "MsSharedLib72";
 

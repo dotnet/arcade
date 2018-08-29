@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.IO.Packaging;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.Versioning;
-using System.Security.Cryptography;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -81,15 +81,15 @@ namespace Microsoft.DotNet.SignTool
         {
             var fileSignInfo = ExtractSignInfo(fullPath, contentHash);
 
+            if (FileSignInfo.IsZipContainer(fullPath) && 
+                !_zipDataMap.ContainsKey(fileSignInfo.ContentHash) && 
+                TryBuildZipData(fileSignInfo, out var zipData))
+            {
+                _zipDataMap[fileSignInfo.ContentHash] = zipData;
+            }
+        
             if (fileSignInfo.SignInfo.ShouldSign)
             {
-                if (FileSignInfo.IsZipContainer(fullPath) && 
-                    !_zipDataMap.ContainsKey(fileSignInfo.ContentHash) && 
-                    TryBuildZipData(fileSignInfo, out var zipData))
-                {
-                    _zipDataMap[fileSignInfo.ContentHash] = zipData;
-                }
-        
                 _filesToSign.Add(fileSignInfo);
             }
 
@@ -141,10 +141,17 @@ namespace Microsoft.DotNet.SignTool
 
             if (FileSignInfo.IsZipContainer(fullPath))
             {
-                return new FileSignInfo(fullPath, hash, new SignInfo(FileSignInfo.IsNupkg(fullPath) ? SignToolConstants.Certificate_NuGet : SignToolConstants.Certificate_VsixSHA2));
+                // Use SignInfo.Ignore for zip files
+                if (!FileSignInfo.IsZip(fullPath))
+                {
+                    return new FileSignInfo(fullPath, hash, new SignInfo(FileSignInfo.IsNupkg(fullPath) ? SignToolConstants.Certificate_NuGet : SignToolConstants.Certificate_VsixSHA2));
+                }
+            }
+            else
+            {
+                _log.LogWarning($"Unidentified artifact type: {fullPath}");
             }
 
-            _log.LogWarning($"Unidentified artifact type: {fullPath}");
             return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
         }
 
@@ -254,41 +261,40 @@ namespace Microsoft.DotNet.SignTool
         {
             Debug.Assert(zipFileSignInfo.IsZipContainer());
 
-            Package package = null;
-
+            FileStream zipStream = null;
             try
             {
-                package = Package.Open(zipFileSignInfo.FullPath, FileMode.Open, FileAccess.Read);
+                // The stream needs to be read/write and the archive needs to be update so
+                // the below entry stream is seekable. Because of this the zip archives should
+                // not be disposed which would attempt to write any changes to the input file. It
+                // isn't neccesary either because the actual file stream is closed.
+                zipStream = File.Open(zipFileSignInfo.FullPath, FileMode.Open);
+                var archive = new ZipArchive(zipStream, ZipArchiveMode.Update, leaveOpen: true);
                 var nestedParts = new List<ZipPart>();
 
-                foreach (var part in package.GetParts())
+                foreach (ZipArchiveEntry entry in archive.Entries)
                 {
-                    var relativePath = GetPartRelativeFileName(part);
+                    string relativePath = entry.FullName;
 
                     if (!FileSignInfo.IsSignableFile(relativePath))
                     {
                         continue;
                     }
 
-                    var stream = part.GetStream();
-
-                    // copy the stream content, as the stream it doesn't support seek:
-                    var memoryStream = new MemoryStream();
-                    stream.CopyTo(memoryStream);
-
-                    memoryStream.Position = 0;
-                    var contentHash = ContentUtil.GetContentHash(memoryStream);
+                    Stream stream = entry.Open();
+                    stream.Position = 0;
+                    var contentHash = ContentUtil.GetContentHash(stream);
 
                     // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
                     if (!_filesByContentHash.TryGetValue(contentHash, out var fileSignInfo))
                     {
-                        var tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
-                        var tempPath = Path.Combine(tempDir, Path.GetFileName(relativePath));
+                        string tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
+                        string tempPath = Path.Combine(tempDir, Path.GetFileName(relativePath));
                         Directory.CreateDirectory(tempDir);
                         using (var tempFileStream = File.OpenWrite(tempPath))
                         {
-                            memoryStream.Position = 0;
-                            memoryStream.CopyTo(tempFileStream);
+                            stream.Position = 0;
+                            stream.CopyTo(tempFileStream);
                             tempFileStream.Close();
                         }
 
@@ -313,7 +319,7 @@ namespace Microsoft.DotNet.SignTool
             }
             finally
             {
-                package?.Close();
+                zipStream?.Close();
             }
         }
 

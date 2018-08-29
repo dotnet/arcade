@@ -206,18 +206,21 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPullRquest;
         }
 
-        public async Task MergePullRequestAsync(string pullRequestUrl, string commit = null, string mergeMethod = GitHubMergeMethod.Squash, string title = null, string message = null)
+        public async Task MergePullRequestAsync(string pullRequestUrl, string commit, string mergeMethod, string title, string message)
         {
-            title = title ?? PullRequestProperties.AutoMergeTitle;
-            message = message ?? PullRequestProperties.AutoMergeMessage;
+            if (mergeMethod == null)
+            {
+                mergeMethod = GitHubMergeMethod.Squash;
+            }
 
             GitHubPullRequestMerge pullRequestMerge = new GitHubPullRequestMerge(title, message, commit, mergeMethod);
 
             string body = JsonConvert.SerializeObject(pullRequestMerge, _serializerSettings);
 
-            string url = GetPrPartialAbsolutePath(pullRequestUrl);
-
-            await this.ExecuteGitCommand(HttpMethod.Put, url, _logger, body);
+            var mergeUriBuilder = new UriBuilder(pullRequestUrl);
+            mergeUriBuilder.Path += "/merge";
+            var mergeUri = mergeUriBuilder.Uri;
+            await this.ExecuteGitCommand(HttpMethod.Put, mergeUri.PathAndQuery, _logger, body);
         }
 
         public async Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message)
@@ -242,6 +245,10 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, Dictionary<string, GitCommit> commits, string pullRequestBaseBranch, string path = "eng/common/")
         {
+            if (path.EndsWith("/"))
+            {
+                path = path.Substring(0, path.Length - 1);
+            }
             _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{assetsProducedInCommit}'");
 
             string ownerAndRepo = GetOwnerAndRepoFromRepoUri(repoUri);
@@ -338,16 +345,19 @@ namespace Microsoft.DotNet.DarcLib
             string lastCommitSha = lastCommit["sha"].ToString();
 
             string ownerAndRepo = GetOwnerAndRepoFromPR(pullRequestUrl);
-            response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}statuses/{lastCommitSha}", _logger);
+            response = await this.ExecuteGitCommand(
+                HttpMethod.Get,
+                $"repos/{ownerAndRepo}commits/{lastCommitSha}/status",
+                _logger);
 
-            content = JArray.Parse(await response.Content.ReadAsStringAsync());
+            var statusContent = JObject.Parse(await response.Content.ReadAsStringAsync());
 
             IList<Check> statuses = new List<Check>();
-            foreach (JToken status in content)
+            foreach (JToken status in statusContent["statuses"])
             {
                 if (Enum.TryParse(status["state"].ToString(), true, out CheckState state))
                 {
-                    statuses.Add(new Check(state, status["context"].ToString(), status["url"].ToString()));
+                    statuses.Add(new Check(state, status["context"].ToString(), status["target_url"].ToString()));
                 }
             }
 

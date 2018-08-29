@@ -46,6 +46,7 @@ namespace Microsoft.DotNet.SignTool
             // Next sign all of the files
             if (!SignFiles())
             {
+                _log.LogError("Error during execution of Microbuild signing process.");
                 return;
             }
 
@@ -230,6 +231,18 @@ namespace Microsoft.DotNet.SignTool
                     if (fileName.SignInfo.StrongName != null)
                     {
                         log.LogError($"Nupkg {fileName} cannot be strong name signed.");
+                    }
+                }
+                else if (fileName.IsZip())
+                {
+                    if (fileName.SignInfo.Certificate != null)
+                    {
+                        log.LogError($"Zip {fileName} should not be signed with this certificate: {fileName.SignInfo.Certificate}");
+                    }
+
+                    if (fileName.SignInfo.StrongName != null)
+                    {
+                        log.LogError($"Zip {fileName} cannot be strong name signed.");
                     }
                 }
             }

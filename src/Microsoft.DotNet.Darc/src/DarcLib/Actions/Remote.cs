@@ -147,7 +147,7 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPr;
         }
 
-        public async Task MergePullRequestAsync(string pullRequestUrl, string commit = null, string mergeMethod = null, string title = null, string message = null)
+        public async Task MergePullRequestAsync(string pullRequestUrl, string commit, string mergeMethod, string title, string message)
         {
             _logger.LogInformation($"Merging pull request '{pullRequestUrl}'...");
 
@@ -190,12 +190,9 @@ namespace Microsoft.DotNet.DarcLib
                     continue;
                 }
 
-                if (string.Compare(asset.Version, dependency.Version) == 1)
-                {
-                    dependency.Version = asset.Version;
-                    dependency.Commit = assetsProducedInCommit;
-                    toUpdate.Add(dependency);
-                }
+                dependency.Version = asset.Version;
+                dependency.Commit = assetsProducedInCommit;
+                toUpdate.Add(dependency);
             }
 
             _logger.LogInformation($"Getting dependencies which need to be updated in repo '{repoUri}' and branch '{branch}' succeeded!");

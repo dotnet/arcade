@@ -108,7 +108,7 @@ Package versions come in the following kinds, depending on the point in the prod
   ```
     1.0.0-preview1.final
   ```
-  
+
 - **Release build** 
 
   Versions should include **MAJOR**, **MINOR**, **PATCH**.
@@ -128,7 +128,7 @@ The format of package versions produced by the build is determined based on the 
 | ""                       | "1.2.3-dev+abcdef", "1.2.3-ci+abcdef", "1.2.3-beta.12345.1+abcdef" |
 | "prerelease"             | "1.2.3-beta.final+abcdef"   |
 | "release"                | "1.2.3"                     |
-  
+
 ## Package Version Generation
 
 - **MAJOR**, **MINOR**, **PATCH**:
@@ -137,7 +137,7 @@ The format of package versions produced by the build is determined based on the 
 - **PRERELEASE**: 
   Property `PreReleaseVersionLabel` specifies the label for an official build.
   Label `dev` is used for developer build and `ci` for PR validation build.
-   
+  
 - **REVISION**, **SHORTDATE**: 
   - In official builds the values are derived from build parameter `OfficialBuildId` with format `20yymmdd.r` like so:
     - REVISION is set to `r` component of `OfficialBuildId`
@@ -181,3 +181,37 @@ Examples of SemVer1 package versions:
 | "release"                | "1.2.3"                     |
 
 Note that the REVISION number is zero-padded to two characters.
+
+
+
+## Implementation
+
+The Arcade SDK implements [here](../src/Microsoft.DotNet.Arcade.Sdk/tools/Version.targets) the Versioning schema described in this document. This section provides a brief outline of how to use the implementation and how it works. More documentation is available in the respective [.target/.props](../src/Microsoft.DotNet.Arcade.Sdk/tools/Version.targets) file.
+
+Arcade onboarded repos use this implementation automatically by using the Arcade SDK. *If you use the SDK you won't have to do anything else to use the format strings described in the proposal.* 
+
+The main entry point for the versioning implementation is the `_InitializeAssemblyVersion` target that executes before the `GetAssemblyVersion`.  Below is a list of the main parameters that control the logic.
+
+### Parameters
+
+| Parameter                  | Scope  | Description                                                  |
+| -------------------------- | ------ | ------------------------------------------------------------ |
+| SemanticVersioningV1       | Arcade | Specify whether the version string should be in SemVer 1.0 format or not. |
+| DotNetUseShippingVersions  | Arcade | Set to `true` to produce shipping version strings in non-official builds. I.e., instead of fixed values like "42.42.42.42" for `AssemblyVersion`. |
+| OfficialBuild              | Arcade | Boolean indicating if the current build is official or not.  |
+| OfficialBuildId            | Arcade | ID of current build. The accepted format is "yyyyMMdd.r". If empty it will be computed following the logic explained in the versioning schema. |
+| ContinuousIntegrationBuild | Arcade | Specify whether the build is happening on a CI server (PR build or official build). |
+| DotNetFinalVersionKind     | Arcade | Specify the "kind" of version being generated: "release", "prerelease" or "" |
+| PreReleaseVersionLabel     | Arcade | Pre-release label to be used on the string. E.g., "ci", "dev", "beta", etc. |
+| VersionPrefix              | .NET   | The leading part of the version string. If empty the tool will try to compute it using `$(MajorVersion).$(MinorVersion).0` |
+
+## Output
+ This is the list of output properties from the Versioning package.
+
+| Name            | Scope | Description                                                  |
+| --------------- | ----- | ------------------------------------------------------------ |
+| PackageVersion  | .NET  | PackageVersion plus the short commit SHA as suffix. `SemanticVersioningV1` controls the separator to be used. |
+| AssemblyVersion | .NET  | Set to "42.42.42.42" if empty and VersionSuffixDateStamp is also empty, otherwise leave as is. |
+| FileVersion     | .NET  | FileVersion string. If "VersionSuffixDateStamp" is empty FileVersion will be set to "42.42.42.42424". |
+| VersionPrefix   | .NET  | The leading part of the version string as specified in the Versioning schema. |
+| VersionSuffix   | .NET  | The suffix part of the version string, including the pre-release portion. |
