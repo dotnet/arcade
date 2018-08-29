@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Internal;
 using MergePolicy = Maestro.Data.Models.MergePolicy;
@@ -33,6 +34,11 @@ namespace SubscriptionActorService
             }
 
             public Task ReceiveReminderAsync(string reminderName, byte[] state, TimeSpan dueTime, TimeSpan period)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task SubscriptionDeletedAsync(string user)
             {
                 throw new NotImplementedException();
             }
@@ -209,6 +215,34 @@ namespace SubscriptionActorService
             await StateManager.SaveStateAsync();
 
             return $"Pull request '{prUrl}' updated.";
+        }
+
+        public async Task SubscriptionDeletedAsync(string user)
+        {
+            ConditionalValue<InProgressPullRequest> maybePr =
+                await StateManager.TryGetStateAsync<InProgressPullRequest>(PullRequest);
+            if (maybePr.HasValue)
+            {
+                InProgressPullRequest pr = maybePr.Value;
+                if (string.IsNullOrEmpty(pr.Url))
+                {
+                    // somehow a bad PR got in the collection, remove it
+                    await StateManager.RemoveStateAsync(PullRequest);
+                    return;
+                }
+
+                long installationId = 0;
+                if (pr.Url.Contains("github.com"))
+                {
+                    var (owner, repo, id) = GitHubClient.ParsePullRequestUri(pr.Url);
+                    installationId = await Context.GetInstallationId($"https://github.com/{owner}/{repo}");
+                }
+
+                IRemote darc = await DarcFactory.CreateAsync(pr.Url, installationId);
+                await darc.CommentOnPullRequestAsync(pr.Url, $@"The subscription that generated this pull request has been deleted by @{user}.
+This pull request will no longer be tracked by maestro.");
+                await StateManager.RemoveStateAsync(PullRequest);
+            }
         }
 
         public Task UpdateAsync(int buildId)

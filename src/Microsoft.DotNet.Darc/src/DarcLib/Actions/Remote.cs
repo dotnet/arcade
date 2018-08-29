@@ -116,6 +116,11 @@ namespace Microsoft.DotNet.DarcLib
             return await _gitClient.SearchPullRequestsAsync(repoUri, pullRequestBranch, status, keyword, author);
         }
 
+        public Task CommentOnPullRequestAsync(string pullRequestUrl, string message)
+        {
+            return _gitClient.CommentOnPullRequestAsync(pullRequestUrl, message);
+        }
+
         public async Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl)
         {
             _logger.LogInformation($"Getting the status of pull request '{pullRequestUrl}'...");
@@ -154,15 +159,6 @@ namespace Microsoft.DotNet.DarcLib
             await _gitClient.MergePullRequestAsync(pullRequestUrl, commit, mergeMethod, title, message);
 
             _logger.LogInformation($"Merging pull request '{pullRequestUrl}' succeeded!");
-        }
-
-        public async Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message)
-        {
-            _logger.LogInformation($"Adding a comment to PR '{pullRequestId}' in repo '{repoUri}'...");
-
-            await _gitClient.CommentOnPullRequestAsync(repoUri, pullRequestId, message);
-
-            _logger.LogInformation($"Adding a comment to PR '{pullRequestId}' in repo '{repoUri}' succeeded!");
         }
 
         private void ValidateSettings(DarcSettings settings)

@@ -92,6 +92,10 @@ namespace Microsoft.DotNet.Maestro.Client.Models
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "Policy");
             }
+            if (Policy != null)
+            {
+                Policy.Validate();
+            }
         }
     }
 }

@@ -70,6 +70,11 @@ namespace Maestro.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<Channel>()
+                .HasIndex(c => c.Name)
+                .IsUnique();
+
             builder.Entity<BuildChannel>().HasKey(bc => new {bc.BuildId, bc.ChannelId});
 
             builder.Entity<BuildChannel>()

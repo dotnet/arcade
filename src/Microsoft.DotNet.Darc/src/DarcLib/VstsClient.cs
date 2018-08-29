@@ -239,9 +239,11 @@ namespace Microsoft.DotNet.DarcLib
             await this.ExecuteGitCommand(new HttpMethod("PATCH"), uri, _logger, body);
         }
 
-        public async Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message)
+        public Task CommentOnPullRequestAsync(string pullRequestUrl, string message)
         {
-            string repoName = SetApiUriAndGetRepoName(repoUri);
+            throw new NotImplementedException("Commenting on VSTS pull requests is not yet implemented.");
+#if UNDEFINED
+            string repoName = SetApiUriAndGetRepoName(pullRequestUrl);
             List<VstsCommentBody> comments = new List<VstsCommentBody>
             {
                 new VstsCommentBody(message)
@@ -252,6 +254,7 @@ namespace Microsoft.DotNet.DarcLib
             string body = JsonConvert.SerializeObject(comment, _serializerSettings);
 
             await this.ExecuteGitCommand(HttpMethod.Post, $"repositories/{repoName}/pullrequests/{pullRequestId}/threads", _logger, body);
+#endif
         }
 
         public async Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng/common/")

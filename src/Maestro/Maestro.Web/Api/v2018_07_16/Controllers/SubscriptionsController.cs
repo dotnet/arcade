@@ -30,7 +30,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [HttpGet]
         [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(List<Subscription>))]
         [ValidateModelState]
-        public IActionResult Get(string sourceRepository = null, string targetRepository = null, int? channelId = null)
+        public IActionResult GetAllSubscriptions(string sourceRepository = null, string targetRepository = null, int? channelId = null)
         {
             IQueryable<Data.Models.Subscription> query = _context.Subscriptions.Include(s => s.Channel);
 
@@ -66,6 +66,86 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 return NotFound();
             }
 
+            return Ok(new Subscription(subscription));
+        }
+
+        [HttpPatch("{id}")]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(Subscription))]
+        [ValidateModelState]
+        public async Task<IActionResult> UpdateSubscription(Guid id, [FromBody] SubscriptionUpdate update)
+        {
+            Data.Models.Subscription subscription = await _context.Subscriptions.Where(sub => sub.Id == id)
+                .FirstOrDefaultAsync();
+
+            if (subscription == null)
+            {
+                return NotFound();
+            }
+
+            bool doUpdate = false;
+
+            if (!string.IsNullOrEmpty(update.SourceRepository))
+            {
+                subscription.SourceRepository = update.SourceRepository;
+                doUpdate = true;
+            }
+
+            if (update.Policy != null)
+            {
+                subscription.PolicyObject = update.Policy.ToDb();
+                doUpdate = true;
+            }
+
+            if (!string.IsNullOrEmpty(update.ChannelName))
+            {
+                Data.Models.Channel channel = await _context.Channels.Where(c => c.Name == update.ChannelName)
+                    .FirstOrDefaultAsync();
+                if (channel == null)
+                {
+                    return BadRequest(
+                        new ApiError(
+                            "the request is invalid",
+                            new[] {$"The channel '{update.ChannelName}' could not be found."}));
+                }
+
+                subscription.Channel = channel;
+                doUpdate = true;
+            }
+
+            if (doUpdate)
+            {
+                _context.Subscriptions.Update(subscription);
+                await _context.SaveChangesAsync();
+            }
+
+
+            return Ok(new Subscription(subscription));
+        }
+
+        [HttpDelete("{id}")]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(Subscription))]
+        [ValidateModelState]
+        public async Task<IActionResult> DeleteSubscription(Guid id)
+        {
+            Data.Models.Subscription subscription = await _context.Subscriptions
+                .FirstOrDefaultAsync(sub => sub.Id == id);
+
+            if (subscription == null)
+            {
+                return NotFound();
+            }
+
+            Data.Models.SubscriptionUpdate subscriptionUpdate = await _context.SubscriptionUpdates
+                .FirstOrDefaultAsync(u => u.SubscriptionId == subscription.Id);
+
+            if (subscriptionUpdate != null)
+            {
+                _context.SubscriptionUpdates.Remove(subscriptionUpdate);
+            }
+
+            _context.Subscriptions.Remove(subscription);
+
+            await _context.SaveChangesAsync();
             return Ok(new Subscription(subscription));
         }
 
