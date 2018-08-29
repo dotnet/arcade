@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.DarcLib
 
         Task CreateBranchAsync(string repoUri, string newBranch, string baseBranch);
 
-        Task PushFilesAsync(Dictionary<string, GitCommit> filesToCommit, string repoUri, string pullRequestBaseBranch);
+        Task PushCommitsAsync(Dictionary<string, GitCommit> filesToCommit, string repoUri, string pullRequestBaseBranch);
 
         Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null);
 

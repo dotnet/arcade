@@ -219,14 +219,14 @@ namespace Microsoft.DotNet.DarcLib
             DependencyFileContentContainer fileContainer = await _fileManager.UpdateDependencyFiles(itemsToUpdate, repoUri, branch);
             Dictionary<string, GitCommit> dependencyFilesToCommit = fileContainer.GetFilesToCommitMap(pullRequestBaseBranch);
 
-            await _gitClient.PushFilesAsync(dependencyFilesToCommit, repoUri, pullRequestBaseBranch);
+            await _gitClient.PushCommitsAsync(dependencyFilesToCommit, repoUri, pullRequestBaseBranch);
 
             // If there is an arcade asset that we need to update we try to update the script files as well
             DependencyDetail arcadeItem = itemsToUpdate.Where(i => i.Name.ToLower().Contains("arcade")).FirstOrDefault();
 
             if (arcadeItem != null)
             {
-                await _gitClient.PushFilesAsync(await GetScriptCommitsAsync(repoUri, branch, assetsProducedInCommit, pullRequestBaseBranch), repoUri, pullRequestBaseBranch);
+                await _gitClient.PushCommitsAsync(await GetScriptCommitsAsync(repoUri, branch, assetsProducedInCommit, pullRequestBaseBranch), repoUri, pullRequestBaseBranch);
             }
         }
     }

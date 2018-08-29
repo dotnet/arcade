@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.DarcLib
             _logger.LogInformation($"Branch '{newBranch}' exists.");
         }
 
-        public async Task PushFilesAsync(Dictionary<string, GitCommit> filesToCommit, string repoUri, string pullRequestBaseBranch)
+        public async Task PushCommitsAsync(Dictionary<string, GitCommit> filesToCommit, string repoUri, string pullRequestBaseBranch)
         {
             _logger.LogInformation($"Pushing files to '{pullRequestBaseBranch}'...");
 
