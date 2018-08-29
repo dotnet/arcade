@@ -34,8 +34,8 @@ A "tag" that defines the purpose of a set of build assets.  Whereas commits defi
 
 Channels have the following characteristics:
 - Should be consistent across the product stack, though they may not necessarily apply to all repos.  For example, all repos may produce bits for a ".NET Core 3.0.0" channel, but only some repos (e.g. core-sdk) might produce output for a ".NET SDK 3.0.1xx" channel
-- Channels are applied to a set of build assets after the build is done.  This may be manual or automatic.
-- A build may applied to multiple channels.
+- Build assets are applied to a set channels after the build is done.  This may be manual or automatic.
+- A build may be applied to multiple channels.
 - Channels may be public or internal.  This differentiates what may be done with outputs from a build.  The following rules must be followed:
     - Builds of internal, non public branches may **not** be assigned to public channels.
     - Build assets that are assign to an internal channel may not publish/display outputs in a public location (e.g. nuget.org, dotnet.visualstudio.com/public)
@@ -118,11 +118,11 @@ There are a variety of scenarios that require changes in channels, branches and 
 Onboarding of new repositories adds new nodes to the product dependency graph. Initially the number of nodes in the dependency graph is 0. There are no branches of any repos producing assets for any channel, and thus there are no subscriptions consuming those assets (because there would be no place to move them). Onboarding the initial repository involves the following:
 
 1. Define potential content - The dotnet/coreclr repo's master branch should be onboarded.
-2. Onboard dotnet/coreclr to Arcade style publishing.  Arcade publishing will push build assets to shared storage locations and notify the Build Asset Registry of new builds.
-3. Create content - Build dotnet/coreclr's master branch (let's say its ID is 'dotnet/coreclr#1')  Through arcade publishing a new entry for this build will be created in the BAR.  'dotnet/coreclr#1' will not initially have a channel..
-4. Create a new channel for content - Create '.NET Core 3.0.0' channel in the BAR
-5. Assign new dotnet/coreclr builds to the channel - dotnet/coreclr's master branch creates content for '.NET Core 3.0.0' channel, so use the BAR to assign 'dotnet/coreclr#1' to '.NET Core 3.0.0'
-6. Assign future builds of a specific branch a default channel (if desired) - Use the BAR to map dotnet/coreclr master onto '.NET Core 3.0.0'.
+2. Onboard dotnet/coreclr to Arcade style publishing.  Arcade publishing will push build assets to shared storage locations and notify the [Build Asset Registry (BAR)](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) of new builds.
+3. Create content - Build dotnet/coreclr's master branch (let's say its ID is 'dotnet/coreclr#1')  Through arcade publishing a new entry for this build will be created in the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md).  'dotnet/coreclr#1' will not initially have a channel..
+4. Create a new channel for content - Create '.NET Core 3.0.0' channel in the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md)
+5. Assign new dotnet/coreclr builds to the channel - dotnet/coreclr's master branch creates content for '.NET Core 3.0.0' channel, so use the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) to assign 'dotnet/coreclr#1' to '.NET Core 3.0.0'
+6. Assign future builds of a specific branch a default channel (if desired) - Use the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) to map dotnet/coreclr master onto '.NET Core 3.0.0'.
 
 Once the repository graph has more than one node (or if there is a circular dependency, like in the case of dotnet/arcade), it becomes possible to create subscriptions.  Onboarding new repositories after the initial node involves the steps above with the follolwing alterations/additions:
 
@@ -132,11 +132,11 @@ Once the repository graph has more than one node (or if there is a circular depe
 Let's say dotnet/corefx's master branch is the second branch to be onboarded.  dotnet/corefx has a dependency on dotnet/coreclr's output assets.
 
 1. Define potential content - The dotnet/corefx repo's master branch should be onboarded.
-2. Onboard dotnet/corefx to Arcade style publishing.  Arcade publishing will push build assets to shared storage locations and notify the Build Asset Registry (BAR) of new builds.
+2. Onboard dotnet/corefx to Arcade style publishing.  Arcade publishing will push build assets to shared storage locations and notify the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) of new builds.
 3. Onboard dotnet/corefx to Arcade style dependency management - Create a Dependency.Versions.xml and associated dependency props files in the master branch.  Use Darc to add dependencies for specific dotnet/coreclr dependencies (e.g. Microsoft.NETCore.Runtime.Coreclr). These dependencies were produced by dotnet/coreclr builds and assigned to the '.NET Core 3.0.0' channel.
-4. Create content - Build dotnet/corefx's master branch (let's say its ID is 'dotnet/corefx#3')  Through arcade publishing a new entry for this build will be created in the BAR.  'dotnet/corefx#3' will not initially have a channel..
-6. Assign new dotnet/corefx build to the channel - dotnet/coreclr's master branch creates content for '.NET Core 3.0.0' channel, so use the BAR to assign 'dotnet/corefx#3' to '.NET Core 3.0.0'
-7. Assign future builds of a specific branch a default channel (if desired) - Use the BAR to map dotnet/corefx master onto '.NET Core 3.0.0'.
+4. Create content - Build dotnet/corefx's master branch (let's say its ID is 'dotnet/corefx#3')  Through arcade publishing a new entry for this build will be created in the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md).  'dotnet/corefx#3' will not initially have a channel..
+6. Assign new dotnet/corefx build to the channel - dotnet/coreclr's master branch creates content for '.NET Core 3.0.0' channel, so use the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) to assign 'dotnet/corefx#3' to '.NET Core 3.0.0'
+7. Assign future builds of a specific branch a default channel (if desired) - Use the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) to map dotnet/corefx master onto '.NET Core 3.0.0'.
 8. Add a subscription to automatically pull new dotnet/coreclr dependencies into dotnet/corefx's master branch. Subscription info
    - Mapping - Any dotnet/coreclr .NET Core 3.0.0 asset -> dotnet/corefx's master branch
    - Quality metric - No quality metric (implies build passes)
@@ -189,7 +189,7 @@ dotnet/roslyn
         -none
 ```
 
-In branching for release, we want to isolate the input code from risky changes, allow mainline development to continue, etc.  This typically involves creating a release branches for each repository, like "release/3.0".  The outputs for .NET Core 3.0 switch to coming from this set of branches, and the original set of branches is now producing .NET Core 3.1 development bits.  Looking at this action from the perspective of channels and subscriptions, we are actually saying:
+In branching for release, we want to isolate the input code from risky changes, allow mainline development to continue, etc.  This typically involves creating a release branch for each repository, like "release/3.0".  The outputs for .NET Core 3.0 switch to coming from this set of branches, and the original set of branches is now producing .NET Core 3.1 development bits.  Looking at this action from the perspective of channels and subscriptions, we are actually saying:
 - The .NET Core 3.0 Dev channel is now defunct (we are in release shutdown)
 - A .NET Core 3.0 release channel should produced from a set of yet-created branches.  These branches would be based off the branches producing .NET Core 3.0 Dev bits.
 - Subscriptions intaking .NET Core 3.0 assets should map onto new branches and flow in the same manner as the .NET Core 3.0 Dev subscriptions
@@ -729,7 +729,7 @@ This operation is in two stages.  A confirmation/modification stage (present use
 
 **Determine input repo+branch list**
 
-1. In the BAR, find the latest build of each repo that has produced assets in the last N days for the existing channel.  N defaults to 7.
+1. In the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md), find the latest build of each repo that has produced assets in the last N days for the existing channel.  N defaults to 7.
 2. Add each build's repo+branch to input repo+branch list
 3. For this set of builds:
     1. Determine unique set of input builds to that build.
@@ -781,7 +781,7 @@ Allow user to modify configuration (branch names, remove subscriptions, add repo
 
 **Valdiate and apply configuration**
 
-Validate the configuration and then apply the configuration using the BAR REST API.
+Validate the configuration and then apply the configuration using the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) REST API.
 
 #### Channel Rename
 
@@ -806,7 +806,7 @@ darc channel edit <existing channel>
 
 **Determine input repo+branch list**
 
-1. In the BAR, find the latest build of each repo that has produced assets in the last N days for the existing channel.  N defaults to 7.
+1. In the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md), find the latest build of each repo that has produced assets in the last N days for the existing channel.  N defaults to 7.
 2. Add each build's repo+branch to input repo+branch list
 3. For this set of builds:
     1. Determine unique set of input builds to that build.
@@ -828,7 +828,7 @@ Allow user to modify configuration (branch names, remove subscriptions, add repo
 
 **Validate and apply configuration**
 
-Validate the configuration and then apply the configuration using the BAR REST API.
+Validate the configuration and then apply the configuration using the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) REST API.
 
 #### Multi-Channel Edit
 
@@ -840,7 +840,7 @@ For all elements (potentially filtered by repo, present the user with a way to e
 
 **Determine input repo+branch list**
 
-1. In the BAR, find the latest build of each repo that has produced assets in the last N days for any channel.  N defaults to 7.
+1. In the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md), find the latest build of each repo that has produced assets in the last N days for any channel.  N defaults to 7.
 2. Add each build's repo+branch to input repo+branch list
 3. For this set of builds:
     1. Determine unique set of input builds to that build.
@@ -863,4 +863,4 @@ Allow user to modify configuration (branch names, remove subscriptions, add repo
 
 **Validate and apply configuration**
 
-Validate the configuration and then apply the configuration using the BAR REST API.
+Validate the configuration and then apply the configuration using the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) REST API.
