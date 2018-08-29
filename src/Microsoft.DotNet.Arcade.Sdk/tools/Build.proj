@@ -55,9 +55,6 @@
   <Import Project="RepoLayout.props"/>
 
   <PropertyGroup>
-    <_PublishToBlobStorage>false</_PublishToBlobStorage>
-    <_PublishToBlobStorage Condition="'$(DotNetPublishBlobFeedUrl)' != ''">true</_PublishToBlobStorage>
-
     <_DotNetOutputBlobFeedDir>$(DotNetOutputBlobFeedDir)</_DotNetOutputBlobFeedDir>
     <_DotNetOutputBlobFeedDir Condition="'$(_DotNetOutputBlobFeedDir)' != '' and !HasTrailingSlash('$(_DotNetOutputBlobFeedDir)')">$(_DotNetOutputBlobFeedDir)\</_DotNetOutputBlobFeedDir>
   </PropertyGroup>
@@ -116,9 +113,9 @@
 
     <ItemGroup>
       <_PublishProps Include="@(_CommonProps)"/>
-      <_PublishProps Include="AzureFeedUrl=$(DotNetPublishBlobFeedUrl)" Condition="$(_PublishToBlobStorage)" />
-      <_PublishProps Include="AzureAccountKey=$(DotNetPublishBlobFeedKey)" Condition="$(_PublishToBlobStorage)" />
-      <_PublishProps Include="DotNetOutputBlobFeedDir=$(_DotNetOutputBlobFeedDir)" Condition="'$(_DotNetOutputBlobFeedDir)' != ''" />
+      <_PublishProps Include="AzureFeedUrl=$(DotNetPublishBlobFeedUrl)" />
+      <_PublishProps Include="AzureAccountKey=$(DotNetPublishBlobFeedKey)" />
+      <_PublishProps Include="DotNetOutputBlobFeedDir=$(_DotNetOutputBlobFeedDir)" />
     </ItemGroup>
 
     <ItemGroup>
@@ -209,7 +206,7 @@
     <MSBuild Projects="Publish.proj"
              Properties="@(_PublishProps)"
              Targets="Publish"
-             Condition="'$(Publish)' == 'true'"/>
+             Condition="'$(Publish)' == 'true' and '$(DotNetPublish)' == 'true'"/>
              
     <MSBuild Projects="PushBuildAssets.proj"
              Properties="@(_PushProps)"
