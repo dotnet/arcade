@@ -88,6 +88,15 @@ namespace SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to find directory {0}..
+        /// </summary>
+        internal static string scDirDoesNotExist {
+            get {
+                return ResourceManager.GetString("scDirDoesNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Downloading {0} to {1}..
         /// </summary>
         internal static string scDownloading {

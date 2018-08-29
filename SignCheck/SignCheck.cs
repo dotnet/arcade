@@ -221,13 +221,23 @@ namespace SignCheck
                         else
                         {
                             // CASE 3: Path contains no search patterns, e.g. "-i C:\Foo\Bar\*.txt"
-                            matchedFiles = Directory.GetFiles(fileSearchPath, fileSearchPattern, fileSearchOptions);
+                            if (Directory.Exists(fileSearchPath))
+                            {
+                                matchedFiles = Directory.GetFiles(fileSearchPath, fileSearchPattern, fileSearchOptions);
+                            }
+                            else
+                            {
+                                Log.WriteError(String.Format(SignCheckResources.scDirDoesNotExist, fileSearchPath));
+                            }
                         }
                     }
 
-                    foreach (string file in matchedFiles)
+                    if (matchedFiles != null)
                     {
-                        inputFiles.Add(file);
+                        foreach (string file in matchedFiles)
+                        {
+                            inputFiles.Add(file);
+                        }
                     }
                 }
                 else
