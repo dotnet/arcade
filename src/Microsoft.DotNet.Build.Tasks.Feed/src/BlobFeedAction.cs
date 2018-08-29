@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -190,7 +190,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        public async Task CreateContainerAsync(IBuildEngine buildEngine, bool publishFlatContainer)
+        public async Task CreateContainerAsync(IBuildEngine buildEngine, bool publishFlatContainer, bool isContainerPublic)
         {
             Log.LogMessage($"Creating container {feed.ContainerName}...");
 
@@ -200,7 +200,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AccountName = feed.AccountName,
                 ContainerName = feed.ContainerName,
                 FailIfExists = false,
-                IsPublic = !hasToken,
+                IsPublic = isContainerPublic && !hasToken,
                 BuildEngine = buildEngine
             };
 
