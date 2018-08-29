@@ -143,8 +143,18 @@ Onboarding of new repositories adds new nodes to the product dependency graph. I
 2. Onboard dotnet/coreclr to Arcade style publishing.  Arcade publishing will push build assets to shared storage locations and notify the [Build Asset Registry (BAR)](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) of new builds.
 3. Create content - Build dotnet/coreclr's master branch (let's say its ID is 'dotnet/coreclr#1')  Through arcade publishing a new entry for this build will be created in the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md).  'dotnet/coreclr#1' will not initially have a channel..
 4. Create a new channel for content - Create '.NET Core 3.0.0' channel in the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md)
-5. Assign new dotnet/coreclr builds to the channel - dotnet/coreclr's master branch creates content for '.NET Core 3.0.0' channel, so use the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) to assign 'dotnet/coreclr#1' to '.NET Core 3.0.0'
+    ```
+    darc channel new '.NET Core 3.0.0'
+    ```
+5. Assign existing dotnet/coreclr builds to the channel if desired - dotnet/coreclr's master branch creates content for '.NET Core 3.0.0' channel, so use the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) to assign 'dotnet/coreclr#1' to '.NET Core 3.0.0'
+    ```
+    darc channel assign 'dotnet/coreclr#1' '.NET Core 3.0.0'
+    ```
 6. Assign future builds of a specific branch a default channel (if desired) - Use the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) to map dotnet/coreclr master onto '.NET Core 3.0.0'.
+
+    ```
+    darc channel edit '.NET Core 3.0.0'
+    ```
 
 Once the repository graph has more than one node (or if there is a circular dependency, like in the case of dotnet/arcade), it becomes possible to create subscriptions.  Onboarding new repositories after the initial node involves the steps above with the follolwing alterations/additions:
 
@@ -768,7 +778,7 @@ dotnet/core-sdk master depends on
       dotnet/corefx master depends on
         dotnet/coreclr master depends on
           dotnet/arcade master depends on
-            dotnet/coresdk master <- graph backedge
+            dotnet/core-sdk master <- graph backedge
 
 INPUT REPOS (what the dev wants to work on):
 
@@ -817,6 +827,24 @@ The following should **not** change
 `darc channel rename <existing channel name> <new channel name>`
 
 This is just a simple rename and need not involve user interaction.
+
+#### Channel Create
+
+Creates a new channel
+
+```
+darc channel new <new channel name> [-internal]
+```
+
+If -internal is specific, channel is internal only.
+
+#### Channel Assign Build
+
+Assigns a build to a specific channel.
+
+```
+darc channel assign <build name> <channel name>
+```
 
 #### Channel Configuration Edit
 
