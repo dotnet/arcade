@@ -265,7 +265,9 @@ namespace Microsoft.DotNet.SignTool
             try
             {
                 // The stream needs to be read/write and the archive needs to be update so
-                // the below entry stream is seekable.
+                // the below entry stream is seekable. Because of this the zip archives should
+                // not be disposed which would attempt to write any changes to the input file. It
+                // isn't neccesary either because the actual file stream is closed.
                 zipStream = File.Open(zipFileSignInfo.FullPath, FileMode.Open);
                 var archive = new ZipArchive(zipStream, ZipArchiveMode.Update, leaveOpen: true);
                 var nestedParts = new List<ZipPart>();
