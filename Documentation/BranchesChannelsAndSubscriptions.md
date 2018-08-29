@@ -42,15 +42,50 @@ Channels have the following characteristics:
 
 #### Subscriptions
 
-Defines the desired rules of product transformation (creation of new commits). Inter-repo dependencies are expressed as dependencies on created content (e.g. core-sdk commit `abcd` depends on core-setup build asset `Microsoft.NetCore.App.123456`). Subscriptions define a set of rules under which those inter-repo dependencies should be altered in new commits to a target branch.
+Defines the process of product transformation (creation of new commits). Inter-repo dependencies are expressed as dependencies on created content (e.g. core-sdk commit `abcd` depends on core-setup build asset `Microsoft.NetCore.App.123456`). Subscriptions define a set of rules under which those inter-repo dependencies should be altered in new commits to a target branch.
 
 Subscriptions have the following characteristics:
-- Defines a mapping between produced assets and commits. This mapping has the form:
+- They define a mapping between assets produced by a build, and new commits to branches in another repo.
 
-    `source repo (optional) + channel + asset (optional) -> target branch + target repo`
+    `source repo + channel + assets (optional) -> target branch + target repo`
 
-- A desired quality metric for when the mapping should be applied (e.g. should tests have passed?)
-- A trigger for when the mapping should be applied.
+- They have a desired quality metric for when the mapping should be applied (e.g. should tests have passed?)
+- They have a trigger for when the mapping should be applied.
+
+A subscription can be visualized with the following psuedocode
+
+```
+    function runSubscription(newBuild, subscription) {}
+        // Determine whether the build applies to the subscription
+        if (subscription.sourceRepo != newBuild.sourceRepo ||
+            subscription.sourceChannel != newBuild.channel) {
+            return 
+        }
+        // Determine whether trigger should be run
+        // For example, this might return false if we've already run once today and the subscription only runs once a day.
+        if (!subscription.isTriggered(newBuild)) {
+            return
+        }
+        // Check out the target repo and branch.
+        // git clone targetRepo; git checkout targetBranch
+        repo = checkOutSources(targetRepo, targetBranch)
+        // Check out a new branch in which to make a commit
+        // git checkout -b update-dependencies
+        repo.checkOutBranchForChanges()
+        // Map assets existing in target's 
+        foreach (dependency in repo.Dependencies) {
+            if (newBuild.assets.contains(dependency)) {
+                if (subscription.assets.count == 0 || subscription.assets.contains(dependency)) {
+                    repo.updateAsset(newBuild.assets)
+                }
+            }
+        }
+        // Check quality of new repo content (do a build, etc.)
+        if (subscription.isDesiredQuality(repo)) {
+            mergeChanges()
+        }
+    }
+```
 
 ## Branches, Channels and Subscriptions in a Monolithic repo world
 
@@ -60,20 +95,7 @@ When a product repository can be viewed as self-contained, the branches, channel
 - A single commmit (and moving branch head by extension) covers the entire product stack.  All components are versioned in a single atomic fashion. This makes it possible to imply a *channel* based on a *branch*:
   - "Main produces vNext"
   - "Dev15.6 produces Dev15.6"
-- Because a single commit describes all components at a *single* specific point in time, subscriptions are combined with branches.  When a new commit is made for some component in the stack, implicitly this new component is immediately referenced by all other components.  The subscription mapping seen in the previous section is complete at commit time:
-    ```
-    Starting from:
-     
-    source repo (optional) + channel + asset (optional) -> target branch + target repo
-
-    source repo = target repo
-    channel = target branch
-    asset = N/A
-
-    Gives:
-    
-    target repo + target branch -> target branch + target repo
-    ```
+- Because a single commit describes all components at a *single* specific point in time, no subscription is needed to update dependencies between components
 - There are perhaps a few remaining 'subscriptions' for the remaining distributed components, but there are few enough that they tend to be manually dealt with and have little overhead.
   1. External team checks in lots of new commits into branch X (potential content)
   2. External team produces new toolset from branch X (created content)
