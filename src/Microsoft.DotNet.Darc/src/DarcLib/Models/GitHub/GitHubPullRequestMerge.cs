@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.DarcLib
         [JsonProperty("commit_message")]
         public string Message { get; set; }
 
+        [JsonProperty("sha")]
         public string Sha { get; set; }
 
         [JsonProperty("merge_method")]

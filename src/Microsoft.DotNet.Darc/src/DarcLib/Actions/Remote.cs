@@ -190,12 +190,9 @@ namespace Microsoft.DotNet.DarcLib
                     continue;
                 }
 
-                if (string.Compare(asset.Version, dependency.Version) == 1)
-                {
-                    dependency.Version = asset.Version;
-                    dependency.Commit = assetsProducedInCommit;
-                    toUpdate.Add(dependency);
-                }
+                dependency.Version = asset.Version;
+                dependency.Commit = assetsProducedInCommit;
+                toUpdate.Add(dependency);
             }
 
             _logger.LogInformation($"Getting dependencies which need to be updated in repo '{repoUri}' and branch '{branch}' succeeded!");
@@ -226,7 +223,7 @@ namespace Microsoft.DotNet.DarcLib
 
             if (arcadeItem != null)
             {
-                await _gitClient.PushFilesAsync(await GetScriptCommitsAsync(repoUri, branch, assetsProducedInCommit, pullRequestBaseBranch), repoUri, pullRequestBaseBranch);
+                await _gitClient.PushFilesAsync(await GetScriptCommitsAsync(arcadeItem.RepoUri, branch, assetsProducedInCommit, pullRequestBaseBranch), repoUri, pullRequestBaseBranch);
             }
         }
     }
