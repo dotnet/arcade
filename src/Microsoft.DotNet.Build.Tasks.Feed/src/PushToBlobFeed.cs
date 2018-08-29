@@ -134,7 +134,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IEnumerable<BlobArtifactModel> blobArtifacts,
             IEnumerable<PackageArtifactModel> packageArtifacts)
         {
-            Log.LogMessage($"Creating build manifest file '{AssetManifestPath}'...");
+            Log.LogMessage(MessageImportance.High, $"Creating build manifest file '{AssetManifestPath}'...");
 
             BuildModel buildModel = new BuildModel(
                     new BuildIdentity
