@@ -147,13 +147,23 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPr;
         }
 
-        public async Task MergePullRequestAsync(string pullRequestUrl, string commit = null, string mergeMethod = null, string title = null, string message = null)
+        public Task MergePullRequestAsync(string pullRequestUrl)
         {
-            if (mergeMethod == null)
-            {
-                mergeMethod = GitHubMergeMethod.Squash;
-            }
+            return MergePullRequestAsync(pullRequestUrl, null);
+        }
 
+        public Task MergePullRequestAsync(string pullRequestUrl, string commit)
+        {
+            return MergePullRequestAsync(pullRequestUrl, commit, null);
+        }
+
+        public Task MergePullRequestAsync(string pullRequestUrl, string commit, string mergeMethod)
+        {
+            return MergePullRequestAsync(pullRequestUrl, commit, mergeMethod, null, null);
+        }
+
+        public async Task MergePullRequestAsync(string pullRequestUrl, string commit, string mergeMethod, string title, string message)
+        {
             _logger.LogInformation($"Merging pull request '{pullRequestUrl}'...");
 
             await _gitClient.MergePullRequestAsync(pullRequestUrl, commit, mergeMethod, title, message);
