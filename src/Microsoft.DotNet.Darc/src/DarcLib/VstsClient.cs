@@ -224,7 +224,7 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPullRquest;
         }
 
-        public async Task MergePullRequestAsync(string pullRequestUrl, string commit, string mergeMethod, string title = null, string message = null)
+        public async Task MergePullRequestAsync(string pullRequestUrl, string commit, string mergeMethod, string title, string message)
         {
             string uri = GetPrPartialAbsolutePath(pullRequestUrl);
 

@@ -147,7 +147,7 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPr;
         }
 
-        public async Task MergePullRequestAsync(string pullRequestUrl, string commit = null, string mergeMethod = null, string title = null, string message = null)
+        public async Task MergePullRequestAsync(string pullRequestUrl, string commit, string mergeMethod, string title, string message)
         {
             _logger.LogInformation($"Merging pull request '{pullRequestUrl}'...");
 

@@ -206,8 +206,13 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPullRquest;
         }
 
-        public async Task MergePullRequestAsync(string pullRequestUrl, string commit = null, string mergeMethod = GitHubMergeMethod.Squash, string title = null, string message = null)
+        public async Task MergePullRequestAsync(string pullRequestUrl, string commit, string mergeMethod, string title, string message)
         {
+            if (mergeMethod == null)
+            {
+                mergeMethod = GitHubMergeMethod.Squash;
+            }
+
             GitHubPullRequestMerge pullRequestMerge = new GitHubPullRequestMerge(title, message, commit, mergeMethod);
 
             string body = JsonConvert.SerializeObject(pullRequestMerge, _serializerSettings);
