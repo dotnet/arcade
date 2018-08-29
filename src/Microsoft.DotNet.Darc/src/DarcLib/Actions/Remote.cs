@@ -149,6 +149,11 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task MergePullRequestAsync(string pullRequestUrl, string commit = null, string mergeMethod = null, string title = null, string message = null)
         {
+            if (mergeMethod == null)
+            {
+                mergeMethod = GitHubMergeMethod.Squash;
+            }
+
             _logger.LogInformation($"Merging pull request '{pullRequestUrl}'...");
 
             await _gitClient.MergePullRequestAsync(pullRequestUrl, commit, mergeMethod, title, message);
