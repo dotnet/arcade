@@ -55,7 +55,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Log.LogMessage(
                             MessageImportance.Low,
                             $"Blob {blobPath} exists for {AccountName}: Status Code:{response.StatusCode} Status Desc: {await response.Content.ReadAsStringAsync()}");
-                    }
                     else
                     {
                         Log.LogMessage(
