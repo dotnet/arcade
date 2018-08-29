@@ -1,6 +1,6 @@
 # Microsoft.DotNet.Helix.Sdk
 
-This Package provides Helix Job sending functionality from a minimal MSBuild project file.
+This Package provides Helix Job sending functionality from an MSBuild project file.
 
 ## Examples
 Each of the following examples require dotnet-cli >= 2.1.300 and need the following files in a directory at or above the example project's directory.
