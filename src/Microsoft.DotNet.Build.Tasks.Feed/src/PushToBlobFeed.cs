@@ -118,7 +118,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         blobArtifacts = ConcatBlobArtifacts(blobArtifacts, symbolItems);
                     }
 
-                    CreateBuildManifest(AssetManifestPath, blobArtifacts, packageArtifacts);
+                    CreateBuildManifest(blobArtifacts, packageArtifacts);
                 }
             }
             catch (Exception e)
@@ -130,7 +130,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         private void CreateBuildManifest(
-            string manifestPath,
             IEnumerable<BlobArtifactModel> blobArtifacts,
             IEnumerable<PackageArtifactModel> packageArtifacts)
         {
