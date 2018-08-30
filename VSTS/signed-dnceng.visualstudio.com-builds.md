@@ -1,12 +1,12 @@
-# Signed dotnet.visualstudio.com builds
+# Signed dnceng.visualstudio.com builds
 
-Dotnet.visualstudio.com does not have support for signed builds.  
+Dnceng.visualstudio.com does not have support for signed builds.  
 
-Code should still be mirrored to dotnet.visualstudio.com/internal as outlined in the [VSTS Guidance](https://github.com/dotnet/arcade/blob/master/Documentation/VSTS/VSTSGuidance.md#projects).
+Code should still be mirrored to dnceng.visualstudio.com/internal as outlined in the [VSTS Guidance](https://github.com/dotnet/arcade/blob/master/Documentation/VSTS/VSTSGuidance.md#projects).
 
 ## Task based build definitions
 
-If your build definition is task based, then the build definition for signing should be created in devdiv.visualstudio.com with an "External Git" source which references the dotnet.visualstudio.com/internal git repository
+If your build definition is task based, then the build definition for signing should be created in devdiv.visualstudio.com with an "External Git" source which references the dnceng.visualstudio.com/internal git repository
 
 1. Select a source: External Git
 2. Change the Connection to "New Service Endpoint"

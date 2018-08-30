@@ -4,7 +4,7 @@
 
 ### Public VSTS service endpoint
 
-The VSTS service endpoint used for communication with GitHub (handles syncing source, setting up web hooks, etc...) is named `DotNet-Bot GitHub Connection`.  It should be available for GitHub connections in the [public project](https://dotnet.visualstudio.com/public).
+The VSTS service endpoint used for communication with GitHub (handles syncing source, setting up web hooks, etc...) is named `DotNet-Bot GitHub Connection`.  It should be available for GitHub connections in the [public project](https://dnceng.visualstudio.com/public).
 
 Service endpoint name: DotNet-Bot GitHub Connection
 
@@ -20,7 +20,7 @@ The service endpoint uses a PAT with **`repo:status`**, **`read:org`**, `user`, 
 
 ### Internal VSTS service endpoint
 
-The VSTS service endpoint used for communication with GitHub (handles syncing source, setting up web hooks, etc...) is named `DotNet-Bot GitHub Internal Connection`.  The PAT scopes used for the service endpoint are slightly different than what is used for the Public project.  It should be available for GitHub connections in the [internal project](https://dotnet.visualstudio.com/internal).
+The VSTS service endpoint used for communication with GitHub (handles syncing source, setting up web hooks, etc...) is named `DotNet-Bot GitHub Internal Connection`.  The PAT scopes used for the service endpoint are slightly different than what is used for the Public project.  It should be available for GitHub connections in the [internal project](https://dnceng.visualstudio.com/internal).
 
 Service endpoint name: DotNet-Bot GitHub Connection
 
