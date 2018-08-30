@@ -1,11 +1,14 @@
 <!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project DefaultTargets="Execute" TreatAsLocalProperty="RepoRoot">
   <!--
+  
   Required parameters:
     RepoRoot                        Repository root.
     Projects                        List of projects to build. Semicolon separated, may include globs.
+  
   Optional parameters:              
     Configuration                   Build configuration: "Debug", "Release", etc.
+  
     DotNetRestoreSourcePropsPath    Overrides of ResourceSources (list of NuGet feeds to download dependencies from)
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetBuildOffline              Building without access to NuGet servers.
@@ -16,6 +19,7 @@
     DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.
     DotNetSymbolExpirationInDays    Symbol expiration time in days (defaults to 10 years).
     DotNetSignType                  Specifies the signing type: 'real' (default), 'test'.
+  
     ContinuousIntegrationBuild      "true" when building on a CI server (PR build or official build)
     Restore                         "true" to restore toolset and solution
     QuietRestore                    "true" to suppress Restore output.
@@ -29,6 +33,7 @@
     Sign                            "true" to sign built binaries
     Publish                         "true" to publish artifacts (e.g. symbols)
     PushBuildAssets                 "true" to push build and asset information to the Build Asset Registry
+    
     SuppressPackageVersionRewrite   "true" to suppress rewrite of PackageVersions.props file. Temporary switch to allow repos to migrate to the official format of the version properties.
   -->
 
@@ -53,8 +58,8 @@
     <_PublishToBlobStorage>false</_PublishToBlobStorage>
     <_PublishToBlobStorage Condition="'$(DotNetPublishToBlobFeed)' == 'true'">true</_PublishToBlobStorage>
     
-    <_PushAssetsToBar>false</_PushAssetsToBar>
-    <_PushAssetsToBar Condition="'$(PushBuildAssets)' == 'true'">true</_PushAssetsToBar>
+    <_PushAssetsToRegistry>false</_PushAssetsToRegistry>
+    <_PushAssetsToRegistry Condition="'$(PushBuildAssets)' == 'true'">true</_PushAssetsToRegistry>
 
     <_DotNetOutputBlobFeedDir>$(DotNetOutputBlobFeedDir)</_DotNetOutputBlobFeedDir>
     <_DotNetOutputBlobFeedDir Condition="'$(_DotNetOutputBlobFeedDir)' != '' and !HasTrailingSlash('$(_DotNetOutputBlobFeedDir)')">$(_DotNetOutputBlobFeedDir)\</_DotNetOutputBlobFeedDir>
@@ -110,7 +115,7 @@
       <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
       <_RestoreToolsProps Include="PublishingToBlobStorage=$(_PublishToBlobStorage)"/>
-      <_RestoreToolsProps Include="PushAssetsToBar=$(_PushAssetsToBar)"/>
+      <_RestoreToolsProps Include="PushAssetsToRegistry=$(_PushAssetsToRegistry)"/>
     </ItemGroup>
 
     <ItemGroup>

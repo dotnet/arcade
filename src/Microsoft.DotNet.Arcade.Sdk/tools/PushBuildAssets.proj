@@ -5,8 +5,6 @@
       ManifestsPath                     Path to file containing manifest files.
       BuildAssetRegistryToken           Token required to insert metadata into BAR.
       MaestroApiEndpoint            	Maestro's endpoint.
-    Optional variables:                 
-      AssetLocationType                 Type of location where the assets are stored. Default is 'Blob'.
   -->
 
   <Import Project="BuildStep.props" />
@@ -23,13 +21,8 @@
     <Error Text="The BuildAssetRegistryToken property must be set on the command line." Condition="'$(BuildAssetRegistryToken)' == ''" />
     <Error Text="The MaestroApiEndpoint property must be set on the command line." Condition="'$(MaestroApiEndpoint)' == ''" />
     
-    <PropertyGroup>
-        <AssetLocationType Condition=" '$(AssetLocationType)'=='' ">NugetFeed</AssetLocationType>
-    </PropertyGroup>
-    
     <PushMetadataToBuildAssetRegistry ManifestsPath="$(ManifestsPath)"
                     BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
-                    MaestroApiEndpoint="$(MaestroApiEndpoint)" 
-                    AssetLocationType="$(AssetLocationType)"/>
+                    MaestroApiEndpoint="$(MaestroApiEndpoint)" />
   </Target>
 </Project>
