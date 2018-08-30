@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.DarcLib
 
         Task CreateBranchAsync(string repoUri, string newBranch, string baseBranch);
 
-        Task PushCommitsAsync(Dictionary<string, GitCommit> filesToCommit, string repoUri, string pullRequestBaseBranch);
+        Task PushCommitsAsync(List<GitFile> filesToCommit, string repoUri, string pullRequestBaseBranch, string commitMessage);
 
         Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null);
 
@@ -30,9 +30,9 @@ namespace Microsoft.DotNet.DarcLib
 
         Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message);
 
-        Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng/common/");
+        Task<List<GitFile>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng/common/");
 
-        Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, Dictionary<string, GitCommit> commits, string pullRequestBaseBranch, string path = "eng/common/");
+        Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, List<GitFile> files, string pullRequestBaseBranch, string path = "eng/common/");
 
         Task<string> GetFileContentAsync(string ownerAndRepo, string path);
 

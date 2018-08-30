@@ -2,12 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Newtonsoft.Json;
+using System.Collections.Generic;
+
 namespace Microsoft.DotNet.DarcLib
 {
-    public class DependencyFilePath
+    public class GitHubTree
     {
-        public const string VersionDetailsXml = "eng/Version.Details.xml";
-        public const string VersionProps = "eng/Versions.props";
-        public const string GlobalJson = "global.json";
+        [JsonProperty("base_tree")]
+        public string BaseTree { get; set; }
+
+        public List<GitHubTreeItem> Tree { get; set; }
     }
 }
