@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 using System;
+using System.ComponentModel.DataAnnotations;
 using JetBrains.Annotations;
 
 namespace Maestro.Web.Api.v2018_07_16.Models
@@ -23,8 +24,10 @@ namespace Maestro.Web.Api.v2018_07_16.Models
             MergePolicy = (MergePolicy) (int) other.MergePolicy;
         }
 
+        [Required]
         public UpdateFrequency UpdateFrequency { get; set; }
 
+        [Required]
         public MergePolicy MergePolicy { get; set; }
 
         public Data.Models.SubscriptionPolicy ToDb()

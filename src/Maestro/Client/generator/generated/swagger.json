@@ -788,7 +788,7 @@
         "tags": [
           "Subscriptions"
         ],
-        "operationId": "Subscriptions_Get",
+        "operationId": "Subscriptions_GetAllSubscriptions",
         "consumes": [],
         "produces": [
           "text/plain",
@@ -914,8 +914,8 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "integer",
-            "format": "int32"
+            "type": "string",
+            "format": "uuid"
           },
           {
             "name": "api-version",
@@ -933,6 +933,160 @@
             "description": "Success",
             "schema": {
               "$ref": "#/definitions/Subscription"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Subscriptions"
+        ],
+        "operationId": "Subscriptions_DeleteSubscription",
+        "consumes": [],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The api version",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "2018-07-16"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Subscription"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Subscriptions"
+        ],
+        "operationId": "Subscriptions_UpdateSubscription",
+        "consumes": [
+          "application/json-patch+json",
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "update",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/SubscriptionUpdate"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The api version",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "2018-07-16"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Subscription"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            }
+          }
+        }
+      }
+    },
+    "/api/subscriptions/{id}/history": {
+      "get": {
+        "tags": [
+          "Subscriptions"
+        ],
+        "operationId": "Subscriptions_GetSubscriptionHistory",
+        "consumes": [],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The api version",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "2018-07-16"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "uniqueItems": false,
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SubscriptionHistoryItem"
+              }
             }
           },
           "default": {
@@ -1214,8 +1368,8 @@
       "type": "object",
       "properties": {
         "id": {
-          "format": "int32",
-          "type": "integer",
+          "format": "uuid",
+          "type": "string",
           "readOnly": false
         },
         "channel": {
@@ -1241,6 +1395,10 @@
       }
     },
     "SubscriptionPolicy": {
+      "required": [
+        "updateFrequency",
+        "mergePolicy"
+      ],
       "type": "object",
       "properties": {
         "updateFrequency": {
@@ -1286,6 +1444,47 @@
         },
         "policy": {
           "$ref": "#/definitions/SubscriptionPolicy"
+        }
+      }
+    },
+    "SubscriptionUpdate": {
+      "type": "object",
+      "properties": {
+        "channelName": {
+          "type": "string"
+        },
+        "sourceRepository": {
+          "type": "string"
+        },
+        "policy": {
+          "$ref": "#/definitions/SubscriptionPolicy"
+        }
+      }
+    },
+    "SubscriptionHistoryItem": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "format": "date-time",
+          "type": "string",
+          "readOnly": false
+        },
+        "errorMessage": {
+          "type": "string",
+          "readOnly": false
+        },
+        "success": {
+          "type": "boolean",
+          "readOnly": false
+        },
+        "subscriptionId": {
+          "format": "uuid",
+          "type": "string",
+          "readOnly": false
+        },
+        "action": {
+          "type": "string",
+          "readOnly": false
         }
       }
     }

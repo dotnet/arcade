@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.DarcLib
         Task<string> UpdatePullRequestAsync(string pullRequestUrl, string assetsProducedInCommit, string branch, IEnumerable <AssetData> assetsToUpdate, string pullRequestTitle = null, string pullRequestDescription = null);
 
         Task MergePullRequestAsync(string pullRequestUrl, string commit, string mergeMethod, string title, string message);
+        Task CommentOnPullRequestAsync(string pullRequestUrl, string message);
 
         Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl);
 

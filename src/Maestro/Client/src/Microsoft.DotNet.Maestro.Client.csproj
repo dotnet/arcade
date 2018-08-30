@@ -4,6 +4,7 @@
     <TargetFrameworks>netstandard1.4;$(NetFxTfm)</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <Description>This package provides access to the Maestro Api</Description>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
