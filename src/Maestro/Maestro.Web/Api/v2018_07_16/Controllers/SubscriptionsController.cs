@@ -104,7 +104,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 {
                     return BadRequest(
                         new ApiError(
-                            "the request is invalid",
+                            "The request is invalid",
                             new[] {$"The channel '{update.ChannelName}' could not be found."}));
                 }
 
