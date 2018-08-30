@@ -27,7 +27,7 @@
     
     <PublishToSymbolServer>false</PublishToSymbolServer>
     <PublishToSymbolServer Condition="'$(UsingToolSymbolUploader)' == 'true' and '$(AzureFeedUrl)' == '' and '$(ContinuousIntegrationBuild)' == 'true'">true</PublishToSymbolServer>
-    <AssetManifestFilePath>$(ArtifactsAssetManifestDir)\$(OS)-$(PlatformName)-asset-manifest.xml</AssetManifestFilePath>
+    <AssetManifestFilePath>$(ArtifactsLogDir)AssetManifest\$(OS)-$(PlatformName)-asset-manifest.xml</AssetManifestFilePath>
   </PropertyGroup>
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets" Condition="$(PublishToAzure)"/>
