@@ -32,7 +32,7 @@ phases:
         git clone https://dotnet-maestro-bot:$(BotAccount-dotnet-maestro-bot-PAT)@github.com/$(GithubRepo) $(WorkingDirectoryName) -b $(BranchToMirror)
       displayName: Clone GitHub repo
     - script: |
-        git remote add vsts-mirror https://dn-bot:$(dn-bot-dotnet-build-rw-code-rw)@dotnet.visualstudio.com/internal/_git/$(VstsRepoName)
+        git remote add vsts-mirror https://dn-bot:$(dn-bot-dotnet-build-rw-code-rw)@dnceng.visualstudio.com/internal/_git/$(VstsRepoName)
       displayName: Add VSTS remote
       workingDirectory: $(WorkingDirectoryName)
     - script: |

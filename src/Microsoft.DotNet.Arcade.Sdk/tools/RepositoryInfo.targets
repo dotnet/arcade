@@ -19,7 +19,7 @@
 
     <!-- The convention for names of VSTS repositories mirrored from GitHub is "{GitHub org name}-{GitHub repository name}" -->
     <PropertyGroup>
-      <_Pattern>https://dotnet.visualstudio.com/internal/_git/([^/-]+)-(.+)</_Pattern>
+      <_Pattern>https://dnceng.visualstudio.com/internal/_git/([^/-]+)-(.+)</_Pattern>
       <_Replacement>https://github.com/$1/$2</_Replacement>
     </PropertyGroup>
 
