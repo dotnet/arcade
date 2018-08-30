@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.IO.Compression;
 using System.IO.Packaging;
 using System.Linq;
 using Microsoft.Build.Framework;
@@ -167,15 +168,16 @@ namespace Microsoft.DotNet.SignTool
         }
 
         /// <summary>
-        /// Repack the zip container with the signed parts.
+        /// Repack the zip container with the signed files.
         /// </summary>
         private void Repack(ZipData zipData)
         {
-            using (var package = Package.Open(zipData.FileSignInfo.FullPath, FileMode.Open, FileAccess.ReadWrite))
+            using (Stream zipStream = File.Open(zipData.FileSignInfo.FullPath, FileMode.Open))
+            using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Update, leaveOpen: true))
             {
-                foreach (var part in package.GetParts())
+                foreach (ZipArchiveEntry entry in archive.Entries)
                 {
-                    var relativeName = GetPartRelativeFileName(part);
+                    string relativeName = entry.FullName;
                     var signedPart = zipData.FindNestedPart(relativeName);
                     if (!signedPart.HasValue)
                     {
@@ -183,10 +185,10 @@ namespace Microsoft.DotNet.SignTool
                     }
 
                     using (var stream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath))
-                    using (var partStream = part.GetStream(FileMode.Open, FileAccess.ReadWrite))
+                    using (var entryStream = entry.Open())
                     {
-                        stream.CopyTo(partStream);
-                        partStream.SetLength(stream.Length);
+                        stream.CopyTo(entryStream);
+                        entryStream.SetLength(stream.Length);
                     }
                 }
             }
@@ -276,18 +278,20 @@ namespace Microsoft.DotNet.SignTool
                 else if (file.IsZipContainer())
                 {
                     var zipData = _batchData.ZipDataMap[file.ContentHash];
-                    using (var package = Package.Open(file.FullPath, FileMode.Open, FileAccess.Read))
+
+                    using (Stream zipStream = File.Open(file.FullPath, FileMode.Open))
+                    using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Update, leaveOpen: true))
                     {
-                        foreach (var part in package.GetParts())
+                        foreach (ZipArchiveEntry entry in archive.Entries)
                         {
-                            var relativeName = GetPartRelativeFileName(part);
+                            string relativeName = entry.FullName;
                             var zipPart = zipData.FindNestedPart(relativeName);
                             if (!zipPart.HasValue || !zipPart.Value.FileSignInfo.IsPEFile())
                             {
                                 continue;
                             }
 
-                            using (var stream = part.GetStream())
+                            using (Stream stream = entry.Open())
                             {
                                 if (!_signTool.VerifySignedAssembly(stream))
                                 {
