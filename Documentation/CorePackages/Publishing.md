@@ -12,6 +12,7 @@ The [PushToBlobFeed](../../src/Microsoft.DotNet.Build.Tasks.Feed/src/PushToBlobF
 
 | Parameter                     | Description                                                  |
 | ----------------------------- | ------------------------------------------------------------ |
+| DotNetPublishToBlobFeed       | Set to *true* if you want to publish to blob feed. Default is *false*. |
 | DotNetPublishBlobFeedUrl      | Target Azure feed URL.                                       |
 | DotNetPublishBlobFeedKey      | Azure account key.                                           |
 | DotNetOutputBlobFeedDir       | Source Build publishing directory. If empty no publishing will occur to Source build local directory. |
