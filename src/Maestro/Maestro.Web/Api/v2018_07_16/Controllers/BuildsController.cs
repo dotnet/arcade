@@ -157,7 +157,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         {
             Data.Models.Build buildModel = build.ToDb();
             buildModel.DateProduced = DateTimeOffset.UtcNow;
-            buildModel.Dependencies = await _context.Builds.Where(b => build.Dependencies.Contains(b.Id)).ToListAsync();
+            buildModel.Dependencies = build.Dependencies != null ? await _context.Builds.Where(b => build.Dependencies.Contains(b.Id)).ToListAsync() : null;
             await _context.Builds.AddAsync(buildModel);
             await _context.SaveChangesAsync();
             return CreatedAtRoute(new { action = "GetBuild", id = buildModel.Id }, new Build(buildModel));
