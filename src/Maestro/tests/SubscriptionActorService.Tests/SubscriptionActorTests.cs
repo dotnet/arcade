@@ -233,7 +233,7 @@ namespace SubscriptionActorService.Tests
 
                 if (existingPrHasChecks && existingPrPassedChecks)
                 {
-                    Darc.Setup(d => d.MergePullRequestAsync(existingPr, null, null, null, null))
+                    Darc.Setup(d => d.MergePullRequestAsync(existingPr, null))
                         .Returns(Task.CompletedTask);
                 }
             }
@@ -383,7 +383,7 @@ namespace SubscriptionActorService.Tests
 
                 if (shouldMergeExistingPr)
                 {
-                    Darc.Setup(r => r.MergePullRequestAsync(existingPr, null, null, null, null))
+                    Darc.Setup(r => r.MergePullRequestAsync(existingPr, null))
                         .Returns(Task.CompletedTask);
                 }
             }

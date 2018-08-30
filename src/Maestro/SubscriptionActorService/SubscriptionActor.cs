@@ -302,7 +302,7 @@ This pull request will no longer be tracked by maestro.");
                 case MergePolicy.UnitTestPassed: // for now both of these cases are the same
                     if (await ShouldMergePrAsync(darc, pr.Url, policy))
                     {
-                        await darc.MergePullRequestAsync(pr.Url, null, null, null, null);
+                        await darc.MergePullRequestAsync(pr.Url, null);
                         return Merged(policy, pr.Url);
                     }
 
