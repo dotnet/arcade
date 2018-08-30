@@ -88,7 +88,7 @@ if ($UseKeyVault) {
     try {
         Write-Output "Obtaining required secrets from keyvault"
         $GitHubPat = $(Get-AzureKeyVaultSecret -VaultName 'EngKeyVault' -Name 'dotnet-bot-user-repo-adminrepohook-pat' -ErrorAction Stop).SecretValueText
-        $VSTSPat = $(Get-AzureKeyVaultSecret -VaultName 'EngKeyVault' -Name 'dn-bot-dotnet-all-scopes' -ErrorAction Stop).SecretValueText
+        $VSTSPat = $(Get-AzureKeyVaultSecret -VaultName 'EngKeyVault' -Name 'dn-bot-dnceng-all-scopes' -ErrorAction Stop).SecretValueText
         $MaestroSecret = $(Get-AzureKeyVaultSecret -VaultName 'EngKeyVault' -Name 'Maestro-WebhookSecretToken' -ErrorAction Stop).SecretValueText
     }
     catch {
