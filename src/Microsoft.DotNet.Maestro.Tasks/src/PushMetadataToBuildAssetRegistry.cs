@@ -8,11 +8,10 @@ using Microsoft.DotNet.Maestro.Client.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
 using System.Xml.Serialization;
 using MSBuild = Microsoft.Build.Utilities;
 
@@ -21,7 +20,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
     public class PushMetadataToBuildAssetRegistry : MSBuild.Task
     {
         [Required]
-        public string ManifestZipFilePath { get; set; }
+        public string ManifestsPath { get; set; }
 
         [Required]
         public string BuildAssetRegistryToken { get; set; }
@@ -29,7 +28,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
         [Required]
         public string MaestroApiEndpoint { get; set; }
 
-        public string AssetLocationType { get; set; } = "Blob";
+        public string AssetLocationType { get; set; } = "NugetFeed";
 
         private static readonly CancellationTokenSource s_tokenSource = new CancellationTokenSource();
         private static readonly CancellationToken s_cancellationToken = s_tokenSource.Token;
@@ -55,48 +54,24 @@ namespace Microsoft.DotNet.Maestro.Tasks
         {
             try
             {
-                Log.LogMessage("Starting build metadata push to the Build Asset Registry...");
+                Log.LogMessage(MessageImportance.High, "Starting build metadata push to the Build Asset Registry...");
 
-                if (!File.Exists(ManifestZipFilePath))
+                if (!Directory.Exists(ManifestsPath))
                 {
-                    Log.LogError($"Required file '{ManifestZipFilePath}' does not exist.");
+                    Log.LogError($"Required folder '{ManifestsPath}' does not exist.");
                 }
                 else
                 {
-                    string tmpManifestsPath = null;
+                    List<BuildData> buildsManifestMetadata = GetBuildManifestsMetadata(ManifestsPath);
 
-                    try
-                    {
-                        tmpManifestsPath = $"{Path.GetTempPath()}\asset-manifests";
+                    BuildData finalBuild = MergeBuildManifests(buildsManifestMetadata);
 
-                        if (!Directory.Exists(tmpManifestsPath))
-                        {
-                            Directory.Delete(tmpManifestsPath, true);
-                        }
+                    MaestroApi client = (MaestroApi)ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
+                    Builds buildAssetRegistryBuilds = new Builds(client);
 
-                        Directory.CreateDirectory(tmpManifestsPath);
+                    Client.Models.Build recordedBuild = await buildAssetRegistryBuilds.CreateAsync(finalBuild, s_cancellationToken);
 
-                        ZipFile.ExtractToDirectory(ManifestZipFilePath, tmpManifestsPath);
-
-                        List<BuildData> buildsManifestMetadata = GetBuildManifestsMetadata(tmpManifestsPath);
-
-                        BuildData finalBuild = MergeBuildManifests(buildsManifestMetadata);
-
-                        MaestroApi client = (MaestroApi)ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
-
-                        Builds buildAssetRegistryBuilds = new Builds(client);
-
-                        Client.Models.Build recordedBuild = await buildAssetRegistryBuilds.CreateAsync(finalBuild, s_cancellationToken);
-
-                        Log.LogMessage($"Metadata has been pushed. Build id in the Build Asset Registry is '{recordedBuild.Id}'");
-                    }
-                    finally
-                    {
-                        if (tmpManifestsPath != null)
-                        {
-                            Directory.Delete(tmpManifestsPath, true);
-                        }
-                    }
+                    Log.LogMessage(MessageImportance.High, $"Metadata has been pushed. Build id in the Build Asset Registry is '{recordedBuild.Id}'");
                 }
             }
             catch (Exception exc)
@@ -128,7 +103,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
             foreach (string manifestPath in Directory.GetFiles(manifestsFolderPath))
             {
                 XmlSerializer xmlSerializer = new XmlSerializer(typeof(Manifest));
-                
+
                 using (FileStream stream = new FileStream(manifestPath, FileMode.Open))
                 {
                     Manifest manifest = (Manifest)xmlSerializer.Deserialize(stream);
@@ -140,21 +115,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
                         AddAsset(assets, package.Id, package.Version, manifest.Location);
                     }
 
-                    foreach (Blob blob in manifest.Blobs)
-                    {
-                        string version = GetVersion(blob.Id);
-
-                        if (string.IsNullOrEmpty(version))
-                        {
-                            Log.LogError($"Version could not be extracted from '{blob.Id}'");
-                        }
-                        else
-                        {
-                            AddAsset(assets, blob.Id, version, manifest.Location);
-                        }
-                    }
-
-                    buildsManifestMetadata.Add(new BuildData(manifest.Name, manifest.Commit, manifest.BuildId, manifest.Branch, assets));
+                    buildsManifestMetadata.Add(new BuildData(manifest.Name, manifest.Commit, manifest.BuildId, manifest.Branch, assets, new List<int?>()));
                 }
             }
 
@@ -193,7 +154,37 @@ namespace Microsoft.DotNet.Maestro.Tasks
                 ((List<AssetData>)mergedBuild.Assets).AddRange(build.Assets);
             }
 
+            mergedBuild.Repository = GetRepoUrl(mergedBuild.Repository, mergedBuild.Commit);
+
             return mergedBuild;
+        }
+
+        private string GetRepoUrl(string repoUrl, string lastCommitHash)
+        {
+            Uri uri = new Uri(repoUrl);
+
+            if (uri.Host == "github.com")
+            {
+                return repoUrl;
+            }
+
+            using (HttpClient client = new HttpClient())
+            {
+                string[] segments = repoUrl.Split('/');
+                string repoName = segments[segments.Length - 1].Replace("-", "/");
+
+                client.BaseAddress = new Uri("https://api.github.com");
+                client.DefaultRequestHeaders.Add("User-Agent", "PushToBarTask");
+
+                HttpResponseMessage response = client.GetAsync($"/repos/{repoName}/commits/{lastCommitHash}").Result;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return $"https://github.com/{repoName}";
+                }
+
+                return repoUrl;
+            }
         }
     }
 }

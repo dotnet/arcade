@@ -2,26 +2,32 @@
 <Project DefaultTargets="PushBuildAssets">
   <!--
     Required variables:
-      ManifestZipFilePath               Path to file containing manifest files.
+      ManifestsPath                     Path to file containing manifest files.
       BuildAssetRegistryToken           Token required to insert metadata into BAR.
       MaestroApiEndpoint            	Maestro's endpoint.
-
     Optional variables:                 
       AssetLocationType                 Type of location where the assets are stored. Default is 'Blob'.
   -->
 
   <Import Project="BuildStep.props" />
-
+  
+  <PropertyGroup>
+    <_MicrosoftDotNetMaestroTasksDir>$(MSBuildThisFileDirectory)../tools/net461/</_MicrosoftDotNetMaestroTasksDir>
+    <_MicrosoftDotNetMaestroTasksDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../tools/netcoreapp2.0/</_MicrosoftDotNetMaestroTasksDir>
+  </PropertyGroup>
+  
+  <UsingTask TaskName="PushMetadataToBuildAssetRegistry" AssemblyFile="$(_MicrosoftDotNetMaestroTasksDir)Microsoft.DotNet.Maestro.Tasks.dll"/>
+  
   <Target Name="PushBuildAssets">
-    <Error Text="The ManifestZipFilePath  property must be set on the command line." Condition="'$(ManifestZipFilePath)' == ''" />
+    <Error Text="The ManifestsPath  property must be set on the command line." Condition="'$(ManifestsPath)' == ''" />
     <Error Text="The BuildAssetRegistryToken property must be set on the command line." Condition="'$(BuildAssetRegistryToken)' == ''" />
     <Error Text="The MaestroApiEndpoint property must be set on the command line." Condition="'$(MaestroApiEndpoint)' == ''" />
     
     <PropertyGroup>
-        <AssetLocationType Condition=" '$(AssetLocationType)'=='' ">Blob</AssetLocationType>
+        <AssetLocationType Condition=" '$(AssetLocationType)'=='' ">NugetFeed</AssetLocationType>
     </PropertyGroup>
     
-    <PushMetadataToBuildAssetRegistry ManifestZipFilePath="$(ManifestZipFilePath)"
+    <PushMetadataToBuildAssetRegistry ManifestsPath="$(ManifestsPath)"
                     BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
                     MaestroApiEndpoint="$(MaestroApiEndpoint)" 
                     AssetLocationType="$(AssetLocationType)"/>
