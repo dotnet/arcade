@@ -42,6 +42,16 @@
       <StrongNameSignInfo Include="MsSharedLib72" PublicKeyToken="31bf3856ad364e35" CertificateName="MicrosoftSHA2" />
     </ItemGroup>
 
+    <ItemGroup>
+      <!-- 
+        Default map of "pass thru" extensions to certificate. Files with these extensions are
+        signed with the specified certificate and no further processing is made on the file.
+      -->
+      <PassThruExtensions Include=".jar" Certificate="MicrosoftJAR" />
+      <PassThruExtensions Include=".dylib" Certificate="Apple" />
+      <PassThruExtensions Include=".js;.ps1;.psd1;.psm1;.psc1" Certificate="Microsoft" />
+    </ItemGroup>
+    
     <Microsoft.DotNet.SignTool.SignToolTask
         DryRun="$(DryRun)"
         TestSign="$(TestSign)"

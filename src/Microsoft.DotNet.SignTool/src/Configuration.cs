@@ -48,9 +48,16 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         private readonly List<FileSignInfo> _filesToSign;
 
+        /// <summary>
+        /// Mapping of ".ext" to certificate. Files that have an extension on this map
+        /// will be signed using the specified certificate.
+        /// </summary>
+        private readonly Dictionary<string, SignInfo> _passThruExtensions;
+
         private readonly Dictionary<ImmutableArray<byte>, FileSignInfo> _filesByContentHash;
 
-        public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, Dictionary<ExplicitCertificateKey, string> explicitCertificates, TaskLoggingHelper log)
+        public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, 
+            Dictionary<ExplicitCertificateKey, string> explicitCertificates, Dictionary<string, SignInfo> passThruExtensions, TaskLoggingHelper log)
         {
             Debug.Assert(tempDir != null);
             Debug.Assert(explicitSignList != null && !explicitSignList.Any(i => i == null));
@@ -61,6 +68,7 @@ namespace Microsoft.DotNet.SignTool
             _log = log;
             _defaultSignInfoForPublicKeyToken = defaultSignInfoForPublicKeyToken;
             _explicitCertificates = explicitCertificates;
+            _passThruExtensions = passThruExtensions;
             _filesToSign = new List<FileSignInfo>();
             _zipDataMap = new Dictionary<ImmutableArray<byte>, ZipData>(ByteSequenceComparer.Instance);
             _filesByContentHash = new Dictionary<ImmutableArray<byte>, FileSignInfo>(ByteSequenceComparer.Instance);
@@ -103,6 +111,11 @@ namespace Microsoft.DotNet.SignTool
 
         private FileSignInfo ExtractSignInfo(string fullPath, ImmutableArray<byte> hash)
         {
+            if (_passThruExtensions.TryGetValue(Path.GetExtension(fullPath), out var passThruSignInfo))
+            {
+                return new FileSignInfo(fullPath, hash, passThruSignInfo);
+            }
+
             if (FileSignInfo.IsPEFile(fullPath))
             {
                 using (var stream = File.OpenRead(fullPath))

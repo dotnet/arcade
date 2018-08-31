@@ -61,6 +61,15 @@ namespace Microsoft.DotNet.SignTool
         public ITaskItem[] FileSignInfo { get; set; }
 
         /// <summary>
+        /// This is a mapping between extension (in the format ".ext") to certificate names.
+        /// Any file that have its extension listed on this map will be signed with the
+        /// specified certificate and no further processing will be made on it. That means, that
+        /// if the file is a container it won't be opened to have its content signed.
+        /// Metadata required: Certificate and Include which is a semicolon separated list of extensions.
+        /// </summary>
+        public ITaskItem[] PassThruExtensions { get; set; }
+
+        /// <summary>
         /// Path to msbuild.exe. Required if <see cref="DryRun"/> is <c>false</c>.
         /// </summary>
         public string MSBuildPath { get; set; }
@@ -95,12 +104,13 @@ namespace Microsoft.DotNet.SignTool
 
             var defaultSignInfoForPublicKeyToken = ParseStrongNameSignInfo();
             var explicitCertificates = ParseFileSignInfo();
+            var passThruExtensions = ParsePassThruExtensions();
 
             if (Log.HasLoggedErrors) return;
 
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
-            var signingInput = new Configuration(TempDir, ItemsToSign, defaultSignInfoForPublicKeyToken, explicitCertificates, Log).GenerateListOfFiles();
+            var signingInput = new Configuration(TempDir, ItemsToSign, defaultSignInfoForPublicKeyToken, explicitCertificates, passThruExtensions, Log).GenerateListOfFiles();
 
             if (Log.HasLoggedErrors) return;
 
@@ -109,6 +119,32 @@ namespace Microsoft.DotNet.SignTool
             if (Log.HasLoggedErrors) return;
 
             util.Go();
+        }
+
+        private Dictionary<string, SignInfo> ParsePassThruExtensions()
+        {
+            var map = new Dictionary<string, SignInfo>(StringComparer.OrdinalIgnoreCase);
+
+            if (PassThruExtensions != null)
+            {
+                foreach (var item in PassThruExtensions)
+                {
+                    var extension = item.ItemSpec;
+                    var certificate = item.GetMetadata("Certificate");
+
+                    if (map.ContainsKey(extension))
+                    {
+                        Log.LogWarning($"Duplicated pass thru signing information for extension: {extension}. " +
+                            $"Attempted to add certificate {certificate}, existing value is {map[extension]}.");
+                    }
+                    else
+                    {
+                        map.Add(extension, new SignInfo(certificate, null));
+                    }
+                }
+            }
+
+            return map;
         }
 
         private Dictionary<string, SignInfo> ParseStrongNameSignInfo()
