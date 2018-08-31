@@ -21,13 +21,26 @@ namespace Microsoft.DotNet.Arcade.Sdk
         {
             var name = new AssemblyName(args.Name);
 
-            if (name.Name.Equals("System.Collections.Immutable", StringComparison.OrdinalIgnoreCase))
+            if (!name.Name.Equals("System.Collections.Immutable", StringComparison.OrdinalIgnoreCase))
             {
-                var sci = Assembly.LoadFile(Path.Combine(Path.GetDirectoryName(typeof(AssemblyResolution).Assembly.Location), "System.Collections.Immutable.dll"));
-                if (name.Version <= sci.GetName().Version)
-                {
-                    return sci;
-                }
+                return null;
+            }
+
+            var fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "System.Collections.Immutable.dll");
+
+            Assembly sci;
+            try
+            {
+                sci = Assembly.LoadFile(fullPath);
+            }
+            catch
+            {
+                return null;
+            }
+
+            if (name.Version <= sci.GetName().Version)
+            {
+                return sci;
             }
 
             return null;

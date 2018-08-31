@@ -7,11 +7,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.IO.Compression;
-using System.IO.Packaging;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -248,17 +246,6 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
             }
-        }
-
-        private static string GetPartRelativeFileName(PackagePart part)
-        {
-            var path = part.Uri.OriginalString;
-            if (!string.IsNullOrEmpty(path) && path[0] == '/')
-            {
-                path = path.Substring(1);
-            }
-
-            return path;
         }
 
         private void VerifyAfterSign(TaskLoggingHelper log)
