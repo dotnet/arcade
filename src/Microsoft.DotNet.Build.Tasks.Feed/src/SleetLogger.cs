@@ -12,14 +12,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     {
         private MSBuild.TaskLoggingHelper _log;
 
-        private LogLevel? _logLevel = null;
+        private readonly LogLevel? _logLevel = null;
 
-        public SleetLogger(MSBuild.TaskLoggingHelper log)
-        {
-            _log = log;
-        }
-
-        public SleetLogger(MSBuild.TaskLoggingHelper log, LogLevel logLevel)
+        public SleetLogger(MSBuild.TaskLoggingHelper log, LogLevel? logLevel = null)
         {
             _log = log;
             _logLevel = logLevel;
@@ -27,25 +22,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public void Log(LogLevel level, string data)
         {
-            level = _logLevel != null ? _logLevel.Value : level;
+            level = level = _logLevel ?? level;
             _log.LogMessage(data, level);
         }
 
         public void Log(ILogMessage message)
         {
-            LogLevel level = _logLevel != null ? _logLevel.Value : message.Level;
+            LogLevel level = level = _logLevel ?? message.Level;
             _log.LogMessage(message.Message, level);
         }
 
         public Task LogAsync(LogLevel level, string data)
         {
-            level = _logLevel != null ? _logLevel.Value : level;
+            level = _logLevel ?? level;
             return Task.Run(() => _log.LogMessage(data, level));
         }
 
         public Task LogAsync(ILogMessage message)
         {
-            LogLevel level = _logLevel != null ? _logLevel.Value : message.Level;
+            LogLevel level = _logLevel ?? message.Level;
             return Task.Run(() => _log.LogMessage(message.Message, level));
         }
 
@@ -88,7 +83,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private void LogByLevel(string data, LogLevel level)
         {
-             level = _logLevel != null ? _logLevel.Value : level;
+             level = _logLevel ?? level;
             _log.LogMessage(data, level);
         }
     }
