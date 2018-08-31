@@ -2,9 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 using System;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Microsoft.AspNetCore.ApiVersioning
 {
+    [AttributeUsage(AttributeTargets.Method)]
     public class ApiRemovedAttribute : Attribute
     {
     }
