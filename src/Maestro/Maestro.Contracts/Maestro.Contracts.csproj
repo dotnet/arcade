@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net461;netcoreapp2.1</TargetFrameworks>
     <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

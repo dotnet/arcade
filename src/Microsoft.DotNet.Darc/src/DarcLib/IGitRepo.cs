@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.DarcLib
 
         Task MergePullRequestAsync(string pullRequestUrl, string commit, string mergeMethod, string title, string message);
 
-        Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message);
+        Task CommentOnPullRequestAsync(string pullRequestUrl, string message);
 
         Task<List<GitFile>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng/common/");
 

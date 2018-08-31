@@ -30,6 +30,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.ServiceFabric.Actors;
 using Newtonsoft.Json;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
@@ -46,6 +47,18 @@ namespace Maestro.Web
                 var queue = context.GetService<BackgroundQueue>();
                 var dependencyUpdater = context.GetService<IDependencyUpdater>();
                 queue.Post(() => dependencyUpdater.StartUpdateDependenciesAsync(entity.BuildId, entity.ChannelId));
+            };
+
+            Triggers<Subscription>.Deleted += entry =>
+            {
+                var entity = entry.Entity;
+                var context = entry.Context;
+                var queue = context.GetService<BackgroundQueue>();
+                var httpContext = context.GetService<IHttpContextAccessor>().HttpContext;
+                var subscriptionActorFactory = context.GetService<Func<ActorId, ISubscriptionActor>>();
+                var subscriptionActor = subscriptionActorFactory(new ActorId(entity.Id));
+                var user = httpContext.User.Identity.Name;
+                queue.Post(() => subscriptionActor.SubscriptionDeletedAsync(httpContext.User.Identity.Name));
             };
         }
 
@@ -128,6 +141,7 @@ namespace Maestro.Web
 
         public void ConfigureContainer(ContainerBuilder builder)
         {
+            builder.AddServiceFabricActor<ISubscriptionActor>();
         }
 
         private void ConfigureApiExceptions(IApplicationBuilder app)

@@ -10,26 +10,23 @@ namespace Microsoft.DotNet.Maestro.Client.Models
     using Newtonsoft.Json;
     using System.Linq;
 
-    public partial class Subscription
+    public partial class SubscriptionUpdate
     {
         /// <summary>
-        /// Initializes a new instance of the Subscription class.
+        /// Initializes a new instance of the SubscriptionUpdate class.
         /// </summary>
-        public Subscription()
+        public SubscriptionUpdate()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the Subscription class.
+        /// Initializes a new instance of the SubscriptionUpdate class.
         /// </summary>
-        public Subscription(System.Guid? id = default(System.Guid?), Channel channel = default(Channel), string sourceRepository = default(string), string targetRepository = default(string), string targetBranch = default(string), SubscriptionPolicy policy = default(SubscriptionPolicy))
+        public SubscriptionUpdate(string channelName = default(string), string sourceRepository = default(string), SubscriptionPolicy policy = default(SubscriptionPolicy))
         {
-            Id = id;
-            Channel = channel;
+            ChannelName = channelName;
             SourceRepository = sourceRepository;
-            TargetRepository = targetRepository;
-            TargetBranch = targetBranch;
             Policy = policy;
             CustomInit();
         }
@@ -41,28 +38,13 @@ namespace Microsoft.DotNet.Maestro.Client.Models
 
         /// <summary>
         /// </summary>
-        [JsonProperty(PropertyName = "id")]
-        public System.Guid? Id { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "channel")]
-        public Channel Channel { get; set; }
+        [JsonProperty(PropertyName = "channelName")]
+        public string ChannelName { get; set; }
 
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "sourceRepository")]
         public string SourceRepository { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "targetRepository")]
-        public string TargetRepository { get; set; }
-
-        /// <summary>
-        /// </summary>
-        [JsonProperty(PropertyName = "targetBranch")]
-        public string TargetBranch { get; set; }
 
         /// <summary>
         /// </summary>

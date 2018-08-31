@@ -5,6 +5,7 @@
     <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
     <SignAssembly>false</SignAssembly>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

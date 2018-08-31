@@ -238,9 +238,9 @@ namespace Microsoft.DotNet.DarcLib
             await this.ExecuteGitCommand(new HttpMethod("PATCH"), uri, _logger, body);
         }
 
-        public async Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message)
+        public async Task CommentOnPullRequestAsync(string pullRequestUrl, string message)
         {
-            string repoName = SetApiUriAndGetRepoName(repoUri);
+            SetApiUriAndGetRepoName(pullRequestUrl);
             List<VstsCommentBody> comments = new List<VstsCommentBody>
             {
                 new VstsCommentBody(message)
@@ -250,7 +250,7 @@ namespace Microsoft.DotNet.DarcLib
 
             string body = JsonConvert.SerializeObject(comment, _serializerSettings);
 
-            await this.ExecuteGitCommand(HttpMethod.Post, $"repositories/{repoName}/pullrequests/{pullRequestId}/threads", _logger, body);
+            await this.ExecuteGitCommand(HttpMethod.Post, $"{pullRequestUrl}/threads", _logger, body);
         }
 
         public async Task<List<GitFile>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng/common/")
