@@ -214,9 +214,7 @@ namespace Microsoft.DotNet.DarcLib
         private async Task CommitFilesForPullRequest(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<DependencyDetail> itemsToUpdate, string pullRequestBaseBranch = null)
         {
             GitFileContentContainer fileContainer = await _fileManager.UpdateDependencyFiles(itemsToUpdate, repoUri, branch);
-            List<GitFile> dependencyFiles= fileContainer.GetFilesToCommitMap(pullRequestBaseBranch);
-
-            await _gitClient.PushCommitsAsync(dependencyFiles, repoUri, pullRequestBaseBranch, "Updating version files");
+            List<GitFile> arcadeFiles= fileContainer.GetFilesToCommitMap(pullRequestBaseBranch);
 
             // If there is an arcade asset that we need to update we try to update the script files as well
             DependencyDetail arcadeItem = itemsToUpdate.Where(i => i.Name.ToLower().Contains("arcade")).FirstOrDefault();
@@ -224,8 +222,10 @@ namespace Microsoft.DotNet.DarcLib
             if (arcadeItem != null)
             {
                 List<GitFile> engCommonsFiles = await GetScriptCommitsAsync(repoUri, branch, assetsProducedInCommit, pullRequestBaseBranch);
-                await _gitClient.PushCommitsAsync(engCommonsFiles, repoUri, pullRequestBaseBranch, "Updating 'eng/common' files");
+                arcadeFiles.AddRange(engCommonsFiles);
             }
+
+            await _gitClient.PushCommitsAsync(arcadeFiles, repoUri, pullRequestBaseBranch, "Updating version files");
         }
     }
 }

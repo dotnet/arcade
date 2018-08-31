@@ -173,13 +173,9 @@ namespace Microsoft.DotNet.DarcLib
 
         private void UpdateVersionFiles(XmlDocument versionProps, JToken token, DependencyDetail itemToUpdate)
         {
-            string namespaceName = "ns";
-            XmlNamespaceManager namespaceManager = new XmlNamespaceManager(versionProps.NameTable);
-            namespaceManager.AddNamespace(namespaceName, versionProps.DocumentElement.Attributes["xmlns"].Value);
-
             string versionedName = itemToUpdate.Name.Replace(".", string.Empty);
 
-            XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"//{namespaceName}:{versionedName}Version", namespaceManager);
+            XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"//{versionedName}Version");
 
             if (versionNode != null)
             {

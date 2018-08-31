@@ -109,9 +109,12 @@ namespace Microsoft.DotNet.DarcLib
             string commitSha = await PushCommitAsync(ownerAndRepo, commitMessage, treeSha, baseTreeSha);
             string gitRef = $"refs/heads/{pullRequestBaseBranch}";
 
-            GitHubRef githubRef = new GitHubRef(gitRef, commitSha);
+            GitHubRef githubRef = new GitHubRef(gitRef, commitSha)
+            {
+                Force = true
+            };
 
-            string body = JsonConvert.SerializeObject(gitRef, _serializerSettings);
+            string body = JsonConvert.SerializeObject(githubRef, _serializerSettings);
             await this.ExecuteGitCommand(new HttpMethod("PATCH"), $"repos/{ownerAndRepo}git/{gitRef}", _logger, body);
 
             _logger.LogInformation($"Pushing commits to '{pullRequestBaseBranch}' succeeded!");
@@ -272,14 +275,15 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task<string> GetFileContentAsync(string ownerAndRepo, string path)
         {
-            string encodedContent;
-
             HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}contents/{path}", _logger);
 
             JObject file = JObject.Parse(await response.Content.ReadAsStringAsync());
-            encodedContent = file["content"].ToString();
+            string encodedContent = file["content"].ToString();
 
-            return encodedContent;
+            byte[] data = Convert.FromBase64String(encodedContent);
+            string content = Encoding.UTF8.GetString(data);
+
+            return content;
         }
 
         public HttpClient CreateHttpClient(string versionOverride = null)
@@ -464,7 +468,7 @@ namespace Microsoft.DotNet.DarcLib
             };
 
             string body = JsonConvert.SerializeObject(gitHubTree, _serializerSettings);
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{ownerAndRepo}git/tree", _logger, body);
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{ownerAndRepo}git/trees", _logger, body);
             JToken parsedResponse = JToken.Parse(response.Content.ReadAsStringAsync().Result);
             return parsedResponse["sha"].ToString();
         }
