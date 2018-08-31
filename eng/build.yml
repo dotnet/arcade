@@ -87,7 +87,7 @@ phases:
           SourceFolder: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
           TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
         continueOnError: true
-        condition: succeededOrFailed()
+        condition: always()
       - task: PublishBuildArtifacts@1
         displayName: Publish Logs to VSTS
         inputs:
@@ -95,4 +95,4 @@ phases:
           PublishLocation: Container
           ArtifactName: $(Agent.Os)_$(Agent.JobName)
         continueOnError: true
-        condition: succeededOrFailed()
+        condition: always()
