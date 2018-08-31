@@ -152,11 +152,11 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPr;
         }
 
-        public async Task MergePullRequestAsync(string pullRequestUrl, string commit, string mergeMethod, string title, string message)
+        public async Task MergePullRequestAsync(string pullRequestUrl, MergePullRequestParameters parameters)
         {
             _logger.LogInformation($"Merging pull request '{pullRequestUrl}'...");
 
-            await _gitClient.MergePullRequestAsync(pullRequestUrl, commit, mergeMethod, title, message);
+            await _gitClient.MergePullRequestAsync(pullRequestUrl, parameters ?? new MergePullRequestParameters());
 
             _logger.LogInformation($"Merging pull request '{pullRequestUrl}' succeeded!");
         }

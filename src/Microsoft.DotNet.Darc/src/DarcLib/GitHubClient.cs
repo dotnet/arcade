@@ -11,9 +11,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Octokit;
 
 namespace Microsoft.DotNet.DarcLib
 {
@@ -21,10 +23,22 @@ namespace Microsoft.DotNet.DarcLib
     {
         private const string GitHubApiUri = "https://api.github.com";
         private const string DarcLibVersion = "1.0.0";
+        private static ProductHeaderValue _product;
         private readonly string _userAgent = $"DarcLib-{DarcLibVersion}";
         private readonly string _personalAccessToken;
         private readonly ILogger _logger;
         private readonly JsonSerializerSettings _serializerSettings;
+        private readonly Lazy<Octokit.GitHubClient> _lazyClient;
+
+        public Octokit.GitHubClient Client => _lazyClient.Value;
+
+        static GitHubClient()
+        {
+            var version = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                .InformationalVersion;
+            _product = new ProductHeaderValue("DarcLib", version);
+        }
 
         public GitHubClient(string accessToken, ILogger logger)
         {
@@ -34,6 +48,15 @@ namespace Microsoft.DotNet.DarcLib
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
                 NullValueHandling = NullValueHandling.Ignore
+            };
+            _lazyClient = new Lazy<Octokit.GitHubClient>(CreateGitHubClientClient);
+        }
+
+        private Octokit.GitHubClient CreateGitHubClientClient()
+        {
+            return new Octokit.GitHubClient(_product)
+            {
+                Credentials = new Credentials(_personalAccessToken)
             };
         }
 
@@ -206,21 +229,23 @@ namespace Microsoft.DotNet.DarcLib
             return linkToPullRquest;
         }
 
-        public async Task MergePullRequestAsync(string pullRequestUrl, string commit, string mergeMethod, string title, string message)
+        public async Task MergePullRequestAsync(string pullRequestUrl, MergePullRequestParameters parameters)
         {
-            if (mergeMethod == null)
+            var (owner, repo, id) = ParsePullRequestUri(pullRequestUrl);
+
+            var mergePullRequest = new MergePullRequest
             {
-                mergeMethod = GitHubMergeMethod.Squash;
+                Sha = parameters.CommitToMerge,
+                MergeMethod = parameters.SquashMerge ? PullRequestMergeMethod.Squash : PullRequestMergeMethod.Merge,
+            };
+
+            var pr = await Client.PullRequest.Get(owner, repo, id);
+            await Client.PullRequest.Merge(owner, repo, id, mergePullRequest);
+
+            if (parameters.DeleteSourceBranch)
+            {
+                await Client.Git.Reference.Delete(owner, repo, $"heads/{pr.Head.Ref}");
             }
-
-            GitHubPullRequestMerge pullRequestMerge = new GitHubPullRequestMerge(title, message, commit, mergeMethod);
-
-            string body = JsonConvert.SerializeObject(pullRequestMerge, _serializerSettings);
-
-            var mergeUriBuilder = new UriBuilder(pullRequestUrl);
-            mergeUriBuilder.Path += "/merge";
-            var mergeUri = mergeUriBuilder.Uri;
-            await this.ExecuteGitCommand(HttpMethod.Put, mergeUri.PathAndQuery, _logger, body);
         }
 
         public async Task CommentOnPullRequestAsync(string pullRequestUrl, string message)

@@ -58,8 +58,10 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [ValidateModelState]
         public async Task<IActionResult> GetSubscription(Guid id)
         {
-            Data.Models.Subscription subscription = await _context.Subscriptions.Where(sub => sub.Id == id)
-                .FirstOrDefaultAsync();
+            Data.Models.Subscription subscription = await _context.Subscriptions
+                .Include(sub => sub.LastAppliedBuild)
+                .Include(sub => sub.Channel)
+                .FirstOrDefaultAsync(sub => sub.Id == id);
 
             if (subscription == null)
             {

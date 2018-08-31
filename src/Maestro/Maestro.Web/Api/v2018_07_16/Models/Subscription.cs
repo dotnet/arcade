@@ -17,6 +17,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
 
             Id = other.Id;
             Channel = other.Channel == null ? null : new Channel(other.Channel);
+            LastAppliedBuild = other.LastAppliedBuild == null ? null : new Build(other.LastAppliedBuild);
             SourceRepository = other.SourceRepository;
             TargetRepository = other.TargetRepository;
             TargetBranch = other.TargetBranch;
@@ -34,5 +35,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         public string TargetBranch { get; }
 
         public SubscriptionPolicy Policy { get; }
+
+        public Build LastAppliedBuild { get; }
     }
 }

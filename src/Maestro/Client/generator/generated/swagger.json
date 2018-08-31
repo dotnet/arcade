@@ -1391,6 +1391,10 @@
         "policy": {
           "$ref": "#/definitions/SubscriptionPolicy",
           "readOnly": false
+        },
+        "lastAppliedBuild": {
+          "$ref": "#/definitions/Build",
+          "readOnly": false
         }
       }
     },
