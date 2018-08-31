@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -12,33 +12,46 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     {
         private MSBuild.TaskLoggingHelper _log;
 
+        private LogLevel? _logLevel = null;
+
         public SleetLogger(MSBuild.TaskLoggingHelper log)
         {
             _log = log;
         }
+
+        public SleetLogger(MSBuild.TaskLoggingHelper log, LogLevel logLevel)
+        {
+            _log = log;
+            _logLevel = logLevel;
+        }
+
         public void Log(LogLevel level, string data)
         {
+            level = _logLevel != null ? _logLevel.Value : level;
             _log.LogMessage(data, level);
         }
 
         public void Log(ILogMessage message)
         {
-            _log.LogMessage(message.Message, message.Level);
+            LogLevel level = _logLevel != null ? _logLevel.Value : message.Level;
+            _log.LogMessage(message.Message, level);
         }
 
         public Task LogAsync(LogLevel level, string data)
         {
+            level = _logLevel != null ? _logLevel.Value : level;
             return Task.Run(() => _log.LogMessage(data, level));
         }
 
         public Task LogAsync(ILogMessage message)
         {
-            return Task.Run(() => _log.LogMessage(message.Message, message.Level));
+            LogLevel level = _logLevel != null ? _logLevel.Value : message.Level;
+            return Task.Run(() => _log.LogMessage(message.Message, level));
         }
 
         public void LogDebug(string data)
         {
-            _log.LogMessage(data, LogLevel.Debug);
+            LogByLevel(data, LogLevel.Debug);
         }
 
         public void LogError(string data)
@@ -50,27 +63,33 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public void LogInformation(string data)
         {
-            _log.LogMessage(data, LogLevel.Information);
+            LogByLevel(data, LogLevel.Information);
         }
 
         public void LogInformationSummary(string data)
         {
-            _log.LogMessage(data, LogLevel.Information);
+            LogByLevel(data, LogLevel.Information);
         }
 
         public void LogMinimal(string data)
         {
-            _log.LogMessage(data, LogLevel.Minimal);
+            LogByLevel(data, LogLevel.Minimal);
         }
 
         public void LogVerbose(string data)
         {
-            _log.LogMessage(data, LogLevel.Verbose);
+            LogByLevel(data, LogLevel.Verbose);
         }
 
         public void LogWarning(string data)
         {
             _log.LogWarning(data);
+        }
+
+        private void LogByLevel(string data, LogLevel level)
+        {
+             level = _logLevel != null ? _logLevel.Value : level;
+            _log.LogMessage(data, level);
         }
     }
 }
