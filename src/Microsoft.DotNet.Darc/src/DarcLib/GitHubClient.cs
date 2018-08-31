@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.DarcLib
 
             GitHubRef githubRef = new GitHubRef(gitRef, commitSha)
             {
-                Force = true
+                Force = false
             };
 
             string body = JsonConvert.SerializeObject(githubRef, _serializerSettings);
