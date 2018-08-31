@@ -6,9 +6,9 @@ namespace Microsoft.DotNet.DarcLib
 {
     public class GitHubTreeItem
     {
-        public string Mode { get; set; } = "100644";
+        public string Mode { get; set; }
 
-        public string Type { get; set; } = "blob";
+        public string Type { get; set; }
 
         public string Path { get; set; }
 

@@ -115,7 +115,7 @@ namespace Microsoft.DotNet.DarcLib
             };
 
             string body = JsonConvert.SerializeObject(githubRef, _serializerSettings);
-            await this.ExecuteGitCommand(new HttpMethod("PATCH"), $"repos/{ownerAndRepo}git/{gitRef}", _logger, body);
+            await this.ExecuteGitCommand(new HttpMethod("PATCH"), $"repos/{ownerAndRepo}/git/{gitRef}", _logger, body);
 
             _logger.LogInformation($"Pushing commits to '{pullRequestBaseBranch}' succeeded!");
         }
@@ -235,7 +235,20 @@ namespace Microsoft.DotNet.DarcLib
         {
             List<GitFile> files = new List<GitFile>();
 
+            List<GitHubTreeItem> treeItems = await GetTreeItems(repoUri, assetsProducedInCommit);
+
             await GetCommitMapForPathAsync(repoUri, branch, assetsProducedInCommit, files, pullRequestBaseBranch, path);
+
+            foreach (GitHubTreeItem treeItem in treeItems)
+            {
+                GitFile gitFile = files.Where(f => f.FilePath == treeItem.Path).FirstOrDefault();
+
+                if (gitFile != null)
+                {
+                    gitFile.Mode = treeItem.Mode;
+                    gitFile.Type = treeItem.Type;
+                }
+            }
 
             return files;
         }
@@ -275,7 +288,7 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task<string> GetFileContentAsync(string ownerAndRepo, string path)
         {
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}contents/{path}", _logger);
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}/contents/{path}", _logger);
 
             JObject file = JObject.Parse(await response.Content.ReadAsStringAsync());
             string encodedContent = file["content"].ToString();
@@ -462,7 +475,9 @@ namespace Microsoft.DotNet.DarcLib
                 GitHubTreeItem treeItem = new GitHubTreeItem
                 {
                     Path = gitFile.FilePath,
-                    Content = gitFile.Content
+                    Content = gitFile.Content,
+                    Mode = gitFile.Mode,
+                    Type = gitFile.Type
                 };
 
                 tree.Add(treeItem);
@@ -475,7 +490,7 @@ namespace Microsoft.DotNet.DarcLib
             };
 
             string body = JsonConvert.SerializeObject(gitHubTree, _serializerSettings);
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{ownerAndRepo}git/trees", _logger, body);
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{ownerAndRepo}/git/trees", _logger, body);
             JToken parsedResponse = JToken.Parse(response.Content.ReadAsStringAsync().Result);
             return parsedResponse["sha"].ToString();
         }
@@ -490,9 +505,38 @@ namespace Microsoft.DotNet.DarcLib
             };
 
             string body = JsonConvert.SerializeObject(gitHubCommit, _serializerSettings);
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{ownerAndRepo}git/commits", _logger, body);
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{ownerAndRepo}/git/commits", _logger, body);
             JToken parsedResponse = JToken.Parse(response.Content.ReadAsStringAsync().Result);
             return parsedResponse["sha"].ToString();
+        }
+
+        private async Task<List<GitHubTreeItem>> GetTreeItems(string repoUri, string assetsProducedInCommit)
+        {
+            string ownerAndRepo = GetOwnerAndRepoFromRepoUri(repoUri);
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}/commits/{assetsProducedInCommit}", _logger);
+            JToken parsedResponse = JToken.Parse(response.Content.ReadAsStringAsync().Result);
+            Uri treeUrl = new Uri(parsedResponse["commit"]["tree"]["url"].ToString());
+
+            response = await this.ExecuteGitCommand(HttpMethod.Get, $"{treeUrl.PathAndQuery}?recursive=1", _logger);
+            parsedResponse = JToken.Parse(response.Content.ReadAsStringAsync().Result);
+
+            JArray tree = JArray.Parse(parsedResponse["tree"].ToString());
+
+            List<GitHubTreeItem> treeItems = new List<GitHubTreeItem>();
+
+            foreach (JToken item in tree)
+            {
+                GitHubTreeItem treeItem = new GitHubTreeItem
+                {
+                    Mode = item["mode"].ToString(),
+                    Path = item["path"].ToString(),
+                    Type = item["type"].ToString()
+                };
+
+                treeItems.Add(treeItem);
+            }
+
+            return treeItems;
         }
     }
 }

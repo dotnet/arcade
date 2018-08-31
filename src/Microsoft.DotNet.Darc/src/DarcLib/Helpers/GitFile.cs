@@ -15,6 +15,10 @@ namespace Microsoft.DotNet.DarcLib
 
         public string Content { get; set; }
 
+        public string Mode { get; set; } = "100644";
+
+        public string Type { get; set; } = "blob";
+
         public GitFile(string filePath, XmlDocument xmlDocument)
             : this(filePath, GetIndentedXmlBody(xmlDocument))
         {
