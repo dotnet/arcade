@@ -35,12 +35,16 @@ namespace Microsoft.DotNet.Maestro.Client
             /// </param>
             /// <param name='loadCollections'>
             /// </param>
+            /// <param name='page'>
+            /// </param>
+            /// <param name='perPage'>
+            /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<IList<Build>> GetAsync(this IBuilds operations, string repository = default(string), string commit = default(string), string buildNumber = default(string), int? channelId = default(int?), System.DateTimeOffset? notBefore = default(System.DateTimeOffset?), System.DateTimeOffset? notAfter = default(System.DateTimeOffset?), bool? loadCollections = default(bool?), CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<IList<Build>> GetAllBuildsAsync(this IBuilds operations, string repository = default(string), string commit = default(string), string buildNumber = default(string), int? channelId = default(int?), System.DateTimeOffset? notBefore = default(System.DateTimeOffset?), System.DateTimeOffset? notAfter = default(System.DateTimeOffset?), bool? loadCollections = default(bool?), int? page = default(int?), int? perPage = default(int?), CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.GetWithHttpMessagesAsync(repository, commit, buildNumber, channelId, notBefore, notAfter, loadCollections, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.GetAllBuildsWithHttpMessagesAsync(repository, commit, buildNumber, channelId, notBefore, notAfter, loadCollections, page, perPage, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }

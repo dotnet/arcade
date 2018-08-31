@@ -14,6 +14,7 @@ using Maestro.Contracts;
 using Maestro.Data;
 using Maestro.Data.Models;
 using Maestro.GitHub;
+using Microsoft.AspNetCore.ApiPagination;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
@@ -115,7 +116,8 @@ namespace Maestro.Web
                         options.Conventions.AuthorizeFolder("/");
                         options.Conventions.AllowAnonymousToPage("/Index");
                     })
-                .AddGitHubWebHooks();
+                .AddGitHubWebHooks()
+                .AddApiPagination();
 
             services.AddSingleton<IConfiguration>(Configuration);
 
