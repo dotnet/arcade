@@ -32,7 +32,7 @@
     Pack                            "true" to build NuGet packages and VS insertion manifests
     Sign                            "true" to sign built binaries
     Publish                         "true" to publish artifacts (e.g. symbols)
-    PushBuildAssets                 "true" to push build and asset information to the Build Asset Registry
+    PublishBuildAssets                 "true" to push build and asset information to the Build Asset Registry
     
     SuppressPackageVersionRewrite   "true" to suppress rewrite of PackageVersions.props file. Temporary switch to allow repos to migrate to the official format of the version properties.
   -->
