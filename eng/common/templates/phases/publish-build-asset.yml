@@ -19,7 +19,7 @@ phases:
             KeyVaultName: EngKeyVault
             SecretsFilter: 'MaestroAccessToken'
           condition: succeeded()
-        - script: eng\common\pushbuildassets.cmd
+        - script: eng\common\publishbuildassets.cmd
             /p:ManifestZipFilePath='$(Build.StagingDirectory)/Download/AssetManifests'
             /p:BuildAssetRegistryToken=$(MaestroAccessToken)
             /p:MaestroApiEndpoint=https://maestro-int.westus2.cloudapp.azure.com

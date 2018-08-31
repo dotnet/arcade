@@ -58,8 +58,8 @@
     <_PublishToBlobStorage>false</_PublishToBlobStorage>
     <_PublishToBlobStorage Condition="'$(DotNetPublishToBlobFeed)' == 'true'">true</_PublishToBlobStorage>
     
-    <_PushAssetsToRegistry>false</_PushAssetsToRegistry>
-    <_PushAssetsToRegistry Condition="'$(PushBuildAssets)' == 'true'">true</_PushAssetsToRegistry>
+    <_PublishingAssetsToRegistry>false</_PublishingAssetsToRegistry>
+    <_PublishingAssetsToRegistry Condition="'$(PublishBuildAssets)' == 'true'">true</_PublishingAssetsToRegistry>
 
     <_DotNetOutputBlobFeedDir>$(DotNetOutputBlobFeedDir)</_DotNetOutputBlobFeedDir>
     <_DotNetOutputBlobFeedDir Condition="'$(_DotNetOutputBlobFeedDir)' != '' and !HasTrailingSlash('$(_DotNetOutputBlobFeedDir)')">$(_DotNetOutputBlobFeedDir)\</_DotNetOutputBlobFeedDir>
@@ -115,7 +115,7 @@
       <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
       <_RestoreToolsProps Include="PublishingToBlobStorage=$(_PublishToBlobStorage)"/>
-      <_RestoreToolsProps Include="PushAssetsToRegistry=$(_PushAssetsToRegistry)"/>
+      <_RestoreToolsProps Include="PublishingAssetsToRegistry=$(_PublishingAssetsToRegistry)"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -130,7 +130,9 @@
       <_SolutionBuildProps Include="__DeployProjectOutput=$(Deploy)" Condition="'$(Deploy)' != ''"/>
     </ItemGroup>
 
-    
+    <!--
+        These are set in the eng\common\templates\phases\publish-build-asset.yml template
+    -->
     <ItemGroup>
       <_PushProps Include="@(_CommonProps)"/>
       <_PushProps Include="ManifestsPath=$(ManifestsPath)"/>
@@ -215,9 +217,9 @@
              Targets="Publish"
              Condition="'$(Publish)' == 'true'"/>
              
-    <MSBuild Projects="PushBuildAssets.proj"
+    <MSBuild Projects="PublishBuildAssets.proj"
              Properties="@(_PushProps)"
-             Targets="PushBuildAssets"
-             Condition="'$(PushBuildAssets)' == 'true'" />
+             Targets="PublishBuildAssets"
+             Condition="'$(PublishBuildAssets)' == 'true'" />
   </Target>
 </Project>
