@@ -23,7 +23,7 @@ phases:
               _SignType: test
             ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
               _PublishType: blob
-              _SignType: real
+              _SignType: test
   
   - template: /eng/build.yml
     parameters:
