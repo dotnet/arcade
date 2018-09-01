@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.SignTool
         public string MSBuildPath { get; set; }
 
         /// <summary>
-        /// Directory to write log to. Required if <see cref="DryRun"/> is <c>false</c>.
+        /// Directory to write log to.
         /// </summary>
         [Required]
         public string LogDir { get; set; }
