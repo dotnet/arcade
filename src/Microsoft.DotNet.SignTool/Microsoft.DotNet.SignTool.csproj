@@ -1,4 +1,4 @@
-﻿<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(NetFxTfm);netcoreapp2.0</TargetFrameworks>
@@ -9,18 +9,21 @@
     <PackageTags>Arcade Build Tool Signing</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Common\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.DotNet.SignTool.Tests" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)"/>
-    <PackageReference Include="System.IO.Compression" Version="$(SystemIOCompressionVersion)"/>
-    <PackageReference Include="System.IO.FileSystem.Primitives" Version="$(SystemIOFileSystemPrimitivesVersion)"/>
-    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)"/>
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)"/>
-    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)"/>
+    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
+    <PackageReference Include="System.IO.Compression" Version="$(SystemIOCompressionVersion)" />
+    <PackageReference Include="System.IO.FileSystem.Primitives" Version="$(SystemIOFileSystemPrimitivesVersion)" />
+    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
   </ItemGroup>
   
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />

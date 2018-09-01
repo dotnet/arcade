@@ -8,7 +8,7 @@ using System;
 using System.IO;
 using System.Reflection;
 
-namespace Microsoft.DotNet.Arcade.Sdk
+namespace Microsoft.DotNet
 {
     internal static class AssemblyResolution
     {
