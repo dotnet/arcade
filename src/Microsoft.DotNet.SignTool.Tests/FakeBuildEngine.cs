@@ -46,7 +46,14 @@ namespace Microsoft.DotNet.SignTool.Tests
             }
             else
             {
-                FilesToSign.Add(itemGroupNode.Descendants("FilesToSign").ToImmutableArray());
+                var filesToSign = itemGroupNode.Descendants("FilesToSign").ToImmutableArray();
+                FilesToSign.Add(filesToSign);
+
+                foreach (var file in filesToSign)
+                {
+                    FakeSignTool.SignFile(file.Attribute("Include").Value);
+                }
+
                 return true;
             }
         }
