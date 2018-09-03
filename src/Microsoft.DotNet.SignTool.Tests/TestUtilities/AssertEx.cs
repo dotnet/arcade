@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
 using System.Collections;
@@ -331,14 +331,14 @@ namespace TestUtilities
             [CallerFilePath]string expectedValueSourcePath = null,
             [CallerLineNumber]int expectedValueSourceLine = 0)
         {
-            var normalizedExpected = NormalizeWhitespace(expected);
-            var normalizedActual = NormalizeWhitespace(actual);
-
-            if (normalizedExpected != normalizedActual)
+            if (!EqualIgnoringWhitespace(expected, actual))
             {
                 Assert.True(false, GetAssertMessage(expected, actual, escapeQuotes, expectedValueSourcePath, expectedValueSourceLine));
             }
         }
+
+        public static bool EqualIgnoringWhitespace(string left, string right)
+            => NormalizeWhitespace(left) == NormalizeWhitespace(right);
 
         public static void ThrowsArgumentNull(string parameterName, Action del)
         {

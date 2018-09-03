@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -25,7 +24,7 @@ namespace Microsoft.DotNet.SignTool
 
         public abstract void RemovePublicSign(string assemblyPath);
 
-        public abstract bool VerifySignedAssembly(Stream assemblyStream);
+        public abstract bool VerifySignedPEFile(Stream stream);
 
         public abstract bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round);
 

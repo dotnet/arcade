@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.IO.Compression;
+using System.IO.Packaging;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -103,7 +104,7 @@ namespace Microsoft.DotNet.SignTool
                     if (file.IsZipContainer())
                     {
                         _log.LogMessage($"Repacking container: '{file.FileName}'");
-                        Repack(_batchData.ZipDataMap[file.ContentHash]);
+                        _batchData.ZipDataMap[file.ContentHash].Repack();
                     }
                 }
             }
@@ -163,33 +164,6 @@ namespace Microsoft.DotNet.SignTool
             }
 
             return true;
-        }
-
-        /// <summary>
-        /// Repack the zip container with the signed files.
-        /// </summary>
-        private void Repack(ZipData zipData)
-        {
-            using (Stream zipStream = File.Open(zipData.FileSignInfo.FullPath, FileMode.Open))
-            using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Update, leaveOpen: true))
-            {
-                foreach (ZipArchiveEntry entry in archive.Entries)
-                {
-                    string relativeName = entry.FullName;
-                    var signedPart = zipData.FindNestedPart(relativeName);
-                    if (!signedPart.HasValue)
-                    {
-                        continue;
-                    }
-
-                    using (var stream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath))
-                    using (var entryStream = entry.Open())
-                    {
-                        stream.CopyTo(entryStream);
-                        entryStream.SetLength(stream.Length);
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -256,7 +230,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     using (var stream = File.OpenRead(file.FullPath))
                     {
-                        if (!_signTool.VerifySignedAssembly(stream))
+                        if (!_signTool.VerifySignedPEFile(stream))
                         {
                             log.LogError($"Assembly {file} is not signed properly");
                         }
@@ -280,7 +254,7 @@ namespace Microsoft.DotNet.SignTool
 
                             using (Stream stream = entry.Open())
                             {
-                                if (!_signTool.VerifySignedAssembly(stream))
+                                if (!_signTool.VerifySignedPEFile(stream))
                                 {
                                     log.LogError($"Zip container {file} has part {relativeName} which is not signed.");
                                 }
