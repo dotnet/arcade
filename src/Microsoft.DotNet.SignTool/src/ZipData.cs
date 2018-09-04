@@ -49,16 +49,19 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         public void Repack()
         {
-            if (FileSignInfo.IsPackage())
+#if NET461
+            if (FileSignInfo.IsVsix())
             {
                 RepackPackage();
             }
             else
+#endif
             {
                 RepackRawZip();
             }
         }
 
+#if NET461
         /// <summary>
         /// Repack a zip container with a package structure.
         /// </summary>
@@ -74,7 +77,7 @@ namespace Microsoft.DotNet.SignTool
 
                 return path;
             }
-
+            
             using (var package = Package.Open(FileSignInfo.FullPath, FileMode.Open, FileAccess.ReadWrite))
             {
                 foreach (var part in package.GetParts())
@@ -95,7 +98,7 @@ namespace Microsoft.DotNet.SignTool
                 }
             }
         }
-
+#endif
         /// <summary>
         /// Repack raw zip container.
         /// </summary>
