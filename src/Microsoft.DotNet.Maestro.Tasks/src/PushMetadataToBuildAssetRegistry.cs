@@ -8,11 +8,11 @@ using Microsoft.DotNet.Maestro.Client.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
+using System.Net.Http;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
 using System.Xml.Serialization;
 using MSBuild = Microsoft.Build.Utilities;
 
@@ -21,15 +21,13 @@ namespace Microsoft.DotNet.Maestro.Tasks
     public class PushMetadataToBuildAssetRegistry : MSBuild.Task
     {
         [Required]
-        public string ManifestZipFilePath { get; set; }
+        public string ManifestsPath { get; set; }
 
         [Required]
         public string BuildAssetRegistryToken { get; set; }
 
         [Required]
         public string MaestroApiEndpoint { get; set; }
-
-        public string AssetLocationType { get; set; } = "Blob";
 
         private static readonly CancellationTokenSource s_tokenSource = new CancellationTokenSource();
         private static readonly CancellationToken s_cancellationToken = s_tokenSource.Token;
@@ -55,48 +53,22 @@ namespace Microsoft.DotNet.Maestro.Tasks
         {
             try
             {
-                Log.LogMessage("Starting build metadata push to the Build Asset Registry...");
+                Log.LogMessage(MessageImportance.High, "Starting build metadata push to the Build Asset Registry...");
 
-                if (!File.Exists(ManifestZipFilePath))
+                if (!Directory.Exists(ManifestsPath))
                 {
-                    Log.LogError($"Required file '{ManifestZipFilePath}' does not exist.");
+                    Log.LogError($"Required folder '{ManifestsPath}' does not exist.");
                 }
                 else
                 {
-                    string tmpManifestsPath = null;
+                    List<BuildData> buildsManifestMetadata = GetBuildManifestsMetadata(ManifestsPath);
 
-                    try
-                    {
-                        tmpManifestsPath = $"{Path.GetTempPath()}\asset-manifests";
+                    BuildData finalBuild = MergeBuildManifests(buildsManifestMetadata);
 
-                        if (!Directory.Exists(tmpManifestsPath))
-                        {
-                            Directory.Delete(tmpManifestsPath, true);
-                        }
+                    IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
+                    Client.Models.Build recordedBuild = await client.Builds.CreateAsync(finalBuild, s_cancellationToken);
 
-                        Directory.CreateDirectory(tmpManifestsPath);
-
-                        ZipFile.ExtractToDirectory(ManifestZipFilePath, tmpManifestsPath);
-
-                        List<BuildData> buildsManifestMetadata = GetBuildManifestsMetadata(tmpManifestsPath);
-
-                        BuildData finalBuild = MergeBuildManifests(buildsManifestMetadata);
-
-                        MaestroApi client = (MaestroApi)ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
-
-                        Builds buildAssetRegistryBuilds = new Builds(client);
-
-                        Client.Models.Build recordedBuild = await buildAssetRegistryBuilds.CreateAsync(finalBuild, s_cancellationToken);
-
-                        Log.LogMessage($"Metadata has been pushed. Build id in the Build Asset Registry is '{recordedBuild.Id}'");
-                    }
-                    finally
-                    {
-                        if (tmpManifestsPath != null)
-                        {
-                            Directory.Delete(tmpManifestsPath, true);
-                        }
-                    }
+                    Log.LogMessage(MessageImportance.High, $"Metadata has been pushed. Build id in the Build Asset Registry is '{recordedBuild.Id}'");
                 }
             }
             catch (Exception exc)
@@ -128,7 +100,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
             foreach (string manifestPath in Directory.GetFiles(manifestsFolderPath))
             {
                 XmlSerializer xmlSerializer = new XmlSerializer(typeof(Manifest));
-                
+
                 using (FileStream stream = new FileStream(manifestPath, FileMode.Open))
                 {
                     Manifest manifest = (Manifest)xmlSerializer.Deserialize(stream);
@@ -137,37 +109,36 @@ namespace Microsoft.DotNet.Maestro.Tasks
 
                     foreach (Package package in manifest.Packages)
                     {
-                        AddAsset(assets, package.Id, package.Version, manifest.Location);
+                        AddAsset(assets, package.Id, package.Version, manifest.Location, "NugetFeed");
                     }
 
                     foreach (Blob blob in manifest.Blobs)
                     {
                         string version = GetVersion(blob.Id);
-
                         if (string.IsNullOrEmpty(version))
                         {
                             Log.LogError($"Version could not be extracted from '{blob.Id}'");
                         }
                         else
                         {
-                            AddAsset(assets, blob.Id, version, manifest.Location);
+                            AddAsset(assets, blob.Id, version, manifest.Location, "Container");
                         }
                     }
 
-                    buildsManifestMetadata.Add(new BuildData(manifest.Name, manifest.Commit, manifest.BuildId, manifest.Branch, assets));
+                    buildsManifestMetadata.Add(new BuildData(manifest.Name, manifest.Commit, manifest.BuildId, manifest.Branch, assets, new List<int?>()));
                 }
             }
 
             return buildsManifestMetadata;
         }
 
-        private void AddAsset(List<AssetData> assets, string assetName, string version, string location)
+        private void AddAsset(List<AssetData> assets, string assetName, string version, string location, string assetLocationType)
         {
             assets.Add(new AssetData
             {
                 Locations = new List<AssetLocationData>
                                     {
-                                        new AssetLocationData(location, AssetLocationType)
+                                        new AssetLocationData(location, assetLocationType)
                                     },
                 Name = assetName,
                 Version = version,
@@ -193,7 +164,52 @@ namespace Microsoft.DotNet.Maestro.Tasks
                 ((List<AssetData>)mergedBuild.Assets).AddRange(build.Assets);
             }
 
+            mergedBuild.Repository = GetRepoUrl(mergedBuild.Repository, mergedBuild.Commit);
+
             return mergedBuild;
+        }
+
+        /// <summary>
+        /// When we flow dependencies we expect source and target repos to be the same i.e github.com or dnceng.visualstudio.com. When this task is executed
+        /// the repository is a VSTS repository even though the real source is GitHub since we just mirror the code. 
+        /// When we detect a vsts repository we check if the latest commit exist in GitHub to determine if the source is GitHub or not. If the commit exists in
+        /// the repo we transform the Url from VSTS to GitHub. If not we continue to work with the original Url.
+        /// </summary>
+        /// <param name="repoUrl">The repo Url.</param>
+        /// <param name="lastCommitHash">The hash of the last commit.</param>
+        /// <returns></returns>
+        private string GetRepoUrl(string repoUrl, string lastCommitHash)
+        {
+            Uri uri = new Uri(repoUrl);
+
+            if (uri.Host == "github.com")
+            {
+                return repoUrl;
+            }
+
+            using (HttpClient client = new HttpClient())
+            {
+                string[] segments = repoUrl.Split('/');
+                string repoName = segments[segments.Length - 1];
+                int index = repoName.IndexOf('-');
+
+                StringBuilder builder = new StringBuilder(repoName);
+                builder[index] = '/';
+
+                repoName = builder.ToString();
+
+                client.BaseAddress = new Uri("https://api.github.com");
+                client.DefaultRequestHeaders.Add("User-Agent", "PushToBarTask");
+
+                HttpResponseMessage response = client.GetAsync($"/repos/{repoName}/commits/{lastCommitHash}").Result;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return $"https://github.com/{repoName}";
+                }
+
+                return repoUrl;
+            }
         }
     }
 }

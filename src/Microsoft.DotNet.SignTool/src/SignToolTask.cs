@@ -66,8 +66,9 @@ namespace Microsoft.DotNet.SignTool
         public string MSBuildPath { get; set; }
 
         /// <summary>
-        /// Directory to write log to. Required if <see cref="DryRun"/> is <c>false</c>.
+        /// Directory to write log to.
         /// </summary>
+        [Required]
         public string LogDir { get; set; }
 
         public override bool Execute()
@@ -78,27 +79,19 @@ namespace Microsoft.DotNet.SignTool
 
         public void ExecuteImpl()
         {
-            if (!DryRun)
+            if (!DryRun && typeof(object).Assembly.GetName().Name != "mscorlib" && !File.Exists(MSBuildPath))
             {
-                if (typeof(object).Assembly.GetName().Name != "mscorlib" && !File.Exists(MSBuildPath))
-                {
-                    Log.LogError($"MSBuild was not found at this path: '{MSBuildPath}'.");
-                    return;
-                }
-
-                if (string.IsNullOrEmpty(LogDir) || !Directory.Exists(LogDir))
-                {
-                    Log.LogError($"Invalid LogDir informed: {LogDir}");
-                    return;
-                }
+                Log.LogError($"MSBuild was not found at this path: '{MSBuildPath}'.");
+                return;
             }
 
+            var enclosingDir = GetEnclosingDirectoryOfItemsToSign();
             var defaultSignInfoForPublicKeyToken = ParseStrongNameSignInfo();
             var explicitCertificates = ParseFileSignInfo();
 
             if (Log.HasLoggedErrors) return;
 
-            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir);
+            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
             var signingInput = new Configuration(TempDir, ItemsToSign, defaultSignInfoForPublicKeyToken, explicitCertificates, Log).GenerateListOfFiles();
 
@@ -109,6 +102,52 @@ namespace Microsoft.DotNet.SignTool
             if (Log.HasLoggedErrors) return;
 
             util.Go();
+        }
+
+        private string GetEnclosingDirectoryOfItemsToSign()
+        {
+            var separators = new[] { '/', '\\' };
+            string[] result = null;
+
+            foreach (var path in ItemsToSign)
+            {
+                if (!Path.IsPathRooted(path))
+                {
+                    Log.LogError($"Paths specified in {nameof(ItemsToSign)} must be absolute: '{path}'.");
+                    continue;
+                }
+
+                var directoryParts = Path.GetFullPath(Path.GetDirectoryName(path)).Split(separators);
+                if (result == null)
+                {
+                    result = directoryParts;
+                    continue;
+                }
+
+                Array.Resize(ref result, getCommonPrefixLength(result, directoryParts));
+            }
+
+            if (result.Length == 0)
+            {
+                Log.LogError($"All {nameof(ItemsToSign)} must be within the cone of a single directory.");
+            }
+
+            return string.Join(Path.DirectorySeparatorChar.ToString(), result);
+
+            int getCommonPrefixLength(string[] dir1, string[] dir2)
+            {
+                int min = Math.Min(dir1.Length, dir2.Length);
+
+                for (int i = 0; i < min; i++)
+                {
+                    if (dir1[i] != dir2[i])
+                    {
+                        return i;
+                    }
+                }
+
+                return min;
+            }
         }
 
         private Dictionary<string, SignInfo> ParseStrongNameSignInfo()

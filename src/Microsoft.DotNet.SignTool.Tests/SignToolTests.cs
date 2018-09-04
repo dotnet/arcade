@@ -4,7 +4,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
+using System.IO.Packaging;
 using System.Linq;
 using TestUtilities;
 using Xunit;
@@ -51,14 +53,16 @@ namespace Microsoft.DotNet.SignTool.Tests
             Dictionary<ExplicitCertificateKey, string> signingOverridingInfos, 
             string[] expectedXmlElementsPerSingingRound)
         {
-            var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
+            var buildEngine = new FakeBuildEngine();
+
+            var task = new SignToolTask { BuildEngine = buildEngine };
 
             // The path to MSBuild will always be null in these tests, this will force
             // the signing logic to call our FakeBuildEngine.BuildProjectFile with a path
             // to the XML that store the content of the would be Microbuild sign request.
-            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir);
+            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir, enclosingDir: "");
 
-            var signTool = new ValidationOnlySignTool(signToolArgs);
+            var signTool = new FakeSignTool(signToolArgs);
             var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, task.Log).GenerateListOfFiles();
             var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput);
 
@@ -66,11 +70,8 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             // The list of files that would be signed was captured inside the FakeBuildEngine,
             // here we check if that matches what we expected
-            var fakeEngine = (FakeBuildEngine)task.BuildEngine;
-
-            AssertEx.Equal(
-                expectedXmlElementsPerSingingRound, 
-                fakeEngine.FilesToSign.Select(round => string.Join(Environment.NewLine, round)));
+            var actualXmlElementsPerSingingRound = buildEngine.FilesToSign.Select(round => string.Join(Environment.NewLine, round));
+            AssertEx.Equal(expectedXmlElementsPerSingingRound, actualXmlElementsPerSingingRound, comparer: AssertEx.EqualIgnoringWhitespace, itemInspector: s => s.Replace("\"", "\"\""));
 
             Assert.False(task.Log.HasLoggedErrors);
         }
@@ -341,7 +342,8 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, new[]
             {
-$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3D4466713FF60CA2747166CD22B097B67DAFC7F3487B7F7725945502D66D0B65", "NativeLibrary.dll")}"">
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3D4466713FF60CA2747166CD22B097B67DAFC7F3487B7F7725945502D66D0B65", "NativeLibrary.dll")}"">
   <Authenticode>MicrosoftSHA2</Authenticode>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "ProjectOne.dll")}"">
@@ -365,11 +367,13 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3D4466713F
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
-$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "19C85C55CB56D9A2533A53A9654D4FDF4B4AEF60A7760DB872CE895EB9B48825", "ContainerOne.1.0.0.nupkg")}"">
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "19C85C55CB56D9A2533A53A9654D4FDF4B4AEF60A7760DB872CE895EB9B48825", "ContainerOne.1.0.0.nupkg")}"">
   <Authenticode>NuGet</Authenticode>
 </FilesToSign>",
 
-$@"<FilesToSign Include=""{GetResourcePath("NestedContainer.1.0.0.nupkg")}"">
+$@"
+<FilesToSign Include=""{GetResourcePath("NestedContainer.1.0.0.nupkg")}"">
   <Authenticode>NuGet</Authenticode>
 </FilesToSign>"
             });
@@ -398,6 +402,18 @@ $@"<FilesToSign Include=""{GetResourcePath("NestedContainer.1.0.0.nupkg")}"">
                 "File 'NativeLibrary.dll' Certificate='MicrosoftSHA2'",
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='MicrosoftSHA2'"
             });
+
+            ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, new[]
+            {
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3D4466713FF60CA2747166CD22B097B67DAFC7F3487B7F7725945502D66D0B65", "NativeLibrary.dll")}"">
+  <Authenticode>MicrosoftSHA2</Authenticode>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "FD4596180FC1AB63B2D6A9C6E4086CC15891E41E34F835B593C3879CECAA86B6", "SOS.NETCore.dll")}"">
+  <Authenticode>MicrosoftSHA2</Authenticode>
+</FilesToSign>
+",
+            });
         }
 
         [Fact]
@@ -423,6 +439,63 @@ $@"<FilesToSign Include=""{GetResourcePath("NestedContainer.1.0.0.nupkg")}"">
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'test.vsix' Certificate='VsixSHA2'"
+            });
+
+            ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, new[]
+            {
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "ProjectOne.dll")}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "ProjectOne.dll")}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>",
+
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "test.vsix")}"">
+  <Authenticode>VsixSHA2</Authenticode>
+</FilesToSign>"
+            });
+        }
+
+        [Fact]
+        public void VsixPackageWithRelationships()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("PackageWithRelationships.vsix")
+            };
+
+            // Default signing information
+            var signingInformation = new Dictionary<string, SignInfo>()
+            {
+                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+            };
+
+            // Overriding information
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, new[]
+            {
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'PackageWithRelationships.vsix' Certificate='VsixSHA2'"
+            });
+
+            ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, new[]
+            {
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "ProjectOne.dll")}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>",
+
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "PackageWithRelationships.vsix")}"">
+  <Authenticode>VsixSHA2</Authenticode>
+</FilesToSign>"
             });
         }
     }

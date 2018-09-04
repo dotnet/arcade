@@ -5,6 +5,7 @@
     <LangVersion>Latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="System.IO.Packaging" Version="$(SystemIOPackagingVersion)" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
   </ItemGroup>

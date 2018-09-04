@@ -16,28 +16,42 @@ namespace Microsoft.DotNet.Maestro.Tasks
         [XmlElement(ElementName = "Blob")]
         public List<Blob> Blobs { get; set; }
 
-        public string Commit { get; set; }
-
-        public string Branch { get; set; }
-       
-        public string BuildId { get; set; }
-
+        [XmlAttribute(AttributeName = "Name")]
         public string Name { get; set; }
 
+        [XmlAttribute(AttributeName = "BuildId")]
+        public string BuildId { get; set; }
+
+        [XmlAttribute(AttributeName = "Branch")]
+        public string Branch { get; set; }
+
+        [XmlAttribute(AttributeName = "Commit")]
+        public string Commit { get; set; }
+
+        [XmlAttribute(AttributeName = "Location")]
         public string Location { get; set; }
     }
 
+    [XmlRoot(ElementName = "Package")]
     public class Package
     {
-        public string NonShipping { get; set; }
+        [XmlAttribute(AttributeName = "Id")]
+        public string Id { get; set; }
 
+        [XmlAttribute(AttributeName = "Version")]
         public string Version { get; set; }
 
-        public string Id { get; set; }
+        [XmlAttribute(AttributeName = "NonShipping")]
+        public string NonShipping { get; set; }
     }
 
+    [XmlRoot(ElementName = "Blob")]
     public class Blob
     {
+        [XmlAttribute(AttributeName = "Id")]
         public string Id { get; set; }
+
+        [XmlAttribute(AttributeName = "NonShipping")]
+        public string NonShipping { get; set; }
     }
 }

@@ -1,14 +1,14 @@
 <!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project DefaultTargets="Execute" TreatAsLocalProperty="RepoRoot">
   <!--
-
+  
   Required parameters:
     RepoRoot                        Repository root.
     Projects                        List of projects to build. Semicolon separated, may include globs.
-
+  
   Optional parameters:              
     Configuration                   Build configuration: "Debug", "Release", etc.
-
+  
     DotNetRestoreSourcePropsPath    Overrides of ResourceSources (list of NuGet feeds to download dependencies from)
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetBuildOffline              Building without access to NuGet servers.
@@ -19,7 +19,7 @@
     DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.
     DotNetSymbolExpirationInDays    Symbol expiration time in days (defaults to 10 years).
     DotNetSignType                  Specifies the signing type: 'real' (default), 'test'.
-
+  
     ContinuousIntegrationBuild      "true" when building on a CI server (PR build or official build)
     Restore                         "true" to restore toolset and solution
     QuietRestore                    "true" to suppress Restore output.
@@ -32,9 +32,7 @@
     Pack                            "true" to build NuGet packages and VS insertion manifests
     Sign                            "true" to sign built binaries
     Publish                         "true" to publish artifacts (e.g. symbols)
-    PushBuildAssets                 "true" to push build and asset information to the Build Asset Registry
-
-    SuppressPackageVersionRewrite   "true" to suppress rewrite of PackageVersions.props file. Temporary switch to allow repos to migrate to the official format of the version properties.
+    PublishBuildAssets                 "true" to push build and asset information to the Build Asset Registry
   -->
 
   <!--
@@ -51,12 +49,14 @@
     <_RemoveProps>Projects;Restore;QuietRestore;Build;Rebuild;Deploy;Test;IntegrationTest;PerformanceTest;Pack;Sign;Publish</_RemoveProps>
   </PropertyGroup>
 
-  <Import Project="BuildTasks.props"/>
   <Import Project="RepoLayout.props"/>
 
   <PropertyGroup>
     <_PublishToBlobStorage>false</_PublishToBlobStorage>
     <_PublishToBlobStorage Condition="'$(DotNetPublishToBlobFeed)' == 'true'">true</_PublishToBlobStorage>
+    
+    <_PublishingAssetsToRegistry>false</_PublishingAssetsToRegistry>
+    <_PublishingAssetsToRegistry Condition="'$(PublishBuildAssets)' == 'true'">true</_PublishingAssetsToRegistry>
 
     <_DotNetOutputBlobFeedDir>$(DotNetOutputBlobFeedDir)</_DotNetOutputBlobFeedDir>
     <_DotNetOutputBlobFeedDir Condition="'$(_DotNetOutputBlobFeedDir)' != '' and !HasTrailingSlash('$(_DotNetOutputBlobFeedDir)')">$(_DotNetOutputBlobFeedDir)\</_DotNetOutputBlobFeedDir>
@@ -112,6 +112,7 @@
       <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
       <_RestoreToolsProps Include="PublishingToBlobStorage=$(_PublishToBlobStorage)"/>
+      <_RestoreToolsProps Include="PublishingAssetsToRegistry=$(_PublishingAssetsToRegistry)"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -126,10 +127,12 @@
       <_SolutionBuildProps Include="__DeployProjectOutput=$(Deploy)" Condition="'$(Deploy)' != ''"/>
     </ItemGroup>
 
-    
+    <!--
+        These are set in the eng\common\templates\phases\publish-build-asset.yml template
+    -->
     <ItemGroup>
       <_PushProps Include="@(_CommonProps)"/>
-      <_PushProps Include="ManifestZipFilePath=$(ManifestZipFilePath)"/>
+      <_PushProps Include="ManifestsPath=$(ManifestsPath)"/>
       <_PushProps Include="BuildAssetRegistryToken=$(BuildAssetRegistryToken)"/>
       <_PushProps Include="MaestroApiEndpoint=$(MaestroApiEndpoint)"/>
     </ItemGroup>
@@ -211,9 +214,9 @@
              Targets="Publish"
              Condition="'$(Publish)' == 'true'"/>
              
-    <MSBuild Projects="PushBuildAssets.proj"
+    <MSBuild Projects="PublishBuildAssets.proj"
              Properties="@(_PushProps)"
-             Targets="PushBuildAssets"
-             Condition="'$(PushBuildAssets)' == 'true'" />
+             Targets="PublishBuildAssets"
+             Condition="'$(PublishBuildAssets)' == 'true'" />
   </Target>
 </Project>

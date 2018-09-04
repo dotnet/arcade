@@ -130,7 +130,7 @@
         "tags": [
           "Builds"
         ],
-        "operationId": "Builds_Get",
+        "operationId": "Builds_GetAllBuilds",
         "consumes": [],
         "produces": [
           "text/plain",
@@ -182,6 +182,20 @@
             "in": "query",
             "required": false,
             "type": "boolean"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           },
           {
             "name": "api-version",
@@ -1390,6 +1404,10 @@
         },
         "policy": {
           "$ref": "#/definitions/SubscriptionPolicy",
+          "readOnly": false
+        },
+        "lastAppliedBuild": {
+          "$ref": "#/definitions/Build",
           "readOnly": false
         }
       }
