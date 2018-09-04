@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.SignTool
         /// if the file is a container it won't be opened to have its content signed.
         /// Metadata required: Certificate and Include which is a semicolon separated list of extensions.
         /// </summary>
-        public ITaskItem[] PassThruExtensions { get; set; }
+        public ITaskItem[] FileExtensionSignInfo { get; set; }
 
         /// <summary>
         /// Path to msbuild.exe. Required if <see cref="DryRun"/> is <c>false</c>.
@@ -125,9 +125,9 @@ namespace Microsoft.DotNet.SignTool
         {
             var map = new Dictionary<string, SignInfo>(StringComparer.OrdinalIgnoreCase);
 
-            if (PassThruExtensions != null)
+            if (FileExtensionSignInfo != null)
             {
-                foreach (var item in PassThruExtensions)
+                foreach (var item in FileExtensionSignInfo)
                 {
                     var extension = item.ItemSpec;
                     var certificate = item.GetMetadata("Certificate");
@@ -139,7 +139,9 @@ namespace Microsoft.DotNet.SignTool
                     }
                     else
                     {
-                        map.Add(extension, new SignInfo(certificate, null));
+                        map.Add(extension, (certificate == SignToolConstants.IgnoreFileCertificateSentinel) ?
+                            SignInfo.Ignore :
+                            new SignInfo(certificate));
                     }
                 }
             }

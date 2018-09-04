@@ -225,9 +225,9 @@ namespace Microsoft.DotNet.SignTool
                 }
                 else if (fileName.IsNupkg())
                 {
-                    if (fileName.SignInfo.Certificate == null || !fileName.SignInfo.Certificate.Equals(SignToolConstants.Certificate_NuGet))
+                    if (fileName.SignInfo.Certificate == null)
                     {
-                        log.LogError($"Nupkg {fileName} should be signed with this certificate: {SignToolConstants.Certificate_NuGet}");
+                        log.LogError($"Nupkg {fileName} should have a certificate name.");
                     }
 
                     if (fileName.SignInfo.StrongName != null)

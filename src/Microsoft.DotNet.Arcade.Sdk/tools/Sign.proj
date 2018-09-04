@@ -44,12 +44,18 @@
 
     <ItemGroup>
       <!-- 
-        Default map of "pass thru" extensions to certificate. Files with these extensions are
-        signed with the specified certificate and no further processing is made on the file.
+        Map of file extensions to default certificate name. Files with these extensions are
+        signed with the specified certificate. Particularly useful for files that don't have
+        a public key token. 
+        The certificate can be overriden using the StrongNameSignInfo or the FileSignInfo item group.
       -->
-      <PassThruExtensions Include=".jar" Certificate="MicrosoftJAR" />
-      <PassThruExtensions Include=".dylib" Certificate="Apple" />
-      <PassThruExtensions Include=".js;.ps1;.psd1;.psm1;.psc1" Certificate="Microsoft" />
+      <FileExtensionSignInfo Include=".jar" CertificateName="MicrosoftJAR" />
+      <FileExtensionSignInfo Include=".dylib" CertificateName="Apple" />
+      <FileExtensionSignInfo Include=".js;.ps1;.psd1;.psm1;.psc1;.exe" CertificateName="Microsoft" />
+      <FileExtensionSignInfo Include=".dll" CertificateName="MicrosoftSHA2" />
+      <FileExtensionSignInfo Include=".nupkg" CertificateName="NuGet" />
+      <FileExtensionSignInfo Include=".vsix" CertificateName="VsixSHA2" />
+      <FileExtensionSignInfo Include=".zip" CertificateName="None" />
     </ItemGroup>
     
     <Microsoft.DotNet.SignTool.SignToolTask

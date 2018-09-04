@@ -34,9 +34,6 @@ namespace Microsoft.DotNet.SignTool
         internal static bool IsZipContainer(string path)
             => IsVsix(path) || IsNupkg(path) || IsZip(path);
 
-        internal static bool IsSignableFile(string path)
-            => IsZipContainer(path) || IsPEFile(path);
-
         internal bool IsPEFile() => IsPEFile(FileName);
 
         internal bool IsVsix() => IsVsix(FileName);
