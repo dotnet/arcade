@@ -50,6 +50,18 @@ namespace Microsoft.DotNet.SignTool.Tests
             return dstPath;
         }
 
+        private string CreateResource(string name)
+        {
+            var dstPath = Path.Combine(_tmpDir, name);
+
+            if (!File.Exists(dstPath))
+            {
+                File.Create(dstPath).Dispose();
+            }
+
+            return dstPath;
+        }
+
         public void Dispose()
         {
             try
@@ -444,18 +456,18 @@ $@"<FilesToSign Include=""{GetResourcePath("NestedContainer.1.0.0.nupkg")}"">
         }
 
         [Fact]
-        public void PassThruSigning()
+        public void CheckFileExtensionSignInfo()
         {
             // List of files to be considered for signing
             var itemsToSign = new[]
             {
-                GetResourcePath("dynalib.dylib"),
-                GetResourcePath("javascript.js"),
-                GetResourcePath("javatest.jar"),
-                GetResourcePath("power.ps1"),
-                GetResourcePath("powerc.psc1"),
-                GetResourcePath("powerd.psd1"),
-                GetResourcePath("powerm.psm1"),
+                CreateResource("dynalib.dylib"),
+                CreateResource("javascript.js"),
+                CreateResource("javatest.jar"),
+                CreateResource("power.ps1"),
+                CreateResource("powerc.psc1"),
+                CreateResource("powerd.psd1"),
+                CreateResource("powerm.psm1"),
             };
 
             // Default signing information
