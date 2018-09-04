@@ -27,19 +27,20 @@
   <ItemGroup>
     <!--
       Update all PackageReference and ProjectReference Items to have
-      PrivateAssets="All" and default Publish to true
+      PrivateAssets="All" and default Publish to true.
       This removes the dependency nodes from the generated nuspec and
       forces the publish output to contain the dlls.
      -->
     <PackageReference Update="@(PackageReference)">
       <PrivateAssets>All</PrivateAssets>
-      <Publish Condition=" '%(PackageReference.Publish)' != 'false' ">true</Publish>
-      <ExcludeAssets Condition=" '%(PackageReference.Publish)' == 'false' ">runtime</ExcludeAssets>
+      <Publish Condition="'%(PackageReference.Publish)' == ''">true</Publish>
+      <ExcludeAssets Condition="'%(PackageReference.Publish)' == 'false'">runtime</ExcludeAssets>
     </PackageReference>
     <ProjectReference Update="@(ProjectReference)">
       <PrivateAssets>All</PrivateAssets>
-      <Publish Condition=" '%(ProjectReference.Publish)' != 'false' ">true</Publish>
+      <Publish Condition="'%(ProjectReference.Publish)' == ''">true</Publish>
     </ProjectReference>
+
     <!--
       Update all Reference items to have Pack="false"
       This removes the frameworkDependency nodes from the generated nuspec
@@ -47,25 +48,36 @@
     <Reference Update="@(Reference)">
       <Pack>false</Pack>
     </Reference>
+
+    <!-- 
+      Do not include assemblies that MSBuild ships with in the package.
+    -->
+    <PackageReference Update="Microsoft.Build" PrivateAssets="All" Publish="false" ExcludeAssets="runtime" />
+    <PackageReference Update="Microsoft.Build.Framework" PrivateAssets="All" Publish="false" ExcludeAssets="runtime" />
+    <PackageReference Update="Microsoft.Build.Tasks.Core" PrivateAssets="All" Publish="false" ExcludeAssets="runtime" />
+    <PackageReference Update="Microsoft.Build.Utilities.Core" PrivateAssets="All" Publish="false" ExcludeAssets="runtime" />
+    <PackageReference Update="System.Collections.Immutable" PrivateAssets="All" Publish="false" ExcludeAssets="runtime" />
+    <PackageReference Update="System.IO.Compression" PrivateAssets="All" Publish="false" ExcludeAssets="runtime" />
+    <PackageReference Update="System.Runtime.InteropServices.RuntimeInformation" PrivateAssets="All" Publish="false" ExcludeAssets="runtime" />
+    <PackageReference Update="System.Threading.Tasks.Dataflow" PrivateAssets="All" Publish="false" ExcludeAssets="runtime" />
   </ItemGroup>
 
-  <!--
-    if $(IncludePublishOutput) it not 'false' add Publish as a dependency to Pack
-    and include TfmSpecificPackageFile items for all published files
-  -->
-  <PropertyGroup Condition="'$(IncludePublishOutput)' != 'false'">
-    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CollectAssets</TargetsForTfmSpecificContentInPackage>
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddBuildOutputToPackageCore;_AddBuildOutputToPackageDesktop</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
-  <Target Name="CollectAssets" DependsOnTargets="Publish">
-    <RemoveDuplicates Inputs="@(ResolvedFileToPublish)">
-      <Output TaskParameter="Filtered" ItemName="FilteredFileToPublish"/>
-    </RemoveDuplicates>
+  
+  <Target Name="_AddBuildOutputToPackageCore" DependsOnTargets="Publish" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
     <ItemGroup>
-      <TfmSpecificPackageFile
-        Include="@(FilteredFileToPublish->'$([MSBuild]::NormalizeDirectory($(PublishDir)))%(RelativePath)')"
-        Condition="'%(FilteredFileToPublish.AssetType)' != 'resources'">
-        <PackagePath>tools/$(TargetFramework)/%(FilteredFileToPublish.RelativePath)</PackagePath>
-      </TfmSpecificPackageFile>
+      <!-- Publish .NET Core assets and include them in the package under tools directory. -->
+      <TfmSpecificPackageFile Include="$(PublishDir)**" 
+                              PackagePath="tools/$(TargetFramework)/%(RecursiveDir)%(FileName)%(Extension)"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AddBuildOutputToPackageDesktop" Condition="'$(TargetFrameworkIdentifier)' != '.NETCoreApp'">
+    <ItemGroup>
+      <!-- Include .NET Framework build outputs in the package under tools directory. -->
+      <TfmSpecificPackageFile Include="$(OutputPath)**" PackagePath="tools/$(TargetFramework)/%(RecursiveDir)%(FileName)%(Extension)"/>
     </ItemGroup>
   </Target>
 </Project>

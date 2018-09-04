@@ -10,6 +10,11 @@ namespace Maestro.Web
 {
     public class ValidateModelStateAttribute : ActionFilterAttribute
     {
+        public ValidateModelStateAttribute()
+        {
+            Order = int.MaxValue;
+        }
+
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             if (!context.ModelState.IsValid)
@@ -17,7 +22,7 @@ namespace Maestro.Web
                 IEnumerable<string> errors = context.ModelState.Values
                     .SelectMany(v => v.Errors)
                     .Select(e => e.ErrorMessage);
-                context.Result = new BadRequestObjectResult(new ApiError("the request is invalid", errors));
+                context.Result = new BadRequestObjectResult(new ApiError("The request is invalid", errors));
             }
         }
     }

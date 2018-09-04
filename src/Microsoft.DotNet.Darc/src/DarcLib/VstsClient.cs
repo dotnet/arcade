@@ -106,19 +106,18 @@ namespace Microsoft.DotNet.DarcLib
             await this.ExecuteGitCommand(HttpMethod.Post, $"repositories/{repoName}/refs", _logger, body);
         }
 
-        public async Task PushFilesAsync(Dictionary<string, GitCommit> filesToCommit, string repoUri, string pullRequestBaseBranch)
+        public async Task PushCommitsAsync(List<GitFile> filesToCommit, string repoUri, string pullRequestBaseBranch, string commitMessage)
         {
             _logger.LogInformation($"Pushing files to '{pullRequestBaseBranch}'...");
 
             List<VstsChange> changes = new List<VstsChange>();
             string repoName = SetApiUriAndGetRepoName(repoUri);
 
-            foreach (string filePath in filesToCommit.Keys)
+            foreach (GitFile gitfile in filesToCommit)
             {
-                string content = this.GetDecodedContent(filesToCommit[filePath].Content);
-                string blobSha = await CheckIfFileExistsAsync(repoUri, filePath, pullRequestBaseBranch);
+                string blobSha = await CheckIfFileExistsAsync(repoUri, gitfile.FilePath, pullRequestBaseBranch);
 
-                VstsChange change = new VstsChange(filePath, content);
+                VstsChange change = new VstsChange(gitfile.FilePath, gitfile.Content);
 
                 if (!string.IsNullOrEmpty(blobSha))
                 {
@@ -293,16 +292,16 @@ namespace Microsoft.DotNet.DarcLib
             await this.ExecuteGitCommand(HttpMethod.Post, $"{pullRequestUrl}/threads", _logger, body);
         }
 
-        public async Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng/common/")
+        public async Task<List<GitFile>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng/common/")
         {
-            Dictionary<string, GitCommit> commits = new Dictionary<string, GitCommit>();
+            List<GitFile> files = new List<GitFile>();
 
-            await GetCommitMapForPathAsync(repoUri, branch, assetsProducedInCommit, commits, pullRequestBaseBranch, path);
+            await GetCommitMapForPathAsync(repoUri, branch, assetsProducedInCommit, files, pullRequestBaseBranch, path);
 
-            return commits;
+            return files;
         }
 
-        public async Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, Dictionary<string, GitCommit> commits, string pullRequestBaseBranch, string path = "eng/common/")
+        public async Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, List<GitFile> files, string pullRequestBaseBranch, string path = "eng/common/")
         {
             _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{assetsProducedInCommit}'");
 
@@ -317,12 +316,11 @@ namespace Microsoft.DotNet.DarcLib
             {
                 if (!item.IsFolder)
                 {
-                    if (!DependencyFileManager.DependencyFiles.Contains(item.Path))
+                    if (!GitFileManager.DependencyFiles.Contains(item.Path))
                     {
                         string fileContent = await GetFileContentAsync(repoName, item.Path);
-                        byte[] encodedBytes = Encoding.UTF8.GetBytes(fileContent);
-                        GitCommit gitCommit = new GitCommit($"Updating contents of file '{item.Path}'", Convert.ToBase64String(encodedBytes), pullRequestBaseBranch);
-                        commits.Add(item.Path, gitCommit);
+                        GitFile gitCommit = new GitFile(item.Path, fileContent);
+                        files.Add(gitCommit);
                     }
                 }
             }

@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.DarcLib
     public class Remote : IRemote
     {
         private readonly BuildAssetRegistryClient _barClient;
-        private readonly DependencyFileManager _fileManager;
+        private readonly GitFileManager _fileManager;
         private readonly IGitRepo _gitClient;
         private readonly ILogger _logger;
 
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.DarcLib
                 _gitClient = new VstsClient(settings.PersonalAccessToken, _logger);
             }
 
-            _fileManager = new DependencyFileManager(_gitClient, _logger);
+            _fileManager = new GitFileManager(_gitClient, _logger);
             _barClient = new BuildAssetRegistryClient(settings.BuildAssetRegistryBaseUri, _logger);
         }
 
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.DarcLib
 
                 await _gitClient.CreateBranchAsync(repoUri, pullRequestBaseBranch, branch);
 
-                await CommitFilesForPullRequest(repoUri, branch, assetsProducedInCommit, itemsToUpdate, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
+                await CommitFilesForPullRequest(repoUri, branch, assetsProducedInCommit, itemsToUpdate, pullRequestBaseBranch);
 
                 linkToPr = await _gitClient.CreatePullRequestAsync(repoUri, branch, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
 
@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.DarcLib
 
             IEnumerable<DependencyDetail> itemsToUpdate = await GetRequiredUpdatesAsync(repoUri, branch, assetsProducedInCommit, assetsToUpdate);
 
-            await CommitFilesForPullRequest(repoUri, branch, assetsProducedInCommit, itemsToUpdate, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
+            await CommitFilesForPullRequest(repoUri, branch, assetsProducedInCommit, itemsToUpdate, pullRequestBaseBranch);
 
             linkToPr = await _gitClient.UpdatePullRequestAsync(pullRequestUrl, branch, pullRequestBaseBranch, pullRequestTitle, pullRequestDescription);
 
@@ -196,31 +196,32 @@ namespace Microsoft.DotNet.DarcLib
             return toUpdate;
         }
 
-        private async Task<Dictionary<string, GitCommit>> GetScriptCommitsAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch)
+        private async Task<List<GitFile>> GetScriptCommitsAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch)
         {
             _logger.LogInformation($"Generating commits for script files");
 
-            Dictionary<string, GitCommit> commits = await _gitClient.GetCommitsForPathAsync(repoUri, branch, assetsProducedInCommit, pullRequestBaseBranch);
+            List<GitFile> commits = await _gitClient.GetCommitsForPathAsync(repoUri, branch, assetsProducedInCommit, pullRequestBaseBranch);
 
             _logger.LogInformation($"Generating commits for script files succeeded!");
 
             return commits;
         }
 
-        private async Task CommitFilesForPullRequest(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<DependencyDetail> itemsToUpdate, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
+        private async Task CommitFilesForPullRequest(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<DependencyDetail> itemsToUpdate, string pullRequestBaseBranch = null)
         {
-            DependencyFileContentContainer fileContainer = await _fileManager.UpdateDependencyFiles(itemsToUpdate, repoUri, branch);
-            Dictionary<string, GitCommit> dependencyFilesToCommit = fileContainer.GetFilesToCommitMap(pullRequestBaseBranch);
-
-            await _gitClient.PushFilesAsync(dependencyFilesToCommit, repoUri, pullRequestBaseBranch);
+            GitFileContentContainer fileContainer = await _fileManager.UpdateDependencyFiles(itemsToUpdate, repoUri, branch);
+            List<GitFile> arcadeFiles= fileContainer.GetFilesToCommitMap(pullRequestBaseBranch);
 
             // If there is an arcade asset that we need to update we try to update the script files as well
             DependencyDetail arcadeItem = itemsToUpdate.Where(i => i.Name.ToLower().Contains("arcade")).FirstOrDefault();
 
             if (arcadeItem != null)
             {
-                await _gitClient.PushFilesAsync(await GetScriptCommitsAsync(arcadeItem.RepoUri, branch, assetsProducedInCommit, pullRequestBaseBranch), repoUri, pullRequestBaseBranch);
+                List<GitFile> engCommonsFiles = await GetScriptCommitsAsync(repoUri, branch, assetsProducedInCommit, pullRequestBaseBranch);
+                arcadeFiles.AddRange(engCommonsFiles);
             }
+
+            await _gitClient.PushCommitsAsync(arcadeFiles, repoUri, pullRequestBaseBranch, "Updating version files");
         }
     }
 }

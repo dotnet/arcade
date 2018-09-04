@@ -11,7 +11,6 @@ using System.IO.Packaging;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -105,7 +104,7 @@ namespace Microsoft.DotNet.SignTool
                     if (file.IsZipContainer())
                     {
                         _log.LogMessage($"Repacking container: '{file.FileName}'");
-                        Repack(_batchData.ZipDataMap[file.ContentHash]);
+                        _batchData.ZipDataMap[file.ContentHash].Repack();
                     }
                 }
             }
@@ -168,33 +167,6 @@ namespace Microsoft.DotNet.SignTool
         }
 
         /// <summary>
-        /// Repack the zip container with the signed files.
-        /// </summary>
-        private void Repack(ZipData zipData)
-        {
-            using (Stream zipStream = File.Open(zipData.FileSignInfo.FullPath, FileMode.Open))
-            using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Update, leaveOpen: true))
-            {
-                foreach (ZipArchiveEntry entry in archive.Entries)
-                {
-                    string relativeName = entry.FullName;
-                    var signedPart = zipData.FindNestedPart(relativeName);
-                    if (!signedPart.HasValue)
-                    {
-                        continue;
-                    }
-
-                    using (var stream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath))
-                    using (var entryStream = entry.Open())
-                    {
-                        stream.CopyTo(entryStream);
-                        entryStream.SetLength(stream.Length);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Sanity check the certificates that are attached to the various items. Ensure we aren't using, say, a VSIX
         /// certificate on a DLL for example.
         /// </summary>
@@ -250,17 +222,6 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        private static string GetPartRelativeFileName(PackagePart part)
-        {
-            var path = part.Uri.OriginalString;
-            if (!string.IsNullOrEmpty(path) && path[0] == '/')
-            {
-                path = path.Substring(1);
-            }
-
-            return path;
-        }
-
         private void VerifyAfterSign(TaskLoggingHelper log)
         {
             foreach (var file in _batchData.FilesToSign)
@@ -269,7 +230,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     using (var stream = File.OpenRead(file.FullPath))
                     {
-                        if (!_signTool.VerifySignedAssembly(stream))
+                        if (!_signTool.VerifySignedPEFile(stream))
                         {
                             log.LogError($"Assembly {file} is not signed properly");
                         }
@@ -293,7 +254,7 @@ namespace Microsoft.DotNet.SignTool
 
                             using (Stream stream = entry.Open())
                             {
-                                if (!_signTool.VerifySignedAssembly(stream))
+                                if (!_signTool.VerifySignedPEFile(stream))
                                 {
                                     log.LogError($"Zip container {file} has part {relativeName} which is not signed.");
                                 }

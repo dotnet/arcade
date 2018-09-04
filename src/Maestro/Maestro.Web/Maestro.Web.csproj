@@ -71,6 +71,7 @@
     <ProjectReference Include="..\Maestro.Contracts\Maestro.Contracts.csproj" />
     <ProjectReference Include="..\Maestro.Data\Maestro.Data.csproj" />
     <ProjectReference Include="..\Maestro.GitHub\Maestro.GitHub.csproj" />
+    <ProjectReference Include="..\Microsoft.AspNetCore.ApiPagination\Microsoft.AspNetCore.ApiPagination.csproj" />
     <ProjectReference Include="..\Microsoft.AspNetCore.ApiVersioning.Swashbuckle\Microsoft.AspNetCore.ApiVersioning.Swashbuckle.csproj" />
     <ProjectReference Include="..\Microsoft.AspNetCore.ApiVersioning\Microsoft.AspNetCore.ApiVersioning.csproj" />
     <ProjectReferenceWithConfiguration Include="..\Microsoft.AspNetCore.ApiVersioning.Analyzers\Microsoft.AspNetCore.ApiVersioning.Analyzers.csproj">

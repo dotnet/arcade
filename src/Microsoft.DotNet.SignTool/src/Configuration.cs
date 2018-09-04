@@ -1,16 +1,19 @@
-using Microsoft.Build.Utilities;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.IO.Packaging;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.Versioning;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -328,17 +331,6 @@ namespace Microsoft.DotNet.SignTool
             {
                 zipStream?.Close();
             }
-        }
-
-        private static string GetPartRelativeFileName(PackagePart part)
-        {
-            var path = part.Uri.OriginalString;
-            if (!string.IsNullOrEmpty(path) && path[0] == '/')
-            {
-                path = path.Substring(1);
-            }
-
-            return path;
         }
     }
 }

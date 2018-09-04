@@ -6,6 +6,7 @@ using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -31,8 +32,11 @@ namespace Microsoft.DotNet.SignTool
         internal static bool IsZip(string path)
             => Path.GetExtension(path).Equals(".zip", StringComparison.OrdinalIgnoreCase);
 
+        internal static bool IsPackage(string path)
+            => IsVsix(path) || IsNupkg(path);
+
         internal static bool IsZipContainer(string path)
-            => IsVsix(path) || IsNupkg(path) || IsZip(path);
+            => IsPackage(path) || IsZip(path);
 
         internal bool IsPEFile() => IsPEFile(FileName);
 
@@ -43,6 +47,8 @@ namespace Microsoft.DotNet.SignTool
         internal bool IsZip() => IsZip(FileName);
 
         internal bool IsZipContainer() => IsZipContainer(FileName);
+
+        internal bool IsPackage() => IsPackage(FileName);
 
         internal FileSignInfo(string fullPath, ImmutableArray<byte> contentHash, SignInfo signInfo, string targetFramework = null)
         {

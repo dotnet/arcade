@@ -8,6 +8,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Maestro.Web.Api.v2018_07_16.Models;
 using Maestro.Data;
+using Microsoft.AspNetCore.ApiPagination;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -28,8 +29,9 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
 
         [HttpGet]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(List<Build>))]
+        [Paginated(typeof(Build))]
         [ValidateModelState]
-        public IActionResult Get(
+        public IActionResult GetAllBuilds(
             string repository,
             string commit,
             string buildNumber,
@@ -46,8 +48,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 notBefore,
                 notAfter,
                 loadCollections);
-            List<Build> results = query.AsEnumerable().Select(b => new Build(b)).ToList();
-            return Ok(results);
+            return Ok(query);
         }
 
         private IQueryable<Data.Models.Build> Query(
@@ -98,7 +99,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                     .Include(b => b.Dependencies);
             }
 
-            return query;
+            return query.OrderByDescending(b => b.DateProduced);
         }
 
         [HttpGet("{id}")]
