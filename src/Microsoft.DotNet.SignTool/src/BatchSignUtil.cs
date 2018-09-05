@@ -240,8 +240,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     var zipData = _batchData.ZipDataMap[file.ContentHash];
 
-                    using (Stream zipStream = File.Open(file.FullPath, FileMode.Open))
-                    using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Update, leaveOpen: true))
+                    using (var archive = new ZipArchive(File.OpenRead(file.FullPath), ZipArchiveMode.Read))
                     {
                         foreach (ZipArchiveEntry entry in archive.Entries)
                         {
@@ -252,7 +251,7 @@ namespace Microsoft.DotNet.SignTool
                                 continue;
                             }
 
-                            using (Stream stream = entry.Open())
+                            using (var stream = entry.Open())
                             {
                                 if (!_signTool.VerifySignedPEFile(stream))
                                 {

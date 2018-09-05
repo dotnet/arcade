@@ -270,66 +270,60 @@ namespace Microsoft.DotNet.SignTool
         {
             Debug.Assert(zipFileSignInfo.IsZipContainer());
 
-            FileStream zipStream = null;
             try
             {
-                // The stream needs to be read/write and the archive needs to be update so
-                // the below entry stream is seekable. Because of this the zip archives should
-                // not be disposed which would attempt to write any changes to the input file. It
-                // isn't neccesary either because the actual file stream is closed.
-                zipStream = File.Open(zipFileSignInfo.FullPath, FileMode.Open);
-                var archive = new ZipArchive(zipStream, ZipArchiveMode.Update, leaveOpen: true);
-                var nestedParts = new List<ZipPart>();
-
-                foreach (ZipArchiveEntry entry in archive.Entries)
+                using (var archive = new ZipArchive(File.OpenRead(zipFileSignInfo.FullPath), ZipArchiveMode.Read))
                 {
-                    string relativePath = entry.FullName;
-                    string extension = Path.GetExtension(relativePath);
+                    var nestedParts = new List<ZipPart>();
 
-                    if (!_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) || !extensionSignInfo.ShouldSign)
+                    foreach (ZipArchiveEntry entry in archive.Entries)
                     {
-                        continue;
-                    }
+                        string relativePath = entry.FullName;
+                        string extension = Path.GetExtension(relativePath);
 
-                    Stream stream = entry.Open();
-                    stream.Position = 0;
-                    var contentHash = ContentUtil.GetContentHash(stream);
-
-                    // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
-                    if (!_filesByContentHash.TryGetValue(contentHash, out var fileSignInfo))
-                    {
-                        string tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
-                        string tempPath = Path.Combine(tempDir, Path.GetFileName(relativePath));
-                        Directory.CreateDirectory(tempDir);
-                        using (var tempFileStream = File.OpenWrite(tempPath))
+                        if (!_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) || !extensionSignInfo.ShouldSign)
                         {
-                            stream.Position = 0;
-                            stream.CopyTo(tempFileStream);
-                            tempFileStream.Close();
+                            continue;
                         }
 
-                        fileSignInfo = TrackFile(tempPath, contentHash);
+                        ImmutableArray<byte> contentHash;
+                        using (var stream = entry.Open())
+                        {
+                            contentHash = ContentUtil.GetContentHash(stream);
+                        }
+
+                        // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
+                        if (!_filesByContentHash.TryGetValue(contentHash, out var fileSignInfo))
+                        {
+                            string tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
+                            string tempPath = Path.Combine(tempDir, Path.GetFileName(relativePath));
+                            Directory.CreateDirectory(tempDir);
+
+                            using (var stream = entry.Open())
+                            using (var tempFileStream = File.OpenWrite(tempPath))
+                            {
+                                stream.CopyTo(tempFileStream);
+                            }
+
+                            fileSignInfo = TrackFile(tempPath, contentHash);
+                        }
+
+                        if (fileSignInfo.SignInfo.ShouldSign)
+                        {
+                            nestedParts.Add(new ZipPart(relativePath, fileSignInfo));
+                        }
                     }
 
-                    if (fileSignInfo.SignInfo.ShouldSign)
-                    {
-                        nestedParts.Add(new ZipPart(relativePath, fileSignInfo));
-                    }
+                    zipData = new ZipData(zipFileSignInfo, nestedParts.ToImmutableArray());
+
+                    return true;
                 }
-
-                zipData = new ZipData(zipFileSignInfo, nestedParts.ToImmutableArray());
-
-                return true;
             }
             catch (Exception e)
             {
                 _log.LogErrorFromException(e);
                 zipData = null;
                 return false;
-            }
-            finally
-            {
-                zipStream?.Close();
             }
         }
     }
