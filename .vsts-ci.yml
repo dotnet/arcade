@@ -28,7 +28,7 @@ phases:
     parameters:
       name: Linux
       queue:
-        name: Hosted Windows Container
+        name: Hosted Ubuntu 1604
         container: linuxContainer
         parallel: 2
         matrix:
