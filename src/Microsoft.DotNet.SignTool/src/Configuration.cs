@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.SignTool
                 GetPEInfo(fullPath, out var isManaged, out var publicKeyToken, out targetFramework);
 
                 // Get the default sign info based on the PKT, if applicable:
-                if (_defaultSignInfoForPublicKeyToken.TryGetValue(publicKeyToken, out var pktBasedSignInfo))
+                if (isManaged && _defaultSignInfoForPublicKeyToken.TryGetValue(publicKeyToken, out var pktBasedSignInfo))
                 {
                     signInfo = pktBasedSignInfo;
                     hasSignInfo = true;
@@ -286,7 +286,7 @@ namespace Microsoft.DotNet.SignTool
                     string relativePath = entry.FullName;
                     string extension = Path.GetExtension(relativePath);
 
-                    if (!_fileExtensionSignInfo.Any(pair => pair.Value.ShouldSign && pair.Key == extension))
+                    if (!_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) || !extensionSignInfo.ShouldSign)
                     {
                         continue;
                     }
