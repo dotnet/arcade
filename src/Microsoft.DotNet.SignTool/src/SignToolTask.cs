@@ -63,8 +63,8 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// This is a mapping between extension (in the format ".ext") to certificate names.
         /// Any file that have its extension listed on this map will be signed with the
-        /// specified certificate and no further processing will be made on it. That means, that
-        /// if the file is a container it won't be opened to have its content signed.
+        /// specified certificate. This parameter specifies only the *default* certificate name,
+        /// overriding this default sign info is possible using the other parameters.
         /// Metadata required: Certificate and Include which is a semicolon separated list of extensions.
         /// </summary>
         public ITaskItem[] FileExtensionSignInfo { get; set; }
