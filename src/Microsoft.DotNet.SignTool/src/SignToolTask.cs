@@ -169,11 +169,11 @@ namespace Microsoft.DotNet.SignTool
                 foreach (var item in FileExtensionSignInfo)
                 {
                     var extension = item.ItemSpec;
-                    var certificate = item.GetMetadata("Certificate");
+                    var certificate = item.GetMetadata("CertificateName");
 
                     if (map.ContainsKey(extension))
                     {
-                        Log.LogWarning($"Duplicated pass thru signing information for extension: {extension}. " +
+                        Log.LogWarning($"Duplicated signing information for extension: {extension}. " +
                             $"Attempted to add certificate {certificate}, existing value is {map[extension]}.");
                     }
                     else
