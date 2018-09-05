@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.SignTool
                     }
                     else
                     {
-                        map.Add(extension, (certificate == SignToolConstants.IgnoreFileCertificateSentinel) ?
+                        map.Add(extension, certificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.InvariantCultureIgnoreCase) ?
                             SignInfo.Ignore :
                             new SignInfo(certificate));
                     }
