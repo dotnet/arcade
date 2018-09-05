@@ -51,9 +51,16 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         private readonly List<FileSignInfo> _filesToSign;
 
+        /// <summary>
+        /// Mapping of ".ext" to certificate. Files that have an extension on this map
+        /// will be signed using the specified certificate.
+        /// </summary>
+        private readonly Dictionary<string, SignInfo> _fileExtensionSignInfo;
+
         private readonly Dictionary<ImmutableArray<byte>, FileSignInfo> _filesByContentHash;
 
-        public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, Dictionary<ExplicitCertificateKey, string> explicitCertificates, TaskLoggingHelper log)
+        public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, 
+            Dictionary<ExplicitCertificateKey, string> explicitCertificates, Dictionary<string, SignInfo> extensionSignInfo, TaskLoggingHelper log)
         {
             Debug.Assert(tempDir != null);
             Debug.Assert(explicitSignList != null && !explicitSignList.Any(i => i == null));
@@ -64,6 +71,7 @@ namespace Microsoft.DotNet.SignTool
             _log = log;
             _defaultSignInfoForPublicKeyToken = defaultSignInfoForPublicKeyToken;
             _explicitCertificates = explicitCertificates;
+            _fileExtensionSignInfo = extensionSignInfo;
             _filesToSign = new List<FileSignInfo>();
             _zipDataMap = new Dictionary<ImmutableArray<byte>, ZipData>(ByteSequenceComparer.Instance);
             _filesByContentHash = new Dictionary<ImmutableArray<byte>, FileSignInfo>(ByteSequenceComparer.Instance);
@@ -106,6 +114,11 @@ namespace Microsoft.DotNet.SignTool
 
         private FileSignInfo ExtractSignInfo(string fullPath, ImmutableArray<byte> hash)
         {
+            var targetFramework = string.Empty;
+
+            // Try to determine default certificate name by the extension of the file
+            var hasSignInfo = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out var signInfo);
+
             if (FileSignInfo.IsPEFile(fullPath))
             {
                 using (var stream = File.OpenRead(fullPath))
@@ -116,12 +129,13 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
 
-                GetPEInfo(fullPath, out var isManaged, out var publicKeyToken, out var targetFramework);
+                GetPEInfo(fullPath, out var isManaged, out var publicKeyToken, out targetFramework);
 
                 // Get the default sign info based on the PKT, if applicable:
-                if (!isManaged || !_defaultSignInfoForPublicKeyToken.TryGetValue(publicKeyToken, out var signInfo))
+                if (isManaged && _defaultSignInfoForPublicKeyToken.TryGetValue(publicKeyToken, out var pktBasedSignInfo))
                 {
-                    signInfo = new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2);
+                    signInfo = pktBasedSignInfo;
+                    hasSignInfo = true;
                 }
 
                 // Check if we have more specific sign info:
@@ -137,24 +151,16 @@ namespace Microsoft.DotNet.SignTool
                     }
 
                     signInfo = signInfo.WithCertificateName(overridingCertificate);
+                    hasSignInfo = true;
                 }
+            }
 
+            if (hasSignInfo)
+            {
                 return new FileSignInfo(fullPath, hash, signInfo, (targetFramework != "") ? targetFramework : null);
             }
 
-            if (FileSignInfo.IsZipContainer(fullPath))
-            {
-                // Use SignInfo.Ignore for zip files
-                if (!FileSignInfo.IsZip(fullPath))
-                {
-                    return new FileSignInfo(fullPath, hash, new SignInfo(FileSignInfo.IsNupkg(fullPath) ? SignToolConstants.Certificate_NuGet : SignToolConstants.Certificate_VsixSHA2));
-                }
-            }
-            else
-            {
-                _log.LogWarning($"Unidentified artifact type: {fullPath}");
-            }
-
+            _log.LogWarning($"Couldn't determine signing information for this file: {fullPath}");
             return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
         }
 
@@ -273,8 +279,9 @@ namespace Microsoft.DotNet.SignTool
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
                         string relativePath = entry.FullName;
+                        string extension = Path.GetExtension(relativePath);
 
-                        if (!FileSignInfo.IsSignableFile(relativePath))
+                        if (!_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) || !extensionSignInfo.ShouldSign)
                         {
                             continue;
                         }
