@@ -18,7 +18,7 @@ Utilise Azure blob storage as the backing storage. A participent repo's official
 ```
 Blob feeds have the same file layout that a NuGet v3 feed would typically use in blob storage. This consists of a root service index.json file, which contains the base url of the feed. Each package that lives in the feed has its own package name folders and each of these folders have versions inside them. Each package folder has an index.json, which contains all the versions that the package supports. These package index.json are generated during the push step.
 
-We upload the nupkg, then generate packages index.jsons on disk then upload and overwrite the package index.json. The generation of the index.jsons is to support NuGet v3. These blob feeds currently don't support the nuget.exe install operation.
+We upload the nupkg, then generate packages index.jsons on disk then upload and overwrite the package index.json. The generation of the index.jsons is to support NuGet v3. These blob feeds currently don't support the NuGet.exe install operation.
 
 ## Structure of the feed inside the Storage Account
 
@@ -111,8 +111,8 @@ Ex: https://github.com/dotnet/standard/pull/548/files#diff-8ac86cae397225debd706
 
 ### Consumption:
 
-Consuming a blob feed works the same as consuming any other nuget feed. You add a reference to the index.json file to your
-nuget.config or your restore sources. It is also good practice to provide a way to have your build definition configure this
+Consuming a blob feed works the same as consuming any other NuGet feed. You add a reference to the index.json file to your
+NuGet.config or your restore sources. It is also good practice to provide a way to have your build definition configure this
 feed via a property so the feed can be controlled while queuing builds.
 
 ## FAQ
