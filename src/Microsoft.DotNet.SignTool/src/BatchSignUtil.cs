@@ -197,9 +197,9 @@ namespace Microsoft.DotNet.SignTool
                 }
                 else if (fileName.IsNupkg())
                 {
-                    if (fileName.SignInfo.Certificate == null || !fileName.SignInfo.Certificate.Equals(SignToolConstants.Certificate_NuGet))
+                    if (fileName.SignInfo.Certificate == null)
                     {
-                        log.LogError($"Nupkg {fileName} should be signed with this certificate: {SignToolConstants.Certificate_NuGet}");
+                        log.LogError($"Nupkg {fileName} should have a certificate name.");
                     }
 
                     if (fileName.SignInfo.StrongName != null)
@@ -240,8 +240,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     var zipData = _batchData.ZipDataMap[file.ContentHash];
 
-                    using (Stream zipStream = File.Open(file.FullPath, FileMode.Open))
-                    using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Update, leaveOpen: true))
+                    using (var archive = new ZipArchive(File.OpenRead(file.FullPath), ZipArchiveMode.Read))
                     {
                         foreach (ZipArchiveEntry entry in archive.Entries)
                         {
@@ -252,12 +251,17 @@ namespace Microsoft.DotNet.SignTool
                                 continue;
                             }
 
-                            using (Stream stream = entry.Open())
+                            // PEReader requires a seekable stream
+                            var peStream = new MemoryStream((int)entry.Length);
+                            using (var stream = entry.Open())
                             {
-                                if (!_signTool.VerifySignedPEFile(stream))
-                                {
-                                    log.LogError($"Zip container {file} has part {relativeName} which is not signed.");
-                                }
+                                stream.CopyTo(peStream);
+                                peStream.Position = 0;
+                            }
+
+                            if (!_signTool.VerifySignedPEFile(peStream))
+                            {
+                                log.LogError($"Zip container {file} has part {relativeName} which is not signed.");
                             }
                         }
                     }

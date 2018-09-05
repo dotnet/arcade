@@ -61,6 +61,15 @@ namespace Microsoft.DotNet.SignTool
         public ITaskItem[] FileSignInfo { get; set; }
 
         /// <summary>
+        /// This is a mapping between extension (in the format ".ext") to certificate names.
+        /// Any file that have its extension listed on this map will be signed with the
+        /// specified certificate. This parameter specifies only the *default* certificate name,
+        /// overriding this default sign info is possible using the other parameters.
+        /// Metadata required: Certificate and Include which is a semicolon separated list of extensions.
+        /// </summary>
+        public ITaskItem[] FileExtensionSignInfo { get; set; }
+
+        /// <summary>
         /// Path to msbuild.exe. Required if <see cref="DryRun"/> is <c>false</c>.
         /// </summary>
         public string MSBuildPath { get; set; }
@@ -88,12 +97,13 @@ namespace Microsoft.DotNet.SignTool
             var enclosingDir = GetEnclosingDirectoryOfItemsToSign();
             var defaultSignInfoForPublicKeyToken = ParseStrongNameSignInfo();
             var explicitCertificates = ParseFileSignInfo();
+            var fileExtensionSignInfo = ParseFileExtensionSignInfo();
 
             if (Log.HasLoggedErrors) return;
 
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
-            var signingInput = new Configuration(TempDir, ItemsToSign, defaultSignInfoForPublicKeyToken, explicitCertificates, Log).GenerateListOfFiles();
+            var signingInput = new Configuration(TempDir, ItemsToSign, defaultSignInfoForPublicKeyToken, explicitCertificates, fileExtensionSignInfo, Log).GenerateListOfFiles();
 
             if (Log.HasLoggedErrors) return;
 
@@ -148,6 +158,34 @@ namespace Microsoft.DotNet.SignTool
 
                 return min;
             }
+        }
+
+        private Dictionary<string, SignInfo> ParseFileExtensionSignInfo()
+        {
+            var map = new Dictionary<string, SignInfo>(StringComparer.OrdinalIgnoreCase);
+
+            if (FileExtensionSignInfo != null)
+            {
+                foreach (var item in FileExtensionSignInfo)
+                {
+                    var extension = item.ItemSpec;
+                    var certificate = item.GetMetadata("CertificateName");
+
+                    if (map.ContainsKey(extension))
+                    {
+                        Log.LogWarning($"Duplicated signing information for extension: {extension}. " +
+                            $"Attempted to add certificate {certificate}, existing value is {map[extension]}.");
+                    }
+                    else
+                    {
+                        map.Add(extension, certificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.InvariantCultureIgnoreCase) ?
+                            SignInfo.Ignore :
+                            new SignInfo(certificate));
+                    }
+                }
+            }
+
+            return map;
         }
 
         private Dictionary<string, SignInfo> ParseStrongNameSignInfo()

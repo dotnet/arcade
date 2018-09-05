@@ -1,76 +1,64 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Build.Framework;
 using NuGet.Common;
 using System.Threading.Tasks;
 using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    public class SleetLogger : ILogger
+    public class SleetLogger : LoggerBase
     {
         private MSBuild.TaskLoggingHelper _log;
 
-        public SleetLogger(MSBuild.TaskLoggingHelper log)
+        private readonly LogLevel _logLevel;
+
+        public SleetLogger(MSBuild.TaskLoggingHelper log, LogLevel logLevel = default(LogLevel))
         {
             _log = log;
-        }
-        public void Log(LogLevel level, string data)
-        {
-            _log.LogMessage(data, level);
+            _logLevel = logLevel;
         }
 
-        public void Log(ILogMessage message)
+        public override void Log(ILogMessage message)
         {
-            _log.LogMessage(message.Message, message.Level);
+            Log(message, _logLevel);
         }
 
-        public Task LogAsync(LogLevel level, string data)
+        public override Task LogAsync(ILogMessage message)
         {
-            return Task.Run(() => _log.LogMessage(data, level));
+            return Task.Run(() => Log(message, _logLevel));
         }
 
-        public Task LogAsync(ILogMessage message)
+        private void Log(ILogMessage message, LogLevel level)
         {
-            return Task.Run(() => _log.LogMessage(message.Message, message.Level));
-        }
+            switch (level)
+            {
+                case LogLevel.Error:
+                    _log.LogError(message.Message);
+                    break;
 
-        public void LogDebug(string data)
-        {
-            _log.LogMessage(data, LogLevel.Debug);
-        }
+                case LogLevel.Warning:
+                    _log.LogWarning(message.Message);
+                    break;
 
-        public void LogError(string data)
-        {
-            // There are cases where Sleet fails and we retry on our side causing things to actually work but if Sleet logs an error the whole build leg
-            // is marked as failed even though it actually succeeded, hence we log a warning here but we will log an error if the retry did not help
-            _log.LogWarning($"This error is being logged as a warning: {data}");
-        }
+                case LogLevel.Minimal:
+                    _log.LogMessage(MessageImportance.Low, message.Message);
+                    break;
 
-        public void LogInformation(string data)
-        {
-            _log.LogMessage(data, LogLevel.Information);
-        }
+                case LogLevel.Information:
+                    _log.LogMessage(MessageImportance.Normal, message.Message);
+                    break;
 
-        public void LogInformationSummary(string data)
-        {
-            _log.LogMessage(data, LogLevel.Information);
-        }
+                case LogLevel.Debug:
+                case LogLevel.Verbose:
+                default:
+                    _log.LogMessage(MessageImportance.High, message.Message);
+                    break;
+            }
 
-        public void LogMinimal(string data)
-        {
-            _log.LogMessage(data, LogLevel.Minimal);
-        }
-
-        public void LogVerbose(string data)
-        {
-            _log.LogMessage(data, LogLevel.Verbose);
-        }
-
-        public void LogWarning(string data)
-        {
-            _log.LogWarning(data);
+            return;
         }
     }
 }

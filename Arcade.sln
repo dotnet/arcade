@@ -42,7 +42,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Github.Iss
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Maestro.Client", "src\Maestro\Client\src\Microsoft.DotNet.Maestro.Client.csproj", "{CBE5BE25-B3DE-4B73-AED5-644B7F752545}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Maestro.Tasks", "src\Microsoft.DotNet.Maestro.Tasks\Microsoft.DotNet.Maestro.Tasks.csproj", "{A89A17DE-2012-4CB0-83D2-128B297A7C05}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Maestro.Tasks", "src\Maestro\Microsoft.DotNet.Maestro.Tasks\Microsoft.DotNet.Maestro.Tasks.csproj", "{A89A17DE-2012-4CB0-83D2-128B297A7C05}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceFabricMocks", "src\Maestro\ServiceFabricMocks\ServiceFabricMocks.csproj", "{7D66C883-C833-4BBC-82E5-5B2766DC719F}"
 EndProject

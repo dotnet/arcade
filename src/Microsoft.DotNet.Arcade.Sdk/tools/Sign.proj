@@ -42,6 +42,22 @@
       <StrongNameSignInfo Include="MsSharedLib72" PublicKeyToken="31bf3856ad364e35" CertificateName="MicrosoftSHA2" />
     </ItemGroup>
 
+    <ItemGroup>
+      <!-- 
+        Map of file extensions to default certificate name. Files with these extensions are
+        signed with the specified certificate. Particularly useful for files that don't have
+        a public key token. 
+        The certificate can be overriden using the StrongNameSignInfo or the FileSignInfo item group.
+      -->
+      <FileExtensionSignInfo Include=".jar" CertificateName="MicrosoftJAR" />
+      <FileExtensionSignInfo Include=".dylib" CertificateName="Apple" />
+      <FileExtensionSignInfo Include=".js;.ps1;.psd1;.psm1;.psc1" CertificateName="Microsoft" />
+      <FileExtensionSignInfo Include=".dll;.exe" CertificateName="MicrosoftSHA2" />
+      <FileExtensionSignInfo Include=".nupkg" CertificateName="NuGet" />
+      <FileExtensionSignInfo Include=".vsix" CertificateName="VsixSHA2" />
+      <FileExtensionSignInfo Include=".zip" CertificateName="None" />
+    </ItemGroup>
+    
     <Microsoft.DotNet.SignTool.SignToolTask
         DryRun="$(DryRun)"
         TestSign="$(TestSign)"
