@@ -24,8 +24,6 @@ phases:
       name: Linux
       queue: 
         name: Hosted Linux Preview
-        demands:
-          - agent.os -equals Linux
         parallel: 2
         matrix:
           Build_Debug:
@@ -41,8 +39,3 @@ phases:
               _SignType: real
       variables:
         _PREVIEW_VSTS_DOCKER_IMAGE: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
-
-        Owner
-chcosta@microsoft.com;dnceng@microsoft.com
-SecretyType
-GITHUB-ACCESS-TOKEN
