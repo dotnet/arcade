@@ -33,12 +33,6 @@ phases:
     parameters:
       name: Linux
       queue: 
-        ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-          name: DotNetCore-Linux
-        ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:        
-          name: DotNetCore-Test
-        demands:
-          - agent.os -equals Linux
         container: linuxContainer
         parallel: 2
         matrix:
