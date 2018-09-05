@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;$(NetFxTfm)</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;$(NetFxTfm)</TargetFrameworks>
 
     <VersionPrefix>1.0.0</VersionPrefix>
 

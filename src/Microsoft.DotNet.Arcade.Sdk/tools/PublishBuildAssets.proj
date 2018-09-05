@@ -10,11 +10,12 @@
   <Import Project="BuildStep.props" />
   
   <PropertyGroup>
-    <_MicrosoftDotNetMaestroTasksDir>$(MSBuildThisFileDirectory)../tools/net461/</_MicrosoftDotNetMaestroTasksDir>
-    <_MicrosoftDotNetMaestroTasksDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../tools/netcoreapp2.0/</_MicrosoftDotNetMaestroTasksDir>
+    <_MicrosoftDotNetMaestroTasksBaseDir>$(NuGetPackageRoot)microsoft.dotnet.maestro.tasks\$(MicrosoftDotNetMaestroTasksVersion)\tools\</_MicrosoftDotNetMaestroTasksBaseDir>
+    <_MicrosoftDotNetMaestroTasksDir>$(_MicrosoftDotNetMaestroTasksBaseDir)net461</_MicrosoftDotNetMaestroTasksDir>
+    <_MicrosoftDotNetMaestroTasksDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(_MicrosoftDotNetMaestroTasksBaseDir)netcoreapp2.1</_MicrosoftDotNetMaestroTasksDir>
   </PropertyGroup>
   
-  <UsingTask TaskName="PushMetadataToBuildAssetRegistry" AssemblyFile="$(_MicrosoftDotNetMaestroTasksDir)Microsoft.DotNet.Maestro.Tasks.dll"/>
+  <UsingTask TaskName="PushMetadataToBuildAssetRegistry" AssemblyFile="$(_MicrosoftDotNetMaestroTasksDir)\Microsoft.DotNet.Maestro.Tasks.dll"/>
   
   <Target Name="PublishBuildAssets">
     <Error Text="The ManifestsPath  property must be set on the command line." Condition="'$(ManifestsPath)' == ''" />
