@@ -87,6 +87,8 @@ A subscription can be visualized with the following psuedocode
     }
 ```
 
+![Channels, Branches, and Subscriptions Flow](ChannelsBranchesSubscriptionsFlow.png)
+
 ## Branches, Channels and Subscriptions in a Monolithic repo world
 
 Those who have worked in a monolithic repo world in the past can have trouble understanding the issues that a distributed repository world introduces (though it has other signficant benefits).  To better understand these issues, let's look at branches, channels and subscriptions in the monolithic world.  A mono repo world is one where the vast majority of changes do not cross repository lines.  Even in monolithic repositories, there are still some distributed qualities.  For example, an update of a checked in toolset effectively is a pull of an external content channel (like a build of a compiler).  However, these types of changes tend to be fewer, and thus the product repository can generally be viewed as self-contained.
