@@ -89,11 +89,11 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    using (var stream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath))
+                    using (var signedStream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath))
                     using (var partStream = part.GetStream(FileMode.Open, FileAccess.ReadWrite))
                     {
-                        stream.CopyTo(partStream);
-                        partStream.SetLength(stream.Length);
+                        signedStream.CopyTo(partStream);
+                        partStream.SetLength(signedStream.Length);
                     }
                 }
             }
@@ -104,8 +104,7 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         private void RepackRawZip()
         {
-            using (Stream zipStream = File.Open(FileSignInfo.FullPath, FileMode.Open))
-            using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Update, leaveOpen: true))
+            using (var archive = new ZipArchive(File.Open(FileSignInfo.FullPath, FileMode.Open), ZipArchiveMode.Update))
             {
                 foreach (ZipArchiveEntry entry in archive.Entries)
                 {
@@ -116,11 +115,11 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    using (var stream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath))
+                    using (var signedStream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath))
                     using (var entryStream = entry.Open())
                     {
-                        stream.CopyTo(entryStream);
-                        entryStream.SetLength(stream.Length);
+                        signedStream.CopyTo(entryStream);
+                        entryStream.SetLength(signedStream.Length);
                     }
                 }
             }
