@@ -251,12 +251,17 @@ namespace Microsoft.DotNet.SignTool
                                 continue;
                             }
 
+                            // PEReader requires a seekable stream
+                            var peStream = new MemoryStream((int)entry.Length);
                             using (var stream = entry.Open())
                             {
-                                if (!_signTool.VerifySignedPEFile(stream))
-                                {
-                                    log.LogError($"Zip container {file} has part {relativeName} which is not signed.");
-                                }
+                                stream.CopyTo(peStream);
+                                peStream.Position = 0;
+                            }
+
+                            if (!_signTool.VerifySignedPEFile(peStream))
+                            {
+                                log.LogError($"Zip container {file} has part {relativeName} which is not signed.");
                             }
                         }
                     }
