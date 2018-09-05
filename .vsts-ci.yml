@@ -1,4 +1,4 @@
-phases:
+phases: 
   - template: /eng/build.yml
     parameters:
       name: Windows_NT
