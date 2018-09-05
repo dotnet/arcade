@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Maestro\Client\src\Microsoft.DotNet.Maestro.Client.csproj" />
+    <ProjectReference Include="..\Client\src\Microsoft.DotNet.Maestro.Client.csproj" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
