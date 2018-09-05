@@ -3,12 +3,7 @@ phases:
     parameters:
       name: Windows_NT
       queue:
-        ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-          name: Hosted VS2017
-        ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:        
-          name: DotNetCore-Build
-          demands:
-          - agent.os -equals Windows_NT        
+        name: Hosted VS2017
         parallel: 2
         matrix:
           Build_Debug:
@@ -28,10 +23,7 @@ phases:
     parameters:
       name: Linux
       queue: 
-        ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-          name: DotNetCore-Linux
-        ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:        
-          name: DotNetCore-Test
+        name: DotNetCore-Linux
         demands:
           - agent.os -equals Linux
         parallel: 2
