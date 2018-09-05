@@ -10,8 +10,8 @@
   <Import Project="BuildStep.props" />
   
   <PropertyGroup>
-    <_MicrosoftDotNetMaestroTasksDir>$(MSBuildThisFileDirectory)../tools/net461/</_MicrosoftDotNetMaestroTasksDir>
-    <_MicrosoftDotNetMaestroTasksDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../tools/netcoreapp2.0/</_MicrosoftDotNetMaestroTasksDir>
+    <_MicrosoftDotNetMaestroTasksDir>$(MSBuildThisFileDirectory)net461/</_MicrosoftDotNetMaestroTasksDir>
+    <_MicrosoftDotNetMaestroTasksDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)netcoreapp2.0/</_MicrosoftDotNetMaestroTasksDir>
   </PropertyGroup>
   
   <UsingTask TaskName="PushMetadataToBuildAssetRegistry" AssemblyFile="$(_MicrosoftDotNetMaestroTasksDir)Microsoft.DotNet.Maestro.Tasks.dll"/>
