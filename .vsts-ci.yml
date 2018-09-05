@@ -27,7 +27,8 @@ phases:
   - template: /eng/build.yml
     parameters:
       name: Linux
-      queue: 
+      queue:
+        name: Hosted Windows Container
         container: linuxContainer
         parallel: 2
         matrix:
