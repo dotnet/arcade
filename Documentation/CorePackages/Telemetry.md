@@ -1,24 +1,74 @@
-# Telemetry
+# Telemetry Scripts
 
 ### What is it?
 
-Component responsible for notifying [Helix](https://helix.dot.net/) of build start and finish events. Essentially, it interacts with the Helix API to notify that a new build is starting or has just finished.
+A pair of scripts that can be used to send events to the [Helix](https://helix.dot.net/) system so that you'll be able to see the status of phases of your build on the [Mission Control](http://mc.dot.net/) website. Essentially, you have a [start](../../eng/common/templates/steps/telemetry-start.yml) and an [end](../../eng/common/templates/steps/telemetry-end.yml) script that you can use to track the execution status of particular regions of your build definitions. These scripts are reentrant, so you can use them several times on the same build definition. See example at the end of this document.
 
-The current implementation for sending start events can be found [here](../../eng/common/templates/steps/telemetry-start.yml) and, for build finish events, it's available [here](../../eng/common/templates/steps/telemetry-end.yml).
+Note that this component (the telemetry implementation) is not part of the Arcade SDK. Only referencing the SDK isn't sufficient to use the telemetry scripts. See below instructions on how to use it.
 
-### When does it run?
+### Will an onboarded repository automatically use it?
 
-If telemetry is enabled on YAML build definition (file `eng\build.yml` -> `enableTelemetry`), telemetry events will be sent for every queued build.
+The scripts automate the process, but there is some setup that you have to do. Basically, you'll need to setup three parameters to identify the region of code that you are collecting telemetry for and enable telemetry sending for the build.
 
-### What is the result?
+One of the requirements for onboarding in Arcade is to copy the `eng\common` folder from the root of the Arcade repository to the onboarding repository and reference the  `eng\common\templates\phases\base.yml` file on your YAML build definitions. This will plug in the use of the telemetry scripts on your build. 
 
-Executing these telemetry scripts during the build is part of the prerequisites to see your build results on the [Mission Control](https://mc.dot.net/) web site. Also, you'll be able to see the build status history for the project.
+However, for enabling the use of telemetry you will also have to set `enableTelemetry` (see file `eng\build.yml` -> `enableTelemetry`) to true. Once that part is done you can use the telemetry scripts  [start](../../eng/common/templates/steps/telemetry-start.yml) and [end](../../eng/common/templates/steps/telemetry-end.yml) to denote regions that you want to collect telemetry for. To do that you have to specify values for the Helix parameters `_HelixType`, `_HelixSource` and `_HelixBuildConfig` for each region. You can find some description of these parameters [here](https://github.com/dotnet/arcade/blob/master/eng/common/templates/phases/base.yml).
 
-### Will the repo automatically report telemetry after on boarded?
+Note that you can collect telemetry for more than one region of code. Use the parameters mentioned above to identify the region that you're collecting telemetry.
 
-The scripts automate the process, but there is some setup that you have to do. 
+### Usage Example
 
-As part of the onboarding process in Arcade you're supposed to copy the `eng\common` folder from the root of the repository and reference the  `eng\common\templates\phases\base.yml` file on your YAML build definitions. This will plug in the use of the telemetry scripts. For the telemetry scripts to work you will also have to set `enableTelemetry` (see file `eng\build.yml` -> `enableTelemetry`) to true and specify values for the Helix parameters (_HelixType, _HelixSource and _HelixBuildConfig). You can find some description of these Helix parameters [here](https://github.com/dotnet/arcade/blob/master/eng/common/templates/phases/base.yml).
+Below is an example of a `.vsts-ci.yaml` configuration using the telemetry scripts to track the status of the several phases of the repository build. Particularly, note that the `telemetry.yml` file is included in every phase and the Helix parameters (`helixType`, `helixSource` and `buildConfig`) are used to identify which phase the telemetry is being collected for.
 
-Note that this component (the telemetry implementation) is not part of the Arcade SDK. Only referencing the SDK isn't sufficient to use the telemetry scripts.
 
+```yaml
+name: $(Date:yyyMMdd)$(Rev:rr)
+variables:
+  Build.Repository.Clean: true
+
+phases:
+
+- phase: Build
+  steps:
+  - template: eng/common/templates/steps/telemetry.yml
+    parameters:
+      helixType: build/product/
+      helixSource: official/helix/$(Build.SourceBranch)/
+      buildConfig: $(BuildConfiguration)
+      steps:
+      - template: /eng/configure.yaml
+      - template: /eng/restore.yaml
+      - template: /eng/build.yaml
+
+- phase: CredScan
+  steps:
+  - template: eng/common/templates/steps/telemetry.yml
+    parameters:
+      helixType: build/staticanalysis/
+      helixSource: official/helix/$(Build.SourceBranch)/
+      buildConfig: $(BuildConfiguration)
+      steps:
+      - template: /eng/cred-scan.yaml
+
+- phase: TSLint
+  steps:
+  - template: eng/common/templates/steps/telemetry.yml
+    parameters:
+      helixType: build/tslint/
+      helixSource: official/helix/$(Build.SourceBranch)/
+      buildConfig: $(BuildConfiguration)
+      steps:
+      - template: /eng/tslint.yaml
+
+- phase: CodeInspection
+  steps:
+  - template: eng/common/templates/steps/telemetry.yml
+    parameters:
+      helixType: build/codeinspection/
+      helixSource: official/helix/$(Build.SourceBranch)/
+      buildConfig: $(BuildConfiguration)
+      steps:
+      - template: /eng/code-inspection.yaml
+```
+
+Having your build definitions collect and report telemetry is the first step for having the telemetry displayed in Mission Control. Besides that you need to follow the instructions outlined [here](https://github.com/dotnet/core-eng/wiki/MissionControlConfiguration) to create a `viewconfiguration.json` file that will tell Mission Control how to group and display the telemetry collected for the repository. For instance, the build configuration above have [this](https://github.com/dotnet/core-eng/blob/master/mission-control-config/dotnet/helix/viewconfiguration.json) `viewconfiguration.json` file associated with it.
