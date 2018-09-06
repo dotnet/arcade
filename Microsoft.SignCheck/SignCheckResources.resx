@@ -171,6 +171,9 @@
   <data name="DetailTimestampInvalid" xml:space="preserve">
     <value>Invalid timestamp</value>
   </data>
+  <data name="DetailTimestampOutisdeCertValidity" xml:space="preserve">
+    <value>Timestamp ({0}) outside validity period ({1} to {2}).</value>
+  </data>
   <data name="DetailTimestampSkipped" xml:space="preserve">
     <value>Timestmap: Skipped</value>
   </data>

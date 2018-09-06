@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.SignCheck.Logging;
 using Microsoft.SignCheck.Verification.Jar;
 
@@ -22,7 +24,6 @@ namespace Microsoft.SignCheck.Verification
                     JarError.ClearErrors();
                     var jarFile = new JarFile(path);
                     svr.IsSigned = jarFile.IsSigned();
-                    svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
 
                     if (!svr.IsSigned && JarError.HasErrors())
                     {
@@ -34,7 +35,19 @@ namespace Microsoft.SignCheck.Verification
                         {
                             svr.AddDetail(DetailKeys.Misc, SignCheckResources.DetailTimestamp, timestamp.SignedOn, timestamp.SignatureAlgorithm);
                         }
+
+                        IEnumerable<Timestamp> invalidTimestamps = from ts in jarFile.Timestamps
+                                                                   where !ts.IsValid
+                                                                   select ts;
+
+                        foreach (Timestamp ts in invalidTimestamps)
+                        {
+                            svr.AddDetail(DetailKeys.Error, SignCheckResources.DetailTimestampOutisdeCertValidity, ts.SignedOn, ts.EffectiveDate, ts.ExpiryDate);
+                            svr.IsSigned = false;
+                        }
                     }
+
+                    svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
                 }
                 catch (Exception e)
                 {

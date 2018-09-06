@@ -223,6 +223,15 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Timestamp ({0}) outside validity period ({1} to {2})..
+        /// </summary>
+        internal static string DetailTimestampOutisdeCertValidity {
+            get {
+                return ResourceManager.GetString("DetailTimestampOutisdeCertValidity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Timestmap: Skipped.
         /// </summary>
         internal static string DetailTimestampSkipped {
