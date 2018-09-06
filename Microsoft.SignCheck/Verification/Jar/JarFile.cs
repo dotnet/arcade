@@ -103,8 +103,6 @@ namespace Microsoft.SignCheck.Verification.Jar
                     a => String.Equals(a.FullName, "META-INF/MANIFEST.MF", StringComparison.OrdinalIgnoreCase)
                     );
             }
-
-            GetManifests();
         }
 
         /// <summary>
@@ -195,24 +193,6 @@ namespace Microsoft.SignCheck.Verification.Jar
                 }
 
                 return signatureFiles;
-            }
-        }
-
-        private void GetManifests()
-        {
-            // We're going to need all the files to calculate digest values.
-            // Still, we'll flatten the files to avoid potential 'path too long' errors
-            using (ZipArchive jarArchive = ZipFile.OpenRead(ArchivePath))
-            {
-                // Get all the signature files. There can be multiple .SF files as a JAR can be modified after being signed
-                // in which case a new .SF file needs to be added that contains digest information for new/modified files.
-                IEnumerable<ZipArchiveEntry> signatureArchiveEntries = jarArchive.Entries.Where(a => Regex.IsMatch(a.FullName, @"META-INF/.*\.SF"));
-
-                foreach (ZipArchiveEntry signatureArchiveEntry in signatureArchiveEntries)
-                {
-                    Stream signatureFileStream = signatureArchiveEntry.Open();
-                    signatureFileStream.Close();
-                }
             }
         }
     }
