@@ -83,6 +83,7 @@ namespace Microsoft.SignCheck.Verification
             AddFileVerifier(new CabVerifier(log, exclusions, options, ".cab"));
             AddFileVerifier(new PortableExecutableVerifier(log, exclusions, options, ".dll"));
             AddFileVerifier(new ExeVerifier(log, exclusions, options, ".exe"));
+            AddFileVerifier(new JarVerifier(log, exclusions, options));
             AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".js"));
             AddFileVerifier(new LzmaVerifier(log, exclusions, options));
             AddFileVerifier(new MsiVerifier(log, exclusions, options));

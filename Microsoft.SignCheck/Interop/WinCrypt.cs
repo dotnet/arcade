@@ -163,6 +163,7 @@ namespace Microsoft.SignCheck.Interop
         public const string szOID_RFC3161_counterSign = "1.3.6.1.4.1.311.3.3.1";
         public const string szOID_NESTED_SIGNATURE = "1.3.6.1.4.1.311.2.4.1";
         public const string szOID_TIMESTAMP_TOKEN = "1.2.840.113549.1.9.16.1.4";
+        public const string szOID_SIGNATURE_TIMESTAMP_ATTRIBUTE = "1.2.840.113549.1.9.16.2.14"; // Defined in RFC 3161 Appendix A
 
         [DllImport("Crypt32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool CryptQueryObject(

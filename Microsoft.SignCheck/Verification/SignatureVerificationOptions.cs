@@ -13,6 +13,7 @@ namespace Microsoft.SignCheck.Verification
         VerifyStrongNameSignature = 0x0001,
         VerifyAuthentiCodeTimestamps = 0x0002,
         VerifyXmlSignatures = 0x0004,
-        VerifyRecursive = 0x0008
+        VerifyJarSignatures = 0x0008,
+        VerifyRecursive = 0x0100,
     };
 }

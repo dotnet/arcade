@@ -39,6 +39,14 @@ namespace SignCheck
             set;
         }
 
+        [Option('j', "verify-jar",
+            HelpText = "Enable JAR signature verification. By default, .jar files are no verified.")]
+        public bool EnableJarSignatureVerification
+        {
+            get;
+            set;
+        }
+
         [Option('l', "log-file",
             HelpText = "Output results to the specified log file. If the file already exists it will be overwritten.")]
         public string LogFile
@@ -69,7 +77,7 @@ namespace SignCheck
         {
             get;
             set;
-        }        
+        }
 
         [Option('s', "verify-strongname",
             HelpText = "Enable strongname checks for managed code files (.exe and .dll)")]

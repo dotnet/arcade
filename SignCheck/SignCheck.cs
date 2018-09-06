@@ -358,6 +358,7 @@ namespace SignCheck
                 options |= Options.EnableXmlSignatureVerification ? SignatureVerificationOptions.VerifyXmlSignatures : SignatureVerificationOptions.None;
                 options |= Options.SkipTimestamp ? SignatureVerificationOptions.None : SignatureVerificationOptions.VerifyAuthentiCodeTimestamps;
                 options |= Options.VerifyStrongName ? SignatureVerificationOptions.VerifyStrongNameSignature : SignatureVerificationOptions.None;
+                options |= Options.EnableJarSignatureVerification ? SignatureVerificationOptions.VerifyJarSignatures : SignatureVerificationOptions.None;
 
                 var signatureVerificationManager = new SignatureVerificationManager(Exclusions, Log, options);
 

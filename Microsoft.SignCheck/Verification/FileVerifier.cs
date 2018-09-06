@@ -50,6 +50,14 @@ namespace Microsoft.SignCheck.Verification
             }            
         }
 
+        protected bool VerifyJarSignatures
+        {
+            get
+            {
+                return (Options & SignatureVerificationOptions.VerifyJarSignatures) == SignatureVerificationOptions.VerifyJarSignatures;
+            }
+        }
+
         protected bool VerifyRecursive
         {
             get
