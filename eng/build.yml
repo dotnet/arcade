@@ -38,9 +38,9 @@ phases:
         _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
         _TeamName: DotNetCore
         _SignArgs: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
-        _PublishArgs: /p:PB_PublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
-          /p:PB_PublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
-          /p:PB_PublishType=$(_PublishType)
+        _PublishArgs: /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
+          /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
+          /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
           /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
           /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         _HelixSource: official/dotnet/arcade/$(Build.SourceBranch)

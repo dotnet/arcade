@@ -15,15 +15,18 @@ phases:
             _BuildConfig: Debug
             _PublishType: none
             _SignType: test
+            _DotNetPublishToBlobFeed : false
           Build_Release:
             _BuildConfig: Release
             # PRs or external builds are not signed.
             ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
               _PublishType: none
               _SignType: test
+              _DotNetPublishToBlobFeed : false
             ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
               _PublishType: blob
               _SignType: real
+              _DotNetPublishToBlobFeed : true
   
   - template: /eng/build.yml
     parameters:
@@ -42,9 +45,21 @@ phases:
             _BuildConfig: Debug
             _PublishType: none
             _SignType: none
+            _DotNetPublishToBlobFeed : false
           Build_Release:
             _BuildConfig: Release
             _PublishType: none
             _SignType: none
+            _DotNetPublishToBlobFeed : false
       variables:
         _PREVIEW_VSTS_DOCKER_IMAGE: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
+
+  - template: /eng/common/templates/phases/publish-build-assets.yml
+    parameters:
+      dependsOn:
+        - Windows_NT
+        - Linux
+      queue: 
+        name: DotNetCore-Windows
+        demands:
+          - agent.os -equals Windows_NT
