@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.IO;
 
-namespace Microsoft.SignCheck
+namespace Microsoft.SignCheck.Verification
 {
     /// <summary>
     /// Represents an exclusion describing
@@ -19,7 +19,7 @@ namespace Microsoft.SignCheck
         /// <summary>
         /// Creates a new <see cref="Exclusion"/>.
         /// </summary>
-        /// <param name="exclusion">A string representation of a file exclusion. An exclusion contains a number of fields, separate by
+        /// <param name="exclusion">A string representation of a file exclusion. An exclusion contains a number of fields, separated by
         /// a ';'. The entry is formated as FILE_PATTERNS;PARENT_FILES;COMMENT. Additional fields are ignored and fields may be left
         /// empty, e.g. ";B.txt" indicates an exclusion with no file patterns and one parent file.
         ///

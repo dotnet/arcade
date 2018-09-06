@@ -43,7 +43,9 @@ namespace Microsoft.SignCheck.Verification
                         {
                             foreach (string file in Directory.EnumerateFiles(svr.TempPath, "*.*", SearchOption.AllDirectories))
                             {
-                                svr.NestedResults.Add(VerifyFile(Path.GetFullPath(file), svr.Filename));
+                                SignatureVerificationResult bundleEntryResult = VerifyFile(Path.GetFullPath(file), svr.Filename);
+                                CheckAndUpdateExclusion(bundleEntryResult, "*"+Path.GetFileName(file), file, svr.Filename);
+                                svr.NestedResults.Add(bundleEntryResult);
                             }
                         }
 

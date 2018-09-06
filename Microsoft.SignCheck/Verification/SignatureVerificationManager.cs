@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using System.IO.Compression;
-using Microsoft.SignCheck.Logging;
+using System.Linq;
 using Microsoft.SignCheck.Interop.PortableExecutable;
+using Microsoft.SignCheck.Logging;
 
 namespace Microsoft.SignCheck.Verification
 {
@@ -14,11 +12,8 @@ namespace Microsoft.SignCheck.Verification
     {
         // Dictionary holding the known verifiers, indexed by file extenion
         private static Dictionary<string, FileVerifier> _fileVerifiers = null;
-
         private static FileVerifier _unsupportedFileVerifier = new UnsupportedFileVerifier();
-
         private List<SignatureVerificationResult> _results;
-
 
         /// <summary>
         /// The Log instance to use for writing output.
@@ -228,7 +223,7 @@ namespace Microsoft.SignCheck.Verification
                     {
                         PortableExecutableHeader pe = new PortableExecutableHeader(path);
 
-                        if ((pe.FileHeader.Characteristics & ImageFileCharacteristics.IMAGe_FILE_DLL) != 0)
+                        if ((pe.FileHeader.Characteristics & ImageFileCharacteristics.IMAGE_FILE_DLL) != 0)
                         {
                             fileVerifier = GetFileVerifierByExtension(".dll");
                         }

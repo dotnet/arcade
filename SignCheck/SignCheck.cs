@@ -162,6 +162,12 @@ namespace SignCheck
             {
                 Exclusions = new Exclusions();
             }
+            // Add some well-known exclusions for WiX
+            Exclusions.Add(new Exclusion("*netfxca;;Wix custom action (NGEN"));
+            Exclusions.Add(new Exclusion("*wixdepca;;WiX custom action"));
+            Exclusions.Add(new Exclusion("*wixuiwixca;;WiX custom action"));
+            Exclusions.Add(new Exclusion("*wixca;;Wix custom action"));
+            Exclusions.Add(new Exclusion("*wixstdba.dll;;WiX standard bundle application"));
 
             if (!Directory.Exists(_appData))
             {

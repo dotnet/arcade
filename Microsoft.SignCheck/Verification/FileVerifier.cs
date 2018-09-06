@@ -132,7 +132,7 @@ namespace Microsoft.SignCheck.Verification
             Log.WriteMessage(LogVerbosity.Diagnostic, String.Format(SignCheckResources.DiagFirstExclusion, path));
             if (Exclusions.Count > 0)
             {
-                svr.IsExcluded = Exclusions.IsParentExcluded(parent) | Exclusions.IsFileExcluded(path);
+                svr.IsExcluded = Exclusions.IsParentExcluded(parent) || Exclusions.IsFileExcluded(path);
             }
 
             // Include the full path for top-level files
