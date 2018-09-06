@@ -61,6 +61,10 @@ namespace Microsoft.DotNet.Maestro.Client
         /// </param>
         /// <param name='loadCollections'>
         /// </param>
+        /// <param name='page'>
+        /// </param>
+        /// <param name='perPage'>
+        /// </param>
         /// <param name='customHeaders'>
         /// Headers that will be added to request.
         /// </param>
@@ -76,7 +80,7 @@ namespace Microsoft.DotNet.Maestro.Client
         /// <return>
         /// A response object containing the response body and response headers.
         /// </return>
-        public async Task<HttpOperationResponse<IList<Build>>> GetWithHttpMessagesAsync(string repository = default(string), string commit = default(string), string buildNumber = default(string), int? channelId = default(int?), System.DateTimeOffset? notBefore = default(System.DateTimeOffset?), System.DateTimeOffset? notAfter = default(System.DateTimeOffset?), bool? loadCollections = default(bool?), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<HttpOperationResponse<IList<Build>>> GetAllBuildsWithHttpMessagesAsync(string repository = default(string), string commit = default(string), string buildNumber = default(string), int? channelId = default(int?), System.DateTimeOffset? notBefore = default(System.DateTimeOffset?), System.DateTimeOffset? notAfter = default(System.DateTimeOffset?), bool? loadCollections = default(bool?), int? page = default(int?), int? perPage = default(int?), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             string apiVersion = "2018-07-16";
             // Tracing
@@ -93,9 +97,11 @@ namespace Microsoft.DotNet.Maestro.Client
                 tracingParameters.Add("notBefore", notBefore);
                 tracingParameters.Add("notAfter", notAfter);
                 tracingParameters.Add("loadCollections", loadCollections);
+                tracingParameters.Add("page", page);
+                tracingParameters.Add("perPage", perPage);
                 tracingParameters.Add("apiVersion", apiVersion);
                 tracingParameters.Add("cancellationToken", cancellationToken);
-                ServiceClientTracing.Enter(_invocationId, this, "Get", tracingParameters);
+                ServiceClientTracing.Enter(_invocationId, this, "GetAllBuilds", tracingParameters);
             }
             // Construct URL
             var _baseUrl = Client.BaseUri.AbsoluteUri;
@@ -128,6 +134,14 @@ namespace Microsoft.DotNet.Maestro.Client
             if (loadCollections != null)
             {
                 _queryParameters.Add(string.Format("loadCollections={0}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(loadCollections, Client.SerializationSettings).Trim('"'))));
+            }
+            if (page != null)
+            {
+                _queryParameters.Add(string.Format("page={0}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(page, Client.SerializationSettings).Trim('"'))));
+            }
+            if (perPage != null)
+            {
+                _queryParameters.Add(string.Format("perPage={0}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(perPage, Client.SerializationSettings).Trim('"'))));
             }
             if (apiVersion != null)
             {

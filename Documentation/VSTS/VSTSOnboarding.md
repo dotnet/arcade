@@ -1,7 +1,7 @@
 # Onboarding VSTS
 
 - [Project Guidance](#project-guidance)
-- [GitHub to DotNet Internal mirror](#github-to-dotnet-internal-mirror)
+- [GitHub to DncEng Internal mirror](#github-to-dnceng-internal-mirror)
 - [VSTS Pull Request and CI builds](#vsts-pull-request-and-ci-builds)
 - [Agent Queues](#agent-queues)
 - [VSTS GitHub connection](#vsts-github-connection)
@@ -15,11 +15,11 @@
 
 [Project guidance](./VSTSGuidance.md) - Covers guidance on naming conventions, folder structure, projects, build definitions, etc...
 
-## GitHub to DotNet Internal mirror
+## GitHub to DncEng Internal mirror
 
-If your repository has internal builds, you will need to set up a DotNet Internal mirror. This is *required* for internal builds; if your repository only does PR or public CI builds, you can skip this step.
+If your repository has internal builds, you will need to set up a DncEng Internal mirror. This is *required* for internal builds; if your repository only does PR or public CI builds, you can skip this step.
 
-Instructions for setting up the GitHub to dotnet.visualstudio.com/internal mirror are available in the [Dotnet.visualstudio.com internal mirror documentation](./internal-mirror.md)
+Instructions for setting up the GitHub to dnceng.visualstudio.com/internal mirror are available in the [dnceng.visualstudio.com internal mirror documentation](./internal-mirror.md)
 
 ## VSTS Pull Request and CI builds
 
@@ -50,16 +50,16 @@ The [VSTS CI Build guidance](https://docs.microsoft.com/en-us/vsts/build-release
 ```JSON
 "_links": {
   "self": {
-      "href": "https://dotnet.visualstudio.com/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_apis/build/Definitions/15?revision=4"
+      "href": "https://dnceng.visualstudio.com/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_apis/build/Definitions/15?revision=4"
   },
   "web": {
-      "href": "https://dotnet.visualstudio.com/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_build/definition?definitionId=15"
+      "href": "https://dnceng.visualstudio.com/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_build/definition?definitionId=15"
   },
   "editor": {
-      "href": "https://dotnet.visualstudio.com/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_build/designer?id=15&_a=edit-build-definition"
+      "href": "https://dnceng.visualstudio.com/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_build/designer?id=15&_a=edit-build-definition"
   },
   "badge": {
-      "href": "https://dotnet.visualstudio.com/_apis/public/build/definitions/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/15/badge"
+      "href": "https://dnceng.visualstudio.com/_apis/public/build/definitions/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/15/badge"
   }
 },
 ```
@@ -73,12 +73,12 @@ It is recommended that you restrict the CI build status to a particular branch. 
 Example:
 
 ```Text
-https://dotnet.visualstudio.com/DotNet-Public/_build/index?definitionId=17&branchName=master
+https://dnceng.visualstudio.com/Public/_build/index?definitionId=17&branchName=master
 ```
 
 ## Signed Builds
 
-Dotnet.visualstudio.com does not have support for signed builds.  Code should still be mirrored to dotnet.visualstudio.com/internal as outlined in the [VSTS Guidance](./VSTSGuidance.md#projects), but build definitions for signing should be created in devdiv.visualstudio.com, see the additional [signing documentation](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/signed-dotnet.visualstudio.com-builds.md)
+dnceng.visualstudio.com does not have support for signed builds.  Code should still be mirrored to dnceng.visualstudio.com/internal as outlined in the [VSTS Guidance](./VSTSGuidance.md#projects), but build definitions for signing should be created in devdiv.visualstudio.com, see the additional [signing documentation](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/signed-dnceng.visualstudio.com-builds.md)
 
 ## Security
 
@@ -114,7 +114,7 @@ Notes about templates:
 
 ### Known issues
 
-For a list of known VSTS issues we are tracking, please go [here](https://dotnet.visualstudio.com/internal/_queries/query/7275f17c-c42f-44b8-9798-9c2426bf8395/)
+For a list of known VSTS issues we are tracking, please go [here](https://dnceng.visualstudio.com/internal/_queries/query/7275f17c-c42f-44b8-9798-9c2426bf8395/)
 
 ### Queuing builds
 
@@ -137,7 +137,7 @@ For a list of known VSTS issues we are tracking, please go [here](https://dotnet
 
   Note that [resource authorization](https://github.com/Microsoft/vsts-agent/blob/d792192875381ea770f09f3740ed8d1051f4f456/docs/preview/yamlgettingstarted-authz.md) happens on Push, not for Pull Requests.  If you have some changes to resources that you want to make and submit via a PR.  You must (currently) authorize the build definition first (otherwise the PR will fail).
 
-  1. Push your changes to a branch of the dotnet repository (not your fork)
+  1. Push your changes to a branch of the dnceng repository (not your fork)
   2. Edit the build definition
   3. Take note of the "Default branch for manual and scheduled builds"
   4. Change "Default branch for manual and scheduled builds" to the branch you just pushed

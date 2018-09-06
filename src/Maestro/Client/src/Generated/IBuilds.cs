@@ -33,6 +33,10 @@ namespace Microsoft.DotNet.Maestro.Client
         /// </param>
         /// <param name='loadCollections'>
         /// </param>
+        /// <param name='page'>
+        /// </param>
+        /// <param name='perPage'>
+        /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
         /// </param>
@@ -48,7 +52,7 @@ namespace Microsoft.DotNet.Maestro.Client
         /// <exception cref="Microsoft.Rest.ValidationException">
         /// Thrown when a required parameter is null
         /// </exception>
-        Task<HttpOperationResponse<IList<Build>>> GetWithHttpMessagesAsync(string repository = default(string), string commit = default(string), string buildNumber = default(string), int? channelId = default(int?), System.DateTimeOffset? notBefore = default(System.DateTimeOffset?), System.DateTimeOffset? notAfter = default(System.DateTimeOffset?), bool? loadCollections = default(bool?), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<IList<Build>>> GetAllBuildsWithHttpMessagesAsync(string repository = default(string), string commit = default(string), string buildNumber = default(string), int? channelId = default(int?), System.DateTimeOffset? notBefore = default(System.DateTimeOffset?), System.DateTimeOffset? notAfter = default(System.DateTimeOffset?), bool? loadCollections = default(bool?), int? page = default(int?), int? perPage = default(int?), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <param name='build'>
         /// </param>
         /// <param name='customHeaders'>

@@ -12,12 +12,8 @@ phases:
             _SignType: test
           Build_Release:
             _BuildConfig: Release
-            ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _PublishType: none
-              _SignType: test
-            ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _PublishType: none
-              _SignType: real
+            _PublishType: none
+            _SignType: test
   
   - template: /eng/build.yml
     parameters:
@@ -29,13 +25,10 @@ phases:
           Build_Debug:
             _BuildConfig: Debug
             _PublishType: none
-            _SignType: test
+            _SignType: none
           Build_Release:
             _BuildConfig: Release
             _PublishType: none
-            ${{ if in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _SignType: test
-            ${{ if notIn(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'PullRequest') }}:
-              _SignType: real
+            _SignType: none
       variables:
         _PREVIEW_VSTS_DOCKER_IMAGE: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304

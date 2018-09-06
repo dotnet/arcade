@@ -13,11 +13,14 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         private readonly GitHubClient _client;
         private readonly string _repoOwner;
         private readonly string _repoName;
+        private readonly double _threshold;
 
-        public Labeler(string repoOwner, string repoName, string accessToken)
+        public Labeler(string repoOwner, string repoName, string accessToken, double threshold)
         {
             _repoOwner = repoOwner;
             _repoName = repoName;
+            _threshold = threshold;
+
             var productInformation = new ProductHeaderValue("MLGitHubLabeler");
             _client = new GitHubClient(productInformation)
             {
@@ -34,7 +37,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
                 Description = body
             };
 
-            string label = await Predictor.PredictAsync(corefxIssue, logger);
+            string label = await Predictor.PredictAsync(corefxIssue, logger, _threshold);
             if (label != null)
             {
                 var issueUpdate = new IssueUpdate();

@@ -1,4 +1,4 @@
-<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+﻿<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(NetFxTfm);netcoreapp2.0</TargetFrameworks>
@@ -9,6 +9,9 @@
     <PackageTags>Arcade Build Tool Signing</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Common\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.DotNet.SignTool.Tests" />
@@ -16,42 +19,16 @@
 
   <ItemGroup>
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
+    <PackageReference Include="System.IO.Compression" Version="$(SystemIOCompressionVersion)" />
     <PackageReference Include="System.IO.FileSystem.Primitives" Version="$(SystemIOFileSystemPrimitivesVersion)" />
-    <PackageReference Include="System.IO.Packaging" Version="$(SystemIOPackagingVersion)" />
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
-    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="$(MicrosoftExtensionsFileSystemGlobbingVersion)" />
-    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
   </ItemGroup>
 
-  <!-- Just copy the .props and .target to the build folder. -->
-  <ItemGroup>
-    <Content Include="build\*" PackagePath="build\" />
+  <ItemGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'">
+    <Reference Include="WindowsBase"/>
   </ItemGroup>
 
-  <!-- 
-    Specify binaries to include in NuGet package 
-  -->
-  <PropertyGroup>
-    <IncludeBuildOutput>false</IncludeBuildOutput>
-    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_PublishCore;_GetFilesToPackage</TargetsForTfmSpecificContentInPackage>
-  </PropertyGroup>
-
-  <Target Name="_PublishCore" DependsOnTargets="Publish" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
-
-  <Target Name="_GetFilesToPackage" Returns="@(TfmSpecificPackageFile)">
-    <PropertyGroup>
-      <_Dir>$(OutDir)</_Dir>
-      <_Dir Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">$(PublishDir)</_Dir>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <_Files Include="$(_Dir)*" />
-
-      <TfmSpecificPackageFile Include="@(_Files)">
-        <PackagePath>tools/$(TargetFramework)/%(_Files.Filename)%(_Files.Extension)</PackagePath>
-      </TfmSpecificPackageFile>
-    </ItemGroup>
-  </Target>
+  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>

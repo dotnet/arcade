@@ -279,6 +279,7 @@ function Build {
     /p:PerformanceTest=$performance_test \
     /p:Sign=$sign \
     /p:Publish=$publish \
+    /p:ContinuousIntegrationBuild=$ci \
     /p:CIBuild=$ci \
     $properties
   local lastexitcode=$?

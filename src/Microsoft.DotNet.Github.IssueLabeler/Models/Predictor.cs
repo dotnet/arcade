@@ -12,8 +12,8 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
     internal static class Predictor
     {
         private static string ModelPath => @"model\GitHubIssueLabelerModel.zip";
-        
-        public static async Task<string> PredictAsync(GitHubIssue issue, ILogger logger)
+
+        public static async Task<string> PredictAsync(GitHubIssue issue, ILogger logger, double threshold)
         {
             PredictionModel<GitHubIssue, GitHubIssuePrediction> model = await PredictionModel.ReadAsync<GitHubIssue, GitHubIssuePrediction>(ModelPath);
             GitHubIssuePrediction prediction = model.Predict(issue);
@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             float[] probabilities = prediction.Probabilities;
             float maxProbability = probabilities.Max();
             logger.LogInformation($"# {maxProbability.ToString()} {prediction.Area} for #{issue.ID} {issue.Title}");
-            return maxProbability > 0.7 ? prediction.Area : null;
+            return maxProbability > threshold ? prediction.Area : null;
         }
     }
 }

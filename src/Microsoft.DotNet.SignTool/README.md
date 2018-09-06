@@ -21,6 +21,7 @@ This is a MSBuild custom task that provides batch signing and verification for M
 | ItemsToSign               | Array     | **Yes**  | This is a list of *full path* to files that need to be signed. Container files will be expanded to look for nested files that need to be signed. |
 | StrongNameSignInfo        | Array     | **Yes**  | Should store the default certificate name and strong name to be used for a given Public Key Token. See details below. |
 | FileSignInfo              | Array     | No       | Used to override the default certificate information for specific files and target frameworks combinations. If not specified default information is used or error occurs. See details below. |
+| FileExtensionSignInfo     | Array     | No       | This is a mapping between extension (in the format ".ext") to default sign information for those kind of files. Overriding of the default sign info is done using the other parameters. |
 | MicroBuildCorePath        | Dir Path  | **Yes**  | Path to MicroBuild.Core package directory.                   |
 | MSBuildPath               | Exe path  | !DryRun  | Path to the MSBuild.exe binary used to run the signing process on MicroBuild. |
 | PublishUrl                | Http URL  | No       | The URL of the feed where the package will be published. This is only used as complimentary information on the orchestration manifest file. |

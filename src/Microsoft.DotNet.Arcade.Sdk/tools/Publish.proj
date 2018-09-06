@@ -3,7 +3,6 @@
   <!--
     Required variables:
       VersionsPropsPath                 Versions.props path.
-      FixedVersionsPropsPath            FixedVersions.props path.
 
     Optional variables:                 
       AzureFeedUrl                      Target Azure feed URL.
@@ -27,7 +26,8 @@
     <PublishToSourceBuildStorage Condition="'$(DotNetOutputBlobFeedDir)' != ''">true</PublishToSourceBuildStorage>
     
     <PublishToSymbolServer>false</PublishToSymbolServer>
-    <PublishToSymbolServer Condition="'$(UsingToolSymbolUploader)' == 'true' and '$(AzureFeedUrl)' == '' and '$(CIBuild)' == 'true'">true</PublishToSymbolServer>
+    <PublishToSymbolServer Condition="'$(UsingToolSymbolUploader)' == 'true' and '$(AzureFeedUrl)' == '' and '$(ContinuousIntegrationBuild)' == 'true'">true</PublishToSymbolServer>
+    <AssetManifestFilePath>$(ArtifactsLogDir)AssetManifest\$(OS)-$(PlatformName).xml</AssetManifestFilePath>
   </PropertyGroup>
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets" Condition="$(PublishToAzure)"/>
@@ -74,10 +74,12 @@
     <PushToBlobFeed ExpectedFeedUrl="$(AzureFeedUrl)"
                     AccountKey="$(AzureAccountKey)"
                     ItemsToPush="@(ItemsToPushToBlobFeed)"
-                    ManifestName="$(BUILD_REPOSITORY_NAME)"
+                    ManifestBuildData="Location=$(AzureFeedUrl)"
+                    ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
                     ManifestBranch="$(BUILD_SOURCEBRANCH)"
                     ManifestBuildId="$(BUILD_BUILDNUMBER)"
                     ManifestCommit="$(BUILD_SOURCEVERSION)" 
+                    AssetManifestPath="$(AssetManifestFilePath)"
                     Condition="$(PublishToAzure)"/>
 
     <!-- Source Build local storage -->    

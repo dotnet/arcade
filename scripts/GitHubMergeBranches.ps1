@@ -40,6 +40,7 @@ param(
     [Alias('a')]
     $AuthToken,
 
+    [Obsolete('Unused parameter. AuthToken is used to find the username.')]
     [Alias('u')]
     $Username,
 
@@ -49,10 +50,6 @@ param(
 $ErrorActionPreference = 'stop'
 Set-StrictMode -Version 1
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-if ($Fork -and (-not $Username)) {
-    throw 'You must specify -Username if you also specify -Fork'
-}
 
 # Workaround for quirk in how dotnet-maestro-bot triggers this script
 if ($RepoName -like "$RepoOwner/*") {
@@ -125,7 +122,42 @@ function RepoExists($owner, $name) {
     }
 }
 
-$workDir = "$PSScriptRoot/obj/$repoName"
+function GetOrCreateFork() {
+    $resp = Invoke-RestMethod -Method Post -Headers $Headers `
+        "https://api.github.com/repos/$RepoOwner/$RepoName/forks"
+    $resp | Write-Verbose
+
+    # This effectively gets the owner based on the PAT.
+    $owner = $resp.owner.login
+    # If there are repos in different orgs with the same name, like dotnet/buildtools and
+    # aspnet/BuildTools, the name of the fork isn't predictable.
+    $name = $resp.name
+
+    $retries = 10
+    $repoCreated = $false
+    do {
+        $retries -= 1
+        if (RepoExists $owner $name) {
+            # Fork creation is an async operation. Wait a minute to give GitHub more time to finish fork creation
+            Start-Sleep -Seconds 90
+            $repoCreated = $true
+            break
+        }
+        Write-Host "Repo ${owner}/${name} does not exist yet. Waiting to check again..."
+        Start-Sleep -Seconds 30
+    } while ($retries -gt 0)
+
+    if (-not $repoCreated) {
+        throw "Could not create a fork ${owner}/${name} for ${RepoOwner}/${RepoName}"
+    }
+
+    return @{
+        Name = $name
+        Owner = $owner
+    }
+}
+
+$workDir = "$PSScriptRoot/obj/$RepoOwner/$RepoName"
 New-Item "$PSScriptRoot/obj/" -ItemType Directory -ErrorAction Ignore | Out-Null
 
 $fetch = $true
@@ -185,6 +217,7 @@ try {
 
     $remoteName = 'origin'
     $prOwnerName = $RepoOwner
+    $prRepoName = $RepoName
 
     if ($Fork) {
         $remoteName = 'fork'
@@ -195,36 +228,15 @@ try {
         }
         catch { }
 
-        Invoke-Block { & git remote add fork "https://${Username}:${AuthToken}@github.com/${Username}/${RepoName}.git" }
-        $prOwnerName = $Username
+        if ($PSCmdlet.ShouldProcess("Finding or creating fork for ${RepoName}")) {
 
-        if (-not (RepoExists $Username $RepoName)) {
-            if ($PSCmdlet.ShouldProcess("Creating fork ${Username}/${RepoName}")) {
+            Write-Host -ForegroundColor Yellow "Finding or creating fork for ${RepoName}"
 
-                Write-Host -ForegroundColor Yellow "Creating a fork ${Username}/${RepoName}"
+            $forkData = GetOrCreateFork
 
-                $resp = Invoke-RestMethod -Method Post -Headers $Headers `
-                    "https://api.github.com/repos/$RepoOwner/$RepoName/forks"
-                $resp | Write-Verbose
-
-                $retries = 10
-                $repoCreated = $false
-                do {
-                    $retries -= 1
-                    if (RepoExists $Username $RepoName) {
-                        # Fork creation is an async operation. Wait a minute to give GitHub more time to finish fork creation
-                        Start-Sleep -Seconds 90
-                        $repoCreated = $true
-                        break
-                    }
-                    Write-Host "Repo ${Username}/${RepoName} does not exist yet. Waiting to check again..."
-                    Start-Sleep -Seconds 30
-                } while ($retries -gt 0)
-
-                if (-not $repoCreated) {
-                    throw "Could not create a fork for ${Username}/${RepoName}"
-                }
-            }
+            Invoke-Block { & git remote add fork "https://placeholderUser:${AuthToken}@github.com/$($forkData.Owner)/$($forkData.Name).git" }
+            $prOwnerName = $forkData.Owner
+            $prRepoName = $forkData.Name
         }
     }
 
@@ -336,7 +348,7 @@ You can also do this on command line:
 ``````
 git checkout $BaseBranch
 git pull
-git fetch --force https://github.com/$prOwnerName/$RepoName ${mergeBranchName}:${mergeBranchName}
+git fetch --force https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}:${mergeBranchName}
 git merge ${mergeBranchName}
 git push
 ``````
@@ -347,7 +359,7 @@ git push
 You can do this [using GitHub](https://help.github.com/articles/resolving-a-merge-conflict-on-github/)
 or using the [command line](https://help.github.com/articles/resolving-a-merge-conflict-using-the-command-line/).
 
-Maintainers of this repo have permission to the branch '$mergeBranchName' on https://github.com/$prOwnerName/$RepoName.
+Maintainers of this repo have permission to the branch '$mergeBranchName' on https://github.com/$prOwnerName/$prRepoName.
 You can push changes to this branch to resolve conflicts or other issues in this pull request. The bot will attempt
 to update this branch as more changes are discovered on $HeadBranch.
 

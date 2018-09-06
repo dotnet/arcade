@@ -14,8 +14,10 @@ namespace Maestro.Data.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
+        [Required]
         public string Name { get; set; }
 
+        [Required]
         public string Classification { get; set; }
 
         public List<BuildChannel> BuildChannels { get; set; }
