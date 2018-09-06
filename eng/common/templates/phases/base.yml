@@ -32,8 +32,8 @@ parameters:
   #             _SignType - 'test' or 'real'
   enableMicrobuild: false
 
-  # Build.Reason for anonymous builds - https://docs.microsoft.com/en-us/vsts/pipelines/build/variables?view=vsts#build-variables
-  publicBuildReasons: PullRequest
+# Internal resources (telemetry, microbuild) can only be accessed from non-public projects,
+# and some (Microbuild) should only be applied to non-PR cases for internal builds.
 
 phases:
 - phase: ${{ parameters.name }}
@@ -50,21 +50,22 @@ phases:
       fetchDepth: ${{ parameters.fetchDepth }}
 
   - ${{ if eq(parameters.enableTelemetry, 'true') }}:
-    # Remove this condition once telemetry can be sent from public CI
-    - ${{ if and(ne(variables['System.TeamProject'], 'public'), not(contains(parameters.publicBuildReasons, variables['Build.Reason'] ))) }}:
-      - template: /eng/common/templates/steps/telemetry-start.yml
-        parameters:
-          buildConfig: ${{ parameters.variables._HelixBuildConfig }}
-          helixSource: ${{ parameters.variables._HelixSource }}
-          helixType: ${{ parameters.variables._HelixType }}
+    - template: /eng/common/templates/steps/telemetry-start.yml
+      parameters:
+        buildConfig: $(_HelixBuildConfig)
+        helixSource: $(_HelixSource)
+        helixType: $(_HelixType)
 
   - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
-    - ${{ if and(ne(variables['System.TeamProject'], 'public'), not(contains(parameters.publicBuildReasons, variables['Build.Reason'] ))) }}:
-      - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
+    # Internal only resource, and Microbuild signing shouldn't be applied to PRs.
+    - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+      - task: MicroBuildSigningPlugin@1
         displayName: Install MicroBuild plugin
         inputs:
           signType: $(_SignType)
           zipSources: false
+          feedSource: https://dnceng.pkgs.visualstudio.com/_packaging/MicroBuildToolset/nuget/v3/index.json
+          
         env:
           TeamName: $(_TeamName)
         continueOnError: false
@@ -74,17 +75,16 @@ phases:
   - ${{ parameters.steps }}
 
   - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
-    - ${{ if and(ne(variables['System.TeamProject'], 'public'), not(contains(parameters.publicBuildReasons, variables['Build.Reason'] ))) }}:
-      - task: ms-vseng.MicroBuildTasks.521a94ea-9e68-468a-8167-6dcf361ea776.MicroBuildCleanup@1
+    # Internal only resources
+    - ${{ if ne(variables['System.TeamProject'], 'public') }}:
+      - task: MicroBuildCleanup@1
         displayName: Execute Microbuild cleanup tasks  
         condition: and(always(), in(variables['_SignType'], 'real', 'test'), eq(variables['Agent.Os'], 'Windows_NT'))
         env:
           TeamName: $(_TeamName)
 
   - ${{ if eq(parameters.enableTelemetry, 'true') }}:
-    # Remove this condition once telemetry can be sent from public CI
-    - ${{ if and(ne(variables['System.TeamProject'], 'public'), not(contains(parameters.publicBuildReasons, variables['Build.Reason'] ))) }}:
-      - template: /eng/common/templates/steps/telemetry-end.yml
-        parameters:
-          helixSource: ${{ parameters.variables._HelixSource }}
-          helixType: ${{ parameters.variables._HelixType }}
+    - template: /eng/common/templates/steps/telemetry-end.yml
+      parameters:
+        helixSource: $(_HelixSource)
+        helixType: $(_HelixType)

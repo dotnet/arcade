@@ -36,7 +36,7 @@ steps:
       echo "##$vstsLogOutput"
       exit 1
     fi
-  displayName: Send Build End Telemetry
+  displayName: Send Unix Build End Telemetry
   env:
     # defined via VSTS variables in start-job.sh
     Helix_JobToken: $(Helix_JobToken)
@@ -59,7 +59,7 @@ steps:
       Write-Error $_.Exception
       exit 1
     }
-  displayName: Send Build End Telemetry
+  displayName: Send Windows Build End Telemetry
   env:
     # defined via VSTS variables in start-job.ps1
     Helix_JobToken: $(Helix_JobToken)

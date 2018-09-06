@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Maestro.Client.Models
         /// <summary>
         /// Initializes a new instance of the Subscription class.
         /// </summary>
-        public Subscription(int? id = default(int?), Channel channel = default(Channel), string sourceRepository = default(string), string targetRepository = default(string), string targetBranch = default(string), SubscriptionPolicy policy = default(SubscriptionPolicy))
+        public Subscription(System.Guid? id = default(System.Guid?), Channel channel = default(Channel), string sourceRepository = default(string), string targetRepository = default(string), string targetBranch = default(string), SubscriptionPolicy policy = default(SubscriptionPolicy), Build lastAppliedBuild = default(Build))
         {
             Id = id;
             Channel = channel;
@@ -31,6 +31,7 @@ namespace Microsoft.DotNet.Maestro.Client.Models
             TargetRepository = targetRepository;
             TargetBranch = targetBranch;
             Policy = policy;
+            LastAppliedBuild = lastAppliedBuild;
             CustomInit();
         }
 
@@ -42,7 +43,7 @@ namespace Microsoft.DotNet.Maestro.Client.Models
         /// <summary>
         /// </summary>
         [JsonProperty(PropertyName = "id")]
-        public int? Id { get; set; }
+        public System.Guid? Id { get; set; }
 
         /// <summary>
         /// </summary>
@@ -69,5 +70,23 @@ namespace Microsoft.DotNet.Maestro.Client.Models
         [JsonProperty(PropertyName = "policy")]
         public SubscriptionPolicy Policy { get; set; }
 
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "lastAppliedBuild")]
+        public Build LastAppliedBuild { get; set; }
+
+        /// <summary>
+        /// Validate the object.
+        /// </summary>
+        /// <exception cref="Rest.ValidationException">
+        /// Thrown if validation fails
+        /// </exception>
+        public virtual void Validate()
+        {
+            if (Policy != null)
+            {
+                Policy.Validate();
+            }
+        }
     }
 }

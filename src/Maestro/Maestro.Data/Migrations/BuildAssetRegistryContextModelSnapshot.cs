@@ -184,11 +184,16 @@ namespace Maestro.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("Classification");
+                    b.Property<string>("Classification")
+                        .IsRequired();
 
-                    b.Property<string>("Name");
+                    b.Property<string>("Name")
+                        .IsRequired();
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Channels");
                 });
@@ -258,6 +263,79 @@ namespace Maestro.Data.Migrations
                     b.HasIndex("LastAppliedBuildId");
 
                     b.ToTable("Subscriptions");
+                });
+
+            modelBuilder.Entity("Maestro.Data.Models.SubscriptionUpdate", b =>
+                {
+                    b.Property<Guid>("SubscriptionId");
+
+                    b.Property<string>("Action")
+                        .HasMaxLength(450);
+
+                    b.Property<string>("Arguments")
+                        .HasMaxLength(450);
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(450);
+
+                    b.Property<string>("Method")
+                        .HasMaxLength(450);
+
+                    b.Property<bool>("Success");
+
+                    b.Property<DateTime>("SysEndTime")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2 GENERATED ALWAYS AS ROW END");
+
+                    b.Property<DateTime>("SysStartTime")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2 GENERATED ALWAYS AS ROW START");
+
+                    b.HasKey("SubscriptionId");
+
+                    b.ToTable("SubscriptionUpdates");
+
+                    b.HasAnnotation("SqlServer:HistoryRetentionPeriod", "1 MONTHS");
+
+                    b.HasAnnotation("SqlServer:SystemVersioned", "Maestro.Data.Models.SubscriptionUpdateHistory");
+                });
+
+            modelBuilder.Entity("Maestro.Data.Models.SubscriptionUpdateHistory", b =>
+                {
+                    b.Property<Guid>("SubscriptionId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("Action")
+                        .HasMaxLength(450);
+
+                    b.Property<string>("Arguments")
+                        .HasMaxLength(450);
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(450);
+
+                    b.Property<string>("Method")
+                        .HasMaxLength(450);
+
+                    b.Property<bool>("Success");
+
+                    b.Property<DateTime>("SysEndTime")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("SysStartTime")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SubscriptionId");
+
+                    b.HasIndex("SubscriptionId")
+                        .HasAnnotation("SqlServer:Clustered", true)
+                        .HasAnnotation("SqlServer:ColumnstoreIndex", true);
+
+                    b.ToTable("SubscriptionUpdateHistory");
+
+                    b.HasAnnotation("SqlServer:HistoryTable", true);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
@@ -429,6 +507,14 @@ namespace Maestro.Data.Migrations
                     b.HasOne("Maestro.Data.Models.Build", "LastAppliedBuild")
                         .WithMany()
                         .HasForeignKey("LastAppliedBuildId");
+                });
+
+            modelBuilder.Entity("Maestro.Data.Models.SubscriptionUpdate", b =>
+                {
+                    b.HasOne("Maestro.Data.Models.Subscription", "Subscription")
+                        .WithOne()
+                        .HasForeignKey("Maestro.Data.Models.SubscriptionUpdate", "SubscriptionId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>

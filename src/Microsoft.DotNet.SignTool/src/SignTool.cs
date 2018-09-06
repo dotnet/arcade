@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -25,13 +24,13 @@ namespace Microsoft.DotNet.SignTool
 
         public abstract void RemovePublicSign(string assemblyPath);
 
-        public abstract bool VerifySignedAssembly(Stream assemblyStream);
+        public abstract bool VerifySignedPEFile(Stream stream);
 
         public abstract bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round);
 
         public bool Sign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> filesToSign)
         {
-            var signingDir = Path.Combine(TempDir, "Signing");
+            var signingDir = Path.Combine(_args.TempDir, "Signing");
             var buildFilePath = Path.Combine(signingDir, $"Round{round}.proj");
             var content = GenerateBuildFileContent(filesToSign);
 
@@ -50,8 +49,8 @@ namespace Microsoft.DotNet.SignTool
             // Setup the code to get the NuGet package root.
             var signKind = _args.TestSign ? "test" : "real";
             AppendLine(builder, depth: 1, text: @"<PropertyGroup>");
-            AppendLine(builder, depth: 2, text: $@"<OutDir>{TempDir}</OutDir>");
-            AppendLine(builder, depth: 2, text: $@"<IntermediateOutputPath>{TempDir}</IntermediateOutputPath>");
+            AppendLine(builder, depth: 2, text: $@"<OutDir>{_args.EnclosingDir}</OutDir>");
+            AppendLine(builder, depth: 2, text: $@"<IntermediateOutputPath>{_args.TempDir}</IntermediateOutputPath>");
             AppendLine(builder, depth: 2, text: $@"<SignType>{signKind}</SignType>");
             AppendLine(builder, depth: 1, text: @"</PropertyGroup>");
 

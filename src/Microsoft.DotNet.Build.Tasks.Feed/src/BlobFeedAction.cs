@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -235,7 +235,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             var context = new SleetContext
             {
                 LocalSettings = GetSettings(),
-                Log = new SleetLogger(Log),
+                Log = new SleetLogger(Log, NuGet.Common.LogLevel.Verbose),
                 Source = GetAzureFileSystem(),
                 Token = CancellationToken
             };
@@ -332,7 +332,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             LocalSettings settings = GetSettings();
             AzureFileSystem fileSystem = GetAzureFileSystem();
-            SleetLogger log = new SleetLogger(Log);
+            SleetLogger log = new SleetLogger(Log, NuGet.Common.LogLevel.Verbose);
 
             var packagesToPush = items.ToList();
 
@@ -409,7 +409,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             LocalSettings settings = GetSettings();
             AzureFileSystem fileSystem = GetAzureFileSystem();
-            bool result = await InitCommand.RunAsync(settings, fileSystem, enableCatalog: false, enableSymbols: false, log: new SleetLogger(Log), token: CancellationToken);
+            bool result = await InitCommand.RunAsync(settings, fileSystem, enableCatalog: false, enableSymbols: false, log: new SleetLogger(Log, NuGet.Common.LogLevel.Verbose), token: CancellationToken);
             return result;
         }
     }

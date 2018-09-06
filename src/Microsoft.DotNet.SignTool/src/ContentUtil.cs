@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.SignTool
 {
-    internal sealed class ContentUtil
+    internal static class ContentUtil
     {
         public static ImmutableArray<byte> GetContentHash(string fullPath)
         {

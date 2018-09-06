@@ -6,7 +6,6 @@ using Microsoft.Build.Framework;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 
 namespace Microsoft.DotNet.SignTool
@@ -75,7 +74,7 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        public override bool VerifySignedAssembly(Stream assemblyStream)
+        public override bool VerifySignedPEFile(Stream assemblyStream)
         {
             // The assembly won't verify by design when doing test signing.
             if (TestSign)

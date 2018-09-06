@@ -9,7 +9,9 @@ namespace Maestro.Contracts
 {
     public interface ISubscriptionActor : IActor
     {
-        Task SynchronizeInProgressPRAsync();
+        Task SubscriptionDeletedAsync(string user);
         Task UpdateAsync(int buildId);
+        Task<string> CheckMergePolicyAsync(string prUrl);
+        Task<string> RunAction(string action, object[] arguments);
     }
 }

@@ -1,14 +1,13 @@
 <!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
-    Used to restore global toolset packages.
+    Used to restore global toolset packages. 
+    Not imported when building from source.
 
     Required parameters:
       VersionsPropsPath             Versions.props path. 
-      FixedVersionsPropsPath        FixedVersions.props path.
 
     Optional parameters:
-      ExternalRestoreSources
       PublishingToBlobStorage
   -->
 
@@ -20,10 +19,6 @@
 
   <PropertyGroup>
     <RestoreSources/>
-    <RestoreSources Condition="'$(ExternalRestoreSources)' != ''">
-      $(RestoreSources);
-      $(ExternalRestoreSources)
-    </RestoreSources>
     <RestoreSources>
       $(RestoreSources);
       https://api.nuget.org/v3/index.json;
@@ -54,6 +49,7 @@
     <PackageReference Include="Microsoft.DotNet.SignTool" Version="$(MicrosoftDotNetSignToolVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="RoslynTools.ModifyVsixManifest" Version="$(RoslynToolsModifyVsixManifestVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" Condition="'$(UsingToolSymbolUploader)' == 'true'" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.DotNet.Maestro.Tasks" Version="$(MicrosoftDotNetMaestroTasksVersion)" Condition="'$(PublishingAssetsToRegistry)' == 'true'" IsImplicitlyDefined="true" />  
   </ItemGroup>
 
   <!-- Repository extensibility point -->

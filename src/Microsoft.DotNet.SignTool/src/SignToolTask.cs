@@ -14,6 +14,9 @@ namespace Microsoft.DotNet.SignTool
 {
     public class SignToolTask : Task
     {
+#if NET461
+        static SignToolTask() => AssemblyResolution.Initialize();
+#endif
         /// <summary>
         /// Perform validation but do not actually send signing request to the server.
         /// </summary>
@@ -58,24 +61,24 @@ namespace Microsoft.DotNet.SignTool
         public ITaskItem[] FileSignInfo { get; set; }
 
         /// <summary>
+        /// This is a mapping between extension (in the format ".ext") to certificate names.
+        /// Any file that have its extension listed on this map will be signed with the
+        /// specified certificate. This parameter specifies only the *default* certificate name,
+        /// overriding this default sign info is possible using the other parameters.
+        /// Metadata required: Certificate and Include which is a semicolon separated list of extensions.
+        /// </summary>
+        public ITaskItem[] FileExtensionSignInfo { get; set; }
+
+        /// <summary>
         /// Path to msbuild.exe. Required if <see cref="DryRun"/> is <c>false</c>.
         /// </summary>
         public string MSBuildPath { get; set; }
 
         /// <summary>
-        /// Directory to write log to. Required if <see cref="DryRun"/> is <c>false</c>.
+        /// Directory to write log to.
         /// </summary>
+        [Required]
         public string LogDir { get; set; }
-
-        /// <summary>
-        /// The URL of the feed where the package will be published.
-        /// </summary>
-        public string PublishUrl { get; set; }
-
-        /// <summary>
-        /// Path to where to store a manifest file containing the list of files that WOULD be signed and their respective signing information.
-        /// </summary>
-        public string OrchestrationManifestPath { get; set; }
 
         public override bool Execute()
         {
@@ -85,37 +88,104 @@ namespace Microsoft.DotNet.SignTool
 
         public void ExecuteImpl()
         {
-            if (!DryRun)
+            if (!DryRun && typeof(object).Assembly.GetName().Name != "mscorlib" && !File.Exists(MSBuildPath))
             {
-                if (typeof(object).Assembly.GetName().Name != "mscorlib" && !File.Exists(MSBuildPath))
-                {
-                    Log.LogError($"MSBuild was not found at this path: '{MSBuildPath}'.");
-                    return;
-                }
-
-                if (string.IsNullOrEmpty(LogDir) || !Directory.Exists(LogDir))
-                {
-                    Log.LogError($"Invalid LogDir informed: {LogDir}");
-                    return;
-                }
+                Log.LogError($"MSBuild was not found at this path: '{MSBuildPath}'.");
+                return;
             }
 
+            var enclosingDir = GetEnclosingDirectoryOfItemsToSign();
             var defaultSignInfoForPublicKeyToken = ParseStrongNameSignInfo();
             var explicitCertificates = ParseFileSignInfo();
+            var fileExtensionSignInfo = ParseFileExtensionSignInfo();
 
             if (Log.HasLoggedErrors) return;
 
-            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir);
+            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
-            var signingInput = new Configuration(TempDir, ItemsToSign, defaultSignInfoForPublicKeyToken, explicitCertificates, PublishUrl, Log).GenerateListOfFiles();
+            var signingInput = new Configuration(TempDir, ItemsToSign, defaultSignInfoForPublicKeyToken, explicitCertificates, fileExtensionSignInfo, Log).GenerateListOfFiles();
 
             if (Log.HasLoggedErrors) return;
 
-            var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput, OrchestrationManifestPath);
+            var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput);
 
             if (Log.HasLoggedErrors) return;
 
             util.Go();
+        }
+
+        private string GetEnclosingDirectoryOfItemsToSign()
+        {
+            var separators = new[] { '/', '\\' };
+            string[] result = null;
+
+            foreach (var path in ItemsToSign)
+            {
+                if (!Path.IsPathRooted(path))
+                {
+                    Log.LogError($"Paths specified in {nameof(ItemsToSign)} must be absolute: '{path}'.");
+                    continue;
+                }
+
+                var directoryParts = Path.GetFullPath(Path.GetDirectoryName(path)).Split(separators);
+                if (result == null)
+                {
+                    result = directoryParts;
+                    continue;
+                }
+
+                Array.Resize(ref result, getCommonPrefixLength(result, directoryParts));
+            }
+
+            if (result.Length == 0)
+            {
+                Log.LogError($"All {nameof(ItemsToSign)} must be within the cone of a single directory.");
+            }
+
+            return string.Join(Path.DirectorySeparatorChar.ToString(), result);
+
+            int getCommonPrefixLength(string[] dir1, string[] dir2)
+            {
+                int min = Math.Min(dir1.Length, dir2.Length);
+
+                for (int i = 0; i < min; i++)
+                {
+                    if (dir1[i] != dir2[i])
+                    {
+                        return i;
+                    }
+                }
+
+                return min;
+            }
+        }
+
+        private Dictionary<string, SignInfo> ParseFileExtensionSignInfo()
+        {
+            var map = new Dictionary<string, SignInfo>(StringComparer.OrdinalIgnoreCase);
+
+            if (FileExtensionSignInfo != null)
+            {
+                foreach (var item in FileExtensionSignInfo)
+                {
+                    var extension = item.ItemSpec;
+                    var certificate = item.GetMetadata("CertificateName");
+
+                    if (map.ContainsKey(extension))
+                    {
+                        Log.LogWarning($"Duplicated signing information for extension: {extension}. " +
+                            $"Attempted to add certificate {certificate}, existing value is {map[extension]}.");
+                    }
+                    else
+                    {
+                        map.Add(extension, certificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.InvariantCultureIgnoreCase) ?
+                            SignInfo.Ignore :
+                            new SignInfo(certificate));
+                    }
+                }
+            }
+
+            return map;
         }
 
         private Dictionary<string, SignInfo> ParseStrongNameSignInfo()

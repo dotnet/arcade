@@ -78,6 +78,8 @@ namespace SubscriptionActorService.Tests
 
         public SubscriptionActorTests()
         {
+            SubscriptionActor.CatchAllExceptions = false;
+
             var services = new ServiceCollection();
             StateManager = new MockActorStateManager();
             Darc = new Mock<IRemote>(MockBehavior.Strict);
@@ -231,7 +233,7 @@ namespace SubscriptionActorService.Tests
 
                 if (existingPrHasChecks && existingPrPassedChecks)
                 {
-                    Darc.Setup(d => d.MergePullRequestAsync(existingPr, null, null, null, null))
+                    Darc.Setup(d => d.MergePullRequestAsync(existingPr, null))
                         .Returns(Task.CompletedTask);
                 }
             }
@@ -314,8 +316,8 @@ namespace SubscriptionActorService.Tests
                             build.Commit,
                             It.IsAny<IList<AssetData>>(),
                             null,
-                            null,
-                            null))
+                            It.IsAny<string>(),
+                            It.IsAny<string>()))
                     .ReturnsAsync(
                         (
                             string repo,
@@ -339,8 +341,8 @@ namespace SubscriptionActorService.Tests
                             build.Commit,
                             subscription.TargetBranch,
                             It.IsAny<IList<AssetData>>(),
-                            null,
-                            null))
+                            It.IsAny<string>(),
+                            It.IsAny<string>()))
                     .ReturnsAsync(
                         (
                             string url,
@@ -381,7 +383,7 @@ namespace SubscriptionActorService.Tests
 
                 if (shouldMergeExistingPr)
                 {
-                    Darc.Setup(r => r.MergePullRequestAsync(existingPr, null, null, null, null))
+                    Darc.Setup(r => r.MergePullRequestAsync(existingPr, null))
                         .Returns(Task.CompletedTask);
                 }
             }

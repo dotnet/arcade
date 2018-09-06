@@ -1,16 +1,19 @@
-using Microsoft.Build.Utilities;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Packaging;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.Versioning;
-using System.Security.Cryptography;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -19,11 +22,6 @@ namespace Microsoft.DotNet.SignTool
         private readonly TaskLoggingHelper _log;
 
         private readonly string[] _explicitSignList;
-
-        /// <summary>
-        /// The URL of the feed where the package will be published.
-        /// </summary>
-        private readonly string _publishUri;
 
         /// <summary>
         /// This store content information for container files.
@@ -53,9 +51,16 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         private readonly List<FileSignInfo> _filesToSign;
 
+        /// <summary>
+        /// Mapping of ".ext" to certificate. Files that have an extension on this map
+        /// will be signed using the specified certificate.
+        /// </summary>
+        private readonly Dictionary<string, SignInfo> _fileExtensionSignInfo;
+
         private readonly Dictionary<ImmutableArray<byte>, FileSignInfo> _filesByContentHash;
 
-        public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, Dictionary<ExplicitCertificateKey, string> explicitCertificates, string publishUri, TaskLoggingHelper log)
+        public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, 
+            Dictionary<ExplicitCertificateKey, string> explicitCertificates, Dictionary<string, SignInfo> extensionSignInfo, TaskLoggingHelper log)
         {
             Debug.Assert(tempDir != null);
             Debug.Assert(explicitSignList != null && !explicitSignList.Any(i => i == null));
@@ -64,9 +69,9 @@ namespace Microsoft.DotNet.SignTool
 
             _pathToContainerUnpackingDirectory = Path.Combine(tempDir, "ContainerSigning");
             _log = log;
-            _publishUri = publishUri;
             _defaultSignInfoForPublicKeyToken = defaultSignInfoForPublicKeyToken;
             _explicitCertificates = explicitCertificates;
+            _fileExtensionSignInfo = extensionSignInfo;
             _filesToSign = new List<FileSignInfo>();
             _zipDataMap = new Dictionary<ImmutableArray<byte>, ZipData>(ByteSequenceComparer.Instance);
             _filesByContentHash = new Dictionary<ImmutableArray<byte>, FileSignInfo>(ByteSequenceComparer.Instance);
@@ -80,22 +85,22 @@ namespace Microsoft.DotNet.SignTool
                 TrackFile(fullPath, ContentUtil.GetContentHash(fullPath));
             }
 
-            return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(), _publishUri);
+            return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary());
         }
 
         private FileSignInfo TrackFile(string fullPath, ImmutableArray<byte> contentHash)
         {
             var fileSignInfo = ExtractSignInfo(fullPath, contentHash);
 
+            if (FileSignInfo.IsZipContainer(fullPath) && 
+                !_zipDataMap.ContainsKey(fileSignInfo.ContentHash) && 
+                TryBuildZipData(fileSignInfo, out var zipData))
+            {
+                _zipDataMap[fileSignInfo.ContentHash] = zipData;
+            }
+        
             if (fileSignInfo.SignInfo.ShouldSign)
             {
-                if (FileSignInfo.IsZipContainer(fullPath) && 
-                    !_zipDataMap.ContainsKey(fileSignInfo.ContentHash) && 
-                    TryBuildZipData(fileSignInfo, out var zipData))
-                {
-                    _zipDataMap[fileSignInfo.ContentHash] = zipData;
-                }
-        
                 _filesToSign.Add(fileSignInfo);
             }
 
@@ -109,6 +114,11 @@ namespace Microsoft.DotNet.SignTool
 
         private FileSignInfo ExtractSignInfo(string fullPath, ImmutableArray<byte> hash)
         {
+            var targetFramework = string.Empty;
+
+            // Try to determine default certificate name by the extension of the file
+            var hasSignInfo = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out var signInfo);
+
             if (FileSignInfo.IsPEFile(fullPath))
             {
                 using (var stream = File.OpenRead(fullPath))
@@ -119,12 +129,13 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
 
-                GetPEInfo(fullPath, out var isManaged, out var publicKeyToken, out var targetFramework);
+                GetPEInfo(fullPath, out var isManaged, out var publicKeyToken, out targetFramework);
 
                 // Get the default sign info based on the PKT, if applicable:
-                if (!isManaged || !_defaultSignInfoForPublicKeyToken.TryGetValue(publicKeyToken, out var signInfo))
+                if (isManaged && _defaultSignInfoForPublicKeyToken.TryGetValue(publicKeyToken, out var pktBasedSignInfo))
                 {
-                    signInfo = new SignInfo(SignToolConstants.Certificate_MicrosoftSHA2);
+                    signInfo = pktBasedSignInfo;
+                    hasSignInfo = true;
                 }
 
                 // Check if we have more specific sign info:
@@ -140,17 +151,16 @@ namespace Microsoft.DotNet.SignTool
                     }
 
                     signInfo = signInfo.WithCertificateName(overridingCertificate);
+                    hasSignInfo = true;
                 }
+            }
 
+            if (hasSignInfo)
+            {
                 return new FileSignInfo(fullPath, hash, signInfo, (targetFramework != "") ? targetFramework : null);
             }
 
-            if (FileSignInfo.IsZipContainer(fullPath))
-            {
-                return new FileSignInfo(fullPath, hash, new SignInfo(FileSignInfo.IsNupkg(fullPath) ? SignToolConstants.Certificate_NuGet : SignToolConstants.Certificate_VsixSHA2));
-            }
-
-            _log.LogWarning($"Unidentified artifact type: {fullPath}");
+            _log.LogWarning($"Couldn't determine signing information for this file: {fullPath}");
             return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
         }
 
@@ -260,56 +270,54 @@ namespace Microsoft.DotNet.SignTool
         {
             Debug.Assert(zipFileSignInfo.IsZipContainer());
 
-            Package package = null;
-
             try
             {
-                package = Package.Open(zipFileSignInfo.FullPath, FileMode.Open, FileAccess.Read);
-                var nestedParts = new List<ZipPart>();
-
-                foreach (var part in package.GetParts())
+                using (var archive = new ZipArchive(File.OpenRead(zipFileSignInfo.FullPath), ZipArchiveMode.Read))
                 {
-                    var relativePath = GetPartRelativeFileName(part);
+                    var nestedParts = new List<ZipPart>();
 
-                    if (!FileSignInfo.IsSignableFile(relativePath))
+                    foreach (ZipArchiveEntry entry in archive.Entries)
                     {
-                        continue;
-                    }
+                        string relativePath = entry.FullName;
+                        string extension = Path.GetExtension(relativePath);
 
-                    var stream = part.GetStream();
-
-                    // copy the stream content, as the stream it doesn't support seek:
-                    var memoryStream = new MemoryStream();
-                    stream.CopyTo(memoryStream);
-
-                    memoryStream.Position = 0;
-                    var contentHash = ContentUtil.GetContentHash(memoryStream);
-
-                    // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
-                    if (!_filesByContentHash.TryGetValue(contentHash, out var fileSignInfo))
-                    {
-                        var tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
-                        var tempPath = Path.Combine(tempDir, Path.GetFileName(relativePath));
-                        Directory.CreateDirectory(tempDir);
-                        using (var tempFileStream = File.OpenWrite(tempPath))
+                        if (!_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) || !extensionSignInfo.ShouldSign)
                         {
-                            memoryStream.Position = 0;
-                            memoryStream.CopyTo(tempFileStream);
-                            tempFileStream.Close();
+                            continue;
                         }
 
-                        fileSignInfo = TrackFile(tempPath, contentHash);
+                        ImmutableArray<byte> contentHash;
+                        using (var stream = entry.Open())
+                        {
+                            contentHash = ContentUtil.GetContentHash(stream);
+                        }
+
+                        // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
+                        if (!_filesByContentHash.TryGetValue(contentHash, out var fileSignInfo))
+                        {
+                            string tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
+                            string tempPath = Path.Combine(tempDir, Path.GetFileName(relativePath));
+                            Directory.CreateDirectory(tempDir);
+
+                            using (var stream = entry.Open())
+                            using (var tempFileStream = File.OpenWrite(tempPath))
+                            {
+                                stream.CopyTo(tempFileStream);
+                            }
+
+                            fileSignInfo = TrackFile(tempPath, contentHash);
+                        }
+
+                        if (fileSignInfo.SignInfo.ShouldSign)
+                        {
+                            nestedParts.Add(new ZipPart(relativePath, fileSignInfo));
+                        }
                     }
 
-                    if (fileSignInfo.SignInfo.ShouldSign)
-                    {
-                        nestedParts.Add(new ZipPart(relativePath, fileSignInfo));
-                    }
+                    zipData = new ZipData(zipFileSignInfo, nestedParts.ToImmutableArray());
+
+                    return true;
                 }
-
-                zipData = new ZipData(zipFileSignInfo, nestedParts.ToImmutableArray());
-
-                return true;
             }
             catch (Exception e)
             {
@@ -317,21 +325,6 @@ namespace Microsoft.DotNet.SignTool
                 zipData = null;
                 return false;
             }
-            finally
-            {
-                package?.Close();
-            }
-        }
-
-        private static string GetPartRelativeFileName(PackagePart part)
-        {
-            var path = part.Uri.OriginalString;
-            if (!string.IsNullOrEmpty(path) && path[0] == '/')
-            {
-                path = path.Substring(1);
-            }
-
-            return path;
         }
     }
 }

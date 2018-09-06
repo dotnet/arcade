@@ -30,7 +30,7 @@ One of the goals of Arcade is to be a vehicle to provide code sharing. One of th
 
   If there is no version specified for a required library feel free to add a new property defining it.
 
-- Patch the `eng\SignToolData.json` file with the list of build-time artifacts created by the package. 
+- If your package produces binaries that need to be signed, make sure to mark it as <IsPackable>true</IsPackable> or check the SignTool [documentation](../src/Microsoft.DotNet.SignTool/README.md) to see how to sign specific files.
 
 - If the package needs to target a version of .NET Framework we recommend you to use the Arcade defined version, which is stored in the $(NetFxTfm) property. For instance:
 
@@ -43,5 +43,3 @@ One of the goals of Arcade is to be a vehicle to provide code sharing. One of th
 - [`Overview.md`](Overview.md)
 
 - [`..\eng\Version.props`](../eng/Versions.props)
-
-  

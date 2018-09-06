@@ -12,9 +12,9 @@ namespace Microsoft.DotNet.DarcLib
     {
         Task<string> GetFileContentsAsync(string filePath, string repoUri, string branch);
 
-        Task CreateDarcBranchAsync(string repoUri, string branch);
+        Task CreateBranchAsync(string repoUri, string newBranch, string baseBranch);
 
-        Task PushFilesAsync(Dictionary<string, GitCommit> filesToCommit, string repoUri, string pullRequestBaseBranch);
+        Task PushCommitsAsync(List<GitFile> filesToCommit, string repoUri, string pullRequestBaseBranch, string commitMessage);
 
         Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null);
 
@@ -26,13 +26,13 @@ namespace Microsoft.DotNet.DarcLib
 
         Task<string> UpdatePullRequestAsync(string pullRequestUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null);
 
-        Task MergePullRequestAsync(string pullRequestUrl, string commit = null, string mergeMethod = null, string title = null, string message = null);
+        Task MergePullRequestAsync(string pullRequestUrl, MergePullRequestParameters parameters);
 
-        Task CommentOnPullRequestAsync(string repoUri, int pullRequestId, string message);
+        Task CommentOnPullRequestAsync(string pullRequestUrl, string message);
 
-        Task<Dictionary<string, GitCommit>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng");
+        Task<List<GitFile>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng/common/");
 
-        Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, Dictionary<string, GitCommit> commits, string pullRequestBaseBranch, string path = "eng");
+        Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, List<GitFile> files, string pullRequestBaseBranch, string path = "eng/common/");
 
         Task<string> GetFileContentAsync(string ownerAndRepo, string path);
 
@@ -43,5 +43,7 @@ namespace Microsoft.DotNet.DarcLib
         HttpClient CreateHttpClient(string versionOverride = null);
 
         Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl);
+
+        Task<string> GetPullRequestBaseBranch(string pullRequestUrl);
     }
 }
