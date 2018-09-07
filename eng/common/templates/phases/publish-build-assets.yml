@@ -2,7 +2,8 @@ parameters:
   dependsOn: ''
   queue: {}
 phases:
-  - phase: Build_Asset_Registry_Push
+  - phase: Asset_Registry_Publish
+    displayName: Publish to Build Asset Registry
     dependsOn: ${{ parameters.dependsOn }}
     queue: ${{ parameters.queue }}
     steps:
