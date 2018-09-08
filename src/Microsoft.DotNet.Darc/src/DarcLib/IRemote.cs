@@ -23,12 +23,16 @@ namespace Microsoft.DotNet.DarcLib
 
         Task MergePullRequestAsync(string pullRequestUrl, MergePullRequestParameters parameters);
 
-        Task CommentOnPullRequestAsync(string pullRequestUrl, string message);
+        Task<string> CreatePullRequestCommentAsync(string pullRequestUrl, string message);
+
+        Task UpdatePullRequestCommentAsync(string pullRequestUrl, string commentId, string message);
 
         Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl);
 
         Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl);
 
         Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null);
+
+        Task<IList<Commit>> GetPullRequestCommitsAsync(string pullRequestUrl);
     }
 }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Maestro.Data;
 using Maestro.Data.Models;
+using Maestro.MergePolicies;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.DarcLib;
 using Microsoft.DotNet.ServiceFabric.ServiceHost.Actors;
@@ -19,7 +20,6 @@ using Moq;
 using ServiceFabricMocks;
 using Xunit;
 using Channel = Maestro.Data.Models.Channel;
-using MergePolicy = Maestro.Data.Models.MergePolicy;
 using SubscriptionPolicy = Maestro.Data.Models.SubscriptionPolicy;
 using UpdateFrequency = Maestro.Data.Models.UpdateFrequency;
 
@@ -88,6 +88,7 @@ namespace SubscriptionActorService.Tests
             services.AddSingleton(Env.Object);
             services.AddSingleton<IActorStateManager>(StateManager);
             services.AddSingleton<IReminderManager>(Reminders);
+            services.AddMergePolicies();
             services.AddLogging();
             services.AddDbContext<BuildAssetRegistryContext>(
                 options => { options.UseInMemoryDatabase("BuildAssetRegistry"); });
@@ -157,15 +158,19 @@ namespace SubscriptionActorService.Tests
             };
         }
 
-        private Subscription CreateSubscription(MergePolicy mergePolicy)
+        private Subscription CreateSubscription(MergePolicyDefinition mergePolicyDefinition)
         {
             return new Subscription
             {
                 SourceRepository = "source.repo",
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
-                PolicyObject =
-                    new SubscriptionPolicy {MergePolicy = mergePolicy, UpdateFrequency = UpdateFrequency.EveryDay}
+                PolicyObject = new SubscriptionPolicy
+                {
+                    MergePolicies =
+                        mergePolicyDefinition != null ? new List<MergePolicyDefinition> {mergePolicyDefinition} : null,
+                    UpdateFrequency = UpdateFrequency.EveryDay
+                }
             };
         }
 
@@ -195,7 +200,10 @@ namespace SubscriptionActorService.Tests
                 new BuildChannel {Build = oldBuild, Channel = channel},
                 new BuildChannel {Build = build, Channel = channel}
             };
-            Subscription subscription = CreateSubscription(MergePolicy.BuildSucceeded);
+            Subscription subscription = CreateSubscription(new MergePolicyDefinition
+            {
+                Name = "AllChecksSuccessful",
+            });
             subscription.Channel = channel;
             var repoInstallation =
                 new RepoInstallation {Repository = subscription.TargetRepository, InstallationId = 1};
@@ -236,6 +244,9 @@ namespace SubscriptionActorService.Tests
                     Darc.Setup(d => d.MergePullRequestAsync(existingPr, null))
                         .Returns(Task.CompletedTask);
                 }
+
+                Darc.Setup(d => d.CreatePullRequestCommentAsync(It.IsAny<string>(), It.IsAny<string>()))
+                    .ReturnsAsync("5");
             }
 
             var actor = ActivatorUtilities.CreateInstance<SubscriptionActor>(Scope.ServiceProvider, actorId);
@@ -258,25 +269,25 @@ namespace SubscriptionActorService.Tests
         }
 
         [Theory]
-        [InlineData(MergePolicy.Never, PrStatus.None, false, false)]
-        [InlineData(MergePolicy.Never, PrStatus.Open, false, false)]
-        [InlineData(MergePolicy.Never, PrStatus.Merged, false, false)]
-        [InlineData(MergePolicy.Never, PrStatus.Closed, false, false)]
-        [InlineData(MergePolicy.BuildSucceeded, PrStatus.None, false, false)]
-        [InlineData(MergePolicy.BuildSucceeded, PrStatus.Open, false, false)]
-        [InlineData(MergePolicy.BuildSucceeded, PrStatus.Open, false, true)]
-        [InlineData(MergePolicy.BuildSucceeded, PrStatus.Open, true, false)]
-        [InlineData(MergePolicy.BuildSucceeded, PrStatus.Open, true, true)]
-        [InlineData(MergePolicy.BuildSucceeded, PrStatus.Merged, false, false)]
-        [InlineData(MergePolicy.BuildSucceeded, PrStatus.Merged, false, true)]
-        [InlineData(MergePolicy.BuildSucceeded, PrStatus.Merged, true, false)]
-        [InlineData(MergePolicy.BuildSucceeded, PrStatus.Merged, true, true)]
-        [InlineData(MergePolicy.BuildSucceeded, PrStatus.Closed, false, false)]
-        [InlineData(MergePolicy.BuildSucceeded, PrStatus.Closed, false, true)]
-        [InlineData(MergePolicy.BuildSucceeded, PrStatus.Closed, true, false)]
-        [InlineData(MergePolicy.BuildSucceeded, PrStatus.Closed, true, true)]
+        [InlineData(false, PrStatus.None, false, false)]
+        [InlineData(false, PrStatus.Open, false, false)]
+        [InlineData(false, PrStatus.Merged, false, false)]
+        [InlineData(false, PrStatus.Closed, false, false)]
+        [InlineData(true, PrStatus.None, false, false)]
+        [InlineData(true, PrStatus.Open, false, false)]
+        [InlineData(true, PrStatus.Open, false, true)]
+        [InlineData(true, PrStatus.Open, true, false)]
+        [InlineData(true, PrStatus.Open, true, true)]
+        [InlineData(true, PrStatus.Merged, false, false)]
+        [InlineData(true, PrStatus.Merged, false, true)]
+        [InlineData(true, PrStatus.Merged, true, false)]
+        [InlineData(true, PrStatus.Merged, true, true)]
+        [InlineData(true, PrStatus.Closed, false, false)]
+        [InlineData(true, PrStatus.Closed, false, true)]
+        [InlineData(true, PrStatus.Closed, true, false)]
+        [InlineData(true, PrStatus.Closed, true, true)]
         public async Task Test(
-            MergePolicy mergePolicy,
+            bool mergeOnPassedChecks,
             PrStatus prStatus,
             bool existingPrHasChecks,
             bool existingPrPassedChecks)
@@ -289,7 +300,10 @@ namespace SubscriptionActorService.Tests
                 new BuildChannel {Build = oldBuild, Channel = channel},
                 new BuildChannel {Build = build, Channel = channel}
             };
-            Subscription subscription = CreateSubscription(mergePolicy);
+            Subscription subscription = CreateSubscription(mergeOnPassedChecks ? new MergePolicyDefinition
+            {
+                Name = "AllChecksSuccessful"
+            } : null);
             subscription.Channel = channel;
             var repoInstallation =
                 new RepoInstallation {Repository = subscription.TargetRepository, InstallationId = 1};
@@ -304,7 +318,7 @@ namespace SubscriptionActorService.Tests
             var pr = "https://repo.pr/new";
 
 
-            bool shouldMergeExistingPr = prStatus == PrStatus.Open && mergePolicy == MergePolicy.BuildSucceeded &&
+            bool shouldMergeExistingPr = prStatus == PrStatus.Open && mergeOnPassedChecks &&
                                          existingPrHasChecks && existingPrPassedChecks;
 
             void SetupCreatePr()
@@ -361,7 +375,7 @@ namespace SubscriptionActorService.Tests
                 StateManager.Data[SubscriptionActor.PullRequest] =
                     new InProgressPullRequest {BuildId = oldBuild.Id, Url = existingPr};
                 Darc.Setup(r => r.GetPullRequestStatusAsync(existingPr)).ReturnsAsync(prStatus);
-                if (mergePolicy == MergePolicy.BuildSucceeded && prStatus == PrStatus.Open)
+                if (mergeOnPassedChecks && prStatus == PrStatus.Open)
                 {
                     if (existingPrHasChecks)
                     {
@@ -379,6 +393,12 @@ namespace SubscriptionActorService.Tests
                     {
                         Darc.Setup(r => r.GetPullRequestChecksAsync(existingPr)).ReturnsAsync(new List<Check>());
                     }
+                }
+
+                if (prStatus == PrStatus.Open)
+                {
+                    Darc.Setup(d => d.CreatePullRequestCommentAsync(It.IsAny<string>(), It.IsAny<string>()))
+                        .ReturnsAsync("5");
                 }
 
                 if (shouldMergeExistingPr)

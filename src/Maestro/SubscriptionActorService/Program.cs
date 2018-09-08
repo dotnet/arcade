@@ -5,6 +5,7 @@
 using System.Reflection;
 using Maestro.Data;
 using Maestro.GitHub;
+using Maestro.MergePolicies;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.ServiceFabric.ServiceHost;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +50,8 @@ namespace SubscriptionActorService
                                         .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                                         ?.InformationalVersion;
                                 });
+
+                            services.AddMergePolicies();
                         });
                 });
         }

@@ -18,8 +18,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Maestro.MergePolicies;
 using Microsoft.Extensions.Logging.Internal;
-using MergePolicy = Maestro.Data.Models.MergePolicy;
+using MergePolicy = Maestro.MergePolicies.MergePolicy;
+using SubscriptionPolicy = Maestro.Data.Models.SubscriptionPolicy;
 
 namespace SubscriptionActorService
 {
@@ -77,6 +79,7 @@ namespace SubscriptionActorService
             IReminderManager reminders,
             BuildAssetRegistryContext context,
             IDarcRemoteFactory darcFactory,
+            IEnumerable<Maestro.MergePolicies.MergePolicy> policyEvaluators,
             ILogger<SubscriptionActor> logger)
         {
             StateManager = stateManager;
@@ -85,7 +88,10 @@ namespace SubscriptionActorService
             Context = context;
             DarcFactory = darcFactory;
             Logger = logger;
+            PolicyEvaluators = policyEvaluators.ToDictionary(p => p.Name);
         }
+
+        public Dictionary<string, Maestro.MergePolicies.MergePolicy> PolicyEvaluators { get; }
 
         public IActorStateManager StateManager { get; }
         public ActorId Id { get; }
@@ -239,7 +245,7 @@ namespace SubscriptionActorService
                 }
 
                 IRemote darc = await DarcFactory.CreateAsync(pr.Url, installationId);
-                await darc.CommentOnPullRequestAsync(pr.Url, $@"The subscription that generated this pull request has been deleted by @{user}.
+                await darc.CreatePullRequestCommentAsync(pr.Url, $@"The subscription that generated this pull request has been deleted by @{user}.
 This pull request will no longer be tracked by maestro.");
                 await StateManager.RemoveStateAsync(PullRequest);
             }
@@ -269,12 +275,12 @@ This pull request will no longer be tracked by maestro.");
             InProgressPullRequest pr = maybePr.Value;
             long installationId = await Context.GetInstallationId(subscription.TargetRepository);
             IRemote darc = await DarcFactory.CreateAsync(pr.Url, installationId);
-            MergePolicy policy = subscription.PolicyObject.MergePolicy;
+            SubscriptionPolicy policy = subscription.PolicyObject;
             PrStatus status = await darc.GetPullRequestStatusAsync(pr.Url);
             switch (status)
             {
                 case PrStatus.Open:
-                    var result = await CheckMergePolicyInternalAsync(darc, policy, pr);
+                    var result = await CheckMergePolicyInternalAsync(darc, policy.MergePolicies, pr);
                     if (result.StartsWith("Merged:"))
                     {
                         subscription.LastAppliedBuildId = pr.BuildId;
@@ -291,41 +297,97 @@ This pull request will no longer be tracked by maestro.");
 
         private async Task<string> CheckMergePolicyInternalAsync(
             IRemote darc,
-            MergePolicy policy,
+            IList<MergePolicyDefinition> policyDefinitions,
             InProgressPullRequest pr)
         {
-            switch (policy)
+            var results = new List<(Maestro.MergePolicies.MergePolicy policy, MergePolicyEvaluationResult result)>();
+            if (policyDefinitions != null)
             {
-                case MergePolicy.Never:
-                    return NotMergedFailedPolicy(policy, pr.Url);
-                case MergePolicy.BuildSucceeded:
-                case MergePolicy.UnitTestPassed: // for now both of these cases are the same
-                    if (await ShouldMergePrAsync(darc, pr.Url, policy))
+                foreach (var policyDefinition in policyDefinitions)
+                {
+                    var context = new MergePolicyEvaluationContext(pr.Url, darc, Logger, policyDefinition.Properties);
+                    if (PolicyEvaluators.TryGetValue(
+                        policyDefinition.Name,
+                        out Maestro.MergePolicies.MergePolicy policyEvaluator))
                     {
-                        await darc.MergePullRequestAsync(pr.Url, null);
-                        return Merged(policy, pr.Url);
+                        var result = await policyEvaluator.EvaluateAsync(context);
+                        results.Add((policyEvaluator, result));
                     }
+                    else
+                    {
+                        results.Add((null, context.Fail($"Unknown Merge Policy '{policyDefinition.Name}'")));
+                    }
+                }
+            }
 
-                    return NotMergedFailedPolicy(policy, pr.Url);
-                default:
-                    Logger.LogError("Unknown merge policy '{policy}'", policy);
-                    return NotMergedUnknownPolicy(policy, pr.Url);
+            if (results.Count == 0)
+            {
+                await UpdateStatusCommentAsync(darc, pr, $@"## Auto-Merge Status
+This pull request will not be merged automatically because the subscription with id '{SubscriptionId}' does not have any merge policies.");
+                return NotMergedNoPolicies();
+            }
+
+            string DisplayPolicy((Maestro.MergePolicies.MergePolicy policy, MergePolicyEvaluationResult result) p)
+            {
+                var (policy, result) = p;
+                if (policy == null)
+                {
+                    return $"- ❌ **{result.Message}**";
+                }
+
+                if (result.Succeeded)
+                {
+                    return $"- ✔️ **{policy.DisplayName}** Succeeded";
+                }
+
+                return $"- ❌ **{policy.DisplayName}** {result.Message}";
+            }
+
+            if (results.Any(r => !r.result.Succeeded))
+            {
+
+                await UpdateStatusCommentAsync(darc, pr, $@"## Auto-Merge Status
+This pull request has not been merged because the subscription with id '{SubscriptionId}' is waiting on the following merge policies.
+
+{string.Join("\n", results.OrderBy(r => r.policy == null ? " " : r.policy.Name).Select(DisplayPolicy))}");
+                return NotMergedFailedPolicies(results.Where(r => !r.result.Succeeded), pr.Url);
+            }
+
+            await UpdateStatusCommentAsync(darc, pr, $@"## Auto-Merge Status
+This pull request has been merged because the following merge policies have succeeded.
+
+{string.Join("\n", results.OrderBy(r => r.policy == null ? " " : r.policy.Name).Select(DisplayPolicy))}");
+
+            await darc.MergePullRequestAsync(pr.Url, null);
+            return Merged(policyDefinitions, pr.Url);
+        }
+
+        private async Task UpdateStatusCommentAsync(IRemote darc, InProgressPullRequest pr, string message)
+        {
+            if (pr.StatusCommentId == null)
+            {
+                pr.StatusCommentId = await darc.CreatePullRequestCommentAsync(pr.Url, message);
+                await StateManager.SetStateAsync(PullRequest, pr);
+            }
+            else
+            {
+                await darc.UpdatePullRequestCommentAsync(pr.Url, pr.StatusCommentId, message);
             }
         }
 
-        private string Merged(MergePolicy policy, string url)
+        private string Merged(IEnumerable<MergePolicyDefinition> policyDefinitions, string url)
         {
-            return $"Merged: PR '{url}' passed policy {policy}";
+            return $"Merged: PR '{url}' passed policies {string.Join(", ", policyDefinitions.Select(p => p.Name))}";
         }
 
-        private string NotMergedFailedPolicy(MergePolicy policy, string url)
+        private string NotMergedNoPolicies()
         {
-            return $"NOT Merged: PR '{url}' failed policy {policy}";
+            return $"NOT Merged: Subscription '{SubscriptionId}' has no merge policies.";
         }
 
-        private string NotMergedUnknownPolicy(MergePolicy policy, string url)
+        private string NotMergedFailedPolicies(IEnumerable<(MergePolicy policy, MergePolicyEvaluationResult result)> failedPolicies, string url)
         {
-            return $"NOT Merged: PR '{url}' unknown policy {policy}";
+            return $"NOT Merged: PR '{url}' failed policies {string.Join(", ", failedPolicies.Select(p => p.policy.Name))}";
         }
 
         public Task<string> CheckMergePolicyAsync(string prUrl)
@@ -408,12 +470,12 @@ This pull request will no longer be tracked by maestro.");
                 }
                 long installationId = await Context.GetInstallationId(subscription.TargetRepository);
                 IRemote darc = await DarcFactory.CreateAsync(pr.Url, installationId);
-                MergePolicy policy = subscription.PolicyObject.MergePolicy;
+                SubscriptionPolicy policy = subscription.PolicyObject;
                 PrStatus status = await darc.GetPullRequestStatusAsync(pr.Url);
                 switch (status)
                 {
                     case PrStatus.Open:
-                        var result = await RunAction(() => CheckMergePolicyInternalAsync(darc, policy, pr), nameof(CheckMergePolicyAsync),  "Checking merge policy for pr '{url}'", pr.Url);
+                        var result = await RunAction(() => CheckMergePolicyInternalAsync(darc, policy.MergePolicies, pr), nameof(CheckMergePolicyAsync),  "Checking merge policy for pr '{url}'", pr.Url);
                         if (result != null && result.StartsWith("Merged:"))
                         {
                             goto case PrStatus.Merged;
@@ -437,7 +499,7 @@ This pull request will no longer be tracked by maestro.");
             await Reminders.TryUnregisterReminderAsync(PullRequestCheck);
         }
 
-        private async Task<bool> ShouldMergePrAsync(IRemote darc, string url, MergePolicy policy)
+        private async Task<bool> ShouldMergePrAsync(IRemote darc, string url, MergePolicyDefinition policyDefinition)
         {
             IList<Check> checks = await darc.GetPullRequestChecksAsync(url);
             if (checks.Count == 0)

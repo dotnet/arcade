@@ -59,7 +59,7 @@ namespace DependencyUpdater.Tests
                 PolicyObject =
                     new SubscriptionPolicy
                     {
-                        MergePolicy = MergePolicy.Never,
+                        MergePolicies = null,
                         UpdateFrequency = UpdateFrequency.EveryBuild
                     },
                 LastAppliedBuild = build

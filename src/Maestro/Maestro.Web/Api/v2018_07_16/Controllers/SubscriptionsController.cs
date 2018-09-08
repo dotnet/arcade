@@ -9,6 +9,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Maestro.Web.Api.v2018_07_16.Models;
 using Maestro.Data;
+using Microsoft.AspNetCore.ApiPagination;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -153,6 +154,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
 
         [HttpGet("{id}/history")]
         [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(List<SubscriptionHistoryItem>))]
+        [Paginated(typeof(SubscriptionHistoryItem))]
         public async Task<IActionResult> GetSubscriptionHistory(Guid id)
         {
             Data.Models.Subscription subscription = await _context.Subscriptions.Where(sub => sub.Id == id)
@@ -163,7 +165,11 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 return NotFound();
             }
 
-            return Ok(await SubscriptionHistoryItem.GetAllForSubscription(id, _context));
+            var query = _context.SubscriptionUpdateHistory
+                .Where(u => u.SubscriptionId == id)
+                .OrderByDescending(u => u.Timestamp);
+
+            return Ok(query);
         }
 
         [HttpPost]

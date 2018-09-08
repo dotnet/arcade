@@ -3,13 +3,15 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using JetBrains.Annotations;
+using Newtonsoft.Json.Linq;
 
 namespace Maestro.Data.Models
 {
-    public class SubscriptionPolicy
+    public class MergePolicyDefinition
     {
-        public UpdateFrequency UpdateFrequency { get; set; }
-
-        public List<MergePolicyDefinition> MergePolicies { get; set; }
+        public string Name { get; set; }
+        [CanBeNull]
+        public Dictionary<string, JToken> Properties { get; set; }
     }
 }
