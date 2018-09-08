@@ -68,6 +68,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.SignTool.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.AspNetCore.ApiPagination", "src\Maestro\Microsoft.AspNetCore.ApiPagination\Microsoft.AspNetCore.ApiPagination.csproj", "{01C47D1E-5EBD-484A-B317-B8FC86707E6E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Maestro.MergePolicies", "src\Maestro\Maestro.MergePolicies\Maestro.MergePolicies.csproj", "{37D70EEA-9621-44EB-921A-5D303917F851}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -438,6 +440,18 @@ Global
 		{01C47D1E-5EBD-484A-B317-B8FC86707E6E}.Release|x64.Build.0 = Release|Any CPU
 		{01C47D1E-5EBD-484A-B317-B8FC86707E6E}.Release|x86.ActiveCfg = Release|Any CPU
 		{01C47D1E-5EBD-484A-B317-B8FC86707E6E}.Release|x86.Build.0 = Release|Any CPU
+		{37D70EEA-9621-44EB-921A-5D303917F851}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37D70EEA-9621-44EB-921A-5D303917F851}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37D70EEA-9621-44EB-921A-5D303917F851}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{37D70EEA-9621-44EB-921A-5D303917F851}.Debug|x64.Build.0 = Debug|Any CPU
+		{37D70EEA-9621-44EB-921A-5D303917F851}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{37D70EEA-9621-44EB-921A-5D303917F851}.Debug|x86.Build.0 = Debug|Any CPU
+		{37D70EEA-9621-44EB-921A-5D303917F851}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37D70EEA-9621-44EB-921A-5D303917F851}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37D70EEA-9621-44EB-921A-5D303917F851}.Release|x64.ActiveCfg = Release|Any CPU
+		{37D70EEA-9621-44EB-921A-5D303917F851}.Release|x64.Build.0 = Release|Any CPU
+		{37D70EEA-9621-44EB-921A-5D303917F851}.Release|x86.ActiveCfg = Release|Any CPU
+		{37D70EEA-9621-44EB-921A-5D303917F851}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -463,6 +477,7 @@ Global
 		{EDF632B3-48E2-43FD-B014-79CDED8F4240} = {AE791E26-78E1-4936-BCF4-1BF5152CBBD6}
 		{C1678663-FB29-4D54-980E-00090785073D} = {AE791E26-78E1-4936-BCF4-1BF5152CBBD6}
 		{01C47D1E-5EBD-484A-B317-B8FC86707E6E} = {AE791E26-78E1-4936-BCF4-1BF5152CBBD6}
+		{37D70EEA-9621-44EB-921A-5D303917F851} = {AE791E26-78E1-4936-BCF4-1BF5152CBBD6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {06E6CFF5-C54E-4623-9587-71A9E3F041D9}
