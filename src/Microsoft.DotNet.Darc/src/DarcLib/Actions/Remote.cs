@@ -225,7 +225,8 @@ namespace Microsoft.DotNet.DarcLib
             // If there is an arcade asset that we need to update we try to update the script files as well
             DependencyDetail arcadeItem = itemsToUpdate.Where(i => i.Name.ToLower().Contains("arcade")).FirstOrDefault();
 
-            if (arcadeItem != null)
+            if (arcadeItem != null
+                && repoUri != arcadeItem.RepoUri)
             {
                 List<GitFile> engCommonsFiles = await GetScriptFilesAsync(arcadeItem.RepoUri, assetsProducedInCommit);
                 filesToCommit.AddRange(engCommonsFiles);
