@@ -292,6 +292,7 @@ namespace SubscriptionActorService.Tests
             bool existingPrHasChecks,
             bool existingPrPassedChecks)
         {
+            const string prCommentId = "5";
             Channel channel = CreateChannel();
             Build oldBuild = CreateOldBuild();
             Build build = CreateNewBuild();
@@ -398,7 +399,7 @@ namespace SubscriptionActorService.Tests
                 if (prStatus == PrStatus.Open)
                 {
                     Darc.Setup(d => d.CreatePullRequestCommentAsync(It.IsAny<string>(), It.IsAny<string>()))
-                        .ReturnsAsync("5");
+                        .ReturnsAsync(prCommentId);
                 }
 
                 if (shouldMergeExistingPr)
@@ -455,7 +456,8 @@ namespace SubscriptionActorService.Tests
                         [SubscriptionActor.PullRequest] = new InProgressPullRequest
                         {
                             BuildId = build.Id,
-                            Url = prStatus == PrStatus.Open && !shouldMergeExistingPr ? existingPr : pr
+                            Url = prStatus == PrStatus.Open && !shouldMergeExistingPr ? existingPr : pr,
+                            StatusCommentId = prStatus == PrStatus.Open && !shouldMergeExistingPr ? prCommentId : null
                         }
                     });
 
