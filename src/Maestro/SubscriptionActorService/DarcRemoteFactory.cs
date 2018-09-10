@@ -35,6 +35,7 @@ namespace SubscriptionActorService
                 {
                     throw new SubscriptionException($"No installation is avaliable for repository '{repoUrl}'");
                 }
+
                 settings.GitType = GitRepoType.GitHub;
                 settings.PersonalAccessToken = await GitHubTokenProvider.GetTokenForInstallation(installationId);
             }

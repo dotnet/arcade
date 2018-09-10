@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +10,9 @@ using Microsoft.DotNet.DarcLib;
 
 namespace Maestro.MergePolicies
 {
+    /// <summary>
+    ///   Merge the PR when it has more than one check and they are all successful, ignoring checks specified in the "ignoreChecks" property.
+    /// </summary>
     public class AllChecksSuccessfulMergePolicy : MergePolicy
     {
         public override string DisplayName => "All Checks Successful";
@@ -14,16 +21,16 @@ namespace Maestro.MergePolicies
         {
             var ignoreChecks = new HashSet<string>(context.Get<string[]>("ignoreChecks") ?? Array.Empty<string>());
 
-            var checks = await context.Darc.GetPullRequestChecksAsync(context.PullRequestUrl);
+            IList<Check> checks = await context.Darc.GetPullRequestChecksAsync(context.PullRequestUrl);
 
-            var notIgnoredChecks = checks.Where(c => !ignoreChecks.Contains(c.Name)).ToList();
+            List<Check> notIgnoredChecks = checks.Where(c => !ignoreChecks.Contains(c.Name)).ToList();
 
             if (notIgnoredChecks.Count < 1)
             {
                 return context.Fail("No unignored checks.");
             }
 
-            var failedChecks = notIgnoredChecks.Where(c => c.Status != CheckState.Success).ToList();
+            List<Check> failedChecks = notIgnoredChecks.Where(c => c.Status != CheckState.Success).ToList();
 
             if (failedChecks.Count < 1)
             {

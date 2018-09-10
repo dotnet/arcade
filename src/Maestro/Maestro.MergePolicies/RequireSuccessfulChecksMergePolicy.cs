@@ -1,11 +1,17 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.DotNet.DarcLib;
 
 namespace Maestro.MergePolicies
 {
+    /// <summary>
+    ///   Merge the PR when it has all the checks specified in the "checks" property and they are all successful.
+    /// </summary>
     public class RequireSuccessfulChecksMergePolicy : MergePolicy
     {
         public override string DisplayName => "Require Successful Checks";
@@ -14,13 +20,13 @@ namespace Maestro.MergePolicies
         {
             var requiredChecks = new HashSet<string>(context.Get<List<string>>("checks"));
 
-            var checks =
+            Dictionary<string, Check> checks =
                 (await context.Darc.GetPullRequestChecksAsync(context.PullRequestUrl)).ToDictionary(c => c.Name);
 
             var missingChecks = new List<string>();
             var failedChecks = new List<Check>();
 
-            foreach (var requiredCheck in requiredChecks)
+            foreach (string requiredCheck in requiredChecks)
             {
                 if (checks.TryGetValue(requiredCheck, out Check check))
                 {
