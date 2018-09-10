@@ -2,19 +2,24 @@
 
 ### What is it?
 
-A pair of scripts that can be used to send events to the [Helix](https://helix.dot.net/) system so that you'll be able to see the status of phases of your build on the [Mission Control](http://mc.dot.net/) website. Essentially, you have a [start](../../eng/common/templates/steps/telemetry-start.yml) and an [end](../../eng/common/templates/steps/telemetry-end.yml) script that you can use to track the execution status of particular regions of your build definitions. These scripts are reentrant, so you can use them several times on the same build definition. See example at the end of this document.
+A pair of scripts that can be used to send telemetry information so that you'll be able to see the status of phases of your build on the [Mission Control](http://mc.dot.net/) website. Essentially, you have a [start](../../eng/common/templates/steps/telemetry-start.yml) and an [end](../../eng/common/templates/steps/telemetry-end.yml) script that you can use to track the execution status of particular regions of your build definitions. These scripts are reentrant, so you can use them several times on the same build definition. See example at the end of this document.
+
+One of the **main benefits** of using these scripts to collect telemetry for the build is that you'll be able to see *aggregated information from all your build configurations* on the Mission Control website. 
 
 Note that this component (the telemetry implementation) is not part of the Arcade SDK. Only referencing the SDK isn't sufficient to use the telemetry scripts. See below instructions on how to use it.
 
 ### Will an onboarded repository automatically use it?
 
-The scripts automate the process, but there is some setup that you have to do. Basically, you'll need to setup three parameters to identify the region of code that you are collecting telemetry for and enable telemetry sending for the build.
-
 One of the requirements for onboarding in Arcade is to copy the `eng\common` folder from the root of the Arcade repository to the onboarding repository and reference the  `eng\common\templates\phases\base.yml` file on your YAML build definitions. This will plug in the use of the telemetry scripts on your build. 
 
-However, for enabling the use of telemetry you will also have to set `enableTelemetry` (see file `eng\build.yml` -> `enableTelemetry`) to true. Once that part is done you can use the telemetry scripts  [start](../../eng/common/templates/steps/telemetry-start.yml) and [end](../../eng/common/templates/steps/telemetry-end.yml) to denote regions that you want to collect telemetry for. To do that you have to specify values for the Helix parameters `_HelixType`, `_HelixSource` and `_HelixBuildConfig` for each region. You can find some description of these parameters [here](https://github.com/dotnet/arcade/blob/master/eng/common/templates/phases/base.yml).
+These scripts automate the process, but there is some setup that you have to do to enable telemetry collection. Basically, you'll need to:
 
-Note that you can collect telemetry for more than one region of code. Use the parameters mentioned above to identify the region that you're collecting telemetry.
+- Setup parameters to identify the region of code that you are collecting telemetry for and,
+- Enable telemetry sending for the build.
+
+For enabling the use of telemetry you will have to set `enableTelemetry` (see file `eng\build.yml` -> `enableTelemetry`) to true. You also have to setup these three parameters `_HelixType`, `_HelixSource` and `_HelixBuildConfig` for each region that you want to collect telemetry. They will basically work as identifiers for the region being monitored. You can find some description of these parameters [here](https://github.com/dotnet/arcade/blob/master/eng/common/templates/phases/base.yml). 
+
+Once that setup is done you can use the telemetry scripts [start](../../eng/common/templates/steps/telemetry-start.yml) and [end](../../eng/common/templates/steps/telemetry-end.yml) to denote regions that you want to collect telemetry for. Note that you can collect telemetry for more than one region of code. Use the parameters mentioned above to identify the region that you're collecting telemetry.
 
 ### Usage Example
 
