@@ -94,7 +94,7 @@ namespace Maestro.Data
                 .HasIndex(t => new {t.ApplicationUserId, t.Name})
                 .IsUnique();
 
-            builder.Entity<DefaultChannel>().HasIndex(dc => new {dc.Repository, dc.Branch}).IsUnique();
+            builder.Entity<DefaultChannel>().HasIndex(dc => new {dc.Repository, dc.Branch, dc.ChannelId}).IsUnique();
 
             builder.Entity<SubscriptionUpdate>()
                 .HasOne(su => su.Subscription)

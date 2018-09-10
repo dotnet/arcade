@@ -132,6 +132,13 @@ namespace Microsoft.AspNetCore.ApiPagination
             var perPage = (int) context.RouteData.Values[nameof(PaginatedAttribute) + ".perPage"];
 
             int rowCount = await query.CountAsync();
+
+            if (rowCount == 0)
+            {
+                result.Value = Array.Empty<object>();
+                return;
+            }
+
             var pageCount = (int) Math.Ceiling((double) rowCount / perPage);
             if (page > pageCount)
             {

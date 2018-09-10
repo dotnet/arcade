@@ -182,10 +182,10 @@ namespace SubscriptionActorService
 
             ConditionalValue<InProgressPullRequest> maybePr =
                 await StateManager.TryGetStateAsync<InProgressPullRequest>(PullRequest);
-            string prUrl;
+            InProgressPullRequest pr;
             if (maybePr.HasValue)
             {
-                InProgressPullRequest pr = maybePr.Value;
+                pr = maybePr.Value;
                 await darc.UpdatePullRequestAsync(
                     pr.Url,
                     build.Commit,
@@ -193,11 +193,10 @@ namespace SubscriptionActorService
                     assets,
                     title,
                     description);
-                prUrl = pr.Url;
             }
             else
             {
-                prUrl = await darc.CreatePullRequestAsync(
+                var prUrl = await darc.CreatePullRequestAsync(
                     targetRepository,
                     targetBranch,
                     build.Commit,
@@ -209,10 +208,15 @@ namespace SubscriptionActorService
                 {
                     return $"No Pull request created. Darc Reports no dependencies need to be updated.";
                 }
+
+                pr = new InProgressPullRequest
+                {
+                    Url = prUrl,
+                };
             }
 
-            var newPr = new InProgressPullRequest { Url = prUrl, BuildId = build.Id };
-            await StateManager.SetStateAsync(PullRequest, newPr);
+            pr.BuildId = build.Id;
+            await StateManager.SetStateAsync(PullRequest, pr);
             await Reminders.TryRegisterReminderAsync(
                 PullRequestCheck,
                 Array.Empty<byte>(),
@@ -220,7 +224,7 @@ namespace SubscriptionActorService
                 new TimeSpan(0, 5, 0));
             await StateManager.SaveStateAsync();
 
-            return $"Pull request '{prUrl}' updated.";
+            return $"Pull request '{pr.Url}' updated.";
         }
 
         public async Task SubscriptionDeletedAsync(string user)
