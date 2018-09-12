@@ -49,11 +49,14 @@
     <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.2.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
     <MicrosoftMLVersion>0.4.0</MicrosoftMLVersion>
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
+    <MicrosoftDiaSymReaderConverterVersion>1.1.0-beta1-62810-01</MicrosoftDiaSymReaderConverterVersion>
   </PropertyGroup>
   <PropertyGroup>
     <RestoreSources>
       $(RestoreSources);
       https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
+      https://dotnet.myget.org/F/symreader-converter/api/v3/index.json;
+      https:%2F%2Fdotnet.myget.org/F/symreader/api/v3/index.json
     </RestoreSources>
   </PropertyGroup>
 </Project>
