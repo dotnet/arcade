@@ -83,12 +83,12 @@ namespace Microsoft.DotNet.GenFacades
             //There's nothing guaranteeing that these are n.n.n.n format.
             //The documentation says that if they're not that format the behavior is undefined.
             Version fileVersion;
-            if (!Version.TryParse(_fileVersionContents, out fileVersion))
+            // For the File & Product Version, we take the first portion of the string before any whitespace,
+            // in case there is extraneous information (e.g. '@BuiltBy') after the version number.
+            if (!Version.TryParse(_fileVersionContents.Split(null)[0], out fileVersion))
                 fileVersion = new Version(0, 0);
 
             Version productVersion;
-            // For the Product Version, we take the first portion of the string before any whitespace,
-            // in case there is extraneous information (e.g. '@BuiltBy') after the version number.
             if (!Version.TryParse(_productVersionContents.Split(null)[0], out productVersion))
                 productVersion = new Version(0, 0);
 
