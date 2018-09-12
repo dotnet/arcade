@@ -52,13 +52,13 @@ this branch+repo
 
 The version/dependency files define a set of versioned items which the repo depends on. These files are:
 
-#### eng\version.details.xml
+#### eng\Version.Details.xml
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
     <!-- Elements contains all product dependencies -->
     <ProductDependencies>
-        <-- All product dependencies are contained in Version.Props -->
+        <-- All product dependencies are contained in Versions.Props -->
         <Dependency Name="DependencyA" Version="1.2.3-45">
             <Uri>https://github.com/dotnet/arepo</Uri>
             <Sha>23498123740982349182340981234</Sha>
@@ -75,11 +75,11 @@ The version/dependency files define a set of versioned items which the repo depe
 
     <!-- Elements contains all toolset dependencies -->
     <ToolsetDependencies>
-        <-- Non well-known dependency.  Expressed in Version.props -->
+        <-- Non well-known dependency.  Expressed in Versions.props -->
         <Dependency Name="DependencyB" Version="2.100.3-1234">
             <Uri>https://github.com/dotnet/atoolsrepo</Uri>
             <Sha>203409823586523490823498234</Sha>
-            <Expression>VersionProps</Expression>
+            <Expression>VersionsProps</Expression>
         </Dependency>
         <-- Well-known dependency.  Expressed in global.json -->
         <Dependency Name="DotNetSdkVersion" Version="2.200.0">
@@ -95,7 +95,7 @@ The version/dependency files define a set of versioned items which the repo depe
 </Dependencies>
 ```
 
-####  eng\version.props
+####  eng\Versions.props
 ```xml
 <Project>
   <PropertyGroup>
@@ -152,7 +152,7 @@ will include dependencies where the `<query-parameters>` were used. Optional
 
 ### query-parameters
 
-*  "": returns all DependencyItems from the local repo's `version.details.xml`
+*  "": returns all DependencyItems from the local repo's `Version.Details.xml`
     *  Example: `darc get`
 	*  Output Sample: 
 ```
@@ -175,7 +175,7 @@ will include dependencies where the `<query-parameters>` were used. Optional
 ]
 ```
 *  `[-s,--sha] <sha> [[-r, --repo-uri] <repo-uri>]`: --repo-uri supports any git repository uri. If --repo-uri is not provided returns the 
-DependencyItems from the local repo's `version.details.xml` which match `<sha>`. If a --repo-uri is given and is different 
+DependencyItems from the local repo's `Version.Details.xml` which match `<sha>`. If a --repo-uri is given and is different 
 from the local, get the DependencyItems that match the SHA+repo combination from the reporting store. 
     *  Example: `darc get -s 23498123740982349182340981234`
         * Output Sample: 
@@ -301,7 +301,7 @@ The returned collection will be a result of an AND join of the `<query-parameter
 
 ## add
 
-Adds a new dependency to `version.details.xml` and in `version.props` and `global.json` if needed.
+Adds a new dependency to `Version.Details.xml` and in `Versions.props` and `global.json` if needed.
 
 ## Usage
 
@@ -322,7 +322,7 @@ Output: `true` if succeeded, `false` if otherwise.
 
 ## put
 
-Updates a dependency in `version.details.xml` and in `version.props` and `global.json` if needed. 
+Updates a dependency in `Version.Details.xml` and in `Versions.props` and `global.json` if needed. 
 
 ### Usage
 
@@ -345,7 +345,7 @@ Output: `true` if succeeded, `false` if otherwise.
 
 ## remove
 
-Removes a dependency from `version.details.xml` matching a versioned item name and an optional version. If only the name is
+Removes a dependency from `Version.Details.xml` matching a versioned item name and an optional version. If only the name is
 given all matching dependencies are removed. If version is also provided only the name+version matched dependencies are deleted.
 
 ### Usage
