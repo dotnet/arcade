@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
         //  1.0.0
         //  1.0.0-dev.123.12
         //  1.0.2343-beta.123.234.23
-        public string VersionRegexPattern { get; set; } = @"(?<version>[0-9]+.[0-9]+.[0-9]+(-[a-z]+\.([0-9]+\.)+)*)";
+        public string VersionRegexPattern { get; set; } = @"(?<version>[0-9]+\.[0-9]+\.[0-9]+(-[a-z]+\.([0-9]+\.)+)*)";
 
         private static readonly CancellationTokenSource s_tokenSource = new CancellationTokenSource();
         private static readonly CancellationToken s_cancellationToken = s_tokenSource.Token;
