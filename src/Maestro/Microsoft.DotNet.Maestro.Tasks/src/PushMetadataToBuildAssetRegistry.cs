@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
 
                 if (version[version.Length - 1] == '.')
                 {
-                    version = version.Substring(0, version.Length - 2);
+                    version = version = version.TrimEnd('.');
                 }
             }
 
