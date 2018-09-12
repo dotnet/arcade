@@ -52,7 +52,7 @@ this branch+repo
 
 The version/dependency files define a set of versioned items which the repo depends on. These files are:
 
-#### eng\Version.Vetails.xml
+#### eng\Version.Details.xml
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
