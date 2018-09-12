@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>7.1</LangVersion>
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
+    <SignAssembly>false</SignAssembly>
+    <AssemblyName>darc</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DarcLib\Microsoft.DotNet.DarcLib.csproj" />
+  </ItemGroup>
+</Project>
