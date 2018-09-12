@@ -86,11 +86,11 @@ namespace Microsoft.DotNet.GenFacades
             // For the File & Product Version, we take the first portion of the string before any whitespace,
             // in case there is extraneous information (e.g. '@BuiltBy') after the version number.
             if (!Version.TryParse(_fileVersionContents.Split(null)[0], out fileVersion))
-                fileVersion = new Version(0, 0);
+                throw new ArgumentException($"error: File Version could not be parsed: {_fileVersionContents}");
 
             Version productVersion;
             if (!Version.TryParse(_productVersionContents.Split(null)[0], out productVersion))
-                productVersion = new Version(0, 0);
+                throw new ArgumentException($"error: Product Version could not be parsed: {_productVersionContents}");
 
             writer.Write((DWORD)0xFEEF04BD);
             writer.Write((DWORD)0x00010000);
