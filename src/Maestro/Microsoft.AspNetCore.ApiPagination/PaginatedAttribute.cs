@@ -9,7 +9,9 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 
 namespace Microsoft.AspNetCore.ApiPagination
@@ -148,11 +150,14 @@ namespace Microsoft.AspNetCore.ApiPagination
 
             AddLinkHeader(context, page, perPage, pageCount);
 
+            var requestServices = context.HttpContext.RequestServices;
+            var urlHelperFactory = requestServices.GetRequiredService<IUrlHelperFactory>();
+            var urlHelper = urlHelperFactory.GetUrlHelper(context);
             result.Value = query
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .AsEnumerable()
-                .Select(o => Activator.CreateInstance(ResultType, o));
+                .Select(o => ActivatorUtilities.CreateInstance(requestServices, ResultType, o, urlHelper, context.HttpContext));
         }
 
         private async Task TransformResultAsync(ResultExecutingContext context)

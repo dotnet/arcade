@@ -7,12 +7,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Maestro.Contracts;
 using Maestro.Web.Api.v2018_07_16.Models;
 using Maestro.Data;
 using Microsoft.AspNetCore.ApiPagination;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.ServiceFabric.Actors;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Maestro.Web.Api.v2018_07_16.Controllers
@@ -22,10 +24,14 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
     public class SubscriptionsController : Controller
     {
         private readonly BuildAssetRegistryContext _context;
+        private readonly BackgroundQueue _queue;
+        private readonly Func<ActorId, ISubscriptionActor> _subscriptionActorFactory;
 
-        public SubscriptionsController(BuildAssetRegistryContext context)
+        public SubscriptionsController(BuildAssetRegistryContext context, BackgroundQueue queue, Func<ActorId, ISubscriptionActor> subscriptionActorFactory)
         {
             _context = context;
+            _queue = queue;
+            _subscriptionActorFactory = subscriptionActorFactory;
         }
 
         [HttpGet]
@@ -171,6 +177,47 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
 
             return Ok(query);
         }
+
+        [HttpPost("{id}/retry/{timestamp}")]
+        [SwaggerResponse((int) HttpStatusCode.Accepted)]
+        public async Task<IActionResult> RetrySubscriptionActionAsync(Guid id, long timestamp)
+        {
+            DateTime ts = DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime;
+
+            Data.Models.Subscription subscription = await _context.Subscriptions.Where(sub => sub.Id == id)
+                .FirstOrDefaultAsync();
+
+            if (subscription == null)
+            {
+                return NotFound();
+            }
+
+            var update = await _context.SubscriptionUpdateHistory
+                .Where(u => u.SubscriptionId == id)
+                .FirstOrDefaultAsync(u => Math.Abs(EF.Functions.DateDiffSecond(u.Timestamp, ts)) < 1);
+
+            if (update == null)
+            {
+                return NotFound();
+            }
+
+            if (update.Success)
+            {
+                return StatusCode(
+                    (int) HttpStatusCode.NotAcceptable,
+                    new ApiError("That action was successful, it cannot be retried."));
+            }
+
+            _queue.Post(
+                async () =>
+                {
+                    var actor = _subscriptionActorFactory(new ActorId(subscription.Id));
+                    await actor.RunAction(update.Method, update.Arguments);
+                });
+
+            return Accepted();
+        }
+
 
         [HttpPost]
         [SwaggerResponse((int) HttpStatusCode.Created, Type = typeof(Subscription))]

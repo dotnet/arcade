@@ -54,7 +54,7 @@ namespace SubscriptionActorService
                 throw new NotImplementedException();
             }
 
-            public Task<string> RunAction(string action, params object[] arguments)
+            public Task<string> RunAction(string action, string arguments)
             {
                 throw new NotImplementedException();
             }
@@ -113,6 +113,11 @@ namespace SubscriptionActorService
             }
         }
 
+        Task<string> ISubscriptionActor.RunAction(string action, string arguments)
+        {
+            return RunAction(action, DeserializeArguments(arguments));
+        }
+
         public Task<string> RunAction(string action, params object[] arguments)
         {
             Func<Task<string>> run;
@@ -120,7 +125,7 @@ namespace SubscriptionActorService
             switch (action)
             {
                 case nameof(UpdateAsync):
-                    var buildId = (int) arguments[0];
+                    var buildId = Convert.ToInt32(arguments[0]);
                     run = () => UpdateAsyncImpl(buildId);
                     messageFormat = "Updating subscription for build '{buildId}'";
                     break;
@@ -193,6 +198,10 @@ This pull request will no longer be tracked by maestro.");
                 catch (SubscriptionException subex)
                 {
                     await TrackSubscriptionUpdateFailure(subex.Message, method, messageFormat, arguments);
+                }
+                catch (DarcException darcEx)
+                {
+                    await TrackSubscriptionUpdateFailure(darcEx.Message, method, messageFormat, arguments);
                 }
                 catch (Exception ex) when (CatchAllExceptions)
                 {
@@ -443,9 +452,19 @@ This pull request has been merged because the following merge policies have succ
             subscriptionUpdate.Action = new FormattedLogValues(messageFormat, arguments).ToString();
             subscriptionUpdate.ErrorMessage = errorMessage;
             subscriptionUpdate.Method = method;
-            subscriptionUpdate.Arguments = JsonConvert.SerializeObject(arguments);
+            subscriptionUpdate.Arguments = SerializeArguments(arguments);
             subscriptionUpdate.Success = false;
             await Context.SaveChangesAsync();
+        }
+
+        private string SerializeArguments(object[] arguments)
+        {
+            return JsonConvert.SerializeObject(arguments);
+        }
+
+        private object[] DeserializeArguments(string value)
+        {
+            return JsonConvert.DeserializeObject<object[]>(value);
         }
 
         private async Task<SubscriptionUpdate> GetSubscriptionUpdate()

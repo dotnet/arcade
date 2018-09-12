@@ -125,6 +125,8 @@ FOR SYSTEM_TIME ALL
                                 Action = u.Action,
                                 Success = u.Success,
                                 ErrorMessage = u.ErrorMessage,
+                                Method = u.Method,
+                                Arguments = u.Arguments,
                                 Timestamp = EF.Property<DateTime>(u, "SysStartTime"),
                             }));
         }
@@ -164,6 +166,8 @@ FOR SYSTEM_TIME ALL
         public string Action { get; set; }
         public bool Success { get; set; }
         public string ErrorMessage { get; set; }
+        public string Method { get; set; }
+        public string Arguments { get; set; }
         public DateTime Timestamp { get; set; }
     }
 }

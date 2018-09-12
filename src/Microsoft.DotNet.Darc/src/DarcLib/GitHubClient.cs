@@ -67,7 +67,18 @@ namespace Microsoft.DotNet.DarcLib
 
             string ownerAndRepo = GetOwnerAndRepoFromRepoUri(repoUri);
 
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}/contents/{filePath}?ref={branch}", _logger);
+            HttpResponseMessage response;
+            try
+            {
+                response = await this.ExecuteGitCommand(
+                    HttpMethod.Get,
+                    $"repos/{ownerAndRepo}/contents/{filePath}?ref={branch}",
+                    _logger);
+            }
+            catch (HttpRequestException reqEx) when (reqEx.Message.Contains("404 (Not Found)"))
+            {
+                throw new DependencyFileNotFoundException(filePath, repoUri, branch, reqEx);
+            }
 
             _logger.LogInformation($"Getting the contents of file '{filePath}' from repo '{repoUri}' in branch '{branch}' succeeded!");
 

@@ -12,6 +12,6 @@ namespace Maestro.Contracts
         Task SubscriptionDeletedAsync(string user);
         Task UpdateAsync(int buildId);
         Task<string> CheckMergePolicyAsync(string prUrl);
-        Task<string> RunAction(string action, object[] arguments);
+        Task<string> RunAction(string action, string arguments);
     }
 }
