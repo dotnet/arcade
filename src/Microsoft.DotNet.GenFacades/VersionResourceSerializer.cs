@@ -87,7 +87,9 @@ namespace Microsoft.DotNet.GenFacades
                 fileVersion = new Version(0, 0);
 
             Version productVersion;
-            if (!Version.TryParse(_productVersionContents, out productVersion))
+            // For the Product Version, we take the first portion of the string before any whitespace,
+            // in case there is extraneous information (e.g. '@BuiltBy') after the version number.
+            if (!Version.TryParse(_productVersionContents.Split(null)[0], out productVersion))
                 productVersion = new Version(0, 0);
 
             writer.Write((DWORD)0xFEEF04BD);
