@@ -24,7 +24,9 @@ namespace Microsoft.DotNet.Darc
         /// <param name="options"></param>
         static int GetOperation(GetCommandLineOptions options)
         {
-            Local local = new Local(options.LocalDirectory, )
+            ILoggerFactory loggerFactory = new LoggerFactory().AddConsole();
+            ILogger logger = loggerFactory.CreateLogger<Program>();
+            Local local = new Local(options.LocalDirectory, logger);
             return 0;
         }
 
