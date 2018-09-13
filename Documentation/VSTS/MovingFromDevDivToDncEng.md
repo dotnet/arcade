@@ -28,6 +28,16 @@ These are the general steps for moving an official build from https://dev.azure.
 
     c. Your M2 will be notificed of the request and will have to approve the request before the MicroBuild team will review the request enable signing of your build definition.
 
+## Known issues
+
+- RepoToolset based repos cannot build from an internal Git repo with SourceLink enabled (the default).  Builds will fail with an error like
+
+```
+2018-09-12T22:25:57.4923150Z E:\A\_work\7\s\.packages\microsoft.sourcelink.common\1.0.0-beta-62911-01\build\Microsoft.SourceLink.Common.targets(60,5): error : SourceRoot.SourceLinkUrl is empty: 'E:\A\_work\7\s\' [E:\A\_work\7\s\src\Tasks\Microsoft.NET.Build.Tasks\Microsoft.NET.Build.Tasks.csproj]
+```
+
+This is because RepoToolset is expecting a GitHub url but internal builds are building from an Azure Git repo.  This issue is fixed in Arcade SDK and it is recommended that you move to the Arcade SDK for your builds.  If moving to the Arcade SDK is not an immediate option, then you can work around the issue by [disabling SourceLink](https://github.com/dotnet/sourcelink/blob/master/docs/README.md#enablesourcelink)
+
 ## Agent pools
 
 The [hosted agent pools](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml) which are available in DevDiv are also available in DncEng.  If your build is using a hosted pool, or it is possible to use a hosted pool, it is recommended that you do so (for non-Windows builds).  The general reason that a hosted pool does not work for teams for Linux / Mac builds, is the current [10 GB capability](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml#capabilities-and-limitations) on these machines which is not sufficient for most teams.  Azure DevOps is working to increase the disk size.
