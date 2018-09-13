@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 .WithCommand(command);
 
             string payloadDirectory = workItem.GetMetadata("PayloadDirectory");
-            string payloadArchive = workItem.GetMetadata("PayloadARchive");
+            string payloadArchive = workItem.GetMetadata("PayloadArchive");
             IWorkItemDefinition wi;
             if (!string.IsNullOrEmpty(payloadDirectory))
             {
