@@ -9,8 +9,6 @@ namespace Microsoft.DotNet.Helix.Client
     {
         public FileInfo Archive { get; }
 
-        private static string[] ALLOWED_ARCHIVES = new string[] { "tar", "tar.gz", "tgz", "zip" };
-
         public ArchivePayload(string pathToArchive)
         {
             Archive = new FileInfo(pathToArchive);
