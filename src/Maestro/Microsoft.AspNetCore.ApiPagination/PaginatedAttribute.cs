@@ -153,11 +153,12 @@ namespace Microsoft.AspNetCore.ApiPagination
             var requestServices = context.HttpContext.RequestServices;
             var urlHelperFactory = requestServices.GetRequiredService<IUrlHelperFactory>();
             var urlHelper = urlHelperFactory.GetUrlHelper(context);
+            var serviceProvider = new ExtendedServiceProvider(requestServices) {urlHelper, context.HttpContext};
             result.Value = query
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .AsEnumerable()
-                .Select(o => ActivatorUtilities.CreateInstance(requestServices, ResultType, o, urlHelper, context.HttpContext));
+                .Select(o => ActivatorUtilities.CreateInstance(serviceProvider, ResultType, o));
         }
 
         private async Task TransformResultAsync(ResultExecutingContext context)
@@ -215,6 +216,31 @@ namespace Microsoft.AspNetCore.ApiPagination
             context.HttpContext.Response.Headers["Link"] = string.Join(
                 ", ",
                 links.Select(l => $"<{l.href}>; rel=\"{l.rel}\""));
+        }
+    }
+
+    internal class ExtendedServiceProvider : Dictionary<Type, object>, IServiceProvider
+    {
+        public IServiceProvider Inner { get; }
+
+        public ExtendedServiceProvider(IServiceProvider inner)
+        {
+            Inner = inner;
+        }
+
+        public void Add<T>(T value)
+        {
+            Add(typeof(T), value);
+        }
+
+        public object GetService(Type serviceType)
+        {
+            if (TryGetValue(serviceType, out object value))
+            {
+                return value;
+            }
+
+            return Inner.GetService(serviceType);
         }
     }
 }
