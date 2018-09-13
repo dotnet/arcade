@@ -42,14 +42,30 @@
     </CleanDependsOn>
   </PropertyGroup>
 
+  <Choose>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('windows'))">
+      <PropertyGroup>
+        <IsPosixShell>false</IsPosixShell>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <IsPosixShell>true</IsPosixShell>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+
   <Target Name="Test"
           DependsOnTargets="$(TestDependsOn)">
     <SendHelixJob Source="$(HelixSource)"
                   Type="$(HelixType)"
                   Build="$(HelixBuild)"
                   TargetQueue="$(HelixTargetQueue)"
+                  IsPosixShell="$(IsPosixShell)"
                   BaseUri="$(HelixBaseUri)"
                   AccessToken="$(HelixAccessToken)"
+                  PreCommands="@(HelixPreCommand)"
+                  PostCommands="@(HelixPostCommand)"
                   CorrelationPayloads="@(HelixCorrelationPayload)"
                   WorkItems="@(HelixWorkItem)">
       <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
