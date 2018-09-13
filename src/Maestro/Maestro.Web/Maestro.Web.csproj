@@ -12,13 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include=".config\settings.Development.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include=".config\settings.Staging.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include=".config\settings.json">
+    <Content Include=".config\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -71,6 +65,7 @@
     <ProjectReference Include="..\Maestro.Contracts\Maestro.Contracts.csproj" />
     <ProjectReference Include="..\Maestro.Data\Maestro.Data.csproj" />
     <ProjectReference Include="..\Maestro.GitHub\Maestro.GitHub.csproj" />
+    <ProjectReference Include="..\Maestro.MergePolicies\Maestro.MergePolicies.csproj" />
     <ProjectReference Include="..\Microsoft.AspNetCore.ApiPagination\Microsoft.AspNetCore.ApiPagination.csproj" />
     <ProjectReference Include="..\Microsoft.AspNetCore.ApiVersioning.Swashbuckle\Microsoft.AspNetCore.ApiVersioning.Swashbuckle.csproj" />
     <ProjectReference Include="..\Microsoft.AspNetCore.ApiVersioning\Microsoft.AspNetCore.ApiVersioning.csproj" />

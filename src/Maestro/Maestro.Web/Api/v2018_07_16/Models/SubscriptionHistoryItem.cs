@@ -4,56 +4,35 @@ using System.Linq;
 using System.Threading.Tasks;
 using Maestro.Data;
 using Maestro.Data.Models;
+using Maestro.Web.Api.v2018_07_16.Controllers;
+using Microsoft.ApplicationInsights.AspNetCore.Extensions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.Operations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Maestro.Web.Api.v2018_07_16.Models
 {
     public class SubscriptionHistoryItem
     {
-        public static async Task<List<SubscriptionHistoryItem>> GetAllForSubscription(
-            Guid subscriptionId,
-            BuildAssetRegistryContext context)
+        public SubscriptionHistoryItem(SubscriptionUpdateHistoryEntry other, IUrlHelper url, HttpContext context)
         {
-            var result = new List<SubscriptionHistoryItem>();
-
-            var dbItems = await context.SubscriptionUpdates.FromSql(
-                @"
-SELECT * FROM [SubscriptionUpdates]
-FOR SYSTEM_TIME ALL
-WHERE [SubscriptionId] = {0}",
-                subscriptionId)
-                .Select(
-                    u => new
-                    {
-                        u.SubscriptionId,
-                        u.Action,
-                        u.Success,
-                        u.ErrorMessage,
-                        SysStartTime = EF.Property<DateTime>(u, "SysStartTime")
-                    })
-                .OrderByDescending(u => u.SysStartTime)
-                .ToListAsync();
-            foreach (var item in dbItems)
+            SubscriptionId = other.SubscriptionId;
+            Action = other.Action;
+            Success = other.Success;
+            ErrorMessage = other.ErrorMessage;
+            Timestamp = DateTime.SpecifyKind(other.Timestamp, DateTimeKind.Utc);
+            if (!other.Success)
             {
-                result.Add(
-                    new SubscriptionHistoryItem(
-                        item.SubscriptionId,
-                        item.Success,
-                        item.Action,
-                        item.ErrorMessage,
-                        DateTime.SpecifyKind(item.SysStartTime, DateTimeKind.Utc)));
+                RetryUrl = new UriBuilder
+                {
+                    Scheme = "https",
+                    Host = context.Request.GetUri().Host,
+                    Path = url.Action(
+                        nameof(SubscriptionsController.RetrySubscriptionActionAsync),
+                        new {id = other.SubscriptionId, timestamp = Timestamp.ToUnixTimeSeconds()}),
+                }.Uri.AbsoluteUri;
             }
-
-            return result;
-        }
-
-        private SubscriptionHistoryItem(Guid subscriptionId, bool success, string action, string errorMessage, DateTimeOffset timestamp)
-        {
-            SubscriptionId = subscriptionId;
-            Action = action;
-            Success = success;
-            ErrorMessage = errorMessage;
-            Timestamp = timestamp;
         }
 
         public DateTimeOffset Timestamp { get; }
@@ -65,5 +44,7 @@ WHERE [SubscriptionId] = {0}",
         public Guid SubscriptionId { get; }
 
         public string Action { get; }
+
+        public string RetryUrl { get; }
     }
 }

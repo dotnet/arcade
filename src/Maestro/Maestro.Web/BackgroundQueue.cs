@@ -3,15 +3,24 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Maestro.Web
 {
     public class BackgroundQueue : BackgroundService
     {
+        public ILogger<BackgroundQueue> Logger { get; }
+
         private readonly BlockingCollection<Func<Task>> _workItems = new BlockingCollection<Func<Task>>();
+
+        public BackgroundQueue(ILogger<BackgroundQueue> logger)
+        {
+            Logger = logger;
+        }
 
         public void Post(Func<Task> workItem)
         {
+            Logger.LogInformation($"Posted work to BackgroundQueue: {workItem}");
             _workItems.Add(workItem);
         }
 
@@ -19,17 +28,43 @@ namespace Maestro.Web
         {
             // Get off the synchronous chain from WebHost.Start
             await Task.Yield();
-            while (!_workItems.IsCompleted)
+            using (Logger.BeginScope("Processing Background Queue"))
             {
-                if (stoppingToken.IsCancellationRequested)
+                while (true)
                 {
-                    _workItems.CompleteAdding();
-                }
+                    try
+                    {
+                        while (!_workItems.IsCompleted)
+                        {
+                            if (stoppingToken.IsCancellationRequested)
+                            {
+                                _workItems.CompleteAdding();
+                            }
 
-                _workItems.TryTake(out Func<Task> item, 1000);
-                if (item != null)
-                {
-                    await item();
+                            _workItems.TryTake(out Func<Task> item, 1000);
+                            if (item != null)
+                            {
+                                using (Logger.BeginScope("Executing background work: {item}", item.ToString()))
+                                {
+                                    try
+                                    {
+                                        await item();
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.LogError(ex, "Background work {item} threw an unhandled exception.", item.ToString());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(ex, "Background queue got unhandled exception.");
+                        continue;
+                    }
+
+                    return;
                 }
             }
         }

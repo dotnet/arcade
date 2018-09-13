@@ -49,9 +49,8 @@ function Read-Parameters($parametersFile)
     $parameters.Add("sslEndpoints", $sslEndpoints)
     $parameters.Add("adminPassword", (Get-ParameterFromKeyVault $unProcessedParameters.adminPassword))
     $parameters.Add("secretSourceVaultResourceId", [string](Get-AzureRmKeyVault -VaultName $vaultName | ForEach-Object ResourceId))
-    $parameters.Add("clusterCertificateThumbprint", [string](Get-AzureKeyVaultCertificate -VaultName $vaultName -Name $unProcessedParameters.clusterCertificate | ForEach-Object Thumbprint))
     $certUrls = @()
-    foreach ($url in ((@($unProcessedParameters.clusterCertificate) + $unProcessedParameters.additionalCertificates) | ForEach-Object { Get-AzureKeyVaultCertificate -VaultName $vaultName -Name $_ } | ForEach-Object SecretId))
+    foreach ($url in ($unProcessedParameters.certificates | ForEach-Object { Get-AzureKeyVaultCertificate -VaultName $vaultName -Name $_ } | ForEach-Object SecretId))
     {
         $certUrls += [string]$url
     }

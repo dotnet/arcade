@@ -39,7 +39,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubscriptionActorService.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.EntityFrameworkCore.Extensions", "Microsoft.DotNet.EntityFrameworkCore.Extensions\Microsoft.DotNet.EntityFrameworkCore.Extensions.csproj", "{0830F09B-884A-42C6-BA64-2F267283623B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.AspNetCore.ApiPagination", "Microsoft.AspNetCore.ApiPagination\Microsoft.AspNetCore.ApiPagination.csproj", "{C7C411A5-B404-4E7E-83E5-26826A3F1DF8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.AspNetCore.ApiPagination", "Microsoft.AspNetCore.ApiPagination\Microsoft.AspNetCore.ApiPagination.csproj", "{C7C411A5-B404-4E7E-83E5-26826A3F1DF8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maestro.MergePolicies", "Maestro.MergePolicies\Maestro.MergePolicies.csproj", "{B8A3BA40-534B-4DD5-B8AE-17016011E62F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -265,6 +267,18 @@ Global
 		{C7C411A5-B404-4E7E-83E5-26826A3F1DF8}.Release|x64.Build.0 = Release|Any CPU
 		{C7C411A5-B404-4E7E-83E5-26826A3F1DF8}.Release|x86.ActiveCfg = Release|Any CPU
 		{C7C411A5-B404-4E7E-83E5-26826A3F1DF8}.Release|x86.Build.0 = Release|Any CPU
+		{B8A3BA40-534B-4DD5-B8AE-17016011E62F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8A3BA40-534B-4DD5-B8AE-17016011E62F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8A3BA40-534B-4DD5-B8AE-17016011E62F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B8A3BA40-534B-4DD5-B8AE-17016011E62F}.Debug|x64.Build.0 = Debug|Any CPU
+		{B8A3BA40-534B-4DD5-B8AE-17016011E62F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B8A3BA40-534B-4DD5-B8AE-17016011E62F}.Debug|x86.Build.0 = Debug|Any CPU
+		{B8A3BA40-534B-4DD5-B8AE-17016011E62F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8A3BA40-534B-4DD5-B8AE-17016011E62F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8A3BA40-534B-4DD5-B8AE-17016011E62F}.Release|x64.ActiveCfg = Release|Any CPU
+		{B8A3BA40-534B-4DD5-B8AE-17016011E62F}.Release|x64.Build.0 = Release|Any CPU
+		{B8A3BA40-534B-4DD5-B8AE-17016011E62F}.Release|x86.ActiveCfg = Release|Any CPU
+		{B8A3BA40-534B-4DD5-B8AE-17016011E62F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

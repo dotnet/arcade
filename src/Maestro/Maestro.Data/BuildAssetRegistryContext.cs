@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -51,6 +52,8 @@ namespace Maestro.Data
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<SubscriptionUpdate> SubscriptionUpdates { get; set; }
         public DbSet<RepoInstallation> RepoInstallations { get; set; }
+        public DbQuery<SubscriptionUpdateHistoryEntry> SubscriptionUpdateHistory { get; set; }
+
 
         public override Task<int> SaveChangesAsync(
             bool acceptAllChangesOnSuccess,
@@ -91,7 +94,7 @@ namespace Maestro.Data
                 .HasIndex(t => new {t.ApplicationUserId, t.Name})
                 .IsUnique();
 
-            builder.Entity<DefaultChannel>().HasIndex(dc => new {dc.Repository, dc.Branch}).IsUnique();
+            builder.Entity<DefaultChannel>().HasIndex(dc => new {dc.Repository, dc.Branch, dc.ChannelId}).IsUnique();
 
             builder.Entity<SubscriptionUpdate>()
                 .HasOne(su => su.Subscription)
@@ -107,6 +110,25 @@ namespace Maestro.Data
                 .ForSqlServerIsColumnstore();
 
             builder.HasDbFunction(() => JsonExtensions.JsonValue("", "")).HasName("JSON_VALUE").HasSchema("");
+
+            builder.Query<SubscriptionUpdateHistoryEntry>()
+                .ToQuery(
+                    () => SubscriptionUpdates.FromSql(
+                            @"
+SELECT * FROM [SubscriptionUpdates]
+FOR SYSTEM_TIME ALL
+")
+                        .Select(
+                            u => new SubscriptionUpdateHistoryEntry
+                            {
+                                SubscriptionId = u.SubscriptionId,
+                                Action = u.Action,
+                                Success = u.Success,
+                                ErrorMessage = u.ErrorMessage,
+                                Method = u.Method,
+                                Arguments = u.Arguments,
+                                Timestamp = EF.Property<DateTime>(u, "SysStartTime"),
+                            }));
         }
 
         public Task<long> GetInstallationId(string repositoryUrl)
@@ -136,5 +158,16 @@ namespace Maestro.Data
             JToken token = JObject.Parse(column).SelectToken(path, !lax);
             return token.ToObject<string>();
         }
+    }
+
+    public class SubscriptionUpdateHistoryEntry
+    {
+        public Guid SubscriptionId { get; set; }
+        public string Action { get; set; }
+        public bool Success { get; set; }
+        public string ErrorMessage { get; set; }
+        public string Method { get; set; }
+        public string Arguments { get; set; }
+        public DateTime Timestamp { get; set; }
     }
 }

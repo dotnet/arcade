@@ -9,7 +9,9 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 
 namespace Microsoft.AspNetCore.ApiPagination
@@ -132,6 +134,13 @@ namespace Microsoft.AspNetCore.ApiPagination
             var perPage = (int) context.RouteData.Values[nameof(PaginatedAttribute) + ".perPage"];
 
             int rowCount = await query.CountAsync();
+
+            if (rowCount == 0)
+            {
+                result.Value = Array.Empty<object>();
+                return;
+            }
+
             var pageCount = (int) Math.Ceiling((double) rowCount / perPage);
             if (page > pageCount)
             {
@@ -141,11 +150,15 @@ namespace Microsoft.AspNetCore.ApiPagination
 
             AddLinkHeader(context, page, perPage, pageCount);
 
+            var requestServices = context.HttpContext.RequestServices;
+            var urlHelperFactory = requestServices.GetRequiredService<IUrlHelperFactory>();
+            var urlHelper = urlHelperFactory.GetUrlHelper(context);
+            var serviceProvider = new ExtendedServiceProvider(requestServices) {urlHelper, context.HttpContext};
             result.Value = query
                 .Skip((page - 1) * perPage)
                 .Take(perPage)
                 .AsEnumerable()
-                .Select(o => Activator.CreateInstance(ResultType, o));
+                .Select(o => ActivatorUtilities.CreateInstance(serviceProvider, ResultType, o));
         }
 
         private async Task TransformResultAsync(ResultExecutingContext context)
@@ -203,6 +216,31 @@ namespace Microsoft.AspNetCore.ApiPagination
             context.HttpContext.Response.Headers["Link"] = string.Join(
                 ", ",
                 links.Select(l => $"<{l.href}>; rel=\"{l.rel}\""));
+        }
+    }
+
+    internal class ExtendedServiceProvider : Dictionary<Type, object>, IServiceProvider
+    {
+        public IServiceProvider Inner { get; }
+
+        public ExtendedServiceProvider(IServiceProvider inner)
+        {
+            Inner = inner;
+        }
+
+        public void Add<T>(T value)
+        {
+            Add(typeof(T), value);
+        }
+
+        public object GetService(Type serviceType)
+        {
+            if (TryGetValue(serviceType, out object value))
+            {
+                return value;
+            }
+
+            return Inner.GetService(serviceType);
         }
     }
 }

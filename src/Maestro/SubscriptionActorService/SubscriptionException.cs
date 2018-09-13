@@ -3,11 +3,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Runtime.Serialization;
 
 namespace SubscriptionActorService
 {
     /// <summary>
-    ///   Exception thrown when there is a failure updating a subscription that should be surfaced to users.
+    ///     Exception thrown when there is a failure updating a subscription that should be surfaced to users.
     /// </summary>
     public class SubscriptionException : Exception
     {
@@ -19,7 +20,7 @@ namespace SubscriptionActorService
         {
         }
 
-        protected SubscriptionException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context)
+        protected SubscriptionException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
 

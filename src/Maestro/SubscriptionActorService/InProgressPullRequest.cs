@@ -14,5 +14,8 @@ namespace SubscriptionActorService
 
         [DataMember]
         public int BuildId { get; set; }
+
+        [DataMember(IsRequired = false)]
+        public string StatusCommentId { get; set; }
     }
 }

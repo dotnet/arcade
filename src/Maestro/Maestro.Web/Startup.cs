@@ -14,6 +14,7 @@ using Maestro.Contracts;
 using Maestro.Data;
 using Maestro.Data.Models;
 using Maestro.GitHub;
+using Maestro.MergePolicies;
 using Microsoft.AspNetCore.ApiPagination;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Builder;
@@ -139,6 +140,8 @@ namespace Maestro.Web
                         .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                         ?.InformationalVersion;
                 });
+
+            services.AddMergePolicies();
         }
 
         public void ConfigureContainer(ContainerBuilder builder)

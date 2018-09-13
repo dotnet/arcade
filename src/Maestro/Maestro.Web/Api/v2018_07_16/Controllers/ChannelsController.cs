@@ -56,6 +56,25 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             return Ok(new Channel(channel));
         }
 
+        [HttpDelete("{id}")]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(Channel))]
+        [ValidateModelState]
+        public async Task<IActionResult> DeleteChannel(int id)
+        {
+            Data.Models.Channel channel = await _context.Channels
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (channel == null)
+            {
+                return NotFound();
+            }
+
+            _context.Channels.Remove(channel);
+
+            await _context.SaveChangesAsync();
+            return Ok(new Channel(channel));
+        }
+
         [HttpPost]
         [SwaggerResponse((int) HttpStatusCode.Created, Type = typeof(Channel))]
         public async Task<IActionResult> CreateChannel([Required] string name, [Required] string classification)
