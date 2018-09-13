@@ -7,6 +7,7 @@
     <PackageType>MSBuildSdk</PackageType>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
+    <NoWarn>0436</NoWarn>
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
   </PropertyGroup>
 
@@ -15,15 +16,15 @@
     <PackageReference Include="System.Diagnostics.TraceSource" Version="4.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
+  </ItemGroup>
+
   <!-- Common command-line helper sources -->
   <ItemGroup>
     <Compile Include="..\Common\CommandLine.cs" />
     <Compile Include="..\Common\CommandLineTraceHandler.cs" />
     <Compile Include="..\Common\ConsoleTraceListener.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
