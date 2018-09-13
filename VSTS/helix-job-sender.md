@@ -33,10 +33,10 @@ The YAML template is not top priority as devs are familiar with MSBuild tasks. H
 
 ## Work to be Done
 
-1. Add .zip file payload support to the SDK (assigned to jofortes; estimated 1 hour of work)
-2. Add multiqueueing support to the MSBuild task using MSBuild batching (assigned to jofortes; estimated 1 day work)
+1. Add .zip file payload support to the SDK (assigned to jofortes; estimated 1 hour of work): PR [here](https://github.com/dotnet/arcade/pull/766)
+2. Add multiqueueing support to the MSBuild task using MSBuild batching (assigned to jofortes; estimated 1 day work): PR [here](https://github.com/dotnet/arcade/pull/768)
 3. Add multi-job waiting to the SDK and link it to MSBuild task (assigned to jofortes; estimated 2 days work)
-4. Add pre- and post-task scripting functionality to the SDK and support XUnit result reporting (assigned to alperovi; estimated 2 days of work)
+4. Add pre- and post-task scripting functionality to the SDK and support XUnit result reporting (assigned to alperovi; estimated 2 days of work): PR [here](https://github.com/dotnet/arcade/pull/767/files)
 5. Documentation for use of all this jazz (assigned to jofortes; estimated 1 day of work)
 6. (Stretch goal) Add YAML template wrapper to MSBuild task (assigned to jofortes; estimated 1 day of work)
 
