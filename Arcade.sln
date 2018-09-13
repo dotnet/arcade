@@ -70,6 +70,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.AspNetCore.ApiPag
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Maestro.MergePolicies", "src\Maestro\Maestro.MergePolicies\Maestro.MergePolicies.csproj", "{37D70EEA-9621-44EB-921A-5D303917F851}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.GenFacades", "src\Microsoft.DotNet.GenFacades\Microsoft.DotNet.GenFacades.csproj", "{B6778A84-3330-4F2E-9D26-316C78A4BCC2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Cci.Extensions", "src\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj", "{BCBFB7E1-B202-4C88-AB9F-290B13F309FD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -452,6 +456,30 @@ Global
 		{37D70EEA-9621-44EB-921A-5D303917F851}.Release|x64.Build.0 = Release|Any CPU
 		{37D70EEA-9621-44EB-921A-5D303917F851}.Release|x86.ActiveCfg = Release|Any CPU
 		{37D70EEA-9621-44EB-921A-5D303917F851}.Release|x86.Build.0 = Release|Any CPU
+		{B6778A84-3330-4F2E-9D26-316C78A4BCC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6778A84-3330-4F2E-9D26-316C78A4BCC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6778A84-3330-4F2E-9D26-316C78A4BCC2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B6778A84-3330-4F2E-9D26-316C78A4BCC2}.Debug|x64.Build.0 = Debug|Any CPU
+		{B6778A84-3330-4F2E-9D26-316C78A4BCC2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B6778A84-3330-4F2E-9D26-316C78A4BCC2}.Debug|x86.Build.0 = Debug|Any CPU
+		{B6778A84-3330-4F2E-9D26-316C78A4BCC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6778A84-3330-4F2E-9D26-316C78A4BCC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6778A84-3330-4F2E-9D26-316C78A4BCC2}.Release|x64.ActiveCfg = Release|Any CPU
+		{B6778A84-3330-4F2E-9D26-316C78A4BCC2}.Release|x64.Build.0 = Release|Any CPU
+		{B6778A84-3330-4F2E-9D26-316C78A4BCC2}.Release|x86.ActiveCfg = Release|Any CPU
+		{B6778A84-3330-4F2E-9D26-316C78A4BCC2}.Release|x86.Build.0 = Release|Any CPU
+		{BCBFB7E1-B202-4C88-AB9F-290B13F309FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCBFB7E1-B202-4C88-AB9F-290B13F309FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCBFB7E1-B202-4C88-AB9F-290B13F309FD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BCBFB7E1-B202-4C88-AB9F-290B13F309FD}.Debug|x64.Build.0 = Debug|Any CPU
+		{BCBFB7E1-B202-4C88-AB9F-290B13F309FD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BCBFB7E1-B202-4C88-AB9F-290B13F309FD}.Debug|x86.Build.0 = Debug|Any CPU
+		{BCBFB7E1-B202-4C88-AB9F-290B13F309FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCBFB7E1-B202-4C88-AB9F-290B13F309FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCBFB7E1-B202-4C88-AB9F-290B13F309FD}.Release|x64.ActiveCfg = Release|Any CPU
+		{BCBFB7E1-B202-4C88-AB9F-290B13F309FD}.Release|x64.Build.0 = Release|Any CPU
+		{BCBFB7E1-B202-4C88-AB9F-290B13F309FD}.Release|x86.ActiveCfg = Release|Any CPU
+		{BCBFB7E1-B202-4C88-AB9F-290B13F309FD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

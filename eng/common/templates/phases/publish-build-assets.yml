@@ -2,7 +2,8 @@ parameters:
   dependsOn: ''
   queue: {}
 phases:
-  - phase: Push to B.A.R.
+  - phase: Asset_Registry_Publish
+    displayName: Publish to Build Asset Registry
     dependsOn: ${{ parameters.dependsOn }}
     queue: ${{ parameters.queue }}
     steps:
@@ -20,7 +21,7 @@ phases:
             SecretsFilter: 'MaestroAccessToken'
           condition: succeeded()
         - script: eng\common\publishbuildassets.cmd
-            /p:ManifestZipFilePath='$(Build.StagingDirectory)/Download/AssetManifests'
+            /p:ManifestsPath='$(Build.StagingDirectory)/Download/AssetManifests'
             /p:BuildAssetRegistryToken=$(MaestroAccessToken)
-            /p:MaestroApiEndpoint=https://maestro-int.westus2.cloudapp.azure.com
-          displayName: Push Build Assets
+            /p:MaestroApiEndpoint=https://maestro-prod.westus2.cloudapp.azure.com
+          displayName: Publish Build Assets
