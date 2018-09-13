@@ -3,7 +3,7 @@
 Entry point script for installing native tools
 
 .DESCRIPTION
-Reads $RepoRoot\eng\NativeToolsVersion.txt file to determine native assets to install
+Reads $RepoRoot\global.json file to determine native assets to install
 and executes installers for those tools
 
 .PARAMETER BaseUri
@@ -35,7 +35,7 @@ File path to tools versions file
 #>
 [CmdletBinding(PositionalBinding=$false)]
 Param (
-  [string] $BaseUri = "https://dotnetfeed.blob.core.windows.net/netcoreeng/native-assets",
+  [string] $BaseUri = "https://netcorenativeassets.blob.core.windows.net/resource-packages/external",
   [string] $InstallDirectory,
   [switch] $Clean = $False,
   [switch] $Force = $False,
