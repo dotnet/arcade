@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Helix.Client
             using (var stream = new FileStream(Archive.FullName, FileMode.Open))
             {
                 Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Archive.Name}");
-                return zipUri.ToString();
+                return zipUri.AbsoluteUri;
             }
         }
     }
