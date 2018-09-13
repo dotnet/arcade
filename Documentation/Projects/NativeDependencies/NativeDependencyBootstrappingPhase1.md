@@ -8,25 +8,35 @@ It is possible that the landscape will change w.r.t. available technologies, and
 
 ## Scope
 
-- CLI and Pre-CLI toolsets ()
+- CLI and Pre-CLI toolsets
 
 - Xcopy deployable native dependencies
 
-### Out of scope (for phase 1)
+### Out of scope for phase 1 (9/21)
 
-- Non-Xcopy deployable dependencies
+- Non-Xcopy deployable dependencies.
 
   - ie, docker, [Visual Studio](https://github.com/dotnet/arcade/issues/64), NodeJS, etc...
 
+- Toolset detection
+
+  - Detecting if a tool (and which version) is already installed, as well as which one should be used by the build (pre-installed vs repo specified).
+
+- Native tool install scripts
+
+  - We will only be providing an example installer for a particular tool (CMake) both as a sample for teams to follow, and as a proof of concept.
+  Additional installers will be written on an as-needed basis.
+
+
 ## Goals
 
-- Cloning a repo and building deploys versioned native dependencies (within [scope](#scope)) which are available for use in the repo's build
+- Cloning a repo and building deploys versioned native dependencies (within [scope](#scope)) which are available for use in the repo's build.
 
 ## Plan Overview
 
 - Create zips / tarballs of a couple of xcopy deployable native dependencies (like cmake) which are stored and publically accessible in Azure blob storage.  These will be proof of concept, and not an exhaustive list of native toolset dependencies.
 
-- Determine how repos will define a dependency version list for native dependencies which fits into the [dependency description](https://github.com/dotnet/arcade/pull/120/files) spec or modifies it where necessary
+- Determine how repos will define a dependency version list for native dependencies which fits into the [dependency description](https://github.com/dotnet/arcade/pull/120/files) spec or modifies it where necessary.
 
 - Create [Powershell](https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell?view=powershell-6) and bash scripts (these are in-box available tools) which are capable of understanding the dependency list and downloading / extracting versioned dependencies so that they are available in the repo from a well-known (or defined) location.
 
@@ -40,6 +50,27 @@ It is possible that the landscape will change w.r.t. available technologies, and
 
   - If we used a nupkg format, we wouldn't actually be able to use NuGet to download and extract them, they would be purely used as zip files.
 
-- X-Plat choco - beyond the scope of what's necessary for xcopy deployable native dependencies
+- X-Plat choco - beyond the scope of what's necessary for xcopy deployable native dependencies.
 
-- MSI's, debian packages, etc - beyond  the scope of what's necessary for xcopy deployable native dependencies
+- MSI's, debian packages, etc - beyond  the scope of what's necessary for xcopy deployable native dependencies.
+
+## Current status
+
+### Done
+
+- Repos list their native toolset dependencies via global.json
+
+- We already have a working and tested version of:
+  - Windows bootstrapping scripts
+  - Windows common library scripts
+  - Windows install sample (CMake)
+We are pending resolution from [#746](https://github.com/dotnet/arcade/issues/746) to see if these need to be rewritten.
+
+### Pending
+
+- Move the current storage location for the native assets, and write guidance for teams on where to upload them in the future. 
+They are currently stored in the native-assets container in the dotnetfeed storage account and need to be moved to the storage account in use by OS onboarding. Tracked by: [#757](https://github.com/dotnet/arcade/issues/757).
+- Reconcile OS onboarding and native tool bootstrapping to potentially reuse the tool installing scripts. Ongoing discussion: details in [#746](https://github.com/dotnet/arcade/issues/746).
+- Write the Linux infrastructure scripts and CMake sample. Tracked by [#749](https://github.com/dotnet/arcade/issues/749) and pending outcome of [#746](https://github.com/dotnet/arcade/issues/746).
+- Update scripts and documentation to add details and remove inconsistencies. Tracked by [#756](https://github.com/dotnet/arcade/issues/756).
+- Handle CLI as a bootstrapped native tool. Tracked by [#151](https://github.com/dotnet/arcade/issues/151).
