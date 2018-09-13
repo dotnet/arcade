@@ -64,13 +64,11 @@ It is possible that the landscape will change w.r.t. available technologies, and
   - Windows bootstrapping scripts
   - Windows common library scripts
   - Windows install sample (CMake)
-We are pending resolution from [#746](https://github.com/dotnet/arcade/issues/746) to see if these need to be rewritten.
 
 ### Pending
 
 - Move the current storage location for the native assets, and write guidance for teams on where to upload them in the future. 
 They are currently stored in the native-assets container in the dotnetfeed storage account and need to be moved to the storage account in use by OS onboarding. Tracked by: [#757](https://github.com/dotnet/arcade/issues/757).
-- Reconcile OS onboarding and native tool bootstrapping to potentially reuse the tool installing scripts. Ongoing discussion: details in [#746](https://github.com/dotnet/arcade/issues/746).
-- Write the Linux infrastructure scripts and CMake sample. Tracked by [#749](https://github.com/dotnet/arcade/issues/749) and pending outcome of [#746](https://github.com/dotnet/arcade/issues/746).
+- Write the Linux infrastructure scripts and CMake sample. Tracked by [#749](https://github.com/dotnet/arcade/issues/749)
 - Update scripts and documentation to add details and remove inconsistencies. Tracked by [#756](https://github.com/dotnet/arcade/issues/756).
 - Handle CLI as a bootstrapped native tool. Tracked by [#151](https://github.com/dotnet/arcade/issues/151).
