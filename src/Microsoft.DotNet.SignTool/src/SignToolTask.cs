@@ -94,6 +94,12 @@ namespace Microsoft.DotNet.SignTool
                 return;
             }
 
+            if (ItemsToSign.Count() == 0)
+            {
+                Log.LogWarning($"An empty list of files to sign was passed as parameter.");
+                return;
+            }
+
             var enclosingDir = GetEnclosingDirectoryOfItemsToSign();
             var defaultSignInfoForPublicKeyToken = ParseStrongNameSignInfo();
             var explicitCertificates = ParseFileSignInfo();
