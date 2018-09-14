@@ -7,20 +7,24 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.DarcLib
 {
     class LocalGitClient : IGitRepo
     {
         string _gitRepoRoot;
+        ILogger _logger;
+
         /// <summary>
         /// Construct a new local git client
         /// </summary>
         /// <param name="path">Current path</param>
-        public LocalGitClient(string path)
+        public LocalGitClient(string path, ILogger logger)
         {
             // TODO: Attempt to find the git repo root?
             _gitRepoRoot = path;
+            _logger = logger;
         }
 
         public Task<string> CheckIfFileExistsAsync(string repoUri, string filePath, string branch)
@@ -58,14 +62,15 @@ namespace Microsoft.DotNet.DarcLib
             throw new NotImplementedException();
         }
 
-        public Task<string> GetFileContentAsync(string ownerAndRepo, string path)
+        public Task<string> GetFileContentsAsync(string ownerAndRepo, string path)
         {
-            throw new NotImplementedException();
+            return GetFileContentsAsync(path, null, null);
         }
 
         public Task<string> GetFileContentsAsync(string filePath, string repoUri, string branch)
         {
-            throw new NotImplementedException();
+            System.IO.StreamReader streamReader = new System.IO.StreamReader(filePath);
+            return streamReader.ReadToEndAsync();
         }
 
         public Task<string> GetLastCommitShaAsync(string ownerAndRepo, string branch)

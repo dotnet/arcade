@@ -27,6 +27,11 @@ namespace Microsoft.DotNet.Darc
             ILoggerFactory loggerFactory = new LoggerFactory().AddConsole();
             ILogger logger = loggerFactory.CreateLogger<Program>();
             Local local = new Local(options.LocalDirectory, logger);
+            var allDependencies = local.GetDependencies().Result;
+            foreach (var dependency in allDependencies)
+            {
+                Console.WriteLine($"{dependency.Name} {dependency.Version}");
+            }
             return 0;
         }
 

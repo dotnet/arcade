@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             _repo = gitPath;
             _logger = logger;
-            _gitClient = new LocalGitClient(gitPath);
+            _gitClient = new LocalGitClient(gitPath, _logger);
             _fileManager = new GitFileManager(_gitClient, _logger);
         }
 

@@ -297,7 +297,7 @@ namespace Microsoft.DotNet.DarcLib
                 {
                     if (!GitFileManager.DependencyFiles.Contains(content.Path))
                     {
-                        string fileContent = await GetFileContentAsync(ownerAndRepo, content.Path);
+                        string fileContent = await GetFileContentsAsync(ownerAndRepo, content.Path);
                         GitFile gitCommit = new GitFile(content.Path, fileContent);
                         files.Add(gitCommit);
                     }
@@ -311,7 +311,7 @@ namespace Microsoft.DotNet.DarcLib
             _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{assetsProducedInCommit}' succeeded!");
         }
 
-        public async Task<string> GetFileContentAsync(string ownerAndRepo, string path)
+        public async Task<string> GetFileContentsAsync(string ownerAndRepo, string path)
         {
             HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repos/{ownerAndRepo}/contents/{path}", _logger);
 
