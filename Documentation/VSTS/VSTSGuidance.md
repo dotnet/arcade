@@ -4,11 +4,11 @@
 
 There are two projects for use.  They are:
 
-- public (https://dnceng.visualstudio.com/public)
+- public (https://dev.azure.com/dnceng/public)
   - Used for oss
   - For build definitions only  (no source code - that's on GitHub)
   - Build definitions are allowed to pull source directly from GitHub
-- internal  (https://dnceng.visualstudio.com/internal)
+- internal  (https://dev.azure.com/dnceng/internal)
   - Build definitions are only allowed to pull source from internal repos
   - Public GitHub repos should be mirror here for official msft builds
 
@@ -24,9 +24,9 @@ In this context, teams pretty much only affect which level the kanban (or whatev
 
 To keep things as simple (manageable) as possible, we're going to manage permissions coarsely at the project level - pointing directly to existing AD security groups managed in idweb.  **We should not be managing permission outside of this method**
 
-- Permissions will point to existing security groups in AD which are managed in idweb.  This admin is done at the **project** level.  ([VSTS link](https://dnceng.visualstudio.com/internal/_admin/_security))
+- Permissions will point to existing security groups in AD which are managed in idweb.  This admin is done at the **project** level.  ([VSTS link](https://dev.azure.com/dnceng/internal/_admin/_security))
 - The bulk of folks will be in the 'contributers' group, with special additions for other groups (like admin)
-- There are VSTS permission groups that can be set out side of the project context. ([VSTS link](https://dnceng.visualstudio.com/_admin/_security))   **We're not going to use those**
+- There are VSTS permission groups that can be set out side of the project context. ([VSTS link](https://dev.azure.com/dnceng/_admin/_security))   **We're not going to use those**
 - It is also possible to set permissions at the team.  **We're not going to do that**
 
 ## Casing
@@ -130,5 +130,5 @@ Both of these would point to the same yaml file in the forks of the repo:
 
 From time to time, there are some terms you might encounter in documentation or otherwise.  Here's some I've run across so far and the interpretation.
 
-- collection --> account --> instance (top level thing - e.g. devdiv.visualstudio.com)
+- collection --> account --> instance (top level thing - e.g. dev.azure.com/dnceng)
 - team --> group of indivduals.  Largely is about the backlog, not much more.  In our case we're not using for permissions.
