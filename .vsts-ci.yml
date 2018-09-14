@@ -61,4 +61,4 @@ phases:
           - Windows_NT
           - Linux
         queue: 
-          name: DotNetCore-Windows
+          name: Hosted VS2017

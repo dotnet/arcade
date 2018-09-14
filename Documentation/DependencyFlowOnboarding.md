@@ -6,14 +6,14 @@ There's a set of steps that need to be completed so the versions of assets your 
 
 Copy the `eng/` folder from the [minimalci-sample](https://github.com/dotnet/arcade-minimalci-sample) repo. 
 
-This folder contains required version files as well as build definition templates used to publishing assets.
+This folder contains required version files as well as build definition templates used for publishing assets.
 
 For more information about version files go to: https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md
 
 ## Enabling assets publishing to the Build Asset Registry (BAR)
 
 To enable asset publishing to BAR we need to add a closing phase to `.vsts-ci.yml`. To do this add the following snippet at the end of `.vsts-ci.yml` and update the `dependsOn` parameter with the names 
-of **all** the previous phases:
+of **all** the previous **build** phases:
 
 ```
   - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -23,7 +23,7 @@ of **all** the previous phases:
           - phase1
           - phase2
         queue: 
-          name: DotNetCore-Windows
+          name: Hosted VS2017
 ```
 
 ## Add subscriptions and channels
@@ -46,7 +46,7 @@ Once you are part of the `arcade-contrib` group
 
 ### Create a subscription
 
-1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html anc click on "Authorize"
+1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
 2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
 3. Expand "POST /api/subscriptions" under "Subscriptions" and click "Try it out"
 4. Update the values of the sample body. Here is an example of how would a request body look like:
@@ -82,6 +82,6 @@ Once you are part of the `arcade-contrib` group
 4. Provide a "name" and a "classification"
 5. Click "Execute"
 
-Currently Swagger is the only way to create Subscriptions and Channels but the plan is for `Darc` to support this as well.
+Currently the REST API is the only way to create Subscriptions and Channels but the plan is for `Darc` to support this as well.
 
 
