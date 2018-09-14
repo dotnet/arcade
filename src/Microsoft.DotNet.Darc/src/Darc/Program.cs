@@ -24,13 +24,13 @@ namespace Microsoft.DotNet.Darc
         /// <param name="options"></param>
         static int GetOperation(GetCommandLineOptions options)
         {
-            ILoggerFactory loggerFactory = new LoggerFactory().AddConsole();
+            ILoggerFactory loggerFactory = new LoggerFactory().AddConsole(LogLevel.Warning);
             ILogger logger = loggerFactory.CreateLogger<Program>();
             Local local = new Local(options.LocalDirectory, logger);
             var allDependencies = local.GetDependencies().Result;
             foreach (var dependency in allDependencies)
             {
-                Console.WriteLine($"{dependency.Name} {dependency.Version}");
+                Console.WriteLine($"{dependency.Name} {dependency.Version} from {dependency.RepoUri}@{dependency.Commit}");
             }
             return 0;
         }

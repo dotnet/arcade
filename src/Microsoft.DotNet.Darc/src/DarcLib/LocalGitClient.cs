@@ -52,6 +52,11 @@ namespace Microsoft.DotNet.DarcLib
             throw new InvalidOperationException();
         }
 
+        public Task<string> CreatePullRequestCommentAsync(string pullRequestUrl, string message)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, List<GitFile> files, string pullRequestBaseBranch, string path = "eng/common/")
         {
             throw new NotImplementedException();
@@ -73,6 +78,11 @@ namespace Microsoft.DotNet.DarcLib
             return streamReader.ReadToEndAsync();
         }
 
+        public Task<List<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<string> GetLastCommitShaAsync(string ownerAndRepo, string branch)
         {
             throw new NotImplementedException();
@@ -84,6 +94,11 @@ namespace Microsoft.DotNet.DarcLib
         }
 
         public Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IList<Commit>> GetPullRequestCommitsAsync(string pullRequestUrl)
         {
             throw new NotImplementedException();
         }
@@ -108,12 +123,22 @@ namespace Microsoft.DotNet.DarcLib
             throw new NotImplementedException();
         }
 
+        public Task PushFilesAsync(List<GitFile> filesToCommit, string repoUri, string branch, string commitMessage)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null)
         {
             throw new NotImplementedException();
         }
 
         public Task<string> UpdatePullRequestAsync(string pullRequestUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task UpdatePullRequestCommentAsync(string pullRequestUrl, string commentId, string message)
         {
             throw new NotImplementedException();
         }
