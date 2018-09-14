@@ -106,16 +106,16 @@ namespace Microsoft.DotNet.DarcLib
             await this.ExecuteGitCommand(HttpMethod.Post, $"repositories/{repoName}/refs", _logger, body);
         }
 
-        public async Task PushCommitsAsync(List<GitFile> filesToCommit, string repoUri, string pullRequestBaseBranch, string commitMessage)
+        public async Task PushFilesAsync(List<GitFile> filesToCommit, string repoUri, string branch, string commitMessage)
         {
-            _logger.LogInformation($"Pushing files to '{pullRequestBaseBranch}'...");
+            _logger.LogInformation($"Pushing files to '{branch}'...");
 
             List<VstsChange> changes = new List<VstsChange>();
             string repoName = SetApiUriAndGetRepoName(repoUri);
 
             foreach (GitFile gitfile in filesToCommit)
             {
-                string blobSha = await CheckIfFileExistsAsync(repoUri, gitfile.FilePath, pullRequestBaseBranch);
+                string blobSha = await CheckIfFileExistsAsync(repoUri, gitfile.FilePath, branch);
 
                 VstsChange change = new VstsChange(gitfile.FilePath, gitfile.Content);
 
@@ -129,8 +129,8 @@ namespace Microsoft.DotNet.DarcLib
 
             VstsCommit commit = new VstsCommit(changes, "Dependency files update");
 
-            string latestSha = await GetLastCommitShaAsync(repoName, pullRequestBaseBranch);
-            VstsRefUpdate refUpdate = new VstsRefUpdate($"refs/heads/{pullRequestBaseBranch}", latestSha);
+            string latestSha = await GetLastCommitShaAsync(repoName, branch);
+            VstsRefUpdate refUpdate = new VstsRefUpdate($"refs/heads/{branch}", latestSha);
 
             VstsPush vstsPush = new VstsPush(refUpdate, commit);
 
@@ -139,7 +139,7 @@ namespace Microsoft.DotNet.DarcLib
             // VSTS' contents API is only supported in version 5.0-preview.2
             await this.ExecuteGitCommand(HttpMethod.Post, $"repositories/{repoName}/pushes", _logger, body, "5.0-preview.2");
 
-            _logger.LogInformation($"Pushing files to '{pullRequestBaseBranch}' succeeded!");
+            _logger.LogInformation($"Pushing files to '{branch}' succeeded!");
         }
 
         public async Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null)
@@ -277,6 +277,57 @@ namespace Microsoft.DotNet.DarcLib
             return (match.Groups["team"].Value, match.Groups["repo"].Value, int.Parse(match.Groups["id"].Value));
         }
 
+        public async Task<string> CreatePullRequestCommentAsync(string pullRequestUrl, string message)
+        {
+            var connection = CreateConnection(pullRequestUrl);
+            var client = await connection.GetClientAsync<GitHttpClient>();
+
+            var (team, repo, id) = ParsePullRequestUri(pullRequestUrl);
+
+            var thread = await client.CreateThreadAsync(new GitPullRequestCommentThread
+            {
+                Comments = new List<Comment>
+                {
+                    new Comment
+                    {
+                        CommentType = CommentType.Text,
+                        Content = message,
+                    },
+                },
+            }, team, repo, id);
+
+            return thread.Id + "-" + thread.Comments.First().Id;
+        }
+
+        public async Task UpdatePullRequestCommentAsync(string pullRequestUrl, string commentId, string message)
+        {
+            var (threadId, commentIdValue) = ParseCommentId(commentId);
+
+            var connection = CreateConnection(pullRequestUrl);
+            var client = await connection.GetClientAsync<GitHttpClient>();
+
+            var (team, repo, id) = ParsePullRequestUri(pullRequestUrl);
+
+            await client.UpdateCommentAsync(new Comment
+            {
+                CommentType = CommentType.Text,
+                Content = message,
+            }, team, repo, id, threadId, commentIdValue);
+        }
+
+        private (int threadId, int commentId) ParseCommentId(string commentId)
+        {
+            var parts = commentId.Split('-');
+            if (parts.Length != 2 ||
+                int.TryParse(parts[0], out int threadId) ||
+                int.TryParse(parts[1], out int commentIdValue))
+            {
+                throw new ArgumentException("The comment id '{commentId}' is in an invalid format", nameof(commentId));
+            }
+
+            return (threadId, commentIdValue);
+        }
+
         public async Task CommentOnPullRequestAsync(string pullRequestUrl, string message)
         {
             SetApiUriAndGetRepoName(pullRequestUrl);
@@ -292,22 +343,22 @@ namespace Microsoft.DotNet.DarcLib
             await this.ExecuteGitCommand(HttpMethod.Post, $"{pullRequestUrl}/threads", _logger, body);
         }
 
-        public async Task<List<GitFile>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng/common/")
+        public async Task<List<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path)
         {
             List<GitFile> files = new List<GitFile>();
 
-            await GetCommitMapForPathAsync(repoUri, branch, assetsProducedInCommit, files, pullRequestBaseBranch, path);
+            await GetCommitMapForPathAsync(repoUri, commit, files, path);
 
             return files;
         }
 
-        public async Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, List<GitFile> files, string pullRequestBaseBranch, string path = "eng/common/")
+        public async Task GetCommitMapForPathAsync(string repoUri, string commit, List<GitFile> files, string path)
         {
-            _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{assetsProducedInCommit}'");
+            _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{commit}'");
 
             string repoName = SetApiUriAndGetRepoName(repoUri);
 
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/items?scopePath={path}&version={assetsProducedInCommit}&includeContent=true&versionType=commit&recursionLevel=full", _logger);
+            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/items?scopePath={path}&version={commit}&includeContent=true&versionType=commit&recursionLevel=full", _logger);
 
             JObject content = JObject.Parse(await response.Content.ReadAsStringAsync());
             List<VstsItem> items = JsonConvert.DeserializeObject<List<VstsItem>>(Convert.ToString(content["value"]));
@@ -325,7 +376,7 @@ namespace Microsoft.DotNet.DarcLib
                 }
             }
 
-            _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{assetsProducedInCommit}' succeeded!");
+            _logger.LogInformation($"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{commit}' succeeded!");
         }
 
         public async Task<string> GetFileContentsAsync(string ownerAndRepo, string path)
@@ -410,6 +461,18 @@ namespace Microsoft.DotNet.DarcLib
                 baseBranch = baseBranch.Substring(refsHeads.Length);
             }
             return baseBranch;
+        }
+
+        public async Task<IList<Commit>> GetPullRequestCommitsAsync(string pullRequestUrl)
+        {
+            var connection = CreateConnection(pullRequestUrl);
+            var client = await connection.GetClientAsync<GitHttpClient>();
+
+            var (team, repo, id) = ParsePullRequestUri(pullRequestUrl);
+
+            var commits = await client.GetPullRequestCommitsAsync(team, repo, id);
+
+            return commits.Select(c => new Commit(c.Author.Name, c.CommitId)).ToList();
         }
 
         public HttpClient CreateHttpClient(string versionOverride = null)

@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.Swagger;
 
@@ -52,6 +53,7 @@ namespace Maestro.Web
 
                     options.MapType<TimeSpan>(() => new Schema {Type = "string", Format = "duration"});
                     options.MapType<TimeSpan?>(() => new Schema {Type = "string", Format = "duration"});
+                    options.MapType<JToken>(() => new Schema());
 
                     options.DescribeAllEnumsAsStrings();
 

@@ -55,6 +55,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [HttpPost]
         [SwaggerResponse((int) HttpStatusCode.Created)]
         [ValidateModelState]
+        [HandleDuplicateKeyRows("A default channel with the same (repository, branch, channel) already exists.")]
         public async Task<IActionResult> Create([FromBody] DefaultChannel.PostData data)
         {
             int channelId = data.ChannelId;

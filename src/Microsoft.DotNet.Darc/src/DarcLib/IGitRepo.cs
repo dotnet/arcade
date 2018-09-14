@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.DarcLib
     {
         Task CreateBranchAsync(string repoUri, string newBranch, string baseBranch);
 
-        Task PushCommitsAsync(List<GitFile> filesToCommit, string repoUri, string pullRequestBaseBranch, string commitMessage);
+        Task PushFilesAsync(List<GitFile> filesToCommit, string repoUri, string branch, string commitMessage);
 
         Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null);
 
@@ -26,11 +26,11 @@ namespace Microsoft.DotNet.DarcLib
 
         Task MergePullRequestAsync(string pullRequestUrl, MergePullRequestParameters parameters);
 
-        Task CommentOnPullRequestAsync(string pullRequestUrl, string message);
+        Task<string> CreatePullRequestCommentAsync(string pullRequestUrl, string message);
 
-        Task<List<GitFile>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng/common/");
+        Task UpdatePullRequestCommentAsync(string pullRequestUrl, string commentId, string message);
 
-        Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, List<GitFile> files, string pullRequestBaseBranch, string path = "eng/common/");
+        Task<List<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path);
 
         Task<string> GetFileContentsAsync(string ownerAndRepo, string path);
 
@@ -45,5 +45,7 @@ namespace Microsoft.DotNet.DarcLib
         Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl);
 
         Task<string> GetPullRequestBaseBranch(string pullRequestUrl);
+
+        Task<IList<Commit>> GetPullRequestCommitsAsync(string pullRequestUrl);
     }
 }

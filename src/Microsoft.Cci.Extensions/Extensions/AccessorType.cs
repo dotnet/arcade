@@ -2,13 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Maestro.Data.Models
+using System;
+
+namespace Microsoft.Cci.Extensions
 {
-    public enum MergePolicy
+    public enum AccessorType
     {
-        None = 0,
-        BuildSucceeded,
-        UnitTestPassed, //Bulild + tests
-        Never
+        None,
+        EventAdder,
+        EventRemover,
+        PropertySetter,
+        PropertyGetter
     }
 }

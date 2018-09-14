@@ -7,53 +7,10 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 
   <PropertyGroup>
-    <!--
-      Set by Microsoft.Common.targets, some targets must be removed while others are left as standard extension mechanisms.
-    -->
-    <CoreBuildDependsOn>
-      BuildOnlySettings;
-      PrepareForBuild;
-      PreBuildEvent;
-      ResolveReferences;
-      PostBuildEvent
-    </CoreBuildDependsOn>
-
-    <PrepareForBuildDependsOn></PrepareForBuildDependsOn>
-
-    <ResolveReferencesDependsOn>
-      BeforeResolveReferences;
-      AssignProjectConfiguration;
-      ResolveProjectReferences;
-      FindInvalidProjectReferences;
-      AfterResolveReferences
-    </ResolveReferencesDependsOn>
-
-    <TestDependsOn>
-      Build
-    </TestDependsOn>
-
-    <CleanDependsOn>
-      BeforeClean;
-      UnmanagedUnregistration;
-      CoreClean;
-      PrepareProjectReferences;
-      CleanPublishFolder;
-      AfterClean
-    </CleanDependsOn>
+    <HelixSdkTargets Condition="'$(HelixTargetQueue)' != ''">$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.Sdk.MonoQueue.targets</HelixSdkTargets>
+    <HelixSdkTargets Condition="'$(HelixTargetQueue)' == ''">$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.Sdk.MultiQueue.targets</HelixSdkTargets>
   </PropertyGroup>
 
-  <Target Name="Test"
-          DependsOnTargets="$(TestDependsOn)">
-    <SendHelixJob Source="$(HelixSource)"
-                  Type="$(HelixType)"
-                  Build="$(HelixBuild)"
-                  TargetQueue="$(HelixTargetQueue)"
-                  BaseUri="$(HelixBaseUri)"
-                  AccessToken="$(HelixAccessToken)"
-                  CorrelationPayloads="@(HelixCorrelationPayload)"
-                  WorkItems="@(HelixWorkItem)">
-      <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
-    </SendHelixJob>
-    <Message Text="Sent Helix Job $(HelixJobId)" Importance="High" />
-  </Target>
+  <Import Project="$(HelixSdkTargets)"/>
+
 </Project>
