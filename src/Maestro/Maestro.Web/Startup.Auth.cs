@@ -200,7 +200,9 @@ namespace Maestro.Web
                             policy.RequireAuthenticatedUser();
                             if (!HostingEnvironment.IsDevelopment())
                             {
-                                policy.RequireRole("github:team:dotnet:dnceng");
+                                policy.RequireRole(
+                                    "github:team:dotnet:dnceng",
+                                    "github:team:dotnet:arcade-contrib");
                             }
                         });
                 });
