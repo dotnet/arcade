@@ -2,7 +2,7 @@
 
 There's a set of steps that need to be completed so the versions of assets your repository depends on are updated and also the assets your repository produces are updated in upstream repositories.
 
-## Copy the eng/ folder
+## 1. Copy the eng/ folder
 
 Copy the `eng/` folder from the [minimalci-sample](https://github.com/dotnet/arcade-minimalci-sample) repo. 
 
@@ -10,10 +10,9 @@ This folder contains required version files as well as build definition template
 
 For more information about version files go to: https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md
 
-## Enabling assets publishing to the Build Asset Registry (BAR)
+## 2. Enable assets publishing to the Build Asset Registry (BAR)
 
-To enable asset publishing to BAR we need to add a closing phase to `.vsts-ci.yml`. To do this add the following snippet at the end of `.vsts-ci.yml` and update the `dependsOn` parameter with the names 
-of **all** the previous **build** phases:
+To enable asset publishing to BAR we need to add a closing phase to `.vsts-ci.yml`. To do this add the following snippet at the end of `.vsts-ci.yml` and update the `dependsOn` parameter with the names of **all** the previous **build** phases:
 
 ```
   - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -26,16 +25,16 @@ of **all** the previous **build** phases:
           name: Hosted VS2017
 ```
 
-## Add subscriptions and channels
+## 3. Add subscriptions and channels
 
-### Join the `arcade-contrib` group
+### 3.1. Join the `arcade-contrib` team
 
 1. Go to https://github.com/orgs/dotnet/teams/arcade-contrib/members
 2. Click on "Request to join"
 
-### Get a token
+### 3.2. Create a PAT for interacting with Maestro
 
-Once you are part of the `arcade-contrib` group
+Once you are part of the `arcade-contrib` team
 
 1. Go to https://maestro-prod.westus2.cloudapp.azure.com/
 2. Click "Sign in" in the upper right of the page
@@ -44,7 +43,7 @@ Once you are part of the `arcade-contrib` group
 5. Choose a name for your token and then "Create"
 6. Copy the created token
 
-### Create a subscription
+### 3.3. Create a subscription
 
 1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
 2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
@@ -52,10 +51,10 @@ Once you are part of the `arcade-contrib` group
 4. Update the values of the sample body. Here is an example of how would a request body look like:
 ``` json
 {
-    "channelName": ".NET Tools - Latest",
-    "sourceRepository": "https://github.com/dotnet/arcade",
-    "targetRepository": "https://github.com/dotnet/arcade-minimalci-sample",
-    "targetBranch": "master",
+    "channelName": "an existing channel, current arcade builds output to '.NET Tools - Latest'",
+    "sourceRepository": "the repository flowing the versions",
+    "targetRepository": "the repository getting updated with the new versions",
+    "targetBranch": "branch in the targetRepository",
     "policy": {
       "updateFrequency": "everyBuild",
       "mergePolicies": [
@@ -74,7 +73,7 @@ Once you are part of the `arcade-contrib` group
 ```
 5. Click "Execute"
 
-### Create a channel 
+### Create a channel (optional)
 
 1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html anc click on "Authorize"
 2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
