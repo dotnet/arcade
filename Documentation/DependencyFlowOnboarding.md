@@ -81,6 +81,21 @@ Once you are part of the `arcade-contrib` team
 4. Provide a "name" and a "classification"
 5. Click "Execute"
 
+### Associate a branch with a channel (optional)
+
+1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html anc click on "Authorize"
+2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
+3. Expand "POST /api/default-channels" under "DefaultChannels" and click "Try it out"
+4. Update the values of the sample body. Here is an example of how would a request body look like:
+``` json
+{
+  "repository": "onboarded repo i.e. https://github.com/dotnet/arcade",
+  "branch": "onboarded brach i.e. refs/heads/master",
+  "channelId": id-of-existing-channel
+}
+```
+5. Click "Execute"
+
 Currently the REST API is the only way to create Subscriptions and Channels but the plan is for `Darc` to support this as well.
 
 
