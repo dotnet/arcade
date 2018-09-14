@@ -27,13 +27,13 @@ Given the complexity of producing a build, it's recommended that the **Full Buil
 
 ### Build Definitions and Pipebuild Definitions
 
-The pipebuild descriptions for the builds are held in https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-BuildPipeline.  The definitions are comprised of an outer pipebuild definition which orchestrates inner pipebuild and utility build definitions.  For example, the orchestrated pipebuild build definition launches the corefx pipebuild build definition with specific parameters, waits for it to complete, then launches the corefx pipebuild build definition.
+The pipebuild descriptions for the builds are held in https://dev.azure.com/devdiv/DevDiv/_git/DotNet-BuildPipeline.  The definitions are comprised of an outer pipebuild definition which orchestrates inner pipebuild and utility build definitions.  For example, the orchestrated pipebuild build definition launches the corefx pipebuild build definition with specific parameters, waits for it to complete, then launches the corefx pipebuild build definition.
 - **Public Servicing** - Public builds will use publicly visible intermediate storage and publish build information to the dotnet/versions repo on completion.
-  - **Build Definition** - https://devdiv.visualstudio.com/DevDiv/_build/index?definitionId=8287
-  - **Pipebuild Definition** - https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.1.json&version=GBorchestrated
+  - **Build Definition** - https://dev.azure.com/devdiv/DevDiv/_build/index?definitionId=8287
+  - **Pipebuild Definition** - https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.1.json&version=GBmaster
 - **Internal Servicing** - Internal builds will use private intermediate storage, including private blob feeds and will not publish build information to the dotnet/versions repo on completion.
-  - **Build Definition** - https://devdiv.visualstudio.com/DevDiv/_build/index?definitionId=9010
-  - **Pipebuild Definition** - `https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.1-internal.json&version=GBorchestrated
+  - **Build Definition** - https://dev.azure.com/devdiv/_build/index?definitionId=9010
+  - **Pipebuild Definition** - `https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.1-internal.json&version=GBmaster
 
 ## Step-by-Step
 

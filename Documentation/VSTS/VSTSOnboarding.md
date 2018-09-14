@@ -19,7 +19,7 @@
 
 If your repository has internal builds, you will need to set up a DncEng Internal mirror. This is *required* for internal builds; if your repository only does PR or public CI builds, you can skip this step.
 
-Instructions for setting up the GitHub to dnceng.visualstudio.com/internal mirror are available in the [dnceng.visualstudio.com internal mirror documentation](./internal-mirror.md)
+Instructions for setting up the GitHub to dev.azure.com/dnceng/internal mirror are available in the [dev.azure.com/dnceng internal mirror documentation](./internal-mirror.md)
 
 ## VSTS Pull Request and CI builds
 
@@ -50,16 +50,16 @@ The [VSTS CI Build guidance](https://docs.microsoft.com/en-us/vsts/build-release
 ```JSON
 "_links": {
   "self": {
-      "href": "https://dnceng.visualstudio.com/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_apis/build/Definitions/15?revision=4"
+      "href": "https://dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_apis/build/Definitions/15?revision=4"
   },
   "web": {
-      "href": "https://dnceng.visualstudio.com/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_build/definition?definitionId=15"
+      "href": "https://dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_build/definition?definitionId=15"
   },
   "editor": {
-      "href": "https://dnceng.visualstudio.com/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_build/designer?id=15&_a=edit-build-definition"
+      "href": "https://dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_build/designer?id=15&_a=edit-build-definition"
   },
   "badge": {
-      "href": "https://dnceng.visualstudio.com/_apis/public/build/definitions/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/15/badge"
+      "href": "https://dev.azure.com/dnceng/_apis/public/build/definitions/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/15/badge"
   }
 },
 ```
@@ -73,12 +73,12 @@ It is recommended that you restrict the CI build status to a particular branch. 
 Example:
 
 ```Text
-https://dnceng.visualstudio.com/Public/_build/index?definitionId=17&branchName=master
+https://dev.azure.com/dnceng/public/_build/index?definitionId=17&branchName=master
 ```
 
 ## Signed Builds
 
-dnceng.visualstudio.com does not have support for signed builds.  Code should still be mirrored to dnceng.visualstudio.com/internal as outlined in the [VSTS Guidance](./VSTSGuidance.md#projects), but build definitions for signing should be created in devdiv.visualstudio.com, see the additional [signing documentation](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/signed-dnceng.visualstudio.com-builds.md)
+dev.azure.com/dnceng now has support for signed builds.  Code should be mirrored to dev.azure.com/dnceng/internal as outlined in the [VSTS Guidance](./VSTSGuidance.md#projects).  See [MovingFromDevDivToDncEng.md](./MovingFromDevDivToDncEng.md) for information about moving signed builds from DevDiv to DncEng.
 
 ## Security
 
@@ -114,7 +114,7 @@ Notes about templates:
 
 ### Known issues
 
-For a list of known VSTS issues we are tracking, please go [here](https://dnceng.visualstudio.com/internal/_queries/query/7275f17c-c42f-44b8-9798-9c2426bf8395/)
+For a list of known VSTS issues we are tracking, please go [here](https://dev.azure.com/dnceng/internal/_queries/query/7275f17c-c42f-44b8-9798-9c2426bf8395/)
 
 ### Queuing builds
 

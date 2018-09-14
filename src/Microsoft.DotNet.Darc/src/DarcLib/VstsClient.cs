@@ -522,7 +522,7 @@ namespace Microsoft.DotNet.DarcLib
             }
             else
             {
-                throw new ArgumentException($"Repository URI host name '{hostName}' should be of the form <accountname>.visualstudio.com i.e. https://<accountname>.visualstudio.com");
+                throw new ArgumentException($"Repository URI host name '{hostName}' should be of the form dev.azure.com/<accountname> i.e. https://dev.azure.com/<accountname>");
             }
 
             string absolutePath = uri.AbsolutePath;
@@ -538,8 +538,8 @@ namespace Microsoft.DotNet.DarcLib
                 throw new ArgumentException($"Repository URI host name '{absolutePath}' should have a project and repo name. i.e. /DefaultCollection/<projectname>/_git/<reponame>");
             }
 
-            VstsApiUri = $"https://{accountName}.visualstudio.com/{projectName}/_apis/git/";
-            VstsPrUri = $"https://{accountName}.visualstudio.com/{projectName}/_git/{repoName}/pullrequest/";
+            VstsApiUri = $"https://dev.azure.com/{accountName}/{projectName}/_apis/git/";
+            VstsPrUri = $"https://dev.azure.com/{accountName}/{projectName}/_git/{repoName}/pullrequest/";
 
             return repoName;
         }
