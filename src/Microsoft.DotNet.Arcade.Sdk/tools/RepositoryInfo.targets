@@ -24,7 +24,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-      <ScmRepositoryUrl>$([System.Text.RegularExpressions.Regex]::Replace($(ScmRepositoryUrl), $(_VstsPattern), $(_Replacement)))</ScmRepositoryUrl>
+      <ScmRepositoryUrl>$([System.Text.RegularExpressions.Regex]::Replace($(ScmRepositoryUrl), $(_Pattern), $(_Replacement)))</ScmRepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
