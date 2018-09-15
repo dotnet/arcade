@@ -40,6 +40,10 @@
     </CleanDependsOn>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <EnableXUnitReporter Condition=" '$(EnableXUnitReporter)' != 'true' ">false</EnableXUnitReporter>
+  </PropertyGroup>
+
   <Choose>
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('windows'))">
       <PropertyGroup>
@@ -52,6 +56,14 @@
       </PropertyGroup>
     </Otherwise>
   </Choose>
+  
+  <Target Name="AddXUnitReporter" Condition="$(EnableXUnitReporter)" BeforeTargets="Test">
+    <ItemGroup>
+      <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)xunit-reporter"/>
+      <HelixPostCommand Condition="$(IsPosixShell)" Include="$HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/xunit-reporter.py"/>
+      <HelixPostCommand Condition="!$(IsPosixShell)" Include="%HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\xunit-reporter.py"/>
+    </ItemGroup>
+  </Target>
 
   <Target Name="Test"
     DependsOnTargets="$(TestDependsOn)">
