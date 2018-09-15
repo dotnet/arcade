@@ -29,7 +29,7 @@
 
     <ItemGroup>
       <SourceRoot Update="@(SourceRoot)">
-        <ScmRepositoryUrl>$([System.Text.RegularExpressions.Regex]::Replace(%(SourceRoot.ScmRepositoryUrl), $(_VstsPattern), $(_Replacement)))</ScmRepositoryUrl>
+        <ScmRepositoryUrl>$([System.Text.RegularExpressions.Regex]::Replace(%(SourceRoot.ScmRepositoryUrl), $(_Pattern), $(_Replacement)))</ScmRepositoryUrl>
       </SourceRoot>
     </ItemGroup>
   </Target>
