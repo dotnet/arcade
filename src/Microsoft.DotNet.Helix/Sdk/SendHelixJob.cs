@@ -85,6 +85,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         ///     Identity - The WorkItemName
         ///     Command - The command that is invoked to execute the work item
         ///   Optional Metadata:
+        ///     NOTE: only a single Payload parameter should be used; they are not to be used in combination
         ///     PayloadDirectory - A directory that will be zipped up and sent as the Work Item payload
         ///     PayloadArchive - An archive that will be sent up as the Work Item payload
         ///     Timeout - A <see cref="System.TimeSpan"/> string that specifies that Work Item execution timeout
