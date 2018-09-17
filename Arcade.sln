@@ -68,15 +68,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.SignTool.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.AspNetCore.ApiPagination", "src\Maestro\Microsoft.AspNetCore.ApiPagination\Microsoft.AspNetCore.ApiPagination.csproj", "{01C47D1E-5EBD-484A-B317-B8FC86707E6E}"
 EndProject
-<<<<<<< HEAD
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Darc", "src\Microsoft.DotNet.Darc\src\Darc\Microsoft.DotNet.Darc.csproj", "{054F97CB-9E79-4271-A288-83B8A88D1B5E}"
-=======
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Maestro.MergePolicies", "src\Maestro\Maestro.MergePolicies\Maestro.MergePolicies.csproj", "{37D70EEA-9621-44EB-921A-5D303917F851}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.GenFacades", "src\Microsoft.DotNet.GenFacades\Microsoft.DotNet.GenFacades.csproj", "{B6778A84-3330-4F2E-9D26-316C78A4BCC2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Cci.Extensions", "src\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj", "{BCBFB7E1-B202-4C88-AB9F-290B13F309FD}"
->>>>>>> upstream/master
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

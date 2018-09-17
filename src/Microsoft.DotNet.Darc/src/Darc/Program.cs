@@ -19,14 +19,33 @@ namespace Microsoft.DotNet.Darc
         }
 
         /// <summary>
+        /// Retrieve the console logger for the CLI.
+        /// </summary>
+        /// <returns>New logger</returns>
+        /// <remarks>Because the internal logging in DarcLib tends to be chatty and non-useful,
+        /// we remap the --verbose switch onto 'info', --debug onto highest level, and the default level onto warning</remarks>
+        static private ILogger GetLogger(CommandLineOptions options)
+        {
+            LogLevel level = LogLevel.Warning;
+            if (options.Debug)
+            {
+                level = LogLevel.Debug;
+            }
+            else if (options.Verbose)
+            {
+                level = LogLevel.Information;
+            }
+            ILoggerFactory loggerFactory = new LoggerFactory().AddConsole(level);
+            return loggerFactory.CreateLogger<Program>();
+        }
+
+        /// <summary>
         /// Implements the 'get' verb
         /// </summary>
         /// <param name="options"></param>
         static int GetOperation(GetCommandLineOptions options)
         {
-            ILoggerFactory loggerFactory = new LoggerFactory().AddConsole(LogLevel.Warning);
-            ILogger logger = loggerFactory.CreateLogger<Program>();
-            Local local = new Local(options.LocalDirectory, logger);
+            Local local = new Local(options.LocalDirectory, GetLogger(options));
             var allDependencies = local.GetDependencies().Result;
             foreach (var dependency in allDependencies)
             {
