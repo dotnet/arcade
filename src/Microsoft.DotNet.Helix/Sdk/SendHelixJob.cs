@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Helix.Sdk
     public class SendHelixJob : HelixTask
     {
         /// <summary>
-        ///   The 'source' value reported to helix
+        ///   The 'source' value reported to Helix
         /// </summary>
         /// <remarks>
         ///   This value is used to filter and sort jobs on Mission Control
@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string Source { get; set; }
 
         /// <summary>
-        ///   The 'type' value reported to helix
+        ///   The 'type' value reported to Helix
         /// </summary>
         /// <remarks>
         ///   This value is used to filter and sort jobs on Mission Control
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string Type { get; set; }
 
         /// <summary>
-        ///   The 'build' value reported to helix
+        ///   The 'build' value reported to Helix
         /// </summary>
         /// <remarks>
         ///   This value is used to filter and sort jobs on Mission Control
@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string Build { get; set; }
 
         /// <summary>
-        ///   The helix queue this job should run on
+        ///   The Helix queue this job should run on
         /// </summary>
         [Required]
         public string TargetQueue { get; set; }
@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         /// <remarks>
         ///   Metadata Used:
-        ///     FullPath - This path is required to be a directory and will be zipped up and used as a correlation payload
+        ///     FullPath - This path is required to be a directory to be zipped up or an already-zipped archive
         /// </remarks>
         public ITaskItem[] CorrelationPayloads { get; set; }
 
@@ -85,7 +85,9 @@ namespace Microsoft.DotNet.Helix.Sdk
         ///     Identity - The WorkItemName
         ///     Command - The command that is invoked to execute the work item
         ///   Optional Metadata:
+        ///     NOTE: only a single Payload parameter should be used; they are not to be used in combination
         ///     PayloadDirectory - A directory that will be zipped up and sent as the Work Item payload
+        ///     PayloadArchive - An archive that will be sent up as the Work Item payload
         ///     Timeout - A <see cref="System.TimeSpan"/> string that specifies that Work Item execution timeout
         ///     PreCommands
         ///       A collection of commands that will run for this work item before the 'Command' Runs
@@ -182,12 +184,18 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
             }
 
+            string payloadDirectory = workItem.GetMetadata("PayloadDirectory");
+            string payloadArchive = workItem.GetMetadata("PayloadArchive");
             IWorkItemDefinition wi;
-
-            if (TryGetMetadata(workItem, "PayloadDirectory", out string payload))
+            if (!string.IsNullOrEmpty(payloadDirectory))
             {
-                wi = wiWithPayload.WithDirectoryPayload(payload);
-                Log.LogMessage(MessageImportance.Low, $"  Directory Payload: '{payload}'");
+                wi = wiWithPayload.WithDirectoryPayload(payloadDirectory);
+                Log.LogMessage(MessageImportance.Low, $"  Directory Payload: '{payloadDirectory}'");
+            }
+            else if (!string.IsNullOrEmpty(payloadArchive))
+            {
+                wi = wiWithPayload.WithArchivePayload(payloadArchive);
+                Log.LogMessage(MessageImportance.Low, $"  Archive Payload: '{payloadArchive}'");
             }
             else
             {
@@ -321,14 +329,21 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             string path = correlationPayload.GetMetadata("FullPath");
 
-            if (!Directory.Exists(path))
+            if (Directory.Exists(path))
             {
-                Log.LogError($"Correlation Payload Directory '{path}' not found.");
+                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Directory '{path}'");
+                return def.WithCorrelationPayloadDirectory(path);
+            }
+            else if (File.Exists(path))
+            {
+                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Archive '{path}'");
+                return def.WithCorrelationPayloadArchive(path);
+            }
+            else
+            {
+                Log.LogError($"Correlation Payload '{path}' not found.");
                 return def;
             }
-
-            Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Directory '{path}'");
-            return def.WithCorrelationPayloadDirectory(path);
         }
     }
 }
