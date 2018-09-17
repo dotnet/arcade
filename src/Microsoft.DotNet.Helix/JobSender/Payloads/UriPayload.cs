@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         public Task<string> UploadAsync(IBlobContainer payloadContainer)
         {
-            return Task.FromResult(_payloadUri.ToString());
+            return Task.FromResult(_payloadUri.AbsoluteUri);
         }
     }
 }

@@ -69,6 +69,12 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
+        public IJobDefinition WithCorrelationPayloadArchive(string archive)
+        {
+            CorrelationPayloads.Add(new ArchivePayload(archive));
+            return this;
+        }
+
         public IJobDefinition WithProperty(string key, string value)
         {
             _properties[key] = value;

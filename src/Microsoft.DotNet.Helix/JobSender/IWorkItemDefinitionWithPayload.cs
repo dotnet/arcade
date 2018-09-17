@@ -8,6 +8,7 @@ namespace Microsoft.DotNet.Helix.Client
         IWorkItemDefinition WithPayloadUri(Uri payloadUri);
         IWorkItemDefinition WithFiles(params string[] files);
         IWorkItemDefinition WithDirectoryPayload(string directory);
+        IWorkItemDefinition WithArchivePayload(string archive);
         IWorkItemDefinition WithSingleFilePayload(string name, string content);
         IWorkItemDefinition WithSingleFilePayload(string name, string content, Encoding encoding);
         IWorkItemDefinition WithSingleFilePayload(string name, byte[] content);

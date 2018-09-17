@@ -60,6 +60,12 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
+        public IWorkItemDefinition WithArchivePayload(string archive)
+        {
+            Payload = new ArchivePayload(archive);
+            return this;
+        }
+
         public IWorkItemDefinition WithSingleFilePayload(string name, string content)
         {
             Payload = new SingleFilePayload(name, content);
