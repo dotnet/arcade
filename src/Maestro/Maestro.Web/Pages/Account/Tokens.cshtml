@@ -9,8 +9,8 @@
 <div class="alert alert-danger" if-not="string.IsNullOrEmpty(Model.Error)">
     <strong>Error: </strong> @Model.Error
 </div>
-<div class="alert alert-info" if-not="string.IsNullOrEmpty(Model.CreatedTokenValue)">
-    Make sure to copy your new personal access token now. You won't be able to see it again!
+<div class="alert alert-info" if-not="string.IsNullOrEmpty(Model.Message)">
+    @Model.Message
 </div>
 <div class="card">
     <div class="card-header">Tokens</div>
@@ -48,10 +48,14 @@
             </div>
             @foreach (TokensModel.TokenModel token in Model.Tokens)
             {
+                if (token.Id == Model.CreatedTokenId)
+                {
+                    continue;
+                }
                 <div class="listgroup-item">
                     <div class="float-right">
                         <form class="form-inline" method="post" asp-page-handler="DeleteToken">
-                            <input type="hidden" name="TokenName" value="@token.Name"/>
+                            <input type="hidden" name="TokenId" value="@token.Id"/>
                             <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                         </form>
                     </div>
@@ -64,10 +68,13 @@
 <div class="card">
     <div class="card-header">Create Token</div>
     <div class="card-body">
-        <form asp-page-handler="NewToken" method="post" autocomplete="off">
+        <form asp-page-handler="NewToken" class="needs-validation" method="post" autocomplete="off" novalidate>
             <div class="form-group">
                 <label asp-for="TokenName"></label>
-                <input class="form-control" name="TokenName"/>
+                <input class="form-control" type="text" name="TokenName" required/>
+                <div class="invalid-feedback">
+                    A token name is required.
+                </div>
             </div>
             <button type="submit" class="btn btn-primary">Create</button>
         </form>
