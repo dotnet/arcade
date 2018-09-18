@@ -40,6 +40,10 @@
     </CleanDependsOn>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <EnableXUnitReporter Condition=" '$(EnableXUnitReporter)' != 'true' ">false</EnableXUnitReporter>
+  </PropertyGroup>
+
   <Choose>
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('windows'))">
       <PropertyGroup>
@@ -52,6 +56,16 @@
       </PropertyGroup>
     </Otherwise>
   </Choose>
+  
+  <Target Name="AddXUnitReporter" Condition="$(EnableXUnitReporter)" BeforeTargets="Test">
+    <ItemGroup>
+      <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)xunit-reporter"/>
+    </ItemGroup>
+    <PropertyGroup>
+      <HelixPostCommands Condition="$(IsPosixShell)">$(HelixPostCommands);$HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/xunit-reporter.py</HelixPostCommands>
+      <HelixPostCommands Condition="!$(IsPosixShell)">$(HelixPostCommands);%HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\xunit-reporter.py</HelixPostCommands>
+    </PropertyGroup>
+  </Target>
 
   <Target Name="Test"
     DependsOnTargets="$(TestDependsOn)">
@@ -62,8 +76,8 @@
                   IsPosixShell="$(IsPosixShell)"
                   BaseUri="$(HelixBaseUri)"
                   AccessToken="$(HelixAccessToken)"
-                  PreCommands="@(HelixPreCommand)"
-                  PostCommands="@(HelixPostCommand)"
+                  PreCommands="$(HelixPreCommands)"
+                  PostCommands="$(HelixPostCommands)"
                   CorrelationPayloads="@(HelixCorrelationPayload)"
                   WorkItems="@(HelixWorkItem)">
       <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
