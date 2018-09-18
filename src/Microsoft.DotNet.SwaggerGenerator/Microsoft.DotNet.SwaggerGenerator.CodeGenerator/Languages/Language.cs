@@ -1,0 +1,227 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
+using HandlebarsDotNet;
+using SwaggerGenerator.csharp;
+using SwaggerGenerator.Modeler;
+
+namespace SwaggerGenerator.Languages
+{
+    public class Templates
+    {
+        public static Templates Load(string languageName, IHandlebars hb)
+        {
+            string templates = Path.Combine(Path.GetDirectoryName(typeof(Templates).Assembly.Location), "Languages", languageName);
+            var serviceClient = Load(hb, templates, "ServiceClient.hb");
+            var model = Load(hb, templates, "Model.hb");
+            var methodGroup = Load(hb, templates, "MethodGroup.hb");
+            return new Templates(
+                (writer, m) => serviceClient(writer, m),
+                (writer, m) => model(writer, m),
+                (writer, m) => methodGroup(writer, m)
+                );
+        }
+
+        private static Action<TextWriter, object> Load(IHandlebars hb, string directory, string fileName)
+        {
+            var dir = new DirectoryInfo(directory);
+            var file = new FileInfo(Path.Combine(dir.FullName, fileName));
+            using (var reader = file.OpenText())
+            {
+                return hb.Compile(reader);
+            }
+        }
+
+        private Templates(Action<TextWriter, ServiceClientModel> serviceClient, Action<TextWriter, TypeModel> model, Action<TextWriter, MethodGroupModel> methodGroup)
+        {
+            ServiceClient = serviceClient;
+            Model = model;
+            MethodGroup = methodGroup;
+        }
+
+        public Action<TextWriter, ServiceClientModel> ServiceClient { get; }
+        public Action<TextWriter, TypeModel> Model { get; }
+        public Action<TextWriter, MethodGroupModel> MethodGroup { get; }
+    }
+
+    public abstract class Language
+    {
+        private static readonly Dictionary<string, Language> _languages;
+
+        static Language()
+        {
+            _languages = new Dictionary<string, Language>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["csharp"] = new CSharp(),
+            };
+        }
+
+        public static Language Get(string name)
+        {
+            _languages.TryGetValue(name, out Language value);
+            return value;
+        }
+
+        public abstract string ResolveReference(TypeReference reference);
+
+        public abstract (string start, string end) NullCheck(TypeReference reference);
+
+        public abstract (string start, string end) NotNullCheck(TypeReference reference);
+
+        public abstract string HttpMethod(HttpMethod method);
+
+        public abstract string Extension { get; }
+
+        public abstract Templates GetTemplates(IHandlebars hb);
+
+
+        private class CSharp : Language
+        {
+            public override string ResolveReference(TypeReference reference)
+            {
+                if (reference is TypeReference.ConstantTypeReference)
+                {
+                    return "string";
+                }
+
+                if (reference is TypeReference.TypeModelReference typeModelRef)
+                {
+                    return typeModelRef.Model.Name;
+                }
+
+                if (reference is TypeReference.ArrayTypeReference arrayTypeRef)
+                {
+                    return $"IImmutableList<{ResolveReference(arrayTypeRef.BaseType)}>";
+                }
+
+                if (reference is TypeReference.DictionaryTypeReference dictTypeRef)
+                {
+                    return $"IImmutableDictionary<string, {ResolveReference(dictTypeRef.ValueType)}>";
+                }
+
+                if (reference == TypeReference.Boolean)
+                {
+                    return "bool";
+                }
+
+                if (reference == TypeReference.Int32)
+                {
+                    return "int";
+                }
+
+                if (reference == TypeReference.Int64)
+                {
+                    return "long";
+                }
+
+                if (reference == TypeReference.Float)
+                {
+                    return "float";
+                }
+
+                if (reference == TypeReference.Double)
+                {
+                    return "double";
+                }
+
+                if (reference == TypeReference.String)
+                {
+                    return "string";
+                }
+
+                if (reference == TypeReference.Date)
+                {
+                    return "DateTimeOffset";
+                }
+
+                if (reference == TypeReference.DateTime)
+                {
+                    return "DateTimeOffset";
+                }
+
+                if (reference == TypeReference.Void)
+                {
+                    return "void";
+                }
+
+                if (reference == TypeReference.Any)
+                {
+                    return "Newtonsoft.Json.Linq.JToken";
+                }
+
+                if (reference == TypeReference.Byte)
+                {
+                    // TODO: implement this
+                }
+
+                throw new NotSupportedException(reference.ToString());
+            }
+
+            public override (string start, string end) NullCheck(TypeReference reference)
+            {
+                if (reference == TypeReference.String)
+                {
+                    return ("string.IsNullOrEmpty(", ")");
+                }
+
+                return ("", " == default");
+            }
+
+            public override (string start, string end) NotNullCheck(TypeReference reference)
+            {
+                if (reference == TypeReference.String)
+                {
+                    return ("!string.IsNullOrEmpty(", ")");
+                }
+
+                return ("", " != default");
+            }
+
+            public override string HttpMethod(HttpMethod method)
+            {
+                if (method == System.Net.Http.HttpMethod.Delete)
+                {
+                    return "HttpMethod.Delete";
+                }
+                if (method == System.Net.Http.HttpMethod.Get)
+                {
+                    return "HttpMethod.Get";
+                }
+                if (method == System.Net.Http.HttpMethod.Head)
+                {
+                    return "HttpMethod.Head";
+                }
+                if (method == System.Net.Http.HttpMethod.Options)
+                {
+                    return "HttpMethod.Options";
+                }
+                if (string.Equals(method.Method, "PATCH", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "new HttpMethod(\"PATCH\")";
+                }
+                if (method == System.Net.Http.HttpMethod.Post)
+                {
+                    return "HttpMethod.Post";
+                }
+                if (method == System.Net.Http.HttpMethod.Put)
+                {
+                    return "HttpMethod.Put";
+                }
+                if (method == System.Net.Http.HttpMethod.Trace)
+                {
+                    return "HttpMethod.Trace";
+                }
+
+                return $"new HttpMethod(\"{method.Method}\")";
+            }
+
+            public override string Extension => ".cs";
+
+            public override Templates GetTemplates(IHandlebars hb)
+            {
+                return Templates.Load("csharp", hb);
+            }
+        }
+    }
+}
