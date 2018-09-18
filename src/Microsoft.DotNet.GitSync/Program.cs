@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.GitSync
         private static GitHubClient Client => _lazyClient.Value;
         private static string s_mirrorSignatureUserName;
         private static readonly ILog s_logger = LogManager.GetLogger(typeof(Program));
+        private IEnumerable<DynamicTableEntity> _listCommits;
 
         private Program(string[] args)
         {
@@ -144,7 +145,7 @@ namespace Microsoft.DotNet.GitSync
                         }
                         else
                         {
-                            UpdateEntities(GetCommitsToMirror(repo, prBranch), "Commits are already Mirrored");
+                            UpdateEntities(_listCommits, "Commits are already Mirrored");
                             s_logger.Info($"Commit Entries modififed to show mirrored in the azure table");
                         }
                     }
@@ -274,7 +275,7 @@ namespace Microsoft.DotNet.GitSync
             s_logger.Debug($"Adding the commits");
             var commits = await Client.Repository.PullRequest.Commits(targetRepo.Configuration.UpstreamOwner, targetRepo.Name, pr.Number);
             s_logger.Debug($"Getting Assignees");
-            var additionalAssignees = await Task.WhenAll(commits.Select(c => GetAuthorAsync(targetRepo, c.Sha)));
+            var additionalAssignees = await Task.WhenAll(commits.Select(c => GetAuthorAsync(targetRepo, c.Sha)).Distinct());
             try
             {
                 var update = new PullRequestUpdate() { Body = pr.Body + "\n\n cc " + string.Join(" ", additionalAssignees.Select(a => "@" + a)) };
@@ -288,7 +289,7 @@ namespace Microsoft.DotNet.GitSync
                 Number = pr.Number,
             };
             s_logger.Info($"Pull request #{pr.Number} created for {prBranch}");
-            UpdateEntities(GetCommitsToMirror(targetRepo, prBranch), pr.Url.ToString());
+            UpdateEntities(_listCommits, pr.Url.ToString());
             s_logger.Info($"Commit Entries modififed to show mirrored in the azure table");
             ConfigFile.Save(targetRepo.Configuration);
         }
@@ -306,12 +307,12 @@ namespace Microsoft.DotNet.GitSync
 
         private NewChanges GetChangesToApply(RepositoryInfo targetRepo, string branch)
         {
-            var listCommits = GetCommitsToMirror(targetRepo, branch);
-            if (listCommits.Count() != 0)
+            _listCommits = GetCommitsToMirror(targetRepo, branch);
+            if (_listCommits.Count() != 0)
             {
                 s_logger.Info($"Commits to mirror for {targetRepo}/{branch}");
                 var result = new NewChanges(targetRepo);
-                foreach (var commit in listCommits)
+                foreach (var commit in _listCommits)
                 {
                     string key = commit.Properties["SourceRepo"].StringValue;
                     if (result.changes.ContainsKey(key))

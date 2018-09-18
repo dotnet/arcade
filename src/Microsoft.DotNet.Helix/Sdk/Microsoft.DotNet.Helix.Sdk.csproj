@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
@@ -15,6 +15,12 @@
   <ItemGroup>
     <ProjectReference Include="..\Client\CSharp\Microsoft.DotNet.Helix.Client.csproj" />
     <ProjectReference Include="..\JobSender\Microsoft.DotNet.Helix.JobSender.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="**\*.py" Pack="true">
+      <PackagePath>%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
+    </None>
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
