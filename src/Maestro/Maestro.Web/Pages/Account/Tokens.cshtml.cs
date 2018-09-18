@@ -17,7 +17,10 @@ namespace Maestro.Web.Pages.Account
 {
     public class TokensModel : PageModel
     {
-        public TokensModel(BuildAssetRegistryContext context, UserManager<ApplicationUser> userManager, ILogger<TokensModel> logger)
+        public TokensModel(
+            BuildAssetRegistryContext context,
+            UserManager<ApplicationUser> userManager,
+            ILogger<TokensModel> logger)
         {
             Context = context;
             UserManager = userManager;
