@@ -17,30 +17,5 @@ namespace Microsoft.DotNet.Helix.Client
 
         public IJob JobApi { get; }
         public string CorrelationId { get; }
-
-        public async Task WaitAsync()
-        {
-            while (true)
-            {
-                try
-                {
-                    await JobApi.WaitAsync(CorrelationId);
-                    Console.WriteLine("Job's done!");
-                    return;
-                }
-                catch (HttpOperationException ex) when ((int) ex.Response.StatusCode >= 500)
-                {
-                    string retryAfterStr = ex.Response.Headers["Retry-After"].FirstOrDefault();
-                    RetryConditionHeaderValue retryAfter =
-                        retryAfterStr == null ? null : RetryConditionHeaderValue.Parse(retryAfterStr);
-                    TimeSpan retryTimeSpan = retryAfter?.Delta ?? TimeSpan.FromMinutes(1);
-                    await Task.Delay(retryTimeSpan);
-                }
-                catch (TaskCanceledException)
-                {
-                    await Task.Delay(TimeSpan.FromMinutes(1));
-                }
-            }
-        }
     }
 }
