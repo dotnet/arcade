@@ -1,14 +1,14 @@
 <!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project DefaultTargets="Execute" TreatAsLocalProperty="RepoRoot">
   <!--
-  
+
   Required parameters:
     RepoRoot                        Repository root.
     Projects                        List of projects to build. Semicolon separated, may include globs.
-  
-  Optional parameters:              
+
+  Optional parameters:
     Configuration                   Build configuration: "Debug", "Release", etc.
-  
+
     DotNetRestoreSourcePropsPath    Overrides of ResourceSources (list of NuGet feeds to download dependencies from)
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetBuildOffline              Building without access to NuGet servers.
@@ -19,7 +19,7 @@
     DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.
     DotNetSymbolExpirationInDays    Symbol expiration time in days (defaults to 10 years).
     DotNetSignType                  Specifies the signing type: 'real' (default), 'test'.
-  
+
     ContinuousIntegrationBuild      "true" when building on a CI server (PR build or official build)
     Restore                         "true" to restore toolset and solution
     QuietRestore                    "true" to suppress Restore output.
@@ -36,10 +36,10 @@
   -->
 
   <!--
-    Default values. 
+    Default values.
   -->
   <ItemGroup>
-    <_ProjectToBuild Include="$(Projects)"/>
+    <ProjectToBuild Include="$(Projects)"/>
   </ItemGroup>
 
   <PropertyGroup>
@@ -51,10 +51,13 @@
 
   <Import Project="RepoLayout.props"/>
 
+  <!-- Allow for repo specific Build properties such as the list of Projects to build -->
+  <Import Project="$(RepositoryEngineeringDir)Build.props" Condition="Exists('$(RepositoryEngineeringDir)Build.props')" />
+
   <PropertyGroup>
     <_PublishToBlobStorage>false</_PublishToBlobStorage>
     <_PublishToBlobStorage Condition="'$(DotNetPublishToBlobFeed)' == 'true'">true</_PublishToBlobStorage>
-    
+
     <_PublishingAssetsToRegistry>false</_PublishingAssetsToRegistry>
     <_PublishingAssetsToRegistry Condition="'$(PublishBuildAssets)' == 'true'">true</_PublishingAssetsToRegistry>
 
@@ -100,7 +103,7 @@
       <_CommonProps Include="ContinuousIntegrationBuild=$(ContinuousIntegrationBuild)"/>
       <_CommonProps Include="RepoRoot=$(RepoRoot)"/>
       <_CommonProps Include="VersionsPropsPath=$(VersionsPropsPath)"/>
-      <!-- 
+      <!--
         When building from source we suppress restore for projects that set ExcludeFromSourceBuild=true.
         NuGet Restore task reports a warning for such projects, which we suppress here.
       -->
@@ -136,7 +139,7 @@
       <_PushProps Include="BuildAssetRegistryToken=$(BuildAssetRegistryToken)"/>
       <_PushProps Include="MaestroApiEndpoint=$(MaestroApiEndpoint)"/>
     </ItemGroup>
-    
+
     <ItemGroup>
       <_SolutionBuildPropsArgs Include="@(_SolutionBuildProps->'/p:%(Identity)')" />
       <_RestoreToolsPropArgs Include="@(_RestoreToolsProps->'/p:%(Identity)')" />
@@ -158,7 +161,7 @@
     <Exec Command='$(_MSBuildCmd) "$(MSBuildProjectDirectory)\Tools.proj" /bl:"$(ArtifactsLogDir)RestoreRepoTools.binlog" /nologo /m /v:quiet /t:Restore $(_RestoreToolsPropsCmdLine)'
           Condition="'$(_RestoreTools)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
-    <Exec Command='$(_MSBuildCmd) "@(_ProjectToBuild)" /bl:"$(ArtifactsLogDir)Restore.binlog" /nologo /m /v:quiet /t:Restore $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
+    <Exec Command='$(_MSBuildCmd) "@(ProjectToBuild)" /bl:"$(ArtifactsLogDir)Restore.binlog" /nologo /m /v:quiet /t:Restore $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
           Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <!--
@@ -166,17 +169,17 @@
     -->
     <MSBuild Projects="Tools.proj"
              Targets="Restore"
-             Properties="@(_RestoreToolsProps)" 
+             Properties="@(_RestoreToolsProps)"
              Condition="'$(_RestoreTools)' == 'true' and '$(_QuietRestore)' != 'true'"/>
 
     <!--
       Run solution restore separately from the other targets, in a different build phase.
       Since restore brings in new .props and .targets files we need to rerun evaluation.
-      
+
       Note: msbuild caches the metaproject for the solution (see https://github.com/Microsoft/msbuild/issues/1695)
       We invalidate the cache by changing the value of __BuildPhase property.
     -->
-    <MSBuild Projects="@(_ProjectToBuild)"
+    <MSBuild Projects="@(ProjectToBuild)"
              Properties="@(_SolutionBuildProps);__BuildPhase=SolutionRestore"
              RemoveProperties="$(_RemoveProps)"
              Targets="Restore"
@@ -186,7 +189,7 @@
     <!--
       Build solution.
     -->
-    <MSBuild Projects="@(_ProjectToBuild)"
+    <MSBuild Projects="@(ProjectToBuild)"
              Properties="@(_SolutionBuildProps);__BuildPhase=SolutionBuild"
              RemoveProperties="$(_RemoveProps)"
              Targets="@(_SolutionBuildTargets)"
@@ -213,7 +216,7 @@
              Properties="@(_PublishProps)"
              Targets="Publish"
              Condition="'$(Publish)' == 'true'"/>
-             
+
     <MSBuild Projects="PublishBuildAssets.proj"
              Properties="@(_PushProps)"
              Targets="PublishBuildAssets"
