@@ -94,7 +94,16 @@ namespace Microsoft.DotNet.SignTool
                 return;
             }
 
+            if (ItemsToSign.Count() == 0)
+            {
+                Log.LogWarning($"An empty list of files to sign was passed as parameter.");
+                return;
+            }
+
             var enclosingDir = GetEnclosingDirectoryOfItemsToSign();
+
+            if (Log.HasLoggedErrors) return;
+
             var defaultSignInfoForPublicKeyToken = ParseStrongNameSignInfo();
             var explicitCertificates = ParseFileSignInfo();
             var fileExtensionSignInfo = ParseFileExtensionSignInfo();
@@ -137,9 +146,10 @@ namespace Microsoft.DotNet.SignTool
                 Array.Resize(ref result, getCommonPrefixLength(result, directoryParts));
             }
 
-            if (result.Length == 0)
+            if (result == null || result.Length == 0)
             {
                 Log.LogError($"All {nameof(ItemsToSign)} must be within the cone of a single directory.");
+                return string.Empty;
             }
 
             return string.Join(Path.DirectorySeparatorChar.ToString(), result);

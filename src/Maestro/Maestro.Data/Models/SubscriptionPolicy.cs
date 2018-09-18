@@ -2,12 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
+
 namespace Maestro.Data.Models
 {
     public class SubscriptionPolicy
     {
         public UpdateFrequency UpdateFrequency { get; set; }
 
-        public MergePolicy MergePolicy { get; set; }
+        public List<MergePolicyDefinition> MergePolicies { get; set; }
     }
 }

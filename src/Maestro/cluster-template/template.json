@@ -33,12 +33,6 @@
         "description": "Application Ssl Endpoints"
       }
     },
-    "clusterCertificateThumbprint": {
-      "type": "string",
-      "metadata": {
-        "description": "Certificate Thumbprint"
-      }
-    },
     "secretSourceVaultResourceId": {
       "type": "string",
       "metadata": {
@@ -265,7 +259,9 @@
                     "enableParallelJobs": true,
                     "nicPrefixOverride": "10.0.0.0/24",
                     "certificate": {
-                      "thumbprint": "[parameters('clusterCertificateThumbprint')]",
+                      "commonNames": [
+                        "[reference('network').outputs.fqdn.value]"
+                      ],
                       "x509StoreName": "My"
                     }
                   },
@@ -444,7 +440,7 @@
       }
     },
     {
-      "apiVersion": "2017-07-01-preview",
+      "apiVersion": "2018-02-01",
       "type": "Microsoft.ServiceFabric/clusters",
       "name": "[parameters('clusterName')]",
       "location": "[variables('location')]",
@@ -453,8 +449,13 @@
       ],
       "properties": {
         "addonFeatures": [],
-        "certificate": {
-          "thumbprint": "[parameters('clusterCertificateThumbprint')]",
+        "certificateCommonNames": {
+          "commonNames": [
+            {
+              "certificateCommonName": "[reference('network').outputs.fqdn.value]",
+              "certificateIssuerThumbprint": ""
+            }
+          ],
           "x509StoreName": "My"
         },
         "clientCertificateCommonNames": [],

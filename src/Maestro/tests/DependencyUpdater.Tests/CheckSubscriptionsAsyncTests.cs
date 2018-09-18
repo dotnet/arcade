@@ -57,7 +57,7 @@ namespace DependencyUpdater.Tests
                 PolicyObject =
                     new SubscriptionPolicy
                     {
-                        MergePolicy = MergePolicy.Never,
+                        MergePolicies = null,
                         UpdateFrequency = UpdateFrequency.EveryDay
                     },
                 LastAppliedBuild = oldBuild
@@ -86,7 +86,7 @@ namespace DependencyUpdater.Tests
                 TargetBranch = "target.branch",
                 PolicyObject = new SubscriptionPolicy
                 {
-                    MergePolicy = MergePolicy.Never,
+                    MergePolicies = null,
                     UpdateFrequency = UpdateFrequency.EveryBuild
                 }
             };
@@ -119,7 +119,7 @@ namespace DependencyUpdater.Tests
                 PolicyObject =
                     new SubscriptionPolicy
                     {
-                        MergePolicy = MergePolicy.Never,
+                        MergePolicies = null,
                         UpdateFrequency = UpdateFrequency.EveryDay
                     },
                 LastAppliedBuild = build

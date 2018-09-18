@@ -14,6 +14,7 @@ using Maestro.Contracts;
 using Maestro.Data;
 using Maestro.Data.Models;
 using Maestro.GitHub;
+using Maestro.MergePolicies;
 using Microsoft.AspNetCore.ApiPagination;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Builder;
@@ -117,7 +118,14 @@ namespace Maestro.Web
                         options.Conventions.AllowAnonymousToPage("/Index");
                     })
                 .AddGitHubWebHooks()
-                .AddApiPagination();
+                .AddApiPagination()
+                .AddCookieTempDataProvider(
+                    options =>
+                    {
+                        // Cookie Policy will not send this cookie unless we mark it as Essential
+                        // The application will not function without this cookie.
+                        options.Cookie.IsEssential = true;
+                    });
 
             services.AddSingleton<IConfiguration>(Configuration);
 
@@ -139,6 +147,8 @@ namespace Maestro.Web
                         .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                         ?.InformationalVersion;
                 });
+
+            services.AddMergePolicies();
         }
 
         public void ConfigureContainer(ContainerBuilder builder)

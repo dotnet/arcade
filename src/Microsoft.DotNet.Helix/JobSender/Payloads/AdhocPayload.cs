@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Helix.Client
                 }
                 stream.Position = 0;
                 Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Guid.NewGuid()}.zip");
-                return zipUri.ToString();
+                return zipUri.AbsoluteUri;
             }
         }
     }

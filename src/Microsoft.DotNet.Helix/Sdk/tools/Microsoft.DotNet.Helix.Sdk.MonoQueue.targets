@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--
+      Set by Microsoft.Common.targets, some targets must be removed while others are left as standard extension mechanisms.
+    -->
+    <CoreBuildDependsOn>
+      BuildOnlySettings;
+      PrepareForBuild;
+      PreBuildEvent;
+      ResolveReferences;
+      PostBuildEvent
+    </CoreBuildDependsOn>
+
+    <PrepareForBuildDependsOn></PrepareForBuildDependsOn>
+
+    <ResolveReferencesDependsOn>
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      AfterResolveReferences
+    </ResolveReferencesDependsOn>
+
+    <TestDependsOn>
+      Build
+    </TestDependsOn>
+
+    <CleanDependsOn>
+      BeforeClean;
+      UnmanagedUnregistration;
+      CoreClean;
+      PrepareProjectReferences;
+      CleanPublishFolder;
+      AfterClean
+    </CleanDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <EnableXUnitReporter Condition=" '$(EnableXUnitReporter)' != 'true' ">false</EnableXUnitReporter>
+  </PropertyGroup>
+
+  <Choose>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('windows'))">
+      <PropertyGroup>
+        <IsPosixShell>false</IsPosixShell>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <IsPosixShell>true</IsPosixShell>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+  
+  <Target Name="AddXUnitReporter" Condition="$(EnableXUnitReporter)" BeforeTargets="Test">
+    <ItemGroup>
+      <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)xunit-reporter"/>
+    </ItemGroup>
+    <PropertyGroup>
+      <HelixPostCommands Condition="$(IsPosixShell)">$(HelixPostCommands);$HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/xunit-reporter.py</HelixPostCommands>
+      <HelixPostCommands Condition="!$(IsPosixShell)">$(HelixPostCommands);%HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\xunit-reporter.py</HelixPostCommands>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="Test"
+    DependsOnTargets="$(TestDependsOn)">
+    <SendHelixJob Source="$(HelixSource)"
+                  Type="$(HelixType)"
+                  Build="$(HelixBuild)"
+                  TargetQueue="$(HelixTargetQueue)"
+                  IsPosixShell="$(IsPosixShell)"
+                  BaseUri="$(HelixBaseUri)"
+                  AccessToken="$(HelixAccessToken)"
+                  PreCommands="$(HelixPreCommands)"
+                  PostCommands="$(HelixPostCommands)"
+                  CorrelationPayloads="@(HelixCorrelationPayload)"
+                  WorkItems="@(HelixWorkItem)">
+      <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
+    </SendHelixJob>
+    <Message Text="Sent Helix Job $(HelixJobId)" Importance="High" />
+  </Target>
+</Project>

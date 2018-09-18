@@ -46,7 +46,7 @@ namespace Maestro.Web
                     configureOptions);
         }
 
-        public static Task<string> CreatePersonalAccessTokenAsync<TUser>(
+        public static Task<(int id, string value)> CreatePersonalAccessTokenAsync<TUser>(
             this HttpContext context,
             TUser user,
             string name) where TUser : class
@@ -58,7 +58,7 @@ namespace Maestro.Web
                 name);
         }
 
-        public static async Task<string> CreatePersonalAccessTokenAsync<TUser>(
+        public static async Task<(int id, string value)> CreatePersonalAccessTokenAsync<TUser>(
             this HttpContext context,
             string authenticationScheme,
             TUser user,

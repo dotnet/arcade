@@ -1,0 +1,18 @@
+{
+  "clusterName": "maestro-prod",
+  "adminUserName": "dotnet-bot",
+  "adminPassword": {
+    "vault": "HelixProdKV",
+    "secret": "HelixVMAdminPassword"
+  },
+  "sslEndpoints": [
+    {
+      "internalPort": 4430
+    }
+  ],
+  "certificateSourceKeyVaultName": "maestroprod",
+  "certificates": [
+    "maestro-prod-westus2-cloudapp-azure-com"
+  ],
+  "adminClientCertificateThumbprint": "9c2d2c0f9a13d303d7e186de476dbf4b51d056f9"
+}

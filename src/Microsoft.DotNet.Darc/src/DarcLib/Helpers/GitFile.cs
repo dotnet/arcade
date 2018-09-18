@@ -15,9 +15,9 @@ namespace Microsoft.DotNet.DarcLib
 
         public string Content { get; set; }
 
-        public string Mode { get; set; } = "100644";
+        public string ContentEncoding { get; set; }
 
-        public string Type { get; set; } = "blob";
+        public string Mode { get; set; } = "100644";
 
         public GitFile(string filePath, XmlDocument xmlDocument)
             : this(filePath, GetIndentedXmlBody(xmlDocument))
@@ -30,9 +30,15 @@ namespace Microsoft.DotNet.DarcLib
         }
 
         public GitFile(string filePath, string content)
+            : this(filePath, content, "utf-8")
+        {
+        }
+
+        public GitFile(string filePath, string content, string contentEncoding)
         {
             FilePath = filePath;
-            Content = content;
+            Content = content.Replace(Environment.NewLine, "\n");
+            ContentEncoding = contentEncoding;
         }
 
         private static string GetIndentedXmlBody(XmlDocument xmlDocument)

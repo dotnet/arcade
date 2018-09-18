@@ -220,7 +220,7 @@ namespace Maestro.Data.Migrations
 
                     b.HasIndex("ChannelId");
 
-                    b.HasIndex("Repository", "Branch")
+                    b.HasIndex("Repository", "Branch", "ChannelId")
                         .IsUnique();
 
                     b.ToTable("DefaultChannels");

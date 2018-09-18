@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--
+      Set by Microsoft.Common.targets, some targets must be removed while others are left as standard extension mechanisms.
+    -->
+    <CoreBuildDependsOn>
+      BuildOnlySettings;
+      PrepareForBuild;
+      PreBuildEvent;
+      ResolveReferences;
+      PostBuildEvent
+    </CoreBuildDependsOn>
+
+    <PrepareForBuildDependsOn></PrepareForBuildDependsOn>
+
+    <ResolveReferencesDependsOn>
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      AfterResolveReferences
+    </ResolveReferencesDependsOn>
+
+    <TestDependsOn>
+      Build
+    </TestDependsOn>
+
+    <CleanDependsOn>
+      BeforeClean;
+      UnmanagedUnregistration;
+      CoreClean;
+      PrepareProjectReferences;
+      CleanPublishFolder;
+      AfterClean
+    </CleanDependsOn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <HelixTargetQueue Include="$(HelixTargetQueues)" />
+  </ItemGroup>
+
+  <Target Name="Test"
+          DependsOnTargets="$(TestDependsOn)">
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Test" Properties="HelixTargetQueue=%(HelixTargetQueue.Identity)"/>
+  </Target>
+</Project>
