@@ -35,7 +35,14 @@ namespace Microsoft.DotNet.DarcLib
             }
 
             _fileManager = new GitFileManager(_gitClient, _logger);
-            _barClient = ApiFactory.GetAuthenticated(settings.BuildAssetRegistryBaseUri, settings.BuildAssetRegistryPassword);
+            if (!String.IsNullOrEmpty(settings.BuildAssetRegistryBaseUri))
+            {
+                _barClient = ApiFactory.GetAuthenticated(settings.BuildAssetRegistryBaseUri, settings.BuildAssetRegistryPassword);
+            }
+            else
+            {
+                _barClient = ApiFactory.GetAuthenticated(settings.BuildAssetRegistryPassword);
+            }
         }
 
         /// <summary>
