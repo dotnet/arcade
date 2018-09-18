@@ -98,15 +98,21 @@ Given a local folder `$(TestFolder)` containing `stuff.txt` this will print out 
         test_results.xml
     -->
     <EnableXUnitReporter>false</EnableXUnitReporter>
+
+    <!--
+      Commands that are run before each workitem's command
+      semicolon separated; use ';;' to escape a single semicolon
+    -->
+    <HelixPreCommands>$(HelixPreCommands);echo 'pizza'</HelixPreCommands>
+
+    <!--
+      Commands that are run after each workitem's command
+      semicolon separated; use ';;' to escape a single semicolon
+    -->
+    <HelixPostCommands>$(HelixPostCommands);echo 'One Pepperoni Pizza'</HelixPostCommands>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Commands that are run before each workitem's command -->
-    <HelixPreCommand Include="echo 'pizza'"/>
-
-    <!-- Commands that are run after each workitem's command -->
-    <HelixPostCommand Include="echo 'One Pepperoni Pizza'"/>
-
     <!-- Directory that is zipped up and sent as a correlation payload -->
     <HelixCorrelationPayload Include="some\directory\that\exists" />
 
