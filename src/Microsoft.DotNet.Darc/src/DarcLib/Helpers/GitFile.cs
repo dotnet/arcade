@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.DarcLib
         public GitFile(string filePath, string content, string contentEncoding)
         {
             FilePath = filePath;
-            Content = content;
+            Content = content.Replace(Environment.NewLine, "\n");
             ContentEncoding = contentEncoding;
         }
 
