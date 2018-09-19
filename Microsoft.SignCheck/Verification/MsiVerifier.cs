@@ -49,9 +49,9 @@ namespace Microsoft.SignCheck.Verification
 
                         foreach (string key in installPackage.Files.Keys)
                         {
-                            SignatureVerificationResult packageFileResult = VerifyFile(installPackage.Files[key].TargetPath, svr.Filename);
+                            SignatureVerificationResult packageFileResult = VerifyFile(installPackage.Files[key].TargetPath, svr.Filename, containerPath: null);
                             packageFileResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, originalFiles[key]);
-                            CheckAndUpdateExclusion(packageFileResult, packageFileResult.Filename, originalFiles[key], svr.Filename);
+                            //CheckAndUpdateExclusion(packageFileResult, packageFileResult.Filename, originalFiles[key], svr.Filename);
                             svr.NestedResults.Add(packageFileResult);
                         }
                     }
@@ -73,9 +73,8 @@ namespace Microsoft.SignCheck.Verification
                         {
                             string binaryFile = Path.Combine(svr.TempPath, (string)record["Name"]);
                             StructuredStorage.SaveStream(record, svr.TempPath);
-                            SignatureVerificationResult binaryStreamResult = VerifyFile(binaryFile, svr.Filename);
+                            SignatureVerificationResult binaryStreamResult = VerifyFile(binaryFile, svr.Filename, containerPath: null);
                             binaryStreamResult.AddDetail(DetailKeys.Misc, SignCheckResources.FileExtractedFromBinaryTable);
-                            CheckAndUpdateExclusion(binaryStreamResult, binaryStreamResult.Filename, null, svr.Filename);
                             svr.NestedResults.Add(binaryStreamResult);
                             record.Close();
                         }

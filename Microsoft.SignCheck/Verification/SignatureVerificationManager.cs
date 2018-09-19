@@ -53,6 +53,12 @@ namespace Microsoft.SignCheck.Verification
             }
         }
 
+        public SignatureVerificationOptions Options
+        {
+            get;
+            private set;
+        }
+
         /// <summary>
         /// Controls the verbosity of the output written to the Log.
         /// 
@@ -63,10 +69,12 @@ namespace Microsoft.SignCheck.Verification
             private set;
         }
 
-        public SignatureVerificationOptions Options
+        public static FileVerifier UnsupportedFileVerifier
         {
-            get;
-            private set;
+            get
+            {
+                return _unsupportedFileVerifier;
+            }
         }
 
         public SignatureVerificationManager(Exclusions exclusions, Log log, SignatureVerificationOptions options)
@@ -202,6 +210,11 @@ namespace Microsoft.SignCheck.Verification
                             {
                                 // If it's an SDK based VSIX there should be a vsixmanifest file
                                 fileVerifier = GetFileVerifierByExtension(".vsix");
+                            }
+                            else if (zipArchive.Entries.Any(z => String.Equals(z.FullName, "META-INF/MANIFEST.MF", StringComparison.OrdinalIgnoreCase)))
+                            {
+                                // Zip file with META-INF/MANIFEST.MF file is likely a JAR
+                                fileVerifier = GetFileVerifierByExtension(".jar");
                             }
                             else
                             {

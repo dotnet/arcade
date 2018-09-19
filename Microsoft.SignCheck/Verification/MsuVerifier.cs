@@ -30,11 +30,7 @@ namespace Microsoft.SignCheck.Verification
                 foreach (string cabFile in Directory.EnumerateFiles(svr.TempPath))
                 {
                     string cabFileFullName = Path.GetFullPath(cabFile);
-                    SignatureVerificationResult cabEntryResult = VerifyFile(cabFile, svr.Filename);
-
-                    // VerifyFile will set IsExcluded if the filename or parent matches, but it's possible the exclusion was
-                    // based on the archive entry's full path.
-                    CheckAndUpdateExclusion(cabEntryResult, cabFile, cabFileFullName, svr.Filename);
+                    SignatureVerificationResult cabEntryResult = VerifyFile(cabFile, svr.Filename, cabFileFullName);
 
                     // Tag the full path into the result detail
                     cabEntryResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, cabFileFullName);

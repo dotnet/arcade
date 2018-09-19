@@ -19,7 +19,7 @@ namespace Microsoft.SignCheck {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class SignCheckResources {
@@ -88,7 +88,7 @@ namespace Microsoft.SignCheck {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Excluded: Yes ({0}).
+        ///   Looks up a localized string similar to Excluded.
         /// </summary>
         internal static string DetailExcluded {
             get {
@@ -120,6 +120,15 @@ namespace Microsoft.SignCheck {
         internal static string DetailHResult {
             get {
                 return ResourceManager.GetString("DetailHResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File identified as {0} using file header..
+        /// </summary>
+        internal static string DetailIdentifyByHeaderAsType {
+            get {
+                return ResourceManager.GetString("DetailIdentifyByHeaderAsType", resourceCulture);
             }
         }
         

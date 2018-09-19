@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.SignCheck.Logging;
-using Microsoft.SignCheck.Interop.PortableExecutable;
-using Microsoft.Tools.WindowsInstallerXml;
 using System.IO;
+using System.Linq;
+using Microsoft.SignCheck.Logging;
+using Microsoft.Tools.WindowsInstallerXml;
 
 namespace Microsoft.SignCheck.Verification
 {
@@ -43,8 +38,8 @@ namespace Microsoft.SignCheck.Verification
                         {
                             foreach (string file in Directory.EnumerateFiles(svr.TempPath, "*.*", SearchOption.AllDirectories))
                             {
-                                SignatureVerificationResult bundleEntryResult = VerifyFile(Path.GetFullPath(file), svr.Filename);
-                                CheckAndUpdateExclusion(bundleEntryResult, "*"+Path.GetFileName(file), file, svr.Filename);
+                                SignatureVerificationResult bundleEntryResult = VerifyFile(Path.GetFullPath(file), svr.Filename, Path.GetFileName(file));
+                                //CheckAndUpdateExclusion(bundleEntryResult, "*"+Path.GetFileName(file), file, svr.Filename);
                                 svr.NestedResults.Add(bundleEntryResult);
                             }
                         }

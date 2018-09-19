@@ -44,11 +44,7 @@ namespace Microsoft.SignCheck.Verification
                         string aliasFullName = Path.Combine(tempPath, aliasFileName);
 
                         archiveEntry.ExtractToFile(aliasFullName);
-                        SignatureVerificationResult archiveEntryResult = VerifyFile(aliasFullName, svr.Filename);
-
-                        // VerifyFile will set IsExcluded if the filename or parent matches, but it's possible the exclusion was
-                        // based on the archive entry's full path.
-                        CheckAndUpdateExclusion(archiveEntryResult, aliasFileName, archiveEntry.FullName, svr.Filename);
+                        SignatureVerificationResult archiveEntryResult = VerifyFile(aliasFullName, svr.Filename, archiveEntry.FullName);
 
                         // Tag the full path into the result detail
                         archiveEntryResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, archiveEntry.FullName);

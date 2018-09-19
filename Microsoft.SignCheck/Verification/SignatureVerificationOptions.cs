@@ -15,5 +15,6 @@ namespace Microsoft.SignCheck.Verification
         VerifyXmlSignatures = 0x0004,
         VerifyJarSignatures = 0x0008,
         VerifyRecursive = 0x0100,
+        GenerateExclusion = 0x0200
     };
 }

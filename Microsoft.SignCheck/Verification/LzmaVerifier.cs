@@ -29,7 +29,7 @@ namespace Microsoft.SignCheck.Verification
                 // LZMA files are just compressed streams. Decompress and then try to verify the decompressed file.
                 LZMAUtils.Decompress(fullPath, destinationFile);
 
-                svr.NestedResults.Add(VerifyFile(destinationFile, parent));
+                svr.NestedResults.Add(VerifyFile(destinationFile, parent, containerPath: null));
             }
 
             return svr;

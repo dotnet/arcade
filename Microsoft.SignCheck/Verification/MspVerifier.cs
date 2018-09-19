@@ -23,7 +23,7 @@ namespace Microsoft.SignCheck.Verification
 
                 foreach (string file in Directory.EnumerateFiles(svr.TempPath))
                 {
-                    svr.NestedResults.Add(VerifyFile(file, svr.Filename));
+                    svr.NestedResults.Add(VerifyFile(file, svr.Filename, containerPath: null));
                 }
 
                 DeleteDirectory(svr.TempPath);

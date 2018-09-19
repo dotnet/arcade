@@ -93,13 +93,14 @@ namespace Microsoft.SignCheck.Verification
 
         private bool IsMatch(string pattern, string value)
         {
-            if (pattern == null || value == null)
+            if (String.IsNullOrEmpty(pattern) || String.IsNullOrEmpty(value))
             {
                 return false;
             }
+
             if (pattern.IndexOfAny(_wildCards) > -1)
             {
-                var regexPattern = Utils.ConvertToRegexPattern(pattern);
+                string regexPattern = Utils.ConvertToRegexPattern(pattern);
                 return Regex.IsMatch(value, regexPattern, RegexOptions.IgnoreCase);
             }
             else

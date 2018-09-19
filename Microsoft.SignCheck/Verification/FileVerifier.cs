@@ -24,6 +24,14 @@ namespace Microsoft.SignCheck.Verification
             private set;
         }
 
+        protected bool GenerateExclusion
+        {
+            get
+            {
+                return (Options & SignatureVerificationOptions.GenerateExclusion) == SignatureVerificationOptions.GenerateExclusion;
+            }
+        }
+
         /// <summary>
         /// The Log to use for writing output during verification.
         /// </summary>
@@ -103,6 +111,34 @@ namespace Microsoft.SignCheck.Verification
         }
 
         /// <summary>
+        /// Retrieve a FileVerifier from the SignatureVerificationManager. The retrieval is based on the file extension. If there are no
+        /// applicable verifiers, the verifier is assigned based on the file's header.
+        /// </summary>
+        /// <param name="path">The path of the file for which to retrieve a FileVerifier.</param>
+        /// <returns>A FileVerifier that can be used to verify the signature of the specified file.</returns>
+        protected FileVerifier GetFileVerifier(string path)
+        {
+            string extension = Path.GetExtension(path);
+            FileVerifier fileVerifier = SignatureVerificationManager.GetFileVerifierByExtension(extension);
+
+            if (fileVerifier == null)
+            {
+                fileVerifier = SignatureVerificationManager.GetFileVerifierByHeader(path);
+
+                if (fileVerifier == null)
+                {
+                    return SignatureVerificationManager.UnsupportedFileVerifier;
+                }
+                else
+                {
+                    Log.WriteMessage(LogVerbosity.Detailed, SignCheckResources.DetailIdentifyByHeaderAsType, fileVerifier.FileExtension);
+                }
+            }
+
+            return fileVerifier;            
+        }
+
+        /// <summary>
         /// Verifies the signature of a file.
         /// </summary>
         /// <param name="path">The path of the file to verify</param>
@@ -116,24 +152,22 @@ namespace Microsoft.SignCheck.Verification
         /// <summary>
         /// Verify the signature of a single file.
         /// </summary>
-        /// <param name="path">The path of the file to verify.</param>
+        /// <param name="path">The path of the file on disk to verify.</param>
         /// <param name="parent">The name of parent container, e.g. an MSI or VSIX. Can be null when there is no parent container.</param>
+        /// <param name="containerPath">The path of the file in the container. This may differ from the path on disk as containers are flattened. It's
+        /// primarily intended to help with exclusions and report more readable names.</param>
         /// <returns>The verification result.</returns>
-        public SignatureVerificationResult VerifyFile(string path, string parent)
+        public SignatureVerificationResult VerifyFile(string path, string parent, string containerPath)
         {
             Log.WriteMessage(LogVerbosity.Detailed, String.Format(SignCheckResources.ProcessingFile, Path.GetFileName(path), String.IsNullOrEmpty(parent) ? SignCheckResources.NA : parent));
 
             string extension = Path.GetExtension(path);
-            FileVerifier fileVerifier = SignatureVerificationManager.GetFileVerifier(path);
+            FileVerifier fileVerifier = GetFileVerifier(path);
 
             SignatureVerificationResult svr;
             svr = fileVerifier.VerifySignature(path, parent);
 
-            Log.WriteMessage(LogVerbosity.Diagnostic, String.Format(SignCheckResources.DiagFirstExclusion, path));
-            if (Exclusions.Count > 0)
-            {
-                svr.IsExcluded = Exclusions.IsParentExcluded(parent) || Exclusions.IsFileExcluded(path);
-            }
+            CheckAndUpdateExclusions(ref svr, path, parent, containerPath);
 
             // Include the full path for top-level files
             if (String.IsNullOrEmpty(parent))
@@ -145,22 +179,29 @@ namespace Microsoft.SignCheck.Verification
         }
 
         /// <summary>
-        /// Check whether the file specified file is excluded from verification and update the SignatureVerificationResult.
-        /// An exclusion entry for the file based on its name, alias and parent is also generated.
+        /// Checks whether the specified file is excluded from verification and updates the SignatureVerificationResult.
+        /// If <see cref="GenerateExclusion"/> is true, an exclusion entry is also generated.
         /// </summary>
-        /// <param name="result">The result to update</param>
-        /// <param name="alias">The alias of the file</param>
-        /// <param name="fullName"></param>
-        /// <param name="parent"></param>
-        protected void CheckAndUpdateExclusion(SignatureVerificationResult result, string alias, string fullName, string parent)
+        /// <param name="result">The SignatureVerificationResult to update.</param>
+        /// <param name="path">The path of the file on disk.</param>
+        /// <param name="parent">The parent (container) of the file.</param>
+        /// <param name="containerPath">The path of the file in the container. May be null if the file is not embedded in a container.</param>
+        protected void CheckAndUpdateExclusions(ref SignatureVerificationResult result, string path, string parent, string containerPath)
         {
             if (Exclusions.Count > 0)
             {
-                result.IsExcluded |= Exclusions.IsFileExcluded(fullName);
-            }
+                result.IsExcluded = Exclusions.IsParentExcluded(parent) || Exclusions.IsFileExcluded(path) || Exclusions.IsFileExcluded(containerPath);
 
-            result.ExclusionEntry = String.Join(";", String.Join("|", alias, fullName), parent, String.Empty);
-            Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagGenerateExclusion, result.Filename, result.ExclusionEntry);
+                if (result.IsExcluded)
+                {
+                    result.AddDetail(DetailKeys.File, SignCheckResources.DetailExcluded);
+                }
+            }
+            if (GenerateExclusion)
+            {
+                result.ExclusionEntry = String.Join(";", String.Join("|", path, containerPath), parent, String.Empty);
+                Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagGenerateExclusion, result.Filename, result.ExclusionEntry);
+            }
         }
 
         /// <summary>

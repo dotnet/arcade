@@ -41,11 +41,10 @@ namespace Microsoft.SignCheck.Verification
                         string aliasFullName = Path.Combine(tempPath, aliasFileName);
 
                         archiveEntry.ExtractToFile(aliasFullName);
-                        SignatureVerificationResult archiveEntryResult = VerifyFile(aliasFullName, svr.Filename);
+                        SignatureVerificationResult archiveEntryResult = VerifyFile(aliasFullName, svr.Filename, archiveEntry.FullName);
 
                         // Tag the full path into the result detail
                         archiveEntryResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, archiveEntry.FullName);
-                        CheckAndUpdateExclusion(archiveEntryResult, aliasFileName, archiveEntry.FullName, svr.Filename);
                         svr.NestedResults.Add(archiveEntryResult);
                     }
 
