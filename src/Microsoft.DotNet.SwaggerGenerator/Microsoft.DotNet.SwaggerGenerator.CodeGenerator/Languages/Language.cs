@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
@@ -29,16 +29,16 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 Path.GetDirectoryName(typeof(Templates).Assembly.Location),
                 "Languages",
                 languageName);
-            Action<TextWriter, object> serviceClient = Load(hb, templates, "ServiceClient.hb");
-            Action<TextWriter, object> model = Load(hb, templates, "Model.hb");
-            Action<TextWriter, object> methodGroup = Load(hb, templates, "MethodGroup.hb");
+            Action<TextWriter, object> serviceClient = LoadTemplateFile(hb, templates, "ServiceClient.hb");
+            Action<TextWriter, object> model = LoadTemplateFile(hb, templates, "Model.hb");
+            Action<TextWriter, object> methodGroup = LoadTemplateFile(hb, templates, "MethodGroup.hb");
             return new Templates(
                 (writer, m) => serviceClient(writer, m),
                 (writer, m) => model(writer, m),
                 (writer, m) => methodGroup(writer, m));
         }
 
-        private static Action<TextWriter, object> Load(IHandlebars hb, string directory, string fileName)
+        private static Action<TextWriter, object> LoadTemplateFile(IHandlebars hb, string directory, string fileName)
         {
             var dir = new DirectoryInfo(directory);
             var file = new FileInfo(Path.Combine(dir.FullName, fileName));
@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
 
         public abstract (string start, string end) NotNullCheck(TypeReference reference);
 
-        public abstract string HttpMethod(HttpMethod method);
+        public abstract string GetHttpMethodReference(HttpMethod method);
 
         public abstract Templates GetTemplates(IHandlebars hb);
 
@@ -184,46 +184,22 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 return ("", " != default");
             }
 
-            public override string HttpMethod(HttpMethod method)
+            public override string GetHttpMethodReference(HttpMethod method)
             {
-                if (method == System.Net.Http.HttpMethod.Delete)
-                {
-                    return "HttpMethod.Delete";
-                }
-
-                if (method == System.Net.Http.HttpMethod.Get)
-                {
-                    return "HttpMethod.Get";
-                }
-
-                if (method == System.Net.Http.HttpMethod.Head)
-                {
-                    return "HttpMethod.Head";
-                }
-
-                if (method == System.Net.Http.HttpMethod.Options)
-                {
-                    return "HttpMethod.Options";
-                }
-
                 if (string.Equals(method.Method, "PATCH", StringComparison.OrdinalIgnoreCase))
                 {
                     return "new HttpMethod(\"PATCH\")";
                 }
 
-                if (method == System.Net.Http.HttpMethod.Post)
+                if (method == HttpMethod.Delete ||
+                    method == HttpMethod.Get ||
+                    method == HttpMethod.Head ||
+                    method == HttpMethod.Options ||
+                    method == HttpMethod.Post ||
+                    method == HttpMethod.Put ||
+                    method == HttpMethod.Trace)
                 {
-                    return "HttpMethod.Post";
-                }
-
-                if (method == System.Net.Http.HttpMethod.Put)
-                {
-                    return "HttpMethod.Put";
-                }
-
-                if (method == System.Net.Http.HttpMethod.Trace)
-                {
-                    return "HttpMethod.Trace";
+                    return $"HttpMethod.{Helpers.PascalCase(method.Method.AsSpan())}";
                 }
 
                 return $"new HttpMethod(\"{method.Method}\")";

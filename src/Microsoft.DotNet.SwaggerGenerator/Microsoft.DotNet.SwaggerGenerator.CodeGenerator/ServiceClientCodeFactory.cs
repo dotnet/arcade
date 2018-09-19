@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.SwaggerGenerator
                 (writer, context, parameters) =>
                 {
                     var method = (HttpMethod) parameters[0];
-                    writer.WriteSafeString(language.HttpMethod(method));
+                    writer.WriteSafeString(language.GetHttpMethodReference(method));
                 });
 
             hb.RegisterHelper(
