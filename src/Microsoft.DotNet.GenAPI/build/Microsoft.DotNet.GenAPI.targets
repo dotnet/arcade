@@ -82,7 +82,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-      <GenAPICmd>$(ToolHostCmd) "$(ToolsDir)Microsoft.DotNet.GenAPI.exe"</GenAPICmd>
+      <GenAPICmd>$(ToolHostCmd) "$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.GenAPI.exe"</GenAPICmd>
     </PropertyGroup>
 
     <Exec Command="$(GenAPICmd) $(GenAPIArgs)" WorkingDirectory="$(ToolRuntimePath)" />
