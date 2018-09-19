@@ -1,6 +1,15 @@
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <UsingTask TaskName="PrereleaseResolveNuGetPackageAssets" AssemblyFile="$(BuildToolsTaskDir)Microsoft.DotNet.Build.Tasks.dll"/>
-  <UsingTask TaskName="LocatePreviousContract" AssemblyFile="$(BuildToolsTaskDir)Microsoft.DotNet.Build.Tasks.dll"/>
+
+  <PropertyGroup>
+    <!-- If ToolHostCmd is undefined, we default to assuming 'dotnet' is on the path -->
+    <ToolHostCmd Condition="'$(ToolHostCmd)' == ''">dotnet</ToolHostCmd>
+
+    <_ApiCompatPath Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)\..\tools\netcoreapp2.1\Microsoft.DotNet.ApiCompat.dll</_ApiCompatPath>
+    <_ApiCompatPath Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.ApiCompat.exe</_ApiCompatPath>
+
+    <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' == 'core'">$(ToolHostCmd) "$(_ApiCompatPath)"</_ApiCompatCommand>
+    <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' == 'core' AND '$(OS)' == 'Windows_NT'">"$(_ApiCompatPath)"</_ApiCompatCommand>
+    <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' == 'core' AND '$(OS)' != 'Windows_NT'">mono --runtime=v4.0.30319 "$(_ApiCompatPath)"</_ApiCompatCommand>
 
   <PropertyGroup>
     <RunApiCompat Condition="'$(RunApiCompat)'==''">false</RunApiCompat>
@@ -49,14 +58,13 @@
       <ApiCompatExitCode>0</ApiCompatExitCode>
 
       <ApiCompatResponseFile>$(IntermediateOutputPath)apicompat.rsp</ApiCompatResponseFile>
-      <ApiCompatCmd>$(ToolHostCmd) "$(ToolsDir)ApiCompat.exe"</ApiCompatCmd>
     </PropertyGroup>
 
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <WriteLinesToFile File="$(ApiCompatResponseFile)" Lines="$(ApiCompatArgs)" Overwrite="true" />
 
     <Exec Condition="Exists('$(ReferenceAssembly)')"
-          Command="$(ApiCompatCmd) @&quot;$(ApiCompatResponseFile)&quot; $(ApiCompatBaselineAll)"
+          Command="$(_ApiCompatCommand) @&quot;$(ApiCompatResponseFile)&quot; $(ApiCompatBaselineAll)"
           CustomErrorRegularExpression="^[a-zA-Z]+ :"
           StandardOutputImportance="Low"
           IgnoreExitCode="true"
@@ -102,14 +110,13 @@
       <MatchingRefApiCompatExitCode>0</MatchingRefApiCompatExitCode>
 
       <MatchingRefApiCompatResponseFile>$(IntermediateOutputPath)MatchingRefApiCompat_verifyexactref.rsp</MatchingRefApiCompatResponseFile>
-      <MatchingRefApiCompatCmd>$(ToolHostCmd) "$(ToolsDir)ApiCompat.exe"</MatchingRefApiCompatCmd>
     </PropertyGroup>
 
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <WriteLinesToFile File="$(MatchingRefApiCompatResponseFile)" Lines="$(MatchingRefApiCompatArgs)" Overwrite="true" />
 
     <Exec Condition="Exists('$(ReferenceAssembly)')"
-          Command="$(MatchingRefApiCompatCmd) @&quot;$(MatchingRefApiCompatResponseFile)&quot; $(MatchingRefApiCompatBaselineAll)"
+          Command="$(_ApiCompatCommand) @&quot;$(MatchingRefApiCompatResponseFile)&quot; $(MatchingRefApiCompatBaselineAll)"
           CustomErrorRegularExpression="^[a-zA-Z]+ :"
           StandardOutputImportance="Low"
           IgnoreExitCode="true"
