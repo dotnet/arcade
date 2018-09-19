@@ -84,11 +84,7 @@
       <GenAPIArgs Condition="'$(GeneratePlatformNotSupportedAssemblyWithGlobalPrefix)' == 'true'">$(GenAPIArgs) -global</GenAPIArgs>
     </PropertyGroup>
 
-    <PropertyGroup>
-      <GenAPICmd>$(ToolHostCmd) "$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.GenAPI.exe"</GenAPICmd>
-    </PropertyGroup>
-
-    <Exec Command="$(GenAPICmd) $(GenAPIArgs)" WorkingDirectory="$(ToolRuntimePath)" />
+    <Exec Command="$(_GenAPICommand) $(GenAPIArgs)" WorkingDirectory="$(ToolRuntimePath)" />
 
     <ItemGroup>
       <FileWrites Include="$(NotSupportedSourceFile)" />
