@@ -118,7 +118,14 @@ namespace Maestro.Web
                         options.Conventions.AllowAnonymousToPage("/Index");
                     })
                 .AddGitHubWebHooks()
-                .AddApiPagination();
+                .AddApiPagination()
+                .AddCookieTempDataProvider(
+                    options =>
+                    {
+                        // Cookie Policy will not send this cookie unless we mark it as Essential
+                        // The application will not function without this cookie.
+                        options.Cookie.IsEssential = true;
+                    });
 
             services.AddSingleton<IConfiguration>(Configuration);
 

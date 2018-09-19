@@ -38,7 +38,7 @@ Channels have the following characteristics:
 - A build may be applied to multiple channels.
 - Channels may be public or internal.  This differentiates what may be done with outputs from a build.  The following rules must be followed:
     - Builds of internal, non public branches may **not** be assigned to public channels.
-    - Build assets that are assign to an internal channel may not publish/display outputs in a public location (e.g. nuget.org, dotnet.visualstudio.com/public)
+    - Build assets that are assign to an internal channel may not publish/display outputs in a public location (e.g. nuget.org, dev.azure.com/dnceng/public)
 
 #### Subscriptions
 

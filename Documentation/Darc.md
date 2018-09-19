@@ -253,14 +253,14 @@ from the local, get the DependencyItems that match the SHA+repo combination from
 	{
 		name: "DependencyA",
 		version: "1.2.3-45",
-		repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
+		repo-uri: "https://dev.azure.com/devdiv/DevDiv/_git/DotNet-CoreFX-Trusted",
 		sha: "13242134123412341465",
 		type: "product"
 	},
 	{
 		name: "DependencyB",
 		version: "2.200.0",
-		repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreCLR-Trusted",
+		repo-uri: "https://dev.azure.com/devdiv/DevDiv/_git/DotNet-CoreCLR-Trusted",
 		sha: "1234123412341234",
 		type: "toolset"
 	},
@@ -426,19 +426,19 @@ Output:
 ```
 [
 	{
-		repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
+		repo-uri: "https://dev.azure.com/devdiv/DevDiv/_git/DotNet-CoreFX-Trusted",
 		branch: "master",
-		prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88066"
+		prLink: "https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88066"
 	},
 	{
-		repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
+		repo-uri: "https://dev.azure.com/devdiv/DevDiv/_git/DotNet-CoreFX-Trusted",
 		branch: "release/2.1",
-		prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88067"
+		prLink: "https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88067"
 	},
 	{
-		repo-uri: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_git/DotNet-CoreFX-Trusted",
+		repo-uri: "https://dev.azure.com/devdiv/DevDiv/_git/DotNet-CoreFX-Trusted",
 		branch: "release/1.1.0",
-		prLink: "https://devdiv.visualstudio.com/DefaultCollection/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88067"
+		prLink: "https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-CoreFX-Trusted/pullrequest/88067"
 	},
 	...
 ]
