@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.DarcLib
         }
 
         /// <summary>
-        /// Creates a new channel in the maestro database
+        /// Creates a new channel in the Build Asset Registry
         /// </summary>
         /// <param name="name">Name of channel</param>
         /// <param name="classification">Classification of the channel</param>
@@ -66,8 +66,7 @@ namespace Microsoft.DotNet.DarcLib
             Guid subscriptionGuid;
             if (!Guid.TryParse(subscriptionId, out subscriptionGuid))
             {
-                _logger.LogError($"Subscription id '{subscriptionId}' is not a valid guid.");
-                return null;
+                throw new ArgumentException($"Subscription id '{subscriptionId}' is not a valid guid.");
             }
             return await _barClient.Subscriptions.GetSubscriptionAsync(subscriptionGuid);
         }
