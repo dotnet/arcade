@@ -1,20 +1,18 @@
 ﻿using System.Runtime.CompilerServices;
-using Swashbuckle.AspNetCore.Swagger;
 
-namespace SwaggerGenerator
+namespace Microsoft.DotNet.SwaggerGenerator
 {
-    public class AttachedProperty<TKey, TValue>
-        where TKey : class
-        where TValue : class
+    public class AttachedProperty<TKey, TValue> where TKey : class where TValue : class
     {
         private readonly ConditionalWeakTable<TKey, TValue> _table = new ConditionalWeakTable<TKey, TValue>();
 
         public void Set(TKey key, TValue value)
         {
-            if (_table.TryGetValue(key, out var v))
+            if (_table.TryGetValue(key, out TValue v))
             {
                 _table.Remove(key);
             }
+
             _table.Add(key, value);
         }
 

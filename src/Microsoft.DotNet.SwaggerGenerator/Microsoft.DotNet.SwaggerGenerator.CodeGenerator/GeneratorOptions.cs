@@ -1,4 +1,4 @@
-﻿namespace SwaggerGenerator
+﻿namespace Microsoft.DotNet.SwaggerGenerator
 {
     public class GeneratorOptions
     {

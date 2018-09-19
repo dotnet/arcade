@@ -1,11 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace SwaggerGenerator.Modeler
+namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 {
     public class ServiceClientModel
     {
-        public ServiceClientModel(string clientName, string @namespace, string host, string scheme, IEnumerable<TypeModel> types, IEnumerable<MethodGroupModel> methodGroups)
+        public ServiceClientModel(
+            string clientName,
+            string @namespace,
+            string host,
+            string scheme,
+            IEnumerable<TypeModel> types,
+            IEnumerable<MethodGroupModel> methodGroups)
         {
             Name = clientName;
             Namespace = @namespace;

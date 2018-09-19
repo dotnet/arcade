@@ -3,11 +3,17 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
 
-namespace SwaggerGenerator.Modeler
+namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 {
     public class MethodModel
     {
-        public MethodModel(string name, string path, HttpMethod httpMethod, TypeReference responseType, TypeReference errorType, IEnumerable<ParameterModel> parameters)
+        public MethodModel(
+            string name,
+            string path,
+            HttpMethod httpMethod,
+            TypeReference responseType,
+            TypeReference errorType,
+            IEnumerable<ParameterModel> parameters)
         {
             Name = name;
             Path = path;
@@ -33,13 +39,10 @@ namespace SwaggerGenerator.Modeler
             Parameters.Where(p => !(p.Type is TypeReference.ConstantTypeReference)).OrderBy(p => p.Name);
 
         public IEnumerable<ParameterModel> FormalParameters =>
-            NonConstantParameters
-                .OrderBy(p => p.Required ? 0 : 1)
-                .ThenBy(p => p.Name);
+            NonConstantParameters.OrderBy(p => p.Required ? 0 : 1).ThenBy(p => p.Name);
 
-        public IEnumerable<ParameterModel> VerifyableParameters => NonConstantParameters
-            .Where(p => p.Verifyable)
-            .OrderBy(p => p.Name);
+        public IEnumerable<ParameterModel> VerifyableParameters =>
+            NonConstantParameters.Where(p => p.Verifyable).OrderBy(p => p.Name);
 
         public IEnumerable<ParameterModel> PathParameters =>
             Parameters.Where(p => p.Location == ParameterLocation.Path);
@@ -50,7 +53,6 @@ namespace SwaggerGenerator.Modeler
         public IEnumerable<ParameterModel> HeaderParameters =>
             Parameters.Where(p => p.Location == ParameterLocation.Header);
 
-        public ParameterModel BodyParameter =>
-            Parameters.SingleOrDefault(p => p.Location == ParameterLocation.Body);
+        public ParameterModel BodyParameter => Parameters.SingleOrDefault(p => p.Location == ParameterLocation.Body);
     }
 }

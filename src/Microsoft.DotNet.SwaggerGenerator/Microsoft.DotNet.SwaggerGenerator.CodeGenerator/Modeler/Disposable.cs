@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SwaggerGenerator.Modeler
+namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 {
     public class Disposable : IDisposable
     {
@@ -11,6 +11,11 @@ namespace SwaggerGenerator.Modeler
             _onDispose = onDispose;
         }
 
+        public void Dispose()
+        {
+            _onDispose();
+        }
+
         public static IDisposable Create(Action onDispose)
         {
             if (onDispose == null)
@@ -19,11 +24,6 @@ namespace SwaggerGenerator.Modeler
             }
 
             return new Disposable(onDispose);
-        }
-
-        public void Dispose()
-        {
-            _onDispose();
         }
     }
 }

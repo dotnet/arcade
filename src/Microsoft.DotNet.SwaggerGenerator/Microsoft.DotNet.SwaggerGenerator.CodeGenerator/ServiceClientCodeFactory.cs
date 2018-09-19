@@ -4,25 +4,23 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using HandlebarsDotNet;
-using SwaggerGenerator.csharp;
-using SwaggerGenerator.Languages;
-using SwaggerGenerator.Modeler;
+using Microsoft.DotNet.SwaggerGenerator.Languages;
+using Microsoft.DotNet.SwaggerGenerator.Modeler;
 
-namespace SwaggerGenerator
+namespace Microsoft.DotNet.SwaggerGenerator
 {
     public class ServiceClientCodeFactory
     {
         public List<CodeFile> GenerateCode(ServiceClientModel model, GeneratorOptions options)
         {
-            var language = Language.Get(options.LanguageName);
+            Language language = Language.Get(options.LanguageName);
 
-            var hb = Handlebars.Create();
+            IHandlebars hb = Handlebars.Create();
 
             RegisterHelpers(hb, language, options);
 
-            var templates = language.GetTemplates(hb);
+            Templates templates = language.GetTemplates(hb);
 
             var result = new List<CodeFile>();
 
@@ -32,7 +30,7 @@ namespace SwaggerGenerator
                 result.Add(new CodeFile(options.ClientName + language.Extension, writer.ToString()));
             }
 
-            foreach (var type in model.Types)
+            foreach (TypeModel type in model.Types)
             {
                 using (var writer = new StringWriter())
                 {
@@ -41,7 +39,7 @@ namespace SwaggerGenerator
                 }
             }
 
-            foreach (var group in model.MethodGroups)
+            foreach (MethodGroupModel group in model.MethodGroups)
             {
                 using (var writer = new StringWriter())
                 {
@@ -55,56 +53,59 @@ namespace SwaggerGenerator
 
         private void RegisterHelpers(IHandlebars hb, Language language, GeneratorOptions options)
         {
-            hb.RegisterHelper("pascalCase",
+            hb.RegisterHelper(
+                "pascalCase",
                 (writer, context, parameters) =>
                 {
-                    writer.Write(Helpers.PascalCase(((string)parameters[0]).AsSpan()));
+                    writer.Write(Helpers.PascalCase(((string) parameters[0]).AsSpan()));
                 });
-            hb.RegisterHelper("camelCase",
+            hb.RegisterHelper(
+                "camelCase",
                 (writer, context, parameters) =>
                 {
-                    writer.Write(Helpers.CamelCase(((string)parameters[0]).AsSpan()));
+                    writer.Write(Helpers.CamelCase(((string) parameters[0]).AsSpan()));
                 });
-            hb.RegisterHelper("pascalCaseNs",
+            hb.RegisterHelper(
+                "pascalCaseNs",
                 (writer, context, parameters) =>
                 {
-                    var nsParts = ((string) parameters[0]).Split('.');
-                    var ns = string.Join(".", nsParts.Select(p => Helpers.PascalCase(p.AsSpan())));
+                    string[] nsParts = ((string) parameters[0]).Split('.');
+                    string ns = string.Join(".", nsParts.Select(p => Helpers.PascalCase(p.AsSpan())));
                     writer.Write(ns);
                 });
-            hb.RegisterHelper("clientName",
-                (writer, context, parameters) =>
-                {
-                    writer.Write(options.ClientName);
-                });
-            hb.RegisterHelper("typeRef",
+            hb.RegisterHelper("clientName", (writer, context, parameters) => { writer.Write(options.ClientName); });
+            hb.RegisterHelper(
+                "typeRef",
                 (writer, context, parameters) =>
                 {
                     var reference = (TypeReference) parameters[0];
                     writer.WriteSafeString(language.ResolveReference(reference));
                 });
-            hb.RegisterHelper("method",
+            hb.RegisterHelper(
+                "method",
                 (writer, context, parameters) =>
                 {
-                    var method = (HttpMethod)parameters[0];
+                    var method = (HttpMethod) parameters[0];
                     writer.WriteSafeString(language.HttpMethod(method));
                 });
 
-            hb.RegisterHelper("nullCheck",
+            hb.RegisterHelper(
+                "nullCheck",
                 (writer, opts, context, parameters) =>
                 {
                     var typeReference = (TypeReference) parameters[0];
-                    var (start, end) = language.NullCheck(typeReference);
+                    (string start, string end) = language.NullCheck(typeReference);
                     writer.WriteSafeString(start);
                     opts.Template(writer, context);
                     writer.WriteSafeString(end);
                 });
 
-            hb.RegisterHelper("notNullCheck",
+            hb.RegisterHelper(
+                "notNullCheck",
                 (writer, opts, context, parameters) =>
                 {
                     var typeReference = (TypeReference) parameters[0];
-                    var (start, end) = language.NotNullCheck(typeReference);
+                    (string start, string end) = language.NotNullCheck(typeReference);
                     writer.WriteSafeString(start);
                     opts.Template(writer, context);
                     writer.WriteSafeString(end);

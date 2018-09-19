@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace SwaggerGenerator.Modeler
+namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 {
     public class MethodGroupModel
     {

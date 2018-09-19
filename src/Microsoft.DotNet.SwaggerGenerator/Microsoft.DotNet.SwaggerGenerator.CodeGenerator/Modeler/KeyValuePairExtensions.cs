@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace SwaggerGenerator.Modeler
+namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 {
     public static class KeyValuePairExtensions
     {

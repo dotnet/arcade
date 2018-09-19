@@ -1,12 +1,64 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace SwaggerGenerator.Modeler
+namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 {
     public abstract class TypeReference
     {
+        private static readonly ConditionalWeakTable<TypeReference, TypeReference> ArrayTypeReferences =
+            new ConditionalWeakTable<TypeReference, TypeReference>();
+
+        private static readonly ConditionalWeakTable<TypeModel, TypeReference> TypeModelReferences =
+            new ConditionalWeakTable<TypeModel, TypeReference>();
+
+        public static readonly TypeReference Boolean = new PrimitiveTypeReference("boolean");
+        public static readonly TypeReference Int32 = new PrimitiveTypeReference("int32");
+        public static readonly TypeReference Int64 = new PrimitiveTypeReference("int64");
+        public static readonly TypeReference Float = new PrimitiveTypeReference("float");
+        public static readonly TypeReference Double = new PrimitiveTypeReference("double");
+        public static readonly TypeReference String = new PrimitiveTypeReference("string");
+        public static readonly TypeReference Byte = new PrimitiveTypeReference("byte");
+        public static readonly TypeReference Date = new PrimitiveTypeReference("date");
+        public static readonly TypeReference DateTime = new PrimitiveTypeReference("date-time");
+        public static readonly TypeReference Void = new PrimitiveTypeReference("void");
+        public static readonly TypeReference Any = new PrimitiveTypeReference("any");
         public abstract string DisplayString { get; }
 
-        public override string ToString() => DisplayString;
+        public override string ToString()
+        {
+            return DisplayString;
+        }
+
+        public static TypeReference Array(TypeReference baseType)
+        {
+            if (!ArrayTypeReferences.TryGetValue(baseType, out TypeReference reference))
+            {
+                reference = new ArrayTypeReference(baseType);
+                ArrayTypeReferences.Add(baseType, reference);
+            }
+
+            return reference;
+        }
+
+        public static TypeReference Object(TypeModel typeModel)
+        {
+            if (!TypeModelReferences.TryGetValue(typeModel, out TypeReference reference))
+            {
+                reference = new TypeModelReference(typeModel);
+                TypeModelReferences.Add(typeModel, reference);
+            }
+
+            return reference;
+        }
+
+        public static TypeReference Constant(string value)
+        {
+            return new ConstantTypeReference(value);
+        }
+
+        public static TypeReference Dictionary(TypeReference valueType)
+        {
+            return new DictionaryTypeReference(valueType);
+        }
 
         public class ConstantTypeReference : TypeReference
         {
@@ -64,55 +116,5 @@ namespace SwaggerGenerator.Modeler
 
             public override string DisplayString { get; }
         }
-
-        private static readonly ConditionalWeakTable<TypeReference, TypeReference> ArrayTypeReferences =
-            new ConditionalWeakTable<TypeReference, TypeReference>();
-
-        public static TypeReference Array(TypeReference baseType)
-        {
-            if (!ArrayTypeReferences.TryGetValue(baseType, out TypeReference reference))
-            {
-                reference = new ArrayTypeReference(baseType);
-                ArrayTypeReferences.Add(baseType, reference);
-            }
-
-            return reference;
-        }
-
-        private static readonly ConditionalWeakTable<TypeModel, TypeReference> TypeModelReferences =
-            new ConditionalWeakTable<TypeModel, TypeReference>();
-
-        public static TypeReference Object(TypeModel typeModel)
-        {
-            if (!TypeModelReferences.TryGetValue(typeModel, out TypeReference reference))
-            {
-                reference = new TypeModelReference(typeModel);
-                TypeModelReferences.Add(typeModel, reference);
-            }
-
-            return reference;
-        }
-
-        public static TypeReference Constant(string value)
-        {
-            return new ConstantTypeReference(value);
-        }
-
-        public static TypeReference Dictionary(TypeReference valueType)
-        {
-            return new DictionaryTypeReference(valueType);
-        }
-
-        public static readonly TypeReference Boolean = new PrimitiveTypeReference("boolean");
-        public static readonly TypeReference Int32 = new PrimitiveTypeReference("int32");
-        public static readonly TypeReference Int64 = new PrimitiveTypeReference("int64");
-        public static readonly TypeReference Float = new PrimitiveTypeReference("float");
-        public static readonly TypeReference Double = new PrimitiveTypeReference("double");
-        public static readonly TypeReference String = new PrimitiveTypeReference("string");
-        public static readonly TypeReference Byte = new PrimitiveTypeReference("byte");
-        public static readonly TypeReference Date = new PrimitiveTypeReference("date");
-        public static readonly TypeReference DateTime = new PrimitiveTypeReference("date-time");
-        public static readonly TypeReference Void = new PrimitiveTypeReference("void");
-        public static readonly TypeReference Any = new PrimitiveTypeReference("any");
     }
 }

@@ -3,37 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using HandlebarsDotNet;
-using SwaggerGenerator.csharp;
-using SwaggerGenerator.Modeler;
+using Microsoft.DotNet.SwaggerGenerator.Modeler;
 
-namespace SwaggerGenerator.Languages
+namespace Microsoft.DotNet.SwaggerGenerator.Languages
 {
     public class Templates
     {
-        public static Templates Load(string languageName, IHandlebars hb)
-        {
-            string templates = Path.Combine(Path.GetDirectoryName(typeof(Templates).Assembly.Location), "Languages", languageName);
-            var serviceClient = Load(hb, templates, "ServiceClient.hb");
-            var model = Load(hb, templates, "Model.hb");
-            var methodGroup = Load(hb, templates, "MethodGroup.hb");
-            return new Templates(
-                (writer, m) => serviceClient(writer, m),
-                (writer, m) => model(writer, m),
-                (writer, m) => methodGroup(writer, m)
-                );
-        }
-
-        private static Action<TextWriter, object> Load(IHandlebars hb, string directory, string fileName)
-        {
-            var dir = new DirectoryInfo(directory);
-            var file = new FileInfo(Path.Combine(dir.FullName, fileName));
-            using (var reader = file.OpenText())
-            {
-                return hb.Compile(reader);
-            }
-        }
-
-        private Templates(Action<TextWriter, ServiceClientModel> serviceClient, Action<TextWriter, TypeModel> model, Action<TextWriter, MethodGroupModel> methodGroup)
+        private Templates(
+            Action<TextWriter, ServiceClientModel> serviceClient,
+            Action<TextWriter, TypeModel> model,
+            Action<TextWriter, MethodGroupModel> methodGroup)
         {
             ServiceClient = serviceClient;
             Model = model;
@@ -43,6 +22,31 @@ namespace SwaggerGenerator.Languages
         public Action<TextWriter, ServiceClientModel> ServiceClient { get; }
         public Action<TextWriter, TypeModel> Model { get; }
         public Action<TextWriter, MethodGroupModel> MethodGroup { get; }
+
+        public static Templates Load(string languageName, IHandlebars hb)
+        {
+            string templates = Path.Combine(
+                Path.GetDirectoryName(typeof(Templates).Assembly.Location),
+                "Languages",
+                languageName);
+            Action<TextWriter, object> serviceClient = Load(hb, templates, "ServiceClient.hb");
+            Action<TextWriter, object> model = Load(hb, templates, "Model.hb");
+            Action<TextWriter, object> methodGroup = Load(hb, templates, "MethodGroup.hb");
+            return new Templates(
+                (writer, m) => serviceClient(writer, m),
+                (writer, m) => model(writer, m),
+                (writer, m) => methodGroup(writer, m));
+        }
+
+        private static Action<TextWriter, object> Load(IHandlebars hb, string directory, string fileName)
+        {
+            var dir = new DirectoryInfo(directory);
+            var file = new FileInfo(Path.Combine(dir.FullName, fileName));
+            using (StreamReader reader = file.OpenText())
+            {
+                return hb.Compile(reader);
+            }
+        }
     }
 
     public abstract class Language
@@ -56,6 +60,8 @@ namespace SwaggerGenerator.Languages
                 ["csharp"] = new CSharp(),
             };
         }
+
+        public abstract string Extension { get; }
 
         public static Language Get(string name)
         {
@@ -71,13 +77,13 @@ namespace SwaggerGenerator.Languages
 
         public abstract string HttpMethod(HttpMethod method);
 
-        public abstract string Extension { get; }
-
         public abstract Templates GetTemplates(IHandlebars hb);
 
 
         private class CSharp : Language
         {
+            public override string Extension => ".cs";
+
             public override string ResolveReference(TypeReference reference)
             {
                 if (reference is TypeReference.ConstantTypeReference)
@@ -184,30 +190,37 @@ namespace SwaggerGenerator.Languages
                 {
                     return "HttpMethod.Delete";
                 }
+
                 if (method == System.Net.Http.HttpMethod.Get)
                 {
                     return "HttpMethod.Get";
                 }
+
                 if (method == System.Net.Http.HttpMethod.Head)
                 {
                     return "HttpMethod.Head";
                 }
+
                 if (method == System.Net.Http.HttpMethod.Options)
                 {
                     return "HttpMethod.Options";
                 }
+
                 if (string.Equals(method.Method, "PATCH", StringComparison.OrdinalIgnoreCase))
                 {
                     return "new HttpMethod(\"PATCH\")";
                 }
+
                 if (method == System.Net.Http.HttpMethod.Post)
                 {
                     return "HttpMethod.Post";
                 }
+
                 if (method == System.Net.Http.HttpMethod.Put)
                 {
                     return "HttpMethod.Put";
                 }
+
                 if (method == System.Net.Http.HttpMethod.Trace)
                 {
                     return "HttpMethod.Trace";
@@ -215,8 +228,6 @@ namespace SwaggerGenerator.Languages
 
                 return $"new HttpMethod(\"{method.Method}\")";
             }
-
-            public override string Extension => ".cs";
 
             public override Templates GetTemplates(IHandlebars hb)
             {

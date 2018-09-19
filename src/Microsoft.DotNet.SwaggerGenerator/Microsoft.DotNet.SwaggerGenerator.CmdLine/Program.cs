@@ -1,23 +1,15 @@
-﻿using Newtonsoft.Json;
-using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
-using HandlebarsDotNet;
+using Microsoft.DotNet.SwaggerGenerator.Modeler;
 using Mono.Options;
-using SwaggerGenerator.csharp;
-using SwaggerGenerator.Languages;
-using SwaggerGenerator.Modeler;
+using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.Swagger;
 
-namespace SwaggerGenerator
+namespace Microsoft.DotNet.SwaggerGenerator.CmdLine
 {
     internal static class Program
     {
@@ -36,8 +28,8 @@ namespace SwaggerGenerator
         {
             string input = null;
             string output = null;
-            bool version = false;
-            bool showHelp = false;
+            var version = false;
+            var showHelp = false;
             var generatorOptions = new GeneratorOptions
             {
                 LanguageName = "csharp",
@@ -56,11 +48,11 @@ namespace SwaggerGenerator
                 {"h|?|help", "Display this help message.", h => showHelp = h != null},
             };
 
-            var arguments = options.Parse(args);
+            List<string> arguments = options.Parse(args);
 
             if (version)
             {
-                var versionString = Assembly.GetEntryAssembly()
+                string versionString = Assembly.GetEntryAssembly()
                     .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                     .InformationalVersion;
                 Console.WriteLine(versionString);
@@ -86,17 +78,17 @@ namespace SwaggerGenerator
             SwaggerDocument document = await GetSwaggerDocument(input);
 
             var generator = new ServiceClientModelFactory(generatorOptions);
-            var model = generator.Create(document);
+            ServiceClientModel model = generator.Create(document);
 
             var codeFactory = new ServiceClientCodeFactory();
-            var code = codeFactory.GenerateCode(model, generatorOptions);
+            List<CodeFile> code = codeFactory.GenerateCode(model, generatorOptions);
 
             var outputDirectory = new DirectoryInfo(output);
             outputDirectory.Create();
 
-            foreach (var (path, contents) in code)
+            foreach ((string path, string contents) in code)
             {
-                var fullPath = Path.Combine(outputDirectory.FullName, path);
+                string fullPath = Path.Combine(outputDirectory.FullName, path);
                 var file = new FileInfo(fullPath);
                 file.Directory.Create();
                 File.WriteAllText(file.FullName, contents);
@@ -109,7 +101,7 @@ namespace SwaggerGenerator
         {
             using (var client = new HttpClient())
             {
-                using (var docStream = await client.GetStreamAsync(input))
+                using (Stream docStream = await client.GetStreamAsync(input))
                 using (var reader = new StreamReader(docStream))
                 using (var jsonReader = new JsonTextReader(reader))
                 {

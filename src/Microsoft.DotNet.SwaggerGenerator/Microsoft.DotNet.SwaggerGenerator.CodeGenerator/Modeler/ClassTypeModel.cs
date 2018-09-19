@@ -2,11 +2,15 @@
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace SwaggerGenerator.Modeler
+namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 {
     public class ClassTypeModel : TypeModel
     {
-        public ClassTypeModel(string name, string @namespace, IEnumerable<PropertyModel> properties, TypeReference additionalProperties)
+        public ClassTypeModel(
+            string name,
+            string @namespace,
+            IEnumerable<PropertyModel> properties,
+            TypeReference additionalProperties)
         {
             Name = name;
             Namespace = @namespace;
@@ -23,8 +27,7 @@ namespace SwaggerGenerator.Modeler
         public IEnumerable<PropertyModel> RequiredAndReadOnlyProperties =>
             Properties.Where(p => p.Required || p.ReadOnly);
 
-        public IEnumerable<PropertyModel> RequiredProperties =>
-            Properties.Where(p => p.Required);
+        public IEnumerable<PropertyModel> RequiredProperties => Properties.Where(p => p.Required);
 
         public bool Verifyable => Properties.Any(p => p.Required);
     }

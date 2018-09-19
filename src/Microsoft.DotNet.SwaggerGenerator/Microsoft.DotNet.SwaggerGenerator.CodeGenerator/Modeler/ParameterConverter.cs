@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Swashbuckle.AspNetCore.Swagger;
 
-namespace SwaggerGenerator.Modeler
+namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 {
     public class ParameterConverter : JsonConverter
     {
@@ -15,9 +15,13 @@ namespace SwaggerGenerator.Modeler
             throw new NotImplementedException();
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer)
         {
-            var jsonObject = JObject.Load(reader);
+            JObject jsonObject = JObject.Load(reader);
             IParameter parameter = null;
             if (jsonObject["in"].ToString() == "body")
             {
@@ -27,6 +31,7 @@ namespace SwaggerGenerator.Modeler
             {
                 parameter = new NonBodyParameter();
             }
+
             serializer.Populate(jsonObject.CreateReader(), parameter);
             return parameter;
         }

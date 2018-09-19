@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Swashbuckle.AspNetCore.Swagger;
 
-namespace SwaggerGenerator
+namespace Microsoft.DotNet.SwaggerGenerator
 {
     public class SecuritySchemeConverter : JsonConverter
     {
@@ -15,9 +15,13 @@ namespace SwaggerGenerator
             throw new NotImplementedException();
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(
+            JsonReader reader,
+            Type objectType,
+            object existingValue,
+            JsonSerializer serializer)
         {
-            var jsonObject = JObject.Load(reader);
+            JObject jsonObject = JObject.Load(reader);
             SecurityScheme scheme = null;
             string type = jsonObject["type"].ToString();
             switch (type)
@@ -34,6 +38,7 @@ namespace SwaggerGenerator
                 default:
                     throw new ArgumentException($"Unexpected security scheme '{type}'");
             }
+
             serializer.Populate(jsonObject.CreateReader(), scheme);
             return scheme;
         }

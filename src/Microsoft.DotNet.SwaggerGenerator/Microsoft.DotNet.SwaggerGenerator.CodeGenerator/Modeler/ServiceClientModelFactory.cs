@@ -5,24 +5,31 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
-using SwaggerGenerator.csharp;
 using Swashbuckle.AspNetCore.Swagger;
 
-namespace SwaggerGenerator.Modeler
+namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 {
     public class ServiceClientModelFactory
     {
-        private readonly List<TypeModel> Types = new List<TypeModel>();
+        public static readonly AttachedProperty<Schema, string> SchemaName = new AttachedProperty<Schema, string>();
+
+        public static readonly AttachedProperty<Schema, Schema> ResolvedReference =
+            new AttachedProperty<Schema, Schema>();
+
+        private static readonly Regex ReferenceRegex = new Regex("^#/definitions/(?<name>.+)$");
+
+
+        private static readonly AttachedProperty<Schema, TypeModel> TypeModel =
+            new AttachedProperty<Schema, TypeModel>();
+
+        private readonly Dictionary<string, EnumTypeModel> _enumTypeModels = new Dictionary<string, EnumTypeModel>();
 
         private readonly GeneratorOptions _generatorOptions;
 
-        private readonly AsyncLocal<Stack<string>> _typeNameStack = new AsyncLocal<Stack<string>>();
-
         private readonly AsyncLocal<Stack<string>> _propertyNameStack = new AsyncLocal<Stack<string>>();
 
-        private string CurrentTypeName => _typeNameStack.Value.Peek();
-
-        private string CurrentPropertyName => _propertyNameStack.Value.Peek();
+        private readonly AsyncLocal<Stack<string>> _typeNameStack = new AsyncLocal<Stack<string>>();
+        private readonly List<TypeModel> Types = new List<TypeModel>();
 
         public ServiceClientModelFactory(GeneratorOptions options)
         {
@@ -31,13 +38,9 @@ namespace SwaggerGenerator.Modeler
             _propertyNameStack.Value = new Stack<string>();
         }
 
-        public static readonly AttachedProperty<Schema, string> SchemaName =
-            new AttachedProperty<Schema, string>();
+        private string CurrentTypeName => _typeNameStack.Value.Peek();
 
-        public static readonly AttachedProperty<Schema, Schema> ResolvedReference =
-            new AttachedProperty<Schema, Schema>();
-
-        private static readonly Regex ReferenceRegex = new Regex("^#/definitions/(?<name>.+)$");
+        private string CurrentPropertyName => _propertyNameStack.Value.Peek();
 
         private static void ResolveReferences(SwaggerDocument document)
         {
@@ -62,8 +65,8 @@ namespace SwaggerGenerator.Modeler
                 Match match = ReferenceRegex.Match(schema.Ref);
                 if (match.Success)
                 {
-                    var name = match.Groups["name"].ToString();
-                    var resolved = document.Definitions[name];
+                    string name = match.Groups["name"].ToString();
+                    Schema resolved = document.Definitions[name];
                     SchemaName.Set(resolved, name);
                     ResolvedReference.Set(schema, resolved);
                 }
@@ -73,21 +76,21 @@ namespace SwaggerGenerator.Modeler
                 }
             }
 
-            foreach (var (defName, scheme) in document.Definitions)
+            foreach ((string defName, Schema scheme) in document.Definitions)
             {
-                foreach (var (propName, prop) in scheme.Properties)
+                foreach ((string propName, Schema prop) in scheme.Properties)
                 {
                     MatchRef(prop);
                 }
             }
 
-            foreach (var (path, pathItem) in document.Paths)
+            foreach ((string path, PathItem pathItem) in document.Paths)
             {
-                foreach (var (method, operation) in GetOperations(pathItem))
+                foreach ((string method, Operation operation) in GetOperations(pathItem))
                 {
                     if (operation.Parameters != null)
                     {
-                        foreach (var parameter in operation.Parameters)
+                        foreach (IParameter parameter in operation.Parameters)
                         {
                             if (parameter is BodyParameter bodyParameter)
                             {
@@ -96,7 +99,7 @@ namespace SwaggerGenerator.Modeler
                         }
                     }
 
-                    foreach (var (status, response) in operation.Responses)
+                    foreach ((string status, Response response) in operation.Responses)
                     {
                         MatchRef(response.Schema);
                     }
@@ -107,74 +110,109 @@ namespace SwaggerGenerator.Modeler
         public static IEnumerable<(string method, Operation operation)> GetOperations(PathItem pathItem)
         {
             if (pathItem.Get != null)
+            {
                 yield return ("get", pathItem.Get);
+            }
+
             if (pathItem.Put != null)
+            {
                 yield return ("put", pathItem.Put);
+            }
+
             if (pathItem.Post != null)
+            {
                 yield return ("post", pathItem.Post);
+            }
+
             if (pathItem.Delete != null)
+            {
                 yield return ("delete", pathItem.Delete);
+            }
+
             if (pathItem.Options != null)
+            {
                 yield return ("options", pathItem.Options);
+            }
+
             if (pathItem.Head != null)
+            {
                 yield return ("head", pathItem.Head);
+            }
+
             if (pathItem.Patch != null)
+            {
                 yield return ("patch", pathItem.Patch);
+            }
         }
 
         private IDisposable WithTypeName(string name)
         {
             _typeNameStack.Value.Push(name);
-            return Disposable.Create(() =>
-            {
-                if (_typeNameStack.Value.Pop() != name)
+            return Disposable.Create(
+                () =>
                 {
-                    throw new InvalidOperationException($"Type name '{name}' popped when it wasn't the top of the stack.");
-                }
-            });
+                    if (_typeNameStack.Value.Pop() != name)
+                    {
+                        throw new InvalidOperationException(
+                            $"Type name '{name}' popped when it wasn't the top of the stack.");
+                    }
+                });
         }
 
         private IDisposable WithPropertyName(string name)
         {
             _propertyNameStack.Value.Push(name);
-            return Disposable.Create(() =>
-            {
-                if (_propertyNameStack.Value.Pop() != name)
+            return Disposable.Create(
+                () =>
                 {
-                    throw new InvalidOperationException($"Property name '{name}' popped when it wasn't the top of the stack.");
-                }
-            });
+                    if (_propertyNameStack.Value.Pop() != name)
+                    {
+                        throw new InvalidOperationException(
+                            $"Property name '{name}' popped when it wasn't the top of the stack.");
+                    }
+                });
         }
 
         public ServiceClientModel Create(SwaggerDocument document)
         {
             ResolveReferences(document);
 
-            var options = _generatorOptions;
+            GeneratorOptions options = _generatorOptions;
             ImmutableList<MethodGroupModel> methodGroups = document.Paths
                 .SelectMany(p => GetOperations(p.Value).Select(o => (path: p.Key, o.method, o.operation)))
                 .ToLookup(t => t.Item3.Tags.FirstOrDefault())
                 .Select(g => CreateMethodGroupModel(g.Key, g))
                 .ToImmutableList();
-            return new ServiceClientModel(options.ClientName, options.Namespace, document.Host, document.Schemes.First(), Types.Concat(_enumTypeModels.Values).OrderBy(m => m.Name), methodGroups);
+            return new ServiceClientModel(
+                options.ClientName,
+                options.Namespace,
+                document.Host,
+                document.Schemes.First(),
+                Types.Concat(_enumTypeModels.Values).OrderBy(m => m.Name),
+                methodGroups);
         }
 
-        private MethodGroupModel CreateMethodGroupModel(string name, IEnumerable<(string path, string method, Operation operation)> operations)
+        private MethodGroupModel CreateMethodGroupModel(
+            string name,
+            IEnumerable<(string path, string method, Operation operation)> operations)
         {
             var methods = new List<MethodModel>();
-            foreach (var (path, method, operation) in operations)
+            foreach ((string path, string method, Operation operation) in operations)
             {
                 methods.Add(CreateMethodModel(path, method, operation));
             }
+
             return new MethodGroupModel(name, _generatorOptions.Namespace, methods);
         }
 
         private MethodModel CreateMethodModel(string path, string method, Operation operation)
         {
-            var parameters = (IList<ParameterModel>)operation.Parameters?.Select(CreateParameterModel).ToList() ?? Array.Empty<ParameterModel>();
+            IList<ParameterModel> parameters =
+                (IList<ParameterModel>) operation.Parameters?.Select(CreateParameterModel).ToList() ??
+                Array.Empty<ParameterModel>();
 
-            var name = operation.OperationId;
-            var firstTag = operation.Tags.FirstOrDefault();
+            string name = operation.OperationId;
+            string firstTag = operation.Tags.FirstOrDefault();
             if (firstTag != null && name.StartsWith(firstTag))
             {
                 name = name.Substring(firstTag.Length);
@@ -182,12 +220,11 @@ namespace SwaggerGenerator.Modeler
 
             name = name.TrimStart('_');
 
-            var errorType = operation.Responses.TryGetValue("default", out Response errorResponse)
+            TypeReference errorType = operation.Responses.TryGetValue("default", out Response errorResponse)
                 ? ResolveType(errorResponse.Schema, name)
                 : null;
 
-            var responseType = operation.Responses
-                .Where(r => r.Key.StartsWith("2"))
+            TypeReference responseType = operation.Responses.Where(r => r.Key.StartsWith("2"))
                 .Select(r => ResolveType(r.Value.Schema, name))
                 .FirstOrDefault();
 
@@ -311,13 +348,15 @@ namespace SwaggerGenerator.Modeler
                     {
                         if (enumeration.Count == 1)
                         {
-                            return TypeReference.Constant((string)enumeration[0]);
+                            return TypeReference.Constant((string) enumeration[0]);
                         }
 
-                        var enumName = $"{Helpers.PascalCase(CurrentTypeName.AsSpan())}{Helpers.PascalCase(CurrentPropertyName.AsSpan())}";
+                        string enumName =
+                            $"{Helpers.PascalCase(CurrentTypeName.AsSpan())}{Helpers.PascalCase(CurrentPropertyName.AsSpan())}";
 
                         return TypeReference.Object(ResolveEnumTypeModel(enumeration, enumName));
                     }
+
                     switch (format)
                     {
                         case "byte":
@@ -336,6 +375,7 @@ namespace SwaggerGenerator.Modeler
                     {
                         return TypeReference.Dictionary(ResolveType(s.AdditionalProperties));
                     }
+
                     return TypeReference.Object(ResolveTypeModel(s));
                 case null:
                     return TypeReference.Any;
@@ -345,8 +385,6 @@ namespace SwaggerGenerator.Modeler
             }
         }
 
-        private readonly Dictionary<string, EnumTypeModel> _enumTypeModels = new Dictionary<string, EnumTypeModel>();
-
         private TypeModel ResolveEnumTypeModel(IList<object> enumeration, string enumName)
         {
             if (!_enumTypeModels.TryGetValue(enumName, out EnumTypeModel value))
@@ -354,7 +392,7 @@ namespace SwaggerGenerator.Modeler
                 _enumTypeModels[enumName] = value = new EnumTypeModel(
                     enumName,
                     _generatorOptions.Namespace,
-                    enumeration.Select(v => (string)v));
+                    enumeration.Select(v => (string) v));
             }
 
             return value;
@@ -379,10 +417,6 @@ namespace SwaggerGenerator.Modeler
             return ResolveType((object) schema);
         }
 
-
-        private static readonly AttachedProperty<Schema, TypeModel> TypeModel =
-            new AttachedProperty<Schema, TypeModel>();
-
         private TypeModel ResolveTypeModel(Schema schema)
         {
             if (schema.Type != "object")
@@ -395,7 +429,7 @@ namespace SwaggerGenerator.Modeler
 
         private TypeModel CreateTypeModel(Schema schema)
         {
-            var name = SchemaName.Get(schema);
+            string name = SchemaName.Get(schema);
             if (string.IsNullOrEmpty(name))
             {
                 name = Helpers.PascalCase((CurrentTypeName + "-" + CurrentPropertyName).AsSpan());
@@ -403,8 +437,9 @@ namespace SwaggerGenerator.Modeler
 
             using (WithTypeName(name))
             {
-                var requiredProperties = schema.Required != null ? new HashSet<string>(schema.Required) : null;
-                var properties = schema.Properties != null
+                HashSet<string> requiredProperties =
+                    schema.Required != null ? new HashSet<string>(schema.Required) : null;
+                IEnumerable<PropertyModel> properties = schema.Properties != null
                     ? schema.Properties.Select(
                         p =>
                         {
@@ -424,6 +459,7 @@ namespace SwaggerGenerator.Modeler
                         ? ResolveType(schema.AdditionalProperties)
                         : null;
                 }
+
                 var model = new ClassTypeModel(name, _generatorOptions.Namespace, properties, additionalProperties);
                 Types.Add(model);
                 return model;

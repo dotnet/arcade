@@ -1,10 +1,10 @@
-﻿using Newtonsoft.Json;
-using SwaggerGenerator.Modeler;
-using Swashbuckle.AspNetCore.Swagger;
-using System;
+﻿using System;
 using System.Text;
+using Microsoft.DotNet.SwaggerGenerator.Modeler;
+using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.Swagger;
 
-namespace SwaggerGenerator.csharp
+namespace Microsoft.DotNet.SwaggerGenerator
 {
     public static class Helpers
     {
@@ -15,8 +15,7 @@ namespace SwaggerGenerator.csharp
             {
                 if (wordStart.HasValue)
                 {
-                    if (!char.IsLetterOrDigit(value[idx]) ||
-                        char.IsUpper(value[idx]))
+                    if (!char.IsLetterOrDigit(value[idx]) || char.IsUpper(value[idx]))
                     {
                         pos = idx;
                         return value.Slice(wordStart.Value, idx - wordStart.Value);
@@ -45,10 +44,10 @@ namespace SwaggerGenerator.csharp
         {
             var builder = new StringBuilder();
             ReadOnlySpan<char> word;
-            int pos = 0;
+            var pos = 0;
             while ((word = GetNextWord(value, ref pos)).Length != 0)
             {
-                for (int i = 0; i < word.Length; i++)
+                for (var i = 0; i < word.Length; i++)
                 {
                     char c;
                     if (i == 0)
@@ -71,11 +70,11 @@ namespace SwaggerGenerator.csharp
         {
             var builder = new StringBuilder();
             ReadOnlySpan<char> word;
-            int pos = 0;
-            bool first = true;
+            var pos = 0;
+            var first = true;
             while ((word = GetNextWord(value, ref pos)).Length != 0)
             {
-                for (int i = 0; i < word.Length; i++)
+                for (var i = 0; i < word.Length; i++)
                 {
                     char c;
                     if (i == 0 && !first)
@@ -104,12 +103,8 @@ namespace SwaggerGenerator.csharp
             var serializer = new JsonSerializer
             {
                 ContractResolver = new SwaggerContractResolver(new JsonSerializerSettings()),
-                Converters =
-                        {
-                            new ParameterConverter(),
-                            new SecuritySchemeConverter()
-                        },
-                MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
+                Converters = {new ParameterConverter(), new SecuritySchemeConverter()},
+                MetadataPropertyHandling = MetadataPropertyHandling.Ignore
             };
             return serializer.Deserialize<SwaggerDocument>(reader);
         }

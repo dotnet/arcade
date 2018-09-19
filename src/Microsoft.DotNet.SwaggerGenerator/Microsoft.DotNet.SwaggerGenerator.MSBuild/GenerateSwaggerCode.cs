@@ -5,16 +5,14 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.SwaggerGenerator.Modeler;
 using Newtonsoft.Json;
-using SwaggerGenerator;
-using SwaggerGenerator.csharp;
-using SwaggerGenerator.Modeler;
 using Swashbuckle.AspNetCore.Swagger;
-using Task = System.Threading.Tasks.Task;
+using Task = Microsoft.Build.Utilities.Task;
 
 namespace Microsoft.DotNet.SwaggerGenerator.MSBuild
 {
-    public class GenerateSwaggerCode : Microsoft.Build.Utilities.Task
+    public class GenerateSwaggerCode : Task
     {
         [Required]
         public string SwaggerDocumentUri { get; set; }
@@ -45,30 +43,30 @@ namespace Microsoft.DotNet.SwaggerGenerator.MSBuild
             return !Log.HasLoggedErrors;
         }
 
-        private async Task ExecuteAsync()
+        private async System.Threading.Tasks.Task ExecuteAsync()
         {
             var options = new GeneratorOptions
             {
                 LanguageName = "csharp",
                 Namespace = RootNamespace,
-                ClientName = ClientName,
+                ClientName = ClientName
             };
 
-            var document = await GetSwaggerDocument(SwaggerDocumentUri);
+            SwaggerDocument document = await GetSwaggerDocument(SwaggerDocumentUri);
 
             var generator = new ServiceClientModelFactory(options);
-            var model = generator.Create(document);
+            ServiceClientModel model = generator.Create(document);
 
             var codeFactory = new ServiceClientCodeFactory();
-            var code = codeFactory.GenerateCode(model, options);
+            List<CodeFile> code = codeFactory.GenerateCode(model, options);
 
             var outputDirectory = new DirectoryInfo(OutputDirectory);
             outputDirectory.Create();
 
             var generatedFiles = new List<ITaskItem>();
-            foreach (var (path, contents) in code)
+            foreach ((string path, string contents) in code)
             {
-                var fullPath = Path.Combine(outputDirectory.FullName, path);
+                string fullPath = Path.Combine(outputDirectory.FullName, path);
                 var file = new FileInfo(fullPath);
                 file.Directory.Create();
                 Log.LogMessage(MessageImportance.Normal, $"Generating file '{file.FullName}'");
@@ -83,7 +81,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.MSBuild
         {
             using (var client = new HttpClient())
             {
-                using (var docStream = await client.GetStreamAsync(input))
+                using (Stream docStream = await client.GetStreamAsync(input))
                 using (var reader = new StreamReader(docStream))
                 using (var jsonReader = new JsonTextReader(reader))
                 {

@@ -1,4 +1,4 @@
-﻿namespace SwaggerGenerator.Modeler
+﻿namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 {
     public enum ParameterLocation
     {
