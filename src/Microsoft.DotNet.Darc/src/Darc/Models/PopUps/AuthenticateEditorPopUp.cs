@@ -33,30 +33,17 @@ namespace Microsoft.DotNet.Darc.Models
 
         public string VstsToken { get; set; }
 
-        public override List<Line> Parse(bool isComment = false)
-        {
-            return new List<Line>
-            {
-                new Line(BarPassword, isComment),
-                new Line(GitHubToken, isComment),
-                new Line(VstsToken, isComment)
-            };
-        }
-
         public override bool Validate()
         {
             // No real validation required since none of the fields are mandatory
             return true;
         }
 
-        public override int OnClose(string path)
+        public override int Execute(IList<Line> contents)
         {
             int result = 0;
 
-            string[] updatedFileContents = File.ReadAllLines(path);
-            List<Line> values = GetContentValues(updatedFileContents);
-
-            foreach (Line line in values)
+            foreach (Line line in contents)
             {
                 string[] keyValue = line.Text.Split("=");
 
@@ -84,7 +71,7 @@ namespace Microsoft.DotNet.Darc.Models
 
             string settings = JsonConvert.SerializeObject(this);
 
-            result = SecureFile.Create(Constants.SettingsFileName, settings, _logger);
+            result = EncodedFile.Create(Constants.SettingsFileName, settings, _logger);
 
             return 0;
         }

@@ -6,23 +6,16 @@ using System.Text;
 
 namespace Microsoft.DotNet.Darc.Helpers
 {
-    public static class SecureFile
+    public static class EncodedFile
     {
-        private static readonly string _darcSecureDirectoryPath;
-
-        static SecureFile()
-        {
-            _darcSecureDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".darc");
-        }
-
-        public static int Create(string fileName, string jsonContent, ILogger logger)
+        public static int Create(string fileName, JToken jsonContent, ILogger logger)
         {
             try
             {
-                Directory.CreateDirectory(_darcSecureDirectoryPath);
-                byte[] textBytes = Encoding.UTF8.GetBytes(jsonContent);
+                Directory.CreateDirectory(Constants.DarcDirectory);
+                byte[] textBytes = Encoding.UTF8.GetBytes(jsonContent.ToString());
                 string encodedContent = Convert.ToBase64String(textBytes);
-                File.WriteAllText(Path.Combine(_darcSecureDirectoryPath, fileName), encodedContent);
+                File.WriteAllText(Path.Combine(Constants.DarcDirectory, fileName), encodedContent);
                 return 0;
             }
             catch (Exception exc)
@@ -34,7 +27,7 @@ namespace Microsoft.DotNet.Darc.Helpers
 
         public static JToken Read(string fileName)
         {
-            string encodedString = File.ReadAllText(Path.Combine(_darcSecureDirectoryPath, fileName));
+            string encodedString = File.ReadAllText(Path.Combine(Constants.DarcDirectory, fileName));
             byte[] encodedBytes = Convert.FromBase64String(encodedString);
             string decodedString = Encoding.UTF8.GetString(encodedBytes);
             return JToken.Parse(decodedString);

@@ -4,7 +4,7 @@ namespace Microsoft.DotNet.Darc.Options
 {
     abstract class CommandLineOptions
     {
-        [Option('p', "pswd", HelpText = "GitHub PAT used to authenticate against Maestro/BAR REST APIs if necessary.")]
+        [Option('p', "password", HelpText = "GitHub PAT used to authenticate against Maestro/BAR REST APIs if necessary.")]
         public string Password { get; set; }
 
         [Option('t', "token", HelpText = "Token used to authenticate VSTS or GitHub if necessary.")]

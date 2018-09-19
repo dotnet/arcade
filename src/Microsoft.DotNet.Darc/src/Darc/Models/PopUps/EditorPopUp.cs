@@ -1,9 +1,10 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Microsoft.DotNet.Darc.Models
 {
-    abstract public class EditorPopUp
+    public abstract class EditorPopUp
     {
         public EditorPopUp(string path, IList<Line> contents)
         {
@@ -17,7 +18,17 @@ namespace Microsoft.DotNet.Darc.Models
         [JsonIgnore]
         public IList<Line> Contents { get; set; }
 
-        public List<Line> GetContentValues(IEnumerable<string> contents)
+        public IList<Line> OnClose(string path)
+        {
+            string[] updatedFileContents = File.ReadAllLines(path);
+            return GetContentValues(updatedFileContents);
+        }
+
+        public abstract bool Validate();
+
+        public abstract int Execute(IList<Line> contents);
+
+        private List<Line> GetContentValues(IEnumerable<string> contents)
         {
             List<Line> values = new List<Line>();
 
@@ -31,12 +42,6 @@ namespace Microsoft.DotNet.Darc.Models
 
             return values;
         }
-
-        abstract public List<Line> Parse(bool isComment);
-
-        abstract public bool Validate();
-
-        abstract public int OnClose(string path);
     }
 
     public class Line

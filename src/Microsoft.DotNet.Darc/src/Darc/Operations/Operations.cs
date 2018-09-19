@@ -11,14 +11,14 @@ namespace Microsoft.DotNet.Darc
     internal static class Operations
     {
         /// <summary>
-        /// Implements the 'init' verb
+        /// Implements the 'authenticate' verb
         /// </summary>
         /// <param name="options"></param>
         public static int AuthenticateOperation(AuthenticateCommandLineOptions options)
         {
             ILogger logger = GetLogger(options);
 
-            AuthenticateEditorPopUp initEditorPopUp = new AuthenticateEditorPopUp("init-settings/init-todo", logger);
+            AuthenticateEditorPopUp initEditorPopUp = new AuthenticateEditorPopUp("authenticate-settings/authenticate-todo", logger);
 
             UxManager uxManager = new UxManager(logger);
 
