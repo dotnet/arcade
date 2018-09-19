@@ -80,14 +80,14 @@ namespace Maestro.Web
             return (tokenId, password);
         }
 
-        public async Task<string> CreateToken(TUser user, string name)
+        public async Task<(int id, string value)> CreateToken(TUser user, string name)
         {
             byte[] passwordBytes = GeneratePassword();
             string password = WebEncoders.Base64UrlEncode(passwordBytes);
             string hash = PasswordHasher.HashPassword(user, password);
             var context = new SetTokenHashContext<TUser>(Context, user, name, hash);
             int tokenId = await Events.SetTokenHash(context);
-            return EncodeToken(tokenId, passwordBytes);
+            return (tokenId, EncodeToken(tokenId, passwordBytes));
         }
 
         public async Task<TUser> VerifyToken(string token)

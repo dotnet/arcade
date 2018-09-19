@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="MaestroApplicationType" ApplicationTypeVersion="1.0.33" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+<ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="MaestroApplicationType" ApplicationTypeVersion="1.0.35" xmlns="http://schemas.microsoft.com/2011/01/fabric">
   <Parameters>
     <Parameter Name="DependencyUpdater_MinReplicaSetSize" DefaultValue="3" />
     <Parameter Name="DependencyUpdater_PartitionCount" DefaultValue="1" />
@@ -15,20 +15,20 @@
        should match the Name and Version attributes of the ServiceManifest element defined in the 
        ServiceManifest.xml file. -->
   <ServiceManifestImport>
-    <ServiceManifestRef ServiceManifestName="SubscriptionActorServicePkg" ServiceManifestVersion="1.0.33" />
+    <ServiceManifestRef ServiceManifestName="SubscriptionActorServicePkg" ServiceManifestVersion="1.0.35" />
     <EnvironmentOverrides CodePackageRef="Code">
       <EnvironmentVariable Name="ASPNETCORE_ENVIRONMENT" Value="[Environment]" />
     </EnvironmentOverrides>
   </ServiceManifestImport>
   <ServiceManifestImport>
-    <ServiceManifestRef ServiceManifestName="DependencyUpdaterPkg" ServiceManifestVersion="1.0.33" />
+    <ServiceManifestRef ServiceManifestName="DependencyUpdaterPkg" ServiceManifestVersion="1.0.35" />
     <ConfigOverrides />
     <EnvironmentOverrides CodePackageRef="Code">
       <EnvironmentVariable Name="ASPNETCORE_ENVIRONMENT" Value="[Environment]" />
     </EnvironmentOverrides>
   </ServiceManifestImport>
   <ServiceManifestImport>
-    <ServiceManifestRef ServiceManifestName="Maestro.WebPkg" ServiceManifestVersion="1.0.33" />
+    <ServiceManifestRef ServiceManifestName="Maestro.WebPkg" ServiceManifestVersion="1.0.35" />
     <ConfigOverrides />
     <ResourceOverrides>
       <Endpoints>
