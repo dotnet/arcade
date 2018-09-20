@@ -56,7 +56,7 @@ function GetCurrentOS {
   local unameOut="$(uname -s)"
   case $unameOut in
     Linux*)     echo "Linux";;
-    Darwin*)    echo "Mac";;
+    Darwin*)    echo "MacOS";;
   esac
   return 0
 }
