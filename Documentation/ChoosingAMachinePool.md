@@ -1,13 +1,15 @@
 # Choosing a Machine Pool
 
-
 ## Builds
 All Azure Pipelines builds should use the following helix-managed agent queues
  * Pull Request validation and Public CI
-   * [dotnet-external-temp]
+   * Windows - [dotnet-external-temp]
+   * Linux - (tbd)
+   * Mac - [Hosted macOS](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml)
  * Official Signed Builds
-   * [dotnet-internal-temp]
-   * [dnceng-linux-internal-temp]
+   * Windows - [dotnet-internal-temp]
+   * Linux - [dnceng-linux-internal-temp]
+   * Max - [Hosted macOS](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml)
    
 Queues for an Azure Pipeline build can be specified at the build and/or phase level in the yaml file ([documentation](https://github.com/Microsoft/azure-pipelines-agent/blob/master/docs/preview/yamlgettingstarted-pools.md)).
 
@@ -15,14 +17,11 @@ Detailed information about the machines in an agent queue can be found in the [d
 
 ## Test Execution
 All test execution should run through helix. An up to date list of helix queues can be obtained from the [Helix Queue Info Api] using the following steps.
- * Perform an HTTP GET of [https://helix.dot.net/api/2018-03-14/info/queues] with your http requesting software of choice. (A web browser works fine)
+ * Perform an HTTP GET of https://helix.dot.net/api/2018-03-14/info/queues with your http requesting software of choice. (A web browser works fine)
  * You will be presented with a json array containing descriptions of all the queues avaliable in helix.
  * All of the queues in the list are avaliable for use in helix. Detailed information about machine setup can be found in the [dotnet-helix-machines] repo.
  * Submit your test jobs to helix using the [Helix Sdk].
 
-
-The definitions for all helix-managed machines are located in the [dotnet-helix-machines] repo.
-The readme in [dotnet-helix-machines] contains information on where machine setup information lives and how to change it if needed.
 
 [Helix Sdk]: /Documentation/VSTS/SendingJobsToHelix.md
 [Bootstrapping System]: /Documentation/Projects/NativeDependencies/NativeDependencyBootstrappingPhase1.md
