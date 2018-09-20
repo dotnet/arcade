@@ -17,8 +17,8 @@ areas:
 - **Shared tooling (Arcade)** - Striving to reduce duplication of tooling,
   improve development consistency between repos and drive tooling improvements
   across a wider swath of the ecosystem more quickly.
-- **Transitioning to Azure DevOps for public CI, and upgrading official builds**
-  - Move away from Jenkins, improve CI reliability, increase the consistency
+- **Transitioning to Azure DevOps for public CI, and upgrading official builds** -
+  Move away from Jenkins, improve CI reliability, increase the consistency
   between our official and PR builds, and bring first-class workflow for
   internal as well as public changes.
 - **Improving our inter-repo dependency version management (Darc)** - Improve
@@ -34,7 +34,7 @@ striving to move as many people towards the new infrastructure as possible.
 - If you use .NET CI (ci.dot.net, ci2.dot.net, ci3.dot.net) you'll need to move
   into Azure DevOps.
 - If you pull new dependencies from other repos (e.g. latest
-  Microsoft.NetCore.App package), you'll need to onboard onto Arcade and
+  Microsoft.NETCore.App package), you'll need to onboard onto Arcade and
   dependency flow.
 - If you publish dependencies used by other repos, you'll need to onboard onto
   Arcade, so that other repos may consume your outputs.
@@ -81,7 +81,8 @@ some highlights:
 - Move out of .NET CI and into our new Azure DevOps project
   (https://dev.azure.com/dnceng/public) for your public CI. - See [Onboarding
   VSTS](VSTS/VSTSOnboarding.md).
-- Move out of the devdiv Azure DevOps instance and into the internal project for
+- Move out of the devdiv Azure DevOps instance (https://dev.azure.com/devdiv/ or
+  https://devdiv.visualstudio.com) and into the internal project for
   (https://dev.azure.com/dnceng/internal) internal CI and official builds. - See
   [Onboarding VSTS](VSTS/VSTSOnboarding.md) and [Moving Official Builds from
   DevDiv to DncEng](VSTS/MovingFromDevDivToDncEng.md).
@@ -98,11 +99,11 @@ release branches is desired, but .NET Core 3 branches should go first.
 
 ## I need help, who should I talk to?
 
-Contact the 'dnceng' alias for additional guidance.
+Contact 'dnceng' for additional guidance.  Either @dotnet/dnceng on GitHub, or dnceng@microsoft.com
 
 ## FAQ
 
-- **Where is .NET CI (ci.dot.net, ci2.dot.net, ci3.dot.net) going?**
+- **Where is .NET CI (Jenkins ci.dot.net, ci2.dot.net, ci3.dot.net) going?**
 
   The current .NET CI instances will remain operational for about another year,
   then will be decomissioned.  This decomission is lined up with the [support
@@ -131,7 +132,8 @@ Contact the 'dnceng' alias for additional guidance.
   bootstrapping can be found at [here](NativeDependencies/).
 
   See [here](VSTS/VSTSOnboarding.md#agent-queues) for more information. For
-  additional questions contact 'dnceng'.
+  additional questions contact 'dnceng'. Either @dotnet/dnceng on GitHub, or
+  dnceng@microsoft.com
 
 - **My repo is currently on repo-toolset, how can I move into Arcade?**
 
