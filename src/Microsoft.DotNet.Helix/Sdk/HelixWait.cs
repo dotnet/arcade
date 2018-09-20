@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// The number of work items sent to Helix
         /// </summary>
         [Required]
-        public int NumberOfWorkItems { get; set; }
+        public int[] WorkItemCounts { get; set; }
 
         protected async override Task ExecuteCore()
         {
@@ -35,18 +35,18 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private async Task<bool> WorkItemsFinished()
         {
-            foreach (string jobId in JobIds)
+            for (int i = 0; i < JobIds.Length; i++)
             {
-                var workItems = await HelixApi.Aggregate.WorkItemSummaryMethodAsync(new string[] { "job.build" }, filtername: jobId);
+                var workItems = await HelixApi.Aggregate.WorkItemSummaryMethodAsync(new string[] { "job.build" }, filtername: JobIds[i]);
                 if (workItems.Count < 1)
                 {
-                    Log.LogError($"No work itmes found for job {jobId}");
+                    Log.LogError($"No work itmes found for job {JobIds[i]}");
                     return true;
                 }
                 int? pass, fail;
                 workItems[0].Data.WorkItemStatus.TryGetValue("pass", out pass);
                 workItems[0].Data.WorkItemStatus.TryGetValue("fail", out fail);
-                if ((pass ?? 0 + fail ?? 0) < NumberOfWorkItems)
+                if ((pass ?? 0 + fail ?? 0) < WorkItemCounts[i])
                 {
                     return false;
                 }

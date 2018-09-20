@@ -47,11 +47,15 @@
   <Target Name="Test"
           DependsOnTargets="$(TestDependsOn)">
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Test" Properties="HelixTargetQueue=%(HelixTargetQueue.Identity)">
-      <Output TaskParameter="TargetOutputs" ItemName="HelixJobIds" />
+      <Output TaskParameter="TargetOutputs" ItemName="SentJobs" />
     </MSBuild>
+  </Target>
 
-    <HelixWait JobIds="$(HelixJobIds)"
-               NumberOfWorkItems="@(HelixWorkItem->Count())" >
-    </HelixWait>
+  <Target Name="Wait"
+          AfterTargets="Test"
+          Condition="$(WaitForWorkItemCompletion)">
+    <HelixWait JobIds="@(SentJobs -> '%(Identity))"
+               WorkItemCounts="@(SentJobs -> %(WorkItemCount))" >
+    </HelixWait>    
   </Target>
 </Project>
