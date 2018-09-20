@@ -43,7 +43,14 @@ Once you are part of the `arcade-contrib` team
 5. Choose a name for your token and then "Create"
 6. Copy the created token
 
-### 3.3. Create a subscription
+### 3.3. Get all existing channels
+
+1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html anc click on "Authorize"
+2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
+3. Expand "GET /api/channels" under "Channels" and click "Try it out"
+5. Click "Execute"
+
+### 3.4. Create a subscription
 
 1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
 2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
@@ -51,12 +58,12 @@ Once you are part of the `arcade-contrib` team
 4. Update the values of the sample body. Here is an example of how would a request body look like:
 ``` json
 {
-    "channelName": "an existing channel, current arcade builds output to '.NET Tools - Latest'",
-    "sourceRepository": "the repository flowing the versions",
-    "targetRepository": "the repository getting updated with the new versions",
-    "targetBranch": "branch in the targetRepository",
+    "channelName": "an existing channel from step 3.3. current arcade builds output to '.NET Tools - Latest'",
+    "sourceRepository": "the repository flowing the versions i.e. https://github.com/dotnet/arcade",
+    "targetRepository": "the repository getting updated with the new versions i.e. https://github.com/dotnet/arcade-minimalci-sample",
+    "targetBranch": "branch in the targetRepository i.e master",
     "policy": {
-      "updateFrequency": "everyBuild",
+      "updateFrequency": "one of 'none', 'everyDay', 'everyBuild'",
       "mergePolicies": [
         {
           "name": "AllChecksSuccessful",
