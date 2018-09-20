@@ -182,7 +182,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
         }
 
         /// <summary>
-        /// When we flow dependencies we expect source and target repos to be the same i.e github.com or dnceng.visualstudio.com. When this task is executed
+        /// When we flow dependencies we expect source and target repos to be the same i.e github.com or dev.azure.com/dnceng. When this task is executed
         /// the repository is a VSTS repository even though the real source is GitHub since we just mirror the code. 
         /// When we detect a vsts repository we check if the latest commit exist in GitHub to determine if the source is GitHub or not. If the commit exists in
         /// the repo we transform the Url from VSTS to GitHub. If not we continue to work with the original Url.

@@ -3,7 +3,7 @@
 Performs a set of actions to enable a repo in VSTS.
 
 .DESCRIPTION
-- Makes an internal repo on dnceng.visualstudio.com for the GitHub repo
+- Makes an internal repo on dev.azure.com/dnceng for the GitHub repo
 - Adds a Maestro webhook
 - Adds a folder structure on internal and public VSTS for build definitions
 
@@ -73,10 +73,10 @@ function Create-VSTS-Folder {
     }
 }
 
-$vstsInternalInstance = "https://dnceng.visualstudio.com/internal"  
-$vstsPublicInstance = "https://dnceng.visualstudio.com/public"
+$vstsInternalInstance = "https://dev.azure.com/dnceng/internal"  
+$vstsPublicInstance = "https://dev.azure.com/dnceng/public"
 
-Write-Output "This script will create the basic set of primitives for onboarding a repo onto dnceng.visualstudio.com:"
+Write-Output "This script will create the basic set of primitives for onboarding a repo onto dev.azure.com/dnceng:"
 Write-Output "  - An internal copy of the GitHub repo."
 Write-Output "  - A webhook to ensure mirror the repo."
 Write-Output "  - Folder structure for public and internal CI."
@@ -123,7 +123,7 @@ $githubOrg = $githubRepoInfo.owner.login
 $githubRepo = $githubRepoInfo.name
 $vstsRepo = "$githubOrg-$githubRepo"
 
-# Check that the repo doesn't already exist on dnceng.visualstudio.com's internal instance.  Unfortunately
+# Check that the repo doesn't already exist on dev.azure.com/dnceng's internal instance.  Unfortunately
 # we can't tell the difference here between a bad PAT and a missing repo.
 Write-Output "Determining whether VSTS mirror repo already exists"
 

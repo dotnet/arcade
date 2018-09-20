@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <PackageType>MSBuildSdk</PackageType>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsPackable>true</IsPackable>
+    <NoWarn>$(NoWarn);0436</NoWarn>
+    <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.0.0" />
+    <PackageReference Include="System.Diagnostics.TraceSource" Version="4.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
+  </ItemGroup>
+
+  <!-- Common command-line helper sources -->
+  <ItemGroup>
+    <Compile Include="..\Common\CommandLine.cs" />
+    <Compile Include="..\Common\CommandLineTraceHandler.cs" />
+    <Compile Include="..\Common\ConsoleTraceListener.cs" />
+  </ItemGroup>
+
+  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
+
+</Project>

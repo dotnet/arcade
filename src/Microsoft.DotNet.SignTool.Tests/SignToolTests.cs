@@ -95,6 +95,8 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             util.Go();
 
+            Assert.Same(ByteSequenceComparer.Instance, signingInput.ZipDataMap.KeyComparer);
+
             // The list of files that would be signed was captured inside the FakeBuildEngine,
             // here we check if that matches what we expected
             var actualXmlElementsPerSingingRound = buildEngine.FilesToSign.Select(round => string.Join(Environment.NewLine, round));

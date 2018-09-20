@@ -28,6 +28,7 @@ namespace Microsoft.DotNet.SignTool
         {
             Debug.Assert(!filesToSign.IsDefault);
             Debug.Assert(zipDataMap != null);
+            Debug.Assert(zipDataMap.KeyComparer == ByteSequenceComparer.Instance);
 
             FilesToSign = filesToSign;
             ZipDataMap = zipDataMap;
