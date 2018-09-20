@@ -1,7 +1,7 @@
 # Choosing a Machine Pool
 
 ## Builds
-All Azure Pipelines builds should use the following helix-managed agent queues
+All Azure Pipelines builds should use the following agent queues
  * Pull Request validation and Public CI
    * Windows - [dotnet-external-temp]
    * Linux - (tbd)
