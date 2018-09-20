@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.DotNet.Maestro.Client;
+using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -12,7 +14,7 @@ namespace Microsoft.DotNet.DarcLib
 {
     public class Remote : IRemote
     {
-        private readonly BuildAssetRegistryClient _barClient;
+        private readonly IMaestroApi _barClient;
         private readonly GitFileManager _fileManager;
         private readonly IGitRepo _gitClient;
         private readonly ILogger _logger;
@@ -33,50 +35,60 @@ namespace Microsoft.DotNet.DarcLib
             }
 
             _fileManager = new GitFileManager(_gitClient, _logger);
-            _barClient = new BuildAssetRegistryClient(settings.BuildAssetRegistryBaseUri, _logger);
-        }
-
-        public async Task<string> CreateChannelAsync(string name, string classification, string barPassword)
-        {
-            if (string.IsNullOrEmpty(barPassword))
+            if (!string.IsNullOrEmpty(settings.BuildAssetRegistryBaseUri))
             {
-                throw new ArgumentException("A B.A.R password is missing...");
+                _barClient = ApiFactory.GetAuthenticated(settings.BuildAssetRegistryBaseUri, settings.BuildAssetRegistryPassword);
             }
-
-            return await _barClient.CreateChannelAsync(name, classification, barPassword);
-        }
-
-        public async Task<string> GetSubscriptionsAsync(string barPassword, string sourceRepo = null, string targetRepo = null, int? channelId = null)
-        {
-            if (string.IsNullOrEmpty(barPassword))
+            else
             {
-                throw new ArgumentException("A B.A.R password is missing...");
+                _barClient = ApiFactory.GetAuthenticated(settings.BuildAssetRegistryPassword);
             }
-
-            return await _barClient.GetSubscriptionsAsync(barPassword, sourceRepo, targetRepo, channelId);
         }
 
-        public async Task<string> GetSubscriptionAsync(int subscriptionId, string barPassword)
+        /// <summary>
+        /// Creates a new channel in the Build Asset Registry
+        /// </summary>
+        /// <param name="name">Name of channel</param>
+        /// <param name="classification">Classification of the channel</param>
+        /// <returns>Newly created channel</returns>
+        public async Task<Channel> CreateChannelAsync(string name, string classification)
         {
-            if (string.IsNullOrEmpty(barPassword))
-            {
-                throw new ArgumentException("A B.A.R password is missing...");
-            }
-
-            return await _barClient.GetSubscriptionAsync(subscriptionId, barPassword);
+            return await _barClient.Channels.CreateChannelAsync(name, classification);
         }
 
-        public async Task<string> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy, string barPassword)
+        public async Task<IEnumerable<Subscription>> GetSubscriptionsAsync(string sourceRepo = null, string targetRepo = null, int? channelId = null)
         {
-            if (string.IsNullOrEmpty(barPassword))
-            {
-                throw new ArgumentException("A B.A.R password is missing...");
-            }
-
-            return await _barClient.CreateSubscriptionAsync(channelName, sourceRepo, targetRepo, targetBranch, updateFrequency, mergePolicy, barPassword);
+            return await _barClient.Subscriptions.GetAllSubscriptionsAsync(sourceRepo, targetRepo, channelId);
         }
 
-        public async Task<string> CreatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<AssetData> assets, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
+        public async Task<Subscription> GetSubscriptionAsync(string subscriptionId)
+        {
+            Guid subscriptionGuid;
+            if (!Guid.TryParse(subscriptionId, out subscriptionGuid))
+            {
+                throw new ArgumentException($"Subscription id '{subscriptionId}' is not a valid guid.");
+            }
+            return await _barClient.Subscriptions.GetSubscriptionAsync(subscriptionGuid);
+        }
+
+        public async Task<Subscription> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy)
+        {
+            SubscriptionData subscriptionData = new SubscriptionData()
+            {
+                ChannelName = channelName,
+                SourceRepository = sourceRepo,
+                TargetRepository = targetRepo,
+                TargetBranch = targetBranch,
+                Policy = new SubscriptionPolicy()
+                {
+                    UpdateFrequency = updateFrequency,
+                    MergePolicy = mergePolicy
+                }
+            };
+            return await _barClient.Subscriptions.CreateAsync(subscriptionData);
+        }
+
+        public async Task<string> CreatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<Microsoft.DotNet.DarcLib.AssetData> assets, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)
         {
             _logger.LogInformation($"Create pull request to update dependencies in repo '{repoUri}' and branch '{branch}'...");
 
@@ -142,7 +154,7 @@ namespace Microsoft.DotNet.DarcLib
             return status;
         }
 
-        public async Task<string> UpdatePullRequestAsync(string pullRequestUrl, string assetsProducedInCommit, string branch, IEnumerable<AssetData> assetsToUpdate, string pullRequestTitle = null, string pullRequestDescription = null)
+        public async Task<string> UpdatePullRequestAsync(string pullRequestUrl, string assetsProducedInCommit, string branch, IEnumerable<Microsoft.DotNet.DarcLib.AssetData> assetsToUpdate, string pullRequestTitle = null, string pullRequestDescription = null)
         {
             _logger.LogInformation($"Updating pull request '{pullRequestUrl}'...");
 
@@ -179,7 +191,7 @@ namespace Microsoft.DotNet.DarcLib
             }
         }
 
-        private async Task<IEnumerable<DependencyDetail>> GetRequiredUpdatesAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<AssetData> assets)
+        private async Task<IEnumerable<DependencyDetail>> GetRequiredUpdatesAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<Microsoft.DotNet.DarcLib.AssetData> assets)
         {
             _logger.LogInformation($"Check if repo '{repoUri}' and branch '{branch}' needs updates...");
 
@@ -188,7 +200,7 @@ namespace Microsoft.DotNet.DarcLib
 
             foreach (DependencyDetail dependency in dependencyDetails)
             {
-                AssetData asset = assets.Where(a => a.Name == dependency.Name).FirstOrDefault();
+                Microsoft.DotNet.DarcLib.AssetData asset = assets.Where(a => a.Name == dependency.Name).FirstOrDefault();
 
                 if (asset == null)
                 {
