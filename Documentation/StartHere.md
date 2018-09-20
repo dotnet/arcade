@@ -17,8 +17,8 @@ areas:
 - **Shared tooling (Arcade)** - Striving to reduce duplication of tooling,
   improve development consistency between repos and drive tooling improvements
   across a wider swath of the ecosystem more quickly.
-- **Transitioning to Azure DevOps for public CI, and upgrading official builds** -
-  Move away from Jenkins, improve CI reliability, increase the consistency
+- **Transitioning to Azure DevOps for public CI, and upgrading official builds**
+  - Move away from Jenkins, improve CI reliability, increase the consistency
   between our official and PR builds, and bring first-class workflow for
   internal as well as public changes.
 - **Improving our inter-repo dependency version management (Darc)** - Improve
@@ -71,9 +71,15 @@ some highlights:
     3. Copy `eng\common` from
        [Arcade](https://github.com/dotnet/arcade-minimalci-sample/tree/master/eng/common)
        into repo.
-    4. Add dotnet-core feed to
+    4. Add (or copy) the
+       [Versions.props](https://github.com/dotnet/arcade-minimalci-sample/blob/master/eng/Versions.props)
+       and
+       [Version.Details.xml](https://github.com/dotnet/arcade-minimalci-sample/blob/master/eng/Version.Details.xml)
+       files to your eng\ folder. Adjust the version prefix and prerelease label
+       as necessary.
+    5. Add dotnet-core feed to
        [NuGet.config](https://github.com/dotnet/arcade-minimalci-sample/blob/master/NuGet.Config).
-    5. Must have a root project/solution file for the repo to build.
+    6. Must have a root project/solution file for the repo to build.
 
     **Using Arcade packages** - See [documentation](CorePackages/) for
     information on specific packages.
@@ -99,7 +105,8 @@ release branches is desired, but .NET Core 3 branches should go first.
 
 ## I need help, who should I talk to?
 
-Contact 'dnceng' for additional guidance.  Either @dotnet/dnceng on GitHub, or dnceng@microsoft.com
+Contact 'dnceng' for additional guidance.  Either @dotnet/dnceng on GitHub, or
+dnceng@microsoft.com
 
 ## FAQ
 
