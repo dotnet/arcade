@@ -46,6 +46,12 @@
 
   <Target Name="Test"
           DependsOnTargets="$(TestDependsOn)">
-    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Test" Properties="HelixTargetQueue=%(HelixTargetQueue.Identity)"/>
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Test" Properties="HelixTargetQueue=%(HelixTargetQueue.Identity)">
+      <Output TaskParameter="TargetOutputs" ItemName="HelixJobIds" />
+    </MSBuild>
+
+    <HelixWait JobIds="$(HelixJobIds)"
+               NumberOfWorkItems="@(HelixWorkItem->Count())" >
+    </HelixWait>
   </Target>
 </Project>

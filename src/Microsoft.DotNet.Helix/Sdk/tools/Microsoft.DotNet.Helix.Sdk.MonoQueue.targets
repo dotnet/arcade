@@ -68,7 +68,7 @@
   </Target>
 
   <Target Name="Test"
-    DependsOnTargets="$(TestDependsOn)">
+    DependsOnTargets="$(TestDependsOn)" Returns="$(JobCorrelationId)">
     <SendHelixJob Source="$(HelixSource)"
                   Type="$(HelixType)"
                   Build="$(HelixBuild)"
