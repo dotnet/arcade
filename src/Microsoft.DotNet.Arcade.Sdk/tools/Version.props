@@ -32,7 +32,7 @@
         <!--
           Building MSIs from dev build requires file versions to be increasing. 
           Use the current date in non-official builds. Note that this reduces the deterministic properties of the build 
-          and should only be enabled used when it's necessary to test-install the MSIs produced by the build.
+          and should only be enabled when it's necessary to test-install the MSIs produced by the build.
         -->
         <_BuildNumber>$(OfficialBuildId)</_BuildNumber>
         <_BuildNumber Condition="'$(OfficialBuildId)' == ''">$([System.DateTime]::Now.ToString(yyyyMMdd)).1</_BuildNumber>

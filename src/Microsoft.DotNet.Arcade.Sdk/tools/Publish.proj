@@ -1,10 +1,7 @@
 <!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project DefaultTargets="Publish">
   <!--
-    Required variables:
-      VersionsPropsPath                 Versions.props path.
-
-    Optional variables:                 
+    Optional variables:
       AzureFeedUrl                      Target Azure feed URL.
       AzureAccountKey                   Azure account key.
       DotNetOutputBlobFeedDir           Source Build publishing directory
@@ -56,7 +53,7 @@
       </SymbolPackagesToGenerate>
     </ItemGroup>
 
-    <!-- 
+    <!--
       If a symbol package doesn't exist yet we assume that the regular package contains Portable PDBs.
       Such packages can act as symbol packages since they have the same structure.
       We just need to copy them to *.symbols.nupkg.
