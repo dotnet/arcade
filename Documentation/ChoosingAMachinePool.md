@@ -27,7 +27,7 @@ All test execution should run through helix. An up to date list of helix queues 
 [Bootstrapping System]: /Documentation/Projects/NativeDependencies/NativeDependencyBootstrappingPhase1.md
 [@dotnet/dnceng]: https://github.com/orgs/dotnet/teams/dnceng
 
-[dotnet-internal-temp]: https://dnceng.visualstudio.com/internal/_settings/agentqueues?queueId=67&_a=agents
+[dotnet-internal-temp]: https://dev.azure.com/dnceng/internal/_settings/agentqueues?queueId=67&_a=agents
 [dnceng-linux-internal-temp]: https://dev.azure.com/dnceng/internal/_settings/agentqueues?queueId=61&_a=agents
 [dotnet-external-temp]: https://dev.azure.com/dnceng/internal/_settings/agentqueues?queueId=47&_a=agents
 
