@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.DotNet.Helix.Sdk">
+
+  <Target Name="CorrelationId" AfterTargets="Test">
+    <Message Importance="High" Text="##vso[task.setvariable variable=HelixJobId;]$(HelixJobId)" />
+    <Message Importance="High" Text="##vso[task.setvariable variable=NumberOfWorkItems;]@(HelixWorkItem->Count())" />
+  </Target>
+</Project>
