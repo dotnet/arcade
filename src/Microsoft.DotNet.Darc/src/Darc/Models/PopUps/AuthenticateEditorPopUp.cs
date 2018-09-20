@@ -1,9 +1,12 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using Microsoft.DotNet.Darc.Helpers;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 
 namespace Microsoft.DotNet.Darc.Models
 {
@@ -39,7 +42,7 @@ namespace Microsoft.DotNet.Darc.Models
             return true;
         }
 
-        public override int Execute(IList<Line> contents)
+        public override int ProcessContents(IList<Line> contents)
         {
             int result = 0;
 

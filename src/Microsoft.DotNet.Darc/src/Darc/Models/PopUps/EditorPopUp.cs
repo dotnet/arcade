@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
@@ -26,7 +30,7 @@ namespace Microsoft.DotNet.Darc.Models
 
         public abstract bool Validate();
 
-        public abstract int Execute(IList<Line> contents);
+        public abstract int ProcessContents(IList<Line> contents);
 
         private List<Line> GetContentValues(IEnumerable<string> contents)
         {

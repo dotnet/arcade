@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using Microsoft.DotNet.Darc.Models;
 using Microsoft.Extensions.Logging;
 using System;
@@ -57,7 +61,7 @@ namespace Microsoft.DotNet.Darc.Helpers
                     {
                         IList<Line> contents = popUp.OnClose(path);
 
-                        result = popUp.Execute(contents);
+                        result = popUp.ProcessContents(contents);
 
                         Directory.Delete(dirPath, true);
 
