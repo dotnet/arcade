@@ -73,7 +73,7 @@ some highlights:
        into repo.
     4. Add dotnet-core feed to
        [NuGet.config](https://github.com/dotnet/arcade-minimalci-sample/blob/master/NuGet.Config).
-    5. Must have an root project/solution file for the repo to build.
+    5. Must have a root project/solution file for the repo to build.
 
     **Using Arcade packages** - See [documentation](CorePackages/) for
     information on specific packages.
