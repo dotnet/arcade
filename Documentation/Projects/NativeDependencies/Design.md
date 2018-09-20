@@ -110,10 +110,10 @@ The `external` folder is a folder structure that contains all installers and res
 
 This will likely come up very quickly and deserves consideration.  The current plan is to allow each installer to handle this as needed.
 
-**I need to onboard a new native tool. Where do I put it?**
+**I need to onboard a new native tool. What do I do?**
 
 * Upload the required files for tool installation to the https://netcorenativeassets.blob.core.windows.net/resource-packages azure storage container
-* Write an installer for the tool these should be scripts called 'install-tool.ps1/sh' (Look at the [install-cmake.ps1/sh](https://github.com/dotnet/arcade/tree/master/eng/common/native) scripts for guidance.
+* Write an installer for the tool. These should be scripts called 'install-tool.ps1/sh' (Look at the [install-cmake.ps1/sh](https://github.com/dotnet/arcade/tree/master/eng/common/native) scripts for guidance.
 
 **How do you determine which version of the common libraries / installers to use?**
 
