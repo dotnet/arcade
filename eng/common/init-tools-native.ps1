@@ -28,8 +28,8 @@ Total number of retry attempts
 .PARAMETER RetryWaitTimeInSeconds
 Wait time between retry attempts in seconds
 
-.PARAMETER ToolsVersionsFile
-File path to tools versions file
+.PARAMETER GlobalJsonFile
+File path to global.json file
 
 .NOTES
 #>
