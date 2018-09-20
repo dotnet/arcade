@@ -1,5 +1,12 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
+  <ItemGroup>
+    <HelixWorkItem Include="WorkItem">
+      <PayloadDirectory>$(WorkItemDirectory)</PayloadDirectory>
+      <Command>$(WorkItemCommand)</Command>
+    </HelixWorkItem>
+  </ItemGroup>
+
   <Target Name="CorrelationId" AfterTargets="Test">
     <Message Importance="High" Text="##vso[task.setvariable variable=HelixJobId;]$(HelixJobId)" />
     <Message Importance="High" Text="##vso[task.setvariable variable=NumberOfWorkItems;]@(HelixWorkItem->Count())" />

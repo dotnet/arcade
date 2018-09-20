@@ -6,16 +6,16 @@ parameters:
   HelixAccessToken: ''
   HelixPreCommands: ''
   HelixPostCommands: ''
-  CorrelationPayloads: []
-  WorkItems: []
-  EnableXUnitReporter: 'false'
+  WorkItemDirectory: ''
+  WorkItemCommand: ''
+  EnableXUnitReporter: false
   WaitForWorkItemCompletion: true
 
 steps:
   - task: DotNetCoreCLI@2
     inputs:
       command: custom
-      projects: tests\helixpublishwitharcade.proj
+      projects: eng/common/helixpublish.proj
       custom: msbuild
       arguments: '/t:test'
     displayName: Send tests job to Helix
@@ -28,4 +28,6 @@ steps:
       HelixPreCommands: $(HelixPreCommands)
       HelixPostCommands: $(HelixPostCommands)
       EnableXUnitReporter: $(EnableXUnitReporter)
-      HelixWaitForWorkItemCompletion: $(WaitForWorkItemCompletion)
+      WaitForWorkItemCompletion: $(WaitForWorkItemCompletion)
+      WorkItemDirectory: $(WorkItemDirectory)
+      WorkItemCommand: $(WorkItemCommand)
