@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Darc.Helpers
             catch (Exception exc)
             {
                 logger.LogError(exc.Message);
-                return -1;
+                return Constants.ErrorCode;
             }
         }
 

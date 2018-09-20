@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Darc.Models
 
             if (!Validate())
             {
-                result = -1;
+                result = Constants.ErrorCode;
             }
 
             string settings = JsonConvert.SerializeObject(this);

@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Microsoft.DotNet.Darc.Helpers
@@ -23,8 +22,8 @@ namespace Microsoft.DotNet.Darc.Helpers
 
         public UxManager(ILogger logger)
         {
-            _editorPath = GetEditorPath();
-            _gitDir = GetGitDir();
+            _editorPath = LocalCommands.GetEditorPath(logger);
+            _gitDir = LocalCommands.GetGitDir(logger);
             _logger = logger;
         }
 
@@ -33,13 +32,13 @@ namespace Microsoft.DotNet.Darc.Helpers
             if (string.IsNullOrEmpty(_editorPath))
             {
                 _logger.LogError("Filed to define an editor for the pop ups...");
-                return -1;
+                return Constants.ErrorCode;
             }
 
             if (string.IsNullOrEmpty(_gitDir))
             {
                 _logger.LogError("Filed to get git's directory...");
-                return -1;
+                return Constants.ErrorCode;
             }
 
             int result = 0;
@@ -81,91 +80,13 @@ namespace Microsoft.DotNet.Darc.Helpers
             catch (Exception exc)
             {
                 _logger.LogError($"There was an excpetion while trying to pop up an editor window. Exception: {exc.Message}");
-                result = -1;
+                result = Constants.ErrorCode;
             }
 
             return result;
         }
 
-        private string GetEditorPath()
-        {
-            string editor = ExecuteCommand("git.exe", "config --get core.editor");
-
-            // If there is nothing set in core.editor we try to default it to notepad if running in Windows, if not default it to
-            // vim
-            if (string.IsNullOrEmpty(editor))
-            {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    editor = ExecuteCommand("where", "notepad");
-                }
-                else
-                {
-                    editor = ExecuteCommand("which", "vim");
-                }
-            }
-
-            return editor;
-        }
-
-        private string GetGitDir()
-        {
-            string dir = ExecuteCommand("git.exe", "rev-parse --absolute-git-dir");
-
-            if (string.IsNullOrEmpty(dir))
-            {
-                dir = Constants.DarcDirectory;
-
-                Directory.CreateDirectory(dir);
-            }
-
-            return dir;
-        }
-
-        private string ExecuteCommand(string fileName, string arguments)
-        {
-            string output = null;
-
-            try
-            {
-                ProcessStartInfo processInfo = new ProcessStartInfo
-                {
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    FileName = fileName,
-                    CreateNoWindow = true,
-                    WorkingDirectory = Environment.CurrentDirectory
-                };
-
-                using (Process process = new Process())
-                {
-                    process.StartInfo = processInfo;
-                    process.StartInfo.Arguments = arguments;
-                    process.Start();
-
-                    output = process.StandardOutput.ReadToEnd().Trim();
-
-                    process.WaitForExit();
-                }
-
-                if (string.IsNullOrEmpty(output))
-                {
-                    _logger.LogError($"There was an error while running git.exe {arguments}");
-                }
-
-                string[] paths = output.Split(Environment.NewLine);
-
-                output = paths[0];
-            }
-            catch (Exception exc)
-            {
-                _logger.LogWarning($"Something failed while trying to execute '{fileName} {arguments}'. Exception: {exc.Message}");
-            }
-
-            return output;
-        }
-
-        private ParsedCommand GetParsedCommand(string command)
+        public static ParsedCommand GetParsedCommand(string command)
         {
             ParsedCommand parsedCommand = new ParsedCommand();
 

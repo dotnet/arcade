@@ -10,6 +10,7 @@ namespace Microsoft.DotNet.Darc
     public class Constants
     {
         public const string SettingsFileName = "settings";
+        public const int ErrorCode = 42;
         public static string DarcDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".darc");
     }
 }
