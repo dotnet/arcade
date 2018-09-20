@@ -72,7 +72,7 @@ Native toolset assets will be placed in an Azure blob storage container.  The de
 
 ```Text
 \external
-  \any (installers that work for any os)
+  \any (resources that would work for any OS)
   \linux
     \tool1
       -installer
@@ -86,6 +86,8 @@ Native toolset assets will be placed in an Azure blob storage container.  The de
 ### external resources folder structure
 
 The `external` folder is a folder structure that contains all installers and resources for external depencencies.  These are zips / tarballs /etc... provided by a tool publisher which we have republished into Azure blob storage, organized in folders by the operating system and tool to be installed.
+
+In cases where the resource's version is not identifiable by the resource's filename, the resource must be uploaded into a folder that allows the installer to disambiguate the version.
 
 ## Example - resource-packages container
 
@@ -102,6 +104,13 @@ The `external` folder is a folder structure that contains all installers and res
     \python
       -python-3.6.5-embed-amd64.zip
       -python-3.7.0b3-embed-win32.zip
+    \vcredist
+      \14.0
+        -vc_redist.x64.exe
+        -vc_redist.x86.exe
+      \15.0
+        -vc_redist.x64.exe
+        -vc_redist.x86.exe
 ```
 
 ## Questions
@@ -113,7 +122,9 @@ This will likely come up very quickly and deserves consideration.  The current p
 **I need to onboard a new native tool. What do I do?**
 
 * Upload the required files for tool installation to the https://netcorenativeassets.blob.core.windows.net/resource-packages azure storage container
-* Write an installer for the tool. These should be scripts called 'install-tool.ps1/sh' (Look at the [install-cmake.ps1/sh](https://github.com/dotnet/arcade/tree/master/eng/common/native) scripts for guidance.
+* Write an installer for the tool. These should be scripts called 'install-tool.ps1/sh'
+    * ps1 example: [install-cmake.ps1](https://github.com/dotnet/arcade/tree/master/eng/common/native/install-cmake.ps1)
+    * sh example: [install-cmake.sh](https://github.com/dotnet/arcade/tree/master/eng/common/native/install-cmake.sh)
 
 **How do you determine which version of the common libraries / installers to use?**
 
