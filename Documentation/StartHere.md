@@ -51,7 +51,7 @@ some highlights:
 - [Packages](CorePackages/)
     - [Roadmap](CorePackages/PackagesRoadmap.md)
     - [Publishing](CorePackages/Publishing.md)
-    - [Signing](CorePackages/Publishing.md)
+    - [Signing](CorePackages/Signing.md)
     - [Telemetry](CorePackages/Telemetry.md)
     - [Versioning](CorePackages/Versioning.md)
 
