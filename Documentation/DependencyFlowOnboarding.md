@@ -80,7 +80,7 @@ Once you are part of the `arcade-contrib` team
 ```
 5. Click "Execute"
 
-### Create a channel (optional)
+### 3.5. Create a channel (optional)
 
 1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
 2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
@@ -88,7 +88,7 @@ Once you are part of the `arcade-contrib` team
 4. Provide a "name" and a "classification"
 5. Click "Execute"
 
-### Associate a branch with a channel (optional)
+### 3.6. Associate a branch with a channel (optional)
 
 1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
 2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
@@ -104,3 +104,18 @@ Once you are part of the `arcade-contrib` team
 5. Click "Execute"
 
 Currently the REST API is the only way to create Subscriptions and Channels but the plan is for `Darc` to support this as well.
+
+## 4. Validate
+
+At this time we don't have a way to notify users if something went wrong while updating dependencies but this work is tracked by
+https://github.com/dotnet/arcade/issues/821.
+
+To validate that created subscriptions and channels work as expected you'd need to verify that a PR has been created on your subscription's `targetRepository` once a build from `sourceRepository` has successfully completed. If a PR was not created something went wrong and to determine what went wrong we need to query the REST API by following these steps:
+
+1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
+2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
+3. Expand "GET /api/subscriptions/{id}/history" under "Subscriptions" and click "Try it out"
+4. Provide your subscription id
+5. Click "Execute"
+6. Find an entry with `"success": false`
+7. Let @alexperovich and @jcagme know about the errors in the unsuccessful entry
