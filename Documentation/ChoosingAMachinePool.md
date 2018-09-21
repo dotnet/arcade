@@ -11,7 +11,7 @@ All Azure Pipelines builds should use the following agent queues
    * Linux - [dnceng-linux-internal-temp]
    * Max - [Hosted macOS](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml)
    
-Queues for an Azure Pipeline build can be specified at the build and/or phase level in the yaml file ([documentation](https://github.com/Microsoft/azure-pipelines-agent/blob/master/docs/preview/yamlgettingstarted-pools.md)).
+Pools for an Azure DevOps Pipeline can be specified at the build and/or job level in the yaml file ([documentation](https://github.com/Microsoft/azure-pipelines-agent/blob/master/docs/preview/yamlgettingstarted-pools.md)).
 
 Detailed information about the machines in an agent queue can be found in the [dotnet-helix-machines] repo. Additional dependencies not avaliable on the machines should be bootstrapped in using our [Bootstrapping System]. If bootstrapping doesn't work for a specific dependency contact [@dotnet/dnceng] for guidance.
 
@@ -24,7 +24,7 @@ All test execution should run through helix. An up to date list of helix queues 
 
 
 [Helix Sdk]: /Documentation/VSTS/SendingJobsToHelix.md
-[Bootstrapping System]: /Documentation/Projects/NativeDependencies/NativeDependencyBootstrappingPhase1.md
+[Bootstrapping System]: /Documentation/Projects/NativeDependencies/Design.md
 [@dotnet/dnceng]: https://github.com/orgs/dotnet/teams/dnceng
 
 [dotnet-internal-temp]: https://dev.azure.com/dnceng/internal/_settings/agentqueues?queueId=67&_a=agents
