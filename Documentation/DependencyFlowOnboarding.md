@@ -45,7 +45,7 @@ Once you are part of the `arcade-contrib` team
 
 ### 3.3. Get all existing channels
 
-1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html anc click on "Authorize"
+1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
 2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
 3. Expand "GET /api/channels" under "Channels" and click "Try it out"
 5. Click "Execute"
@@ -82,7 +82,7 @@ Once you are part of the `arcade-contrib` team
 
 ### Create a channel (optional)
 
-1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html anc click on "Authorize"
+1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
 2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
 3. Expand "POST /api/channels" under "Channels" and click "Try it out"
 4. Provide a "name" and a "classification"
@@ -90,7 +90,7 @@ Once you are part of the `arcade-contrib` team
 
 ### Associate a branch with a channel (optional)
 
-1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html anc click on "Authorize"
+1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
 2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
 3. Expand "POST /api/default-channels" under "DefaultChannels" and click "Try it out"
 4. Update the values of the sample body. Here is an example of how would a request body look like:
