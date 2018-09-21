@@ -56,6 +56,11 @@
           Condition="$(WaitForWorkItemCompletion)">
     <HelixWait JobIds="@(SentJobs -> '%(Identity))"
                WorkItemCounts="@(SentJobs -> %(WorkItemCount))" >
-    </HelixWait>    
+      <Output TaskParameter="WorkItemStatus" ItemName="WorkItemStatus" />
+    </HelixWait>
+  </Target>
+
+  <Target Name="WaitResult" AfterTargets="Wait">
+    <Message Importance="High" Text="$(WorkItemStatus)" />
   </Target>
 </Project>

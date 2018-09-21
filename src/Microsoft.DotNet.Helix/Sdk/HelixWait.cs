@@ -24,8 +24,15 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public int[] WorkItemCounts { get; set; }
 
+        /// <summary>
+        /// A return string that contains the status of the work items
+        /// </summary>
+        public string WorkItemStatus { get; set; }
+
         protected async override Task ExecuteCore()
         {
+            WorkItemStatus = "All work items and tests have completed successfully.";  // If this is not true, this status will be overwritten
+
             bool finished = false;
             while (!finished)
             {
@@ -46,9 +53,24 @@ namespace Microsoft.DotNet.Helix.Sdk
                 int? pass, fail;
                 workItems[0].Data.WorkItemStatus.TryGetValue("pass", out pass);
                 workItems[0].Data.WorkItemStatus.TryGetValue("fail", out fail);
-                if ((pass ?? 0 + fail ?? 0) < WorkItemCounts[i])
+                if ((fail ?? 0) > 0)  // If a work item has failed, we don't need to wait anymore and can just state that a workitem has fireballed
+                {
+                    WorkItemStatus = "##vso[task.logissue type=error;]One or more work items failed. See Mission Control for more information.";
+                    return true;
+                }
+                else if ((pass ?? 0) < WorkItemCounts[i])  // if the workitems haven't finished, we need to keep waiting
                 {
                     return false;
+                }
+                else  // if they have finished, we should check to see if any of the tests failed. if they have, we can stop early
+                {
+                    int? testFailures;
+                    workItems[0].Data.Analysis[0].Status.TryGetValue("fail", out testFailures);
+                    if ((testFailures ?? 0) > 0)
+                    {
+                        WorkItemStatus = "##vso[task.logissue type=error;]One or more tests have failed. See Mission Control for more information.";
+                        return true;
+                    }
                 }
             }
             return true;
