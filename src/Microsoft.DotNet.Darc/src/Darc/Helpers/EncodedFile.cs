@@ -29,12 +29,11 @@ namespace Microsoft.DotNet.Darc.Helpers
             }
         }
 
-        public static JToken Read(string fileName)
+        public static string Read(string fileName)
         {
             string encodedString = File.ReadAllText(Path.Combine(Constants.DarcDirectory, fileName));
             byte[] encodedBytes = Convert.FromBase64String(encodedString);
-            string decodedString = Encoding.UTF8.GetString(encodedBytes);
-            return JToken.Parse(decodedString);
+            return Encoding.UTF8.GetString(encodedBytes);
         }
     }
 }

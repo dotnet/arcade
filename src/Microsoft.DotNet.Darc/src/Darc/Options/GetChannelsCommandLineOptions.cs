@@ -2,13 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.DarcLib
+using CommandLine;
+
+namespace Microsoft.DotNet.Darc.Options
 {
-    public enum GitRepoType
+    [Verb("get-channels", HelpText = "Query information about dependencies")]
+    internal class GetChannelsCommandLineOptions : CommandLineOptions
     {
-        GitHub,
-        Vsts,
-        Local,
-        None
     }
 }

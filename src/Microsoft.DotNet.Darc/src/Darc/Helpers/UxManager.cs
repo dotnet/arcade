@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Darc.Helpers
 
             try
             {
-                string path = Path.Join(_gitDir, popUp.Path);
+                string path = Path.Combine(_gitDir, popUp.Path);
                 string dirPath = Path.GetDirectoryName(path);
 
                 Directory.CreateDirectory(dirPath);
