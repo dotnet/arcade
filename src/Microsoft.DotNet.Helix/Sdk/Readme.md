@@ -24,7 +24,7 @@ Each of the following examples require dotnet-cli >= 2.1.300 and need the follow
 ```
 
 The examples can all be run with `dotnet msbuild` and will require an environment variable or MSBuildProperty `HelixAccessToken` set if:
-- A non .Open queue is selected for `HelixTargetQueue`
+- A non .Open queue is selected for `HelixTargetQueues`
 - Any payloads are used, as the payloads are uploaded using Helix-Managed storage apis and these require authentication
 
 ### Hello World
@@ -35,7 +35,7 @@ This will print out 'Hai Wurld!' in the job console log.
     <HelixSource>pr/testing</HelixSource>
     <HelixType>test/stuff</HelixType>
     <HelixBuild>23456.01</HelixBuild>
-    <HelixTargetQueue>Windows.10.Amd64.Open</HelixTargetQueue>
+    <HelixTargetQueues>Windows.10.Amd64.Open</HelixTargetQueues>
   </PropertyGroup>
 
   <ItemGroup>
@@ -47,19 +47,19 @@ This will print out 'Hai Wurld!' in the job console log.
 ```
 
 ### Using a Payload folder
-Given a local folder `$(TestFolder)` containing `stuff.txt` this will print out its contents in the job console log.
+Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `runtests.cmd`.
 ```xml
 <Project Sdk="Microsoft.DotNet.Helix.Sdk" DefaultTargets="Test">
   <PropertyGroup>
     <HelixSource>pr/testing</HelixSource>
     <HelixType>test/stuff</HelixType>
     <HelixBuild>23456.01</HelixBuild>
-    <HelixTargetQueue>Windows.10.Amd64.Open</HelixTargetQueue>
+    <HelixTargetQueues>Windows.10.Amd64.Open</HelixTargetQueues>
   </PropertyGroup>
 
   <ItemGroup>
     <HelixWorkItem Include="Using a Payload">
-      <Command>type stuff.txt</Command>
+      <Command>runtests.cmd</Command>
       <PayloadDirectory>$(TestFolder)</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>

@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.SignTool
                 TrackFile(fullPath, ContentUtil.GetContentHash(fullPath));
             }
 
-            return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary());
+            return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(ByteSequenceComparer.Instance));
         }
 
         private FileSignInfo TrackFile(string fullPath, ImmutableArray<byte> contentHash)

@@ -25,4 +25,8 @@
     <PackageReference Include="Microsoft.Net.Http" Version="2.2.29" ExcludeAssets="All" />
     <PackageReference Include="System.Net.Http" Version="4.3.3" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Maestro\Client\src\Microsoft.DotNet.Maestro.Client.csproj" />
+  </ItemGroup>
 </Project>

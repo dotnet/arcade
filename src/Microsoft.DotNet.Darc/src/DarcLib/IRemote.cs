@@ -4,22 +4,23 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Maestro.Client.Models;
 
 namespace Microsoft.DotNet.DarcLib
 {
     public interface IRemote
     {
-        Task<string> CreateChannelAsync(string name, string classification, string barPassword);
+        Task<Channel> CreateChannelAsync(string name, string classification);
 
-        Task<string> GetSubscriptionsAsync(string barPassword, string sourceRepo = null, string targetRepo = null, int? channelId = null);
+        Task<IEnumerable<Subscription>> GetSubscriptionsAsync(string sourceRepo = null, string targetRepo = null, int? channelId = null);
 
-        Task<string> GetSubscriptionAsync(int subscriptionId, string barPassword);
+        Task<Subscription> GetSubscriptionAsync(string subscriptionId);
 
-        Task<string> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy, string barPassword);
+        Task<Subscription> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy);
 
-        Task<string> CreatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<AssetData> assets, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
+        Task<string> CreatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<Microsoft.DotNet.DarcLib.AssetData> assets, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
 
-        Task<string> UpdatePullRequestAsync(string pullRequestUrl, string assetsProducedInCommit, string branch, IEnumerable <AssetData> assetsToUpdate, string pullRequestTitle = null, string pullRequestDescription = null);
+        Task<string> UpdatePullRequestAsync(string pullRequestUrl, string assetsProducedInCommit, string branch, IEnumerable <Microsoft.DotNet.DarcLib.AssetData> assetsToUpdate, string pullRequestTitle = null, string pullRequestDescription = null);
 
         Task MergePullRequestAsync(string pullRequestUrl, MergePullRequestParameters parameters);
 
