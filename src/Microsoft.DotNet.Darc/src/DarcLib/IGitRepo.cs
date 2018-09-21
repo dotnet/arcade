@@ -10,8 +10,6 @@ namespace Microsoft.DotNet.DarcLib
 {
     public interface IGitRepo
     {
-        Task<string> GetFileContentsAsync(string filePath, string repoUri, string branch);
-
         Task CreateBranchAsync(string repoUri, string newBranch, string baseBranch);
 
         Task PushFilesAsync(List<GitFile> filesToCommit, string repoUri, string branch, string commitMessage);
@@ -34,7 +32,9 @@ namespace Microsoft.DotNet.DarcLib
 
         Task<List<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path);
 
-        Task<string> GetFileContentAsync(string ownerAndRepo, string path);
+        Task<string> GetFileContentsAsync(string ownerAndRepo, string path);
+
+        Task<string> GetFileContentsAsync(string filePath, string repoUri, string branch);
 
         Task<string> GetLastCommitShaAsync(string ownerAndRepo, string branch);
 

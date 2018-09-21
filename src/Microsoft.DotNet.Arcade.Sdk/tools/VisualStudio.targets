@@ -39,9 +39,25 @@
 
     <DeployExtension>false</DeployExtension>
     <DeployExtension Condition="'$(DeployProjectOutput)' == 'true'">true</DeployExtension>
-
-    <_ComponentIntermediateDir Condition="'$(VisualStudioInsertionComponent)' != ''">$(VisualStudioSetupIntermediateOutputPath)$(VisualStudioInsertionComponent)\</_ComponentIntermediateDir>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(VisualStudioInsertionComponent)' != ''">
+    <_ComponentIntermediateDir>$(VisualStudioSetupIntermediateOutputPath)$(VisualStudioInsertionComponent)\</_ComponentIntermediateDir>
+
+    <IsProductComponent>true</IsProductComponent>
+
+    <Ngen Condition="'$(Ngen)' == ''">true</Ngen>
+    <NgenArchitecture Condition="'$(NgenArchitecture)' == ''">All</NgenArchitecture>
+    <NgenPriority Condition="'$(NgenPriority)' == ''">3</NgenPriority>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(VisualStudioInsertionComponent)' != ''">
+    <ProjectReference Update="@(ProjectReference)">
+      <Ngen Condition="'%(Ngen)' == ''">true</Ngen>
+      <NgenArchitecture Condition="'%(NgenArchitecture)' == '' and '%(Ngen)' != 'false'">All</NgenArchitecture>
+      <NgenPriority Condition="'%(NgenPriority)' == '' and '%(Ngen)' != 'false'">3</NgenPriority>
+    </ProjectReference>
+  </ItemGroup>
 
   <!--
     Calculate name of a stub file that will be saved to ComponentIntermediateDir (Setup.obj subdirectory for the target insertion component).
@@ -105,7 +121,7 @@
     This task copies them to VisualStudioSetupInsertionPath and removes the flag from the manifest.
     VSIX files that are already in VisualStudioSetupInsertionPath are already non-experimental.
   -->
-  
+
   <Target Name="_CalculateFinalizeInsertionVsixFilesInputsOutputs"
           DependsOnTargets="_SetStubFileNameFromManifest">
     <PropertyGroup>
@@ -120,7 +136,7 @@
       <_FinalizeInsertionVsixFilesOutputs Include="$(VisualStudioSetupInsertionPath)$(_JsonFileName)" />
     </ItemGroup>
   </Target>
-  
+
   <Target Name="FinalizeInsertionVsixFiles"
           AfterTargets="Build"
           DependsOnTargets="CreateVsixContainer;_CalculateFinalizeInsertionVsixFilesInputsOutputs;_WriteComponentStubFile"
@@ -148,8 +164,9 @@
     Build Willow VSIX from SWR files.
   -->
   <Target Name="SwixBuild"
-          DependsOnTargets="_SetStubFileNameForSwixProject;_WriteComponentStubFile"
+          DependsOnTargets="_CalculateSwixBuildOutputs;_WriteComponentStubFile"
           AfterTargets="Build"
+          Outputs="$(_SwixBuildOutputs)"
           Condition="'@(SwrFile)' != ''">
 
     <PropertyGroup>
@@ -159,26 +176,32 @@
     <ItemGroup>
       <_SwixArgs Include="SwrProperties=$([MSBuild]::Escape($(_SwrProperties)))"/>
       <_SwixArgs Include="SwrFiles=$([MSBuild]::Escape($(_SwrFiles)))"/>
-      <_SwixArgs Include="SwrPackageName=$(TargetName)"/>
+      <_SwixArgs Include="SwrPackageName=$(_VsixPackageId)"/>
       <_SwixArgs Include="IntermediateOutputPath=$(IntermediateOutputPath)"/>
       <_SwixArgs Include="SwixBuildPath=$(NuGetPackageRoot)microbuild.plugins.swixbuild\$(MicroBuildPluginsSwixBuildVersion)\"/>
     </ItemGroup>
 
     <MSBuild Projects="$(MSBuildThisFileDirectory)VisualStudio.SetupPackage.swixproj" Properties="@(_SwixArgs)" Targets="Build"/>
 
-    <Copy SourceFiles="$(IntermediateOutputPath)$(TargetName).vsix;$(IntermediateOutputPath)$(TargetName).json"
+    <Copy SourceFiles="$(IntermediateOutputPath)$(TargetVsixContainerName);$(IntermediateOutputPath)$(_JsonFileName)"
           DestinationFolder="$(VisualStudioSetupInsertionPath)" />
 
     <ItemGroup>
-      <FileWrites Include="$(VisualStudioSetupInsertionPath)$(TargetName).vsix"/>
-      <FileWrites Include="$(VisualStudioSetupInsertionPath)$(TargetName).json"/>
+      <FileWrites Include="@(_SwixBuildOutputs)"/>
     </ItemGroup>
   </Target>
 
-  <Target Name="_SetStubFileNameForSwixProject">
+  <Target Name="_CalculateSwixBuildOutputs">
     <PropertyGroup>
-      <_PackageStubFile>$(_ComponentIntermediateDir)$(TargetName).stub</_PackageStubFile>
+      <_VsixPackageId>$([System.IO.Path]::GetFileNameWithoutExtension($(TargetVsixContainerName)))</_VsixPackageId>
+      <_PackageStubFile>$(_ComponentIntermediateDir)$(_VsixPackageId).stub</_PackageStubFile>
+      <_JsonFileName>$(_VsixPackageId).json</_JsonFileName>
     </PropertyGroup>
+
+    <ItemGroup>
+      <_SwixBuildOutputs Include="$(VisualStudioSetupInsertionPath)$(TargetVsixContainerName)" />
+      <_SwixBuildOutputs Include="$(VisualStudioSetupInsertionPath)$(_JsonFileName)" />
+    </ItemGroup>
   </Target>
 
   <!--
@@ -243,10 +266,8 @@
     <GetVsixSourceItemsDependsOn>$(GetVsixSourceItemsDependsOn);_GetVsixTemplateItems</GetVsixSourceItemsDependsOn>
   </PropertyGroup>
 
-  <!--
-    Export VSIX version. This target is to be used in vsixmanifest files.
-  -->
-  <Target Name="GetVsixVersion" Outputs="$(VsixVersion)">
+  <!-- Returns the current build version. Used in .vsixmanifests to substitute our build version into them -->
+  <Target Name="GetVsixVersion" Returns="$(VsixVersion)">
     <Error Text="Invalid format of OfficialBuildId: '$(OfficialBuildId)'"
            Condition="$(VersionSuffixDateStamp) != '' and ($(VersionSuffixDateStamp.Length) != 5 or $(VersionSuffixBuildOfTheDayPadded.Length) != 2)"/>
 
