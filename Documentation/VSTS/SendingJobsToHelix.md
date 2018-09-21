@@ -43,7 +43,7 @@ In a case where you have a directory called `tests` and a batch file in that dir
       HelixSource: your/helix/source
       HelixType: type/tests
       # HelixBuild: $(Build.BuildNumber) -- This property is set by default
-      HelixTargetQueues: Windows.10.Amd64.Open;Windows.7.Amd64.Open'
+      HelixTargetQueues: Windows.10.Amd64.Open;Windows.7.Amd64.Open
       HelixAccessToken: $('BotAccount-dotnet-github-anon-kaonashi-bot-helix-token')
       # HelixPreCommands: '' -- any commands that you would like to run prior to running your job
       # HelixPostCommands: '' -- any commands that you would like to run after running your job
