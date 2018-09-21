@@ -57,7 +57,13 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         private readonly Dictionary<string, SignInfo> _fileExtensionSignInfo;
 
-        private readonly Dictionary<ImmutableArray<byte>, FileSignInfo> _filesByContentHash;
+        private readonly Dictionary<SignedFileContentKey, FileSignInfo> _filesByContentKey;
+
+        /// <summary>
+        /// A list of files whose content needs to be overwritten by signed content from a different file.
+        /// Copy the content of file with full path specified in Key to file with full path specified in Value.
+        /// </summary>
+        internal List<KeyValuePair<string, string>> _filesToCopy;
 
         public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, 
             Dictionary<ExplicitCertificateKey, string> explicitCertificates, Dictionary<string, SignInfo> extensionSignInfo, TaskLoggingHelper log)
@@ -73,8 +79,9 @@ namespace Microsoft.DotNet.SignTool
             _explicitCertificates = explicitCertificates;
             _fileExtensionSignInfo = extensionSignInfo;
             _filesToSign = new List<FileSignInfo>();
+            _filesToCopy = new List<KeyValuePair<string, string>>();
             _zipDataMap = new Dictionary<ImmutableArray<byte>, ZipData>(ByteSequenceComparer.Instance);
-            _filesByContentHash = new Dictionary<ImmutableArray<byte>, FileSignInfo>(ByteSequenceComparer.Instance);
+            _filesByContentKey = new Dictionary<SignedFileContentKey, FileSignInfo>();
             _explicitSignList = explicitSignList;
         }
 
@@ -82,31 +89,43 @@ namespace Microsoft.DotNet.SignTool
         {
             foreach (var fullPath in _explicitSignList)
             {
-                TrackFile(fullPath, ContentUtil.GetContentHash(fullPath));
+                TrackFile(fullPath, ContentUtil.GetContentHash(fullPath), isNested: false);
             }
 
-            return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(ByteSequenceComparer.Instance));
+            return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(ByteSequenceComparer.Instance), _filesToCopy.ToImmutableArray());
         }
 
-        private FileSignInfo TrackFile(string fullPath, ImmutableArray<byte> contentHash)
+        private FileSignInfo TrackFile(string fullPath, ImmutableArray<byte> contentHash, bool isNested)
         {
             var fileSignInfo = ExtractSignInfo(fullPath, contentHash);
 
-            if (FileSignInfo.IsZipContainer(fullPath) && 
-                !_zipDataMap.ContainsKey(fileSignInfo.ContentHash) && 
-                TryBuildZipData(fileSignInfo, out var zipData))
+            var key = new SignedFileContentKey(contentHash, Path.GetFileName(fullPath));
+
+            if (_filesByContentKey.TryGetValue(key, out var existingSignInfo))
             {
-                _zipDataMap[fileSignInfo.ContentHash] = zipData;
+                // If we saw this file already we wouldn't call TrackFile unless this is a top-level file.
+                Debug.Assert(!isNested);
+
+                // Copy the signed content to the destination path.
+                _filesToCopy.Add(new KeyValuePair<string, string>(existingSignInfo.FullPath, fullPath));
+                return fileSignInfo;
             }
-        
+
+            if (FileSignInfo.IsZipContainer(fullPath))
+            {
+                Debug.Assert(!_zipDataMap.ContainsKey(contentHash));
+
+                if (TryBuildZipData(fileSignInfo, out var zipData))
+                {
+                    _zipDataMap[contentHash] = zipData;
+                }
+            }
+
+            _filesByContentKey.Add(key, fileSignInfo);
+
             if (fileSignInfo.SignInfo.ShouldSign)
             {
                 _filesToSign.Add(fileSignInfo);
-            }
-
-            if (!_filesByContentHash.ContainsKey(contentHash))
-            {
-                _filesByContentHash.Add(contentHash, fileSignInfo);
             }
 
             return fileSignInfo;
@@ -293,7 +312,8 @@ namespace Microsoft.DotNet.SignTool
                         }
 
                         // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
-                        if (!_filesByContentHash.TryGetValue(contentHash, out var fileSignInfo))
+                        string fileName = Path.GetFileName(relativePath);
+                        if (!_filesByContentKey.TryGetValue(new SignedFileContentKey(contentHash, fileName), out var fileSignInfo))
                         {
                             string tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
                             string tempPath = Path.Combine(tempDir, Path.GetFileName(relativePath));
@@ -305,7 +325,7 @@ namespace Microsoft.DotNet.SignTool
                                 stream.CopyTo(tempFileStream);
                             }
 
-                            fileSignInfo = TrackFile(tempPath, contentHash);
+                            fileSignInfo = TrackFile(tempPath, contentHash, isNested: true);
                         }
 
                         if (fileSignInfo.SignInfo.ShouldSign)
