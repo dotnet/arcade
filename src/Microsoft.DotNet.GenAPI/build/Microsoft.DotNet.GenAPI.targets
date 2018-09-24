@@ -10,7 +10,7 @@
     <_GenAPIPath Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.GenAPI.exe</_GenAPIPath>
 
     <_GenAPICommand Condition="'$(MSBuildRuntimeType)' == 'core'">$(ToolHostCmd) "$(_GenAPIPath)"</_GenAPICommand>
-    <_GenAPICommand Condition="'$(MSBuildRuntimeType)' != 'core' AND '$(OS)' == 'Windows_NT'">$(_GenAPIPath)</_GenAPICommand>
+    <_GenAPICommand Condition="'$(MSBuildRuntimeType)' != 'core' AND '$(OS)' == 'Windows_NT'">"$(_GenAPIPath)"</_GenAPICommand>
     <_GenAPICommand Condition="'$(MSBuildRuntimeType)' != 'core' AND '$(OS)' != 'Windows_NT'">mono --runtime=v4.0.30319 "$(_GenAPIPath)"</_GenAPICommand>
 
     <!-- Sequence ourselves last in PrepareForRun
