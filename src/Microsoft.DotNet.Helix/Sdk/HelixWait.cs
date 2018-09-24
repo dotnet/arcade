@@ -28,6 +28,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <summary>
         /// A return string that contains the status of the work items
         /// </summary>
+        [Output]
         public string WorkItemStatus { get; set; }
 
         protected async override Task ExecuteCore()
