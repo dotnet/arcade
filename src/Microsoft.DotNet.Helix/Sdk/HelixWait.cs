@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Helix.Sdk
     public class HelixWait : HelixTask
     {
         /// <summary>
-        /// An array of Helix Job IDs to be waited on
+        /// An array of Helix Jobs to be waited on
         /// </summary>
         [Required]
         public ITaskItem[] Jobs { get; set; }
