@@ -68,7 +68,7 @@
   </Target>
 
   <Target Name="Test"
-    DependsOnTargets="$(TestDependsOn)">
+    DependsOnTargets="$(TestDependsOn)" Returns="@(SentJob)">
     <SendHelixJob Source="$(HelixSource)"
                   Type="$(HelixType)"
                   Build="$(HelixBuild)"
@@ -82,6 +82,11 @@
                   WorkItems="@(HelixWorkItem)">
       <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
     </SendHelixJob>
+    <ItemGroup>
+      <SentJob Include="$(JobCorrelationId)">
+        <WorkItemCount>@(HelixWorkItem->Count())</WorkItemCount>
+      </SentJob>
+    </ItemGroup>
     <Message Text="Sent Helix Job $(HelixJobId)" Importance="High" />
   </Target>
 </Project>

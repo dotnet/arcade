@@ -40,10 +40,19 @@ namespace Microsoft.DotNet.SignTool.Tests
             Directory.CreateDirectory(_tmpDir);
         }
 
-        private string GetResourcePath(string name)
+        private string GetResourcePath(string name, string relativePath = null)
         {
             var srcPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "Resources", name);
-            var dstPath = Path.Combine(_tmpDir, name);
+
+            var dstDir = _tmpDir;
+
+            if (relativePath != null)
+            {
+                dstDir = Path.Combine(dstDir, relativePath);
+                Directory.CreateDirectory(dstDir);
+            }
+
+            var dstPath = Path.Combine(dstDir, name);
 
             if (!File.Exists(dstPath))
             {
@@ -110,12 +119,14 @@ namespace Microsoft.DotNet.SignTool.Tests
             Dictionary<string, SignInfo> strongNameSignInfo,
             Dictionary<ExplicitCertificateKey, string> signingOverridingInfos,
             Dictionary<string, SignInfo> extensionsSignInfo,
-            string[] expected)
+            string[] expected,
+            string[] expectedCopyFiles = null)
         {
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
             var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, extensionsSignInfo, task.Log).GenerateListOfFiles();
 
             AssertEx.Equal(expected, signingInput.FilesToSign.Select(f => f.ToString()));
+            AssertEx.Equal(expectedCopyFiles ?? Array.Empty<string>(), signingInput.FilesToCopy.Select(f => $"{f.Key} -> {f.Value}"));
             Assert.False(task.Log.HasLoggedErrors);
         }
 
@@ -162,7 +173,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'"
+                "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
             });
         }
 
@@ -365,6 +376,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
                 "File 'NestedContainer.1.0.0.nupkg' Certificate='NuGet'"
             });
@@ -392,6 +404,10 @@ $@"
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "ProjectOne.dll")}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "9F8CCEE4CECF286C80916F13EAB8DF1FC6C9BED5F81E3AFF26747C008D265E5C", "ContainerOne.dll")}"">
   <Authenticode>ArcadeCertTest</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
@@ -446,12 +462,13 @@ $@"
         }
 
         [Fact]
-        public void VsixPackage()
+        public void VsixPackage_DuplicateVsixAfter()
         {
             // List of files to be considered for signing
             var itemsToSign = new[]
             {
-                GetResourcePath("test.vsix")
+                GetResourcePath("test.vsix"),
+                GetResourcePath("PackageWithRelationships.vsix"),
             };
 
             // Default signing information
@@ -467,7 +484,13 @@ $@"
             {
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'test.vsix' Certificate='VsixSHA2'"
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'PackageWithRelationships.vsix' Certificate='VsixSHA2'",
+                "File 'test.vsix' Certificate='VsixSHA2'",
+            },
+            new[]
+            {
+                $"{Path.Combine(_tmpDir, "ContainerSigning", "8CE04F803804FF47F7F96E6D993262E295456CE7A11D65E81530DC030C8BB03C", "PackageWithRelationships.vsix")} -> {Path.Combine(_tmpDir, "PackageWithRelationships.vsix")}"
             });
 
             ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
@@ -480,12 +503,141 @@ $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "ProjectOne.dll")}"">
   <Authenticode>ArcadeCertTest</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "ProjectOne.dll")}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>",
+
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8CE04F803804FF47F7F96E6D993262E295456CE7A11D65E81530DC030C8BB03C", "PackageWithRelationships.vsix")}"">
+  <Authenticode>VsixSHA2</Authenticode>
 </FilesToSign>",
 
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "test.vsix")}"">
   <Authenticode>VsixSHA2</Authenticode>
-</FilesToSign>"
+</FilesToSign>
+"
+            });
+        }
+
+        [Fact]
+        public void VsixPackage_DuplicateVsixBefore()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("PackageWithRelationships.vsix"),
+                GetResourcePath("test.vsix"),
+            };
+
+            // Default signing information
+            var signingInformation = new Dictionary<string, SignInfo>()
+            {
+                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+            };
+
+            // Overriding information
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            {
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'PackageWithRelationships.vsix' Certificate='VsixSHA2'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'test.vsix' Certificate='VsixSHA2'",
+            });
+
+            ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            {
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "ProjectOne.dll")}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "ProjectOne.dll")}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "ProjectOne.dll")}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>",
+
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "PackageWithRelationships.vsix")}"">
+  <Authenticode>VsixSHA2</Authenticode>
+</FilesToSign>",
+
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "test.vsix")}"">
+  <Authenticode>VsixSHA2</Authenticode>
+</FilesToSign>
+"
+            });
+        }
+
+        [Fact]
+        public void VsixPackage_DuplicateVsixBeforeAndAfter()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("PackageWithRelationships.vsix", relativePath: "A"),
+                GetResourcePath("test.vsix"),
+                GetResourcePath("PackageWithRelationships.vsix", relativePath: "B"),
+            };
+
+            // Default signing information
+            var signingInformation = new Dictionary<string, SignInfo>()
+            {
+                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+            };
+
+            // Overriding information
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            {
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'PackageWithRelationships.vsix' Certificate='VsixSHA2'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'test.vsix' Certificate='VsixSHA2'",
+            },
+            new[]
+            {
+                $"{Path.Combine(_tmpDir, "A", "PackageWithRelationships.vsix")} -> {Path.Combine(_tmpDir, "B", "PackageWithRelationships.vsix")}"
+            });
+
+            ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            {
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "ProjectOne.dll")}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "ProjectOne.dll")}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "ProjectOne.dll")}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>",
+
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "A", "PackageWithRelationships.vsix")}"">
+  <Authenticode>VsixSHA2</Authenticode>
+</FilesToSign>",
+
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "test.vsix")}"">
+  <Authenticode>VsixSHA2</Authenticode>
+</FilesToSign>
+"
             });
         }
 

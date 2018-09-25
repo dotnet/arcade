@@ -50,6 +50,11 @@ namespace Microsoft.DotNet.SignTool
                 return;
             }
 
+            if (!CopyFiles())
+            {
+                return;
+            }
+
             // Validate the signing worked and produced actual signed binaries in all locations.
             VerifyAfterSign(_log);
 
@@ -164,6 +169,29 @@ namespace Microsoft.DotNet.SignTool
             }
 
             return true;
+        }
+
+        private bool CopyFiles()
+        {
+            bool success = true;
+            foreach (var entry in _batchData.FilesToCopy)
+            {
+                var src = entry.Key;
+                var dst = entry.Value;
+
+                try
+                {
+                    _log.LogMessage($"Updating '{dst}' with signed content");
+                    File.Copy(src, dst, overwrite: true);
+                }
+                catch (Exception e)
+                {
+                    _log.LogError($"Updating '{dst}' with signed content failed: '{e.Message}'");
+                    success = false;
+                }
+            }
+
+            return success;
         }
 
         /// <summary>
