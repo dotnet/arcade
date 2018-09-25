@@ -1,5 +1,7 @@
 # Initialize variables if they aren't already defined
+
 $ci = if (Test-Path variable:ci) { $ci } else { $false }
+$prepareMachine = if (Test-Path variable:prepareMachine) { $prepareMachine } else { $false }
 $restore = if (Test-Path variable:restore) { $restore } else { $true }
 
 set-strictmode -version 2.0
@@ -56,7 +58,7 @@ function InstallDotNetSdk([string] $dotnetRoot, [string] $version) {
   & $installScript -Version $version -InstallDir $dotnetRoot
   if ($lastExitCode -ne 0) {
     Write-Host "Failed to install dotnet cli (exit code '$lastExitCode')." -ForegroundColor Red
-    exit $lastExitCode
+    ExitWithExitCode $lastExitCode
   }
 }
 
@@ -92,7 +94,7 @@ function LocateVisualStudio {
 
   if ($lastExitCode -ne 0) {
     Write-Host "Failed to locate Visual Studio (exit code '$lastExitCode')." -ForegroundColor Red
-    exit $lastExitCode
+    ExitWithExitCode $lastExitCode
   }
 
   return $vsInstallDir
@@ -119,7 +121,7 @@ function InitializeTools() {
 
   if ($buildDriver -eq $null) {
     Write-Host "/global.json must either specify 'tools.dotnet' or 'tools.vswhere'." -ForegroundColor Red
-    exit 1
+    ExitWithExitCode 1
   }
 
   InitializeToolSet $script:buildDriver $script:buildArgs
@@ -148,7 +150,7 @@ function InitializeToolset([string] $buildDriver, [string]$buildArgs) {
 
   if (-not $restore) {
     Write-Host  "Toolset version $toolsetVersion has not been restored."
-    exit 1
+    ExitWithExitCode 1
   }
 
   $proj = Join-Path $ToolsetDir "restore.proj"
@@ -159,7 +161,7 @@ function InitializeToolset([string] $buildDriver, [string]$buildArgs) {
   if ($lastExitCode -ne 0) {
     Write-Host "Failed to restore toolset (exit code '$lastExitCode')." -ForegroundColor Red
     Write-Host "Build log: $ToolsetRestoreLog" -ForegroundColor DarkGray
-    exit $lastExitCode
+    ExitWithExitCode $lastExitCode
   }
 
   $path = Get-Content $toolsetLocationFile -TotalCount 1
@@ -180,6 +182,20 @@ function InitializeCustomToolset {
   if (Test-Path $script) {
     . $script
   }
+}
+
+function ExitWithExitCode([int] $exitCode) {
+  if ($ci -and $prepareMachine) {
+    Stop-Processes
+  }
+  exit $exitCode
+}
+
+function Stop-Processes() {
+  Write-Host "Killing running build processes..."
+  Get-Process -Name "msbuild" -ErrorAction SilentlyContinue | Stop-Process
+  Get-Process -Name "dotnet" -ErrorAction SilentlyContinue | Stop-Process
+  Get-Process -Name "vbcscompiler" -ErrorAction SilentlyContinue | Stop-Process
 }
 
 try {
@@ -214,6 +230,6 @@ catch {
   Write-Host $_
   Write-Host $_.Exception
   Write-Host $_.ScriptStackTrace
-  exit 1
+  ExitWithExitCode 1
 }
 

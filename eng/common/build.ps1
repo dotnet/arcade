@@ -59,52 +59,39 @@ if ($help -or (($properties -ne $null) -and ($properties.Contains("/help") -or $
   exit 0
 }
 
-function Stop-Processes() {
-  Write-Host "Killing running build processes..."
-  Get-Process -Name "msbuild" -ErrorAction SilentlyContinue | Stop-Process
-  Get-Process -Name "dotnet" -ErrorAction SilentlyContinue | Stop-Process
-  Get-Process -Name "vbcscompiler" -ErrorAction SilentlyContinue | Stop-Process
-}
-
 try {
   if ($projects -eq "") {
     $projects = Join-Path $RepoRoot "*.sln"
   }
 
   $msbuildArgs = (@"
-    $ToolsetBuildProj
-    /p:Configuration=$configuration
-    /p:Projects=$projects
-    /p:RepoRoot=$RepoRoot
-    /p:Restore=$restore
-    /p:DeployDeps=$deployDeps
-    /p:Build=$build
-    /p:Rebuild=$rebuild
-    /p:Deploy=$deploy
-    /p:Test=$test
-    /p:Pack=$pack
-    /p:IntegrationTest=$integrationTest
-    /p:PerformanceTest=$performanceTest
-    /p:Sign=$sign
-    /p:Publish=$publish
-    /p:PublishBuildAssets=$publishBuildAssets
-    /p:ContinuousIntegrationBuild=$ci
-    /p:CIBuild=$ci
-    $properties
-"@).Replace("`r`n","").Replace("    ", " ");
+$ToolsetBuildProj
+/p:Configuration=$configuration
+/p:Projects=$projects
+/p:RepoRoot=$RepoRoot
+/p:Restore=$restore
+/p:DeployDeps=$deployDeps
+/p:Build=$build
+/p:Rebuild=$rebuild
+/p:Deploy=$deploy
+/p:Test=$test
+/p:Pack=$pack
+/p:IntegrationTest=$integrationTest
+/p:PerformanceTest=$performanceTest
+/p:Sign=$sign
+/p:Publish=$publish
+/p:PublishBuildAssets=$publishBuildAssets
+/p:ContinuousIntegrationBuild=$ci
+/p:CIBuild=$ci
+$properties
+"@).Replace([Environment]::NewLine," ")
 
   Invoke-Expression "& `"$PSScriptRoot\msbuild.ps1`" $msbuildArgs"
-  exit $lastExitCode
+  ExitWithExitCode $lastExitCode
 }
 catch {
   Write-Host $_
   Write-Host $_.Exception
   Write-Host $_.ScriptStackTrace
-  exit 1
+  ExitWithExitCode 1
 }
-finally {
-  if ($ci -and $prepareMachine) {
-    Stop-Processes
-  }
-}
-

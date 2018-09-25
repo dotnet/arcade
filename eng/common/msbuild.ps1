@@ -3,6 +3,8 @@ Param(
   [string] $verbosity = "minimal",
   [bool] $warnaserror = $true,
   [bool] $nodereuse = $true,
+  [switch] $ci,
+  [switch] $prepareMachine,
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$properties
 )
 
@@ -27,12 +29,11 @@ try {
   if ($lastExitCode -ne 0) {
     Write-Host "Build failed see log: $buildLog" -ForegroundColor DarkGray
   }
-
-  exit $lastExitCode
+  ExitWithExitCode $lastExitCode
 }
 catch {
   Write-Host $_
   Write-Host $_.Exception
   Write-Host $_.ScriptStackTrace
-  exit 1
+  ExitWithExitCode 1
 }

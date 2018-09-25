@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-restore=${restore:-true}
 ci=${ci:-false}
 prepare_machine=${prepare_machine:-false}
+restore=${restore:-true}
 
 repo_root="$scriptroot/../.."
 eng_root="$scriptroot/.."

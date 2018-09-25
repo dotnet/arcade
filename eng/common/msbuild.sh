@@ -12,7 +12,6 @@ while [[ -h "$source" ]]; do
 done
 scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
-projects=''
 verbosity='minimal'
 warnaserrorflag=''
 nodereuseflag='/nr:true'
