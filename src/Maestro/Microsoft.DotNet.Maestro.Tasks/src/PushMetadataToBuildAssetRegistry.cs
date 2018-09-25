@@ -29,12 +29,6 @@ namespace Microsoft.DotNet.Maestro.Tasks
         [Required]
         public string MaestroApiEndpoint { get; set; }
 
-        // Default pattern matches versions like:
-        //  1.0.0
-        //  1.0.0-dev.123.12
-        //  1.0.2343-beta.123.234.23
-        public string VersionRegexPattern { get; set; } = @"(?<version>[0-9]+\.[0-9]+\.[0-9]+(-[a-z]+\.([0-9]+\.)+)*)";
-
         private static readonly CancellationTokenSource s_tokenSource = new CancellationTokenSource();
         private static readonly CancellationToken s_cancellationToken = s_tokenSource.Token;
 
@@ -89,16 +83,11 @@ namespace Microsoft.DotNet.Maestro.Tasks
         {
             string version = null;
 
-            Match versionMatch = Regex.Match(assetId, VersionRegexPattern);
+            Match versionMatch = Regex.Match(assetId, @"(?<version>\d+(\.\d+).+?(?=\.))");
 
             if (versionMatch.Success)
             {
                 version = versionMatch.Groups["version"].Value;
-
-                if (version[version.Length - 1] == '.')
-                {
-                    version = version = version.TrimEnd('.');
-                }
             }
 
             return version;
@@ -126,10 +115,9 @@ namespace Microsoft.DotNet.Maestro.Tasks
                     foreach (Blob blob in manifest.Blobs)
                     {
                         string version = GetVersion(blob.Id);
-
                         if (string.IsNullOrEmpty(version))
                         {
-                            Log.LogError($"Version could not be extracted from '{blob.Id}' using the regex pattern '{VersionRegexPattern}'");
+                            Log.LogError($"Version could not be extracted from '{blob.Id}'");
                         }
                         else
                         {
