@@ -16,7 +16,7 @@
     <!-- Sequence ourselves last in PrepareForRun
          This ensures the output has been copied to TargetPath, but still permits
          us to participate in FileWrites. -->
-    <PrepareForRunDependsOn>
+    <PrepareForRunDependsOn Condition="'$(RunGenerateReferenceAssemblySource)' == 'true'">
       $(PrepareForRunDependsOn);
       GenerateReferenceAssemblySource;
     </PrepareForRunDependsOn>
