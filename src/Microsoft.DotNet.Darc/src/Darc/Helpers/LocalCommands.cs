@@ -42,6 +42,8 @@ namespace Microsoft.DotNet.Darc.Helpers
                 dir = Constants.DarcDirectory;
 
                 Directory.CreateDirectory(dir);
+
+                logger.LogWarning($"'.git' directory was not found... Defaulting to '{dir}'");
             }
 
             return dir;

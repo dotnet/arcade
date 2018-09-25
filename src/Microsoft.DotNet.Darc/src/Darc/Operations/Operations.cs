@@ -34,7 +34,8 @@ namespace Microsoft.DotNet.Darc
         /// <param name="options"></param>
         public static int GetOperation(GetCommandLineOptions options)
         {
-            Local local = new Local(options.LocalDirectory, GetLogger(options));
+            ILogger logger = GetLogger(options);
+            Local local = new Local(LocalCommands.GetGitDir(logger), logger);
             var allDependencies = local.GetDependencies().Result;
             foreach (var dependency in allDependencies)
             {
@@ -45,7 +46,28 @@ namespace Microsoft.DotNet.Darc
 
         public static int AddOperation(AddCommandLineOptions options)
         {
-            throw new NotImplementedException("Add operation not yet implemented");
+            DependencyType type = options.Type.ToLower() == "toolset" ? DependencyType.Toolset : DependencyType.Product;
+
+            ILogger logger = GetLogger(options);
+            Local local = new Local(LocalCommands.GetGitDir(logger), logger);
+
+            DependencyDetail dependency = new DependencyDetail
+            {
+                Name = options.Name,
+                Version = options.Version,
+                RepoUri = options.RepoUri,
+                Commit = options.Commit
+            };
+
+            try
+            {
+                return local.AddDependencies(dependency, type).Result;
+            }
+            catch (Exception exc)
+            {
+                logger.LogError($"Something failed while adding dependency '{dependency.Name}' {dependency.Version}. Exception: {exc.Message}");
+                return Constants.ErrorCode;
+            }
         }
 
         /// <summary>

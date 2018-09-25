@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -72,10 +73,12 @@ namespace Microsoft.DotNet.DarcLib
             return GetFileContentsAsync(path, null, null);
         }
 
-        public Task<string> GetFileContentsAsync(string filePath, string repoUri, string branch)
+        public async Task<string> GetFileContentsAsync(string filePath, string repoUri, string branch)
         {
-            System.IO.StreamReader streamReader = new System.IO.StreamReader(filePath);
-            return streamReader.ReadToEndAsync();
+            using (StreamReader streamReader = new StreamReader(repoUri))
+            {
+                return await streamReader.ReadToEndAsync();
+            }
         }
 
         public Task<List<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path)
