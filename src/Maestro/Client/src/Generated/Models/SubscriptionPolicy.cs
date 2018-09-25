@@ -9,6 +9,8 @@ namespace Microsoft.DotNet.Maestro.Client.Models
 {
     using Microsoft.Rest;
     using Newtonsoft.Json;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Linq;
 
     public partial class SubscriptionPolicy
@@ -26,12 +28,10 @@ namespace Microsoft.DotNet.Maestro.Client.Models
         /// </summary>
         /// <param name="updateFrequency">Possible values include: 'none',
         /// 'everyDay', 'everyBuild'</param>
-        /// <param name="mergePolicy">Possible values include: 'none',
-        /// 'buildSucceeded', 'unitTestPassed', 'never'</param>
-        public SubscriptionPolicy(string updateFrequency, string mergePolicy)
+        public SubscriptionPolicy(string updateFrequency, IList<MergePolicy> mergePolicies)
         {
             UpdateFrequency = updateFrequency;
-            MergePolicy = mergePolicy;
+            MergePolicies = mergePolicies;
             CustomInit();
         }
 
@@ -48,11 +48,9 @@ namespace Microsoft.DotNet.Maestro.Client.Models
         public string UpdateFrequency { get; set; }
 
         /// <summary>
-        /// Gets or sets possible values include: 'none', 'buildSucceeded',
-        /// 'unitTestPassed', 'never'
         /// </summary>
-        [JsonProperty(PropertyName = "mergePolicy")]
-        public string MergePolicy { get; set; }
+        [JsonProperty(PropertyName = "mergePolicies")]
+        public IList<MergePolicy> MergePolicies { get; set; }
 
         /// <summary>
         /// Validate the object.
@@ -66,9 +64,9 @@ namespace Microsoft.DotNet.Maestro.Client.Models
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "UpdateFrequency");
             }
-            if (MergePolicy == null)
+            if (MergePolicies == null)
             {
-                throw new ValidationException(ValidationRules.CannotBeNull, "MergePolicy");
+                throw new ValidationException(ValidationRules.CannotBeNull, "MergePolicies");
             }
         }
     }

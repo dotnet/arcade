@@ -109,15 +109,34 @@ namespace Microsoft.DotNet.Maestro.Client
             /// </param>
             /// <param name='id'>
             /// </param>
+            /// <param name='page'>
+            /// </param>
+            /// <param name='perPage'>
+            /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<IList<SubscriptionHistoryItem>> GetSubscriptionHistoryAsync(this ISubscriptions operations, System.Guid id, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<IList<SubscriptionHistoryItem>> GetSubscriptionHistoryAsync(this ISubscriptions operations, System.Guid id, int? page = default(int?), int? perPage = default(int?), CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.GetSubscriptionHistoryWithHttpMessagesAsync(id, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.GetSubscriptionHistoryWithHttpMessagesAsync(id, page, perPage, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
+            }
+
+            /// <param name='operations'>
+            /// The operations group for this extension method.
+            /// </param>
+            /// <param name='id'>
+            /// </param>
+            /// <param name='timestamp'>
+            /// </param>
+            /// <param name='cancellationToken'>
+            /// The cancellation token.
+            /// </param>
+            public static async Task RetrySubscriptionActionAsyncAsync(this ISubscriptions operations, System.Guid id, long timestamp, CancellationToken cancellationToken = default(CancellationToken))
+            {
+                (await operations.RetrySubscriptionActionAsyncWithHttpMessagesAsync(id, timestamp, null, cancellationToken).ConfigureAwait(false)).Dispose();
             }
 
     }
