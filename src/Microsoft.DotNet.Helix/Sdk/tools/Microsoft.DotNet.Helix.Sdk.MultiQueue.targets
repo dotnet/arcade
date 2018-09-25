@@ -54,7 +54,7 @@
   <Target Name="Wait"
           AfterTargets="Test"
           Condition="$(WaitForWorkItemCompletion)">
-    <HelixWait Jobs="@SentJobs" >
+    <HelixWait Jobs="@(SentJobs)" >
       <Output TaskParameter="WorkItemStatus" ItemName="WorkItemStatus" />
     </HelixWait>
   </Target>
