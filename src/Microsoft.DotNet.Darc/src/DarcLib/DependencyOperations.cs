@@ -4,15 +4,22 @@ namespace Microsoft.DotNet.DarcLib
 {
     public static class DependencyOperations
     {
-        private static readonly HashSet<string> _wellKnownDependencies = new HashSet<string>
+        private static readonly Dictionary<string, string> _wellKnownDependencies = new Dictionary<string, string>
             {
-                "Microsoft.DotNet.Arcade.Sdk",
-                "dotnet"
+                { "Microsoft.DotNet.Arcade.Sdk", "msbuild-sdks" },
+                { "dotnet", "tools" },
             };
 
-        public static bool IsWellKnownDependency(string name)
+        public static bool TryGetKnownDependency(string name, out string parent)
         {
-            return _wellKnownDependencies.Contains(name);
+            if (_wellKnownDependencies.ContainsKey(name))
+            {
+                parent = _wellKnownDependencies[name];
+                return true;
+            }
+
+            parent = null;
+            return false;
         }
     }
 }

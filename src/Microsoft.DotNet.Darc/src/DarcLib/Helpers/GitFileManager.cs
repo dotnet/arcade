@@ -176,6 +176,8 @@ namespace Microsoft.DotNet.DarcLib
 
             GitFile file = new GitFile(filePath, versionDetails);
             File.WriteAllText(file.FilePath, file.Content);
+
+            _logger.LogInformation($"Dependency '{dependency.Name}' with version '{dependency.Version}' successfully added to Version.Details.xml");
         }
 
         public async Task AddDependencyToVersionProps(string filePath, DependencyDetail dependency)
@@ -193,6 +195,29 @@ namespace Microsoft.DotNet.DarcLib
 
             GitFile file = new GitFile(filePath, versionProps);
             File.WriteAllText(file.FilePath, file.Content);
+
+            _logger.LogInformation($"Dependency '{dependency.Name}' with version '{dependency.Version}' successfully added to Version.props");
+        }
+
+        public async Task AddDependencyToGlobalJson(string filePath, string parentField, string dependencyName, string version)
+        {
+            JToken versionProperty = new JProperty(dependencyName, version);
+            JObject globalJson = await ReadGlobalJsonAsync(filePath, null);
+            JToken parent = globalJson[parentField];
+
+            if (parent != null)
+            {
+                parent.Last.AddAfterSelf(versionProperty);
+            }
+            else
+            {
+                globalJson.Add(new JProperty(parentField, new JObject(versionProperty)));
+            }
+
+            GitFile file = new GitFile(filePath, globalJson);
+            File.WriteAllText(file.FilePath, file.Content);
+
+            _logger.LogInformation($"Dependency '{dependencyName}' with version '{version}' successfully added to global.json");
         }
 
         private async Task<XmlDocument> ReadXmlFileAsync(string filePath, string repoUri, string branch)
