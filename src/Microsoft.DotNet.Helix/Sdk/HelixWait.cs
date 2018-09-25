@@ -23,7 +23,9 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// The number of work items sent to Helix
         /// </summary>
         [Required]
-        public int[] WorkItemCounts { get; set; }
+        public string[] WorkItemCounts { get { return WorkItemCounts; }; set { WorkItemCounts = value; ParsedWorkItemCounts = Array.ConvertAll(WorkItemCounts, stringCount => int.Parse(stringCount)); } }
+
+        private int[] ParsedWorkItemCounts { get; set; }
 
         /// <summary>
         /// A return string that contains the status of the work items
@@ -64,7 +66,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogError("One or more work items failed. See Mission Control for more information.");
                     return true;
                 }
-                else if ((pass ?? 0) < WorkItemCounts[i])  // if the workitems haven't finished, we need to keep waiting
+                else if ((pass ?? 0) < ParsedWorkItemCounts[i])  // if the workitems haven't finished, we need to keep waiting
                 {
                     return false;
                 }
