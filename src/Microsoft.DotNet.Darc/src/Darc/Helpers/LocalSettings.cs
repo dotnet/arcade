@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Darc.Helpers
 
         public static LocalSettings LoadSettings()
         {
-            String settings = EncodedFile.Read(Constants.SettingsFileName);
+            string settings = EncodedFile.Read(Constants.SettingsFileName);
             return JsonConvert.DeserializeObject<LocalSettings>(settings);
         }
     }

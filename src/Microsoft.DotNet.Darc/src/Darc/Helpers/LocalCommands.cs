@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Darc.Helpers
             darcSettings.BuildAssetRegistryPassword = OverrideIfSet(darcSettings.BuildAssetRegistryPassword, 
                                                                     options.BuildAssetRegistryPassword);
 
-            // Current the darc settings only has one PAT type which is interpreted differently based
+            // Currently the darc settings only has one PAT type which is interpreted differently based
             // on the git type (Azure DevOps vs. GitHub).  For now, leave this setting empty until
             // we know what we are talking to.
 
