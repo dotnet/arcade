@@ -1,6 +1,6 @@
 namespace Microsoft.DotNet.DarcLib
 {
-    public enum VstsCheckState
+    public enum AzureDevOpsCheckState
     {
         None,
         Pending,

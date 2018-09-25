@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.DarcLib
             }
             else
             {
-                _gitClient = new VstsClient(settings.PersonalAccessToken, _logger);
+                _gitClient = new AzureDevOpsClient(settings.PersonalAccessToken, _logger);
             }
 
             _fileManager = new GitFileManager(_gitClient, _logger);

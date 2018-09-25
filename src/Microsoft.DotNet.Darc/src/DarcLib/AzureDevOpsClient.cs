@@ -21,18 +21,18 @@ using Microsoft.VisualStudio.Services.WebApi;
 
 namespace Microsoft.DotNet.DarcLib
 {
-    public class VstsClient : IGitRepo
+    public class AzureDevOpsClient : IGitRepo
     {
         private const string DefaultApiVersion = "5.0-preview.1";
         private readonly string _personalAccessToken;
         private readonly ILogger _logger;
         private readonly JsonSerializerSettings _serializerSettings;
 
-        private string VstsApiUri { get; set; }
+        private string AzureDevOpsApiUri { get; set; }
 
-        private string VstsPrUri { get; set; }
+        private string AzureDevOpsPrUri { get; set; }
 
-        public VstsClient(string accessToken, ILogger logger)
+        public AzureDevOpsClient(string accessToken, ILogger logger)
         {
             _personalAccessToken = accessToken;
             _logger = logger;
@@ -75,8 +75,8 @@ namespace Microsoft.DotNet.DarcLib
             string repoName = SetApiUriAndGetRepoName(repoUri);
             string body;
 
-            List<VstsRef> vstsRefs = new List<VstsRef>();
-            VstsRef vstsRef;
+            List<AzureDevOpsRef> azureDevOpsRefs = new List<AzureDevOpsRef>();
+            AzureDevOpsRef azureDevOpsRef;
             HttpResponseMessage response = null;
 
             string latestSha = await GetLastCommitShaAsync(repoName, baseBranch);
@@ -84,13 +84,13 @@ namespace Microsoft.DotNet.DarcLib
             response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/refs/heads/{newBranch}", _logger);
             JObject responseContent = JObject.Parse(await response.Content.ReadAsStringAsync());
 
-            // VSTS doesn't fail with a 404 if a branch does not exist, it just returns an empty response object...
+            // Azure DevOps doesn't fail with a 404 if a branch does not exist, it just returns an empty response object...
             if (responseContent["count"].ToObject<int>() == 0)
             {
                 _logger.LogInformation($"'{newBranch}' branch doesn't exist. Creating it...");
 
-                vstsRef = new VstsRef($"refs/heads/{newBranch}", latestSha);
-                vstsRefs.Add(vstsRef);
+                azureDevOpsRef = new AzureDevOpsRef($"refs/heads/{newBranch}", latestSha);
+                azureDevOpsRefs.Add(azureDevOpsRef);
             }
             else
             {
@@ -98,11 +98,11 @@ namespace Microsoft.DotNet.DarcLib
 
                 string oldSha = await GetLastCommitShaAsync(repoName, $"{newBranch}");
 
-                vstsRef = new VstsRef($"refs/heads/{newBranch}", latestSha, oldSha);
-                vstsRefs.Add(vstsRef);
+                azureDevOpsRef = new AzureDevOpsRef($"refs/heads/{newBranch}", latestSha, oldSha);
+                azureDevOpsRefs.Add(azureDevOpsRef);
             }
 
-            body = JsonConvert.SerializeObject(vstsRefs, _serializerSettings);
+            body = JsonConvert.SerializeObject(azureDevOpsRefs, _serializerSettings);
             await this.ExecuteGitCommand(HttpMethod.Post, $"repositories/{repoName}/refs", _logger, body);
         }
 
@@ -110,33 +110,33 @@ namespace Microsoft.DotNet.DarcLib
         {
             _logger.LogInformation($"Pushing files to '{branch}'...");
 
-            List<VstsChange> changes = new List<VstsChange>();
+            List<AzureDevOpsChange> changes = new List<AzureDevOpsChange>();
             string repoName = SetApiUriAndGetRepoName(repoUri);
 
             foreach (GitFile gitfile in filesToCommit)
             {
                 string blobSha = await CheckIfFileExistsAsync(repoUri, gitfile.FilePath, branch);
 
-                VstsChange change = new VstsChange(gitfile.FilePath, gitfile.Content);
+                AzureDevOpsChange change = new AzureDevOpsChange(gitfile.FilePath, gitfile.Content);
 
                 if (!string.IsNullOrEmpty(blobSha))
                 {
-                    change.ChangeType = VstsChangeType.Edit;
+                    change.ChangeType = AzureDevOpsChangeType.Edit;
                 }
 
                 changes.Add(change);
             }
 
-            VstsCommit commit = new VstsCommit(changes, "Dependency files update");
+            AzureDevOpsCommit commit = new AzureDevOpsCommit(changes, "Dependency files update");
 
             string latestSha = await GetLastCommitShaAsync(repoName, branch);
-            VstsRefUpdate refUpdate = new VstsRefUpdate($"refs/heads/{branch}", latestSha);
+            AzureDevOpsRefUpdate refUpdate = new AzureDevOpsRefUpdate($"refs/heads/{branch}", latestSha);
 
-            VstsPush vstsPush = new VstsPush(refUpdate, commit);
+            AzureDevOpsPush azureDevOpsPush = new AzureDevOpsPush(refUpdate, commit);
 
-            string body = JsonConvert.SerializeObject(vstsPush, _serializerSettings);
+            string body = JsonConvert.SerializeObject(azureDevOpsPush, _serializerSettings);
 
-            // VSTS' contents API is only supported in version 5.0-preview.2
+            // Azure DevOps' contents API is only supported in version 5.0-preview.2
             await this.ExecuteGitCommand(HttpMethod.Post, $"repositories/{repoName}/pushes", _logger, body, "5.0-preview.2");
 
             _logger.LogInformation($"Pushing files to '{branch}' succeeded!");
@@ -146,21 +146,21 @@ namespace Microsoft.DotNet.DarcLib
         {
             string repoName = SetApiUriAndGetRepoName(repoUri);
             StringBuilder query = new StringBuilder();
-            VstsPrStatus prStatus;
+            AzureDevOpsPrStatus prStatus;
 
             switch (status)
             {
                 case PrStatus.Open:
-                    prStatus = VstsPrStatus.Active;
+                    prStatus = AzureDevOpsPrStatus.Active;
                     break;
                 case PrStatus.Closed:
-                    prStatus = VstsPrStatus.Abandoned;
+                    prStatus = AzureDevOpsPrStatus.Abandoned;
                     break;
                 case PrStatus.Merged:
-                    prStatus = VstsPrStatus.Completed;
+                    prStatus = AzureDevOpsPrStatus.Completed;
                     break;
                 default:
-                    prStatus = VstsPrStatus.None;
+                    prStatus = AzureDevOpsPrStatus.None;
                     break;
             }
 
@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.DarcLib
 
             if (!string.IsNullOrEmpty(keyword))
             {
-                _logger.LogInformation("A keyword was provided but VSTS doesn't support searching for PRs based on keywords and it won't be used...");
+                _logger.LogInformation("A keyword was provided but Azure DevOps doesn't support searching for PRs based on keywords and it won't be used...");
             }
 
             if (!string.IsNullOrEmpty(author))
@@ -194,19 +194,19 @@ namespace Microsoft.DotNet.DarcLib
 
             JObject responseContent = JObject.Parse(await response.Content.ReadAsStringAsync());
 
-            if (Enum.TryParse(responseContent["status"].ToString(), true, out VstsPrStatus status))
+            if (Enum.TryParse(responseContent["status"].ToString(), true, out AzureDevOpsPrStatus status))
             {
-                if (status == VstsPrStatus.Active)
+                if (status == AzureDevOpsPrStatus.Active)
                 {
                     return PrStatus.Open;
                 }
 
-                if (status == VstsPrStatus.Completed)
+                if (status == AzureDevOpsPrStatus.Completed)
                 {
                     return PrStatus.Merged;
                 }
 
-                if (status == VstsPrStatus.Abandoned)
+                if (status == AzureDevOpsPrStatus.Abandoned)
                 {
                     return PrStatus.Closed;
                 }
@@ -331,12 +331,12 @@ namespace Microsoft.DotNet.DarcLib
         public async Task CommentOnPullRequestAsync(string pullRequestUrl, string message)
         {
             SetApiUriAndGetRepoName(pullRequestUrl);
-            List<VstsCommentBody> comments = new List<VstsCommentBody>
+            List<AzureDevOpsCommentBody> comments = new List<AzureDevOpsCommentBody>
             {
-                new VstsCommentBody(message)
+                new AzureDevOpsCommentBody(message)
             };
 
-            VstsComment comment = new VstsComment(comments);
+            AzureDevOpsComment comment = new AzureDevOpsComment(comments);
 
             string body = JsonConvert.SerializeObject(comment, _serializerSettings);
 
@@ -361,9 +361,9 @@ namespace Microsoft.DotNet.DarcLib
             HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, $"repositories/{repoName}/items?scopePath={path}&version={commit}&includeContent=true&versionType=commit&recursionLevel=full", _logger);
 
             JObject content = JObject.Parse(await response.Content.ReadAsStringAsync());
-            List<VstsItem> items = JsonConvert.DeserializeObject<List<VstsItem>>(Convert.ToString(content["value"]));
+            List<AzureDevOpsItem> items = JsonConvert.DeserializeObject<List<AzureDevOpsItem>>(Convert.ToString(content["value"]));
 
-            foreach (VstsItem item in items)
+            foreach (AzureDevOpsItem item in items)
             {
                 if (!item.IsFolder)
                 {
@@ -419,22 +419,22 @@ namespace Microsoft.DotNet.DarcLib
             IList<Check> statuses = new List<Check>();
             foreach (JToken status in values)
             {
-                if (Enum.TryParse(status["state"].ToString(), true, out VstsCheckState state))
+                if (Enum.TryParse(status["state"].ToString(), true, out AzureDevOpsCheckState state))
                 {
                     CheckState checkState;
 
                     switch (state)
                     {
-                        case VstsCheckState.Error:
+                        case AzureDevOpsCheckState.Error:
                             checkState = CheckState.Error;
                             break;
-                        case VstsCheckState.Failed:
+                        case AzureDevOpsCheckState.Failed:
                             checkState = CheckState.Failure;
                             break;
-                        case VstsCheckState.Pending:
+                        case AzureDevOpsCheckState.Pending:
                             checkState = CheckState.Pending;
                             break;
-                        case VstsCheckState.Succeeded:
+                        case AzureDevOpsCheckState.Succeeded:
                             checkState = CheckState.Success;
                             break;
                         default:
@@ -479,7 +479,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             HttpClient client = new HttpClient
             {
-                BaseAddress = new Uri(VstsApiUri)
+                BaseAddress = new Uri(AzureDevOpsApiUri)
             };
             client.DefaultRequestHeaders.Add("Accept", $"application/json;api-version={versionOverride ?? DefaultApiVersion}");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", _personalAccessToken))));
@@ -538,8 +538,8 @@ namespace Microsoft.DotNet.DarcLib
                 throw new ArgumentException($"Repository URI host name '{absolutePath}' should have a project and repo name. i.e. /DefaultCollection/<projectname>/_git/<reponame>");
             }
 
-            VstsApiUri = $"https://dev.azure.com/{accountName}/{projectName}/_apis/git/";
-            VstsPrUri = $"https://dev.azure.com/{accountName}/{projectName}/_git/{repoName}/pullrequest/";
+            AzureDevOpsApiUri = $"https://dev.azure.com/{accountName}/{projectName}/_apis/git/";
+            AzureDevOpsPrUri = $"https://dev.azure.com/{accountName}/{projectName}/_git/{repoName}/pullrequest/";
 
             return repoName;
         }
@@ -552,7 +552,7 @@ namespace Microsoft.DotNet.DarcLib
             title = !string.IsNullOrEmpty(title) ? $"{PullRequestProperties.TitleTag} {title}" : PullRequestProperties.Title;
             description = description ?? PullRequestProperties.Description;
 
-            VstsPullRequest pullRequest = new VstsPullRequest(title, description, sourceBranch, mergeWithBranch);
+            AzureDevOpsPullRequest pullRequest = new AzureDevOpsPullRequest(title, description, sourceBranch, mergeWithBranch);
 
             string body = JsonConvert.SerializeObject(pullRequest, _serializerSettings);
 
@@ -569,7 +569,7 @@ namespace Microsoft.DotNet.DarcLib
 
             JObject content = JObject.Parse(await response.Content.ReadAsStringAsync());
 
-            Console.WriteLine($"Browser ready link for this PR is: '{VstsPrUri}{content["pullRequestId"].ToString()}'");
+            Console.WriteLine($"Browser ready link for this PR is: '{AzureDevOpsPrUri}{content["pullRequestId"].ToString()}'");
 
             return content["url"].ToString();
         }

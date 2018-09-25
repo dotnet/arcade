@@ -4,7 +4,7 @@
 
 namespace Microsoft.DotNet.DarcLib
 {
-    public class VstsItem
+    public class AzureDevOpsItem
     {
         public string Path { get; set; }
 

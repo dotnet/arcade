@@ -171,9 +171,9 @@ namespace Microsoft.DotNet.Maestro.Tasks
 
         /// <summary>
         /// When we flow dependencies we expect source and target repos to be the same i.e github.com or dev.azure.com/dnceng. When this task is executed
-        /// the repository is a VSTS repository even though the real source is GitHub since we just mirror the code. 
-        /// When we detect a vsts repository we check if the latest commit exist in GitHub to determine if the source is GitHub or not. If the commit exists in
-        /// the repo we transform the Url from VSTS to GitHub. If not we continue to work with the original Url.
+        /// the repository is an Azure DevOps repository even though the real source is GitHub since we just mirror the code. 
+        /// When we detect an Azure DevOps repository we check if the latest commit exist in GitHub to determine if the source is GitHub or not. If the commit exists in
+        /// the repo we transform the Url from Azure DevOps to GitHub. If not we continue to work with the original Url.
         /// </summary>
         /// <param name="repoUrl">The repo Url.</param>
         /// <param name="lastCommitHash">The hash of the last commit.</param>
