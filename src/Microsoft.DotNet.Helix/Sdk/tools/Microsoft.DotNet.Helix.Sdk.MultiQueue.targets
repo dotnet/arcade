@@ -54,8 +54,7 @@
   <Target Name="Wait"
           AfterTargets="Test"
           Condition="$(WaitForWorkItemCompletion)">
-    <HelixWait JobIds="@(SentJobs -> %(SentJob.Identity))"
-               WorkItemCounts="@(SentJobs -> %(SentJob.WorkItemCount))" >
+    <HelixWait Jobs="@SentJobs" >
       <Output TaskParameter="WorkItemStatus" ItemName="WorkItemStatus" />
     </HelixWait>
   </Target>
