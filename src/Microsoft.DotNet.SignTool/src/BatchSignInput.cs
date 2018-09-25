@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
@@ -24,14 +25,22 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         internal ImmutableDictionary<ImmutableArray<byte>, ZipData> ZipDataMap;
 
-        internal BatchSignInput(ImmutableArray<FileSignInfo> filesToSign, ImmutableDictionary<ImmutableArray<byte>, ZipData> zipDataMap)
+        /// <summary>
+        /// A list of files whose content needs to be overwritten by signed content from a different file.
+        /// Copy the content of file with full path specified in Key to file with full path specified in Value.
+        /// </summary>
+        internal ImmutableArray<KeyValuePair<string, string>> FilesToCopy;
+
+        internal BatchSignInput(ImmutableArray<FileSignInfo> filesToSign, ImmutableDictionary<ImmutableArray<byte>, ZipData> zipDataMap, ImmutableArray<KeyValuePair<string, string>> filesToCopy)
         {
             Debug.Assert(!filesToSign.IsDefault);
             Debug.Assert(zipDataMap != null);
             Debug.Assert(zipDataMap.KeyComparer == ByteSequenceComparer.Instance);
+            Debug.Assert(!filesToCopy.IsDefault);
 
             FilesToSign = filesToSign;
             ZipDataMap = zipDataMap;
+            FilesToCopy = filesToCopy;
         }
     }
 }

@@ -16,6 +16,11 @@ namespace Microsoft.DotNet.Darc.Models
             Contents = contents;
         }
 
+        public EditorPopUp(string path)
+        {
+            Path = path;
+        }
+
         [JsonIgnore]
         public string Path { get; set; }
 
