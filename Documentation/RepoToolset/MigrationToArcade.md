@@ -60,7 +60,9 @@ The following applies to CI build definition, not PR validation build definition
   - otherwise example to follow: https://github.com/dotnet/roslyn-analyzers/.vsts-ci.yml 
 - pipeline variables (settable in build definition web UI)
   - Add SignType definition variable settable at queue time
-  - Link DotNet-Symbol-Publish variable group. If you don’t see the group in the UI you might not have permissions. Let me know and I’ll add it to your definition.
+    ![Pipeline Variables](PipelineVariables.png)
+  - Link DotNet-Symbol-Publish variable group. If you don’t see the group in the UI you might not have permissions. Let me know and I'll add it to your definition.
+    ![Variable Groups](VariableGroups.png)
 
 ### Versioning changes
 - Arcade has a new versioning scheme for packages
@@ -110,7 +112,7 @@ The following applies to CI build definition, not PR validation build definition
 
 - `PublicKeyToken` and `TargetFramework` attributes are optional, allow to distinguish between multiple flavors of a multi-targeted file
 - Sign tool is now a build task producing the following output to the binlog:
- 
+ ![Sign Tool Log](SignToolLog.png)
 -	After switching double-check that the binaries are signed as expected.
 
 ### NuGet packaging
