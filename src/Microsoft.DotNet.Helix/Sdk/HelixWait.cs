@@ -14,16 +14,10 @@ namespace Microsoft.DotNet.Helix.Sdk
     public class HelixWait : HelixTask
     {
         /// <summary>
-        /// An array of Helix Job IDs to be waited on
+        /// An array of Helix Jobs to be waited on
         /// </summary>
         [Required]
-        public string[] JobIds { get; set; }
-
-        /// <summary>
-        /// The number of work items sent to Helix
-        /// </summary>
-        [Required]
-        public int[] WorkItemCounts { get; set; }
+        public ITaskItem[] Jobs { get; set; }
 
         /// <summary>
         /// A return string that contains the status of the work items
@@ -46,12 +40,12 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private async Task<bool> WorkItemsFinished()
         {
-            for (int i = 0; i < JobIds.Length; i++)
+            foreach (var job in Jobs)
             {
-                var workItemSummary = await HelixApi.Aggregate.JobSummaryMethodAsync(new string[] { "job.source" }, 1, filtername:JobIds[i]);
+                var workItemSummary = await HelixApi.Aggregate.JobSummaryMethodAsync(new string[] { "job.source" }, 1, filtername:job.GetMetadata("Identity"));
                 if (workItemSummary.Count < 1)
                 {
-                    Log.LogError($"Job {JobIds[i]} not found -- something has gone terribly wrong");
+                    Log.LogError($"Job {job.GetMetadata("Identity")} not found -- something has gone terribly wrong");
                     return true;
                 }
 
@@ -64,7 +58,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogError("One or more work items failed. See Mission Control for more information.");
                     return true;
                 }
-                else if ((pass ?? 0) < WorkItemCounts[i])  // if the workitems haven't finished, we need to keep waiting
+                else if ((pass ?? 0) < Convert.ToInt32(job.GetMetadata("WorkItemCount")))  // if the workitems haven't finished, we need to keep waiting
                 {
                     return false;
                 }
