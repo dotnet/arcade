@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.DotNet.Darc.Helpers;
 using Microsoft.DotNet.Darc.Options;
 using Microsoft.DotNet.DarcLib;
 using System;
@@ -23,12 +24,15 @@ namespace Microsoft.DotNet.Darc.Operations
         /// <param name="options"></param>
         public override int Execute()
         {
-            Local local = new Local(_options.LocalDirectory, Logger);
+            Local local = new Local(LocalCommands.GetGitDir(Logger), Logger);
+
             var allDependencies = local.GetDependencies().Result;
+
             foreach (var dependency in allDependencies)
             {
                 Console.WriteLine($"{dependency.Name} {dependency.Version} from {dependency.RepoUri}@{dependency.Commit}");
             }
+
             return 0;
         }
     }

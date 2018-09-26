@@ -25,7 +25,5 @@ namespace Microsoft.DotNet.Darc.Options
 
         [Option("debug", HelpText = "Turn on debug output")]
         public bool Debug { get; set; }
-
-        public string LocalDirectory { get { return System.IO.Directory.GetCurrentDirectory(); } }
     }
 }
