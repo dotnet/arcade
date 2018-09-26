@@ -20,14 +20,14 @@ namespace Microsoft.DotNet.GenFacades
         private readonly string _commentsContents;
         private readonly string _companyNameContents;
         private readonly string _fileDescriptionContents;
-        private readonly Version _fileVersionContents;
+        private readonly Version _fileVersion;
         private readonly string _internalNameContents;
         private readonly string _legalCopyrightContents;
         private readonly string _legalTrademarksContents;
         private readonly string _originalFileNameContents;
         private readonly string _productNameContents;
-        private readonly Version _productVersionContents;
-        private readonly Version _assemblyVersionContents;
+        private readonly Version _productVersion;
+        private readonly Version _assemblyVersion;
 
         private const string vsVersionInfoKey = "VS_VERSION_INFO";
         private const string varFileInfoKey = "VarFileInfo";
@@ -47,14 +47,14 @@ namespace Microsoft.DotNet.GenFacades
             _commentsContents = comments;
             _companyNameContents = companyName;
             _fileDescriptionContents = fileDescription;
-            _fileVersionContents = fileVersion;
+            _fileVersion = fileVersion;
             _internalNameContents = internalName;
             _legalCopyrightContents = legalCopyright;
             _legalTrademarksContents = legalTrademark;
             _originalFileNameContents = originalFileName;
             _productNameContents = productName;
-            _productVersionContents = productVersion;
-            _assemblyVersionContents = assemblyVersion;
+            _productVersion = productVersion;
+            _assemblyVersion = assemblyVersion;
             _langIdAndCodePageKey = System.String.Format("{0:x4}{1:x4}", 0 /*langId*/, CP_WINUNICODE /*codepage*/);
         }
 
@@ -66,14 +66,14 @@ namespace Microsoft.DotNet.GenFacades
             if (_commentsContents != null) yield return new KeyValuePair<string, string>("Comments", _commentsContents);
             if (_companyNameContents != null) yield return new KeyValuePair<string, string>("CompanyName", _companyNameContents);
             if (_fileDescriptionContents != null) yield return new KeyValuePair<string, string>("FileDescription", _fileDescriptionContents);
-            if (_fileVersionContents != null) yield return new KeyValuePair<string, string>("FileVersion", _fileVersionContents.ToString());
+            if (_fileVersion != null) yield return new KeyValuePair<string, string>("FileVersion", _fileVersion.ToString());
             if (_internalNameContents != null) yield return new KeyValuePair<string, string>("InternalName", _internalNameContents);
             if (_legalCopyrightContents != null) yield return new KeyValuePair<string, string>("LegalCopyright", _legalCopyrightContents);
             if (_legalTrademarksContents != null) yield return new KeyValuePair<string, string>("LegalTrademarks", _legalTrademarksContents);
             if (_originalFileNameContents != null) yield return new KeyValuePair<string, string>("OriginalFilename", _originalFileNameContents);
             if (_productNameContents != null) yield return new KeyValuePair<string, string>("ProductName", _productNameContents);
-            if (_productVersionContents != null) yield return new KeyValuePair<string, string>("ProductVersion", _productVersionContents.ToString());
-            if (_assemblyVersionContents != null) yield return new KeyValuePair<string, string>("Assembly Version", _assemblyVersionContents.ToString());
+            if (_productVersion != null) yield return new KeyValuePair<string, string>("ProductVersion", _productVersion.ToString());
+            if (_assemblyVersion != null) yield return new KeyValuePair<string, string>("Assembly Version", _assemblyVersion.ToString());
         }
 
         private uint FileType { get { return (_isDll) ? VFT_DLL : VFT_APP; } }
@@ -82,10 +82,10 @@ namespace Microsoft.DotNet.GenFacades
         {
             writer.Write((DWORD)0xFEEF04BD);
             writer.Write((DWORD)0x00010000);
-            writer.Write((DWORD)(_fileVersionContents.Major << 16) | (uint)_fileVersionContents.Minor);
-            writer.Write((DWORD)(_fileVersionContents.Build << 16) | (uint)_fileVersionContents.Revision);
-            writer.Write((DWORD)(_productVersionContents.Major << 16) | (uint)_productVersionContents.Minor);
-            writer.Write((DWORD)(_productVersionContents.Build << 16) | (uint)_productVersionContents.Revision);
+            writer.Write((DWORD)(_fileVersion.Major << 16) | (uint)_fileVersion.Minor);
+            writer.Write((DWORD)(_fileVersion.Build << 16) | (uint)_fileVersion.Revision);
+            writer.Write((DWORD)(_productVersion.Major << 16) | (uint)_productVersion.Minor);
+            writer.Write((DWORD)(_productVersion.Build << 16) | (uint)_productVersion.Revision);
             writer.Write((DWORD)0x0000003F);   //VS_FFI_FILEFLAGSMASK  (EDMAURER) really? all these bits are valid?
             writer.Write((DWORD)0);    //file flags
             writer.Write((DWORD)0x00000004);   //VOS__WINDOWS32
