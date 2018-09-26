@@ -666,18 +666,19 @@ namespace Microsoft.DotNet.GenFacades
             private void AddWin32VersionResource(string contractLocation, Assembly facade)
             {
                 var versionInfo = FileVersionInfo.GetVersionInfo(contractLocation);
+                Version version = new Version(versionInfo.FileMajorPart, versionInfo.FileMinorPart, versionInfo.FileBuildPart, versionInfo.FilePrivatePart);
                 var versionSerializer = new VersionResourceSerializer(
                     true,
                     versionInfo.Comments,
                     versionInfo.CompanyName,
                     versionInfo.FileDescription,
-                    _assemblyFileVersion == null ? versionInfo.FileVersion : _assemblyFileVersion.ToString(),
+                    version,
                     versionInfo.InternalName,
                     versionInfo.LegalCopyright,
                     versionInfo.LegalTrademarks,
                     versionInfo.OriginalFilename,
                     versionInfo.ProductName,
-                    _assemblyFileVersion == null ? versionInfo.ProductVersion : _assemblyFileVersion.ToString(),
+                    version,
                     facade.Version);
 
                 using (var stream = new MemoryStream())
