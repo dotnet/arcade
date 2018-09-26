@@ -19,12 +19,11 @@
       The certificate can be overriden using the StrongNameSignInfo or the FileSignInfo item group.
     -->
     <FileExtensionSignInfo Include=".jar" CertificateName="MicrosoftJAR" />
-    <FileExtensionSignInfo Include=".dylib" CertificateName="Apple" />
     <FileExtensionSignInfo Include=".js;.ps1;.psd1;.psm1;.psc1" CertificateName="Microsoft400" />
     <FileExtensionSignInfo Include=".dll;.exe" CertificateName="MicrosoftSHA2" />
     <FileExtensionSignInfo Include=".nupkg" CertificateName="NuGet" />
     <FileExtensionSignInfo Include=".vsix" CertificateName="VsixSHA2" />
-    <FileExtensionSignInfo Include=".zip" CertificateName="None" />
+    <FileExtensionSignInfo Include=".zip;.dylib" CertificateName="None" />
   </ItemGroup>
 
   <!-- Allow repository to customize signing configuration -->
