@@ -556,6 +556,51 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Channels"
+        ],
+        "operationId": "Channels_DeleteChannel",
+        "consumes": [],
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The api version",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "2018-07-16"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Channel"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            }
+          }
+        }
       }
     },
     "/api/channels/{channelId}/builds/{buildId}": {
@@ -1082,6 +1127,20 @@
             "format": "uuid"
           },
           {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
             "name": "api-version",
             "in": "query",
             "description": "The api version",
@@ -1102,6 +1161,53 @@
                 "$ref": "#/definitions/SubscriptionHistoryItem"
               }
             }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/ApiError"
+            }
+          }
+        }
+      }
+    },
+    "/api/subscriptions/{id}/retry/{timestamp}": {
+      "post": {
+        "tags": [
+          "Subscriptions"
+        ],
+        "operationId": "Subscriptions_RetrySubscriptionActionAsync",
+        "consumes": [],
+        "produces": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "timestamp",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The api version",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "2018-07-16"
+            ]
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success"
           },
           "default": {
             "description": "Error",
@@ -1415,7 +1521,7 @@
     "SubscriptionPolicy": {
       "required": [
         "updateFrequency",
-        "mergePolicy"
+        "mergePolicies"
       ],
       "type": "object",
       "properties": {
@@ -1427,14 +1533,24 @@
           ],
           "type": "string"
         },
-        "mergePolicy": {
-          "enum": [
-            "none",
-            "buildSucceeded",
-            "unitTestPassed",
-            "never"
-          ],
+        "mergePolicies": {
+          "uniqueItems": false,
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MergePolicy"
+          }
+        }
+      }
+    },
+    "MergePolicy": {
+      "type": "object",
+      "properties": {
+        "name": {
           "type": "string"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": {}
         }
       }
     },
@@ -1501,6 +1617,10 @@
           "readOnly": false
         },
         "action": {
+          "type": "string",
+          "readOnly": false
+        },
+        "retryUrl": {
           "type": "string",
           "readOnly": false
         }

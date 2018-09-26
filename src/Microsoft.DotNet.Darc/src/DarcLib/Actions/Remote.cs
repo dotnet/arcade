@@ -94,6 +94,7 @@ namespace Microsoft.DotNet.DarcLib
             return await _barClient.Subscriptions.GetSubscriptionAsync(subscriptionGuid);
         }
 
+        // TODO: Fix this API to handle multiple merge policies
         public async Task<Subscription> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy)
         {
             CheckForValidBarClient();
@@ -106,7 +107,10 @@ namespace Microsoft.DotNet.DarcLib
                 Policy = new SubscriptionPolicy()
                 {
                     UpdateFrequency = updateFrequency,
-                    MergePolicy = mergePolicy
+                    MergePolicies = new List<MergePolicy>
+                    {
+                        new MergePolicy(mergePolicy),
+                    },
                 }
             };
             return await _barClient.Subscriptions.CreateAsync(subscriptionData);
