@@ -43,7 +43,7 @@ Shipping packages are the ones that are pushed to NuGet.org, non-shipping are pu
     "vswhere": "2.2.7"    // Only present for repositories that require desktop msbuild to build their projects (shipped with VS)
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "1.0.0-beta.18470.22" // Pick the latest
+    "Microsoft.DotNet.Arcade.Sdk": "1.0.0-beta.18476.3" // Pick the latest
   }
 }
 ```
