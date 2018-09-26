@@ -41,7 +41,8 @@ namespace Microsoft.DotNet.Darc.Helpers
                 return Constants.ErrorCode;
             }
 
-            int result = 0;
+            int result = Constants.ErrorCode;
+            int tries = Constants.MaxPopupTries;
 
             ParsedCommand parsedCommand = GetParsedCommand(_editorPath);
 
@@ -53,33 +54,51 @@ namespace Microsoft.DotNet.Darc.Helpers
                 Directory.CreateDirectory(dirPath);
                 File.WriteAllLines(path, popUp.Contents.Select(l => l.Text));
 
-                using (Process process = new Process())
+                while (tries-- > 0 && result != Constants.SuccessCode)
                 {
-                    process.EnableRaisingEvents = true;
-                    process.Exited += (sender, e) =>
+                    using (Process process = new Process())
                     {
-                        IList<Line> contents = popUp.OnClose(path);
+                        _popUpClosed = false;
+                        process.EnableRaisingEvents = true;
+                        process.Exited += (sender, e) =>
+                        {
+                            IList<Line> contents = popUp.OnClose(path);
 
-                        result = popUp.ProcessContents(contents);
+                            result = popUp.ProcessContents(contents);
 
-                        Directory.Delete(dirPath, true);
+                            // If succeeded, delete the temp file, otherwise keep it around
+                            // for another popup iteration.
+                            if (result == Constants.SuccessCode)
+                            {
+                                Directory.Delete(dirPath, true);
+                            }
+                            else if (tries > 0)
+                            {
+                                _logger.LogError("Inputs were invalid, please try again.");
+                            }
+                            else
+                            {
+                                Directory.Delete(dirPath, true);
+                                _logger.LogError("Maximum number of tries reached, aborting..");
+                            }
 
-                        _popUpClosed = true;
-                    };
-                    process.StartInfo.FileName = parsedCommand.FileName;
-                    process.StartInfo.Arguments = $"{parsedCommand.Arguments} {path}";
-                    process.Start();
+                            _popUpClosed = true;
+                        };
+                        process.StartInfo.FileName = parsedCommand.FileName;
+                        process.StartInfo.Arguments = $"{parsedCommand.Arguments} {path}";
+                        process.Start();
 
-                    int waitForMilliseconds = 100;
-                    while (!_popUpClosed)
-                    {
-                        Thread.Sleep(waitForMilliseconds);
+                        int waitForMilliseconds = 100;
+                        while (!_popUpClosed)
+                        {
+                            Thread.Sleep(waitForMilliseconds);
+                        }
                     }
                 }
             }
             catch (Exception exc)
             {
-                _logger.LogError($"There was an excpetion while trying to pop up an editor window. Exception: {exc.Message}");
+                _logger.LogError(exc, $"There was an exception while trying to pop up an editor window");
                 result = Constants.ErrorCode;
             }
 

@@ -51,55 +51,6 @@ namespace Microsoft.DotNet.Darc.Models
 
         public LocalSettings settings { get; set; }
 
-        public override bool Validate()
-        {
-            // No real validation required since none of the fields are mandatory
-            return true;
-        }
-        
-        /// <summary>
-        /// Retrieve the string that should be displayed to the user.
-        /// </summary>
-        /// <param name="currentValue">Current value of the setting</param>
-        /// <param name="defaultValue">Default value if the current setting value is empty</param>
-        /// <param name="isSecret">If secret and current value is empty, should display ***</param>
-        /// <returns>String to display</returns>
-        private string GetCurrentSettingForDisplay(string currentValue, string defaultValue, bool isSecret)
-        {
-            if (!string.IsNullOrEmpty(currentValue))
-            {
-                return isSecret ? "***" : currentValue;
-            }
-            else
-            {
-                return defaultValue;
-            }
-        }
-
-        /// <summary>
-        /// Parses a setting and returns the value to save.
-        /// </summary>
-        /// <param name="inputSetting">Input string from the file</param>
-        /// <returns>
-        ///     - Original setting if the setting is secret and value is still all ***
-        ///     - Empty string if the setting starts+ends with <>
-        ///     - New value if anything else.
-        /// </returns>
-        private string ParseSetting(string inputSetting, string originalSetting, bool isSecret)
-        {
-            string trimmedSetting = inputSetting.Trim();
-            if (trimmedSetting.StartsWith('<') && trimmedSetting.EndsWith('>'))
-            {
-                return string.Empty;
-            }
-            // If the setting is secret and only contains *, then keep it the same as the input setting
-            if (isSecret && trimmedSetting.Length > 0 && trimmedSetting.Replace("*", "") == string.Empty)
-            {
-                return originalSetting;
-            }
-            return trimmedSetting;
-        }
-
         public override int ProcessContents(IList<Line> contents)
         {
             foreach (Line line in contents)
@@ -124,11 +75,6 @@ namespace Microsoft.DotNet.Darc.Models
                         _logger.LogWarning($"'{keyValue[0]}' is an unknown field in the authentication scope");
                         break;
                 }
-            }
-
-            if (!Validate())
-            {
-                return Constants.ErrorCode;
             }
 
             return settings.SaveSettings(_logger);

@@ -16,12 +16,16 @@ namespace Microsoft.DotNet.Darc
             return Parser.Default.ParseArguments<AuthenticateCommandLineOptions,
                                                  GetCommandLineOptions,
                                                  AddCommandLineOptions,
-                                                 GetChannelsCommandLineOptions>(args)
+                                                 GetChannelsCommandLineOptions,
+                                                 AddSubscriptionCommandLineOptions,
+                                                 DeleteSubscriptionCommandLineOptions>(args)
                 .MapResult(
                     (AuthenticateCommandLineOptions opts) => { return RunOperation(new AuthenticateOperation(opts)); },
                     (GetCommandLineOptions opts) => { return RunOperation(new GetOperation(opts)); },
                     (AddCommandLineOptions opts) => { return RunOperation(new AddOperation(opts)); },
                     (GetChannelsCommandLineOptions opts) => { return RunOperation(new GetChannelsOperation(opts)); },
+                    (AddSubscriptionCommandLineOptions opts) => { return RunOperation(new AddSubscriptionOperation(opts)); },
+                    (DeleteSubscriptionCommandLineOptions opts) => { return RunOperation(new DeleteSubscriptionOperation(opts)); },
                     (errs => 1));
         }
 
