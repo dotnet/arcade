@@ -37,8 +37,6 @@ phases:
           name: dnceng-linux-external-temp
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           name: dnceng-linux-internal-temp
-        demands:
-          - agent.os -equals Linux
         parallel: 2
         matrix:
           Build_Debug:
