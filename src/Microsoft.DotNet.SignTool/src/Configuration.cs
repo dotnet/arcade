@@ -138,14 +138,13 @@ namespace Microsoft.DotNet.SignTool
             // Try to determine default certificate name by the extension of the file
             var hasSignInfo = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out var signInfo);
 
+            var isAlreadySigned = false;
+
             if (FileSignInfo.IsPEFile(fullPath))
             {
                 using (var stream = File.OpenRead(fullPath))
                 {
-                    if (ContentUtil.IsAuthenticodeSigned(stream))
-                    {
-                        return new FileSignInfo(fullPath, hash, SignInfo.AlreadySigned);
-                    }
+                    isAlreadySigned = ContentUtil.IsAuthenticodeSigned(stream);
                 }
 
                 GetPEInfo(fullPath, out var isManaged, out var publicKeyToken, out targetFramework);
@@ -176,6 +175,17 @@ namespace Microsoft.DotNet.SignTool
 
             if (hasSignInfo)
             {
+                if (isAlreadySigned)
+                {
+                    if (signInfo.Certificate.Equals(SignToolConstants.Certificate_Microsoft3rdPartyAppComponentDual, StringComparison.OrdinalIgnoreCase) || 
+                        signInfo.Certificate.Equals(SignToolConstants.Certificate_Microsoft3rdPartyAppComponentSha2, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return new FileSignInfo(fullPath, hash, signInfo, (targetFramework != "") ? targetFramework : null);
+                    }
+
+                    return new FileSignInfo(fullPath, hash, SignInfo.AlreadySigned);
+                }
+
                 return new FileSignInfo(fullPath, hash, signInfo, (targetFramework != "") ? targetFramework : null);
             }
 

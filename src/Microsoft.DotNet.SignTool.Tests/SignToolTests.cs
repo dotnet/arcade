@@ -712,5 +712,49 @@ $@"
                 "File 'powerm.psm1' Certificate='PSMCertificate'",
             });
         }
+
+        [Fact]
+        public void ValidateAppendingCertificate_MicrosoftDual()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("SignedLibrary.dll")
+            };
+
+            var signingInformation = new Dictionary<string, SignInfo>()
+            {
+                { "31bf3856ad364e35", new SignInfo(SignToolConstants.Certificate_Microsoft3rdPartyAppComponentDual, null) }
+            };
+
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            {
+                $"File 'SignedLibrary.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='{SignToolConstants.Certificate_Microsoft3rdPartyAppComponentDual}'",
+            });
+        }
+
+        [Fact]
+        public void ValidateAppendingCertificate_MicrosoftSHA2()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("SignedLibrary.dll")
+            };
+
+            var signingInformation = new Dictionary<string, SignInfo>()
+            {
+                { "31bf3856ad364e35", new SignInfo(SignToolConstants.Certificate_Microsoft3rdPartyAppComponentSha2, null) }
+            };
+
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            {
+                $"File 'SignedLibrary.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='{SignToolConstants.Certificate_Microsoft3rdPartyAppComponentSha2}'",
+            });
+        }
     }
 }
