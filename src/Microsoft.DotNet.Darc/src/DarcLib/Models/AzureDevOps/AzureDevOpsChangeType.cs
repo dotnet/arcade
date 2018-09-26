@@ -4,7 +4,7 @@
 
 namespace Microsoft.DotNet.DarcLib
 {
-    public class VstsChangeType
+    public class AzureDevOpsChangeType
     {
         public static int Add = 1;
 

@@ -4,11 +4,9 @@
 
 namespace Microsoft.DotNet.DarcLib
 {
-    public enum VstsPrStatus
+    public enum DependencyType
     {
-        None, 
-        Active,
-        Completed,
-        Abandoned
+        Toolset,
+        Product
     }
 }

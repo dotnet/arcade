@@ -4,11 +4,11 @@
 
 namespace Microsoft.DotNet.DarcLib
 {
-    public enum GitRepoType
+    public enum AzureDevOpsPrStatus
     {
-        GitHub,
-        AzureDevOps,
-        Local,
-        None
+        None, 
+        Active,
+        Completed,
+        Abandoned
     }
 }

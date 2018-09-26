@@ -23,13 +23,14 @@ namespace Microsoft.DotNet.Maestro.Client.Models
         /// <summary>
         /// Initializes a new instance of the SubscriptionHistoryItem class.
         /// </summary>
-        public SubscriptionHistoryItem(System.DateTimeOffset? timestamp = default(System.DateTimeOffset?), string errorMessage = default(string), bool? success = default(bool?), System.Guid? subscriptionId = default(System.Guid?), string action = default(string))
+        public SubscriptionHistoryItem(System.DateTimeOffset? timestamp = default(System.DateTimeOffset?), string errorMessage = default(string), bool? success = default(bool?), System.Guid? subscriptionId = default(System.Guid?), string action = default(string), string retryUrl = default(string))
         {
             Timestamp = timestamp;
             ErrorMessage = errorMessage;
             Success = success;
             SubscriptionId = subscriptionId;
             Action = action;
+            RetryUrl = retryUrl;
             CustomInit();
         }
 
@@ -62,6 +63,11 @@ namespace Microsoft.DotNet.Maestro.Client.Models
         /// </summary>
         [JsonProperty(PropertyName = "action")]
         public string Action { get; set; }
+
+        /// <summary>
+        /// </summary>
+        [JsonProperty(PropertyName = "retryUrl")]
+        public string RetryUrl { get; set; }
 
     }
 }

@@ -29,9 +29,9 @@ namespace Microsoft.DotNet.DarcLib
             {
                 _gitClient = new GitHubClient(settings.PersonalAccessToken, _logger);
             }
-            else if (settings.GitType == GitRepoType.Vsts)
+            else if (settings.GitType == GitRepoType.AzureDevOps)
             {
-                _gitClient = new VstsClient(settings.PersonalAccessToken, _logger);
+                _gitClient = new AzureDevOpsClient(settings.PersonalAccessToken, _logger);
             }
 
             // Only initialize the file manager if we have a git client, which excludes "None"
@@ -94,6 +94,7 @@ namespace Microsoft.DotNet.DarcLib
             return await _barClient.Subscriptions.GetSubscriptionAsync(subscriptionGuid);
         }
 
+        // TODO: Fix this API to handle multiple merge policies
         public async Task<Subscription> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy)
         {
             CheckForValidBarClient();
@@ -106,7 +107,10 @@ namespace Microsoft.DotNet.DarcLib
                 Policy = new SubscriptionPolicy()
                 {
                     UpdateFrequency = updateFrequency,
-                    MergePolicy = mergePolicy
+                    MergePolicies = new List<MergePolicy>
+                    {
+                        new MergePolicy(mergePolicy),
+                    },
                 }
             };
             return await _barClient.Subscriptions.CreateAsync(subscriptionData);
@@ -241,7 +245,7 @@ namespace Microsoft.DotNet.DarcLib
         private void ValidateSettings(DarcSettings settings)
         {
             // Should have a git repo type of AzureDevOps, GitHub, or None.
-            if (settings.GitType == GitRepoType.GitHub || settings.GitType == GitRepoType.Vsts)
+            if (settings.GitType == GitRepoType.GitHub || settings.GitType == GitRepoType.AzureDevOps)
             {
                 // PAT is required for these types.
                 if (string.IsNullOrEmpty(settings.PersonalAccessToken))

@@ -4,11 +4,9 @@
 
 namespace Microsoft.DotNet.DarcLib
 {
-    public enum GitRepoType
+    public enum KnownDependencyType
     {
-        GitHub,
-        AzureDevOps,
-        Local,
-        None
+        GlobalJson,
+        Docker
     }
 }

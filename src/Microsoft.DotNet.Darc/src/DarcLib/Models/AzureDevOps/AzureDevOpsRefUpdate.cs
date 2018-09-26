@@ -4,9 +4,9 @@
 
 namespace Microsoft.DotNet.DarcLib
 {
-    public class VstsRefUpdate
+    public class AzureDevOpsRefUpdate
     {
-        public VstsRefUpdate(string branch, string currentSha)
+        public AzureDevOpsRefUpdate(string branch, string currentSha)
         {
             Name = branch;
             OldObjectId = currentSha;

@@ -6,19 +6,19 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.DarcLib
 {
-    public class VstsComment
+    public class AzureDevOpsComment
     {
-        public VstsComment(List<VstsCommentBody> comments)
+        public AzureDevOpsComment(List<AzureDevOpsCommentBody> comments)
         {
             Comments = comments;
         }
 
-        public List<VstsCommentBody> Comments { get; set; }
+        public List<AzureDevOpsCommentBody> Comments { get; set; }
     }
 
-    public class VstsCommentBody
+    public class AzureDevOpsCommentBody
     {
-        public VstsCommentBody(string content)
+        public AzureDevOpsCommentBody(string content)
         {
             Content = content;
         }

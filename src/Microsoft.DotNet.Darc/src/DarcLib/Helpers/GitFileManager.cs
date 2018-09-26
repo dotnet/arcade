@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -135,6 +136,7 @@ namespace Microsoft.DotNet.DarcLib
                 XmlNode nodeToUpdate = versionDetails.DocumentElement.SelectSingleNode($"//Dependency[@Name='{itemToUpdate.Name}']");
                 nodeToUpdate.Attributes["Version"].Value = itemToUpdate.Version;
                 nodeToUpdate.SelectSingleNode("Sha").InnerText = itemToUpdate.Commit;
+                nodeToUpdate.SelectSingleNode("Uri").InnerText = itemToUpdate.RepoUri;
                 UpdateVersionFiles(versionProps, globalJson, itemToUpdate);
             }
 
@@ -146,6 +148,77 @@ namespace Microsoft.DotNet.DarcLib
             };
 
             return fileContainer;
+        }
+
+        public async Task AddDependencyToVersionDetails(string filePath, DependencyDetail dependency, DependencyType dependencyType)
+        {
+            XmlDocument versionDetails = await ReadVersionDetailsXmlAsync(filePath, null);
+
+            XmlNode newDependency = versionDetails.CreateElement("Dependency");
+
+            XmlAttribute nameAttribute = versionDetails.CreateAttribute("Name");
+            nameAttribute.Value = dependency.Name;
+            newDependency.Attributes.Append(nameAttribute);
+
+            XmlAttribute versionAttribute = versionDetails.CreateAttribute("Version");
+            versionAttribute.Value = dependency.Version;
+            newDependency.Attributes.Append(versionAttribute);
+
+            XmlNode uri = versionDetails.CreateElement("Uri");
+            uri.InnerText = dependency.RepoUri;
+            newDependency.AppendChild(uri);
+
+            XmlNode sha = versionDetails.CreateElement("Sha");
+            sha.InnerText = dependency.Commit;
+            newDependency.AppendChild(sha);
+
+            XmlNode dependencies = versionDetails.SelectSingleNode($"//{dependencyType}Dependencies");
+            dependencies.AppendChild(newDependency);
+
+            GitFile file = new GitFile(filePath, versionDetails);
+            File.WriteAllText(file.FilePath, file.Content);
+
+            _logger.LogInformation($"Dependency '{dependency.Name}' with version '{dependency.Version}' successfully added to Version.Details.xml");
+        }
+
+        public async Task AddDependencyToVersionProps(string filePath, DependencyDetail dependency)
+        {
+            XmlDocument versionProps = await ReadVersionPropsAsync(filePath, null);
+
+            string versionedName = dependency.Name.Replace(".", string.Empty);
+            versionedName = $"{versionedName}Version";
+
+            XmlNode versionNode = versionProps.DocumentElement.SelectNodes($"//PropertyGroup").Item(0);
+            
+            XmlNode newDependency = versionProps.CreateElement(versionedName);
+            newDependency.InnerText = dependency.Version;
+            versionNode.AppendChild(newDependency);
+
+            GitFile file = new GitFile(filePath, versionProps);
+            File.WriteAllText(file.FilePath, file.Content);
+
+            _logger.LogInformation($"Dependency '{dependency.Name}' with version '{dependency.Version}' successfully added to Version.props");
+        }
+
+        public async Task AddDependencyToGlobalJson(string filePath, string parentField, string dependencyName, string version)
+        {
+            JToken versionProperty = new JProperty(dependencyName, version);
+            JObject globalJson = await ReadGlobalJsonAsync(filePath, null);
+            JToken parent = globalJson[parentField];
+
+            if (parent != null)
+            {
+                parent.Last.AddAfterSelf(versionProperty);
+            }
+            else
+            {
+                globalJson.Add(new JProperty(parentField, new JObject(versionProperty)));
+            }
+
+            GitFile file = new GitFile(filePath, globalJson);
+            File.WriteAllText(file.FilePath, file.Content);
+
+            _logger.LogInformation($"Dependency '{dependencyName}' with version '{version}' successfully added to global.json");
         }
 
         private async Task<XmlDocument> ReadXmlFileAsync(string filePath, string repoUri, string branch)
