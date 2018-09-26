@@ -136,6 +136,7 @@ namespace Microsoft.DotNet.DarcLib
                 XmlNode nodeToUpdate = versionDetails.DocumentElement.SelectSingleNode($"//Dependency[@Name='{itemToUpdate.Name}']");
                 nodeToUpdate.Attributes["Version"].Value = itemToUpdate.Version;
                 nodeToUpdate.SelectSingleNode("Sha").InnerText = itemToUpdate.Commit;
+                nodeToUpdate.SelectSingleNode("Uri").InnerText = itemToUpdate.RepoUri;
                 UpdateVersionFiles(versionProps, globalJson, itemToUpdate);
             }
 

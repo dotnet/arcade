@@ -42,10 +42,9 @@ namespace Microsoft.DotNet.DarcLib
         /// <returns></returns>
         public async Task<int> AddDependencies(DependencyDetail dependency, DependencyType dependencyType)
         {
-            if (DependencyOperations.TryGetKnownDependency(dependency.Name, out string parent))
+            if (DependencyOperations.TryGetKnownUpdater(dependency.Name, out Delegate function))
             {
-                await _fileManager.AddDependencyToGlobalJson(Path.Combine(_repo, VersionFilePath.GlobalJson), parent, dependency.Name, dependency.Version);
-                await _fileManager.AddDependencyToVersionDetails(Path.Combine(_repo, VersionFilePath.VersionDetailsXml), dependency, DependencyType.Toolset);
+                await (Task)function.DynamicInvoke(_fileManager, _repo, dependency);
             }
             else
             {

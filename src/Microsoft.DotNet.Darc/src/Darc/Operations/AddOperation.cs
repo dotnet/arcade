@@ -28,9 +28,9 @@ namespace Microsoft.DotNet.Darc.Operations
             DependencyDetail dependency = new DependencyDetail
             {
                 Name = _options.Name,
-                Version = _options.Version,
-                RepoUri = _options.RepoUri,
-                Commit = _options.Commit
+                Version = _options.Version ?? string.Empty,
+                RepoUri = _options.RepoUri ?? string.Empty,
+                Commit = _options.Commit ?? string.Empty
             };
 
             try
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Darc.Operations
             }
             catch (Exception exc)
             {
-                Logger.LogError($"Something failed while adding dependency '{dependency.Name}' {dependency.Version}. Exception: {exc.Message}");
+                Logger.LogError(exc, $"Something failed while adding dependency '{dependency.Name}' {dependency.Version}.");
                 return Constants.ErrorCode;
             }
         }
