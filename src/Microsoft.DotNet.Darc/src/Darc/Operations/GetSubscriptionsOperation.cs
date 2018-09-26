@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Darc.Operations
                 {
                     Console.WriteLine($"{subscription.SourceRepository} ({subscription.Channel.Name}) ==> '{subscription.TargetRepository}' ('{subscription.TargetBranch}')");
                     Console.WriteLine($"  Id: {subscription.Id}");
-                    Console.WriteLine($"  Trigger: {subscription.Policy.UpdateFrequency}");
+                    Console.WriteLine($"  Update Frequency: {subscription.Policy.UpdateFrequency}");
                     Console.WriteLine($"  Merge Policy: {subscription.Policy.MergePolicy}");
                     Console.WriteLine($"  Last Build: {(subscription.LastAppliedBuild != null ? subscription.LastAppliedBuild.BuildNumber : "N/A")}");
                 }
