@@ -175,14 +175,10 @@ namespace Microsoft.DotNet.SignTool
 
             if (hasSignInfo)
             {
-                if (isAlreadySigned)
+                if (isAlreadySigned &&
+                    !signInfo.Certificate.Equals(SignToolConstants.Certificate_Microsoft3rdPartyAppComponentDual, StringComparison.OrdinalIgnoreCase) &&
+                    !signInfo.Certificate.Equals(SignToolConstants.Certificate_Microsoft3rdPartyAppComponentSha2, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (signInfo.Certificate.Equals(SignToolConstants.Certificate_Microsoft3rdPartyAppComponentDual, StringComparison.OrdinalIgnoreCase) || 
-                        signInfo.Certificate.Equals(SignToolConstants.Certificate_Microsoft3rdPartyAppComponentSha2, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return new FileSignInfo(fullPath, hash, signInfo, (targetFramework != "") ? targetFramework : null);
-                    }
-
                     return new FileSignInfo(fullPath, hash, SignInfo.AlreadySigned);
                 }
 
