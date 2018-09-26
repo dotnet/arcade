@@ -4,9 +4,9 @@
 
 namespace Microsoft.DotNet.DarcLib
 {
-    public class VstsPullRequest
+    public class AzureDevOpsPullRequest
     {
-        public VstsPullRequest(string title, string description, string sourceBranch, string targetBranch)
+        public AzureDevOpsPullRequest(string title, string description, string sourceBranch, string targetBranch)
         {
             Title = title;
             Description = description;

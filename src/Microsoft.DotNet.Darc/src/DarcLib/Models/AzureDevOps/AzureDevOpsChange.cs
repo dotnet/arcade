@@ -4,13 +4,13 @@
 
 namespace Microsoft.DotNet.DarcLib
 {
-    public class VstsChange
+    public class AzureDevOpsChange
     {
-        public VstsChange(string filePath, string content, string contentType = null)
+        public AzureDevOpsChange(string filePath, string content, string contentType = null)
         {
             Item = new Item(filePath);
             NewContent = new NewContent(content, contentType);
-            ChangeType = VstsChangeType.Edit;
+            ChangeType = AzureDevOpsChangeType.Edit;
         }
 
         public int ChangeType { get; set; }

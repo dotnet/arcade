@@ -41,7 +41,7 @@ namespace SubscriptionActorService
             }
             else
             {
-                settings.GitType = GitRepoType.Vsts;
+                settings.GitType = GitRepoType.AzureDevOps;
                 settings.PersonalAccessToken = ""; // TODO: get this
             }
 

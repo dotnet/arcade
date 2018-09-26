@@ -29,9 +29,9 @@ namespace Microsoft.DotNet.DarcLib
             {
                 _gitClient = new GitHubClient(settings.PersonalAccessToken, _logger);
             }
-            else if (settings.GitType == GitRepoType.Vsts)
+            else if (settings.GitType == GitRepoType.AzureDevOps)
             {
-                _gitClient = new VstsClient(settings.PersonalAccessToken, _logger);
+                _gitClient = new AzureDevOpsClient(settings.PersonalAccessToken, _logger);
             }
 
             // Only initialize the file manager if we have a git client, which excludes "None"
@@ -241,7 +241,7 @@ namespace Microsoft.DotNet.DarcLib
         private void ValidateSettings(DarcSettings settings)
         {
             // Should have a git repo type of AzureDevOps, GitHub, or None.
-            if (settings.GitType == GitRepoType.GitHub || settings.GitType == GitRepoType.Vsts)
+            if (settings.GitType == GitRepoType.GitHub || settings.GitType == GitRepoType.AzureDevOps)
             {
                 // PAT is required for these types.
                 if (string.IsNullOrEmpty(settings.PersonalAccessToken))
