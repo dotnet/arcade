@@ -8,14 +8,19 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Resources;
 using System.Runtime.Versioning;
 
 namespace Microsoft.DotNet.SignTool
 {
+#if NET461
+    [LoadInSeparateAppDomain]
+    public class SignToolTask : AppDomainIsolatedTask
+    {
+        static SignToolTask() => AssemblyResolution.Initialize();
+#else
     public class SignToolTask : Task
     {
-#if NET461
-        static SignToolTask() => AssemblyResolution.Initialize();
 #endif
         /// <summary>
         /// Perform validation but do not actually send signing request to the server.
@@ -82,8 +87,20 @@ namespace Microsoft.DotNet.SignTool
 
         public override bool Execute()
         {
-            ExecuteImpl();
-            return !Log.HasLoggedErrors;
+#if NET461
+            AssemblyResolution.Log = Log;
+#endif
+            try
+            {
+                ExecuteImpl();
+                return !Log.HasLoggedErrors;
+            }
+            finally
+            {
+#if NET461
+                AssemblyResolution.Log = null;
+#endif
+            }
         }
 
         public void ExecuteImpl()
