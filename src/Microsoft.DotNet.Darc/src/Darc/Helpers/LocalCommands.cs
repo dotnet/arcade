@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Darc.Helpers
 
             if (string.IsNullOrEmpty(dir))
             {
-                throw new Exception("'.git' directory was not found. Check if git is installed and that a .git directory exist in the root of your repository.");
+                throw new Exception("'.git' directory was not found. Check if git is installed and that a .git directory exists in the root of your repository.");
             }
 
             return dir;

@@ -14,8 +14,7 @@ namespace Microsoft.DotNet.DarcLib
         public static readonly Dictionary<string, KnownDependencyType> _knownAssetNames = new Dictionary<string, KnownDependencyType>
             {
                 { "Microsoft.DotNet.Arcade.Sdk", KnownDependencyType.GlobalJson },
-                { "dotnet", KnownDependencyType.GlobalJson },
-                { "test", KnownDependencyType.GlobalJson }
+                { "dotnet", KnownDependencyType.GlobalJson }
             };
 
         private static readonly Dictionary<KnownDependencyType, Delegate> _dependenciesToFuncMapping = new Dictionary<KnownDependencyType, Delegate>
@@ -40,8 +39,7 @@ namespace Microsoft.DotNet.DarcLib
             Dictionary<string, string> dependencyMapping = new Dictionary<string, string>
             {
                 { "Microsoft.DotNet.Arcade.Sdk", "msbuild-sdks" },
-                { "dotnet", "tools" },
-                { "test", "tools" },
+                { "dotnet", "tools" }
             };
 
             if (!dependencyMapping.ContainsKey(dependency.Name))
