@@ -6,6 +6,7 @@ using Microsoft.DotNet.Darc.Helpers;
 using Microsoft.DotNet.Darc.Options;
 using Microsoft.DotNet.DarcLib;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
 
@@ -56,8 +57,34 @@ namespace Microsoft.DotNet.Darc.Operations
                 {
                     Console.WriteLine($"{subscription.SourceRepository} ({subscription.Channel.Name}) ==> '{subscription.TargetRepository}' ('{subscription.TargetBranch}')");
                     Console.WriteLine($"  Id: {subscription.Id}");
-                    Console.WriteLine($"  Trigger: {subscription.Policy.UpdateFrequency}");
-                    Console.WriteLine($"  Merge Policy: {subscription.Policy.MergePolicy}");
+                    Console.WriteLine($"  Update Frequency: {subscription.Policy.UpdateFrequency}");
+                    Console.WriteLine($"  Merge Policies:");
+                    foreach (var mergePolicy in subscription.Policy.MergePolicies)
+                    {
+                        Console.WriteLine($"    {mergePolicy.Name}");
+                        foreach (var mergePolicyProperty in mergePolicy.Properties)
+                        {
+                            // Provide appropriate formatting for the value of the merge policy property
+                            if (mergePolicyProperty.Value is JArray)
+                            {
+                                JArray arr = (JArray)mergePolicyProperty.Value;
+                                // Write out each value in the array ensuring correct indentation.
+                                string keyString = $"      {mergePolicyProperty.Key} = [";
+                                int leftPad = keyString.Length;
+                                Console.WriteLine(keyString);
+                                foreach (var foo in arr)
+                                {
+                                    Console.WriteLine(foo.ToString().PadRight
+                                }
+                            }
+                            // Default handling using normal ToString
+                            else
+                            {
+                                Console.WriteLine($"      {mergePolicyProperty.Key} = {mergePolicyProperty.Value}");
+                            }
+                            
+                        }
+                    }
                     Console.WriteLine($"  Last Build: {(subscription.LastAppliedBuild != null ? subscription.LastAppliedBuild.BuildNumber : "N/A")}");
                 }
                 return 0;
