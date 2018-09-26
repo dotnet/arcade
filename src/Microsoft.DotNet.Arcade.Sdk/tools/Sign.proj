@@ -23,7 +23,7 @@
     <FileExtensionSignInfo Include=".dll;.exe" CertificateName="MicrosoftSHA2" />
     <FileExtensionSignInfo Include=".nupkg" CertificateName="NuGet" />
     <FileExtensionSignInfo Include=".vsix" CertificateName="VsixSHA2" />
-    <FileExtensionSignInfo Include=".zip;.dylib" CertificateName="None" />
+    <FileExtensionSignInfo Include=".zip" CertificateName="None" />
   </ItemGroup>
 
   <!-- Allow repository to customize signing configuration -->
