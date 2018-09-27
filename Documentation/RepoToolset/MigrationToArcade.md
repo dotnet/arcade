@@ -33,6 +33,9 @@ Shipping packages are the ones that are pushed to NuGet.org, non-shipping are pu
  - Add non-standard custom properties to `NuspecProperty` item group, if needed
  - PackageProjectUrl is now set automatically from `RepositoryUrl`, which is retrieved automatically from git remote origin by SourceLink.
 
+### New `-publish` build parameter
+A new option `-publish` was added to `build.ps1` script that needs to be set for CI builds. If the repo uses a custom `CIBuild.cmd` pass `-publish` when invoking `build.ps1`. See [CIBuild.cmd](https://github.com/dotnet/symreader/blob/master/eng/common/CIBuild.cmd#L2).
+
 ## Arcade.SDK
 
 ### Global.json
