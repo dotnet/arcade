@@ -20,14 +20,14 @@ namespace Microsoft.DotNet.GenFacades
         private readonly string _commentsContents;
         private readonly string _companyNameContents;
         private readonly string _fileDescriptionContents;
-        private readonly string _fileVersionContents;
+        private readonly Version _fileVersion;
         private readonly string _internalNameContents;
         private readonly string _legalCopyrightContents;
         private readonly string _legalTrademarksContents;
         private readonly string _originalFileNameContents;
         private readonly string _productNameContents;
-        private readonly string _productVersionContents;
-        private readonly Version _assemblyVersionContents;
+        private readonly Version _productVersion;
+        private readonly Version _assemblyVersion;
 
         private const string vsVersionInfoKey = "VS_VERSION_INFO";
         private const string varFileInfoKey = "VarFileInfo";
@@ -39,22 +39,22 @@ namespace Microsoft.DotNet.GenFacades
         private const ushort sizeVS_FIXEDFILEINFO = sizeof(DWORD) * 13;
         private readonly bool _isDll;
 
-        internal VersionResourceSerializer(bool isDll, string comments, string companyName, string fileDescription, string fileVersion,
-            string internalName, string legalCopyright, string legalTrademark, string originalFileName, string productName, string productVersion,
+        internal VersionResourceSerializer(bool isDll, string comments, string companyName, string fileDescription, Version fileVersion,
+            string internalName, string legalCopyright, string legalTrademark, string originalFileName, string productName, Version productVersion,
             Version assemblyVersion)
         {
             _isDll = isDll;
             _commentsContents = comments;
             _companyNameContents = companyName;
             _fileDescriptionContents = fileDescription;
-            _fileVersionContents = fileVersion;
+            _fileVersion = fileVersion;
             _internalNameContents = internalName;
             _legalCopyrightContents = legalCopyright;
             _legalTrademarksContents = legalTrademark;
             _originalFileNameContents = originalFileName;
             _productNameContents = productName;
-            _productVersionContents = productVersion;
-            _assemblyVersionContents = assemblyVersion;
+            _productVersion = productVersion;
+            _assemblyVersion = assemblyVersion;
             _langIdAndCodePageKey = System.String.Format("{0:x4}{1:x4}", 0 /*langId*/, CP_WINUNICODE /*codepage*/);
         }
 
@@ -66,38 +66,26 @@ namespace Microsoft.DotNet.GenFacades
             if (_commentsContents != null) yield return new KeyValuePair<string, string>("Comments", _commentsContents);
             if (_companyNameContents != null) yield return new KeyValuePair<string, string>("CompanyName", _companyNameContents);
             if (_fileDescriptionContents != null) yield return new KeyValuePair<string, string>("FileDescription", _fileDescriptionContents);
-            if (_fileVersionContents != null) yield return new KeyValuePair<string, string>("FileVersion", _fileVersionContents);
+            if (_fileVersion != null) yield return new KeyValuePair<string, string>("FileVersion", _fileVersion.ToString());
             if (_internalNameContents != null) yield return new KeyValuePair<string, string>("InternalName", _internalNameContents);
             if (_legalCopyrightContents != null) yield return new KeyValuePair<string, string>("LegalCopyright", _legalCopyrightContents);
             if (_legalTrademarksContents != null) yield return new KeyValuePair<string, string>("LegalTrademarks", _legalTrademarksContents);
             if (_originalFileNameContents != null) yield return new KeyValuePair<string, string>("OriginalFilename", _originalFileNameContents);
             if (_productNameContents != null) yield return new KeyValuePair<string, string>("ProductName", _productNameContents);
-            if (_productVersionContents != null) yield return new KeyValuePair<string, string>("ProductVersion", _productVersionContents);
-            if (_assemblyVersionContents != null) yield return new KeyValuePair<string, string>("Assembly Version", _assemblyVersionContents.ToString());
+            if (_productVersion != null) yield return new KeyValuePair<string, string>("ProductVersion", _productVersion.ToString());
+            if (_assemblyVersion != null) yield return new KeyValuePair<string, string>("Assembly Version", _assemblyVersion.ToString());
         }
 
         private uint FileType { get { return (_isDll) ? VFT_DLL : VFT_APP; } }
 
         private void WriteVSFixedFileInfo(BinaryWriter writer)
         {
-            //There's nothing guaranteeing that these are n.n.n.n format.
-            //The documentation says that if they're not that format the behavior is undefined.
-            Version fileVersion;
-            // For the File & Product Version, we take the first portion of the string before any whitespace,
-            // in case there is extraneous information (e.g. '@BuiltBy') after the version number.
-            if (!Version.TryParse(_fileVersionContents.Split(null)[0], out fileVersion))
-                throw new ArgumentException($"error: File Version could not be parsed: {_fileVersionContents}");
-
-            Version productVersion;
-            if (!Version.TryParse(_productVersionContents.Split(null)[0], out productVersion))
-                throw new ArgumentException($"error: Product Version could not be parsed: {_productVersionContents}");
-
             writer.Write((DWORD)0xFEEF04BD);
             writer.Write((DWORD)0x00010000);
-            writer.Write((DWORD)(fileVersion.Major << 16) | (uint)fileVersion.Minor);
-            writer.Write((DWORD)(fileVersion.Build << 16) | (uint)fileVersion.Revision);
-            writer.Write((DWORD)(productVersion.Major << 16) | (uint)productVersion.Minor);
-            writer.Write((DWORD)(productVersion.Build << 16) | (uint)productVersion.Revision);
+            writer.Write((DWORD)(_fileVersion.Major << 16) | (uint)_fileVersion.Minor);
+            writer.Write((DWORD)(_fileVersion.Build << 16) | (uint)_fileVersion.Revision);
+            writer.Write((DWORD)(_productVersion.Major << 16) | (uint)_productVersion.Minor);
+            writer.Write((DWORD)(_productVersion.Build << 16) | (uint)_productVersion.Revision);
             writer.Write((DWORD)0x0000003F);   //VS_FFI_FILEFLAGSMASK  (EDMAURER) really? all these bits are valid?
             writer.Write((DWORD)0);    //file flags
             writer.Write((DWORD)0x00000004);   //VOS__WINDOWS32

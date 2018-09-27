@@ -33,6 +33,9 @@ Shipping packages are the ones that are pushed to NuGet.org, non-shipping are pu
  - Add non-standard custom properties to `NuspecProperty` item group, if needed
  - PackageProjectUrl is now set automatically from `RepositoryUrl`, which is retrieved automatically from git remote origin by SourceLink.
 
+### New `-publish` build parameter
+A new option `-publish` was added to `build.ps1` script that needs to be set for CI builds. If the repo uses a custom `CIBuild.cmd` pass `-publish` when invoking `build.ps1`. See [CIBuild.cmd](https://github.com/dotnet/symreader/blob/master/eng/common/CIBuild.cmd#L2).
+
 ## Arcade.SDK
 
 ### Global.json
@@ -99,8 +102,8 @@ The following applies to CI build definition, not PR validation build definition
 - All VSIX files under `Artifacts\VSSetup` are signed.
 - All PE files contained in these packages are signed.
 - Default certificates used for signing:
-  - For managed PE files with PublicKeyToken=31bf3856ad364e35: MsSharedLib72 strong name and MicrosoftSHA2 certificates
-  - For native PE files: MicrosoftSHA2 certificate
+  - For managed PE files with PublicKeyToken=31bf3856ad364e35: MsSharedLib72 strong name and Microsoft400 certificates
+  - For native PE files: Microsoft400 certificate
 - If a file needs to be signed by non-default certificate, specify so in `eng\Versions.props` file like so:
 
 ```xml  

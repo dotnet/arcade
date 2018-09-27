@@ -83,7 +83,7 @@
       <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
     </SendHelixJob>
     <ItemGroup>
-      <SentJob Include="$(JobCorrelationId)">
+      <SentJob Include="$(HelixJobId)">
         <WorkItemCount>@(HelixWorkItem->Count())</WorkItemCount>
       </SentJob>
     </ItemGroup>
