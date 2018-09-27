@@ -102,8 +102,8 @@ The following applies to CI build definition, not PR validation build definition
 - All VSIX files under `Artifacts\VSSetup` are signed.
 - All PE files contained in these packages are signed.
 - Default certificates used for signing:
-  - For managed PE files with PublicKeyToken=31bf3856ad364e35: MsSharedLib72 strong name and MicrosoftSHA2 certificates
-  - For native PE files: MicrosoftSHA2 certificate
+  - For managed PE files with PublicKeyToken=31bf3856ad364e35: MsSharedLib72 strong name and Microsoft400 certificates
+  - For native PE files: Microsoft400 certificate
 - If a file needs to be signed by non-default certificate, specify so in `eng\Versions.props` file like so:
 
 ```xml  
