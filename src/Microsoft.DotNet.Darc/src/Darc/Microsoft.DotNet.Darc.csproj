@@ -4,8 +4,10 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <AssemblyName>darc</AssemblyName>
     <SignAssembly>false</SignAssembly>
+    <IsPackable>true</IsPackable>
+    <Description>Darc CLI</Description>
+    <PackageTags>Arcade Darc CLI Dependency Flow</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
