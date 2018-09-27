@@ -35,6 +35,9 @@ namespace Microsoft.DotNet.XUnitRunnerUap
             var completionMessages = new ConcurrentDictionary<string, ExecutionSummary>();
             var assembliesElement = new XElement("assemblies");
 
+            int errorCount = 0;
+            int failCount = 0;
+
             foreach (var assembly in commandLine.Project.Assemblies)
             {
                 if (cancel)
@@ -88,6 +91,10 @@ namespace Microsoft.DotNet.XUnitRunnerUap
 
                             assembliesElement.Add(assemblyElement);
 
+                            // Set counters to determine the error code later.
+                            errorCount += resultsVisitor.ExecutionSummary.Errors;
+                            failCount += resultsVisitor.ExecutionSummary.Failed;
+
                             Console.WriteLine($"{Path.GetFileNameWithoutExtension(assembly.AssemblyFilename)}  Total: {resultsVisitor.ExecutionSummary.Total}, Errors: {resultsVisitor.ExecutionSummary.Errors}, Failed: {resultsVisitor.ExecutionSummary.Failed}, Skipped: {resultsVisitor.ExecutionSummary.Skipped}, Time: {resultsVisitor.ExecutionSummary.Time}");
                         }
                     }
@@ -103,6 +110,11 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                     WriteResults(Path.GetFileName(assembly.AssemblyFilename), assembliesElement).GetAwaiter().GetResult();
                 }
             }
+
+            if (errorCount > 0)
+                return 2;
+            else if (failCount > 0)
+                return 1;
 
             return 0;
         }
