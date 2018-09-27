@@ -27,8 +27,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             {".psm1", new SignInfo("PSMCertificate") },
             {".psc1", new SignInfo("PSCCertificate") },
             {".dylib", new SignInfo("DylibCertificate") },
-            {".dll", new SignInfo("MicrosoftSHA2") },
-            {".exe", new SignInfo("MicrosoftSHA2") },
+            {".dll", new SignInfo("Microsoft400") },
+            {".exe", new SignInfo("Microsoft400") },
             {".vsix", new SignInfo("VsixSHA2") },
             {".zip", SignInfo.Ignore },
             {".nupkg", new SignInfo("NuGet") },
@@ -167,7 +167,7 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
             {
-                "File 'NativeLibrary.dll' Certificate='MicrosoftSHA2'",
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
@@ -232,7 +232,7 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
             {
-                "File 'NativeLibrary.dll' Certificate='MicrosoftSHA2'",
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='OverriddenCertificate' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='OverriddenCertificate' StrongName='ArcadeStrongTest'",
@@ -370,7 +370,7 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
             {
-                "File 'NativeLibrary.dll' Certificate='MicrosoftSHA2'",
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ContainerTwo.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
@@ -385,7 +385,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3D4466713FF60CA2747166CD22B097B67DAFC7F3487B7F7725945502D66D0B65", "NativeLibrary.dll")}"">
-  <Authenticode>MicrosoftSHA2</Authenticode>
+  <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "ProjectOne.dll")}"">
   <Authenticode>ArcadeCertTest</Authenticode>
@@ -444,18 +444,18 @@ $@"
 
             ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
             {
-                "File 'NativeLibrary.dll' Certificate='MicrosoftSHA2'",
-                "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='MicrosoftSHA2'"
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'"
             });
 
             ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3D4466713FF60CA2747166CD22B097B67DAFC7F3487B7F7725945502D66D0B65", "NativeLibrary.dll")}"">
-  <Authenticode>MicrosoftSHA2</Authenticode>
+  <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "FD4596180FC1AB63B2D6A9C6E4086CC15891E41E34F835B593C3879CECAA86B6", "SOS.NETCore.dll")}"">
-  <Authenticode>MicrosoftSHA2</Authenticode>
+  <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
 ",
             });
