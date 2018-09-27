@@ -56,36 +56,39 @@ namespace Microsoft.DotNet.Darc.Operations
                                              $"{subscription.SourceRepository}{subscription.Channel}{subscription.TargetRepository}{subscription.TargetBranch}"))
                 {
                     Console.WriteLine($"{subscription.SourceRepository} ({subscription.Channel.Name}) ==> '{subscription.TargetRepository}' ('{subscription.TargetBranch}')");
-                    Console.WriteLine($"  Id: {subscription.Id}");
-                    Console.WriteLine($"  Update Frequency: {subscription.Policy.UpdateFrequency}");
-                    Console.WriteLine($"  Merge Policies:");
+                    Console.WriteLine($"  - Id: {subscription.Id}");
+                    Console.WriteLine($"  - Update Frequency: {subscription.Policy.UpdateFrequency}");
+                    Console.WriteLine($"  - Merge Policies:");
                     foreach (var mergePolicy in subscription.Policy.MergePolicies)
                     {
                         Console.WriteLine($"    {mergePolicy.Name}");
                         foreach (var mergePolicyProperty in mergePolicy.Properties)
                         {
-                            // Provide appropriate formatting for the value of the merge policy property
-                            if (mergePolicyProperty.Value is JArray)
+                            // The merge policy property is a key value pair.  For formatting, turn it into a string.
+                            // It's often a JToken, so handle appropriately
+                            // 1. If the number of lines in the string is 1, write on same line as key
+                            // 2. If the number of lines in the string is more than one, start on new
+                            //    line and indent.
+                            string valueString = mergePolicyProperty.Value.ToString();
+                            string[] valueLines = valueString.Split(System.Environment.NewLine);
+                            string keyString = $"      {mergePolicyProperty.Key} = ";
+                            Console.Write(keyString);
+                            if (valueLines.Length == 1)
                             {
-                                JArray arr = (JArray)mergePolicyProperty.Value;
-                                // Write out each value in the array ensuring correct indentation.
-                                string keyString = $"      {mergePolicyProperty.Key} = [";
-                                int leftPad = keyString.Length;
-                                Console.WriteLine(keyString);
-                                foreach (var foo in arr)
-                                {
-                                    Console.WriteLine(foo.ToString().PadRight
-                                }
+                                Console.WriteLine(valueString);
                             }
-                            // Default handling using normal ToString
                             else
                             {
-                                Console.WriteLine($"      {mergePolicyProperty.Key} = {mergePolicyProperty.Value}");
+                                string indentString = new string(' ', keyString.Length);
+                                Console.WriteLine();
+                                foreach (string line in valueLines)
+                                {
+                                    Console.WriteLine($"{indentString}{line}");
+                                }
                             }
-                            
                         }
                     }
-                    Console.WriteLine($"  Last Build: {(subscription.LastAppliedBuild != null ? subscription.LastAppliedBuild.BuildNumber : "N/A")}");
+                    Console.WriteLine($"  - Last Build: {(subscription.LastAppliedBuild != null ? subscription.LastAppliedBuild.BuildNumber : "N/A")}");
                 }
                 return 0;
             }
