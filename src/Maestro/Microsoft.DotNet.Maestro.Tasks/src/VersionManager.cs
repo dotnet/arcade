@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,11 +11,23 @@ namespace Microsoft.DotNet.Maestro.Tasks
 {
     public class VersionManager
     {
+        private static readonly HashSet<string> _knownTags = new HashSet<string>
+            {
+                "alpha",
+                "beta",
+                "preview",
+                "prerelease",
+                "servicing"
+            };
+
         public static string GetVersion(string assetName)
         {
+            string pathVersion = null;
+
             if (assetName.Contains('/'))
             {
                 string[] pathSegments = assetName.Split('/');
+                pathVersion = CheckIfVersionInPath(pathSegments);
                 assetName = pathSegments[pathSegments.Length - 1];
             }
 
@@ -45,7 +58,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
                 }
             }
 
-            if (versionStart == versionEnd)
+            if (string.IsNullOrEmpty(pathVersion) && versionStart == versionEnd)
             {
                 return null;
             }
@@ -61,7 +74,27 @@ namespace Microsoft.DotNet.Maestro.Tasks
 
             sb.Append($"{segments[versionEnd]}");
 
-            return sb.ToString();
+            string version = sb.ToString();
+
+            if (string.IsNullOrEmpty(pathVersion) || _knownTags.Any(t => version.Contains(t)))
+            {
+                return version;
+            }
+
+            return pathVersion;
+        }
+
+        private static string CheckIfVersionInPath(string[] pathSegments)
+        {
+            foreach (string pathSegment in pathSegments)
+            {
+                if (Version.TryParse(pathSegment, out Version ver))
+                {
+                    return pathSegment;
+                }
+            }
+
+            return null;
         }
 
         private static bool IsMajorAndMinor(string major, string minor)
@@ -89,16 +122,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
 
         private static bool IsValidSegment(string versionSegment)
         {
-            HashSet<string> knownTags = new HashSet<string>
-            {
-                "alpha",
-                "beta",
-                "preview",
-                "prerelease",
-                "servicing"
-            };
-
-            return versionSegment.Any(char.IsDigit) || knownTags.Any(t => versionSegment.Contains(t));
+            return versionSegment.Any(char.IsDigit) || _knownTags.Any(t => versionSegment.Contains(t));
         }
     }
 }
