@@ -1,8 +1,10 @@
 # Initialize variables if they aren't already defined
 
 $ci = if (Test-Path variable:ci) { $ci } else { $false }
+$nodereuse = if (Test-Path variable:nodereuse) { $nodereuse } else { $true }
 $prepareMachine = if (Test-Path variable:prepareMachine) { $prepareMachine } else { $false }
 $restore = if (Test-Path variable:restore) { $restore } else { $true }
+$warnaserror = if (Test-Path variable:warnaserror) { $warnaserror } else { $true }
 
 set-strictmode -version 2.0
 $ErrorActionPreference = "Stop"
@@ -116,7 +118,7 @@ function InitializeTools() {
 
     # Presence of vswhere.version indicates the repo needs to build using VS msbuild:
     $script:buildDriver = Join-Path $vsInstallDir "MSBuild\15.0\Bin\msbuild.exe"
-    $script:buildArgs = "/nodeReuse:$(!$ci)"
+    if ($ci) { $nodereuse = $false }
   }
 
   if ($buildDriver -eq $null) {
@@ -128,14 +130,6 @@ function InitializeTools() {
   InitializeCustomToolset
 }
 
-function GetBuildCommand() {
-  if ($ci) {
-    Write-Host "Using $buildDriver"
-  }
-
-  return $script:buildDriver, $script:buildArgs
-}
-
 function InitializeToolset([string] $buildDriver, [string]$buildArgs) {
   $toolsetVersion = $GlobalJson.'msbuild-sdks'.'Microsoft.DotNet.Arcade.Sdk'
   $toolsetLocationFile = Join-Path $ToolsetDir "$toolsetVersion.txt"
@@ -143,7 +137,7 @@ function InitializeToolset([string] $buildDriver, [string]$buildArgs) {
   if (Test-Path $toolsetLocationFile) {
     $path = Get-Content $toolsetLocationFile -TotalCount 1
     if (Test-Path $path) {
-      $global:ToolsetBuildProj = $path
+      $script:ToolsetBuildProj = $path
       return
     }
   }
@@ -153,14 +147,14 @@ function InitializeToolset([string] $buildDriver, [string]$buildArgs) {
     ExitWithExitCode 1
   }
 
+  $ToolsetRestoreLog = Join-Path $LogDir "ToolsetRestore.binlog"
   $proj = Join-Path $ToolsetDir "restore.proj"
 
   '<Project Sdk="Microsoft.DotNet.Arcade.Sdk"/>' | Set-Content $proj
-  & $buildDriver $buildArgs $proj /t:__WriteToolsetLocation /m /nologo /clp:None /warnaserror /bl:$ToolsetRestoreLog /v:$verbosity /p:__ToolsetLocationOutputFile=$toolsetLocationFile
+  MSBuild $proj /t:__WriteToolsetLocation /clp:None /bl:$ToolsetRestoreLog /p:__ToolsetLocationOutputFile=$toolsetLocationFile
 
   if ($lastExitCode -ne 0) {
-    Write-Host "Failed to restore toolset (exit code '$lastExitCode')." -ForegroundColor Red
-    Write-Host "Build log: $ToolsetRestoreLog" -ForegroundColor DarkGray
+    Write-Host "Failed to restore toolset (exit code '$lastExitCode'). See log: $ToolsetRestoreLog" -ForegroundColor Red
     ExitWithExitCode $lastExitCode
   }
 
@@ -169,7 +163,7 @@ function InitializeToolset([string] $buildDriver, [string]$buildArgs) {
     throw "Invalid toolset path: $path"
   }
 
-  $global:ToolsetBuildProj = $path
+  $script:ToolsetBuildProj = $path
 }
 
 function InitializeCustomToolset {
@@ -198,13 +192,28 @@ function Stop-Processes() {
   Get-Process -Name "vbcscompiler" -ErrorAction SilentlyContinue | Stop-Process
 }
 
+function MsBuild() {
+  $msbuildArgs = "$buildArgs /m /nologo /clp:Summary /v:$verbosity"
+  $extraArgs = "$args"
+
+  if ($warnaserror) {
+    $msbuildArgs += " /warnaserror"
+  }
+
+  $msbuildArgs += " /nr:$nodereuse"
+
+  Write-Host "`"$buildDriver`" $msbuildArgs $extraArgs"
+  Invoke-Expression "& `"$buildDriver`" $msbuildArgs $extraArgs"
+
+  return $lastExitCode
+}
+
 try {
-  $RepoRoot = Join-Path $PSScriptRoot "..\.."
-  $EngRoot = Join-Path $PSScriptRoot ".."
+  $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+  $EngRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
   $ArtifactsDir = Join-Path $RepoRoot "artifacts"
   $ToolsetDir = Join-Path $ArtifactsDir "toolset"
   $LogDir = Join-Path $ArtifactsDir "log"
-  $ToolsetRestoreLog = Join-Path $LogDir "ToolsetRestore.binlog"
   $TempDir = Join-Path $ArtifactsDir "tmp"
   $GlobalJson = Get-Content -Raw -Path (Join-Path $RepoRoot "global.json") | ConvertFrom-Json
 
@@ -232,4 +241,3 @@ catch {
   Write-Host $_.ScriptStackTrace
   ExitWithExitCode 1
 }
-

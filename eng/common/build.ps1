@@ -3,6 +3,8 @@ Param(
   [string] $configuration = "Debug",
   [string] $projects = "",
   [string] $verbosity = "minimal",
+  [bool] $warnaserror = $true,
+  [bool] $nodereuse = $true,
   [switch] $restore,
   [switch] $deployDeps,
   [switch] $build,
@@ -64,29 +66,34 @@ try {
     $projects = Join-Path $RepoRoot "*.sln"
   }
 
-  $msbuildArgs = (@"
-$ToolsetBuildProj
-/p:Configuration=$configuration
-/p:Projects=$projects
-/p:RepoRoot=$RepoRoot
-/p:Restore=$restore
-/p:DeployDeps=$deployDeps
-/p:Build=$build
-/p:Rebuild=$rebuild
-/p:Deploy=$deploy
-/p:Test=$test
-/p:Pack=$pack
-/p:IntegrationTest=$integrationTest
-/p:PerformanceTest=$performanceTest
-/p:Sign=$sign
-/p:Publish=$publish
-/p:PublishBuildAssets=$publishBuildAssets
-/p:ContinuousIntegrationBuild=$ci
-/p:CIBuild=$ci
-$properties
-"@).Replace([Environment]::NewLine," ")
+  $BuildLog = Join-Path $LogDir "Build.binlog"
 
-  Invoke-Expression "& `"$PSScriptRoot\msbuild.ps1`" $msbuildArgs"
+  MSBuild $ToolsetBuildProj `
+    /bl:$BuildLog `
+    /p:Configuration=$configuration `
+    /p:Projects=$projects `
+    /p:RepoRoot=$RepoRoot `
+    /p:Restore=$restore `
+    /p:DeployDeps=$deployDeps `
+    /p:Build=$build `
+    /p:Rebuild=$rebuild `
+    /p:Deploy=$deploy `
+    /p:Test=$test `
+    /p:Pack=$pack `
+    /p:IntegrationTest=$integrationTest `
+    /p:PerformanceTest=$performanceTest `
+    /p:Sign=$sign `
+    /p:Publish=$publish `
+    /p:PublishBuildAssets=$publishBuildAssets `
+    /p:ContinuousIntegrationBuild=$ci `
+    /p:CIBuild=$ci `
+    @properties
+
+  if ($lastExitCode -ne 0) {
+    Write-Host "Build Failed (exit code '$lastExitCode'). See log: $BuildLog" -ForegroundColor Red
+    ExitWithExitCode $lastExitCode
+  }
+
   ExitWithExitCode $lastExitCode
 }
 catch {

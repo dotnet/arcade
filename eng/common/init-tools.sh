@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
 ci=${ci:-false}
+nodereuse=${nodereuse:-true}
 prepare_machine=${prepare_machine:-false}
 restore=${restore:-true}
+warnaserror=${warnaserror:-true}
 
 repo_root="$scriptroot/../.."
 eng_root="$scriptroot/.."
 artifacts_dir="$repo_root/artifacts"
 toolset_dir="$artifacts_dir/toolset"
 log_dir="$artifacts_dir/log"
-build_log="$log_dir/Build.binlog"
-toolset_restore_log="$log_dir/ToolsetRestore.binlog"
 temp_dir="$artifacts_dir/tmp"
 
 global_json_file="$repo_root/global.json"
@@ -119,10 +119,12 @@ function InitializeToolset {
     ExitWithExitCode 2
   fi
 
+  local toolset_restore_log="$log_dir/ToolsetRestore.binlog"
   local proj="$toolset_dir/restore.proj"
 
   echo '<Project Sdk="Microsoft.DotNet.Arcade.Sdk"/>' > $proj
-  "$build_driver" msbuild $proj /t:__WriteToolsetLocation /m /nologo /clp:None /warnaserror /bl:$toolset_restore_log /v:$verbosity /p:__ToolsetLocationOutputFile=$toolset_location_file
+
+  MSBuild "$proj /t:__WriteToolsetLocation /clp:None /bl:$toolset_restore_log /p:__ToolsetLocationOutputFile=$toolset_location_file"
   local lastexitcode=$?
 
   if [[ $lastexitcode != 0 ]]; then
@@ -165,6 +167,22 @@ function StopProcesses {
   pkill -9 "vbcscompiler"
 }
 
+function MSBuild {
+  local msbuildArgs="msbuild /m /nologo /clp:Summary /v:$verbosity"
+  local extraArgs="$@"
+
+  if [[ $warnaserror == true ]]; then
+    msbuildArgs="$msbuildArgs /warnaserror"
+  fi
+
+  msbuildArgs="$msbuildArgs /nr:$nodereuse"
+
+  echo "$build_driver $msbuildArgs $extraArgs"
+  "$build_driver" $msbuildArgs $extraArgs
+
+  return $?
+}
+
 # HOME may not be defined in some scenarios, but it is required by NuGet
 if [[ -z $HOME ]]; then
   export HOME="$repo_root/artifacts/.home/"
@@ -172,7 +190,7 @@ if [[ -z $HOME ]]; then
 fi
 
 if [[ -z $NUGET_PACKAGES ]]; then
-  if [[ $ci ]]; then
+  if [[ $ci == true ]]; then
     export NUGET_PACKAGES="$repo_root/.packages"
   else
     export NUGET_PACKAGES="$HOME/.nuget/packages"
@@ -182,7 +200,7 @@ fi
 mkdir -p "$toolset_dir"
 mkdir -p "$log_dir"
 
-if [[ $ci ]]; then
+if [[ $ci == true ]]; then
   mkdir -p "$temp_dir"
   export TEMP="$temp_dir"
   export TMP="$temp_dir"

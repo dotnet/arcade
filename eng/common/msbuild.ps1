@@ -5,30 +5,13 @@ Param(
   [bool] $nodereuse = $true,
   [switch] $ci,
   [switch] $prepareMachine,
-  [Parameter(ValueFromRemainingArguments=$true)][String[]]$properties
+  [Parameter(ValueFromRemainingArguments=$true)][String[]]$extraArgs
 )
 
 . $PSScriptRoot\init-tools.ps1
 
 try {
-  $buildDriver, $buildArgs = GetBuildCommand
-
-  $buildlog = Join-Path $LogDir "Build.binlog"
-
-  $warnaserrorflag = if ($warnaserror) { "/warnaserror" }
-  $nodereuseflag = if ($nodereuse) { "/nr:true" } else { "/nr:false" }
-
-  & $buildDriver $buildArgs `
-    /m /nologo /clp:Summary `
-    /v:$verbosity `
-    /bl:$buildlog `
-    $warnaserrorflag `
-    $nodereuseflag `
-    @properties
-
-  if ($lastExitCode -ne 0) {
-    Write-Host "Build failed see log: $buildLog" -ForegroundColor DarkGray
-  }
+  MSBuild @extraArgs
   ExitWithExitCode $lastExitCode
 }
 catch {

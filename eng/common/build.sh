@@ -28,7 +28,8 @@ projects=''
 configuration='Debug'
 prepare_machine=false
 verbosity='minimal'
-properties=''
+msbuildArgs=''
+extraargs=''
 
 while (($# > 0)); do
   lowerI="$(echo $1 | awk '{print tolower($0)}')"
@@ -115,7 +116,15 @@ while (($# > 0)); do
       verbosity=$2
       shift 2
       ;;
-    *)
+    --warnaserror)
+      warnaserror=$2
+      shift 2
+      ;;
+    --nodereuse)
+      nodereuse=$2
+      shift 2
+      ;;
+      *)
       properties="$properties $1"
       shift 1
       ;;
@@ -128,22 +137,31 @@ if [[ -z $projects ]]; then
   projects="$repo_root/*.sln"
 fi
 
-$scriptroot/msbuild.sh $toolset_build_proj \
-    /p:Configuration=$configuration \
-    /p:Projects=$projects \
-    /p:RepoRoot="$repo_root" \
-    /p:Restore=$restore \
-    /p:Build=$build \
-    /p:Rebuild=$rebuild \
-    /p:Deploy=$deploy \
-    /p:Test=$test \
-    /p:Pack=$pack \
-    /p:IntegrationTest=$integration_test \
-    /p:PerformanceTest=$performance_test \
-    /p:Sign=$sign \
-    /p:Publish=$publish \
-    /p:ContinuousIntegrationBuild=$ci \
-    /p:CIBuild=$ci \
-    $properties
+build_log="$log_dir/Build.binlog"
 
-ExitWithExitCode $?
+MSBuild $toolset_build_proj \
+  /bl:$build_log \
+  /p:Configuration=$configuration \
+  /p:Projects=$projects \
+  /p:RepoRoot="$repo_root" \
+  /p:Restore=$restore \
+  /p:Build=$build \
+  /p:Rebuild=$rebuild \
+  /p:Deploy=$deploy \
+  /p:Test=$test \
+  /p:Pack=$pack \
+  /p:IntegrationTest=$integration_test \
+  /p:PerformanceTest=$performance_test \
+  /p:Sign=$sign \
+  /p:Publish=$publish \
+  /p:ContinuousIntegrationBuild=$ci \
+  /p:CIBuild=$ci \
+  $properties
+
+lastexitcode=$?
+
+if [[ $lastexitcode != 0 ]]; then
+  echo "Build Failed (exit code '$lastexitcode'). See log: $build_log"
+fi
+
+ExitWithExitCode $lastexitcode
