@@ -109,12 +109,11 @@ namespace Microsoft.DotNet.Maestro.Tasks
 
                         if (string.IsNullOrEmpty(version))
                         {
-                            Log.LogError($"Version could not be extracted from '{blob.Id}'");
+                            Log.LogWarning($"Version could not be extracted from '{blob.Id}'");
+                            version = string.Empty;
                         }
-                        else
-                        {
-                            AddAsset(assets, blob.Id, version, manifest.Location, "Container");
-                        }
+
+                        AddAsset(assets, blob.Id, version, manifest.Location, "Container");
                     }
 
                     buildsManifestMetadata.Add(new BuildData(manifest.Name, manifest.Commit, manifest.BuildId, manifest.Branch, assets, new List<int?>()));
