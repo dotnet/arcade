@@ -81,16 +81,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
 
         private string GetVersion(string assetId)
         {
-            string version = null;
-
-            Match versionMatch = Regex.Match(assetId, @"(?<version>\d+(\.\d+).+?(?=\.))");
-
-            if (versionMatch.Success)
-            {
-                version = versionMatch.Groups["version"].Value;
-            }
-
-            return version;
+            return VersionManager.GetVersion(assetId);
         }
 
         private List<BuildData> GetBuildManifestsMetadata(string manifestsFolderPath)
@@ -115,14 +106,14 @@ namespace Microsoft.DotNet.Maestro.Tasks
                     foreach (Blob blob in manifest.Blobs)
                     {
                         string version = GetVersion(blob.Id);
+
                         if (string.IsNullOrEmpty(version))
                         {
-                            Log.LogError($"Version could not be extracted from '{blob.Id}'");
+                            Log.LogWarning($"Version could not be extracted from '{blob.Id}'");
+                            version = string.Empty;
                         }
-                        else
-                        {
-                            AddAsset(assets, blob.Id, version, manifest.Location, "Container");
-                        }
+
+                        AddAsset(assets, blob.Id, version, manifest.Location, "Container");
                     }
 
                     buildsManifestMetadata.Add(new BuildData(manifest.Name, manifest.Commit, manifest.BuildId, manifest.Branch, assets, new List<int?>()));
