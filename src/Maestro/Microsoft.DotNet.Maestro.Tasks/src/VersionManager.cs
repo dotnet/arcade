@@ -41,6 +41,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
                 if (IsMajorAndMinor(segments[i - 1], segments[i]))
                 {
                     versionStart = i - 1;
+                    versionEnd = i;
                     i++;
 
                     // Once we have a major and minor we continue to check all the segments and if any have digits in it versionEnd
@@ -58,7 +59,7 @@ namespace Microsoft.DotNet.Maestro.Tasks
                 }
             }
 
-            if (string.IsNullOrEmpty(pathVersion) && versionStart == versionEnd)
+            if (versionStart == versionEnd)
             {
                 return null;
             }
@@ -76,6 +77,16 @@ namespace Microsoft.DotNet.Maestro.Tasks
 
             string version = sb.ToString();
 
+            if (!string.IsNullOrEmpty(pathVersion) && string.IsNullOrEmpty(version))
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrEmpty(pathVersion) && _knownTags.Any(t => version.Contains(t)) && _knownTags.Any(k => pathVersion.Contains(k)))
+            {
+                return version.Length < pathVersion.Length ? version : pathVersion;
+            }
+
             if (string.IsNullOrEmpty(pathVersion) || _knownTags.Any(t => version.Contains(t)))
             {
                 return version;
@@ -88,9 +99,11 @@ namespace Microsoft.DotNet.Maestro.Tasks
         {
             foreach (string pathSegment in pathSegments)
             {
-                if (Version.TryParse(pathSegment, out Version ver))
+                string version = GetVersion(pathSegment);
+
+                if (!string.IsNullOrEmpty(version))
                 {
-                    return pathSegment;
+                    return version;
                 }
             }
 

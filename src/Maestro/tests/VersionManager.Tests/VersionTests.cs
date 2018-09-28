@@ -31,10 +31,13 @@ namespace VersionManager.Tests
 
             foreach (string input in assets)
             {
-                string[] values = input.Split(',');
-                string name = values[0];
-                string expectedVersion = string.IsNullOrEmpty(values[1]) ? null : values[1];
-                testAssets.Add(new TestAsset(name, expectedVersion));
+                if (!string.IsNullOrEmpty(input))
+                {
+                    string[] values = input.Split(',');
+                    string name = values[0];
+                    string expectedVersion = string.IsNullOrEmpty(values[1]) ? null : values[1];
+                    testAssets.Add(new TestAsset(name, expectedVersion));
+                }
             }
 
             return testAssets;
