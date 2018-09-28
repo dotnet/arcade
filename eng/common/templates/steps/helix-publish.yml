@@ -8,8 +8,10 @@ parameters:
   HelixPostCommands: ''
   WorkItemDirectory: ''
   WorkItemCommand: ''
+  CorrelationPayloadDirectory: ''
   EnableXUnitReporter: false
   WaitForWorkItemCompletion: true
+  Condition: 'always()'
 
 steps:
   - task: DotNetCoreCLI@2
@@ -29,5 +31,7 @@ steps:
       HelixPostCommands: ${{ parameters.HelixPostCommands }}
       EnableXUnitReporter: ${{ parameters.EnableXUnitReporter }}
       WaitForWorkItemCompletion: ${{ parameters.WaitForWorkItemCompletion }}
+      CorrelationPayloadDirectory: ${{ parameters.CorrelationPayloadDirectory }}
       WorkItemDirectory: ${{ parameters.WorkItemDirectory }}
       WorkItemCommand: ${{ parameters.WorkItemCommand }}
+    condition: ${{ parameters.Condition }}

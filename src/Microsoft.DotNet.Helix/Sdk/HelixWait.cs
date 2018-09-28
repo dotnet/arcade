@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         protected async override Task ExecuteCore()
         {
             bool finished = false;
+            await Task.Delay(1000); // Give the job a second to be processed by the API
             while (!finished)
             {
                 finished = await WorkItemsFinished();
