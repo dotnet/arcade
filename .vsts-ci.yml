@@ -1,3 +1,16 @@
+variables:
+  _HelixType: build/product
+  ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+    _HelixSource: pr/dotnet/arcade/$(Build.SourceBranch)
+  ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    _TeamName: DotNetCore
+    _HelixSource: official/dotnet/arcade/$(Build.SourceBranch)
+
+resources:
+  containers:
+  - container: LinuxContainer
+    image: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
+
 phases:
   - template: /eng/build.yml
     parameters:
@@ -32,7 +45,7 @@ phases:
     parameters:
       name: Linux
       queue:
-        # Temporarily, use the linux pool while the hosted preview doesn't have docker support.
+        container: LinuxContainer
         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
           name: dnceng-linux-external-temp
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -49,8 +62,6 @@ phases:
             _PublishType: none
             _SignType: none
             _DotNetPublishToBlobFeed : false
-      variables:
-        _PREVIEW_VSTS_DOCKER_IMAGE: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
 
   - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - template: /eng/common/templates/phases/publish-build-assets.yml
