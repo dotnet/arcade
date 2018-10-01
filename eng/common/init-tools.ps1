@@ -1,6 +1,7 @@
 # Initialize variables if they aren't already defined
 
 $ci = if (Test-Path variable:ci) { $ci } else { $false }
+$configuration = if (Test-Path variable:configuration) { $configuration } else { "Debug" }
 $nodereuse = if (Test-Path variable:nodereuse) { $nodereuse } else { $true }
 $prepareMachine = if (Test-Path variable:prepareMachine) { $prepareMachine } else { $false }
 $restore = if (Test-Path variable:restore) { $restore } else { $true }
@@ -213,8 +214,8 @@ try {
   $EngRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
   $ArtifactsDir = Join-Path $RepoRoot "artifacts"
   $ToolsetDir = Join-Path $ArtifactsDir "toolset"
-  $LogDir = Join-Path $ArtifactsDir "log"
-  $TempDir = Join-Path $ArtifactsDir "tmp"
+  $LogDir = Join-Path (Join-Path $ArtifactsDir "log") $configuration
+  $TempDir = Join-Path (Join-Path $ArtifactsDir "tmp") $configuration
   $GlobalJson = Get-Content -Raw -Path (Join-Path $RepoRoot "global.json") | ConvertFrom-Json
 
   if ($env:NUGET_PACKAGES -eq $null) {

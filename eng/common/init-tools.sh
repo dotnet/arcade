@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 ci=${ci:-false}
+configuration=${configuration:-'Debug'}
 nodereuse=${nodereuse:-true}
 prepare_machine=${prepare_machine:-false}
 restore=${restore:-true}
@@ -10,8 +11,8 @@ repo_root="$scriptroot/../.."
 eng_root="$scriptroot/.."
 artifacts_dir="$repo_root/artifacts"
 toolset_dir="$artifacts_dir/toolset"
-log_dir="$artifacts_dir/log"
-temp_dir="$artifacts_dir/tmp"
+log_dir="$artifacts_dir/log/$configuration"
+temp_dir="$artifacts_dir/tmp/$configuration"
 
 global_json_file="$repo_root/global.json"
 build_driver=""
