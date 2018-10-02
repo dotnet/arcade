@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 
-while [[ -h "$source" ]]; do
-  scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
-  source="$(readlink "$source")"
-  # if $source was a relative symlink, we need to resolve it relative to the path where the
-  # symlink file was located
-  [[ $source != /* ]] && source="$scriptroot/$source"
-done
+source="${BASH_SOURCE[0]}"
 scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
 ci=${ci:-false}
@@ -45,6 +39,8 @@ function ReadGlobalVersion {
   # return value
   echo "$version"
 }
+
+toolset_version=`ReadGlobalVersion "Microsoft.DotNet.Arcade.Sdk"`
 
 function InitializeDotNetCli {
   # Disable first run since we want to control all package sources
@@ -113,7 +109,6 @@ function GetDotNetInstallScript {
 }
 
 function InitializeToolset {
-  local toolset_version=`ReadGlobalVersion "Microsoft.DotNet.Arcade.Sdk"`
   local toolset_location_file="$toolset_dir/$toolset_version.txt"
 
   if [[ -a "$toolset_location_file" ]]; then
@@ -194,7 +189,6 @@ function MSBuild {
 }
 
 function InstallDarcCli {
-  local toolset_version=`ReadGlobalVersion "Microsoft.DotNet.Arcade.Sdk"`
   local darc_cli_package_name="microsoft.dotnet.darc"
   local uninstall_command=`dotnet tool uninstall $darc_cli_package_name -g`
   local tool_list=$(dotnet tool list -g)
@@ -230,4 +224,3 @@ if [[ $ci == true ]]; then
 fi
 
 InitializeTools
-InstallDarcCli

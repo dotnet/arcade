@@ -247,7 +247,6 @@ try {
   }
 
   InitializeTools
-  InstallDarcCli
 }
 catch {
   Write-Host $_
