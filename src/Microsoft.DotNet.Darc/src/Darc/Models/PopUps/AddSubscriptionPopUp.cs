@@ -48,8 +48,8 @@ namespace Microsoft.DotNet.Darc.Models.PopUps
                 MergePolicies = new List<MergePolicy>(mergePolicies)
             };
 
-            var builder = new SerializerBuilder().Build();
-            string yaml = builder.Serialize(_yamlData);
+            var serializer = new SerializerBuilder().Build();
+            string yaml = serializer.Serialize(_yamlData);
             string[] lines = yaml.Split(Environment.NewLine);
 
             // Initialize line contents.  Augment the input lines with suggestions and explanation
@@ -137,8 +137,8 @@ namespace Microsoft.DotNet.Darc.Models.PopUps
             {
                 // Join the lines back into a string string and deserialize as YAML.
                 string yamlString = contents.Aggregate<Line, string>("", (current, line) => $"{current}{System.Environment.NewLine}{line.Text}");
-                var builder = new DeserializerBuilder().Build();
-                outputYamlData = builder.Deserialize<SubscriptionData>(yamlString);
+                var serializer = new DeserializerBuilder().Build();
+                outputYamlData = serializer.Deserialize<SubscriptionData>(yamlString);
             }
             catch (Exception e)
             {
