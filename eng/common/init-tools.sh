@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-source="${BASH_SOURCE[0]}"
-scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
-
 ci=${ci:-false}
 configuration=${configuration:-'Debug'}
 nodereuse=${nodereuse:-true}
