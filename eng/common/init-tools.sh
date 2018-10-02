@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+while [[ -h "$source" ]]; do
+  scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
+  source="$(readlink "$source")"
+  # if $source was a relative symlink, we need to resolve it relative to the path where the
+  # symlink file was located
+  [[ $source != /* ]] && source="$scriptroot/$source"
+done
+scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
+
 ci=${ci:-false}
 configuration=${configuration:-'Debug'}
 nodereuse=${nodereuse:-true}
@@ -15,7 +24,6 @@ log_dir="$artifacts_dir/log/$configuration"
 temp_dir="$artifacts_dir/tmp/$configuration"
 
 global_json_file="$repo_root/global.json"
-toolset_version=`ReadGlobalVersion "Microsoft.DotNet.Arcade.Sdk"`
 build_driver=""
 toolset_build_proj=""
 
@@ -105,6 +113,7 @@ function GetDotNetInstallScript {
 }
 
 function InitializeToolset {
+  local toolset_version=`ReadGlobalVersion "Microsoft.DotNet.Arcade.Sdk"`
   local toolset_location_file="$toolset_dir/$toolset_version.txt"
 
   if [[ -a "$toolset_location_file" ]]; then
@@ -185,6 +194,7 @@ function MSBuild {
 }
 
 function InstallDarcCli {
+  local toolset_version=`ReadGlobalVersion "Microsoft.DotNet.Arcade.Sdk"`
   local darc_cli_package_name="microsoft.dotnet.darc"
   local uninstall_command=`dotnet tool uninstall $darc_cli_package_name -g`
   local tool_list=$(dotnet tool list -g)
@@ -193,7 +203,7 @@ function InstallDarcCli {
   fi
 
   echo "Installing Darc CLI version $toolset_version..."
-  echo $(dotnet tool install $darc_cli_package_name --version $toolset_version -g)
+  echo $(dotnet tool install $darc_cli_package_name --version $toolset_version -v $verbosity -g)
 }
 
 # HOME may not be defined in some scenarios, but it is required by NuGet

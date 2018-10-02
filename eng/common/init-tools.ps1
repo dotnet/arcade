@@ -217,7 +217,7 @@ function InstallDarcCli {
   }
 
   Write-Host "Installing Darc CLI version $toolsetVersion..."
-  iex "dotnet tool install $DarcCliPackageName --version $toolsetVersion -g"
+  iex "dotnet tool install $DarcCliPackageName --version $toolsetVersion -v $verbosity -g"
 }
 
 try {
