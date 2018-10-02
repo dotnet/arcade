@@ -210,14 +210,14 @@ function MsBuild() {
 
 function InstallDarcCli {
   $DarcCliPackageName = "microsoft.dotnet.darc"
-  $ToolList = iex "dotnet tool list -g"
+  $ToolList = Invoke-Expression "$buildDriver tool list -g"
 
   if ($ToolList -like "*$DarcCliPackageName*") {
-    iex "dotnet tool uninstall $DarcCliPackageName -g"
+    Invoke-Expression "$buildDriver tool uninstall $DarcCliPackageName -g"
   }
 
   Write-Host "Installing Darc CLI version $toolsetVersion..."
-  iex "dotnet tool install $DarcCliPackageName --version $toolsetVersion -v $verbosity -g"
+  Invoke-Expression "$buildDriver tool install $DarcCliPackageName --version $toolsetVersion -v $verbosity -g"
 }
 
 try {
