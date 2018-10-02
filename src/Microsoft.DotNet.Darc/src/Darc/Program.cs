@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Darc
         {
             try
             {
-                int returnValue = operation.Execute();
+                int returnValue = operation.Execute().GetAwaiter().GetResult();
                 operation.Dispose();
                 return returnValue;
             }

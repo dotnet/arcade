@@ -7,6 +7,7 @@ using Microsoft.DotNet.Darc.Options;
 using Microsoft.DotNet.DarcLib;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Darc.Operations
 {
@@ -19,7 +20,7 @@ namespace Microsoft.DotNet.Darc.Operations
             _options = options;
         }
 
-        public override int Execute()
+        public override async Task<int> Execute()
         {
             DependencyType type = _options.Type.ToLower() == "toolset" ? DependencyType.Toolset : DependencyType.Product;
 
@@ -35,7 +36,7 @@ namespace Microsoft.DotNet.Darc.Operations
 
             try
             {
-                return local.AddDependencies(dependency, type).Result;
+                return await local.AddDependencies(dependency, type);
             }
             catch (Exception exc)
             {

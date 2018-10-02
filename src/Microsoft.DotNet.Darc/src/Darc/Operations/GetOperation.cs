@@ -6,6 +6,7 @@ using Microsoft.DotNet.Darc.Helpers;
 using Microsoft.DotNet.Darc.Options;
 using Microsoft.DotNet.DarcLib;
 using System;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Darc.Operations
 {
@@ -22,18 +23,18 @@ namespace Microsoft.DotNet.Darc.Operations
         /// Implements the 'get' verb
         /// </summary>
         /// <param name="options"></param>
-        public override int Execute()
+        public override async Task<int> Execute()
         {
             Local local = new Local(LocalCommands.GetGitDir(Logger), Logger);
 
-            var allDependencies = local.GetDependencies().Result;
+            var allDependencies = await local.GetDependencies();
 
             foreach (var dependency in allDependencies)
             {
                 Console.WriteLine($"{dependency.Name} {dependency.Version} from {dependency.RepoUri}@{dependency.Commit}");
             }
 
-            return 0;
+            return Constants.SuccessCode;
         }
     }
 }

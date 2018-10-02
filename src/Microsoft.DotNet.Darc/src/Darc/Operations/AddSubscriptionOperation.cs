@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Darc.Operations
 {
@@ -28,7 +29,7 @@ namespace Microsoft.DotNet.Darc.Operations
         /// Implements the 'add-subscription' operation
         /// </summary>
         /// <param name="options"></param>
-        public override int Execute()
+        public override async Task<int> Execute()
         {
             DarcSettings darcSettings = LocalCommands.GetSettings(_options, Logger);
             // No need to set up a git type or PAT here.
@@ -85,11 +86,8 @@ namespace Microsoft.DotNet.Darc.Operations
                 // Grab existing subscriptions to get suggested values.
                 // TODO: When this becomes paged, set a max number of results to avoid
                 // pulling too much.
-                var suggestedRepos = remote.GetSubscriptionsAsync().Result.SelectMany(subscription => new List<string> {
-                    subscription.SourceRepository,
-                    subscription.TargetRepository
-                });
-                var suggestedChannels = remote.GetChannelsAsync().Result.Select(suggestedChannel => suggestedChannel.Name);
+                var suggestedRepos = remote.GetSubscriptionsAsync();
+                var suggestedChannels = remote.GetChannelsAsync();
 
                 // Help the user along with a form.  We'll use the API to gather suggested values
                 // from existing subscriptions based on the input parameters.
@@ -102,8 +100,8 @@ namespace Microsoft.DotNet.Darc.Operations
                                              targetBranch,
                                              updateFrequency,
                                              mergePolicies,
-                                             suggestedChannels,
-                                             suggestedRepos,
+                                             (await suggestedChannels).Select(suggestedChannel => suggestedChannel.Name),
+                                             (await suggestedRepos).SelectMany(subscription => new List<string> {subscription.SourceRepository, subscription.TargetRepository }),
                                              Constants.AvailableFrequencies,
                                              Constants.AvailableMergePolicyYamlHelp);
 
@@ -123,12 +121,12 @@ namespace Microsoft.DotNet.Darc.Operations
 
             try
             {
-                var newSubscription = remote.CreateSubscriptionAsync(channel,
+                var newSubscription = await remote.CreateSubscriptionAsync(channel,
                                                                      sourceRepository,
                                                                      targetRepository,
                                                                      targetBranch,
                                                                      updateFrequency,
-                                                                     mergePolicies).Result;
+                                                                     mergePolicies);
                 Console.WriteLine($"Successfully created new subscription with id '{newSubscription.Id}'.");
                 return Constants.SuccessCode;
             }

@@ -5,7 +5,9 @@ using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Darc.Operations
 {
@@ -18,7 +20,7 @@ namespace Microsoft.DotNet.Darc.Operations
             _options = options;
         }
 
-        public override int Execute()
+        public override async Task<int> Execute()
         {
             DarcSettings darcSettings = LocalCommands.GetSettings(_options, Logger);
             // No need to set up a git type or PAT here.
@@ -26,26 +28,21 @@ namespace Microsoft.DotNet.Darc.Operations
 
             try
             {
-                Subscription deletedSubscription = remote.DeleteSubscriptionAsync(_options.Id).Result;
+                Subscription deletedSubscription = await remote.DeleteSubscriptionAsync(_options.Id);
                 Console.WriteLine($"Successfully deleted subscription with id '{_options.Id}'");
+                return Constants.SuccessCode;
+            }
+            catch (ApiErrorException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
+            {
+                // Not found is fine to ignore.  If we get this, it will be an aggregate exception with an inner API exception
+                // that has a response message code of NotFound.  Return success.
+                Console.WriteLine($"Subscription with id '{_options.Id}' does not exist.");
                 return Constants.SuccessCode;
             }
             catch (Exception e)
             {
-                // Not found is fine to ignore.  If we get this, it will be an aggregate exception with an inner API exception
-                // that has a response message code of NotFound.  Return success.
-                if (e is AggregateException &&
-                    e.InnerException is ApiErrorException &&
-                    ((ApiErrorException)e.InnerException).Response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    Console.WriteLine($"Subscription with id '{_options.Id}' does not exist.");
-                    return Constants.SuccessCode;
-                }
-                else
-                {
-                    Logger.LogError(e, $"Failed to delete subscription with id '{_options.Id}'");
-                    return Constants.ErrorCode;
-                }
+                Logger.LogError(e, $"Failed to delete subscription with id '{_options.Id}'");
+                return Constants.ErrorCode;
             }
         }
     }

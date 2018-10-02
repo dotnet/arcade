@@ -7,6 +7,7 @@ using Microsoft.DotNet.Darc.Options;
 using Microsoft.DotNet.DarcLib;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Darc.Operations
 {
@@ -24,7 +25,7 @@ namespace Microsoft.DotNet.Darc.Operations
         /// </summary>
         /// <param name="options">Command line options</param>
         /// <returns>Process exit code.</returns>
-        public override int Execute()
+        public override async Task<int> Execute()
         {
             try
             {
@@ -32,7 +33,7 @@ namespace Microsoft.DotNet.Darc.Operations
                 // No need to set up a git type or PAT here.
                 Remote remote = new Remote(darcSettings, Logger);
 
-                var allChannels = remote.GetChannelsAsync().Result;
+                var allChannels = await remote.GetChannelsAsync();
 
                 // Write out a simple list of each channel's name
                 foreach (var channel in allChannels)
@@ -40,7 +41,7 @@ namespace Microsoft.DotNet.Darc.Operations
                     Console.WriteLine(channel.Name);
                 }
 
-                return 0;
+                return Constants.SuccessCode;
             }
             catch (Exception e)
             {
