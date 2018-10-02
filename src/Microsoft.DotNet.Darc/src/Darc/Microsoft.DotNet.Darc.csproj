@@ -8,6 +8,8 @@
     <IsPackable>true</IsPackable>
     <Description>Darc CLI</Description>
     <PackageTags>Arcade Darc CLI Dependency Flow</PackageTags>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>darc</ToolCommandName>
   </PropertyGroup>
 
   <ItemGroup>
