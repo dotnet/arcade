@@ -29,7 +29,7 @@ Target completion date for these workstreams is 12/14/2018.
 | [Templating](https://github.com/dotnet/arcade/issues/716)           | ?                    | Scheduled for planning |
 | [Test-Templates](https://github.com/dotnet/arcade/issues/661)       | ?                    | Will follow Templating |
 | [Visual FSharp](https://github.com/dotnet/arcade/issues/731)        | ?                    | CI builds do not import base.yml |
-| [WebSDK](https://github.com/dotnet/arcade/issues/721)               | ?                    | |
+| [WebSDK](https://github.com/dotnet/arcade/issues/721)               | ?                    | Starting planning |
 | [WinForms](https://github.com/dotnet/arcade/issues/706)             | ?                    | Starting planning |
 | [WPF](https://github.com/dotnet/arcade/issues/701)                  | ?                    | Starting planning |
 
