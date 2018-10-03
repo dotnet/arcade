@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Darc.Operations
 
                 }
 
-                // Based on the current output scheme, sort by source repo, target repo, target branch, etc.
+                // Based on the current output schema, sort by source repo, target repo, target branch, etc.
                 // Concat the input strings as a simple sorting mechanism.
                 foreach (var subscription in subscriptions.OrderBy( subscription =>
                                              $"{subscription.SourceRepository}{subscription.Channel}{subscription.TargetRepository}{subscription.TargetBranch}"))
