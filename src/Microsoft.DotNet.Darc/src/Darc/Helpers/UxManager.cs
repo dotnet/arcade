@@ -31,13 +31,13 @@ namespace Microsoft.DotNet.Darc.Helpers
         {
             if (string.IsNullOrEmpty(_editorPath))
             {
-                _logger.LogError("Filed to define an editor for the pop ups...");
+                _logger.LogError("Failed to define an editor for the pop ups...");
                 return Constants.ErrorCode;
             }
 
             if (string.IsNullOrEmpty(_gitDir))
             {
-                _logger.LogError("Filed to get git's directory...");
+                _logger.LogError("Failed to get git's directory...");
                 return Constants.ErrorCode;
             }
 
@@ -74,12 +74,12 @@ namespace Microsoft.DotNet.Darc.Helpers
                             }
                             else if (tries > 0)
                             {
-                                _logger.LogError("Inputs were invalid, please try again.");
+                                _logger.LogError("Inputs were invalid, please try again...");
                             }
                             else
                             {
                                 Directory.Delete(dirPath, true);
-                                _logger.LogError("Maximum number of tries reached, aborting..");
+                                _logger.LogError("Maximum number of tries reached, aborting.");
                             }
 
                             _popUpClosed = true;
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Darc.Helpers
             }
             catch (Exception exc)
             {
-                _logger.LogError(exc, $"There was an exception while trying to pop up an editor window");
+                _logger.LogError(exc, $"There was an exception while trying to pop up an editor window.");
                 result = Constants.ErrorCode;
             }
 

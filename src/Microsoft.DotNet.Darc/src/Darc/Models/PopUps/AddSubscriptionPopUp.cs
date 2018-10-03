@@ -135,7 +135,9 @@ namespace Microsoft.DotNet.Darc.Models.PopUps
 
             try
             {
-                // Join the lines back into a string string and deserialize as YAML.
+                // Join the lines back into a string and deserialize as YAML.
+                // TODO: Alter the popup/ux manager to pass along the raw file to avoid this unnecessary
+                // operation once authenticate ends up as YAML.
                 string yamlString = contents.Aggregate<Line, string>("", (current, line) => $"{current}{System.Environment.NewLine}{line.Text}");
                 IDeserializer serializer = new DeserializerBuilder().Build();
                 outputYamlData = serializer.Deserialize<SubscriptionData>(yamlString);
