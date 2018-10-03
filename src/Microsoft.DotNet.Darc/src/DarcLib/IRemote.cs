@@ -18,8 +18,29 @@ namespace Microsoft.DotNet.DarcLib
 
         Task<Subscription> GetSubscriptionAsync(string subscriptionId);
 
-        Task<Subscription> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo,
-            string targetBranch, string updateFrequency, List<MergePolicy> mergePolicies);
+        Task<List<DependencyDetail>> GetRequiredUpdatesAsync(
+            string repoUri,
+            string branch,
+            string sourceCommit,
+            IEnumerable<AssetData> assets);
+
+        Task CreateNewBranchAsync(string repoUri, string baseBranch, string newBranch);
+
+        Task CommitUpdatesAsync(string repoUri, string branch, List<DependencyDetail> itemsToUpdate, string message);
+
+        Task<PullRequest> GetPullRequestAsync(string pullRequestUri);
+
+        Task<string> CreatePullRequestAsync(string repoUri, PullRequest pullRequest);
+
+        Task UpdatePullRequestAsync(string pullRequestUri, PullRequest pullRequest);
+
+        Task<Subscription> CreateSubscriptionAsync(
+            string channelName,
+            string sourceRepo,
+            string targetRepo,
+            string targetBranch,
+            string updateFrequency,
+            List<MergePolicy> mergePolicies);
 
         /// <summary>
         /// Delete a subscription by ID.
@@ -28,15 +49,9 @@ namespace Microsoft.DotNet.DarcLib
         /// <returns>Information on deleted subscription</returns>
         Task<Subscription> DeleteSubscriptionAsync(string subscriptionId);
 
-        Task<string> CreatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<Microsoft.DotNet.DarcLib.AssetData> assets, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
-
-        Task<string> UpdatePullRequestAsync(string pullRequestUrl, string assetsProducedInCommit, string branch, IEnumerable <Microsoft.DotNet.DarcLib.AssetData> assetsToUpdate, string pullRequestTitle = null, string pullRequestDescription = null);
-
         Task MergePullRequestAsync(string pullRequestUrl, MergePullRequestParameters parameters);
 
-        Task<string> CreatePullRequestCommentAsync(string pullRequestUrl, string message);
-
-        Task UpdatePullRequestCommentAsync(string pullRequestUrl, string commentId, string message);
+        Task CreateOrUpdatePullRequestDarcCommentAsync(string pullRequestUrl, string message);
 
         Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl);
 

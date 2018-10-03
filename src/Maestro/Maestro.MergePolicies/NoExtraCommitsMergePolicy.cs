@@ -2,7 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace Maestro.MergePolicies
 {
@@ -13,9 +15,12 @@ namespace Maestro.MergePolicies
     {
         public override string DisplayName => "No Extra Commits";
 
-        protected override Task<MergePolicyEvaluationResult> DoEvaluateAsync(MergePolicyEvaluationContext context)
+        public override Task EvaluateAsync(
+            IMergePolicyEvaluationContext context,
+            MergePolicyProperties properties)
         {
-            return Task.FromResult(context.Fail("Merge Policy Not Yet Implemented."));
+            context.Fail("Merge Policy Not Yet Implemented.");
+            return Task.CompletedTask;
         }
     }
 }

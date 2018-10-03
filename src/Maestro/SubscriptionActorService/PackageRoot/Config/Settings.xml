@@ -7,5 +7,12 @@
   <Section Name="SubscriptionActorServiceReplicatorSecurityConfig">
     <Parameter Name="CredentialType" Value="None" />
   </Section>
+  <Section Name="PullRequestActorServiceReplicatorConfig">
+    <Parameter Name="ReplicatorEndpoint" Value="PullRequestActorServiceReplicatorEndpoint" />
+    <Parameter Name="BatchAcknowledgementInterval" Value="0.005" />
+  </Section>
+  <Section Name="PullRequestActorServiceReplicatorSecurityConfig">
+    <Parameter Name="CredentialType" Value="None" />
+  </Section>
   <!-- The content will be generated during build -->
 </Settings>

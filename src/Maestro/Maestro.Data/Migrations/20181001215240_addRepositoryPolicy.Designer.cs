@@ -4,14 +4,16 @@ using Maestro.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Maestro.Data.Migrations
 {
     [DbContext(typeof(BuildAssetRegistryContext))]
-    partial class BuildAssetRegistryContextModelSnapshot : ModelSnapshot
+    [Migration("20181001215240_addRepositoryPolicy")]
+    partial class addRepositoryPolicy
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -337,8 +339,6 @@ namespace Maestro.Data.Migrations
                         .ValueGeneratedOnAdd();
 
                     b.Property<int>("ChannelId");
-
-                    b.Property<bool>("Enabled");
 
                     b.Property<int?>("LastAppliedBuildId");
 

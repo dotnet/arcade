@@ -41,7 +41,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.EntityFram
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.AspNetCore.ApiPagination", "Microsoft.AspNetCore.ApiPagination\Microsoft.AspNetCore.ApiPagination.csproj", "{C7C411A5-B404-4E7E-83E5-26826A3F1DF8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maestro.MergePolicies", "Maestro.MergePolicies\Maestro.MergePolicies.csproj", "{B8A3BA40-534B-4DD5-B8AE-17016011E62F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Maestro.MergePolicies", "Maestro.MergePolicies\Maestro.MergePolicies.csproj", "{B8A3BA40-534B-4DD5-B8AE-17016011E62F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "svcs", "svcs", "{74294C4E-44D5-4CCC-A26E-FB7B60880CCC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -284,7 +286,10 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{031A182F-57D5-4D8E-B73B-0542444BB89F} = {74294C4E-44D5-4CCC-A26E-FB7B60880CCC}
+		{DE37A8C1-BACF-46B0-8D2E-1A90D6D6A44F} = {74294C4E-44D5-4CCC-A26E-FB7B60880CCC}
 		{BC74E068-4FFB-40DC-9B7E-6FDC6AAB3BCE} = {69454143-8045-4799-BCF3-323F75FF14C5}
+		{14E9078C-8168-4CDD-95C1-2BDFC34CE547} = {74294C4E-44D5-4CCC-A26E-FB7B60880CCC}
 		{32FA6B55-5EF1-47BD-9FF6-2E3541E19884} = {69454143-8045-4799-BCF3-323F75FF14C5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

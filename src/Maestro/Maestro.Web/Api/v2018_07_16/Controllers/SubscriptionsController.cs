@@ -223,7 +223,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 async () =>
                 {
                     var actor = _subscriptionActorFactory(new ActorId(subscription.Id));
-                    await actor.RunAction(update.Method, update.Arguments);
+                    await actor.RunActionAsync(update.Method, update.Arguments);
                 });
 
             return Accepted();
@@ -247,8 +247,8 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
 
             if (subscription.TargetRepository.Contains("github.com"))
             {
-                var repoInstallation = await _context.RepoInstallations.FindAsync(subscription.TargetRepository);
-                if (repoInstallation == null)
+                var repo = await _context.Repositories.FindAsync(subscription.TargetRepository);
+                if (repo == null || repo.InstallationId <= 0)
                 {
                     return BadRequest(
                         new ApiError(

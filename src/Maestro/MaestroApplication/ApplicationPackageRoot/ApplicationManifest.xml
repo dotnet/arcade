@@ -10,6 +10,9 @@
     <Parameter Name="SubscriptionActorService_PartitionCount" DefaultValue="10" />
     <Parameter Name="SubscriptionActorService_MinReplicaSetSize" DefaultValue="3" />
     <Parameter Name="SubscriptionActorService_TargetReplicaSetSize" DefaultValue="3" />
+    <Parameter Name="PullRequestActorService_PartitionCount" DefaultValue="10" />
+    <Parameter Name="PullRequestActorService_MinReplicaSetSize" DefaultValue="3" />
+    <Parameter Name="PullRequestActorService_TargetReplicaSetSize" DefaultValue="3" />
   </Parameters>
   <!-- Import the ServiceManifest from the ServicePackage. The ServiceManifestName and ServiceManifestVersion 
        should match the Name and Version attributes of the ServiceManifest element defined in the 
@@ -62,6 +65,11 @@
     <Service Name="SubscriptionActorService" GeneratedIdRef="82792a84-735e-4f43-970a-18493cc68564|Persisted">
       <StatefulService ServiceTypeName="SubscriptionActorServiceType" TargetReplicaSetSize="[SubscriptionActorService_TargetReplicaSetSize]" MinReplicaSetSize="[SubscriptionActorService_MinReplicaSetSize]">
         <UniformInt64Partition PartitionCount="[SubscriptionActorService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
+      </StatefulService>
+    </Service>
+    <Service Name="PullRequestActorService" GeneratedIdRef="818bba8f-85b7-4be9-86c9-ec18f401f383|Persisted">
+      <StatefulService ServiceTypeName="PullRequestActorServiceType" TargetReplicaSetSize="[PullRequestActorService_TargetReplicaSetSize]" MinReplicaSetSize="[PullRequestActorService_MinReplicaSetSize]">
+        <UniformInt64Partition PartitionCount="[PullRequestActorService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
       </StatefulService>
     </Service>
   </DefaultServices>

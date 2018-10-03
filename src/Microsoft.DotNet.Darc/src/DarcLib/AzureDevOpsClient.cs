@@ -226,16 +226,53 @@ namespace Microsoft.DotNet.DarcLib
             return responseContent["repository"]["remoteUrl"].ToString();
         }
 
-        public async Task<string> CreatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
+        public async Task<PullRequest> GetPullRequestAsync(string pullRequestUrl)
         {
-            string linkToPullRquest = await CreateOrUpdatePullRequestAsync(repoUri, mergeWithBranch, sourceBranch, HttpMethod.Post,title, description);
-            return linkToPullRquest;
+            var connection = CreateConnection(pullRequestUrl);
+            var client = await connection.GetClientAsync<GitHttpClient>();
+
+            var (team, repo, id) = ParsePullRequestUri(pullRequestUrl);
+
+            var pr = await client.GetPullRequestAsync(team, repo, id);
+            return new PullRequest
+            {
+                Title = pr.Title,
+                Description = pr.Description,
+                BaseBranch = pr.TargetRefName,
+                HeadBranch = pr.SourceRefName,
+            };
         }
 
-        public async Task<string> UpdatePullRequestAsync(string pullRequestUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
+        public async Task<string> CreatePullRequestAsync(string repoUri, PullRequest pullRequest)
         {
-            string linkToPullRquest = await CreateOrUpdatePullRequestAsync(pullRequestUri, mergeWithBranch, sourceBranch, new HttpMethod("PATCH"), title, description);
-            return linkToPullRquest;
+            var connection = CreateConnection(repoUri);
+            var client = await connection.GetClientAsync<GitHttpClient>();
+
+            var (team, repo) = ParseRepoUri(repoUri);
+
+            var createdPr = await client.CreatePullRequestAsync(new GitPullRequest
+            {
+                Title = pullRequest.Title,
+                Description = pullRequest.Description,
+                SourceRefName = "refs/heads/" + pullRequest.HeadBranch,
+                TargetRefName = "refs/heads/" + pullRequest.BaseBranch,
+            }, team, repo);
+
+            return createdPr.Url;
+        }
+
+        public async Task UpdatePullRequestAsync(string pullRequestUri, PullRequest pullRequest)
+        {
+            var connection = CreateConnection(pullRequestUri);
+            var client = await connection.GetClientAsync<GitHttpClient>();
+
+            var (team, repo, id) = ParsePullRequestUri(pullRequestUri);
+
+            await client.UpdatePullRequestAsync(new GitPullRequest
+            {
+                Title = pullRequest.Title,
+                Description = pullRequest.Description,
+            }, team, repo, id);
         }
 
         public async Task MergePullRequestAsync(string pullRequestUrl, MergePullRequestParameters parameters)
@@ -263,7 +300,26 @@ namespace Microsoft.DotNet.DarcLib
                 id);
         }
 
-        private static Regex prUriPattern = new Regex(@"^/(?<team>[^/])/_apis/git/repositories/(?<repo>[^/])/pullRequests/(?<id>\d+)$");
+        public Task CreateOrUpdatePullRequestDarcCommentAsync(string pullRequestUrl, string message)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static Regex repoUriPattern = new Regex(@"^/dnceng/(?<team>[^/]+)/_git/(?<repo>[^/]+)$");
+
+        private (string team, string repo) ParseRepoUri(string uri)
+        {
+            var u = new UriBuilder(uri);
+            var match = repoUriPattern.Match(u.Path);
+            if (!match.Success)
+            {
+                return default;
+            }
+
+            return (match.Groups["team"].Value, match.Groups["repo"].Value);
+        }
+
+        private static Regex prUriPattern = new Regex(@"^/(?<team>[^/]+)/_apis/git/repositories/(?<repo>[^/])/pullRequests/(?<id>\d+)$");
 
         private (string team, string repo, int id) ParsePullRequestUri(string uri)
         {
