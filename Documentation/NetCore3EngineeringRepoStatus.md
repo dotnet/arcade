@@ -43,7 +43,7 @@
 | [CoreClr](https://github.com/dotnet/arcade/issues/643)              | ?                    | In progress |
 | [CoreFx](https://github.com/dotnet/arcade/issues/684)               | December 2018        | In progress |
 | [Core-SDK](https://github.com/dotnet/arcade/issues/694)             | ?                    | |
-| [Core-Setup](https://github.com/dotnet/arcade/issues/679)           | January 2019         | |
+| [Core-Setup](https://github.com/dotnet/arcade/issues/679)           | January 2019         | Will follow CoreFx |
 | [MSBuild](https://github.com/dotnet/arcade/issues/724)              | ?                    | |
 | [Roslyn](https://github.com/dotnet/arcade/issues/639)               | November 2018        | In progress |
 | [SDK](https://github.com/dotnet/arcade/issues/648)                  | September 2018       | Completed |
