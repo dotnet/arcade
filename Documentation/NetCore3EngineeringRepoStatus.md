@@ -16,7 +16,7 @@ Target completion date for these workstreams is 12/14/2018.
 | [CLI](https://github.com/dotnet/arcade/issues/655)                  | ?                    | |
 | [CLICommandLineParser](https://github.com/dotnet/arcade/issues/741) | September 2018       | Completed |
 | [CLI-Migrate](https://github.com/dotnet/arcade/issues/736)          | September 2018       | Completed |
-| [CoreClr](https://github.com/dotnet/arcade/issues/645)              | ?                    | |
+| [CoreClr](https://github.com/dotnet/arcade/issues/645)              | ?                    | In progress |
 | [CoreFx](https://github.com/dotnet/arcade/issues/686)               | ?                    | |
 | [Core-SDK](https://github.com/dotnet/arcade/issues/696)             | ?                    | |
 | [Core-Setup](https://github.com/dotnet/arcade/issues/681)           | ?                    | |
