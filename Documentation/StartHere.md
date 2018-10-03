@@ -86,12 +86,12 @@ some highlights:
 
 - Move out of .NET CI and into our new Azure DevOps project
   (https://dev.azure.com/dnceng/public) for your public CI. - See [Onboarding
-  VSTS](VSTS/VSTSOnboarding.md).
+  Azure DevOps](AzureDevOps/AzureDevOpsOnboarding.md).
 - Move out of the devdiv Azure DevOps instance (https://dev.azure.com/devdiv/ or
   https://devdiv.visualstudio.com) and into the internal project for
   (https://dev.azure.com/dnceng/internal) internal CI and official builds. - See
-  [Onboarding VSTS](VSTS/VSTSOnboarding.md) and [Moving Official Builds from
-  DevDiv to DncEng](VSTS/MovingFromDevDivToDncEng.md).
+  [Onboarding Azure DevOps](AzureDevOps/AzureDevOpsOnboarding.md) and [Moving Official Builds from
+  DevDiv to DncEng](AzureDevOps/MovingFromDevDivToDncEng.md).
 - Onboard onto dependency flow (Darc). - See [Dependency Flow
   Onboarding](DependencyFlowOnboarding.md).
 - Use Helix for testing where possible - See *Helix onboarding docs coming
@@ -138,7 +138,7 @@ dnceng@microsoft.com
   machine becomes a simpler process.  Documentation on the process of
   bootstrapping can be found at [here](NativeDependencies/).
 
-  See [here](VSTS/VSTSOnboarding.md#agent-queues) for more information. For
+  See [here](AzureDevOps/AzureDevOpsOnboarding.md#agent-queues) for more information. For
   additional questions contact 'dnceng'. Either @dotnet/dnceng on GitHub, or
   dnceng@microsoft.com
 

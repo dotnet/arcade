@@ -8,10 +8,10 @@ namespace Microsoft.DotNet.DarcLib
 {
     public class AzureDevOpsPush
     {
-        public AzureDevOpsPush(AzureDevOpsRefUpdate refUpdate, AzureDevOpsCommit vstsCommit)
+        public AzureDevOpsPush(AzureDevOpsRefUpdate refUpdate, AzureDevOpsCommit azureDevOpsCommit)
         {
             RefUpdates = new List<AzureDevOpsRefUpdate> { refUpdate };
-            Commits = new List<AzureDevOpsCommit> { vstsCommit };
+            Commits = new List<AzureDevOpsCommit> { azureDevOpsCommit };
         }
         public List<AzureDevOpsRefUpdate> RefUpdates { get; set; }
 

@@ -12,11 +12,11 @@ The goals are
 - be as close to the latest shipping .NET Core SDK as possible, with minimal overrides and tweaks
 - be modular and flexible, not all repos need all features; let the repo choose subset of features to import
 - unify common operations and structure across repos
-- unify VSTS build definitions used to produce official builds
+- unify Azure DevOps Pipelines build definitions used to produce official builds
 
 The toolset has four kinds of features and helpers:
 - Common conventions applicable to all repos using the toolset.
-- Infrastructure required for VSTS CI builds, MicroBuild and build from source.
+- Infrastructure required for Azure DevOps Pipelines CI builds, MicroBuild and build from source.
 - Workarounds for bugs in shipping tools (dotnet SDK, VS SDK, msbuild, VS, NuGet client, etc.).
   Will be removed once the bugs are fixed in the product and the toolset moves to the new version of the tool.
 - Abstraction of peculiarities of VSSDK and VS insertion process that are not compatible with dotnet SDK.
@@ -283,7 +283,7 @@ VSIX packages are built to `VSSetup` directory.
 To include the output VSIX of a project in Visual Studio Insertion, set the `VisualStudioInsertionComponent` property.
 Multiple VSIXes can specify the same component name, in which case their manifests will be merged into a single insertion unit.
 
-The Visual Studio insertion manifests and VSIXes are generated during Pack task into `VSSetup\Insertion` directory, where they are picked by by MicroBuild VSTS publishing task during official builds.
+The Visual Studio insertion manifests and VSIXes are generated during Pack task into `VSSetup\Insertion` directory, where they are picked by by MicroBuild Azure DevOps Pipelines publishing task during official builds.
 
 Arcade SDK also enables building VS Setup Components from .swr files (as opposed to components comprised of one or more VSIXes).
 

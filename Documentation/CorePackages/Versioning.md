@@ -21,7 +21,7 @@ Both types of versioning have advantages and disadvantages:
 - Build metadata typically includes SHA, which makes identification of the source of bits easy.
 
 **CONS:**
-- Some related infrastructure systems may not support the ingestion of multiple assets with the same name/version.  For example, MyGet, NuGet, or VSTS support overwriting to varying degrees. You're left to deal with these scenarios on a case-by-case basis.  For example:
+- Some related infrastructure systems may not support the ingestion of multiple assets with the same name/version.  For example, MyGet, NuGet, or Azure DevOps support overwriting to varying degrees. You're left to deal with these scenarios on a case-by-case basis.  For example:
   - Introduce a new meaningless commit to bump the version number
   - Successive builds of the same SHA, if they were to have different outputs (e.g. a checked vs. debug build) may require a clean of the cache.
   - Temporarily unlock a feed to enable re-publishing (may not be possible, and bad practice)

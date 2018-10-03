@@ -23,7 +23,7 @@ All test execution should run through helix. An up to date list of helix queues 
  * Submit your test jobs to helix using the [Helix Sdk].
 
 
-[Helix Sdk]: /Documentation/VSTS/SendingJobsToHelix.md
+[Helix Sdk]: /Documentation/AzureDevOps/SendingJobsToHelix.md
 [Bootstrapping System]: /Documentation/Projects/NativeDependencies/Design.md
 [@dotnet/dnceng]: https://github.com/orgs/dotnet/teams/dnceng
 

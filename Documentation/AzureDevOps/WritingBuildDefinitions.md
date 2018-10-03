@@ -1,6 +1,6 @@
-# Writing VSTS Build Definitions
+# Writing Azure DevOps Pipelines Definitions
 
-The purpose of this document is to detail how VSTS YAML build definitions should be written to integrate into the .NET Core Ecosystem and take advantage of the scaffolding availabe in the Arcade repository.
+The purpose of this document is to detail how Azure DevOps YAML pipelines should be written to integrate into the .NET Core Ecosystem and take advantage of the scaffolding availabe in the Arcade repository.
 
 ## General Goals For Build Definitions
 

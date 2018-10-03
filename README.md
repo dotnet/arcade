@@ -6,7 +6,7 @@ Arcade is intended to provide well-understood and consistent mechanisms for cons
 
 ## Build & Test Status
 
-VSTS [![Build Status](https://dev.azure.com/dnceng/_apis/public/build/definitions/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/17/badge
+Azure DevOps Pipelines [![Build Status](https://dev.azure.com/dnceng/_apis/public/build/definitions/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/17/badge
 )](https://dev.azure.com/dnceng/public/_build/index?definitionId=17&branchName=master)
 
 ## Getting Started
