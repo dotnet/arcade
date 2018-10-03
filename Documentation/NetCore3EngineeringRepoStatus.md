@@ -55,7 +55,7 @@ Target completion date for these workstreams is 12/14/2018.
 | [Templating](https://github.com/dotnet/arcade/issues/714)           | ?                    | Scheduled for planning |
 | [Test-Templates](https://github.com/dotnet/arcade/issues/658)       | ?                    | Will follow Templating |
 | [Visual FSharp](https://github.com/dotnet/arcade/issues/729)        | ?                    | |
-| [WebSDK](https://github.com/dotnet/arcade/issues/719)               | ?                    | |
+| [WebSDK](https://github.com/dotnet/arcade/issues/719)               | ?                    | Starting planning |
 | [WinForms](https://github.com/dotnet/arcade/issues/704)             | ?                    | Starting planning |
 | [WPF](https://github.com/dotnet/arcade/issues/699)                  | ?                    | Starting planning |
 
@@ -81,7 +81,7 @@ Target completion date for these workstreams is 12/14/2018.
 | [Templating](https://github.com/dotnet/arcade/issues/713)           | ?                    | |
 | [Test-Templates](https://github.com/dotnet/arcade/issues/657)       | ?                    | |
 | [Visual FSharp](https://github.com/dotnet/arcade/issues/728)        | ?                    | |
-| [WebSDK](https://github.com/dotnet/arcade/issues/718)               | ?                    | |
+| [WebSDK](https://github.com/dotnet/arcade/issues/718)               | ?                    | Starting planning |
 | [WinForms](https://github.com/dotnet/arcade/issues/703)             | ?                    | Starting planning |
 | [WPF](https://github.com/dotnet/arcade/issues/698)                  | ?                    | Starting planning |
 
@@ -107,6 +107,6 @@ Target completion date for these workstreams is 12/14/2018.
 | [Templating](https://github.com/dotnet/arcade/issues/715)           | ?                    | Scheduled for planning |
 | [Test-Templates](https://github.com/dotnet/arcade/issues/659)       | ?                    | Will follow Templating |
 | [Visual FSharp](https://github.com/dotnet/arcade/issues/730)        | ?                    | |
-| [WebSDK](https://github.com/dotnet/arcade/issues/720)               | ?                    | |
-| [WinForms](https://github.com/dotnet/arcade/issues/705)             | ?                    | |
-| [WPF](https://github.com/dotnet/arcade/issues/700)                  | ?                    | |
+| [WebSDK](https://github.com/dotnet/arcade/issues/720)               | ?                    | Starting planning |
+| [WinForms](https://github.com/dotnet/arcade/issues/705)             | ?                    | Starting planning |
+| [WPF](https://github.com/dotnet/arcade/issues/700)                  | ?                    | Starting planning |
