@@ -5,6 +5,8 @@
 - [Engineering dependency flow status](#engineering-dependency-flow)
 - [Internal builds from dev.azure.com/dnceng status](#internal-builds-from-dnceng)
 
+Target completion date for these workstreams is 12/14/2018.
+
 ## Using Azure DevOps for CI
 
 | Repo                                                                | Est. Completion Date | Status |
