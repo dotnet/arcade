@@ -1,10 +1,9 @@
-# Onboarding VSTS
+# Onboarding onto Azure DevOps
 
 - [Project Guidance](#project-guidance)
 - [GitHub to DncEng Internal mirror](#github-to-dnceng-internal-mirror)
-- [VSTS Pull Request and CI builds](#vsts-pull-request-and-ci-builds)
+- [Azure DevOps Pipelines Pull Request and CI builds](#azure-devops-pipelines-pull-request-and-ci-builds)
 - [Agent Queues](#agent-queues)
-- [VSTS GitHub connection](#vsts-github-connection)
 - [CI badge link](#ci-badge-link)
 - [Signed builds](#signed-builds)
 - [Security](#security)
@@ -13,7 +12,7 @@
 
 ## Project Guidance
 
-[Project guidance](./VSTSGuidance.md) - Covers guidance on naming conventions, folder structure, projects, build definitions, etc...
+[Project guidance](./AzureDevOpsGuidance.md) - Covers guidance on naming conventions, folder structure, projects, pipelines, etc...
 
 ## GitHub to DncEng Internal mirror
 
@@ -21,13 +20,13 @@ If your repository has internal builds, you will need to set up a DncEng Interna
 
 Instructions for setting up the GitHub to dev.azure.com/dnceng/internal mirror are available in the [dev.azure.com/dnceng internal mirror documentation](./internal-mirror.md)
 
-## VSTS Pull Request and CI builds
+## Azure DevOps Pipelines Pull Request and CI builds
 
-VSTS has detailed documentation on how to create builds that are linked from GitHub repositories which can be found [here](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts); however, before going through those steps, keep in mind that our process differs from the steps in the official documentation in a few key places:
+Azure DevOps has detailed documentation on how to create builds that are linked from GitHub repositories which can be found [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/get-started-yaml?view=vsts); however, before going through those steps, keep in mind that our process differs from the steps in the official documentation in a few key places:
 
 * The documentation defaults to showing the process for creating a build using the Designer. The Arcade standard is to use **YAML**, so make sure to click that tab under the "Set up CI for your GitHub repository" header.
 * The YAML tutorial links to a .NET Core sample repository for an example of a simple `.vsts-ci.yml` file. Instead of using that repository, use [our sample repository](https://github.com/dotnet/arcade-minimalci-sample).
-* VSTS will require a GitHub Service Endpoint to communicate with github and setup web hooks.  Teams should use the `DotNet-Bot GitHub Connection` Service Endpoint.  The `DotNet-Bot GitHub Connection` requires that teams add the .NET Core owned [service account](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#github-service-account) as a [collaborator](https://help.github.com/articles/permission-levels-for-a-user-account-repository/#collaborator-access-on-a-repository-owned-by-a-user-account) (Admin access) on the GitHub repo.
+* Azure DevOps will require a GitHub Service Endpoint to communicate with github and setup web hooks.  Teams should use the `DotNet-Bot GitHub Connection` Service Endpoint.  The `DotNet-Bot GitHub Connection` requires that teams add the .NET Core owned [service account](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#github-service-account) as a [collaborator](https://help.github.com/articles/permission-levels-for-a-user-account-repository/#collaborator-access-on-a-repository-owned-by-a-user-account) (Admin access) on the GitHub repo.
 
 For implementation details and managing information about `DotNet-Bot GitHub Connection` see the [documentation](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#vsts-service-endpoint)
 
@@ -43,9 +42,9 @@ A couple of notes:
 
 ## CI badge link
 
-The [VSTS CI Build guidance](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts#create-a-vsts-build-status-with-a-github-readme-file) describes how to determine the CI build badge link, but only for task based build definitions.  If you're using a YAML based build definition, then you can determine the badge link by either of these two methods.
+The [Azure DevOps Pipelines CI Build guidance](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts#create-a-vsts-build-status-with-a-github-readme-file) describes how to determine the CI build badge link, but only for task based pipelines.  If you're using a YAML based pipeline, then you can determine the badge link by either of these two methods.
 
-- Edit the build definition and go to the "History" tab.  Select the most recent change, right-click, and select "Compare Differences".  Scroll through the json and look for the "\_links" section to find the "badge" link.
+- Edit the pipeline and go to the "History" tab.  Select the most recent change, right-click, and select "Compare Differences".  Scroll through the json and look for the "\_links" section to find the "badge" link.
 
 ```JSON
 "_links": {
@@ -64,9 +63,9 @@ The [VSTS CI Build guidance](https://docs.microsoft.com/en-us/vsts/build-release
 },
 ```
 
-- Use the method provided in the [CI Build Guidance](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts#create-a-vsts-build-status-with-a-github-readme-file) to discover the badge link for a task based build definition in the same project, then replace the build definition id with the build definition id of the yaml based build you are modifying.  The Url encoding follows this pattern...
+- Use the method provided in the [CI Build Guidance](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts#create-a-vsts-build-status-with-a-github-readme-file) to discover the badge link for a task based pipeline in the same project, then replace the pipeline id with the pipeline id of the yaml based build you are modifying.  The Url encoding follows this pattern...
 
-  `https://[project collection]/_apis/[project name]/build/definitions/[project id]/[build definition id]/badge`
+  `https://[project collection]/_apis/[project name]/build/definitions/[project id]/[pipeline id]/badge`
 
 It is recommended that you restrict the CI build status to a particular branch.  This will prevent the badge from reporting Pull Request build status.  Restrict to a branch by adding the `branchName` parameter to your query string.
 
@@ -133,24 +132,24 @@ For a list of known VSTS issues we are tracking, please go [here](https://dev.az
 
 - "Resource not authorized" or "The service endpoint does not exist or has not been authorized for use"
 
-  If you made some change to a resource or changed resources, but everything else *appears* correct (from a permissions / authorization point of view), and you're seeing "resource not authorized" when you try to queue a build; it's possible that the resource is fine, but the build definition is not authorized to use it.  Edit the build definition and make some minor change, then save.  This will force the build definition to re-authorize and you can undo whatever minor change you made.
+  If you made some change to a resource or changed resources, but everything else *appears* correct (from a permissions / authorization point of view), and you're seeing "resource not authorized" when you try to queue a build; it's possible that the resource is fine, but the pipeline is not authorized to use it.  Edit the pipeline and make some minor change, then save.  This will force the pipeline to re-authorize and you can undo whatever minor change you made.
 
-  Note that [resource authorization](https://github.com/Microsoft/vsts-agent/blob/d792192875381ea770f09f3740ed8d1051f4f456/docs/preview/yamlgettingstarted-authz.md) happens on Push, not for Pull Requests.  If you have some changes to resources that you want to make and submit via a PR.  You must (currently) authorize the build definition first (otherwise the PR will fail).
+  Note that [resource authorization](https://github.com/Microsoft/vsts-agent/blob/d792192875381ea770f09f3740ed8d1051f4f456/docs/preview/yamlgettingstarted-authz.md) happens on Push, not for Pull Requests.  If you have some changes to resources that you want to make and submit via a PR.  You must (currently) authorize the pipeline first (otherwise the PR will fail).
 
-  1. Push your changes to a branch of the dnceng repository (not your fork)
-  2. Edit the build definition
-  3. Take note of the "Default branch for manual and scheduled builds"
-  4. Change "Default branch for manual and scheduled builds" to the branch you just pushed
-  5. Save the build definition.  This will force reauthorization of the "default" branch resoures.
-  6. Edit the build definition
+  1. Push your changes to a branch of the dnceng repository (not your fork).
+  2. Edit the pipeline.
+  3. Take note of the "Default branch for manual and scheduled builds".
+  4. Change "Default branch for manual and scheduled builds" to the branch you just pushed.
+  5. Save the pipeline.  This will force reauthorization of the "default" branch resoures.
+  6. Edit the pipeline.
   7. Change the "default branch for manual and scheduled builds" back to the value you noted in step 3.
-  8. Save the build definition
-  9. Now the resources should be authorized and you can submit your changes via a PR or direct push
+  8. Save the pipeline.
+  9. Now the resources should be authorized and you can submit your changes via a PR or direct push.
 
 - "Repository self references endpoint"
 
   If you see an error like this
 
-  `An error occurred while loading the YAML build definition. Repository self references endpoint 6510879c-eddc-458b-b083-f8150e06ada5 which does not exist or is not authorized for use`
+  `An error occurred while loading the YAML pipeline. Repository self references endpoint 6510879c-eddc-458b-b083-f8150e06ada5 which does not exist or is not authorized for use`
 
   The problem is the yaml file had a parse error when the definition was originally created. When the definition is created, parse errors are saved with the definition and are supposed to be shown in the definition editor. That regressed in the UI. VSTS is also making a change so that even if there are errors parsing the file, they go ahead and save the repository endpoint as authorized.  In the mean time, you have to track down your YAML parse error.

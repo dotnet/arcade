@@ -56,12 +56,12 @@ A new option `-publish` was added to `build.ps1` script that needs to be set for
 
 ### CI build 
 
-The following applies to CI build definition, not PR validation build definitions.
+The following applies to CI pipeline, not PR validation pipelines.
 
 - YAML definition (`.vsts-ci.yml`)
   - repository participates in .NET Core build: https://github.com/dotnet/arcade/.vsts-ci.yml 
   - otherwise example to follow: https://github.com/dotnet/roslyn-analyzers/.vsts-ci.yml 
-- pipeline variables (settable in build definition web UI)
+- pipeline variables (settable in Azure DevOps Pipeline web UI)
   - Add SignType definition variable settable at queue time
     ![Pipeline Variables](PipelineVariables.png)
   - Link DotNet-Symbol-Publish variable group. If you don’t see the group in the UI you might not have permissions. Let me know and I'll add it to your definition.

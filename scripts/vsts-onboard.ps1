@@ -5,7 +5,7 @@ Performs a set of actions to enable a repo in VSTS.
 .DESCRIPTION
 - Makes an internal repo on dev.azure.com/dnceng for the GitHub repo
 - Adds a Maestro webhook
-- Adds a folder structure on internal and public VSTS for build definitions
+- Adds a folder structure on internal and public VSTS for pipelines
 
 .PARAMETER GitHubRepoName
 Repository name of the GitHub repo to onboard, in org/repo form.

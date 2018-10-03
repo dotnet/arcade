@@ -12,7 +12,7 @@ as well as bootstrapping files and scripts in arcade participating repos.
 
 1.  An Official Build for Arcade happens that i.e. creates XX package with vXY
     1. At the end of the build, the Reporting Store gets updated with the information of the new package produced and its dependencies
-    by a "publishing" task within the build definition.
+    by a "publishing" task within the pipeline.
 2.  Maestro++ trigger happens
 3.  Maestro++ uses Darc to ask who has a dependency on `arcade.sdk`
     1. Maestro++ calls `get -d --remote -n arcade.sdk`

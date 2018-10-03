@@ -12,7 +12,7 @@ The goals are
 - be as close to the latest shipping .NET Core SDK as possible, with minimal overrides and tweaks
 - be modular and flexible, not all repos need all features; let the repo choose subset of features to import
 - unify common operations and structure across repos
-- unify Azure DevOps Pipelines build definitions used to produce official builds
+- unify Azure DevOps Pipelines used to produce official builds
 
 The toolset has four kinds of features and helpers:
 - Common conventions applicable to all repos using the toolset.
@@ -329,7 +329,7 @@ folder "InstallDir:MSBuild\Microsoft\VisualStudio\Managed"
 
 ### MicroBuild
 
-The repository shall define a YAML build definition that uses MicroBuild (e.g. `.vsts-ci.yml`).
+The repository shall define an Azure DevOps YAML Pipeline that uses MicroBuild (e.g. `.vsts-ci.yml`).
 
 The following step shall be included in the definition:
 
@@ -367,7 +367,7 @@ The above build steps assume the following variables to be defined:
 
 - `SignType`, which specified the kind signing type: "real" (default) or "test"
 
-The build definition also needs to link the following variable group:
+The Azure DevOps Pipeline also needs to link the following variable group:
 
 - DotNet-Symbol-Publish 
   - `microsoft-symbol-server-pat`

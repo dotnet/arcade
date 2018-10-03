@@ -6,7 +6,7 @@ There's a set of steps that need to be completed so the versions of assets your 
 
 Copy the `eng/` folder from the [minimalci-sample](https://github.com/dotnet/arcade-minimalci-sample) repo. 
 
-This folder contains required version files as well as build definition templates used for publishing assets.
+This folder contains required version files as well as pipeline templates used for publishing assets.
 
 For more information about version files go to: https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md
 

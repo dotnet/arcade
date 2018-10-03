@@ -2,7 +2,7 @@
 
 ### What is it?
 
-A pair of scripts that can be used to send telemetry information so that you'll be able to see the status of phases of your build on the [Mission Control](http://mc.dot.net/) website. Essentially, you have a [start](../../eng/common/templates/steps/telemetry-start.yml) and an [end](../../eng/common/templates/steps/telemetry-end.yml) script that you can use to track the execution status of particular regions of your build definitions. These scripts are reentrant, so you can use them several times on the same build definition. See example at the end of this document.
+A pair of scripts that can be used to send telemetry information so that you'll be able to see the status of phases of your build on the [Mission Control](http://mc.dot.net/) website. Essentially, you have a [start](../../eng/common/templates/steps/telemetry-start.yml) and an [end](../../eng/common/templates/steps/telemetry-end.yml) script that you can use to track the execution status of particular regions of your pipelines. These scripts are reentrant, so you can use them several times on the same pipeline. See example at the end of this document.
 
 One of the **main benefits** of using these scripts to collect telemetry for the build is that you'll be able to see *aggregated information from all your build configurations* on the Mission Control website. 
 
@@ -10,7 +10,7 @@ Note that this component (the telemetry implementation) is not part of the Arcad
 
 ### Will an onboarded repository automatically use it?
 
-One of the requirements for onboarding in Arcade is to copy the `eng\common` folder from the root of the Arcade repository to the onboarding repository and reference the  `eng\common\templates\phases\base.yml` file on your YAML build definitions. This will plug in the use of the telemetry scripts on your build. 
+One of the requirements for onboarding in Arcade is to copy the `eng\common` folder from the root of the Arcade repository to the onboarding repository and reference the  `eng\common\templates\phases\base.yml` file on your YAML pipelines. This will plug in the use of the telemetry scripts on your build. 
 
 These scripts automate the process, but there is some setup that you have to do to enable telemetry collection. Basically, you'll need to:
 
@@ -76,4 +76,4 @@ phases:
       - template: /eng/code-inspection.yaml
 ```
 
-Having your build definitions collect and report telemetry is the first step for having the telemetry displayed in Mission Control. Besides that you need to follow the instructions outlined [here](https://github.com/dotnet/core-eng/wiki/MissionControlConfiguration) to create a `viewconfiguration.json` file that will tell Mission Control how to group and display the telemetry collected for the repository. For instance, the build configuration above have [this](https://github.com/dotnet/core-eng/blob/master/mission-control-config/dotnet/helix/viewconfiguration.json) `viewconfiguration.json` file associated with it.
+Having your pipeliness collect and report telemetry is the first step for having the telemetry displayed in Mission Control. Besides that you need to follow the instructions outlined [here](https://github.com/dotnet/core-eng/wiki/MissionControlConfiguration) to create a `viewconfiguration.json` file that will tell Mission Control how to group and display the telemetry collected for the repository. For instance, the build configuration above have [this](https://github.com/dotnet/core-eng/blob/master/mission-control-config/dotnet/helix/viewconfiguration.json) `viewconfiguration.json` file associated with it.
