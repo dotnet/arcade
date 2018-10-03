@@ -17,6 +17,7 @@
 | [CoreClr](https://github.com/dotnet/arcade/issues/645)              | ?                    | |
 | [CoreFx](https://github.com/dotnet/arcade/issues/686)               | ?                    | |
 | [Core-SDK](https://github.com/dotnet/arcade/issues/696)             | ?                    | |
+| [Core-Setup](https://github.com/dotnet/arcade/issues/681)           | ?                    | |
 | [MSBuild](https://github.com/dotnet/arcade/issues/726)              | ?                    | CI builds do not import base.yml |
 | [Roslyn](https://github.com/dotnet/arcade/issues/637)               | October 2018         | One Spanish test leg still uses Jenkins |
 | [SDK](https://github.com/dotnet/arcade/issues/650)                  | September 2018       | Completed |
@@ -27,8 +28,8 @@
 | [Test-Templates](https://github.com/dotnet/arcade/issues/661)       | ?                    | Will follow Templating |
 | [Visual FSharp](https://github.com/dotnet/arcade/issues/731)        | ?                    | CI builds do not import base.yml |
 | [WebSDK](https://github.com/dotnet/arcade/issues/721)               | ?                    | |
-| [WinForms](https://github.com/dotnet/arcade/issues/706)             | ?                    | |
-| [WPF](https://github.com/dotnet/arcade/issues/701)                  | ?                    | |
+| [WinForms](https://github.com/dotnet/arcade/issues/706)             | ?                    | Starting planning |
+| [WPF](https://github.com/dotnet/arcade/issues/701)                  | ?                    | Starting planning |
 
 ## Using shared toolset (Arcade SDK)
 
@@ -40,20 +41,21 @@
 | [CLICommandLineParser](https://github.com/dotnet/arcade/issues/739) | October 2018         | Completed |
 | [CLI-Migrate](https://github.com/dotnet/arcade/issues/734)          | September 2018       | Completed |
 | [CoreClr](https://github.com/dotnet/arcade/issues/643)              | ?                    | In progress |
-| [CoreFx](https://github.com/dotnet/arcade/issues/684)               | ?                    | In progress |
+| [CoreFx](https://github.com/dotnet/arcade/issues/684)               | December 2018        | In progress |
 | [Core-SDK](https://github.com/dotnet/arcade/issues/694)             | ?                    | |
+| [Core-Setup](https://github.com/dotnet/arcade/issues/679)           | January 2019         | |
 | [MSBuild](https://github.com/dotnet/arcade/issues/724)              | ?                    | |
 | [Roslyn](https://github.com/dotnet/arcade/issues/639)               | November 2018        | In progress |
 | [SDK](https://github.com/dotnet/arcade/issues/648)                  | September 2018       | Completed |
-| [Standard](https://github.com/dotnet/arcade/issues/689)             | ?                    | |
+| [Standard](https://github.com/dotnet/arcade/issues/689)             | October 2018         | In progress|
 | [SymReader](https://github.com/dotnet/arcade/issues/664)            | ?                    | Will follow Roslyn |
 | [SymReader-Portable](https://github.com/dotnet/arcade/issues/669)   | ?                    | Will follow Roslyn |
 | [Templating](https://github.com/dotnet/arcade/issues/714)           | ?                    | Scheduled for planning |
 | [Test-Templates](https://github.com/dotnet/arcade/issues/658)       | ?                    | Will follow Templating |
 | [Visual FSharp](https://github.com/dotnet/arcade/issues/729)        | ?                    | |
 | [WebSDK](https://github.com/dotnet/arcade/issues/719)               | ?                    | |
-| [WinForms](https://github.com/dotnet/arcade/issues/704)             | ?                    | |
-| [WPF](https://github.com/dotnet/arcade/issues/699)                  | ?                    | |
+| [WinForms](https://github.com/dotnet/arcade/issues/704)             | ?                    | Starting planning |
+| [WPF](https://github.com/dotnet/arcade/issues/699)                  | ?                    | Starting planning |
 
 ## Engineering dependency flow
 
@@ -65,20 +67,21 @@
 | [CLICommandLineParser](https://github.com/dotnet/arcade/issues/738) | ?                    | |
 | [CLI-Migrate](https://github.com/dotnet/arcade/issues/733)          | ?                    | |
 | [CoreClr](https://github.com/dotnet/arcade/issues/642)              | ?                    | |
-| [CoreFx](https://github.com/dotnet/arcade/issues/683)               | ?                    | |
+| [CoreFx](https://github.com/dotnet/arcade/issues/683)               | October 2018         | Completed |
 | [Core-SDK](https://github.com/dotnet/arcade/issues/693)             | ?                    | |
+| [Core-Setup](https://github.com/dotnet/arcade/issues/678)           | October 2018         | Completed |
 | [MSBuild](https://github.com/dotnet/arcade/issues/723)              | ?                    | |
 | [Roslyn](https://github.com/dotnet/arcade/issues/640)               | ?                    | |
 | [SDK](https://github.com/dotnet/arcade/issues/647)                  | ?                    | |
-| [Standard](https://github.com/dotnet/arcade/issues/688)             | ?                    | |
+| [Standard](https://github.com/dotnet/arcade/issues/688)             | October 2018         | Completed |
 | [SymReader](https://github.com/dotnet/arcade/issues/663)            | ?                    | |
 | [SymReader-Portable](https://github.com/dotnet/arcade/issues/668)   | ?                    | |
 | [Templating](https://github.com/dotnet/arcade/issues/713)           | ?                    | |
 | [Test-Templates](https://github.com/dotnet/arcade/issues/657)       | ?                    | |
 | [Visual FSharp](https://github.com/dotnet/arcade/issues/728)        | ?                    | |
 | [WebSDK](https://github.com/dotnet/arcade/issues/718)               | ?                    | |
-| [WinForms](https://github.com/dotnet/arcade/issues/703)             | ?                    | |
-| [WPF](https://github.com/dotnet/arcade/issues/698)                  | ?                    | |
+| [WinForms](https://github.com/dotnet/arcade/issues/703)             | ?                    | Starting planning |
+| [WPF](https://github.com/dotnet/arcade/issues/698)                  | ?                    | Starting planning |
 
 ## Internal builds from DncEng
 
@@ -92,6 +95,7 @@
 | [CoreClr](https://github.com/dotnet/arcade/issues/644)              | ?                    | |
 | [CoreFx](https://github.com/dotnet/arcade/issues/685)               | ?                    | |
 | [Core-SDK](https://github.com/dotnet/arcade/issues/695)             | ?                    | |
+| [Core-Setup](https://github.com/dotnet/arcade/issues/680)           | ?                    | |
 | [MSBuild](https://github.com/dotnet/arcade/issues/725)              | ?                    | |
 | [Roslyn](https://github.com/dotnet/arcade/issues/638)               | ?                    | No plans at this time |
 | [SDK](https://github.com/dotnet/arcade/issues/649)                  | September 2018       | Completed |
