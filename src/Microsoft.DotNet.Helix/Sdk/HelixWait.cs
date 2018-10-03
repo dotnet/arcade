@@ -19,16 +19,8 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public ITaskItem[] Jobs { get; set; }
 
-        /// <summary>
-        /// A return string that contains the status of the work items
-        /// </summary>
-        [Output]
-        public string WorkItemStatus { get; set; }
-
         protected async override Task ExecuteCore()
         {
-            WorkItemStatus = "All work items and tests have completed successfully.";  // If this is not true, this status will be overwritten
-
             bool finished = false;
             while (!finished)
             {
@@ -45,7 +37,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var workItemSummary = await HelixApi.Aggregate.JobSummaryMethodAsync(new string[] { "job.source" }, 1, filtername:job.GetMetadata("Identity"));
                 if (workItemSummary.Count < 1)
                 {
-                    Log.LogError($"Job {job.GetMetadata("Identity")} not found -- something has gone terribly wrong");
+                    Log.LogError($"Job {job.GetMetadata("Identity")} not found -- did you authorize this task properly?");
                     return true;
                 }
 
