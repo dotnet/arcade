@@ -6,7 +6,7 @@ using CommandLine;
 
 namespace Microsoft.DotNet.Darc.Options
 {
-    [Verb("get-channels", HelpText = "Get a list of channels")]
+    [Verb("get-channels", HelpText = "Get a list of channels.")]
     internal class GetChannelsCommandLineOptions : CommandLineOptions
     {
     }

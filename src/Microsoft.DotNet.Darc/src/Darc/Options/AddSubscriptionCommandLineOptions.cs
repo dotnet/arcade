@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Darc.Options
         [Option("update-frequency", HelpText = "Frequency of updates. Valid values are: 'none', 'everyDay', or 'everyBuild'.")]
         public string UpdateFrequency { get; set; }
 
-        [Option("all-checks-passed", HelpText = "PR is automatically merged if there is at least one checks and all are passed." +
+        [Option("all-checks-passed", HelpText = "PR is automatically merged if there is at least one checks and all are passed. " +
             "Optionally provide a comma separated list of ignored check with --ignore-checks.")]
         public bool AllChecksSuccessfulMergePolicy { get; set; }
 
@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Darc.Options
         [Option("no-extra-commits", HelpText = "PR is automatically merged if no non-bot commits exist in the PR.")]
         public bool NoExtraCommitsMergePolicy { get; set; }
 
-        [Option("require-checks", Separator = ',', HelpText = "PR is automatically merged if the specified checks are passed." +
+        [Option("require-checks", Separator = ',', HelpText = "PR is automatically merged if the specified checks are passed. " +
             "Provide a comma separate list of required checks.")]
         public IEnumerable<string> RequireChecksMergePolicy { get; set; }
 

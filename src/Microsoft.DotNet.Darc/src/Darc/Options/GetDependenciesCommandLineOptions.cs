@@ -6,10 +6,10 @@ using CommandLine;
 
 namespace Microsoft.DotNet.Darc.Options
 {
-    [Verb("get-dependencies", HelpText = "Get local dependencies")]
+    [Verb("get-dependencies", HelpText = "Get local dependencies.")]
     internal class GetDependenciesCommandLineOptions : CommandLineOptions
     {
-        [Option('n', "name", HelpText = "Name of dependency to query for")]
+        [Option('n', "name", HelpText = "Name of dependency to query for.")]
         public string Name { get; set; }
     }
 }

@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DarcLib
@@ -32,7 +31,7 @@ namespace Microsoft.DotNet.DarcLib
         /// Adds a dependency to the dependency files
         /// </summary>
         /// <returns></returns>
-        public async Task AddDependencies(DependencyDetail dependency, DependencyType dependencyType)
+        public async Task AddDependenciesAsync(DependencyDetail dependency, DependencyType dependencyType)
         {
             if (DependencyOperations.TryGetKnownUpdater(dependency.Name, out Delegate function))
             {
@@ -49,36 +48,9 @@ namespace Microsoft.DotNet.DarcLib
         /// Gets the local dependencies
         /// </summary>
         /// <returns></returns>
-        public async Task GetDependencies(string name)
+        public async Task<IEnumerable<DependencyDetail>> GetDependenciesAsync(string name)
         {
-            IEnumerable<DependencyDetail> dependencies = await _fileManager.ParseVersionDetailsXmlAsync(Path.Combine(_repo, VersionFilePath.VersionDetailsXml), null);
-
-            if (!string.IsNullOrEmpty(name))
-            {
-                DependencyDetail dependency = dependencies.Where(d => d.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-
-                if (dependency == null)
-                {
-                    throw new Exception($"A dependency with name '{name}' was not found...");
-                }
-
-                LogDependency(dependency);
-            }
-
-            foreach (DependencyDetail dependency in dependencies)
-            {
-                LogDependency(dependency);
-
-                Console.WriteLine();
-            }
-        }
-
-        private void LogDependency(DependencyDetail dependency)
-        {
-            Console.WriteLine($"Name:    {dependency.Name}");
-            Console.WriteLine($"Version: {dependency.Version}");
-            Console.WriteLine($"Repo:    {dependency.RepoUri}");
-            Console.WriteLine($"Commit:  {dependency.Commit}");
+            return await _fileManager.ParseVersionDetailsXmlAsync(Path.Combine(_repo, VersionFilePath.VersionDetailsXml), null);
         }
     }
 }
