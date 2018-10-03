@@ -86,7 +86,6 @@ namespace Microsoft.DotNet.Darc.Helpers
                         };
                         process.StartInfo.FileName = parsedCommand.FileName;
                         process.StartInfo.UseShellExecute = true;
-                        process.StartInfo.CreateNoWindow = true;
                         process.StartInfo.Arguments = $"{parsedCommand.Arguments} {path}";
                         process.Start();
 
@@ -134,6 +133,8 @@ namespace Microsoft.DotNet.Darc.Helpers
             }
             else
             {
+                // Find a space after the command name, if there are args, then parse them out,
+                // otherwise just return the whole string as the filename.
                 int fileNameEnd = command.IndexOf(" ");
                 if (fileNameEnd != -1)
                 {
