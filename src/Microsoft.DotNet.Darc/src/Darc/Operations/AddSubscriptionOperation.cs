@@ -38,6 +38,7 @@ namespace Microsoft.DotNet.Darc.Operations
             if (_options.IgnoreChecks.Count() > 0 && !_options.AllChecksSuccessfulMergePolicy)
             {
                 Logger.LogError($"--ignore-checks must be combined with --all-checks-passed");
+                return Constants.ErrorCode;
             }
             // Parse the merge policies
             List<MergePolicy> mergePolicies = new List<MergePolicy>();

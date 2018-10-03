@@ -7,25 +7,25 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Darc.Options
 {
-    [Verb("add-subscription", HelpText = "Add a new subscription")]
+    [Verb("add-subscription", HelpText = "Add a new subscription.")]
     class AddSubscriptionCommandLineOptions : CommandLineOptions
     {
-        [Option("channel", HelpText = "Name of channel to pull from")]
+        [Option("channel", HelpText = "Name of channel to pull from.")]
         public string Channel { get; set; }
 
-        [Option("source-repo", HelpText = "Source repository for the subscription")]
+        [Option("source-repo", HelpText = "Source repository for the subscription.")]
         public string SourceRepository { get; set; }
 
-        [Option("target-repo", HelpText = "Target repository for the subscription")]
+        [Option("target-repo", HelpText = "Target repository for the subscription.")]
         public string TargetRepository { get; set; }
 
-        [Option("target-branch", HelpText = "Target repository for the subscription")]
+        [Option("target-branch", HelpText = "Target repository for the subscription.")]
         public string TargetBranch { get; set; }
 
-        [Option("update-frequency", HelpText = "Frequency of updates. Valid values are: 'none', 'everyDay', or 'everyBuild'")]
+        [Option("update-frequency", HelpText = "Frequency of updates. Valid values are: 'none', 'everyDay', or 'everyBuild'.")]
         public string UpdateFrequency { get; set; }
 
-        [Option("all-checks-passed", HelpText = "PR is automatically merged if all there is at least one checks and all are passed." +
+        [Option("all-checks-passed", HelpText = "PR is automatically merged if there is at least one checks and all are passed." +
             "Optionally provide a comma separated list of ignored check with --ignore-checks.")]
         public bool AllChecksSuccessfulMergePolicy { get; set; }
 
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Darc.Options
             "Provide a comma separate list of required checks.")]
         public IEnumerable<string> RequireChecksMergePolicy { get; set; }
 
-        [Option('q', "quiet", HelpText = "Non-interactive mode (requires all elements to be passed on the command line)")]
+        [Option('q', "quiet", HelpText = "Non-interactive mode (requires all elements to be passed on the command line).")]
         public bool Quiet { get; set; }
     }
 }

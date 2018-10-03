@@ -86,8 +86,7 @@ namespace Microsoft.DotNet.DarcLib
         public async Task<Subscription> GetSubscriptionAsync(string subscriptionId)
         {
             CheckForValidBarClient();
-            Guid subscriptionGuid;
-            if (!Guid.TryParse(subscriptionId, out subscriptionGuid))
+            if (!Guid.TryParse(subscriptionId, out Guid subscriptionGuid))
             {
                 throw new ArgumentException($"Subscription id '{subscriptionId}' is not a valid guid.");
             }
@@ -132,8 +131,7 @@ namespace Microsoft.DotNet.DarcLib
         public async Task<Subscription> DeleteSubscriptionAsync(string subscriptionId)
         {
             CheckForValidBarClient();
-            Guid subscriptionGuid;
-            if (!Guid.TryParse(subscriptionId, out subscriptionGuid))
+            if (!Guid.TryParse(subscriptionId, out Guid subscriptionGuid))
             {
                 throw new ArgumentException($"Subscription id '{subscriptionId}' is not a valid guid.");
             }

@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Darc.Models.PopUps
                 MergePolicies = new List<MergePolicy>(mergePolicies)
             };
 
-            var serializer = new SerializerBuilder().Build();
+            ISerializer serializer = new SerializerBuilder().Build();
             string yaml = serializer.Serialize(_yamlData);
             string[] lines = yaml.Split(Environment.NewLine);
 
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Darc.Models.PopUps
                 switch (policy.Name)
                 {
                     case "AllChecksSuccessful":
-                        // Should either have no properties, ore one called "ignoreChecks"
+                        // Should either have no properties, or one called "ignoreChecks"
                         object ignoreChecksProperty = null;
                         if (policy.Properties.Count > 1 ||
                             (policy.Properties.Count == 1 &&
@@ -137,12 +137,12 @@ namespace Microsoft.DotNet.Darc.Models.PopUps
             {
                 // Join the lines back into a string string and deserialize as YAML.
                 string yamlString = contents.Aggregate<Line, string>("", (current, line) => $"{current}{System.Environment.NewLine}{line.Text}");
-                var serializer = new DeserializerBuilder().Build();
+                IDeserializer serializer = new DeserializerBuilder().Build();
                 outputYamlData = serializer.Deserialize<SubscriptionData>(yamlString);
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to parse input yaml.  Please try again.");
+                _logger.LogError(e, "Failed to parse input yaml.  Please see help for correct format.");
                 return Constants.ErrorCode;
             }
 
