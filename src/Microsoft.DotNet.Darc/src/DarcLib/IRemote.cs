@@ -16,7 +16,15 @@ namespace Microsoft.DotNet.DarcLib
 
         Task<Subscription> GetSubscriptionAsync(string subscriptionId);
 
-        Task<Subscription> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy);
+        Task<Subscription> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo,
+            string targetBranch, string updateFrequency, List<MergePolicy> mergePolicies);
+
+        /// <summary>
+        /// Delete a subscription by ID.
+        /// </summary>
+        /// <param name="subscriptionId">Id of subscription to delete.</param>
+        /// <returns>Information on deleted subscription</returns>
+        Task<Subscription> DeleteSubscriptionAsync(string subscriptionId);
 
         Task<string> CreatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<Microsoft.DotNet.DarcLib.AssetData> assets, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
 

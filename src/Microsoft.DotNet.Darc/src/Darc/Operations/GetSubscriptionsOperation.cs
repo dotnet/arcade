@@ -8,6 +8,7 @@ using Microsoft.DotNet.DarcLib;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Darc.Operations
 {
@@ -23,7 +24,7 @@ namespace Microsoft.DotNet.Darc.Operations
             _options = options;
         }
 
-        public override int Execute()
+        public override async Task<int> ExecuteAsync()
         {
             try
             {
@@ -32,7 +33,8 @@ namespace Microsoft.DotNet.Darc.Operations
                 // No need to set up a git type or PAT here.
                 Remote remote = new Remote(darcSettings, Logger);
 
-                var subscriptions = remote.GetSubscriptionsAsync().Result.Where(subscription => {
+                var subscriptions = (await remote.GetSubscriptionsAsync()).Where(subscription =>
+                {
                     return (string.IsNullOrEmpty(_options.TargetRepository) ||
                         subscription.TargetRepository.Contains(_options.TargetRepository, StringComparison.OrdinalIgnoreCase)) &&
                     (string.IsNullOrEmpty(_options.TargetBranch) ||
@@ -41,18 +43,17 @@ namespace Microsoft.DotNet.Darc.Operations
                         subscription.SourceRepository.Contains(_options.SourceRepository, StringComparison.OrdinalIgnoreCase)) &&
                     (string.IsNullOrEmpty(_options.Channel) ||
                         subscription.Channel.Name.Contains(_options.Channel, StringComparison.OrdinalIgnoreCase));
-                    });
+                });
 
                 if (subscriptions.Count() == 0)
                 {
-                    Console.WriteLine("No subscriptions found matching the specified criteria");
-
+                    Console.WriteLine("No subscriptions found matching the specified criteria.");
                 }
 
                 // Based on the current output schema, sort by source repo, target repo, target branch, etc.
                 // Concat the input strings as a simple sorting mechanism.
-                foreach (var subscription in subscriptions.OrderBy( subscription =>
-                                             $"{subscription.SourceRepository}{subscription.Channel}{subscription.TargetRepository}{subscription.TargetBranch}"))
+                foreach (var subscription in subscriptions.OrderBy(subscription =>
+                                            $"{subscription.SourceRepository}{subscription.Channel}{subscription.TargetRepository}{subscription.TargetBranch}"))
                 {
                     Console.WriteLine($"{subscription.SourceRepository} ({subscription.Channel.Name}) ==> '{subscription.TargetRepository}' ('{subscription.TargetBranch}')");
                     Console.WriteLine($"  - Id: {subscription.Id}");
@@ -89,7 +90,7 @@ namespace Microsoft.DotNet.Darc.Operations
                     }
                     Console.WriteLine($"  - Last Build: {(subscription.LastAppliedBuild != null ? subscription.LastAppliedBuild.BuildNumber : "N/A")}");
                 }
-                return 0;
+                return Constants.SuccessCode;
             }
             catch (Exception e)
             {

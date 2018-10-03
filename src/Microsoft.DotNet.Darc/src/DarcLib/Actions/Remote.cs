@@ -86,16 +86,26 @@ namespace Microsoft.DotNet.DarcLib
         public async Task<Subscription> GetSubscriptionAsync(string subscriptionId)
         {
             CheckForValidBarClient();
-            Guid subscriptionGuid;
-            if (!Guid.TryParse(subscriptionId, out subscriptionGuid))
+            if (!Guid.TryParse(subscriptionId, out Guid subscriptionGuid))
             {
                 throw new ArgumentException($"Subscription id '{subscriptionId}' is not a valid guid.");
             }
             return await _barClient.Subscriptions.GetSubscriptionAsync(subscriptionGuid);
         }
 
-        // TODO: Fix this API to handle multiple merge policies
-        public async Task<Subscription> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo, string targetBranch, string updateFrequency, string mergePolicy)
+        /// <summary>
+        /// Create a new subscription
+        /// </summary>
+        /// <param name="channelName">Name of source channel</param>
+        /// <param name="sourceRepo">URL of source repository</param>
+        /// <param name="targetRepo">URL of target repository where updates should be made</param>
+        /// <param name="targetBranch">Name of target branch where updates should be made</param>
+        /// <param name="updateFrequency">Frequency of updates, can be 'none', 'everyBuild' or 'everyDay'</param>
+        /// <param name="mergePolicies">Dictionary of merge policies. Each merge policy is a name of a policy with an associated blob
+        /// of metadata</param>
+        /// <returns>Newly created subscription, if successful</returns>
+        public async Task<Subscription> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo,
+            string targetBranch, string updateFrequency, List<MergePolicy> mergePolicies)
         {
             CheckForValidBarClient();
             SubscriptionData subscriptionData = new SubscriptionData()
@@ -107,13 +117,25 @@ namespace Microsoft.DotNet.DarcLib
                 Policy = new SubscriptionPolicy()
                 {
                     UpdateFrequency = updateFrequency,
-                    MergePolicies = new List<MergePolicy>
-                    {
-                        new MergePolicy(mergePolicy),
-                    },
+                    MergePolicies = mergePolicies
                 }
             };
             return await _barClient.Subscriptions.CreateAsync(subscriptionData);
+        }
+
+        /// <summary>
+        /// Delete a subscription by id
+        /// </summary>
+        /// <param name="subscriptionId">Id of subscription to delete</param>
+        /// <returns>Information on deleted subscriptio</returns>
+        public async Task<Subscription> DeleteSubscriptionAsync(string subscriptionId)
+        {
+            CheckForValidBarClient();
+            if (!Guid.TryParse(subscriptionId, out Guid subscriptionGuid))
+            {
+                throw new ArgumentException($"Subscription id '{subscriptionId}' is not a valid guid.");
+            }
+            return await _barClient.Subscriptions.DeleteSubscriptionAsync(subscriptionGuid);
         }
 
         public async Task<string> CreatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<Microsoft.DotNet.DarcLib.AssetData> assets, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null)

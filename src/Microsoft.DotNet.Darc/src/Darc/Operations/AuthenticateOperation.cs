@@ -5,6 +5,7 @@
 using Microsoft.DotNet.Darc.Helpers;
 using Microsoft.DotNet.Darc.Models;
 using Microsoft.DotNet.Darc.Options;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Darc.Operations
 {
@@ -21,22 +22,21 @@ namespace Microsoft.DotNet.Darc.Operations
         /// Implements the 'authenticate' verb
         /// </summary>
         /// <param name="options"></param>
-        public override int Execute()
+        public override Task<int> ExecuteAsync()
         {
             // If clear was passed, then clear the options (no popup)
             if (_options.Clear)
             {
                 LocalSettings defaultSettings = new LocalSettings();
                 defaultSettings.SaveSettings(Logger);
-                return 0;
+                return Task.FromResult<int>(Constants.SuccessCode);
             }
             else
             {
                 AuthenticateEditorPopUp initEditorPopUp = new AuthenticateEditorPopUp("authenticate-settings/authenticate-todo", Logger);
 
                 UxManager uxManager = new UxManager(Logger);
-
-                return uxManager.PopUp(initEditorPopUp);
+                return Task.FromResult<int>(uxManager.PopUp(initEditorPopUp));
             }
         }
     }
