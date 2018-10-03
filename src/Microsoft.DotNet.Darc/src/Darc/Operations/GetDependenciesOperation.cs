@@ -11,10 +11,11 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Darc.Operations
 {
-    internal class AddOperation : Operation
+    internal class GetDependenciesOperation : Operation
     {
-        AddCommandLineOptions _options;
-        public AddOperation(AddCommandLineOptions options)
+        private GetDependenciesCommandLineOptions _options;
+
+        public GetDependenciesOperation(GetDependenciesCommandLineOptions options)
             : base(options)
         {
             _options = options;
@@ -22,26 +23,24 @@ namespace Microsoft.DotNet.Darc.Operations
 
         public override async Task<int> ExecuteAsync()
         {
-            DependencyType type = _options.Type.ToLower() == "toolset" ? DependencyType.Toolset : DependencyType.Product;
-
             Local local = new Local(LocalCommands.GetGitDir(Logger), Logger);
-
-            DependencyDetail dependency = new DependencyDetail
-            {
-                Name = _options.Name,
-                Version = _options.Version ?? string.Empty,
-                RepoUri = _options.RepoUri ?? string.Empty,
-                Commit = _options.Commit ?? string.Empty
-            };
 
             try
             {
-                await local.AddDependencies(dependency, type);
+                await local.GetDependencies(_options.Name);
                 return Constants.SuccessCode;
             }
             catch (Exception exc)
             {
-                Logger.LogError(exc, $"Something failed while adding dependency '{dependency.Name}' {dependency.Version}.");
+                if (!string.IsNullOrEmpty(_options.Name))
+                {
+                    Logger.LogError(exc, $"Something failed while querying for local dependency '{_options.Name}'.");
+                }
+                else
+                {
+                    Logger.LogError(exc, "Something failed while querying for local dependencies.");
+                }
+                
                 return Constants.ErrorCode;
             }
         }

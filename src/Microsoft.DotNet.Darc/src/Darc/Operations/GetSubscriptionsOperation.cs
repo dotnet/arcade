@@ -17,8 +17,8 @@ namespace Microsoft.DotNet.Darc.Operations
     /// </summary>
     class GetSubscriptionsOperation : Operation
     {
-        GetSubscriptionsComandLineOptions _options;
-        public GetSubscriptionsOperation(GetSubscriptionsComandLineOptions options)
+        GetSubscriptionsCommandLineOptions _options;
+        public GetSubscriptionsOperation(GetSubscriptionsCommandLineOptions options)
             : base(options)
         {
             _options = options;

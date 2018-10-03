@@ -7,7 +7,7 @@ using CommandLine;
 namespace Microsoft.DotNet.Darc.Options
 {
     [Verb("get-subscriptions", HelpText = "Get information about subscriptions")]
-    class GetSubscriptionsComandLineOptions : CommandLineOptions
+    class GetSubscriptionsCommandLineOptions : CommandLineOptions
     {
         [Option("target-repo", HelpText = "Filter by target repo (matches substring)")]
         public string TargetRepository { get; set; }
