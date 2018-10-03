@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Darc.Operations
         /// Implements the 'get' verb
         /// </summary>
         /// <param name="options"></param>
-        public override async Task<int> Execute()
+        public override async Task<int> ExecuteAsync()
         {
             Local local = new Local(LocalCommands.GetGitDir(Logger), Logger);
 

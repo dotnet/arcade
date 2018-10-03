@@ -63,10 +63,10 @@ namespace Microsoft.DotNet.Darc.Models
                         settings.BuildAssetRegistryPassword = ParseSetting(keyValue[1], settings.BuildAssetRegistryPassword, true);
                         break;
                     case githubTokenElement:
-                        settings.GitHubToken = ParseSetting(keyValue[1], settings.BuildAssetRegistryPassword, true);
+                        settings.GitHubToken = ParseSetting(keyValue[1], settings.GitHubToken, true);
                         break;
                     case azureDevOpsTokenElement:
-                        settings.AzureDevOpsToken = ParseSetting(keyValue[1], settings.BuildAssetRegistryPassword, true);
+                        settings.AzureDevOpsToken = ParseSetting(keyValue[1], settings.AzureDevOpsToken, true);
                         break;
                     case barBaseUriElement:
                         settings.BuildAssetRegistryBaseUri = ParseSetting(keyValue[1], settings.BuildAssetRegistryBaseUri, false);

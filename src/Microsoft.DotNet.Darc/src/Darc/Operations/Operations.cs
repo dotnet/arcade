@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Darc.Operations
             _logger = _loggerFactory.CreateLogger<Operation>();
         }
 
-        public abstract Task<int> Execute();
+        public abstract Task<int> ExecuteAsync();
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls

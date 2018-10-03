@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Darc.Helpers
                 byte[] textBytes = Encoding.UTF8.GetBytes(jsonContent.ToString());
                 string encodedContent = Convert.ToBase64String(textBytes);
                 File.WriteAllText(Path.Combine(Constants.DarcDirectory, fileName), encodedContent);
-                return 0;
+                return Constants.SuccessCode;
             }
             catch (Exception exc)
             {

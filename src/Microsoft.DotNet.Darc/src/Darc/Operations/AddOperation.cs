@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Darc.Operations
             _options = options;
         }
 
-        public override async Task<int> Execute()
+        public override async Task<int> ExecuteAsync()
         {
             DependencyType type = _options.Type.ToLower() == "toolset" ? DependencyType.Toolset : DependencyType.Product;
 

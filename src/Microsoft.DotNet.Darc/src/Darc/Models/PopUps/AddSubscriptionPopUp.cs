@@ -152,6 +152,8 @@ namespace Microsoft.DotNet.Darc.Models.PopUps
                 return Constants.ErrorCode;
             }
 
+            _yamlData.MergePolicies = outputYamlData.MergePolicies;
+
             // Parse and check the input fields
             _yamlData.Channel = ParseSetting(outputYamlData.Channel, _yamlData.Channel, false);
             if (string.IsNullOrEmpty(_yamlData.Channel))

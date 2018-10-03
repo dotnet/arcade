@@ -17,6 +17,7 @@ namespace Microsoft.DotNet.Darc
                                                  GetCommandLineOptions,
                                                  AddCommandLineOptions,
                                                  GetChannelsCommandLineOptions,
+                                                 GetSubscriptionsComandLineOptions,
                                                  AddSubscriptionCommandLineOptions,
                                                  DeleteSubscriptionCommandLineOptions>(args)
                 .MapResult(
@@ -24,6 +25,7 @@ namespace Microsoft.DotNet.Darc
                     (GetCommandLineOptions opts) => { return RunOperation(new GetOperation(opts)); },
                     (AddCommandLineOptions opts) => { return RunOperation(new AddOperation(opts)); },
                     (GetChannelsCommandLineOptions opts) => { return RunOperation(new GetChannelsOperation(opts)); },
+                    (GetSubscriptionsComandLineOptions opts) => { return RunOperation(new GetSubscriptionsOperation(opts)); },
                     (AddSubscriptionCommandLineOptions opts) => { return RunOperation(new AddSubscriptionOperation(opts)); },
                     (DeleteSubscriptionCommandLineOptions opts) => { return RunOperation(new DeleteSubscriptionOperation(opts)); },
                     (errs => 1));
@@ -41,7 +43,7 @@ namespace Microsoft.DotNet.Darc
         {
             try
             {
-                int returnValue = operation.Execute().GetAwaiter().GetResult();
+                int returnValue = operation.ExecuteAsync().GetAwaiter().GetResult();
                 operation.Dispose();
                 return returnValue;
             }

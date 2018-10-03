@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Darc.Operations
         /// </summary>
         /// <param name="options">Command line options</param>
         /// <returns>Process exit code.</returns>
-        public override async Task<int> Execute()
+        public override async Task<int> ExecuteAsync()
         {
             try
             {

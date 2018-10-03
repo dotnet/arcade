@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Darc.Operations
         /// Implements the 'add-subscription' operation
         /// </summary>
         /// <param name="options"></param>
-        public override async Task<int> Execute()
+        public override async Task<int> ExecuteAsync()
         {
             DarcSettings darcSettings = LocalCommands.GetSettings(_options, Logger);
             // No need to set up a git type or PAT here.

@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Darc.Operations
         /// Implements the 'authenticate' verb
         /// </summary>
         /// <param name="options"></param>
-        public override Task<int> Execute()
+        public override Task<int> ExecuteAsync()
         {
             // If clear was passed, then clear the options (no popup)
             if (_options.Clear)
