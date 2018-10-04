@@ -168,6 +168,8 @@ namespace Microsoft.DotNet.SignTool
                 list.ForEach(x => signedSet.Add(x.ContentHash));
             }
 
+            repackFiles(_batchData.ZipFilesToRepack);
+
             return true;
         }
 

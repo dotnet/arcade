@@ -52,6 +52,14 @@ namespace Microsoft.DotNet.SignTool
         private readonly List<FileSignInfo> _filesToSign;
 
         /// <summary>
+        /// List of files that need to be repacked at the end of the signing process.
+        /// The need for this came mostly from .zip files, because the .zip files aren't
+        /// themselves signed but their content is and the repacking must only happen
+        /// after the content is signed.
+        /// </summary>
+        private readonly List<FileSignInfo> _zipFilesToRepack;
+
+        /// <summary>
         /// Mapping of ".ext" to certificate. Files that have an extension on this map
         /// will be signed using the specified certificate.
         /// </summary>
@@ -83,6 +91,7 @@ namespace Microsoft.DotNet.SignTool
             _zipDataMap = new Dictionary<ImmutableArray<byte>, ZipData>(ByteSequenceComparer.Instance);
             _filesByContentKey = new Dictionary<SignedFileContentKey, FileSignInfo>();
             _explicitSignList = explicitSignList;
+            _zipFilesToRepack = new List<FileSignInfo>();
         }
 
         internal BatchSignInput GenerateListOfFiles()
@@ -92,7 +101,7 @@ namespace Microsoft.DotNet.SignTool
                 TrackFile(fullPath, ContentUtil.GetContentHash(fullPath), isNested: false);
             }
 
-            return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(ByteSequenceComparer.Instance), _filesToCopy.ToImmutableArray());
+            return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(ByteSequenceComparer.Instance), _filesToCopy.ToImmutableArray(), _zipFilesToRepack);
         }
 
         private FileSignInfo TrackFile(string fullPath, ImmutableArray<byte> contentHash, bool isNested)
@@ -118,6 +127,11 @@ namespace Microsoft.DotNet.SignTool
                 if (TryBuildZipData(fileSignInfo, out var zipData))
                 {
                     _zipDataMap[contentHash] = zipData;
+                }
+
+                if (FileSignInfo.IsZip(fullPath))
+                {
+                    _zipFilesToRepack.Add(fileSignInfo);
                 }
             }
 
