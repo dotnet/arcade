@@ -195,7 +195,7 @@ function InstallDarcCli {
 
   echo "Installing Darc CLI version $toolset_version..."
   echo "You may need to restart your command shell if this is the first dotnet tool you have installed."
-  echo $($DOTNET_INSTALL_DIR/dotnet tool install $darc_cli_package_name --version $toolset_version -v m -g)
+  echo $($DOTNET_INSTALL_DIR/dotnet tool install $darc_cli_package_name --version $toolset_version -v $verbosity -g)
 }
 
 # HOME may not be defined in some scenarios, but it is required by NuGet
