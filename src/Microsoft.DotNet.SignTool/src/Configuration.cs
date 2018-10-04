@@ -47,17 +47,10 @@ namespace Microsoft.DotNet.SignTool
         private readonly Dictionary<string, SignInfo> _defaultSignInfoForPublicKeyToken;
 
         /// <summary>
-        /// A list of all of the binaries that MUST be signed.
+        /// A list of all the binaries that MUST be signed. Also include containers that don't need 
+        /// to be signed themselves but include files that must be signed.
         /// </summary>
         private readonly List<FileSignInfo> _filesToSign;
-
-        /// <summary>
-        /// List of files that need to be repacked at the end of the signing process.
-        /// The need for this came mostly from .zip files, because the .zip files aren't
-        /// themselves signed but their content is and the repacking must only happen
-        /// after the content is signed.
-        /// </summary>
-        private readonly List<FileSignInfo> _zipFilesToRepack;
 
         /// <summary>
         /// Mapping of ".ext" to certificate. Files that have an extension on this map
@@ -91,7 +84,6 @@ namespace Microsoft.DotNet.SignTool
             _zipDataMap = new Dictionary<ImmutableArray<byte>, ZipData>(ByteSequenceComparer.Instance);
             _filesByContentKey = new Dictionary<SignedFileContentKey, FileSignInfo>();
             _explicitSignList = explicitSignList;
-            _zipFilesToRepack = new List<FileSignInfo>();
         }
 
         internal BatchSignInput GenerateListOfFiles()
@@ -101,7 +93,7 @@ namespace Microsoft.DotNet.SignTool
                 TrackFile(fullPath, ContentUtil.GetContentHash(fullPath), isNested: false);
             }
 
-            return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(ByteSequenceComparer.Instance), _filesToCopy.ToImmutableArray(), _zipFilesToRepack);
+            return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(ByteSequenceComparer.Instance), _filesToCopy.ToImmutableArray());
         }
 
         private FileSignInfo TrackFile(string fullPath, ImmutableArray<byte> contentHash, bool isNested)
@@ -128,16 +120,11 @@ namespace Microsoft.DotNet.SignTool
                 {
                     _zipDataMap[contentHash] = zipData;
                 }
-
-                if (FileSignInfo.IsZip(fullPath))
-                {
-                    _zipFilesToRepack.Add(fileSignInfo);
-                }
             }
 
             _filesByContentKey.Add(key, fileSignInfo);
 
-            if (fileSignInfo.SignInfo.ShouldSign)
+            if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.IsZipContainer())
             {
                 _filesToSign.Add(fileSignInfo);
             }
@@ -320,7 +307,7 @@ namespace Microsoft.DotNet.SignTool
                         string relativePath = entry.FullName;
                         string extension = Path.GetExtension(relativePath);
 
-                        if (!_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) || !extensionSignInfo.ShouldSign)
+                        if (!FileSignInfo.IsZipContainer(relativePath) && (!_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) || !extensionSignInfo.ShouldSign))
                         {
                             continue;
                         }

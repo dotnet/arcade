@@ -91,9 +91,9 @@ namespace Microsoft.DotNet.SignTool
 
             bool signFiles(IEnumerable<FileSignInfo> files)
             {
-                var filesToSign = files.ToArray();
+                var filesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign).ToArray();
 
-                _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
+                _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign (non-signable containers skipped).");
                 foreach (var file in filesToSign)
                 {
                     _log.LogMessage(MessageImportance.Low, file.ToString());
@@ -167,8 +167,6 @@ namespace Microsoft.DotNet.SignTool
                 round++;
                 list.ForEach(x => signedSet.Add(x.ContentHash));
             }
-
-            repackFiles(_batchData.ZipFilesToRepack);
 
             return true;
         }

@@ -31,10 +31,7 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         internal ImmutableArray<KeyValuePair<string, string>> FilesToCopy;
 
-        internal List<FileSignInfo> ZipFilesToRepack;
-
-        internal BatchSignInput(ImmutableArray<FileSignInfo> filesToSign, ImmutableDictionary<ImmutableArray<byte>, ZipData> zipDataMap, 
-            ImmutableArray<KeyValuePair<string, string>> filesToCopy, List<FileSignInfo> zipFilesToRepack)
+        internal BatchSignInput(ImmutableArray<FileSignInfo> filesToSign, ImmutableDictionary<ImmutableArray<byte>, ZipData> zipDataMap, ImmutableArray<KeyValuePair<string, string>> filesToCopy)
         {
             Debug.Assert(!filesToSign.IsDefault);
             Debug.Assert(zipDataMap != null);
@@ -44,7 +41,6 @@ namespace Microsoft.DotNet.SignTool
             FilesToSign = filesToSign;
             ZipDataMap = zipDataMap;
             FilesToCopy = filesToCopy;
-            ZipFilesToRepack = zipFilesToRepack;
         }
     }
 }

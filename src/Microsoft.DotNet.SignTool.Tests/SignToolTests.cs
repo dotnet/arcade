@@ -445,7 +445,8 @@ $@"
             ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
-                "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'"
+                "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'test.zip' Certificate=''",
             });
 
             ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
@@ -458,6 +459,8 @@ $@"
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
 ",
+
+$@"" // for the .zip file that isn't actually signed
             });
         }
 
@@ -754,6 +757,62 @@ $@"
             ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
             {
                 $"File 'SignedLibrary.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='{SignToolConstants.Certificate_Microsoft3rdPartyAppComponentSha2}'",
+            });
+        }
+
+        [Fact]
+        public void PackageWithZipFile()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("PackageWithZip.nupkg")
+            };
+
+            // Default signing information
+            var signingInformation = new Dictionary<string, SignInfo>()
+            {
+                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+            };
+
+            // Overriding information
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            {
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'test.zip' Certificate=''",
+                "File 'PackageWithZip.nupkg' Certificate='NuGet'",
+            });
+        }
+
+        [Fact]
+        public void NestedZipFile()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("NestedZip.zip")
+            };
+
+            // Default signing information
+            var signingInformation = new Dictionary<string, SignInfo>()
+            {
+                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+            };
+
+            // Overriding information
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            {
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'InnerZipFile.zip' Certificate=''",
+                "File 'Mid.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'MidNativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'NestedZip.zip' Certificate=''",
             });
         }
     }
