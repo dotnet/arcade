@@ -1,5 +1,11 @@
 # .NET Core Ecosystem v2 - Versioning
 
+| Date       | Note                                                         |
+| ---------- | ------------------------------------------------------------ |
+| 10/03/2018 | The implementation doesn't include the SHA on the version strings anymore, because: 1) The chaining of targets to plug that into SemVer1 strings were causing generation of incorrect NuSpec files and no clear path to fix it was found and, 2) VS CoreXT build system doesn't support it. |
+
+## Versioning Plan
+
 .NET Core repositories should use [SemVer2](https://semver.org) for their asset versioning scheme. Package versions take the general form of:
 
 ```MAJOR.MINOR.PATCH-PRERELEASE+BUILDMETADATA```
