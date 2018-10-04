@@ -74,8 +74,9 @@ try {
     $NativeTools.PSObject.Properties | ForEach-Object {
       $ToolName = $_.Name
       $ToolVersion = $_.Value
-      $InstallerFilename = "install-$ToolName.ps1"
+      $InstallerFilename = "install-tool.ps1"
       $LocalInstallerCommand = Join-Path $EngCommonBaseDir $InstallerFilename
+      $LocalInstallerCommand += " -ToolName $ToolName"
       $LocalInstallerCommand += " -InstallPath $InstallBin"
       $LocalInstallerCommand += " -BaseUri $BaseUri"
       $LocalInstallerCommand += " -CommonLibraryDirectory $EngCommonBaseDir"

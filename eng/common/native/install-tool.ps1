@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Install cmake native tool
+Install native tool
 
 .DESCRIPTION
 Install cmake native tool from Azure blob storage
@@ -32,6 +32,8 @@ Returns 0 if install succeeds, 1 otherwise
 [CmdletBinding(PositionalBinding=$false)]
 Param (
   [Parameter(Mandatory=$True)]
+  [string] $ToolName,
+  [Parameter(Mandatory=$True)]
   [string] $InstallPath,
   [Parameter(Mandatory=$True)]
   [string] $BaseUri,
@@ -50,8 +52,6 @@ Import-Module -Name (Join-Path $CommonLibraryDirectory "CommonLibrary.psm1")
 try {
   # Define verbose switch if undefined
   $Verbose = $VerbosePreference -Eq "Continue"
-  
-  $ToolName = "cmake"
 
   $Arch = CommonLibrary\Get-MachineArchitecture
   $ToolOs = "win64"
@@ -60,7 +60,7 @@ try {
   }
   $ToolNameMoniker = "$ToolName-$Version-$ToolOs-$Arch"
   $ToolInstallDirectory = Join-Path $InstallPath "$ToolName\$Version\"
-  $ToolFilePath = Join-Path $ToolInstallDirectory "$ToolNameMoniker\bin\$ToolName.exe"
+  $ToolFilePath = Join-Path $ToolInstallDirectory "$ToolNameMoniker\$ToolName.exe"
   $ShimPath = Join-Path $InstallPath "$ToolName.cmd"
   $Uri = "$BaseUri/windows/$Toolname/$ToolNameMoniker.zip"
 
@@ -109,11 +109,11 @@ try {
     Write-Error "Generate shim failed"
     return 1
   }
-  
+
   exit 0
 }
 catch {
   Write-Host $_
   Write-Host $_.Exception
-  exit 1    
+  exit 1
 }
