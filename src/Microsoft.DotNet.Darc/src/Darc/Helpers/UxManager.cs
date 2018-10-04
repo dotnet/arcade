@@ -85,6 +85,7 @@ namespace Microsoft.DotNet.Darc.Helpers
                             _popUpClosed = true;
                         };
                         process.StartInfo.FileName = parsedCommand.FileName;
+                        process.StartInfo.UseShellExecute = true;
                         process.StartInfo.Arguments = $"{parsedCommand.Arguments} {path}";
                         process.Start();
 
@@ -109,21 +110,43 @@ namespace Microsoft.DotNet.Darc.Helpers
         {
             ParsedCommand parsedCommand = new ParsedCommand();
 
-            if (command.Contains("'"))
+            // If it's quoted then find the end of the quoted string.
+            // If non quoted find a space or the end of the string.
+            command = command.Trim();
+            if (command.StartsWith("'") || command.StartsWith("\""))
             {
-                int start = command.IndexOf("'") + 1;
-                int end = command.LastIndexOf("'");
+                int start = 1;
+                int end = command.IndexOf("'", start);
+                if (end == -1)
+                {
+                    end = command.IndexOf("\"", start);
+                    if (end == -1)
+                    {
+                        // Unterminated quoted string.  Use full command as file name
+                        parsedCommand.FileName = command.Substring(1);
+                        return parsedCommand;
+                    }
+                }
                 parsedCommand.FileName = command.Substring(start, end - start);
                 parsedCommand.Arguments = command.Substring(end + 1);
+                return parsedCommand;
             }
             else
             {
+                // Find a space after the command name, if there are args, then parse them out,
+                // otherwise just return the whole string as the filename.
                 int fileNameEnd = command.IndexOf(" ");
-                parsedCommand.FileName = command.Substring(0, fileNameEnd);
-                parsedCommand.Arguments = command.Substring(fileNameEnd);
+                if (fileNameEnd != -1)
+                {
+                    parsedCommand.FileName = command.Substring(0, fileNameEnd);
+                    parsedCommand.Arguments = command.Substring(fileNameEnd);
+                }
+                else
+                {
+                    parsedCommand.FileName = command;
+                }
+                return parsedCommand;
             }
-
-            return parsedCommand;
         }
     }
 
