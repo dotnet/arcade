@@ -36,7 +36,8 @@ namespace Microsoft.DotNet.Darc.Operations
 
             try
             {
-                return await local.AddDependencies(dependency, type);
+                await local.AddDependenciesAsync(dependency, type);
+                return Constants.SuccessCode;
             }
             catch (Exception exc)
             {

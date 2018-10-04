@@ -6,8 +6,10 @@ using CommandLine;
 
 namespace Microsoft.DotNet.Darc.Options
 {
-    [Verb("get-channels", HelpText = "Get a list of channels.")]
-    internal class GetChannelsCommandLineOptions : CommandLineOptions
+    [Verb("get-dependencies", HelpText = "Get local dependencies.")]
+    internal class GetDependenciesCommandLineOptions : CommandLineOptions
     {
+        [Option('n', "name", HelpText = "Name of dependency to query for.")]
+        public string Name { get; set; }
     }
 }

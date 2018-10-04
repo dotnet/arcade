@@ -28,19 +28,10 @@ namespace Microsoft.DotNet.DarcLib
         }
 
         /// <summary>
-        /// Retrieves all dependencies from the local repo
-        /// </summary>
-        /// <returns></returns>
-        public async Task<IEnumerable<DependencyDetail>> GetDependencies()
-        {
-            return await _fileManager.ParseVersionDetailsXmlAsync(_repo, _branch);
-        }
-
-        /// <summary>
         /// Adds a dependency to the dependency files
         /// </summary>
         /// <returns></returns>
-        public async Task<int> AddDependencies(DependencyDetail dependency, DependencyType dependencyType)
+        public async Task AddDependenciesAsync(DependencyDetail dependency, DependencyType dependencyType)
         {
             if (DependencyOperations.TryGetKnownUpdater(dependency.Name, out Delegate function))
             {
@@ -51,8 +42,15 @@ namespace Microsoft.DotNet.DarcLib
                 await _fileManager.AddDependencyToVersionProps(Path.Combine(_repo, VersionFilePath.VersionProps), dependency);
                 await _fileManager.AddDependencyToVersionDetails(Path.Combine(_repo, VersionFilePath.VersionDetailsXml), dependency, dependencyType);
             }
+        }
 
-            return 0;
+        /// <summary>
+        /// Gets the local dependencies
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IEnumerable<DependencyDetail>> GetDependenciesAsync(string name)
+        {
+            return await _fileManager.ParseVersionDetailsXmlAsync(Path.Combine(_repo, VersionFilePath.VersionDetailsXml), null);
         }
     }
 }
