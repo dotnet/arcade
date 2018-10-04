@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.DarcLib
         private readonly IGitRepo _gitClient;
         private readonly ILogger _logger;
         // TODO: Make these not constants and instead attempt to give more accurate information commit, branch, repo name, etc.)
-        private string _repo;
+        private readonly string _repo;
         private const string _branch = "current";
 
         public Local(string gitPath, ILogger logger)
@@ -45,12 +45,26 @@ namespace Microsoft.DotNet.DarcLib
         }
 
         /// <summary>
-        /// Gets the local dependencies
+        /// Gets local dependencies from a local repository
         /// </summary>
         /// <returns></returns>
-        public async Task<IEnumerable<DependencyDetail>> GetDependenciesAsync(string name)
+        public async Task<IEnumerable<DependencyDetail>> GetDependenciesAsync(string repoPath = null, string commit = null)
         {
-            return await _fileManager.ParseVersionDetailsXmlAsync(Path.Combine(_repo, VersionFilePath.VersionDetailsXml), null);
+            IEnumerable<DependencyDetail> dependencies = null;
+
+            if (string.IsNullOrEmpty(repoPath))
+            {
+                return await _fileManager.ParseVersionDetailsXmlAsync(Path.Combine(_repo, VersionFilePath.VersionDetailsXml), null);
+            }
+
+            if (string.IsNullOrEmpty(commit))
+            {
+                throw new ArgumentException("A commit hash is needed to get the dependencies from a repository different that the current...");
+            }
+
+            dependencies = await _fileManager.ParseVersionDetailsXmlAsync(Path.Combine(repoPath, VersionFilePath.VersionDetailsXml), null);
+
+            return dependencies;
         }
     }
 }

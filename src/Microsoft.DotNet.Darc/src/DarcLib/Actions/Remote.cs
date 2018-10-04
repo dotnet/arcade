@@ -93,6 +93,12 @@ namespace Microsoft.DotNet.DarcLib
             return await _barClient.Subscriptions.GetSubscriptionAsync(subscriptionGuid);
         }
 
+        public async Task<IEnumerable<DependencyDetail>> GetDependenciesAsync(string repoUri, string reference)
+        {
+            CheckForValidGitClient();
+            return await _fileManager.ParseVersionDetailsXmlAsync(repoUri, reference);
+        }
+
         /// <summary>
         /// Create a new subscription
         /// </summary>

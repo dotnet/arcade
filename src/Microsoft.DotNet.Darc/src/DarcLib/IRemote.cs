@@ -16,6 +16,8 @@ namespace Microsoft.DotNet.DarcLib
 
         Task<Subscription> GetSubscriptionAsync(string subscriptionId);
 
+        Task<IEnumerable<DependencyDetail>> GetDependenciesAsync(string repo, string reference);
+
         Task<Subscription> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo,
             string targetBranch, string updateFrequency, List<MergePolicy> mergePolicies);
 

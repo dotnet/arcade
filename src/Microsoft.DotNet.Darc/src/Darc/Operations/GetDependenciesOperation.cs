@@ -8,6 +8,7 @@ using Microsoft.DotNet.DarcLib;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,12 +16,14 @@ namespace Microsoft.DotNet.Darc.Operations
 {
     internal class GetDependenciesOperation : Operation
     {
-        private GetDependenciesCommandLineOptions _options;
+        private readonly GetDependenciesCommandLineOptions _options;
+        private readonly HashSet<string> _flatList;
 
         public GetDependenciesOperation(GetDependenciesCommandLineOptions options)
             : base(options)
         {
             _options = options;
+            _flatList = new HashSet<string>();
         }
 
         public override async Task<int> ExecuteAsync()
@@ -29,7 +32,7 @@ namespace Microsoft.DotNet.Darc.Operations
 
             try
             {
-                IEnumerable<DependencyDetail> dependencies = await local.GetDependenciesAsync(_options.Name);
+                IEnumerable<DependencyDetail> dependencies = await local.GetDependenciesAsync();
 
                 if (!string.IsNullOrEmpty(_options.Name))
                 {
@@ -40,14 +43,14 @@ namespace Microsoft.DotNet.Darc.Operations
                         throw new Exception($"A dependency with name '{_options.Name}' was not found...");
                     }
 
-                    LogDependency(dependency);
+                    await LogDependencyAsync(dependency, _options.RepoSha, _options.Local, local);
                 }
-
-                foreach (DependencyDetail dependency in dependencies)
+                else
                 {
-                    LogDependency(dependency);
-
-                    Console.WriteLine();
+                    foreach (DependencyDetail dependency in dependencies)
+                    {
+                        await LogDependencyAsync(dependency, _options.RepoSha, _options.Local, local);
+                    }
                 }
 
                 return Constants.SuccessCode;
@@ -67,12 +70,127 @@ namespace Microsoft.DotNet.Darc.Operations
             }
         }
 
-        private void LogDependency(DependencyDetail dependency)
+        private void LogDependency(DependencyDetail dependency, string tab = "")
         {
-            Console.WriteLine($"Name:    {dependency.Name}");
-            Console.WriteLine($"Version: {dependency.Version}");
-            Console.WriteLine($"Repo:    {dependency.RepoUri}");
-            Console.WriteLine($"Commit:  {dependency.Commit}");
+            if (!_options.Flat)
+            {
+                Console.WriteLine($"{tab}- Name:    {dependency.Name}");
+                Console.WriteLine($"{tab}  Version: {dependency.Version}");
+                Console.WriteLine($"{tab}  Repo:    {dependency.RepoUri}");
+                Console.WriteLine($"{tab}  Commit:  {dependency.Commit}");
+            }
+            else
+            {
+                string combo = $"{dependency.RepoUri} - {dependency.Commit}";
+
+                if (!_flatList.Contains(combo))
+                {
+                    Console.WriteLine(combo);
+
+                    _flatList.Add(combo);
+                }
+            }
+        }
+
+        private async Task LogDependencyAsync(DependencyDetail dependency, bool repoSha, bool local, Local localClient)
+        {
+            LogDependency(dependency);
+
+            if (repoSha)
+            {
+                IEnumerable<DependencyDetail> dependenciesAtSha = null;
+
+                if (local)
+                {
+                    string repoPath = null;
+
+                    if (!string.IsNullOrEmpty(_options.RemotesMap))
+                    {
+                        if (string.IsNullOrEmpty(dependency.RepoUri))
+                        {
+                            throw new ArgumentException($"When setting --remotes-map a uri has to be included in Version.Details.xml for asset '{dependency.Name}'...");
+                        }
+
+                        string[] keyValuePairs = _options.RemotesMap.Split(';');
+
+                        foreach (string keyValue in keyValuePairs)
+                        {
+                            string[] kv = keyValue.Split(',');
+
+                            if (kv[0] == dependency.RepoUri)
+                            {
+                                repoPath = kv[1];
+                                break;
+                            }
+                        }
+
+                        if (string.IsNullOrEmpty(repoPath))
+                        {
+                            throw new Exception($"A key matching '{dependency.RepoUri}' was not found in the mapping. Please make sure to include it...");
+                        }
+                    }
+                    else 
+                    {
+                        string folder = null;
+
+                        if (!string.IsNullOrEmpty(_options.ReposFolder))
+                        {
+                            folder = _options.ReposFolder;
+                        }
+                        else
+                        {
+                            // If a repo folder or a mapping was not set we use the current parent parent folder.
+                            string gitDir = LocalCommands.GetGitDir(Logger);
+                            string parent = Directory.GetParent(gitDir).FullName;
+                            folder = Directory.GetParent(parent).FullName;
+                        }
+
+                        if (string.IsNullOrEmpty(dependency.Commit))
+                        {
+                            throw new ArgumentException($"When setting --repos-folder a commit has to be included in Version.Details.xml for asset '{dependency.Name}'...");
+                        }
+
+                        repoPath = LocalCommands.GetRepoPathFromFolder(folder, dependency.Commit, Logger);
+
+                        if (string.IsNullOrEmpty(repoPath))
+                        {
+                            throw new Exception($"Commit '{dependency.Commit}' was not found in any folder in '{folder}'. Make sure a folder for '{dependency.RepoUri}' exists "
+                                + "and it has all the latest changes...");
+                        }
+                    }
+
+                    Exception exception = null;
+
+                    // Always try to checkout master even though there was an exception
+                    try
+                    {
+                        LocalCommands.Checkout(repoPath, dependency.Commit, Logger);
+                        dependenciesAtSha = await localClient.GetDependenciesAsync(repoPath, dependency.Commit);
+                    }
+                    catch (Exception exc)
+                    {
+                        exception = exc;
+                    }
+
+                    LocalCommands.Checkout(repoPath, "master", Logger);
+
+                    if (exception != null)
+                    {
+                        throw exception;
+                    }
+                }
+                else
+                {
+                    DarcSettings darcSettings = LocalCommands.GetSettings(_options, Logger, dependency.RepoUri);
+                    Remote remote = new Remote(darcSettings, Logger);
+                    dependenciesAtSha = await remote.GetDependenciesAsync(dependency.RepoUri, dependency.Commit);
+                }
+
+                foreach (DependencyDetail dependencyAtSha in dependenciesAtSha)
+                {
+                    LogDependency(dependencyAtSha, "    ");
+                }
+            }
         }
     }
 }

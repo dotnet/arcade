@@ -16,12 +16,13 @@ namespace Microsoft.DotNet.Darc.Helpers
     {
         /// <summary>
         /// Retrieve the settings from the combination of the command line
-        /// options and the user's darc settings file.
+        /// options and the user's darc settings file. If repoUri is set, we define the
+        /// repo type and read the required token field from the settings file
         /// </summary>
         /// <param name="options">Command line options</param>
         /// <returns>Darc settings for use in remote commands</returns>
         /// <remarks>The command line takes precedence over the darc settings file.</remarks>
-        public static DarcSettings GetSettings(CommandLineOptions options, ILogger logger)
+        public static DarcSettings GetSettings(CommandLineOptions options, ILogger logger, string repoUri = null)
         {
             DarcSettings darcSettings = new DarcSettings();
             darcSettings.GitType = GitRepoType.None;
@@ -31,7 +32,21 @@ namespace Microsoft.DotNet.Darc.Helpers
                 LocalSettings localSettings = LocalSettings.LoadSettings();
                 darcSettings.BuildAssetRegistryBaseUri = localSettings.BuildAssetRegistryBaseUri;
                 darcSettings.BuildAssetRegistryPassword = localSettings.BuildAssetRegistryPassword;
-            }
+
+                if (!string.IsNullOrEmpty(repoUri))
+                {
+                    if (repoUri.Contains("github"))
+                    {
+                        darcSettings.GitType = GitRepoType.GitHub;
+                        darcSettings.PersonalAccessToken = localSettings.GitHubToken;
+                    }
+                    else
+                    {
+                        darcSettings.GitType = GitRepoType.AzureDevOps;
+                        darcSettings.PersonalAccessToken = localSettings.AzureDevOpsToken;
+                    }
+                }
+             }
             catch (FileNotFoundException)
             {
                 // Doesn't have a settings file, which is not an error
@@ -52,11 +67,6 @@ namespace Microsoft.DotNet.Darc.Helpers
             // we know what we are talking to.
 
             return darcSettings;
-        }
-
-        private static string OverrideIfSet(string currentSetting, string commandLineSetting)
-        {
-            return !string.IsNullOrEmpty(commandLineSetting) ? commandLineSetting : currentSetting;
         }
 
         public static string GetEditorPath(ILogger logger)
@@ -92,7 +102,7 @@ namespace Microsoft.DotNet.Darc.Helpers
             return dir;
         }
 
-        public static string ExecuteCommand(string fileName, string arguments, ILogger logger)
+        public static string ExecuteCommand(string fileName, string arguments, ILogger logger, string workingDirectory = null)
         {
             string output = null;
 
@@ -102,9 +112,10 @@ namespace Microsoft.DotNet.Darc.Helpers
                 {
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                     FileName = fileName,
                     CreateNoWindow = true,
-                    WorkingDirectory = Environment.CurrentDirectory
+                    WorkingDirectory = workingDirectory ?? Environment.CurrentDirectory
                 };
 
                 using (Process process = new Process())
@@ -112,15 +123,22 @@ namespace Microsoft.DotNet.Darc.Helpers
                     process.StartInfo = processInfo;
                     process.StartInfo.Arguments = arguments;
                     process.Start();
+                    process.WaitForExit();
+
+                    if (process.ExitCode != 0)
+                    {
+                        return string.Empty;
+                    }
 
                     output = process.StandardOutput.ReadToEnd().Trim();
 
-                    process.WaitForExit();
-                }
-
-                if (string.IsNullOrEmpty(output))
-                {
-                    logger.LogError($"There was an error while running git.exe {arguments}");
+                    // Workaround. With some git commands the non-error output is logged in the
+                    // StandardError and not in StandardOutput. If the error code is 0, we also
+                    // check the StandardError if output is null
+                    if (string.IsNullOrEmpty(output))
+                    {
+                        output = process.StandardError.ReadToEnd().Trim();
+                    }
                 }
 
                 string[] paths = output.Split(Environment.NewLine);
@@ -133,6 +151,36 @@ namespace Microsoft.DotNet.Darc.Helpers
             }
 
             return output;
+        }
+
+        public static string GetRepoPathFromFolder(string folder, string commit, ILogger logger)
+        {
+            foreach (string directory in Directory.GetDirectories(folder))
+            {
+                string containsCommand = ExecuteCommand("git.exe", $"branch --contains {commit}", logger, directory);
+
+                if (!string.IsNullOrEmpty(containsCommand))
+                {
+                    return directory;
+                }
+            }
+
+            return string.Empty;
+        }
+
+        public static void Checkout(string repoFolderPath, string commit, ILogger logger)
+        {
+            string checkoutCommand = ExecuteCommand("git.exe", $"checkout {commit}", logger, repoFolderPath);
+
+            if (string.IsNullOrEmpty(checkoutCommand))
+            {
+                throw new Exception($"Could not checkout '{commit}' in '{repoFolderPath}'. Check that your repo in this folder is up to date and that you don't have uncommited changes...");
+            }
+        }
+
+        private static string OverrideIfSet(string currentSetting, string commandLineSetting)
+        {
+            return !string.IsNullOrEmpty(commandLineSetting) ? commandLineSetting : currentSetting;
         }
     }
 }
