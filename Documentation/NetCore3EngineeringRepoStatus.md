@@ -11,17 +11,17 @@ Target completion date for these workstreams is 12/14/2018.
 | [CLI-Migrate](#climigrate)                    | [licavalc](#livar-cunha)      | 3 / 4             | dependency flow still pending |
 | [CoreClr](#coreclr)                           | [russellk](#russ-keldorph)    | 0 / 4             | |
 | [CoreFx](#corefx)                             | [wesh](#wes-haggard)          | 1 / 4             | |
-| [Core-SDK](#coresdk)                          | [licavalc](#livar-cunha)      | 0 / 4             | Will start following Toolset repo |
+| [Core-SDK](#coresdk)                          | [licavalc](#livar-cunha)      | 0 / 4             | Will follow Toolset repo |
 | [Core-Setup](#coresetup)                      | [wesh](#wes-haggard)          | 1 / 4             | |
 | [MSBuild](#msbuild)                           | [raines](#rainer-sigwald)     | 0 / 4             | Investigating requirements |
 | [Roslyn](#roslyn)                             | [jaredpar](#jared-parsons)    | 0 / 4             | |
 | [SDK](#sdk)                                   | [licavalc](#livar-cunha)      | 3 / 4             | dependency flow still pending |
 | [Standard](#standard)                         | [wesh](#wes-haggard)          | 1 / 4             | wtgodbe is working on this |
-| [SymReader](#symreader)                       | [tmat](#tomas-matousek)       | 0 / 4             | Will follow Roslyn |
-| [SymReader-Portable](#symreader-portable)     | [tmat](#tomas-matousek)       | 0 / 4             | Will follow Roslyn |
+| [SymReader](#symreader)                       | [tmat](#tomas-matousek)       | 0 / 4             | Will follow Roslyn repo |
+| [SymReader-Portable](#symreader-portable)     | [tmat](#tomas-matousek)       | 0 / 4             | Will follow Roslyn repo |
 | [Templating](#templating)                     | [vramak](#vijay-ramakrishnan) | 0 / 4             | |
 | [Test-Templates](#test-templates)             | [vramak](#vijay-ramakrishnan) | 0 / 4             | |
-| [Toolset](#toolset)                           | [licavalc](#livar-cunha)      | 0 / 4             | Will follow CLI
+| [Toolset](#toolset)                           | [licavalc](#livar-cunha)      | 0 / 4             | Will follow CLI repo |
 | [Visual FSharp](#visual-fsharp)               | [brettfo](#brett-forsgren)    | 0 / 4             | |
 | [WebSDK](#websdk)                             | [vramak](#vijay-ramakrishnan) | 0 / 4             | |
 | [WinForms](#winforms)                         | [mmcgaw](#merrie-mcgaw)       | 0 / 4             | |
