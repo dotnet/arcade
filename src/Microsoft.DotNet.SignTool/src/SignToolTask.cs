@@ -41,7 +41,6 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// Path to MicroBuild.Core package directory.
         /// </summary>
-        [Required]
         public string MicroBuildCorePath { get; set; }
 
         /// <summary>
@@ -108,6 +107,12 @@ namespace Microsoft.DotNet.SignTool
             if (!DryRun && typeof(object).Assembly.GetName().Name != "mscorlib" && !File.Exists(MSBuildPath))
             {
                 Log.LogError($"MSBuild was not found at this path: '{MSBuildPath}'.");
+                return;
+            }
+
+            if (!DryRun && string.IsNullOrWhiteSpace(MicroBuildCorePath))
+            {
+                Log.LogError($"MicroBuildCorePath is required if DryRun == false.");
                 return;
             }
 
