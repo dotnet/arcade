@@ -165,6 +165,7 @@ namespace Microsoft.DotNet.SignTool
                     // If has overriding info, is it for ignoring the file?
                     if (overridingCertificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.OrdinalIgnoreCase))
                     {
+                        _log.LogMessage($"Ignoring file that was explicitly asked to be ignored: {fullPath}");
                         return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
                     }
 
@@ -308,6 +309,8 @@ namespace Microsoft.DotNet.SignTool
 
                         if (!_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) || !extensionSignInfo.ShouldSign)
                         {
+                            var reason = extensionSignInfo.ShouldIgnore ? "configuration tells to ignore this extension" : "its extension isn't on recognizable signing extension list";
+                            _log.LogMessage($"Ignoring this file because {reason} : {relativePath}");
                             continue;
                         }
 
