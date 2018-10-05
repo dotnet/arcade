@@ -75,6 +75,13 @@ namespace Microsoft.DotNet.SignTool
         public ITaskItem[] FileExtensionSignInfo { get; set; }
 
         /// <summary>
+        /// This is a list describing attributes for each used certificate.
+        /// Currently attributes are: 
+        ///     DualSigningAllowed:boolean - Tells whether this certificate can be used to sign already signed files.
+        /// </summary>
+        public ITaskItem[] CertificatesSignInfo { get; private set; }
+        
+        /// <summary>
         /// Path to msbuild.exe. Required if <see cref="DryRun"/> is <c>false</c>.
         /// </summary>
         public string MSBuildPath { get; set; }
@@ -124,12 +131,13 @@ namespace Microsoft.DotNet.SignTool
             var defaultSignInfoForPublicKeyToken = ParseStrongNameSignInfo();
             var explicitCertificates = ParseFileSignInfo();
             var fileExtensionSignInfo = ParseFileExtensionSignInfo();
+            var dualCertificates = ParseCertificateInfo();
 
             if (Log.HasLoggedErrors) return;
 
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
-            var signingInput = new Configuration(TempDir, ItemsToSign, defaultSignInfoForPublicKeyToken, explicitCertificates, fileExtensionSignInfo, Log).GenerateListOfFiles();
+            var signingInput = new Configuration(TempDir, ItemsToSign, defaultSignInfoForPublicKeyToken, explicitCertificates, fileExtensionSignInfo, dualCertificates, Log).GenerateListOfFiles();
 
             if (Log.HasLoggedErrors) return;
 
@@ -138,6 +146,15 @@ namespace Microsoft.DotNet.SignTool
             if (Log.HasLoggedErrors) return;
 
             util.Go();
+        }
+
+        private List<string> ParseCertificateInfo()
+        {
+            var dualCertificates = CertificatesSignInfo?
+                .Where(item => item.GetMetadata("DualSigningAllowed").Equals("true", StringComparison.OrdinalIgnoreCase))
+                .Select(item => item.ItemSpec);
+
+            return dualCertificates?.ToList() ?? new List<string>();
         }
 
         private string GetEnclosingDirectoryOfItemsToSign()

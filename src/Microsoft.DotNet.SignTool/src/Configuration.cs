@@ -60,13 +60,20 @@ namespace Microsoft.DotNet.SignTool
         private readonly Dictionary<SignedFileContentKey, FileSignInfo> _filesByContentKey;
 
         /// <summary>
+        /// This is a list of the friendly name of certificates that can be used to
+        /// sign already signed binaries.
+        /// </summary>
+        private readonly List<string> _dualCertificates;
+        
+        /// <summary>
         /// A list of files whose content needs to be overwritten by signed content from a different file.
         /// Copy the content of file with full path specified in Key to file with full path specified in Value.
         /// </summary>
         internal List<KeyValuePair<string, string>> _filesToCopy;
 
         public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, 
-            Dictionary<ExplicitCertificateKey, string> explicitCertificates, Dictionary<string, SignInfo> extensionSignInfo, TaskLoggingHelper log)
+            Dictionary<ExplicitCertificateKey, string> explicitCertificates, Dictionary<string, SignInfo> extensionSignInfo, 
+            List<string> dualCertificates, TaskLoggingHelper log)
         {
             Debug.Assert(tempDir != null);
             Debug.Assert(explicitSignList != null && !explicitSignList.Any(i => i == null));
@@ -83,6 +90,7 @@ namespace Microsoft.DotNet.SignTool
             _zipDataMap = new Dictionary<ImmutableArray<byte>, ZipData>(ByteSequenceComparer.Instance);
             _filesByContentKey = new Dictionary<SignedFileContentKey, FileSignInfo>();
             _explicitSignList = explicitSignList;
+            _dualCertificates = dualCertificates;
         }
 
         internal BatchSignInput GenerateListOfFiles()
@@ -175,9 +183,7 @@ namespace Microsoft.DotNet.SignTool
 
             if (hasSignInfo)
             {
-                if (isAlreadySigned &&
-                    !signInfo.Certificate.Equals(SignToolConstants.Certificate_Microsoft3rdPartyAppComponentDual, StringComparison.OrdinalIgnoreCase) &&
-                    !signInfo.Certificate.Equals(SignToolConstants.Certificate_Microsoft3rdPartyAppComponentSha2, StringComparison.OrdinalIgnoreCase))
+                if (isAlreadySigned && !_dualCertificates.Contains(signInfo.Certificate))
                 {
                     return new FileSignInfo(fullPath, hash, SignInfo.AlreadySigned);
                 }
