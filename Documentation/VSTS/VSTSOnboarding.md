@@ -32,13 +32,47 @@ For implementation details and managing information about `DotNet-Bot GitHub Con
 
 ## Agent queues
 
-Agent queue use / configuration / etc... is likely to change very soon, at the moment, agent queues are primarily relegated to Hosted machine pools.  When VSTS enables "bring your own cloud", we'll provide greater flexibility / capacity of machines.
+Agent queue use / configuration / etc... is likely to change very soon when Azure DevOps enables "bring your own cloud".
+
+Current machine pool recommendations:
+
+### External
+
+| OS         | Recommended pool     | Additional pool option     |
+| ---------- | -------------------- | -------------------------- |
+| Windows_NT | dotnet-external-temp |                            |
+| Linux      | Hosted Ubuntu 1604   | dnceng-linux-external-temp |
+| OSX        | Hosted Mac Preview   | |
+
+### Internal
+
+| OS         | Access   | Recommended pool     | Additional pool option |
+| ---------- | -------- | ---------------------| ---------------------- |
+| Windows_NT | Internal | dotnet-internal-temp | |
+| Linux      | Internal | Hosted Ubuntu 1604   | dnceng-linux-internal-temp |
+| OSX        | Internal | Hosted Mac Internal  | |
 
 A couple of notes:
 
-- Space on [Hosted machines](https://docs.microsoft.com/en-us/vsts/pipelines/agents/hosted?view=vsts#capabilities-and-limitations) is only guaranteed to be at least 10 GB.  We have a "Helix" machine pool which has greater disk space capacity.  This pool has machines running VMs with Windows Server 2016, MSBuild 15.0, and Visual Studio 2017 installed.  Connection instructions for connecting to these machines can be found in the [VSTS Windows Connection Instructions](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/vsts-windows-connection-instructions.md) document.
+- [Hosted pool](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml) capabilities
 
-- For Linux, use the "DotNetCore-Linux" machine pool instead of "Hosted Linux Preview".  "Hosted Linux Preview" is not guaranteed to have docker installed.
+- dotnet-external-temp and dotnet-internal-temp queues:
+
+  - Windows Server 2016
+
+  - 4 cores
+
+  - 512 GB disk space capacity (not SSD)
+
+  - Visual Studio 2017 15.8
+
+- dnceng-linux-external-temp and dnceng-linux-internal-temp queues:
+
+  - Ubuntu 16.04
+
+  - Docker 17.12.1
+
+  - 512 GB disk space capacity (not SSD)
 
 ## CI badge link
 
