@@ -1,6 +1,15 @@
 # .NET Core 3 Engineering transition status
 
+## WorkStreams
+
+- Using Azure DevOps for CI
+- Using shared toolset (Arcade SDK)
+- Engineering dependency flow
+- Internal builds from dnceng
+
 Target completion date for these workstreams is 12/14/2018.
+
+## Status Overview
 
 | Repo                                          | Owner                         | Status   | Risk Assessment                                                                           | Completion Status | Notes |
 | --------------------------------------------- | ----------------------------- | -------- |:-----------------------------------------------------------------------------------------:|:-----------------:| ----- |
