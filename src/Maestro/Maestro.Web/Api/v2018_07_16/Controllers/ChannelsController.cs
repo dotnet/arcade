@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
+using System;
+using System.Data.SqlClient;
 
 namespace Maestro.Web.Api.v2018_07_16.Controllers
 {
@@ -79,10 +81,18 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [SwaggerResponse((int) HttpStatusCode.Created, Type = typeof(Channel))]
         public async Task<IActionResult> CreateChannel([Required] string name, [Required] string classification)
         {
-            var channelModel = new Data.Models.Channel {Name = name, Classification = classification};
-            await _context.Channels.AddAsync(channelModel);
-            await _context.SaveChangesAsync();
-            return CreatedAtRoute(new {action = "GetChannel", id = channelModel.Id}, new Channel(channelModel));
+            try
+            {
+                var channelModel = new Data.Models.Channel { Name = name, Classification = classification };
+                await _context.Channels.AddAsync(channelModel);
+                await _context.SaveChangesAsync();
+                return CreatedAtRoute(new { action = "GetChannel", id = channelModel.Id }, new Channel(channelModel));
+            }
+            catch (DbUpdateException dbEx) when (dbEx.InnerException is SqlException sqlEx &&
+                                                 sqlEx.Message.Contains("Cannot insert duplicate key row"))
+            {
+                return Conflict(new ApiError($"Could not create channel with name '{name}'. A channel with that name already exists."));
+            }
         }
 
         [HttpPost("{channelId}/builds/{buildId}")]
