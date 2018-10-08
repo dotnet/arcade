@@ -2,30 +2,42 @@
 
 Target completion date for these workstreams is 12/14/2018.
 
-| Repo                                          | Owner                         | Status   |                                                                                           | Completion Status | Notes |
+| Repo                                          | Owner                         | Status   | Trend                                                                                     | Completion Status | Notes |
 | --------------------------------------------- | ----------------------------- | -------- |:-----------------------------------------------------------------------------------------:|:-----------------:| ----- |
 | [Arcade](#arcade)                             | [mawilkie](#mark-wilkie)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | |
-| [ASP.Net](#aspnet)                            | [namc](#nate-mcmaster)        | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)    | 0 / 4             | Internal builds in dnceng work is in progress |
-| [CLI](#cli)                                   | [licavalc](#livar-cunha)      | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | In progress |
-| [CLICommandLineParser](#clicommandlineparser) | [licavalc](#livar-cunha)      | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 3 / 4             | dependency flow still pending |
-| [CLI-Migrate](#climigrate)                    | [licavalc](#livar-cunha)      | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 3 / 4             | dependency flow still pending |
+| [ASP.Net](#aspnet)                            | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 0 / 4             | Internal builds in dnceng work is in progress |
+| [CLI](#cli)                                   | [licavalc](#livar-cunha)      | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | In progress |
+| [CLICommandLineParser](#clicommandlineparser) | [licavalc](#livar-cunha)      | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 3 / 4             | dependency flow still pending |
+| [CLI-Migrate](#climigrate)                    | [licavalc](#livar-cunha)      | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 3 / 4             | dependency flow still pending |
 | [CoreClr](#coreclr)                           | [russellk](#russ-keldorph)    | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | |
-| [CoreFx](#corefx)                             | [wesh](#wes-haggard)          | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | |
+| [CoreFx](#corefx)                             | [wesh](#wes-haggard)          | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | |
 | [Core-SDK](#coresdk)                          | [licavalc](#livar-cunha)      | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | Will start following Toolset repo |
-| [Core-Setup](#coresetup)                      | [wesh](#wes-haggard)          | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | |
-| [MSBuild](#msbuild)                           | [raines](#rainer-sigwald)     | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | Investigating requirements |
-| [Roslyn](#roslyn)                             | [jaredpar](#jared-parsons)    | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | |
-| [SDK](#sdk)                                   | [licavalc](#livar-cunha)      | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 3 / 4             | dependency flow still pending |
-| [Standard](#standard)                         | [wesh](#wes-haggard)          | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | wtgodbe is working on this |
-| [SymReader](#symreader)                       | [tmat](#tomas-matousek)       | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | Will follow Roslyn |
-| [SymReader-Portable](#symreader-portable)     | [tmat](#tomas-matousek)       | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | Will follow Roslyn |
-| [Templating](#templating)                     | [vramak](#vijay-ramakrishnan) | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | |
-| [Test-Templates](#test-templates)             | [vramak](#vijay-ramakrishnan) | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | |
-| [Toolset](#toolset)                           | [licavalc](#livar-cunha)      | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | Will follow CLI
-| [Visual FSharp](#visual-fsharp)               | [brettfo](#brett-forsgren)    | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | |
-| [WebSDK](#websdk)                             | [vramak](#vijay-ramakrishnan) | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | |
-| [WinForms](#winforms)                         | [mmcgaw](#merrie-mcgaw)       | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | |
-| [WPF](#wpf)                                   | [mmcgaw](#merrie-mcgaw)       | On track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | |
+| [Core-Setup](#coresetup)                      | [wesh](#wes-haggard)          | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | |
+| [MSBuild](#msbuild)                           | [raines](#rainer-sigwald)     | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | Investigating requirements |
+| [Roslyn](#roslyn)                             | [jaredpar](#jared-parsons)    | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | |
+| [SDK](#sdk)                                   | [licavalc](#livar-cunha)      | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 3 / 4             | dependency flow still pending |
+| [Standard](#standard)                         | [wesh](#wes-haggard)          | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | wtgodbe is working on this |
+| [SymReader](#symreader)                       | [tmat](#tomas-matousek)       | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | Will follow Roslyn |
+| [SymReader-Portable](#symreader-portable)     | [tmat](#tomas-matousek)       | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | Will follow Roslyn |
+| [Templating](#templating)                     | [vramak](#vijay-ramakrishnan) | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | |
+| [Test-Templates](#test-templates)             | [vramak](#vijay-ramakrishnan) | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | |
+| [Toolset](#toolset)                           | [licavalc](#livar-cunha)      | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | Will follow CLI
+| [Visual FSharp](#visual-fsharp)               | [brettfo](#brett-forsgren)    | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | |
+| [WebSDK](#websdk)                             | [vramak](#vijay-ramakrishnan) | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | |
+| [WinForms](#winforms)                         | [mmcgaw](#merrie-mcgaw)       | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | |
+| [WPF](#wpf)                                   | [mmcgaw](#merrie-mcgaw)       | On track | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | |
+
+| Status   | Description |
+| -------- | ----------- |
+| Complete | All work streams are complete |
+| On track | Work streams are on track for completion by the target completion date or exceptions are understood / acceptable |
+| At risk  | One or more work streams are not on track to be completed by the target completion date and may impact business decisions |
+
+| Trend                                                                                     | Description |
+|:-----------------------------------------------------------------------------------------:| ----------- |
+| ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | Work stream is on track or trending well |
+| ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | Work stream has some risk or there is no change in trend |
+| ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | Work stream has high risk or is trending poorly |
 
 ---
 
