@@ -47,9 +47,9 @@ phases:
       queue:
         container: LinuxContainer
         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-          name: dnceng-linux-external-temp
+          name: dnceng-linux-external-temp-pr
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-          name: dnceng-linux-internal-temp
+          name: dnceng-linux-internal-temp-pr
         parallel: 2
         matrix:
           Build_Debug:
