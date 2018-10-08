@@ -25,7 +25,6 @@ Instructions for setting up the GitHub to dev.azure.com/dnceng/internal mirror a
 
 VSTS has detailed documentation on how to create builds that are linked from GitHub repositories which can be found [here](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts); however, before going through those steps, keep in mind that our process differs from the steps in the official documentation in a few key places:
 
-* The documentation defaults to showing the process for creating a build using the Designer. The Arcade standard is to use **YAML**, so make sure to click that tab under the "Set up CI for your GitHub repository" header.
 * The YAML tutorial links to a .NET Core sample repository for an example of a simple `.vsts-ci.yml` file. Instead of using that repository, use [our sample repository](https://github.com/dotnet/arcade-minimalci-sample).
 * VSTS will require a GitHub Service Endpoint to communicate with github and setup web hooks.  Teams should use the `DotNet-Bot GitHub Connection` Service Endpoint.  The `DotNet-Bot GitHub Connection` requires that teams add the .NET Core owned [service account](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#github-service-account) as a [collaborator](https://help.github.com/articles/permission-levels-for-a-user-account-repository/#collaborator-access-on-a-repository-owned-by-a-user-account) (Admin access) on the GitHub repo.
 
