@@ -21,6 +21,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
             SourceRepository = other.SourceRepository;
             TargetRepository = other.TargetRepository;
             TargetBranch = other.TargetBranch;
+            Enabled = other.Enabled;
             Policy = new SubscriptionPolicy(other.PolicyObject);
         }
 
@@ -37,5 +38,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         public SubscriptionPolicy Policy { get; }
 
         public Build LastAppliedBuild { get; }
+
+        public bool Enabled { get; }
     }
 }

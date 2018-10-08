@@ -28,6 +28,8 @@ namespace Maestro.Data.Models
         [Column("Policy")]
         public string PolicyString { get; set; }
 
+        public bool Enabled { get; set; } = true;
+
         [NotMapped]
         public SubscriptionPolicy PolicyObject
         {

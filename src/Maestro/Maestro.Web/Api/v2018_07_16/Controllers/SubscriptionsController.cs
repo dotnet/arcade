@@ -37,7 +37,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [HttpGet]
         [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(List<Subscription>))]
         [ValidateModelState]
-        public IActionResult GetAllSubscriptions(string sourceRepository = null, string targetRepository = null, int? channelId = null)
+        public IActionResult GetAllSubscriptions(string sourceRepository = null, string targetRepository = null, int? channelId = null, bool? enabled = null)
         {
             IQueryable<Data.Models.Subscription> query = _context.Subscriptions.Include(s => s.Channel);
 
@@ -54,6 +54,11 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             if (channelId.HasValue)
             {
                 query = query.Where(sub => sub.ChannelId == channelId.Value);
+            }
+
+            if (enabled.HasValue)
+            {
+                query = query.Where(sub => sub.Enabled == enabled.Value);
             }
 
             List<Subscription> results = query.AsEnumerable().Select(sub => new Subscription(sub)).ToList();
@@ -118,6 +123,12 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 }
 
                 subscription.Channel = channel;
+                doUpdate = true;
+            }
+
+            if (update.Enabled.HasValue)
+            {
+                subscription.Enabled = update.Enabled.Value;
                 doUpdate = true;
             }
 
