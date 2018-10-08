@@ -32,7 +32,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
                 TargetRepository = TargetRepository,
                 TargetBranch = TargetBranch,
                 PolicyObject = Policy.ToDb(),
-                Enabled = Enabled.HasValue ? Enabled.Value : true,
+                Enabled = Enabled ?? true,
             };
         }
     }
