@@ -2,7 +2,7 @@
 
 Target completion date for these workstreams is 12/14/2018.
 
-| Repo                                          | Owner                         | Status   | Trend                                                                                     | Completion Status | Notes |
+| Repo                                          | Owner                         | Status   | Risk Assessment                                                                           | Completion Status | Notes |
 | --------------------------------------------- | ----------------------------- | -------- |:-----------------------------------------------------------------------------------------:|:-----------------:| ----- |
 | [Arcade](#arcade)                             | [mawilkie](#mark-wilkie)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | |
 | [ASP.Net](#aspnet)                            | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 0 / 4             | Internal builds in dnceng work is in progress |
@@ -33,7 +33,7 @@ Target completion date for these workstreams is 12/14/2018.
 | On track | Work streams are on track for completion by the target completion date or exceptions are understood / acceptable |
 | At risk  | One or more work streams are not on track to be completed by the target completion date and may impact business decisions |
 
-| Trend                                                                                     | Description |
+| Risk Assessment                                                                           | Description |
 |:-----------------------------------------------------------------------------------------:| ----------- |
 | ![positive](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | Work stream is on track or trending well |
 | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | Work stream has some risk or there is no change in trend |
