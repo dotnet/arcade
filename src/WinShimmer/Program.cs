@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.WinShimmer
         /// </summary>
         /// <param name="args[0]">The name of the shim to be created</param>
         /// <param name="args[1]">The path to the executable to be shimmed</param>
-        /// <param name="args[2]">The path to the directory where the shim is going to be output.</param>
+        /// <param name="args[2]">The path to the directory where the shim is going to be output</param>
         static void Main(string[] args)
         {
             if (args.Length != 3)
@@ -41,13 +41,9 @@ namespace Microsoft.DotNet.WinShimmer
 
             var compilation = CSharpCompilation.Create(shimName)
                 .AddReferences(
-                    // NOTE: yes, I hate hardcoding these dlls as much as everyone else does.
-                    // However, the output exe needs framework dlls, and there doesn't seem to be an easy way to obtain the location
-                    // of framework dlls from within a .NET Core project. These locations should be constant across most Win machines
-                    // we use in our queues.
-                    MetadataReference.CreateFromFile(@"C:\Windows\Microsoft.NET\Framework\v4.0.30319\mscorlib.dll"),
-                    MetadataReference.CreateFromFile(@"C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Core\v4.0_4.0.0.0__b77a5c561934e089\System.Core.dll"),
-                    MetadataReference.CreateFromFile(@"C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System\v4.0_4.0.0.0__b77a5c561934e089\System.dll")
+                    MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof(ProcessStartInfo).Assembly.Location)
                     )
                 .AddSyntaxTrees(CSharpSyntaxTree.ParseText($@"
 using System;
@@ -76,11 +72,11 @@ class Program
             using (var exe = new FileStream(outputLocation, FileMode.Create))
             using (var resources = compilation.CreateDefaultWin32Resources(true, true, null, null))
             {
-                var emit = compilation.Emit(exe, win32Resources:resources);
+                var emit = compilation.Emit(exe, win32Resources: resources);
 
                 if (!emit.Success)
                 {
-                    throw new InvalidProgramException($"The generated program contained errors: \n{string.Join('\n', emit.Diagnostics.AsEnumerable())}");
+                    throw new InvalidProgramException($"The generated program contained errors: \n{string.Join("\n", emit.Diagnostics.AsEnumerable())}");
                 }
             }
         }

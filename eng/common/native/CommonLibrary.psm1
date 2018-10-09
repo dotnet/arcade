@@ -179,6 +179,8 @@ function New-ScriptShim {
     [string] $ShimDirectory,
     [Parameter(Mandatory=$True)]
     [string] $ToolFilePath,
+    [Parameter(Mandatory=$True)]
+    [string] $BaseUri,
     [switch] $Force
   )
   try {
@@ -205,10 +207,16 @@ function New-ScriptShim {
     }
     $ErrorActionPreference = $oldPreference
 
-    Write-Host $ShimName
-    Write-Host $ToolFilePath
-    Write-Host $ShimDirectory
-    Invoke-Expression "winshimmer $ShimName $ToolFilePath $ShimDirectory"
+    if (-Not (Test-Path "$ShimDirectory\WinShimmer\winshimmer.exe")) {
+      $InstallStatus = DownloadAndExtract -Uri "$BaseUri/windows/winshimmer/WinShimmer.zip" `
+                                          -InstallDirectory $ShimDirectory\WinShimmer `
+                                          -Force:$Force `
+                                          -DownloadRetries 2 `
+                                          -RetryWaitTimeInSeconds 5 `
+                                          -Verbose:$Verbose
+    }
+
+    Invoke-Expression "$ShimDirectory\WinShimmer\winshimmer.exe $ShimName $ToolFilePath $ShimDirectory"
     return $True
   }
   catch {

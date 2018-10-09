@@ -104,7 +104,8 @@ try {
   $GenerateShimStatus = CommonLibrary\New-ScriptShim -ShimName $ToolName `
                                                      -ShimDirectory $InstallPath `
                                                      -ToolFilePath $ToolFilePath `
-                                                     -Force `
+                                                     -BaseUri $BaseUri `
+                                                     -Force:$Force `
                                                      -Verbose:$Verbose
 
   if ($GenerateShimStatus -Eq $False) {
