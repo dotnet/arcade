@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.SignTool
         /// Currently attributes are: 
         ///     DualSigningAllowed:boolean - Tells whether this certificate can be used to sign already signed files.
         /// </summary>
-        public ITaskItem[] CertificatesSignInfo { get; private set; }
+        public ITaskItem[] CertificatesSignInfo { get; set; }
         
         /// <summary>
         /// Path to msbuild.exe. Required if <see cref="DryRun"/> is <c>false</c>.
@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.SignTool
         private List<string> ParseCertificateInfo()
         {
             var dualCertificates = CertificatesSignInfo?
-                .Where(item => item.GetMetadata("DualSigningAllowed").Equals("true", StringComparison.OrdinalIgnoreCase))
+                .Where(item => item.GetMetadata("DualSigningAllowed")?.Equals("true", StringComparison.OrdinalIgnoreCase) ?? false)
                 .Select(item => item.ItemSpec);
 
             return dualCertificates?.ToList() ?? new List<string>();
