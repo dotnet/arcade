@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -9,15 +10,34 @@ namespace Microsoft.DotNet.WinShimmer
 {
     class Program
     {
+        /// <summary>
+        /// The WinShimmer creates exe shims for windows tools
+        /// </summary>
+        /// <param name="args[0]">The name of the shim to be created</param>
+        /// <param name="args[1]">The path to the executable to be shimmed</param>
+        /// <param name="args[2]">The path to the directory where the shim is going to be output.</param>
         static void Main(string[] args)
         {
-            var shimName = args[0];
-            var exePath = args[1];
-            var outputDirectory = args[2];
+            if (args.Length != 3)
+            {
+                throw new ArgumentOutOfRangeException("args", $"WinShimmer was provided {args.Length} arguments instead of 3");
+            }
+            string shimName = args[0];
+            string exePath = args[1];
+            string outputDirectory = args[2];
 
-            var outputLocation = $@"{outputDirectory}\{shimName}.exe";
+            if (!File.Exists(exePath))
+            {
+                throw new FileNotFoundException($"The executable {exePath} was not found.");
+            }
+            if (!Directory.Exists(outputDirectory))
+            {
+                throw new DirectoryNotFoundException($"The specified output directory \"{outputDirectory}\" does not exist");
+            }
 
-            var compileReadyShimPath = $@"""{exePath.Replace(@"\", @"\\")}""";
+            string outputLocation = $@"{outputDirectory}\{shimName}.exe";
+
+            string compileReadyShimPath = $@"""{exePath.Replace(@"\", @"\\")}""";
 
             var compilation = CSharpCompilation.Create(shimName)
                 .AddReferences(
@@ -57,6 +77,11 @@ class Program
             using (var resources = compilation.CreateDefaultWin32Resources(true, true, null, null))
             {
                 var emit = compilation.Emit(exe, win32Resources:resources);
+
+                if (!emit.Success)
+                {
+                    throw new InvalidProgramException($"The generated program contained errors: \n{string.Join('\n', emit.Diagnostics.AsEnumerable())}");
+                }
             }
         }
     }
