@@ -458,9 +458,7 @@ $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "FD4596180FC1AB63B2D6A9C6E4086CC15891E41E34F835B593C3879CECAA86B6", "SOS.NETCore.dll")}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-",
-
-$@"" // for the .zip file that isn't actually signed
+"
             });
         }
 
