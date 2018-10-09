@@ -60,7 +60,7 @@ try {
   }
   $Env:CommonLibrary_NativeInstallDir = $NativeBaseDir
   $InstallBin = Join-Path $NativeBaseDir "bin"
-  
+
   # Process tools list
   Write-Host "Processing $GlobalJsonFile"
   If (-Not (Test-Path $GlobalJsonFile)) {

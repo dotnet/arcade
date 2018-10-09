@@ -194,14 +194,20 @@ function New-ScriptShim {
       return $False
     }
 
+    $oldPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'stop'
     try {
       Get-Command winshimmer
     }
     catch {
-      Write-Host "Installing winshimmer"
-      Invoke-Expression "dotnet tool install -g winshimmer"
+      Write-Verbose "Installing winshimmer"
+      Invoke-Expression "dotnet tool install -g Microsoft.DotNet.WinShimmer --version 1.0.0-dev"
     }
+    $ErrorActionPreference = $oldPreference
 
+    Write-Host $ShimName
+    Write-Host $ToolFilePath
+    Write-Host $ShimDirectory
     Invoke-Expression "winshimmer $ShimName $ToolFilePath $ShimDirectory"
     return $True
   }
