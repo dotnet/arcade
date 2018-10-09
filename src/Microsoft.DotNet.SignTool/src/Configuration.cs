@@ -159,25 +159,24 @@ namespace Microsoft.DotNet.SignTool
                 // Check if we have more specific sign info:
                 var fileName = Path.GetFileName(fullPath);
 
-                var First = false;
-                var Second = false;
+                var first = false;
+                var second = false;
 
                 var fullKey = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework);
                 var midKey = new ExplicitCertificateKey(fileName, publicKeyToken);
-                var smallKey = new ExplicitCertificateKey(fileName);
 
-                if ((_explicitCertificates.TryGetValue(fullKey, out var overridingCertificate) && (First = true)) ||
-                    (_explicitCertificates.TryGetValue(midKey, out overridingCertificate) && (Second = true)) ||
-                    _explicitCertificates.TryGetValue(smallKey, out overridingCertificate))
+                if ((first = _explicitCertificates.TryGetValue(fullKey, out var overridingCertificate)) ||
+                    (second = _explicitCertificates.TryGetValue(midKey, out overridingCertificate)) ||
+                    _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName), out overridingCertificate))
                 {
                     // If has overriding info, is it for ignoring the file?
                     if (overridingCertificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.OrdinalIgnoreCase))
                     {
-                        var fileSpec = First ? $"(PKT = {publicKeyToken}, Framework = {targetFramework}) " :
-                                      Second ? $"(PKT = {publicKeyToken}) " :
-                                      string.Empty;
+                        var fileSpec = first ? $" (PublicKeyToken = {publicKeyToken}, Framework = {targetFramework})" :
+                            second ? $" (PublicKeyToken = {publicKeyToken})" :
+                            string.Empty;
 
-                        _log.LogMessage($"File configurated to not be signed {fileSpec}: {fileName}");
+                        _log.LogMessage($"File configurated to not be signed: {fileName}{fileSpec}");
                         return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
                     }
 
