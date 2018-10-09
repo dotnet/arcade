@@ -47,7 +47,8 @@ namespace Microsoft.DotNet.SignTool
         private readonly Dictionary<string, SignInfo> _defaultSignInfoForPublicKeyToken;
 
         /// <summary>
-        /// A list of all of the binaries that MUST be signed.
+        /// A list of all the binaries that MUST be signed. Also include containers that don't need 
+        /// to be signed themselves but include files that must be signed.
         /// </summary>
         private readonly List<FileSignInfo> _filesToSign;
 
@@ -131,7 +132,7 @@ namespace Microsoft.DotNet.SignTool
 
             _filesByContentKey.Add(key, fileSignInfo);
 
-            if (fileSignInfo.SignInfo.ShouldSign)
+            if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.IsZipContainer())
             {
                 _filesToSign.Add(fileSignInfo);
             }
@@ -312,7 +313,7 @@ namespace Microsoft.DotNet.SignTool
                         string relativePath = entry.FullName;
                         string extension = Path.GetExtension(relativePath);
 
-                        if (!_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) || !extensionSignInfo.ShouldSign)
+                        if (!FileSignInfo.IsZipContainer(relativePath) && (!_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) || !extensionSignInfo.ShouldSign))
                         {
                             continue;
                         }

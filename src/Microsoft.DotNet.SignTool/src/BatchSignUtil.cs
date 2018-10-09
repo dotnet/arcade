@@ -91,9 +91,12 @@ namespace Microsoft.DotNet.SignTool
 
             bool signFiles(IEnumerable<FileSignInfo> files)
             {
-                var filesToSign = files.ToArray();
+                var filesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign).ToArray();
 
                 _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
+
+                if (filesToSign.Length == 0) return true;
+
                 foreach (var file in filesToSign)
                 {
                     _log.LogMessage(MessageImportance.Low, file.ToString());
