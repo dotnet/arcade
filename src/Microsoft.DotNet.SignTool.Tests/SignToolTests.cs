@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             Dictionary<ExplicitCertificateKey, string> signingOverridingInfos,
             Dictionary<string, SignInfo> extensionsSignInfo,
             string[] expectedXmlElementsPerSingingRound,
-            List<string> dualCertificates = default)
+            string[] dualCertificates = null)
         {
             var buildEngine = new FakeBuildEngine();
 
@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             Dictionary<string, SignInfo> extensionsSignInfo,
             string[] expected,
             string[] expectedCopyFiles = null,
-            List<string> dualCertificates = default)
+            string[] dualCertificates = null)
         {
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
             var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
@@ -142,7 +142,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var FileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
-            var signingInput = new Configuration(_tmpDir, ExplicitSignItems, StrongNameSignInfo, FileSignInfo, s_fileExtensionSignInfo, new List<string>(), task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, ExplicitSignItems, StrongNameSignInfo, FileSignInfo, s_fileExtensionSignInfo, null, task.Log).GenerateListOfFiles();
 
             Assert.Empty(signingInput.FilesToSign);
             Assert.Empty(signingInput.ZipDataMap);
@@ -724,7 +724,7 @@ $@"
                 GetResourcePath("SignedLibrary.dll")
             };
 
-            var dualCertificates = new List<string>() {
+            var dualCertificates = new string[] {
                 "DualCertificateName"
             };
 
@@ -739,8 +739,7 @@ $@"
             {
                 $"File 'SignedLibrary.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='{dualCertificates.First()}'",
             },
-            null,
-            dualCertificates);
+            dualCertificates : dualCertificates);
         }
     }
 }

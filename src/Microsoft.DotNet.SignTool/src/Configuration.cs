@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.SignTool
         /// This is a list of the friendly name of certificates that can be used to
         /// sign already signed binaries.
         /// </summary>
-        private readonly List<string> _dualCertificates;
+        private readonly string[] _dualCertificates;
         
         /// <summary>
         /// A list of files whose content needs to be overwritten by signed content from a different file.
@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.SignTool
 
         public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, 
             Dictionary<ExplicitCertificateKey, string> explicitCertificates, Dictionary<string, SignInfo> extensionSignInfo, 
-            List<string> dualCertificates, TaskLoggingHelper log)
+            string[] dualCertificates, TaskLoggingHelper log)
         {
             Debug.Assert(tempDir != null);
             Debug.Assert(explicitSignList != null && !explicitSignList.Any(i => i == null));
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.SignTool
             _zipDataMap = new Dictionary<ImmutableArray<byte>, ZipData>(ByteSequenceComparer.Instance);
             _filesByContentKey = new Dictionary<SignedFileContentKey, FileSignInfo>();
             _explicitSignList = explicitSignList;
-            _dualCertificates = dualCertificates;
+            _dualCertificates = dualCertificates ?? new string[0];
         }
 
         internal BatchSignInput GenerateListOfFiles()

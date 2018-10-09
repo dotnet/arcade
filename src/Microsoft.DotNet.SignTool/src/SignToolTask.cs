@@ -148,13 +148,13 @@ namespace Microsoft.DotNet.SignTool
             util.Go();
         }
 
-        private List<string> ParseCertificateInfo()
+        private string[] ParseCertificateInfo()
         {
             var dualCertificates = CertificatesSignInfo?
                 .Where(item => item.GetMetadata("DualSigningAllowed").Equals("true", StringComparison.OrdinalIgnoreCase))
                 .Select(item => item.ItemSpec);
 
-            return dualCertificates?.ToList() ?? new List<string>();
+            return dualCertificates?.ToArray();
         }
 
         private string GetEnclosingDirectoryOfItemsToSign()
