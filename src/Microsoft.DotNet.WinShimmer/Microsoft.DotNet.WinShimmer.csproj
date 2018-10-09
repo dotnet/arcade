@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <SignAssembly>false</SignAssembly>
+    <IsPackable>true</IsPackable>
+    <Description>WinShimmer</Description>
+    <PackageTags>Arcade Native Tools native-tools Shim</PackageTags>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>winshimmer</ToolCommandName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.8.0-dev-62823-01" />
+  </ItemGroup>
+
+</Project>

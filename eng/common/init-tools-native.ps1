@@ -60,7 +60,7 @@ try {
   }
   $Env:CommonLibrary_NativeInstallDir = $NativeBaseDir
   $InstallBin = Join-Path $NativeBaseDir "bin"
-
+  
   # Process tools list
   Write-Host "Processing $GlobalJsonFile"
   If (-Not (Test-Path $GlobalJsonFile)) {
@@ -75,12 +75,19 @@ try {
       $ToolName = $_.Name
       $ToolVersion = $_.Value
       $InstallerFilename = "install-tool.ps1"
+      $PathToBinary = ""
+      if ($ToolName -Eq 'cmake') {
+        $PathToBinary = "bin\"
+      }
       $LocalInstallerCommand = Join-Path $EngCommonBaseDir $InstallerFilename
       $LocalInstallerCommand += " -ToolName $ToolName"
       $LocalInstallerCommand += " -InstallPath $InstallBin"
       $LocalInstallerCommand += " -BaseUri $BaseUri"
       $LocalInstallerCommand += " -CommonLibraryDirectory $EngCommonBaseDir"
       $LocalInstallerCommand += " -Version $ToolVersion"
+      if ($PathToBinary -Ne "") {
+        $LocalInstallerCommand += " -PathToBinary $PathToBinary"
+      }
 
       if ($Verbose) {
         $LocalInstallerCommand += " -Verbose"
@@ -113,9 +120,7 @@ try {
   }
   if (Test-Path $InstallBin) {
     Write-Host "Native tools are available from" (Convert-Path -Path $InstallBin)
-    if ($env:BUILD_BUILDNUMBER) {
-        Write-Host "##vso[task.prependpath]" (Convert-Path -Path $InstallBin)
-    }
+    Write-Host "##vso[task.prependpath]" (Convert-Path -Path $InstallBin)
   }
   else {
     Write-Error "Native tools install directory does not exist, installation failed"

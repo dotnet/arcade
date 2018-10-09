@@ -39,6 +39,7 @@ Param (
   [string] $BaseUri,
   [Parameter(Mandatory=$True)]
   [string] $Version,
+  [string] $PathToBinary,
   [string] $CommonLibraryDirectory = $PSScriptRoot,
   [switch] $Force = $False,
   [switch] $Clean = $False,
@@ -60,7 +61,7 @@ try {
   }
   $ToolNameMoniker = "$ToolName-$Version-$ToolOs-$Arch"
   $ToolInstallDirectory = Join-Path $InstallPath "$ToolName\$Version\"
-  $ToolFilePath = Join-Path $ToolInstallDirectory "$ToolNameMoniker\$ToolName.exe"
+  $ToolFilePath = Join-Path $ToolInstallDirectory "$ToolNameMoniker\$PathToBinary$ToolName.exe"
   $ShimPath = Join-Path $InstallPath "$ToolName.cmd"
   $Uri = "$BaseUri/windows/$Toolname/$ToolNameMoniker.zip"
 
@@ -100,7 +101,8 @@ try {
   }
   # Generate shim
   # Always rewrite shims so that we are referencing the expected version
-  $GenerateShimStatus = CommonLibrary\New-ScriptShim -ShimPath $ShimPath `
+  $GenerateShimStatus = CommonLibrary\New-ScriptShim -ShimName $ToolName `
+                                                     -ShimDirectory $InstallPath `
                                                      -ToolFilePath $ToolFilePath `
                                                      -Force `
                                                      -Verbose:$Verbose
