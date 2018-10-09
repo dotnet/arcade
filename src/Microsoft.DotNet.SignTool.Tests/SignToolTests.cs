@@ -87,7 +87,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             Dictionary<string, SignInfo> strongNameSignInfo,
             Dictionary<ExplicitCertificateKey, string> signingOverridingInfos,
             Dictionary<string, SignInfo> extensionsSignInfo,
-            string[] expectedXmlElementsPerSingingRound)
+            string[] expectedXmlElementsPerSingingRound,
+            string[] dualCertificates = null)
         {
             var buildEngine = new FakeBuildEngine();
 
@@ -99,7 +100,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir, enclosingDir: "");
 
             var signTool = new FakeSignTool(signToolArgs);
-            var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, extensionsSignInfo, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
             var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput);
 
             util.Go();
@@ -120,10 +121,11 @@ namespace Microsoft.DotNet.SignTool.Tests
             Dictionary<ExplicitCertificateKey, string> signingOverridingInfos,
             Dictionary<string, SignInfo> extensionsSignInfo,
             string[] expected,
-            string[] expectedCopyFiles = null)
+            string[] expectedCopyFiles = null,
+            string[] dualCertificates = null)
         {
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
-            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, extensionsSignInfo, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
 
             AssertEx.Equal(expected, signingInput.FilesToSign.Select(f => f.ToString()));
             AssertEx.Equal(expectedCopyFiles ?? Array.Empty<string>(), signingInput.FilesToCopy.Select(f => $"{f.Key} -> {f.Value}"));
@@ -140,7 +142,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var FileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
-            var signingInput = new Configuration(_tmpDir, ExplicitSignItems, StrongNameSignInfo, FileSignInfo, s_fileExtensionSignInfo, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, ExplicitSignItems, StrongNameSignInfo, FileSignInfo, s_fileExtensionSignInfo, null, task.Log).GenerateListOfFiles();
 
             Assert.Empty(signingInput.FilesToSign);
             Assert.Empty(signingInput.ZipDataMap);
@@ -714,7 +716,7 @@ $@"
         }
 
         [Fact]
-        public void ValidateAppendingCertificate_MicrosoftDual()
+        public void ValidateAppendingCertificate()
         {
             // List of files to be considered for signing
             var itemsToSign = new[]
@@ -722,39 +724,22 @@ $@"
                 GetResourcePath("SignedLibrary.dll")
             };
 
+            var dualCertificates = new string[] {
+                "DualCertificateName"
+            };
+
             var signingInformation = new Dictionary<string, SignInfo>()
             {
-                { "31bf3856ad364e35", new SignInfo(SignToolConstants.Certificate_Microsoft3rdPartyAppComponentDual, null) }
+                { "31bf3856ad364e35", new SignInfo(dualCertificates.First(), null) }
             };
 
             var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
 
             ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
             {
-                $"File 'SignedLibrary.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='{SignToolConstants.Certificate_Microsoft3rdPartyAppComponentDual}'",
-            });
-        }
-
-        [Fact]
-        public void ValidateAppendingCertificate_MicrosoftSHA2()
-        {
-            // List of files to be considered for signing
-            var itemsToSign = new[]
-            {
-                GetResourcePath("SignedLibrary.dll")
-            };
-
-            var signingInformation = new Dictionary<string, SignInfo>()
-            {
-                { "31bf3856ad364e35", new SignInfo(SignToolConstants.Certificate_Microsoft3rdPartyAppComponentSha2, null) }
-            };
-
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
-
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
-            {
-                $"File 'SignedLibrary.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='{SignToolConstants.Certificate_Microsoft3rdPartyAppComponentSha2}'",
-            });
+                $"File 'SignedLibrary.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='{dualCertificates.First()}'",
+            },
+            dualCertificates : dualCertificates);
         }
     }
 }
