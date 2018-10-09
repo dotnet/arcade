@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.SignTool
         private List<string> ParseCertificateInfo()
         {
             var dualCertificates = CertificatesSignInfo?
-                .Where(item => item.GetMetadata("DualSigningAllowed")?.Equals("true", StringComparison.OrdinalIgnoreCase) ?? false)
+                .Where(item => item.GetMetadata("DualSigningAllowed").Equals("true", StringComparison.OrdinalIgnoreCase))
                 .Select(item => item.ItemSpec);
 
             return dualCertificates?.ToList() ?? new List<string>();
