@@ -5,7 +5,6 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-
 namespace Microsoft.DotNet.WinShimmer
 {
     class Program
