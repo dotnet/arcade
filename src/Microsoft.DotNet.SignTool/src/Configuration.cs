@@ -158,14 +158,26 @@ namespace Microsoft.DotNet.SignTool
 
                 // Check if we have more specific sign info:
                 var fileName = Path.GetFileName(fullPath);
-                if (_explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out var overridingCertificate) ||
-                    _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out overridingCertificate) ||
-                    _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName), out overridingCertificate))
+
+                var First = false;
+                var Second = false;
+
+                var fullKey = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework);
+                var midKey = new ExplicitCertificateKey(fileName, publicKeyToken);
+                var smallKey = new ExplicitCertificateKey(fileName);
+
+                if ((_explicitCertificates.TryGetValue(fullKey, out var overridingCertificate) && (First = true)) ||
+                    (_explicitCertificates.TryGetValue(midKey, out overridingCertificate) && (Second = true)) ||
+                    _explicitCertificates.TryGetValue(smallKey, out overridingCertificate))
                 {
                     // If has overriding info, is it for ignoring the file?
                     if (overridingCertificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.OrdinalIgnoreCase))
                     {
-                        _log.LogMessage($"Ignoring file that was explicitly asked to be ignored: {fullPath}");
+                        var fileSpec = First ? $"(PKT = {publicKeyToken}, Framework = {targetFramework}) " :
+                                      Second ? $"(PKT = {publicKeyToken}) " :
+                                      string.Empty;
+
+                        _log.LogMessage($"File configurated to not be signed {fileSpec}: {fileName}");
                         return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
                     }
 

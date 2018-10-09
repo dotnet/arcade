@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.SignTool
 
             var enclosingDir = GetEnclosingDirectoryOfItemsToSign();
 
-            printConfigInformation();
+            PrintConfigInformation();
 
             if (Log.HasLoggedErrors) return;
 
@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.SignTool
             util.Go();
         }
 
-        private void printConfigInformation()
+        private void PrintConfigInformation()
         {
             Log.LogMessage(MessageImportance.High, "SignToolTask starting.");
             Log.LogMessage(MessageImportance.High, $"DryRun: {DryRun}");
