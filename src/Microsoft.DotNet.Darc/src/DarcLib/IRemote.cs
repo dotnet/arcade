@@ -10,6 +10,8 @@ namespace Microsoft.DotNet.DarcLib
 {
     public interface IRemote
     {
+        Task<IEnumerable<DefaultChannel>> GetDefaultChannelsAsync(string repository = null, string branch = null, int? channelId = null);
+
         Task<Channel> CreateChannelAsync(string name, string classification);
 
         Task<IEnumerable<Subscription>> GetSubscriptionsAsync(string sourceRepo = null, string targetRepo = null, int? channelId = null);

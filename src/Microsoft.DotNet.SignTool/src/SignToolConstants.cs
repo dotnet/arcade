@@ -7,10 +7,5 @@ namespace Microsoft.DotNet.SignTool
     internal static class SignToolConstants
     {
         public const string IgnoreFileCertificateSentinel = "None";
-
-        // These certificate are special because they are used when we want 
-        // to sign a file that is already signed.
-        public const string Certificate_Microsoft3rdPartyAppComponentDual = "3PartyDual";
-        public const string Certificate_Microsoft3rdPartyAppComponentSha2 = "3PartySHA2";
     }
 }

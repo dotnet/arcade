@@ -7,10 +7,12 @@ $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
 
 & "$PSScriptRoot\MaestroApplication\bootstrap-certs.ps1"
-if ($LASTEXITCODE -ne 0) {
-  exit $LASTEXITCODE
+if (-not $?) {
+  Write-Error "Failed to bootstrap certs"
+  exit $?
 }
 & "$PSScriptRoot\MaestroApplication\setup-localdb.ps1"
-if ($LASTEXITCODE -ne 0) {
-  exit $LASTEXITCODE
+if (-not $?) {
+  Write-Error "Failed to set up local db"
+  exit $?
 }

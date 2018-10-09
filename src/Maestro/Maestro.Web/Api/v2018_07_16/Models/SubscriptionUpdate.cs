@@ -5,5 +5,6 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         public string ChannelName { get; set; }
         public string SourceRepository { get; set; }
         public SubscriptionPolicy Policy { get; set; }
+        public bool? Enabled { get; set; }
     }
 }
