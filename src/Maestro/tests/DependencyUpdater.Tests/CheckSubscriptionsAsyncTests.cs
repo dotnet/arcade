@@ -125,8 +125,8 @@ namespace DependencyUpdater.Tests
                     },
                 LastAppliedBuild = oldBuild
             };
-            var repoInstallation = new RepoInstallation { Repository = "target.repo", InstallationId = 1 };
-            await Context.RepoInstallations.AddAsync(repoInstallation);
+            var repoInstallation = new Repository { RepositoryName = "target.repo", InstallationId = 1 };
+            await Context.Repositories.AddAsync(repoInstallation);
             await Context.Subscriptions.AddAsync(subscription);
             await Context.BuildChannels.AddAsync(buildChannel);
             await Context.SaveChangesAsync();

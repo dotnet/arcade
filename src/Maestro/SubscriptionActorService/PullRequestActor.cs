@@ -174,19 +174,29 @@ namespace SubscriptionActorService
                 return ActionResult.Create(false, "PR cannot be updated.");
             }
 
+            string result;
             if (pr != null)
             {
                 await UpdatePullRequestAsync(pr, updates);
+                result = $"Pull Request '{pr.Url}' updated.";
             }
             else
             {
-                await CreatePullRequestAsync(updates);
+                var prUrl = await CreatePullRequestAsync(updates);
+                if (prUrl == null)
+                {
+                    result = "No changes required, no pull request created.";
+                }
+                else
+                {
+                    result = $"Pull Request '{prUrl}' created.";
+                }
             }
 
             await StateManager.RemoveStateAsync(PullRequestUpdate);
             await Reminders.TryUnregisterReminderAsync(PullRequestUpdate);
 
-            return ActionResult.Create(true, "Pending updates applied.");
+            return ActionResult.Create(true, "Pending updates applied. " + result);
         }
 
         /// <summary>
@@ -390,7 +400,17 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
             public List<Asset> Assets { get; set; }
         }
 
-        public async Task UpdateAssetsAsync(Guid subscriptionId, int buildId, string sourceSha, List<Asset> assets)
+        Task IPullRequestActor.UpdateAssetsAsync(
+            Guid subscriptionId,
+            int buildId,
+            string sourceSha,
+            List<Asset> assets)
+        {
+            return ActionRunner.ExecuteAction(() => UpdateAssetsAsync(subscriptionId, buildId, sourceSha, assets));
+        }
+
+        [ActionMethod("Updating assets for subscription: {subscriptionId}, build: {buildId}")]
+        public async Task<ActionResult<object>> UpdateAssetsAsync(Guid subscriptionId, int buildId, string sourceSha, List<Asset> assets)
         {
             var (pr, canUpdate) = await SynchronizeInProgressPullRequestAsync();
 
@@ -416,16 +436,23 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
                     Array.Empty<byte>(),
                     TimeSpan.FromMinutes(5),
                     TimeSpan.FromMinutes(5));
-                return;
+                return ActionResult.Create<object>(null, $"Current Pull request '{pr.Url}' cannot be updated, update queued.");
             }
 
             if (pr != null)
             {
                 await UpdatePullRequestAsync(pr, new List<UpdateAssetsParameters> {updateParameter});
+                return ActionResult.Create<object>(null, $"Pull Request '{pr.Url}' updated.");
             }
             else
             {
-                await CreatePullRequestAsync(new List<UpdateAssetsParameters> {updateParameter});
+                var prUrl = await CreatePullRequestAsync(new List<UpdateAssetsParameters> {updateParameter});
+                if (prUrl == null)
+                {
+                    return ActionResult.Create<object>(null, "Updates require no changes, no pull request created.");
+                }
+
+                return ActionResult.Create<object>(null, $"Pull request '{prUrl}' created.");
             }
         }
 
@@ -434,7 +461,7 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
         /// </summary>
         /// <param name="updates"></param>
         /// <returns><see langref="true"/> when a pr was created; <see langref="false"/> if no PR is necessary</returns>
-        private async Task CreatePullRequestAsync(List<UpdateAssetsParameters> updates)
+        private async Task<string> CreatePullRequestAsync(List<UpdateAssetsParameters> updates)
         {
             var (targetRepository, targetBranch) = await GetTargetAsync();
             var darc = await GetDarc();
@@ -445,7 +472,7 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
 
             if (requiredUpdates.Count < 1)
             {
-                return;
+                return null;
             }
 
             var newBranchName = $"darc-{targetBranch}-{Guid.NewGuid()}";
@@ -483,7 +510,7 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
                 await StateManager.SetStateAsync(PullRequest, inProgressPr);
                 await StateManager.SaveStateAsync();
                 await Reminders.TryRegisterReminderAsync(PullRequestCheck, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
-                return;
+                return prUrl;
             }
         }
 

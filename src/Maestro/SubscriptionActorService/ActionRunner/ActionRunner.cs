@@ -66,9 +66,10 @@ namespace SubscriptionActorService
 
         private async Task<ActionResult<T>> InvokeAction<T>(IActionTracker target, ActionMethod method, object[] arguments)
         {
-            string actionMessage = new FormattedLogValues(method.MessageFormat, arguments).ToString();
+            var argumentsForFormat = arguments.ToArray(); // copy the array because formatted log values modifies the array.
+            string actionMessage = new FormattedLogValues(method.MessageFormat, argumentsForFormat).ToString();
 
-            using (Logger.BeginScope(method.MessageFormat, arguments))
+            using (Logger.BeginScope(method.MessageFormat, argumentsForFormat))
             {
                 try
                 {

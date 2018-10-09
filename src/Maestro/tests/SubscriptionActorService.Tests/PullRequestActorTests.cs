@@ -392,7 +392,7 @@ namespace SubscriptionActorService.Tests
                     async context =>
                     {
                         var actor = CreateActor(context);
-                        await actor.UpdateAssetsAsync(
+                        await actor.Implementation.UpdateAssetsAsync(
                             Subscription.Id,
                             forBuild.Id,
                             NewCommit,
