@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 using Maestro.Data.Models;
 using Maestro.MergePolicies;
@@ -12,72 +11,7 @@ using MergePolicy = Maestro.MergePolicies.MergePolicy;
 
 namespace SubscriptionActorService
 {
-    public class MergePolicyEvaluationContext : IMergePolicyEvaluationContext
-    {
-        public MergePolicyEvaluationContext(
-            string pullRequestUrl,
-            IRemote darc)
-        {
-            PullRequestUrl = pullRequestUrl;
-            Darc = darc;
-        }
-
-        public string PullRequestUrl { get; }
-        public IRemote Darc { get; }
-
-        public MergePolicyEvaluationResult Result => new MergePolicyEvaluationResult(PolicyResults);
-
-        public void Pending(string message)
-        {
-            PolicyResults.Add(new MergePolicyEvaluationResult.SingleResult(null, message, CurrentPolicy));
-        }
-
-        public void Succeed(string message)
-        {
-            PolicyResults.Add(new MergePolicyEvaluationResult.SingleResult(true, message, CurrentPolicy));
-        }
-
-        public void Fail(string message)
-        {
-            PolicyResults.Add(new MergePolicyEvaluationResult.SingleResult(false, message, CurrentPolicy));
-        }
-
-        private IList<MergePolicyEvaluationResult.SingleResult> PolicyResults { get; } = new List<MergePolicyEvaluationResult.SingleResult>();
-
-        internal MergePolicy CurrentPolicy { get; set; }
-    }
-
-    public class MergePolicyEvaluationResult
-    {
-        public MergePolicyEvaluationResult(IEnumerable<SingleResult> results)
-        {
-            Results = results.ToImmutableList();
-        }
-
-        public IReadOnlyList<SingleResult> Results { get; }
-
-        public bool Succeeded => Results.Count > 0 && Results.All(r => r.Success == true);
-
-        public bool Pending => Results.Count > 0 && Results.Any(r => r.Success == null);
-
-        public bool Failed => Results.Count > 0 && Results.Any(r => r.Success == false);
-
-        public class SingleResult
-        {
-            public SingleResult(bool? success, string message, MergePolicy policy)
-            {
-                Success = success;
-                Message = message;
-                Policy = policy;
-            }
-
-            public bool? Success { get; }
-            public string Message { get; }
-            public MergePolicy Policy { get; }
-        }
-    }
-
-    public class MergePolicyEvaluator
+    public class MergePolicyEvaluator : IMergePolicyEvaluator
     {
         public IImmutableDictionary<string, MergePolicy> MergePolicies { get; }
         public ILogger<MergePolicyEvaluator> Logger { get; }

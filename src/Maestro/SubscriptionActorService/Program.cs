@@ -37,7 +37,7 @@ namespace SubscriptionActorService
                         services =>
                         {
                             services.AddSingleton<IActionRunner, ActionRunner>();
-                            services.AddSingleton<MergePolicyEvaluator>();
+                            services.AddSingleton<IMergePolicyEvaluator, MergePolicyEvaluator>();
                             services.AddSingleton<IDarcRemoteFactory, DarcRemoteFactory>();
                             services.AddGitHubTokenProvider();
                             services.AddSingleton(

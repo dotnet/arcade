@@ -56,11 +56,11 @@ namespace SubscriptionActorService
             Id = id;
             if (Id.Kind == ActorIdKind.Guid)
             {
-                Implementation = ActivatorUtilities.CreateInstance<NonBatchedPullRequestActorImplementation>(provider);
+                Implementation = ActivatorUtilities.CreateInstance<NonBatchedPullRequestActorImplementation>(provider, id);
             }
             else if (Id.Kind == ActorIdKind.String)
             {
-                Implementation = ActivatorUtilities.CreateInstance<BatchedPullRequestActorImplementation>(provider);
+                Implementation = ActivatorUtilities.CreateInstance<BatchedPullRequestActorImplementation>(provider, id);
             }
         }
 
@@ -115,13 +115,13 @@ namespace SubscriptionActorService
         public ActorId Id { get; }
         public IReminderManager Reminders { get; }
         public IActorStateManager StateManager { get; }
-        public MergePolicyEvaluator MergePolicyEvaluator { get; }
+        public IMergePolicyEvaluator MergePolicyEvaluator { get; }
         public BuildAssetRegistryContext Context { get; }
         public IDarcRemoteFactory DarcFactory { get; }
         public IActionRunner ActionRunner { get; }
         public Func<ActorId, ISubscriptionActor> SubscriptionActorFactory { get; }
 
-        protected PullRequestActorImplementation(ActorId id, IReminderManager reminders, IActorStateManager stateManager, MergePolicyEvaluator mergePolicyEvaluator, BuildAssetRegistryContext context, IDarcRemoteFactory darcFactory, ILoggerFactory loggerFactory, IActionRunner actionRunner, Func<ActorId, ISubscriptionActor> subscriptionActorFactory)
+        protected PullRequestActorImplementation(ActorId id, IReminderManager reminders, IActorStateManager stateManager, IMergePolicyEvaluator mergePolicyEvaluator, BuildAssetRegistryContext context, IDarcRemoteFactory darcFactory, ILoggerFactory loggerFactory, IActionRunner actionRunner, Func<ActorId, ISubscriptionActor> subscriptionActorFactory)
         {
             Id = id;
             Reminders = reminders;
@@ -183,7 +183,7 @@ namespace SubscriptionActorService
                 await CreatePullRequestAsync(updates);
             }
 
-            await StateManager.SetStateAsync(PullRequestUpdate, new List<UpdateAssetsParameters>());
+            await StateManager.RemoveStateAsync(PullRequestUpdate);
             await Reminders.TryUnregisterReminderAsync(PullRequestUpdate);
 
             return ActionResult.Create(true, "Pending updates applied.");
@@ -686,7 +686,7 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
             ActorId id,
             IReminderManager reminders,
             IActorStateManager stateManager,
-            MergePolicyEvaluator mergePolicyEvaluator,
+            IMergePolicyEvaluator mergePolicyEvaluator,
             BuildAssetRegistryContext context,
             IDarcRemoteFactory darcFactory,
             ILoggerFactory loggerFactory,
@@ -727,7 +727,7 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
             ActorId id,
             IReminderManager reminders,
             IActorStateManager stateManager,
-            MergePolicyEvaluator mergePolicyEvaluator,
+            IMergePolicyEvaluator mergePolicyEvaluator,
             BuildAssetRegistryContext context,
             IDarcRemoteFactory darcFactory,
             ILoggerFactory loggerFactory,
