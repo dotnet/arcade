@@ -156,17 +156,13 @@ namespace Microsoft.DotNet.SignTool
                     hasSignInfo = true;
                 }
 
-                // Check if we have more specific sign info:
                 var fileName = Path.GetFileName(fullPath);
-
                 var first = false;
                 var second = false;
-
-                var fullKey = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework);
-                var midKey = new ExplicitCertificateKey(fileName, publicKeyToken);
-
-                if ((first = _explicitCertificates.TryGetValue(fullKey, out var overridingCertificate)) ||
-                    (second = _explicitCertificates.TryGetValue(midKey, out overridingCertificate)) ||
+                
+                // Check if we have more specific sign info:
+                if ((first = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out var overridingCertificate)) ||
+                    (second = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out overridingCertificate)) ||
                     _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName), out overridingCertificate))
                 {
                     // If has overriding info, is it for ignoring the file?
