@@ -55,6 +55,19 @@ namespace Microsoft.DotNet.DarcLib
         }
 
         /// <summary>
+        /// Retrieve a list of default channel associations.
+        /// </summary>
+        /// <param name="repository">Optionally filter by repository</param>
+        /// <param name="branch">Optionally filter by branch</param>
+        /// <param name="channelId">Optionally filter by channel ID</param>
+        /// <returns>Collection of default channels.</returns>
+        public async Task<IEnumerable<DefaultChannel>> GetDefaultChannelsAsync(string repository = null, string branch = null, int? channelId = null)
+        {
+            CheckForValidBarClient();
+            return await _barClient.DefaultChannels.ListAsync(repository, branch, channelId);
+        }
+
+        /// <summary>
         /// Retrieve the list of channels from the build asset registry.
         /// </summary>
         /// <param name="classification">Optional classification to get</param>

@@ -113,6 +113,7 @@ namespace DependencyUpdater
         public async Task CheckSubscriptionsAsync(CancellationToken cancellationToken)
         {
             var subscriptionsToUpdate = from sub in Context.Subscriptions
+                where sub.Enabled
                 let updateFrequency = JsonExtensions.JsonValue(sub.PolicyString, "lax $.UpdateFrequency")
                 where updateFrequency == ((int) UpdateFrequency.EveryDay).ToString()
                 let latestBuild =
@@ -140,6 +141,7 @@ namespace DependencyUpdater
         {
             Build build = await Context.Builds.FindAsync(buildId);
             List<Subscription> subscriptionsToUpdate = await (from sub in Context.Subscriptions
+                where sub.Enabled
                 where sub.ChannelId == channelId
                 where sub.SourceRepository == build.Repository
                 let updateFrequency = JsonExtensions.JsonValue(sub.PolicyString, "lax $.UpdateFrequency")
