@@ -345,12 +345,37 @@ by creating a merge commit, *not* a squash or rebase commit.
 <img alt="merge button instructions" src="https://i.imgur.com/GepcNJV.png" width="300" />
 
 You can also do this on command line:
+
+Step 1: From your project repository, check out a new branch and pull the changes from the pull request
+``````
+git checkout -b ${mergeBranchName} $BaseBranch
+git pull https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
+``````
+
+Step 2: Merge the changes and update on GitHub. This will automatically mark this pull request as "merged".
 ``````
 git checkout $BaseBranch
-git pull
-git fetch --force https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}:${mergeBranchName}
-git merge ${mergeBranchName}
-git push
+git merge --no-ff ${mergeBranchName}
+git push origin $BaseBranch
+``````
+
+## Instructions for updating this pull-request
+
+Contributors to this repo should have access to push updates to the pull request. You can do this
+by running the following git commands on a clone of this repository.
+
+Step 1: From your project repository, check out a new branch and pull the changes from the pull request.
+``````
+git checkout -b ${mergeBranchName} $BaseBranch
+git pull https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
+``````
+
+Step 2: Make changes, such as resolving conflicts.
+
+Step 3: Push your changes to the pull-request branch. This will re-trigger pull request validation.
+``````
+git commit -m "Updated PR with my changes"
+git push https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 ``````
 
 ## Instructions for resolving conflicts
