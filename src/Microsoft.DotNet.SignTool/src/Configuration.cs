@@ -165,15 +165,23 @@ namespace Microsoft.DotNet.SignTool
                     hasSignInfo = true;
                 }
 
-                // Check if we have more specific sign info:
                 var fileName = Path.GetFileName(fullPath);
-                if (_explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out var overridingCertificate) ||
-                    _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out overridingCertificate) ||
+                var first = false;
+                var second = false;
+                
+                // Check if we have more specific sign info:
+                if ((first = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out var overridingCertificate)) ||
+                    (second = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out overridingCertificate)) ||
                     _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName), out overridingCertificate))
                 {
                     // If has overriding info, is it for ignoring the file?
                     if (overridingCertificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.OrdinalIgnoreCase))
                     {
+                        var fileSpec = first ? $" (PublicKeyToken = {publicKeyToken}, Framework = {targetFramework})" :
+                            second ? $" (PublicKeyToken = {publicKeyToken})" :
+                            string.Empty;
+
+                        _log.LogMessage($"File configurated to not be signed: {fileName}{fileSpec}");
                         return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
                     }
 
@@ -315,6 +323,8 @@ namespace Microsoft.DotNet.SignTool
 
                         if (!FileSignInfo.IsZipContainer(relativePath) && (!_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) || !extensionSignInfo.ShouldSign))
                         {
+                            var reason = extensionSignInfo.ShouldIgnore ? "configuration tells to ignore this extension" : "its extension isn't on recognizable signing extension list";
+                            _log.LogMessage($"Ignoring this file because {reason} : {relativePath}");
                             continue;
                         }
 

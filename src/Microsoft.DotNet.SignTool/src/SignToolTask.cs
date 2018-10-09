@@ -107,6 +107,7 @@ namespace Microsoft.DotNet.SignTool
 #if NET461
                 AssemblyResolution.Log = null;
 #endif
+                Log.LogMessage(MessageImportance.High, "SignToolTask execution finished.");
             }
         }
 
@@ -125,6 +126,8 @@ namespace Microsoft.DotNet.SignTool
             }
 
             var enclosingDir = GetEnclosingDirectoryOfItemsToSign();
+
+            PrintConfigInformation();
 
             if (Log.HasLoggedErrors) return;
 
@@ -146,6 +149,15 @@ namespace Microsoft.DotNet.SignTool
             if (Log.HasLoggedErrors) return;
 
             util.Go();
+        }
+
+        private void PrintConfigInformation()
+        {
+            Log.LogMessage(MessageImportance.High, "SignToolTask starting.");
+            Log.LogMessage(MessageImportance.High, $"DryRun: {DryRun}");
+            Log.LogMessage(MessageImportance.High, $"Signing mode: { (TestSign ? "Test" : "Real") }");
+            Log.LogMessage(MessageImportance.High, $"MicroBuild signing logs will be in (Signing*.binlog): {LogDir}");
+            Log.LogMessage(MessageImportance.High, $"MicroBuild signing configuration will be in (Round*.proj): {TempDir}");
         }
 
         private string[] ParseCertificateInfo()
