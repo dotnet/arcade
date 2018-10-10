@@ -39,7 +39,6 @@ Param (
   [string] $BaseUri,
   [Parameter(Mandatory=$True)]
   [string] $Version,
-  [string] $PathToBinary,
   [string] $CommonLibraryDirectory = $PSScriptRoot,
   [switch] $Force = $False,
   [switch] $Clean = $False,
@@ -61,7 +60,11 @@ try {
   }
   $ToolNameMoniker = "$ToolName-$Version-$ToolOs-$Arch"
   $ToolInstallDirectory = Join-Path $InstallPath "$ToolName\$Version\"
-  $ToolFilePath = Join-Path $ToolInstallDirectory "$ToolNameMoniker\$PathToBinary$ToolName.exe"
+  $ToolFilePath = Get-ChildItem $ToolInstallDirectory -Recurse -Filter $ToolName | % { $_.FullName }
+  if (@($ToolFilePath).Length -Ne 1) {
+    Write-Error "There are too many $($ToolName)s in $ToolFilePath!"
+    exit 1
+  }
   $ShimPath = Join-Path $InstallPath "$ToolName.exe"
   $Uri = "$BaseUri/windows/$Toolname/$ToolNameMoniker.zip"
 
