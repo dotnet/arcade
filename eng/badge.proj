@@ -1,0 +1,48 @@
+<Project>
+  <PropertyGroup>
+    <!-- Workaround for Imports in ProjectDefaults.props which requires Language to be set. -->
+    <Language>SVG</Language>
+    <!-- Workaround for resx targets which produce errors for unsupported languages -->
+    <DisableResxSourceGeneration>true</DisableResxSourceGeneration>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+
+  <Target Name="GenerateSvgBadge" AfterTargets="Build" DependsOnTargets="GetPackageVersion">
+  
+    <Error Text="Could not determine a value for required property 'PackageVersion'" Condition="'$(PackageVersion)' == ''" />
+
+    <PropertyGroup>
+      <SvgBadgeLabel>version</SvgBadgeLabel>
+      <SvgBadgeValue>$(PackageVersion)</SvgBadgeValue>
+      <SvgBadgeColor>#007EC6</SvgBadgeColor>
+      <SvgBadgeWidth>$([MSBuild]::Add(56, $([MSBuild]::Multiply($(PackageVersion.Length), 6.67))))</SvgBadgeWidth>
+      <SvgBadgeContent>
+<![CDATA[
+<svg xmlns="http://www.w3.org/2000/svg" width="$(SvgBadgeWidth)" height="20">
+    <g>
+        <rect width="$(SvgBadgeWidth)" height="20" rx="0" fill="#007EC6" />
+        <rect width="52" height="20" rx="0" fill="#555"  />
+    </g>
+    <g fill="#fff" text-anchor="left" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
+        <text x="6" y="15" fill="#010101" fill-opacity=".3">$(SvgBadgeLabel)</text>
+        <text x="6" y="14">$(SvgBadgeLabel)</text>
+        <text x="60" y="15" fill="#010101" fill-opacity=".3">$(SvgBadgeValue)</text>
+        <text x="60" y="14">$(SvgBadgeValue)</text>
+    </g>
+</svg>
+]]>
+      </SvgBadgeContent>
+    </PropertyGroup>
+    
+    <WriteLinesToFile File="$(ArtifactsDir)badge.xml" Lines="$(SvgBadgeContent)" Overwrite="true" />
+    <WriteLinesToFile File="$(ArtifactsDir)latest.txt" Lines="$(PackageVersion)" Overwrite="true" />
+  </Target>
+
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+
+  <!-- Dummy targets required to make Microsoft.Common.targets happy -->
+  <Target Name="CreateManifestResourceNames" />
+  <Target Name="CoreCompile" />
+  <Target Name="CopyFilesToOutputDirectory" />
+</Project>

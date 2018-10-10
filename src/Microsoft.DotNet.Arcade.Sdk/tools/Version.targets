@@ -72,6 +72,11 @@
       <PackageVersion Condition="'$(SemanticVersioningV1)' != 'true'">$(Version)+$(_ShortSha)</PackageVersion>
       <PackageVersion Condition="'$(SemanticVersioningV1)' == 'true'">$(Version)-$(_ShortSha)</PackageVersion>
     </PropertyGroup>
+
+    <!-- Ensure PackageVersion is always set when this target runs -->
+    <PropertyGroup Condition="'$(PackageVersion)' == ''">
+      <PackageVersion>$(Version)</PackageVersion>
+    </PropertyGroup>
   </Target>
 
 </Project>
