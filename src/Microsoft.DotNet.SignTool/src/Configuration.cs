@@ -149,9 +149,9 @@ namespace Microsoft.DotNet.SignTool
             var targetFramework = string.Empty;
             var fileSpec = string.Empty;
             var isAlreadySigned = false;
-            var matchedFullKey = false;
-            var matchedWithPkt = false;
-            var matchedByName = false;
+            var matchedNameTokenFramework = false;
+            var matchedNameToken = false;
+            var matchedName = false;
 
             if (FileSignInfo.IsPEFile(fullPath))
             {
@@ -170,17 +170,17 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 // Check if we have more specific sign info:
-                matchedFullKey = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out explicitCertificateName);
-                matchedWithPkt = !matchedFullKey && _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out explicitCertificateName);
+                matchedNameTokenFramework = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out explicitCertificateName);
+                matchedNameToken = !matchedNameTokenFramework && _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out explicitCertificateName);
 
-                fileSpec = matchedFullKey ? $" (PublicKeyToken = {publicKeyToken}, Framework = {targetFramework})" :
-                        matchedWithPkt ? $" (PublicKeyToken = {publicKeyToken})" : string.Empty;
+                fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {publicKeyToken}, Framework = {targetFramework})" :
+                        matchedNameToken ? $" (PublicKeyToken = {publicKeyToken})" : string.Empty;
             }
 
             // We didn't find any specific information for PE files using PKT + TargetFramework
             if (explicitCertificateName == null)
             {
-                matchedByName = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName), out explicitCertificateName);
+                matchedName = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName), out explicitCertificateName);
             }
 
             // If has overriding info, is it for ignoring the file?
@@ -189,7 +189,9 @@ namespace Microsoft.DotNet.SignTool
                 _log.LogMessage($"File configurated to not be signed: {fileName}{fileSpec}");
                 return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
             }
-            else if (explicitCertificateName != null)
+
+            // Do we have an explicit certificate after all?
+            if (explicitCertificateName != null)
             {
                 signInfo = signInfo.WithCertificateName(explicitCertificateName);
                 hasSignInfo = true;
