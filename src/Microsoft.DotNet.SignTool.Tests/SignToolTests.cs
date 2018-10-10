@@ -798,5 +798,68 @@ $@"
                 "File 'NestedZip.zip' Certificate=''",
             });
         }
+
+        [Fact]
+        public void SpecificFileSignInfos()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                CreateTestResource("test.js"),
+                CreateTestResource("test.jar"),
+                CreateTestResource("test.ps1"),
+                CreateTestResource("test.psd1"),
+                CreateTestResource("test.psm1"),
+                CreateTestResource("test.psc1"),
+                CreateTestResource("test.dylib"),
+                GetResourcePath("EmptyPKT.dll"),
+                GetResourcePath("test.vsix"),
+                GetResourcePath("Simple.nupkg"),
+            };
+
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            {
+                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "StrongNameValue") },
+            };
+
+            // Overriding information
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>()
+            {
+                { new ExplicitCertificateKey("test.js"), "JSCertificate" },
+                { new ExplicitCertificateKey("test.jar"), "JARCertificate" },
+                { new ExplicitCertificateKey("test.ps1"), "PS1Certificate" },
+                { new ExplicitCertificateKey("test.psd1"), "PSD1Certificate" },
+                { new ExplicitCertificateKey("test.psm1"), "PSM1Certificate" },
+                { new ExplicitCertificateKey("test.psc1"), "PSC1Certificate" },
+                { new ExplicitCertificateKey("test.dylib"), "DYLIBCertificate" },
+                { new ExplicitCertificateKey("EmptyPKT.dll"), "DLLCertificate" },
+                { new ExplicitCertificateKey("test.vsix"), "VSIXCertificate" },
+                { new ExplicitCertificateKey("PackageWithRelationships.vsix"), "VSIXCertificate2" },
+                { new ExplicitCertificateKey("Simple.dll"), "DLLCertificate2" },
+                { new ExplicitCertificateKey("Simple.nupkg"), "NUPKGCertificate" },
+                { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETFramework,Version=v4.6.1"), "DLLCertificate3" },
+                { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETStandard,Version=v2.0"), "DLLCertificate4" },
+                { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETCoreApp,Version=v2.0"), "DLLCertificate5" },
+            };
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            {
+                "File 'test.js' Certificate='JSCertificate'",
+                "File 'test.jar' Certificate='JARCertificate'",
+                "File 'test.ps1' Certificate='PS1Certificate'",
+                "File 'test.psd1' Certificate='PSD1Certificate'",
+                "File 'test.psm1' Certificate='PSM1Certificate'",
+                "File 'test.psc1' Certificate='PSC1Certificate'",
+                "File 'test.dylib' Certificate='DYLIBCertificate'",
+                "File 'EmptyPKT.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='DLLCertificate'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='DLLCertificate3' StrongName='StrongNameValue'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='DLLCertificate4' StrongName='StrongNameValue'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='DLLCertificate5' StrongName='StrongNameValue'",
+                "File 'PackageWithRelationships.vsix' Certificate='VSIXCertificate2'",
+                "File 'test.vsix' Certificate='VSIXCertificate'",
+                "File 'Simple.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='DLLCertificate2'",
+                "File 'Simple.nupkg' Certificate='NUPKGCertificate'",
+            });
+        }
     }
 }

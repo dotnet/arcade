@@ -142,12 +142,16 @@ namespace Microsoft.DotNet.SignTool
 
         private FileSignInfo ExtractSignInfo(string fullPath, ImmutableArray<byte> hash)
         {
-            var targetFramework = string.Empty;
-
             // Try to determine default certificate name by the extension of the file
             var hasSignInfo = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out var signInfo);
-
+            var fileName = Path.GetFileName(fullPath);
+            string explicitCertificateName = null;
+            var targetFramework = string.Empty;
+            var fileSpec = string.Empty;
             var isAlreadySigned = false;
+            var matchedNameTokenFramework = false;
+            var matchedNameToken = false;
+            var matchedName = false;
 
             if (FileSignInfo.IsPEFile(fullPath))
             {
@@ -165,29 +169,32 @@ namespace Microsoft.DotNet.SignTool
                     hasSignInfo = true;
                 }
 
-                var fileName = Path.GetFileName(fullPath);
-                var first = false;
-                var second = false;
-                
                 // Check if we have more specific sign info:
-                if ((first = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out var overridingCertificate)) ||
-                    (second = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out overridingCertificate)) ||
-                    _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName), out overridingCertificate))
-                {
-                    // If has overriding info, is it for ignoring the file?
-                    if (overridingCertificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.OrdinalIgnoreCase))
-                    {
-                        var fileSpec = first ? $" (PublicKeyToken = {publicKeyToken}, Framework = {targetFramework})" :
-                            second ? $" (PublicKeyToken = {publicKeyToken})" :
-                            string.Empty;
+                matchedNameTokenFramework = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out explicitCertificateName);
+                matchedNameToken = !matchedNameTokenFramework && _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out explicitCertificateName);
 
-                        _log.LogMessage($"File configurated to not be signed: {fileName}{fileSpec}");
-                        return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
-                    }
+                fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {publicKeyToken}, Framework = {targetFramework})" :
+                        matchedNameToken ? $" (PublicKeyToken = {publicKeyToken})" : string.Empty;
+            }
 
-                    signInfo = signInfo.WithCertificateName(overridingCertificate);
-                    hasSignInfo = true;
-                }
+            // We didn't find any specific information for PE files using PKT + TargetFramework
+            if (explicitCertificateName == null)
+            {
+                matchedName = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName), out explicitCertificateName);
+            }
+
+            // If has overriding info, is it for ignoring the file?
+            if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(explicitCertificateName, StringComparison.OrdinalIgnoreCase))
+            {
+                _log.LogMessage($"File configurated to not be signed: {fileName}{fileSpec}");
+                return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
+            }
+
+            // Do we have an explicit certificate after all?
+            if (explicitCertificateName != null)
+            {
+                signInfo = signInfo.WithCertificateName(explicitCertificateName);
+                hasSignInfo = true;
             }
 
             if (hasSignInfo)
