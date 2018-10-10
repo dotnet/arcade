@@ -65,7 +65,7 @@ phases:
         $(_OfficialBuildIdArgs)
       displayName: Windows Build / Publish
       condition: and(succeeded(), eq(variables['Agent.Os'], 'Windows_NT'))
-        
+
     - script: eng/common/cibuild.sh
         --configuration $(_BuildConfig) 
         --prepareMachine
@@ -75,17 +75,10 @@ phases:
       displayName: Unix Build / Publish
       condition: and(succeeded(), ne(variables['Agent.Os'], 'Windows_NT'))
 
-    - task: CopyFiles@2
-      displayName: Gather Logs
-      inputs:
-        SourceFolder: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
-        TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
-      continueOnError: true
-      condition: always()
     - task: PublishBuildArtifacts@1
       displayName: Publish Logs to VSTS
       inputs:
-        PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
+        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
         PublishLocation: Container
         ArtifactName: $(Agent.Os)_$(Agent.JobName)
       continueOnError: true
