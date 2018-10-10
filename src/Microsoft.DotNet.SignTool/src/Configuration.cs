@@ -145,7 +145,7 @@ namespace Microsoft.DotNet.SignTool
             // Try to determine default certificate name by the extension of the file
             var hasSignInfo = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out var signInfo);
             var fileName = Path.GetFileName(fullPath);
-            var overridingCertificate = string.Empty;
+            string explicitCertificateName = null;
             var targetFramework = string.Empty;
             var fileSpec = string.Empty;
             var isAlreadySigned = false;
@@ -170,30 +170,28 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 // Check if we have more specific sign info:
-                matchedFullKey = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out overridingCertificate);
-                matchedWithPkt = !matchedFullKey && _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out overridingCertificate);
+                matchedFullKey = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out explicitCertificateName);
+                matchedWithPkt = !matchedFullKey && _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out explicitCertificateName);
 
                 fileSpec = matchedFullKey ? $" (PublicKeyToken = {publicKeyToken}, Framework = {targetFramework})" :
                         matchedWithPkt ? $" (PublicKeyToken = {publicKeyToken})" : string.Empty;
             }
 
             // We didn't find any specific information for PE files using PKT + TargetFramework
-            if (!matchedFullKey && !matchedWithPkt)
+            if (explicitCertificateName == null)
             {
-                matchedByName = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName), out overridingCertificate);
+                matchedByName = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName), out explicitCertificateName);
             }
 
-            // If we find any specific information use it
-            if (matchedFullKey || matchedWithPkt || matchedByName)
+            // If has overriding info, is it for ignoring the file?
+            if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(explicitCertificateName, StringComparison.OrdinalIgnoreCase))
             {
-                // If has overriding info, is it for ignoring the file?
-                if (overridingCertificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.OrdinalIgnoreCase))
-                {
-                    _log.LogMessage($"File configurated to not be signed: {fileName}{fileSpec}");
-                    return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
-                }
-
-                signInfo = signInfo.WithCertificateName(overridingCertificate);
+                _log.LogMessage($"File configurated to not be signed: {fileName}{fileSpec}");
+                return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
+            }
+            else if (explicitCertificateName != null)
+            {
+                signInfo = signInfo.WithCertificateName(explicitCertificateName);
                 hasSignInfo = true;
             }
 
