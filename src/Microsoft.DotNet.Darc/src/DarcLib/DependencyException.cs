@@ -8,21 +8,21 @@ using System.Runtime.Serialization;
 namespace Microsoft.DotNet.DarcLib
 {
     [Serializable]
-    public class DarcException : Exception
+    public class DependencyException : Exception
     {
-        public DarcException() : base()
+        public DependencyException() : base()
         {
         }
 
-        protected DarcException(SerializationInfo info, StreamingContext context) : base(info, context)
+        protected DependencyException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
 
-        public DarcException(string message) : base(message)
+        public DependencyException(string message) : base(message)
         {
         }
 
-        public DarcException(string message, Exception innerException) : base(message, innerException)
+        public DependencyException(string message, Exception innerException) : base(message, innerException)
         {
         }
     }

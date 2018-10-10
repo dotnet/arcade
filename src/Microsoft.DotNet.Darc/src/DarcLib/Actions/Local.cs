@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DarcLib
@@ -33,6 +34,11 @@ namespace Microsoft.DotNet.DarcLib
         /// <returns></returns>
         public async Task AddDependenciesAsync(DependencyDetail dependency, DependencyType dependencyType)
         {
+            if (GetDependenciesAsync(dependency.Name).GetAwaiter().GetResult().Any())
+            {
+                throw new DependencyException($"Dependency {dependency.Name} already exists in this repository");
+            }
+
             if (DependencyOperations.TryGetKnownUpdater(dependency.Name, out Delegate function))
             {
                 await (Task)function.DynamicInvoke(_fileManager, _repo, dependency);
@@ -50,7 +56,8 @@ namespace Microsoft.DotNet.DarcLib
         /// <returns></returns>
         public async Task<IEnumerable<DependencyDetail>> GetDependenciesAsync(string name)
         {
-            return await _fileManager.ParseVersionDetailsXmlAsync(Path.Combine(_repo, VersionFilePath.VersionDetailsXml), null);
+            return (await _fileManager.ParseVersionDetailsXmlAsync(Path.Combine(_repo, VersionFilePath.VersionDetailsXml), null)).Where(
+                dependency => string.IsNullOrEmpty(name) || dependency.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         }
     }
 }
