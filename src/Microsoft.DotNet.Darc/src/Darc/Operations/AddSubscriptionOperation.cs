@@ -123,13 +123,19 @@ namespace Microsoft.DotNet.Darc.Operations
             try
             {
                 var newSubscription = await remote.CreateSubscriptionAsync(channel,
-                                                                     sourceRepository,
-                                                                     targetRepository,
-                                                                     targetBranch,
-                                                                     updateFrequency,
-                                                                     mergePolicies);
+                                                                           sourceRepository,
+                                                                           targetRepository,
+                                                                           targetBranch,
+                                                                           updateFrequency,
+                                                                           mergePolicies);
                 Console.WriteLine($"Successfully created new subscription with id '{newSubscription.Id}'.");
                 return Constants.SuccessCode;
+            }
+            catch (ApiErrorException e) when (e.Response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                // Could have been some kind of validation error (e.g. channel doesn't exist)
+                Logger.LogError($"Failed to create subscription: {e.Response.Content}");
+                return Constants.ErrorCode;
             }
             catch (Exception e)
             {
