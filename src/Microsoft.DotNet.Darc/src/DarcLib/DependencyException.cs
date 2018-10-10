@@ -8,7 +8,7 @@ using System.Runtime.Serialization;
 namespace Microsoft.DotNet.DarcLib
 {
     [Serializable]
-    public class DependencyException : Exception
+    public class DependencyException : DarcException
     {
         public DependencyException() : base()
         {
