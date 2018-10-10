@@ -6,6 +6,8 @@ using Microsoft.Cci.Extensions;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Cci.Mappings;
+using System.Composition;
+using Microsoft.Cci.Comparers;
 
 namespace Microsoft.Cci.Differs.Rules
 {
@@ -27,27 +29,15 @@ namespace Microsoft.Cci.Differs.Rules
 
             return DifferenceType.Unknown;
         }
-
-        protected override void AttributeAdded(IReference target, string attributeName)
-        {
-        }
     }
 
+    [ExportDifferenceRule]
     internal class AttributeDifference : CompatDifferenceRule
     {
         private MappingSettings _settings = new MappingSettings();
 
-        protected virtual void AttributeChanged(IReference target, string attributeName)
-        {
-        }
-
-        protected virtual void AttributeAdded(IReference target, string attributeName)
-        {
-        }
-
-        protected virtual void AttributeRemoved(IReference target, string attributeName)
-        {
-        }
+        [Import]
+        public IAttributeFilter AttributeFilter { get; set; }
 
         public override DifferenceType Diff(IDifferences differences, IAssembly impl, IAssembly contract)
         {
@@ -71,10 +61,7 @@ namespace Microsoft.Cci.Differs.Rules
             if (impl == null || contract == null)
                 return DifferenceType.Unknown;
 
-            //            if (AnyAttributeAdded(differences, impl, impl.Attributes, contract.Attributes))
-            //                return DifferenceType.Changed;
-
-            return DifferenceType.Unknown;
+            return CheckAttributeDifferences(differences, impl, impl.Attributes, contract.Attributes);
         }
 
         public override DifferenceType Diff(IDifferences differences, ITypeDefinitionMember impl, ITypeDefinitionMember contract)
@@ -118,11 +105,13 @@ namespace Microsoft.Cci.Differs.Rules
         //    return AnyAttributeAdded(differences, target, attribues1.SelectMany(a => a.Attributes), attributes2.SelectMany(a => a.Attributes));
         //}
 
-        private void CheckAttributeDifferences(IDifferences differences, IReference target, IEnumerable<ICustomAttribute> implAttributes, IEnumerable<ICustomAttribute> contractAttributes)
+        private DifferenceType CheckAttributeDifferences(IDifferences differences, IReference target, IEnumerable<ICustomAttribute> implAttributes, IEnumerable<ICustomAttribute> contractAttributes)
         {
+            DifferenceType difference = DifferenceType.Unchanged;
             AttributesMapping<IEnumerable<ICustomAttribute>> attributeMapping = new AttributesMapping<IEnumerable<ICustomAttribute>>(_settings);
-            attributeMapping.AddMapping(0, contractAttributes);
-            attributeMapping.AddMapping(1, implAttributes);
+            AttributeComparer attributeComparer = new AttributeComparer();
+            attributeMapping.AddMapping(0, contractAttributes.OrderBy(a => a, attributeComparer));
+            attributeMapping.AddMapping(1, implAttributes.OrderBy(a => a, attributeComparer));
 
             foreach (var group in attributeMapping.Attributes)
             {
@@ -131,75 +120,76 @@ namespace Microsoft.Cci.Differs.Rules
                     case DifferenceType.Added:
                         {
                             ITypeReference type = group.Representative.Attributes.First().Type;
-                            string attribName = type.FullName();
 
-                            if (FilterAttribute(attribName))
+                            if (AttributeFilter.ShouldExclude(type.DocId()))
                                 break;
 
-                            AttributeAdded(target, attribName);
+                            // Allow for additions
+                            differences.Add(new Difference("AddedAttribute",
+                                $"Attribute '{type.FullName()}' exists on '{target.FullName()}' in the {Implementation} but not the {Contract}."));
 
-                            differences.AddIncompatibleDifference("CannotAddAttribute",
-                                $"Attribute '{attribName}' exists on '{target.FullName()}' in the {Implementation} but not the {Contract}.");
-
+                            if (difference < DifferenceType.Added)
+                            {
+                                difference = DifferenceType.Added;
+                            }
                             break;
                         }
                     case DifferenceType.Changed:
+                        {
+                            ITypeReference type = group.Representative.Attributes.First().Type;
 
-                        //TODO: Add some more logic to check the two lists of attributes which have the same type.
-                        break;
+                            if (AttributeFilter.ShouldExclude(type.DocId()))
+                                break;
+
+                            string contractKey = attributeComparer.GetKey(group[0].Attributes.First());
+                            string implementationKey = attributeComparer.GetKey(group[1].Attributes.First());
+
+                            differences.AddIncompatibleDifference("CannotChangeAttribute",
+                                $"Attribute '{type.FullName()}' on '{target.FullName()}' changed from '{contractKey}' in the {Contract} to '{implementationKey}' in the {Implementation}.");
+
+                            if (difference < DifferenceType.Changed)
+                            {
+                                difference = DifferenceType.Changed;
+                            }
+                            break;
+                        }
 
                     case DifferenceType.Removed:
                         {
                             ITypeReference type = group.Representative.Attributes.First().Type;
-                            string attribName = type.FullName();
 
-                            if (s_IgnorableAttributes.Contains(attribName))
+                            if (AttributeFilter.ShouldExclude(type.DocId()))
                                 break;
 
                             differences.AddIncompatibleDifference("CannotRemoveAttribute",
-                                $"Attribute '{attribName}' exists on '{target.FullName()}' in the {Contract} but not the {Implementation}.");
+                                $"Attribute '{type.FullName()}' exists on '{target.FullName()}' in the {Contract} but not the {Implementation}.");
 
+                            difference = DifferenceType.Removed;
                             break;
                         }
                 }
             }
+            return difference;
         }
+    }
 
-        protected virtual bool FilterAttribute(string attributeType)
+    public interface IAttributeFilter
+    {
+        bool ShouldExclude(string attributeDocID);
+    }
+
+    public class AttributeFilter : IAttributeFilter
+    {
+        private HashSet<string> ignorableAttributes;
+
+        public AttributeFilter(string docIdList)
         {
-            return s_IgnorableAttributes.Contains(attributeType);
+            ignorableAttributes = DocIdExtensions.ReadDocIds(docIdList);
         }
 
-        // Ignore list copied from ApiConformance tool
-        private static HashSet<string> s_IgnorableAttributes = new HashSet<string> {
-            "System.Reflection.AssemblyFileVersionAttribute",
-            "System.Reflection.AssemblyInformationalVersionAttribute",
-            "System.Reflection.AssemblyKeyFileAttribute",
-            "System.Runtime.AssemblyTargetedPatchBandAttribute",
-            "System.ObsoleteAttribute",
-            "System.SupportedPlatformsAttribute",
-            "System.Reflection.AssemblyProductAttribute",
-            "System.Resources.SatelliteContractVersionAttribute",
-            "System.Runtime.CompilerServices.TypeForwardedFromAttribute",
-            "System.Runtime.CompilerServices.CompilerGeneratedAttribute",
-            "System.Runtime.TargetedPatchingOptOutAttribute",
-            "System.ComponentModel.EditorBrowsableAttribute",
-            "System.Diagnostics.DebuggerDisplayAttribute", // Should this really be ignored?  What about cross sku?
-            "System.Diagnostics.DebuggerTypeProxyAttribute", // Should this really be ignored? What about cross sku?
-            "System.Diagnostics.DebuggerBrowsableAttribute", // Should this really be ignored? What about cross sku?
-            "System.Runtime.CompilerServices.FriendAccessAllowedAttribute", // Should this really be ignorable when checking the a previous version of the same sku?
-            "System.Runtime.CompilerServices.InternalsVisibleToAttribute", // Should this really be ignorable when checking the a previous version of the same sku?
-            "System.Runtime.CompilerServices.ReferenceAssemblyAttribute",
-            "System.Security.UnverifiableCodeAttribute", // Ignoring this for now because all the refasms are build with the /unsafe switch even if it isn't necessary
-            "System.Runtime.CompilerServices.ExtensionAttribute",
-
-            // For now we are ignoring security attributes because they can be different in 
-            // the contract assemblies from the implementation assemblies. At some future time we 
-            // should add a rule to verify that the security is the same in the contracts and implementation.
-            "System.Security.SecuritySafeCriticalAttribute",
-            "System.Security.SecurityCriticalAttribute",
-            "System.Security.AllowPartiallyTrustedCallersAttribute",
-            "System.Security.SecurityRulesAttribute",
-        };
+        public bool ShouldExclude(string attributeDocID)
+        {
+            return ignorableAttributes.Contains(attributeDocID);
+        }
     }
 }
