@@ -798,5 +798,55 @@ $@"
                 "File 'NestedZip.zip' Certificate=''",
             });
         }
+
+        [Fact]
+        public void SpecificFileSignInfos()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                CreateTestResource("test.js"),
+                CreateTestResource("test.jar"),
+                CreateTestResource("test.ps1"),
+                CreateTestResource("test.psd1"),
+                CreateTestResource("test.psm1"),
+                CreateTestResource("test.psc1"),
+                CreateTestResource("test.dylib"),
+                GetResourcePath("EmptyPKT.dll"),
+                GetResourcePath("test.vsix"),
+                GetResourcePath("Simple.nupkg"),
+            };
+
+            // Overriding information
+            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>()
+            {
+                { new ExplicitCertificateKey("test.js"), "JSCertificate" },
+                { new ExplicitCertificateKey("test.jar"), "JARCertificate" },
+                { new ExplicitCertificateKey("test.ps1"), "PS1Certificate" },
+                { new ExplicitCertificateKey("test.psd1"), "PSD1Certificate" },
+                { new ExplicitCertificateKey("test.psm1"), "PSM1Certificate" },
+                { new ExplicitCertificateKey("test.psc1"), "PSC1Certificate" },
+                { new ExplicitCertificateKey("test.dylib"), "DYLIBCertificate" },
+                { new ExplicitCertificateKey("EmptyPKT.dll"), "DLLCertificate" },
+                { new ExplicitCertificateKey("test.vsix"), "VSIXCertificate" },
+                { new ExplicitCertificateKey("PackageWithRelationships.vsix"), "VSIXCertificate2" },
+                { new ExplicitCertificateKey("Simple.nupkg"), "NUPKGCertificate" }
+            };
+
+            ValidateFileSignInfos(itemsToSign, new Dictionary<string, SignInfo>(), signingOverridingInformation, new Dictionary<string, SignInfo>(), new[]
+            {
+                "File 'test.js' Certificate='JSCertificate'",
+                "File 'test.jar' Certificate='JARCertificate'",
+                "File 'test.ps1' Certificate='PS1Certificate'",
+                "File 'test.psd1' Certificate='PSD1Certificate'",
+                "File 'test.psm1' Certificate='PSM1Certificate'",
+                "File 'test.psc1' Certificate='PSC1Certificate'",
+                "File 'test.dylib' Certificate='DYLIBCertificate'",
+                "File 'EmptyPKT.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='DLLCertificate'",
+                "File 'PackageWithRelationships.vsix' Certificate='VSIXCertificate2'",
+                "File 'test.vsix' Certificate='VSIXCertificate'",
+                "File 'Simple.nupkg' Certificate='NUPKGCertificate'",
+            });
+        }
     }
 }
