@@ -34,6 +34,89 @@ namespace Microsoft.DotNet.SignTool.Tests
             {".nupkg", new SignInfo("NuGet") },
         };
 
+        /// <summary>
+        /// List of known signable extensions. Copied, removing duplicates, from here:
+        /// https://microsoft.sharepoint.com/teams/codesigninfo/Wiki/Signable%20Files.aspx
+        /// </summary>
+        private static readonly HashSet<string> SignableExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".exe",
+            ".dll",
+            ".rll",
+            ".olb",
+            ".ocx",
+
+            ".cab",
+
+            ".cat",
+
+            ".vbs",
+            ".js",
+            ".wfs",
+
+            ".msi",
+            ".mui",
+            ".msp",
+            ".msu",
+            ".psf",
+            ".mpb",
+            ".mp",
+            ".msm",
+
+            ".doc",
+            ".xls",
+            ".ppt",
+            ".xla",
+            ".vdx",
+            ".xsn",
+            ".mpp",
+
+            ".xlam",
+            ".xlsb",
+            ".xlsm",
+            ".xltm",
+            ".potm",
+            ".ppsm",
+            ".pptm",
+            ".docm",
+            ".dotm",
+
+            ".ttf",
+            ".otf",
+
+            ".ps1",
+            ".ps1xml",
+            ".psm1",
+            ".psd1",
+            ".psc1",
+            ".cdxml",
+            ".wsf",
+            ".mof",
+
+            ".sft",
+            ".dsft",
+
+            ".vsi",
+
+            ".xap",
+
+            ".efi",
+
+            ".vsix",
+
+            ".jar",
+
+            ".winmd",
+
+            ".appx",
+            ".appxbundle",
+
+            ".esd",
+
+            ".py",
+            ".pyd",
+        };
+
         public SignToolTests()
         {
             _tmpDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -860,6 +943,25 @@ $@"
                 "File 'Simple.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='DLLCertificate2'",
                 "File 'Simple.nupkg' Certificate='NUPKGCertificate'",
             });
+        }
+
+        [Fact]
+        public void FailIfMissingCertificateName()
+        {
+            foreach (var extension in SignableExtensions)
+            {
+                var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
+
+                new Configuration(_tmpDir,
+                    new string[] { CreateTestResource("test" + extension) },
+                    new Dictionary<string, SignInfo>(),
+                    new Dictionary<ExplicitCertificateKey, string>(),
+                    new Dictionary<string, SignInfo>(),
+                    new string[0], task.Log)
+                    .GenerateListOfFiles();
+
+                Assert.True(task.Log.HasLoggedErrors);
+            }
         }
     }
 }

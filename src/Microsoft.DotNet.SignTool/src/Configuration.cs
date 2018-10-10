@@ -210,7 +210,7 @@ namespace Microsoft.DotNet.SignTool
 
             if (SignToolConstants.SignableExtensions.Contains(extension))
             {
-                _log.LogError($"Couldn't determine signing information for this signable file: {fullPath}");
+                _log.LogError($"Couldn't determine certificate name for signable file: {fullPath}");
             }
 
             return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
