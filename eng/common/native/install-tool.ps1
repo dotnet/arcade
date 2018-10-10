@@ -61,8 +61,11 @@ try {
   $ToolNameMoniker = "$ToolName-$Version-$ToolOs-$Arch"
   $ToolInstallDirectory = Join-Path $InstallPath "$ToolName\$Version\"
   $ToolFilePath = Get-ChildItem $ToolInstallDirectory -Recurse -Filter $ToolName | % { $_.FullName }
-  if (@($ToolFilePath).Length -Ne 1) {
+  if (@($ToolFilePath).Length -Gt 1) {
     Write-Error "There are too many $($ToolName)s in $ToolFilePath!"
+    exit 1
+  } elseif (@($ToolFilePath).Length -Lt 1) {
+    Write-Error "There are not enough $($ToolName)s in $ToolFilePath!"
     exit 1
   }
   $ShimPath = Join-Path $InstallPath "$ToolName.exe"
