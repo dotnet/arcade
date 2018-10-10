@@ -255,13 +255,7 @@ namespace Microsoft.Cci.Writers.CSharp
             }
             else if (type.ResolvedType.IsEnum)
             {
-                //TODO: Do a better job translating the Enum value.
-                WriteSymbol("(");
-                WriteTypeName(type, noSpace: true);
-                WriteSymbol(")");
-                WriteSymbol("("); // Wrap value in parens to avoid issues with negative values
-                Write(value.ToString());
-                WriteSymbol(")");
+                WriteEnumValue(constant, constantType);
             }
             else if (value is string)
             {
