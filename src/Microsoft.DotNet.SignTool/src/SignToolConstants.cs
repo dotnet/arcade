@@ -7,5 +7,88 @@ namespace Microsoft.DotNet.SignTool
     internal static class SignToolConstants
     {
         public const string IgnoreFileCertificateSentinel = "None";
+
+        /// <summary>
+        /// List of known signable extensions. Copied, removing duplicates, from here:
+        /// https://microsoft.sharepoint.com/teams/codesigninfo/Wiki/Signable%20Files.aspx
+        /// </summary>
+        public static readonly string[] SignableExtensions =
+        {
+            ".exe",
+            ".dll",
+            ".rll",
+            ".olb",
+            ".ocx",
+
+            ".cab",
+
+            ".cat",
+
+            ".vbs",
+            ".js",
+            ".wfs",
+
+            ".msi",
+            ".mui",
+            ".msp",
+            ".msu",
+            ".psf",
+            ".mpb",
+            ".mp",
+            ".msm",
+
+            ".doc",
+            ".xls",
+            ".ppt",
+            ".xla",
+            ".vdx",
+            ".xsn",
+            ".mpp",
+
+            ".xlam",
+            ".xlsb",
+            ".xlsm",
+            ".xltm",
+            ".potm",
+            ".ppsm",
+            ".pptm",
+            ".docm",
+            ".dotm",
+
+            ".ttf",
+            ".otf",
+
+            ".ps1",
+            ".ps1xml",
+            ".psm1",
+            ".psd1",
+            ".psc1",
+            ".cdxml",
+            ".wsf",
+            ".mof",
+
+            ".sft",
+            ".dsft",
+
+            ".vsi",
+
+            ".xap",
+
+            ".efi",
+
+            ".vsix",
+
+            ".jar",
+
+            ".winmd",
+
+            ".appx",
+            ".appxbundle",
+
+            ".esd",
+
+            ".py",
+            ".pyd",
+        };
     }
 }
