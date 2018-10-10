@@ -46,8 +46,8 @@
     <MicrosoftDotNetIBCMergeVersion Condition="'$(MicrosoftDotNetIBCMergeVersion)' == ''">4.7.1-alpha-00001</MicrosoftDotNetIBCMergeVersion>
     <MicrosoftNetCompilersVersion Condition="'$(MicrosoftNetCompilersVersion)' == ''">2.8.0</MicrosoftNetCompilersVersion>
     <MicrosoftNETCoreCompilersVersion Condition="'$(MicrosoftNETCoreCompilersVersion)' == ''">$(MicrosoftNetCompilersVersion)</MicrosoftNETCoreCompilersVersion>
-    <!-- Using a private build of Microsoft.Net.Test.SDK to work around issue https://github.com/Microsoft/vstest/issues/373 -->
-    <MicrosoftNETTestSdkVersion Condition="'$(MicrosoftNETTestSdkVersion)' == ''">15.6.0-dev</MicrosoftNETTestSdkVersion>
+    <!-- Using a private build of Microsoft.Net.Test.SDK to work around issue https://github.com/Microsoft/vstest/issues/1764 -->
+    <MicrosoftNETTestSdkVersion Condition="'$(MicrosoftNETTestSdkVersion)' == ''">15.9.0-dev2</MicrosoftNETTestSdkVersion>
     <MicrosoftNetFrameworkReferenceAssembliesVersion Condition="'$(MicrosoftNetFrameworkReferenceAssembliesVersion)' == ''">1.0.0-alpha-004</MicrosoftNetFrameworkReferenceAssembliesVersion>
     <MicrosoftVSSDKBuildToolsVersion Condition="'$(MicrosoftVSSDKBuildToolsVersion)' == ''">15.1.192</MicrosoftVSSDKBuildToolsVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion Condition="'$(MicrosoftDiaSymReaderPdb2PdbVersion)' == ''">1.1.0-beta1-62506-02</MicrosoftDiaSymReaderPdb2PdbVersion>
@@ -81,8 +81,8 @@
     <RestoreSources Condition="$(XUnitVersion.Contains('-')) or $(XUnitRunnerVisualStudioVersion.Contains('-')) or $(XUnitRunnerVisualStudioVersion.Contains('-'))">$(RestoreSources);https://www.myget.org/F/xunit/api/v3/index.json</RestoreSources>
     <RestoreSources Condition="$(MicrosoftSourceLinkVersion.Contains('-'))">$(RestoreSources);https://dotnet.myget.org/F/sourcelink/api/v3/index.json</RestoreSources>
     
-    <!-- Using a private build of Microsoft.Net.Test.SDK to work around issue https://github.com/Microsoft/vstest/issues/373 -->
-    <RestoreSources Condition="'$(MicrosoftNETTestSdkVersion)' == '15.6.0-dev'">$(RestoreSources);https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json</RestoreSources>
+    <!-- Using a private build of Microsoft.Net.Test.SDK to work around issue https://github.com/Microsoft/vstest/issues/1764 -->
+    <RestoreSources Condition="$(MicrosoftNETTestSdkVersion.Contains('-dev'))">$(RestoreSources);https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json</RestoreSources>
 
     <RestoreSources Condition="'$(DotNetRestoreSources)' != ''">$(DotNetRestoreSources);$(RestoreSources)</RestoreSources>
   </PropertyGroup>

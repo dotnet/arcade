@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <!-- 
-    Include '*' target to force running tests even if the input assemblies haven't changed and the outputs are present.
+    Include '*' input to force running tests even if the input assemblies haven't changed and the outputs are present.
     This matches the common expectations that test command always runs all tests in scope.
   -->
   <Target Name="RunTests"
@@ -23,42 +23,79 @@
     <PropertyGroup>
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
       <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
-      <_RunOnCore>false</_RunOnCore>
-      <_RunOnCore Condition="'%(TestToRun.TargetFrameworkIdentifier)' == '.NETCoreApp'">true</_RunOnCore>
+      <_TestRuntime>%(TestToRun.TestRuntime)</_TestRuntime>
     </PropertyGroup>
 
-    <PropertyGroup Condition="$(_RunOnCore)">
+    <PropertyGroup Condition="'$(_TestRuntime)' == 'Core'">
       <_TargetFileNameNoExt>$([System.IO.Path]::GetFileNameWithoutExtension('$(_TestAssembly)'))</_TargetFileNameNoExt>
       <_TargetDir>$([System.IO.Path]::GetDirectoryName('$(_TestAssembly)'))\</_TargetDir>
       <_CoreRuntimeConfigPath>$(_TargetDir)$(_TargetFileNameNoExt).runtimeconfig.json</_CoreRuntimeConfigPath>
       <_CoreDepsPath>$(_TargetDir)$(_TargetFileNameNoExt).deps.json</_CoreDepsPath>
-      <_TestRunnerCommand>"$(DotNetTool)" exec --depsfile "$(_CoreDepsPath)" --runtimeconfig "$(_CoreRuntimeConfigPath)" "$(NuGetPackageRoot)xunit.runner.console/$(XUnitVersion)/tools/netcoreapp2.0/xunit.console.dll" "$(_TestAssembly)" -noautoreporters -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)" $(XUnitRunnerAdditionalArguments)</_TestRunnerCommand>
+      <_TestRunner>$(DotNetTool)</_TestRunner>
+      <_TestRunnerArgs>exec --depsfile "$(_CoreDepsPath)" --runtimeconfig "$(_CoreRuntimeConfigPath)" "$(NuGetPackageRoot)xunit.runner.console/$(XUnitVersion)/tools/netcoreapp2.0/xunit.console.dll" "$(_TestAssembly)" -noautoreporters -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)" $(XUnitRunnerAdditionalArguments)</_TestRunnerArgs>
     </PropertyGroup>
 
-    <PropertyGroup Condition="!$(_RunOnCore)">
+    <PropertyGroup Condition="'$(_TestRuntime)' != 'Core'">
       <_XUnitConsoleExe>xunit.console.exe</_XUnitConsoleExe>
       <_XUnitConsoleExe Condition="'%(TestToRun.Architecture)' == 'x86'">xunit.console.x86.exe</_XUnitConsoleExe>
-      <_TestRunnerCommand>"$(NuGetPackageRoot)xunit.runner.console\$(XUnitVersion)\tools\net452\$(_XUnitConsoleExe)" "$(_TestAssembly)" -noshadow -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)" $(XUnitRunnerAdditionalArguments)</_TestRunnerCommand>
+      <_XUnitConsoleExePath>$(NuGetPackageRoot)xunit.runner.console\$(XUnitVersion)\tools\net452\$(_XUnitConsoleExe)</_XUnitConsoleExePath>
+
+      <_TestRunnerArgs>"$(_TestAssembly)" -noshadow -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)" $(XUnitRunnerAdditionalArguments)</_TestRunnerArgs>
+      <_TestRunnerArgs Condition="'$(_TestRuntime)' == 'Mono'">"$(_XUnitConsoleExePath)" $(_TestRunnerArgs)</_TestRunnerArgs>
+
+      <_TestRunner Condition="'$(_TestRuntime)' == 'Mono'">$(MonoTool)</_TestRunner>
+      <_TestRunner Condition="'$(_TestRuntime)' != 'Mono'">$(_XUnitConsoleExePath)</_TestRunner>
     </PropertyGroup>
 
-    <MakeDir Directories="$(ArtifactsTestResultsDir)"/>
-    <Delete Files="%(TestToRun.ResultsFilePathWithoutExtension).*" />
+    <Error Text="File not found: '$(_TestRunner)'" Condition="!Exists('$(_TestRunner)')"/>
+
+    <PropertyGroup>
+      <_TestRunnerCommand>"$(_TestRunner)" $(_TestRunnerArgs)</_TestRunnerCommand>
+
+      <!-- 
+        Redirect std output of the runner.
+        Note that xUnit outputs failure info to both STDOUT (stack trace, message) and STDERR (failed test name) 
+      -->
+      <_TestRunnerCommand Condition="'$(TestCaptureOutput)' != 'false'">$(_TestRunnerCommand) > "%(TestToRun.ResultsStdOutPath)" 2>&amp;1</_TestRunnerCommand>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_OutputFiles Include="%(TestToRun.ResultsXmlPath)" />
+      <_OutputFiles Include="%(TestToRun.ResultsHtmlPath)" />
+      <_OutputFiles Include="%(TestToRun.ResultsLogPath)" />
+    </ItemGroup>
+
+    <MakeDir Directories="@(_OutputFiles->'%(RootDir)%(Directory)')"/>
+    <Delete Files="@(_OutputFiles)" />
 
     <Message Text="Running tests: $(_TestAssembly) [$(_TestEnvironment)]" Importance="high"/>
-
-    <!-- Note that xUnit outputs failure info to both STDOUT (stack trace, message) and STDERR (failed test name) -->
-    <Exec Command='$(_TestRunnerCommand) > "%(TestToRun.ResultsStdOutPath)" 2>&amp;1'
-          LogStandardErrorAsError="false"
-          WorkingDirectory="$(_TargetDir)"
-          IgnoreExitCode="true">
-
+    <Exec Command='$(_TestRunnerCommand)' LogStandardErrorAsError="false" WorkingDirectory="$(_TargetDir)" IgnoreExitCode="true">
       <Output TaskParameter="ExitCode" PropertyName="_TestErrorCode" />
     </Exec>
 
-    <WriteLinesToFile File="%(TestToRun.ResultsStdOutPath)" Overwrite="false" Lines=";=== COMMAND LINE ===;$(_TestRunnerCommand)" />
+    <!--
+      Add command line to the log.
+    -->
+    <WriteLinesToFile File="%(TestToRun.ResultsStdOutPath)" 
+                      Overwrite="false" 
+                      Lines=";=== COMMAND LINE ===;$(_TestRunnerCommand)"
+                      Condition="'$(TestCaptureOutput)' != 'false'" />
 
+    <!--
+      Report test status.
+    -->
     <Message Text="Tests succeeded: $(_TestAssembly) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' == '0'" Importance="high" />
-    <Error Text="%(TestToRun.ResultsHtmlPath) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0'" File="XUnit" ContinueOnError="true" />
+
+    <PropertyGroup>
+      <_ResultsFileToDisplay>%(TestToRun.ResultsHtmlPath)</_ResultsFileToDisplay>
+      <_ResultsFileToDisplay Condition="!Exists('$(_ResultsFileToDisplay)')">%(TestToRun.ResultsStdOutPath)</_ResultsFileToDisplay>
+    </PropertyGroup>
+
+    <Error Text="Tests failed: $(_ResultsFileToDisplay) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0'" File="XUnit" ContinueOnError="true" />
+
+    <ItemGroup>
+      <FileWrites Include="@(_OutputFiles)"/>
+    </ItemGroup>
   </Target>
 
   <!-- Workaround for https://github.com/xunit/xunit/issues/1651 -->

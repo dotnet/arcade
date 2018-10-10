@@ -395,3 +395,50 @@ By default Portable and Embedded PDBs produced by _shipping_ projects are conver
 
 `true` (default) if the PDBs produced by the project should be converted to Windows PDB and published to Microsoft symbol servers.
 Set to `false` to override the default (uncommon).
+
+#### `IsTestProject` (bool, read-only)
+
+Initialized to `true` in test projects.
+
+#### `IsUnitTestProject` (bool, read-only)
+
+Initialized to `true` in unit test projects.
+
+#### `IsIntegrationTestProject` (bool, read-only)
+
+Initialized to `true` in integration test projects.
+
+#### `IsPerformanceTestProject` (bool, read-only)
+
+Initialized to `true` in perfomance test projects.
+
+#### `SkipTests` (bool)
+
+Set to `true` in project to skip running tests.
+
+#### `TestArchitectures` (list of strings)
+
+List of test architectures (`x64`, `x86`) to run tests on.
+If not specified by the project defaults to the value of `PlatformTarget` property, or `x64` if `Platform` is `AnyCPU` or unspecified.
+
+For example, a project that targets `AnyCPU` can opt-into running tests using both 32-bit and 64-bit test runners on .NET Framework by setting `TestArchitectures` to `x64;x86`.
+
+#### `TestTargetFrameworks` (list of strings)
+
+By default, the test runner will run tests for all frameworks a test project targets. Use `TestTargetFrameworks` to reduce the set of frameworks to run against.
+
+For example, consider a project that has `<TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>`. To only run .NET Core tests run 
+
+```
+msbuild Project.UnitTests.csproj /p:TestTargetFrameworks=netcoreapp2.1
+```
+
+#### `TestRuntime` (string)
+
+Runtime to use for running tests. Currently supported values are: `Core` (.NET Core), `Full` (.NET Framework) and `Mono` (Mono runtime).
+
+For example, the following runs .NET Framework tests using Mono runtime:
+
+```
+msbuild Project.UnitTests.csproj /p:TestTargetFrameworks=net472 /p:TestRuntime=Mono
+```

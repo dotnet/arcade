@@ -43,6 +43,12 @@
     <DotNetRoot Condition="'$(DotNetRoot)' == ''">$(DOTNET_INSTALL_DIR)</DotNetRoot>
     <DotNetRoot Condition="'$(DotNetRoot)' == ''">$(RepoRoot).dotnet\</DotNetRoot>
     <DotNetRoot Condition="!HasTrailingSlash('$(DotNetRoot)')">$(DotNetRoot)\</DotNetRoot>
+
+    <DotNetTool>$(DotNetRoot)dotnet</DotNetTool>
+    <DotNetTool Condition="'$(OS)' == 'Windows_NT'">$(DotNetTool).exe</DotNetTool>
+
+    <MonoTool Condition="'$(MonoTool)' == ''">mono</MonoTool>
+    <MonoTool Condition="'$(OS)' == 'Windows_NT'">$(MonoTool).exe</MonoTool>
   </PropertyGroup>
 
   <PropertyGroup>
