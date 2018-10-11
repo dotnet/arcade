@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         /// List of known signable extensions. Copied, removing duplicates, from here:
         /// https://microsoft.sharepoint.com/teams/codesigninfo/Wiki/Signable%20Files.aspx
         /// </summary>
-        private static readonly HashSet<string> SignableExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        public static readonly string[] SignableExtensions =
         {
             ".exe",
             ".dll",
@@ -114,8 +114,16 @@ namespace Microsoft.DotNet.SignTool.Tests
             ".esd",
 
             ".py",
-            ".pyd",
+            ".pyd"
         };
+
+        public static IEnumerable<object[]> GetSignableExtensions()
+        {
+            foreach (var extension in SignableExtensions)
+            {
+                yield return new object[] { extension };
+            }
+        }
 
         public SignToolTests()
         {
@@ -945,23 +953,33 @@ $@"
             });
         }
 
-        [Fact]
-        public void FailIfMissingCertificateName()
+        [Theory]
+        [MemberData(nameof(GetSignableExtensions))]
+        public void FailIfMissingCertificateName(string extension)
         {
-            foreach (var extension in SignableExtensions)
+            var needContent = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
+                { ".dll", "EmptyPKT.dll" },
+                { ".vsix", "test.vsix" },
+                { ".nupkg", "Simple.nupkg" },
+                { ".exe", "vswhere.exe" }
+            };
 
-                new Configuration(_tmpDir,
-                    new string[] { CreateTestResource("test" + extension) },
-                    new Dictionary<string, SignInfo>(),
-                    new Dictionary<ExplicitCertificateKey, string>(),
-                    new Dictionary<string, SignInfo>(),
-                    new string[0], task.Log)
-                    .GenerateListOfFiles();
+            var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
 
-                Assert.True(task.Log.HasLoggedErrors);
-            }
+            var inputFilePath = needContent.TryGetValue(extension, out var resourcePath) ?
+                GetResourcePath(resourcePath) :
+                CreateTestResource("test" + extension);
+
+            new Configuration(_tmpDir,
+                new string[] { inputFilePath },
+                new Dictionary<string, SignInfo>(),
+                new Dictionary<ExplicitCertificateKey, string>(),
+                new Dictionary<string, SignInfo>(),
+                new string[0], task.Log)
+                .GenerateListOfFiles();
+
+            Assert.True(task.Log.HasLoggedErrors);
         }
     }
 }
