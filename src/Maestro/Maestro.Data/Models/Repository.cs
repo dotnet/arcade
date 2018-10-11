@@ -7,7 +7,12 @@ namespace Maestro.Data.Models
 {
     public class Repository
     {
-        [MaxLength(450)]
+        // 450 is short enough to work well in SQL indexes,
+        // and long enough to hold any repository or branch that we need to store.
+        public const int RepositoryNameLength = 450;
+        public const int BranchNameLength = 450;
+
+        [MaxLength(RepositoryNameLength)]
         public string RepositoryName { get; set; }
 
         public long InstallationId { get; set; }
@@ -17,12 +22,12 @@ namespace Maestro.Data.Models
 
     public class RepositoryBranch
     {
-        [MaxLength(450)]
+        [MaxLength(Repository.RepositoryNameLength)]
         public string RepositoryName { get; set; }
 
         public Repository Repository { get; set; }
 
-        [MaxLength(450)]
+        [MaxLength(Repository.BranchNameLength)]
         public string BranchName { get; set; }
 
         [Column("Policy")]
@@ -43,10 +48,10 @@ namespace Maestro.Data.Models
 
     public class RepositoryBranchUpdate
     {
-        [MaxLength(450)]
+        [MaxLength(Repository.RepositoryNameLength)]
         public string RepositoryName { get; set; }
 
-        [MaxLength(450)]
+        [MaxLength(Repository.BranchNameLength)]
         public string BranchName { get; set; }
 
         public RepositoryBranch RepositoryBranch { get; set; }
@@ -80,10 +85,10 @@ namespace Maestro.Data.Models
 
     public class RepositoryBranchUpdateHistory
     {
-        [MaxLength(450)]
+        [MaxLength(Repository.RepositoryNameLength)]
         public string RepositoryName { get; set; }
 
-        [MaxLength(450)]
+        [MaxLength(Repository.BranchNameLength)]
         public string BranchName { get; set; }
 
         /// <summary>

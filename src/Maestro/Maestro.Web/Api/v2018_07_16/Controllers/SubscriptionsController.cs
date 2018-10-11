@@ -247,6 +247,8 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
 
             if (subscription.TargetRepository.Contains("github.com"))
             {
+                // If we have no repository information or an invalid installation id
+                // then we will fail when trying to update things, so we fail early.
                 var repo = await _context.Repositories.FindAsync(subscription.TargetRepository);
                 if (repo == null || repo.InstallationId <= 0)
                 {

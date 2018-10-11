@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.DarcLib
 
         Task MergePullRequestAsync(string pullRequestUrl, MergePullRequestParameters parameters);
 
-        Task CreateOrUpdatePullRequestDarcCommentAsync(string pullRequestUrl, string message);
+        Task CreateOrUpdatePullRequestStatusCommentAsync(string pullRequestUrl, string message);
 
         Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl);
 

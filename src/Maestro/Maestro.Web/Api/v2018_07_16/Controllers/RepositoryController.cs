@@ -36,7 +36,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
 
         [HttpGet("merge-policy")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(IList<MergePolicy>))]
-        public async Task<IActionResult> GetMergePolicy(string repository, string branch)
+        public async Task<IActionResult> GetMergePolicies(string repository, string branch)
         {
             RepositoryBranch repoBranch = await Context.RepositoryBranches.FindAsync(repository, branch);
             if (repoBranch == null)
@@ -49,7 +49,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         }
 
         [HttpPost("merge-policy")]
-        public async Task<IActionResult> SetMergePolicy(string repository, string branch, [FromBody]IImmutableList<MergePolicy> policies)
+        public async Task<IActionResult> SetMergePolicies(string repository, string branch, [FromBody]IImmutableList<MergePolicy> policies)
         {
             if (string.IsNullOrEmpty(repository))
             {

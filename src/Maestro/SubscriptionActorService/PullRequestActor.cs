@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Maestro.Contracts;
 using Maestro.Data;
 using Maestro.Data.Models;
+using Maestro.MergePolicies;
 using Microsoft.DotNet.DarcLib;
 using Microsoft.DotNet.ServiceFabric.ServiceHost.Actors;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,8 +48,20 @@ namespace SubscriptionActorService
         }
     }
 
+    /// <summary>
+    ///   A service fabric actor implementation that is responsible for creating and updating pull requests for dependency updates.
+    /// </summary>
     public class PullRequestActor : IPullRequestActor, IRemindable, IActionTracker
     {
+        /// <summary>
+        ///   Creates a new PullRequestActor
+        /// </summary>
+        /// <param name="id">
+        ///   The actor id for this actor.
+        ///   If it is a <see cref="Guid"/> actor id, then it is required to be the id of a non-batched subscription in the database
+        ///   If it is a <see cref="string"/> actor id, then it MUST be an actor id created with <see cref="PullRequestActorId.Create(string, string)"/> for use with all subscriptions targeting the specified repository and branch.
+        /// </param>
+        /// <param name="provider"></param>
         public PullRequestActor(
             ActorId id,
             IServiceProvider provider)
@@ -156,6 +169,14 @@ namespace SubscriptionActorService
             return ActionRunner.ExecuteAction(() => ProcessPendingUpdatesAsync());
         }
 
+        /// <summary>
+        ///   Process any pending pull request updates stored in the <see cref="PullRequestUpdate"/>
+        ///   actor state key.
+        /// </summary>
+        /// <returns>
+        ///   An <see cref="ActionResult{bool}"/> containing:
+        ///     <see langword="true"/> if updates have been applied; <see langword="false"/> otherwise.
+        /// </returns>
         [ActionMethod("Processing pending updates")]
         public async Task<ActionResult<bool>> ProcessPendingUpdatesAsync()
         {
@@ -200,9 +221,15 @@ namespace SubscriptionActorService
         }
 
         /// <summary>
-        ///   Synchronizes an in progress pull request and returns the pull request any if it is Open and ready to accept updates
+        ///   Synchronizes an in progress pull request.
+        ///   This will update current state if the pull request has been manually closed or merged.
+        ///   This will evaluate merge policies on an in progress pull request and merge the pull request if policies allow.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        ///   A <see cref="ValueTuple{InProgressPullRequest, bool}"/> containing:
+        ///     The current open pull request if one exists, and
+        ///     <see langword="true"/> if the open pull request can be updated; <see langword="false"/> otherwise.
+        /// </returns>
         public virtual async Task<(InProgressPullRequest pr, bool canUpdate)> SynchronizeInProgressPullRequestAsync()
         {
             ConditionalValue<InProgressPullRequest> maybePr =
@@ -238,9 +265,10 @@ namespace SubscriptionActorService
         /// </summary>
         /// <param name="prUrl"></param>
         /// <returns>
-        ///   <see langref="null"/> when there is no pull request;
-        ///   <see langref="true"/> when there is a PR and it can be updated;
-        ///   <see langref="false"/> when there is a PR and it cannot be updated
+        ///   An <see cref="ActionResult{bool?}"/> containing:
+        ///     <see langref="null"/> when there is no pull request;
+        ///     <see langref="true"/> when there is a PR and it can be updated;
+        ///     <see langref="false"/> when there is a PR and it cannot be updated
         /// </returns>
         [ActionMethod("Synchronizing Pull Request: '{url}'")]
         private async Task<ActionResult<bool?>> SynchronizePullRequestAsync(string prUrl)
@@ -370,7 +398,7 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
 
         private Task UpdateStatusCommentAsync(IRemote darc, string prUrl, string message)
         {
-            return darc.CreateOrUpdatePullRequestDarcCommentAsync(prUrl, message);
+            return darc.CreateOrUpdatePullRequestStatusCommentAsync(prUrl, message);
         }
 
         private async Task UpdateSubscriptionsForMergedPRAsync(IEnumerable<SubscriptionPullRequestUpdate> subscriptionPullRequestUpdates)
@@ -409,6 +437,20 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
             return ActionRunner.ExecuteAction(() => UpdateAssetsAsync(subscriptionId, buildId, sourceSha, assets));
         }
 
+        /// <summary>
+        ///   Applies or queues asset updates for the target repository and branch from the given build and list of assets.
+        /// </summary>
+        /// <param name="subscriptionId">The id of the subscription the update comes from</param>
+        /// <param name="buildId">The build that the updated assets came from</param>
+        /// <param name="sourceSha">The commit hash that built the assets</param>
+        /// <param name="assets">The list of assets</param>
+        /// <remarks>
+        ///   This function will queue updates if there is a pull request and it is currently not-updateable.
+        ///   A pull request is considered "not-updateable" based on merge policies.
+        ///   If at least one merge policy calls <see cref="IMergePolicyEvaluationContext.Pending"/> and
+        ///   no merge policy calls <see cref="IMergePolicyEvaluationContext.Fail"/> then the pull request is considered not-updateable.
+        /// </remarks>
+        /// <returns></returns>
         [ActionMethod("Updating assets for subscription: {subscriptionId}, build: {buildId}")]
         public async Task<ActionResult<object>> UpdateAssetsAsync(Guid subscriptionId, int buildId, string sourceSha, List<Asset> assets)
         {
@@ -460,7 +502,7 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
         ///   Creates a pull request from the given updates.
         /// </summary>
         /// <param name="updates"></param>
-        /// <returns><see langref="true"/> when a pr was created; <see langref="false"/> if no PR is necessary</returns>
+        /// <returns>The pull request url when a pr was created; <see langref="null"/> if no PR is necessary</returns>
         private async Task<string> CreatePullRequestAsync(List<UpdateAssetsParameters> updates)
         {
             var (targetRepository, targetBranch) = await GetTargetAsync();
@@ -680,6 +722,9 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
         }
     }
 
+    /// <summary>
+    ///   A <see cref="PullRequestActorImplementation"/> that reads its Merge Policies and Target information from a non-batched subscription object
+    /// </summary>
     public class NonBatchedPullRequestActorImplementation : PullRequestActorImplementation
     {
         public Guid SubscriptionId => Id.GetGuidId();
@@ -752,6 +797,9 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
         }
     }
 
+    /// <summary>
+    ///   A <see cref="PullRequestActorImplementation"/> for batched subscriptions that reads its Target and Merge Policies from the configuration for a repository
+    /// </summary>
     public class BatchedPullRequestActorImplementation : PullRequestActorImplementation
     {
         private (string repository, string branch) Target => PullRequestActorId.Parse(Id);

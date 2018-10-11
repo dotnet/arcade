@@ -177,7 +177,7 @@ namespace Microsoft.DotNet.DarcLib
             return _gitClient.GetPullRequestCommitsAsync(pullRequestUrl);
         }
 
-        public Task CreateOrUpdatePullRequestDarcCommentAsync(string pullRequestUrl, string message)
+        public Task CreateOrUpdatePullRequestStatusCommentAsync(string pullRequestUrl, string message)
         {
             CheckForValidGitClient();
             return _gitClient.CreateOrUpdatePullRequestDarcCommentAsync(pullRequestUrl, message);
