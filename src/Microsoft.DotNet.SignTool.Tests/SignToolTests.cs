@@ -955,7 +955,7 @@ $@"
 
         [Theory]
         [MemberData(nameof(GetSignableExtensions))]
-        public void FailIfMissingCertificateName(string extension)
+        public void MissingCertificateName(string extension)
         {
             var needContent = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
@@ -980,6 +980,36 @@ $@"
                 .GenerateListOfFiles();
 
             Assert.True(task.Log.HasLoggedErrors);
+        }
+
+        [Theory]
+        [MemberData(nameof(GetSignableExtensions))]
+        public void MissingCertificateNameButExtensionIsIgnored(string extension)
+        {
+            var needContent = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { ".dll", "EmptyPKT.dll" },
+                { ".vsix", "test.vsix" },
+                { ".nupkg", "Simple.nupkg" },
+                { ".exe", "vswhere.exe" }
+            };
+
+            var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
+
+            var inputFilePath = needContent.TryGetValue(extension, out var resourcePath) ?
+                GetResourcePath(resourcePath) :
+                CreateTestResource("test" + extension);
+
+            new Configuration(_tmpDir,
+                new string[] { inputFilePath },
+                new Dictionary<string, SignInfo>(),
+                new Dictionary<ExplicitCertificateKey, string>(),
+                new Dictionary<string, SignInfo>() { { extension, SignInfo.Ignore } },
+                new string[0], 
+                task.Log)
+                .GenerateListOfFiles();
+
+            Assert.False(task.Log.HasLoggedErrors);
         }
     }
 }
