@@ -57,25 +57,21 @@ namespace Maestro.Data.Models
         ///   A message describing what the subscription was trying to do.
         ///   e.g. 'Updating dependencies from dotnet/coreclr in dotnet/corefx'
         /// </summary>
-        [MaxLength(450)]
         public string Action { get; set; }
 
         /// <summary>
         ///   The error that occured, if any.
         /// </summary>
-        [MaxLength(450)]
         public string ErrorMessage { get; set; }
 
         /// <summary>
         ///   The method that was called.
         /// </summary>
-        [MaxLength(450)]
         public string Method { get; set; }
 
         /// <summary>
         ///   The parameters to the called method.
         /// </summary>
-        [MaxLength(450)]
         public string Arguments { get; set; }
     }
 
@@ -93,25 +89,21 @@ namespace Maestro.Data.Models
         ///   A message describing what the subscription was trying to do.
         ///   e.g. 'Updating dependencies from dotnet/coreclr in dotnet/corefx'
         /// </summary>
-        [MaxLength(450)]
         public string Action { get; set; }
 
         /// <summary>
         ///   The error that occured, if any.
         /// </summary>
-        [MaxLength(450)]
         public string ErrorMessage { get; set; }
 
         /// <summary>
         ///   The method that was called.
         /// </summary>
-        [MaxLength(450)]
         public string Method { get; set; }
 
         /// <summary>
         ///   The parameters to the called method.
         /// </summary>
-        [MaxLength(450)]
         public string Arguments { get; set; }
     }
 }

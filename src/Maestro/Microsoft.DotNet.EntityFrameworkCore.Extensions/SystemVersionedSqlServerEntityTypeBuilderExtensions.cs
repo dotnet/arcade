@@ -33,6 +33,10 @@ namespace Microsoft.DotNet.EntityFrameworkCore.Extensions
                 .HasColumnType("datetime2")
                 .ValueGeneratedOnAddOrUpdate();
 
+            historyBuilder
+                .HasIndex("SysEndTime", "SysStartTime")
+                .ForSqlServerIsClustered();
+
             return modelBuilder;
         }
 

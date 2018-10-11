@@ -44,6 +44,11 @@ namespace SubscriptionActorService
             ActionMethod method = ActionMethods.Get(target.GetType())[methodInfo.Name];
             object[] arguments = GetArguments(mce.Arguments).ToArray();
             ActionResult<T> result = await InvokeAction<T>(target, method, arguments);
+            if (result == null)
+            {
+                return default;
+            }
+
             return result.Result;
         }
 
@@ -58,7 +63,7 @@ namespace SubscriptionActorService
         private async Task<string> InvokeActionNoResult<T>(IActionTracker target, ActionMethod method, object[] arguments)
         {
             var result = await InvokeAction<T>(target, method, arguments);
-            return result.Message;
+            return result?.Message ?? "";
         }
 
         private static readonly MethodInfo InvokeActionMethod =

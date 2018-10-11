@@ -108,9 +108,7 @@ namespace Maestro.Data
             builder.ForSqlServerIsSystemVersioned<SubscriptionUpdate, SubscriptionUpdateHistory>("1 MONTHS");
 
             builder.Entity<SubscriptionUpdateHistory>()
-                .HasIndex("SubscriptionId") // a clustered columnstore index can have no fields defined, but EF needs at least one
-                .ForSqlServerIsClustered()
-                .ForSqlServerIsColumnstore();
+                .HasIndex("SubscriptionId", "SysEndTime", "SysStartTime");
 
             builder.Entity<Repository>()
                 .HasKey(r => new {r.RepositoryName});
@@ -138,9 +136,7 @@ namespace Maestro.Data
                 .HasKey(ru => new {ru.RepositoryName, ru.BranchName});
 
             builder.Entity<RepositoryBranchUpdateHistory>()
-                .HasIndex(ru => new {ru.RepositoryName, ru.BranchName})
-                .ForSqlServerIsClustered()
-                .ForSqlServerIsColumnstore();
+                .HasIndex("RepositoryName", "BranchName", "SysEndTime", "SysStartTime");
 
             builder.HasDbFunction(() => JsonExtensions.JsonValue("", "")).HasName("JSON_VALUE").HasSchema("");
 

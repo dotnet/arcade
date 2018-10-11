@@ -621,11 +621,11 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
             var update = await Context.RepositoryBranchUpdates.FindAsync(repo, branch);
             if (update == null)
             {
+                var repoBranch = await GetRepositoryBranch(repo, branch);
                 Context.RepositoryBranchUpdates.Add(
                     update = new RepositoryBranchUpdate
                     {
-                        RepositoryName = repo,
-                        BranchName = branch,
+                        RepositoryBranch = repoBranch
                     });
             }
             else
@@ -634,6 +634,25 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
             }
 
             return update;
+        }
+
+        private async Task<RepositoryBranch> GetRepositoryBranch(string repo, string branch)
+        {
+            var repoBranch = await Context.RepositoryBranches.FindAsync(repo, branch);
+            if (repoBranch == null)
+            {
+                Context.RepositoryBranches.Add(
+                    repoBranch = new RepositoryBranch
+                    {
+                        RepositoryName = repo,
+                        BranchName = branch,
+                    });
+            }
+            else
+            {
+                Context.RepositoryBranches.Update(repoBranch);
+            }
+            return repoBranch;
         }
 
         public async Task TrackSuccessfulAction(string action, string result)
@@ -746,7 +765,7 @@ This pull request {(merged ? "has been merged" : "will be merged")} because the 
         {
             var repositoryBranch = await Context.RepositoryBranches.FindAsync(Target.repository, Target.branch);
             return (IReadOnlyList<MergePolicyDefinition>)
-                   repositoryBranch.PolicyObject.MergePolicies ??
+                   repositoryBranch.PolicyObject?.MergePolicies ??
                    Array.Empty<MergePolicyDefinition>();
         }
 

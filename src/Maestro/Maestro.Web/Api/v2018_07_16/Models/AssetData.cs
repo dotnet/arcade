@@ -20,7 +20,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
             {
                 Name = Name,
                 Version = Version,
-                Locations = Locations.Select(l => l.ToDb()).ToList(),
+                Locations = Locations?.Select(l => l.ToDb()).ToList() ?? new List<Data.Models.AssetLocation>(),
             };
         }
     }
