@@ -962,7 +962,7 @@ $@"
                 { ".dll", "EmptyPKT.dll" },
                 { ".vsix", "test.vsix" },
                 { ".nupkg", "Simple.nupkg" },
-                { ".exe", "vswhere.exe" }
+                { ".exe", "Simple.exe" }
             };
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
@@ -991,7 +991,7 @@ $@"
                 { ".dll", "EmptyPKT.dll" },
                 { ".vsix", "test.vsix" },
                 { ".nupkg", "Simple.nupkg" },
-                { ".exe", "vswhere.exe" }
+                { ".exe", "Simple.exe" }
             };
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
