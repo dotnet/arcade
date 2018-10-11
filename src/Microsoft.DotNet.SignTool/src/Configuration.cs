@@ -145,6 +145,7 @@ namespace Microsoft.DotNet.SignTool
             // Try to determine default certificate name by the extension of the file
             var hasSignInfo = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out var signInfo);
             var fileName = Path.GetFileName(fullPath);
+            var extension = Path.GetExtension(fullPath);
             string explicitCertificateName = null;
             var targetFramework = string.Empty;
             var fileSpec = string.Empty;
@@ -207,7 +208,11 @@ namespace Microsoft.DotNet.SignTool
                 return new FileSignInfo(fullPath, hash, signInfo, (targetFramework != "") ? targetFramework : null);
             }
 
-            _log.LogWarning($"Couldn't determine signing information for this file: {fullPath}");
+            if (SignToolConstants.SignableExtensions.Contains(extension))
+            {
+                _log.LogError($"Couldn't determine certificate name for signable file: {fullPath}");
+            }
+
             return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
         }
 

@@ -34,6 +34,97 @@ namespace Microsoft.DotNet.SignTool.Tests
             {".nupkg", new SignInfo("NuGet") },
         };
 
+        /// <summary>
+        /// List of known signable extensions. Copied, removing duplicates, from here:
+        /// https://microsoft.sharepoint.com/teams/codesigninfo/Wiki/Signable%20Files.aspx
+        /// </summary>
+        public static readonly string[] SignableExtensions =
+        {
+            ".exe",
+            ".dll",
+            ".rll",
+            ".olb",
+            ".ocx",
+
+            ".cab",
+
+            ".cat",
+
+            ".vbs",
+            ".js",
+            ".wfs",
+
+            ".msi",
+            ".mui",
+            ".msp",
+            ".msu",
+            ".psf",
+            ".mpb",
+            ".mp",
+            ".msm",
+
+            ".doc",
+            ".xls",
+            ".ppt",
+            ".xla",
+            ".vdx",
+            ".xsn",
+            ".mpp",
+
+            ".xlam",
+            ".xlsb",
+            ".xlsm",
+            ".xltm",
+            ".potm",
+            ".ppsm",
+            ".pptm",
+            ".docm",
+            ".dotm",
+
+            ".ttf",
+            ".otf",
+
+            ".ps1",
+            ".ps1xml",
+            ".psm1",
+            ".psd1",
+            ".psc1",
+            ".cdxml",
+            ".wsf",
+            ".mof",
+
+            ".sft",
+            ".dsft",
+
+            ".vsi",
+
+            ".xap",
+
+            ".efi",
+
+            ".vsix",
+
+            ".jar",
+
+            ".winmd",
+
+            ".appx",
+            ".appxbundle",
+
+            ".esd",
+
+            ".py",
+            ".pyd"
+        };
+
+        public static IEnumerable<object[]> GetSignableExtensions()
+        {
+            foreach (var extension in SignableExtensions)
+            {
+                yield return new object[] { extension };
+            }
+        }
+
         public SignToolTests()
         {
             _tmpDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -860,6 +951,65 @@ $@"
                 "File 'Simple.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='DLLCertificate2'",
                 "File 'Simple.nupkg' Certificate='NUPKGCertificate'",
             });
+        }
+
+        [Theory]
+        [MemberData(nameof(GetSignableExtensions))]
+        public void MissingCertificateName(string extension)
+        {
+            var needContent = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { ".dll", "EmptyPKT.dll" },
+                { ".vsix", "test.vsix" },
+                { ".nupkg", "Simple.nupkg" },
+                { ".exe", "Simple.exe" }
+            };
+
+            var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
+
+            var inputFilePath = needContent.TryGetValue(extension, out var resourcePath) ?
+                GetResourcePath(resourcePath) :
+                CreateTestResource("test" + extension);
+
+            new Configuration(_tmpDir,
+                new string[] { inputFilePath },
+                new Dictionary<string, SignInfo>(),
+                new Dictionary<ExplicitCertificateKey, string>(),
+                new Dictionary<string, SignInfo>(),
+                new string[0], task.Log)
+                .GenerateListOfFiles();
+
+            Assert.True(task.Log.HasLoggedErrors);
+        }
+
+        [Theory]
+        [MemberData(nameof(GetSignableExtensions))]
+        public void MissingCertificateNameButExtensionIsIgnored(string extension)
+        {
+            var needContent = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { ".dll", "EmptyPKT.dll" },
+                { ".vsix", "test.vsix" },
+                { ".nupkg", "Simple.nupkg" },
+                { ".exe", "Simple.exe" }
+            };
+
+            var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
+
+            var inputFilePath = needContent.TryGetValue(extension, out var resourcePath) ?
+                GetResourcePath(resourcePath) :
+                CreateTestResource("test" + extension);
+
+            new Configuration(_tmpDir,
+                new string[] { inputFilePath },
+                new Dictionary<string, SignInfo>(),
+                new Dictionary<ExplicitCertificateKey, string>(),
+                new Dictionary<string, SignInfo>() { { extension, SignInfo.Ignore } },
+                new string[0], 
+                task.Log)
+                .GenerateListOfFiles();
+
+            Assert.False(task.Log.HasLoggedErrors);
         }
     }
 }
