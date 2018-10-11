@@ -158,7 +158,7 @@ Owners: licavalc
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
 | [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/706)         |                      | Not scheduled | Looking at documentation / requirements|
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/704) |                      | Not scheduled | Looking at documentation / requirements|
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/704) |                      | In progress   | advoker is engaged |
 | [Engineering dependency flow](https://github.com/dotnet/arcade/issues/703)       |                      | Not scheduled | Looking at documentation / requirements|
 | [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/705)       |                      | Not scheduled | Looking at documentation / requirements|
 
