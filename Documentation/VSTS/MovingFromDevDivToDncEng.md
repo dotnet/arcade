@@ -40,24 +40,4 @@ This is because RepoToolset is expecting a GitHub url but internal builds are bu
 
 ## Agent pools
 
-The [hosted agent pools](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml) which are available in DevDiv are also available in DncEng.  If your build is using a hosted pool, or it is possible to use a hosted pool, it is recommended that you do so (for non-Windows builds).  The general reason that a hosted pool does not work for teams for Linux / Mac builds, is the current [10 GB capability](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml#capabilities-and-limitations) on these machines which is not sufficient for most teams.  Azure DevOps is working to increase the disk size.
-
-### Windows builds
-
-Agent pool: DotNetCore-Windows
-
-There are currently 5 machines in the DotNetCore-Windows agent pool and they are all signing capable.  We are in the midst of bringing up a different agent pool which will have far more machines that are all signing capable.
-
-### Linux builds
-
-Hosted agent pool: Hosted Ubuntu 1604
-
-Non-Hosted agent pool: DotNetCore-Linux
-
-Both the hosted and non-hosted agent pools have Linux machines with docker installed.
-
-### Mac builds
-
-Hosted agent pool: Hosted macOS
-
-Non-Hosted agent pool: DotNetCore-Mac
+See [VSTS Onboarding documentation](./VSTSOnboarding.md#agent-queues)
