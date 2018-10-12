@@ -74,58 +74,141 @@ The Arcade SDK include a set of predefined configurations for the SignTool in th
 
 ## Usage Examples
 
-The Arcade SDK will include all container files from the `$(ArtifactsPackagesDir)` and `$(VisualStudioSetupOutputPath)` folders (these properties are set [here](../src/Microsoft.DotNet.Arcade.Sdk/tools/RepoLayout.props)) in the list of containers to be looked up for. Note that only projects marked with `<IsPackable>true</IsPackable>` will be packed and copied to this folder. Here is how the Arcade SDK does it:
+#### 1. Use the SDK predefined configuration
+
+The Arcade SDK will [include](../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) all NuGet packages from the `$(ArtifactsPackagesDir)` and all VSIX packages from the`$(VisualStudioSetupOutputPath)` folder (these properties are set [here](../src/Microsoft.DotNet.Arcade.Sdk/tools/RepoLayout.props)) in the list of containers to be looked up for - `ItemsToSign`. Note that only projects marked with `<IsPackable>true</IsPackable>` will be packed and copied to these folders. 
+
+The [default configuration](../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) of Arcade SDK + SignTool also assigns default certificates to many signable file types and to all files that have the `31bf3856ad364e35` Public Key Token. Therefore, if all files that your repo need to sign are covered under these conditions you won't need to do any specific setup for the tool.
+
+#### 2. Use a different certificate for an specific Public Key Token
+
+If you repo have signable files that have a different Public Key Token than the one preconfigured in the SDK (i.e., `31bf3856ad364e35`) you might add an entry to `StrongNameSignInfo` to specify the certificate name that should be used for those files. To do that, place an entry like the one show below in your `build\Signing.props` file.
 
 ```xml
 <ItemGroup>
-	<ItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
-	<ItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
+	<StrongNameSignInfo Include="StrongName1" PublicKeyToken="4321abcda1b2c3d4" CertificateName="DifferentCertName />
 </ItemGroup>
 ```
 
-If you **need to** add additional file(s) make sure to add them to the `ItemsToSign` list. Default signing information (Certificate Name & Strong Name) will be looked up in the `StrongNameSignInfo` property based on the Public Key Token of the file. Therefore, make sure that `StrongNameSignInfo` contains a public key token covering the files that you add to `ItemsToSign`. Here's an example:
+If that is is your only custom configuration all files with that Public Key Token will be signed with the `DifferentCertName` certificate and `StrongName1` strong name.
 
-```xml
-<ItemGroup>
-	<StrongNameSignInfo Include="StrongName1" PublicKeyToken="31bf3856ad364e35" CertificateName="CertificateName1" />
-</ItemGroup>
-```
+#### 3. Configure signing information for an specific file
 
-It is possible to override the default signing information or skip signing specific file(s). For that you need to use the `FileSignInfo` property. For instance, in the snippet below the certificate `MyCustomCert` will be used for `My.Library.dll` when it targets `.NETStandard,Version=v2.0` and has Public Key Token `31bf3856ad364e35`:
+It is possible to override the default signing information or explicitly skip signing for specific files. For that you need to use the `FileSignInfo` property. For instance, in the snippet below the certificate `MyCustomCert` will be used for `My.Library.dll` when it targets `.NETStandard,Version=v2.0` and has Public Key Token `31bf3856ad364e35`:
 
 ```xml
 <ItemGroup> 
     <FileSignInfo Include="My.Library.dll" TargetFramework=".NETStandard,Version=v2.0" PublicKeyToken="31bf3856ad364e35" CertificateName="MyCustomCert" />
 </ItemGroup>
 ```
-In this snippet the library `Other.Library.dll` with Public Key Token `31bf3856ad364e35` won't be signed, independent of its Target framework:
+In this snippet the library `Other.Library.dll` with Public Key Token `31bf3856ad364e35` won't be signed, independent of its target framework:
 
 ```xml
-	<FileSignInfo Include="Other.Library.dll" TargetFramework="All" PublicKeyToken="31bf3856ad364e35" CertificateName="None" />
+<FileSignInfo Include="Other.Library.dll" PublicKeyToken="31bf3856ad364e35" CertificateName="None" />
 </ItemGroup>
 ```
-For more detailed information you can see [how](../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) the Arcade SDK calls the `SignToolTask`. Here's a snippet:
+#### 4. How to remove all preconfigured signing information?
+
+To remove *all* preconfigured signing information put the following snippet in your `build\Signing.props` file:
+
+```xml
+<ItemGroup>
+    <!-- Remove all predefined dual certificate information -->
+	<CertificatesSignInfo Remove="@(CertificatesSignInfo)" />
+    
+    <!-- Remove all automatically included packages -->
+	<ItemsToSign Remove="@(ItemsToSign)" />
+    
+    <!-- Remove default signing for `31bf3856ad364e35` PKT -->
+	<StrongNameSignInfo Remove="@(StrongNameSignInfo)" />
+    
+    <!-- Remove default signing for signable extensions -->
+	<FileExtensionSignInfo Remove="@(FileExtensionSignInfo)" />
+</ItemGroup>
+```
+
+#### 5. How to explicitly list the certificates for each file to be signed?
+
+Assuming that you *don't want* to use any of the preconfigured information in the SDK and want to specify by yourself the list of files to be signed and the certificate to be used for each file, take a look at the example below:
+
+```xml
+<ItemGroup>
+    <!-- Remove all preconfigured signing info as shown above in (4). -->
+	
+	<!-- My custom list of files to be signed -->
+	<ItemsToSign Include="c:\build\file1.dll" />
+	<ItemsToSign Include="c:\build\file2.ps1" />
+	<ItemsToSign Include="c:\build\file3.js" />
+	<ItemsToSign Include="c:\build\file4.nupkg" />
+		
+	<!-- configure the certificate for each file -->
+	<FileSignInfo Include="file1.dll" CertificateName="DLLCert" />
+	<FileSignInfo Include="file2.ps1" CertificateName="PS1Cert" />
+	<FileSignInfo Include="file3.js" CertificateName="JSCert" />
+	<FileSignInfo Include="file4.nupkg" CertificateName="NuGet" />
+	
+	<!-- Assuming this file is present in file4.nupkg -->
+	<!-- 
+		 If we hadn't specified this information here the signing process 
+		 would fail because no signing information would be found for a 
+		 signable file (.dll) 
+	-->
+	<FileSignInfo Include="nested.dll" CertificateName="DeepCert" />
+</ItemGroup>
+```
+
+#### 6. How to sign different files that have same name?
+
+The tool assumes that you will be able to differentiate the files using name, public key token or target framework. If you have two files with the same name your only option (currently) is to differentiate them using public key token or target framework as below:
+
+```xml
+<ItemGroup>
+    <!-- Note that these are full paths -->
+	<ItemsToSign Include="c:\build\pack1\lib.dll" />
+	<ItemsToSign Include="c:\build\pack2\lib.dll" />
+	<ItemsToSign Include="c:\build\pack3\lib.dll" />
+	
+    <!-- Note that here only file names + extension are used -->
+	<FileSignInfo Include="lib.dll" 
+                  CertificateName="File1Cert" 
+                  PublicKeyToken="a1b2c3d4e5f6g7h8" 
+                  TargetFramework=".NETStandard,Version=v2.0" />
+	
+    <FileSignInfo Include="lib.dll" 
+                  CertificateName="File2Cert" 
+                  PublicKeyToken="abcdefghi12345678" 
+                  TargetFramework=".NETCore,Version=v2.0" />
+	
+    <FileSignInfo Include="lib.dll" 
+                  CertificateName="File3Cert" 
+                  PublicKeyToken="abcdefghi12345678" 
+                  TargetFramework=".NETStandard,Version=v2.0" />
+</ItemGroup>
+```
+#### 7. How should I call the SignToolTask?
+
+Click [here](../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) to see how the Arcade SDK calls the `SignToolTask`. Here's a snippet:
 
 ```xml
 ...
 <Microsoft.DotNet.SignTool.SignToolTask
     DryRun="$(DryRun)"
     TestSign="$(TestSign)"
+    CertificatesSignInfo="$(CertificatesSignInfo)"
     ItemsToSign="@(ItemsToSign)"
     StrongNameSignInfo="@(StrongNameSignInfo)"
     FileSignInfo="@(FileSignInfo)"
+    FileExtensionSignInfo="@(FileExtensionSignInfo)"
     TempDir="$(ArtifactsTmpDir)"
     LogDir="$(ArtifactsLogDir)"
-    PublishUrl="$(PublishUrl)"
-    OrchestrationManifestPath="$(OrchestrationManifestPath)"
     MSBuildPath="$(DesktopMSBuildPath)"
     MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"/>
 ...
 ```
 
-## Log Files
+## Logs & MicroBuild configuration files
 
-
+The log messages from the SignToolTask itself will be included in the log (+.binlog) of the original build process. The binary log of executing the MicroBuild signing plugin will be stored in files named `SigningX.binlog` in the `LogDir` folder. The project files used to call the MicroBuild plugin will be stored in files named `RoundX.proj` in the `TempDir` folder. In both cases the `X` in the name refers to a signing round.
 
 ## Valid Argument Values
 
