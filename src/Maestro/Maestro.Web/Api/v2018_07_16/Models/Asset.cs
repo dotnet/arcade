@@ -20,6 +20,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
             Id = other.Id;
             Name = other.Name;
             Version = other.Version;
+            BuildId = other.BuildId;
             Locations = other.Locations?.Select(al => new AssetLocation(al)).ToList();
         }
 
@@ -28,6 +29,8 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         public string Name { get; }
 
         public string Version { get; }
+
+        public int BuildId { get; set; }
 
         public List<AssetLocation> Locations { get; }
     }
