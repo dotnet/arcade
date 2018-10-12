@@ -2,7 +2,7 @@
 
 $ci = if (Test-Path variable:ci) { $ci } else { $false }
 $configuration = if (Test-Path variable:configuration) { $configuration } else { "Debug" }
-$nodereuse = if (Test-Path variable:nodereuse) { $nodereuse } else { $true }
+$nodereuse = if (Test-Path variable:nodereuse) { $nodereuse } else { !$ci }
 $prepareMachine = if (Test-Path variable:prepareMachine) { $prepareMachine } else { $false }
 $restore = if (Test-Path variable:restore) { $restore } else { $true }
 $verbosity = if (Test-Path variable:verbosity) { $verbosity } else { "minimal" }
@@ -67,19 +67,26 @@ function InstallDotNetSdk([string] $dotnetRoot, [string] $version) {
 }
 
 function InitializeVisualStudioBuild {
-  $inVSEnvironment = !($env:VS150COMNTOOLS -eq $null) -and (Test-Path $env:VS150COMNTOOLS)
-
-  if ($inVSEnvironment) {
-    $vsInstallDir = Join-Path $env:VS150COMNTOOLS "..\.."
-  } else {
-    $vsInstallDir = LocateVisualStudio
-
-    $env:VS150COMNTOOLS = Join-Path $vsInstallDir "Common7\Tools\"
-    $env:VSSDK150Install = Join-Path $vsInstallDir "VSSDK\"
-    $env:VSSDKInstall = Join-Path $vsInstallDir "VSSDK\"
+  $vsToolsPath = $env:VS150COMNTOOLS
+  if ($vsToolsPath -eq $null) { 
+    $vsToolsPath = $env:VS160COMNTOOLS
   }
 
-  return $vsInstallDir;
+  if (($vsToolsPath -ne $null) -and (Test-Path $vsToolsPath)) {
+    $vsInstallDir = [System.IO.Path]::GetFullPath((Join-Path $vsToolsPath "..\.."))
+  } else {
+    $vsInfo = LocateVisualStudio
+
+    $vsInstallDir = $vsInfo.installationPath
+    $vsSdkInstallDir = Join-Path $vsInstallDir "VSSDK\"
+    $vsVersion = $vsInfo.installationVersion.Split('.')[0] + "0"
+
+    Set-Item "env:VS$($vsVersion)COMNTOOLS" (Join-Path $vsInstallDir "Common7\Tools\")    
+    Set-Item "env:VSSDK$($vsMajorVersion)Install" $vsSdkInstallDir
+    $env:VSSDKInstall = $vsSdkInstallDir
+  }
+
+  return $vsInstallDir
 }
 
 function LocateVisualStudio {
@@ -94,37 +101,51 @@ function LocateVisualStudio {
     Invoke-WebRequest "https://github.com/Microsoft/vswhere/releases/download/$vswhereVersion/vswhere.exe" -OutFile $vswhereExe
   }
 
-  $vsInstallDir = & $vsWhereExe -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild -requires Microsoft.VisualStudio.Component.VSSDK -requires Microsoft.Net.Component.4.6.TargetingPack -requires Microsoft.VisualStudio.Component.Roslyn.Compiler -requires Microsoft.VisualStudio.Component.VSSDK
+  $vsInfo = & $vsWhereExe
+    -latest
+    -prerelease
+    -format json
+    -requires Microsoft.Component.MSBuild
+    -requires Microsoft.VisualStudio.Component.VSSDK
+    -requires Microsoft.VisualStudio.Component.Roslyn.Compiler | ConvertFrom-Json
 
   if ($lastExitCode -ne 0) {
     Write-Host "Failed to locate Visual Studio (exit code '$lastExitCode')." -ForegroundColor Red
     ExitWithExitCode $lastExitCode
   }
 
-  return $vsInstallDir
+  # use first matching instance
+  return $vsInfo[0]
 }
 
 function InitializeTools() {
   $tools = $GlobalJson.tools
 
-  if ((Get-Member -InputObject $tools -Name "dotnet") -ne $null) {
+  if (-not $msbuildEngine) {
+    # Presence of vswhere.version indicates the repo needs to build using VS msbuild.
+
+    if ((Get-Member -InputObject $tools -Name "vswhere") -ne $null) {
+      $msbuildEngine = "vs"
+    } elseif ((Get-Member -InputObject $tools -Name "dotnet") -ne $null) {
+      $msbuildEngine = "dotnet"
+    } else {
+      Write-Host "-msbuildEngine must be specified, or /global.json must specify 'tools.dotnet' or 'tools.vswhere'." -ForegroundColor Red
+      ExitWithExitCode 1
+    }
+  }
+
+  if ($msbuildEngine -eq "dotnet") {
     $dotnetRoot = InitializeDotNetCli
 
-    # by default build with dotnet cli:
     $script:buildDriver = Join-Path $dotnetRoot "dotnet.exe"
     $script:buildArgs = "msbuild"
-  }
-
-  if ((Get-Member -InputObject $tools -Name "vswhere") -ne $null) {
+  } elseif ($msbuildEngine -eq "vs") {
     $vsInstallDir = InitializeVisualStudioBuild
 
-    # Presence of vswhere.version indicates the repo needs to build using VS msbuild:
     $script:buildDriver = Join-Path $vsInstallDir "MSBuild\15.0\Bin\msbuild.exe"
-    if ($ci) { $nodereuse = $false }
-  }
-
-  if ($buildDriver -eq $null) {
-    Write-Host "/global.json must either specify 'tools.dotnet' or 'tools.vswhere'." -ForegroundColor Red
+    $script:buildArgs = ""
+  } else {
+    Write-Host "Unexpected value of -msbuildEngine: '$msbuildEngine'." -ForegroundColor Red
     ExitWithExitCode 1
   }
 
