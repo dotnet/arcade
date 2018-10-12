@@ -243,9 +243,9 @@ namespace Microsoft.DotNet.SignTool
                         Log.LogWarning($"Duplicated signing information for extension: {extension}. Overriding the previous entry.");
                     }
 
-                    map[extension] = certificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.InvariantCultureIgnoreCase) ? 
+                    map[extension] = certificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.InvariantCultureIgnoreCase) ?
                         SignInfo.Ignore :
-                        new SignInfo(certificate));
+                        new SignInfo(certificate);
                 }
             }
 
