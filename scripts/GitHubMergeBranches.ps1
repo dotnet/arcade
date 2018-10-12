@@ -331,62 +331,44 @@ You may need to fix this problem by merging branches with this PR. Contact .NET 
         }
 
         $prBody = @"
-I detected changes in the $HeadBranch branch which have not been merged yet to $BaseBranch.
-I'm a robot and am configured to help you automatically keep $BaseBranch up to date, so
-I've opened this PR.
+I detected changes in the $HeadBranch branch which have not been merged yet to $BaseBranch. I'm a robot and am configured to help you automatically keep $BaseBranch up to date, so I've opened this PR.
 
 $committersList
 
 ## Instructions for merging
 
-This PR will not be auto-merged. When pull request checks pass, please complete this PR
-by creating a merge commit, *not* a squash or rebase commit.
+This PR will not be auto-merged. When pull request checks pass, please complete this PR by creating a merge commit, *not* a squash or rebase commit.
 
 <img alt="merge button instructions" src="https://i.imgur.com/GepcNJV.png" width="300" />
 
 You can also do this on command line:
 
-Step 1: From your project repository, check out a new branch and pull the changes from the pull request
 ``````
 git checkout -b ${mergeBranchName} $BaseBranch
 git pull https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
-``````
-
-Step 2: Merge the changes and update on GitHub. This will automatically mark this pull request as "merged".
-``````
 git checkout $BaseBranch
 git merge --no-ff ${mergeBranchName}
 git push origin $BaseBranch
 ``````
 
-## Instructions for updating this pull-request
+## Instructions for resolving conflicts
 
-Contributors to this repo should have access to push updates to the pull request. You can do this
-by running the following git commands on a clone of this repository.
+:warning: If there are merge conflicts, you will need to resolve them manually before merging. You can do this [using GitHub][resolve-github] or using the [command line][resolve-cli].
 
-Step 1: From your project repository, check out a new branch and pull the changes from the pull request.
+[resolve-github]: https://help.github.com/articles/resolving-a-merge-conflict-on-github/
+[resolve-cli]: https://help.github.com/articles/resolving-a-merge-conflict-using-the-command-line/
+
+## Instructions for updating this pull request
+
+Contributors to this repo have permission update this pull request by pushing to the branch '$mergeBranchName'. This can be done to resolve conflicts or make other changes to this pull request before it is merged.
+
 ``````
 git checkout -b ${mergeBranchName} $BaseBranch
 git pull https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
-``````
-
-Step 2: Make changes, such as resolving conflicts.
-
-Step 3: Push your changes to the pull-request branch. This will re-trigger pull request validation.
-``````
+(make changes)
 git commit -m "Updated PR with my changes"
 git push https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 ``````
-
-## Instructions for resolving conflicts
-
-:warning: If there are merge conflicts, you will need to resolve them manually before merging.
-You can do this [using GitHub](https://help.github.com/articles/resolving-a-merge-conflict-on-github/)
-or using the [command line](https://help.github.com/articles/resolving-a-merge-conflict-using-the-command-line/).
-
-Maintainers of this repo have permission to the branch '$mergeBranchName' on https://github.com/$prOwnerName/$prRepoName.
-You can push changes to this branch to resolve conflicts or other issues in this pull request. The bot will attempt
-to update this branch as more changes are discovered on $HeadBranch.
 
 Please contact .NET Core Engineering if you have questions or issues.
 Also, if this PR was generated incorrectly, help us fix it. See https://github.com/dotnet/arcade/blob/master/scripts/GitHubMergeBranches.ps1.
