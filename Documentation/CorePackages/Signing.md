@@ -56,9 +56,23 @@ This field only attribute should be  `Include`. This field holds a list of full 
 
 # Signing Info Precedence
 
+The signing information (SI) for a given file is looked up in the order shown below. Later conditions (i.e., more specific ones) override previous ones.
 
+1. A default SI is looked up on `FileExtensionSignInfo` **based on the extension of the file**.
+2. If the file is a **managed PE file**, SI based on the file *Public Key Token* (and only on it) is looked up in the `StrongNameSignInfo` parameter.
+3. If the file is a PE file (not necessarily managed), SI based on a combination of **file name, public key token and target framework** is looked up in `FileSignInfo`. *If there is no match, then:*
+4. If the file is a PE file (not necessarily managed), SI based on a combination of **file name and public key token** is looked up in `FileSignInfo`. *If there is no match, then:*
+5. SI based **only on file name** is looked up in `FileSignInfo`.
 
-## Example Usage
+Note that the logic starts looking for SI on a broad scope and then looks for specific information for the file. Also, the last three conditions are mutually exclusive.
+
+At the end, if the file is signable but no signing information was determined for the file an error message will be logged and execution is expected to fail.
+
+#### The Signing.props file
+
+The Arcade SDK include a set of predefined configurations for the SignTool in the [Sign.proj](../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) file. However, you can override/remove/update any of these configurations by including a file named `Signing.props` in the `\build\` folder of your repository. See examples on the next section.
+
+## Usage Examples
 
 The Arcade SDK will include all container files from the `$(ArtifactsPackagesDir)` and `$(VisualStudioSetupOutputPath)` folders (these properties are set [here](../src/Microsoft.DotNet.Arcade.Sdk/tools/RepoLayout.props)) in the list of containers to be looked up for. Note that only projects marked with `<IsPackable>true</IsPackable>` will be packed and copied to this folder. Here is how the Arcade SDK does it:
 
@@ -109,10 +123,16 @@ For more detailed information you can see [how](../src/Microsoft.DotNet.Arcade.S
 ...
 ```
 
+## Log Files
+
+
+
 ## Valid Argument Values
 
-**Certificate Name:** name of the Authenticode certificate to use for signing.  Valid values include `Microsoft402`, `WindowsPhone623`, `MicrosoftSHA1Win8WinBlue` and `VsixSHA2`.  
+**Certificate Name:** name of the Authenticode certificate to use for signing. Valid values include `Microsoft402`, `WindowsPhone623`, `MicrosoftSHA1Win8WinBlue` and `VsixSHA2`.  
 
 **Strong Name:** name of the key to use when strong naming the binary. This can be `null` for values which do not require strong name signing such as VSIX files. 
 
 **Target Framework:** valid values include (but are not limited to): `.NETStandard,Version=v2.0`,  `.NETFramework,Version=v4.6.1`, `.NET Core,Version=v2.0`, etc.
+
+**Public Key Token:** valid values are 16 characters in length comprising values between `[0-9]` and `[a-Z]`.
