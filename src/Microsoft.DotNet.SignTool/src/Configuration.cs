@@ -335,7 +335,7 @@ namespace Microsoft.DotNet.SignTool
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
                         // `entry` might be just a pointer to a folder. We skip those.
-                        if (string.IsNullOrEmpty(Path.GetExtension(entry.FullName)))
+                        if (entry.FullName.EndsWith("/") && entry.Name == "")
                         {
                             continue;
                         }
