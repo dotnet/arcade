@@ -228,7 +228,7 @@ namespace Microsoft.DotNet.SignTool
 
                     if (!extension.Equals(Path.GetExtension(extension)))
                     {
-                        Log.LogError($"Extension metadata of {nameof(FileExtensionSignInfo)} is invalid: '{extension}'");
+                        Log.LogError($"Value of {nameof(FileExtensionSignInfo)} is invalid: '{extension}'");
                         continue;
                     }
 

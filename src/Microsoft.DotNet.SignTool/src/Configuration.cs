@@ -212,6 +212,10 @@ namespace Microsoft.DotNet.SignTool
             {
                 _log.LogError($"Couldn't determine certificate name for signable file: {fullPath}");
             }
+            else
+            {
+                _log.LogMessage($"Ignoring non-signable file: {fullPath}");
+            }
 
             return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
         }
@@ -330,14 +334,9 @@ namespace Microsoft.DotNet.SignTool
 
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
-                        string relativePath = entry.FullName;
-                        string extension = Path.GetExtension(relativePath);
-
-                        if (!FileSignInfo.IsZipContainer(relativePath) &&
-                            (!SignToolConstants.SignableExtensions.Contains(extension) || (_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) && !extensionSignInfo.ShouldSign)))
+                        // `entry` might be just a pointer to a folder. We skip those.
+                        if (string.IsNullOrEmpty(Path.GetExtension(entry.FullName)))
                         {
-                            var reason = !SignToolConstants.SignableExtensions.Contains(extension) ? "its extension isn't on recognizable signing extension list" : "configuration tells to ignore this extension";
-                            _log.LogMessage($"Ignoring this file because {reason} : {relativePath}");
                             continue;
                         }
 
@@ -348,11 +347,11 @@ namespace Microsoft.DotNet.SignTool
                         }
 
                         // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
-                        string fileName = Path.GetFileName(relativePath);
+                        string fileName = Path.GetFileName(entry.FullName);
                         if (!_filesByContentKey.TryGetValue(new SignedFileContentKey(contentHash, fileName), out var fileSignInfo))
                         {
                             string tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
-                            string tempPath = Path.Combine(tempDir, Path.GetFileName(relativePath));
+                            string tempPath = Path.Combine(tempDir, fileName);
                             Directory.CreateDirectory(tempDir);
 
                             using (var stream = entry.Open())
@@ -366,7 +365,7 @@ namespace Microsoft.DotNet.SignTool
 
                         if (fileSignInfo.SignInfo.ShouldSign)
                         {
-                            nestedParts.Add(new ZipPart(relativePath, fileSignInfo));
+                            nestedParts.Add(new ZipPart(entry.FullName, fileSignInfo));
                         }
                     }
 
