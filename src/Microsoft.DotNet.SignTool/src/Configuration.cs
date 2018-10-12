@@ -334,8 +334,10 @@ namespace Microsoft.DotNet.SignTool
 
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
+                        string relativePath = entry.FullName;
+
                         // `entry` might be just a pointer to a folder. We skip those.
-                        if (entry.FullName.EndsWith("/") && entry.Name == "")
+                        if (relativePath.EndsWith("/") && entry.Name == "")
                         {
                             continue;
                         }
@@ -347,11 +349,11 @@ namespace Microsoft.DotNet.SignTool
                         }
 
                         // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
-                        string fileName = Path.GetFileName(entry.FullName);
+                        string fileName = Path.GetFileName(relativePath);
                         if (!_filesByContentKey.TryGetValue(new SignedFileContentKey(contentHash, fileName), out var fileSignInfo))
                         {
                             string tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
-                            string tempPath = Path.Combine(tempDir, fileName);
+                            string tempPath = Path.Combine(tempDir, Path.GetFileName(relativePath));
                             Directory.CreateDirectory(tempDir);
 
                             using (var stream = entry.Open())
@@ -365,7 +367,7 @@ namespace Microsoft.DotNet.SignTool
 
                         if (fileSignInfo.SignInfo.ShouldSign)
                         {
-                            nestedParts.Add(new ZipPart(entry.FullName, fileSignInfo));
+                            nestedParts.Add(new ZipPart(relativePath, fileSignInfo));
                         }
                     }
 
