@@ -18,7 +18,7 @@ function Create-Directory([string[]] $path) {
   }
 }
 
-function InitializeDotNetCli {
+function InitializeDotNetCli([bool]$install) {
   # Don't resolve runtime, shared framework, or SDK from other locations to ensure build determinism
   $env:DOTNET_MULTILEVEL_LOOKUP=0
 
@@ -30,16 +30,28 @@ function InitializeDotNetCli {
     $env:DOTNET_INSTALL_DIR = $env:DotNetCoreSdkDir
   }
 
+  # Find the first path on %PATH% that contains the dotnet.exe
+  if ($env:DOTNET_INSTALL_DIR -eq $null) {
+    $env:DOTNET_INSTALL_DIR = ${env:PATH}.Split(';') | where { ($_ -ne "") -and (Test-Path (Join-Path $_ "dotnet.exe")) }
+  }
+
+  $dotnetSdkVersion = $GlobalJson.tools.dotnet
+
   # Use dotnet installation specified in DOTNET_INSTALL_DIR if it contains the required SDK version,
   # otherwise install the dotnet CLI and SDK to repo local .dotnet directory to avoid potential permission issues.
-  if (($env:DOTNET_INSTALL_DIR -ne $null) -and (Test-Path(Join-Path $env:DOTNET_INSTALL_DIR "sdk\$($GlobalJson.tools.dotnet)"))) {
+  if (($env:DOTNET_INSTALL_DIR -ne $null) -and (Test-Path(Join-Path $env:DOTNET_INSTALL_DIR "sdk\$dotnetSdkVersion"))) {
     $dotnetRoot = $env:DOTNET_INSTALL_DIR
   } else {
     $dotnetRoot = Join-Path $RepoRoot ".dotnet"
     $env:DOTNET_INSTALL_DIR = $dotnetRoot
 
-    if ($restore) {
-      InstallDotNetSdk $dotnetRoot $GlobalJson.tools.dotnet
+    if (-not (Test-Path(Join-Path $env:DOTNET_INSTALL_DIR "sdk\$dotnetSdkVersion"))) {
+      if ($install) {
+        InstallDotNetSdk $dotnetRoot $GlobalJson.tools.dotnet
+      } else {
+        Write-Host "Unable to find dotnet with SDK version '$dotnetSdkVersion'" -ForegroundColor Red
+        ExitWithExitCode 1
+      }
     }
   }
 
@@ -135,7 +147,7 @@ function InitializeTools() {
   }
 
   if ($msbuildEngine -eq "dotnet") {
-    $dotnetRoot = InitializeDotNetCli
+    $dotnetRoot = InitializeDotNetCli -install:$restore
 
     $script:buildDriver = Join-Path $dotnetRoot "dotnet.exe"
     $script:buildArgs = "msbuild"
@@ -154,7 +166,8 @@ function InitializeTools() {
 }
 
 function InitializeToolset([string] $buildDriver, [string]$buildArgs) {
-  $toolsetLocationFile = Join-Path $ToolsetDir "$ToolsetVersion.txt"
+  $toolsetVersion = $GlobalJson.'msbuild-sdks'.'Microsoft.DotNet.Arcade.Sdk'
+  $toolsetLocationFile = Join-Path $ToolsetDir "$toolsetVersion.txt"
 
   if (Test-Path $toolsetLocationFile) {
     $path = Get-Content $toolsetLocationFile -TotalCount 1
@@ -165,7 +178,7 @@ function InitializeToolset([string] $buildDriver, [string]$buildArgs) {
   }
 
   if (-not $restore) {
-    Write-Host  "Toolset version $ToolsetVersion has not been restored."
+    Write-Host  "Toolset version $toolsetVersion has not been restored."
     ExitWithExitCode 1
   }
 
@@ -230,19 +243,6 @@ function MsBuild() {
   return $lastExitCode
 }
 
-function InstallDarcCli {
-  $DarcCliPackageName = "microsoft.dotnet.darc"
-  $ToolList = Invoke-Expression "$buildDriver tool list -g"
-
-  if ($ToolList -like "*$DarcCliPackageName*") {
-    Invoke-Expression "$buildDriver tool uninstall $DarcCliPackageName -g"
-  }
-
-  Write-Host "Installing Darc CLI version $toolsetVersion..."
-  Write-Host "You may need to restart your command window if this is the first dotnet tool you have installed."
-  Invoke-Expression "$buildDriver tool install $DarcCliPackageName --version $toolsetVersion -v $verbosity -g"
-}
-
 try {
   $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
   $EngRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
@@ -251,7 +251,6 @@ try {
   $LogDir = Join-Path (Join-Path $ArtifactsDir "log") $configuration
   $TempDir = Join-Path (Join-Path $ArtifactsDir "tmp") $configuration
   $GlobalJson = Get-Content -Raw -Path (Join-Path $RepoRoot "global.json") | ConvertFrom-Json
-  $ToolsetVersion = $GlobalJson.'msbuild-sdks'.'Microsoft.DotNet.Arcade.Sdk'
 
   if ($env:NUGET_PACKAGES -eq $null) {
     # Use local cache on CI to ensure deterministic build,
