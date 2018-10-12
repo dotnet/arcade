@@ -333,9 +333,10 @@ namespace Microsoft.DotNet.SignTool
                         string relativePath = entry.FullName;
                         string extension = Path.GetExtension(relativePath);
 
-                        if (!FileSignInfo.IsZipContainer(relativePath) && (!_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) || !extensionSignInfo.ShouldSign))
+                        if (!FileSignInfo.IsZipContainer(relativePath) &&
+                            (!SignToolConstants.SignableExtensions.Contains(extension) || (_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) && !extensionSignInfo.ShouldSign)))
                         {
-                            var reason = extensionSignInfo.ShouldIgnore ? "configuration tells to ignore this extension" : "its extension isn't on recognizable signing extension list";
+                            var reason = !SignToolConstants.SignableExtensions.Contains(extension) ? "its extension isn't on recognizable signing extension list" : "configuration tells to ignore this extension";
                             _log.LogMessage($"Ignoring this file because {reason} : {relativePath}");
                             continue;
                         }
