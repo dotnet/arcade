@@ -960,7 +960,7 @@ $@"
             var needContent = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 { ".dll", "EmptyPKT.dll" },
-                { ".vsix", "test.vsix" },
+                { ".vsix", "Simple.vsix" },
                 { ".nupkg", "Simple.nupkg" },
                 { ".exe", "Simple.exe" }
             };
@@ -989,7 +989,7 @@ $@"
             var needContent = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 { ".dll", "EmptyPKT.dll" },
-                { ".vsix", "test.vsix" },
+                { ".vsix", "Simple.vsix" },
                 { ".nupkg", "Simple.nupkg" },
                 { ".exe", "Simple.exe" }
             };

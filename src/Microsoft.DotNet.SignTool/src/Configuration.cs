@@ -212,6 +212,10 @@ namespace Microsoft.DotNet.SignTool
             {
                 _log.LogError($"Couldn't determine certificate name for signable file: {fullPath}");
             }
+            else
+            {
+                _log.LogMessage($"Ignoring non-signable file: {fullPath}");
+            }
 
             return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
         }
@@ -331,12 +335,10 @@ namespace Microsoft.DotNet.SignTool
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
                         string relativePath = entry.FullName;
-                        string extension = Path.GetExtension(relativePath);
 
-                        if (!FileSignInfo.IsZipContainer(relativePath) && (!_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) || !extensionSignInfo.ShouldSign))
+                        // `entry` might be just a pointer to a folder. We skip those.
+                        if (relativePath.EndsWith("/") && entry.Name == "")
                         {
-                            var reason = extensionSignInfo.ShouldIgnore ? "configuration tells to ignore this extension" : "its extension isn't on recognizable signing extension list";
-                            _log.LogMessage($"Ignoring this file because {reason} : {relativePath}");
                             continue;
                         }
 
