@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.SignTool
     {
         private readonly TaskLoggingHelper _log;
 
-        private readonly string[] _explicitSignList;
+        private readonly string[] _itemsToSign;
 
         /// <summary>
         /// This store content information for container files.
@@ -39,12 +39,12 @@ namespace Microsoft.DotNet.SignTool
         /// It also contains a SignToolConstants.IgnoreFileCertificateSentinel flag in the certificate name in case the file does not need to be signed
         /// for that 
         /// </summary>
-        private readonly Dictionary<ExplicitCertificateKey, string> _explicitCertificates;
+        private readonly Dictionary<ExplicitCertificateKey, string> _fileSignInfo;
 
         /// <summary>
         /// Used to look for signing information when we have the PublicKeyToken of a file.
         /// </summary>
-        private readonly Dictionary<string, SignInfo> _defaultSignInfoForPublicKeyToken;
+        private readonly Dictionary<string, SignInfo> _strongNameInfo;
 
         /// <summary>
         /// A list of all the binaries that MUST be signed. Also include containers that don't need 
@@ -72,31 +72,31 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         internal List<KeyValuePair<string, string>> _filesToCopy;
 
-        public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, 
-            Dictionary<ExplicitCertificateKey, string> explicitCertificates, Dictionary<string, SignInfo> extensionSignInfo, 
+        public Configuration(string tempDir, string[] itemsToSign, Dictionary<string, SignInfo> strongNameInfo,
+            Dictionary<ExplicitCertificateKey, string> fileSignInfo, Dictionary<string, SignInfo> extensionSignInfo,
             string[] dualCertificates, TaskLoggingHelper log)
         {
             Debug.Assert(tempDir != null);
-            Debug.Assert(explicitSignList != null && !explicitSignList.Any(i => i == null));
-            Debug.Assert(defaultSignInfoForPublicKeyToken != null);
-            Debug.Assert(explicitCertificates != null);
+            Debug.Assert(itemsToSign != null && !itemsToSign.Any(i => i == null));
+            Debug.Assert(strongNameInfo != null);
+            Debug.Assert(fileSignInfo != null);
 
             _pathToContainerUnpackingDirectory = Path.Combine(tempDir, "ContainerSigning");
             _log = log;
-            _defaultSignInfoForPublicKeyToken = defaultSignInfoForPublicKeyToken;
-            _explicitCertificates = explicitCertificates;
+            _strongNameInfo = strongNameInfo;
+            _fileSignInfo = fileSignInfo;
             _fileExtensionSignInfo = extensionSignInfo;
             _filesToSign = new List<FileSignInfo>();
             _filesToCopy = new List<KeyValuePair<string, string>>();
             _zipDataMap = new Dictionary<ImmutableArray<byte>, ZipData>(ByteSequenceComparer.Instance);
             _filesByContentKey = new Dictionary<SignedFileContentKey, FileSignInfo>();
-            _explicitSignList = explicitSignList;
+            _itemsToSign = itemsToSign;
             _dualCertificates = dualCertificates ?? new string[0];
         }
 
         internal BatchSignInput GenerateListOfFiles()
         {
-            foreach (var fullPath in _explicitSignList)
+            foreach (var fullPath in _itemsToSign)
             {
                 TrackFile(fullPath, ContentUtil.GetContentHash(fullPath), isNested: false);
             }
@@ -164,15 +164,15 @@ namespace Microsoft.DotNet.SignTool
                 GetPEInfo(fullPath, out var isManaged, out var publicKeyToken, out targetFramework);
 
                 // Get the default sign info based on the PKT, if applicable:
-                if (isManaged && _defaultSignInfoForPublicKeyToken.TryGetValue(publicKeyToken, out var pktBasedSignInfo))
+                if (isManaged && _strongNameInfo.TryGetValue(publicKeyToken, out var pktBasedSignInfo))
                 {
                     signInfo = pktBasedSignInfo;
                     hasSignInfo = true;
                 }
 
                 // Check if we have more specific sign info:
-                matchedNameTokenFramework = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out explicitCertificateName);
-                matchedNameToken = !matchedNameTokenFramework && _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out explicitCertificateName);
+                matchedNameTokenFramework = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out explicitCertificateName);
+                matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out explicitCertificateName);
 
                 fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {publicKeyToken}, Framework = {targetFramework})" :
                         matchedNameToken ? $" (PublicKeyToken = {publicKeyToken})" : string.Empty;
@@ -181,7 +181,7 @@ namespace Microsoft.DotNet.SignTool
             // We didn't find any specific information for PE files using PKT + TargetFramework
             if (explicitCertificateName == null)
             {
-                matchedName = _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName), out explicitCertificateName);
+                matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName), out explicitCertificateName);
             }
 
             // If has overriding info, is it for ignoring the file?

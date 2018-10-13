@@ -176,7 +176,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         private void ValidateGeneratedProject(
             string[] itemsToSign,
             Dictionary<string, SignInfo> strongNameSignInfo,
-            Dictionary<ExplicitCertificateKey, string> signingOverridingInfos,
+            Dictionary<ExplicitCertificateKey, string> fileSignInfo,
             Dictionary<string, SignInfo> extensionsSignInfo,
             string[] expectedXmlElementsPerSingingRound,
             string[] dualCertificates = null)
@@ -191,7 +191,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir, enclosingDir: "");
 
             var signTool = new FakeSignTool(signToolArgs);
-            var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
             var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput);
 
             util.Go();
@@ -209,14 +209,14 @@ namespace Microsoft.DotNet.SignTool.Tests
         private void ValidateFileSignInfos(
             string[] itemsToSign,
             Dictionary<string, SignInfo> strongNameSignInfo,
-            Dictionary<ExplicitCertificateKey, string> signingOverridingInfos,
+            Dictionary<ExplicitCertificateKey, string> fileSignInfo,
             Dictionary<string, SignInfo> extensionsSignInfo,
             string[] expected,
             string[] expectedCopyFiles = null,
             string[] dualCertificates = null)
         {
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
-            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, signingOverridingInfos, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
 
             AssertEx.Equal(expected, signingInput.FilesToSign.Select(f => f.ToString()));
             AssertEx.Equal(expectedCopyFiles ?? Array.Empty<string>(), signingInput.FilesToCopy.Select(f => $"{f.Key} -> {f.Value}"));
@@ -226,14 +226,14 @@ namespace Microsoft.DotNet.SignTool.Tests
         [Fact]
         public void EmptySigningList()
         {
-            var ExplicitSignItems = new string[0];
+            var itemsToSign = new string[0];
 
-            var StrongNameSignInfo = new Dictionary<string, SignInfo>();
+            var strongNameSignInfo = new Dictionary<string, SignInfo>();
 
-            var FileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
-            var signingInput = new Configuration(_tmpDir, ExplicitSignItems, StrongNameSignInfo, FileSignInfo, s_fileExtensionSignInfo, null, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, null, task.Log).GenerateListOfFiles();
 
             Assert.Empty(signingInput.FilesToSign);
             Assert.Empty(signingInput.ZipDataMap);
@@ -250,15 +250,15 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
@@ -280,19 +280,19 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>
             {
                 { new ExplicitCertificateKey("NativeLibrary.dll"), "None" },
                 { new ExplicitCertificateKey("ProjectOne.dll", publicKeyToken: "581d91ccdfc4ea9c", targetFramework: ".NETCoreApp,Version=v2.1"), "None" }
             };
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
@@ -312,18 +312,18 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
             {
                 { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c"), "OverriddenCertificate" }
             };
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='OverriddenCertificate' StrongName='ArcadeStrongTest'",
@@ -345,19 +345,19 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
             {
                 { new ExplicitCertificateKey("NativeLibrary.dll"), "OverriddenCertificate1" },
                 { new ExplicitCertificateKey("ProjectOne.dll"), "OverriddenCertificate2" }
             };
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='OverriddenCertificate1'",
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='OverriddenCertificate2' StrongName='ArcadeStrongTest'",
@@ -379,18 +379,18 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
             {
                 { new ExplicitCertificateKey("EmptyPKT.dll"), "OverriddenCertificate" }
             };
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'EmptyPKT.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='OverriddenCertificate'",
             });
@@ -405,14 +405,14 @@ namespace Microsoft.DotNet.SignTool.Tests
                 GetResourcePath("EmptyPKT.dll")
             };
 
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "", new SignInfo("DefaultCertificate") }
             };
 
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>() { };
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>() { };
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'EmptyPKT.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='DefaultCertificate'",
             });
@@ -427,17 +427,17 @@ namespace Microsoft.DotNet.SignTool.Tests
                 GetResourcePath("CustomTargetFrameworkAttribute.dll")
             };
 
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 {  "", new SignInfo("DefaultCertificate") }
             };
 
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
             {
                 { new ExplicitCertificateKey("CustomTargetFrameworkAttribute.dll", targetFramework: ".NETFramework,Version=v2.0"), "OverriddenCertificate" }
             };
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'CustomTargetFrameworkAttribute.dll' TargetFramework='.NETFramework,Version=v2.0' Certificate='OverriddenCertificate'",
             });
@@ -453,15 +453,15 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
@@ -474,7 +474,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 "File 'NestedContainer.1.0.0.nupkg' Certificate='NuGet'"
             });
 
-            ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3D4466713FF60CA2747166CD22B097B67DAFC7F3487B7F7725945502D66D0B65", "NativeLibrary.dll")}"">
@@ -527,22 +527,22 @@ $@"
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'test.zip' Certificate=''",
             });
 
-            ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3D4466713FF60CA2747166CD22B097B67DAFC7F3487B7F7725945502D66D0B65", "NativeLibrary.dll")}"">
@@ -566,15 +566,15 @@ $@"
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
@@ -587,7 +587,7 @@ $@"
                 $"{Path.Combine(_tmpDir, "ContainerSigning", "8CE04F803804FF47F7F96E6D993262E295456CE7A11D65E81530DC030C8BB03C", "PackageWithRelationships.vsix")} -> {Path.Combine(_tmpDir, "PackageWithRelationships.vsix")}"
             });
 
-            ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "ProjectOne.dll")}"">
@@ -627,15 +627,15 @@ $@"
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'PackageWithRelationships.vsix' Certificate='VsixSHA2'",
@@ -644,7 +644,7 @@ $@"
                 "File 'test.vsix' Certificate='VsixSHA2'",
             });
 
-            ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "ProjectOne.dll")}"">
@@ -685,15 +685,15 @@ $@"
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'PackageWithRelationships.vsix' Certificate='VsixSHA2'",
@@ -706,7 +706,7 @@ $@"
                 $"{Path.Combine(_tmpDir, "A", "PackageWithRelationships.vsix")} -> {Path.Combine(_tmpDir, "B", "PackageWithRelationships.vsix")}"
             });
 
-            ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "ProjectOne.dll")}"">
@@ -745,21 +745,21 @@ $@"
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
                 "File 'PackageWithRelationships.vsix' Certificate='VsixSHA2'"
             });
 
-            ValidateGeneratedProject(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "ProjectOne.dll")}"">
@@ -790,12 +790,12 @@ $@"
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>();
+            var strongNameSignInfo = new Dictionary<string, SignInfo>();
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'dynalib.dylib' Certificate='DylibCertificate'",
                 "File 'javascript.js' Certificate='JSCertificate'",
@@ -820,14 +820,14 @@ $@"
                 "DualCertificateName"
             };
 
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "31bf3856ad364e35", new SignInfo(dualCertificates.First(), null) }
             };
 
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 $"File 'SignedLibrary.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='{dualCertificates.First()}'",
             },
@@ -844,15 +844,15 @@ $@"
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
@@ -871,15 +871,15 @@ $@"
             };
 
             // Default signing information
-            var signingInformation = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
                 { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, signingInformation, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
@@ -914,7 +914,7 @@ $@"
             };
 
             // Overriding information
-            var signingOverridingInformation = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
             {
                 { new ExplicitCertificateKey("test.js"), "JSCertificate" },
                 { new ExplicitCertificateKey("test.jar"), "JARCertificate" },
@@ -933,7 +933,7 @@ $@"
                 { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETCoreApp,Version=v2.0"), "DLLCertificate5" },
             };
 
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, signingOverridingInformation, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'test.js' Certificate='JSCertificate'",
                 "File 'test.jar' Certificate='JARCertificate'",
