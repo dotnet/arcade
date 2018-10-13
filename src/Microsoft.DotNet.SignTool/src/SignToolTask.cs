@@ -130,16 +130,16 @@ namespace Microsoft.DotNet.SignTool
 
             if (Log.HasLoggedErrors) return;
 
-            var defaultSignInfoForPublicKeyToken = ParseStrongNameSignInfo();
-            var explicitCertificates = ParseFileSignInfo();
-            var fileExtensionSignInfo = ParseFileExtensionSignInfo();
+            var strongNameInfo = ParseStrongNameSignInfo();
+            var fileSignInfo = ParseFileSignInfo();
+            var extensionSignInfo = ParseFileExtensionSignInfo();
             var dualCertificates = ParseCertificateInfo();
 
             if (Log.HasLoggedErrors) return;
 
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
-            var signingInput = new Configuration(TempDir, ItemsToSign, defaultSignInfoForPublicKeyToken, explicitCertificates, fileExtensionSignInfo, dualCertificates, Log).GenerateListOfFiles();
+            var signingInput = new Configuration(TempDir, ItemsToSign, strongNameInfo, fileSignInfo, extensionSignInfo, dualCertificates, Log).GenerateListOfFiles();
 
             if (Log.HasLoggedErrors) return;
 
