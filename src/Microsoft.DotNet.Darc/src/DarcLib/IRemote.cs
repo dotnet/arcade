@@ -10,7 +10,32 @@ namespace Microsoft.DotNet.DarcLib
 {
     public interface IRemote
     {
-        Task<IEnumerable<DefaultChannel>> GetDefaultChannelsAsync(string repository = null, string branch = null, int? channelId = null);
+        /// <summary>
+        /// Retrieve a set of default channel associations based on the provided filters.
+        /// </summary>
+        /// <param name="repository">Repository name</param>
+        /// <param name="branch">Name of branch</param>
+        /// <param name="channel">Channel name.</param>
+        /// <returns>List of default channel associations. Channel is matched based on case insensitivity.</returns>
+        Task<IEnumerable<DefaultChannel>> GetDefaultChannelsAsync(string repository = null, string branch = null, string channel = null);
+
+        /// <summary>
+        /// Adds a default channel association.
+        /// </summary>
+        /// <param name="repository">Repository receiving the default association</param>
+        /// <param name="branch">Branch receiving the default association</param>
+        /// <param name="channel">Name of channel that builds of 'repository' on 'branch' should automatically be applied to.</param>
+        /// <returns>Async task.</returns>
+        Task AddDefaultChannelAsync(string repository, string branch, string channel);
+
+        /// <summary>
+        /// Removes a default channel based on the specified criteria
+        /// </summary>
+        /// <param name="repository">Repository having a default association</param>
+        /// <param name="branch">Branch having a default association</param>
+        /// <param name="channel">Name of channel that builds of 'repository' on 'branch' are being applied to.</param>
+        /// <returns>Async task</returns>
+        Task DeleteDefaultChannelAsync(string repository, string branch, string channel);
 
         Task<Channel> CreateChannelAsync(string name, string classification);
 

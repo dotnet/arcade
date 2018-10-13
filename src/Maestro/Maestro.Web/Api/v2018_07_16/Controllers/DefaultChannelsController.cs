@@ -92,6 +92,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
 
         [HttpDelete("{id}")]
         [ValidateModelState]
+        [SwaggerResponse((int)HttpStatusCode.Accepted)]
         public async Task<IActionResult> Delete(int id)
         {
             Data.Models.DefaultChannel defaultChannel = await _context.DefaultChannels.FindAsync(id);
