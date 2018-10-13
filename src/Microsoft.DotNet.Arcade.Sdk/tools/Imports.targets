@@ -53,4 +53,12 @@
     <RootNamespace />
   </PropertyGroup>
 
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.LocateDotNet" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+
+  <Target Name="InitializeDotNetToolPath" Condition="'$(DotNetTool)' == ''">
+    <Microsoft.DotNet.Arcade.Sdk.LocateDotNet RepositoryRoot="$(RepoRoot)">
+      <Output TaskParameter="DotNetPath" PropertyName="DotNetTool" />
+    </Microsoft.DotNet.Arcade.Sdk.LocateDotNet>
+  </Target>
+
 </Project>
