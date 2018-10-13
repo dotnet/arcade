@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.Darc.Operations
                                              updateFrequency,
                                              mergePolicies,
                                              (await suggestedChannels).Select(suggestedChannel => suggestedChannel.Name),
-                                             (await suggestedRepos).SelectMany(subscription => new List<string> {subscription.SourceRepository, subscription.TargetRepository }),
+                                             (await suggestedRepos).SelectMany(subscription => new List<string> {subscription.SourceRepository, subscription.TargetRepository }).ToHashSet(),
                                              Constants.AvailableFrequencies,
                                              Constants.AvailableMergePolicyYamlHelp);
 
