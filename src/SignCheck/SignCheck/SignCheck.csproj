@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'build\ResxWorkaround.props'))\build\ResxWorkaround.props" />
+  <PropertyGroup>
+    <TargetFramework>net461</TargetFramework>
+    <OutputType>EXE</OutputType>
+    <Platforms>x86</Platforms>
+    <IsTool>True</IsTool>
+    <Configurations>Release;Debug</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Nuget Package Settings">
+    <IsTool>true</IsTool>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.2.0" />
+    <PackageReference Include="NerdBank.GitVersioning" Version="2.1.17" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.SignCheck\Microsoft.SignCheck.csproj">
+      <Private>true</Private>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(OutputPath)\*.dll">
+      <PackagePath>tools/</PackagePath>
+      <Pack>true</Pack>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Net" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="SignCheckResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SignCheckResources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="SignCheckResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>SignCheckResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>
