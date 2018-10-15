@@ -1,11 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'build\ResxWorkaround.props'))\build\ResxWorkaround.props" />
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(MSBuildThisFileDirectory)/../Microsoft.SignCheck/ResxWorkaround.props" />
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
     <OutputType>EXE</OutputType>
     <Platforms>x86</Platforms>
     <IsTool>True</IsTool>
     <Configurations>Release;Debug</Configurations>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
 
   <PropertyGroup Label="Nuget Package Settings">
