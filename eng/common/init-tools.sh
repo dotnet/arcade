@@ -65,12 +65,12 @@ function InitializeDotNetCli {
   export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
 
   # Source Build uses DotNetCoreSdkDir variable
-  if [[ -n "${DotNetCoreSdkDir-}" ]]; then
+  if [[ -n "${DotNetCoreSdkDir:-}" ]]; then
     export DOTNET_INSTALL_DIR="$DotNetCoreSdkDir"
   fi
 
   # Find the first path on $PATH that contains the dotnet.exe
-  if [[ -z "${DOTNET_INSTALL_DIR-}" ]]; then
+  if [[ -z "${DOTNET_INSTALL_DIR:-}" ]]; then
     local dotnet_path=`command -v dotnet`
     if [[ -n "$dotnet_path" ]]; then
       ResolvePath $dotnet_path
@@ -84,7 +84,7 @@ function InitializeDotNetCli {
 
   # Use dotnet installation specified in DOTNET_INSTALL_DIR if it contains the required SDK version,
   # otherwise install the dotnet CLI and SDK to repo local .dotnet directory to avoid potential permission issues.
-  if [[ -n "${DOTNET_INSTALL_DIR-}" ]] && [[ -d "$DOTNET_INSTALL_DIR/sdk/$dotnet_sdk_version" ]]; then
+  if [[ -n "${DOTNET_INSTALL_DIR:-}" ]] && [[ -d "$DOTNET_INSTALL_DIR/sdk/$dotnet_sdk_version" ]]; then
     dotnet_root="$DOTNET_INSTALL_DIR"
   else
     dotnet_root="$repo_root/.dotnet"
@@ -209,6 +209,7 @@ function StopProcesses {
   echo "Killing running build processes..."
   pkill -9 "dotnet"
   pkill -9 "vbcscompiler"
+  return 0
 }
 
 function MSBuild {
@@ -221,7 +222,6 @@ function MSBuild {
 
   msbuildArgs="$msbuildArgs /nr:$nodereuse"
 
-  #echo "$build_driver $msbuildArgs $extraArgs"
   "$build_driver" $msbuildArgs $extraArgs
 
   return $?
@@ -233,7 +233,7 @@ if [[ -z $HOME ]]; then
   mkdir -p "$HOME"
 fi
 
-if [[ -z ${NUGET_PACKAGES-} ]]; then
+if [[ -z ${NUGET_PACKAGES:-} ]]; then
   if [[ $ci == true ]]; then
     export NUGET_PACKAGES="$repo_root/.packages"
   else

@@ -165,6 +165,5 @@ lastexitcode=$?
 
 if [[ $lastexitcode != 0 ]]; then
   echo "Build Failed (exit code '$lastexitcode'). See log: $build_log"
+  ExitWithExitCode $lastexitcode
 fi
-
-ExitWithExitCode $lastexitcode
