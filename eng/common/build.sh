@@ -164,6 +164,7 @@ MSBuild $toolset_build_proj \
 lastexitcode=$?
 
 if [[ $lastexitcode != 0 ]]; then
-  echo "Build Failed (exit code '$lastexitcode'). See log: $build_log"
-  ExitWithExitCode $lastexitcode
+  echo "Build failed (exit code '$lastexitcode'). See log: $build_log"
 fi
+
+ExitWithExitCode $lastexitcode
