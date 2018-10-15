@@ -18,18 +18,21 @@ build=false
 rebuild=false
 test=false
 pack=false
+publish=false
 integration_test=false
 performance_test=false
 sign=false
 public=false
 ci=false
 
+warnaserror=true
+nodereuse=true
+
 projects=''
 configuration='Debug'
 prepare_machine=false
 verbosity='minimal'
-msbuildArgs=''
-extraargs=''
+properties=''
 
 while (($# > 0)); do
   lowerI="$(echo $1 | awk '{print tolower($0)}')"
@@ -58,6 +61,7 @@ while (($# > 0)); do
       echo "  --rebuild                Rebuild solution"
       echo "  --test                   Run all unit tests in the solution"
       echo "  --sign                   Sign build outputs"
+      echo "  --publish                Publish artifacts (e.g. symbols)"
       echo "  --pack                   Package build outputs into NuGet packages and Willow components"
       echo ""
       echo "Advanced settings:"
@@ -147,7 +151,6 @@ MSBuild $toolset_build_proj \
   /p:Restore=$restore \
   /p:Build=$build \
   /p:Rebuild=$rebuild \
-  /p:Deploy=$deploy \
   /p:Test=$test \
   /p:Pack=$pack \
   /p:IntegrationTest=$integration_test \
