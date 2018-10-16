@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +19,7 @@ using Microsoft.ServiceFabric.Actors;
 using Microsoft.VisualStudio.Services.Common;
 using Moq;
 using Xunit;
-using SubscriptionPolicy = Maestro.Data.Models.SubscriptionPolicy;
-using UpdateFrequency = Maestro.Data.Models.UpdateFrequency;
+using Asset = Maestro.Contracts.Asset;
 
 namespace SubscriptionActorService.Tests
 {
@@ -26,20 +29,26 @@ namespace SubscriptionActorService.Tests
         private const string InProgressPrUrl = "https://github.com/owner/repo/pull/10";
         private const string InProgressPrHeadBranch = "pr.head.branch";
 
-        private readonly Dictionary<ActorId, Mock<ISubscriptionActor>> SubscriptionActors =
-            new Dictionary<ActorId, Mock<ISubscriptionActor>>();
-
-        private readonly Dictionary<(string repo, long installationId), Mock<IRemote>> DarcRemotes = new Dictionary<(string repo, long installationId), Mock<IRemote>>();
+        private readonly Dictionary<(string repo, long installationId), Mock<IRemote>> DarcRemotes =
+            new Dictionary<(string repo, long installationId), Mock<IRemote>>();
 
         private readonly Mock<IMergePolicyEvaluator> MergePolicyEvaluator;
 
+        private readonly Dictionary<ActorId, Mock<ISubscriptionActor>> SubscriptionActors =
+            new Dictionary<ActorId, Mock<ISubscriptionActor>>();
+
+        private string NewBranch;
+
         public PullRequestActorTests()
         {
-            Builder.RegisterInstance((Func<ActorId, ISubscriptionActor>)(actorId =>
-            {
-                Mock<ISubscriptionActor> mock = SubscriptionActors.GetOrAddValue(actorId, CreateMock<ISubscriptionActor>);
-                return mock.Object;
-            }));
+            Builder.RegisterInstance(
+                (Func<ActorId, ISubscriptionActor>) (actorId =>
+                {
+                    Mock<ISubscriptionActor> mock = SubscriptionActors.GetOrAddValue(
+                        actorId,
+                        CreateMock<ISubscriptionActor>);
+                    return mock.Object;
+                }));
 
             MergePolicyEvaluator = CreateMock<IMergePolicyEvaluator>();
             Builder.RegisterInstance(MergePolicyEvaluator.Object);
@@ -55,23 +64,33 @@ namespace SubscriptionActorService.Tests
         protected override Task BeforeExecute(IComponentContext context)
         {
             var dbContext = context.Resolve<BuildAssetRegistryContext>();
-            dbContext.Repositories.Add(new Repository { RepositoryName = TargetRepo, InstallationId = InstallationId });
+            dbContext.Repositories.Add(
+                new Repository
+                {
+                    RepositoryName = TargetRepo,
+                    InstallationId = InstallationId
+                });
             return base.BeforeExecute(context);
         }
 
         private void ThenGetRequiredUpdatesShouldHaveBeenCalled(Build withBuild)
         {
             var assets = new List<IEnumerable<AssetData>>();
-            DarcRemotes[(TargetRepo, InstallationId)].Verify(r => r.GetRequiredUpdatesAsync(TargetRepo, TargetBranch, NewCommit, Capture.In(assets)));
+            DarcRemotes[(TargetRepo, InstallationId)]
+                .Verify(r => r.GetRequiredUpdatesAsync(TargetRepo, TargetBranch, NewCommit, Capture.In(assets)));
             assets.Should()
                 .BeEquivalentTo(
                     new List<List<AssetData>>
                     {
-                        withBuild.Assets.Select(a => new AssetData {Name = a.Name, Version = a.Version}).ToList(),
+                        withBuild.Assets.Select(
+                                a => new AssetData
+                                {
+                                    Name = a.Name,
+                                    Version = a.Version
+                                })
+                            .ToList()
                     });
         }
-
-        private string NewBranch;
 
         private void AndCreateNewBranchShouldHaveBeenCalled()
         {
@@ -90,14 +109,18 @@ namespace SubscriptionActorService.Tests
                         NewBranch ?? InProgressPrHeadBranch,
                         Capture.In(updatedDependencies),
                         It.IsAny<string>()));
-            updatedDependencies.Should().BeEquivalentTo(new List<List<DependencyDetail>>
-            {
-                withUpdatesFromBuild.Assets.Select(a => new DependencyDetail
-                {
-                    Name = a.Name,
-                    Version = a.Version,
-                }).ToList()
-            });
+            updatedDependencies.Should()
+                .BeEquivalentTo(
+                    new List<List<DependencyDetail>>
+                    {
+                        withUpdatesFromBuild.Assets.Select(
+                                a => new DependencyDetail
+                                {
+                                    Name = a.Name,
+                                    Version = a.Version
+                                })
+                            .ToList()
+                    });
         }
 
         private void AndCreatePullRequestShouldHaveBeenCalled()
@@ -105,14 +128,17 @@ namespace SubscriptionActorService.Tests
             var pullRequests = new List<PullRequest>();
             DarcRemotes[(TargetRepo, InstallationId)]
                 .Verify(r => r.CreatePullRequestAsync(TargetRepo, Capture.In(pullRequests)));
-            pullRequests.Should().BeEquivalentTo(new List<PullRequest>
-            {
-                new PullRequest
+            pullRequests.Should()
+            .BeEquivalentTo(
+                new List<PullRequest>
                 {
-                    BaseBranch = TargetBranch,
-                    HeadBranch = NewBranch,
-                }
-            }, options => options.Excluding(pr => pr.Title).Excluding(pr => pr.Description));
+                    new PullRequest
+                    {
+                        BaseBranch = TargetBranch,
+                        HeadBranch = NewBranch
+                    }
+                },
+                options => options.Excluding(pr => pr.Title).Excluding(pr => pr.Description));
         }
 
         private void AndUpdatePullRequestShouldHaveBeenCalled()
@@ -120,14 +146,17 @@ namespace SubscriptionActorService.Tests
             var pullRequests = new List<PullRequest>();
             DarcRemotes[(TargetRepo, InstallationId)]
                 .Verify(r => r.UpdatePullRequestAsync(InProgressPrUrl, Capture.In(pullRequests)));
-            pullRequests.Should().BeEquivalentTo(new List<PullRequest>
-            {
-                new PullRequest
+            pullRequests.Should()
+            .BeEquivalentTo(
+                new List<PullRequest>
                 {
-                    BaseBranch = TargetBranch,
-                    HeadBranch = NewBranch ?? InProgressPrHeadBranch,
-                }
-            }, options => options.Excluding(pr => pr.Title).Excluding(pr => pr.Description));
+                    new PullRequest
+                    {
+                        BaseBranch = TargetBranch,
+                        HeadBranch = NewBranch ?? InProgressPrHeadBranch
+                    }
+                },
+                options => options.Excluding(pr => pr.Title).Excluding(pr => pr.Description));
         }
 
         private void AndSubscriptionShouldBeUpdatedForMergedPullRequest(Build withBuild)
@@ -148,11 +177,13 @@ namespace SubscriptionActorService.Tests
                 .ReturnsAsync(
                     (string repo, string branch, string sha, IEnumerable<AssetData> assets) =>
                     {
-                        return assets.Select(d => new DependencyDetail
-                        {
-                            Name = d.Name,
-                            Version = d.Version,
-                        }).ToList();
+                        return assets.Select(
+                                d => new DependencyDetail
+                                {
+                                    Name = d.Name,
+                                    Version = d.Version
+                                })
+                            .ToList();
                     });
         }
 
@@ -163,12 +194,14 @@ namespace SubscriptionActorService.Tests
                 Url = InProgressPrUrl,
                 ContainedSubscriptions = new List<SubscriptionPullRequestUpdate>
                 {
-                    new SubscriptionPullRequestUpdate {BuildId = -1, SubscriptionId = Subscription.Id}
-                },
+                    new SubscriptionPullRequestUpdate
+                    {
+                        BuildId = -1,
+                        SubscriptionId = Subscription.Id
+                    }
+                }
             };
-            StateManager.SetStateAsync(
-                PullRequestActorImplementation.PullRequest,
-                pr);
+            StateManager.SetStateAsync(PullRequestActorImplementation.PullRequest, pr);
             ExpectedActorState.Add(PullRequestActorImplementation.PullRequest, pr);
 
             ActionRunner.Setup(r => r.ExecuteAction(It.IsAny<Expression<Func<Task<ActionResult<bool?>>>>>()))
@@ -178,11 +211,12 @@ namespace SubscriptionActorService.Tests
             {
                 DarcRemotes.GetOrAddValue((TargetRepo, InstallationId), CreateMock<IRemote>)
                     .Setup(r => r.GetPullRequestAsync(InProgressPrUrl))
-                    .ReturnsAsync(new PullRequest
-                    {
-                        HeadBranch = InProgressPrHeadBranch,
-                        BaseBranch = TargetBranch,
-                    });
+                    .ReturnsAsync(
+                        new PullRequest
+                        {
+                            HeadBranch = InProgressPrHeadBranch,
+                            BaseBranch = TargetBranch
+                        });
             }
 
             return Disposable.Create(
@@ -220,17 +254,19 @@ namespace SubscriptionActorService.Tests
 
         private void AndShouldHaveInProgressPullRequestState(Build forBuild)
         {
-            ExpectedActorState.Add(PullRequestActorImplementation.PullRequest, new InProgressPullRequest
-            {
-                ContainedSubscriptions = new List<SubscriptionPullRequestUpdate>
+            ExpectedActorState.Add(
+                PullRequestActorImplementation.PullRequest,
+                new InProgressPullRequest
                 {
-                    new SubscriptionPullRequestUpdate
+                    ContainedSubscriptions = new List<SubscriptionPullRequestUpdate>
                     {
-                        BuildId = forBuild.Id,
-                        SubscriptionId = Subscription.Id,
-                    },
-                },
-            });
+                        new SubscriptionPullRequestUpdate
+                        {
+                            BuildId = forBuild.Id,
+                            SubscriptionId = Subscription.Id
+                        }
+                    }
+                });
         }
 
         private void AndShouldHavePendingUpdateState(Build forBuild)
@@ -245,9 +281,13 @@ namespace SubscriptionActorService.Tests
                         BuildId = forBuild.Id,
                         SourceSha = forBuild.Commit,
                         Assets = forBuild.Assets.Select(
-                                a => new Maestro.Contracts.Asset {Name = a.Name, Version = a.Version})
-                            .ToList(),
-                    },
+                                a => new Asset
+                                {
+                                    Name = a.Name,
+                                    Version = a.Version
+                                })
+                            .ToList()
+                    }
                 });
         }
 
@@ -257,9 +297,7 @@ namespace SubscriptionActorService.Tests
             ActorId actorId;
             if (Subscription.PolicyObject.Batchable)
             {
-                actorId = PullRequestActorId.Create(
-                    Subscription.TargetRepository,
-                    Subscription.TargetBranch);
+                actorId = PullRequestActorId.Create(Subscription.TargetRepository, Subscription.TargetBranch);
             }
             else
             {
@@ -276,7 +314,7 @@ namespace SubscriptionActorService.Tests
                 await Execute(
                     async context =>
                     {
-                        var actor = CreateActor(context);
+                        PullRequestActor actor = CreateActor(context);
                         await actor.Implementation.ProcessPendingUpdatesAsync();
                     });
             }
@@ -294,7 +332,7 @@ namespace SubscriptionActorService.Tests
 
             private void AndNoPendingUpdates()
             {
-                var updates = new List<PullRequestActorImplementation.UpdateAssetsParameters> { };
+                var updates = new List<PullRequestActorImplementation.UpdateAssetsParameters>();
                 StateManager.Data[PullRequestActorImplementation.PullRequestUpdate] = updates;
                 ExpectedActorState[PullRequestActorImplementation.PullRequestUpdate] = updates;
             }
@@ -308,11 +346,13 @@ namespace SubscriptionActorService.Tests
                         SubscriptionId = Subscription.Id,
                         BuildId = forBuild.Id,
                         SourceSha = forBuild.Commit,
-                        Assets = forBuild.Assets.Select(a => new Maestro.Contracts.Asset
-                        {
-                            Name = a.Name,
-                            Version = a.Version,
-                        }).ToList(),
+                        Assets = forBuild.Assets.Select(
+                                a => new Asset
+                                {
+                                    Name = a.Name,
+                                    Version = a.Version
+                                })
+                            .ToList()
                     }
                 };
                 StateManager.Data[PullRequestActorImplementation.PullRequestUpdate] = updates;
@@ -334,8 +374,12 @@ namespace SubscriptionActorService.Tests
             {
                 GivenATestChannel();
                 GivenASubscription(
-                    new SubscriptionPolicy {Batchable = true, UpdateFrequency = UpdateFrequency.EveryBuild,});
-                var b = GivenANewBuild();
+                    new SubscriptionPolicy
+                    {
+                        Batchable = true,
+                        UpdateFrequency = UpdateFrequency.EveryBuild
+                    });
+                Build b = GivenANewBuild();
 
                 GivenAPendingUpdateReminder();
                 AndNoPendingUpdates();
@@ -348,12 +392,16 @@ namespace SubscriptionActorService.Tests
             {
                 GivenATestChannel();
                 GivenASubscription(
-                    new SubscriptionPolicy {Batchable = true, UpdateFrequency = UpdateFrequency.EveryBuild,});
-                var b = GivenANewBuild();
+                    new SubscriptionPolicy
+                    {
+                        Batchable = true,
+                        UpdateFrequency = UpdateFrequency.EveryBuild
+                    });
+                Build b = GivenANewBuild();
 
                 GivenAPendingUpdateReminder();
-                AndPendingUpdates(forBuild: b);
-                using (WithExistingPullRequest(updatable: false))
+                AndPendingUpdates(b);
+                using (WithExistingPullRequest(false))
                 {
                     await WhenProcessPendingUpdatesAsyncIsCalled();
                     // Nothing happens
@@ -365,19 +413,23 @@ namespace SubscriptionActorService.Tests
             {
                 GivenATestChannel();
                 GivenASubscription(
-                    new SubscriptionPolicy {Batchable = true, UpdateFrequency = UpdateFrequency.EveryBuild,});
-                var b = GivenANewBuild();
+                    new SubscriptionPolicy
+                    {
+                        Batchable = true,
+                        UpdateFrequency = UpdateFrequency.EveryBuild
+                    });
+                Build b = GivenANewBuild();
 
                 GivenAPendingUpdateReminder();
-                AndPendingUpdates(forBuild: b);
-                WithRequiredUpdates(fromBuild: b);
-                using (WithExistingPullRequest(updatable: true))
+                AndPendingUpdates(b);
+                WithRequiredUpdates(b);
+                using (WithExistingPullRequest(true))
                 {
                     await WhenProcessPendingUpdatesAsyncIsCalled();
                     ThenUpdateReminderIsRemoved();
                     AndPendingUpdateIsRemoved();
-                    ThenGetRequiredUpdatesShouldHaveBeenCalled(withBuild: b);
-                    AndCommitUpdatesShouldHaveBeenCalled(withUpdatesFromBuild: b);
+                    ThenGetRequiredUpdatesShouldHaveBeenCalled(b);
+                    AndCommitUpdatesShouldHaveBeenCalled(b);
                     AndUpdatePullRequestShouldHaveBeenCalled();
                     AndShouldHavePullRequestCheckReminder();
                 }
@@ -391,15 +443,18 @@ namespace SubscriptionActorService.Tests
                 await Execute(
                     async context =>
                     {
-                        var actor = CreateActor(context);
+                        PullRequestActor actor = CreateActor(context);
                         await actor.Implementation.UpdateAssetsAsync(
                             Subscription.Id,
                             forBuild.Id,
                             NewCommit,
-                            forBuild.Assets
-                                .Select(a => new Maestro.Contracts.Asset { Name = a.Name, Version = a.Version, })
+                            forBuild.Assets.Select(
+                                    a => new Asset
+                                    {
+                                        Name = a.Name,
+                                        Version = a.Version
+                                    })
                                 .ToList());
-
                     });
             }
 
@@ -410,19 +465,23 @@ namespace SubscriptionActorService.Tests
             {
                 GivenATestChannel();
                 GivenASubscription(
-                    new SubscriptionPolicy { Batchable = batchable, UpdateFrequency = UpdateFrequency.EveryBuild, });
-                var b = GivenANewBuild();
+                    new SubscriptionPolicy
+                    {
+                        Batchable = batchable,
+                        UpdateFrequency = UpdateFrequency.EveryBuild
+                    });
+                Build b = GivenANewBuild();
 
-                WithRequiredUpdates(fromBuild: b);
+                WithRequiredUpdates(b);
 
-                await WhenUpdateAssetsAsyncIsCalled(forBuild: b);
+                await WhenUpdateAssetsAsyncIsCalled(b);
 
-                ThenGetRequiredUpdatesShouldHaveBeenCalled(withBuild: b);
+                ThenGetRequiredUpdatesShouldHaveBeenCalled(b);
                 AndCreateNewBranchShouldHaveBeenCalled();
-                AndCommitUpdatesShouldHaveBeenCalled(withUpdatesFromBuild: b);
+                AndCommitUpdatesShouldHaveBeenCalled(b);
                 AndCreatePullRequestShouldHaveBeenCalled();
                 AndShouldHavePullRequestCheckReminder();
-                AndShouldHaveInProgressPullRequestState(forBuild: b);
+                AndShouldHaveInProgressPullRequestState(b);
             }
 
             [Theory]
@@ -432,16 +491,20 @@ namespace SubscriptionActorService.Tests
             {
                 GivenATestChannel();
                 GivenASubscription(
-                    new SubscriptionPolicy { Batchable = batchable, UpdateFrequency = UpdateFrequency.EveryBuild, });
-                var b = GivenANewBuild();
+                    new SubscriptionPolicy
+                    {
+                        Batchable = batchable,
+                        UpdateFrequency = UpdateFrequency.EveryBuild
+                    });
+                Build b = GivenANewBuild();
 
-                WithRequiredUpdates(fromBuild: b);
-                using (WithExistingPullRequest(updatable: true))
+                WithRequiredUpdates(b);
+                using (WithExistingPullRequest(true))
                 {
-                    await WhenUpdateAssetsAsyncIsCalled(forBuild: b);
+                    await WhenUpdateAssetsAsyncIsCalled(b);
 
-                    ThenGetRequiredUpdatesShouldHaveBeenCalled(withBuild: b);
-                    AndCommitUpdatesShouldHaveBeenCalled(withUpdatesFromBuild: b);
+                    ThenGetRequiredUpdatesShouldHaveBeenCalled(b);
+                    AndCommitUpdatesShouldHaveBeenCalled(b);
                     AndUpdatePullRequestShouldHaveBeenCalled();
                     AndShouldHavePullRequestCheckReminder();
                 }
@@ -454,16 +517,20 @@ namespace SubscriptionActorService.Tests
             {
                 GivenATestChannel();
                 GivenASubscription(
-                    new SubscriptionPolicy { Batchable = batchable, UpdateFrequency = UpdateFrequency.EveryBuild, });
-                var b = GivenANewBuild();
+                    new SubscriptionPolicy
+                    {
+                        Batchable = batchable,
+                        UpdateFrequency = UpdateFrequency.EveryBuild
+                    });
+                Build b = GivenANewBuild();
 
-                WithRequiredUpdates(fromBuild: b);
-                using (WithExistingPullRequest(updatable: false))
+                WithRequiredUpdates(b);
+                using (WithExistingPullRequest(false))
                 {
-                    await WhenUpdateAssetsAsyncIsCalled(forBuild: b);
+                    await WhenUpdateAssetsAsyncIsCalled(b);
 
                     ThenShouldHavePullRequestUpdateReminder();
-                    AndShouldHavePendingUpdateState(forBuild: b);
+                    AndShouldHavePendingUpdateState(b);
                 }
             }
 
@@ -474,15 +541,19 @@ namespace SubscriptionActorService.Tests
             {
                 GivenATestChannel();
                 GivenASubscription(
-                    new SubscriptionPolicy { Batchable = batchable, UpdateFrequency = UpdateFrequency.EveryBuild, });
-                var b = GivenANewBuild(Array.Empty<(string, string)>());
+                    new SubscriptionPolicy
+                    {
+                        Batchable = batchable,
+                        UpdateFrequency = UpdateFrequency.EveryBuild
+                    });
+                Build b = GivenANewBuild(Array.Empty<(string, string)>());
 
-                WithRequiredUpdates(fromBuild: b);
+                WithRequiredUpdates(b);
 
-                await WhenUpdateAssetsAsyncIsCalled(forBuild: b);
+                await WhenUpdateAssetsAsyncIsCalled(b);
 
-                ThenGetRequiredUpdatesShouldHaveBeenCalled(withBuild: b);
-                AndSubscriptionShouldBeUpdatedForMergedPullRequest(withBuild: b);
+                ThenGetRequiredUpdatesShouldHaveBeenCalled(b);
+                AndSubscriptionShouldBeUpdatedForMergedPullRequest(b);
             }
         }
     }

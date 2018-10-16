@@ -1,3 +1,8 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -17,12 +22,18 @@ namespace Maestro.Web
 
         public void Apply(ActionModel action)
         {
-            var preexisting = action.Controller.Filters.Concat(action.Filters);
+            IEnumerable<IFilterMetadata> preexisting = action.Controller.Filters.Concat(action.Filters);
             if (preexisting.Any(f => f is IAsyncAuthorizationFilter || f is IAllowAnonymousFilter))
+            {
                 return;
-            var attributes = action.Controller.Attributes.Concat(action.Attributes);
+            }
+
+            IEnumerable<object> attributes = action.Controller.Attributes.Concat(action.Attributes);
             if (attributes.Any(a => a is IAllowAnonymous || a is IAuthorizeData))
+            {
                 return;
+            }
+
             action.Filters.Add(Filter);
         }
     }

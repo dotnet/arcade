@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Maestro.Data.Models;
@@ -7,6 +11,9 @@ namespace SubscriptionActorService
 {
     public interface IMergePolicyEvaluator
     {
-        Task<MergePolicyEvaluationResult> EvaluateAsync(string prUrl, IRemote darc, IReadOnlyList<MergePolicyDefinition> policyDefinitions);
+        Task<MergePolicyEvaluationResult> EvaluateAsync(
+            string prUrl,
+            IRemote darc,
+            IReadOnlyList<MergePolicyDefinition> policyDefinitions);
     }
 }

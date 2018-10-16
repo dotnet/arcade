@@ -11,16 +11,19 @@ namespace Microsoft.DotNet.DarcLib
     public interface IRemote
     {
         /// <summary>
-        /// Retrieve a set of default channel associations based on the provided filters.
+        ///     Retrieve a set of default channel associations based on the provided filters.
         /// </summary>
         /// <param name="repository">Repository name</param>
         /// <param name="branch">Name of branch</param>
         /// <param name="channel">Channel name.</param>
         /// <returns>List of default channel associations. Channel is matched based on case insensitivity.</returns>
-        Task<IEnumerable<DefaultChannel>> GetDefaultChannelsAsync(string repository = null, string branch = null, string channel = null);
+        Task<IEnumerable<DefaultChannel>> GetDefaultChannelsAsync(
+            string repository = null,
+            string branch = null,
+            string channel = null);
 
         /// <summary>
-        /// Adds a default channel association.
+        ///     Adds a default channel association.
         /// </summary>
         /// <param name="repository">Repository receiving the default association</param>
         /// <param name="branch">Branch receiving the default association</param>
@@ -29,7 +32,7 @@ namespace Microsoft.DotNet.DarcLib
         Task AddDefaultChannelAsync(string repository, string branch, string channel);
 
         /// <summary>
-        /// Removes a default channel based on the specified criteria
+        ///     Removes a default channel based on the specified criteria
         /// </summary>
         /// <param name="repository">Repository having a default association</param>
         /// <param name="branch">Branch having a default association</param>
@@ -39,7 +42,10 @@ namespace Microsoft.DotNet.DarcLib
 
         Task<Channel> CreateChannelAsync(string name, string classification);
 
-        Task<IEnumerable<Subscription>> GetSubscriptionsAsync(string sourceRepo = null, string targetRepo = null, int? channelId = null);
+        Task<IEnumerable<Subscription>> GetSubscriptionsAsync(
+            string sourceRepo = null,
+            string targetRepo = null,
+            int? channelId = null);
 
         Task<Subscription> GetSubscriptionAsync(string subscriptionId);
 
@@ -68,7 +74,7 @@ namespace Microsoft.DotNet.DarcLib
             List<MergePolicy> mergePolicies);
 
         /// <summary>
-        /// Delete a subscription by ID.
+        ///     Delete a subscription by ID.
         /// </summary>
         /// <param name="subscriptionId">Id of subscription to delete.</param>
         /// <returns>Information on deleted subscription</returns>
@@ -82,7 +88,12 @@ namespace Microsoft.DotNet.DarcLib
 
         Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl);
 
-        Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null);
+        Task<IEnumerable<int>> SearchPullRequestsAsync(
+            string repoUri,
+            string pullRequestBranch,
+            PrStatus status,
+            string keyword = null,
+            string author = null);
 
         Task<IList<Commit>> GetPullRequestCommitsAsync(string pullRequestUrl);
     }

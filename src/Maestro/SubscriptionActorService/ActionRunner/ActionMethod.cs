@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using Microsoft.DotNet.DarcLib;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Internal;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace SubscriptionActorService
@@ -20,8 +15,8 @@ namespace SubscriptionActorService
         {
             MethodInfo = methodInfo;
             ParameterTypes = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray();
-            var taskReturnType = methodInfo.ReturnType;
-            var returnType = taskReturnType.GetGenericArguments()[0];
+            Type taskReturnType = methodInfo.ReturnType;
+            Type returnType = taskReturnType.GetGenericArguments()[0];
             ResultType = returnType.GetGenericArguments()[0];
 
             var attr = methodInfo.GetCustomAttribute<ActionMethodAttribute>();
@@ -37,7 +32,7 @@ namespace SubscriptionActorService
 
         public object[] DeserializeArguments(string arguments)
         {
-            var jArray = JArray.Parse(arguments);
+            JArray jArray = JArray.Parse(arguments);
             if (jArray.Count != ParameterTypes.Length)
             {
                 throw new TargetParameterCountException(
@@ -45,7 +40,7 @@ namespace SubscriptionActorService
             }
 
             var args = new object[ParameterTypes.Length];
-            for (int i = 0; i < ParameterTypes.Length; i++)
+            for (var i = 0; i < ParameterTypes.Length; i++)
             {
                 args[i] = jArray[i].ToObject(ParameterTypes[i]);
             }

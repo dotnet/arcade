@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.ApiVersioning.Schemes;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
@@ -31,7 +32,13 @@ namespace Microsoft.AspNetCore.ApiVersioning.Swashbuckle
             ConfigureSwaggerVersioningParameters(options, VersioningOptions.VersioningScheme);
             foreach (string version in ControllerProvider.Versions.Keys)
             {
-                options.SwaggerDoc(version, new Info {Version = version, Title = $"Version {version}"});
+                options.SwaggerDoc(
+                    version,
+                    new Info
+                    {
+                        Version = version,
+                        Title = $"Version {version}"
+                    });
             }
 
             options.DocInclusionPredicate(IsVersion);

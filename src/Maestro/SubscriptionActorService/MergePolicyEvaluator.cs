@@ -1,31 +1,35 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Maestro.Data.Models;
 using Maestro.MergePolicies;
 using Microsoft.DotNet.DarcLib;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using MergePolicy = Maestro.MergePolicies.MergePolicy;
 
 namespace SubscriptionActorService
 {
     public class MergePolicyEvaluator : IMergePolicyEvaluator
     {
-        public IImmutableDictionary<string, MergePolicy> MergePolicies { get; }
-        public ILogger<MergePolicyEvaluator> Logger { get; }
-
         public MergePolicyEvaluator(IEnumerable<MergePolicy> mergePolicies, ILogger<MergePolicyEvaluator> logger)
         {
             MergePolicies = mergePolicies.ToImmutableDictionary(p => p.Name);
             Logger = logger;
         }
 
-        public async Task<MergePolicyEvaluationResult> EvaluateAsync(string prUrl, IRemote darc, IReadOnlyList<MergePolicyDefinition> policyDefinitions)
+        public IImmutableDictionary<string, MergePolicy> MergePolicies { get; }
+        public ILogger<MergePolicyEvaluator> Logger { get; }
+
+        public async Task<MergePolicyEvaluationResult> EvaluateAsync(
+            string prUrl,
+            IRemote darc,
+            IReadOnlyList<MergePolicyDefinition> policyDefinitions)
         {
             var context = new MergePolicyEvaluationContext(prUrl, darc);
-            foreach (var definition in policyDefinitions)
+            foreach (MergePolicyDefinition definition in policyDefinitions)
             {
                 if (MergePolicies.TryGetValue(definition.Name, out MergePolicy policy))
                 {
