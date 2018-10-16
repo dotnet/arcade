@@ -59,12 +59,66 @@ namespace Microsoft.DotNet.DarcLib
         /// </summary>
         /// <param name="repository">Optionally filter by repository</param>
         /// <param name="branch">Optionally filter by branch</param>
-        /// <param name="channelId">Optionally filter by channel ID</param>
+        /// <param name="channel">Optionally filter by channel</param>
         /// <returns>Collection of default channels.</returns>
-        public async Task<IEnumerable<DefaultChannel>> GetDefaultChannelsAsync(string repository = null, string branch = null, int? channelId = null)
+        public async Task<IEnumerable<DefaultChannel>> GetDefaultChannelsAsync(string repository = null, string branch = null, string channel = null)
         {
             CheckForValidBarClient();
-            return await _barClient.DefaultChannels.ListAsync(repository, branch, channelId);
+            var channels = await _barClient.DefaultChannels.ListAsync(repository: repository, branch: branch);
+            if (!string.IsNullOrEmpty(channel))
+            {
+                return channels.Where(c => c.Channel.Name.Equals(channel, StringComparison.OrdinalIgnoreCase));
+            }
+            // Filter away based on channel info.
+            return channels;
+        }
+
+        /// <summary>
+        /// Adds a default channel association.
+        /// </summary>
+        /// <param name="repository">Repository receiving the default association</param>
+        /// <param name="branch">Branch receiving the default association</param>
+        /// <param name="channel">Name of channel that builds of 'repository' on 'branch' should automatically be applied to.</param>
+        /// <returns>Async task.</returns>
+        public async Task AddDefaultChannelAsync(string repository, string branch, string channel)
+        {
+            CheckForValidBarClient();
+            // Look up channel to translate to channel id.
+            var foundChannel = (await _barClient.Channels.GetAsync()).Where(c => c.Name.Equals(channel, StringComparison.OrdinalIgnoreCase)).SingleOrDefault();
+            if (foundChannel == null)
+            {
+                throw new ArgumentException($"Channel {channel} is not a valid channel.");
+            }
+
+            PostData defaultChannelsData = new PostData {
+                Branch = branch,
+                Repository = repository,
+                ChannelId = foundChannel.Id.Value
+            };
+
+            await _barClient.DefaultChannels.CreateAsync(defaultChannelsData);
+            return;
+        }
+
+        /// <summary>
+        /// Removes a default channel based on the specified criteria
+        /// </summary>
+        /// <param name="repository">Repository having a default association</param>
+        /// <param name="branch">Branch having a default association</param>
+        /// <param name="channel">Name of channel that builds of 'repository' on 'branch' are being applied to.</param>
+        /// <returns>Async task</returns>
+        public async Task DeleteDefaultChannelAsync(string repository, string branch, string channel)
+        {
+            CheckForValidBarClient();
+
+            var existingDefaultChannel = (await GetDefaultChannelsAsync(repository, branch, channel)).SingleOrDefault();
+
+            if (existingDefaultChannel != null)
+            {
+                // Find the existing default channel.  If none found then nothing to do.
+                await _barClient.DefaultChannels.DeleteAsync(existingDefaultChannel.Id.Value);
+                return;
+            }
         }
 
         /// <summary>
