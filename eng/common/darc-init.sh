@@ -13,7 +13,7 @@ done
 scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 verbosity=m
 
-. $scriptroot/init-tools.sh
+. "$scriptroot/tools.sh"
 
 function InstallDarcCli {
   local darc_cli_package_name="microsoft.dotnet.darc"

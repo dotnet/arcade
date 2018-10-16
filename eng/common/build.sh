@@ -135,7 +135,7 @@ while (($# > 0)); do
   esac
 done
 
-. "$scriptroot/init-tools.sh"
+. "$scriptroot/tools.sh"
 
 if [[ -z $projects ]]; then
   projects="$repo_root/*.sln"

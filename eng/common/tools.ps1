@@ -139,7 +139,7 @@ function LocateVisualStudio {
 
 function ConfigureTools { 
   # Include custom tools configuration
-  $script = Join-Path $EngRoot "Configure.ps1"
+  $script = Join-Path $EngRoot "configure-toolset.ps1"
 
   if (Test-Path $script) {
     . $script
@@ -232,7 +232,7 @@ function InitializeCustomToolset {
     return
   }
 
-  $script = Join-Path $EngRoot "RestoreToolset.ps1"
+  $script = Join-Path $EngRoot "restore-toolset.ps1"
 
   if (Test-Path $script) {
     . $script

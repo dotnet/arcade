@@ -184,7 +184,7 @@ function InitializeToolset {
 }
 
 function InitializeCustomToolset {
-  local script="$eng_root/RestoreToolset.sh"
+  local script="$eng_root/restore-toolset.sh"
 
   if [[ -a "$script" ]]; then
     . "$script"
@@ -192,7 +192,7 @@ function InitializeCustomToolset {
 }
 
 function ConfigureTools {
-  local script="$eng_root/Configure.sh"
+  local script="$eng_root/configure-toolset.sh"
 
   if [[ -a "$script" ]]; then
     . "$script"

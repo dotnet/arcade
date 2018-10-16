@@ -1,5 +1,5 @@
 $verbosity = "m"
-. $PSScriptRoot\init-tools.ps1
+. $PSScriptRoot\tools.ps1
 
 function InstallDarcCli {
   $darcCliPackageName = "microsoft.dotnet.darc"
