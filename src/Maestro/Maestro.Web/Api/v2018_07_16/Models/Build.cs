@@ -19,6 +19,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
 
             Id = other.Id;
             Repository = other.Repository;
+            Branch = other.Branch;
             Commit = other.Commit;
             BuildNumber = other.BuildNumber;
             DateProduced = other.DateProduced;
@@ -30,6 +31,8 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         public int Id { get; }
 
         public string Repository { get; }
+
+        public string Branch { get; }
 
         public string Commit { get; }
 
