@@ -100,10 +100,10 @@ try {
 
   $ToolFilePath = Get-ChildItem $ToolInstallDirectory -Recurse -Filter "$ToolName.exe" | % { $_.FullName }
   if (@($ToolFilePath).Length -Gt 1) {
-    Write-Error "There are too many $($ToolName)s in $ToolFilePath!"
+    Write-Error "There are multiple copies of $ToolName in $($ToolInstallDirectory): `n$(@($ToolFilePath | out-string))"
     exit 1
   } elseif (@($ToolFilePath).Length -Lt 1) {
-    Write-Error "There are not enough $($ToolName)s in $ToolFilePath!"
+    Write-Error "$ToolName was not found in $ToolFilePath."
     exit 1
   }
 
