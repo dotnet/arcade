@@ -73,7 +73,7 @@
 
     <PropertyGroup>
       <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' != 'Core'">"$(MSBuildBinPath)\MSBuild.exe" /nodeReuse:false</_MSBuildCmd>
-      <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' == 'Core'">"$(DotNetTool)" msbuild</_MSBuildCmd>
+      <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' == 'Core'">"$(MSBuildBinPath)\..\..\dotnet" msbuild</_MSBuildCmd>
     </PropertyGroup>
 
     <PropertyGroup>
