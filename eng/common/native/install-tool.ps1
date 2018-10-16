@@ -60,6 +60,26 @@ try {
   }
   $ToolNameMoniker = "$ToolName-$Version-$ToolOs-$Arch"
   $ToolInstallDirectory = Join-Path $InstallPath "$ToolName\$Version\"
+  $Uri = "$BaseUri/windows/$ToolName/$ToolNameMoniker.zip"
+
+  # Install tool
+  if ((Test-Path $ToolInstallDirectory) -And (-Not $Force)) {
+    Write-Verbose "$ToolName ($Version) already exists, skipping install"
+  }
+  else {
+    $InstallStatus = CommonLibrary\DownloadAndExtract -Uri $Uri `
+                                                      -InstallDirectory $ToolInstallDirectory `
+                                                      -Force:$Force `
+                                                      -DownloadRetries $DownloadRetries `
+                                                      -RetryWaitTimeInSeconds $RetryWaitTimeInSeconds `
+                                                      -Verbose:$Verbose
+
+    if ($InstallStatus -Eq $False) {
+      Write-Error "Installation failed"
+      exit 1
+    }
+  }
+
   $ToolFilePath = Get-ChildItem $ToolInstallDirectory -Recurse -Filter "$ToolName.exe" | % { $_.FullName }
   if (@($ToolFilePath).Length -Gt 1) {
     Write-Error "There are too many $($ToolName)s in $ToolFilePath!"
@@ -69,7 +89,6 @@ try {
     exit 1
   }
   $ShimPath = Join-Path $InstallPath "$ToolName.exe"
-  $Uri = "$BaseUri/windows/$Toolname/$ToolNameMoniker.zip"
 
   if ($Clean) {
     Write-Host "Cleaning $ToolInstallDirectory"
@@ -88,23 +107,6 @@ try {
     exit 0
   }
 
-  # Install tool
-  if ((Test-Path $ToolFilePath) -And (-Not $Force)) {
-    Write-Verbose "$ToolName ($Version) already exists, skipping install"
-  }
-  else {
-    $InstallStatus = CommonLibrary\DownloadAndExtract -Uri $Uri `
-                                                      -InstallDirectory $ToolInstallDirectory `
-                                                      -Force:$Force `
-                                                      -DownloadRetries $DownloadRetries `
-                                                      -RetryWaitTimeInSeconds $RetryWaitTimeInSeconds `
-                                                      -Verbose:$Verbose
-
-    if ($InstallStatus -Eq $False) {
-      Write-Error "Installation failed"
-      exit 1
-    }
-  }
   # Generate shim
   # Always rewrite shims so that we are referencing the expected version
   $GenerateShimStatus = CommonLibrary\New-ScriptShim -ShimName $ToolName `
