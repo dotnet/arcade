@@ -50,14 +50,6 @@ namespace Microsoft.DotNet.Build.Common.Desktop
                 }
             }
 
-            // look in AppDomain base directory
-            probingPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
-            Debug.WriteLine($"Considering {probingPath} based on BaseDirectory");
-            if (Probe(probingPath, referenceName.Version, out assm))
-            {
-                return assm;
-            }
-
             // look next to the executing assembly
             assemblyPath = Assembly.GetExecutingAssembly().Location;
             if (!String.IsNullOrEmpty(assemblyPath))
@@ -69,6 +61,14 @@ namespace Microsoft.DotNet.Build.Common.Desktop
                 {
                     return assm;
                 }
+            }
+
+            // look in AppDomain base directory
+            probingPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
+            Debug.WriteLine($"Considering {probingPath} based on BaseDirectory");
+            if (Probe(probingPath, referenceName.Version, out assm))
+            {
+                return assm;
             }
 
             // look in current directory

@@ -74,6 +74,15 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         }
 
         /// <summary>
+        /// Optionally, other runtime.jsons which may contain imported RIDs
+        /// </summary>
+        public string[] ExternalRuntimeJsons
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// When defined, specifies the file to write compatibility precedence for each RID in the graph.
         /// </summary>
         public string CompatibilityMap
@@ -132,7 +141,22 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 runtimeGraph = SafeMerge(runtimeGraph, runtimeGroup);
             }
 
-            ValidateImports(runtimeGraph);
+            Dictionary<string, string> externalRids = new Dictionary<string, string>();
+            if (ExternalRuntimeJsons != null)
+            {
+                foreach(var externalRuntimeJson in ExternalRuntimeJsons)
+                {
+                    RuntimeGraph externalRuntimeGraph = JsonRuntimeFormat.ReadRuntimeGraph(externalRuntimeJson);
+
+                    foreach (var runtime in externalRuntimeGraph.Runtimes.Keys)
+                    {
+                        // don't check for duplicates, we merely care what is external
+                        externalRids.Add(runtime, externalRuntimeJson);
+                    }
+                }
+            }
+
+            ValidateImports(runtimeGraph, externalRids);
 
             if (!String.IsNullOrEmpty(RuntimeJson))
             {
@@ -229,13 +253,20 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return RuntimeGraph.Merge(existingGraph, runtimeGraph);
         }
 
-        private void ValidateImports(RuntimeGraph runtimeGraph)
+        private void ValidateImports(RuntimeGraph runtimeGraph, IDictionary<string, string> externalRIDs)
         {
             foreach (var runtimeDescription in runtimeGraph.Runtimes.Values)
             {
+                string externalRuntimeJson;
+
+                if (externalRIDs.TryGetValue(runtimeDescription.RuntimeIdentifier, out externalRuntimeJson))
+                {
+                    Log.LogError($"Runtime {runtimeDescription.RuntimeIdentifier} is defined in both this RuntimeGraph and {externalRuntimeJson}.");
+                }
+
                 foreach (var import in runtimeDescription.InheritedRuntimes)
                 {
-                    if (!runtimeGraph.Runtimes.ContainsKey(import))
+                    if (!runtimeGraph.Runtimes.ContainsKey(import) && !externalRIDs.ContainsKey(import))
                     {
                         Log.LogError($"Runtime {runtimeDescription.RuntimeIdentifier} imports {import} which is not defined.");
                     }

@@ -1,4 +1,3 @@
-<!-- Copyright (c) .NET Foundation. All rights reserved. -->
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <Import Condition="'$(_PackagingCommonTargetsImported)' != 'true'" Project="Packaging.common.targets"/>
@@ -494,19 +493,6 @@
         <PackageVersion>$(PackageVersion)</PackageVersion>
       </PackageFile>
 
-      <!-- Include Sources. Deduplicate so the nuspec doesn't contain multiple entries for each source file. -->
-      <PackageSources Include="@(File)"
-                      KeepMetadata="TargetPath;IsSourceCodeFile"
-                      KeepDuplicates="false"
-                      Condition="'%(File.IsSourceCodeFile)'=='true'" />
-      <!-- Add a placeholder source file if there are symbols but no sources. -->
-      <PackageSymbolFiles Include="@(File)" Condition="'%(File.IsSymbolFile)'=='true'" />
-      <PackageSources Include="$(PlaceholderFile)" Condition="'@(PackageSymbolFiles)'!='' AND '@(PackageSources)'==''">
-        <IsSourceCodeFile>true</IsSourceCodeFile>
-        <TargetPath>src</TargetPath>
-      </PackageSources>
-      <PackageFile Include="@(PackageSources)" />
-
       <!-- NuGet will treat TargetPath as a directory if the extensions dont match,
            however we need to package files without an extension (Unix exectuables).
            As such NuGet will always consider TargetPath to be a file path for these
@@ -960,6 +946,10 @@
     <DefaultValidateFramework Include="netcoreapp2.2">
       <RuntimeIDs>@(NETCoreApp22RIDs)</RuntimeIDs>
     </DefaultValidateFramework>
+    <NETCoreApp30RIDs Condition="'@(NETCoreApp30RIDs)' == ''" Include="@(NETCoreApp22RIDs)" />
+    <DefaultValidateFramework Include="netcoreapp3.0">
+      <RuntimeIDs>@(NETCoreApp30RIDs)</RuntimeIDs>
+    </DefaultValidateFramework>
 
     <NETCore50RIDs Condition="'@(NETCore50RIDs)' == ''" Include="win10-x86;win10-x86-aot;win10-x64;win10-x64-aot;win10-arm;win10-arm-aot" />
     <DefaultValidateFramework Include="netcore50">
@@ -998,6 +988,14 @@
     <NET47RIDs Condition="'@(NET47RIDs)' == ''" Include="@(NET462RIDs)" />
     <DefaultValidateFramework Include="net47" Condition="'$(ExcludeFromDesktopSupportValidation)' != 'true'">
       <RuntimeIDs>;@(NET47RIDs)</RuntimeIDs>
+    </DefaultValidateFramework>
+    <NET471RIDs Condition="'@(NET471RIDs)' == ''" Include="@(NET47RIDs)" />
+    <DefaultValidateFramework Include="net471" Condition="'$(ExcludeFromDesktopSupportValidation)' != 'true'">
+      <RuntimeIDs>;@(NET471RIDs)</RuntimeIDs>
+    </DefaultValidateFramework>
+    <NET472RIDs Condition="'@(NET472RIDs)' == ''" Include="@(NET471RIDs)" />
+    <DefaultValidateFramework Include="net472" Condition="'$(ExcludeFromDesktopSupportValidation)' != 'true'">
+      <RuntimeIDs>;@(NET472RIDs)</RuntimeIDs>
     </DefaultValidateFramework>
 
     <DefaultValidateFramework Include="wpa81">
@@ -1127,6 +1125,12 @@
       <SupportedFramework Condition="'%(SupportedFramework.Version)' == ''">
         <Version>$(_AssemblyVersion)</Version>
       </SupportedFramework>
+      <!--
+        Harvesting supported versions can sometimes lead to unknown versions when harvesting a package
+        which has placeholders for older frameworks like net45. We should just exclude those from validation
+        since we cannot easily determine what they are without looking at each specific platform itself.
+      -->
+      <SupportedFramework Remove="@(SupportedFramework)" Condition="'%(SupportedFramework.Version)' == 'unknown'" />
     </ItemGroup>
 
     <ValidatePackage ContractName="$(BaseId)"
@@ -1223,7 +1227,8 @@
                     References="@(Reference)"
                     FrameworkReferences="@(FrameworkReference)"
                     Files="@(_packageFile)"
-                    Serviceable="$(Serviceable)"/>
+                    Serviceable="$(Serviceable)"
+                    PackageTypes="$(PackageType)"/>
   </Target>
 
   <Target Name="CreatePackage"

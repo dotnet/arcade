@@ -310,7 +310,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 {
                     packageType = "packed";
                 }
-                Log.LogError($"Error when creating NuGet {packageType} package from {nuspecPath}. {e}");
+                Log.LogError($"Error when creating nuget {packageType} package from {nuspecPath}. {e}");
             }
         }
 

@@ -1,8 +1,7 @@
-<!-- Copyright (c) .NET Foundation. All rights reserved. -->
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
-  	<ImportPackagingTargets Condition="'$(ImportPackagingTargets)' == '' AND '$(MSBuildProjectExtension)' == '.pkgproj'">true</ImportPackagingTargets>
+    <ImportPackagingTargets Condition="'$(ImportPackagingTargets)' == '' AND '$(MSBuildProjectExtension)' == '.pkgproj'">true</ImportPackagingTargets>
   </PropertyGroup>
   <Import Project="Packaging.common.targets"/>
   <Import Project="Packaging.targets" Condition="'$(ImportPackagingTargets)' == 'true'" />

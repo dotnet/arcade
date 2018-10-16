@@ -1,4 +1,3 @@
-<!-- Copyright (c) .NET Foundation. All rights reserved. -->
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <Import Condition="'$(_PackagingCommonTargetsImported)' != 'true'" Project="Packaging.common.targets"/>
@@ -182,13 +181,7 @@
       <FilesToPackage Condition="'%(FilesToPackage.SubFolder)' != ''">
         <TargetPath>%(TargetPath)%(FilesToPackage.SubFolder)</TargetPath>
       </FilesToPackage>
-
-      <!-- Include source files for symbol packages. -->
-      <FilesToPackage Include="@(Compile->'%(FullPath)')">
-        <TargetPath>src</TargetPath>
-        <TargetPath Condition="$([System.String]::new('%(FullPath)').StartsWith('$(ProjectRoot)'))">$(SourceFileTargetPathPrefix)$([System.String]::new('%(FullPath)').Substring('$(ProjectRootLength)'))</TargetPath>
-        <IsSourceCodeFile>true</IsSourceCodeFile>
-      </FilesToPackage>
+      
     </ItemGroup>
   </Target>
 </Project>
