@@ -10,7 +10,7 @@
     <Content Include="FrameworkLists\**\*" CopyToOutputDirectory="Always"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.Build.Tasks.Packaging\Microsoft.DotNet.Build.Tasks.Packaging.csproj" />
+    <ProjectReference Include="..\src\Microsoft.DotNet.Build.Tasks.Packaging.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)"/>

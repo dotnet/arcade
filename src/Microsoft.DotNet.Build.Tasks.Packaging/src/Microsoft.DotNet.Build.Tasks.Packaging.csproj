@@ -45,6 +45,10 @@
 
     <DefaultItemExcludes Condition="'$(TargetFramework)' != 'net46'">**/*.Desktop.*</DefaultItemExcludes>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <None Include="..\build\**\*" Pack="true" PackagePath="build\%(RecursiveDir)%(FileName)%(Extension)"/>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)"/>
@@ -58,7 +62,7 @@
 
   <!-- Dependencies and sources that are specific to net46 -->
   <ItemGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'">
-    <Compile Include="..\common\AssemblyResolver.cs" />
+    <Compile Include="..\..\common\AssemblyResolver.cs" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
