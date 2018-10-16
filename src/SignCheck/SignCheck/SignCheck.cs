@@ -361,7 +361,7 @@ namespace SignCheck
         {
             try
             {
-                Log.WriteMessage(String.Format("{0} {1}", ThisAssembly.AssemblyName, ThisAssembly.AssemblyFileVersion));
+                Log.WriteMessage("Starting execution of SignCheck.");
 
                 SignatureVerificationOptions options = SignatureVerificationOptions.None;
                 options |= Options.Recursive ? SignatureVerificationOptions.VerifyRecursive : SignatureVerificationOptions.None;

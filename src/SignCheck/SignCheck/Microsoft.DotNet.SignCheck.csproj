@@ -1,3 +1,4 @@
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(MSBuildThisFileDirectory)/../Microsoft.SignCheck/ResxWorkaround.props" />
   <PropertyGroup>
@@ -7,6 +8,9 @@
     <IsTool>True</IsTool>
     <Configurations>Release;Debug</Configurations>
     <SignAssembly>false</SignAssembly>
+    <IsPackable>true</IsPackable>
+    <Description>Build artifact signing validation tool</Description>
+    <PackageTags>Arcade Signing Validation Tool</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Label="Nuget Package Settings">
@@ -15,13 +19,6 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.2.0" />
-    <PackageReference Include="NerdBank.GitVersioning" Version="2.1.17" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Microsoft.SignCheck\Microsoft.SignCheck.csproj">
-      <Private>true</Private>
-    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -29,6 +26,10 @@
       <PackagePath>tools/</PackagePath>
       <Pack>true</Pack>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.SignCheck\Microsoft.DotNet.SignCheckLibrary.csproj" />
   </ItemGroup>
 
   <ItemGroup>
