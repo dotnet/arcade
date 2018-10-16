@@ -29,10 +29,10 @@ Target completion date for these workstreams is 12/14/2018.
 | [SymReader](#symreader)                       | [tmat](#tomas-matousek)       | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Will follow Roslyn - need plan to go green |
 | [SymReader-Portable](#symreader-portable)     | [tmat](#tomas-matousek)       | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Will follow Roslyn - need plan to go green |
 | [Templating](#templating)                     | [vramak](#vijay-ramakrishnan) | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Need plan to go green |
-| [Test-Templates](#test-templates)             | [vramak](#vijay-ramakrishnan) | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Need plan to go green |
+| [Test-Templates](#test-templates)             | [sasin](#vijay-ramakrishnan) | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Need plan to go green |
 | [Toolset](#toolset)                           | [licavalc](#livar-cunha)      | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Will follow CLI - need plan to go green |
 | [Visual FSharp](#visual-fsharp)               | [brettfo](#brett-forsgren)    | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Need plan to go green |
-| [WebSDK](#websdk)                             | [vramak](#vijay-ramakrishnan) | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Need plan to go green |
+| [WebSDK](#websdk)                             | [vramak](#sarabjot-singh)     | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Need plan to go green |
 | [WinForms](#winforms)                         | [mmcgaw](#merrie-mcgaw)       | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | New repo, so understanding requirements better - Need plan |
 | [WPF](#wpf)                                   | [srivatsm](#vatsan-madhavan)  | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | New repo, so understanding requirements better - Need plan |
 
@@ -249,15 +249,6 @@ Owners: licavalc
 | [Engineering dependency flow](https://github.com/dotnet/arcade/issues/713)       |                      | Not scheduled | No resources available yet for scheduling |
 | [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/715)       |                      | Not scheduled | No resources available yet for scheduling |
 
-#### Test-Templates
-
-| Work stream                                                                      | Est. Completion Date | Status        | Notes |
-| -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/661)         |                      | Not scheduled | Will follow Templating repo |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/658) |                      | Not scheduled | Will follow Templating repo |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/657)       |                      | Not scheduled | Will follow Templating repo |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/659)       |                      | Not scheduled | Will follow Templating repo |
-
 #### WebSdk
 
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
@@ -266,6 +257,19 @@ Owners: licavalc
 | [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/719) |                      | Not scheduled | No resources available yet for scheduling |
 | [Engineering dependency flow](https://github.com/dotnet/arcade/issues/718)       |                      | Not scheduled | No resources available yet for scheduling |
 | [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/720)       |                      | Not scheduled | No resources available yet for scheduling |
+
+---
+
+### Sarabjot Singh
+
+#### Test-Templates
+
+| Work stream                                                                      | Est. Completion Date | Status        | Notes |
+| -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/661)         |                      | Not scheduled | Will follow Templating repo |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/658) |                      | Not scheduled | Will follow Templating repo |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/657)       |                      | Not scheduled | Will follow Templating repo |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/659)       |                      | Not scheduled | Will follow Templating repo |
 
 ---
 
