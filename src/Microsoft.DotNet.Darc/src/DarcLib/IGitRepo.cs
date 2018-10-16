@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -15,7 +14,12 @@ namespace Microsoft.DotNet.DarcLib
 
         Task PushFilesAsync(List<GitFile> filesToCommit, string repoUri, string branch, string commitMessage);
 
-        Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null);
+        Task<IEnumerable<int>> SearchPullRequestsAsync(
+            string repoUri,
+            string pullRequestBranch,
+            PrStatus status,
+            string keyword = null,
+            string author = null);
 
         Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl);
 

@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using Maestro.Data;
 using Maestro.Web.Api.v2018_07_16.Controllers;
@@ -19,7 +23,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
             Action = other.Action;
             if (!other.Success)
             {
-                var pathAndQuery = url.Action(
+                string pathAndQuery = url.Action(
                     nameof(RepositoryController.RetryActionAsync),
                     new
                     {
@@ -27,13 +31,13 @@ namespace Maestro.Web.Api.v2018_07_16.Models
                         branch = other.Branch,
                         timestamp = Timestamp.ToUnixTimeSeconds()
                     });
-                var (path, query) = pathAndQuery.Split2('?');
+                (string path, string query) = pathAndQuery.Split2('?');
                 RetryUrl = new UriBuilder
                 {
                     Scheme = "https",
                     Host = context.Request.GetUri().Host,
                     Path = path,
-                    Query = query,
+                    Query = query
                 }.Uri.AbsoluteUri;
             }
         }

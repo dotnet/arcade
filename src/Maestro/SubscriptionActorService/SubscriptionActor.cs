@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Maestro.Contracts;
 using Maestro.Data;
 using Maestro.Data.Models;
-using Microsoft.DotNet.DarcLib;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.ServiceFabric.Actors;
@@ -73,6 +72,30 @@ namespace SubscriptionActorService
 
         public Guid SubscriptionId => Id.GetGuidId();
 
+        public async Task TrackSuccessfulAction(string action, string result)
+        {
+            SubscriptionUpdate subscriptionUpdate = await GetSubscriptionUpdate();
+
+            subscriptionUpdate.Action = action;
+            subscriptionUpdate.ErrorMessage = result;
+            subscriptionUpdate.Method = null;
+            subscriptionUpdate.Arguments = null;
+            subscriptionUpdate.Success = true;
+            await Context.SaveChangesAsync();
+        }
+
+        public async Task TrackFailedAction(string action, string result, string method, string arguments)
+        {
+            SubscriptionUpdate subscriptionUpdate = await GetSubscriptionUpdate();
+
+            subscriptionUpdate.Action = action;
+            subscriptionUpdate.ErrorMessage = result;
+            subscriptionUpdate.Method = method;
+            subscriptionUpdate.Arguments = arguments;
+            subscriptionUpdate.Success = false;
+            await Context.SaveChangesAsync();
+        }
+
         public Task<string> RunActionAsync(string method, string arguments)
         {
             return ActionRunner.RunAction(this, method, arguments);
@@ -116,37 +139,17 @@ namespace SubscriptionActorService
 
             IPullRequestActor pullRequestActor = PullRequestActorFactory(pullRequestActorId);
 
-            List<Asset> assets = build.Assets
-                .Select(a => new Asset {Name = a.Name, Version = a.Version})
+            List<Asset> assets = build.Assets.Select(
+                    a => new Asset
+                    {
+                        Name = a.Name,
+                        Version = a.Version
+                    })
                 .ToList();
 
             await pullRequestActor.UpdateAssetsAsync(SubscriptionId, build.Id, build.Commit, assets);
 
             return ActionResult.Create(true, "Update Sent");
-        }
-
-        public async Task TrackSuccessfulAction(string action, string result)
-        {
-            SubscriptionUpdate subscriptionUpdate = await GetSubscriptionUpdate();
-
-            subscriptionUpdate.Action = action;
-            subscriptionUpdate.ErrorMessage = result;
-            subscriptionUpdate.Method = null;
-            subscriptionUpdate.Arguments = null;
-            subscriptionUpdate.Success = true;
-            await Context.SaveChangesAsync();
-        }
-
-        public async Task TrackFailedAction(string action, string result, string method, string arguments)
-        {
-            SubscriptionUpdate subscriptionUpdate = await GetSubscriptionUpdate();
-
-            subscriptionUpdate.Action = action;
-            subscriptionUpdate.ErrorMessage = result;
-            subscriptionUpdate.Method = method;
-            subscriptionUpdate.Arguments = arguments;
-            subscriptionUpdate.Success = false;
-            await Context.SaveChangesAsync();
         }
 
         private async Task<SubscriptionUpdate> GetSubscriptionUpdate()

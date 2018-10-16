@@ -21,7 +21,10 @@
                                     AzureActiveDirectory="true"
                                     ServerCertThumbprint="0123456789012345678901234567890123456789" />
   -->
-  <ClusterConnectionParameters ConnectionEndpoint="maestro-prod.westus2.cloudapp.azure.com:19000" X509Credential="true" ServerCertThumbprint="6D5B19EC4F23B78811ED38EBBEBFABD8713A4C41" FindType="FindByThumbprint" FindValue="9C2D2C0F9A13D303D7E186DE476DBF4B51D056F9" StoreLocation="LocalMachine" StoreName="My" />
+  <ClusterConnectionParameters ConnectionEndpoint="maestro-prod.westus2.cloudapp.azure.com:19000" X509Credential="true"
+                               ServerCertThumbprint="6D5B19EC4F23B78811ED38EBBEBFABD8713A4C41"
+                               FindType="FindByThumbprint" FindValue="9C2D2C0F9A13D303D7E186DE476DBF4B51D056F9"
+                               StoreLocation="LocalMachine" StoreName="My" />
   <ApplicationParameterFile Path="..\ApplicationParameters\Prod.xml" />
   <CopyPackageParameters CompressPackage="true" />
   <UpgradeDeployment Mode="Monitored" Enabled="true">

@@ -6,19 +6,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.DarcLib
 {
-    class LocalGitClient : IGitRepo
+    internal class LocalGitClient : IGitRepo
     {
-        string _gitRepoRoot;
-        ILogger _logger;
+        private string _gitRepoRoot;
+        private ILogger _logger;
 
         /// <summary>
-        /// Construct a new local git client
+        ///     Construct a new local git client
         /// </summary>
         /// <param name="path">Current path</param>
         public LocalGitClient(string path, ILogger logger)
@@ -50,7 +49,7 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task<string> GetFileContentsAsync(string filePath, string repoUri, string branch)
         {
-            using (StreamReader streamReader = new StreamReader(repoUri))
+            using (var streamReader = new StreamReader(repoUri))
             {
                 return await streamReader.ReadToEndAsync();
             }
@@ -121,7 +120,12 @@ namespace Microsoft.DotNet.DarcLib
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null)
+        public Task<IEnumerable<int>> SearchPullRequestsAsync(
+            string repoUri,
+            string pullRequestBranch,
+            PrStatus status,
+            string keyword = null,
+            string author = null)
         {
             throw new NotImplementedException();
         }

@@ -1,5 +1,10 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -13,23 +18,30 @@ namespace SubscriptionActorService
 {
     public class ActionRunner : IActionRunner
     {
-        protected ILogger Logger { get; }
+        private static readonly MethodInfo InvokeActionNoResultMethod =
+            typeof(ActionRunner).GetRuntimeMethods().Single(m => m.Name == nameof(InvokeActionNoResult));
+
+        private static readonly MethodInfo InvokeActionMethod =
+            typeof(ActionRunner).GetRuntimeMethods().Single(m => m.Name == nameof(InvokeAction));
 
         public ActionRunner(ILogger<ActionRunner> logger)
         {
             Logger = logger;
         }
 
+        protected ILogger Logger { get; }
+
         public Task<string> RunAction<T>(T tracker, string method, string arguments) where T : IActionTracker
         {
-            var methods = ActionMethods.Get<T>();
-            if (!methods.TryGetValue(method, out var actionMethod))
+            IImmutableDictionary<string, ActionMethod> methods = ActionMethods.Get<T>();
+            if (!methods.TryGetValue(method, out ActionMethod actionMethod))
             {
                 throw new ArgumentException("Specified method not found.", nameof(method));
             }
-            var args = actionMethod.DeserializeArguments(arguments);
+
+            object[] args = actionMethod.DeserializeArguments(arguments);
             return (Task<string>) InvokeActionNoResultMethod.MakeGenericMethod(actionMethod.ResultType)
-                .Invoke(this, new object[]{tracker, actionMethod, args});
+                .Invoke(this, new object[] {tracker, actionMethod, args});
         }
 
         public async Task<T> ExecuteAction<T>(Expression<Func<Task<ActionResult<T>>>> actionExpression)
@@ -40,7 +52,7 @@ namespace SubscriptionActorService
             }
 
             MethodInfo methodInfo = mce.Method;
-            var target = (IActionTracker)GetValue(mce.Object);
+            var target = (IActionTracker) GetValue(mce.Object);
             ActionMethod method = ActionMethods.Get(target.GetType())[methodInfo.Name];
             object[] arguments = GetArguments(mce.Arguments).ToArray();
             ActionResult<T> result = await InvokeAction<T>(target, method, arguments);
@@ -57,21 +69,23 @@ namespace SubscriptionActorService
             return ex is DarcException || ex is SubscriptionException;
         }
 
-        private static readonly MethodInfo InvokeActionNoResultMethod =
-            typeof(ActionRunner).GetRuntimeMethods().Single(m => m.Name == nameof(InvokeActionNoResult));
-
-        private async Task<string> InvokeActionNoResult<T>(IActionTracker target, ActionMethod method, object[] arguments)
+        private async Task<string> InvokeActionNoResult<T>(
+            IActionTracker target,
+            ActionMethod method,
+            object[] arguments)
         {
-            var result = await InvokeAction<T>(target, method, arguments);
+            ActionResult<T> result = await InvokeAction<T>(target, method, arguments);
             return result?.Message ?? "";
         }
 
-        private static readonly MethodInfo InvokeActionMethod =
-            typeof(ActionRunner).GetRuntimeMethods().Single(m => m.Name == nameof(InvokeAction));
-
-        private async Task<ActionResult<T>> InvokeAction<T>(IActionTracker target, ActionMethod method, object[] arguments)
+        private async Task<ActionResult<T>> InvokeAction<T>(
+            IActionTracker target,
+            ActionMethod method,
+            object[] arguments)
         {
-            var argumentsForFormat = arguments.ToArray(); // copy the array because formatted log values modifies the array.
+            object[]
+                argumentsForFormat =
+                    arguments.ToArray(); // copy the array because formatted log values modifies the array.
             string actionMessage = new FormattedLogValues(method.MessageFormat, argumentsForFormat).ToString();
 
             using (Logger.BeginScope(method.MessageFormat, argumentsForFormat))
@@ -92,9 +106,13 @@ namespace SubscriptionActorService
                 }
                 catch (Exception ex)
                 {
-                    var message = $"Unexpected error processing action: {ex.Message}";
+                    string message = $"Unexpected error processing action: {ex.Message}";
                     Logger.LogError(ex, message);
-                    await target.TrackFailedAction(actionMessage, message, method.Name, JsonConvert.SerializeObject(arguments));
+                    await target.TrackFailedAction(
+                        actionMessage,
+                        message,
+                        method.Name,
+                        JsonConvert.SerializeObject(arguments));
                 }
             }
 
@@ -103,7 +121,7 @@ namespace SubscriptionActorService
 
         private IEnumerable<object> GetArguments(IEnumerable<Expression> arguments)
         {
-            foreach (var argument in arguments)
+            foreach (Expression argument in arguments)
             {
                 yield return GetValue(argument);
             }
@@ -122,12 +140,15 @@ namespace SubscriptionActorService
                     {
                         return fi.GetValue(target);
                     }
+
                     if (member is PropertyInfo pi)
                     {
                         return pi.GetValue(target);
                     }
+
                     break;
             }
+
             throw new NotImplementedException();
         }
     }

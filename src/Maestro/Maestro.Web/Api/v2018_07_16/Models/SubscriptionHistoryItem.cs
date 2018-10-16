@@ -1,15 +1,13 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Maestro.Data;
-using Maestro.Data.Models;
 using Maestro.Web.Api.v2018_07_16.Controllers;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.Operations;
-using Microsoft.EntityFrameworkCore;
 
 namespace Maestro.Web.Api.v2018_07_16.Models
 {
@@ -30,7 +28,11 @@ namespace Maestro.Web.Api.v2018_07_16.Models
                     Host = context.Request.GetUri().Host,
                     Path = url.Action(
                         nameof(SubscriptionsController.RetrySubscriptionActionAsync),
-                        new {id = other.SubscriptionId, timestamp = Timestamp.ToUnixTimeSeconds()}),
+                        new
+                        {
+                            id = other.SubscriptionId,
+                            timestamp = Timestamp.ToUnixTimeSeconds()
+                        })
                 }.Uri.AbsoluteUri;
             }
         }

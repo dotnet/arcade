@@ -7,12 +7,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.DarcLib;
-using Newtonsoft.Json.Linq;
 
 namespace Maestro.MergePolicies
 {
     /// <summary>
-    ///   Merge the PR when it has more than one check and they are all successful, ignoring checks specified in the "ignoreChecks" property.
+    ///     Merge the PR when it has more than one check and they are all successful, ignoring checks specified in the
+    ///     "ignoreChecks" property.
     /// </summary>
     public class AllChecksSuccessfulMergePolicy : MergePolicy
     {
@@ -34,7 +34,7 @@ namespace Maestro.MergePolicies
                 return;
             }
 
-            var statuses = notIgnoredChecks.ToLookup(
+            ILookup<CheckState, Check> statuses = notIgnoredChecks.ToLookup(
                 c =>
                 {
                     // unify the check statuses to success, pending, and error
@@ -66,7 +66,6 @@ namespace Maestro.MergePolicies
             }
 
             context.Succeed($"Successful checks: {ListChecks(CheckState.Success)}");
-            return;
         }
     }
 }

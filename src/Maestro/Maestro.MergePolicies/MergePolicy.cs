@@ -4,19 +4,18 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
 namespace Maestro.MergePolicies
 {
     public class MergePolicyProperties
     {
-        public IReadOnlyDictionary<string, JToken> Properties { get; }
-
         public MergePolicyProperties(IReadOnlyDictionary<string, JToken> properties)
         {
             Properties = properties;
         }
+
+        public IReadOnlyDictionary<string, JToken> Properties { get; }
 
         public T Get<T>(string key)
         {
@@ -48,8 +47,6 @@ namespace Maestro.MergePolicies
 
         public abstract string DisplayName { get; }
 
-        public abstract Task EvaluateAsync(
-            IMergePolicyEvaluationContext context,
-            MergePolicyProperties properties);
+        public abstract Task EvaluateAsync(IMergePolicyEvaluationContext context, MergePolicyProperties properties);
     }
 }

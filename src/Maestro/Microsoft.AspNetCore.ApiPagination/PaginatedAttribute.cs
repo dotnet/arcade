@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +24,11 @@ namespace Microsoft.AspNetCore.ApiPagination
     [PublicAPI]
     public class PaginatedAttribute : ActionFilterAttribute
     {
+        public PaginatedAttribute(Type resultType)
+        {
+            ResultType = resultType;
+        }
+
         public string PageParameterName { get; set; } = "page";
 
         public string PageSizeParameterName { get; set; } = "perPage";
@@ -30,13 +39,8 @@ namespace Microsoft.AspNetCore.ApiPagination
 
         public Type ResultType { get; }
 
-        public PaginatedAttribute(Type resultType)
-        {
-            ResultType = resultType;
-        }
-
         /// <summary>
-        ///   Method that exists to allow creation of ParameterModel objects
+        ///     Method that exists to allow creation of ParameterModel objects
         /// </summary>
         [UsedImplicitly]
         private static void Method(int? page, int? perPage)
@@ -45,21 +49,19 @@ namespace Microsoft.AspNetCore.ApiPagination
 
         public IEnumerable<ParameterModel> CreateParameterModels()
         {
-            MethodInfo methodMethod = typeof(PaginatedAttribute)
-                .GetTypeInfo()
-                .DeclaredMethods
-                .Single(m => m.Name == "Method");
+            MethodInfo methodMethod = typeof(PaginatedAttribute).GetTypeInfo()
+                .DeclaredMethods.Single(m => m.Name == "Method");
 
             ParameterInfo pageParameterInfo = methodMethod.GetParameters()[0];
             var pageParameter = new ParameterModel(pageParameterInfo, Array.Empty<object>())
             {
-                ParameterName = PageParameterName,
+                ParameterName = PageParameterName
             };
 
             ParameterInfo perPageParameterInfo = methodMethod.GetParameters()[1];
             var perPageParameter = new ParameterModel(perPageParameterInfo, Array.Empty<object>())
             {
-                ParameterName = PageSizeParameterName,
+                ParameterName = PageSizeParameterName
             };
 
             yield return pageParameter;
@@ -128,7 +130,10 @@ namespace Microsoft.AspNetCore.ApiPagination
         }
 
         [UsedImplicitly]
-        private async Task TransformResultAsync<TData>(ResultExecutingContext context, ObjectResult result, IQueryable<TData> query)
+        private async Task TransformResultAsync<TData>(
+            ResultExecutingContext context,
+            ObjectResult result,
+            IQueryable<TData> query)
         {
             var page = (int) context.RouteData.Values[nameof(PaginatedAttribute) + ".page"];
             var perPage = (int) context.RouteData.Values[nameof(PaginatedAttribute) + ".perPage"];
@@ -150,12 +155,15 @@ namespace Microsoft.AspNetCore.ApiPagination
 
             AddLinkHeader(context, page, perPage, pageCount);
 
-            var requestServices = context.HttpContext.RequestServices;
+            IServiceProvider requestServices = context.HttpContext.RequestServices;
             var urlHelperFactory = requestServices.GetRequiredService<IUrlHelperFactory>();
-            var urlHelper = urlHelperFactory.GetUrlHelper(context);
-            var serviceProvider = new ExtendedServiceProvider(requestServices) {urlHelper, context.HttpContext};
-            result.Value = query
-                .Skip((page - 1) * perPage)
+            IUrlHelper urlHelper = urlHelperFactory.GetUrlHelper(context);
+            var serviceProvider = new ExtendedServiceProvider(requestServices)
+            {
+                urlHelper,
+                context.HttpContext
+            };
+            result.Value = query.Skip((page - 1) * perPage)
                 .Take(perPage)
                 .AsEnumerable()
                 .Select(o => ActivatorUtilities.CreateInstance(serviceProvider, ResultType, o));
@@ -166,9 +174,8 @@ namespace Microsoft.AspNetCore.ApiPagination
             if (context.Result is ObjectResult result &&
                 result.Value.IsGenericInterface(typeof(IQueryable<>), out Type typeParam))
             {
-                await (Task)
-                    typeof(PaginatedAttribute).GetTypeInfo().DeclaredMethods
-                    .Single(m => m.IsGenericMethod && m.Name == "TransformResultAsync")
+                await (Task) typeof(PaginatedAttribute).GetTypeInfo()
+                    .DeclaredMethods.Single(m => m.IsGenericMethod && m.Name == "TransformResultAsync")
                     .MakeGenericMethod(typeParam)
                     .Invoke(this, new[] {context, result, result.Value});
             }
@@ -177,7 +184,12 @@ namespace Microsoft.AspNetCore.ApiPagination
         private void AddLinkHeader(ResultExecutingContext context, int page, int perPage, int pageCount)
         {
             HttpRequest req = context.HttpContext.Request;
-            var currentUri = new UriBuilder {Path = req.Path, Scheme = "https", Host = req.Host.Host,};
+            var currentUri = new UriBuilder
+            {
+                Path = req.Path,
+                Scheme = "https",
+                Host = req.Host.Host
+            };
             if (req.Host.Port.HasValue)
             {
                 currentUri.Port = req.Host.Port.Value;
@@ -191,8 +203,7 @@ namespace Microsoft.AspNetCore.ApiPagination
                 var linkQuery =
                     new QueryBuilder(
                         query.Where(pair => pair.Key != PageParameterName && pair.Key != PageSizeParameterName)
-                            .SelectMany(
-                                pair => pair.Value.Select(v => new KeyValuePair<string, string>(pair.Key, v))))
+                            .SelectMany(pair => pair.Value.Select(v => new KeyValuePair<string, string>(pair.Key, v))))
                     {
                         {PageParameterName, p.ToString()},
                         {PageSizeParameterName, perPage.ToString()}
@@ -221,17 +232,12 @@ namespace Microsoft.AspNetCore.ApiPagination
 
     internal class ExtendedServiceProvider : Dictionary<Type, object>, IServiceProvider
     {
-        public IServiceProvider Inner { get; }
-
         public ExtendedServiceProvider(IServiceProvider inner)
         {
             Inner = inner;
         }
 
-        public void Add<T>(T value)
-        {
-            Add(typeof(T), value);
-        }
+        public IServiceProvider Inner { get; }
 
         public object GetService(Type serviceType)
         {
@@ -241,6 +247,11 @@ namespace Microsoft.AspNetCore.ApiPagination
             }
 
             return Inner.GetService(serviceType);
+        }
+
+        public void Add<T>(T value)
+        {
+            Add(typeof(T), value);
         }
     }
 }

@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,12 +27,16 @@ namespace SubscriptionActorService.Tests
         protected const string NewBuildNumber = "build.number";
         protected const string NewCommit = "sha2";
 
-        protected readonly Mock<IHostingEnvironment> HostingEnvironment;
-
         protected readonly Mock<IActionRunner> ActionRunner;
 
         protected readonly List<Action<BuildAssetRegistryContext>> ContextUpdates =
             new List<Action<BuildAssetRegistryContext>>();
+
+        protected readonly Mock<IHostingEnvironment> HostingEnvironment;
+
+        protected Channel Channel;
+
+        protected Subscription Subscription;
 
         public SubscriptionOrPullRequestActorTests()
         {
@@ -51,17 +59,20 @@ namespace SubscriptionActorService.Tests
             {
                 update(dbContext);
             }
+
             await dbContext.SaveChangesAsync();
         }
 
-        protected Channel Channel;
         internal void GivenATestChannel()
         {
-            Channel = new Channel { Name = "channel", Classification = "class" };
+            Channel = new Channel
+            {
+                Name = "channel",
+                Classification = "class"
+            };
             ContextUpdates.Add(context => context.Channels.Add(Channel));
         }
 
-        protected Subscription Subscription;
         internal void GivenASubscription(SubscriptionPolicy policy)
         {
             Subscription = new Subscription
@@ -70,18 +81,14 @@ namespace SubscriptionActorService.Tests
                 SourceRepository = SourceRepo,
                 TargetRepository = TargetRepo,
                 TargetBranch = TargetBranch,
-                PolicyObject = policy,
+                PolicyObject = policy
             };
             ContextUpdates.Add(context => context.Subscriptions.Add(Subscription));
         }
 
         internal Build GivenANewBuild((string name, string version)[] assets = null)
         {
-            assets = assets ?? new[]
-            {
-                ("quail.eating.ducks", "1.1.0"),
-                ("quite.expensive.device", "2.0.1"),
-            };
+            assets = assets ?? new[] {("quail.eating.ducks", "1.1.0"), ("quite.expensive.device", "2.0.1")};
             var build = new Build
             {
                 Branch = SourceBranch,
@@ -89,25 +96,32 @@ namespace SubscriptionActorService.Tests
                 BuildNumber = NewBuildNumber,
                 Commit = NewCommit,
                 DateProduced = DateTimeOffset.UtcNow,
-                Assets = new List<Asset>(assets.Select(a => new Asset
-                {
-                    Name = a.name,
-                    Version = a.version,
-                    Locations = new List<AssetLocation>
-                    {
-                        new AssetLocation{Location = AssetFeedUrl, Type = LocationType.NugetFeed},
-                    },
-                })),
+                Assets = new List<Asset>(
+                    assets.Select(
+                        a => new Asset
+                        {
+                            Name = a.name,
+                            Version = a.version,
+                            Locations = new List<AssetLocation>
+                            {
+                                new AssetLocation
+                                {
+                                    Location = AssetFeedUrl,
+                                    Type = LocationType.NugetFeed
+                                }
+                            }
+                        }))
             };
             ContextUpdates.Add(
                 context =>
                 {
                     context.Builds.Add(build);
-                    context.BuildChannels.Add(new BuildChannel
-                    {
-                        Build = build,
-                        Channel = Channel,
-                    });
+                    context.BuildChannels.Add(
+                        new BuildChannel
+                        {
+                            Build = build,
+                            Channel = Channel
+                        });
                 });
             return build;
         }

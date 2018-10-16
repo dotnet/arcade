@@ -7,9 +7,12 @@ namespace Microsoft.DotNet.DarcLib
     public class PullRequestProperties
     {
         public const string TitleTag = "[Darc-Update]";
-        public const string Description = "Darc is trying to update these files to the latest versions found in the Product Dependency Store";
-        public static readonly string Title = $"{TitleTag} global.json, Version.props and Version.Details.xml";
+
+        public const string Description =
+            "Darc is trying to update these files to the latest versions found in the Product Dependency Store";
+
         public const string AutoMergeTitle = "Auto-merging PR by Darc";
         public const string AutoMergeMessage = "Darc was instructed to merge this PR";
+        public static readonly string Title = $"{TitleTag} global.json, Version.props and Version.Details.xml";
     }
 }

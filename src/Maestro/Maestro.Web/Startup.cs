@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.Azure.KeyVault;
-using Microsoft.Azure.Services.AppAuthentication;
+using Microsoft.Azure.KeyVault.Models;
 using Microsoft.DotNet.ServiceFabric.ServiceHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -32,7 +33,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Microsoft.ServiceFabric.Actors;
 using Newtonsoft.Json;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
@@ -44,8 +44,8 @@ namespace Maestro.Web
         {
             Triggers<BuildChannel>.Inserted += entry =>
             {
-                var entity = entry.Entity;
-                var context = entry.Context;
+                BuildChannel entity = entry.Entity;
+                DbContext context = entry.Context;
                 var queue = context.GetService<BackgroundQueue>();
                 var dependencyUpdater = context.GetService<IDependencyUpdater>();
                 queue.Post(() => dependencyUpdater.StartUpdateDependenciesAsync(entity.BuildId, entity.ChannelId));
@@ -72,10 +72,10 @@ namespace Maestro.Web
             {
                 IConfigurationSection dpConfig = Configuration.GetSection("DataProtection");
 
-                var vaultUri = Configuration["KeyVaultUri"];
-                var keyVaultKeyIdentifierName = dpConfig["KeyIdentifier"];
-                var kvClient = ServiceHostConfiguration.GetKeyVaultClient(HostingEnvironment);
-                var key = kvClient.GetKeyAsync(vaultUri, keyVaultKeyIdentifierName).GetAwaiter().GetResult();
+                string vaultUri = Configuration["KeyVaultUri"];
+                string keyVaultKeyIdentifierName = dpConfig["KeyIdentifier"];
+                KeyVaultClient kvClient = ServiceHostConfiguration.GetKeyVaultClient(HostingEnvironment);
+                KeyBundle key = kvClient.GetKeyAsync(vaultUri, keyVaultKeyIdentifierName).GetAwaiter().GetResult();
                 services.AddDataProtection()
                     .PersistKeysToAzureBlobStorage(new Uri(dpConfig["KeyFileUri"]))
                     .ProtectKeysWithAzureKeyVault(kvClient, key.KeyIdentifier.ToString());
@@ -150,7 +150,7 @@ namespace Maestro.Web
             app.Run(
                 async ctx =>
                 {
-                    var result = new ApiError($"An error occured.");
+                    var result = new ApiError("An error occured.");
                     MvcJsonOptions jsonOptions =
                         ctx.RequestServices.GetRequiredService<IOptions<MvcJsonOptions>>().Value;
                     string output = JsonConvert.SerializeObject(result, jsonOptions.SerializerSettings);

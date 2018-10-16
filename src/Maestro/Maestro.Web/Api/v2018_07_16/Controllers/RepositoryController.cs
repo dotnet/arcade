@@ -1,7 +1,10 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -12,7 +15,6 @@ using Maestro.Web.Api.v2018_07_16.Models;
 using Microsoft.AspNetCore.ApiPagination;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ServiceFabric.Actors;
 using Swashbuckle.AspNetCore.Annotations;
@@ -23,19 +25,22 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
     [ApiVersion("2018-07-16")]
     public class RepositoryController : Controller
     {
-        public BuildAssetRegistryContext Context { get; }
-        public BackgroundQueue Queue { get; }
-        public Func<ActorId, IPullRequestActor> PullRequestActorFactory { get; }
-
-        public RepositoryController(BuildAssetRegistryContext context, BackgroundQueue queue, Func<ActorId, IPullRequestActor> pullRequestActorFactory)
+        public RepositoryController(
+            BuildAssetRegistryContext context,
+            BackgroundQueue queue,
+            Func<ActorId, IPullRequestActor> pullRequestActorFactory)
         {
             Context = context;
             Queue = queue;
             PullRequestActorFactory = pullRequestActorFactory;
         }
 
+        public BuildAssetRegistryContext Context { get; }
+        public BackgroundQueue Queue { get; }
+        public Func<ActorId, IPullRequestActor> PullRequestActorFactory { get; }
+
         [HttpGet("merge-policy")]
-        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(IList<MergePolicy>))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(IList<MergePolicy>))]
         public async Task<IActionResult> GetMergePolicies(string repository, string branch)
         {
             RepositoryBranch repoBranch = await Context.RepositoryBranches.FindAsync(repository, branch);
@@ -44,17 +49,22 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 return NotFound();
             }
 
-            var policies = repoBranch.PolicyObject?.MergePolicies ?? new List<Data.Models.MergePolicyDefinition>();
+            List<MergePolicyDefinition> policies =
+                repoBranch.PolicyObject?.MergePolicies ?? new List<MergePolicyDefinition>();
             return Ok(policies.Select(p => new MergePolicy(p)));
         }
 
         [HttpPost("merge-policy")]
-        public async Task<IActionResult> SetMergePolicies(string repository, string branch, [FromBody]IImmutableList<MergePolicy> policies)
+        public async Task<IActionResult> SetMergePolicies(
+            string repository,
+            string branch,
+            [FromBody] IImmutableList<MergePolicy> policies)
         {
             if (string.IsNullOrEmpty(repository))
             {
                 ModelState.TryAddModelError(nameof(repository), "The repository parameter is required");
             }
+
             if (string.IsNullOrEmpty(branch))
             {
                 ModelState.TryAddModelError(nameof(branch), "The branch parameter is required");
@@ -66,9 +76,8 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             }
 
             RepositoryBranch repoBranch = await GetRepositoryBranch(repository, branch);
-            RepositoryBranch.Policy policy = repoBranch.PolicyObject ?? new Data.Models.RepositoryBranch.Policy();
-            policy.MergePolicies =
-                policies?.Select(p => p.ToDb()).ToList() ?? new List<Data.Models.MergePolicyDefinition>();
+            RepositoryBranch.Policy policy = repoBranch.PolicyObject ?? new RepositoryBranch.Policy();
+            policy.MergePolicies = policies?.Select(p => p.ToDb()).ToList() ?? new List<MergePolicyDefinition>();
             repoBranch.PolicyObject = policy;
             await Context.SaveChangesAsync();
             return Ok();
@@ -83,6 +92,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             {
                 ModelState.TryAddModelError(nameof(repository), "The repository parameter is required");
             }
+
             if (string.IsNullOrEmpty(branch))
             {
                 ModelState.TryAddModelError(nameof(branch), "The branch parameter is required");
@@ -93,14 +103,14 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 return BadRequest(ModelState);
             }
 
-            var repoBranch = await Context.RepositoryBranches.FindAsync(repository, branch);
+            RepositoryBranch repoBranch = await Context.RepositoryBranches.FindAsync(repository, branch);
 
             if (repoBranch == null)
             {
                 return NotFound();
             }
 
-            var query = Context.RepositoryBranchUpdateHistory
+            IOrderedQueryable<RepositoryBranchUpdateHistoryEntry> query = Context.RepositoryBranchUpdateHistory
                 .Where(u => u.Repository == repository && u.Branch == branch)
                 .OrderByDescending(u => u.Timestamp);
 
@@ -115,6 +125,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             {
                 ModelState.TryAddModelError(nameof(repository), "The repository parameter is required");
             }
+
             if (string.IsNullOrEmpty(branch))
             {
                 ModelState.TryAddModelError(nameof(branch), "The branch parameter is required");
@@ -127,14 +138,14 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
 
             DateTime ts = DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime;
 
-            var repoBranch = await Context.RepositoryBranches.FindAsync(repository, branch);
+            RepositoryBranch repoBranch = await Context.RepositoryBranches.FindAsync(repository, branch);
 
             if (repoBranch == null)
             {
                 return NotFound();
             }
 
-            var update = await Context.RepositoryBranchUpdateHistory
+            RepositoryBranchUpdateHistoryEntry update = await Context.RepositoryBranchUpdateHistory
                 .Where(u => u.Repository == repository && u.Branch == branch)
                 .FirstOrDefaultAsync(u => Math.Abs(EF.Functions.DateDiffSecond(u.Timestamp, ts)) < 1);
 
@@ -153,23 +164,24 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             Queue.Post(
                 async () =>
                 {
-                    var actor = PullRequestActorFactory(PullRequestActorId.Create(update.Repository, update.Branch));
+                    IPullRequestActor actor =
+                        PullRequestActorFactory(PullRequestActorId.Create(update.Repository, update.Branch));
                     await actor.RunActionAsync(update.Method, update.Arguments);
                 });
 
             return Accepted();
         }
 
-        private async Task<Data.Models.RepositoryBranch> GetRepositoryBranch(string repository, string branch)
+        private async Task<RepositoryBranch> GetRepositoryBranch(string repository, string branch)
         {
-            var repoBranch = await Context.RepositoryBranches.FindAsync(repository, branch);
+            RepositoryBranch repoBranch = await Context.RepositoryBranches.FindAsync(repository, branch);
             if (repoBranch == null)
             {
                 Context.RepositoryBranches.Add(
-                    repoBranch = new Data.Models.RepositoryBranch
+                    repoBranch = new RepositoryBranch
                     {
                         RepositoryName = repository,
-                        BranchName = branch,
+                        BranchName = branch
                     });
             }
             else

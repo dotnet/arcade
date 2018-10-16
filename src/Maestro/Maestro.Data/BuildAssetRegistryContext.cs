@@ -77,11 +77,15 @@ namespace Maestro.Data
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<Channel>()
-                .HasIndex(c => c.Name)
-                .IsUnique();
+            builder.Entity<Channel>().HasIndex(c => c.Name).IsUnique();
 
-            builder.Entity<BuildChannel>().HasKey(bc => new {bc.BuildId, bc.ChannelId});
+            builder.Entity<BuildChannel>()
+            .HasKey(
+                bc => new
+                {
+                    bc.BuildId,
+                    bc.ChannelId
+                });
 
             builder.Entity<BuildChannel>()
                 .HasOne(bc => bc.Build)
@@ -94,10 +98,23 @@ namespace Maestro.Data
                 .HasForeignKey(bc => bc.ChannelId);
 
             builder.Entity<ApplicationUserPersonalAccessToken>()
-                .HasIndex(t => new {t.ApplicationUserId, t.Name})
+                .HasIndex(
+                    t => new
+                    {
+                        t.ApplicationUserId,
+                        t.Name
+                    })
                 .IsUnique();
 
-            builder.Entity<DefaultChannel>().HasIndex(dc => new {dc.Repository, dc.Branch, dc.ChannelId}).IsUnique();
+            builder.Entity<DefaultChannel>()
+                .HasIndex(
+                    dc => new
+                    {
+                        dc.Repository,
+                        dc.Branch,
+                        dc.ChannelId
+                    })
+                .IsUnique();
 
             builder.Entity<SubscriptionUpdate>()
                 .HasOne(su => su.Subscription)
@@ -107,14 +124,17 @@ namespace Maestro.Data
 
             builder.ForSqlServerIsSystemVersioned<SubscriptionUpdate, SubscriptionUpdateHistory>("1 MONTHS");
 
-            builder.Entity<SubscriptionUpdateHistory>()
-                .HasIndex("SubscriptionId", "SysEndTime", "SysStartTime");
+            builder.Entity<SubscriptionUpdateHistory>().HasIndex("SubscriptionId", "SysEndTime", "SysStartTime");
 
-            builder.Entity<Repository>()
-                .HasKey(r => new {r.RepositoryName});
+            builder.Entity<Repository>().HasKey(r => new {r.RepositoryName});
 
             builder.Entity<RepositoryBranch>()
-                .HasKey(rb => new {rb.RepositoryName, rb.BranchName});
+            .HasKey(
+                rb => new
+                {
+                    rb.RepositoryName,
+                    rb.BranchName
+                });
 
             builder.Entity<RepositoryBranch>()
                 .HasOne(rb => rb.Repository)
@@ -122,18 +142,33 @@ namespace Maestro.Data
                 .HasForeignKey(rb => new {rb.RepositoryName});
 
             builder.Entity<RepositoryBranchUpdate>()
-                .HasKey(ru => new {ru.RepositoryName, ru.BranchName});
+            .HasKey(
+                ru => new
+                {
+                    ru.RepositoryName,
+                    ru.BranchName
+                });
 
             builder.Entity<RepositoryBranchUpdate>()
                 .HasOne(ru => ru.RepositoryBranch)
                 .WithOne()
-                .HasForeignKey<RepositoryBranchUpdate>(ru => new {ru.RepositoryName, ru.BranchName})
+                .HasForeignKey<RepositoryBranchUpdate>(
+                    ru => new
+                    {
+                        ru.RepositoryName,
+                        ru.BranchName
+                    })
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.ForSqlServerIsSystemVersioned<RepositoryBranchUpdate, RepositoryBranchUpdateHistory>("3 MONTHS");
 
             builder.Entity<RepositoryBranchUpdateHistory>()
-                .HasKey(ru => new {ru.RepositoryName, ru.BranchName});
+            .HasKey(
+                ru => new
+                {
+                    ru.RepositoryName,
+                    ru.BranchName
+                });
 
             builder.Entity<RepositoryBranchUpdateHistory>()
                 .HasIndex("RepositoryName", "BranchName", "SysEndTime", "SysStartTime");
@@ -156,7 +191,7 @@ FOR SYSTEM_TIME ALL
                                 ErrorMessage = u.ErrorMessage,
                                 Method = u.Method,
                                 Arguments = u.Arguments,
-                                Timestamp = EF.Property<DateTime>(u, "SysStartTime"),
+                                Timestamp = EF.Property<DateTime>(u, "SysStartTime")
                             }));
 
             builder.Query<RepositoryBranchUpdateHistoryEntry>()
@@ -176,7 +211,7 @@ FOR SYSTEM_TIME ALL
                                 ErrorMessage = u.ErrorMessage,
                                 Method = u.Method,
                                 Arguments = u.Arguments,
-                                Timestamp = EF.Property<DateTime>(u, "SysStartTime"),
+                                Timestamp = EF.Property<DateTime>(u, "SysStartTime")
                             }));
         }
 

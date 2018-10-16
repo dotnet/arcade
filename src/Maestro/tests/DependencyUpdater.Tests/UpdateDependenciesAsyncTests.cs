@@ -18,7 +18,11 @@ namespace DependencyUpdater.Tests
         [Fact]
         public async Task EveryBuildSubscription()
         {
-            var channel = new Channel {Name = "channel", Classification = "class"};
+            var channel = new Channel
+            {
+                Name = "channel",
+                Classification = "class"
+            };
             var build = new Build
             {
                 Branch = "source.branch",
@@ -34,7 +38,11 @@ namespace DependencyUpdater.Tests
                 Version = "1.0.1",
                 Locations = new List<AssetLocation>
                 {
-                    new AssetLocation {Location = location, Type = LocationType.NugetFeed}
+                    new AssetLocation
+                    {
+                        Location = location,
+                        Type = LocationType.NugetFeed
+                    }
                 }
             };
             var newBuild = new Build
@@ -48,8 +56,16 @@ namespace DependencyUpdater.Tests
             };
             var buildChannels = new[]
             {
-                new BuildChannel {Build = build, Channel = channel},
-                new BuildChannel {Build = newBuild, Channel = channel}
+                new BuildChannel
+                {
+                    Build = build,
+                    Channel = channel
+                },
+                new BuildChannel
+                {
+                    Build = newBuild,
+                    Channel = channel
+                }
             };
             var subscription = new Subscription
             {
@@ -58,15 +74,18 @@ namespace DependencyUpdater.Tests
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
                 Enabled = true,
-                PolicyObject =
-                    new SubscriptionPolicy
-                    {
-                        MergePolicies = null,
-                        UpdateFrequency = UpdateFrequency.EveryBuild
-                    },
+                PolicyObject = new SubscriptionPolicy
+                {
+                    MergePolicies = null,
+                    UpdateFrequency = UpdateFrequency.EveryBuild
+                },
                 LastAppliedBuild = build
             };
-            var repoInstallation = new Repository {RepositoryName = "target.repo", InstallationId = 1};
+            var repoInstallation = new Repository
+            {
+                RepositoryName = "target.repo",
+                InstallationId = 1
+            };
             await Context.BuildChannels.AddRangeAsync(buildChannels);
             await Context.Subscriptions.AddAsync(subscription);
             await Context.Repositories.AddAsync(repoInstallation);
@@ -83,7 +102,11 @@ namespace DependencyUpdater.Tests
         [Fact]
         public async Task EveryBuildSubscriptionNotEnabled()
         {
-            var channel = new Channel { Name = "channel", Classification = "class" };
+            var channel = new Channel
+            {
+                Name = "channel",
+                Classification = "class"
+            };
             var build = new Build
             {
                 Branch = "source.branch",
@@ -99,7 +122,11 @@ namespace DependencyUpdater.Tests
                 Version = "1.0.1",
                 Locations = new List<AssetLocation>
                 {
-                    new AssetLocation {Location = location, Type = LocationType.NugetFeed}
+                    new AssetLocation
+                    {
+                        Location = location,
+                        Type = LocationType.NugetFeed
+                    }
                 }
             };
             var newBuild = new Build
@@ -109,12 +136,20 @@ namespace DependencyUpdater.Tests
                 BuildNumber = "build.number.2",
                 Commit = "sha2",
                 DateProduced = DateTimeOffset.UtcNow,
-                Assets = new List<Asset> { newAsset }
+                Assets = new List<Asset> {newAsset}
             };
             var buildChannels = new[]
             {
-                new BuildChannel {Build = build, Channel = channel},
-                new BuildChannel {Build = newBuild, Channel = channel}
+                new BuildChannel
+                {
+                    Build = build,
+                    Channel = channel
+                },
+                new BuildChannel
+                {
+                    Build = newBuild,
+                    Channel = channel
+                }
             };
             var subscription = new Subscription
             {
@@ -123,15 +158,18 @@ namespace DependencyUpdater.Tests
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
                 Enabled = false,
-                PolicyObject =
-                    new SubscriptionPolicy
-                    {
-                        MergePolicies = null,
-                        UpdateFrequency = UpdateFrequency.EveryBuild
-                    },
+                PolicyObject = new SubscriptionPolicy
+                {
+                    MergePolicies = null,
+                    UpdateFrequency = UpdateFrequency.EveryBuild
+                },
                 LastAppliedBuild = build
             };
-            var repoInstallation = new Repository { RepositoryName = "target.repo", InstallationId = 1 };
+            var repoInstallation = new Repository
+            {
+                RepositoryName = "target.repo",
+                InstallationId = 1
+            };
             await Context.BuildChannels.AddRangeAsync(buildChannels);
             await Context.Subscriptions.AddAsync(subscription);
             await Context.Repositories.AddAsync(repoInstallation);
@@ -146,7 +184,11 @@ namespace DependencyUpdater.Tests
         [Fact]
         public async Task NoSubscriptions()
         {
-            var channel = new Channel {Name = "channel", Classification = "class"};
+            var channel = new Channel
+            {
+                Name = "channel",
+                Classification = "class"
+            };
             var build = new Build
             {
                 Branch = "source.branch",
@@ -165,8 +207,16 @@ namespace DependencyUpdater.Tests
             };
             var buildChannels = new[]
             {
-                new BuildChannel {Build = build, Channel = channel},
-                new BuildChannel {Build = newBuild, Channel = channel}
+                new BuildChannel
+                {
+                    Build = build,
+                    Channel = channel
+                },
+                new BuildChannel
+                {
+                    Build = newBuild,
+                    Channel = channel
+                }
             };
             await Context.BuildChannels.AddRangeAsync(buildChannels);
             await Context.SaveChangesAsync();

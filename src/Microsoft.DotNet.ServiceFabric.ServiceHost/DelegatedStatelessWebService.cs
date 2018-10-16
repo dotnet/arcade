@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
             _configureServices = configureServices;
             if (typeof(TStartup).IsAssignableTo<IStartup>())
             {
-                _startupImplementation = (IStartup)ActivatorUtilities.CreateInstance<TStartup>(provider);
+                _startupImplementation = (IStartup) ActivatorUtilities.CreateInstance<TStartup>(provider);
             }
             else
             {
