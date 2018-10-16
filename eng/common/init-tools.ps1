@@ -254,19 +254,8 @@ function Stop-Processes() {
 }
 
 function MsBuild() {
-  $msbuildArgs = "$buildArgs /m /nologo /clp:Summary /v:$verbosity"
-  $extraArgs = "$args"
-
-  if ($warnaserror) {
-    $msbuildArgs += " /warnaserror"
-  }
-
-  $msbuildArgs += " /nr:$nodereuse"
-
-  Write-Debug "`"$buildDriver`" $msbuildArgs $extraArgs"
-  Invoke-Expression "& `"$buildDriver`" $msbuildArgs $extraArgs"
-
-  return $lastExitCode
+  $warnaserrorSwitch = if ($warnaserror) { "/warnaserror" } else { "" }
+  & $buildDriver $buildArgs $warnaserrorSwitch /m /nologo /clp:Summary /v:$verbosity /nr:$nodereuse $args
 }
 
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
