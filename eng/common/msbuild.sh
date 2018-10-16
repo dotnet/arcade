@@ -50,5 +50,6 @@ done
 
 . $scriptroot/init-tools.sh
 
+InitializeTools
 MSBuild $extraargs
 ExitWithExitCode $?

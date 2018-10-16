@@ -68,6 +68,8 @@ try {
     $projects = Join-Path $RepoRoot "*.sln"
   }
 
+  InitializeTools
+
   $BuildLog = Join-Path $LogDir "Build.binlog"
 
   MSBuild $ToolsetBuildProj `
@@ -88,7 +90,6 @@ try {
     /p:Publish=$publish `
     /p:PublishBuildAssets=$publishBuildAssets `
     /p:ContinuousIntegrationBuild=$ci `
-    /p:CIBuild=$ci `
     @properties
 
   if ($lastExitCode -ne 0) {

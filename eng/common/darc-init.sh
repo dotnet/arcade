@@ -31,4 +31,5 @@ function InstallDarcCli {
   echo $($DOTNET_INSTALL_DIR/dotnet tool install $darc_cli_package_name --version $toolset_version -v $verbosity -g)
 }
 
+InitializeTools
 InstallDarcCli

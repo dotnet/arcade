@@ -11,6 +11,7 @@ Param(
 . $PSScriptRoot\init-tools.ps1
 
 try {
+  InitializeTools
   MSBuild @extraArgs
   ExitWithExitCode $lastExitCode
 }

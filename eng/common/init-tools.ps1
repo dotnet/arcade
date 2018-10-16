@@ -7,6 +7,8 @@ $prepareMachine = if (Test-Path variable:prepareMachine) { $prepareMachine } els
 $restore = if (Test-Path variable:restore) { $restore } else { $true }
 $verbosity = if (Test-Path variable:verbosity) { $verbosity } else { "minimal" }
 $warnaserror = if (Test-Path variable:warnaserror) { $warnaserror } else { $true }
+$msbuildEngine = if (Test-Path variable:msbuildEngine) { $msbuildEngine } else { $null }
+$useInstalledDotNetCli = if (Test-Path variable:useInstalledCli) { $useInstalledCli } else { $true }
 
 set-strictmode -version 2.0
 $ErrorActionPreference = "Stop"
@@ -31,7 +33,7 @@ function InitializeDotNetCli([bool]$install) {
   }
 
   # Find the first path on %PATH% that contains the dotnet.exe
-  if ($env:DOTNET_INSTALL_DIR -eq $null) {
+  if ($useInstalledDotNetCli -and ($env:DOTNET_INSTALL_DIR -eq $null)) {
     $env:DOTNET_INSTALL_DIR = ${env:PATH}.Split(';') | where { ($_ -ne "") -and (Test-Path (Join-Path $_ "dotnet.exe")) }
   }
 
@@ -103,6 +105,12 @@ function InitializeVisualStudioBuild {
 
 function LocateVisualStudio {
   $vswhereVersion = $GlobalJson.tools.vswhere
+
+  if (!$vsWhereVersion) {
+    Write-Host "vswhere version must be specified in /global.json." -ForegroundColor Red
+    ExitWithExitCode 1
+  }
+
   $toolsRoot = Join-Path $RepoRoot ".tools"
   $vsWhereDir = Join-Path $toolsRoot "vswhere\$vswhereVersion"
   $vsWhereExe = Join-Path $vsWhereDir "vswhere.exe"
@@ -130,15 +138,31 @@ function LocateVisualStudio {
   return $vsInfo[0]
 }
 
+function ConfigureTools { 
+  # Include custom tools configuration
+  $script = Join-Path $EngRoot "Configure.ps1"
+
+  if (Test-Path $script) {
+    . $script
+  }
+}
+
 function InitializeTools() {
+  ConfigureTools
+
   $tools = $GlobalJson.tools
+
+  # Initialize dotnet cli if listed in 'tools'
+  $dotnetRoot = $null
+  if ((Get-Member -InputObject $tools -Name "dotnet") -ne $null) {
+    $dotnetRoot = InitializeDotNetCli -install:$restore
+  }
 
   if (-not $msbuildEngine) {
     # Presence of vswhere.version indicates the repo needs to build using VS msbuild.
-
     if ((Get-Member -InputObject $tools -Name "vswhere") -ne $null) {
       $msbuildEngine = "vs"
-    } elseif ((Get-Member -InputObject $tools -Name "dotnet") -ne $null) {
+    } elseif ($dotnetRoot -ne $null) {
       $msbuildEngine = "dotnet"
     } else {
       Write-Host "-msbuildEngine must be specified, or /global.json must specify 'tools.dotnet' or 'tools.vswhere'." -ForegroundColor Red
@@ -147,7 +171,10 @@ function InitializeTools() {
   }
 
   if ($msbuildEngine -eq "dotnet") {
-    $dotnetRoot = InitializeDotNetCli -install:$restore
+    if (!$dotnetRoot) {
+      Write-Host "/global.json must specify 'tools.dotnet'." -ForegroundColor Red
+      ExitWithExitCode 1
+    }
 
     $script:buildDriver = Join-Path $dotnetRoot "dotnet.exe"
     $script:buildArgs = "msbuild"
@@ -243,36 +270,26 @@ function MsBuild() {
   return $lastExitCode
 }
 
-try {
-  $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
-  $EngRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
-  $ArtifactsDir = Join-Path $RepoRoot "artifacts"
-  $ToolsetDir = Join-Path $ArtifactsDir "toolset"
-  $LogDir = Join-Path (Join-Path $ArtifactsDir "log") $configuration
-  $TempDir = Join-Path (Join-Path $ArtifactsDir "tmp") $configuration
-  $GlobalJson = Get-Content -Raw -Path (Join-Path $RepoRoot "global.json") | ConvertFrom-Json
+$RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+$EngRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+$ArtifactsDir = Join-Path $RepoRoot "artifacts"
+$ToolsetDir = Join-Path $ArtifactsDir "toolset"
+$LogDir = Join-Path (Join-Path $ArtifactsDir "log") $configuration
+$TempDir = Join-Path (Join-Path $ArtifactsDir "tmp") $configuration
+$GlobalJson = Get-Content -Raw -Path (Join-Path $RepoRoot "global.json") | ConvertFrom-Json
 
-  if ($env:NUGET_PACKAGES -eq $null) {
-    # Use local cache on CI to ensure deterministic build,
-    # use global cache in dev builds to avoid cost of downloading packages.
-    $env:NUGET_PACKAGES = if ($ci) { Join-Path $RepoRoot ".packages" }
-                          else { Join-Path $env:UserProfile ".nuget\packages" }
-  }
-
-  Create-Directory $ToolsetDir
-  Create-Directory $LogDir
-
-  if ($ci) {
-    Create-Directory $TempDir
-    $env:TEMP = $TempDir
-    $env:TMP = $TempDir
-  }
-
-  InitializeTools
+if ($env:NUGET_PACKAGES -eq $null) {
+  # Use local cache on CI to ensure deterministic build,
+  # use global cache in dev builds to avoid cost of downloading packages.
+  $env:NUGET_PACKAGES = if ($ci) { Join-Path $RepoRoot ".packages" }
+                        else { Join-Path $env:UserProfile ".nuget\packages" }
 }
-catch {
-  Write-Host $_
-  Write-Host $_.Exception
-  Write-Host $_.ScriptStackTrace
-  ExitWithExitCode 1
+
+Create-Directory $ToolsetDir
+Create-Directory $LogDir
+
+if ($ci) {
+  Create-Directory $TempDir
+  $env:TEMP = $TempDir
+  $env:TMP = $TempDir
 }

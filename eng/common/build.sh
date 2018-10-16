@@ -141,6 +141,8 @@ if [[ -z $projects ]]; then
   projects="$repo_root/*.sln"
 fi
 
+InitializeTools
+
 build_log="$log_dir/Build.binlog"
 
 MSBuild $toolset_build_proj \
@@ -158,7 +160,6 @@ MSBuild $toolset_build_proj \
   /p:Sign=$sign \
   /p:Publish=$publish \
   /p:ContinuousIntegrationBuild=$ci \
-  /p:CIBuild=$ci \
   $properties
 
 lastexitcode=$?

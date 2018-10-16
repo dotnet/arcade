@@ -190,7 +190,17 @@ function InitializeCustomToolset {
   fi
 }
 
+function ConfigureTools {
+  local script="$eng_root/Configure.sh"
+
+  if [[ -a "$script" ]]; then
+    . "$script"
+  fi
+}
+
 function InitializeTools {
+  ConfigureTools
+
   InitializeDotNetCli $restore
   build_driver="$_InitializeDotNetCli/dotnet"
 
@@ -249,5 +259,3 @@ if [[ $ci == true ]]; then
   export TEMP="$temp_dir"
   export TMP="$temp_dir"
 fi
-
-InitializeTools
