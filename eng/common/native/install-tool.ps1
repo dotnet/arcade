@@ -61,6 +61,24 @@ try {
   $ToolNameMoniker = "$ToolName-$Version-$ToolOs-$Arch"
   $ToolInstallDirectory = Join-Path $InstallPath "$ToolName\$Version\"
   $Uri = "$BaseUri/windows/$ToolName/$ToolNameMoniker.zip"
+  $ShimPath = Join-Path $InstallPath "$ToolName.exe"
+
+  if ($Clean) {
+    Write-Host "Cleaning $ToolInstallDirectory"
+    if (Test-Path $ToolInstallDirectory) {
+      Remove-Item $ToolInstallDirectory -Force -Recurse
+    }
+    Write-Host "Cleaning $ShimPath"
+    if (Test-Path $ShimPath) {
+      Remove-Item $ShimPath -Force
+    }
+    $ToolTempPath = CommonLibrary\Get-TempPathFilename -Path $Uri
+    Write-Host "Cleaning $ToolTempPath"
+    if (Test-Path $ToolTempPath) {
+      Remove-Item $ToolTempPath -Force
+    }
+    exit 0
+  }
 
   # Install tool
   if ((Test-Path $ToolInstallDirectory) -And (-Not $Force)) {
@@ -87,24 +105,6 @@ try {
   } elseif (@($ToolFilePath).Length -Lt 1) {
     Write-Error "There are not enough $($ToolName)s in $ToolFilePath!"
     exit 1
-  }
-  $ShimPath = Join-Path $InstallPath "$ToolName.exe"
-
-  if ($Clean) {
-    Write-Host "Cleaning $ToolInstallDirectory"
-    if (Test-Path $ToolInstallDirectory) {
-      Remove-Item $ToolInstallDirectory -Force -Recurse
-    }
-    Write-Host "Cleaning $ShimPath"
-    if (Test-Path $ShimPath) {
-      Remove-Item $ShimPath -Force
-    }
-    $ToolTempPath = CommonLibrary\Get-TempPathFilename -Path $Uri
-    Write-Host "Cleaning $ToolTempPath"
-    if (Test-Path $ToolTempPath) {
-      Remove-Item $ToolTempPath -Force
-    }
-    exit 0
   }
 
   # Generate shim
