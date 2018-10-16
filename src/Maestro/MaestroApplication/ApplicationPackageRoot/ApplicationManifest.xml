@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="MaestroApplicationType" ApplicationTypeVersion="1.0.36" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+<ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="MaestroApplicationType" ApplicationTypeVersion="1.0.40" xmlns="http://schemas.microsoft.com/2011/01/fabric">
   <Parameters>
     <Parameter Name="DependencyUpdater_MinReplicaSetSize" DefaultValue="3" />
     <Parameter Name="DependencyUpdater_PartitionCount" DefaultValue="1" />
@@ -10,25 +10,28 @@
     <Parameter Name="SubscriptionActorService_PartitionCount" DefaultValue="10" />
     <Parameter Name="SubscriptionActorService_MinReplicaSetSize" DefaultValue="3" />
     <Parameter Name="SubscriptionActorService_TargetReplicaSetSize" DefaultValue="3" />
+    <Parameter Name="PullRequestActorService_PartitionCount" DefaultValue="10" />
+    <Parameter Name="PullRequestActorService_MinReplicaSetSize" DefaultValue="3" />
+    <Parameter Name="PullRequestActorService_TargetReplicaSetSize" DefaultValue="3" />
   </Parameters>
   <!-- Import the ServiceManifest from the ServicePackage. The ServiceManifestName and ServiceManifestVersion 
        should match the Name and Version attributes of the ServiceManifest element defined in the 
        ServiceManifest.xml file. -->
   <ServiceManifestImport>
-    <ServiceManifestRef ServiceManifestName="SubscriptionActorServicePkg" ServiceManifestVersion="1.0.36" />
+    <ServiceManifestRef ServiceManifestName="SubscriptionActorServicePkg" ServiceManifestVersion="1.0.40" />
     <EnvironmentOverrides CodePackageRef="Code">
       <EnvironmentVariable Name="ASPNETCORE_ENVIRONMENT" Value="[Environment]" />
     </EnvironmentOverrides>
   </ServiceManifestImport>
   <ServiceManifestImport>
-    <ServiceManifestRef ServiceManifestName="DependencyUpdaterPkg" ServiceManifestVersion="1.0.36" />
+    <ServiceManifestRef ServiceManifestName="DependencyUpdaterPkg" ServiceManifestVersion="1.0.40" />
     <ConfigOverrides />
     <EnvironmentOverrides CodePackageRef="Code">
       <EnvironmentVariable Name="ASPNETCORE_ENVIRONMENT" Value="[Environment]" />
     </EnvironmentOverrides>
   </ServiceManifestImport>
   <ServiceManifestImport>
-    <ServiceManifestRef ServiceManifestName="Maestro.WebPkg" ServiceManifestVersion="1.0.36" />
+    <ServiceManifestRef ServiceManifestName="Maestro.WebPkg" ServiceManifestVersion="1.0.40" />
     <ConfigOverrides />
     <ResourceOverrides>
       <Endpoints>
@@ -62,6 +65,11 @@
     <Service Name="SubscriptionActorService" GeneratedIdRef="82792a84-735e-4f43-970a-18493cc68564|Persisted">
       <StatefulService ServiceTypeName="SubscriptionActorServiceType" TargetReplicaSetSize="[SubscriptionActorService_TargetReplicaSetSize]" MinReplicaSetSize="[SubscriptionActorService_MinReplicaSetSize]">
         <UniformInt64Partition PartitionCount="[SubscriptionActorService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
+      </StatefulService>
+    </Service>
+    <Service Name="PullRequestActorService" GeneratedIdRef="818bba8f-85b7-4be9-86c9-ec18f401f383|Persisted">
+      <StatefulService ServiceTypeName="PullRequestActorServiceType" TargetReplicaSetSize="[PullRequestActorService_TargetReplicaSetSize]" MinReplicaSetSize="[PullRequestActorService_MinReplicaSetSize]">
+        <UniformInt64Partition PartitionCount="[PullRequestActorService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
       </StatefulService>
     </Service>
   </DefaultServices>

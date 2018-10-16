@@ -223,16 +223,45 @@ namespace Microsoft.DotNet.DarcLib
             return responseContent["base"]["repo"]["html_url"].ToString();
         }
 
-        public async Task<string> CreatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
+        public async Task<PullRequest> GetPullRequestAsync(string pullRequestUrl)
         {
-            string linkToPullRquest = await CreateOrUpdatePullRequestAsync(repoUri, mergeWithBranch, sourceBranch, HttpMethod.Post, title, description);
-            return linkToPullRquest;
+            var (owner, repo, id) = ParsePullRequestUri(pullRequestUrl);
+            var pr = await Client.PullRequest.Get(owner, repo, id);
+            return new PullRequest
+            {
+                Title = pr.Title,
+                Description = pr.Body,
+                BaseBranch = pr.Base.Ref,
+                HeadBranch = pr.Head.Ref,
+            };
         }
 
-        public async Task<string> UpdatePullRequestAsync(string pullRequestUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
+        public async Task<string> CreatePullRequestAsync(string repoUri, PullRequest pullRequest)
         {
-            string linkToPullRquest = await CreateOrUpdatePullRequestAsync(pullRequestUri, mergeWithBranch, sourceBranch, new HttpMethod("PATCH"), title, description);
-            return linkToPullRquest;
+            var (owner, repo) = ParseRepoUri(repoUri);
+
+            var pr = new NewPullRequest(pullRequest.Title, pullRequest.HeadBranch, pullRequest.BaseBranch)
+            {
+                Body = pullRequest.Description,
+            };
+            var createdPullRequest = await Client.PullRequest.Create(owner, repo, pr);
+
+            return createdPullRequest.Url;
+        }
+
+        public async Task UpdatePullRequestAsync(string pullRequestUri, PullRequest pullRequest)
+        {
+            var (owner, repo, id) = ParsePullRequestUri(pullRequestUri);
+
+            await Client.PullRequest.Update(
+                owner,
+                repo,
+                id,
+                new PullRequestUpdate
+                {
+                    Title = pullRequest.Title,
+                    Body = pullRequest.Description,
+                });
         }
 
         public async Task MergePullRequestAsync(string pullRequestUrl, MergePullRequestParameters parameters)
@@ -254,35 +283,21 @@ namespace Microsoft.DotNet.DarcLib
             }
         }
 
-        public async Task<string> CreatePullRequestCommentAsync(string pullRequestUrl, string message)
+        private static readonly string CommentMarker =
+            "\n\n[//]: # (This identifies this comment as a Maestro++ comment)\n";
+
+        public async Task CreateOrUpdatePullRequestDarcCommentAsync(string pullRequestUrl, string message)
         {
             var (owner, repo, id) = ParsePullRequestUri(pullRequestUrl);
-
-            IssueComment comment = await Client.Issue.Comment.Create(owner, repo, id, message);
-
-            return comment.Id.ToString();
-        }
-
-        public async Task UpdatePullRequestCommentAsync(string pullRequestUrl, string commentId, string message)
-        {
-            var (owner, repo, id) = ParsePullRequestUri(pullRequestUrl);
-            if (!int.TryParse(commentId, out int commentIdValue))
+            var lastComment = (await Client.Issue.Comment.GetAllForIssue(owner, repo, id)).LastOrDefault();
+            if (lastComment != null && lastComment.Body.EndsWith(CommentMarker))
             {
-                throw new ArgumentException("The comment id '{commentId}' is in an invalid format", nameof(commentId));
+                await Client.Issue.Comment.Update(owner, repo, lastComment.Id, message + CommentMarker);
             }
-
-            await Client.Issue.Comment.Update(owner, repo, commentIdValue, message);
-        }
-
-        public async Task CommentOnPullRequestAsync(string pullRequestUrl, string message)
-        {
-            GitHubComment comment = new GitHubComment(message);
-
-            string body = JsonConvert.SerializeObject(comment, _serializerSettings);
-
-            var (owner, repo, id) = ParsePullRequestUri(pullRequestUrl);
-
-            await this.ExecuteGitCommand(HttpMethod.Post, $"repos/{owner}/{repo}/issues/{id}/comments", _logger, body);
+            else
+            {
+                await Client.Issue.Comment.Create(owner, repo, id, message + CommentMarker);
+            }
         }
 
         public async Task<List<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path)

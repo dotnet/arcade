@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Octokit;
 using Octokit.Internal;
+using Repository = Octokit.Repository;
 
 namespace Maestro.Web.Controllers
 {
@@ -70,7 +71,11 @@ namespace Maestro.Web.Controllers
 
         private async Task RemoveInstallationRepositoriesAsync(long installationId)
         {
-            Context.RepoInstallations.RemoveRange(await Context.RepoInstallations.Where(ri => ri.InstallationId == installationId).ToListAsync());
+            foreach (var repo in Context.Repositories.Where(r => r.InstallationId == installationId))
+            {
+                Context.Update(repo);
+                repo.InstallationId = 0;
+            }
             await Context.SaveChangesAsync();
         }
 
@@ -106,30 +111,29 @@ namespace Maestro.Web.Controllers
             string token = await GitHubTokenProvider.GetTokenForInstallation(installationId);
             IReadOnlyList<Repository> gitHubRepos = await GetAllInstallationRepositories(token);
 
-            HashSet<string> toRemove = (await Context.RepoInstallations.Where(ri => ri.InstallationId == installationId)
-                .Select(ri => ri.Repository)
-                .ToListAsync())
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            List<Data.Models.Repository> toRemove =
+                (await Context.Repositories.Where(r => r.InstallationId == installationId).ToListAsync());
 
             foreach (Repository repo in gitHubRepos)
             {
-                toRemove.Remove(repo.HtmlUrl);
-
-                RepoInstallation existing = await Context.RepoInstallations.FindAsync(repo.HtmlUrl);
+                Data.Models.Repository existing = await Context.Repositories.FindAsync(repo.HtmlUrl);
                 if (existing == null)
                 {
-                    Context.RepoInstallations.Add(
-                        new RepoInstallation {Repository = repo.HtmlUrl, InstallationId = installationId});
+                    Context.Repositories.Add(
+                        new Data.Models.Repository {RepositoryName = repo.HtmlUrl, InstallationId = installationId});
                 }
                 else
                 {
+                    toRemove.Remove(existing);
                     existing.InstallationId = installationId;
+                    Context.Update(existing);
                 }
             }
 
-            foreach (string repository in toRemove)
+            foreach (var repository in toRemove)
             {
-                Context.RepoInstallations.Remove(await Context.RepoInstallations.FindAsync(repository));
+                repository.InstallationId = 0;
+                Context.Update(repository);
             }
 
             await Context.SaveChangesAsync();

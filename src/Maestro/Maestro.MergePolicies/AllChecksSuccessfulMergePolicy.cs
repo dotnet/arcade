@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.DarcLib;
+using Newtonsoft.Json.Linq;
 
 namespace Maestro.MergePolicies
 {
@@ -17,9 +18,11 @@ namespace Maestro.MergePolicies
     {
         public override string DisplayName => "All Checks Successful";
 
-        protected override async Task<MergePolicyEvaluationResult> DoEvaluateAsync(MergePolicyEvaluationContext context)
+        public override async Task EvaluateAsync(
+            IMergePolicyEvaluationContext context,
+            MergePolicyProperties properties)
         {
-            var ignoreChecks = new HashSet<string>(context.Get<string[]>("ignoreChecks") ?? Array.Empty<string>());
+            var ignoreChecks = new HashSet<string>(properties.Get<string[]>("ignoreChecks") ?? Array.Empty<string>());
 
             IList<Check> checks = await context.Darc.GetPullRequestChecksAsync(context.PullRequestUrl);
 
@@ -27,17 +30,43 @@ namespace Maestro.MergePolicies
 
             if (notIgnoredChecks.Count < 1)
             {
-                return context.Fail("No unignored checks.");
+                context.Fail("No un-ignored checks.");
+                return;
             }
 
-            List<Check> failedChecks = notIgnoredChecks.Where(c => c.Status != CheckState.Success).ToList();
+            var statuses = notIgnoredChecks.ToLookup(
+                c =>
+                {
+                    // unify the check statuses to success, pending, and error
+                    switch (c.Status)
+                    {
+                        case CheckState.Success:
+                        case CheckState.Pending:
+                            return c.Status;
+                        default:
+                            return CheckState.Error;
+                    }
+                });
 
-            if (failedChecks.Count < 1)
+            string ListChecks(CheckState state)
             {
-                return context.Success();
+                return string.Join(", ", statuses[state].Select(c => c.Name));
             }
 
-            return context.Fail($"Unsuccessful checks: {string.Join(", ", failedChecks.Select(c => c.Name))}");
+            if (statuses.Contains(CheckState.Error))
+            {
+                context.Fail($"Unsuccessful checks: {ListChecks(CheckState.Error)}");
+                return;
+            }
+
+            if (statuses.Contains(CheckState.Pending))
+            {
+                context.Pending($"Waiting on checks: {ListChecks(CheckState.Pending)}");
+                return;
+            }
+
+            context.Succeed($"Successful checks: {ListChecks(CheckState.Success)}");
+            return;
         }
     }
 }

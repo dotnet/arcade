@@ -306,13 +306,12 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost.Actors
         }
     }
 
-    public class DelegatedActorService<TServiceImplementation, TActorImplementation> : ActorService
-        where TServiceImplementation : IServiceImplementation
+    public class DelegatedActorService<TActorImplementation> : ActorService
     {
         private readonly Func<ActorService, ActorId, ILifetimeScope, Action<ContainerBuilder>, ActorBase> _actorFactory;
         private readonly Action<ContainerBuilder> _configureContainer;
         private readonly Action<IServiceCollection> _configureServices;
-        private ILifetimeScope _container;
+        protected ILifetimeScope Container { get; private set; }
 
         public DelegatedActorService(
             StatefulServiceContext context,
@@ -344,19 +343,53 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost.Actors
             var builder = new ContainerBuilder();
             builder.Populate(services);
             _configureContainer(builder);
-            _container = builder.Build();
+            Container = builder.Build();
         }
 
         protected override async Task OnCloseAsync(CancellationToken cancellationToken)
         {
             await base.OnCloseAsync(cancellationToken);
-            _container?.Dispose();
+            Container?.Dispose();
         }
 
         protected override void OnAbort()
         {
             base.OnAbort();
-            _container?.Dispose();
+            Container?.Dispose();
+        }
+
+        protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
+        {
+            return base.CreateServiceReplicaListeners();
+        }
+
+        protected override async Task RunAsync(CancellationToken cancellationToken)
+        {
+            await base.RunAsync(cancellationToken);
+        }
+
+        private ActorBase CreateActor(ActorId actorId)
+        {
+            return _actorFactory(this, actorId, Container, builder => { });
+        }
+
+        private static ActorBase ActorFactory(ActorService service, ActorId actorId)
+        {
+            return ((DelegatedActorService<TActorImplementation>) service).CreateActor(actorId);
+        }
+    }
+
+    public class DelegatedActorService<TServiceImplementation, TActorImplementation> : DelegatedActorService<TActorImplementation>
+        where TServiceImplementation : IServiceImplementation
+    {
+        public DelegatedActorService(
+            StatefulServiceContext context,
+            ActorTypeInformation actorTypeInfo,
+            Action<IServiceCollection> configureServices,
+            Action<ContainerBuilder> configureContainer,
+            Func<ActorService, ActorId, ILifetimeScope, Action<ContainerBuilder>, ActorBase> actorFactory,
+            ActorServiceSettings settings = null) : base(context, actorTypeInfo, configureServices, configureContainer, actorFactory, settings)
+        {
         }
 
         protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
@@ -377,7 +410,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost.Actors
                         context => ServiceHostRemoting.CreateServiceRemotingListener<TServiceImplementation>(
                             context,
                             ifaces,
-                            _container))
+                            Container))
                 });
         }
 
@@ -385,7 +418,7 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost.Actors
         {
             await base.RunAsync(cancellationToken);
 
-            using (ILifetimeScope scope = _container.BeginLifetimeScope())
+            using (ILifetimeScope scope = Container.BeginLifetimeScope())
             {
                 var impl = scope.Resolve<TServiceImplementation>();
                 var telemetryClient = scope.Resolve<TelemetryClient>();
@@ -396,16 +429,6 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost.Actors
                     impl.RunAsync(cancellationToken),
                     ScheduledService.RunScheduleAsync(impl, telemetryClient, cancellationToken, logger));
             }
-        }
-
-        private ActorBase CreateActor(ActorId actorId)
-        {
-            return _actorFactory(this, actorId, _container, builder => { });
-        }
-
-        private static ActorBase ActorFactory(ActorService service, ActorId actorId)
-        {
-            return ((DelegatedActorService<TServiceImplementation, TActorImplementation>) service).CreateActor(actorId);
         }
     }
 }

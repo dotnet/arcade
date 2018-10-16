@@ -39,6 +39,7 @@ namespace Microsoft.DotNet.EntityFrameworkCore.Extensions
                     idx++;
                 }
             }
+
             return base.Generate(toSort, model);
         }
 

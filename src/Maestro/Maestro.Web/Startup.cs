@@ -50,18 +50,6 @@ namespace Maestro.Web
                 var dependencyUpdater = context.GetService<IDependencyUpdater>();
                 queue.Post(() => dependencyUpdater.StartUpdateDependenciesAsync(entity.BuildId, entity.ChannelId));
             };
-
-            Triggers<Subscription>.Deleted += entry =>
-            {
-                var entity = entry.Entity;
-                var context = entry.Context;
-                var queue = context.GetService<BackgroundQueue>();
-                var httpContext = context.GetService<IHttpContextAccessor>().HttpContext;
-                var subscriptionActorFactory = context.GetService<Func<ActorId, ISubscriptionActor>>();
-                var subscriptionActor = subscriptionActorFactory(new ActorId(entity.Id));
-                var user = httpContext.User.Identity.Name;
-                queue.Post(() => subscriptionActor.SubscriptionDeletedAsync(httpContext.User.Identity.Name));
-            };
         }
 
         public Startup(IHostingEnvironment env)
@@ -154,6 +142,7 @@ namespace Maestro.Web
         public void ConfigureContainer(ContainerBuilder builder)
         {
             builder.AddServiceFabricActor<ISubscriptionActor>();
+            builder.AddServiceFabricActor<IPullRequestActor>();
         }
 
         private void ConfigureApiExceptions(IApplicationBuilder app)

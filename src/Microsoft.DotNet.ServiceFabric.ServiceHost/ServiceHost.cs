@@ -173,7 +173,30 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 
         public ServiceHost RegisterStatefulActorService<
             [MeansImplicitUse(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature)]
-            TService, [MeansImplicitUse(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature)]
+            TActor>(string actorName) where TActor : IActor
+        {
+            RegisterStatefulActorService<TActor>(
+                actorName,
+                (context, info, actorFactory) =>
+                {
+                    return new DelegatedActorService<TActor>(
+                        context,
+                        info,
+                        ApplyConfigurationToServices,
+                        ApplyConfigurationToContainer,
+                        actorFactory);
+                });
+            return ConfigureContainer(
+                builder =>
+                {
+                    builder.RegisterType<TActor>().As<TActor>().InstancePerDependency();
+                });
+        }
+
+        public ServiceHost RegisterStatefulActorService<
+            [MeansImplicitUse(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature)]
+            TService,
+            [MeansImplicitUse(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature)]
             TActor>(string actorName) where TService : IServiceImplementation where TActor : IActor
         {
             RegisterStatefulActorService<TActor>(

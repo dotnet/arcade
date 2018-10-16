@@ -66,10 +66,10 @@ namespace DependencyUpdater.Tests
                     },
                 LastAppliedBuild = build
             };
-            var repoInstallation = new RepoInstallation {Repository = "target.repo", InstallationId = 1};
+            var repoInstallation = new Repository {RepositoryName = "target.repo", InstallationId = 1};
             await Context.BuildChannels.AddRangeAsync(buildChannels);
             await Context.Subscriptions.AddAsync(subscription);
-            await Context.RepoInstallations.AddAsync(repoInstallation);
+            await Context.Repositories.AddAsync(repoInstallation);
             await Context.SaveChangesAsync();
 
             SubscriptionActor.Setup(s => s.UpdateAsync(newBuild.Id)).Returns(Task.CompletedTask);
@@ -131,10 +131,10 @@ namespace DependencyUpdater.Tests
                     },
                 LastAppliedBuild = build
             };
-            var repoInstallation = new RepoInstallation { Repository = "target.repo", InstallationId = 1 };
+            var repoInstallation = new Repository { RepositoryName = "target.repo", InstallationId = 1 };
             await Context.BuildChannels.AddRangeAsync(buildChannels);
             await Context.Subscriptions.AddAsync(subscription);
-            await Context.RepoInstallations.AddAsync(repoInstallation);
+            await Context.Repositories.AddAsync(repoInstallation);
             await Context.SaveChangesAsync();
 
             SubscriptionActor.Verify(a => a.UpdateAsync(build.Id), Times.Never());

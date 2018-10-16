@@ -8,5 +8,6 @@
     <Parameter Name="WebCertThumbprint" Value="C4DFDCC47D95C1C64B55B42946CCEFDDF9E46FAB" />
     <Parameter Name="Environment" Value="Development" />
     <Parameter Name="SubscriptionActorService_PartitionCount" Value="1" />
+    <Parameter Name="PullRequestActorService_PartitionCount" Value="1" />
   </Parameters>
 </Application>
