@@ -109,7 +109,8 @@ It is possible to override the default signing information or explicitly skip si
 In this snippet the library `Other.Library.dll` with Public Key Token `31bf3856ad364e35` won't be signed, independent of its target framework:
 
 ```xml
-<FileSignInfo Include="Other.Library.dll" PublicKeyToken="31bf3856ad364e35" CertificateName="None" />
+<ItemGroup>
+  <FileSignInfo Include="Other.Library.dll" PublicKeyToken="31bf3856ad364e35" CertificateName="None" />
 </ItemGroup>
 ```
 #### 4. How to remove all preconfigured signing information?
