@@ -62,7 +62,7 @@
 
   <!-- Dependencies and sources that are specific to net46 -->
   <ItemGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'">
-    <Compile Include="..\..\common\AssemblyResolver.cs" />
+    <Compile Include="..\..\Common\AssemblyResolver.cs" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
