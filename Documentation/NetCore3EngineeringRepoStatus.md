@@ -14,7 +14,7 @@ Target completion date for these workstreams is 12/14/2018.
 | Repo                                          | Owner                         | Status   | Risk Assessment                                                                           | Completion Status | Plan | Notes |
 | --------------------------------------------- | ----------------------------- | -------- |:-----------------------------------------------------------------------------------------:|:-----------------:| ----- |----- |
 | [Arcade](#arcade)                             | [mawilkie](#mark-wilkie)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | | |
-| [ASP.Net](#aspnet)                            | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 0 / 4             | | Internal builds in dnceng work is in progress - Need plan |
+| [AspNetCore](#aspnet)                         | [namc](#natemcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 0 / 4             | | Internal builds in dnceng work is in progress - Need plan |
 | [CLI](#cli)                                   | [licavalc](#livar-cunha)      | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Good progress, but need plan to go green |
 | [CLICommandLineParser](#clicommandlineparser) | [licavalc](#livar-cunha)      | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 3 / 4             | | Almost done, but need plan to go green |
 | [CLI-Migrate](#climigrate)                    | [licavalc](#livar-cunha)      | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 3 / 4             | | Almost done, but need plan to go green |
@@ -22,6 +22,8 @@ Target completion date for these workstreams is 12/14/2018.
 | [CoreFx](#corefx)                             | [danmose](#dan-moseley)       | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 1 / 4             | | A LOT of great progress,  but need plan to go green |
 | [Core-SDK](#coresdk)                          | [licavalc](#livar-cunha)      | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Will follow Toolset repo - need plan to go green |
 | [Core-Setup](#coresetup)                      | [danmose](#dan-moseley)       | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 1 / 4             | | Need to establish ownership|
+| [EntityFrameworkCore](#efcore)                | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 0 / 4             | | Internal builds in dnceng work is in progress - Need plan |
+| [Extensions](#extensions)                     | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 0 / 4             | | Internal builds in dnceng work is in progress - Need plan |
 | [MSBuild](#msbuild)                           | [raines](#rainer-sigwald)     | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Investigating requirements - need plan to go green |
 | [Roslyn](#roslyn)                             | [jaredpar](#jared-parsons)    | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Good progress, but need plan to go green |
 | [SDK](#sdk)                                   | [licavalc](#livar-cunha)      | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 3 / 4             | | Almost done, but need plan to go green |
@@ -179,7 +181,9 @@ Owners: licavalc
 
 ### Nate McMaster
 
-#### ASP.Net
+#### AspNetCore
+
+<https://github.com/aspnet/AspNetCore>
 
 | Work stream                                                                      | Est. Completion Date | Status      | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ----------- | ----- |
@@ -187,6 +191,28 @@ Owners: licavalc
 | [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/673) | ?                    | Scheduled   | Planning to start mid-November |
 | [Engineering dependency flow](https://github.com/dotnet/arcade/issues/673)       | ?                    | Scheduled   | Planning to start mid-November |
 | [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/675)       | ?                    | In progress | |
+
+#### EntityFrameworkCore
+
+<https://github.com/aspnet/EntityFrameworkCore>
+
+| Work stream                                                                      | Est. Completion Date | Status      | Notes |
+| -------------------------------------------------------------------------------- |:--------------------:| ----------- | ----- |
+| [Using Azure DevOps for CI](](???))         | ?                    | Scheduled   | Planning to start mid-November |
+| [Using shared toolset (Arcade SDK)](](???)) | ?                    | Scheduled   | Planning to start mid-November |
+| [Engineering dependency flow](](???))       | ?                    | Scheduled   | Planning to start mid-November |
+| [Internal builds from dnceng](](???))       | ?                    | In progress | |
+
+#### Extensions
+
+<https://github.com/aspnet/Extensions>
+
+| Work stream                                                                      | Est. Completion Date | Status      | Notes |
+| -------------------------------------------------------------------------------- |:--------------------:| ----------- | ----- |
+| [Using Azure DevOps for CI](](???))         | ?                    | Scheduled   | Planning to start mid-November |
+| [Using shared toolset (Arcade SDK)](](???)) | ?                    | Scheduled   | Planning to start mid-November |
+| [Engineering dependency flow](???)       | ?                    | Scheduled   | Planning to start mid-November |
+| [Internal builds from dnceng](???)       | ?                    | In progress | |
 
 ---
 
