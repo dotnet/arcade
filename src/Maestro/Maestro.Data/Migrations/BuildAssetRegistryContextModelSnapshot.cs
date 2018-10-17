@@ -222,16 +222,106 @@ namespace Maestro.Data.Migrations
                     b.ToTable("DefaultChannels");
                 });
 
-            modelBuilder.Entity("Maestro.Data.Models.RepoInstallation", b =>
+            modelBuilder.Entity("Maestro.Data.Models.Repository", b =>
                 {
-                    b.Property<string>("Repository")
-                        .ValueGeneratedOnAdd();
+                    b.Property<string>("RepositoryName")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(450);
 
                     b.Property<long>("InstallationId");
 
-                    b.HasKey("Repository");
+                    b.HasKey("RepositoryName");
 
-                    b.ToTable("RepoInstallations");
+                    b.ToTable("Repositories");
+                });
+
+            modelBuilder.Entity("Maestro.Data.Models.RepositoryBranch", b =>
+                {
+                    b.Property<string>("RepositoryName")
+                        .HasMaxLength(450);
+
+                    b.Property<string>("BranchName")
+                        .HasMaxLength(450);
+
+                    b.Property<string>("PolicyString")
+                        .HasColumnName("Policy");
+
+                    b.HasKey("RepositoryName", "BranchName");
+
+                    b.ToTable("RepositoryBranches");
+                });
+
+            modelBuilder.Entity("Maestro.Data.Models.RepositoryBranchUpdate", b =>
+                {
+                    b.Property<string>("RepositoryName")
+                        .HasMaxLength(450);
+
+                    b.Property<string>("BranchName")
+                        .HasMaxLength(450);
+
+                    b.Property<string>("Action");
+
+                    b.Property<string>("Arguments");
+
+                    b.Property<string>("ErrorMessage");
+
+                    b.Property<string>("Method");
+
+                    b.Property<bool>("Success");
+
+                    b.Property<DateTime>("SysEndTime")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2 GENERATED ALWAYS AS ROW END");
+
+                    b.Property<DateTime>("SysStartTime")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2 GENERATED ALWAYS AS ROW START");
+
+                    b.HasKey("RepositoryName", "BranchName");
+
+                    b.ToTable("RepositoryBranchUpdates");
+
+                    b.HasAnnotation("SqlServer:HistoryRetentionPeriod", "3 MONTHS");
+
+                    b.HasAnnotation("SqlServer:SystemVersioned", "Maestro.Data.Models.RepositoryBranchUpdateHistory");
+                });
+
+            modelBuilder.Entity("Maestro.Data.Models.RepositoryBranchUpdateHistory", b =>
+                {
+                    b.Property<string>("RepositoryName")
+                        .HasMaxLength(450);
+
+                    b.Property<string>("BranchName")
+                        .HasMaxLength(450);
+
+                    b.Property<string>("Action");
+
+                    b.Property<string>("Arguments");
+
+                    b.Property<string>("ErrorMessage");
+
+                    b.Property<string>("Method");
+
+                    b.Property<bool>("Success");
+
+                    b.Property<DateTime>("SysEndTime")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("SysStartTime")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("RepositoryName", "BranchName");
+
+                    b.HasIndex("SysEndTime", "SysStartTime")
+                        .HasAnnotation("SqlServer:Clustered", true);
+
+                    b.HasIndex("RepositoryName", "BranchName", "SysEndTime", "SysStartTime");
+
+                    b.ToTable("RepositoryBranchUpdateHistory");
+
+                    b.HasAnnotation("SqlServer:HistoryTable", true);
                 });
 
             modelBuilder.Entity("Maestro.Data.Models.Subscription", b =>
@@ -267,17 +357,13 @@ namespace Maestro.Data.Migrations
                 {
                     b.Property<Guid>("SubscriptionId");
 
-                    b.Property<string>("Action")
-                        .HasMaxLength(450);
+                    b.Property<string>("Action");
 
-                    b.Property<string>("Arguments")
-                        .HasMaxLength(450);
+                    b.Property<string>("Arguments");
 
-                    b.Property<string>("ErrorMessage")
-                        .HasMaxLength(450);
+                    b.Property<string>("ErrorMessage");
 
-                    b.Property<string>("Method")
-                        .HasMaxLength(450);
+                    b.Property<string>("Method");
 
                     b.Property<bool>("Success");
 
@@ -303,17 +389,13 @@ namespace Maestro.Data.Migrations
                     b.Property<Guid>("SubscriptionId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Action")
-                        .HasMaxLength(450);
+                    b.Property<string>("Action");
 
-                    b.Property<string>("Arguments")
-                        .HasMaxLength(450);
+                    b.Property<string>("Arguments");
 
-                    b.Property<string>("ErrorMessage")
-                        .HasMaxLength(450);
+                    b.Property<string>("ErrorMessage");
 
-                    b.Property<string>("Method")
-                        .HasMaxLength(450);
+                    b.Property<string>("Method");
 
                     b.Property<bool>("Success");
 
@@ -327,9 +409,10 @@ namespace Maestro.Data.Migrations
 
                     b.HasKey("SubscriptionId");
 
-                    b.HasIndex("SubscriptionId")
-                        .HasAnnotation("SqlServer:Clustered", true)
-                        .HasAnnotation("SqlServer:ColumnstoreIndex", true);
+                    b.HasIndex("SysEndTime", "SysStartTime")
+                        .HasAnnotation("SqlServer:Clustered", true);
+
+                    b.HasIndex("SubscriptionId", "SysEndTime", "SysStartTime");
 
                     b.ToTable("SubscriptionUpdateHistory");
 
@@ -493,6 +576,22 @@ namespace Maestro.Data.Migrations
                         .WithMany("DefaultChannels")
                         .HasForeignKey("ChannelId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Maestro.Data.Models.RepositoryBranch", b =>
+                {
+                    b.HasOne("Maestro.Data.Models.Repository", "Repository")
+                        .WithMany("Branches")
+                        .HasForeignKey("RepositoryName")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Maestro.Data.Models.RepositoryBranchUpdate", b =>
+                {
+                    b.HasOne("Maestro.Data.Models.RepositoryBranch", "RepositoryBranch")
+                        .WithOne()
+                        .HasForeignKey("Maestro.Data.Models.RepositoryBranchUpdate", "RepositoryName", "BranchName")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Maestro.Data.Models.Subscription", b =>

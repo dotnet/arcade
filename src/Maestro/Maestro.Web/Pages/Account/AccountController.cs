@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -94,7 +95,11 @@ namespace Maestro.Web.Pages.Account
 
             using (IDbContextTransaction txn = await Context.Database.BeginTransactionAsync())
             {
-                var user = new ApplicationUser {UserName = name, FullName = fullName};
+                var user = new ApplicationUser
+                {
+                    UserName = name,
+                    FullName = fullName
+                };
                 IdentityResult result = await UserManager.CreateAsync(user);
                 if (!result.Succeeded)
                 {
@@ -112,9 +117,7 @@ namespace Maestro.Web.Pages.Account
                 }
 
                 IEnumerable<Claim> claimsToAdd = info.Principal.Claims.Where(
-                    c => c.Type == ClaimTypes.Email ||
-                         c.Type == "urn:github:name" ||
-                         c.Type == "urn:github:url" ||
+                    c => c.Type == ClaimTypes.Email || c.Type == "urn:github:name" || c.Type == "urn:github:url" ||
                          c.Type == ClaimTypes.Role);
 
                 result = await UserManager.AddClaimsAsync(user, claimsToAdd);

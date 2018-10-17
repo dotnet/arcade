@@ -33,7 +33,11 @@ namespace Maestro.GitHub
         {
             var generator = new GitHubJwtFactory(
                 new StringPrivateKeySource(Options.PrivateKey),
-                new GitHubJwtFactoryOptions {AppIntegrationId = Options.GitHubAppId, ExpirationSeconds = 600});
+                new GitHubJwtFactoryOptions
+                {
+                    AppIntegrationId = Options.GitHubAppId,
+                    ExpirationSeconds = 600
+                });
             return generator.CreateEncodedJwtToken();
         }
     }

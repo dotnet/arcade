@@ -10,16 +10,23 @@ namespace Microsoft.DotNet.DarcLib
     [Serializable]
     public class DependencyFileNotFoundException : DarcException
     {
-        public DependencyFileNotFoundException(string filePath, string repository, string branch, Exception innerException)
-            : base($"Required dependency file '{filePath}' in repository '{repository}' branch '{branch}' was not found.", innerException)
+        public DependencyFileNotFoundException(
+            string filePath,
+            string repository,
+            string branch,
+            Exception innerException) : base(
+            $"Required dependency file '{filePath}' in repository '{repository}' branch '{branch}' was not found.",
+            innerException)
         {
         }
 
-        protected DependencyFileNotFoundException(SerializationInfo info, StreamingContext context) : base(info, context)
+        protected DependencyFileNotFoundException(SerializationInfo info, StreamingContext context) : base(
+            info,
+            context)
         {
         }
 
-        public DependencyFileNotFoundException() : base()
+        public DependencyFileNotFoundException()
         {
         }
 

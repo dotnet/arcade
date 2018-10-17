@@ -13,6 +13,7 @@
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetBuildOffline              Building without access to NuGet servers.
     DotNetOutputBlobFeedDir         Directory to publish Source Build assets to (packages, symbol pacakges, installers, etc.).
+    DotNetPublishToBlobFeed         Publish assets to blob feed using DotNetPublishBlobFeedUrl and DotNetPublishBlobFeedKey.
     DotNetPublishBlobFeedUrl        Target feed URL, or empty if not publishing to Azure blob feed.
     DotNetPublishBlobFeedKey        Azure blob feed account key.
     DotNetSymbolServerTokenMsdl     Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.
@@ -72,7 +73,7 @@
 
     <PropertyGroup>
       <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' != 'Core'">"$(MSBuildBinPath)\MSBuild.exe" /nodeReuse:false</_MSBuildCmd>
-      <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' == 'Core'">"$(DotNetTool)" msbuild</_MSBuildCmd>
+      <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' == 'Core'">"$(MSBuildBinPath)\..\..\dotnet" msbuild</_MSBuildCmd>
     </PropertyGroup>
 
     <PropertyGroup>

@@ -17,6 +17,7 @@
     This matches the common expectations that test command always runs all tests in scope.
   -->
   <Target Name="RunTests"
+          DependsOnTargets="InitializeDotNetToolPath"
           Inputs="@(TestToRun);*"
           Outputs="%(TestToRun.LogPath);%(TestToRun.ResultsXmlPath);%(TestToRun.ResultsHtmlPath)">
 

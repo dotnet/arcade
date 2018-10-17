@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.DarcLib
     [Serializable]
     public class DarcException : Exception
     {
-        public DarcException() : base()
+        public DarcException()
         {
         }
 

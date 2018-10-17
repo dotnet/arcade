@@ -14,21 +14,26 @@ namespace Microsoft.DotNet.DarcLib
 
         Task PushFilesAsync(List<GitFile> filesToCommit, string repoUri, string branch, string commitMessage);
 
-        Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null);
+        Task<IEnumerable<int>> SearchPullRequestsAsync(
+            string repoUri,
+            string pullRequestBranch,
+            PrStatus status,
+            string keyword = null,
+            string author = null);
 
         Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl);
 
         Task<string> GetPullRequestRepo(string pullRequestUrl);
 
-        Task<string> CreatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null);
+        Task<PullRequest> GetPullRequestAsync(string pullRequestUrl);
 
-        Task<string> UpdatePullRequestAsync(string pullRequestUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null);
+        Task<string> CreatePullRequestAsync(string repoUri, PullRequest pullRequest);
+
+        Task UpdatePullRequestAsync(string pullRequestUri, PullRequest pullRequest);
 
         Task MergePullRequestAsync(string pullRequestUrl, MergePullRequestParameters parameters);
 
-        Task<string> CreatePullRequestCommentAsync(string pullRequestUrl, string message);
-
-        Task UpdatePullRequestCommentAsync(string pullRequestUrl, string commentId, string message);
+        Task CreateOrUpdatePullRequestDarcCommentAsync(string pullRequestUrl, string message);
 
         Task<List<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path);
 
@@ -47,5 +52,13 @@ namespace Microsoft.DotNet.DarcLib
         Task<string> GetPullRequestBaseBranch(string pullRequestUrl);
 
         Task<IList<Commit>> GetPullRequestCommitsAsync(string pullRequestUrl);
+    }
+
+    public class PullRequest
+    {
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string BaseBranch { get; set; }
+        public string HeadBranch { get; set; }
     }
 }

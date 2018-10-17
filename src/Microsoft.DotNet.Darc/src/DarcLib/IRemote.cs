@@ -10,39 +10,90 @@ namespace Microsoft.DotNet.DarcLib
 {
     public interface IRemote
     {
-        Task<IEnumerable<DefaultChannel>> GetDefaultChannelsAsync(string repository = null, string branch = null, int? channelId = null);
+        /// <summary>
+        ///     Retrieve a set of default channel associations based on the provided filters.
+        /// </summary>
+        /// <param name="repository">Repository name</param>
+        /// <param name="branch">Name of branch</param>
+        /// <param name="channel">Channel name.</param>
+        /// <returns>List of default channel associations. Channel is matched based on case insensitivity.</returns>
+        Task<IEnumerable<DefaultChannel>> GetDefaultChannelsAsync(
+            string repository = null,
+            string branch = null,
+            string channel = null);
+
+        /// <summary>
+        ///     Adds a default channel association.
+        /// </summary>
+        /// <param name="repository">Repository receiving the default association</param>
+        /// <param name="branch">Branch receiving the default association</param>
+        /// <param name="channel">Name of channel that builds of 'repository' on 'branch' should automatically be applied to.</param>
+        /// <returns>Async task.</returns>
+        Task AddDefaultChannelAsync(string repository, string branch, string channel);
+
+        /// <summary>
+        ///     Removes a default channel based on the specified criteria
+        /// </summary>
+        /// <param name="repository">Repository having a default association</param>
+        /// <param name="branch">Branch having a default association</param>
+        /// <param name="channel">Name of channel that builds of 'repository' on 'branch' are being applied to.</param>
+        /// <returns>Async task</returns>
+        Task DeleteDefaultChannelAsync(string repository, string branch, string channel);
 
         Task<Channel> CreateChannelAsync(string name, string classification);
 
-        Task<IEnumerable<Subscription>> GetSubscriptionsAsync(string sourceRepo = null, string targetRepo = null, int? channelId = null);
+        Task<IEnumerable<Subscription>> GetSubscriptionsAsync(
+            string sourceRepo = null,
+            string targetRepo = null,
+            int? channelId = null);
 
         Task<Subscription> GetSubscriptionAsync(string subscriptionId);
 
-        Task<Subscription> CreateSubscriptionAsync(string channelName, string sourceRepo, string targetRepo,
-            string targetBranch, string updateFrequency, List<MergePolicy> mergePolicies);
+        Task<List<DependencyDetail>> GetRequiredUpdatesAsync(
+            string repoUri,
+            string branch,
+            string sourceCommit,
+            IEnumerable<AssetData> assets);
+
+        Task CreateNewBranchAsync(string repoUri, string baseBranch, string newBranch);
+
+        Task CommitUpdatesAsync(string repoUri, string branch, List<DependencyDetail> itemsToUpdate, string message);
+
+        Task<PullRequest> GetPullRequestAsync(string pullRequestUri);
+
+        Task<string> CreatePullRequestAsync(string repoUri, PullRequest pullRequest);
+
+        Task UpdatePullRequestAsync(string pullRequestUri, PullRequest pullRequest);
+
+        Task<Subscription> CreateSubscriptionAsync(
+            string channelName,
+            string sourceRepo,
+            string targetRepo,
+            string targetBranch,
+            string updateFrequency,
+            List<MergePolicy> mergePolicies);
 
         /// <summary>
-        /// Delete a subscription by ID.
+        ///     Delete a subscription by ID.
         /// </summary>
         /// <param name="subscriptionId">Id of subscription to delete.</param>
         /// <returns>Information on deleted subscription</returns>
         Task<Subscription> DeleteSubscriptionAsync(string subscriptionId);
 
-        Task<string> CreatePullRequestAsync(string repoUri, string branch, string assetsProducedInCommit, IEnumerable<Microsoft.DotNet.DarcLib.AssetData> assets, string pullRequestBaseBranch = null, string pullRequestTitle = null, string pullRequestDescription = null);
-
-        Task<string> UpdatePullRequestAsync(string pullRequestUrl, string assetsProducedInCommit, string branch, IEnumerable <Microsoft.DotNet.DarcLib.AssetData> assetsToUpdate, string pullRequestTitle = null, string pullRequestDescription = null);
-
         Task MergePullRequestAsync(string pullRequestUrl, MergePullRequestParameters parameters);
 
-        Task<string> CreatePullRequestCommentAsync(string pullRequestUrl, string message);
-
-        Task UpdatePullRequestCommentAsync(string pullRequestUrl, string commentId, string message);
+        Task CreateOrUpdatePullRequestStatusCommentAsync(string pullRequestUrl, string message);
 
         Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl);
 
         Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl);
 
-        Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null);
+        Task<IEnumerable<int>> SearchPullRequestsAsync(
+            string repoUri,
+            string pullRequestBranch,
+            PrStatus status,
+            string keyword = null,
+            string author = null);
 
         Task<IList<Commit>> GetPullRequestCommitsAsync(string pullRequestUrl);
     }

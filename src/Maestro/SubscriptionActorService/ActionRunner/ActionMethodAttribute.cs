@@ -2,17 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.DotNet.ServiceFabric.ServiceHost;
+using System;
 
 namespace SubscriptionActorService
 {
-    public class SubscriptionService : IServiceImplementation
+    [AttributeUsage(AttributeTargets.Method, Inherited = false)]
+    public class ActionMethodAttribute : Attribute
     {
-        public Task RunAsync(CancellationToken cancellationToken)
+        public ActionMethodAttribute(string format)
         {
-            return Task.CompletedTask;
+            Format = format;
         }
+
+        public string Format { get; }
     }
 }
