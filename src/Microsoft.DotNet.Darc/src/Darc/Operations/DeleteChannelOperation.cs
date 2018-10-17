@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Darc.Operations
             }
             catch (Exception e)
             {
-                Logger.LogError(e, "Error: Failed to create new channel.");
+                Logger.LogError(e, "Error: Failed to delete channel.");
                 return Constants.ErrorCode;
             }
         }
