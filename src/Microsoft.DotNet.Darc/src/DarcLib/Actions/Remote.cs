@@ -141,6 +141,17 @@ namespace Microsoft.DotNet.DarcLib
             return await _barClient.Channels.CreateChannelAsync(name, classification);
         }
 
+        /// <summary>
+        /// Deletes a channel from the Build Asset Registry
+        /// </summary>
+        /// <param name="name">Name of channel</param>
+        /// <returns>Channel just deleted</returns>
+        public async Task<Channel> DeleteChannelAsync(int id)
+        {
+            CheckForValidBarClient();
+            return await _barClient.Channels.DeleteChannelAsync(id);
+        }
+
         public async Task<IEnumerable<Subscription>> GetSubscriptionsAsync(
             string sourceRepo = null,
             string targetRepo = null,

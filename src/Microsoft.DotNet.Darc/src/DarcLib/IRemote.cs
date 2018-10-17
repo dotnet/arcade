@@ -42,6 +42,8 @@ namespace Microsoft.DotNet.DarcLib
 
         Task<Channel> CreateChannelAsync(string name, string classification);
 
+        Task<Channel> DeleteChannelAsync(int id);
+
         Task<IEnumerable<Subscription>> GetSubscriptionsAsync(
             string sourceRepo = null,
             string targetRepo = null,
