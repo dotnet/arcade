@@ -102,8 +102,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             Assert.Equal(0, _log.ErrorsLogged);
             Assert.Equal(0, _log.WarningsLogged);
             Assert.Equal(4, task.HarvestedFiles.Length);
-            Assert.Equal("netstandard1.0", task.HarvestedFiles[0].GetMetadata("TargetFramework"));
-            Assert.Equal("1.2.1.0", task.HarvestedFiles[0].GetMetadata("AssemblyVersion"));
+            var ns10asset = task.HarvestedFiles.FirstOrDefault(f => f.GetMetadata("TargetFramework") == "netstandard1.0" );
+            Assert.NotNull(ns10asset);
+            Assert.Equal("1.2.1.0", ns10asset.GetMetadata("AssemblyVersion"));
             Assert.Equal(_frameworks.Length, task.SupportedFrameworks.Length);
         }
 
@@ -129,7 +130,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             Assert.Equal(0, _log.ErrorsLogged);
             Assert.Equal(0, _log.WarningsLogged);
             Assert.Equal(17, task.HarvestedFiles.Length);
-            Assert.Equal("4.0.1.0", task.HarvestedFiles[0].GetMetadata("AssemblyVersion"));
+            var net46asset = task.HarvestedFiles.FirstOrDefault(f => f.GetMetadata("TargetFramework") == "net46" );
+            Assert.NotNull(net46asset);
+            Assert.Equal("4.0.1.0", net46asset.GetMetadata("AssemblyVersion"));
             Assert.Equal(6, task.SupportedFrameworks.Length);
         }
 
