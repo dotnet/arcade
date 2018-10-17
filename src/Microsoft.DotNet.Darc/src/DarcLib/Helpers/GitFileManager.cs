@@ -126,15 +126,12 @@ namespace Microsoft.DotNet.DarcLib
                 {
                     if (versionList.Count == 0)
                     {
-                        _logger.LogError($"No dependencies named '{itemToUpdate.Name}' found.");
+                        throw new DarcException($"No dependencies named '{itemToUpdate.Name}' found.");
                     }
                     else
                     {
-                        _logger.LogError(
-                            "The use of the same asset, even with a different version, is currently not supported.");
+                        throw new DarcException("The use of the same asset, even with a different version, is currently not supported.");
                     }
-
-                    return null;
                 }
 
                 XmlNode nodeToUpdate =
