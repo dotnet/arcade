@@ -123,12 +123,6 @@ namespace Microsoft.DotNet.Darc.Helpers
                     process.StartInfo = processInfo;
                     process.StartInfo.Arguments = arguments;
                     process.Start();
-                    process.WaitForExit();
-
-                    if (process.ExitCode != 0)
-                    {
-                        return string.Empty;
-                    }
 
                     output = process.StandardOutput.ReadToEnd().Trim();
 
@@ -138,6 +132,13 @@ namespace Microsoft.DotNet.Darc.Helpers
                     if (string.IsNullOrEmpty(output))
                     {
                         output = process.StandardError.ReadToEnd().Trim();
+                    }
+
+                    process.WaitForExit();
+
+                    if (process.ExitCode != 0)
+                    {
+                        output = string.Empty;
                     }
                 }
 

@@ -27,14 +27,15 @@ namespace Microsoft.DotNet.Darc.Operations
         public override async Task<int> ExecuteAsync()
         {
             Local local = new Local(LocalCommands.GetGitDir(Logger), Logger);
+            string name = _options.Name ?? string.Empty;
 
             try
             {
-                IEnumerable<DependencyDetail> dependencies = await local.GetDependenciesAsync();
+                IEnumerable<DependencyDetail> dependencies = await local.GetDependenciesAsync(_options.Name);
 
                 if (!string.IsNullOrEmpty(_options.Name))
                 {
-                    DependencyDetail dependency = dependencies.Where(d => d.Name.Equals(_options.Name, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                    DependencyDetail dependency = dependencies.FirstOrDefault();
 
                     if (dependency == null)
                     {

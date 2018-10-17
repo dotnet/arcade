@@ -31,7 +31,8 @@ namespace Microsoft.DotNet.Darc.Helpers
 
                 if (!_flatList.Contains(combo))
                 {
-                    Console.WriteLine(combo);
+                    Console.WriteLine($"- Repo:    {dependency.RepoUri}");
+                    Console.WriteLine($"  Commit:  {dependency.Commit}");
 
                     _flatList.Add(combo);
                 }
