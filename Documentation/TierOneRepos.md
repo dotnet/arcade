@@ -6,13 +6,12 @@ The primary driving business requirement is the ability to build .NET Core 3.
 ## Tier 1 Repositories table
 
 | Repository                  | Branch        | Owner           |
-| --------------------------- |:-------------:| ---------------:| 
+| --------------------------- |:-------------:| ---------------:|
 | aspnet/AspNetCore           | master        |  @natemcmaster  |
 | aspnet/EntityFrameworkCore  | master        |  @natemcmaster  |
 | aspnet/Extensions           | master        |  @natemcmaster  |
 | aspnet/Scaffolding          | master        |  @vijayrkn      |
 | aspnet/BrowserLink          | master        |  @vijayrkn      |
-| aspnet/Tooling              | master        |  @vijayrkn      |
 | aspnet/websdk               | master        |  @vijayrkn      |
 | dotnet/arcade               | master        |  @markwilkie    |
 | dotnet/cli                  | master        |  @livarcocc     |

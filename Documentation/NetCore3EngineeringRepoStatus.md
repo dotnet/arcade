@@ -198,23 +198,23 @@ Owners: licavalc
 
 <https://github.com/aspnet/EntityFrameworkCore>
 
-| Work stream                                                                      | Est. Completion Date | Status      | Notes |
-| -------------------------------------------------------------------------------- |:--------------------:| ----------- | ----- |
-| [Using Azure DevOps for CI](???)         | ?                    | Scheduled   | Planning to start mid-November |
-| [Using shared toolset (Arcade SDK)](???) | ?                    | Scheduled   | Planning to start mid-November |
-| [Engineering dependency flow](???)       | ?                    | Scheduled   | Planning to start mid-November |
-| [Internal builds from dnceng](???)       | ?                    | In progress | |
+| Work stream                                                                       | Est. Completion Date | Status      | Notes |
+| --------------------------------------------------------------------------------- |:--------------------:| ----------- | ----- |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/1053)         | ?                    | Scheduled   | Planning to start mid-November |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/1051) | ?                    | Scheduled   | Planning to start mid-November |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/1050)       | ?                    | Scheduled   | Planning to start mid-November |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/1052)       | ?                    | In progress | |
 
 #### Extensions
 
 <https://github.com/aspnet/Extensions>
 
-| Work stream                                                                      | Est. Completion Date | Status      | Notes |
-| -------------------------------------------------------------------------------- |:--------------------:| ----------- | ----- |
-| [Using Azure DevOps for CI](???)         | ?                    | Scheduled   | Planning to start mid-November |
-| [Using shared toolset (Arcade SDK)](???) | ?                    | Scheduled   | Planning to start mid-November |
-| [Engineering dependency flow](???)       | ?                    | Scheduled   | Planning to start mid-November |
-| [Internal builds from dnceng](???)       | ?                    | In progress | |
+| Work stream                                                                       | Est. Completion Date | Status      | Notes |
+| --------------------------------------------------------------------------------- |:--------------------:| ----------- | ----- |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/1048)         | ?                    | Scheduled   | Planning to start mid-November |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/1046) | ?                    | Scheduled   | Planning to start mid-November |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/1045)       | ?                    | Scheduled   | Planning to start mid-November |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/1047)       | ?                    | In progress | |
 
 ---
 
