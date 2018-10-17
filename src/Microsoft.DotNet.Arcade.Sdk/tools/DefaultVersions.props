@@ -20,6 +20,15 @@
   <Import Project="Version.props" />
 
   <PropertyGroup>
+    <!-- 
+      Configure NuGet Restore to only use NuGet.config file in the repository root.
+      This makes sure we do not depend on any NuGet.config files located outside of the repository.
+      
+      Note: This setting only applies to command-line build, not design time builds done from Visual Studio.
+      Visual Studio restore might still use other NuGet.config files.
+    -->
+    <RestoreConfigFile>$(RepoRoot)NuGet.config</RestoreConfigFile>
+
     <!-- Opt-out features -->
     <UsingToolXliff Condition="'$(UsingToolXliff)' == ''">true</UsingToolXliff>
     <UsingToolXUnit Condition="'$(UsingToolXUnit)' == ''">true</UsingToolXUnit>
