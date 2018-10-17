@@ -33,11 +33,16 @@ variables:
   _BuildConfig: Debug
   _DotNetPublishToBlobFeed : true
   _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
-  _PublishArgs: /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
-    /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
-    /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
-    /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
-    /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+  ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    _PublishArgs: /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
+      /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
+      /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
+      /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+      /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+    _OfficialBuildIdArgs: /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+  ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+    _PublishArgs: ''
+    _OfficialBuildIdArgs: ''
 steps:
 # publishing requires some secrets from key vault
 - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
