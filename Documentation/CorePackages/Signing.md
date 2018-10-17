@@ -13,50 +13,54 @@ This is a MSBuild custom task that provides batch signing and simple verificatio
 
 ## Arguments
 
-| Name                  | Type     | Required | Description                                                  |
-| --------------------- | -------- | -------- | ------------------------------------------------------------ |
-| DryRun                | bool     | No       | When true the list of files to be signed will be created but won't be sent to the signing server. Default is false. |
-| TestSign              | bool     | No       | When true the binaries will be test signed. The default is to real sign. |
-| ItemsToSign           | Array    | **Yes**  | This is a list of *full path* to files that need to be signed. Container files will be expanded to look for nested files that need to be signed. |
-| StrongNameSignInfo    | Array    | No       | Should store the default certificate name and strong name to be used for a given Public Key Token. See details below. |
-| FileSignInfo          | Array    | No       | Used to override the default certificate information for specific files and target frameworks combinations. If not specified default information is used or error occurs. See details below. |
-| FileExtensionSignInfo | Array    | No       | This is a mapping between extension (in the format ".ext") to default sign information for those kind of files. Overriding of the default sign info is done using the other parameters. |
-| CertificatesSignInfo  | Array    | No       | List of certificate names that can be flagged using the `DualSigningAllowed` attribute as dual certificates. |
-| MicroBuildCorePath    | Dir Path | **Yes**  | Path to MicroBuild.Core package directory.                   |
-| MSBuildPath           | Exe path | !DryRun  | Path to the MSBuild.exe binary used to run the signing process on MicroBuild. |
-| TempDir               | Dir path | **Yes**  | Used to store temporary files during the process of calling MicroBuild signing. |
-| LogDir                | Dir path | !DryRun  | MSBuild binary log information from the signing rounds will be stored in this directory. |
+| Name                   | Type     | Description                                                  |
+| ---------------------- | -------- | ------------------------------------------------------------ |
+| DryRun                 | bool     | When true the list of files to be signed will be created but won't be sent to the signing server. Default is false. |
+| TestSign               | bool     | When true the binaries will be test signed. The default is to real sign. |
+| **ItemsToSign**        | Array    | This is a list of *full path* to files that need to be signed. Container files will be expanded to look for nested files that need to be signed. |
+| StrongNameSignInfo     | Array    | Should store the default certificate name and strong name to be used for a given Public Key Token. See details below. |
+| FileSignInfo           | Array    | Used to override the default certificate information for specific files and target frameworks combinations. If not specified default information is used or error occurs. See details below. |
+| FileExtensionSignInfo  | Array    | This is a mapping between extension (in the format ".ext") to default sign information for those kind of files. Overriding of the default sign info is done using the other parameters. |
+| CertificatesSignInfo   | Array    | List of certificate names that can be flagged using the `DualSigningAllowed` attribute as dual certificates. |
+| **MicroBuildCorePath** | Dir Path | Path to MicroBuild.Core package directory.                   |
+| MSBuildPath            | Exe path | Path to the MSBuild.exe binary used to run the signing process on MicroBuild. |
+| **TempDir**            | Dir path | Used to store temporary files during the process of calling MicroBuild signing. |
+| LogDir                 | Dir path | MSBuild binary log information from the signing rounds will be stored in this directory. |
 
-**Note:** `MSBuildPath` and `LogDir` are only required if `DryRun == false`.
+**Note:** 
+
+​	Items in bold are required: `ItemsToSign`, `MicroBuildCorePath` and `TempDir`.
+
+​	`MSBuildPath` and `LogDir` are only required if `DryRun == false`.
 
 
 # Arguments Metadata
 
-**StrongNameSignInfo**
+**StrongNameSignInfo** - Optional parameter
 
 This field **requires** the following metadata: `PublicKeyToken`, `CertificateName` and the `Include` field is assumed to hold the `Strong Name`. This information will be used as the default certificate and strong name information for all **PE files** that match the `PublicKeyToken`.
 
-**FileExtensionSignInfo**
+**FileExtensionSignInfo** - Optional parameter
 
 This field requires two metadata attributes: `CertificateName` and `Include` which should be a file extension in the format `.ext`. This field is used to configure a default certificate for all files that have an specific extension.
 
-**CertificatesSignInfo**
+**CertificatesSignInfo** - Optional parameter
 
 This field requires the following metadata: `DualSigningAllowed` (boolean) and `Include` which is assumed to hold a valid certificate name. Use this list to explicitly configure the tool to allow the use of the specified certificate as a dual certificate - i.e., be able to use it to sign already signed files.
 
-**FileSignInfo**
+**FileSignInfo** - Optional parameter
 
 This field accepts the following metadata: `PublicKeyToken` (*optional*), `CertificateName`, `TargetFramework` (*optional*) and the `Include` field is assumed to hold a file name (*including extension; not a full path*). The `CertificateName` attribute accept the value "*None*" to flag a file that should not be signed.
 
 All files that match the combination informed will use the Signing information informed.
 
-**ItemsToSign**
+**ItemsToSign** - Required parameter
 
 This field only attribute should be  `Include`. This field holds a list of full path to files that need to be considered during the signing process. Path to containers and regular files are accepted. Containers will be opened and their content will be processed recursively.
 
 # Signing Info Precedence
 
-The signing information (SI) for a given file is looked up in the order shown below. Later conditions (i.e., more specific ones) override previous ones.
+The signing information (SI) for a given file is looked up in the order shown below. Later conditions override previous ones.
 
 1. A default SI is looked up on `FileExtensionSignInfo` **based on the extension of the file**.
 2. If the file is a **managed PE file**, SI based on the file *Public Key Token* (and only on it) is looked up in the `StrongNameSignInfo` parameter.
@@ -70,7 +74,7 @@ At the end, if the file is signable but no signing information was determined fo
 
 #### The Signing.props file
 
-The Arcade SDK include a set of predefined configurations for the SignTool in the [Sign.proj](../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) file. However, you can override/remove/update any of these configurations by including a file named `Signing.props` in the `\build\` folder of your repository. See examples on the next section.
+The Arcade SDK include a set of predefined configurations for the SignTool in the [Sign.proj](../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) file. However, you can override/remove/update any of these configurations by including a file named `Signing.props` in the `\eng\` folder of your repository. See examples on the next section.
 
 ## Usage Examples
 
@@ -82,7 +86,7 @@ The [default configuration](../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) 
 
 #### 2. Use a different certificate for an specific Public Key Token
 
-If you repo have signable files that have a different Public Key Token than the one preconfigured in the SDK (i.e., `31bf3856ad364e35`) you might add an entry to `StrongNameSignInfo` to specify the certificate name that should be used for those files. To do that, place an entry like the one show below in your `build\Signing.props` file.
+If you repo have signable files that have a different Public Key Token than the one preconfigured in the SDK (i.e., `31bf3856ad364e35`) you might add an entry to `StrongNameSignInfo` to specify the certificate name that should be used for those files. To do that, place an entry like the one show below in your `eng\Signing.props` file.
 
 ```xml
 <ItemGroup>
@@ -109,7 +113,7 @@ In this snippet the library `Other.Library.dll` with Public Key Token `31bf3856a
 ```
 #### 4. How to remove all preconfigured signing information?
 
-To remove *all* preconfigured signing information put the following snippet in your `build\Signing.props` file:
+To remove *all* preconfigured signing information put the following snippet in your `eng\Signing.props` file:
 
 ```xml
 <ItemGroup>
