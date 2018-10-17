@@ -51,6 +51,13 @@ namespace Microsoft.DotNet.DarcLib
 
         Task<Subscription> GetSubscriptionAsync(string subscriptionId);
 
+        /// <summary>
+        /// Retrieve subscription history.
+        /// </summary>
+        /// <param name="subscriptionId">ID of subscription</param>
+        /// <returns>Subscription history</returns>
+        Task<IEnumerable<SubscriptionHistoryItem>> GetSubscriptionHistoryAsync(string subscriptionId);
+
         Task<List<DependencyDetail>> GetRequiredUpdatesAsync(
             string repoUri,
             string branch,

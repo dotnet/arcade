@@ -2,7 +2,17 @@
 
 There's a set of steps that need to be completed so the versions of assets your repository depends on are updated and also the assets your repository produces are updated in upstream repositories.
 
-## 1. Copy the eng/ folder
+## Prerequisites
+
+These pre-requisites are not hard requirements, but enabling dependency flow will be much simpler if you are using these processes:
+
+- Internal builds produced out of https://dev.azure.com/dnceng/internal
+
+- Publishing using the [Arcade SDK](https://github.com/dotnet/arcade/blob/master/Documentation/StartHere.md#im-ready-to-get-started-what-do-i-do)
+
+## Steps
+
+### 1. Copy the eng/ folder
 
 Copy the `eng/` folder from the [minimalci-sample](https://github.com/dotnet/arcade-minimalci-sample) repo. 
 
@@ -10,29 +20,64 @@ This folder contains required version files as well as build definition template
 
 For more information about version files go to: https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md
 
-## 2. Enable assets publishing to the Build Asset Registry (BAR)
+### 2. Enable Arcade publishing
+
+https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md
+
+To enable Arcade publishing, you need to define some additional variables on the job which needs to publish.
+
+A typical publish job would look something like this...
+
+```json
+variables:
+  _BuildConfig: Debug
+  _DotNetPublishToBlobFeed : true
+  _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
+  ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    _PublishArgs: /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
+      /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
+      /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
+      /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+      /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+    _OfficialBuildIdArgs: /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+  ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+    _PublishArgs: ''
+    _OfficialBuildIdArgs: ''
+steps:
+# publishing requires some secrets from key vault
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - task: AzureKeyVault@1
+    inputs:
+      azureSubscription: 'DotNet-Engineering-Services_KeyVault'
+      KeyVaultName: EngKeyVault
+      SecretsFilter: 'dotnetfeed-storage-access-key-1,microsoft-symbol-server-pat,symweb-symbol-server-pat'
+
+- script: eng\common\CIBuild.cmd $(_PublishArgs) /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+```
+
+### 3. Enable assets publishing to the Build Asset Registry (BAR)
 
 To enable asset publishing to BAR we need to add a closing phase to `.vsts-ci.yml`. To do this add the following snippet at the end of `.vsts-ci.yml` and update the `dependsOn` parameter with the names of **all** the previous **build** phases:
 
-```
+```json
   - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - template: /eng/common/templates/phases/publish-build-assets.yml
       parameters:
         dependsOn:
           - phase1
           - phase2
-        queue: 
+        queue:
           name: Hosted VS2017
 ```
 
-## 3. Add subscriptions and channels
+### 4. Add subscriptions and channels
 
-### 3.1. Join the `arcade-contrib` team
+#### 3.1. Join the `arcade-contrib` team
 
 1. Go to https://github.com/orgs/dotnet/teams/arcade-contrib/members
 2. Click on "Request to join"
 
-### 3.2. Set up your darc client.
+#### 3.2. Set up your darc client
 
 Once you are part of the `arcade-contrib` team
 
@@ -48,19 +93,20 @@ Once you are part of the `arcade-contrib` team
 10. Place the token into the `bar_password` field.  You may leave the rest of the fields as-is.
 11. Save and close.
 
-### 3.3. Get all existing channels
+#### 3.3. Get all existing channels
 
 1. Run `darc get-channels` to display available channels.  Arcade builds are published to the '.NET Tools - Latest' channel.
 
-### 3.4. Create a subscription to get Arcade updates
+#### 3.4. Create a subscription to get Arcade updates
 
 Darc can be used to create new subscriptions, either in interactive mode or non-interactive mode.
 Interactive will open an editor to modify the fields, while non-interactive expects all fields on the command line.
 
-**Interactive mode**
+##### Interactive mode
 
 1. Run `darc add-subscription`
 2. Fill out the fields.  For Arcade, this typically looks like:
+
 ```
 Channel: .NET Tools - Latest
 Source Repository URL: https://github.com/dotnet/arcade
@@ -74,15 +120,16 @@ Merge Policies:
     - WIP
     - license/cla
 ```
-3. Save and close.
 
-**Non-interactive mode**
+3. Save and close
+
+##### Non-interactive mode
 
 1. Run `darc add-subscription --channel ".NET Tools Latest" --source-repo https://github.com/dotnet/arcade --target-repo <your repo> --target-branch master --update-frequency everyDay --ignore-checks WIP,license/cla --all-checks-passed -q`
 
 These steps can be altered for additional subscriptions to other repositories.
 
-### 3.5. Create a channel (optional, typically not needed)
+#### 3.5. Create a channel (optional, typically not needed)
 
 1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
 2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
@@ -90,12 +137,14 @@ These steps can be altered for additional subscriptions to other repositories.
 4. Provide a "name" and a "classification"
 5. Click "Execute"
 
-### 3.6. Associate a branch with a channel (optional)
+#### 3.6. Associate a branch with a channel (optional)
 
 1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
 2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
 3. Expand "POST /api/default-channels" under "DefaultChannels" and click "Try it out"
+
 4. Update the values of the sample body. Here is an example of how would a request body look like:
+
 ``` json
 {
   "repository": "onboarded repo i.e. https://github.com/dotnet/arcade",
@@ -103,11 +152,12 @@ These steps can be altered for additional subscriptions to other repositories.
   "channelId": id-of-existing-channel
 }
 ```
+
 5. Click "Execute"
 
 Currently the REST API is the only way to create Subscriptions and Channels but the plan is for `Darc` to support this as well.
 
-## 4. Validate
+### 5. Validate
 
 At this time we don't have a way to notify users if something went wrong while updating dependencies but this work is tracked by
 https://github.com/dotnet/arcade/issues/821.
