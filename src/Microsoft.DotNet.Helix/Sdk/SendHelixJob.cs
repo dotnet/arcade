@@ -328,8 +328,14 @@ namespace Microsoft.DotNet.Helix.Sdk
         private IJobDefinition AddCorrelationPayload(IJobDefinition def, ITaskItem correlationPayload)
         {
             string path = correlationPayload.GetMetadata("FullPath");
+            string uri = correlationPayload.GetMetadata("Uri");
 
-            if (Directory.Exists(path))
+            if (uri.StartsWith("https://"))
+            {
+                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload URI '{uri}'");
+                return def.WithCorrelationPayloadUris(new Uri(uri));
+            }
+            else if (Directory.Exists(path))
             {
                 Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Directory '{path}'");
                 return def.WithCorrelationPayloadDirectory(path);
