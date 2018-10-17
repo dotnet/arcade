@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Darc.Options
         [Option("repo-sha", HelpText = "Get the repo+sha which produced a specific dependency specified by --name or all dependencies in a repository.")]
         public bool RepoSha { get; set; }
 
-        [Option('l', "local", HelpText = "Required is repo-sha is set and we want to get the repo+sha combinations from local repositories. False by default.")]
+        [Option('l', "local", HelpText = "Get the repo+sha combinations from local repositories. Requires --repo-sha to be set. False by default.")]
         public bool Local { get; set; }
 
         [Option("repos-folder", HelpText = @"Full path to folder where all the repos are locally stored. i.e. C:\repos")]

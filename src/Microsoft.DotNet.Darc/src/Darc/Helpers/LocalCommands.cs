@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Darc.Helpers
 
         public static string GetEditorPath(ILogger logger)
         {
-            string editor = ExecuteCommand("git.exe", "config --get core.editor", logger);
+            string editor = ExecuteCommand("git", "config --get core.editor", logger);
 
             // If there is nothing set in core.editor we try to default it to notepad if running in Windows, if not default it to
             // vim
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.Darc.Helpers
 
         public static string GetGitDir(ILogger logger)
         {
-            string dir = ExecuteCommand("git.exe", "rev-parse --absolute-git-dir", logger);
+            string dir = ExecuteCommand("git", "rev-parse --absolute-git-dir", logger);
 
             if (string.IsNullOrEmpty(dir))
             {
@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.Darc.Helpers
         {
             foreach (string directory in Directory.GetDirectories(sourceFolder))
             {
-                string containsCommand = ExecuteCommand("git.exe", $"branch --contains {commit}", logger, directory);
+                string containsCommand = ExecuteCommand("git", $"branch --contains {commit}", logger, directory);
 
                 if (!string.IsNullOrEmpty(containsCommand))
                 {
@@ -179,7 +179,7 @@ namespace Microsoft.DotNet.Darc.Helpers
 
         public static string Show(string repoFolderPath, string commit, string fileName, ILogger logger)
         {
-            string fileContents = ExecuteCommand("git.exe", $"show {commit}:{fileName}", logger, repoFolderPath);
+            string fileContents = ExecuteCommand("git", $"show {commit}:{fileName}", logger, repoFolderPath);
 
             if (string.IsNullOrEmpty(fileContents))
             {
