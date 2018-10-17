@@ -214,6 +214,38 @@ namespace Microsoft.DotNet.DarcLib
             return await _barClient.Subscriptions.DeleteSubscriptionAsync(subscriptionGuid);
         }
 
+        /// <summary>
+        /// Retrieve subscription history.
+        /// </summary>
+        /// <param name="subscriptionId">ID of subscription</param>
+        /// <returns>Subscription history</returns>
+        public async Task<IEnumerable<SubscriptionHistoryItem>> GetSubscriptionHistoryAsync(string subscriptionId)
+        {
+            CheckForValidBarClient();
+            if (!Guid.TryParse(subscriptionId, out Guid subscriptionGuid))
+            {
+                throw new ArgumentException($"Subscription id '{subscriptionId}' is not a valid guid.");
+            }
+
+            return await _barClient.Subscriptions.GetSubscriptionHistoryAsync(subscriptionGuid);
+        }
+
+        /// <summary>
+        /// Retry subscription operation.
+        /// </summary>
+        /// <param name="subscriptionId">Id of subscription that should have its action retried</param>
+        /// <param name="actionIdentifier">Timestamp of the action that needs to be retried</param>
+        public Task RetrySubscriptionUpdateAsync(string subscriptionId, long actionIdentifier)
+        {
+            CheckForValidBarClient();
+            if (!Guid.TryParse(subscriptionId, out Guid subscriptionGuid))
+            {
+                throw new ArgumentException($"Subscription id '{subscriptionId}' is not a valid guid.");
+            }
+
+            return _barClient.Subscriptions.RetrySubscriptionActionAsyncAsync(subscriptionGuid, actionIdentifier);
+        }
+
         public async Task CreateNewBranchAsync(string repoUri, string baseBranch, string newBranch)
         {
             await _gitClient.CreateBranchAsync(repoUri, newBranch, baseBranch);

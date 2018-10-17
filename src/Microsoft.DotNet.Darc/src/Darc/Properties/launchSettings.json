@@ -2,7 +2,7 @@
   "profiles": {
     "Microsoft.DotNet.Darc": {
       "commandName": "Project",
-      "commandLineArgs": "authenticate"
+      "commandLineArgs": "get-subscription-history --id c297d885-0692-40f8-6b97-08d61f281b4c"
     }
   }
 }
