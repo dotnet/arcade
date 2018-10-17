@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Darc.Operations
         }
 
         /// <summary>
-        /// Retrieve information about a particular subscription's history.
+        /// Retry a specified subscription update.
         /// </summary>
         /// <param name="options">Command line options</param>
         /// <returns>Process exit code.</returns>
@@ -44,17 +44,13 @@ namespace Microsoft.DotNet.Darc.Operations
             }
             catch (ApiErrorException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
             {
-                // Not found is fine to ignore.  If we get this, it will be an aggregate exception with an inner API exception
-                // that has a response message code of NotFound.  Return success.
                 Console.WriteLine($"Subscription with id '{_options.SubscriptionId}' or subscription update with id '{_options.UpdateId}' was not found.");
-                return Constants.SuccessCode;
+                return Constants.ErrorCode;
             }
             catch (ApiErrorException e) when (e.Response.StatusCode == HttpStatusCode.NotAcceptable)
             {
-                // Not found is fine to ignore.  If we get this, it will be an aggregate exception with an inner API exception
-                // that has a response message code of NotFound.  Return success.
                 Console.WriteLine($"Update '{_options.UpdateId}' did not fail and cannot be retried");
-                return Constants.SuccessCode;
+                return Constants.ErrorCode;
             }
             catch (Exception e)
             {
