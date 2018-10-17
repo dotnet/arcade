@@ -2,19 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Data.SqlClient;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
 using Maestro.Data;
 using Maestro.Data.Models;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 using Build = Maestro.Data.Models.Build;
 using Channel = Maestro.Web.Api.v2018_07_16.Models.Channel;
 
@@ -32,7 +30,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         }
 
         [HttpGet]
-        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(List<Channel>))]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(List<Channel>))]
         [ValidateModelState]
         public IActionResult Get(string classification = null)
         {
@@ -47,7 +45,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         }
 
         [HttpGet("{id}")]
-        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(Channel))]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Channel))]
         [ValidateModelState]
         public async Task<IActionResult> GetChannel(int id)
         {
@@ -62,7 +60,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         }
 
         [HttpDelete("{id}")]
-        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(Channel))]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Channel))]
         [ValidateModelState]
         public async Task<IActionResult> DeleteChannel(int id)
         {
@@ -80,35 +78,28 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         }
 
         [HttpPost]
-        [SwaggerResponse((int) HttpStatusCode.Created, Type = typeof(Channel))]
+        [SwaggerResponse((int)HttpStatusCode.Created, Type = typeof(Channel))]
+        [HandleDuplicateKeyRows("Could not create channel '{name}'. A channel with the specified name already exists.")]
         public async Task<IActionResult> CreateChannel([Required] string name, [Required] string classification)
         {
-            try
+            var channelModel = new Data.Models.Channel
             {
-                var channelModel = new Data.Models.Channel
+                Name = name,
+                Classification = classification
+            };
+            await _context.Channels.AddAsync(channelModel);
+            await _context.SaveChangesAsync();
+            return CreatedAtRoute(
+                new
                 {
-                    Name = name,
-                    Classification = classification
-                };
-                await _context.Channels.AddAsync(channelModel);
-                await _context.SaveChangesAsync();
-                return CreatedAtRoute(
-                    new
-                    {
-                        action = "GetChannel",
-                        id = channelModel.Id
-                    },
-                    new Channel(channelModel));
-            }
-            catch (DbUpdateException dbEx) when (dbEx.InnerException is SqlException sqlEx &&
-                                                 sqlEx.Message.Contains("Cannot insert duplicate key row"))
-            {
-                return Conflict(new ApiError($"Could not create channel with name '{name}'. A channel with that name already exists."));
-            }
+                    action = "GetChannel",
+                    id = channelModel.Id
+                },
+                new Channel(channelModel));
         }
 
         [HttpPost("{channelId}/builds/{buildId}")]
-        [SwaggerResponse((int) HttpStatusCode.Created)]
+        [SwaggerResponse((int)HttpStatusCode.Created)]
         public async Task<IActionResult> AddBuildToChannel(int channelId, int buildId)
         {
             Data.Models.Channel channel = await _context.Channels.FindAsync(channelId);
@@ -130,7 +121,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             };
             await _context.BuildChannels.AddAsync(buildChannel);
             await _context.SaveChangesAsync();
-            return StatusCode((int) HttpStatusCode.Created);
+            return StatusCode((int)HttpStatusCode.Created);
         }
     }
 }
