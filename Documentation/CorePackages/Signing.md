@@ -4,8 +4,9 @@ This is a MSBuild custom task that provides batch signing and simple verificatio
 
 - **Performance:** It operates as a post-build step and uses the minimum number of requests possible. This can have a dramatic performance improvement over the typical implementation which signs as a post-compile step. For example, in Roslyn it took build + sign times down from 1-2 hours to 8 minutes.
 - **Automated:** It is able to recursively open container files (like .nupkg, .vsix) and create a list of nested files that need to be signed. Therefore, you don't need to manually specify which files need to be signed.
-- **Strict mode:**
+- **Explicit Signing Info:**
   - The tool supports receiving an *explicit list of files* that need to be signed or ignored from the signing process.
+  - The tool support specifying which certificate should be used for each file and is able to identify files based on public key token, target framework, extension and file name.
   - The tool will report an error if a [signable file](https://microsoft.sharepoint.com/teams/codesigninfo/Wiki/Signable%20Files.aspx) is discovered for which no signing information was found. That means that all signable files will need to be either explicitly ignored or have signing information attributed in one of the many ways explained below.
 - **Containers:** It can handle the nesting issues that come with container files: both nested PE and nested containers. The tool will correctly sign the inner most content first, repack the containing package with the signed content and then sign the outermost container. Arbitrary levels of nesting are supported.
 - **Post signing checks:** It takes extra steps to ensure that **PE files** are properly signed after the signing process completes. This tool parses the signed binary file to make sure the binary was modified and marked as signed.
