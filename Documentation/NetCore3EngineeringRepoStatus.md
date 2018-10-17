@@ -2,10 +2,10 @@
 
 ## Work Streams
 
-- Using Azure DevOps for CI
-- Using shared toolset (Arcade SDK)
-- Engineering dependency flow
-- Internal builds from dnceng
+1. Using Azure DevOps for CI
+2. Using shared toolset (Arcade SDK)
+3. Engineering dependency flow
+4. Internal builds from dnceng
 
 Target completion date for these workstreams is 12/14/2018.
 
