@@ -91,7 +91,7 @@ If you repo have signable files that have a different Public Key Token than the 
 
 ```xml
 <ItemGroup>
-	<StrongNameSignInfo Include="StrongName1" PublicKeyToken="4321abcda1b2c3d4" CertificateName="DifferentCertName />
+	<StrongNameSignInfo Include="StrongName1" PublicKeyToken="4321abcda1b2c3d4" CertificateName="DifferentCertName" />
 </ItemGroup>
 ```
 
