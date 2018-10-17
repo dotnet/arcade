@@ -58,7 +58,13 @@ namespace DependencyUpdater
                 await StateManager.GetOrAddAsync<IReliableConcurrentQueue<DependencyUpdateItem>>("queue");
             using (ITransaction tx = StateManager.CreateTransaction())
             {
-                await queue.EnqueueAsync(tx, new DependencyUpdateItem {BuildId = buildId, ChannelId = channelId});
+                await queue.EnqueueAsync(
+                    tx,
+                    new DependencyUpdateItem
+                    {
+                        BuildId = buildId,
+                        ChannelId = channelId
+                    });
                 await tx.CommitAsync();
             }
         }
@@ -123,7 +129,11 @@ namespace DependencyUpdater
                         .FirstOrDefault()
                 where latestBuild != null
                 where sub.LastAppliedBuildId == null || sub.LastAppliedBuildId != latestBuild.Id
-                select new {subscription = sub.Id, latestBuild = latestBuild.Id};
+                select new
+                {
+                    subscription = sub.Id,
+                    latestBuild = latestBuild.Id
+                };
 
             foreach (var s in await subscriptionsToUpdate.ToListAsync(cancellationToken))
             {

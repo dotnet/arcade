@@ -32,7 +32,7 @@ To enable asset publishing to BAR we need to add a closing phase to `.vsts-ci.ym
 1. Go to https://github.com/orgs/dotnet/teams/arcade-contrib/members
 2. Click on "Request to join"
 
-### 3.2. Create a PAT for interacting with Maestro
+### 3.2. Set up your darc client.
 
 Once you are part of the `arcade-contrib` team
 
@@ -42,45 +42,47 @@ Once you are part of the `arcade-contrib` team
 4. Click on your name and then on "Tokens"
 5. Choose a name for your token and then "Create"
 6. Copy the created token
+7. Open a powershell or bash prompt and navigate to a repository that has the arcade toolset.
+8. Run `.\eng\common\darc-init.ps1` or `.\eng\common\darc-init.sh`.  This will install darc as a global tool.
+9. Run `darc authenticate`
+10. Place the token into the `bar_password` field.  You may leave the rest of the fields as-is.
+11. Save and close.
 
 ### 3.3. Get all existing channels
 
-1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
-2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
-3. Expand "GET /api/channels" under "Channels" and click "Try it out"
-5. Click "Execute"
+1. Run `darc get-channels` to display available channels.  Arcade builds are published to the '.NET Tools - Latest' channel.
 
-### 3.4. Create a subscription
+### 3.4. Create a subscription to get Arcade updates
 
-1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
-2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
-3. Expand "POST /api/subscriptions" under "Subscriptions" and click "Try it out"
-4. Update the values of the sample body. Here is an example of how would a request body look like:
-``` json
-{
-    "channelName": "an existing channel from step 3.3. current arcade builds output to '.NET Tools - Latest'",
-    "sourceRepository": "the repository flowing the versions i.e. https://github.com/dotnet/arcade",
-    "targetRepository": "the repository getting updated with the new versions i.e. https://github.com/dotnet/arcade-minimalci-sample",
-    "targetBranch": "branch in the targetRepository i.e master",
-    "policy": {
-      "updateFrequency": "one of 'none', 'everyDay', 'everyBuild'",
-      "mergePolicies": [
-        {
-          "name": "AllChecksSuccessful",
-          "properties": {
-            "ignoreChecks": [
-              "WIP",
-              "license/cla"
-            ]
-          }
-        }
-      ]
-    }
-}
+Darc can be used to create new subscriptions, either in interactive mode or non-interactive mode.
+Interactive will open an editor to modify the fields, while non-interactive expects all fields on the command line.
+
+**Interactive mode**
+
+1. Run `darc add-subscription`
+2. Fill out the fields.  For Arcade, this typically looks like:
 ```
-5. Click "Execute"
+Channel: .NET Tools - Latest
+Source Repository URL: https://github.com/dotnet/arcade
+Target Repository URL: <your repository URL>
+Target Branch: <target branch for arcade updates, e.g. master>
+Update Frequency: everyDay
+Merge Policies:
+- Name: AllChecksSuccessful
+  Properties:
+    ignoreChecks:
+    - WIP
+    - license/cla
+```
+3. Save and close.
 
-### 3.5. Create a channel (optional)
+**Non-interactive mode**
+
+1. Run `darc add-subscription --channel ".NET Tools Latest" --source-repo https://github.com/dotnet/arcade --target-repo <your repo> --target-branch master --update-frequency everyDay --ignore-checks WIP,license/cla --all-checks-passed -q`
+
+These steps can be altered for additional subscriptions to other repositories.
+
+### 3.5. Create a channel (optional, typically not needed)
 
 1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
 2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"

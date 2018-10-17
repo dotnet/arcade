@@ -1,7 +1,10 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace Microsoft.AspNetCore.ApiPagination
 {
@@ -12,7 +15,7 @@ namespace Microsoft.AspNetCore.ApiPagination
             var set = new HashSet<Type>();
             while (type != null)
             {
-                foreach (var iface in type.GetInterfaces())
+                foreach (Type iface in type.GetInterfaces())
                 {
                     if (iface.IsConstructedGenericType)
                     {
@@ -23,6 +26,7 @@ namespace Microsoft.AspNetCore.ApiPagination
                         set.Add(iface);
                     }
                 }
+
                 type = type.BaseType;
             }
 
@@ -30,7 +34,9 @@ namespace Microsoft.AspNetCore.ApiPagination
         }
 
         /// <summary>
-        ///   Returns <see langword="true"/> when <see paramref="value"/> implements a constructed version of the open generic interface type <see paramref="openGenericType"/> and sets <see paramref="param"/> to the type parameter of the generic interface.
+        ///     Returns <see langword="true" /> when <see paramref="value" /> implements a constructed version of the open generic
+        ///     interface type <see paramref="openGenericType" /> and sets <see paramref="param" /> to the type parameter of the
+        ///     generic interface.
         /// </summary>
         /// <param name="value"></param>
         /// <param name="openGenericType"></param>
@@ -39,7 +45,7 @@ namespace Microsoft.AspNetCore.ApiPagination
         public static bool IsGenericInterface(this object value, Type openGenericType, out Type param)
         {
             param = null;
-            var type = value?.GetType();
+            Type type = value?.GetType();
             if (type == null)
             {
                 return false;

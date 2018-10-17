@@ -49,33 +49,29 @@ namespace Maestro.Data.Models
         public Subscription Subscription { get; set; }
 
         /// <summary>
-        ///   <see langword="true"/> if the update succeeded; <see langword="false"/> otherwise.
+        ///     <see langword="true" /> if the update succeeded; <see langword="false" /> otherwise.
         /// </summary>
         public bool Success { get; set; }
-        
+
         /// <summary>
-        ///   A message describing what the subscription was trying to do.
-        ///   e.g. 'Updating dependencies from dotnet/coreclr in dotnet/corefx'
+        ///     A message describing what the subscription was trying to do.
+        ///     e.g. 'Updating dependencies from dotnet/coreclr in dotnet/corefx'
         /// </summary>
-        [MaxLength(450)]
         public string Action { get; set; }
 
         /// <summary>
-        ///   The error that occured, if any.
+        ///     The error that occured, if any.
         /// </summary>
-        [MaxLength(450)]
         public string ErrorMessage { get; set; }
 
         /// <summary>
-        ///   The method that was called.
+        ///     The method that was called.
         /// </summary>
-        [MaxLength(450)]
         public string Method { get; set; }
 
         /// <summary>
-        ///   The parameters to the called method.
+        ///     The parameters to the called method.
         /// </summary>
-        [MaxLength(450)]
         public string Arguments { get; set; }
     }
 
@@ -85,33 +81,29 @@ namespace Maestro.Data.Models
         public Guid SubscriptionId { get; set; }
 
         /// <summary>
-        ///   <see langword="true"/> if the update succeeded; <see langword="false"/> otherwise.
+        ///     <see langword="true" /> if the update succeeded; <see langword="false" /> otherwise.
         /// </summary>
         public bool Success { get; set; }
-        
+
         /// <summary>
-        ///   A message describing what the subscription was trying to do.
-        ///   e.g. 'Updating dependencies from dotnet/coreclr in dotnet/corefx'
+        ///     A message describing what the subscription was trying to do.
+        ///     e.g. 'Updating dependencies from dotnet/coreclr in dotnet/corefx'
         /// </summary>
-        [MaxLength(450)]
         public string Action { get; set; }
 
         /// <summary>
-        ///   The error that occured, if any.
+        ///     The error that occured, if any.
         /// </summary>
-        [MaxLength(450)]
         public string ErrorMessage { get; set; }
 
         /// <summary>
-        ///   The method that was called.
+        ///     The method that was called.
         /// </summary>
-        [MaxLength(450)]
         public string Method { get; set; }
 
         /// <summary>
-        ///   The parameters to the called method.
+        ///     The parameters to the called method.
         /// </summary>
-        [MaxLength(450)]
         public string Arguments { get; set; }
     }
 }

@@ -22,7 +22,9 @@ namespace Microsoft.DotNet.Darc
                                                  DeleteSubscriptionCommandLineOptions,
                                                  AddChannelCommandLineOptions,
                                                  DeleteChannelCommandLineOptions,
-                                                 GetDefaultChannelCommandLineOptions>(args)
+                                                 GetDefaultChannelCommandLineOptions,
+                                                 AddDefaultChannelCommandLineOptions,
+                                                 DeleteDefaultChannelCommandLineOptions>(args)
                 .MapResult(
                     (AuthenticateCommandLineOptions opts) => { return RunOperation(new AuthenticateOperation(opts)); },
                     (GetDependenciesCommandLineOptions opts) => { return RunOperation(new GetDependenciesOperation(opts)); },
@@ -34,6 +36,8 @@ namespace Microsoft.DotNet.Darc
                     (AddChannelCommandLineOptions opts) => { return RunOperation(new AddChannelOperation(opts)); },
                     (DeleteChannelCommandLineOptions opts) => { return RunOperation(new DeleteChannelOperation(opts)); },
                     (GetDefaultChannelCommandLineOptions opts) => { return RunOperation(new GetDefaultChannelsOperation(opts)); },
+                    (AddDefaultChannelCommandLineOptions opts) => { return RunOperation(new AddDefaultChannelOperation(opts)); },
+                    (DeleteDefaultChannelCommandLineOptions opts) => { return RunOperation(new DeleteDefaultChannelOperation(opts)); },
                     (errs => 1));
         }
 

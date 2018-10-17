@@ -1,17 +1,22 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
+using System;
+using System.Data.SqlClient;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Maestro.Web.Api.v2018_07_16.Models;
 using Maestro.Data;
+using Maestro.Data.Models;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
+using Build = Maestro.Data.Models.Build;
+using Channel = Maestro.Web.Api.v2018_07_16.Models.Channel;
 
 namespace Maestro.Web.Api.v2018_07_16.Controllers
 {
@@ -61,8 +66,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [ValidateModelState]
         public async Task<IActionResult> DeleteChannel(int id)
         {
-            Data.Models.Channel channel = await _context.Channels
-                .FirstOrDefaultAsync(c => c.Id == id);
+            Data.Models.Channel channel = await _context.Channels.FirstOrDefaultAsync(c => c.Id == id);
 
             if (channel == null)
             {
@@ -79,10 +83,28 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [SwaggerResponse((int) HttpStatusCode.Created, Type = typeof(Channel))]
         public async Task<IActionResult> CreateChannel([Required] string name, [Required] string classification)
         {
-            var channelModel = new Data.Models.Channel {Name = name, Classification = classification};
-            await _context.Channels.AddAsync(channelModel);
-            await _context.SaveChangesAsync();
-            return CreatedAtRoute(new {action = "GetChannel", id = channelModel.Id}, new Channel(channelModel));
+            try
+            {
+                var channelModel = new Data.Models.Channel
+                {
+                    Name = name,
+                    Classification = classification
+                };
+                await _context.Channels.AddAsync(channelModel);
+                await _context.SaveChangesAsync();
+                return CreatedAtRoute(
+                    new
+                    {
+                        action = "GetChannel",
+                        id = channelModel.Id
+                    },
+                    new Channel(channelModel));
+            }
+            catch (DbUpdateException dbEx) when (dbEx.InnerException is SqlException sqlEx &&
+                                                 sqlEx.Message.Contains("Cannot insert duplicate key row"))
+            {
+                return Conflict(new ApiError($"Could not create channel with name '{name}'. A channel with that name already exists."));
+            }
         }
 
         [HttpPost("{channelId}/builds/{buildId}")]
@@ -95,13 +117,17 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 return NotFound(new ApiError($"The channel with id '{channelId}' was not found."));
             }
 
-            Data.Models.Build build = await _context.Builds.FindAsync(buildId);
+            Build build = await _context.Builds.FindAsync(buildId);
             if (build == null)
             {
                 return NotFound(new ApiError($"The build with id '{buildId}' was not found."));
             }
 
-            var buildChannel = new Data.Models.BuildChannel {Channel = channel, Build = build};
+            var buildChannel = new BuildChannel
+            {
+                Channel = channel,
+                Build = build
+            };
             await _context.BuildChannels.AddAsync(buildChannel);
             await _context.SaveChangesAsync();
             return StatusCode((int) HttpStatusCode.Created);

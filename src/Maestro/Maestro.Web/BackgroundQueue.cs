@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -9,14 +13,14 @@ namespace Maestro.Web
 {
     public class BackgroundQueue : BackgroundService
     {
-        public ILogger<BackgroundQueue> Logger { get; }
-
         private readonly BlockingCollection<Func<Task>> _workItems = new BlockingCollection<Func<Task>>();
 
         public BackgroundQueue(ILogger<BackgroundQueue> logger)
         {
             Logger = logger;
         }
+
+        public ILogger<BackgroundQueue> Logger { get; }
 
         public void Post(Func<Task> workItem)
         {
@@ -52,7 +56,10 @@ namespace Maestro.Web
                                     }
                                     catch (Exception ex)
                                     {
-                                        Logger.LogError(ex, "Background work {item} threw an unhandled exception.", item.ToString());
+                                        Logger.LogError(
+                                            ex,
+                                            "Background work {item} threw an unhandled exception.",
+                                            item.ToString());
                                     }
                                 }
                             }

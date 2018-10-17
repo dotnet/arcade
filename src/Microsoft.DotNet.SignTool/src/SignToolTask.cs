@@ -56,7 +56,6 @@ namespace Microsoft.DotNet.SignTool
         /// Metadata required: PublicKeyToken, CertificateName and Include (which will be the Strong Name)
         /// During signing Certificate and Strong Name will be looked up here based on PublicKeyToken.
         /// </summary>
-        [Required]
         public ITaskItem[] StrongNameSignInfo { get; set; }
 
         /// <summary>
@@ -74,6 +73,13 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         public ITaskItem[] FileExtensionSignInfo { get; set; }
 
+        /// <summary>
+        /// This is a list describing attributes for each used certificate.
+        /// Currently attributes are: 
+        ///     DualSigningAllowed:boolean - Tells whether this certificate can be used to sign already signed files.
+        /// </summary>
+        public ITaskItem[] CertificatesSignInfo { get; set; }
+        
         /// <summary>
         /// Path to msbuild.exe. Required if <see cref="DryRun"/> is <c>false</c>.
         /// </summary>
@@ -100,6 +106,7 @@ namespace Microsoft.DotNet.SignTool
 #if NET461
                 AssemblyResolution.Log = null;
 #endif
+                Log.LogMessage(MessageImportance.High, "SignToolTask execution finished.");
             }
         }
 
@@ -119,17 +126,20 @@ namespace Microsoft.DotNet.SignTool
 
             var enclosingDir = GetEnclosingDirectoryOfItemsToSign();
 
+            PrintConfigInformation();
+
             if (Log.HasLoggedErrors) return;
 
-            var defaultSignInfoForPublicKeyToken = ParseStrongNameSignInfo();
-            var explicitCertificates = ParseFileSignInfo();
-            var fileExtensionSignInfo = ParseFileExtensionSignInfo();
+            var strongNameInfo = ParseStrongNameSignInfo();
+            var fileSignInfo = ParseFileSignInfo();
+            var extensionSignInfo = ParseFileExtensionSignInfo();
+            var dualCertificates = ParseCertificateInfo();
 
             if (Log.HasLoggedErrors) return;
 
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
-            var signingInput = new Configuration(TempDir, ItemsToSign, defaultSignInfoForPublicKeyToken, explicitCertificates, fileExtensionSignInfo, Log).GenerateListOfFiles();
+            var signingInput = new Configuration(TempDir, ItemsToSign, strongNameInfo, fileSignInfo, extensionSignInfo, dualCertificates, Log).GenerateListOfFiles();
 
             if (Log.HasLoggedErrors) return;
 
@@ -138,6 +148,24 @@ namespace Microsoft.DotNet.SignTool
             if (Log.HasLoggedErrors) return;
 
             util.Go();
+        }
+
+        private void PrintConfigInformation()
+        {
+            Log.LogMessage(MessageImportance.High, "SignToolTask starting.");
+            Log.LogMessage(MessageImportance.High, $"DryRun: {DryRun}");
+            Log.LogMessage(MessageImportance.High, $"Signing mode: { (TestSign ? "Test" : "Real") }");
+            Log.LogMessage(MessageImportance.High, $"MicroBuild signing logs will be in (Signing*.binlog): {LogDir}");
+            Log.LogMessage(MessageImportance.High, $"MicroBuild signing configuration will be in (Round*.proj): {TempDir}");
+        }
+
+        private string[] ParseCertificateInfo()
+        {
+            var dualCertificates = CertificatesSignInfo?
+                .Where(item => item.GetMetadata("DualSigningAllowed").Equals("true", StringComparison.OrdinalIgnoreCase))
+                .Select(item => item.ItemSpec);
+
+            return dualCertificates?.ToArray();
         }
 
         private string GetEnclosingDirectoryOfItemsToSign()
@@ -198,17 +226,26 @@ namespace Microsoft.DotNet.SignTool
                     var extension = item.ItemSpec;
                     var certificate = item.GetMetadata("CertificateName");
 
+                    if (!extension.Equals(Path.GetExtension(extension)))
+                    {
+                        Log.LogError($"Value of {nameof(FileExtensionSignInfo)} is invalid: '{extension}'");
+                        continue;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(certificate))
+                    {
+                        Log.LogError($"CertificateName metadata of {nameof(FileExtensionSignInfo)} is invalid: '{certificate}'");
+                        continue;
+                    }
+
                     if (map.ContainsKey(extension))
                     {
-                        Log.LogWarning($"Duplicated signing information for extension: {extension}. " +
-                            $"Attempted to add certificate {certificate}, existing value is {map[extension]}.");
+                        Log.LogWarning($"Duplicated signing information for extension: {extension}. Overriding the previous entry.");
                     }
-                    else
-                    {
-                        map.Add(extension, certificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.InvariantCultureIgnoreCase) ?
-                            SignInfo.Ignore :
-                            new SignInfo(certificate));
-                    }
+
+                    map[extension] = certificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.InvariantCultureIgnoreCase) ?
+                        SignInfo.Ignore :
+                        new SignInfo(certificate);
                 }
             }
 
@@ -219,39 +256,42 @@ namespace Microsoft.DotNet.SignTool
         {
             var map = new Dictionary<string, SignInfo>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var item in StrongNameSignInfo)
+            if (StrongNameSignInfo != null)
             {
-                var strongName = item.ItemSpec;
-                var publicKeyToken = item.GetMetadata("PublicKeyToken");
-                var certificateName = item.GetMetadata("CertificateName");
-
-                if (string.IsNullOrWhiteSpace(strongName))
+                foreach (var item in StrongNameSignInfo)
                 {
-                    Log.LogError($"An invalid strong name was specified in {nameof(StrongNameSignInfo)}: '{strongName}'");
-                    continue;
+                    var strongName = item.ItemSpec;
+                    var publicKeyToken = item.GetMetadata("PublicKeyToken");
+                    var certificateName = item.GetMetadata("CertificateName");
+
+                    if (string.IsNullOrWhiteSpace(strongName))
+                    {
+                        Log.LogError($"An invalid strong name was specified in {nameof(StrongNameSignInfo)}: '{strongName}'");
+                        continue;
+                    }
+
+                    if (!IsValidPublicKeyToken(publicKeyToken))
+                    {
+                        Log.LogError($"PublicKeyToken metadata of {nameof(StrongNameSignInfo)} is invalid: '{publicKeyToken}'");
+                        continue;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(certificateName))
+                    {
+                        Log.LogError($"CertificateName metadata of {nameof(StrongNameSignInfo)} is invalid: '{certificateName}'");
+                        continue;
+                    }
+
+                    var signInfo = new SignInfo(certificateName, strongName);
+
+                    if (map.ContainsKey(publicKeyToken))
+                    {
+                        Log.LogError($"Duplicate entries in {nameof(StrongNameSignInfo)} with the same key '{publicKeyToken}'.");
+                        continue;
+                    }
+
+                    map.Add(publicKeyToken, signInfo);
                 }
-
-                if (!IsValidPublicKeyToken(publicKeyToken))
-                {
-                    Log.LogError($"PublicKeyToken metadata of {nameof(StrongNameSignInfo)} is invalid: '{publicKeyToken}'");
-                    continue;
-                }
-
-                if (string.IsNullOrWhiteSpace(certificateName))
-                {
-                    Log.LogError($"CertificateName metadata of {nameof(StrongNameSignInfo)} is invalid: '{certificateName}'");
-                    continue;
-                }
-
-                var signInfo = new SignInfo(certificateName, strongName);
-
-                if (map.ContainsKey(publicKeyToken))
-                {
-                    Log.LogError($"Duplicate entries in {nameof(StrongNameSignInfo)} with the same key '{publicKeyToken}'.");
-                    continue;
-                }
-
-                map.Add(publicKeyToken, signInfo);
             }
 
             return map;

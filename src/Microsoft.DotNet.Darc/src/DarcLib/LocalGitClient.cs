@@ -6,19 +6,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.DarcLib
 {
-    class LocalGitClient : IGitRepo
+    internal class LocalGitClient : IGitRepo
     {
-        string _gitRepoRoot;
-        ILogger _logger;
+        private string _gitRepoRoot;
+        private ILogger _logger;
 
         /// <summary>
-        /// Construct a new local git client
+        ///     Construct a new local git client
         /// </summary>
         /// <param name="path">Current path</param>
         public LocalGitClient(string path, ILogger logger)
@@ -33,11 +32,6 @@ namespace Microsoft.DotNet.DarcLib
             throw new NotImplementedException();
         }
 
-        public Task CommentOnPullRequestAsync(string pullRequestUrl, string message)
-        {
-            throw new InvalidOperationException();
-        }
-
         public Task CreateBranchAsync(string repoUri, string newBranch, string baseBranch)
         {
             throw new InvalidOperationException();
@@ -48,26 +42,6 @@ namespace Microsoft.DotNet.DarcLib
             throw new InvalidOperationException();
         }
 
-        public Task<string> CreatePullRequestAsync(string repoUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
-        {
-            throw new InvalidOperationException();
-        }
-
-        public Task<string> CreatePullRequestCommentAsync(string pullRequestUrl, string message)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task GetCommitMapForPathAsync(string repoUri, string branch, string assetsProducedInCommit, List<GitFile> files, string pullRequestBaseBranch, string path = "eng/common/")
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<List<GitFile>> GetCommitsForPathAsync(string repoUri, string branch, string assetsProducedInCommit, string pullRequestBaseBranch, string path = "eng/common/")
-        {
-            throw new NotImplementedException();
-        }
-
         public Task<string> GetFileContentsAsync(string ownerAndRepo, string path)
         {
             return GetFileContentsAsync(path, null, null);
@@ -75,10 +49,15 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task<string> GetFileContentsAsync(string filePath, string repoUri, string branch)
         {
-            using (StreamReader streamReader = new StreamReader(repoUri))
+            using (var streamReader = new StreamReader(repoUri))
             {
                 return await streamReader.ReadToEndAsync();
             }
+        }
+
+        public Task CreateOrUpdatePullRequestDarcCommentAsync(string pullRequestUrl, string message)
+        {
+            throw new NotImplementedException();
         }
 
         public Task<List<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path)
@@ -111,6 +90,21 @@ namespace Microsoft.DotNet.DarcLib
             throw new NotImplementedException();
         }
 
+        public Task<PullRequest> GetPullRequestAsync(string pullRequestUrl)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> CreatePullRequestAsync(string repoUri, PullRequest pullRequest)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task UpdatePullRequestAsync(string pullRequestUri, PullRequest pullRequest)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<PrStatus> GetPullRequestStatusAsync(string pullRequestUrl)
         {
             throw new NotImplementedException();
@@ -121,27 +115,17 @@ namespace Microsoft.DotNet.DarcLib
             throw new NotImplementedException();
         }
 
-        public Task PushCommitsAsync(List<GitFile> filesToCommit, string repoUri, string pullRequestBaseBranch, string commitMessage)
-        {
-            throw new NotImplementedException();
-        }
-
         public Task PushFilesAsync(List<GitFile> filesToCommit, string repoUri, string branch, string commitMessage)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<int>> SearchPullRequestsAsync(string repoUri, string pullRequestBranch, PrStatus status, string keyword = null, string author = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<string> UpdatePullRequestAsync(string pullRequestUri, string mergeWithBranch, string sourceBranch, string title = null, string description = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task UpdatePullRequestCommentAsync(string pullRequestUrl, string commentId, string message)
+        public Task<IEnumerable<int>> SearchPullRequestsAsync(
+            string repoUri,
+            string pullRequestBranch,
+            PrStatus status,
+            string keyword = null,
+            string author = null)
         {
             throw new NotImplementedException();
         }
