@@ -144,7 +144,7 @@ dnceng@microsoft.com
 
 - **My repo is currently on repo-toolset, how can I move into Arcade?**
 
-  *Guidance for moving from repo-toolset into arcade is coming soon.*
+  https://github.com/dotnet/arcade/blob/master/Documentation/RepoToolset/MigrationToArcade.md
 
 - **Can I run .NET CI and Azure DevOps CI in parallel while I work out the
   kinks?**
