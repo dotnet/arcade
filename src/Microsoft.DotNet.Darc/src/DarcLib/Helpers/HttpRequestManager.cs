@@ -2,20 +2,26 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.DarcLib
 {
     public class HttpRequestManager
     {
-        private readonly HttpRequestMessage _message;
         private readonly HttpClient _client;
         private readonly ILogger _logger;
+        private readonly HttpRequestMessage _message;
 
-        public HttpRequestManager(HttpClient client, HttpMethod method, string requestUri, ILogger logger, string body = null, string versionOverride = null)
+        public HttpRequestManager(
+            HttpClient client,
+            HttpMethod method,
+            string requestUri,
+            ILogger logger,
+            string body = null,
+            string versionOverride = null)
         {
             _client = client;
             _logger = logger;
@@ -33,7 +39,8 @@ namespace Microsoft.DotNet.DarcLib
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"There was an error executing method '{_message.Method}' against URI '{_message.RequestUri}'. Request failed with error code: '{response.StatusCode}'");
+                _logger.LogError(
+                    $"There was an error executing method '{_message.Method}' against URI '{_message.RequestUri}'. Request failed with error code: '{response.StatusCode}'");
                 response.EnsureSuccessStatusCode();
             }
 

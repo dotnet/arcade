@@ -14,7 +14,8 @@ namespace Maestro.Contracts
     public static class PullRequestActorId
     {
         /// <summary>
-        ///     Creates an <see cref="ActorId"/> identifying the PullRequestActor responsible for pull requests for the non-batched subscription
+        ///     Creates an <see cref="ActorId" /> identifying the PullRequestActor responsible for pull requests for the
+        ///     non-batched subscription
         ///     referenced by <see paramref="subscriptionId" />.
         /// </summary>
         public static ActorId Create(Guid subscriptionId)
@@ -23,7 +24,8 @@ namespace Maestro.Contracts
         }
 
         /// <summary>
-        ///     Creates an <see cref="ActorId"/> identifying the PullRequestActor responsible for pull requests for all batched subscriptions
+        ///     Creates an <see cref="ActorId" /> identifying the PullRequestActor responsible for pull requests for all batched
+        ///     subscriptions
         ///     targeting the (<see paramref="repository" />, <see paramref="branch" />) pair.
         /// </summary>
         public static ActorId Create(string repository, string branch)
@@ -32,7 +34,8 @@ namespace Maestro.Contracts
         }
 
         /// <summary>
-        ///   Parses an <see cref="ActorId"/> created by <see cref="Create(string, string)"/> into the (repository, branch) pair that created it.
+        ///     Parses an <see cref="ActorId" /> created by <see cref="Create(string, string)" /> into the (repository, branch)
+        ///     pair that created it.
         /// </summary>
         public static (string repository, string branch) Parse(ActorId id)
         {

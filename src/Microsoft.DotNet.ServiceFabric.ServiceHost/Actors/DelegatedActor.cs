@@ -311,7 +311,6 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost.Actors
         private readonly Func<ActorService, ActorId, ILifetimeScope, Action<ContainerBuilder>, ActorBase> _actorFactory;
         private readonly Action<ContainerBuilder> _configureContainer;
         private readonly Action<IServiceCollection> _configureServices;
-        protected ILifetimeScope Container { get; private set; }
 
         public DelegatedActorService(
             StatefulServiceContext context,
@@ -331,6 +330,8 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost.Actors
             _configureContainer = configureContainer;
             _actorFactory = actorFactory;
         }
+
+        protected ILifetimeScope Container { get; private set; }
 
         protected override async Task OnOpenAsync(ReplicaOpenMode openMode, CancellationToken cancellationToken)
         {
@@ -379,8 +380,9 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost.Actors
         }
     }
 
-    public class DelegatedActorService<TServiceImplementation, TActorImplementation> : DelegatedActorService<TActorImplementation>
-        where TServiceImplementation : IServiceImplementation
+    public class
+        DelegatedActorService<TServiceImplementation, TActorImplementation> : DelegatedActorService<TActorImplementation
+        > where TServiceImplementation : IServiceImplementation
     {
         public DelegatedActorService(
             StatefulServiceContext context,
@@ -388,7 +390,13 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost.Actors
             Action<IServiceCollection> configureServices,
             Action<ContainerBuilder> configureContainer,
             Func<ActorService, ActorId, ILifetimeScope, Action<ContainerBuilder>, ActorBase> actorFactory,
-            ActorServiceSettings settings = null) : base(context, actorTypeInfo, configureServices, configureContainer, actorFactory, settings)
+            ActorServiceSettings settings = null) : base(
+            context,
+            actorTypeInfo,
+            configureServices,
+            configureContainer,
+            actorFactory,
+            settings)
         {
         }
 

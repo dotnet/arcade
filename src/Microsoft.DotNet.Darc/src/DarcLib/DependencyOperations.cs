@@ -11,15 +11,20 @@ namespace Microsoft.DotNet.DarcLib
 {
     public static class DependencyOperations
     {
-        public static readonly Dictionary<string, KnownDependencyType> _knownAssetNames = new Dictionary<string, KnownDependencyType>
+        public static readonly Dictionary<string, KnownDependencyType> _knownAssetNames =
+            new Dictionary<string, KnownDependencyType>
             {
-                { "Microsoft.DotNet.Arcade.Sdk", KnownDependencyType.GlobalJson },
-                { "dotnet", KnownDependencyType.GlobalJson }
+                {"Microsoft.DotNet.Arcade.Sdk", KnownDependencyType.GlobalJson},
+                {"dotnet", KnownDependencyType.GlobalJson}
             };
 
-        private static readonly Dictionary<KnownDependencyType, Delegate> _dependenciesToFuncMapping = new Dictionary<KnownDependencyType, Delegate>
+        private static readonly Dictionary<KnownDependencyType, Delegate> _dependenciesToFuncMapping =
+            new Dictionary<KnownDependencyType, Delegate>
             {
-                { KnownDependencyType.GlobalJson, new Func<GitFileManager, string, DependencyDetail, Task>(UpdateGlobalJson) },
+                {
+                    KnownDependencyType.GlobalJson,
+                    new Func<GitFileManager, string, DependencyDetail, Task>(UpdateGlobalJson)
+                }
             };
 
         public static bool TryGetKnownUpdater(string name, out Delegate function)
@@ -34,12 +39,15 @@ namespace Microsoft.DotNet.DarcLib
             return false;
         }
 
-        public static async Task UpdateGlobalJson(GitFileManager fileManager, string repository, DependencyDetail dependency)
+        public static async Task UpdateGlobalJson(
+            GitFileManager fileManager,
+            string repository,
+            DependencyDetail dependency)
         {
-            Dictionary<string, string> dependencyMapping = new Dictionary<string, string>
+            var dependencyMapping = new Dictionary<string, string>
             {
-                { "Microsoft.DotNet.Arcade.Sdk", "msbuild-sdks" },
-                { "dotnet", "tools" }
+                {"Microsoft.DotNet.Arcade.Sdk", "msbuild-sdks"},
+                {"dotnet", "tools"}
             };
 
             if (!dependencyMapping.ContainsKey(dependency.Name))
@@ -49,8 +57,15 @@ namespace Microsoft.DotNet.DarcLib
 
             string parent = dependencyMapping[dependency.Name];
 
-            await fileManager.AddDependencyToGlobalJson(Path.Combine(repository, VersionFilePath.GlobalJson), parent, dependency.Name, dependency.Version);
-            await fileManager.AddDependencyToVersionDetails(Path.Combine(repository, VersionFilePath.VersionDetailsXml), dependency, DependencyType.Toolset);
+            await fileManager.AddDependencyToGlobalJson(
+                Path.Combine(repository, VersionFilePath.GlobalJson),
+                parent,
+                dependency.Name,
+                dependency.Version);
+            await fileManager.AddDependencyToVersionDetails(
+                Path.Combine(repository, VersionFilePath.VersionDetailsXml),
+                dependency,
+                DependencyType.Toolset);
         }
     }
 }

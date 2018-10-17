@@ -1,18 +1,20 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Maestro.Web.Api.v2018_07_16.Models;
 using Maestro.Data;
+using Maestro.Web.Api.v2018_07_16.Models;
 using Microsoft.AspNetCore.ApiPagination;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
+using Build = Maestro.Data.Models.Build;
 
 namespace Maestro.Web.Api.v2018_07_16.Controllers
 {
@@ -28,8 +30,8 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         }
 
         [HttpGet]
-        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(List<Build>))]
-        [Paginated(typeof(Build))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(List<Models.Build>))]
+        [Paginated(typeof(Models.Build))]
         [ValidateModelState]
         public IActionResult GetAllBuilds(
             string repository,
@@ -40,7 +42,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             DateTimeOffset? notAfter,
             bool? loadCollections)
         {
-            IQueryable<Data.Models.Build> query = Query(
+            IQueryable<Build> query = Query(
                 repository,
                 commit,
                 buildNumber,
@@ -51,7 +53,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             return Ok(query);
         }
 
-        private IQueryable<Data.Models.Build> Query(
+        private IQueryable<Build> Query(
             string repository,
             string commit,
             string buildNumber,
@@ -60,7 +62,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             DateTimeOffset? notAfter,
             bool? loadCollections)
         {
-            IQueryable<Data.Models.Build> query = _context.Builds;
+            IQueryable<Build> query = _context.Builds;
             if (!string.IsNullOrEmpty(repository))
             {
                 query = query.Where(b => b.Repository == repository);
@@ -103,11 +105,11 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         }
 
         [HttpGet("{id}")]
-        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Build))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(Models.Build))]
         [ValidateModelState]
         public async Task<IActionResult> GetBuild(int id)
         {
-            Data.Models.Build build = await _context.Builds.Where(b => b.Id == id)
+            Build build = await _context.Builds.Where(b => b.Id == id)
                 .Include(b => b.BuildChannels)
                 .ThenInclude(bc => bc.Channel)
                 .Include(b => b.Assets)
@@ -119,11 +121,11 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 return NotFound();
             }
 
-            return Ok(new Build(build));
+            return Ok(new Models.Build(build));
         }
 
         [HttpGet("latest")]
-        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Build))]
+        [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(Models.Build))]
         [ValidateModelState]
         public async Task<IActionResult> GetLatest(
             string repository,
@@ -134,7 +136,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             DateTimeOffset? notAfter,
             bool? loadCollections)
         {
-            IQueryable<Data.Models.Build> query = Query(
+            IQueryable<Build> query = Query(
                 repository,
                 commit,
                 buildNumber,
@@ -142,26 +144,34 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 notBefore,
                 notAfter,
                 loadCollections);
-            Data.Models.Build build = await query.OrderByDescending(o => o.DateProduced).FirstOrDefaultAsync();
+            Build build = await query.OrderByDescending(o => o.DateProduced).FirstOrDefaultAsync();
             if (build == null)
             {
                 return NotFound();
             }
 
-            return Ok(new Build(build));
+            return Ok(new Models.Build(build));
         }
 
         [HttpPost]
-        [SwaggerResponse((int)HttpStatusCode.Created, Type = typeof(Build))]
+        [SwaggerResponse((int) HttpStatusCode.Created, Type = typeof(Models.Build))]
         [ValidateModelState]
         public async Task<IActionResult> Create([FromBody] BuildData build)
         {
-            Data.Models.Build buildModel = build.ToDb();
+            Build buildModel = build.ToDb();
             buildModel.DateProduced = DateTimeOffset.UtcNow;
-            buildModel.Dependencies = build.Dependencies != null ? await _context.Builds.Where(b => build.Dependencies.Contains(b.Id)).ToListAsync() : null;
+            buildModel.Dependencies = build.Dependencies != null
+                ? await _context.Builds.Where(b => build.Dependencies.Contains(b.Id)).ToListAsync()
+                : null;
             await _context.Builds.AddAsync(buildModel);
             await _context.SaveChangesAsync();
-            return CreatedAtRoute(new { action = "GetBuild", id = buildModel.Id }, new Build(buildModel));
+            return CreatedAtRoute(
+                new
+                {
+                    action = "GetBuild",
+                    id = buildModel.Id
+                },
+                new Models.Build(buildModel));
         }
     }
 }
