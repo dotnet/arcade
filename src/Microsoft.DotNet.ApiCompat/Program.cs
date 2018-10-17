@@ -27,11 +27,13 @@ namespace Microsoft.DotNet.ApiCompat
     {
         public static IEqualityComparer<ITypeReference> StaticSettings { get; set; }
         public static IDifferenceOperands  StaticOperands { get; set; }
+        public static IAttributeFilter StaticAttributeFilter { get; set; }
 
         public ExportCciSettings()
         {
             Settings = StaticSettings;
             Operands = StaticOperands;
+            AttributeFilter = StaticAttributeFilter;
         }
 
         [Export(typeof(IEqualityComparer<ITypeReference>))]
@@ -39,6 +41,9 @@ namespace Microsoft.DotNet.ApiCompat
 
         [Export(typeof(IDifferenceOperands))]
         public IDifferenceOperands Operands { get; }
+
+        [Export(typeof(IAttributeFilter))]
+        public IAttributeFilter AttributeFilter { get; }
     }
 
     public class Program
@@ -198,6 +203,7 @@ namespace Microsoft.DotNet.ApiCompat
                 Contract = s_contractOperand,
                 Implementation = s_implementationOperand,
             };
+            ExportCciSettings.StaticAttributeFilter = new AttributeFilter(s_excludeAttributesList);
 
             // Always compose the diff writer to allow it to import or provide exports
             container.SatisfyImports(diffWriter);
@@ -292,6 +298,7 @@ namespace Microsoft.DotNet.ApiCompat
                 parser.DefineOptionalQualifier("leftOperand", ref s_contractOperand, "Name for left operand in comparison, default is 'contract'.");
                 parser.DefineAliases("rightOperand", "rhs");
                 parser.DefineOptionalQualifier("rightOperand", ref s_implementationOperand, "Name for right operand in comparison, default is 'implementation'.");
+                parser.DefineOptionalQualifier("excludeAttributes", ref s_excludeAttributesList, "Specify a api list in the DocId format of which attributes to exclude.");
                 parser.DefineParameter<string>("contracts", ref s_contractSet, "Comma delimited list of assemblies or directories of assemblies for all the contract assemblies.");
             }, args);
         }
@@ -306,6 +313,7 @@ namespace Microsoft.DotNet.ApiCompat
         private static string s_remapFile;
         private static string s_contractOperand = "contract";
         private static string s_implementationOperand = "implementation";
+        public static string s_excludeAttributesList;
         private static bool s_groupByAssembly = true;
         private static bool s_mdil;
         private static bool s_resolveFx;

@@ -96,7 +96,12 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                 string id = Guid.NewGuid().ToString();
                 IJobDetail job = JobBuilder.Create<FuncInvokingJob>()
                     .WithIdentity(id)
-                    .UsingJobData(new JobDataMap {["func"] = func, ["telemetryClient"] = telemetryClient})
+                    .UsingJobData(
+                        new JobDataMap
+                        {
+                            ["func"] = func,
+                            ["telemetryClient"] = telemetryClient
+                        })
                     .Build();
 
                 ITrigger trigger = TriggerBuilder.Create()

@@ -1,4 +1,8 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/GeneratedFilesAndFolders/=031A182F_002D57D5_002D4D8E_002DB73B_002D0542444BB89F_002Fd_003Awwwroot_002Fd_003Aswagger_002Fd_003Aui/@EntryIndexedValue">031A182F-57D5-4D8E-B73B-0542444BB89F/d:wwwroot/d:swagger/d:ui</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/GeneratedFilesAndFolders/=F3C48199_002D4375_002D4DF0_002D9D24_002DF910A20E8644_002Fd_003AMigrations/@EntryIndexedValue">F3C48199-4375-4DF0-9D24-F910A20E8644/d:Migrations</s:String>
+	<s:Int64 x:Key="/Default/CodeStyle/CodeFormatting/CSharpFormat/MAX_ARRAY_INITIALIZER_ELEMENTS_ON_LINE/@EntryValue">3</s:Int64>
+	<s:Int64 x:Key="/Default/CodeStyle/CodeFormatting/CSharpFormat/MAX_INITIALIZER_ELEMENTS_ON_LINE/@EntryValue">1</s:Int64>
 	<s:String x:Key="/Default/CodeStyle/FileHeader/FileHeaderText/@EntryValue">Licensed to the .NET Foundation under one or more agreements.&#xD;
 The .NET Foundation licenses this file to you under the MIT license.&#xD;
 See the LICENSE file in the project root for more information.</s:String></wpf:ResourceDictionary>

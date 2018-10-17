@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,10 +20,14 @@ namespace Maestro.Web.Api.v2018_07_16.Models
 
             Id = other.Id;
             Repository = other.Repository;
+            Branch = other.Branch;
             Commit = other.Commit;
             BuildNumber = other.BuildNumber;
             DateProduced = other.DateProduced;
-            Channels = other.BuildChannels?.Select(bc => bc.Channel).Where(c => c != null).Select(c => new Channel(c)).ToList();
+            Channels = other.BuildChannels?.Select(bc => bc.Channel)
+                .Where(c => c != null)
+                .Select(c => new Channel(c))
+                .ToList();
             Assets = other.Assets?.Select(a => new Asset(a)).ToList();
             Dependencies = other.Dependencies?.Select(b => new BuildRef {Id = b.Id}).ToList();
         }
@@ -30,6 +35,8 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         public int Id { get; }
 
         public string Repository { get; }
+
+        public string Branch { get; }
 
         public string Commit { get; }
 

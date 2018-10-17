@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Darc.Operations
             }
             catch (Exception exc)
             {
-                Logger.LogError(exc, $"Something failed while adding dependency '{dependency.Name}' {dependency.Version}.");
+                Logger.LogError(exc, $"Failed to add dependency '{dependency.Name}' to repository.");
                 return Constants.ErrorCode;
             }
         }

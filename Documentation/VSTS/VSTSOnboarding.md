@@ -25,7 +25,6 @@ Instructions for setting up the GitHub to dev.azure.com/dnceng/internal mirror a
 
 VSTS has detailed documentation on how to create builds that are linked from GitHub repositories which can be found [here](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts); however, before going through those steps, keep in mind that our process differs from the steps in the official documentation in a few key places:
 
-* The documentation defaults to showing the process for creating a build using the Designer. The Arcade standard is to use **YAML**, so make sure to click that tab under the "Set up CI for your GitHub repository" header.
 * The YAML tutorial links to a .NET Core sample repository for an example of a simple `.vsts-ci.yml` file. Instead of using that repository, use [our sample repository](https://github.com/dotnet/arcade-minimalci-sample).
 * VSTS will require a GitHub Service Endpoint to communicate with github and setup web hooks.  Teams should use the `DotNet-Bot GitHub Connection` Service Endpoint.  The `DotNet-Bot GitHub Connection` requires that teams add the .NET Core owned [service account](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#github-service-account) as a [collaborator](https://help.github.com/articles/permission-levels-for-a-user-account-repository/#collaborator-access-on-a-repository-owned-by-a-user-account) (Admin access) on the GitHub repo.
 
@@ -33,13 +32,47 @@ For implementation details and managing information about `DotNet-Bot GitHub Con
 
 ## Agent queues
 
-Agent queue use / configuration / etc... is likely to change very soon, at the moment, agent queues are primarily relegated to Hosted machine pools.  When VSTS enables "bring your own cloud", we'll provide greater flexibility / capacity of machines.
+Agent queue use / configuration / etc... is likely to change very soon when Azure DevOps enables "bring your own cloud".
+
+Current machine pool recommendations:
+
+### External
+
+| OS         | Recommended pool     | Additional pool option     |
+| ---------- | -------------------- | -------------------------- |
+| Windows_NT | dotnet-external-temp |                            |
+| Linux      | Hosted Ubuntu 1604   | dnceng-linux-external-temp |
+| OSX        | Hosted Mac Preview   | |
+
+### Internal
+
+| OS         | Access   | Recommended pool     | Additional pool option |
+| ---------- | -------- | ---------------------| ---------------------- |
+| Windows_NT | Internal | dotnet-internal-temp | |
+| Linux      | Internal | Hosted Ubuntu 1604   | dnceng-linux-internal-temp |
+| OSX        | Internal | Hosted Mac Internal  | |
 
 A couple of notes:
 
-- Space on [Hosted machines](https://docs.microsoft.com/en-us/vsts/pipelines/agents/hosted?view=vsts#capabilities-and-limitations) is only guaranteed to be at least 10 GB.  We have a "Helix" machine pool which has greater disk space capacity.  This pool has machines running VMs with Windows Server 2016, MSBuild 15.0, and Visual Studio 2017 installed.  Connection instructions for connecting to these machines can be found in the [VSTS Windows Connection Instructions](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/vsts-windows-connection-instructions.md) document.
+- [Hosted pool](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml) capabilities
 
-- For Linux, use the "DotNetCore-Linux" machine pool instead of "Hosted Linux Preview".  "Hosted Linux Preview" is not guaranteed to have docker installed.
+- dotnet-external-temp and dotnet-internal-temp queues:
+
+  - Windows Server 2016
+
+  - 4 cores
+
+  - 512 GB disk space capacity (not SSD)
+
+  - Visual Studio 2017 15.8
+
+- dnceng-linux-external-temp and dnceng-linux-internal-temp queues:
+
+  - Ubuntu 16.04
+
+  - Docker 17.12.1
+
+  - 512 GB disk space capacity (not SSD)
 
 ## CI badge link
 

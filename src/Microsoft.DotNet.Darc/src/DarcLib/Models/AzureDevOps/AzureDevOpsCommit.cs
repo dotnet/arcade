@@ -13,6 +13,7 @@ namespace Microsoft.DotNet.DarcLib
             Changes = changes;
             Comment = commitComment;
         }
+
         public List<AzureDevOpsChange> Changes { get; set; }
 
         public string Comment { get; set; }

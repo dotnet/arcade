@@ -19,7 +19,14 @@ namespace Microsoft.DotNet.Darc
                                                  GetChannelsCommandLineOptions,
                                                  GetSubscriptionsCommandLineOptions,
                                                  AddSubscriptionCommandLineOptions,
-                                                 DeleteSubscriptionCommandLineOptions>(args)
+                                                 DeleteSubscriptionCommandLineOptions,
+                                                 AddChannelCommandLineOptions,
+                                                 DeleteChannelCommandLineOptions,
+                                                 GetDefaultChannelCommandLineOptions,
+                                                 AddDefaultChannelCommandLineOptions,
+                                                 DeleteDefaultChannelCommandLineOptions,
+                                                 GetSubscriptionHistoryCommandLineOptions,
+                                                 RetrySubscriptionUpdateCommandLineOptions>(args)
                 .MapResult(
                     (AuthenticateCommandLineOptions opts) => { return RunOperation(new AuthenticateOperation(opts)); },
                     (GetDependenciesCommandLineOptions opts) => { return RunOperation(new GetDependenciesOperation(opts)); },
@@ -28,6 +35,13 @@ namespace Microsoft.DotNet.Darc
                     (GetSubscriptionsCommandLineOptions opts) => { return RunOperation(new GetSubscriptionsOperation(opts)); },
                     (AddSubscriptionCommandLineOptions opts) => { return RunOperation(new AddSubscriptionOperation(opts)); },
                     (DeleteSubscriptionCommandLineOptions opts) => { return RunOperation(new DeleteSubscriptionOperation(opts)); },
+                    (AddChannelCommandLineOptions opts) => { return RunOperation(new AddChannelOperation(opts)); },
+                    (DeleteChannelCommandLineOptions opts) => { return RunOperation(new DeleteChannelOperation(opts)); },
+                    (GetDefaultChannelCommandLineOptions opts) => { return RunOperation(new GetDefaultChannelsOperation(opts)); },
+                    (AddDefaultChannelCommandLineOptions opts) => { return RunOperation(new AddDefaultChannelOperation(opts)); },
+                    (DeleteDefaultChannelCommandLineOptions opts) => { return RunOperation(new DeleteDefaultChannelOperation(opts)); },
+                    (GetSubscriptionHistoryCommandLineOptions opts) => { return RunOperation(new GetSubscriptionHistoryOperation(opts)); },
+                    (RetrySubscriptionUpdateCommandLineOptions opts) => { return RunOperation(new RetrySubscriptionUpdateOperation(opts)); },
                     (errs => 1));
         }
 

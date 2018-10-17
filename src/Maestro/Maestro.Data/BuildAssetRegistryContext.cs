@@ -51,7 +51,10 @@ namespace Maestro.Data
         public DbSet<DefaultChannel> DefaultChannels { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<SubscriptionUpdate> SubscriptionUpdates { get; set; }
-        public DbSet<RepoInstallation> RepoInstallations { get; set; }
+        public DbSet<Repository> Repositories { get; set; }
+        public DbSet<RepositoryBranch> RepositoryBranches { get; set; }
+        public DbSet<RepositoryBranchUpdate> RepositoryBranchUpdates { get; set; }
+        public DbQuery<RepositoryBranchUpdateHistoryEntry> RepositoryBranchUpdateHistory { get; set; }
         public DbQuery<SubscriptionUpdateHistoryEntry> SubscriptionUpdateHistory { get; set; }
 
 
@@ -74,11 +77,15 @@ namespace Maestro.Data
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<Channel>()
-                .HasIndex(c => c.Name)
-                .IsUnique();
+            builder.Entity<Channel>().HasIndex(c => c.Name).IsUnique();
 
-            builder.Entity<BuildChannel>().HasKey(bc => new {bc.BuildId, bc.ChannelId});
+            builder.Entity<BuildChannel>()
+            .HasKey(
+                bc => new
+                {
+                    bc.BuildId,
+                    bc.ChannelId
+                });
 
             builder.Entity<BuildChannel>()
                 .HasOne(bc => bc.Build)
@@ -91,10 +98,23 @@ namespace Maestro.Data
                 .HasForeignKey(bc => bc.ChannelId);
 
             builder.Entity<ApplicationUserPersonalAccessToken>()
-                .HasIndex(t => new {t.ApplicationUserId, t.Name})
+                .HasIndex(
+                    t => new
+                    {
+                        t.ApplicationUserId,
+                        t.Name
+                    })
                 .IsUnique();
 
-            builder.Entity<DefaultChannel>().HasIndex(dc => new {dc.Repository, dc.Branch, dc.ChannelId}).IsUnique();
+            builder.Entity<DefaultChannel>()
+                .HasIndex(
+                    dc => new
+                    {
+                        dc.Repository,
+                        dc.Branch,
+                        dc.ChannelId
+                    })
+                .IsUnique();
 
             builder.Entity<SubscriptionUpdate>()
                 .HasOne(su => su.Subscription)
@@ -104,10 +124,54 @@ namespace Maestro.Data
 
             builder.ForSqlServerIsSystemVersioned<SubscriptionUpdate, SubscriptionUpdateHistory>("1 MONTHS");
 
-            builder.Entity<SubscriptionUpdateHistory>()
-                .HasIndex("SubscriptionId") // a clustered columnstore index can have no fields defined, but EF needs at least one
-                .ForSqlServerIsClustered()
-                .ForSqlServerIsColumnstore();
+            builder.Entity<SubscriptionUpdateHistory>().HasIndex("SubscriptionId", "SysEndTime", "SysStartTime");
+
+            builder.Entity<Repository>().HasKey(r => new {r.RepositoryName});
+
+            builder.Entity<RepositoryBranch>()
+            .HasKey(
+                rb => new
+                {
+                    rb.RepositoryName,
+                    rb.BranchName
+                });
+
+            builder.Entity<RepositoryBranch>()
+                .HasOne(rb => rb.Repository)
+                .WithMany(r => r.Branches)
+                .HasForeignKey(rb => new {rb.RepositoryName});
+
+            builder.Entity<RepositoryBranchUpdate>()
+            .HasKey(
+                ru => new
+                {
+                    ru.RepositoryName,
+                    ru.BranchName
+                });
+
+            builder.Entity<RepositoryBranchUpdate>()
+                .HasOne(ru => ru.RepositoryBranch)
+                .WithOne()
+                .HasForeignKey<RepositoryBranchUpdate>(
+                    ru => new
+                    {
+                        ru.RepositoryName,
+                        ru.BranchName
+                    })
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.ForSqlServerIsSystemVersioned<RepositoryBranchUpdate, RepositoryBranchUpdateHistory>("3 MONTHS");
+
+            builder.Entity<RepositoryBranchUpdateHistory>()
+            .HasKey(
+                ru => new
+                {
+                    ru.RepositoryName,
+                    ru.BranchName
+                });
+
+            builder.Entity<RepositoryBranchUpdateHistory>()
+                .HasIndex("RepositoryName", "BranchName", "SysEndTime", "SysStartTime");
 
             builder.HasDbFunction(() => JsonExtensions.JsonValue("", "")).HasName("JSON_VALUE").HasSchema("");
 
@@ -127,14 +191,34 @@ FOR SYSTEM_TIME ALL
                                 ErrorMessage = u.ErrorMessage,
                                 Method = u.Method,
                                 Arguments = u.Arguments,
-                                Timestamp = EF.Property<DateTime>(u, "SysStartTime"),
+                                Timestamp = EF.Property<DateTime>(u, "SysStartTime")
+                            }));
+
+            builder.Query<RepositoryBranchUpdateHistoryEntry>()
+                .ToQuery(
+                    () => RepositoryBranchUpdates.FromSql(
+                            @"
+SELECT * FROM [RepositoryBranchUpdates]
+FOR SYSTEM_TIME ALL
+")
+                        .Select(
+                            u => new RepositoryBranchUpdateHistoryEntry
+                            {
+                                Repository = u.RepositoryName,
+                                Branch = u.BranchName,
+                                Action = u.Action,
+                                Success = u.Success,
+                                ErrorMessage = u.ErrorMessage,
+                                Method = u.Method,
+                                Arguments = u.Arguments,
+                                Timestamp = EF.Property<DateTime>(u, "SysStartTime")
                             }));
         }
 
         public Task<long> GetInstallationId(string repositoryUrl)
         {
-            return RepoInstallations.Where(ri => ri.Repository == repositoryUrl)
-                .Select(ri => ri.InstallationId)
+            return Repositories.Where(r => r.RepositoryName == repositoryUrl)
+                .Select(r => r.InstallationId)
                 .FirstOrDefaultAsync();
         }
     }
@@ -163,6 +247,18 @@ FOR SYSTEM_TIME ALL
     public class SubscriptionUpdateHistoryEntry
     {
         public Guid SubscriptionId { get; set; }
+        public string Action { get; set; }
+        public bool Success { get; set; }
+        public string ErrorMessage { get; set; }
+        public string Method { get; set; }
+        public string Arguments { get; set; }
+        public DateTime Timestamp { get; set; }
+    }
+
+    public class RepositoryBranchUpdateHistoryEntry
+    {
+        public string Repository { get; set; }
+        public string Branch { get; set; }
         public string Action { get; set; }
         public bool Success { get; set; }
         public string ErrorMessage { get; set; }
