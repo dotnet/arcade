@@ -17,6 +17,8 @@ The GitHub username
 A personal access token
 .PARAMETER Fork
 Make PR from a fork
+.PARAMETER AllowAutomatedCommits
+Create a PR even if the only commits are from aspnetci
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
@@ -44,7 +46,9 @@ param(
     [Alias('u')]
     $Username,
 
-    [switch]$Fork
+    [switch]$Fork,
+
+    [switch]$AllowAutomatedCommits
 )
 
 $ErrorActionPreference = 'stop'
@@ -201,7 +205,7 @@ try {
         | ? { $_ -ne $null } `
         | select -Unique
 
-    if ((($authors | measure).Count -eq 1) -and ($authors | select -first 1) -eq 'aspnetci') {
+    if (-not $AllowAutomatedCommits -and (($authors | measure).Count -eq 1) -and ($authors | select -first 1) -eq 'aspnetci') {
         Write-Host -ForegroundColor Yellow 'Skipping PR generation because it appears this PR would only contain automated commits by aspnetci'
         exit 0
     }

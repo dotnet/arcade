@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace SubscriptionActorService
@@ -13,9 +15,16 @@ namespace SubscriptionActorService
         public string Url { get; set; }
 
         [DataMember]
-        public int BuildId { get; set; }
+        public List<SubscriptionPullRequestUpdate> ContainedSubscriptions { get; set; }
+    }
 
-        [DataMember(IsRequired = false)]
-        public string StatusCommentId { get; set; }
+    [DataContract]
+    public class SubscriptionPullRequestUpdate
+    {
+        [DataMember]
+        public Guid SubscriptionId { get; set; }
+
+        [DataMember]
+        public int BuildId { get; set; }
     }
 }

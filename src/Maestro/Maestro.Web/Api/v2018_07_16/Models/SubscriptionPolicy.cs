@@ -7,10 +7,11 @@ using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using JetBrains.Annotations;
+using Maestro.Data.Models;
 
 namespace Maestro.Web.Api.v2018_07_16.Models
 {
-    public class SubscriptionPolicy
+    public class SubscriptionPolicy : IValidatableObject
     {
         public SubscriptionPolicy()
         {
@@ -23,25 +24,38 @@ namespace Maestro.Web.Api.v2018_07_16.Models
                 throw new ArgumentNullException(nameof(other));
             }
 
+            Batchable = other.Batchable;
             UpdateFrequency = (UpdateFrequency) (int) other.UpdateFrequency;
             MergePolicies = other.MergePolicies != null
                 ? other.MergePolicies.Select(p => new MergePolicy(p)).ToImmutableList()
                 : ImmutableList<MergePolicy>.Empty;
         }
 
+        public bool Batchable { get; set; } = true;
+
         [Required]
         public UpdateFrequency UpdateFrequency { get; set; }
 
-        [Required]
         public IImmutableList<MergePolicy> MergePolicies { get; set; }
 
         public Data.Models.SubscriptionPolicy ToDb()
         {
             return new Data.Models.SubscriptionPolicy
             {
-                MergePolicies = MergePolicies.Select(p => p.ToDb()).ToList(),
+                Batchable = Batchable,
+                MergePolicies = MergePolicies?.Select(p => p.ToDb()).ToList() ?? new List<MergePolicyDefinition>(),
                 UpdateFrequency = (Data.Models.UpdateFrequency) (int) UpdateFrequency,
             };
+        }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (Batchable && MergePolicies != null && MergePolicies.Count != 0)
+            {
+                yield return new ValidationResult(
+                    "Batchable Subscriptions cannot have any merge policies.",
+                    new[] {nameof(MergePolicies), nameof(Batchable)});
+            }
         }
     }
 }

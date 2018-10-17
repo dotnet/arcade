@@ -2,15 +2,96 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.Collections.Generic;
+
 namespace Microsoft.DotNet.SignTool
 {
     internal static class SignToolConstants
     {
         public const string IgnoreFileCertificateSentinel = "None";
 
-        // These certificate are special because they are used when we want 
-        // to sign a file that is already signed.
-        public const string Certificate_Microsoft3rdPartyAppComponentDual = "3PartyDual";
-        public const string Certificate_Microsoft3rdPartyAppComponentSha2 = "3PartySHA2";
+        /// <summary>
+        /// List of known signable extensions. Copied, removing duplicates, from here:
+        /// https://microsoft.sharepoint.com/teams/codesigninfo/Wiki/Signable%20Files.aspx
+        /// </summary>
+        public static readonly HashSet<string> SignableExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".exe",
+            ".dll",
+            ".rll",
+            ".olb",
+            ".ocx",
+
+            ".cab",
+
+            ".cat",
+
+            ".vbs",
+            ".js",
+            ".wfs",
+
+            ".msi",
+            ".mui",
+            ".msp",
+            ".msu",
+            ".psf",
+            ".mpb",
+            ".mp",
+            ".msm",
+
+            ".doc",
+            ".xls",
+            ".ppt",
+            ".xla",
+            ".vdx",
+            ".xsn",
+            ".mpp",
+
+            ".xlam",
+            ".xlsb",
+            ".xlsm",
+            ".xltm",
+            ".potm",
+            ".ppsm",
+            ".pptm",
+            ".docm",
+            ".dotm",
+
+            ".ttf",
+            ".otf",
+
+            ".ps1",
+            ".ps1xml",
+            ".psm1",
+            ".psd1",
+            ".psc1",
+            ".cdxml",
+            ".wsf",
+            ".mof",
+
+            ".sft",
+            ".dsft",
+
+            ".vsi",
+
+            ".xap",
+
+            ".efi",
+
+            ".vsix",
+
+            ".jar",
+
+            ".winmd",
+
+            ".appx",
+            ".appxbundle",
+
+            ".esd",
+
+            ".py",
+            ".pyd",
+        };
     }
 }

@@ -10,5 +10,8 @@
     <Parameter Name="SubscriptionActorService_PartitionCount" Value="1" />
     <Parameter Name="SubscriptionActorService_TargetReplicaSetSize" Value="1" />
     <Parameter Name="SubscriptionActorService_MinReplicaSetSize" Value="1" />
+    <Parameter Name="PullRequestActorService_PartitionCount" Value="1" />
+    <Parameter Name="PullRequestActorService_TargetReplicaSetSize" Value="1" />
+    <Parameter Name="PullRequestActorService_MinReplicaSetSize" Value="1" />
   </Parameters>
 </Application>

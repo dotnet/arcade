@@ -37,7 +37,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [HttpGet]
         [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(List<Subscription>))]
         [ValidateModelState]
-        public IActionResult GetAllSubscriptions(string sourceRepository = null, string targetRepository = null, int? channelId = null)
+        public IActionResult GetAllSubscriptions(string sourceRepository = null, string targetRepository = null, int? channelId = null, bool? enabled = null)
         {
             IQueryable<Data.Models.Subscription> query = _context.Subscriptions.Include(s => s.Channel);
 
@@ -54,6 +54,11 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             if (channelId.HasValue)
             {
                 query = query.Where(sub => sub.ChannelId == channelId.Value);
+            }
+
+            if (enabled.HasValue)
+            {
+                query = query.Where(sub => sub.Enabled == enabled.Value);
             }
 
             List<Subscription> results = query.AsEnumerable().Select(sub => new Subscription(sub)).ToList();
@@ -118,6 +123,12 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 }
 
                 subscription.Channel = channel;
+                doUpdate = true;
+            }
+
+            if (update.Enabled.HasValue)
+            {
+                subscription.Enabled = update.Enabled.Value;
                 doUpdate = true;
             }
 
@@ -212,7 +223,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 async () =>
                 {
                     var actor = _subscriptionActorFactory(new ActorId(subscription.Id));
-                    await actor.RunAction(update.Method, update.Arguments);
+                    await actor.RunActionAsync(update.Method, update.Arguments);
                 });
 
             return Accepted();
@@ -236,8 +247,10 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
 
             if (subscription.TargetRepository.Contains("github.com"))
             {
-                var repoInstallation = await _context.RepoInstallations.FindAsync(subscription.TargetRepository);
-                if (repoInstallation == null)
+                // If we have no repository information or an invalid installation id
+                // then we will fail when trying to update things, so we fail early.
+                var repo = await _context.Repositories.FindAsync(subscription.TargetRepository);
+                if (repo == null || repo.InstallationId <= 0)
                 {
                     return BadRequest(
                         new ApiError(

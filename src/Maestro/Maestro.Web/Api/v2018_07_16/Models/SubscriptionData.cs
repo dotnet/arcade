@@ -19,6 +19,8 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         [Required]
         public string TargetBranch { get; set; }
 
+        public bool? Enabled { get; set; }
+
         [Required]
         public SubscriptionPolicy Policy { get; set; }
 
@@ -30,6 +32,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
                 TargetRepository = TargetRepository,
                 TargetBranch = TargetBranch,
                 PolicyObject = Policy.ToDb(),
+                Enabled = Enabled ?? true,
             };
         }
     }

@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.DarcLib
 
         public GitFile GlobalJson { get; set; }
 
-        public List<GitFile> GetFilesToCommitMap(string branch, string message = null)
+        public List<GitFile> GetFilesToCommit()
         {
             List<GitFile> gitHubCommitsMap = new List<GitFile>
             {

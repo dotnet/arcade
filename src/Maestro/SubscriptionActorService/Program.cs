@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Reflection;
+using Maestro.Contracts;
 using Maestro.Data;
 using Maestro.GitHub;
 using Maestro.MergePolicies;
@@ -24,10 +25,19 @@ namespace SubscriptionActorService
             ServiceHost.Run(
                 host =>
                 {
-                    host.RegisterStatefulActorService<SubscriptionService, SubscriptionActor>("SubscriptionActor");
+                    host.RegisterStatefulActorService<SubscriptionActor>("SubscriptionActor");
+                    host.RegisterStatefulActorService<PullRequestActor>("PullRequestActor");
+                    host.ConfigureContainer(
+                        builder =>
+                        {
+                            builder.AddServiceFabricActor<IPullRequestActor>();
+                            builder.AddServiceFabricActor<ISubscriptionActor>();
+                        });
                     host.ConfigureServices(
                         services =>
                         {
+                            services.AddSingleton<IActionRunner, ActionRunner>();
+                            services.AddSingleton<IMergePolicyEvaluator, MergePolicyEvaluator>();
                             services.AddSingleton<IDarcRemoteFactory, DarcRemoteFactory>();
                             services.AddGitHubTokenProvider();
                             services.AddSingleton(
