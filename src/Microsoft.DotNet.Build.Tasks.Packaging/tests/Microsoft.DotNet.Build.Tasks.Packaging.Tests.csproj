@@ -49,6 +49,8 @@
     <ItemGroup>
       <TestPackage>
         <Folder Condition="Exists('$(_candidatePackageFolder)\%(Identity)\%(Version)')">$(_candidatePackageFolder)\%(Identity)\%(Version)</Folder>
+        <!-- NuGet will restore to lower case folder and linux is case sensitive -->
+        <Folder Condition="Exists('$(_candidatePackageFolder)\$([System.String]::new(&quot;%(Identity)\%(Version)&quot;).ToLower())')">$(_candidatePackageFolder)\$([System.String]::new(&quot;%(Identity)\%(Version)&quot;).ToLower())</Folder>
       </TestPackage>
     </ItemGroup>
   </Target>
