@@ -26,29 +26,29 @@ namespace Microsoft.DotNet.DarcLib
         public static HashSet<string> DependencyFiles =>
             new HashSet<string>
             {
-                VersionFilePath.VersionDetailsXml,
-                VersionFilePath.VersionProps,
-                VersionFilePath.GlobalJson
+                VersionFiles.VersionDetailsXml,
+                VersionFiles.VersionProps,
+                VersionFiles.GlobalJson
             };
 
         public async Task<XmlDocument> ReadVersionDetailsXmlAsync(string repoUri, string branch)
         {
-            XmlDocument document = await ReadXmlFileAsync(VersionFilePath.VersionDetailsXml, repoUri, branch);
+            XmlDocument document = await ReadXmlFileAsync(VersionFiles.VersionDetailsXml, repoUri, branch);
             return document;
         }
 
         public async Task<XmlDocument> ReadVersionPropsAsync(string repoUri, string branch)
         {
-            XmlDocument document = await ReadXmlFileAsync(VersionFilePath.VersionProps, repoUri, branch);
+            XmlDocument document = await ReadXmlFileAsync(VersionFiles.VersionProps, repoUri, branch);
             return document;
         }
 
         public async Task<JObject> ReadGlobalJsonAsync(string repoUri, string branch)
         {
             _logger.LogInformation(
-                $"Reading '{VersionFilePath.GlobalJson}' in repo '{repoUri}' and branch '{branch}'...");
+                $"Reading '{VersionFiles.GlobalJson}' in repo '{repoUri}' and branch '{branch}'...");
 
-            string fileContent = await _gitClient.GetFileContentsAsync(VersionFilePath.GlobalJson, repoUri, branch);
+            string fileContent = await _gitClient.GetFileContentsAsync(VersionFiles.GlobalJson, repoUri, branch);
 
             JObject jsonContent = JObject.Parse(fileContent);
 
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.DarcLib
         public async Task<IEnumerable<DependencyDetail>> ParseVersionDetailsXmlAsync(string repoUri, string branch)
         {
             _logger.LogInformation(
-                $"Getting a collection of BuildAsset objects from '{VersionFilePath.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}'...");
+                $"Getting a collection of BuildAsset objects from '{VersionFiles.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}'...");
 
             var BuildAssets = new List<DependencyDetail>();
             XmlDocument document = await ReadVersionDetailsXmlAsync(repoUri, branch);
@@ -98,13 +98,13 @@ namespace Microsoft.DotNet.DarcLib
             else
             {
                 _logger.LogError(
-                    $"There was an error while reading '{VersionFilePath.VersionDetailsXml}' and it came back empty. Look for exceptions above.");
+                    $"There was an error while reading '{VersionFiles.VersionDetailsXml}' and it came back empty. Look for exceptions above.");
 
                 return BuildAssets;
             }
 
             _logger.LogInformation(
-                $"Getting a collection of BuildAsset objects from '{VersionFilePath.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}' succeeded!");
+                $"Getting a collection of BuildAsset objects from '{VersionFiles.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}' succeeded!");
 
             return BuildAssets;
         }
@@ -144,9 +144,9 @@ namespace Microsoft.DotNet.DarcLib
 
             var fileContainer = new GitFileContentContainer
             {
-                GlobalJson = new GitFile(VersionFilePath.GlobalJson, globalJson),
-                VersionDetailsXml = new GitFile(VersionFilePath.VersionDetailsXml, versionDetails),
-                VersionProps = new GitFile(VersionFilePath.VersionProps, versionProps)
+                GlobalJson = new GitFile(VersionFiles.GlobalJson, globalJson),
+                VersionDetailsXml = new GitFile(VersionFiles.VersionDetailsXml, versionDetails),
+                VersionProps = new GitFile(VersionFiles.VersionProps, versionProps)
             };
 
             return fileContainer;
@@ -191,9 +191,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             XmlDocument versionProps = await ReadVersionPropsAsync(filePath, null);
 
-            string versionedName = dependency.Name.Replace(".", string.Empty);
-            versionedName = $"{versionedName}Version";
-
+            string versionedName = VersionFiles.CalculateVersionPropsElementName(dependency.Name);
             XmlNode versionNode = versionProps.DocumentElement.SelectNodes("//PropertyGroup").Item(0);
 
             XmlNode newDependency = versionProps.CreateElement(versionedName);
@@ -258,9 +256,9 @@ namespace Microsoft.DotNet.DarcLib
 
         private void UpdateVersionFiles(XmlDocument versionProps, JToken token, DependencyDetail itemToUpdate)
         {
-            string versionedName = itemToUpdate.Name.Replace(".", string.Empty);
+            string versionElementName = VersionFiles.CalculateVersionPropsElementName(itemToUpdate.Name);
 
-            XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"//{versionedName}Version");
+            XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"//{versionElementName}");
 
             if (versionNode != null)
             {
@@ -274,9 +272,11 @@ namespace Microsoft.DotNet.DarcLib
 
         private void UpdateVersionGlobalJson(DependencyDetail itemToUpdate, JToken token)
         {
+            string versionElementName = VersionFiles.CalculateGlobalJsonElementName(itemToUpdate.Name);
+
             foreach (JProperty property in token.Children<JProperty>())
             {
-                if (property.Name == itemToUpdate.Name)
+                if (property.Name == versionElementName)
                 {
                     property.Value = new JValue(itemToUpdate.Version);
                     break;

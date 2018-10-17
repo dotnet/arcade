@@ -2,7 +2,8 @@
   "profiles": {
     "Microsoft.DotNet.Darc": {
       "commandName": "Project",
-      "commandLineArgs": "authenticate"
+      "commandLineArgs": "verify",
+      "workingDirectory": "D:\\enlistments\\corefx"
     }
   }
 }
