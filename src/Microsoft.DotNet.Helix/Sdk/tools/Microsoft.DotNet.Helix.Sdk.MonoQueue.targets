@@ -82,10 +82,6 @@
         <Uri>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/linux/dotnet/dotnet-sdk-2.1.403-linux-x64.tar.gz</Uri>
       </HelixCorrelationPayload>
     </ItemGroup>
-    <PropertyGroup>
-      <HelixPreCommands Condition="$(IsPosixShell)">$(HelixPostCommands);$HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/xunit-reporter.py</HelixPreCommands>
-      <HelixPreCommands Condition="!$(IsPosixShell)">$(HelixPostCommands);%HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\xunit-reporter.py</HelixPreCommands>
-    </PropertyGroup>
   </Target>
   
   <Target Name="AddXUnitReporter" Condition="$(EnableXUnitReporter)" BeforeTargets="Test">
