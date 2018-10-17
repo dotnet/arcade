@@ -27,7 +27,6 @@ namespace Microsoft.DotNet.Darc.Operations
         public override async Task<int> ExecuteAsync()
         {
             Local local = new Local(LocalCommands.GetGitDir(Logger), Logger);
-            string name = _options.Name ?? string.Empty;
 
             try
             {
