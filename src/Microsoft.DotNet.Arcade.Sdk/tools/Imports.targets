@@ -39,6 +39,7 @@
   <Import Project="RepositoryInfo.targets"/>
   <Import Project="Version.targets"/>
   <Import Project="Tests.targets"/>
+  <Import Project="CodeAnalysis.Build.targets"/>
 
   <Import Project="Performance.targets" />
   <Import Project="Localization.targets" Condition="'$(UsingToolXliff)' == 'true'"/>

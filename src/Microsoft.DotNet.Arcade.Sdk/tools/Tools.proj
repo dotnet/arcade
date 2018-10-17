@@ -55,4 +55,7 @@
   <!-- Repository extensibility point -->
   <Import Project="$(RepositoryEngineeringDir)Tools.props" Condition="Exists('$(RepositoryEngineeringDir)Tools.props')" />
 
+  <!-- Import at the end so that repos can opt out resolving analyzers in Tools.props -->
+  <Import Condition="'$(EnableAnalyzers)' == 'true'" Project="CodeAnalysis.Restore.targets" />
+
 </Project>
