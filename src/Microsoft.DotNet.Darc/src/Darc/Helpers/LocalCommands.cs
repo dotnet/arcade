@@ -153,9 +153,17 @@ namespace Microsoft.DotNet.Darc.Helpers
             return output;
         }
 
-        public static string GetRepoPathFromFolder(string folder, string commit, ILogger logger)
+        /// <summary>
+        /// For each child folder in the provided "source" folder we check for the existance of a given commit. Each folder in "source"
+        /// represent a different repo.
+        /// </summary>
+        /// <param name="sourceFolder">The main source folder.</param>
+        /// <param name="commit">The commit to search for in a repo folder.</param>
+        /// <param name="logger">The logger.</param>
+        /// <returns></returns>
+        public static string GetRepoPathFromFolder(string sourceFolder, string commit, ILogger logger)
         {
-            foreach (string directory in Directory.GetDirectories(folder))
+            foreach (string directory in Directory.GetDirectories(sourceFolder))
             {
                 string containsCommand = ExecuteCommand("git.exe", $"branch --contains {commit}", logger, directory);
 
@@ -168,14 +176,16 @@ namespace Microsoft.DotNet.Darc.Helpers
             return string.Empty;
         }
 
-        public static void Checkout(string repoFolderPath, string commit, ILogger logger)
+        public static string Show(string repoFolderPath, string commit, string fileName, ILogger logger)
         {
-            string checkoutCommand = ExecuteCommand("git.exe", $"checkout {commit}", logger, repoFolderPath);
+            string fileContents = ExecuteCommand("git.exe", $"show {commit}:{fileName}", logger, repoFolderPath);
 
-            if (string.IsNullOrEmpty(checkoutCommand))
+            if (string.IsNullOrEmpty(fileContents))
             {
-                throw new Exception($"Could not checkout '{commit}' in '{repoFolderPath}'. Check that your repo in this folder is up to date and that you don't have uncommited changes...");
+                throw new Exception($"Could not show the contents of '{fileName}' at '{commit}' in '{repoFolderPath}'...");
             }
+
+            return fileContents;
         }
 
         private static string OverrideIfSet(string currentSetting, string commandLineSetting)

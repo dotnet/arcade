@@ -17,13 +17,11 @@ namespace Microsoft.DotNet.Darc.Operations
     internal class GetDependenciesOperation : Operation
     {
         private readonly GetDependenciesCommandLineOptions _options;
-        private readonly HashSet<string> _flatList;
 
         public GetDependenciesOperation(GetDependenciesCommandLineOptions options)
             : base(options)
         {
             _options = options;
-            _flatList = new HashSet<string>();
         }
 
         public override async Task<int> ExecuteAsync()
@@ -70,31 +68,9 @@ namespace Microsoft.DotNet.Darc.Operations
             }
         }
 
-        private void LogDependency(DependencyDetail dependency, string tab = "")
-        {
-            if (!_options.Flat)
-            {
-                Console.WriteLine($"{tab}- Name:    {dependency.Name}");
-                Console.WriteLine($"{tab}  Version: {dependency.Version}");
-                Console.WriteLine($"{tab}  Repo:    {dependency.RepoUri}");
-                Console.WriteLine($"{tab}  Commit:  {dependency.Commit}");
-            }
-            else
-            {
-                string combo = $"{dependency.RepoUri} - {dependency.Commit}";
-
-                if (!_flatList.Contains(combo))
-                {
-                    Console.WriteLine(combo);
-
-                    _flatList.Add(combo);
-                }
-            }
-        }
-
         private async Task LogDependencyAsync(DependencyDetail dependency, bool repoSha, bool local, Local localClient)
         {
-            LogDependency(dependency);
+            ConsoleLogger.LogDependency(dependency, _options.Flat);
 
             if (repoSha)
             {
@@ -161,18 +137,15 @@ namespace Microsoft.DotNet.Darc.Operations
 
                     Exception exception = null;
 
-                    // Always try to checkout master even though there was an exception
                     try
                     {
-                        LocalCommands.Checkout(repoPath, dependency.Commit, Logger);
-                        dependenciesAtSha = await localClient.GetDependenciesAsync(repoPath, dependency.Commit);
+                        string fileContents = LocalCommands.Show(repoPath, dependency.Commit, VersionFilePath.VersionDetailsXml, Logger);
+                        dependenciesAtSha = localClient.GetDependenciesFromFileContents(fileContents);
                     }
                     catch (Exception exc)
                     {
                         exception = exc;
                     }
-
-                    LocalCommands.Checkout(repoPath, "master", Logger);
 
                     if (exception != null)
                     {
@@ -188,7 +161,7 @@ namespace Microsoft.DotNet.Darc.Operations
 
                 foreach (DependencyDetail dependencyAtSha in dependenciesAtSha)
                 {
-                    LogDependency(dependencyAtSha, "    ");
+                    ConsoleLogger.LogDependency(dependencyAtSha, _options.Flat, "    ");
                 }
             }
         }

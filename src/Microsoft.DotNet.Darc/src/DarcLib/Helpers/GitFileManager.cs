@@ -42,6 +42,12 @@ namespace Microsoft.DotNet.DarcLib
             return document;
         }
 
+        public XmlDocument ReadVersionDetailsXml(string fileContent)
+        {
+            XmlDocument document = ReadXmlFileAsync(fileContent);
+            return document;
+        }
+
         public async Task<XmlDocument> ReadVersionPropsAsync(string repoUri, string branch)
         {
             XmlDocument document = await ReadXmlFileAsync(VersionFilePath.VersionProps, repoUri, branch);
@@ -63,48 +69,24 @@ namespace Microsoft.DotNet.DarcLib
         {
             _logger.LogInformation($"Getting a collection of BuildAsset objects from '{VersionFilePath.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}'...");
 
-            List<DependencyDetail> BuildAssets = new List<DependencyDetail>();
             XmlDocument document = await ReadVersionDetailsXmlAsync(repoUri, branch);
 
-            if (document != null)
-            {
-                BuildDependencies(document.DocumentElement.SelectNodes("//Dependency"));
-
-                void BuildDependencies(XmlNodeList dependencies)
-                {
-                    if (dependencies.Count > 0)
-                    {
-                        foreach (XmlNode dependency in dependencies)
-                        {
-                            if (dependency.NodeType != XmlNodeType.Comment && dependency.NodeType != XmlNodeType.Whitespace)
-                            {
-                                DependencyDetail BuildAsset = new DependencyDetail
-                                {
-                                    Branch = branch,
-                                    Name = dependency.Attributes["Name"].Value,
-                                    RepoUri = dependency.SelectSingleNode("Uri").InnerText,
-                                    Commit = dependency.SelectSingleNode("Sha").InnerText,
-                                    Version = dependency.Attributes["Version"].Value
-                                };
-
-                                BuildAssets.Add(BuildAsset);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogWarning("No dependencies defined in file.");
-                    }
-                }
-            }
-            else
-            {
-                _logger.LogError($"There was an error while reading '{VersionFilePath.VersionDetailsXml}' and it came back empty. Look for exceptions above.");
-
-                return BuildAssets;
-            }
-
+            IEnumerable<DependencyDetail> BuildAssets = GetBuildAssets(document, branch);
+            
             _logger.LogInformation($"Getting a collection of BuildAsset objects from '{VersionFilePath.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}' succeeded!");
+
+            return BuildAssets;
+        }
+
+        public IEnumerable<DependencyDetail> ParseVersionDetailsXml(string fileContents)
+        {
+            _logger.LogInformation($"Getting a collection of BuildAsset objects from '{VersionFilePath.VersionDetailsXml}'...");
+
+            XmlDocument document = ReadVersionDetailsXml(fileContents);
+
+            IEnumerable<DependencyDetail> BuildAssets = GetBuildAssets(document);
+
+            _logger.LogInformation($"Getting a collection of BuildAsset objects from '{VersionFilePath.VersionDetailsXml}' succeeded!");
 
             return BuildAssets;
         }
@@ -189,7 +171,7 @@ namespace Microsoft.DotNet.DarcLib
             versionedName = $"{versionedName}Version";
 
             XmlNode versionNode = versionProps.DocumentElement.SelectNodes($"//PropertyGroup").Item(0);
-            
+
             XmlNode newDependency = versionProps.CreateElement(versionedName);
             newDependency.InnerText = dependency.Version;
             versionNode.AppendChild(newDependency);
@@ -226,20 +208,34 @@ namespace Microsoft.DotNet.DarcLib
             _logger.LogInformation($"Reading '{filePath}' in repo '{repoUri}' and branch '{branch}'...");
 
             string fileContent = await _gitClient.GetFileContentsAsync(filePath, repoUri, branch);
-            XmlDocument document = new XmlDocument();
 
             try
             {
-                document.PreserveWhitespace = true;
-                document.LoadXml(fileContent);
+                XmlDocument document = GetXmlDocument(fileContent);
+
+                _logger.LogInformation($"Reading '{filePath}' from repo '{repoUri}' and branch '{branch}' succeeded!");
+
+                return document;
             }
             catch (Exception exc)
             {
                 _logger.LogError($"There was an exception while loading '{filePath}'. Exception: {exc}");
                 throw;
             }
+        }
 
-            _logger.LogInformation($"Reading '{filePath}' from repo '{repoUri}' and branch '{branch}' succeeded!");
+        private XmlDocument ReadXmlFileAsync(string fileContent)
+        {
+            return GetXmlDocument(fileContent);
+        }
+
+        private XmlDocument GetXmlDocument(string fileContent)
+        {
+            XmlDocument document = new XmlDocument
+            {
+                PreserveWhitespace = true
+            };
+            document.LoadXml(fileContent);
 
             return document;
         }
@@ -274,6 +270,49 @@ namespace Microsoft.DotNet.DarcLib
                     UpdateVersionGlobalJson(itemToUpdate, property.Value);
                 }
             }
+        }
+
+        private IEnumerable<DependencyDetail> GetBuildAssets(XmlDocument document, string branch = null)
+        {
+            List<DependencyDetail> BuildAssets = new List<DependencyDetail>();
+
+            if (document != null)
+            {
+                BuildDependencies(document.DocumentElement.SelectNodes("//Dependency"));
+
+                void BuildDependencies(XmlNodeList dependencies)
+                {
+                    if (dependencies.Count > 0)
+                    {
+                        foreach (XmlNode dependency in dependencies)
+                        {
+                            if (dependency.NodeType != XmlNodeType.Comment && dependency.NodeType != XmlNodeType.Whitespace)
+                            {
+                                DependencyDetail BuildAsset = new DependencyDetail
+                                {
+                                    Branch = branch,
+                                    Name = dependency.Attributes["Name"].Value,
+                                    RepoUri = dependency.SelectSingleNode("Uri").InnerText,
+                                    Commit = dependency.SelectSingleNode("Sha").InnerText,
+                                    Version = dependency.Attributes["Version"].Value
+                                };
+
+                                BuildAssets.Add(BuildAsset);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("No dependencies defined in file.");
+                    }
+                }
+            }
+            else
+            {
+                _logger.LogError($"There was an error while reading '{VersionFilePath.VersionDetailsXml}' and it came back empty. Look for exceptions above.");
+            }
+
+            return BuildAssets;
         }
     }
 }

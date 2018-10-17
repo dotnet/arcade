@@ -48,23 +48,18 @@ namespace Microsoft.DotNet.DarcLib
         /// Gets local dependencies from a local repository
         /// </summary>
         /// <returns></returns>
-        public async Task<IEnumerable<DependencyDetail>> GetDependenciesAsync(string repoPath = null, string commit = null)
+        public async Task<IEnumerable<DependencyDetail>> GetDependenciesAsync()
         {
-            IEnumerable<DependencyDetail> dependencies = null;
+            return await _fileManager.ParseVersionDetailsXmlAsync(Path.Combine(_repo, VersionFilePath.VersionDetailsXml), null);
+        }
 
-            if (string.IsNullOrEmpty(repoPath))
-            {
-                return await _fileManager.ParseVersionDetailsXmlAsync(Path.Combine(_repo, VersionFilePath.VersionDetailsXml), null);
-            }
-
-            if (string.IsNullOrEmpty(commit))
-            {
-                throw new ArgumentException("A commit hash is needed to get the dependencies from a repository different that the current...");
-            }
-
-            dependencies = await _fileManager.ParseVersionDetailsXmlAsync(Path.Combine(repoPath, VersionFilePath.VersionDetailsXml), null);
-
-            return dependencies;
+        /// <summary>
+        /// Gets local dependencies from a local repository
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<DependencyDetail> GetDependenciesFromFileContents(string fileContents)
+        {
+            return _fileManager.ParseVersionDetailsXml(fileContents);
         }
     }
 }
