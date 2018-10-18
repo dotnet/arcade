@@ -38,5 +38,18 @@ namespace Microsoft.DotNet.Darc.Helpers
                 }
             }
         }
+
+        public static void LogDependencyGraph(List<DependencyGraphNode> graph, bool isFlat, string indent = "")
+        {
+            foreach (DependencyGraphNode node in graph)
+            {
+                LogDependency(node.DependencyDetail, isFlat, indent);
+
+                if (node.ChildNodes != null)
+                {
+                    LogDependencyGraph(node.ChildNodes, isFlat, indent + "  ");
+                }
+            }
+        }
     }
 }
