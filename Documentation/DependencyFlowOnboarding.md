@@ -2,6 +2,12 @@
 
 There's a set of steps that need to be completed so the versions of assets your repository depends on are updated and also the assets your repository produces are updated in upstream repositories.
 
+- [Dependency flow prerequisites](#prerequisites)
+
+- [Publishing dependencies](#publishing)
+
+- [Consuming dependencies](#consuming)
+
 ## Prerequisites
 
 These pre-requisites are not hard requirements, but enabling dependency flow will be much simpler if you are using these processes:
@@ -10,9 +16,11 @@ These pre-requisites are not hard requirements, but enabling dependency flow wil
 
 - Publishing using the [Arcade SDK](https://github.com/dotnet/arcade/blob/master/Documentation/StartHere.md#im-ready-to-get-started-what-do-i-do)
 
-## Steps
+## Publishing
 
-### 1. Copy the eng/ folder
+### Steps for publishing
+
+#### 1. Copy the eng/ folder
 
 Copy the `eng/` folder from the [minimalci-sample](https://github.com/dotnet/arcade-minimalci-sample) repo. 
 
@@ -20,7 +28,7 @@ This folder contains required version files as well as build definition template
 
 For more information about version files go to: https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md
 
-### 2. Enable Arcade publishing
+#### 2. Enable Arcade publishing
 
 https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md
 
@@ -55,7 +63,7 @@ steps:
 - script: eng\common\CIBuild.cmd $(_PublishArgs) /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
 ```
 
-### 3. Enable assets publishing to the Build Asset Registry (BAR)
+#### 3. Enable assets publishing to the Build Asset Registry (BAR)
 
 To enable asset publishing to BAR we need to add a closing phase to `.vsts-ci.yml`. To do this add the following snippet at the end of `.vsts-ci.yml` and update the `dependsOn` parameter with the names of **all** the previous **build** phases:
 
@@ -70,14 +78,38 @@ To enable asset publishing to BAR we need to add a closing phase to `.vsts-ci.ym
           name: Hosted VS2017
 ```
 
-### 4. Add subscriptions and channels
+## Consuming
 
-#### 3.1. Join the `arcade-contrib` team
+### Steps for consuming
+
+#### 1. Add or copy Version.Details.xml
+
+Dependency consumption depends on the [details file](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md#details-file) defining what dependencies your repo is going to consume.
+
+You can create this file or copy the file from arcade-minimalci-sample's [Version.Details.xml](https://github.com/dotnet/arcade-minimalci-sample/blob/master/eng/Version.Details.xml) file as a starting point.
+
+#### 2. Add or copy your expression files
+
+Dependency flow will update versions in your [expression files](https://github.com/dotnet/arcade-minimalci-sample/blob/master/eng/Version.Details.xml).
+
+You can create these files or copy them from the arcade-minimalci-sample repo:
+
+- [Version.props](https://github.com/dotnet/arcade-minimalci-sample/blob/master/eng/Versions.props)
+
+- [global.json](https://github.com/dotnet/arcade-minimalci-sample/blob/master/global.json)
+
+#### 3. Add subscriptions and channels
+
+More about [Channels, Branches, and Subscriptions](https://github.com/dotnet/arcade/blob/master/Documentation/BranchesChannelsAndSubscriptions.md)
+
+[Scenarios](https://github.com/dotnet/arcade/blob/master/Documentation/BranchesChannelsAndSubscriptions.md#scenarios)
+
+##### 3.1. Join the `arcade-contrib` team
 
 1. Go to https://github.com/orgs/dotnet/teams/arcade-contrib/members
 2. Click on "Request to join"
 
-#### 3.2. Set up your darc client
+##### 3.2. Set up your darc client
 
 Once you are part of the `arcade-contrib` team
 
@@ -93,18 +125,19 @@ Once you are part of the `arcade-contrib` team
 10. Place the token into the `bar_password` field.  You may leave the rest of the fields as-is.
 11. Save and close.
 
-#### 3.3. Get all existing channels
+##### 3.3. Get all existing channels
 
 1. Run `darc get-channels` to display available channels.  Arcade builds are published to the '.NET Tools - Latest' channel.
 
-#### 3.4. Create a subscription to get Arcade updates
+##### 3.4. Create a subscription to get Arcade updates
 
 Darc can be used to create new subscriptions, either in interactive mode or non-interactive mode.
 Interactive will open an editor to modify the fields, while non-interactive expects all fields on the command line.
 
-##### Interactive mode
+###### Interactive mode
 
 1. Run `darc add-subscription`
+
 2. Fill out the fields.  For Arcade, this typically looks like:
 
 ```
@@ -123,13 +156,13 @@ Merge Policies:
 
 3. Save and close
 
-##### Non-interactive mode
+###### Non-interactive mode
 
 1. Run `darc add-subscription --channel ".NET Tools Latest" --source-repo https://github.com/dotnet/arcade --target-repo <your repo> --target-branch master --update-frequency everyDay --ignore-checks WIP,license/cla --all-checks-passed -q`
 
 These steps can be altered for additional subscriptions to other repositories.
 
-#### 3.5. Create a channel (optional, typically not needed)
+##### 3.5. Create a channel (optional, typically not needed)
 
 1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
 2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
@@ -137,7 +170,7 @@ These steps can be altered for additional subscriptions to other repositories.
 4. Provide a "name" and a "classification"
 5. Click "Execute"
 
-#### 3.6. Associate a branch with a channel (optional)
+##### 3.6. Associate a branch with a channel (optional)
 
 1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
 2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
@@ -157,7 +190,7 @@ These steps can be altered for additional subscriptions to other repositories.
 
 Currently the REST API is the only way to create Subscriptions and Channels but the plan is for `Darc` to support this as well.
 
-### 5. Validate
+#### 5. Validate
 
 At this time we don't have a way to notify users if something went wrong while updating dependencies but this work is tracked by
 https://github.com/dotnet/arcade/issues/821.
