@@ -94,8 +94,7 @@ some highlights:
   DevDiv to DncEng](VSTS/MovingFromDevDivToDncEng.md).
 - Onboard onto dependency flow (Darc). - See [Dependency Flow
   Onboarding](DependencyFlowOnboarding.md).
-- Use Helix for testing where possible - See *Helix onboarding docs coming
-  soon.*
+- Use Helix for testing where possible - See [Sending Jobs to Helix](https://github.com/dotnet/arcade/blob/master/Documentation/VSTS/SendingJobsToHelix.md)
 
 ### Which branches should I make these changes in?
 
