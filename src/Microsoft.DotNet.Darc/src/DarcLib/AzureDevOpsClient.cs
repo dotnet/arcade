@@ -331,9 +331,9 @@ namespace Microsoft.DotNet.DarcLib
             throw new NotImplementedException();
         }
 
-        public async Task<List<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path)
+        public async Task<HashSet<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path)
         {
-            var files = new List<GitFile>();
+            var files = new HashSet<GitFile>();
 
             await GetCommitMapForPathAsync(repoUri, commit, files, path);
 
@@ -482,6 +482,11 @@ namespace Microsoft.DotNet.DarcLib
             return content["objectId"].ToString();
         }
 
+        public string GetOwnerAndRepoFromRepoUri(string repoUri)
+        {
+            throw new NotImplementedException();
+        }
+
         private VssConnection CreateConnection(string uri)
         {
             var collectionUri = new UriBuilder(uri)
@@ -590,7 +595,7 @@ namespace Microsoft.DotNet.DarcLib
             await this.ExecuteGitCommand(HttpMethod.Post, $"{pullRequestUrl}/threads", _logger, body);
         }
 
-        public async Task GetCommitMapForPathAsync(string repoUri, string commit, List<GitFile> files, string path)
+        public async Task GetCommitMapForPathAsync(string repoUri, string commit, HashSet<GitFile> files, string path)
         {
             _logger.LogInformation(
                 $"Getting the contents of file/files in '{path}' of repo '{repoUri}' at commit '{commit}'");

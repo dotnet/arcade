@@ -372,8 +372,22 @@ namespace Microsoft.DotNet.DarcLib
 
             if (arcadeItem != null && repoUri != arcadeItem.RepoUri)
             {
-                List<GitFile> engCommonFiles = await GetScriptFilesAsync(arcadeItem.RepoUri, arcadeItem.Commit);
+                // Files in arcade repository
+                HashSet<GitFile> engCommonFiles = await GetScriptFilesAsync(arcadeItem.RepoUri, arcadeItem.Commit);
                 filesToCommit.AddRange(engCommonFiles);
+
+                // Files in the target repo
+                string latestCommit = await _gitClient.GetLastCommitShaAsync(_gitClient.GetOwnerAndRepoFromRepoUri(repoUri), branch);
+                HashSet<GitFile> targetEngCommonFiles = await GetScriptFilesAsync(repoUri, latestCommit);
+
+                foreach (GitFile file in targetEngCommonFiles)
+                {
+                    if (!engCommonFiles.Where(f => f.FilePath == file.FilePath).Any())
+                    {
+                        file.Operation = GitFileOperation.Delete;
+                        filesToCommit.Add(file);
+                    }
+                }
             }
 
             await _gitClient.PushFilesAsync(filesToCommit, repoUri, branch, message);
@@ -439,12 +453,12 @@ namespace Microsoft.DotNet.DarcLib
             }
         }
 
-        private async Task<List<GitFile>> GetScriptFilesAsync(string repoUri, string commit)
+        private async Task<HashSet<GitFile>> GetScriptFilesAsync(string repoUri, string commit)
         {
             CheckForValidGitClient();
             _logger.LogInformation("Generating commits for script files");
 
-            List<GitFile> files = await _gitClient.GetFilesForCommitAsync(repoUri, commit, "eng/common");
+            HashSet<GitFile> files = await _gitClient.GetFilesForCommitAsync(repoUri, commit, "eng/common");
 
             _logger.LogInformation("Generating commits for script files succeeded!");
 

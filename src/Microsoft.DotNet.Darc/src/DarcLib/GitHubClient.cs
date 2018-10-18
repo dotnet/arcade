@@ -321,7 +321,7 @@ namespace Microsoft.DotNet.DarcLib
             }
         }
 
-        public async Task<List<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path)
+        public async Task<HashSet<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path)
         {
             path = path.Replace('\\', '/');
             path = path.TrimStart('/').TrimEnd('/');
@@ -343,7 +343,7 @@ namespace Microsoft.DotNet.DarcLib
                                 blob.Content,
                                 blob.Encoding == EncodingType.Base64 ? "base64" : "utf-8") {Mode = treeItem.Mode};
                         }));
-            return files.ToList();
+            return new HashSet<GitFile>(files.ToList());
         }
 
         public async Task<string> GetFileContentsAsync(string ownerAndRepo, string path)
@@ -577,7 +577,7 @@ namespace Microsoft.DotNet.DarcLib
             return $"{match.Groups["owner"]}/{match.Groups["repo"]}";
         }
 
-        public static string GetOwnerAndRepoFromRepoUri(string repoUri)
+        public string GetOwnerAndRepoFromRepoUri(string repoUri)
         {
             return GetOwnerAndRepo(repoUri, repoUriPattern);
         }
@@ -659,7 +659,20 @@ namespace Microsoft.DotNet.DarcLib
         {
             var newTree = new NewTree {BaseTree = baseTree.Sha};
 
-            foreach (GitFile file in filesToCommit)
+            // Delete files that are not in the arcade repo but still exist in the target repo
+            IEnumerable<GitFile> filesToDelete = filesToCommit.Where(f => f.Operation == GitFileOperation.Delete);
+
+            foreach (GitFile file in filesToDelete)
+            {
+                NewTreeItem item = newTree.Tree.Where(t => t.Path == file.FilePath).FirstOrDefault();
+
+                if (item != null)
+                {
+                    newTree.Tree.Remove(item);
+                }
+            }
+
+            foreach (GitFile file in filesToCommit.Where(f => f.Operation == GitFileOperation.Add))
             {
                 BlobReference newBlob = await Client.Git.Blob.Create(
                     owner,

@@ -39,10 +39,18 @@ namespace Microsoft.DotNet.DarcLib
 
         public string Mode { get; set; } = "100644";
 
+        public GitFileOperation Operation { get; set; } = GitFileOperation.Add;
+
         private static string GetIndentedXmlBody(XmlDocument xmlDocument)
         {
             XDocument doc = XDocument.Parse(xmlDocument.OuterXml);
             return $"{doc.Declaration}\n{doc}";
         }
+    }
+
+    public enum GitFileOperation
+    {
+        Add,
+        Delete
     }
 }
