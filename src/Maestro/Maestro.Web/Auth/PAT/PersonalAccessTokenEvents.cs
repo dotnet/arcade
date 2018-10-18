@@ -11,17 +11,26 @@ namespace Maestro.Web
     {
         public Func<SetTokenHashContext<TUser>, Task<int>> OnSetTokenHash { get; set; } = context =>
             throw new NotImplementedException("An implementation of SetTokenHash must be provided.");
-        public virtual Task<int> SetTokenHash(SetTokenHashContext<TUser> context) => OnSetTokenHash(context);
 
         public Func<GetTokenHashContext<TUser>, Task> OnGetTokenHash { get; set; } = context =>
             throw new NotImplementedException("An implementation of GetTokenHash must be provided.");
 
-        public virtual Task GetTokenHash(GetTokenHashContext<TUser> context) => OnGetTokenHash(context);
-
         public Func<PersonalAccessTokenValidatePrincipalContext<TUser>, Task> OnValidatePrincipal { get; set; } =
             context => Task.CompletedTask;
 
-        public virtual Task ValidatePrincipal(PersonalAccessTokenValidatePrincipalContext<TUser> context) =>
-            OnValidatePrincipal(context);
+        public virtual Task<int> SetTokenHash(SetTokenHashContext<TUser> context)
+        {
+            return OnSetTokenHash(context);
+        }
+
+        public virtual Task GetTokenHash(GetTokenHashContext<TUser> context)
+        {
+            return OnGetTokenHash(context);
+        }
+
+        public virtual Task ValidatePrincipal(PersonalAccessTokenValidatePrincipalContext<TUser> context)
+        {
+            return OnValidatePrincipal(context);
+        }
     }
 }

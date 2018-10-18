@@ -2,10 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using JetBrains.Annotations;
+using Maestro.Data.Models;
 using Newtonsoft.Json.Linq;
 
 namespace Maestro.Web.Api.v2018_07_16.Models
@@ -16,7 +16,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         {
         }
 
-        public MergePolicy(Data.Models.MergePolicyDefinition other)
+        public MergePolicy(MergePolicyDefinition other)
         {
             Name = other.Name;
             Properties = other.Properties?.ToImmutableDictionary();
@@ -27,12 +27,12 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         [CanBeNull]
         public IImmutableDictionary<string, JToken> Properties { get; set; }
 
-        public Data.Models.MergePolicyDefinition ToDb()
+        public MergePolicyDefinition ToDb()
         {
-            return new Data.Models.MergePolicyDefinition
+            return new MergePolicyDefinition
             {
                 Name = Name,
-                Properties = Properties?.ToDictionary(p => p.Key, p => p.Value),
+                Properties = Properties?.ToDictionary(p => p.Key, p => p.Value)
             };
         }
     }

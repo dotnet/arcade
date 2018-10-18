@@ -58,7 +58,13 @@ namespace DependencyUpdater
                 await StateManager.GetOrAddAsync<IReliableConcurrentQueue<DependencyUpdateItem>>("queue");
             using (ITransaction tx = StateManager.CreateTransaction())
             {
-                await queue.EnqueueAsync(tx, new DependencyUpdateItem {BuildId = buildId, ChannelId = channelId});
+                await queue.EnqueueAsync(
+                    tx,
+                    new DependencyUpdateItem
+                    {
+                        BuildId = buildId,
+                        ChannelId = channelId
+                    });
                 await tx.CommitAsync();
             }
         }
@@ -113,6 +119,7 @@ namespace DependencyUpdater
         public async Task CheckSubscriptionsAsync(CancellationToken cancellationToken)
         {
             var subscriptionsToUpdate = from sub in Context.Subscriptions
+                where sub.Enabled
                 let updateFrequency = JsonExtensions.JsonValue(sub.PolicyString, "lax $.UpdateFrequency")
                 where updateFrequency == ((int) UpdateFrequency.EveryDay).ToString()
                 let latestBuild =
@@ -122,7 +129,11 @@ namespace DependencyUpdater
                         .FirstOrDefault()
                 where latestBuild != null
                 where sub.LastAppliedBuildId == null || sub.LastAppliedBuildId != latestBuild.Id
-                select new {subscription = sub.Id, latestBuild = latestBuild.Id};
+                select new
+                {
+                    subscription = sub.Id,
+                    latestBuild = latestBuild.Id
+                };
 
             foreach (var s in await subscriptionsToUpdate.ToListAsync(cancellationToken))
             {
@@ -140,6 +151,7 @@ namespace DependencyUpdater
         {
             Build build = await Context.Builds.FindAsync(buildId);
             List<Subscription> subscriptionsToUpdate = await (from sub in Context.Subscriptions
+                where sub.Enabled
                 where sub.ChannelId == channelId
                 where sub.SourceRepository == build.Repository
                 let updateFrequency = JsonExtensions.JsonValue(sub.PolicyString, "lax $.UpdateFrequency")

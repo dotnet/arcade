@@ -29,28 +29,24 @@ phases:
 
     variables: 
       ${{ insert }}: ${{ parameters.variables }}
-      _HelixType: build/product
       _HelixBuildConfig: $(_BuildConfig)
       # Only enable publishing in non-public, non PR scenarios.
       ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         # This should be changed to an isolated blob feed per-build.
         # Right now a manual build of a random branch would get published alongside the normal branch artifacts.
         _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
-        _TeamName: DotNetCore
         _SignArgs: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
         _PublishArgs: /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
           /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
           /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
           /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
           /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
-        _HelixSource: official/dotnet/arcade/$(Build.SourceBranch)
         _OfficialBuildIdArgs: /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
       # else
       ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
         _PublishArgs: ''
         _OfficialBuildIdArgs: ''
         _SignArgs: ''
-        _HelixSource: pr/dotnet/arcade/$(Build.SourceBranch)
 
     steps:
     - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -69,9 +65,9 @@ phases:
         $(_OfficialBuildIdArgs)
       displayName: Windows Build / Publish
       condition: and(succeeded(), eq(variables['Agent.Os'], 'Windows_NT'))
-        
+
     - script: eng/common/cibuild.sh
-        --configuration $(_BuildConfig) 
+        --configuration $(_BuildConfig)
         --prepareMachine
         $(_PublishArgs)
         $(_SignArgs)
@@ -79,20 +75,11 @@ phases:
       displayName: Unix Build / Publish
       condition: and(succeeded(), ne(variables['Agent.Os'], 'Windows_NT'))
 
-    # Internal only build steps (until publishing artifacts in public CI is supported).
-    - ${{ if ne(variables['System.TeamProject'], 'public') }}:
-      - task: CopyFiles@2
-        displayName: Gather Logs
-        inputs:
-          SourceFolder: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
-          TargetFolder: '$(Build.StagingDirectory)/BuildLogs'
-        continueOnError: true
-        condition: always()
-      - task: PublishBuildArtifacts@1
-        displayName: Publish Logs to VSTS
-        inputs:
-          PathtoPublish: '$(Build.StagingDirectory)/BuildLogs'
-          PublishLocation: Container
-          ArtifactName: $(Agent.Os)_$(Agent.JobName)
-        continueOnError: true
-        condition: always()
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Logs to VSTS
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+        PublishLocation: Container
+        ArtifactName: $(Agent.Os)_$(Agent.JobName)
+      continueOnError: true
+      condition: always()

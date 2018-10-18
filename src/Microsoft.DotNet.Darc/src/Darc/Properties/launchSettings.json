@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Microsoft.DotNet.Darc": {
+      "commandName": "Project",
+      "commandLineArgs": "authenticate"
+    }
+  }
+}

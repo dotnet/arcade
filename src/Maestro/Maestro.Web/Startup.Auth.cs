@@ -1,11 +1,20 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Maestro.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OAuth;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
@@ -13,20 +22,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Octokit;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Maestro.Web
 {
     public partial class Startup
     {
         public const string GitHubScheme = "GitHub";
+
+        public const string MsftAuthorizationPolicyName = "msft";
 
         private static string ProductName { get; } = "Maestro";
 
@@ -57,7 +60,7 @@ namespace Maestro.Web
                                     context.Identity.AddClaim(
                                         new Claim(ClaimTypes.Role, role, ClaimValueTypes.String, GitHubScheme));
                                 }
-                            },
+                            }
                         };
                     })
                 .AddPersonalAccessToken<ApplicationUser>(
@@ -67,7 +70,8 @@ namespace Maestro.Web
                         {
                             OnSetTokenHash = async context =>
                             {
-                                var dbContext = context.HttpContext.RequestServices.GetRequiredService<BuildAssetRegistryContext>();
+                                var dbContext = context.HttpContext.RequestServices
+                                    .GetRequiredService<BuildAssetRegistryContext>();
                                 int userId = context.User.Id;
                                 var token = new ApplicationUserPersonalAccessToken
                                 {
@@ -83,7 +87,8 @@ namespace Maestro.Web
                             },
                             OnGetTokenHash = async context =>
                             {
-                                var dbContext = context.HttpContext.RequestServices.GetRequiredService<BuildAssetRegistryContext>();
+                                var dbContext = context.HttpContext.RequestServices
+                                    .GetRequiredService<BuildAssetRegistryContext>();
                                 ApplicationUserPersonalAccessToken token = await dbContext
                                     .Set<ApplicationUserPersonalAccessToken>()
                                     .Where(t => t.Id == context.TokenId)
@@ -107,9 +112,10 @@ namespace Maestro.Web
 
                                     await UpdateUserAsync(context.User, dbContext, userManager, signInManager);
 
-                                    context.ReplacePrincipal(await signInManager.CreateUserPrincipalAsync(context.User));
+                                    context.ReplacePrincipal(
+                                        await signInManager.CreateUserPrincipalAsync(context.User));
                                 }
-                            },
+                            }
                         };
                     });
             services.ConfigureExternalCookie(
@@ -154,7 +160,7 @@ namespace Maestro.Web
                             // replace the ClaimsPrincipal we are about to serialize to the cookie with a reference
                             Claim claim = ctx.Principal.Claims.Single(
                                 c => c.Type == identityOptions.ClaimsIdentity.UserIdClaimType);
-                            Claim[] claims = { claim };
+                            Claim[] claims = {claim};
                             var identity = new ClaimsIdentity(claims, IdentityConstants.ApplicationScheme);
                             ctx.Principal = new ClaimsPrincipal(identity);
 
@@ -200,9 +206,7 @@ namespace Maestro.Web
                             policy.RequireAuthenticatedUser();
                             if (!HostingEnvironment.IsDevelopment())
                             {
-                                policy.RequireRole(
-                                    "github:team:dotnet:dnceng",
-                                    "github:team:dotnet:arcade-contrib");
+                                policy.RequireRole("github:team:dotnet:dnceng", "github:team:dotnet:arcade-contrib");
                             }
                         });
                 });
@@ -214,42 +218,34 @@ namespace Maestro.Web
                 });
         }
 
-        public const string MsftAuthorizationPolicyName = "msft";
-
         private bool ShouldUpdateUser(ApplicationUser user)
         {
             // If we haven't updated the user in the last 30 minutes
             return DateTimeOffset.UtcNow - user.LastUpdated > new TimeSpan(0, 30, 0);
         }
 
-        private async Task UpdateUserAsync(ApplicationUser user, BuildAssetRegistryContext dbContext, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        private async Task UpdateUserAsync(
+            ApplicationUser user,
+            BuildAssetRegistryContext dbContext,
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
         {
             using (IDbContextTransaction txn = await dbContext.Database.BeginTransactionAsync())
             {
-                string token = await userManager.GetAuthenticationTokenAsync(
-                    user,
-                    GitHubScheme,
-                    "access_token");
+                string token = await userManager.GetAuthenticationTokenAsync(user, GitHubScheme, "access_token");
                 var roles = new HashSet<string>(await GetGithubRolesAsync(token));
                 List<Claim> currentRoles = (await userManager.GetClaimsAsync(user))
                     .Where(c => c.Type == ClaimTypes.Role)
                     .ToList();
 
                 // remove claims where github doesn't have the role anymore
-                await userManager.RemoveClaimsAsync(
-                    user,
-                    currentRoles.Where(c => !roles.Contains(c.Value)));
+                await userManager.RemoveClaimsAsync(user, currentRoles.Where(c => !roles.Contains(c.Value)));
 
                 // add new claims
                 await userManager.AddClaimsAsync(
                     user,
                     roles.Where(r => currentRoles.All(c => c.Value != r))
-                        .Select(
-                            r => new Claim(
-                                ClaimTypes.Role,
-                                r,
-                                ClaimValueTypes.String,
-                                GitHubScheme)));
+                        .Select(r => new Claim(ClaimTypes.Role, r, ClaimValueTypes.String, GitHubScheme)));
 
                 user.LastUpdated = DateTimeOffset.UtcNow;
                 await dbContext.SaveChangesAsync();
@@ -265,7 +261,10 @@ namespace Maestro.Web
                     Credentials = new Credentials(accessToken)
                 };
             return (await client.Organization.GetAllForCurrent()).Select(org => $"github:org:{org.Login}")
-                .Concat((await client.Organization.Team.GetAllForCurrent()).Select(team => $"github:team:{team.Organization.Login}:{team.Name}")).ToList();
+                .Concat(
+                    (await client.Organization.Team.GetAllForCurrent()).Select(
+                        team => $"github:team:{team.Organization.Login}:{team.Name}"))
+                .ToList();
         }
     }
 }

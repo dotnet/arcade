@@ -117,6 +117,10 @@ namespace Microsoft.DotNet.Maestro.Client
         Task<HttpOperationResponse<Subscription>> UpdateSubscriptionWithHttpMessagesAsync(System.Guid id, SubscriptionUpdate update = default(SubscriptionUpdate), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <param name='id'>
         /// </param>
+        /// <param name='page'>
+        /// </param>
+        /// <param name='perPage'>
+        /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
         /// </param>
@@ -132,6 +136,23 @@ namespace Microsoft.DotNet.Maestro.Client
         /// <exception cref="Microsoft.Rest.ValidationException">
         /// Thrown when a required parameter is null
         /// </exception>
-        Task<HttpOperationResponse<IList<SubscriptionHistoryItem>>> GetSubscriptionHistoryWithHttpMessagesAsync(System.Guid id, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<IList<SubscriptionHistoryItem>>> GetSubscriptionHistoryWithHttpMessagesAsync(System.Guid id, int? page = default(int?), int? perPage = default(int?), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        /// <param name='id'>
+        /// </param>
+        /// <param name='timestamp'>
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        /// <exception cref="ApiErrorException">
+        /// Thrown when the operation returned an invalid status code
+        /// </exception>
+        /// <exception cref="Microsoft.Rest.ValidationException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        Task<HttpOperationResponse> RetrySubscriptionActionAsyncWithHttpMessagesAsync(System.Guid id, long timestamp, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
     }
 }

@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -64,6 +65,7 @@ namespace Maestro.Web.Pages.Account
             {
                 return BadRequest("Invalid Token Id");
             }
+
             ApplicationUser user = await UserManager.GetUserAsync(User);
             try
             {
@@ -113,7 +115,14 @@ namespace Maestro.Web.Pages.Account
         private async Task<List<TokenModel>> GetTokens(ApplicationUser user)
         {
             await Context.Entry(user).Collection(u => u.PersonalAccessTokens).LoadAsync();
-            return user.PersonalAccessTokens.Select(t => new TokenModel {Name = t.Name, Id = t.Id, Created = t.Created}).ToList();
+            return user.PersonalAccessTokens.Select(
+                    t => new TokenModel
+                    {
+                        Name = t.Name,
+                        Id = t.Id,
+                        Created = t.Created
+                    })
+                .ToList();
         }
 
         public class TokenModel

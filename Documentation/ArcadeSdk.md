@@ -381,9 +381,17 @@ The build definition also needs to link the following variable group:
 
 #### `IsShipping` (bool)
 
-`true` if the package (NuGet or VSIX) produced by the project is shipping. 
+`true` if the package (NuGet or VSIX) produced by the project is _shipping_. 
 
-Shipping packages and their content must be signed. 
-Windows PDBs are produced and published to symbol servers for binaries in shipping packages. 
-Shipping packages can be published to NuGet, non-shipping packages can only be published to MyGet or Azure tool feeds.
+Set `IsShipping` property to `false`
+- projects that produce NuGet packages that are not shipping on NuGet.org or via other official channel (like part of an official installer), 
+- projects that produce VSIX packages that are only used only within the repository (e.g. to facilitate integration tests or VS F5) and not expected to be installed by customers,
+- Test/build utility projects (test projects are automatically marked as non-shipping).
 
+All packages are VSIXes are signed by default, regardless of whether they are _shipping_ or not.
+By default Portable and Embedded PDBs produced by _shipping_ projects are converted to Windows PDBs and published to Microsoft symbol servers.
+
+#### `PublishWindowsPdb` (bool)
+
+`true` (default) if the PDBs produced by the project should be converted to Windows PDB and published to Microsoft symbol servers.
+Set to `false` to override the default (uncommon).

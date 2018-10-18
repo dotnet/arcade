@@ -54,13 +54,7 @@
   <Target Name="Wait"
           AfterTargets="Test"
           Condition="$(WaitForWorkItemCompletion)">
-    <HelixWait JobIds="@(SentJobs -> '%(Identity))"
-               WorkItemCounts="@(SentJobs -> %(WorkItemCount))" >
-      <Output TaskParameter="WorkItemStatus" ItemName="WorkItemStatus" />
-    </HelixWait>
-  </Target>
-
-  <Target Name="WaitResult" AfterTargets="Wait">
-    <Message Importance="High" Text="$(WorkItemStatus)" />
+    <Message Importance="High" Text="Waiting on job completion..." />
+    <HelixWait Jobs="@(SentJobs)" AccessToken="$(HelixAccessToken)" />
   </Target>
 </Project>

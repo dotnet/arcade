@@ -23,7 +23,11 @@ namespace Maestro.Data.Models
                 context.BuildChannels.AddRange(
                     from dc in context.DefaultChannels
                     where dc.Repository == build.Repository && dc.Branch == build.Branch
-                    select new BuildChannel {Channel = dc.Channel, Build = build});
+                    select new BuildChannel
+                    {
+                        Channel = dc.Channel,
+                        Build = build
+                    });
             };
         }
 

@@ -1,4 +1,4 @@
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
     <!-- If ToolHostCmd is undefined, we default to assuming 'dotnet' is on the path -->
@@ -8,8 +8,8 @@
     <_ApiCompatPath Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.ApiCompat.exe</_ApiCompatPath>
 
     <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' == 'core'">$(ToolHostCmd) "$(_ApiCompatPath)"</_ApiCompatCommand>
-    <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' == 'core' AND '$(OS)' == 'Windows_NT'">"$(_ApiCompatPath)"</_ApiCompatCommand>
-    <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' == 'core' AND '$(OS)' != 'Windows_NT'">mono --runtime=v4.0.30319 "$(_ApiCompatPath)"</_ApiCompatCommand>
+    <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' != 'core' AND '$(OS)' == 'Windows_NT'">"$(_ApiCompatPath)"</_ApiCompatCommand>
+    <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' != 'core' AND '$(OS)' != 'Windows_NT'">mono --runtime=v4.0.30319 "$(_ApiCompatPath)"</_ApiCompatCommand>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -54,6 +54,7 @@
       <ApiCompatArgs>$(ApiCompatArgs) "$(ReferenceAssembly)"</ApiCompatArgs>
       <ApiCompatArgs>$(ApiCompatArgs) -contractDepends:"@(_ContractDependencyDirectories, ','),"</ApiCompatArgs>
       <ApiCompatArgs>$(ApiCompatArgs) -implDirs:"$(IntermediateOutputPath),@(_DependencyDirectories, ','),"</ApiCompatArgs>
+      <ApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(ApiCompatArgs) -excludeAttributes:"$(ApiCompatExcludeAttributeList)"</ApiCompatArgs>
       <ApiCompatArgs Condition="'$(BaselineAllAPICompatError)'!='true' and Exists('$(ApiCompatBaseline)')">$(ApiCompatArgs) -baseline:"$(ApiCompatBaseline)"</ApiCompatArgs>
       <ApiCompatBaselineAll Condition="'$(BaselineAllAPICompatError)'=='true'">&gt; $(ApiCompatBaseline)</ApiCompatBaselineAll>
       <ApiCompatExitCode>0</ApiCompatExitCode>
@@ -105,6 +106,7 @@
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) -lhs:implementation</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) -implDirs:"@(_ImplementationDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) -rhs:reference</MatchingRefApiCompatArgs>
+      <MatchingRefApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(MatchingRefApiCompatArgs) -excludeAttributes:"$(ApiCompatExcludeAttributeList)"</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs Condition="'$(BaselineAllMatchingRefApiCompatError)'!='true' and Exists('$(MatchingRefApiCompatBaseline)')">$(MatchingRefApiCompatArgs) -baseline:"$(MatchingRefApiCompatBaseline)"</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatBaselineAll Condition="'$(BaselineAllMatchingRefApiCompatError)'=='true'">&gt; $(MatchingRefApiCompatBaseline)</MatchingRefApiCompatBaselineAll>
 

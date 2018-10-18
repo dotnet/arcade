@@ -10,15 +10,17 @@ using Microsoft.DotNet.DarcLib;
 namespace Maestro.MergePolicies
 {
     /// <summary>
-    ///   Merge the PR when it has all the checks specified in the "checks" property and they are all successful.
+    ///     Merge the PR when it has all the checks specified in the "checks" property and they are all successful.
     /// </summary>
     public class RequireSuccessfulChecksMergePolicy : MergePolicy
     {
         public override string DisplayName => "Require Successful Checks";
 
-        protected override async Task<MergePolicyEvaluationResult> DoEvaluateAsync(MergePolicyEvaluationContext context)
+        public override async Task EvaluateAsync(
+            IMergePolicyEvaluationContext context,
+            MergePolicyProperties properties)
         {
-            var requiredChecks = new HashSet<string>(context.Get<List<string>>("checks"));
+            var requiredChecks = new HashSet<string>(properties.Get<List<string>>("checks"));
 
             Dictionary<string, Check> checks =
                 (await context.Darc.GetPullRequestChecksAsync(context.PullRequestUrl)).ToDictionary(c => c.Name);
@@ -43,7 +45,8 @@ namespace Maestro.MergePolicies
 
             if (missingChecks.Count < 1 && failedChecks.Count < 1)
             {
-                return context.Success();
+                context.Succeed("Required checks passed.");
+                return;
             }
 
             var parts = new List<string>();
@@ -58,7 +61,7 @@ namespace Maestro.MergePolicies
                 parts.Add($"Missing checks: {string.Join(", ", missingChecks)}");
             }
 
-            return context.Fail(string.Join("; ", parts));
+            context.Fail(string.Join("; ", parts));
         }
     }
 }

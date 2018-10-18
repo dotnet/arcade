@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -51,8 +52,18 @@ namespace Maestro.Web
                             op.OperationId = $"{op.Tags.First()}_{op.OperationId}";
                         });
 
-                    options.MapType<TimeSpan>(() => new Schema {Type = "string", Format = "duration"});
-                    options.MapType<TimeSpan?>(() => new Schema {Type = "string", Format = "duration"});
+                    options.MapType<TimeSpan>(
+                        () => new Schema
+                        {
+                            Type = "string",
+                            Format = "duration"
+                        });
+                    options.MapType<TimeSpan?>(
+                        () => new Schema
+                        {
+                            Type = "string",
+                            Format = "duration"
+                        });
                     options.MapType<JToken>(() => new Schema());
 
                     options.DescribeAllEnumsAsStrings();
@@ -75,14 +86,22 @@ namespace Maestro.Web
 
                     options.AddSecurityDefinition(
                         "Bearer",
-                        new ApiKeyScheme {Type = "apiKey", In = "header", Name = "Authorization"});
+                        new ApiKeyScheme
+                        {
+                            Type = "apiKey",
+                            In = "header",
+                            Name = "Authorization"
+                        });
 
                     options.FilterDocument(
                         (doc, ctx) =>
                         {
                             doc.Security = new List<IDictionary<string, IEnumerable<string>>>
                             {
-                                new Dictionary<string, IEnumerable<string>> {["Bearer"] = Enumerable.Empty<string>()}
+                                new Dictionary<string, IEnumerable<string>>
+                                {
+                                    ["Bearer"] = Enumerable.Empty<string>()
+                                }
                             };
                         });
                 });

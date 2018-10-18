@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -9,24 +13,22 @@ namespace Microsoft.DotNet.EntityFrameworkCore.Extensions
 {
     public class SystemVersionedSqlServerMigrationsAnnotationProvider : SqlServerMigrationsAnnotationProvider
     {
-        public SystemVersionedSqlServerMigrationsAnnotationProvider([NotNull] MigrationsAnnotationProviderDependencies dependencies) : base(dependencies)
+        public SystemVersionedSqlServerMigrationsAnnotationProvider(
+            [NotNull] MigrationsAnnotationProviderDependencies dependencies) : base(dependencies)
         {
         }
 
         public override IEnumerable<IAnnotation> For(IIndex index)
         {
-            foreach (var annotation in base.For(index))
+            foreach (IAnnotation annotation in base.For(index))
             {
                 yield return annotation;
             }
 
-            var toKeep = new[]
+            string[] toKeep = {DotNetExtensionsAnnotationNames.Columnstore};
+            foreach (string name in toKeep)
             {
-                DotNetExtensionsAnnotationNames.Columnstore
-            };
-            foreach (var name in toKeep)
-            {
-                var value = index[name];
+                object value = index[name];
                 if (value != null)
                 {
                     yield return new Annotation(name, value);
@@ -36,20 +38,20 @@ namespace Microsoft.DotNet.EntityFrameworkCore.Extensions
 
         public override IEnumerable<IAnnotation> For(IEntityType entityType)
         {
-            foreach (var annotation in base.For(entityType))
+            foreach (IAnnotation annotation in base.For(entityType))
             {
                 yield return annotation;
             }
 
-            var toKeep = new[]
+            string[] toKeep =
             {
                 DotNetExtensionsAnnotationNames.HistoryTable,
                 DotNetExtensionsAnnotationNames.SystemVersioned,
-                DotNetExtensionsAnnotationNames.RetentionPeriod,
+                DotNetExtensionsAnnotationNames.RetentionPeriod
             };
-            foreach (var name in toKeep)
+            foreach (string name in toKeep)
             {
-                var value = entityType[name];
+                object value = entityType[name];
                 if (value != null)
                 {
                     yield return new Annotation(name, value);

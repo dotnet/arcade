@@ -4,8 +4,12 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <AssemblyName>darc</AssemblyName>
     <SignAssembly>false</SignAssembly>
+    <IsPackable>true</IsPackable>
+    <Description>Darc CLI</Description>
+    <PackageTags>Arcade Darc CLI Dependency Flow</PackageTags>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>darc</ToolCommandName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,5 +20,6 @@
     <PackageReference Include="CommandLineParser" Version="$(CommandLineParserVersion)" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.1.1" />
+    <PackageReference Include="YamlDotNet.Signed" Version="5.1.0" />
   </ItemGroup>
 </Project>

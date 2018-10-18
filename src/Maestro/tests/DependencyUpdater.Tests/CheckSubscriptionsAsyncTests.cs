@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Maestro.Data.Models;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using Xunit;
 
 namespace DependencyUpdater.Tests
@@ -17,7 +18,11 @@ namespace DependencyUpdater.Tests
         [Fact]
         public async Task NeedsUpdateSubscription()
         {
-            var channel = new Channel {Name = "channel", Classification = "class"};
+            var channel = new Channel
+            {
+                Name = "channel",
+                Classification = "class"
+            };
             var oldBuild = new Build
             {
                 Branch = "source.branch",
@@ -42,28 +47,40 @@ namespace DependencyUpdater.Tests
                         Version = "1.0.1",
                         Locations = new List<AssetLocation>
                         {
-                            new AssetLocation {Location = location, Type = LocationType.NugetFeed}
+                            new AssetLocation
+                            {
+                                Location = location,
+                                Type = LocationType.NugetFeed
+                            }
                         }
                     }
                 }
             };
-            var buildChannel = new BuildChannel {Build = build, Channel = channel};
+            var buildChannel = new BuildChannel
+            {
+                Build = build,
+                Channel = channel
+            };
             var subscription = new Subscription
             {
                 Channel = channel,
                 SourceRepository = "source.repo",
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
-                PolicyObject =
-                    new SubscriptionPolicy
-                    {
-                        MergePolicies = null,
-                        UpdateFrequency = UpdateFrequency.EveryDay
-                    },
+                Enabled = true,
+                PolicyObject = new SubscriptionPolicy
+                {
+                    MergePolicies = null,
+                    UpdateFrequency = UpdateFrequency.EveryDay
+                },
                 LastAppliedBuild = oldBuild
             };
-            var repoInstallation = new RepoInstallation {Repository = "target.repo", InstallationId = 1};
-            await Context.RepoInstallations.AddAsync(repoInstallation);
+            var repoInstallation = new Repository
+            {
+                RepositoryName = "target.repo",
+                InstallationId = 1
+            };
+            await Context.Repositories.AddAsync(repoInstallation);
             await Context.Subscriptions.AddAsync(subscription);
             await Context.BuildChannels.AddAsync(buildChannel);
             await Context.SaveChangesAsync();
@@ -75,15 +92,96 @@ namespace DependencyUpdater.Tests
         }
 
         [Fact]
-        public async Task OneEveryBuildSubscription()
+        public async Task NoUpdateSubscriptionBecauseNotEnabled()
         {
-            var channel = new Channel {Name = "channel", Classification = "class"};
+            var channel = new Channel
+            {
+                Name = "channel",
+                Classification = "class"
+            };
+            var oldBuild = new Build
+            {
+                Branch = "source.branch",
+                Repository = "source.repo",
+                BuildNumber = "old.build.number",
+                Commit = "oldSha",
+                DateProduced = DateTimeOffset.UtcNow.AddDays(-2)
+            };
+            var location = "https://source.feed/index.json";
+            var build = new Build
+            {
+                Branch = "source.branch",
+                Repository = "source.repo",
+                BuildNumber = "build.number",
+                Commit = "sha",
+                DateProduced = DateTimeOffset.UtcNow,
+                Assets = new List<Asset>
+                {
+                    new Asset
+                    {
+                        Name = "source.asset",
+                        Version = "1.0.1",
+                        Locations = new List<AssetLocation>
+                        {
+                            new AssetLocation
+                            {
+                                Location = location,
+                                Type = LocationType.NugetFeed
+                            }
+                        }
+                    }
+                }
+            };
+            var buildChannel = new BuildChannel
+            {
+                Build = build,
+                Channel = channel
+            };
             var subscription = new Subscription
             {
                 Channel = channel,
                 SourceRepository = "source.repo",
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
+                Enabled = false,
+                PolicyObject = new SubscriptionPolicy
+                {
+                    MergePolicies = null,
+                    UpdateFrequency = UpdateFrequency.EveryDay
+                },
+                LastAppliedBuild = oldBuild
+            };
+            var repoInstallation = new Repository
+            {
+                RepositoryName = "target.repo",
+                InstallationId = 1
+            };
+            await Context.Repositories.AddAsync(repoInstallation);
+            await Context.Subscriptions.AddAsync(subscription);
+            await Context.BuildChannels.AddAsync(buildChannel);
+            await Context.SaveChangesAsync();
+
+            SubscriptionActor.Verify(a => a.UpdateAsync(build.Id), Times.Never());
+
+            var updater = ActivatorUtilities.CreateInstance<DependencyUpdater>(Scope.ServiceProvider);
+            await updater.CheckSubscriptionsAsync(CancellationToken.None);
+        }
+
+        [Fact]
+        public async Task OneEveryBuildSubscription()
+        {
+            var channel = new Channel
+            {
+                Name = "channel",
+                Classification = "class"
+            };
+            var subscription = new Subscription
+            {
+                Channel = channel,
+                SourceRepository = "source.repo",
+                TargetRepository = "target.repo",
+                TargetBranch = "target.branch",
+                Enabled = true,
                 PolicyObject = new SubscriptionPolicy
                 {
                     MergePolicies = null,
@@ -100,7 +198,11 @@ namespace DependencyUpdater.Tests
         [Fact]
         public async Task UpToDateSubscription()
         {
-            var channel = new Channel {Name = "channel", Classification = "class"};
+            var channel = new Channel
+            {
+                Name = "channel",
+                Classification = "class"
+            };
             var build = new Build
             {
                 Branch = "source.branch",
@@ -109,19 +211,22 @@ namespace DependencyUpdater.Tests
                 Commit = "sha",
                 DateProduced = DateTimeOffset.UtcNow
             };
-            var buildChannel = new BuildChannel {Build = build, Channel = channel};
+            var buildChannel = new BuildChannel
+            {
+                Build = build,
+                Channel = channel
+            };
             var subscription = new Subscription
             {
                 Channel = channel,
                 SourceRepository = "source.repo",
                 TargetRepository = "target.repo",
                 TargetBranch = "target.branch",
-                PolicyObject =
-                    new SubscriptionPolicy
-                    {
-                        MergePolicies = null,
-                        UpdateFrequency = UpdateFrequency.EveryDay
-                    },
+                PolicyObject = new SubscriptionPolicy
+                {
+                    MergePolicies = null,
+                    UpdateFrequency = UpdateFrequency.EveryDay
+                },
                 LastAppliedBuild = build
             };
             await Context.Subscriptions.AddAsync(subscription);

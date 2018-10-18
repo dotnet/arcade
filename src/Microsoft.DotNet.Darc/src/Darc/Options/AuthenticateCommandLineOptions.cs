@@ -6,8 +6,10 @@ using CommandLine;
 
 namespace Microsoft.DotNet.Darc.Options
 {
-    [Verb("authenticate", HelpText = "Stores the VSTS and GitHub tokens required for remote operations")]
+    [Verb("authenticate", HelpText = "Stores the VSTS and GitHub tokens required for remote operations.")]
     internal class AuthenticateCommandLineOptions : CommandLineOptions
     {
+        [Option("clear", HelpText = "Clear any settings to defaults.")]
+        public bool Clear { get; set; }
     }
 }

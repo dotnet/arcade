@@ -11,7 +11,7 @@ New client library code can be generated with `npm start`
 use:
 - '@microsoft.azure/autorest.csharp@2.2.51'
 
-input-file: http://localhost:8080/api/swagger.json
+input-file: https://maestro-prod.westus2.cloudapp.azure.com/api/swagger.json
 sync-methods: none
 add-credentials: true
 override-client-name: MaestroApi

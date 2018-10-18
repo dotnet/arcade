@@ -8,14 +8,18 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Maestro.Contracts;
-using Maestro.Web.Api.v2018_07_16.Models;
 using Maestro.Data;
+using Maestro.Data.Models;
+using Maestro.Web.Api.v2018_07_16.Models;
 using Microsoft.AspNetCore.ApiPagination;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ServiceFabric.Actors;
 using Swashbuckle.AspNetCore.Annotations;
+using Channel = Maestro.Data.Models.Channel;
+using Subscription = Maestro.Web.Api.v2018_07_16.Models.Subscription;
+using SubscriptionUpdate = Maestro.Web.Api.v2018_07_16.Models.SubscriptionUpdate;
 
 namespace Maestro.Web.Api.v2018_07_16.Controllers
 {
@@ -27,7 +31,10 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         private readonly BackgroundQueue _queue;
         private readonly Func<ActorId, ISubscriptionActor> _subscriptionActorFactory;
 
-        public SubscriptionsController(BuildAssetRegistryContext context, BackgroundQueue queue, Func<ActorId, ISubscriptionActor> subscriptionActorFactory)
+        public SubscriptionsController(
+            BuildAssetRegistryContext context,
+            BackgroundQueue queue,
+            Func<ActorId, ISubscriptionActor> subscriptionActorFactory)
         {
             _context = context;
             _queue = queue;
@@ -37,7 +44,11 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [HttpGet]
         [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(List<Subscription>))]
         [ValidateModelState]
-        public IActionResult GetAllSubscriptions(string sourceRepository = null, string targetRepository = null, int? channelId = null)
+        public IActionResult GetAllSubscriptions(
+            string sourceRepository = null,
+            string targetRepository = null,
+            int? channelId = null,
+            bool? enabled = null)
         {
             IQueryable<Data.Models.Subscription> query = _context.Subscriptions.Include(s => s.Channel);
 
@@ -56,6 +67,11 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 query = query.Where(sub => sub.ChannelId == channelId.Value);
             }
 
+            if (enabled.HasValue)
+            {
+                query = query.Where(sub => sub.Enabled == enabled.Value);
+            }
+
             List<Subscription> results = query.AsEnumerable().Select(sub => new Subscription(sub)).ToList();
             return Ok(results);
         }
@@ -65,8 +81,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [ValidateModelState]
         public async Task<IActionResult> GetSubscription(Guid id)
         {
-            Data.Models.Subscription subscription = await _context.Subscriptions
-                .Include(sub => sub.LastAppliedBuild)
+            Data.Models.Subscription subscription = await _context.Subscriptions.Include(sub => sub.LastAppliedBuild)
                 .Include(sub => sub.Channel)
                 .FirstOrDefaultAsync(sub => sub.Id == id);
 
@@ -91,7 +106,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 return NotFound();
             }
 
-            bool doUpdate = false;
+            var doUpdate = false;
 
             if (!string.IsNullOrEmpty(update.SourceRepository))
             {
@@ -107,7 +122,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
 
             if (!string.IsNullOrEmpty(update.ChannelName))
             {
-                Data.Models.Channel channel = await _context.Channels.Where(c => c.Name == update.ChannelName)
+                Channel channel = await _context.Channels.Where(c => c.Name == update.ChannelName)
                     .FirstOrDefaultAsync();
                 if (channel == null)
                 {
@@ -118,6 +133,12 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 }
 
                 subscription.Channel = channel;
+                doUpdate = true;
+            }
+
+            if (update.Enabled.HasValue)
+            {
+                subscription.Enabled = update.Enabled.Value;
                 doUpdate = true;
             }
 
@@ -136,16 +157,16 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [ValidateModelState]
         public async Task<IActionResult> DeleteSubscription(Guid id)
         {
-            Data.Models.Subscription subscription = await _context.Subscriptions
-                .FirstOrDefaultAsync(sub => sub.Id == id);
+            Data.Models.Subscription subscription =
+                await _context.Subscriptions.FirstOrDefaultAsync(sub => sub.Id == id);
 
             if (subscription == null)
             {
                 return NotFound();
             }
 
-            Data.Models.SubscriptionUpdate subscriptionUpdate = await _context.SubscriptionUpdates
-                .FirstOrDefaultAsync(u => u.SubscriptionId == subscription.Id);
+            Data.Models.SubscriptionUpdate subscriptionUpdate =
+                await _context.SubscriptionUpdates.FirstOrDefaultAsync(u => u.SubscriptionId == subscription.Id);
 
             if (subscriptionUpdate != null)
             {
@@ -171,7 +192,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 return NotFound();
             }
 
-            var query = _context.SubscriptionUpdateHistory
+            IOrderedQueryable<SubscriptionUpdateHistoryEntry> query = _context.SubscriptionUpdateHistory
                 .Where(u => u.SubscriptionId == id)
                 .OrderByDescending(u => u.Timestamp);
 
@@ -192,7 +213,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 return NotFound();
             }
 
-            var update = await _context.SubscriptionUpdateHistory
+            SubscriptionUpdateHistoryEntry update = await _context.SubscriptionUpdateHistory
                 .Where(u => u.SubscriptionId == id)
                 .FirstOrDefaultAsync(u => Math.Abs(EF.Functions.DateDiffSecond(u.Timestamp, ts)) < 1);
 
@@ -211,8 +232,8 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             _queue.Post(
                 async () =>
                 {
-                    var actor = _subscriptionActorFactory(new ActorId(subscription.Id));
-                    await actor.RunAction(update.Method, update.Arguments);
+                    ISubscriptionActor actor = _subscriptionActorFactory(new ActorId(subscription.Id));
+                    await actor.RunActionAsync(update.Method, update.Arguments);
                 });
 
             return Accepted();
@@ -224,7 +245,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [ValidateModelState]
         public async Task<IActionResult> Create([FromBody] SubscriptionData subscription)
         {
-            Data.Models.Channel channel = await _context.Channels.Where(c => c.Name == subscription.ChannelName)
+            Channel channel = await _context.Channels.Where(c => c.Name == subscription.ChannelName)
                 .FirstOrDefaultAsync();
             if (channel == null)
             {
@@ -236,8 +257,10 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
 
             if (subscription.TargetRepository.Contains("github.com"))
             {
-                var repoInstallation = await _context.RepoInstallations.FindAsync(subscription.TargetRepository);
-                if (repoInstallation == null)
+                // If we have no repository information or an invalid installation id
+                // then we will fail when trying to update things, so we fail early.
+                Repository repo = await _context.Repositories.FindAsync(subscription.TargetRepository);
+                if (repo == null || repo.InstallationId <= 0)
                 {
                     return BadRequest(
                         new ApiError(
@@ -250,12 +273,16 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                 }
             }
 
-            var subscriptionModel = subscription.ToDb();
+            Data.Models.Subscription subscriptionModel = subscription.ToDb();
             subscriptionModel.Channel = channel;
             await _context.Subscriptions.AddAsync(subscriptionModel);
             await _context.SaveChangesAsync();
             return CreatedAtRoute(
-                new {action = "GetSubscription", id = subscriptionModel.Id},
+                new
+                {
+                    action = "GetSubscription",
+                    id = subscriptionModel.Id
+                },
                 new Subscription(subscriptionModel));
         }
     }

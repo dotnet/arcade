@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
 using System;
 using System.Linq;
 using System.Net;
@@ -17,8 +18,7 @@ using Microsoft.Extensions.Options;
 namespace Maestro.Web
 {
     public class PersonalAccessTokenAuthenticationHandler<TUser> :
-        AuthenticationHandler<PersonalAccessTokenAuthenticationOptions<TUser>>
-        where TUser : class
+        AuthenticationHandler<PersonalAccessTokenAuthenticationOptions<TUser>> where TUser : class
     {
         public PersonalAccessTokenAuthenticationHandler(
             IOptionsMonitor<PersonalAccessTokenAuthenticationOptions<TUser>> options,
@@ -57,6 +57,7 @@ namespace Maestro.Web
             {
                 rng.GetBytes(bytes);
             }
+
             return bytes;
         }
 
@@ -140,13 +141,20 @@ namespace Maestro.Web
 
                 ClaimsPrincipal principal = await SignInManager.CreateUserPrincipalAsync(user);
                 var ticket = new AuthenticationTicket(principal, Scheme.Name);
-                var context = new PersonalAccessTokenValidatePrincipalContext<TUser>(Context, Scheme, Options, ticket, user);
+                var context = new PersonalAccessTokenValidatePrincipalContext<TUser>(
+                    Context,
+                    Scheme,
+                    Options,
+                    ticket,
+                    user);
                 await Events.ValidatePrincipal(context);
                 if (context.Principal == null)
                 {
                     return AuthenticateResult.Fail("No principal.");
                 }
-                return AuthenticateResult.Success(new AuthenticationTicket(context.Principal, context.Properties, Scheme.Name));
+
+                return AuthenticateResult.Success(
+                    new AuthenticationTicket(context.Principal, context.Properties, Scheme.Name));
             }
             catch (Exception ex)
             {

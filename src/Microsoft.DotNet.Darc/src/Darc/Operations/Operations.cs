@@ -2,60 +2,25 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.DotNet.Darc.Helpers;
-using Microsoft.DotNet.Darc.Models;
 using Microsoft.DotNet.Darc.Options;
-using Microsoft.DotNet.DarcLib;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Darc
+namespace Microsoft.DotNet.Darc.Operations
 {
-    internal static class Operations
+    internal abstract class Operation : IDisposable
     {
-        /// <summary>
-        /// Implements the 'authenticate' verb
-        /// </summary>
-        /// <param name="options"></param>
-        public static int AuthenticateOperation(AuthenticateCommandLineOptions options)
+        protected ILoggerFactory _loggerFactory;
+        private ILogger _logger;
+
+        protected ILogger Logger { get { return _logger; } }
+
+        public Operation(CommandLineOptions options)
         {
-            ILogger logger = GetLogger(options);
-
-            AuthenticateEditorPopUp initEditorPopUp = new AuthenticateEditorPopUp("authenticate-settings/authenticate-todo", logger);
-
-            UxManager uxManager = new UxManager(logger);
-
-            return uxManager.PopUp(initEditorPopUp);
-        }
-
-        /// <summary>
-        /// Implements the 'get' verb
-        /// </summary>
-        /// <param name="options"></param>
-        public static int GetOperation(GetCommandLineOptions options)
-        {
-            Local local = new Local(options.LocalDirectory, GetLogger(options));
-            var allDependencies = local.GetDependencies().Result;
-            foreach (var dependency in allDependencies)
-            {
-                Console.WriteLine($"{dependency.Name} {dependency.Version} from {dependency.RepoUri}@{dependency.Commit}");
-            }
-            return 0;
-        }
-
-        public static int AddOperation(AddCommandLineOptions options)
-        {
-            throw new NotImplementedException("Add operation not yet implemented");
-        }
-
-        /// <summary>
-        /// Retrieve the console logger for the CLI.
-        /// </summary>
-        /// <returns>New logger</returns>
-        /// <remarks>Because the internal logging in DarcLib tends to be chatty and non-useful,
-        /// we remap the --verbose switch onto 'info', --debug onto highest level, and the default level onto warning</remarks>
-        private static ILogger GetLogger(CommandLineOptions options)
-        {
+            // Because the internal logging in DarcLib tends to be chatty and non-useful,
+            // we remap the --verbose switch onto 'info', --debug onto highest level, and the
+            // default level onto warning
             LogLevel level = LogLevel.Warning;
             if (options.Debug)
             {
@@ -65,8 +30,32 @@ namespace Microsoft.DotNet.Darc
             {
                 level = LogLevel.Information;
             }
-            ILoggerFactory loggerFactory = new LoggerFactory().AddConsole(level);
-            return loggerFactory.CreateLogger<Program>();
+            _loggerFactory = new LoggerFactory().AddConsole(level);
+            _logger = _loggerFactory.CreateLogger<Operation>();
         }
+
+        public abstract Task<int> ExecuteAsync();
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    _loggerFactory.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+        
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        #endregion
     }
 }

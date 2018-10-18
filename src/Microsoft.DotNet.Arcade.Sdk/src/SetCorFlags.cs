@@ -6,15 +6,21 @@ using System;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using System.Resources;
+using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-    public sealed class SetCorFlags : Task
-    {
 #if NET461
+    [LoadInSeparateAppDomain]
+    public class SetCorFlags : AppDomainIsolatedTask
+    {
         static SetCorFlags() => AssemblyResolution.Initialize();
+#else
+    public class SetCorFlags : Task
+    {
 #endif
         [Required]
         public string FilePath { get; set; }
@@ -30,8 +36,20 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         public override bool Execute()
         {
-            ExecuteImpl();
-            return !Log.HasLoggedErrors;
+#if NET461
+            AssemblyResolution.Log = Log;
+#endif
+            try
+            {
+                ExecuteImpl();
+                return !Log.HasLoggedErrors;
+            }
+            finally
+            {
+#if NET461
+                AssemblyResolution.Log = null;
+#endif
+            }
         }
 
         private void ExecuteImpl()

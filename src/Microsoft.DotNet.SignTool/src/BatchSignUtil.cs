@@ -50,6 +50,11 @@ namespace Microsoft.DotNet.SignTool
                 return;
             }
 
+            if (!CopyFiles())
+            {
+                return;
+            }
+
             // Validate the signing worked and produced actual signed binaries in all locations.
             VerifyAfterSign(_log);
 
@@ -86,9 +91,12 @@ namespace Microsoft.DotNet.SignTool
 
             bool signFiles(IEnumerable<FileSignInfo> files)
             {
-                var filesToSign = files.ToArray();
+                var filesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign).ToArray();
 
                 _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
+
+                if (filesToSign.Length == 0) return true;
+
                 foreach (var file in filesToSign)
                 {
                     _log.LogMessage(MessageImportance.Low, file.ToString());
@@ -164,6 +172,29 @@ namespace Microsoft.DotNet.SignTool
             }
 
             return true;
+        }
+
+        private bool CopyFiles()
+        {
+            bool success = true;
+            foreach (var entry in _batchData.FilesToCopy)
+            {
+                var src = entry.Key;
+                var dst = entry.Value;
+
+                try
+                {
+                    _log.LogMessage($"Updating '{dst}' with signed content");
+                    File.Copy(src, dst, overwrite: true);
+                }
+                catch (Exception e)
+                {
+                    _log.LogError($"Updating '{dst}' with signed content failed: '{e.Message}'");
+                    success = false;
+                }
+            }
+
+            return success;
         }
 
         /// <summary>

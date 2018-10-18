@@ -31,55 +31,75 @@ namespace Microsoft.DotNet.Darc.Helpers
         {
             if (string.IsNullOrEmpty(_editorPath))
             {
-                _logger.LogError("Filed to define an editor for the pop ups...");
+                _logger.LogError("Failed to define an editor for the pop ups...");
                 return Constants.ErrorCode;
             }
 
             if (string.IsNullOrEmpty(_gitDir))
             {
-                _logger.LogError("Filed to get git's directory...");
+                _logger.LogError("Failed to get git's directory...");
                 return Constants.ErrorCode;
             }
 
-            int result = 0;
+            int result = Constants.ErrorCode;
+            int tries = Constants.MaxPopupTries;
 
             ParsedCommand parsedCommand = GetParsedCommand(_editorPath);
 
             try
             {
-                string path = Path.Join(_gitDir, popUp.Path);
+                string path = Path.Combine(_gitDir, popUp.Path);
                 string dirPath = Path.GetDirectoryName(path);
 
                 Directory.CreateDirectory(dirPath);
                 File.WriteAllLines(path, popUp.Contents.Select(l => l.Text));
 
-                using (Process process = new Process())
+                while (tries-- > 0 && result != Constants.SuccessCode)
                 {
-                    process.EnableRaisingEvents = true;
-                    process.Exited += (sender, e) =>
+                    using (Process process = new Process())
                     {
-                        IList<Line> contents = popUp.OnClose(path);
+                        _popUpClosed = false;
+                        process.EnableRaisingEvents = true;
+                        process.Exited += (sender, e) =>
+                        {
+                            IList<Line> contents = popUp.OnClose(path);
 
-                        result = popUp.ProcessContents(contents);
+                            result = popUp.ProcessContents(contents);
 
-                        Directory.Delete(dirPath, true);
+                            // If succeeded, delete the temp file, otherwise keep it around
+                            // for another popup iteration.
+                            if (result == Constants.SuccessCode)
+                            {
+                                Directory.Delete(dirPath, true);
+                            }
+                            else if (tries > 0)
+                            {
+                                _logger.LogError("Inputs were invalid, please try again...");
+                            }
+                            else
+                            {
+                                Directory.Delete(dirPath, true);
+                                _logger.LogError("Maximum number of tries reached, aborting.");
+                            }
 
-                        _popUpClosed = true;
-                    };
-                    process.StartInfo.FileName = parsedCommand.FileName;
-                    process.StartInfo.Arguments = $"{parsedCommand.Arguments} {path}";
-                    process.Start();
+                            _popUpClosed = true;
+                        };
+                        process.StartInfo.FileName = parsedCommand.FileName;
+                        process.StartInfo.UseShellExecute = true;
+                        process.StartInfo.Arguments = $"{parsedCommand.Arguments} {path}";
+                        process.Start();
 
-                    int waitForMilliseconds = 100;
-                    while (!_popUpClosed)
-                    {
-                        Thread.Sleep(waitForMilliseconds);
+                        int waitForMilliseconds = 100;
+                        while (!_popUpClosed)
+                        {
+                            Thread.Sleep(waitForMilliseconds);
+                        }
                     }
                 }
             }
             catch (Exception exc)
             {
-                _logger.LogError($"There was an excpetion while trying to pop up an editor window. Exception: {exc.Message}");
+                _logger.LogError(exc, $"There was an exception while trying to pop up an editor window.");
                 result = Constants.ErrorCode;
             }
 
@@ -90,21 +110,43 @@ namespace Microsoft.DotNet.Darc.Helpers
         {
             ParsedCommand parsedCommand = new ParsedCommand();
 
-            if (command.Contains("'"))
+            // If it's quoted then find the end of the quoted string.
+            // If non quoted find a space or the end of the string.
+            command = command.Trim();
+            if (command.StartsWith("'") || command.StartsWith("\""))
             {
-                int start = command.IndexOf("'") + 1;
-                int end = command.LastIndexOf("'");
+                int start = 1;
+                int end = command.IndexOf("'", start);
+                if (end == -1)
+                {
+                    end = command.IndexOf("\"", start);
+                    if (end == -1)
+                    {
+                        // Unterminated quoted string.  Use full command as file name
+                        parsedCommand.FileName = command.Substring(1);
+                        return parsedCommand;
+                    }
+                }
                 parsedCommand.FileName = command.Substring(start, end - start);
                 parsedCommand.Arguments = command.Substring(end + 1);
+                return parsedCommand;
             }
             else
             {
+                // Find a space after the command name, if there are args, then parse them out,
+                // otherwise just return the whole string as the filename.
                 int fileNameEnd = command.IndexOf(" ");
-                parsedCommand.FileName = command.Substring(0, fileNameEnd);
-                parsedCommand.Arguments = command.Substring(fileNameEnd);
+                if (fileNameEnd != -1)
+                {
+                    parsedCommand.FileName = command.Substring(0, fileNameEnd);
+                    parsedCommand.Arguments = command.Substring(fileNameEnd);
+                }
+                else
+                {
+                    parsedCommand.FileName = command;
+                }
+                return parsedCommand;
             }
-
-            return parsedCommand;
         }
     }
 

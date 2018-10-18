@@ -4,7 +4,7 @@
 
 using Microsoft.DotNet.Darc.Helpers;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
@@ -13,53 +13,63 @@ namespace Microsoft.DotNet.Darc.Models
     internal class AuthenticateEditorPopUp : EditorPopUp
     {
         private readonly ILogger _logger;
-        private static readonly IList<Line> _contents = new ReadOnlyCollection<Line>(new List<Line>
-            {
-                new Line("bar_password=<token-from-https://maestro-prod.westus2.cloudapp.azure.com/>"),
-                new Line("github_token=<github-personal-access-token>"),
-                new Line("vsts_token=<vsts-personal-access-token>"),
-                new Line(""),
-                new Line("Storing the required tokens...", true),
-                new Line("Set 'bar_password', 'github_token' and 'vsts_token' depending on what you need", true),
-            });
 
+        private const string barPasswordElement = "bar_password";
+        private const string githubTokenElement = "github_token";
+        private const string azureDevOpsTokenElement = "azure_devops_token";
+        private const string barBaseUriElement = "build_asset_registry_base_uri";
 
         public AuthenticateEditorPopUp(string path, ILogger logger)
-            : base(path, _contents)
+            : base(path)
         {
             _logger = logger;
+            try
+            {
+                // Load current settings
+                settings = LocalSettings.LoadSettings();
+            }
+            catch (Exception e)
+            {
+                // Failed to load the settings file.  Quite possible it just doesn't exist.
+                // In this case, just initialize the settings to empty
+                _logger.LogTrace($"Couldn't load or locate the settings file ({e.Message}).  Initializing empty settings file");
+                settings = new LocalSettings();
+            }
+
+            // Initialize line contents.
+            Contents = new ReadOnlyCollection<Line>(new List<Line>
+            {
+                new Line($"{barPasswordElement}={GetCurrentSettingForDisplay(settings.BuildAssetRegistryPassword, "<token-from-https://maestro-prod.westus2.cloudapp.azure.com/>", true)}"),
+                new Line($"{githubTokenElement}={GetCurrentSettingForDisplay(settings.GitHubToken, "<github-personal-access-token>", true)}"),
+                new Line($"{azureDevOpsTokenElement}={GetCurrentSettingForDisplay(settings.AzureDevOpsToken, "<azure-devops-personal-access-token>", true)}"),
+                new Line($"{barBaseUriElement}={GetCurrentSettingForDisplay(settings.BuildAssetRegistryBaseUri, "<alternate build asset registry uri if needed, otherwise leave as is>", false)}"),
+                new Line(""),
+                new Line("Storing the required settings...", true),
+                new Line($"Set elements above depending on what you need", true),
+            });
         }
 
-        public string BarPassword { get; set; }
-
-        public string GitHubToken { get; set; }
-
-        public string VstsToken { get; set; }
-
-        public override bool Validate()
-        {
-            // No real validation required since none of the fields are mandatory
-            return true;
-        }
+        public LocalSettings settings { get; set; }
 
         public override int ProcessContents(IList<Line> contents)
         {
-            int result = 0;
-
             foreach (Line line in contents)
             {
                 string[] keyValue = line.Text.Split("=");
 
                 switch (keyValue[0])
                 {
-                    case "bar_password":
-                        BarPassword = keyValue[1];
+                    case barPasswordElement:
+                        settings.BuildAssetRegistryPassword = ParseSetting(keyValue[1], settings.BuildAssetRegistryPassword, true);
                         break;
-                    case "github_token":
-                        GitHubToken = keyValue[1];
+                    case githubTokenElement:
+                        settings.GitHubToken = ParseSetting(keyValue[1], settings.GitHubToken, true);
                         break;
-                    case "vsts_token":
-                        VstsToken = keyValue[1];
+                    case azureDevOpsTokenElement:
+                        settings.AzureDevOpsToken = ParseSetting(keyValue[1], settings.AzureDevOpsToken, true);
+                        break;
+                    case barBaseUriElement:
+                        settings.BuildAssetRegistryBaseUri = ParseSetting(keyValue[1], settings.BuildAssetRegistryBaseUri, false);
                         break;
                     default:
                         _logger.LogWarning($"'{keyValue[0]}' is an unknown field in the authentication scope");
@@ -67,16 +77,7 @@ namespace Microsoft.DotNet.Darc.Models
                 }
             }
 
-            if (!Validate())
-            {
-                result = Constants.ErrorCode;
-            }
-
-            string settings = JsonConvert.SerializeObject(this);
-
-            result = EncodedFile.Create(Constants.SettingsFileName, settings, _logger);
-
-            return 0;
+            return settings.SaveSettings(_logger);
         }
     }
 }

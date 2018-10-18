@@ -6,20 +6,20 @@
   </PropertyGroup>
 
   <!--
-    Include both GitHub and VSTS packages to enable SourceLink in repositories that mirror to VSTS.
+    Include both GitHub and Azure DevOps (formerly VSTS) packages to enable SourceLink in repositories that mirror to Azure DevOps (formerly VSTS).
   -->
   <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.SourceLink.Vsts.Git" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
-  <Target Name="_TranslateVstsUrlToGitHubUrl"
+  <Target Name="_TranslateAzureDevOpsUrlToGitHubUrl"
           DependsOnTargets="$(SourceControlManagerUrlTranslationTargets)"
           BeforeTargets="SourceControlManagerPublishTranslatedUrls">
 
-    <!-- The convention for names of VSTS repositories mirrored from GitHub is "{GitHub org name}-{GitHub repository name}" -->
+    <!-- The convention for names of Azure DevOps repositories mirrored from GitHub is "{GitHub org name}-{GitHub repository name}" -->
     <PropertyGroup>
-      <_Pattern>https://dnceng.visualstudio\.com/internal/_git/([^/-]+)-(.+)|https://dev.azure.com/dnceng/internal/_git/([^/-]+)-(.+)</_Pattern>
+      <_Pattern>https://dnceng.visualstudio\.com/internal/_git/([^/-]+)-(.+)|https://dev.azure.com/dnceng/internal/_git/([^/-]+)-(.+)|https://dnceng@dev.azure.com/dnceng/internal/_git/([^/-]+)-(.+)</_Pattern>
       <_Replacement>https://github.com/$1/$2</_Replacement>
     </PropertyGroup>
 

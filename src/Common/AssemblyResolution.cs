@@ -5,13 +5,18 @@
 #if NET461
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet
 {
     internal static class AssemblyResolution
     {
+        internal static TaskLoggingHelper Log;
+
         public static void Initialize()
         {
             AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolve;
@@ -33,13 +38,15 @@ namespace Microsoft.DotNet
             {
                 sci = Assembly.LoadFile(fullPath);
             }
-            catch
+            catch (Exception e)
             {
+                Log?.LogWarning($"AssemblyResolve: exception while loading '{fullPath}': {e.Message}");
                 return null;
             }
 
             if (name.Version <= sci.GetName().Version)
             {
+                Log?.LogMessage(MessageImportance.Low, $"AssemblyResolve: loaded '{fullPath}' to {AppDomain.CurrentDomain.FriendlyName}");
                 return sci;
             }
 

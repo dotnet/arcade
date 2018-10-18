@@ -16,6 +16,11 @@ namespace Microsoft.DotNet.Darc.Models
             Contents = contents;
         }
 
+        public EditorPopUp(string path)
+        {
+            Path = path;
+        }
+
         [JsonIgnore]
         public string Path { get; set; }
 
@@ -28,8 +33,6 @@ namespace Microsoft.DotNet.Darc.Models
             return GetContentValues(updatedFileContents);
         }
 
-        public abstract bool Validate();
-
         public abstract int ProcessContents(IList<Line> contents);
 
         private List<Line> GetContentValues(IEnumerable<string> contents)
@@ -38,13 +41,56 @@ namespace Microsoft.DotNet.Darc.Models
 
             foreach (string content in contents)
             {
-                if (!content.Contains("#") && !string.IsNullOrEmpty(content))
+                if (!content.TrimStart().StartsWith("#") && !string.IsNullOrEmpty(content))
                 {
                     values.Add(new Line(content));
                 }
             }
 
             return values;
+        }
+
+        /// <summary>
+        /// Retrieve the string that should be displayed to the user.
+        /// </summary>
+        /// <param name="currentValue">Current value of the setting</param>
+        /// <param name="defaultValue">Default value if the current setting value is empty</param>
+        /// <param name="isSecret">If secret and current value is empty, should display ***</param>
+        /// <returns>String to display</returns>
+        protected static string GetCurrentSettingForDisplay(string currentValue, string defaultValue, bool isSecret)
+        {
+            if (!string.IsNullOrEmpty(currentValue))
+            {
+                return isSecret ? "***" : currentValue;
+            }
+            else
+            {
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Parses a simple string setting and returns the value to save.
+        /// </summary>
+        /// <param name="inputSetting">Input string from the file</param>
+        /// <returns>
+        ///     - Original setting if the setting is secret and value is still all ***
+        ///     - Empty string if the setting starts+ends with <>
+        ///     - New value if anything else.
+        /// </returns>
+        protected string ParseSetting(string inputSetting, string originalSetting, bool isSecret)
+        {
+            string trimmedSetting = inputSetting.Trim();
+            if (trimmedSetting.StartsWith('<') && trimmedSetting.EndsWith('>'))
+            {
+                return string.Empty;
+            }
+            // If the setting is secret and only contains *, then keep it the same as the input setting
+            if (isSecret && trimmedSetting.Length > 0 && trimmedSetting.Replace("*", "") == string.Empty)
+            {
+                return originalSetting;
+            }
+            return trimmedSetting;
         }
     }
 
@@ -53,6 +99,11 @@ namespace Microsoft.DotNet.Darc.Models
         public Line(string text, bool isComment = false)
         {
             Text = !isComment ? text : $"# {text}";
+        }
+
+        public Line()
+        {
+            Text = null;
         }
 
         public string Text { get; set; }

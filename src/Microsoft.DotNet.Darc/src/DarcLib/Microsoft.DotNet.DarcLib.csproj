@@ -5,6 +5,9 @@
     <LangVersion>7.1</LangVersion>
     <NoWarn>$(NoWarn);NU1701</NoWarn>
     <SignAssembly>false</SignAssembly>
+    <IsPackable>true</IsPackable>
+    <Description>Darc Library</Description>
+    <PackageTags>Arcade Darc Dependency Flow</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

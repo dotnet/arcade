@@ -67,7 +67,8 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                         new[]
                         {
                             invocation,
-                            s_makeCallMethodMethod.MakeGenericMethod(retType).Invoke(this, new object[] {invocation})
+                            s_makeCallMethodMethod.MakeGenericMethod(retType)
+                                .Invoke(this, new object[] {invocation})
                         });
             }
         }
