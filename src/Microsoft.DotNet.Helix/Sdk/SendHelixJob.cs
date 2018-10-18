@@ -330,9 +330,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         private IJobDefinition AddCorrelationPayload(IJobDefinition def, ITaskItem correlationPayload)
         {
             string path = correlationPayload.GetMetadata("FullPath");
+            string uri = correlationPayload.GetMetadata("Uri");
             string runtimeVersion = correlationPayload.GetMetadata("RuntimeVersion");
             string sdkVersion = correlationPayload.GetMetadata("SdkVersion");
 
+            // TODO: Break this logic out into a separate MSBuild task (https://github.com/dotnet/arcade/issues/1063)
             if (!string.IsNullOrEmpty(runtimeVersion) || !string.IsNullOrEmpty(sdkVersion))
             {
                 string targetQueue = correlationPayload.GetMetadata("TargetQueue");
@@ -347,10 +349,13 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
                 Log.LogMessage(MessageImportance.Low, $"Adding .NET {sdkOrRuntime.ToString()} version {version} for queue {targetQueue}");
 
-                Uri uri = DotNetArchiveUri(version, DotNetReleaseString(targetQueue, sdkOrRuntime), sdkOrRuntime);
+                uri = DotNetArchiveUri(version, DotNetReleaseString(targetQueue, sdkOrRuntime), sdkOrRuntime).ToString();
+            }
 
-                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload URI '{uri.ToString()}'");
-                return def.WithCorrelationPayloadUris(uri);
+            if (!string.IsNullOrEmpty(uri))
+            {
+                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload URI '{uri}'");
+                return def.WithCorrelationPayloadUris(new Uri(uri));
             }
             else if (Directory.Exists(path))
             {
