@@ -56,6 +56,16 @@
       </PropertyGroup>
     </Otherwise>
   </Choose>
+
+  <Target Name="AddDotNetSdk" Condition="$(IncludeDotNetSdkVersion)!='' Or $(IncludeDotNetRuntimeVersion)!=''" BeforeTargets="AddXUnitReporter">
+    <ItemGroup>
+      <HelixCorrelationPayload Include="ignore">
+        <SdkVersion>$(IncludeDotNetSdkVersion)</SdkVersion>
+        <RuntimeVersion>$(IncludeDotNetRuntimeVersion)</RuntimeVersion>
+        <TargetQueue>$(HelixTargetQueue)</TargetQueue>
+      </HelixCorrelationPayload>
+    </ItemGroup>
+  </Target>
   
   <Target Name="AddXUnitReporter" Condition="$(EnableXUnitReporter)" BeforeTargets="Test">
     <ItemGroup>

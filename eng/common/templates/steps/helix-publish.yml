@@ -8,6 +8,7 @@ parameters:
   HelixPostCommands: ''
   WorkItemDirectory: ''
   WorkItemCommand: ''
+  IncludeDotNetSdk: false
   EnableXUnitReporter: false
   WaitForWorkItemCompletion: true
 
@@ -27,6 +28,7 @@ steps:
       HelixAccessToken: ${{ parameters.HelixAccessToken }}
       HelixPreCommands: ${{ parameters.HelixPreCommands }}
       HelixPostCommands: ${{ parameters.HelixPostCommands }}
+      IncludeDotNetSdk: ${{ parameters.IncludeDotNetSdk }}
       EnableXUnitReporter: ${{ parameters.EnableXUnitReporter }}
       WaitForWorkItemCompletion: ${{ parameters.WaitForWorkItemCompletion }}
       WorkItemDirectory: ${{ parameters.WorkItemDirectory }}
