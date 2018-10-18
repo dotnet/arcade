@@ -16,11 +16,13 @@ namespace Microsoft.DotNet.Darc.Operations
     internal class GetDependenciesOperation : Operation
     {
         private readonly GetDependenciesCommandLineOptions _options;
+        private readonly ConsoleLogger _consoleLogger;
 
         public GetDependenciesOperation(GetDependenciesCommandLineOptions options)
             : base(options)
         {
             _options = options;
+            _consoleLogger = new ConsoleLogger();
         }
 
         public override async Task<int> ExecuteAsync()
@@ -50,7 +52,7 @@ namespace Microsoft.DotNet.Darc.Operations
                     graph = await GetDependencyGraph(dependencies, local);
                 }
 
-                ConsoleLogger.LogDependencyGraph(graph, _options.Flat);
+                _consoleLogger.LogDependencyGraph(graph, _options.Flat);
 
                 return Constants.SuccessCode;
             }

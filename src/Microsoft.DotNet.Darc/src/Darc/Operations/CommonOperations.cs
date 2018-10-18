@@ -73,7 +73,6 @@ namespace Microsoft.DotNet.Darc.Operations
                 }
             }
 
-            Exception exception = null;
             DependencyGraphNode node = null;
 
             try
@@ -82,14 +81,9 @@ namespace Microsoft.DotNet.Darc.Operations
                 IEnumerable<DependencyDetail> dependencies = localClient.GetDependenciesFromFileContents(fileContents);
                 node = dependency.ToGraphNode(dependencies);
             }
-            catch (Exception exc)
+            catch
             {
-                exception = exc;
-            }
-
-            if (exception != null)
-            {
-                throw exception;
+                throw;
             }
 
             return node;

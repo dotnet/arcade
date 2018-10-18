@@ -14,9 +14,9 @@ namespace Microsoft.DotNet.Darc.Helpers
     /// </summary>
     internal class ConsoleLogger
     {
-        private static readonly HashSet<string> _flatList = new HashSet<string>();
+        private readonly HashSet<string> _flatList = new HashSet<string>();
 
-        public static void LogDependency(DependencyDetail dependency, bool isFlat, string indent = "")
+        public void LogDependency(DependencyDetail dependency, bool isFlat, string indent = "")
         {
             if (!isFlat)
             {
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Darc.Helpers
             }
         }
 
-        public static void LogDependencyGraph(List<DependencyGraphNode> graph, bool isFlat, string indent = "")
+        public void LogDependencyGraph(List<DependencyGraphNode> graph, bool isFlat, string indent = "")
         {
             foreach (DependencyGraphNode node in graph)
             {
