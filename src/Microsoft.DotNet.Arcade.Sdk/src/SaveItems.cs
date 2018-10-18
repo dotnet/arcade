@@ -11,6 +11,8 @@ using System.IO;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
+    // This task writes msbuild Items with their metadata to a props file.
+    // Useful to statically save a status of an Item that will be used later on by just importing the generated file.
     public class SaveItems : Task
     {
         [Required]
@@ -21,7 +23,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         [Output]
         [Required]
-        public string[] Files { get; set; }
+        public string File { get; set; }
 
         public override bool Execute()
         {
@@ -31,9 +33,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             {
                 var metadata = ((ITaskItem2)item).CloneCustomMetadataEscaped();
 
-                var metadataPairs = metadata as IEnumerable<KeyValuePair<string, string>>;
-
-                if (metadataPairs == null)
+                if (!(metadata is IEnumerable<KeyValuePair<string, string>> metadataPairs))
                 {
                     metadataPairs = metadata.Keys.OfType<string>().Select(key => new KeyValuePair<string, string>(key, metadata[key] as string));
                 }
@@ -41,17 +41,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 project.AddItem(ItemName, item.ItemSpec, metadataPairs);
             }
 
-            foreach(var file in Files)
+            string path = Path.GetDirectoryName(File);
+
+            if (!string.IsNullOrEmpty(path))
             {
-                var path = Path.GetDirectoryName(file);
-
-                if (!string.IsNullOrEmpty(path))
-                {
-                    Directory.CreateDirectory(path);
-                }
-
-                project.Save(file);
+                Directory.CreateDirectory(path);
             }
+
+            project.Save(File);
 
             return !Log.HasLoggedErrors;
         }
