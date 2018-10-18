@@ -330,21 +330,24 @@ namespace Microsoft.DotNet.Helix.Sdk
         private IJobDefinition AddCorrelationPayload(IJobDefinition def, ITaskItem correlationPayload)
         {
             string path = correlationPayload.GetMetadata("FullPath");
+            string runtimeVersion = correlationPayload.GetMetadata("RuntimeVersion");
             string sdkVersion = correlationPayload.GetMetadata("SdkVersion");
 
-            if (!string.IsNullOrEmpty(sdkVersion))
+            if (!string.IsNullOrEmpty(runtimeVersion) || !string.IsNullOrEmpty(sdkVersion))
             {
                 string targetQueue = correlationPayload.GetMetadata("TargetQueue");
+
+                var sdkOrRuntime = (string.IsNullOrEmpty(sdkVersion) ? DOTNET.RUNTIME : DOTNET.SDK);
+                string version = (sdkOrRuntime == DOTNET.RUNTIME ? runtimeVersion : sdkVersion);
+
                 if (string.IsNullOrEmpty(targetQueue))
                 {
-                    Log.LogError($"No queue specified for .NET SDK {sdkVersion} payload");
+                    Log.LogError($"No queue specified for .NET {sdkOrRuntime.ToString()} {version} payload");
                     return def;
                 }
-                Log.LogMessage(MessageImportance.Low, $"Adding .NET SDK version {sdkVersion} for queue {targetQueue}");
+                Log.LogMessage(MessageImportance.Low, $"Adding .NET {sdkOrRuntime.ToString()} version {version} for queue {targetQueue}");
 
-                Uri uri = DotNetArchiveUri(sdkVersion, DotNetReleaseString(targetQueue, DOTNET.SDK), DOTNET.SDK);
-
-                Console.WriteLine($"Uri: {uri.ToString()}");
+                Uri uri = DotNetArchiveUri(version, DotNetReleaseString(targetQueue, sdkOrRuntime), sdkOrRuntime);
 
                 Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload URI '{uri.ToString()}'");
                 return def.WithCorrelationPayloadUris(uri);
@@ -383,7 +386,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                         {
                             jsonTextReader.Read();
 
-                            if (jsonTextReader.TokenType == JsonToken.PropertyName && ((string)jsonTextReader.Value == "version-sdk" && sdkOrRuntime == DOTNET.SDK || (string)jsonTextReader.Value == "version-sdk"))
+                            if (jsonTextReader.TokenType == JsonToken.PropertyName && (string)jsonTextReader.Value == $"version-{sdkOrRuntime.ToString().ToLowerInvariant()}")
                             {
                                 jsonTextReader.Read();
 

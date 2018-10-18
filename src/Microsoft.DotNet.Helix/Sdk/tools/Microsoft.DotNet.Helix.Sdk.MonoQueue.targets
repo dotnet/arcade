@@ -57,10 +57,11 @@
     </Otherwise>
   </Choose>
 
-  <Target Name="AddDotNetSdk" Condition="$(IncludeDotNetSdkVersion)!=''" BeforeTargets="AddXUnitReporter">
+  <Target Name="AddDotNetSdk" Condition="$(IncludeDotNetSdkVersion)!='' Or $(IncludeDotNetRuntimeVersion)!=''" BeforeTargets="AddXUnitReporter">
     <ItemGroup>
       <HelixCorrelationPayload Include="ignore">
         <SdkVersion>$(IncludeDotNetSdkVersion)</SdkVersion>
+        <RuntimeVersion>$(IncludeDotNetRuntimeVersion)</RuntimeVersion>
         <TargetQueue>$(HelixTargetQueue)</TargetQueue>
       </HelixCorrelationPayload>
     </ItemGroup>
