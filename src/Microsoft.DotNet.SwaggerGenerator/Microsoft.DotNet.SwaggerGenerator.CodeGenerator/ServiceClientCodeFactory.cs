@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -89,15 +89,25 @@ namespace Microsoft.DotNet.SwaggerGenerator
                     writer.WriteSafeString(language.GetHttpMethodReference(method));
                 });
 
+            void WriteLanguageFormatString(TextWriter writer, HelperOptions opts, object context, string format)
+            {
+                var placeholderIdx = format.IndexOf(Language.FormatStringPlaceholder, StringComparison.Ordinal);
+                if (placeholderIdx < 0)
+                {
+                    throw new InvalidOperationException("language format string missing placeholder");
+                }
+                writer.WriteSafeString(format.Substring(0, placeholderIdx));
+                opts.Template(writer, context);
+                writer.WriteSafeString(format.Substring(placeholderIdx + Language.FormatStringPlaceholder.Length));
+            }
+
             hb.RegisterHelper(
                 "nullCheck",
                 (writer, opts, context, parameters) =>
                 {
                     var typeReference = (TypeReference) parameters[0];
-                    (string start, string end) = language.NullCheck(typeReference);
-                    writer.WriteSafeString(start);
-                    opts.Template(writer, context);
-                    writer.WriteSafeString(end);
+                    string format = language.NullCheckFormat(typeReference);
+                    WriteLanguageFormatString(writer, opts, context, format);
                 });
 
             hb.RegisterHelper(
@@ -105,10 +115,8 @@ namespace Microsoft.DotNet.SwaggerGenerator
                 (writer, opts, context, parameters) =>
                 {
                     var typeReference = (TypeReference) parameters[0];
-                    (string start, string end) = language.NotNullCheck(typeReference);
-                    writer.WriteSafeString(start);
-                    opts.Template(writer, context);
-                    writer.WriteSafeString(end);
+                    string format = language.NotNullCheckFormat(typeReference);
+                    WriteLanguageFormatString(writer, opts, context, format);
                 });
         }
     }

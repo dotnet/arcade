@@ -51,6 +51,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
 
     public abstract class Language
     {
+        public const string FormatStringPlaceholder = "%%";
         private static readonly Dictionary<string, Language> _languages;
 
         static Language()
@@ -69,11 +70,26 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
             return value;
         }
 
+        /// <summary>
+        ///   Gets the source code representation of the given <see cref="TypeReference"/>
+        /// </summary>
         public abstract string ResolveReference(TypeReference reference);
 
-        public abstract (string start, string end) NullCheck(TypeReference reference);
+        /// <summary>
+        ///   Gets a format string for the source code representation of a null check for a variable of the given <see cref="TypeReference"/>
+        /// </summary>
+        /// <remarks>
+        ///   The character sequence `%%` will be replaced by the variable to be checked
+        /// </remarks>
+        public abstract string NullCheckFormat(TypeReference reference);
 
-        public abstract (string start, string end) NotNullCheck(TypeReference reference);
+        /// <summary>
+        ///   Gets a format string for the source code representation of a not-null check for a variable of the given <see cref="TypeReference"/>
+        /// </summary>
+        /// <remarks>
+        ///   The character sequence `%%` will be replaced by the variable to be checked
+        /// </remarks>
+        public abstract string NotNullCheckFormat(TypeReference reference);
 
         public abstract string GetHttpMethodReference(HttpMethod method);
 
@@ -164,24 +180,24 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 throw new NotSupportedException(reference.ToString());
             }
 
-            public override (string start, string end) NullCheck(TypeReference reference)
+            public override string NullCheckFormat(TypeReference reference)
             {
                 if (reference == TypeReference.String)
                 {
-                    return ("string.IsNullOrEmpty(", ")");
+                    return "string.IsNullOrEmpty(%%)";
                 }
 
-                return ("", " == default");
+                return "%% == default";
             }
 
-            public override (string start, string end) NotNullCheck(TypeReference reference)
+            public override string NotNullCheckFormat(TypeReference reference)
             {
                 if (reference == TypeReference.String)
                 {
-                    return ("!string.IsNullOrEmpty(", ")");
+                    return "!string.IsNullOrEmpty(%%)";
                 }
 
-                return ("", " != default");
+                return "%% != default";
             }
 
             public override string GetHttpMethodReference(HttpMethod method)
