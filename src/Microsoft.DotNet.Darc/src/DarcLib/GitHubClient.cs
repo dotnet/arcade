@@ -159,7 +159,7 @@ namespace Microsoft.DotNet.DarcLib
                 string baseCommitSha = await Client.Repository.Commit.GetSha1(owner, repo, branch);
                 Octokit.Commit baseCommit = await Client.Git.Commit.Get(owner, repo, baseCommitSha);
                 TreeResponse baseTree = await Client.Git.Tree.Get(owner, repo, baseCommit.Tree.Sha);
-                TreeResponse newTree = await CreateGitHubTreeAsync(owner, repo, filesToCommit, baseTree);
+                TreeResponse newTree = await CreateGitHubTreeAsync(owner, repo, branch, filesToCommit, baseTree);
                 Octokit.Commit newCommit = await Client.Git.Commit.Create(
                     owner,
                     repo,
@@ -654,23 +654,18 @@ namespace Microsoft.DotNet.DarcLib
         private async Task<TreeResponse> CreateGitHubTreeAsync(
             string owner,
             string repo,
+            string branch,
             IEnumerable<GitFile> filesToCommit,
             TreeResponse baseTree)
         {
-            var newTree = new NewTree {BaseTree = baseTree.Sha};
+            IEnumerable<GitFile> filesToRemove = filesToCommit.Where(f => f.Operation == GitFileOperation.Delete);
 
-            // Delete files that are not in the arcade repo but still exist in the target repo
-            IEnumerable<GitFile> filesToDelete = filesToCommit.Where(f => f.Operation == GitFileOperation.Delete);
-
-            foreach (GitFile file in filesToDelete)
+            if (filesToRemove.Any())
             {
-                NewTreeItem item = newTree.Tree.Where(t => t.Path == file.FilePath).FirstOrDefault();
-
-                if (item != null)
-                {
-                    newTree.Tree.Remove(item);
-                }
+                await RemoveFilesFromTree(owner, repo, branch, baseTree.Sha, filesToRemove);
             }
+
+            var newTree = new NewTree {BaseTree = baseTree.Sha };
 
             foreach (GitFile file in filesToCommit.Where(f => f.Operation == GitFileOperation.Add))
             {
@@ -748,6 +743,47 @@ namespace Microsoft.DotNet.DarcLib
             }
 
             return treeItems;
+        }
+
+        private async Task RemoveFilesFromTree(string owner, string repo, string branch, string treeSha, IEnumerable<GitFile> filesToRemove)
+        {
+            TreeResponse rootTree = await Client.Git.Tree.Get(owner, repo, treeSha);
+            TreeItem engTreeItem = rootTree.Tree.Where(t => t.Path == "eng").FirstOrDefault();
+
+            if (engTreeItem == null)
+            {
+                return;
+            }
+
+            TreeResponse engTree = await Client.Git.Tree.Get(owner, repo, engTreeItem.Sha);
+            TreeItem engCommonTreeItem = engTree.Tree.Where(t => t.Path == "common").FirstOrDefault();
+
+            if (engCommonTreeItem == null)
+            {
+                return;
+            }
+
+            TreeResponse engCommonTree = await Client.Git.Tree.Get(owner, repo, engCommonTreeItem.Sha);
+            NewTree newTree = new NewTree();
+
+            foreach (TreeItem treeItem in engCommonTree.Tree)
+            {
+                if (!filesToRemove.Any(f => f.FilePath == $"eng/common/{treeItem.Path}"))
+                {
+                    NewTreeItem newTreeItem = new NewTreeItem
+                    {
+                        Mode = treeItem.Mode,
+                        Path = treeItem.Path,
+                        Sha = treeItem.Sha,
+                        Type = treeItem.Type.Value
+                    };
+
+                    newTree.Tree.Add(newTreeItem);
+                }
+            }
+
+            TreeResponse createdTree = await Client.Git.Tree.Create(owner, repo, newTree);
+            await Client.Git.Reference.Update(owner, repo, $"heads/{branch}", new ReferenceUpdate(createdTree.Sha));
         }
     }
 }
