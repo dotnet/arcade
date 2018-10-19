@@ -139,7 +139,7 @@ dnceng@microsoft.com
 
   See [here](VSTS/VSTSOnboarding.md#agent-queues) for more information. For
   additional questions contact 'dnceng'. Either @dotnet/dnceng on GitHub, or
-  dnceng@microsoft.com
+  dnceng@microsoft.com.  Also, you post to the [Arcade Teams channel](https://teams.microsoft.com/l/channel/19%3acf9dc0ac9753432dbac4023239a9965f%40thread.skype/Arcade?groupId=147df318-61de-4f04-8f7b-ecd328c256bb&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47).
 
 - **My repo is currently on repo-toolset, how can I move into Arcade?**
 
