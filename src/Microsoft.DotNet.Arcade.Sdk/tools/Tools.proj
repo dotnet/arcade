@@ -12,7 +12,6 @@
   -->
 
   <Import Project="BuildStep.props" />
-  <Import Project="BuildTasks.props" />
 
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
