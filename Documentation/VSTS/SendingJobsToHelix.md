@@ -37,7 +37,7 @@ For these builds, you will need to add a variable group to your build which cont
 
 The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `helix-publish` template in `eng/common/templates/steps/helix-publish.yml` from your `.vsts-ci.yml` file.
 
-In a case where you have a directory called `tests` and a batch file in that directory called `runtests.cmd` which will run several different XUnit test projects:
+You'll need to create a script file to run your tests. In the future, it will be possible to simply specify the directory where your xUnit tests live and the job sender will intelligently handle the rest of this for you; currently, however, this functionality does not exist.
 
 ```yaml
   - template: /eng/common/templates/steps/helix-publish.yml
@@ -49,9 +49,9 @@ In a case where you have a directory called `tests` and a batch file in that dir
       HelixAccessToken: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token)
       # HelixPreCommands: '' -- any commands that you would like to run prior to running your job
       # HelixPostCommands: '' -- any commands that you would like to run after running your job
-      WorkItemDirectory: $(Build.SourcesDirectory)/artifacts/bin/test/$(_BuildConfig)/netcoreapp2.0
-      WorkItemCommand: runtests.cmd
-      EnableXUnitReporter: true # required for reporting out XUnit test results
+      WorkItemDirectory: $(Build.SourcesDirectory)/ # specify the directory where your tests live here
+      WorkItemCommand: # specify the command to run your tests
+      EnableXUnitReporter: true # required for reporting out xUnit test results to Mission Control
       # WaitForWorkItemCompletion: true -- defaults to true
 ```
 
