@@ -67,7 +67,7 @@
     </PropertyGroup>
 
     <!-- Find dotnet on PATHs -->
-    <Microsoft.DotNet.Arcade.Sdk.LocateDotNet RepositoryRoot="$(RepoRoot)">
+    <Microsoft.DotNet.Arcade.Sdk.LocateDotNet RepositoryRoot="$(RepoRoot)" Condition="!Exists('$(DotNetTool)')">
       <Output TaskParameter="DotNetPath" PropertyName="DotNetTool" />
     </Microsoft.DotNet.Arcade.Sdk.LocateDotNet>
   </Target>
