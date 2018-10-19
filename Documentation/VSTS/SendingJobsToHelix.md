@@ -40,7 +40,7 @@ The simplest Helix use-case is zipping up a single folder containing your projec
 In a case where you have a directory called `tests` and a batch file in that directory called `runtests.cmd` which will run several different XUnit test projects:
 
 ```yaml
-  - template: eng/common/templates/steps/helix-publish.yml
+  - template: /eng/common/templates/steps/helix-publish.yml
     parameters:
       HelixSource: your/helix/source
       HelixType: type/tests
