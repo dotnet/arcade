@@ -14,6 +14,8 @@ First, you have to import the SDK. Everything that follows requires dotnet-cli â
   }
 }
 ```
+
+Example: `"Microsoft.DotNet.Helix.Sdk": "1.0.0-beta.18502.3"`
 #### NuGet.config
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
