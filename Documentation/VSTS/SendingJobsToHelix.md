@@ -31,13 +31,13 @@ Example: `"Microsoft.DotNet.Helix.Sdk": "1.0.0-beta.18502.3"`
 
 If you plan to send a payload (such as a work item) to Helix, you will need to be authorized. For official builds you can use your current access token; however, sending jobs from public CI builds is a different story.
 
-For these builds, you will need to add a variable group to your build which contains only the *BotAccount-dotnet-github-anon-kaonashi-bot-helix-token* secret from EngKeyVault. This will allow you to send telemetry to Helix while minimizing the risk of leaking secrets.
+For these builds, you will need to copy the *BotAccount-dotnet-github-anon-kaonashi-bot-helix-token* secret from EngKeyVault and specify it as a build variable. This will allow you to send payloads to Helix while minimizing the risk of leaking secrets.
 
 ## The Simple Case
 
 The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `helix-publish` template in `eng/common/templates/steps/helix-publish.yml` from your `.vsts-ci.yml` file.
 
-You'll need to create a script file to run your tests. In the future, it will be possible to simply specify the directory where your xUnit tests live and the job sender will intelligently handle the rest of this for you; currently, however, this functionality does not exist.
+You will need to create a script file to run your tests. In the future, it will be possible to simply specify the directory where your xUnit tests live and the job sender will intelligently handle the rest of this for you; currently, however, this functionality does not exist.
 
 ```yaml
   - template: /eng/common/templates/steps/helix-publish.yml
