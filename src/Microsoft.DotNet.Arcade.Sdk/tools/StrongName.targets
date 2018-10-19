@@ -48,6 +48,29 @@
         <PublicSign>false</PublicSign> <!-- The MicrosoftAspNet strong name key is a full key -->
       </PropertyGroup>
     </When>
+    <When Condition="'$(StrongNameKeyId)' == 'ECMA'">
+      <PropertyGroup>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)ECMA.snk</AssemblyOriginatorKeyFile>
+        <PublicKey>$(ECMAPublicKey)</PublicKey>
+        <PublicKeyToken>b77a5c561934e089</PublicKeyToken>
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(StrongNameKeyId)' == 'Open'">
+      <PropertyGroup>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)Open.snk</AssemblyOriginatorKeyFile>
+        <PublicKey>$(OpenPublicKey)</PublicKey>
+        <PublicKeyToken>cc7b13ffcd2ddd51</PublicKeyToken>
+        <DealySign>false</DealySign>
+        <PublicSign>false</PublicSign> <!-- The Open strong name key is a full key -->
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(StrongNameKeyId)' == 'SilverlightPlatform'">
+      <PropertyGroup>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)SilverlightPlatformPublicKey.snk</AssemblyOriginatorKeyFile>
+        <PublicKey>$(SilverlightPlatformPublicKey)</PublicKey>
+        <PublicKeyToken>7cec85d7bea7798e</PublicKeyToken>
+      </PropertyGroup>
+    </When>
   </Choose>
 
   <!-- Build Flag Verification -->
