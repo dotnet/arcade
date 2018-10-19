@@ -49,7 +49,7 @@ In a case where you have a directory called `tests` and a batch file in that dir
       HelixAccessToken: $('BotAccount-dotnet-github-anon-kaonashi-bot-helix-token')
       # HelixPreCommands: '' -- any commands that you would like to run prior to running your job
       # HelixPostCommands: '' -- any commands that you would like to run after running your job
-      WorkItemDirectory: tests
+      WorkItemDirectory: $(Build.SourcesDirectory)/artifacts/bin/test/$(_BuildConfig)/netcoreapp2.0
       WorkItemCommand: runtests.cmd
       EnableXUnitReporter: true # required for reporting out XUnit test results
       # WaitForWorkItemCompletion: true -- defaults to true
