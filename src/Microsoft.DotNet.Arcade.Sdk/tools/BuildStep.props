@@ -2,4 +2,5 @@
 <Project>
   <Import Project="RepoLayout.props" />
   <Import Project="DefaultVersions.props" />
+  <Import Project="BuildTasks.props" />
 </Project>
