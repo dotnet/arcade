@@ -19,7 +19,7 @@ steps:
       projects: eng/common/helixpublish.proj
       custom: msbuild
       arguments: '/t:test /p:Language=msbuild'
-    displayName: Send tests job to Helix
+    displayName: Send job to Helix
     env:
       HelixSource: ${{ parameters.HelixSource }}
       HelixType: ${{ parameters.HelixType }}
