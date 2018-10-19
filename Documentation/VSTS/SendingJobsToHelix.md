@@ -42,7 +42,7 @@ In a case where you have a directory called `tests` and a batch file in that dir
 ```yaml
   - template: /eng/common/templates/steps/helix-publish.yml
     parameters:
-      HelixSource: your/helix/source
+      HelixSource: pr/your/helix/source # sources must start with pr/, official/, prodcon/, or agent/
       HelixType: type/tests
       # HelixBuild: $(Build.BuildNumber) -- This property is set by default
       HelixTargetQueues: Windows.10.Amd64.Open;Windows.7.Amd64.Open
