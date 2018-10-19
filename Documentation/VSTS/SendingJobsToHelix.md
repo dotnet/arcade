@@ -46,7 +46,7 @@ In a case where you have a directory called `tests` and a batch file in that dir
       HelixType: type/tests
       # HelixBuild: $(Build.BuildNumber) -- This property is set by default
       HelixTargetQueues: Windows.10.Amd64.Open;Windows.7.Amd64.Open
-      HelixAccessToken: $('BotAccount-dotnet-github-anon-kaonashi-bot-helix-token')
+      HelixAccessToken: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token)
       # HelixPreCommands: '' -- any commands that you would like to run prior to running your job
       # HelixPostCommands: '' -- any commands that you would like to run after running your job
       WorkItemDirectory: $(Build.SourcesDirectory)/artifacts/bin/test/$(_BuildConfig)/netcoreapp2.0
