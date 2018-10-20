@@ -55,6 +55,8 @@ In a case where you have a directory called `tests` and a batch file in that dir
       WorkItemCommand: runtests.cmd
       EnableXUnitReporter: true # required for reporting out XUnit test results
       # WaitForWorkItemCompletion: true -- defaults to true
+      # condition: succeeded() - defaults to succeeded()
+      # continueOnError: false -- defaults to false
 ```
 
 ## The More Complex Case
