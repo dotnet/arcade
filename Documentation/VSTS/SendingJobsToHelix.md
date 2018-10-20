@@ -33,6 +33,8 @@ If you plan to send a payload (such as a work item) to Helix, you will need to b
 
 For these builds, you will need to add a variable group to your build which contains only the *BotAccount-dotnet-github-anon-kaonashi-bot-helix-token* secret from EngKeyVault. This will allow you to send telemetry to Helix while minimizing the risk of leaking secrets.
 
+In the dev.azure.com/dnceng/public project, you can use the `Helix Anonymous` variable group to provide this secret to your build
+
 ## The Simple Case
 
 The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `helix-publish` template in `eng/common/templates/steps/helix-publish.yml` from your `.vsts-ci.yml` file.
