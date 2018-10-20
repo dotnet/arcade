@@ -213,14 +213,19 @@ namespace Microsoft.DotNet.SignTool.Tests
             Dictionary<string, SignInfo> extensionsSignInfo,
             string[] expected,
             string[] expectedCopyFiles = null,
-            string[] dualCertificates = null)
+            string[] dualCertificates = null,
+            string[] expectedErrors = null,
+            string[] expectedWarnings = null)
         {
-            var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
+            var engine = new FakeBuildEngine();
+            var task = new SignToolTask { BuildEngine = engine };
             var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
 
             AssertEx.Equal(expected, signingInput.FilesToSign.Select(f => f.ToString()));
             AssertEx.Equal(expectedCopyFiles ?? Array.Empty<string>(), signingInput.FilesToCopy.Select(f => $"{f.Key} -> {f.Value}"));
-            Assert.False(task.Log.HasLoggedErrors);
+
+            AssertEx.Equal(expectedErrors ?? Array.Empty<string>(), engine.LogErrorEvents.Select(w => w.Message));
+            AssertEx.Equal(expectedWarnings ?? Array.Empty<string>(), engine.LogWarningEvents.Select(w => $"{w.Code}: {w.Message}"));
         }
 
         [Fact]
@@ -252,7 +257,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             // Default signing information
             var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest") }
             };
 
             // Overriding information
@@ -261,11 +266,11 @@ namespace Microsoft.DotNet.SignTool.Tests
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
-                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
             });
         }
@@ -282,7 +287,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             // Default signing information
             var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest") }
             };
 
             // Overriding information
@@ -294,10 +299,10 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
-                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'"
             });
         }
@@ -314,7 +319,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             // Default signing information
             var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest") }
             };
 
             // Overriding information
@@ -327,11 +332,18 @@ namespace Microsoft.DotNet.SignTool.Tests
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='OverriddenCertificate' StrongName='ArcadeStrongTest'",
-                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='OverriddenCertificate' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='OverriddenCertificate' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='OverriddenCertificate' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'"
+            },
+            expectedWarnings: new[]
+            {
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "CC1D99EE8C2F627E77D019E94B06EBB6D87A4D19E65DDAEF62B6137E49167BAF", "ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 
@@ -354,18 +366,22 @@ namespace Microsoft.DotNet.SignTool.Tests
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
             {
                 { new ExplicitCertificateKey("NativeLibrary.dll"), "OverriddenCertificate1" },
-                { new ExplicitCertificateKey("ProjectOne.dll"), "OverriddenCertificate2" }
+                { new ExplicitCertificateKey("ProjectOne.dll"), "3PartySHA2" }
             };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='OverriddenCertificate1'",
-                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='OverriddenCertificate2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='OverriddenCertificate2' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='OverriddenCertificate2' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='OverriddenCertificate2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'"
+            }, 
+            expectedWarnings: new[] 
+            {
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "9F8CCEE4CECF286C80916F13EAB8DF1FC6C9BED5F81E3AFF26747C008D265E5C", "ContainerOne.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 
@@ -387,12 +403,12 @@ namespace Microsoft.DotNet.SignTool.Tests
             // Overriding information
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
             {
-                { new ExplicitCertificateKey("EmptyPKT.dll"), "OverriddenCertificate" }
+                { new ExplicitCertificateKey("EmptyPKT.dll"), "3PartySHA2" }
             };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
-                "File 'EmptyPKT.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='OverriddenCertificate'",
+                "File 'EmptyPKT.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='3PartySHA2'",
             });
         }
 
@@ -407,14 +423,14 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
-                { "", new SignInfo("DefaultCertificate") }
+                { "", new SignInfo("3PartySHA2") }
             };
 
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>() { };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
-                "File 'EmptyPKT.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='DefaultCertificate'",
+                "File 'EmptyPKT.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='3PartySHA2'",
             });
         }
 
@@ -434,12 +450,34 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
             {
-                { new ExplicitCertificateKey("CustomTargetFrameworkAttribute.dll", targetFramework: ".NETFramework,Version=v2.0"), "OverriddenCertificate" }
+                { new ExplicitCertificateKey("CustomTargetFrameworkAttribute.dll", targetFramework: ".NETFramework,Version=v2.0"), "3PartySHA2" }
             };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
-                "File 'CustomTargetFrameworkAttribute.dll' TargetFramework='.NETFramework,Version=v2.0' Certificate='OverriddenCertificate'",
+                "File 'CustomTargetFrameworkAttribute.dll' TargetFramework='.NETFramework,Version=v2.0' Certificate='3PartySHA2'",
+            });
+        }
+
+        [Fact]
+        public void ThirdPartyLibraryMicrosoftCertificate()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("EmptyPKT.dll")
+            };
+
+            var strongNameSignInfo = new Dictionary<string, SignInfo>() {};
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>() { };
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'EmptyPKT.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
+            }, 
+            expectedWarnings: new[] 
+            {
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 
@@ -455,7 +493,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             // Default signing information
             var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest") }
             };
 
             // Overriding information
@@ -464,12 +502,12 @@ namespace Microsoft.DotNet.SignTool.Tests
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
-                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ContainerTwo.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ContainerTwo.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
                 "File 'NestedContainer.1.0.0.nupkg' Certificate='NuGet'"
             });
@@ -481,27 +519,27 @@ $@"
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "ProjectOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "9F8CCEE4CECF286C80916F13EAB8DF1FC6C9BED5F81E3AFF26747C008D265E5C", "ContainerTwo.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "ProjectOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "CC1D99EE8C2F627E77D019E94B06EBB6D87A4D19E65DDAEF62B6137E49167BAF", "ProjectOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "ProjectOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "9F8CCEE4CECF286C80916F13EAB8DF1FC6C9BED5F81E3AFF26747C008D265E5C", "ContainerOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
@@ -568,7 +606,7 @@ $@"
             // Default signing information
             var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest") }
             };
 
             // Overriding information
@@ -576,9 +614,9 @@ $@"
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
-                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'PackageWithRelationships.vsix' Certificate='VsixSHA2'",
                 "File 'test.vsix' Certificate='VsixSHA2'",
             },
@@ -591,15 +629,15 @@ $@"
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "ProjectOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "ProjectOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "ProjectOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
@@ -629,7 +667,7 @@ $@"
             // Default signing information
             var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest") }
             };
 
             // Overriding information
@@ -637,10 +675,10 @@ $@"
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
-                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'PackageWithRelationships.vsix' Certificate='VsixSHA2'",
-                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'test.vsix' Certificate='VsixSHA2'",
             });
 
@@ -648,15 +686,15 @@ $@"
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "ProjectOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "ProjectOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "ProjectOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
@@ -687,7 +725,7 @@ $@"
             // Default signing information
             var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest") }
             };
 
             // Overriding information
@@ -695,10 +733,10 @@ $@"
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
-                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'PackageWithRelationships.vsix' Certificate='VsixSHA2'",
-                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'test.vsix' Certificate='VsixSHA2'",
             },
             new[]
@@ -710,15 +748,15 @@ $@"
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "ProjectOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "ProjectOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "ProjectOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
@@ -747,7 +785,7 @@ $@"
             // Default signing information
             var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest") }
             };
 
             // Overriding information
@@ -755,7 +793,7 @@ $@"
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
-                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'PackageWithRelationships.vsix' Certificate='VsixSHA2'"
             });
 
@@ -763,7 +801,7 @@ $@"
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "ProjectOne.dll")}"">
-  <Authenticode>ArcadeCertTest</Authenticode>
+  <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
@@ -950,6 +988,14 @@ $@"
                 "File 'test.vsix' Certificate='VSIXCertificate'",
                 "File 'Simple.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='DLLCertificate2'",
                 "File 'Simple.nupkg' Certificate='NUPKGCertificate'",
+            }, 
+            expectedWarnings: new[]
+            {
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'DLLCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate3'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate4'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate5'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "DCD5A867480FEE469A37FF890446F4A34B7770EDDE4DD939A0313F1D3B3AAF99", "Simple.dll")}' with Microsoft certificate 'DLLCertificate2'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 
