@@ -271,10 +271,10 @@ namespace Microsoft.DotNet.SignTool
             var pktBytes = assemblyName.GetPublicKeyToken();
 
             publicKeyToken = (pktBytes == null || pktBytes.Length == 0) ? string.Empty : string.Join("", pktBytes.Select(b => b.ToString("x2")));
-            GetTargetFrameworkName(fullPath, out targetFramework, out copyright);
+            GetTargetFrameworkAndCopyright(fullPath, out targetFramework, out copyright);
         }
 
-        private static void GetTargetFrameworkName(string filePath, out string targetFramework, out string copyright)
+        private static void GetTargetFrameworkAndCopyright(string filePath, out string targetFramework, out string copyright)
         {
             targetFramework = string.Empty;
             copyright = string.Empty;
