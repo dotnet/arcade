@@ -50,6 +50,9 @@
       Language="$(Language)"
       ResourceFile="%(EmbeddedResourceSG.FullPath)"
       ResourceName="%(EmbeddedResourceSG.ManifestResourceName)"
+      ResourceClassName="%(EmbeddedResourceSG.ClassName)"
+      OmitGetResourceString="$(GenerateResxSourceOmitGetResourceString)"
+      IncludeDefaultValues="$(GenerateResxSourceIncludeDefaultValues)"
       OutputPath="%(EmbeddedResourceSG.SourceOutputPath)" />
   </Target>
 
@@ -63,7 +66,8 @@
     <ItemGroup>
       <EmbeddedResourceSG Include="@(EmbeddedResource)" Condition="'%(EmbeddedResource.GenerateSource)' == 'true' and '%(EmbeddedResource.XlfLanguage)' == ''" />
       <EmbeddedResourceSG Condition="'$(Language)' != 'F#'">
-        <SourceOutputPath>$(IntermediateOutputPath)%(EmbeddedResourceSG.ManifestResourceName).$(_EmbeddedResourceSourceExtension)</SourceOutputPath>
+        <SourceOutputPath Condition="'%(EmbeddedResourceSG.SourceOutputPath)' == '' AND '%(EmbeddedResourceSG.ClassName)' != ''">$(IntermediateOutputPath)%(EmbeddedResourceSG.ClassName).$(_EmbeddedResourceSourceExtension)</SourceOutputPath>
+        <SourceOutputPath Condition="'%(EmbeddedResourceSG.SourceOutputPath)' == '' AND '%(EmbeddedResourceSG.ClassName)' == ''">$(IntermediateOutputPath)%(EmbeddedResourceSG.ManifestResourceName).$(_EmbeddedResourceSourceExtension)</SourceOutputPath>
       </EmbeddedResourceSG>
     </ItemGroup>
   </Target>
