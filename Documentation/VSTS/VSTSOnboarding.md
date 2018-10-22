@@ -176,6 +176,15 @@ For a list of known VSTS issues we are tracking, please go [here](https://dev.az
 
 - "Resource not authorized" or "The service endpoint does not exist or has not been authorized for use"
 
+  1. Push your changes to a branch of the dnceng repository (not your fork)
+  2. Edit the build definition
+  3. Take note of the "Default branch for manual and scheduled builds"
+  4. Change "Default branch for manual and scheduled builds" to the branch you just pushed
+  5. Save the build definition.  This will force reauthorization of the "default" branch resoures.
+  6. Edit the build definition
+  7. Change the "default branch for manual and scheduled builds" back to the value you noted in step 3.
+  8. Save the build definition
+  9. Now the resources should be authorized and you can submit your changes via a PR or direct push
 
 ##### Unauthorized agent pools
 
