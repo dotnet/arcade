@@ -321,7 +321,7 @@ namespace Microsoft.DotNet.DarcLib
             }
         }
 
-        public async Task<HashSet<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path)
+        public async Task<List<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path)
         {
             path = path.Replace('\\', '/');
             path = path.TrimStart('/').TrimEnd('/');
@@ -343,7 +343,7 @@ namespace Microsoft.DotNet.DarcLib
                                 blob.Content,
                                 blob.Encoding == EncodingType.Base64 ? "base64" : "utf-8") {Mode = treeItem.Mode};
                         }));
-            return new HashSet<GitFile>(files.ToList());
+            return new List<GitFile>(files.ToList());
         }
 
         public async Task<string> GetFileContentsAsync(string ownerAndRepo, string path)

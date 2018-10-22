@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.DarcLib
             throw new NotImplementedException();
         }
 
-        public Task<HashSet<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path)
+        public Task<List<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path)
         {
             throw new NotImplementedException();
         }

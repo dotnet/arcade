@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.DarcLib
 
         Task CreateOrUpdatePullRequestDarcCommentAsync(string pullRequestUrl, string message);
 
-        Task<HashSet<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path);
+        Task<List<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path);
 
         Task<string> GetFileContentsAsync(string ownerAndRepo, string path);
 
