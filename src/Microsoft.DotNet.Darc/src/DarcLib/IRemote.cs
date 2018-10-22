@@ -105,5 +105,30 @@ namespace Microsoft.DotNet.DarcLib
             string author = null);
 
         Task<IList<Commit>> GetPullRequestCommitsAsync(string pullRequestUrl);
+
+        /// <summary>
+        /// Retrieve the common script files from a remote source.
+        /// </summary>
+        /// <param name="repoUri">URI of repo containing script files.</param>
+        /// <param name="commit">Common to get script files at.</param>
+        /// <returns>Script files.</returns>
+        Task<List<GitFile>> GetCommonScriptFilesAsync(string repoUri, string commit);
+
+        /// <summary>
+        ///     Retrieve a specific channel by name.
+        /// </summary>
+        /// <param name="channel">Channel name.</param>
+        /// <returns>Channel or null if not found.</returns>
+        Task<Channel> GetChannelAsync(string channel);
+
+        /// <summary>
+        ///     Retrieve the latest build of a repository on a specific channel.
+        /// </summary>
+        /// <param name="repoUri">URI of repository to obtain a build for.</param>
+        /// <param name="channelId">Channel the build was applied to.</param>
+        /// <returns>Latest build of <paramref name="repoUri"/> on channel <paramref name="channelId"/>,
+        /// or null if there is no latest.</returns>
+        /// <remarks>The build's assets are returned</remarks>
+        Task<Build> GetLatestBuildAsync(string repoUri, int channelId);
     }
 }
