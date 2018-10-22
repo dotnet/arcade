@@ -343,7 +343,7 @@ namespace Microsoft.DotNet.DarcLib
                                 blob.Content,
                                 blob.Encoding == EncodingType.Base64 ? "base64" : "utf-8") {Mode = treeItem.Mode};
                         }));
-            return new List<GitFile>(files.ToList());
+            return files.ToList();
         }
 
         public async Task<string> GetFileContentsAsync(string ownerAndRepo, string path)
