@@ -18,16 +18,20 @@ phases:
           inputs:
             artifactName: AssetManifests
             downloadPath: '$(Build.StagingDirectory)/Download'
-          condition: succeeded()
+          condition: ${{ parameters.condition }}
+          continueOnError: ${{ parameters.continueOnError }}
         - task: AzureKeyVault@1
           inputs:
             azureSubscription: 'DotNet-Engineering-Services_KeyVault'
             KeyVaultName: EngKeyVault
             SecretsFilter: 'MaestroAccessToken'
-          condition: succeeded()
+          condition: ${{ parameters.condition }}
+          continueOnError: ${{ parameters.continueOnError }}
         - script: eng\common\publishbuildassets.cmd
             /p:ManifestsPath='$(Build.StagingDirectory)/Download/AssetManifests'
             /p:BuildAssetRegistryToken=$(MaestroAccessToken)
             /p:MaestroApiEndpoint=https://maestro-prod.westus2.cloudapp.azure.com
             /p:Configuration=$(config)
           displayName: Publish Build Assets
+          condition: ${{ parameters.condition }}
+          continueOnError: ${{ parameters.continueOnError }}
