@@ -1,7 +1,7 @@
 parameters:
   dependsOn: ''
   queue: {}
-  configuration: ''
+  configuration: 'Debug'
 phases:
   - phase: Asset_Registry_Publish
     displayName: Publish to Build Asset Registry
@@ -23,16 +23,9 @@ phases:
             KeyVaultName: EngKeyVault
             SecretsFilter: 'MaestroAccessToken'
           condition: succeeded()
-        - ${{ if ne(parameters.configuration, '') }}:
-          - script: eng\common\publishbuildassets.cmd
+        - script: eng\common\publishbuildassets.cmd
               /p:ManifestsPath='$(Build.StagingDirectory)/Download/AssetManifests'
               /p:BuildAssetRegistryToken=$(MaestroAccessToken)
               /p:MaestroApiEndpoint=https://maestro-prod.westus2.cloudapp.azure.com
               /p:Configuration=$(config)
-            displayName: Publish Build Assets
-        - ${{ if eq(parameters.configuration, '') }}:
-          - script: eng\common\publishbuildassets.cmd
-              /p:ManifestsPath='$(Build.StagingDirectory)/Download/AssetManifests'
-              /p:BuildAssetRegistryToken=$(MaestroAccessToken)
-              /p:MaestroApiEndpoint=https://maestro-prod.westus2.cloudapp.azure.com
             displayName: Publish Build Assets
