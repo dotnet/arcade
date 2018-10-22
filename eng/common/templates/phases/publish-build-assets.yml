@@ -26,10 +26,8 @@ phases:
             SecretsFilter: 'MaestroAccessToken'
           condition: succeeded()
         - script: eng\common\publishbuildassets.cmd
-              /p:ManifestsPath='$(Build.StagingDirectory)/Download/AssetManifests'
-              /p:BuildAssetRegistryToken=$(MaestroAccessToken)
-              /p:MaestroApiEndpoint=https://maestro-prod.westus2.cloudapp.azure.com
-              /p:Configuration=$(config)
-            displayName: Publish Build Assets
-          condition: ${{ parameters.condition }}
-          continueOnError: ${{ parameters.continueOnError }}
+            /p:ManifestsPath='$(Build.StagingDirectory)/Download/AssetManifests'
+            /p:BuildAssetRegistryToken=$(MaestroAccessToken)
+            /p:MaestroApiEndpoint=https://maestro-prod.westus2.cloudapp.azure.com
+            /p:Configuration=$(config)
+          displayName: Publish Build Assets
