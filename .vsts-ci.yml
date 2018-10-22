@@ -19,7 +19,7 @@ phases:
         # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
         # Will eventually change this to two BYOC pools.
         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-          name: dotnet-external-temp
+          name: dotnet-external-temp-staging
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           name: dotnet-internal-temp
         parallel: 2
@@ -47,7 +47,7 @@ phases:
       queue:
         container: LinuxContainer
         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-          name: dnceng-linux-external-temp
+          name: dnceng-linux-external-temp-staging
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           name: dnceng-linux-internal-temp
         parallel: 2
