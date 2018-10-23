@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 
 namespace Microsoft.DotNet.DarcLib.Helpers
 {
-    internal static class LocalHelpers
+    public static class LocalHelpers
     {
         public static string GetEditorPath(ILogger logger)
         {

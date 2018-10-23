@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.DotNet.Darc.Models;
+using Microsoft.DotNet.DarcLib.Helpers;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -22,8 +23,8 @@ namespace Microsoft.DotNet.Darc.Helpers
 
         public UxManager(ILogger logger)
         {
-            _editorPath = LocalCommands.GetEditorPath(logger);
-            _gitDir = LocalCommands.GetGitDir(logger);
+            _editorPath = LocalHelpers.GetEditorPath(logger);
+            _gitDir = LocalHelpers.GetGitDir(logger);
             _logger = logger;
         }
 

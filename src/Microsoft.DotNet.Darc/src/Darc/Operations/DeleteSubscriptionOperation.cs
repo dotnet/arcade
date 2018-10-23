@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Darc.Operations
 
         public override async Task<int> ExecuteAsync()
         {
-            DarcSettings darcSettings = LocalCommands.GetSettings(_options, Logger);
+            DarcSettings darcSettings = LocalSettings.GetDarcSettings(_options, Logger);
             // No need to set up a git type or PAT here.
             Remote remote = new Remote(darcSettings, Logger);
 

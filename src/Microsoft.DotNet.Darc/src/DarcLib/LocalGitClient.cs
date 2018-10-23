@@ -9,6 +9,7 @@ using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.DotNet.DarcLib.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.DarcLib
@@ -170,7 +171,7 @@ namespace Microsoft.DotNet.DarcLib
             const string crlf = "\r\n";
             const string lf = "\n";
             // Check gitAttributes to determine whether the file has eof handling set.
-            string eofAttr = ExecuteLocalGitCommand($"check-attr eol -- {filePath}", _logger);
+            string eofAttr = LocalHelpers.ExecuteCommand("git", $"check-attr eol -- {filePath}", _logger);
             if (eofAttr.Contains("eol: unspecified") || eofAttr.Contains("eol: auto"))
             {
                 if (Environment.NewLine != crlf)

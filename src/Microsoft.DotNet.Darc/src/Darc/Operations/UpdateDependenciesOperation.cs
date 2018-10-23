@@ -5,6 +5,7 @@
 using Microsoft.DotNet.Darc.Helpers;
 using Microsoft.DotNet.Darc.Options;
 using Microsoft.DotNet.DarcLib;
+using Microsoft.DotNet.DarcLib.Helpers;
 using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.Extensions.Logging;
 using System;
@@ -33,15 +34,15 @@ namespace Microsoft.DotNet.Darc.Operations
         {
             try
             {
-                DarcSettings darcSettings = LocalCommands.GetSettings(_options, Logger);
+                DarcSettings darcSettings = LocalSettings.GetDarcSettings(_options, Logger);
                 // TODO: PAT only used for pulling the arcade eng/common dir,
                 // so hardcoded to GitHub PAT right now. Must be more generic in the future.
                 darcSettings.GitType = GitRepoType.GitHub;
-                LocalSettings localSettings = LocalSettings.LoadSettings();
+                LocalSettings localSettings = LocalSettings.LoadSettingsFile();
                 darcSettings.PersonalAccessToken = localSettings.GitHubToken;
 
                 Remote remote = new Remote(darcSettings, Logger);
-                Local local = new Local(LocalCommands.GetGitDir(Logger), Logger);
+                Local local = new Local(LocalHelpers.GetGitDir(Logger), Logger);
 
                 // Start channel query.
                 var channel = remote.GetChannelAsync(_options.Channel);
