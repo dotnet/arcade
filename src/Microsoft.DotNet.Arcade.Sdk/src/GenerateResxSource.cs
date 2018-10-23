@@ -30,23 +30,23 @@ namespace Microsoft.DotNet.Arcade.Sdk
         public string ResourceFile { get; set; }
 
         /// <summary>
-        /// Name of te embedded resources to generate accessor class for.
+        /// Name of the embedded resources to generate accessor class for.
         /// </summary>
         [Required]
         public string ResourceName { get; set; }
 
         /// <summary>
-        /// Optionally, a fully qualified type name for the generated Resources accessor class.  Defaults to ResourceName if unspecified.
+        /// Optionally, a namespace.type name for the generated Resources accessor class.  Defaults to ResourceName if unspecified.
         /// </summary>
         public string ResourceClassName { get; set; }
 
         /// <summary>
-        /// If set to true the GetString is not included in the generated class and must be specified in a seperate source file.
+        /// If set to true the GetResourceString method is not included in the generated class and must be specified in a separate source file.
         /// </summary>
         public bool OmitGetResourceString { get; set; }
 
         /// <summary>
-        /// If set to true calls to GetString recieve a default resource string value.
+        /// If set to true calls to GetResourceString receive a default resource string value.
         /// </summary>
         public bool IncludeDefaultValues { get; set; }
 
@@ -189,7 +189,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                         break;
 
                     case Lang.VisualBasic:
-                        getStringMethod =$@"<Global.System.Runtime.CompilerServices.MethodImpl(Global.System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)>
+                        getStringMethod = $@"<Global.System.Runtime.CompilerServices.MethodImpl(Global.System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)>
 {memberIndent}Friend Shared Function GetResourceString(ByVal resourceKey As String, Optional ByVal defaultValue As String = null) As String
 {memberIndent}  Get
 {memberIndent}    Return ResourceManager.GetString(resourceKey, Culture)
@@ -237,7 +237,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
             else
             {
-                // resource name differs from the accesss class, need a type for specifying the resources
+                // resource name differs from the access class, need a type for specifying the resources
                 // this empty type must remain as it is required by the .NETNative toolchain for locating resources
                 // once assemblies have been merged into the application
                 resourceTypeName = ResourceName;
