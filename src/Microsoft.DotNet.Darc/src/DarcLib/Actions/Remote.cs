@@ -373,12 +373,12 @@ namespace Microsoft.DotNet.DarcLib
             if (arcadeItem != null && repoUri != arcadeItem.RepoUri)
             {
                 // Files in arcade repository
-                List<GitFile> engCommonFiles = await GetScriptFilesAsync(arcadeItem.RepoUri, arcadeItem.Commit);
+                List<GitFile> engCommonFiles = await GetCommonScriptFilesAsync(arcadeItem.RepoUri, arcadeItem.Commit);
                 filesToCommit.AddRange(engCommonFiles);
 
                 // Files in the target repo
                 string latestCommit = await _gitClient.GetLastCommitShaAsync(_gitClient.GetOwnerAndRepoFromRepoUri(repoUri), branch);
-                List<GitFile> targetEngCommonFiles = await GetScriptFilesAsync(repoUri, latestCommit);
+                List<GitFile> targetEngCommonFiles = await GetCommonScriptFilesAsync(repoUri, latestCommit);
 
                 foreach (GitFile file in targetEngCommonFiles)
                 {
