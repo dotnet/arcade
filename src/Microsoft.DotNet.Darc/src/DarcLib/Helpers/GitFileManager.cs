@@ -121,7 +121,8 @@ namespace Microsoft.DotNet.DarcLib
 
             foreach (DependencyDetail itemToUpdate in itemsToUpdate)
             {
-                XmlNodeList versionList = versionDetails.SelectNodes($"//Dependency[@Name='{itemToUpdate.Name}']");
+                // Use a case-insensitive update.
+                XmlNodeList versionList = versionDetails.SelectNodes($"//Dependency[translate(@Name,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='{itemToUpdate.Name.ToLower()}']");
 
                 if (versionList.Count != 1)
                 {
@@ -135,9 +136,9 @@ namespace Microsoft.DotNet.DarcLib
                     }
                 }
 
-                XmlNode nodeToUpdate =
-                    versionDetails.DocumentElement.SelectSingleNode($"//Dependency[@Name='{itemToUpdate.Name}']");
+                XmlNode nodeToUpdate = versionList.Item(0);
                 nodeToUpdate.Attributes["Version"].Value = itemToUpdate.Version;
+                nodeToUpdate.Attributes["Name"].Value = itemToUpdate.Name;
                 nodeToUpdate.SelectSingleNode("Sha").InnerText = itemToUpdate.Commit;
                 nodeToUpdate.SelectSingleNode("Uri").InnerText = itemToUpdate.RepoUri;
                 UpdateVersionFiles(versionProps, globalJson, itemToUpdate);
