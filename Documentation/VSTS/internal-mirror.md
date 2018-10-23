@@ -17,7 +17,7 @@ Public code should be mirrored to dev.azure.com/dnceng/internal (see [VSTS Guida
         "https://github.com/Microsoft/msbuild/blob/release/**/*",
         "https://github.com/{org}/{repo}/blob/{branch}/**/*" // <-- insert your URI here
       ],
-      "action": "github-ddnceng-vsts-mirror",
+      "action": "github-dnceng-vsts-mirror",
       "actionArguments": {
 "vsoSourceBranch": "master",
 ```
