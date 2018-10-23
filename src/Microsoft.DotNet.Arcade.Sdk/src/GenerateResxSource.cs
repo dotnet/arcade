@@ -17,14 +17,38 @@ namespace Microsoft.DotNet.Arcade.Sdk
     {
         private const int maxDocCommentLength = 256;
 
+        /// <summary>
+        /// Language of source file to generate.  Supported languages: CSharp, VisualBasic
+        /// </summary>
         [Required]
         public string Language { get; set; }
 
+        /// <summary>
+        /// Resources (resx) file.
+        /// </summary>
         [Required]
         public string ResourceFile { get; set; }
 
+        /// <summary>
+        /// Name of the embedded resources to generate accessor class for.
+        /// </summary>
         [Required]
         public string ResourceName { get; set; }
+
+        /// <summary>
+        /// Optionally, a namespace.type name for the generated Resources accessor class.  Defaults to ResourceName if unspecified.
+        /// </summary>
+        public string ResourceClassName { get; set; }
+
+        /// <summary>
+        /// If set to true the GetResourceString method is not included in the generated class and must be specified in a separate source file.
+        /// </summary>
+        public bool OmitGetResourceString { get; set; }
+
+        /// <summary>
+        /// If set to true calls to GetResourceString receive a default resource string value.
+        /// </summary>
+        public bool IncludeDefaultValues { get; set; }
 
         [Required]
         public string OutputPath { get; set; }
@@ -66,17 +90,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 return false;
             }
 
-            string[] nameParts = ResourceName.Split('.');
-            if (nameParts.Length == 1)
-            {
-                namespaceName = null;
-                className = nameParts[0];
-            }
-            else
-            {
-                namespaceName = string.Join(".", nameParts, 0, nameParts.Length - 1);
-                className = nameParts.Last();
-            }
+            string resourceAccessName = string.IsNullOrEmpty(ResourceClassName) ? ResourceName : ResourceClassName;
+            SplitName(resourceAccessName, out namespaceName, out className);
 
             string docCommentStart;
             Lang language;
@@ -138,16 +153,18 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                 string identifier = IsLetterChar(CharUnicodeInfo.GetUnicodeCategory(name[0])) ? name : "_" + name;
 
+                string defaultValue = IncludeDefaultValues ? ", " + CreateStringLiteral(value, language) : string.Empty;
+
                 switch (language)
                 {
                     case Lang.CSharp:
-                        strings.AppendLine($"{memberIndent}internal static string {identifier} => ResourceManager.GetString(\"{name}\", Culture);");
+                        strings.AppendLine($"{memberIndent}internal static string {identifier} => GetResourceString(\"{name}\"{defaultValue});");
                         break;
 
                     case Lang.VisualBasic:
                         strings.AppendLine($"{memberIndent}Friend Shared ReadOnly Property {identifier} As String");
                         strings.AppendLine($"{memberIndent}  Get");
-                        strings.AppendLine($"{memberIndent}    Return ResourceManager.GetString(\"{name}\", Culture)");
+                        strings.AppendLine($"{memberIndent}    Return GetResourceString(\"{name}\"{defaultValue})");
                         strings.AppendLine($"{memberIndent}  End Get");
                         strings.AppendLine($"{memberIndent}End Property");
                         break;
@@ -156,6 +173,35 @@ namespace Microsoft.DotNet.Arcade.Sdk
                         throw new InvalidOperationException();
                 }
             }
+
+            string getStringMethod;
+            if (OmitGetResourceString)
+            {
+                getStringMethod = null;
+            }
+            else
+            {
+                switch (language)
+                {
+                    case Lang.CSharp:
+                        getStringMethod = $@"{memberIndent}[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+{memberIndent}internal static string GetResourceString(string resourceKey, string defaultValue = null) =>  ResourceManager.GetString(resourceKey, Culture);";
+                        break;
+
+                    case Lang.VisualBasic:
+                        getStringMethod = $@"<Global.System.Runtime.CompilerServices.MethodImpl(Global.System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)>
+{memberIndent}Friend Shared Function GetResourceString(ByVal resourceKey As String, Optional ByVal defaultValue As String = null) As String
+{memberIndent}  Get
+{memberIndent}    Return ResourceManager.GetString(resourceKey, Culture)
+{memberIndent}  End Get
+{memberIndent}End Function";
+                        break;
+
+                    default:
+                        throw new InvalidOperationException();
+                }
+            }
+
 
             string namespaceStart, namespaceEnd;
             if (namespaceName == null)
@@ -181,6 +227,55 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 }
             }
 
+            string resourceTypeName;
+            string resourceTypeDefinition;
+            if (string.IsNullOrEmpty(ResourceClassName) || ResourceName == ResourceClassName)
+            {
+                // resource name is same as accessor, no need for a second type.
+                resourceTypeName = className;
+                resourceTypeDefinition = null;
+            }
+            else
+            {
+                // resource name differs from the access class, need a type for specifying the resources
+                // this empty type must remain as it is required by the .NETNative toolchain for locating resources
+                // once assemblies have been merged into the application
+                resourceTypeName = ResourceName;
+
+                string resourceNamespaceName;
+                string resourceClassName;
+                SplitName(resourceTypeName, out resourceNamespaceName, out resourceClassName);
+                string resourceClassIndent = (resourceNamespaceName == null ? "" : "    ");
+
+                switch (language)
+                {
+                    case Lang.CSharp:
+                        resourceTypeDefinition = $"{resourceClassIndent}internal static class {resourceClassName} {{ }}";
+                        if (resourceNamespaceName != null)
+                        {
+                            resourceTypeDefinition = $@"namespace {resourceNamespaceName}
+{{
+{resourceTypeDefinition}
+}}";
+                        }
+                        break;
+
+                    case Lang.VisualBasic:
+                        resourceTypeDefinition = $@"{resourceClassIndent}Friend Class {resourceClassName}
+{resourceClassIndent}End Class";
+                        if (resourceNamespaceName != null)
+                        {
+                            resourceTypeDefinition = $@"Namespace {resourceNamespaceName}
+{resourceTypeDefinition}
+End Namespace";
+                        }
+                        break;
+
+                    default:
+                        throw new InvalidOperationException();
+                }
+            }
+
             string result;
             switch (language)
             {
@@ -188,11 +283,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     result = $@"// <auto-generated>
 using System.Reflection;
 
+{resourceTypeDefinition}
 {namespaceStart}
-{classIndent}internal static class {className}
+{classIndent}internal static partial class {className}
 {classIndent}{{
 {memberIndent}internal static global::System.Globalization.CultureInfo Culture {{ get; set; }}
-{memberIndent}internal static global::System.Resources.ResourceManager ResourceManager {{ get; }} = new global::System.Resources.ResourceManager(""{ResourceName}"", typeof({className}).GetTypeInfo().Assembly);
+{memberIndent}internal static global::System.Resources.ResourceManager ResourceManager {{ get; }} = new global::System.Resources.ResourceManager(typeof({resourceTypeName}));
+
+{getStringMethod}
 
 {strings}
 {classIndent}}}
@@ -204,13 +302,16 @@ using System.Reflection;
                     result = $@"' <auto-generated>
 Imports System.Reflection
 
+{resourceTypeDefinition}
 {namespaceStart}
-{classIndent}Friend Class {className}
+{classIndent}Friend Partial Class {className}
 {memberIndent}Private Sub New
 {memberIndent}End Sub
 {memberIndent}
 {memberIndent}Friend Shared Property Culture As Global.System.Globalization.CultureInfo
-{memberIndent}Friend Shared ReadOnly Property ResourceManager As New Global.System.Resources.ResourceManager(""{ResourceName}"", GetType({className}).GetTypeInfo().Assembly)
+{memberIndent}Friend Shared ReadOnly Property ResourceManager As New Global.System.Resources.ResourceManager(GetType({resourceTypeName}))
+
+{getStringMethod}
 
 {strings}
 {classIndent}End Class
@@ -224,6 +325,43 @@ Imports System.Reflection
 
             File.WriteAllText(OutputPath, result);
             return true;
+        }
+
+        private static string CreateStringLiteral(string original, Lang lang)
+        {
+            StringBuilder stringLiteral = new StringBuilder(original.Length + 3);
+            if (lang == Lang.CSharp)
+            {
+                stringLiteral.Append('@');
+            }
+            stringLiteral.Append('\"');
+            for (var i = 0; i < original.Length; i++)
+            {
+                // duplicate '"' for VB and C#
+                if (original[i] == '\"')
+                {
+                    stringLiteral.Append("\"");
+                }
+                stringLiteral.Append(original[i]);
+            }
+            stringLiteral.Append('\"');
+
+            return stringLiteral.ToString();
+        }
+
+        private static void SplitName(string fullName, out string namespaceName, out string className)
+        {
+            int lastDot = fullName.LastIndexOf('.');
+            if (lastDot == -1)
+            {
+                namespaceName = null;
+                className = fullName;
+            }
+            else
+            {
+                namespaceName = fullName.Substring(0, lastDot);
+                className = fullName.Substring(lastDot + 1);
+            }
         }
     }
 }
