@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -129,7 +130,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             foreach (GitFile file in filesToCommit)
             {
-                string fullPath = System.IO.Path.Combine(repoUri, file.FilePath);
+                string fullPath = Path.Combine(repoUri, file.FilePath);
                 using (var streamWriter = new StreamWriter(fullPath))
                 {
                     string finalContent;
@@ -140,7 +141,7 @@ namespace Microsoft.DotNet.DarcLib
                             break;
                         case "base64":
                             byte[] bytes = Convert.FromBase64String(file.Content);
-                            finalContent = System.Text.Encoding.UTF8.GetString(bytes);
+                            finalContent = Encoding.UTF8.GetString(bytes);
                             break;
                         default:
                             throw new DarcException($"Unknown file content encoding {file.ContentEncoding}");
@@ -199,46 +200,6 @@ namespace Microsoft.DotNet.DarcLib
             }
             return content;
         }
-
-        private string ExecuteLocalGitCommand(string arguments, ILogger logger)
-        {
-            string output = null;
-
-            try
-            {
-                ProcessStartInfo processInfo = new ProcessStartInfo
-                {
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    FileName = "git",
-                    CreateNoWindow = true,
-                    WorkingDirectory = Environment.CurrentDirectory
-                };
-
-                using (Process process = new Process())
-                {
-                    process.StartInfo = processInfo;
-                    process.StartInfo.Arguments = arguments;
-                    process.Start();
-
-                    output = process.StandardOutput.ReadToEnd().Trim();
-
-                    process.WaitForExit();
-                }
-
-                if (string.IsNullOrEmpty(output))
-                {
-                    logger.LogError($"There was an error while running git.exe {arguments}");
-                }
-            }
-            catch (Exception exc)
-            {
-                throw new DarcException($"Something failed while trying to execute 'git {arguments}'.", exc);
-            }
-
-            return output;
-        }
-
 
         public Task<IEnumerable<int>> SearchPullRequestsAsync(
             string repoUri,
