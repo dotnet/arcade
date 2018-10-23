@@ -748,7 +748,10 @@ namespace Microsoft.DotNet.DarcLib
 
         /// <summary>
         /// This approach was based on https://github.com/octokit/octokit.net/issues/1610 which suggests
-        /// to clone the base tree without the files to be removed.
+        /// to clone the base tree without the files to be removed. If when getting the recursive tree it is
+        /// truncated, instead we iteratively walk the tree attempting to get the files on each tree
+        /// object. If a given tree object is truncated we return the original base tree sha. Calling GetRecursive
+        /// is way faster than the iterative approach.
         /// </summary>
         /// <param name="owner">Repo owner.</param>
         /// <param name="repo">The repo.</param>
@@ -757,27 +760,82 @@ namespace Microsoft.DotNet.DarcLib
         /// <returns>The new tree sha.</returns>
         private async Task<string> RemoveFilesFromTree(string owner, string repo, string baseTreeSha, IEnumerable<GitFile> filesToRemove)
         {
+            NewTree newTree = new NewTree();
             TreeResponse rootTree = await Client.Git.Tree.GetRecursive(owner, repo, baseTreeSha);
 
-            NewTree newTree = new NewTree();
-            rootTree.Tree.Where(tree => tree.Type != TreeType.Tree)
-                .Select(tree => new NewTreeItem
+            if (rootTree.Truncated)
+            {
+                newTree = await ConstructNewTreeAsync(owner, repo, baseTreeSha, filesToRemove);
+
+                if (newTree == null)
                 {
-                    Path = tree.Path,
-                    Mode = tree.Mode,
-                    Type = tree.Type.Value,
-                    Sha = tree.Sha
-                }).ToList()
-                    .ForEach(tree =>
+                    _logger.LogWarning("One of the trees was truncated and not all the files were cloned. Not possible to remove files from tree...");
+                    return baseTreeSha;
+                }
+            }
+            else
+            {
+                rootTree.Tree.Where(tree => tree.Type != TreeType.Tree)
+                    .Select(tree => new NewTreeItem
                     {
-                        if (!filesToRemove.Any(f => f.FilePath == tree.Path))
+                        Path = tree.Path,
+                        Mode = tree.Mode,
+                        Type = tree.Type.Value,
+                        Sha = tree.Sha
+                    }).ToList()
+                        .ForEach(tree =>
                         {
-                            newTree.Tree.Add(tree);
-                        }
-                    });
+                            if (!filesToRemove.Any(f => f.FilePath == tree.Path))
+                            {
+                                newTree.Tree.Add(tree);
+                            }
+                        });
+            }
 
             TreeResponse createdTree = await Client.Git.Tree.Create(owner, repo, newTree);
             return createdTree.Sha;
+        }
+
+        private async Task<NewTree> ConstructNewTreeAsync(string owner, string repo, string treeSha, IEnumerable<GitFile> filesToRemove)
+        {
+            NewTree newTree = new NewTree();
+            Queue<(string, string)> treeShas = new Queue<(string, string)>();
+            treeShas.Enqueue((treeSha, string.Empty));
+
+            while (treeShas.Count > 0)
+            {
+                (string sha, string path) = treeShas.Dequeue();
+
+                TreeResponse rootTree = await Client.Git.Tree.Get(owner, repo, sha);
+
+                if (rootTree.Truncated)
+                {
+                    return null;
+                }
+
+                rootTree.Tree.Where(tree => tree.Type != TreeType.Tree)
+                    .Select(tree => new NewTreeItem
+                    {
+                        Path = string.IsNullOrEmpty(path) ? tree.Path : $"{path}/{tree.Path}",
+                        Mode = tree.Mode,
+                        Type = tree.Type.Value,
+                        Sha = tree.Sha
+                    }).ToList()
+                        .ForEach(tree =>
+                        {
+                            if (!filesToRemove.Any(f => f.FilePath == tree.Path))
+                            {
+                                newTree.Tree.Add(tree);
+                            }
+                        });
+
+                foreach (TreeItem treeItem in rootTree.Tree.Where(tree => tree.Type == TreeType.Tree))
+                {
+                    treeShas.Enqueue((treeItem.Sha, string.IsNullOrEmpty(path) ? treeItem.Path : $"{path}/{treeItem.Path}"));
+                }
+            }
+
+            return newTree;
         }
     }
 }
