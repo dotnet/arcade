@@ -49,7 +49,7 @@ You will need to create a script file to run your tests. In the future, it will 
       HelixAccessToken: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token)
       # HelixPreCommands: '' -- any commands that you would like to run prior to running your job
       # HelixPostCommands: '' -- any commands that you would like to run after running your job
-      WorkItemDirectory: $(Build.SourcesDirectory)/ # specify the directory where your tests live here
+      WorkItemDirectory: $(Build.SourcesDirectory)/artifacts/bin/test/$(_BuildConfig)/netcoreapp2.0 # specify the directory where your tests live here
       WorkItemCommand: # specify the command to run your tests
       EnableXUnitReporter: true # required for reporting out xUnit test results to Mission Control
       # WaitForWorkItemCompletion: true -- defaults to true
