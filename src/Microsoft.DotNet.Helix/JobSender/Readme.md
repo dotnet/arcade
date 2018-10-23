@@ -37,7 +37,7 @@ var job = await api.Job.Define()
     .AttachToJob()
   .SendAsync();
 
-Console.WriteLine($"Job '{job.Name}' created.");
+Console.WriteLine($"Job '{job.CorrelationId}' created.");
 ```
 
 ### Using A Payload
@@ -55,7 +55,7 @@ var job = await api.Job.Define()
     .AttachToJob()
   .SendAsync();
 
-Console.WriteLine($"Job '{job.Name}' created.");
+Console.WriteLine($"Job '{job.CorrelationId}' created.");
 ```
 
 ### Using a payload uri
@@ -73,6 +73,6 @@ var job = await api.Job.Define()
     .AttachToJob()
   .SendAsync();
 
-Console.WriteLine($"Job '{job.Name}' created.");
+Console.WriteLine($"Job '{job.CorrelationId}' created.");
 ```
 
