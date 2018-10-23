@@ -8,7 +8,6 @@ Public code should be mirrored to dev.azure.com/dnceng/internal (see [VSTS Guida
 3. Add data for repo and branches that you want mirrored to the [subscriptions json](https://github.com/dotnet/versions/blob/master/Maestro/subscriptions.json). Specifically, add a URI of the pattern `"https://github.com/{org}/{repo}/blob/{branch}/**/*"` for your GitHub repository to the `triggerPaths` list above `"action": "github-dnceng-vsts-mirror"`.
 
 ```
-...
         "https://github.com/dotnet/project-system/blob/release/**/*",
         "https://github.com/dotnet/toolset/blob/master/**/*",
         "https://github.com/dotnet/toolset/blob/release/**/*",
@@ -18,8 +17,7 @@ Public code should be mirrored to dev.azure.com/dnceng/internal (see [VSTS Guida
         "https://github.com/Microsoft/msbuild/blob/release/**/*",
         "https://github.com/{org}/{repo}/blob/{branch}/**/*" // <-- insert your URI here
       ],
-      "action": "github-dotnet-vsts-mirror",
+      "action": "github-ddnceng-vsts-mirror",
       "actionArguments": {
 "vsoSourceBranch": "master",
-...
 ```
