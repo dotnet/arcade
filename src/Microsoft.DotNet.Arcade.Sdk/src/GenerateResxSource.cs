@@ -184,12 +184,16 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 switch (language)
                 {
                     case Lang.CSharp:
-                        getStringMethod = $@"{memberIndent}[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+                        getStringMethod = $@"{memberIndent}internal static global::System.Globalization.CultureInfo Culture {{ get; set; }}
+
+{memberIndent}[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
 {memberIndent}internal static string GetResourceString(string resourceKey, string defaultValue = null) =>  ResourceManager.GetString(resourceKey, Culture);";
                         break;
 
                     case Lang.VisualBasic:
-                        getStringMethod = $@"<Global.System.Runtime.CompilerServices.MethodImpl(Global.System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)>
+                        getStringMethod = $@"{memberIndent}Friend Shared Property Culture As Global.System.Globalization.CultureInfo
+
+{memberIndent}<Global.System.Runtime.CompilerServices.MethodImpl(Global.System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)>
 {memberIndent}Friend Shared Function GetResourceString(ByVal resourceKey As String, Optional ByVal defaultValue As String = null) As String
 {memberIndent}  Get
 {memberIndent}    Return ResourceManager.GetString(resourceKey, Culture)
@@ -287,7 +291,6 @@ using System.Reflection;
 {namespaceStart}
 {classIndent}internal static partial class {className}
 {classIndent}{{
-{memberIndent}internal static global::System.Globalization.CultureInfo Culture {{ get; set; }}
 {memberIndent}internal static global::System.Resources.ResourceManager ResourceManager {{ get; }} = new global::System.Resources.ResourceManager(typeof({resourceTypeName}));
 
 {getStringMethod}
@@ -308,7 +311,6 @@ Imports System.Reflection
 {memberIndent}Private Sub New
 {memberIndent}End Sub
 {memberIndent}
-{memberIndent}Friend Shared Property Culture As Global.System.Globalization.CultureInfo
 {memberIndent}Friend Shared ReadOnly Property ResourceManager As New Global.System.Resources.ResourceManager(GetType({resourceTypeName}))
 
 {getStringMethod}
