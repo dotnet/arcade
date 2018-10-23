@@ -75,15 +75,15 @@ At the end, if the file is signable but no signing information was determined fo
 
 #### The Signing.props file
 
-The Arcade SDK include a set of predefined configurations for the SignTool in the [Sign.proj](../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) file. However, you can override/remove/update any of these configurations by including a file named `Signing.props` in the `\eng\` folder of your repository. See examples on the next section.
+The Arcade SDK include a set of predefined configurations for the SignTool in the [Sign.proj](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) file. However, you can override/remove/update any of these configurations by including a file named `Signing.props` in the `\eng\` folder of your repository. See examples on the next section.
 
 ## Usage Examples
 
 #### 1. Use the SDK predefined configuration
 
-The Arcade SDK will [include](../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) all NuGet packages from the `$(ArtifactsPackagesDir)` and all VSIX packages from the`$(VisualStudioSetupOutputPath)` folder (these properties are set [here](../src/Microsoft.DotNet.Arcade.Sdk/tools/RepoLayout.props)) in the list of containers to be looked up for - `ItemsToSign`. Note that only projects marked with `<IsPackable>true</IsPackable>` will be packed and copied to these folders. 
+The Arcade SDK will [include](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) all NuGet packages from the `$(ArtifactsPackagesDir)` and all VSIX packages from the`$(VisualStudioSetupOutputPath)` folder (these properties are set [here](../../src/Microsoft.DotNet.Arcade.Sdk/tools/RepoLayout.props)) in the list of containers to be looked up for - `ItemsToSign`. Note that only projects marked with `<IsPackable>true</IsPackable>` will be packed and copied to these folders. 
 
-The [default configuration](../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) of Arcade SDK + SignTool also assigns default certificates to many signable file types and to all files that have the `31bf3856ad364e35` Public Key Token. Therefore, if all files that your repo need to sign are covered under these conditions you won't need to do any specific setup for the tool.
+The [default configuration](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) of Arcade SDK + SignTool also assigns default certificates to many signable file types and to all files that have the `31bf3856ad364e35` Public Key Token. Therefore, if all files that your repo need to sign are covered under these conditions you won't need to do any specific setup for the tool.
 
 #### 2. Use a different certificate for an specific Public Key Token
 

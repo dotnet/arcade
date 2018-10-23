@@ -12,6 +12,7 @@ syntax: glob
 *.user
 *.userosscache
 *.sln.docstates
+launchSettings.json
 
 # Build results
 

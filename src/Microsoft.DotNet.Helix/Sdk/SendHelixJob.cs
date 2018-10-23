@@ -71,11 +71,13 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string[] PostCommands { get; set; }
 
         /// <summary>
-        ///   A set of directories that will be zipped up and sent as Correlation Payloads for the helix job.
+        ///   A set of correlation payloads that will be sent for the helix job.
         /// </summary>
         /// <remarks>
-        ///   Metadata Used:
-        ///     FullPath - This path is required to be a directory to be zipped up or an already-zipped archive
+        ///   These Items can be either:
+        ///     A Directory - The specified directory will be zipped up and sent as a correlation payload
+        ///     A File - The specified archive file will be sent as a correlation payload
+        ///     A Uri - The Item's Uri metadata will be used as a correlation payload
         /// </remarks>
         public ITaskItem[] CorrelationPayloads { get; set; }
 
@@ -331,159 +333,27 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             string path = correlationPayload.GetMetadata("FullPath");
             string uri = correlationPayload.GetMetadata("Uri");
-            string runtimeVersion = correlationPayload.GetMetadata("RuntimeVersion");
-            string sdkVersion = correlationPayload.GetMetadata("SdkVersion");
-
-            // TODO: Break this logic out into a separate MSBuild task (https://github.com/dotnet/arcade/issues/1063)
-            if (!string.IsNullOrEmpty(runtimeVersion) || !string.IsNullOrEmpty(sdkVersion))
-            {
-                string targetQueue = correlationPayload.GetMetadata("TargetQueue");
-
-                var sdkOrRuntime = (string.IsNullOrEmpty(sdkVersion) ? DOTNET.RUNTIME : DOTNET.SDK);
-                string version = (sdkOrRuntime == DOTNET.RUNTIME ? runtimeVersion : sdkVersion);
-
-                if (string.IsNullOrEmpty(targetQueue))
-                {
-                    Log.LogError($"No queue specified for .NET {sdkOrRuntime.ToString()} {version} payload");
-                    return def;
-                }
-                Log.LogMessage(MessageImportance.Low, $"Adding .NET {sdkOrRuntime.ToString()} version {version} for queue {targetQueue}");
-
-                uri = DotNetArchiveUri(version, DotNetReleaseString(targetQueue, sdkOrRuntime), sdkOrRuntime).ToString();
-            }
 
             if (!string.IsNullOrEmpty(uri))
             {
                 Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload URI '{uri}'");
                 return def.WithCorrelationPayloadUris(new Uri(uri));
             }
-            else if (Directory.Exists(path))
+
+            if (Directory.Exists(path))
             {
                 Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Directory '{path}'");
                 return def.WithCorrelationPayloadDirectory(path);
             }
-            else if (File.Exists(path))
+
+            if (File.Exists(path))
             {
                 Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Archive '{path}'");
                 return def.WithCorrelationPayloadArchive(path);
             }
-            else
-            {
-                Log.LogError($"Correlation Payload '{path}' not found.");
-                return def;
-            }
-        }
 
-        private const string DotNetCoreReleasesUrl = "https://raw.githubusercontent.com/dotnet/core/master/release-notes/releases.json";
-        private Uri DotNetArchiveUri(string version, string releaseString, DOTNET sdkOrRuntime)
-        {
-            using (WebClient jsonDownloader = new WebClient())
-            {
-                string releasesJson = jsonDownloader.DownloadString(DotNetCoreReleasesUrl);
-                JsonTextReader jsonTextReader = new JsonTextReader(new StringReader(releasesJson));
-                do
-                {
-                    jsonTextReader.Read();
-
-                    if (jsonTextReader.TokenType == JsonToken.StartObject)
-                    {
-                        do
-                        {
-                            jsonTextReader.Read();
-
-                            if (jsonTextReader.TokenType == JsonToken.PropertyName && (string)jsonTextReader.Value == $"version-{sdkOrRuntime.ToString().ToLowerInvariant()}")
-                            {
-                                jsonTextReader.Read();
-
-                                if ((string)jsonTextReader.Value == version)
-                                {
-                                    do
-                                    {
-                                        jsonTextReader.Read();
-                                    } while (!(jsonTextReader.TokenType == JsonToken.PropertyName && (string)jsonTextReader.Value == releaseString));
-                                    jsonTextReader.Read();
-                                    try
-                                    {
-                                        return new Uri((string)jsonTextReader.Value);
-                                    }
-                                    catch (UriFormatException)
-                                    {
-                                        Log.LogError($"Attempted to create URI to .NET Core {(sdkOrRuntime == DOTNET.SDK ? "SDK" : "Runtime")} version {version} from via release string {releaseString} from invalid string {(string)jsonTextReader.Value};");
-                                        return new Uri("");
-                                    }
-                                }
-                            }
-                        } while (jsonTextReader.TokenType != JsonToken.EndObject);
-                    }
-                } while (jsonTextReader.TokenType != JsonToken.None);
-            }
-
-            Log.LogError($"The specified .NET Core {(sdkOrRuntime == DOTNET.SDK ? "SDK" : "Runtime")} version {version} could not be found (searching for {releaseString}).");
-            return new Uri("");
-        }
-
-        private string DotNetReleaseString(string targetQueue, DOTNET sdkOrRunTime)
-        {
-            string releaseString = "";
-            targetQueue = targetQueue.ToLowerInvariant();
-
-            releaseString += sdkOrRunTime == DOTNET.SDK ? "sdk-" : "runtime-";
-
-            if (targetQueue.Contains("windows"))
-            {
-                releaseString += "win-";
-            }
-            else if (targetQueue.Contains("osx"))
-            {
-                releaseString += "mac-";
-            }
-            else
-            {
-                releaseString += "linux-";
-            }
-
-            if (targetQueue.Contains("amd64"))
-            {
-                releaseString += "x64";
-            }
-            else if (targetQueue.Contains("arm64"))
-            {
-                if (releaseString.Contains("linux-"))
-                {
-                    releaseString += "arm-x64";
-                }
-                else
-                {
-                    releaseString += "x64";
-                }
-            }
-            else if (targetQueue.Contains("amd32"))
-            {
-                releaseString += "x86";
-            }
-            else if (targetQueue.Contains("arm32"))
-            {
-                if (releaseString.Contains("linux-"))
-                {
-                    releaseString += "arm-x32";
-                }
-                else
-                {
-                    releaseString += "x86";
-                }
-            }
-            else
-            {
-                releaseString += "x86";
-            }
-
-            return releaseString;
-        }
-
-        private enum DOTNET
-        {
-            SDK,
-            RUNTIME
+            Log.LogError($"Correlation Payload '{path}' not found.");
+            return def;
         }
     }
 }

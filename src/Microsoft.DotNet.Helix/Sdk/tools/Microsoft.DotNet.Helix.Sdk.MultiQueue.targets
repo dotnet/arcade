@@ -40,6 +40,10 @@
     </CleanDependsOn>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <WaitForWorkItemCompletion Condition="'$(WaitForWorkItemCompletion)' != 'false'">true</WaitForWorkItemCompletion>
+  </PropertyGroup>
+
   <ItemGroup>
     <HelixTargetQueue Include="$(HelixTargetQueues)" />
   </ItemGroup>

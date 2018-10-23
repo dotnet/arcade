@@ -2,12 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+using System.Xml;
 
 namespace Microsoft.DotNet.DarcLib
 {
@@ -48,23 +50,74 @@ namespace Microsoft.DotNet.DarcLib
             else
             {
                 await _fileManager.AddDependencyToVersionProps(
-                    Path.Combine(_repo, VersionFilePath.VersionProps),
+                    Path.Combine(_repo, VersionFiles.VersionProps),
                     dependency);
                 await _fileManager.AddDependencyToVersionDetails(
-                    Path.Combine(_repo, VersionFilePath.VersionDetailsXml),
+                    Path.Combine(_repo, VersionFiles.VersionDetailsXml),
                     dependency,
                     dependencyType);
             }
         }
 
         /// <summary>
+        ///     Updates existing dependencies in the dependency files
+        /// </summary>
+        /// <param name="dependencies">Dependencies that need updates.</param>
+        /// <param name="remote">Remote instance for gathering eng/common script updates.</param>
+        /// <returns></returns>
+        public async Task UpdateDependenciesAsync(List<DependencyDetail> dependencies, IRemote remote)
+        {
+            // TODO: This should use known updaters, but today the updaters for global.json can only
+            // add, not actually update.  This needs a fix. https://github.com/dotnet/arcade/issues/1095
+            /*List<DependencyDetail> defaultUpdates = new List<DependencyDetail>(, IRemote remote);
+            foreach (DependencyDetail dependency in dependencies)
+            {
+                if (DependencyOperations.TryGetKnownUpdater(dependency.Name, out Delegate function))
+                {
+                    await (Task)function.DynamicInvoke(_fileManager, _repo, dependency);
+                }
+                else
+                {
+                    defaultUpdates.Add(dependency);
+                }
+            }*/
+
+            var fileContainer = await _fileManager.UpdateDependencyFiles(dependencies, _repo, null);
+            List<GitFile> filesToUpdate = fileContainer.GetFilesToCommit();
+
+            // TODO: This needs to be moved into some consistent handling between local/remote and add/update:
+            // https://github.com/dotnet/arcade/issues/1095
+            // If we are updating the arcade sdk we need to update the eng/common files as well
+            DependencyDetail arcadeItem = dependencies.FirstOrDefault(
+                i => string.Equals(i.Name, "Microsoft.DotNet.Arcade.Sdk", StringComparison.OrdinalIgnoreCase));
+
+            if (arcadeItem != null)
+            {
+                List<GitFile> engCommonFiles = await remote.GetCommonScriptFilesAsync(arcadeItem.RepoUri, arcadeItem.Commit);
+                filesToUpdate.AddRange(engCommonFiles);
+            }
+
+            // Push on local does not commit.
+            await _gitClient.PushFilesAsync(filesToUpdate, _repo, null, null);
+        }
+
+        /// <summary>
         ///     Gets the local dependencies
         /// </summary>
         /// <returns></returns>
-        public async Task<IEnumerable<DependencyDetail>> GetDependenciesAsync(string name)
+        public async Task<IEnumerable<DependencyDetail>> GetDependenciesAsync(string name = null)
         {
-            return (await _fileManager.ParseVersionDetailsXmlAsync(Path.Combine(_repo, VersionFilePath.VersionDetailsXml), null)).Where(
+            return (await _fileManager.ParseVersionDetailsXmlAsync(_repo, null)).Where(
                 dependency => string.IsNullOrEmpty(name) || dependency.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        ///     Verify the local repository has correct and consistent dependency information
+        /// </summary>
+        /// <returns>True if verification succeeds, false otherwise.</returns>
+        public Task<bool> Verify()
+        {
+            return _fileManager.Verify(_repo, null);
         }
     }
 }

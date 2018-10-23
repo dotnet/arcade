@@ -164,43 +164,65 @@ These steps can be altered for additional subscriptions to other repositories.
 
 ##### 3.5. Create a channel (optional, typically not needed)
 
-1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
-2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
-3. Expand "POST /api/channels" under "Channels" and click "Try it out"
-4. Provide a "name" and a "classification"
-5. Click "Execute"
+You only need to create a channel in  rare cases.  Most .NET Core 3 builds should be assigned to the ".NET Core 3 Dev" channel.  However, if you do need to create a new channel:
+
+1. Run the following darc command:
+   ```
+   darc add-channel --name "<channel name>" --classification "<classification>"
+   ```
+   The classification is typically 'product'.  Later on this will be used to differentiate dev or non-product builds, etc.
 
 ##### 3.6. Associate a branch with a channel (optional)
 
-1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
-2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
-3. Expand "POST /api/default-channels" under "DefaultChannels" and click "Try it out"
+This will associate each new build of a specific branch in a repository with a channel.
 
-4. Update the values of the sample body. Here is an example of how would a request body look like:
-
-``` json
-{
-  "repository": "onboarded repo i.e. https://github.com/dotnet/arcade",
-  "branch": "onboarded brach i.e. refs/heads/master",
-  "channelId": id-of-existing-channel
-}
-```
-
-5. Click "Execute"
-
-Currently the REST API is the only way to create Subscriptions and Channels but the plan is for `Darc` to support this as well.
+1. Run the following darc command:
+   ```
+   darc add-default-channel --branch refs/heads/<branch> --repo <repo URI> --channel <target channel>
+   ```
+   Example: For corefx master (the .NET Core 3 development branch), this would be:
+   ```
+   darc add-default-channel --branch refs/heads/master --repo https://github.com/dotnet/corefx --channel ".NET Core 3 Dev"
+   ```
+2. Verify with `darc get-default-channels`
 
 #### 5. Validate
 
 At this time we don't have a way to notify users if something went wrong while updating dependencies but this work is tracked by
 https://github.com/dotnet/arcade/issues/821.
 
-To validate that created subscriptions and channels work as expected you'd need to verify that a PR has been created on your subscription's `targetRepository` once a build from `sourceRepository` has successfully completed. If a PR was not created something went wrong and to determine what went wrong we need to query the REST API by following these steps:
+To validate that created subscriptions and channels work as expected you'd need to verify that a PR has been created on your subscription's `targetRepository` once a build from `sourceRepository` has successfully completed. If a PR was not created something went wrong and we can use darc to find out what happened
 
-1. Go to https://maestro-prod.westus2.cloudapp.azure.com/swagger/ui/index.html and click on "Authorize"
-2. In the "Value" input box add "Bearer" + the token generated in the previous step. i.e "Bearer m1T0ken6tab5" and click "Authorize"
-3. Expand "GET /api/subscriptions/{id}/history" under "Subscriptions" and click "Try it out"
-4. Provide your subscription id
-5. Click "Execute"
-6. Find an entry with `"success": false`
-7. Let @alexperovich and @jcagme know about the errors in the unsuccessful entry
+1. Obtain the id of the non-functioning subscription:
+   ```
+   darc get-subscriptions
+   ```
+   You can use various parameters to filter the list and find the subscription you're interested in.  For instance:
+   ```
+   darc get-subscriptions --target-repo corefx
+   https://github.com/dotnet/arcade (.NET Tools - Latest) ==> 'https://github.com/dotnet/corefx' ('master')
+   - Id: c297d885-0692-40f8-6b97-08d61f281b4c
+   - Update Frequency: everyDay
+   - Merge Policies:
+     AllChecksSuccessful
+       ignoreChecks =
+                     [
+                       "WIP",
+                       "license/cla"
+                     ]
+   - Last Build: N/A
+   ```
+2. Use the ID and query for the subscription history:
+   ```
+   darc get-subscription-history --id <id>
+   ```
+   For example:
+   ```
+   darc get-subscription-history --id d2d2e80d-8b31-4744-1959-08d6175791f6
+   10/19/2018 9:15:17 AM: (Success) - Checking merge policy for pr 'https://api.github.com/repos/dotnet/arcade-minimalci-sample/pulls/129'
+   10/19/2018 9:10:15 AM: (Success) - Checking merge policy for pr 'https://api.github.com/repos/dotnet/arcade-minimalci-sample/pulls/129'
+   10/19/2018 9:05:14 AM: (Success) - Checking merge policy for pr 'https://api.github.com/repos/dotnet/arcade-minimalci-sample/pulls/129'
+   10/19/2018 9:05:04 AM: (Success) - Updating subscription for build '146'
+   ```
+   Any failed actions will be marked as such, along with a retry command.
+3. Let @alexperovich, @jcagme or @mmitche know about the errors in the unsuccessful entry

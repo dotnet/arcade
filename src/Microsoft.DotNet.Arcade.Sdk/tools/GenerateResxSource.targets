@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateResxSource" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
-  
+
   <!-- Set the Generator metadata so that VS triggers design-time build whenever the .resx file is saved -->
   <ItemGroup>
     <EmbeddedResource Update="@(EmbeddedResource)">
@@ -46,14 +46,14 @@
           Inputs="@(EmbeddedResourceSG)"
           Outputs="%(EmbeddedResourceSG.SourceOutputPath)">
 
-    <Microsoft.DotNet.Arcade.Sdk.GenerateResxSource 
+    <Microsoft.DotNet.Arcade.Sdk.GenerateResxSource
       Language="$(Language)"
       ResourceFile="%(EmbeddedResourceSG.FullPath)"
       ResourceName="%(EmbeddedResourceSG.ManifestResourceName)"
       OutputPath="%(EmbeddedResourceSG.SourceOutputPath)" />
   </Target>
 
-  <Target Name="_GetEmbeddedResourcesWithSourceGeneration">
+  <Target Name="_GetEmbeddedResourcesWithSourceGeneration" Condition="'@(EmbeddedResource)' != ''">
     <PropertyGroup>
       <_EmbeddedResourceSourceExtension Condition="'$(Language)' == 'C#'">cs</_EmbeddedResourceSourceExtension>
       <_EmbeddedResourceSourceExtension Condition="'$(Language)' == 'VB'">vb</_EmbeddedResourceSourceExtension>

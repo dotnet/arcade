@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MicrosoftDotNetSwaggerGeneratorMSBuildTasksAssembly)' == ''">
+    <MicrosoftDotNetSwaggerGeneratorMSBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../tools/netcoreapp2.1/Microsoft.DotNet.SwaggerGenerator.MSBuild.dll</MicrosoftDotNetSwaggerGeneratorMSBuildTasksAssembly>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)../tools/net472/Microsoft.DotNet.SwaggerGenerator.MSBuild.dll</MicrosoftDotNetSwaggerGeneratorMSBuildTasksAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <SwaggerOutputDirectory>$(MSBuildProjectDirectory)\generated-code\</SwaggerOutputDirectory>
+  </PropertyGroup>
+</Project>

@@ -14,6 +14,8 @@ First, you have to import the SDK. Everything that follows requires dotnet-cli â
   }
 }
 ```
+
+Example: `"Microsoft.DotNet.Helix.Sdk": "1.0.0-beta.18502.3"`
 #### NuGet.config
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -31,6 +33,8 @@ If you plan to send a payload (such as a work item) to Helix, you will need to b
 
 For these builds, you will need to add a variable group to your build which contains only the *BotAccount-dotnet-github-anon-kaonashi-bot-helix-token* secret from EngKeyVault. This will allow you to send telemetry to Helix while minimizing the risk of leaking secrets.
 
+In the dev.azure.com/dnceng/public project, you can use the `Helix Anonymous` variable group to provide this secret to your build
+
 ## The Simple Case
 
 The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `helix-publish` template in `eng/common/templates/steps/helix-publish.yml` from your `.vsts-ci.yml` file.
@@ -38,16 +42,16 @@ The simplest Helix use-case is zipping up a single folder containing your projec
 In a case where you have a directory called `tests` and a batch file in that directory called `runtests.cmd` which will run several different XUnit test projects:
 
 ```yaml
-  - template: eng/common/templates/steps/helix-publish.yml
+  - template: /eng/common/templates/steps/helix-publish.yml
     parameters:
-      HelixSource: your/helix/source
+      HelixSource: pr/your/helix/source # sources must start with pr/, official/, prodcon/, or agent/
       HelixType: type/tests
       # HelixBuild: $(Build.BuildNumber) -- This property is set by default
       HelixTargetQueues: Windows.10.Amd64.Open;Windows.7.Amd64.Open
-      HelixAccessToken: $('BotAccount-dotnet-github-anon-kaonashi-bot-helix-token')
+      HelixAccessToken: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token)
       # HelixPreCommands: '' -- any commands that you would like to run prior to running your job
       # HelixPostCommands: '' -- any commands that you would like to run after running your job
-      WorkItemDirectory: tests
+      WorkItemDirectory: $(Build.SourcesDirectory)/artifacts/bin/test/$(_BuildConfig)/netcoreapp2.0
       WorkItemCommand: runtests.cmd
       EnableXUnitReporter: true # required for reporting out XUnit test results
       # WaitForWorkItemCompletion: true -- defaults to true

@@ -4,9 +4,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.DotNet.DarcLib.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.DarcLib
@@ -47,9 +50,10 @@ namespace Microsoft.DotNet.DarcLib
             return GetFileContentsAsync(path, null, null);
         }
 
-        public async Task<string> GetFileContentsAsync(string filePath, string repoUri, string branch)
+        public async Task<string> GetFileContentsAsync(string relativeFilePath, string repoUri, string branch)
         {
-            using (var streamReader = new StreamReader(repoUri))
+            string fullPath = Path.Combine(repoUri, relativeFilePath);
+            using (var streamReader = new StreamReader(fullPath))
             {
                 return await streamReader.ReadToEndAsync();
             }
@@ -115,9 +119,87 @@ namespace Microsoft.DotNet.DarcLib
             throw new NotImplementedException();
         }
 
-        public Task PushFilesAsync(List<GitFile> filesToCommit, string repoUri, string branch, string commitMessage)
+        /// <summary>
+        ///     Updates local copies of the files.
+        /// </summary>
+        /// <param name="filesToCommit">Files to update locally</param>
+        /// <param name="repoUri">Base path of the repo</param>
+        /// <param name="branch">Unused</param>
+        /// <param name="commitMessage">Unused</param>
+        /// <returns></returns>
+        public async Task PushFilesAsync(List<GitFile> filesToCommit, string repoUri, string branch, string commitMessage)
         {
-            throw new NotImplementedException();
+            foreach (GitFile file in filesToCommit)
+            {
+                string fullPath = Path.Combine(repoUri, file.FilePath);
+                using (var streamWriter = new StreamWriter(fullPath))
+                {
+                    string finalContent;
+                    switch (file.ContentEncoding)
+                    {
+                        case "utf-8":
+                            finalContent = file.Content;
+                            break;
+                        case "base64":
+                            byte[] bytes = Convert.FromBase64String(file.Content);
+                            finalContent = Encoding.UTF8.GetString(bytes);
+                            break;
+                        default:
+                            throw new DarcException($"Unknown file content encoding {file.ContentEncoding}");
+                    }
+                    finalContent = NormalizeLineEndings(fullPath, finalContent);
+                    await streamWriter.WriteAsync(finalContent);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Normalize line endings of content.
+        /// </summary>
+        /// <param name="filePath">Path of file</param>
+        /// <param name="content">Content to normalize</param>
+        /// <returns>Normalized content</returns>
+        /// <remarks>
+        ///     Normalize based on the following rules:
+        ///     - Auto CRLF is assumed.
+        ///     - Check the git attributes the file to determine whether it has a specific setting for the file.  If so, use that.
+        ///     - If no setting, or if auto, then determine whether incoming content differs in line ends vs. the
+        ///       OS setting, and replace if needed.
+        /// </remarks>
+        private string NormalizeLineEndings(string filePath, string content)
+        {
+            const string crlf = "\r\n";
+            const string lf = "\n";
+            // Check gitAttributes to determine whether the file has eof handling set.
+            string eofAttr = LocalHelpers.ExecuteCommand("git", $"check-attr eol -- {filePath}", _logger);
+            if (eofAttr.Contains("eol: unspecified") || eofAttr.Contains("eol: auto"))
+            {
+                if (Environment.NewLine != crlf)
+                {
+                    return content.Replace(crlf, Environment.NewLine);
+                }
+                else if (Environment.NewLine == crlf && !content.Contains(crlf))
+                {
+                    return content.Replace(lf, Environment.NewLine);
+                }
+            }
+            else if (eofAttr.Contains("eol: crlf"))
+            {
+                // Test to avoid adding extra \r.
+                if (!content.Contains(crlf))
+                {
+                    return content.Replace(lf, crlf);
+                }
+            }
+            else if (eofAttr.Contains("eol: lf"))
+            {
+                return content.Replace(crlf, lf);
+            }
+            else
+            {
+                throw new DarcException($"Unknown eof setting '{eofAttr}' for file '{filePath};");
+            }
+            return content;
         }
 
         public string GetOwnerAndRepoFromRepoUri(string repoUri)

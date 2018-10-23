@@ -147,12 +147,14 @@ namespace Microsoft.DotNet.SignTool
             var fileName = Path.GetFileName(fullPath);
             var extension = Path.GetExtension(fullPath);
             string explicitCertificateName = null;
+            string copyright = string.Empty;
             var targetFramework = string.Empty;
             var fileSpec = string.Empty;
             var isAlreadySigned = false;
             var matchedNameTokenFramework = false;
             var matchedNameToken = false;
             var matchedName = false;
+            var isManagedPE = false;
 
             if (FileSignInfo.IsPEFile(fullPath))
             {
@@ -161,10 +163,10 @@ namespace Microsoft.DotNet.SignTool
                     isAlreadySigned = ContentUtil.IsAuthenticodeSigned(stream);
                 }
 
-                GetPEInfo(fullPath, out var isManaged, out var publicKeyToken, out targetFramework);
+                GetPEInfo(fullPath, out isManagedPE, out var publicKeyToken, out targetFramework, out copyright);
 
                 // Get the default sign info based on the PKT, if applicable:
-                if (isManaged && _strongNameInfo.TryGetValue(publicKeyToken, out var pktBasedSignInfo))
+                if (isManagedPE && _strongNameInfo.TryGetValue(publicKeyToken, out var pktBasedSignInfo))
                 {
                     signInfo = pktBasedSignInfo;
                     hasSignInfo = true;
@@ -205,6 +207,25 @@ namespace Microsoft.DotNet.SignTool
                     return new FileSignInfo(fullPath, hash, SignInfo.AlreadySigned);
                 }
 
+                // TODO: implement this check for native PE files as well:
+                // extract copyright from native resource (.rsrc section) 
+                if (signInfo.ShouldSign && isManagedPE)
+                {
+                    bool isMicrosoftLibrary = IsMicrosoftLibrary(copyright);
+                    bool isMicrosoftCertificate = !IsThirdPartyCertificate(signInfo.Certificate);
+                    if (isMicrosoftLibrary != isMicrosoftCertificate)
+                    {
+                        if (isMicrosoftLibrary)
+                        {
+                            LogWarning("SIGN001", $"Signing Microsoft library '{fullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{copyright}'.");
+                        }
+                        else
+                        {
+                            LogWarning("SIGN001", $"Signing 3rd party library '{fullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{copyright}'.");
+                        }
+                    }
+                }
+
                 return new FileSignInfo(fullPath, hash, signInfo, (targetFramework != "") ? targetFramework : null);
             }
 
@@ -220,7 +241,17 @@ namespace Microsoft.DotNet.SignTool
             return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
         }
 
-        private static void GetPEInfo(string fullPath, out bool isManaged, out string publicKeyToken, out string targetFramework)
+        private void LogWarning(string code, string message)
+            => _log.LogWarning(subcategory: null, warningCode: code, helpKeyword: null, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message);
+
+        private static bool IsMicrosoftLibrary(string copyright)
+            => copyright.Contains("Microsoft");
+
+        private static bool IsThirdPartyCertificate(string name)
+            => name.Equals("3PartyDual", StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("3PartySHA2", StringComparison.OrdinalIgnoreCase);
+
+        private static void GetPEInfo(string fullPath, out bool isManaged, out string publicKeyToken, out string targetFramework, out string copyright)
         {
             AssemblyName assemblyName;
             try
@@ -233,17 +264,21 @@ namespace Microsoft.DotNet.SignTool
                 isManaged = false;
                 publicKeyToken = string.Empty;
                 targetFramework = string.Empty;
+                copyright = string.Empty;
                 return;
             }
 
             var pktBytes = assemblyName.GetPublicKeyToken();
 
             publicKeyToken = (pktBytes == null || pktBytes.Length == 0) ? string.Empty : string.Join("", pktBytes.Select(b => b.ToString("x2")));
-            targetFramework = GetTargetFrameworkName(fullPath);
+            GetTargetFrameworkAndCopyright(fullPath, out targetFramework, out copyright);
         }
 
-        private static string GetTargetFrameworkName(string filePath)
+        private static void GetTargetFrameworkAndCopyright(string filePath, out string targetFramework, out string copyright)
         {
+            targetFramework = string.Empty;
+            copyright = string.Empty;
+
             using (var stream = File.OpenRead(filePath))
             using (var pereader = new PEReader(stream))
             {
@@ -257,13 +292,16 @@ namespace Microsoft.DotNet.SignTool
                         var attribute = metadataReader.GetCustomAttribute(attributeHandle);
                         if (QualifiedNameEquals(metadataReader, attribute, "System.Runtime.Versioning", "TargetFrameworkAttribute"))
                         {
-                            return new FrameworkName(GetTargetFrameworkAttributeValue(metadataReader, attribute)).FullName;
+                            targetFramework = new FrameworkName(GetTargetFrameworkAttributeValue(metadataReader, attribute)).FullName;
+                        }
+                        else if (QualifiedNameEquals(metadataReader, attribute, "System.Reflection", "AssemblyCopyrightAttribute"))
+                        {
+                            copyright = GetTargetFrameworkAttributeValue(metadataReader, attribute);
                         }
                     }
                 }
-            }
 
-            return null;
+            }
         }
 
         private static bool QualifiedNameEquals(MetadataReader reader, CustomAttribute attribute, string namespaceName, string typeName)
