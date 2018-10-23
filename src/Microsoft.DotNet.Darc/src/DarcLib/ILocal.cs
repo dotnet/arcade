@@ -10,5 +10,10 @@ namespace Microsoft.DotNet.DarcLib
     internal interface ILocal
     {
         Task UpdateDependenciesAsync(List<DependencyDetail> dependencies, IRemote remote);
+        /// <summary>
+        ///     Verify the local repository has correct and consistent dependency information
+        /// </summary>
+        /// <returns>Async task</returns>
+        Task<bool> Verify();
     }
 }

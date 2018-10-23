@@ -2,12 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+using System.Xml;
 
 namespace Microsoft.DotNet.DarcLib
 {
@@ -48,10 +50,10 @@ namespace Microsoft.DotNet.DarcLib
             else
             {
                 await _fileManager.AddDependencyToVersionProps(
-                    Path.Combine(_repo, VersionFilePath.VersionProps),
+                    Path.Combine(_repo, VersionFiles.VersionProps),
                     dependency);
                 await _fileManager.AddDependencyToVersionDetails(
-                    Path.Combine(_repo, VersionFilePath.VersionDetailsXml),
+                    Path.Combine(_repo, VersionFiles.VersionDetailsXml),
                     dependency,
                     dependencyType);
             }
@@ -107,6 +109,15 @@ namespace Microsoft.DotNet.DarcLib
         {
             return (await _fileManager.ParseVersionDetailsXmlAsync(_repo, null)).Where(
                 dependency => string.IsNullOrEmpty(name) || dependency.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        ///     Verify the local repository has correct and consistent dependency information
+        /// </summary>
+        /// <returns>True if verification succeeds, false otherwise.</returns>
+        public Task<bool> Verify()
+        {
+            return _fileManager.Verify(_repo, null);
         }
     }
 }

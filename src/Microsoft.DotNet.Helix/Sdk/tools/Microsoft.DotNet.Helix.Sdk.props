@@ -12,5 +12,6 @@
   </PropertyGroup>
 
   <UsingTask TaskName="SendHelixJob" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
+  <UsingTask TaskName="FindDotNetCliPackage" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
   <UsingTask TaskName="HelixWait" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
 </Project>

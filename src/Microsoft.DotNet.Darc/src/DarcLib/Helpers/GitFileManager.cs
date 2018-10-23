@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.Extensions.Logging;
@@ -26,29 +27,29 @@ namespace Microsoft.DotNet.DarcLib
         public static HashSet<string> DependencyFiles =>
             new HashSet<string>
             {
-                VersionFilePath.VersionDetailsXml,
-                VersionFilePath.VersionProps,
-                VersionFilePath.GlobalJson
+                VersionFiles.VersionDetailsXml,
+                VersionFiles.VersionProps,
+                VersionFiles.GlobalJson
             };
 
         public async Task<XmlDocument> ReadVersionDetailsXmlAsync(string repoUri, string branch)
         {
-            XmlDocument document = await ReadXmlFileAsync(VersionFilePath.VersionDetailsXml, repoUri, branch);
+            XmlDocument document = await ReadXmlFileAsync(VersionFiles.VersionDetailsXml, repoUri, branch);
             return document;
         }
 
         public async Task<XmlDocument> ReadVersionPropsAsync(string repoUri, string branch)
         {
-            XmlDocument document = await ReadXmlFileAsync(VersionFilePath.VersionProps, repoUri, branch);
+            XmlDocument document = await ReadXmlFileAsync(VersionFiles.VersionProps, repoUri, branch);
             return document;
         }
 
         public async Task<JObject> ReadGlobalJsonAsync(string repoUri, string branch)
         {
             _logger.LogInformation(
-                $"Reading '{VersionFilePath.GlobalJson}' in repo '{repoUri}' and branch '{branch}'...");
+                $"Reading '{VersionFiles.GlobalJson}' in repo '{repoUri}' and branch '{branch}'...");
 
-            string fileContent = await _gitClient.GetFileContentsAsync(VersionFilePath.GlobalJson, repoUri, branch);
+            string fileContent = await _gitClient.GetFileContentsAsync(VersionFiles.GlobalJson, repoUri, branch);
 
             JObject jsonContent = JObject.Parse(fileContent);
 
@@ -58,7 +59,7 @@ namespace Microsoft.DotNet.DarcLib
         public async Task<IEnumerable<DependencyDetail>> ParseVersionDetailsXmlAsync(string repoUri, string branch)
         {
             _logger.LogInformation(
-                $"Getting a collection of BuildAsset objects from '{VersionFilePath.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}'...");
+                $"Getting a collection of BuildAsset objects from '{VersionFiles.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}'...");
 
             var BuildAssets = new List<DependencyDetail>();
             XmlDocument document = await ReadVersionDetailsXmlAsync(repoUri, branch);
@@ -98,13 +99,13 @@ namespace Microsoft.DotNet.DarcLib
             else
             {
                 _logger.LogError(
-                    $"There was an error while reading '{VersionFilePath.VersionDetailsXml}' and it came back empty. Look for exceptions above.");
+                    $"There was an error while reading '{VersionFiles.VersionDetailsXml}' and it came back empty. Look for exceptions above.");
 
                 return BuildAssets;
             }
 
             _logger.LogInformation(
-                $"Getting a collection of BuildAsset objects from '{VersionFilePath.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}' succeeded!");
+                $"Getting a collection of BuildAsset objects from '{VersionFiles.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}' succeeded!");
 
             return BuildAssets;
         }
@@ -145,9 +146,9 @@ namespace Microsoft.DotNet.DarcLib
 
             var fileContainer = new GitFileContentContainer
             {
-                GlobalJson = new GitFile(VersionFilePath.GlobalJson, globalJson),
-                VersionDetailsXml = new GitFile(VersionFilePath.VersionDetailsXml, versionDetails),
-                VersionProps = new GitFile(VersionFilePath.VersionProps, versionProps)
+                GlobalJson = new GitFile(VersionFiles.GlobalJson, globalJson),
+                VersionDetailsXml = new GitFile(VersionFiles.VersionDetailsXml, versionDetails),
+                VersionProps = new GitFile(VersionFiles.VersionProps, versionProps)
             };
 
             return fileContainer;
@@ -192,9 +193,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             XmlDocument versionProps = await ReadVersionPropsAsync(filePath, null);
 
-            string versionedName = dependency.Name.Replace(".", string.Empty);
-            versionedName = $"{versionedName}Version";
-
+            string versionedName = VersionFiles.CalculateVersionPropsElementName(dependency.Name);
             XmlNode versionNode = versionProps.DocumentElement.SelectNodes("//PropertyGroup").Item(0);
 
             XmlNode newDependency = versionProps.CreateElement(versionedName);
@@ -259,9 +258,9 @@ namespace Microsoft.DotNet.DarcLib
 
         private void UpdateVersionFiles(XmlDocument versionProps, JToken token, DependencyDetail itemToUpdate)
         {
-            string versionedName = itemToUpdate.Name.Replace(".", string.Empty);
+            string versionElementName = VersionFiles.CalculateVersionPropsElementName(itemToUpdate.Name);
 
-            XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"//{versionedName}Version");
+            XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"//{versionElementName}");
 
             if (versionNode != null)
             {
@@ -275,9 +274,11 @@ namespace Microsoft.DotNet.DarcLib
 
         private void UpdateVersionGlobalJson(DependencyDetail itemToUpdate, JToken token)
         {
+            string versionElementName = VersionFiles.CalculateGlobalJsonElementName(itemToUpdate.Name);
+
             foreach (JProperty property in token.Children<JProperty>())
             {
-                if (property.Name == itemToUpdate.Name)
+                if (property.Name == versionElementName)
                 {
                     property.Value = new JValue(itemToUpdate.Version);
                     break;
@@ -285,6 +286,215 @@ namespace Microsoft.DotNet.DarcLib
 
                 UpdateVersionGlobalJson(itemToUpdate, property.Value);
             }
+        }
+
+        /// <summary>
+        ///     Verify the local repository has correct and consistent dependency information.
+        ///     Currently, this implementation checks:
+        ///     - global.json, Version.props and Version.Details.xml can be parsed.
+        ///     - There are no duplicated dependencies in Version.Details.xml
+        ///     - If a dependency exists in Version.Details.xml and in version.props/global.json, the versions match.
+        /// </summary>
+        /// <param name="repo"></param>
+        /// <param name="branch"></param>
+        /// <returns>Async task</returns>
+        public async Task<bool> Verify(string repo, string branch)
+        {
+            Task<IEnumerable<DependencyDetail>> dependencyDetails;
+            Task<XmlDocument> versionProps;
+            Task<JObject> globalJson;
+
+            try
+            {
+                dependencyDetails = ParseVersionDetailsXmlAsync(repo, branch);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Failed to parse {VersionFiles.VersionDetailsXml}");
+                return false;
+            }
+
+            try
+            {
+                versionProps = ReadVersionPropsAsync(repo, branch);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Failed to read {VersionFiles.VersionProps}");
+                return false;
+            }
+
+            try
+            {
+                globalJson = ReadGlobalJsonAsync(repo, branch);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Failed to read {VersionFiles.GlobalJson}");
+                return false;
+            }
+
+            List<Task<bool>> verificationTasks = new List<Task<bool>>()
+            {
+                VerifyNoDuplicatedDependencies(await dependencyDetails),
+                VerifyMatchingVersionProps(await dependencyDetails, await versionProps, out Task<HashSet<string>> utilizedVersionPropsDependencies),
+                VerifyMatchingGlobalJson(await dependencyDetails, await globalJson, out Task<HashSet<string>> utilizedGlobalJsonDependencies),
+                VerifyUtilizedDependencies(await dependencyDetails, new List<HashSet<string>>{ await utilizedVersionPropsDependencies, await utilizedGlobalJsonDependencies})
+            };
+
+            var results = await Task.WhenAll<bool>(verificationTasks);
+            return results.All(result => result);
+        }
+
+        /// <summary>
+        ///     Ensure that the dependency structure only contains one of each named dependency.
+        /// </summary>
+        /// <param name="dependencies">Parsed dependencies in the repository.</param>
+        /// <returns>True if there are no duplicated dependencies.</returns>
+        private Task<bool> VerifyNoDuplicatedDependencies(IEnumerable<DependencyDetail> dependencies)
+        {
+            bool result = true;
+            HashSet<string> dependenciesBitVector = new HashSet<string>();
+            foreach (var dependency in dependencies)
+            {
+                if (dependenciesBitVector.Contains(dependency.Name, StringComparer.OrdinalIgnoreCase))
+                {
+                    _logger.LogError($"The dependency '{dependency.Name}' appears more than once in '{VersionFiles.VersionDetailsXml}'");
+                    result = false;
+                }
+                dependenciesBitVector.Add(dependency.Name);
+            }
+            return Task.FromResult(result);
+        }
+
+        /// <summary>
+        ///     Verify that any dependency that exists in both Version.props and Version.Details.xml has matching version numbers.
+        /// </summary>
+        /// <param name="dependencies">Parsed dependencies in the repository.</param>
+        /// <param name="versionProps">Parsed version props file</param>
+        /// <returns></returns>
+        private Task<bool> VerifyMatchingVersionProps(IEnumerable<DependencyDetail> dependencies, XmlDocument versionProps, out Task<HashSet<string>> utilizedDependencies)
+        {
+            HashSet<string> utilizedSet = new HashSet<string>();
+            bool result = true;
+            foreach (var dependency in dependencies)
+            {
+                string versionedName = VersionFiles.CalculateVersionPropsElementName(dependency.Name);
+                XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"//{versionedName}");
+
+                if (versionNode != null)
+                {
+                    // Validate that the casing matches for consistency
+                    if (versionNode.Name != versionedName)
+                    {
+                        _logger.LogError($"The dependency '{dependency.Name}' has a case mismatch between '{VersionFiles.VersionProps}' and '{VersionFiles.VersionDetailsXml}' " +
+                            $"('{versionNode.Name}' vs. '{versionedName}')");
+                        result = false;
+                    }
+                    // Validate innner version matches
+                    if (versionNode.InnerText != dependency.Version)
+                    {
+                        _logger.LogError($"The dependency '{dependency.Name}' has a version mismatch between '{VersionFiles.VersionProps}' and '{VersionFiles.VersionDetailsXml}' " +
+                            $"('{versionNode.InnerText}' vs. '{dependency.Version}')");
+                        result = false;
+                    }
+                    utilizedSet.Add(dependency.Name);
+                }
+            }
+            utilizedDependencies = Task.FromResult(utilizedSet);
+            return Task.FromResult(result);
+        }
+
+        /// <summary>
+        ///     Verify that any dependency that exists in global.json and Version.Details.xml (e.g. Arcade SDK) 
+        ///     has matching version numbers.
+        /// </summary>
+        /// <param name="dependencies">Parsed dependencies in the repository.</param>
+        /// <param name="rootToken">Root global.json token.</param>
+        /// <returns></returns>
+        private Task<bool> VerifyMatchingGlobalJson(IEnumerable<DependencyDetail> dependencies, JObject rootToken, out Task<HashSet<string>> utilizedDependencies)
+        {
+            HashSet<string> utilizedSet = new HashSet<string>();
+            bool result = true;
+            foreach (var dependency in dependencies)
+            {
+                string versionedName = VersionFiles.CalculateGlobalJsonElementName(dependency.Name);
+                JToken dependencyNode = FindDependency(rootToken, versionedName);
+                if (dependencyNode != null)
+                {
+                    // Should be a string with matching version.
+                    if (dependencyNode.Type != JTokenType.Property || ((JProperty)dependencyNode).Value.Type != JTokenType.String)
+                    {
+                        _logger.LogError($"The element '{dependency.Name}' in '{VersionFiles.GlobalJson}' should be a property with a value of type string.");
+                        result = false;
+                        continue;
+                    }
+                    JProperty property = (JProperty)dependencyNode;
+                    // Validate that the casing matches for consistency
+                    if (property.Name != versionedName)
+                    {
+                        _logger.LogError($"The dependency '{dependency.Name}' has a case mismatch between '{VersionFiles.GlobalJson}' and '{VersionFiles.VersionDetailsXml}' " +
+                            $"('{property.Name}' vs. '{versionedName}')");
+                        result = false;
+                    }
+                    // Validate version
+                    JToken value = (JToken)property.Value;
+                    if (value.Value<string>() != dependency.Version)
+                    {
+                        _logger.LogError($"The dependency '{dependency.Name}' has a version mismatch between '{VersionFiles.GlobalJson}' and '{VersionFiles.VersionDetailsXml}' " +
+                            $"('{value.Value<string>()}' vs. '{dependency.Version}')");
+                    }
+
+                    utilizedSet.Add(dependency.Name);
+                }
+            }
+            utilizedDependencies = Task.FromResult(utilizedSet);
+            return Task.FromResult(result);
+        }
+
+        /// <summary>
+        ///     Recursively walks a json tree to find a property called <paramref name="elementName"/> in its children
+        /// </summary>
+        /// <param name="currentToken">Current token to walk.</param>
+        /// <param name="elementName">Property name to find.</param>
+        /// <returns>Token with name 'name' or null if it does not exist.</returns>
+        private JToken FindDependency(JToken currentToken, string elementName)
+        {
+            foreach (JProperty property in currentToken.Children<JProperty>())
+            {
+                if (property.Name.Equals(elementName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return property;
+                }
+
+                JToken foundToken = FindDependency(property.Value, elementName);
+                if (foundToken != null)
+                {
+                    return foundToken;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        ///     Check that each dependency in <paramref name="dependencies"/> exists in at least one of the <paramref name="utilizedDependencySets"/>
+        /// </summary>
+        /// <param name="dependencies">Parsed dependencies in the repository.</param>
+        /// <param name="utilizedDependencySets">Bit vectors dependency expression locations.</param>
+        /// <returns></returns>
+        private Task<bool> VerifyUtilizedDependencies(IEnumerable<DependencyDetail> dependencies, IEnumerable<HashSet<string>> utilizedDependencySets)
+        {
+            bool result = true;
+            foreach (var dependency in dependencies)
+            {
+                if (!utilizedDependencySets.Where(set => set.Contains(dependency.Name)).Any())
+                {
+                    _logger.LogWarning($"The dependency '{dependency.Name}' is unused in either '{VersionFiles.GlobalJson}' or '{VersionFiles.VersionProps}'");
+                    result = false;
+                }
+            }
+            return Task.FromResult(result);
         }
     }
 }

@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task<string> GetFileContentsAsync(string relativeFilePath, string repoUri, string branch)
         {
-            string fullPath = System.IO.Path.Combine(repoUri, relativeFilePath);
+            string fullPath = Path.Combine(repoUri, relativeFilePath);
             using (var streamReader = new StreamReader(fullPath))
             {
                 return await streamReader.ReadToEndAsync();

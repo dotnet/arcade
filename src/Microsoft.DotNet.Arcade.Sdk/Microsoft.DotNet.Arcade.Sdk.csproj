@@ -3,7 +3,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
-    
+
     <ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
 
     <IsPackable>true</IsPackable>
@@ -31,6 +31,9 @@
     </None>
     <None Include="tools/*.*" Pack="true">
       <PackagePath>tools/%(Filename)%(Extension)</PackagePath>
+    </None>
+    <None Include="tools/snk/*.snk" Pack="true">
+      <PackagePath>tools/snk/%(Filename)%(Extension)</PackagePath>
     </None>
   </ItemGroup>
 
