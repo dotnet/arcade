@@ -140,7 +140,7 @@ static char sccsid[] __attribute__((used)) = "@(#)Version $(FileVersion)$(_Sourc
 
     <WriteLinesToFile
       File="$(NativeVersionFile)"
-      Lines="$(_NativeVersionFileContents)"
+      Lines="$(_NativeVersionFileContents.Replace(';', '%3B'))"
       Overwrite="true" />
 
     <ItemGroup>
