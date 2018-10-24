@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Dependencies>
+  <ProductDependencies>
+    <Dependency Name="Foo.Bar" Version="1.2.3">
+      <Uri>https://foo.com/foo/bar</Uri>
+      <Sha>12345</Sha>
+    </Dependency>
+    <Dependency Name="Foo.Bar2" Version="1.2.4">
+      <Uri>https://foo.com/foo/bar</Uri>
+      <Sha>67890</Sha>
+    </Dependency>
+  </ProductDependencies>
+  <ToolsetDependencies>
+    <Dependency Name="Foo.Bar3" Version="1.2.4">
+      <Uri>https://foo.com/foo/bar</Uri>
+      <Sha>67890</Sha>
+    </Dependency>
+  </ToolsetDependencies>
+</Dependencies>

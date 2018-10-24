@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Dependencies>
+  <ProductDependencies>
+    <Dependency Name="Existing.Dependency" Version="1.2.3">
+      <Uri>https://foo.com/foo/baz</Uri>
+      <Sha>szdfsdfsdf</Sha>
+    </Dependency>
+  </ProductDependencies>
+</Dependencies>

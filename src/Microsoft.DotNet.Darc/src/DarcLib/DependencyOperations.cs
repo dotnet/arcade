@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.DarcLib
             {
                 {
                     KnownDependencyType.GlobalJson,
-                    new Func<GitFileManager, string, DependencyDetail, Task>(UpdateGlobalJson)
+                    new Func<GitFileManager, string, string, DependencyDetail, Task>(UpdateGlobalJson)
                 }
             };
 
@@ -42,6 +42,7 @@ namespace Microsoft.DotNet.DarcLib
         public static async Task UpdateGlobalJson(
             GitFileManager fileManager,
             string repository,
+            string branch,
             DependencyDetail dependency)
         {
             var dependencyMapping = new Dictionary<string, string>
@@ -58,12 +59,14 @@ namespace Microsoft.DotNet.DarcLib
             string parent = dependencyMapping[dependency.Name];
 
             await fileManager.AddDependencyToGlobalJson(
-                Path.Combine(repository, VersionFiles.GlobalJson),
+                repository,
+                branch,
                 parent,
                 dependency.Name,
                 dependency.Version);
             await fileManager.AddDependencyToVersionDetails(
-                Path.Combine(repository, VersionFiles.VersionDetailsXml),
+                repository,
+                branch,
                 dependency,
                 DependencyType.Toolset);
         }
