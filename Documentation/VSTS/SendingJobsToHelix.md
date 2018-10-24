@@ -31,7 +31,7 @@ Example: `"Microsoft.DotNet.Helix.Sdk": "1.0.0-beta.18502.3"`
 
 If you plan to send a payload (such as a work item) to Helix, you will need to be authorized. For official builds you can use your current access token; however, sending jobs from public CI builds is a different story.
 
-For these builds, you will need to copy the *BotAccount-dotnet-github-anon-kaonashi-bot-helix-token* secret from EngKeyVault and specify it as a build variable. This will allow you to send payloads to Helix while minimizing the risk of leaking secrets.
+For these builds, you will need to copy the *BotAccount-dotnet-github-anon-kaonashi-bot-helix-token* secret from **ToolsKV** (subscription *Dotnet Engineering services*) and specify it as a build variable. This will allow you to send payloads to Helix while minimizing the risk of leaking secrets.
 
 In the dev.azure.com/dnceng/public project, you can use the `Helix Anonymous` variable group to provide this secret to your build
 
