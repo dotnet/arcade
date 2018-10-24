@@ -280,6 +280,9 @@ End Namespace";
                 }
             }
 
+            // The ResourceManager property being initialized lazily is an important optimization that lets .NETNative 
+            // completely remove the ResourceManager class if the disk space saving optimization to strip resources 
+            // (/DisableExceptionMessages) is turned on in the compiler.
             string result;
             switch (language)
             {
