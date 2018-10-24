@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.XPath;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
@@ -155,11 +156,12 @@ namespace Microsoft.DotNet.DarcLib
         }
 
         public async Task AddDependencyToVersionDetails(
-            string filePath,
+            string repo,
+            string branch,
             DependencyDetail dependency,
             DependencyType dependencyType)
         {
-            XmlDocument versionDetails = await ReadVersionDetailsXmlAsync(filePath, null);
+            XmlDocument versionDetails = await ReadVersionDetailsXmlAsync(repo, null);
 
             XmlNode newDependency = versionDetails.CreateElement("Dependency");
 
@@ -179,42 +181,122 @@ namespace Microsoft.DotNet.DarcLib
             sha.InnerText = dependency.Commit;
             newDependency.AppendChild(sha);
 
-            XmlNode dependencies = versionDetails.SelectSingleNode($"//{dependencyType}Dependencies");
-            dependencies.AppendChild(newDependency);
+            XmlNode dependenciesNode = versionDetails.SelectSingleNode($"//{dependencyType}Dependencies");
+            if (dependenciesNode == null)
+            {
+                dependenciesNode = versionDetails.CreateElement("{dependencyType}Dependencies");
+                versionDetails.DocumentElement.AppendChild(dependenciesNode);
+            }
+            dependenciesNode.AppendChild(newDependency);
 
-            var file = new GitFile(filePath, versionDetails);
-            File.WriteAllText(file.FilePath, file.Content);
+            // TODO: This should not be done here.  This should return some kind of generic file container to the caller,
+            // who will gather up all updates and then call the git client to write the files all at once:
+            // https://github.com/dotnet/arcade/issues/1095.  Today this is only called from the Local interface so it's okay for now.
+            var file = new GitFile(VersionFiles.VersionDetailsXml, versionDetails);
+            await _gitClient.PushFilesAsync(new List<GitFile> { file }, repo, branch, $"Add {dependency} to '{VersionFiles.VersionDetailsXml}'");
 
             _logger.LogInformation(
-                $"Dependency '{dependency.Name}' with version '{dependency.Version}' successfully added to Version.Details.xml");
+                $"Dependency '{dependency.Name}' with version '{dependency.Version}' successfully added to '{VersionFiles.VersionDetailsXml}'");
         }
 
-        public async Task AddDependencyToVersionProps(string filePath, DependencyDetail dependency)
+        /// <summary>
+        ///     Add a dependency to Versions.props.  This has the form:
+        ///     <!-- Package names -->
+        ///     <PropertyGroup>
+        ///         <MicrosoftDotNetApiCompatPackage>Microsoft.DotNet.ApiCompat</MicrosoftDotNetApiCompatPackage>
+        ///     </PropertyGroup>
+        ///     
+        ///     <!-- Package versions -->
+        ///     <PropertyGroup>
+        ///         <MicrosoftDotNetApiCompatPackageVersion>1.0.0-beta.18478.5</MicrosoftDotNetApiCompatPackageVersion>
+        ///     </PropertyGroup>
+        ///     
+        ///     See https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md for more
+        ///     information.
+        /// </summary>
+        /// <param name="repo">Path to Versions.props file</param>
+        /// <param name="dependency">Dependency information to add.</param>
+        /// <returns>Async task.</returns>
+        public async Task AddDependencyToVersionsProps(string repo, string branch, DependencyDetail dependency)
         {
-            XmlDocument versionProps = await ReadVersionPropsAsync(filePath, null);
+            XmlDocument versionProps = await ReadVersionPropsAsync(repo, null);
+            
+            string packageNameElementName = VersionFiles.GetVersionPropsPackageElementName(dependency.Name);
+            string packageVersionElementName = VersionFiles.GetVersionPropsPackageVersionElementName(dependency.Name);
 
-            string versionedName = VersionFiles.CalculateVersionPropsElementName(dependency.Name);
-            XmlNode versionNode = versionProps.DocumentElement.SelectNodes("//PropertyGroup").Item(0);
+            // Select elements by local name, since the Project (DocumentElement) element often has a default
+            // xmlns set.
+            XmlNodeList propertyGroupNodes = versionProps.DocumentElement.SelectNodes($"//*[local-name()='PropertyGroup']");
 
-            XmlNode newDependency = versionProps.CreateElement(versionedName);
-            newDependency.InnerText = dependency.Version;
-            versionNode.AppendChild(newDependency);
+            XmlNode newPackageVersionElement = versionProps.CreateElement(packageVersionElementName, versionProps.DocumentElement.NamespaceURI);
+            newPackageVersionElement.InnerText = dependency.Version;
+            XmlNode newPackageNameElement = versionProps.CreateElement(packageNameElementName, versionProps.DocumentElement.NamespaceURI);
+            newPackageNameElement.InnerText = dependency.Name;
 
-            var file = new GitFile(filePath, versionProps);
-            File.WriteAllText(file.FilePath, file.Content);
+            bool addedPackageVersionElement = false;
+            bool addedPackageNameElement = false;
+            // There can be more than one property group.  Find the appropriate one containing an existing element of
+            // the same type, and add it to the parent.
+            foreach (XmlNode propertyGroupNode in propertyGroupNodes)
+            {
+                if (propertyGroupNode.HasChildNodes)
+                {
+                    foreach (XmlNode propertyNode in propertyGroupNode.ChildNodes)
+                    {
+                        if (!addedPackageVersionElement && propertyNode.Name.EndsWith(VersionFiles.VersionPropsVersionElementSuffix))
+                        {
+                            propertyGroupNode.AppendChild(newPackageVersionElement);
+                            addedPackageVersionElement = true;
+                            break;
+                        }
+                        else if (!addedPackageNameElement && propertyNode.Name.EndsWith(VersionFiles.VersionPropsPackageElementSuffix))
+                        {
+                            propertyGroupNode.AppendChild(newPackageNameElement);
+                            addedPackageNameElement = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Add the property groups if none were present
+            if (!addedPackageVersionElement)
+            {
+                XmlNode propertyGroupElement = versionProps.CreateElement("PropertyGroup");
+                XmlNode propertyGroupCommentElement = versionProps.CreateComment("Package versions");
+                versionProps.DocumentElement.AppendChild(propertyGroupCommentElement);
+                versionProps.DocumentElement.AppendChild(propertyGroupElement);
+                propertyGroupElement.AppendChild(newPackageVersionElement);
+            }
+
+            if (!addedPackageNameElement)
+            {
+                XmlNode propertyGroupElement = versionProps.CreateElement("PropertyGroup");
+                XmlNode propertyGroupCommentElement = versionProps.CreateComment("Package names");
+                versionProps.DocumentElement.AppendChild(propertyGroupCommentElement);
+                versionProps.DocumentElement.AppendChild(propertyGroupElement);
+                propertyGroupElement.AppendChild(newPackageNameElement);
+            }
+
+            // TODO: This should not be done here.  This should return some kind of generic file container to the caller,
+            // who will gather up all updates and then call the git client to write the files all at once:
+            // https://github.com/dotnet/arcade/issues/1095.  Today this is only called from the Local interface so it's okay for now.
+            var file = new GitFile(VersionFiles.VersionProps, versionProps);
+            await _gitClient.PushFilesAsync(new List<GitFile> { file }, repo, branch, $"Add {dependency} to '{VersionFiles.VersionProps}'");
 
             _logger.LogInformation(
-                $"Dependency '{dependency.Name}' with version '{dependency.Version}' successfully added to Version.props");
+                $"Dependency '{dependency.Name}' with version '{dependency.Version}' successfully added to '{VersionFiles.VersionProps}'");
         }
 
         public async Task AddDependencyToGlobalJson(
-            string filePath,
+            string repo,
+            string branch,
             string parentField,
             string dependencyName,
             string version)
         {
             JToken versionProperty = new JProperty(dependencyName, version);
-            JObject globalJson = await ReadGlobalJsonAsync(filePath, null);
+            JObject globalJson = await ReadGlobalJsonAsync(repo, branch);
             JToken parent = globalJson[parentField];
 
             if (parent != null)
@@ -226,8 +308,8 @@ namespace Microsoft.DotNet.DarcLib
                 globalJson.Add(new JProperty(parentField, new JObject(versionProperty)));
             }
 
-            var file = new GitFile(filePath, globalJson);
-            File.WriteAllText(file.FilePath, file.Content);
+            var file = new GitFile(VersionFiles.GlobalJson, globalJson);
+            await _gitClient.PushFilesAsync(new List<GitFile> { file }, repo, branch, $"Add {dependencyName} to '{VersionFiles.GlobalJson}'");
 
             _logger.LogInformation(
                 $"Dependency '{dependencyName}' with version '{version}' successfully added to global.json");
@@ -256,15 +338,24 @@ namespace Microsoft.DotNet.DarcLib
             return document;
         }
 
+        /// <summary>
+        ///     Update well-known version files.
+        /// </summary>
+        /// <param name="versionProps">Versions.props xml document</param>
+        /// <param name="token">Global.json document</param>
+        /// <param name="itemToUpdate">Item that needs an update.</param>
+        /// <remarks>
+        ///     TODO: https://github.com/dotnet/arcade/issues/1095
+        /// </remarks>
         private void UpdateVersionFiles(XmlDocument versionProps, JToken token, DependencyDetail itemToUpdate)
         {
-            string versionElementName = VersionFiles.CalculateVersionPropsElementName(itemToUpdate.Name);
+            string versionElementName = VersionFiles.GetVersionPropsPackageVersionElementName(itemToUpdate.Name);
 
-            XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"//{versionElementName}");
+            XmlNode packageVersionNode = versionProps.DocumentElement.SelectSingleNode($"//*[local-name()='{versionElementName}']");
 
-            if (versionNode != null)
+            if (packageVersionNode != null)
             {
-                versionNode.InnerText = itemToUpdate.Version;
+                packageVersionNode.InnerText = itemToUpdate.Version;
             }
             else
             {
@@ -379,7 +470,7 @@ namespace Microsoft.DotNet.DarcLib
             bool result = true;
             foreach (var dependency in dependencies)
             {
-                string versionedName = VersionFiles.CalculateVersionPropsElementName(dependency.Name);
+                string versionedName = VersionFiles.GetVersionPropsPackageVersionElementName(dependency.Name);
                 XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"//{versionedName}");
 
                 if (versionNode != null)

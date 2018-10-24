@@ -49,11 +49,13 @@ namespace Microsoft.DotNet.DarcLib
             }
             else
             {
-                await _fileManager.AddDependencyToVersionProps(
-                    Path.Combine(_repo, VersionFiles.VersionProps),
+                await _fileManager.AddDependencyToVersionsProps(
+                    _repo,
+                    null,
                     dependency);
                 await _fileManager.AddDependencyToVersionDetails(
-                    Path.Combine(_repo, VersionFiles.VersionDetailsXml),
+                    _repo,
+                    null,
                     dependency,
                     dependencyType);
             }
