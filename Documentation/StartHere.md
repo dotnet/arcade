@@ -78,7 +78,7 @@ some highlights:
        files to your eng\ folder. Adjust the version prefix and prerelease label
        as necessary.
     5. Add dotnet-core feed to
-       [NuGet.config](https://github.com/dotnet/arcade-minimalci-sample/blob/master/NuGet.Config).
+       [NuGet.config](https://github.com/dotnet/arcade-minimalci-sample/blob/master/NuGet.config).
     6. Must have a root project/solution file for the repo to build.
 
     **Using Arcade packages** - See [documentation](CorePackages/) for
@@ -135,11 +135,11 @@ dnceng@microsoft.com
   In addition, we are pushing to bootstrap in native tools (e.g. cmake) rather
   than bake them into the images.  This means that setting up a developer
   machine becomes a simpler process.  Documentation on the process of
-  bootstrapping can be found at [here](NativeDependencies/).
+  bootstrapping can be found [here](Projects/NativeDependencies/).
 
   See [here](VSTS/VSTSOnboarding.md#agent-queues) for more information. For
   additional questions contact 'dnceng'. Either @dotnet/dnceng on GitHub, or
-  dnceng@microsoft.com.  Also, you post to the [Arcade Teams channel](https://teams.microsoft.com/l/channel/19%3acf9dc0ac9753432dbac4023239a9965f%40thread.skype/Arcade?groupId=147df318-61de-4f04-8f7b-ecd328c256bb&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47).
+  dnceng@microsoft.com.  Also, you can post to the [Arcade Teams channel](https://teams.microsoft.com/l/channel/19%3acf9dc0ac9753432dbac4023239a9965f%40thread.skype/Arcade?groupId=147df318-61de-4f04-8f7b-ecd328c256bb&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47).
 
 - **My repo is currently on repo-toolset, how can I move into Arcade?**
 
