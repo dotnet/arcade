@@ -161,7 +161,7 @@ namespace Microsoft.DotNet.DarcLib
             DependencyDetail dependency,
             DependencyType dependencyType)
         {
-            XmlDocument versionDetails = await ReadVersionDetailsXmlAsync(repo, null);
+            XmlDocument versionDetails = await ReadVersionDetailsXmlAsync(repo, branch);
 
             XmlNode newDependency = versionDetails.CreateElement("Dependency");
 
@@ -214,12 +214,13 @@ namespace Microsoft.DotNet.DarcLib
         ///     See https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md for more
         ///     information.
         /// </summary>
-        /// <param name="repo">Path to Versions.props file</param>
+        /// <param name="repo">Repository root path or URI.</param>
+        /// <param name="branch">Repository branch.</param>
         /// <param name="dependency">Dependency information to add.</param>
         /// <returns>Async task.</returns>
         public async Task AddDependencyToVersionsProps(string repo, string branch, DependencyDetail dependency)
         {
-            XmlDocument versionProps = await ReadVersionPropsAsync(repo, null);
+            XmlDocument versionProps = await ReadVersionPropsAsync(repo, branch);
             
             string packageNameElementName = VersionFiles.GetVersionPropsPackageElementName(dependency.Name);
             string packageVersionElementName = VersionFiles.GetVersionPropsPackageVersionElementName(dependency.Name);

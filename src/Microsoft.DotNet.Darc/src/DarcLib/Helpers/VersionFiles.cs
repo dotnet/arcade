@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.DarcLib
         public const string VersionDetailsXml = "eng/Version.Details.xml";
         public const string VersionProps = "eng/Versions.props";
         public const string GlobalJson = "global.json";
-        public const string VersionPropsVersionElementSuffix = "PackageVersion";
+        public const string VersionPropsVersionElementSuffix = "Version";
         public const string VersionPropsPackageElementSuffix = "Package";
 
         public static string GetVersionPropsPackageVersionElementName(string dependencyName)
