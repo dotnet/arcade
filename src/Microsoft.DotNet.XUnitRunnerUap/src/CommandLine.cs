@@ -40,8 +40,6 @@ namespace Microsoft.DotNet.XUnitRunnerUap
 
         public int? MaxParallelThreads { get; set; }
 
-        public bool NoAppDomain { get; protected set; }
-
         public bool NoColor { get; protected set; }
 
         public bool NoLogo { get; protected set; }
@@ -57,7 +55,6 @@ namespace Microsoft.DotNet.XUnitRunnerUap
         public bool ShowProgress { get; protected set; }
 
         public bool Wait { get; protected set; }
-        public string InstallLocation { get; internal set; }
 
         public static CommandLine Parse(params string[] args)
         {
@@ -136,13 +133,7 @@ namespace Microsoft.DotNet.XUnitRunnerUap
 
                 optionName = optionName.Substring(1);
 
-                if (optionName == "installlocation")
-                {
-                    if (option.Value == null)
-                        throw new ArgumentException("missing argument for -installlocation");
-                    InstallLocation = option.Value;
-                }
-                else if (optionName == "nologo")
+                if (optionName == "nologo")
                 {
                     GuardNoOptionValue(option);
                     NoLogo = true;
@@ -156,11 +147,6 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                 {
                     GuardNoOptionValue(option);
                     NoColor = true;
-                }
-                else if (optionName == "noappdomain")
-                {
-                    GuardNoOptionValue(option);
-                    NoAppDomain = true;
                 }
                 else if (optionName == "debug")
                 {
