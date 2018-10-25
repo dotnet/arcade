@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using CommandLine;
+using Microsoft.DotNet.Darc.Operations;
 
 namespace Microsoft.DotNet.Darc.Options
 {
@@ -14,5 +15,10 @@ namespace Microsoft.DotNet.Darc.Options
 
         [Option('u', "update", Required = true, HelpText = "Timestamp of update to retry.  You can view failed updates using the get-subscription-history verb.")]
         public long UpdateId { get; set; }
+
+        public override Operation GetOperation()
+        {
+            return new RetrySubscriptionUpdateOperation(this);
+        }
     }
 }

@@ -3,11 +3,16 @@
 // See the LICENSE file in the project root for more information.
 
 using CommandLine;
+using Microsoft.DotNet.Darc.Operations;
 
 namespace Microsoft.DotNet.Darc.Options
 {
     [Verb("verify", HelpText = "Verify that the dependency information in the repository is correct.")]
     internal class VerifyCommandLineOptions : CommandLineOptions
     {
+        public override Operation GetOperation()
+        {
+            return new VerifyOperation(this);
+        }
     }
-}
+} 

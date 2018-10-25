@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using CommandLine;
+using Microsoft.DotNet.Darc.Operations;
 
 namespace Microsoft.DotNet.Darc.Options
 {
@@ -24,5 +25,10 @@ namespace Microsoft.DotNet.Darc.Options
 
         [Option('c', "commmit", Required = false, HelpText = "SHA at which the dependency was produced.")]
         public string Commit { get; set; }
+
+        public override Operation GetOperation()
+        {
+            return new AddOperation(this);
+        }
     }
 }

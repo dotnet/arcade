@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Darc.Helpers
         /// <param name="options">Command line options</param>
         /// <returns>Darc settings for use in remote commands</returns>
         /// <remarks>The command line takes precedence over the darc settings file.</remarks>
-        public static DarcSettings GetDarcSettings(CommandLineOptions options, ILogger logger)
+        public static DarcSettings GetDarcSettings(CommandLineOptions options, ILogger logger, string repoUri = null)
         {
             DarcSettings darcSettings = new DarcSettings();
             darcSettings.GitType = GitRepoType.None;
@@ -58,6 +58,24 @@ namespace Microsoft.DotNet.Darc.Helpers
                 LocalSettings localSettings = LoadSettingsFile();
                 darcSettings.BuildAssetRegistryBaseUri = localSettings.BuildAssetRegistryBaseUri;
                 darcSettings.BuildAssetRegistryPassword = localSettings.BuildAssetRegistryPassword;
+
+                if (!string.IsNullOrEmpty(repoUri))
+                {
+                    if (repoUri.Contains("github"))
+                    {
+                        darcSettings.GitType = GitRepoType.GitHub;
+                        darcSettings.PersonalAccessToken = localSettings.GitHubToken;
+                    }
+                    else if (repoUri.Contains("dev.azure.com"))
+                    {
+                        darcSettings.GitType = GitRepoType.AzureDevOps;
+                        darcSettings.PersonalAccessToken = localSettings.AzureDevOpsToken;
+                    }
+                    else
+                    {
+                        logger.LogWarning($"Unknown repository '{repoUri}'");
+                    }
+                }
             }
             catch (FileNotFoundException)
             {

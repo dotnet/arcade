@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using CommandLine;
+using Microsoft.DotNet.Darc.Operations;
 
 namespace Microsoft.DotNet.Darc.Options
 {
@@ -11,5 +12,10 @@ namespace Microsoft.DotNet.Darc.Options
     {
         [Option('i', "id", Required = true, HelpText = "ID of subscription to delete.")]
         public string Id { get; set; }
+
+        public override Operation GetOperation()
+        {
+            return new DeleteSubscriptionOperation(this);
+        }
     }
 }
