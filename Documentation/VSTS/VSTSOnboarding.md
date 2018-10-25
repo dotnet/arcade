@@ -42,7 +42,7 @@ Current machine pool recommendations:
 | ---------- | -------------------- | -------------------------- |
 | Windows_NT | dotnet-external-temp |                            |
 | Linux      | Hosted Ubuntu 1604   | dnceng-linux-external-temp |
-| OSX        | Hosted Mac Preview   | |
+| OSX        | Hosted macOS         | |
 
 ### Internal
 
