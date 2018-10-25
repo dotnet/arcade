@@ -280,6 +280,9 @@ End Namespace";
                 }
             }
 
+            // The ResourceManager property being initialized lazily is an important optimization that lets .NETNative 
+            // completely remove the ResourceManager class if the disk space saving optimization to strip resources 
+            // (/DisableExceptionMessages) is turned on in the compiler.
             string result;
             switch (language)
             {
@@ -291,10 +294,9 @@ using System.Reflection;
 {namespaceStart}
 {classIndent}internal static partial class {className}
 {classIndent}{{
-{memberIndent}internal static global::System.Resources.ResourceManager ResourceManager {{ get; }} = new global::System.Resources.ResourceManager(typeof({resourceTypeName}));
-
+{memberIndent}private static global::System.Resources.ResourceManager s_resourceManager;
+{memberIndent}internal static global::System.Resources.ResourceManager ResourceManager => s_resourceManager ?? (s_resourceManager = new global::System.Resources.ResourceManager(typeof({resourceTypeName})));
 {getStringMethod}
-
 {strings}
 {classIndent}}}
 {namespaceEnd}
@@ -311,10 +313,16 @@ Imports System.Reflection
 {memberIndent}Private Sub New
 {memberIndent}End Sub
 {memberIndent}
-{memberIndent}Friend Shared ReadOnly Property ResourceManager As New Global.System.Resources.ResourceManager(GetType({resourceTypeName}))
-
+{memberIndent}Private Shared s_resourceManager As Global.System.Resources.ResourceManager
+{memberIndent}Friend Shared ReadOnly Property ResourceManager As Global.System.Resources.ResourceManager
+{memberIndent}    Get
+{memberIndent}        If s_resourceManager Is Nothing Then
+{memberIndent}            s_resourceManager = New Global.System.Resources.ResourceManager(GetType({resourceTypeName}))
+{memberIndent}        End If
+{memberIndent}        Return s_resourceManager
+{memberIndent}    End Get
+{memberIndent}End Property
 {getStringMethod}
-
 {strings}
 {classIndent}End Class
 {namespaceEnd}
