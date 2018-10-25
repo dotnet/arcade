@@ -44,11 +44,11 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var finishedCount = workItems.Count(wi => wi.State == "Finished");
                 if (waitingCount == 0 && runningCount == 0)
                 {
-                    Log.LogMessage($"Job {jobName} is completed with {finishedCount} finished work items. Results can be found at {GetMissionControlResultUri()}");
+                    Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items. Results can be found at {GetMissionControlResultUri()}");
                     return;
                 }
 
-                Log.LogMessage($"Job {jobName} is not yet completed with Waiting: {waitingCount}, Running: {runningCount}, Finished: {finishedCount}");
+                Log.LogMessage(MessageImportance.High, $"Job {jobName} is not yet completed with Waiting: {waitingCount}, Running: {runningCount}, Finished: {finishedCount}");
                 await Task.Delay(10000);
             }
         }
@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
                 catch (WebException e)
                 {
-                    Log.LogMessage("Failed to connect to GitHub to retrieve username", e.StackTrace);
+                    Log.LogMessage(MessageImportance.High, "Failed to connect to GitHub to retrieve username", e.StackTrace);
                     return "Mission Control (generation of MC link failed)";
                 }
                 JsonTextReader jsonTextReader = new JsonTextReader(new StringReader(githubJson));
