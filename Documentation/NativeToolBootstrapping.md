@@ -34,7 +34,7 @@ Entry-point scripts are:
 
 - init-tools-native.sh
 
-These scripts will also be wired into the `eng\common\Build.ps1` and `eng\common\build.sh` scripts so that they will run as part of a repo's restore operations.
+Add a call to these scripts in your build script to bootstrap all tools specified in your global.json.
 
 ### Common libraries
 
@@ -60,7 +60,7 @@ Native tool installers will be responsible for supporting an "install" operation
 
 #### Shims
 
-Most [native tools](#native-tools-installers) will need to provide a "shim" via the common library scripts.  "Shims" are used to execute the native toolset.  Since there is no enforced structure on the file layout for a native asset, shims bridge the gap so that we have a single well-known entry point that can be used for our native toolset.  Having shims allows us to put all of them in a single folder (in a given repo) so that we can use them to access the tools rather than managing path access to every known toolset.
+Most [native tools](#native-tools-installers) will need to provide a "shim" via the common library scripts.  "Shims" are used to execute the native toolset. Shims bridge the gap so that we have a single well-known entry point that can be used for our native toolset.  Having shims allows us to put all of them in a single folder (in a given repo) so that we can use them to access the tools rather than managing path access to every known toolset.
 
 It is possible that a native toolset will require more than one shim.
 
@@ -72,7 +72,6 @@ Native toolset assets will be placed in an Azure blob storage container.  The de
 
 ```Text
 \external
-  \any (resources that would work for any OS)
   \linux
     \tool1
       -installer
@@ -87,8 +86,6 @@ Native toolset assets will be placed in an Azure blob storage container.  The de
 
 The `external` folder is a folder structure that contains all installers and resources for external depencencies.  These are zips / tarballs /etc... provided by a tool publisher which we have republished into Azure blob storage, organized in folders by the operating system and tool to be installed.
 
-In cases where the resource's version is not identifiable by the resource's filename, the resource must be uploaded into a folder that allows the installer to disambiguate the version.
-
 ## Example - resource-packages container
 
 ```Text
@@ -102,15 +99,8 @@ In cases where the resource's version is not identifiable by the resource's file
       -cmake-3.11.1-win32-x86.zip
       -cmake-3.11.1-win64-x64.zip
     \python
-      -python-3.6.5-embed-amd64.zip
-      -python-3.7.0b3-embed-win32.zip
-    \vcredist
-      \14.0
-        -vc_redist.x64.exe
-        -vc_redist.x86.exe
-      \15.0
-        -vc_redist.x64.exe
-        -vc_redist.x86.exe
+      -python-3.6.5-win64-x64.zip
+      -python-3.7.0b3-win32-x86.zip
 ```
 
 ## Questions
@@ -121,10 +111,17 @@ This will likely come up very quickly and deserves consideration.  The current p
 
 **I need to onboard a new native tool. What do I do?**
 
-* Upload the required files for tool installation to the https://netcorenativeassets.blob.core.windows.net/resource-packages azure storage container
-* Write an installer for the tool. These should be scripts called 'install-tool.ps1/sh'
-    * ps1 example: [install-cmake.ps1](https://github.com/dotnet/arcade/tree/master/eng/common/native/install-cmake.ps1)
-    * sh example: [install-cmake.sh](https://github.com/dotnet/arcade/tree/master/eng/common/native/install-cmake.sh)
+* Upload the required files for tool installation to the https://netcorenativeassets.blob.core.windows.net/resource-packages azure storage container (contact @dnceng if you need assistance) using the specified structure and naming convention:
+
+* **Windows**
+  * Packages should be uploaded to the `windows/<tool-name>` folder structure in the container.
+  * Naming convention for packages is as follows `<tool-name>-<version>-<win32 | win64>-<x86 | x64>.zip`
+  * Once the package has been uploaded, you should be able to add a reference to it in your global.json file.
+
+* **Linux**
+  * There is no requirement for a strict naming convention for Linux tools, taking into account that there may be different packages available for different distros and configurations.  Upload the tool packages to the `linux/<tool-name>` folder structure in the container.
+  * Write an installer for the tool. This should be a script called 'install-tool.sh' and create a Pull Request to the dotnet/arcade repo to introduce the installer in the [eng/common/native](https://github.com/dotnet/arcade/tree/master/eng/common/native) folder.
+    * Example: [install-cmake.sh](https://github.com/dotnet/arcade/tree/master/eng/common/native/install-cmake.sh)
 
 **How do you determine which version of the common libraries / installers to use?**
 
@@ -153,3 +150,5 @@ Example:
 **Why is each native dependency required to have an "installer", why isn't the local repo handling unzipping and laying out the assets?**
 
 I think that this model will allow us to be a bit more flexible in the types of dependencies that we install and provide a method for non-xcopy deployable dependencies to be installed in the future.  The tool installers may make use of common libraries for installs though.
+
+We are looking into improving this experience to generizice the installers and reduce boilerplate.
