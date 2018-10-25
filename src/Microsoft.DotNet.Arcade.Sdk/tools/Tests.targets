@@ -65,5 +65,6 @@
     </MSBuild>
   </Target>
 
-  <Import Project="XUnit.targets" Condition="'$(TestRunnerName)' == 'XUnit'"/>
+  <!-- Import specialized targets files of supported test runners -->
+  <Import Project="$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).targets" Condition="'$(TestRunnerName)' != '' and Exists('$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).targets')"/>
 </Project>
