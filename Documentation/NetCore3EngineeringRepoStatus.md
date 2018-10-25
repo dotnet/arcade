@@ -1,6 +1,6 @@
 # .NET Core 3 Engineering transition status
 
-## Work Streams
+## Primary Deliverables / Work Streams
 
 1. Using Azure DevOps for CI
 2. Using shared toolset (Arcade SDK)
