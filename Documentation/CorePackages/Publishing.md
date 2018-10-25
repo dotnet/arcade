@@ -1,6 +1,6 @@
 # Arcade SDK Publishing Implementation
 
-The publishing logic used by the Arcade SDK is implemented [here](../src/Microsoft.DotNet.Arcade.Sdk/tools/Publishing.proj) and [here](../src/Microsoft.DotNet.Build.Tasks.Feed). This document provides a brief outline of how to use the implementation and how it works.
+The publishing logic used by the Arcade SDK is implemented [here](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Publish.proj) and [here](../../src/Microsoft.DotNet.Build.Tasks.Feed). This document provides a brief outline of how to use the implementation and how it works.
 
 Arcade onboarded repos use this implementation automatically by using the Arcade SDK. *If the repo use the SDK you won't have to do anything else to use the publishing implementation.*
 
