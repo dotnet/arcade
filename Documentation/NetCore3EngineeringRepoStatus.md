@@ -172,9 +172,9 @@ Owners: licavalc
 
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/701)         |                      | Not scheduled | Looking at documentation / requirements|
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/699) |                      | Not scheduled | Looking at documentation / requirements|
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/698)       |                      | Not scheduled | Looking at documentation / requirements|
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/701)         |                      | Not scheduled | This. will begin. after. shared. toolset. migration. is. completed, and. C++/CLI. support. for. netcore. is. made. available. in. Dev16. builds.|
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/699) |        TBD.          | In. progress..| Working. with. Arcade. team. to. vcxproj. support for. native. C++. builds|
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/698)       |                      | Not scheduled | This. will. being. around the same. time. Azure. DevOps. for. CI. is being. adopted|
 | [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/700)       |                      | Not scheduled | Looking at documentation / requirements|
 
 ---
