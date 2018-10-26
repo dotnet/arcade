@@ -13,23 +13,21 @@
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" Publish="false" />
     <PackageReference Include="Microsoft.Cci" Version="4.0.0-rc3-24214-00" />
     <PackageReference Include="Microsoft.DiaSymReader.Converter" Version="$(MicrosoftDiaSymReaderConverterVersion)" />
-    <PackageReference Include="Microsoft.DiaSymReader.Native" Version="$(MicrosoftDiaSymReaderNativeVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.DiaSymReader.Native" Version="$(MicrosoftDiaSymReaderNativeVersion)" />
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.0.0" />
     <PackageReference Include="System.Diagnostics.FileVersionInfo" Version="4.0.0" />
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="$(NuGetPackageRoot)\microsoft.diasymreader.native\$(MicrosoftDiaSymReaderNativeVersion)\runtimes\win\native\Microsoft.DiaSymReader.Native.x86.dll" Condition="'$(TargetFramework)'=='net472'">
+  <ItemGroup Condition="'$(TargetFramework)'=='net472'">
+    <None Include="$(NuGetPackageRoot)\microsoft.diasymreader.native\$(MicrosoftDiaSymReaderNativeVersion)\runtimes\win\native\Microsoft.DiaSymReader.Native.x86.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>false</Visible>
-      <Pack>false</Pack>
-    </Content>
-    <Content Include="$(NuGetPackageRoot)\microsoft.diasymreader.native\$(MicrosoftDiaSymReaderNativeVersion)\runtimes\win\native\Microsoft.DiaSymReader.Native.amd64.dll" Condition="'$(TargetFramework)'=='net472'">
+    </None>
+    <None Include="$(NuGetPackageRoot)\microsoft.diasymreader.native\$(MicrosoftDiaSymReaderNativeVersion)\runtimes\win\native\Microsoft.DiaSymReader.Native.amd64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>false</Visible>
-      <Pack>false</Pack>
-    </Content>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
