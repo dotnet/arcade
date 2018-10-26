@@ -1,15 +1,26 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
-  <ItemGroup>
-    <HelixCorrelationPayload Include="$(CorrelationPayloadDirectory)">
-      <PayloadDirectory>%(Identity)</PayloadDirectory>
-    </HelixCorrelationPayload>
-  </ItemGroup>
-
-  <ItemGroup>
+  <ItemGroup Condition="'$(WorkItemDirectory)' != ''">
     <HelixWorkItem Include="WorkItem">
       <PayloadDirectory>$(WorkItemDirectory)</PayloadDirectory>
       <Command>$(WorkItemCommand)</Command>
     </HelixWorkItem>
   </ItemGroup>
+
+  <ItemGroup Condition="'$(HelixCorrelationPayload)' != ''">
+    <HelixCorrelationPayload Include="$(HelixCorrelationPayload)" />
+  </ItemGroup>
+
+  <Target Name="BuildHelixWorkItem"
+          Condition="'$(WorkItemArchiveWildCard)' != ''"
+          BeforeTargets="Test">
+    <ItemGroup>
+      <_WorkItem Include="$(WorkItemArchiveWildCard)" Exclude="$(HelixCorrelationPayload)" />
+
+      <HelixWorkItem Include="@(_WorkItem -> '%(FileName)')">
+        <PayloadArchive>%(Identity)</PayloadArchive>
+        <Command>$(WorkItemCommand)</Command>
+      </HelixWorkItem>
+    </ItemGroup>
+  </Target>
 </Project>
