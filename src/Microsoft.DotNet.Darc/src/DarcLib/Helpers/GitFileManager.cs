@@ -159,7 +159,10 @@ namespace Microsoft.DotNet.DarcLib
             DependencyDetail dependency,
             DependencyType dependencyType)
         {
-            XmlDocument versionDetails = await ReadVersionDetailsXmlAsync(filePath, null);
+            // 'filePath' contains the full path to the versions file and 'ReadVersionDetailsXmlAsync' will append the file name again
+            // hence passing only the folder path to the file.
+            string engFolder = Directory.GetParent(Directory.GetParent(filePath).FullName).FullName;
+            XmlDocument versionDetails = await ReadVersionDetailsXmlAsync(engFolder, null);
 
             XmlNode newDependency = versionDetails.CreateElement("Dependency");
 
@@ -191,7 +194,10 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task AddDependencyToVersionProps(string filePath, DependencyDetail dependency)
         {
-            XmlDocument versionProps = await ReadVersionPropsAsync(filePath, null);
+            // 'filePath' contains the full path to the versions file and 'ReadVersionPropsAsync' will append the file name again
+            // hence passing only the folder path to the file.
+            string engFolder = Directory.GetParent(Directory.GetParent(filePath).FullName).FullName;
+            XmlDocument versionProps = await ReadVersionPropsAsync(Directory.GetParent(filePath).FullName, null);
 
             string versionedName = VersionFiles.CalculateVersionPropsElementName(dependency.Name);
             XmlNode versionNode = versionProps.DocumentElement.SelectNodes("//PropertyGroup").Item(0);
@@ -214,7 +220,10 @@ namespace Microsoft.DotNet.DarcLib
             string version)
         {
             JToken versionProperty = new JProperty(dependencyName, version);
-            JObject globalJson = await ReadGlobalJsonAsync(filePath, null);
+            // 'filePath' contains the full path to the versions file and 'ReadGlobalJsonAsync' will append the file name again
+            // hence passing only the folder path to the file.
+            string repoFolder = Directory.GetParent(filePath).FullName;
+            JObject globalJson = await ReadGlobalJsonAsync(Directory.GetParent(filePath).FullName, null);
             JToken parent = globalJson[parentField];
 
             if (parent != null)

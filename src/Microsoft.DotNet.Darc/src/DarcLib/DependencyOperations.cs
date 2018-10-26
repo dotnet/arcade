@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.DarcLib
         public static readonly Dictionary<string, KnownDependencyType> _knownAssetNames =
             new Dictionary<string, KnownDependencyType>
             {
+                {"Microsoft.DotNet.Helix.Sdk", KnownDependencyType.GlobalJson},
                 {"Microsoft.DotNet.Arcade.Sdk", KnownDependencyType.GlobalJson},
                 {"dotnet", KnownDependencyType.GlobalJson}
             };
@@ -46,6 +47,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             var dependencyMapping = new Dictionary<string, string>
             {
+                {"Microsoft.DotNet.Helix.Sdk", "msbuild-sdks"},
                 {"Microsoft.DotNet.Arcade.Sdk", "msbuild-sdks"},
                 {"dotnet", "tools"}
             };

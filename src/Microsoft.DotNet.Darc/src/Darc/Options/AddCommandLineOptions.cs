@@ -15,7 +15,6 @@ namespace Microsoft.DotNet.Darc.Options
         [Option('t', "type", Required = true, HelpText = "'toolset' or 'product'.")]
         public string Type { get; set; }
 
-
         [Option('v', "version", HelpText = "Dependency version.")]
         public string Version { get; set; }
 
