@@ -86,15 +86,15 @@ some highlights:
 
 - Move out of .NET CI and into our new Azure DevOps project
   (https://dev.azure.com/dnceng/public) for your public CI. - See [Onboarding
-  VSTS](VSTS/VSTSOnboarding.md).
+  Azure DevOps](AzureDevOps/Azure DevOpsOnboarding.md).
 - Move out of the devdiv Azure DevOps instance (https://dev.azure.com/devdiv/ or
   https://devdiv.visualstudio.com) and into the internal project for
   (https://dev.azure.com/dnceng/internal) internal CI and official builds. - See
-  [Onboarding VSTS](VSTS/VSTSOnboarding.md) and [Moving Official Builds from
-  DevDiv to DncEng](VSTS/MovingFromDevDivToDncEng.md).
+  [Onboarding Azure DevOps](AzureDevOps/Azure DevOpsOnboarding.md) and [Moving Official Builds from
+  DevDiv to DncEng](AzureDevOps/MovingFromDevDivToDncEng.md).
 - Onboard onto dependency flow (Darc). - See [Dependency Flow
   Onboarding](DependencyFlowOnboarding.md).
-- Use Helix for testing where possible - See [Sending Jobs to Helix](https://github.com/dotnet/arcade/blob/master/Documentation/VSTS/SendingJobsToHelix.md)
+- Use Helix for testing where possible - See [Sending Jobs to Helix](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/SendingJobsToHelix.md)
 
 ### Which branches should I make these changes in?
 
@@ -135,9 +135,9 @@ dnceng@microsoft.com
   In addition, we are pushing to bootstrap in native tools (e.g. cmake) rather
   than bake them into the images.  This means that setting up a developer
   machine becomes a simpler process.  Documentation on the process of
-  bootstrapping can be found [here](Projects/NativeDependencies/).
+  bootstrapping can be found [here](./NativeToolBootstrapping.md).
 
-  See [here](VSTS/VSTSOnboarding.md#agent-queues) for more information. For
+  See [here](AzureDevOps/AzureDevOpsOnboarding.md#agent-queues) for more information. For
   additional questions contact 'dnceng'. Either @dotnet/dnceng on GitHub, or
   dnceng@microsoft.com.  Also, you can post to the [Arcade Teams channel](https://teams.microsoft.com/l/channel/19%3acf9dc0ac9753432dbac4023239a9965f%40thread.skype/Arcade?groupId=147df318-61de-4f04-8f7b-ecd328c256bb&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47).
 
