@@ -35,6 +35,10 @@ The Azure Pipelines app ("dotnet" connection) will work for repos that are a mem
 
 The "dotnet" service connection is the only dnceng supported connection.  Other available connections may be removed and we strongly encourage devs to create OAuth connections only when needed and to clean them up when they are no longer necessary.
 
+### Switching service connections
+
+There is no way to update an existing build definition to use a different service connection.  Instead, you will need to deprecate your current build definition (disable triggers, change the name), and create a new build definition with the same properites.  You should then delete your deprecated definition when you are convinced the new definition works as expected.
+
 ## Agent queues
 
 Agent queue use / configuration / etc... is likely to change very soon when Azure DevOps enables "bring your own cloud".
