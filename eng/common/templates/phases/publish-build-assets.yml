@@ -1,13 +1,18 @@
 parameters:
   dependsOn: ''
+  pool: {}
   queue: {}
   configuration: 'Debug'
   condition: succeeded()
   continueOnError: false
-phases:
-  - phase: Asset_Registry_Publish
+jobs:
+  - job: Asset_Registry_Publish
     displayName: Publish to Build Asset Registry
     dependsOn: ${{ parameters.dependsOn }}
+    # queue is deprecated and has been replaced by pool
+    ${{ if ne(parameters.pool, '') }}:
+      pool: ${{ parameters.pool }}
+    ${{ if eq(parameters.pool, '') }}:
     queue: ${{ parameters.queue }}
     variables:
       config: ${{ parameters.configuration }}

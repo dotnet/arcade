@@ -2,12 +2,12 @@
 trigger: none
 
 # Moves code from GitHub into internal repos
-phases:
+jobs:
 - template: /eng/common/templates/phases/base.yml
   parameters:
     agentsOS: Windows_NT
-    name: Mirror_GitHub_to_VSTS
-    queue:
+    name: Mirror_GitHub_to_Azure_DevOps
+    pool:
       name: Hosted VS2017
     variables:
       WorkingDirectoryName: repo-dir
@@ -20,26 +20,26 @@ phases:
         inlineScript: |
           param([string]$repo, [string]$branch)
         
-          $vstsRepo = $repo.Replace("/", "-");
+          $azureDevOpsRepo = $repo.Replace("/", "-");
           # Check that the parameters look correct
-          if ($vstsRepo -eq "" -or $branch -eq "")
+          if ($azureDevOpsRepo -eq "" -or $branch -eq "")
           {
             Write-Error "Expected valid branch and GitHub repo in the form of owner/repo"
           }
-          Write-Host "##vso[task.setvariable variable=VstsRepoName]$vstsRepo"
-          Write-Host "Mirroring branch '$branch' from GitHub repo '$repo' to VSTS repo '$vstsRepo'."
+          Write-Host "##vso[task.setvariable variable=VstsRepoName]$azureDevOpsRepo"
+          Write-Host "Mirroring branch '$branch' from GitHub repo '$repo' to Azure DevOps repo '$azureDevOpsRepo'."
     - script: |
         git clone https://dotnet-maestro-bot:$(BotAccount-dotnet-maestro-bot-PAT)@github.com/$(GithubRepo) $(WorkingDirectoryName) -b $(BranchToMirror)
       displayName: Clone GitHub repo
     - script: |
-        git remote add vsts-mirror https://dn-bot:$(dn-bot-dnceng-build-rw-code-rw)@dev.azure.com/dnceng/internal/_git/$(VstsRepoName)
-      displayName: Add VSTS remote
+        git remote add azuredevops-mirror https://dn-bot:$(dn-bot-dnceng-build-rw-code-rw)@dev.azure.com/dnceng/internal/_git/$(VstsRepoName)
+      displayName: Add Azure DevOps remote
       workingDirectory: $(WorkingDirectoryName)
     - script: |
         git reset --hard origin/$(BranchToMirror)
       displayName: Hard reset local branch to GitHub branch
       workingDirectory: $(WorkingDirectoryName)
     - script: |
-        git push vsts-mirror $(BranchToMirror) $(ExtraPushArgs)
-      displayName: Push changes to VSTS repo
+        git push azuredevops-mirror $(BranchToMirror) $(ExtraPushArgs)
+      displayName: Push changes to Azure DevOps repo
       workingDirectory: $(WorkingDirectoryName)

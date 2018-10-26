@@ -32,13 +32,13 @@ steps:
 
     if [ $curlStatus -ne 0 ]; then
       echo "Failed to Send Build Finish information"
-      vstsLogOutput="vso[task.logissue type=error;sourcepath=templates/steps/telemetry-end.yml;code=1;]Failed to Send Build Finish information: $curlStatus"
-      echo "##$vstsLogOutput"
+      azureDevOpsLogOutput="vso[task.logissue type=error;sourcepath=templates/steps/telemetry-end.yml;code=1;]Failed to Send Build Finish information: $curlStatus"
+      echo "##$azureDevOpsLogOutput"
       exit 1
     fi
   displayName: Send Unix Build End Telemetry
   env:
-    # defined via VSTS variables in start-job.sh
+    # defined via Azure DevOps variables in start-job.sh
     Helix_JobToken: $(Helix_JobToken)
     Helix_WorkItemId: $(Helix_WorkItemId)
   condition: and(always(), ne(variables['Agent.Os'], 'Windows_NT'))
@@ -61,7 +61,7 @@ steps:
     }
   displayName: Send Windows Build End Telemetry
   env:
-    # defined via VSTS variables in start-job.ps1
+    # defined via Azure DevOps variables in start-job.ps1
     Helix_JobToken: $(Helix_JobToken)
     Helix_WorkItemId: $(Helix_WorkItemId)
   condition: and(always(),eq(variables['Agent.Os'], 'Windows_NT'))

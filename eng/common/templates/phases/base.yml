@@ -8,7 +8,8 @@ parameters:
   # Optional: name of the phase (not specifying phase name may cause name collisions)
   name: ''
 
-  # Required: A defined YAML queue
+  # Required: A defined YAML pool
+  pool: {}
   queue: {}
 
   # Required: build steps
@@ -35,10 +36,15 @@ parameters:
 # Internal resources (telemetry, microbuild) can only be accessed from non-public projects,
 # and some (Microbuild) should only be applied to non-PR cases for internal builds.
 
-phases:
-- phase: ${{ parameters.name }}
+jobs:
+# job YAML object - https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&tabs=schema#job
+- job: ${{ parameters.name }}
 
-  queue: ${{ parameters.queue }}
+  # queue is deprecated and has been replaced by pool
+  ${{ if ne(parameters.pool, '') }}:
+    pool: ${{ parameters.pool }}
+  ${{ if eq(parameters.pool, '') }}:
+    queue: ${{ parameters.queue }}
 
   ${{ if ne(parameters.variables, '') }}:
     variables: 
