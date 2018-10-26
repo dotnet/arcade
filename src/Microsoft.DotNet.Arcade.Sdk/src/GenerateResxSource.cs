@@ -194,7 +194,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                         getStringMethod = $@"{memberIndent}Friend Shared Property Culture As Global.System.Globalization.CultureInfo
 
 {memberIndent}<Global.System.Runtime.CompilerServices.MethodImpl(Global.System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)>
-{memberIndent}Friend Shared Function GetResourceString(ByVal resourceKey As String, Optional ByVal defaultValue As String = null) As String
+{memberIndent}Friend Shared Function GetResourceString(ByVal resourceKey As String, Optional ByVal defaultValue As String = Nothing) As String
 {memberIndent}  Get
 {memberIndent}    Return ResourceManager.GetString(resourceKey, Culture)
 {memberIndent}  End Get

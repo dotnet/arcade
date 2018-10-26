@@ -55,6 +55,8 @@ You will need to create a script file to run your tests. In the future, it will 
       WorkItemCommand: # specify the command to run your tests
       EnableXUnitReporter: true # required for reporting out xUnit test results to Mission Control
       # WaitForWorkItemCompletion: true -- defaults to true
+      # condition: succeeded() - defaults to succeeded()
+      # continueOnError: false -- defaults to false
 ```
 
 ## The More Complex Case

@@ -14,7 +14,8 @@ parameters:
   DotNetCliVersion: ''
   EnableXUnitReporter: false
   WaitForWorkItemCompletion: true
-  Condition: 'always()'
+  condition: succeeded()
+  continueOnError: false
 
 steps:
   - task: DotNetCoreCLI@2
@@ -39,4 +40,5 @@ steps:
       DotNetCliVersion: ${{ parameters.DotNetCliVersion }}
       EnableXUnitReporter: ${{ parameters.EnableXUnitReporter }}
       WaitForWorkItemCompletion: ${{ parameters.WaitForWorkItemCompletion }}
-    condition: ${{ parameters.Condition }}
+    condition: ${{ parameters.condition }}
+    continueOnError: ${{ parameters.continueOnError }}
