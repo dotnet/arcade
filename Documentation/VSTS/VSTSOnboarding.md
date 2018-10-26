@@ -29,7 +29,7 @@ VSTS has detailed documentation on how to create builds that are linked from Git
 
 ## Azure DevOps service connection
 
-When creating an Azure DevOps build definition with a GitHub source, you will need a GitHub Service Endpoint to communicate with GitHub and setup web hooks.  Teams should use the "dotnet" GitHub app service connection to manage the GitHub <-> Azure DevOps connection.
+When creating an Azure DevOps build definition with a GitHub source, you will need a GitHub Service Endpoint to communicate with GitHub and setup web hooks.  Teams should use the "dotnet" GitHub app service connection to manage the GitHub <-> Azure DevOps pipeline connection.
 
 The Azure Pipelines app ("dotnet" connection) will work for repos that are a member of the dotnet organization.  If you have a repo that should be supported but does not show up, you will need to work with @dnceng to update repository access for the app.
 
