@@ -482,6 +482,11 @@ namespace Microsoft.DotNet.DarcLib
             return content["objectId"].ToString();
         }
 
+        public string GetOwnerAndRepoFromRepoUri(string repoUri)
+        {
+            throw new NotImplementedException();
+        }
+
         private VssConnection CreateConnection(string uri)
         {
             var collectionUri = new UriBuilder(uri)

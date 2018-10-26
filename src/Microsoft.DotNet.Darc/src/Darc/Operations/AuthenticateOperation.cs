@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Darc.Operations
             if (_options.Clear)
             {
                 LocalSettings defaultSettings = new LocalSettings();
-                defaultSettings.SaveSettings(Logger);
+                defaultSettings.SaveSettingsFile(Logger);
                 return Task.FromResult<int>(Constants.SuccessCode);
             }
             else

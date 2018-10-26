@@ -52,6 +52,8 @@ namespace Microsoft.DotNet.DarcLib
         Task<string> GetPullRequestBaseBranch(string pullRequestUrl);
 
         Task<IList<Commit>> GetPullRequestCommitsAsync(string pullRequestUrl);
+
+        string GetOwnerAndRepoFromRepoUri(string repoUri);
     }
 
     public class PullRequest

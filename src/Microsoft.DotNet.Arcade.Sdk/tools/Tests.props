@@ -44,4 +44,6 @@
     <TestRunnerName Condition="'$(UsingToolXUnit)' == 'true'">XUnit</TestRunnerName>
   </PropertyGroup>
 
+  <!-- Import specialized props files of supported test runners -->
+  <Import Project="$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).props" Condition="'$(TestRunnerName)' != '' and Exists('$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).props')"/>
 </Project>

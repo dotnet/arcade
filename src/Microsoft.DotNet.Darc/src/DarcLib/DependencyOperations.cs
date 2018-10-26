@@ -58,12 +58,12 @@ namespace Microsoft.DotNet.DarcLib
             string parent = dependencyMapping[dependency.Name];
 
             await fileManager.AddDependencyToGlobalJson(
-                Path.Combine(repository, VersionFilePath.GlobalJson),
+                Path.Combine(repository, VersionFiles.GlobalJson),
                 parent,
                 dependency.Name,
                 dependency.Version);
             await fileManager.AddDependencyToVersionDetails(
-                Path.Combine(repository, VersionFilePath.VersionDetailsXml),
+                Path.Combine(repository, VersionFiles.VersionDetailsXml),
                 dependency,
                 DependencyType.Toolset);
         }

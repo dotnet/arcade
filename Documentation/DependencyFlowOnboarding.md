@@ -158,7 +158,7 @@ Merge Policies:
 
 ###### Non-interactive mode
 
-1. Run `darc add-subscription --channel ".NET Tools Latest" --source-repo https://github.com/dotnet/arcade --target-repo <your repo> --target-branch master --update-frequency everyDay --ignore-checks WIP,license/cla --all-checks-passed -q`
+1. Run `darc add-subscription --channel ".NET Tools - Latest" --source-repo https://github.com/dotnet/arcade --target-repo <your repo> --target-branch master --update-frequency everyDay --ignore-checks WIP,license/cla --all-checks-passed -q`
 
 These steps can be altered for additional subscriptions to other repositories.
 

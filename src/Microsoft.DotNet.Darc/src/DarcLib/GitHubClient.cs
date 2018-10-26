@@ -577,7 +577,7 @@ namespace Microsoft.DotNet.DarcLib
             return $"{match.Groups["owner"]}/{match.Groups["repo"]}";
         }
 
-        public static string GetOwnerAndRepoFromRepoUri(string repoUri)
+        public string GetOwnerAndRepoFromRepoUri(string repoUri)
         {
             return GetOwnerAndRepo(repoUri, repoUriPattern);
         }
@@ -657,9 +657,18 @@ namespace Microsoft.DotNet.DarcLib
             IEnumerable<GitFile> filesToCommit,
             TreeResponse baseTree)
         {
-            var newTree = new NewTree {BaseTree = baseTree.Sha};
+            string baseTreeSha = baseTree.Sha;
 
-            foreach (GitFile file in filesToCommit)
+            IEnumerable<GitFile> filesToRemove = filesToCommit.Where(f => f.Operation == GitFileOperation.Delete);
+
+            if (filesToRemove.Any())
+            {
+                baseTreeSha = await RemoveFilesFromTree(owner, repo, baseTree.Sha, filesToRemove);
+            }
+
+            var newTree = new NewTree {BaseTree = baseTreeSha };
+
+            foreach (GitFile file in filesToCommit.Where(f => f.Operation == GitFileOperation.Add))
             {
                 BlobReference newBlob = await Client.Git.Blob.Create(
                     owner,
@@ -735,6 +744,98 @@ namespace Microsoft.DotNet.DarcLib
             }
 
             return treeItems;
+        }
+
+        /// <summary>
+        /// This approach was based on https://github.com/octokit/octokit.net/issues/1610 which suggests
+        /// to clone the base tree without the files to be removed. If when getting the recursive tree it is
+        /// truncated, instead we iteratively walk the tree attempting to get the files on each tree
+        /// object. If a given tree object is truncated we return the original base tree sha. Calling GetRecursive
+        /// is way faster than the iterative approach.
+        /// </summary>
+        /// <param name="owner">Repo owner.</param>
+        /// <param name="repo">The repo.</param>
+        /// <param name="baseTreeSha">The base tree sha.</param>
+        /// <param name="filesToRemove">The files to remove.</param>
+        /// <returns>The new tree sha.</returns>
+        private async Task<string> RemoveFilesFromTree(string owner, string repo, string baseTreeSha, IEnumerable<GitFile> filesToRemove)
+        {
+            NewTree newTree = new NewTree();
+            TreeResponse rootTree = await Client.Git.Tree.GetRecursive(owner, repo, baseTreeSha);
+
+            if (rootTree.Truncated)
+            {
+                newTree = await ConstructNewTreeAsync(owner, repo, baseTreeSha, filesToRemove);
+
+                if (newTree == null)
+                {
+                    _logger.LogWarning("One of the trees was truncated and not all the files were cloned. Not possible to remove files from tree...");
+                    return baseTreeSha;
+                }
+            }
+            else
+            {
+                rootTree.Tree.Where(tree => tree.Type != TreeType.Tree)
+                    .Select(tree => new NewTreeItem
+                    {
+                        Path = tree.Path,
+                        Mode = tree.Mode,
+                        Type = tree.Type.Value,
+                        Sha = tree.Sha
+                    }).ToList()
+                        .ForEach(tree =>
+                        {
+                            if (!filesToRemove.Any(f => f.FilePath == tree.Path))
+                            {
+                                newTree.Tree.Add(tree);
+                            }
+                        });
+            }
+
+            TreeResponse createdTree = await Client.Git.Tree.Create(owner, repo, newTree);
+            return createdTree.Sha;
+        }
+
+        private async Task<NewTree> ConstructNewTreeAsync(string owner, string repo, string treeSha, IEnumerable<GitFile> filesToRemove)
+        {
+            NewTree newTree = new NewTree();
+            Queue<(string, string)> treeShas = new Queue<(string, string)>();
+            treeShas.Enqueue((treeSha, string.Empty));
+
+            while (treeShas.Count > 0)
+            {
+                (string sha, string path) = treeShas.Dequeue();
+
+                TreeResponse rootTree = await Client.Git.Tree.Get(owner, repo, sha);
+
+                if (rootTree.Truncated)
+                {
+                    return null;
+                }
+
+                rootTree.Tree.Where(tree => tree.Type != TreeType.Tree)
+                    .Select(tree => new NewTreeItem
+                    {
+                        Path = string.IsNullOrEmpty(path) ? tree.Path : $"{path}/{tree.Path}",
+                        Mode = tree.Mode,
+                        Type = tree.Type.Value,
+                        Sha = tree.Sha
+                    }).ToList()
+                        .ForEach(tree =>
+                        {
+                            if (!filesToRemove.Any(f => f.FilePath == tree.Path))
+                            {
+                                newTree.Tree.Add(tree);
+                            }
+                        });
+
+                foreach (TreeItem treeItem in rootTree.Tree.Where(tree => tree.Type == TreeType.Tree))
+                {
+                    treeShas.Enqueue((treeItem.Sha, string.IsNullOrEmpty(path) ? treeItem.Path : $"{path}/{treeItem.Path}"));
+                }
+            }
+
+            return newTree;
         }
     }
 }

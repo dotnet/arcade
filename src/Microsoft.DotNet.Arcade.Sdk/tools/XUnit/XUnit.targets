@@ -12,6 +12,21 @@
     <PackageReference Include="xunit.runner.console" Version="$(XUnitRunnerConsoleVersion)" IsImplicitlyDefined="true" PrivateAssets="all"/>
   </ItemGroup>
 
+  <!--
+    Include settings file (xunit.runner.json) if specified.
+  -->
+  <ItemGroup>
+    <None Include="$(XUnitDesktopSettingsFile)"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false"
+          Condition="'$(XUnitDesktopSettingsFile)' != '' and '$(TargetFrameworkIdentifier)' == '.NETFramework'" />
+
+    <None Include="$(XUnitCoreSettingsFile)"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false"
+          Condition="'$(XUnitCoreSettingsFile)' != '' and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
+  </ItemGroup>
+
   <!-- 
     Include '*' target to force running tests even if the input assemblies haven't changed and the outputs are present.
     This matches the common expectations that test command always runs all tests in scope.
