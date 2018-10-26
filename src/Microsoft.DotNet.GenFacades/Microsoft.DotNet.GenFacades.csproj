@@ -19,6 +19,7 @@
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
   </ItemGroup>
 
+  <!-- On Core, these native binaries wind up in the Runtimes folder of this package. For Desktop, we have to manually mark them to get them packed -->
   <ItemGroup Condition="'$(TargetFramework)'=='net472'">
     <None Include="$(NuGetPackageRoot)\microsoft.diasymreader.native\$(MicrosoftDiaSymReaderNativeVersion)\runtimes\win\native\Microsoft.DiaSymReader.Native.x86.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
