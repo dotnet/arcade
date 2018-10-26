@@ -34,7 +34,9 @@ namespace Microsoft.DotNet.Helix.Sdk
         private async Task WaitForHelixJobAsync(string jobName)
         {
             await Task.Yield();
+            string mcUri = GetMissionControlResultUri()
             Log.LogMessage($"Waiting for completion of job {jobName}");
+            Log.LogMessage(MessageImportance.High, $"Results will be available from {mcUri}");
 
             while (true)
             {
@@ -44,7 +46,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var finishedCount = workItems.Count(wi => wi.State == "Finished");
                 if (waitingCount == 0 && runningCount == 0)
                 {
-                    Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items. Results can be found at {GetMissionControlResultUri()}");
+                    Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items. Results can be found at {mcUri}");
                     return;
                 }
 
