@@ -79,7 +79,7 @@
   -->
   <Target Name="InitializeStandardNuspecProperties"
           BeforeTargets="GenerateNuspec"
-          DependsOnTargets="GetPackageVersion;_InitializeNuspecRepositoryInformationPropertiesWorkaround">
+          DependsOnTargets="_InitializeNuspecRepositoryInformationPropertiesWorkaround">
 
     <PropertyGroup>
       <PackageProjectUrl Condition="'$(PackageProjectUrl)' == ''">$(RepositoryUrl)</PackageProjectUrl>

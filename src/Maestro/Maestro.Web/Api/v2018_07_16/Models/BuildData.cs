@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
 
         public List<int> Dependencies { get; set; }
 
-        public Maestro.Data.Models.Build ToDb()
+        public Data.Models.Build ToDb()
         {
             return new Data.Models.Build
             {
@@ -32,7 +33,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
                 Branch = Branch,
                 Commit = Commit,
                 BuildNumber = BuildNumber,
-                Assets = Assets.Select(a => a.ToDb()).ToList(),
+                Assets = Assets.Select(a => a.ToDb()).ToList()
             };
         }
     }

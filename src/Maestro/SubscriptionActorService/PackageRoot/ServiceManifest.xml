@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ServiceManifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="SubscriptionActorServicePkg" Version="1.0.36" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+<ServiceManifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="SubscriptionActorServicePkg" Version="1.0.40" xmlns="http://schemas.microsoft.com/2011/01/fabric">
   <ServiceTypes>
     <StatefulServiceType ServiceTypeName="SubscriptionActorServiceType" HasPersistedState="true">
       <Extensions>
@@ -15,8 +15,22 @@
         </Extension>
       </Extensions>
     </StatefulServiceType>
+    <StatefulServiceType ServiceTypeName="PullRequestActorServiceType" HasPersistedState="true">
+      <Extensions>
+        <Extension Name="__GeneratedServiceType__" GeneratedId="818bba8f-85b7-4be9-86c9-ec18f401f383|Persisted">
+          <GeneratedNames xmlns="http://schemas.microsoft.com/2015/03/fabact-no-schema">
+            <DefaultService Name="PullRequestActorService" />
+            <ReplicatorEndpoint Name="PullRequestActorServiceReplicatorEndpoint" />
+            <ReplicatorConfigSection Name="PullRequestActorServiceReplicatorConfig" />
+            <ReplicatorSecurityConfigSection Name="PullRequestActorServiceReplicatorSecurityConfig" />
+            <StoreConfigSection Name="PullRequestActorServiceLocalStoreConfig" />
+            <ServiceEndpointV2 Name="PullRequestActorServiceEndpointV2" />
+          </GeneratedNames>
+        </Extension>
+      </Extensions>
+    </StatefulServiceType>
   </ServiceTypes>
-  <CodePackage Name="Code" Version="1.0.36">
+  <CodePackage Name="Code" Version="1.0.40">
     <EntryPoint>
       <ExeHost>
         <Program>SubscriptionActorService.exe</Program>
@@ -26,11 +40,13 @@
       <EnvironmentVariable Name="ASPNETCORE_ENVIRONMENT" Value="Development" />
     </EnvironmentVariables>
   </CodePackage>
-  <ConfigPackage Name="Config" Version="1.0.36" />
+  <ConfigPackage Name="Config" Version="1.0.40" />
   <Resources>
     <Endpoints>
       <Endpoint Name="SubscriptionActorServiceEndpointV2" />
       <Endpoint Name="SubscriptionActorServiceReplicatorEndpoint" />
+      <Endpoint Name="PullRequestActorServiceEndpointV2" />
+      <Endpoint Name="PullRequestActorServiceReplicatorEndpoint" />
     </Endpoints>
   </Resources>
 </ServiceManifest>

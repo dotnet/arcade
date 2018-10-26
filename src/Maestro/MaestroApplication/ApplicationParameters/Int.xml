@@ -1,5 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Application xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="fabric:/MaestroApplication" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+
+<Application xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             Name="fabric:/MaestroApplication" xmlns="http://schemas.microsoft.com/2011/01/fabric">
   <Parameters>
     <Parameter Name="Environment" Value="Staging" />
     <Parameter Name="WebCertThumbprint" Value="6d5b19ec4f23b78811ed38ebbebfabd8713a4c41" />

@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.SignTool
     {
         private readonly TaskLoggingHelper _log;
 
-        private readonly string[] _explicitSignList;
+        private readonly string[] _itemsToSign;
 
         /// <summary>
         /// This store content information for container files.
@@ -39,15 +39,16 @@ namespace Microsoft.DotNet.SignTool
         /// It also contains a SignToolConstants.IgnoreFileCertificateSentinel flag in the certificate name in case the file does not need to be signed
         /// for that 
         /// </summary>
-        private readonly Dictionary<ExplicitCertificateKey, string> _explicitCertificates;
+        private readonly Dictionary<ExplicitCertificateKey, string> _fileSignInfo;
 
         /// <summary>
         /// Used to look for signing information when we have the PublicKeyToken of a file.
         /// </summary>
-        private readonly Dictionary<string, SignInfo> _defaultSignInfoForPublicKeyToken;
+        private readonly Dictionary<string, SignInfo> _strongNameInfo;
 
         /// <summary>
-        /// A list of all of the binaries that MUST be signed.
+        /// A list of all the binaries that MUST be signed. Also include containers that don't need 
+        /// to be signed themselves but include files that must be signed.
         /// </summary>
         private readonly List<FileSignInfo> _filesToSign;
 
@@ -60,34 +61,42 @@ namespace Microsoft.DotNet.SignTool
         private readonly Dictionary<SignedFileContentKey, FileSignInfo> _filesByContentKey;
 
         /// <summary>
+        /// This is a list of the friendly name of certificates that can be used to
+        /// sign already signed binaries.
+        /// </summary>
+        private readonly string[] _dualCertificates;
+        
+        /// <summary>
         /// A list of files whose content needs to be overwritten by signed content from a different file.
         /// Copy the content of file with full path specified in Key to file with full path specified in Value.
         /// </summary>
         internal List<KeyValuePair<string, string>> _filesToCopy;
 
-        public Configuration(string tempDir, string[] explicitSignList, Dictionary<string, SignInfo> defaultSignInfoForPublicKeyToken, 
-            Dictionary<ExplicitCertificateKey, string> explicitCertificates, Dictionary<string, SignInfo> extensionSignInfo, TaskLoggingHelper log)
+        public Configuration(string tempDir, string[] itemsToSign, Dictionary<string, SignInfo> strongNameInfo,
+            Dictionary<ExplicitCertificateKey, string> fileSignInfo, Dictionary<string, SignInfo> extensionSignInfo,
+            string[] dualCertificates, TaskLoggingHelper log)
         {
             Debug.Assert(tempDir != null);
-            Debug.Assert(explicitSignList != null && !explicitSignList.Any(i => i == null));
-            Debug.Assert(defaultSignInfoForPublicKeyToken != null);
-            Debug.Assert(explicitCertificates != null);
+            Debug.Assert(itemsToSign != null && !itemsToSign.Any(i => i == null));
+            Debug.Assert(strongNameInfo != null);
+            Debug.Assert(fileSignInfo != null);
 
             _pathToContainerUnpackingDirectory = Path.Combine(tempDir, "ContainerSigning");
             _log = log;
-            _defaultSignInfoForPublicKeyToken = defaultSignInfoForPublicKeyToken;
-            _explicitCertificates = explicitCertificates;
+            _strongNameInfo = strongNameInfo;
+            _fileSignInfo = fileSignInfo;
             _fileExtensionSignInfo = extensionSignInfo;
             _filesToSign = new List<FileSignInfo>();
             _filesToCopy = new List<KeyValuePair<string, string>>();
             _zipDataMap = new Dictionary<ImmutableArray<byte>, ZipData>(ByteSequenceComparer.Instance);
             _filesByContentKey = new Dictionary<SignedFileContentKey, FileSignInfo>();
-            _explicitSignList = explicitSignList;
+            _itemsToSign = itemsToSign;
+            _dualCertificates = dualCertificates ?? new string[0];
         }
 
         internal BatchSignInput GenerateListOfFiles()
         {
-            foreach (var fullPath in _explicitSignList)
+            foreach (var fullPath in _itemsToSign)
             {
                 TrackFile(fullPath, ContentUtil.GetContentHash(fullPath), isNested: false);
             }
@@ -123,7 +132,7 @@ namespace Microsoft.DotNet.SignTool
 
             _filesByContentKey.Add(key, fileSignInfo);
 
-            if (fileSignInfo.SignInfo.ShouldSign)
+            if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.IsZipContainer())
             {
                 _filesToSign.Add(fileSignInfo);
             }
@@ -133,12 +142,19 @@ namespace Microsoft.DotNet.SignTool
 
         private FileSignInfo ExtractSignInfo(string fullPath, ImmutableArray<byte> hash)
         {
-            var targetFramework = string.Empty;
-
             // Try to determine default certificate name by the extension of the file
             var hasSignInfo = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out var signInfo);
-
+            var fileName = Path.GetFileName(fullPath);
+            var extension = Path.GetExtension(fullPath);
+            string explicitCertificateName = null;
+            string copyright = string.Empty;
+            var targetFramework = string.Empty;
+            var fileSpec = string.Empty;
             var isAlreadySigned = false;
+            var matchedNameTokenFramework = false;
+            var matchedNameToken = false;
+            var matchedName = false;
+            var isManagedPE = false;
 
             if (FileSignInfo.IsPEFile(fullPath))
             {
@@ -147,49 +163,95 @@ namespace Microsoft.DotNet.SignTool
                     isAlreadySigned = ContentUtil.IsAuthenticodeSigned(stream);
                 }
 
-                GetPEInfo(fullPath, out var isManaged, out var publicKeyToken, out targetFramework);
+                GetPEInfo(fullPath, out isManagedPE, out var publicKeyToken, out targetFramework, out copyright);
 
                 // Get the default sign info based on the PKT, if applicable:
-                if (isManaged && _defaultSignInfoForPublicKeyToken.TryGetValue(publicKeyToken, out var pktBasedSignInfo))
+                if (isManagedPE && _strongNameInfo.TryGetValue(publicKeyToken, out var pktBasedSignInfo))
                 {
                     signInfo = pktBasedSignInfo;
                     hasSignInfo = true;
                 }
 
                 // Check if we have more specific sign info:
-                var fileName = Path.GetFileName(fullPath);
-                if (_explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out var overridingCertificate) ||
-                    _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out overridingCertificate) ||
-                    _explicitCertificates.TryGetValue(new ExplicitCertificateKey(fileName), out overridingCertificate))
-                {
-                    // If has overriding info, is it for ignoring the file?
-                    if (overridingCertificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
-                    }
+                matchedNameTokenFramework = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out explicitCertificateName);
+                matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out explicitCertificateName);
 
-                    signInfo = signInfo.WithCertificateName(overridingCertificate);
-                    hasSignInfo = true;
-                }
+                fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {publicKeyToken}, Framework = {targetFramework})" :
+                        matchedNameToken ? $" (PublicKeyToken = {publicKeyToken})" : string.Empty;
+            }
+
+            // We didn't find any specific information for PE files using PKT + TargetFramework
+            if (explicitCertificateName == null)
+            {
+                matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName), out explicitCertificateName);
+            }
+
+            // If has overriding info, is it for ignoring the file?
+            if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(explicitCertificateName, StringComparison.OrdinalIgnoreCase))
+            {
+                _log.LogMessage($"File configurated to not be signed: {fileName}{fileSpec}");
+                return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
+            }
+
+            // Do we have an explicit certificate after all?
+            if (explicitCertificateName != null)
+            {
+                signInfo = signInfo.WithCertificateName(explicitCertificateName);
+                hasSignInfo = true;
             }
 
             if (hasSignInfo)
             {
-                if (isAlreadySigned &&
-                    !signInfo.Certificate.Equals(SignToolConstants.Certificate_Microsoft3rdPartyAppComponentDual, StringComparison.OrdinalIgnoreCase) &&
-                    !signInfo.Certificate.Equals(SignToolConstants.Certificate_Microsoft3rdPartyAppComponentSha2, StringComparison.OrdinalIgnoreCase))
+                if (isAlreadySigned && !_dualCertificates.Contains(signInfo.Certificate))
                 {
                     return new FileSignInfo(fullPath, hash, SignInfo.AlreadySigned);
+                }
+
+                // TODO: implement this check for native PE files as well:
+                // extract copyright from native resource (.rsrc section) 
+                if (signInfo.ShouldSign && isManagedPE)
+                {
+                    bool isMicrosoftLibrary = IsMicrosoftLibrary(copyright);
+                    bool isMicrosoftCertificate = !IsThirdPartyCertificate(signInfo.Certificate);
+                    if (isMicrosoftLibrary != isMicrosoftCertificate)
+                    {
+                        if (isMicrosoftLibrary)
+                        {
+                            LogWarning("SIGN001", $"Signing Microsoft library '{fullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{copyright}'.");
+                        }
+                        else
+                        {
+                            LogWarning("SIGN001", $"Signing 3rd party library '{fullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{copyright}'.");
+                        }
+                    }
                 }
 
                 return new FileSignInfo(fullPath, hash, signInfo, (targetFramework != "") ? targetFramework : null);
             }
 
-            _log.LogWarning($"Couldn't determine signing information for this file: {fullPath}");
+            if (SignToolConstants.SignableExtensions.Contains(extension))
+            {
+                _log.LogError($"Couldn't determine certificate name for signable file: {fullPath}");
+            }
+            else
+            {
+                _log.LogMessage($"Ignoring non-signable file: {fullPath}");
+            }
+
             return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
         }
 
-        private static void GetPEInfo(string fullPath, out bool isManaged, out string publicKeyToken, out string targetFramework)
+        private void LogWarning(string code, string message)
+            => _log.LogWarning(subcategory: null, warningCode: code, helpKeyword: null, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message);
+
+        private static bool IsMicrosoftLibrary(string copyright)
+            => copyright.Contains("Microsoft");
+
+        private static bool IsThirdPartyCertificate(string name)
+            => name.Equals("3PartyDual", StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("3PartySHA2", StringComparison.OrdinalIgnoreCase);
+
+        private static void GetPEInfo(string fullPath, out bool isManaged, out string publicKeyToken, out string targetFramework, out string copyright)
         {
             AssemblyName assemblyName;
             try
@@ -202,17 +264,21 @@ namespace Microsoft.DotNet.SignTool
                 isManaged = false;
                 publicKeyToken = string.Empty;
                 targetFramework = string.Empty;
+                copyright = string.Empty;
                 return;
             }
 
             var pktBytes = assemblyName.GetPublicKeyToken();
 
             publicKeyToken = (pktBytes == null || pktBytes.Length == 0) ? string.Empty : string.Join("", pktBytes.Select(b => b.ToString("x2")));
-            targetFramework = GetTargetFrameworkName(fullPath);
+            GetTargetFrameworkAndCopyright(fullPath, out targetFramework, out copyright);
         }
 
-        private static string GetTargetFrameworkName(string filePath)
+        private static void GetTargetFrameworkAndCopyright(string filePath, out string targetFramework, out string copyright)
         {
+            targetFramework = string.Empty;
+            copyright = string.Empty;
+
             using (var stream = File.OpenRead(filePath))
             using (var pereader = new PEReader(stream))
             {
@@ -226,13 +292,16 @@ namespace Microsoft.DotNet.SignTool
                         var attribute = metadataReader.GetCustomAttribute(attributeHandle);
                         if (QualifiedNameEquals(metadataReader, attribute, "System.Runtime.Versioning", "TargetFrameworkAttribute"))
                         {
-                            return new FrameworkName(GetTargetFrameworkAttributeValue(metadataReader, attribute)).FullName;
+                            targetFramework = new FrameworkName(GetTargetFrameworkAttributeValue(metadataReader, attribute)).FullName;
+                        }
+                        else if (QualifiedNameEquals(metadataReader, attribute, "System.Reflection", "AssemblyCopyrightAttribute"))
+                        {
+                            copyright = GetTargetFrameworkAttributeValue(metadataReader, attribute);
                         }
                     }
                 }
-            }
 
-            return null;
+            }
         }
 
         private static bool QualifiedNameEquals(MetadataReader reader, CustomAttribute attribute, string namespaceName, string typeName)
@@ -304,9 +373,9 @@ namespace Microsoft.DotNet.SignTool
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
                         string relativePath = entry.FullName;
-                        string extension = Path.GetExtension(relativePath);
 
-                        if (!_fileExtensionSignInfo.TryGetValue(extension, out var extensionSignInfo) || !extensionSignInfo.ShouldSign)
+                        // `entry` might be just a pointer to a folder. We skip those.
+                        if (relativePath.EndsWith("/") && entry.Name == "")
                         {
                             continue;
                         }

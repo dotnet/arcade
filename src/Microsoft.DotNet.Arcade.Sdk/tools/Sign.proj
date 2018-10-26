@@ -5,12 +5,21 @@
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.signtool\$(MicrosoftDotNetSignToolVersion)\build\Microsoft.DotNet.SignTool.props" />
 
   <ItemGroup>
+    <!-- 
+      This is intended to hold information about the certificates used for signing. 
+      For now the only information required is whether or not the certificate can be 
+      used for signing already signed files - DualSigningAllowed==true.
+    -->
+    <CertificatesSignInfo Include="3PartyDual" DualSigningAllowed="true" />
+    <CertificatesSignInfo Include="3PartySHA2" DualSigningAllowed="true" />
+    
     <!-- List of container files that will be opened and checked for files that need to be signed. -->
     <ItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
     <ItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
 
     <!-- Default certificate/strong-name to be used for all files with PKT=="31bf3856ad364e35". -->
     <StrongNameSignInfo Include="MsSharedLib72" PublicKeyToken="31bf3856ad364e35" CertificateName="Microsoft400" />
+    <StrongNameSignInfo Include="SilverlightCert121" PublicKeyToken="7cec85d7bea7798e" CertificateName="Microsoft400" />
 
     <!-- 
       Map of file extensions to default certificate name. Files with these extensions are
@@ -59,6 +68,7 @@
     <Microsoft.DotNet.SignTool.SignToolTask
         DryRun="$(_DryRun)"
         TestSign="$(_TestSign)"
+        CertificatesSignInfo="$(CertificatesSignInfo)"
         ItemsToSign="@(ItemsToSign)"
         StrongNameSignInfo="@(StrongNameSignInfo)"
         FileSignInfo="@(FileSignInfo)"

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsPackable>true</IsPackable>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CodeAnalysis.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCSharpVersion)" ExcludeAssets="analyzers" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="build/*.*" PackagePath="build" />
+    <Content Include="content/*.*" PackagePath="content" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzerToOutput</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <Target Name="_AddAnalyzerToOutput">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(OutputPath)*.dll" PackagePath="analyzers/%(RecursiveDir)%(FileName)%(Extension)" />
+    </ItemGroup>
+  </Target>
+</Project>

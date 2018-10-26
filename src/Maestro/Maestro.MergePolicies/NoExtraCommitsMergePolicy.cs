@@ -7,15 +7,16 @@ using System.Threading.Tasks;
 namespace Maestro.MergePolicies
 {
     /// <summary>
-    ///   Merge the PR when it only has commits created by Maestro. This is not yet implemented.
+    ///     Merge the PR when it only has commits created by Maestro. This is not yet implemented.
     /// </summary>
     public class NoExtraCommitsMergePolicy : MergePolicy
     {
         public override string DisplayName => "No Extra Commits";
 
-        protected override Task<MergePolicyEvaluationResult> DoEvaluateAsync(MergePolicyEvaluationContext context)
+        public override Task EvaluateAsync(IMergePolicyEvaluationContext context, MergePolicyProperties properties)
         {
-            return Task.FromResult(context.Fail("Merge Policy Not Yet Implemented."));
+            context.Fail("Merge Policy Not Yet Implemented.");
+            return Task.CompletedTask;
         }
     }
 }

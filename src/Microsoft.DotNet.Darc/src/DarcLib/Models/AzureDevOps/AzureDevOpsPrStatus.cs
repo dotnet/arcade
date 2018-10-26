@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.DarcLib
 {
     public enum AzureDevOpsPrStatus
     {
-        None, 
+        None,
         Active,
         Completed,
         Abandoned

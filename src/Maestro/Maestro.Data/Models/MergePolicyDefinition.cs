@@ -11,6 +11,7 @@ namespace Maestro.Data.Models
     public class MergePolicyDefinition
     {
         public string Name { get; set; }
+
         [CanBeNull]
         public Dictionary<string, JToken> Properties { get; set; }
     }

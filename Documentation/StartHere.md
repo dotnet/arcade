@@ -59,7 +59,7 @@ some highlights:
 
 - Onboard onto the arcade SDK, which provides templates (building blocks) for
   interacting with Azure DevOps, as well as shared tooling for signing,
-  packaging, publishing and general build infrastructure.
+  packaging, publishing and general build infrastructure.  (Here's a [video of a walkthough](https://msit.microsoftstream.com/video/e22d2dad-ef72-4cca-9b62-7e33621f86a1) which might help too)
 
     **Arcade SDK onboarding**
     1. Add a
@@ -78,7 +78,7 @@ some highlights:
        files to your eng\ folder. Adjust the version prefix and prerelease label
        as necessary.
     5. Add dotnet-core feed to
-       [NuGet.config](https://github.com/dotnet/arcade-minimalci-sample/blob/master/NuGet.Config).
+       [NuGet.config](https://github.com/dotnet/arcade-minimalci-sample/blob/master/NuGet.config).
     6. Must have a root project/solution file for the repo to build.
 
     **Using Arcade packages** - See [documentation](CorePackages/) for
@@ -94,8 +94,7 @@ some highlights:
   DevDiv to DncEng](VSTS/MovingFromDevDivToDncEng.md).
 - Onboard onto dependency flow (Darc). - See [Dependency Flow
   Onboarding](DependencyFlowOnboarding.md).
-- Use Helix for testing where possible - See *Helix onboarding docs coming
-  soon.*
+- Use Helix for testing where possible - See [Sending Jobs to Helix](https://github.com/dotnet/arcade/blob/master/Documentation/VSTS/SendingJobsToHelix.md)
 
 ### Which branches should I make these changes in?
 
@@ -136,15 +135,15 @@ dnceng@microsoft.com
   In addition, we are pushing to bootstrap in native tools (e.g. cmake) rather
   than bake them into the images.  This means that setting up a developer
   machine becomes a simpler process.  Documentation on the process of
-  bootstrapping can be found at [here](NativeDependencies/).
+  bootstrapping can be found [here](Projects/NativeDependencies/).
 
   See [here](VSTS/VSTSOnboarding.md#agent-queues) for more information. For
   additional questions contact 'dnceng'. Either @dotnet/dnceng on GitHub, or
-  dnceng@microsoft.com
+  dnceng@microsoft.com.  Also, you can post to the [Arcade Teams channel](https://teams.microsoft.com/l/channel/19%3acf9dc0ac9753432dbac4023239a9965f%40thread.skype/Arcade?groupId=147df318-61de-4f04-8f7b-ecd328c256bb&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47).
 
 - **My repo is currently on repo-toolset, how can I move into Arcade?**
 
-  *Guidance for moving from repo-toolset into arcade is coming soon.*
+  https://github.com/dotnet/arcade/blob/master/Documentation/RepoToolset/MigrationToArcade.md
 
 - **Can I run .NET CI and Azure DevOps CI in parallel while I work out the
   kinks?**

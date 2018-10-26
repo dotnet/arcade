@@ -5,8 +5,10 @@
 using Microsoft.DotNet.Darc.Helpers;
 using Microsoft.DotNet.Darc.Options;
 using Microsoft.DotNet.DarcLib;
+using Microsoft.DotNet.DarcLib.Helpers;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Darc.Operations
 {
@@ -19,11 +21,11 @@ namespace Microsoft.DotNet.Darc.Operations
             _options = options;
         }
 
-        public override int Execute()
+        public override async Task<int> ExecuteAsync()
         {
             DependencyType type = _options.Type.ToLower() == "toolset" ? DependencyType.Toolset : DependencyType.Product;
 
-            Local local = new Local(LocalCommands.GetGitDir(Logger), Logger);
+            Local local = new Local(LocalHelpers.GetGitDir(Logger), Logger);
 
             DependencyDetail dependency = new DependencyDetail
             {
@@ -35,11 +37,12 @@ namespace Microsoft.DotNet.Darc.Operations
 
             try
             {
-                return local.AddDependencies(dependency, type).Result;
+                await local.AddDependenciesAsync(dependency, type);
+                return Constants.SuccessCode;
             }
             catch (Exception exc)
             {
-                Logger.LogError(exc, $"Something failed while adding dependency '{dependency.Name}' {dependency.Version}.");
+                Logger.LogError(exc, $"Failed to add dependency '{dependency.Name}' to repository.");
                 return Constants.ErrorCode;
             }
         }

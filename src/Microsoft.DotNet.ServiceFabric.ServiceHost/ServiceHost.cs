@@ -173,6 +173,25 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
 
         public ServiceHost RegisterStatefulActorService<
             [MeansImplicitUse(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature)]
+            TActor>(string actorName) where TActor : IActor
+        {
+            RegisterStatefulActorService<TActor>(
+                actorName,
+                (context, info, actorFactory) =>
+                {
+                    return new DelegatedActorService<TActor>(
+                        context,
+                        info,
+                        ApplyConfigurationToServices,
+                        ApplyConfigurationToContainer,
+                        actorFactory);
+                });
+            return ConfigureContainer(
+                builder => { builder.RegisterType<TActor>().As<TActor>().InstancePerDependency(); });
+        }
+
+        public ServiceHost RegisterStatefulActorService<
+            [MeansImplicitUse(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature)]
             TService, [MeansImplicitUse(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature)]
             TActor>(string actorName) where TService : IServiceImplementation where TActor : IActor
         {
@@ -262,15 +281,13 @@ namespace Microsoft.DotNet.ServiceFabric.ServiceHost
                     $"RunAs=App;AppId={appId};TenantId={tenantId};CertificateThumbprint={certThumbprint};CertificateStoreLocation=LocalMachine";
                 return connectionString;
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
         public static KeyVaultClient GetKeyVaultClient(IHostingEnvironment env)
         {
-            var connectionString = GetAzureServiceTokenProviderConnectionString(env);
+            string connectionString = GetAzureServiceTokenProviderConnectionString(env);
             var provider = new AzureServiceTokenProvider(connectionString);
             return new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(provider.KeyVaultTokenCallback));
         }

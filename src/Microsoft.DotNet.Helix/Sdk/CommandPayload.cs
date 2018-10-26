@@ -35,6 +35,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 name = $"scripts/{Guid.NewGuid():N}/execute.sh";
                 contents.Append("#!/bin/sh\n");
+                contents.Append("chmod +x $HELIX_WORKITEM_PAYLOAD/*.sh\n");
                 foreach (var command in commands)
                 {
                     contents.Append(command + "\n");

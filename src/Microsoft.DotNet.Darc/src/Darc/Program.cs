@@ -14,14 +14,38 @@ namespace Microsoft.DotNet.Darc
         static int Main(string[] args)
         {
             return Parser.Default.ParseArguments<AuthenticateCommandLineOptions,
-                                                 GetCommandLineOptions,
+                                                 GetDependenciesCommandLineOptions,
                                                  AddCommandLineOptions,
-                                                 GetChannelsCommandLineOptions>(args)
+                                                 GetChannelsCommandLineOptions,
+                                                 GetSubscriptionsCommandLineOptions,
+                                                 AddSubscriptionCommandLineOptions,
+                                                 DeleteSubscriptionCommandLineOptions,
+                                                 AddChannelCommandLineOptions,
+                                                 DeleteChannelCommandLineOptions,
+                                                 GetDefaultChannelCommandLineOptions,
+                                                 AddDefaultChannelCommandLineOptions,
+                                                 DeleteDefaultChannelCommandLineOptions,
+                                                 GetSubscriptionHistoryCommandLineOptions,
+                                                 RetrySubscriptionUpdateCommandLineOptions,
+                                                 UpdateDependenciesCommandLineOptions,
+                                                 VerifyCommandLineOptions>(args)
                 .MapResult(
                     (AuthenticateCommandLineOptions opts) => { return RunOperation(new AuthenticateOperation(opts)); },
-                    (GetCommandLineOptions opts) => { return RunOperation(new GetOperation(opts)); },
+                    (GetDependenciesCommandLineOptions opts) => { return RunOperation(new GetDependenciesOperation(opts)); },
                     (AddCommandLineOptions opts) => { return RunOperation(new AddOperation(opts)); },
                     (GetChannelsCommandLineOptions opts) => { return RunOperation(new GetChannelsOperation(opts)); },
+                    (GetSubscriptionsCommandLineOptions opts) => { return RunOperation(new GetSubscriptionsOperation(opts)); },
+                    (AddSubscriptionCommandLineOptions opts) => { return RunOperation(new AddSubscriptionOperation(opts)); },
+                    (DeleteSubscriptionCommandLineOptions opts) => { return RunOperation(new DeleteSubscriptionOperation(opts)); },
+                    (AddChannelCommandLineOptions opts) => { return RunOperation(new AddChannelOperation(opts)); },
+                    (DeleteChannelCommandLineOptions opts) => { return RunOperation(new DeleteChannelOperation(opts)); },
+                    (GetDefaultChannelCommandLineOptions opts) => { return RunOperation(new GetDefaultChannelsOperation(opts)); },
+                    (AddDefaultChannelCommandLineOptions opts) => { return RunOperation(new AddDefaultChannelOperation(opts)); },
+                    (DeleteDefaultChannelCommandLineOptions opts) => { return RunOperation(new DeleteDefaultChannelOperation(opts)); },
+                    (GetSubscriptionHistoryCommandLineOptions opts) => { return RunOperation(new GetSubscriptionHistoryOperation(opts)); },
+                    (RetrySubscriptionUpdateCommandLineOptions opts) => { return RunOperation(new RetrySubscriptionUpdateOperation(opts)); },
+                    (UpdateDependenciesCommandLineOptions opts) => { return RunOperation(new UpdateDependenciesOperation(opts)); },
+                    (VerifyCommandLineOptions opts) => { return RunOperation(new VerifyOperation(opts)); },
                     (errs => 1));
         }
 
@@ -37,7 +61,7 @@ namespace Microsoft.DotNet.Darc
         {
             try
             {
-                int returnValue = operation.Execute();
+                int returnValue = operation.ExecuteAsync().GetAwaiter().GetResult();
                 operation.Dispose();
                 return returnValue;
             }

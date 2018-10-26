@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
+using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -69,11 +71,13 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string[] PostCommands { get; set; }
 
         /// <summary>
-        ///   A set of directories that will be zipped up and sent as Correlation Payloads for the helix job.
+        ///   A set of correlation payloads that will be sent for the helix job.
         /// </summary>
         /// <remarks>
-        ///   Metadata Used:
-        ///     FullPath - This path is required to be a directory to be zipped up or an already-zipped archive
+        ///   These Items can be either:
+        ///     A Directory - The specified directory will be zipped up and sent as a correlation payload
+        ///     A File - The specified archive file will be sent as a correlation payload
+        ///     A Uri - The Item's Uri metadata will be used as a correlation payload
         /// </remarks>
         public ITaskItem[] CorrelationPayloads { get; set; }
 
@@ -328,22 +332,28 @@ namespace Microsoft.DotNet.Helix.Sdk
         private IJobDefinition AddCorrelationPayload(IJobDefinition def, ITaskItem correlationPayload)
         {
             string path = correlationPayload.GetMetadata("FullPath");
+            string uri = correlationPayload.GetMetadata("Uri");
+
+            if (!string.IsNullOrEmpty(uri))
+            {
+                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload URI '{uri}'");
+                return def.WithCorrelationPayloadUris(new Uri(uri));
+            }
 
             if (Directory.Exists(path))
             {
                 Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Directory '{path}'");
                 return def.WithCorrelationPayloadDirectory(path);
             }
-            else if (File.Exists(path))
+
+            if (File.Exists(path))
             {
                 Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Archive '{path}'");
                 return def.WithCorrelationPayloadArchive(path);
             }
-            else
-            {
-                Log.LogError($"Correlation Payload '{path}' not found.");
-                return def;
-            }
+
+            Log.LogError($"Correlation Payload '{path}' not found.");
+            return def;
         }
     }
 }

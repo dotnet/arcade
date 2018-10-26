@@ -5,6 +5,7 @@
 using Microsoft.DotNet.Darc.Options;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Darc.Operations
 {
@@ -33,7 +34,7 @@ namespace Microsoft.DotNet.Darc.Operations
             _logger = _loggerFactory.CreateLogger<Operation>();
         }
 
-        public abstract int Execute();
+        public abstract Task<int> ExecuteAsync();
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
