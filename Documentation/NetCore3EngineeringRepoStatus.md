@@ -1,6 +1,6 @@
 # .NET Core 3 Engineering transition status
 
-## Work Streams
+## Primary Deliverables / Work Streams
 
 1. Using Azure DevOps for CI
 2. Using shared toolset (Arcade SDK)
@@ -60,10 +60,10 @@ Target completion date for these workstreams is 12/14/2018.
 
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/731)         |                      | Not scheduled | Currently migrating to .NET Core 2 tools, scheduling this work is pending completion of that work |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/729) |                      | Not scheduled | Currently migrating to .NET Core 2 tools, scheduling this work is pending completion of that work |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/728)       |                      | Not scheduled | Currently migrating to .NET Core 2 tools, scheduling this work is pending completion of that work |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/730)       |                      | Not scheduled | Currently migrating to .NET Core 2 tools, scheduling this work is pending completion of that work |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/731)         | November 2018 (end)  | In progress   | Half-way done, need to finish migration to .NET Core 2 tools, first. |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/729) | December 2018 (mid)  | Not scheduled | Will be started immediately after the above. |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/728)       | December 2018 (mid)  | Not scheduled | Will be started immediately after the above. |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/730)       | January 2019         | Not scheduled | Lowest on our priority list, but should be reasonably fast once the above are complete. |
 
 ---
 

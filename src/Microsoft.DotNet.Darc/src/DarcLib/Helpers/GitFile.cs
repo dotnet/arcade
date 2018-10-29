@@ -27,7 +27,14 @@ namespace Microsoft.DotNet.DarcLib
         public GitFile(string filePath, string content, string contentEncoding)
         {
             FilePath = filePath;
+            // TODO: Newline normalization should happen on the writer side,
+            // since the writer knows the local repo/remote repo context.
             Content = content.Replace(Environment.NewLine, "\n");
+            // Ensure it ends in a newline
+            if (!Content.EndsWith("\n"))
+            {
+                Content = $"{Content}\n";
+            }
             ContentEncoding = contentEncoding;
         }
 

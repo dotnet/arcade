@@ -3,8 +3,8 @@
 - [Project Guidance](#project-guidance)
 - [GitHub to DncEng Internal mirror](#github-to-dnceng-internal-mirror)
 - [VSTS Pull Request and CI builds](#vsts-pull-request-and-ci-builds)
-- [Agent Queues](#agent-queues)
-- [VSTS GitHub connection](#vsts-github-connection)
+- [Azure DevOps service connection](#azure-devops-service-connection)
+- [Agent queues](#agent-queues)
 - [CI badge link](#ci-badge-link)
 - [Signed builds](#signed-builds)
 - [Security](#security)
@@ -25,10 +25,19 @@ Instructions for setting up the GitHub to dev.azure.com/dnceng/internal mirror a
 
 VSTS has detailed documentation on how to create builds that are linked from GitHub repositories which can be found [here](https://docs.microsoft.com/en-us/vsts/build-release/actions/ci-build-github?view=vsts); however, before going through those steps, keep in mind that our process differs from the steps in the official documentation in a few key places:
 
-* The YAML tutorial links to a .NET Core sample repository for an example of a simple `.vsts-ci.yml` file. Instead of using that repository, use [our sample repository](https://github.com/dotnet/arcade-minimalci-sample).
-* VSTS will require a GitHub Service Endpoint to communicate with github and setup web hooks.  Teams should use the `DotNet-Bot GitHub Connection` Service Endpoint.  The `DotNet-Bot GitHub Connection` requires that teams add the .NET Core owned [service account](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#github-service-account) as a [collaborator](https://help.github.com/articles/permission-levels-for-a-user-account-repository/#collaborator-access-on-a-repository-owned-by-a-user-account) (Admin access) on the GitHub repo.
+- The YAML tutorial links to a .NET Core sample repository for an example of a simple `azure-pipelines.yml` file. Instead of using that repository, use [our sample repository](https://github.com/dotnet/arcade-minimalci-sample).
 
-For implementation details and managing information about `DotNet-Bot GitHub Connection` see the [documentation](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#vsts-service-endpoint)
+## Azure DevOps service connection
+
+When creating an Azure DevOps build definition with a GitHub source, you will need a GitHub Service Endpoint to communicate with GitHub and setup web hooks.  Teams should use the "dotnet" GitHub app service connection to manage the GitHub <-> Azure DevOps pipeline connection.
+
+The Azure Pipelines app ("dotnet" connection) will work for repos that are a member of the dotnet organization.  If you have a repo that should be supported but does not show up, you will need to work with @dnceng to update repository access for the app.
+
+The "dotnet" service connection is the only dnceng supported connection.  Other available connections may be removed and we strongly encourage devs to create OAuth connections only when needed and to clean them up when they are no longer necessary.
+
+### Switching service connections
+
+There is no way to update an existing build definition to use a different service connection.  Instead, you will need to deprecate your current build definition (disable triggers, change the name), and create a new build definition with the same properites.  You should then delete your deprecated definition when you are convinced the new definition works as expected.
 
 ## Agent queues
 
@@ -42,7 +51,7 @@ Current machine pool recommendations:
 | ---------- | -------------------- | -------------------------- |
 | Windows_NT | dotnet-external-temp |                            |
 | Linux      | Hosted Ubuntu 1604   | dnceng-linux-external-temp |
-| OSX        | Hosted Mac Preview   | |
+| OSX        | Hosted macOS         | |
 
 ### Internal
 

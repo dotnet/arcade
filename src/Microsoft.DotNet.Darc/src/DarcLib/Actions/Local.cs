@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.DarcLib
         {
             _repo = Directory.GetParent(gitPath).FullName;
             _logger = logger;
-            _gitClient = new LocalGitClient(gitPath, _logger);
+            _gitClient = new LocalGitClient(_logger);
             _fileManager = new GitFileManager(_gitClient, _logger);
         }
 
@@ -34,27 +34,11 @@ namespace Microsoft.DotNet.DarcLib
         ///     Adds a dependency to the dependency files
         /// </summary>
         /// <returns></returns>
-        public async Task AddDependenciesAsync(DependencyDetail dependency, DependencyType dependencyType)
+        public async Task AddDependencyAsync(DependencyDetail dependency, DependencyType dependencyType)
         {
-            if (GetDependenciesAsync(dependency.Name).GetAwaiter().GetResult().Any())
-            {
-                throw new DependencyException($"Dependency {dependency.Name} already exists in this repository");
-            }
-
-            if (DependencyOperations.TryGetKnownUpdater(dependency.Name, out Delegate function))
-            {
-                await (Task) function.DynamicInvoke(_fileManager, _repo, dependency);
-            }
-            else
-            {
-                await _fileManager.AddDependencyToVersionProps(
-                    Path.Combine(_repo, VersionFiles.VersionProps),
-                    dependency);
-                await _fileManager.AddDependencyToVersionDetails(
-                    Path.Combine(_repo, VersionFiles.VersionDetailsXml),
-                    dependency,
-                    dependencyType);
-            }
+            // TODO: https://github.com/dotnet/arcade/issues/1095
+            // This should be getting back a container and writing the files from here.
+            await _fileManager.AddDependencyAsync(dependency, dependencyType, _repo, null);
         }
 
         /// <summary>

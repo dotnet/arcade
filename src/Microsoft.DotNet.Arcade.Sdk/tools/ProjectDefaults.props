@@ -138,6 +138,20 @@
         <DeterministicSourcePaths>false</DeterministicSourcePaths>
       </PropertyGroup>
     </When>
+
+    <!-- C++ specific settings -->
+    <When Condition="'$(Language)' == 'C++'">
+      <PropertyGroup>
+        <OutDir>$(OutputPath)</OutDir>
+
+        <!-- 
+          Disable NuGet package resolution during build - PackageReferences are not fully supported 
+          Props and target files are still going to be imported from referenced packages.
+        -->
+        <ResolveNuGetPackages>false</ResolveNuGetPackages>
+      </PropertyGroup>
+    </When>
+
   </Choose>
 
   <!-- 
