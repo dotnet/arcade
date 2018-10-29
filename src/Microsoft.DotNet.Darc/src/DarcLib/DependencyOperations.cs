@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.DarcLib
                 parent,
                 dependency.Name,
                 dependency.Version);
-            await fileManager.AddDependencyToVersionDetails(
+            await fileManager.AddDependencyToVersionDetailsAsync(
                 repository,
                 branch,
                 dependency,

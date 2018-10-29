@@ -112,10 +112,13 @@ namespace Microsoft.DotNet.DarcLib
         }
 
         /// <summary>
-        /// Add new dependencies to the repo.
+        /// Add a new dependency to the repository
         /// </summary>
-        /// <param name="itemsToAdd"></param>
-        /// <returns></returns>
+        /// <param name="dependency">Dependency to add.</param>
+        /// <param name="dependencyType">Type of dependency.</param>
+        /// <param name="repoUri">Repository URI to add the dependency to.</param>
+        /// <param name="branch">Branch to add the dependency to.</param>
+        /// <returns>Async task.</returns>
         public async Task AddDependencyAsync(
             DependencyDetail dependency,
             DependencyType dependencyType,
@@ -134,11 +137,11 @@ namespace Microsoft.DotNet.DarcLib
             }
             else
             {
-                await AddDependencyToVersionsProps(
+                await AddDependencyToVersionsPropsAsync(
                     repoUri,
                     branch,
                     dependency);
-                await AddDependencyToVersionDetails(
+                await AddDependencyToVersionDetailsAsync(
                     repoUri,
                     branch,
                     dependency,
@@ -190,7 +193,7 @@ namespace Microsoft.DotNet.DarcLib
             return fileContainer;
         }
 
-        public async Task AddDependencyToVersionDetails(
+        public async Task AddDependencyToVersionDetailsAsync(
             string repo,
             string branch,
             DependencyDetail dependency,
@@ -252,7 +255,7 @@ namespace Microsoft.DotNet.DarcLib
         /// <param name="repo">Path to Versions.props file</param>
         /// <param name="dependency">Dependency information to add.</param>
         /// <returns>Async task.</returns>
-        public async Task AddDependencyToVersionsProps(string repo, string branch, DependencyDetail dependency)
+        public async Task AddDependencyToVersionsPropsAsync(string repo, string branch, DependencyDetail dependency)
         {
             XmlDocument versionProps = await ReadVersionPropsAsync(repo, null);
             string documentNamespaceUri = versionProps.DocumentElement.NamespaceURI;
@@ -304,6 +307,11 @@ namespace Microsoft.DotNet.DarcLib
                             addedPackageNameElement = true;
                             break;
                         }
+                    }
+
+                    if (addedPackageVersionElement && addedPackageVersionElement)
+                    {
+                        break;
                     }
                 }
             }
