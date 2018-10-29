@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Uri;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
 using Newtonsoft.Json;
@@ -70,11 +71,22 @@ namespace Microsoft.DotNet.Helix.Sdk
                 catch (HttpRequestException e)
                 {
                     Log.LogMessage(MessageImportance.High, "Failed to connect to GitHub to retrieve username", e.StackTrace);
-                    return "Mission Control (generation of MC link failed)";
+                    return "Mission Control (generation of MC link failed -- GitHub HTTP request error)";
                 }
-                string userName = JObject.Parse(githubJson)["login"].ToString();
+                try
+                {
+                    string userName = JObject.Parse(githubJson)["login"].ToString();
+                }
+                catch (Exception e) // Don't check in without substituting this with the correct exception
+                {
+                    Log.LogMessage(MessageImportance.High, "Failed to find value 'login' in parsed JSON", e.StackTrace);
+                    return "Mission Control (generation of MC link failed -- JSON parsing error)"
+                }
 
-                return $"https://mc.dot.net/#/user/{userName}/builds";
+                string source =  EscapeUriString(GetMetadata("HelixSource"));
+                string type = EscapeUriString(GetMetadata("HelixType"));
+
+                return $"https://mc.dot.net/#/user/{userName}/builds/{source}/{type}/{Build}";
             }
         }
     }
