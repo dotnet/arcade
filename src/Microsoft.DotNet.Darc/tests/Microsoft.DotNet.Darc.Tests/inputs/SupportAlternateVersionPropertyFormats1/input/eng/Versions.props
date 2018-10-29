@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- This is comment that should not be altered. -->
+  <PropertyGroup>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <PreReleaseVersionLabel>prerelease</PreReleaseVersionLabel>
+  </PropertyGroup>
+  <ItemGroup>
+    <RandomElement>Foo</RandomElement>
+  </ItemGroup>
+  <!--Package versions-->
+  <PropertyGroup>
+    <ExistingDependencyVersion>1.2.3</ExistingDependencyVersion>
+  </PropertyGroup>
+  <!--Package names-->
+  <PropertyGroup>
+    <ExistingDependencyPackage>Existing.Dependency</ExistingDependencyPackage>
+  </PropertyGroup>
+</Project>

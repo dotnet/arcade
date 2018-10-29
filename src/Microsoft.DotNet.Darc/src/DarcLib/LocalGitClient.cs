@@ -14,19 +14,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.DarcLib
 {
-    internal class LocalGitClient : IGitRepo
+    public class LocalGitClient : IGitRepo
     {
-        private string _gitRepoRoot;
         private ILogger _logger;
 
         /// <summary>
         ///     Construct a new local git client
         /// </summary>
         /// <param name="path">Current path</param>
-        public LocalGitClient(string path, ILogger logger)
+        public LocalGitClient(ILogger logger)
         {
-            // TODO: Attempt to find the git repo root?
-            _gitRepoRoot = path;
             _logger = logger;
         }
 
@@ -172,7 +169,9 @@ namespace Microsoft.DotNet.DarcLib
             const string lf = "\n";
             // Check gitAttributes to determine whether the file has eof handling set.
             string eofAttr = LocalHelpers.ExecuteCommand("git", $"check-attr eol -- {filePath}", _logger);
-            if (eofAttr.Contains("eol: unspecified") || eofAttr.Contains("eol: auto"))
+            if (string.IsNullOrEmpty(eofAttr) ||
+                eofAttr.Contains("eol: unspecified") ||
+                eofAttr.Contains("eol: auto"))
             {
                 if (Environment.NewLine != crlf)
                 {

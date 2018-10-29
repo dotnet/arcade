@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!--Package versions-->
+  <PropertyGroup>
+    <FooBarPackageVersion>1.2.3</FooBarPackageVersion>
+    <FooBar2PackageVersion>1.2.4</FooBar2PackageVersion>
+    <FooBar3PackageVersion>1.2.4</FooBar3PackageVersion>
+    <ExistingDependencyPackageVersion>1.2.3</ExistingDependencyPackageVersion>
+  </PropertyGroup>
+  <!--Package names-->
+  <PropertyGroup>
+    <FooBarPackage>Foo.Bar</FooBarPackage>
+    <FooBar2Package>Foo.Bar2</FooBar2Package>
+    <FooBar3Package>Foo.Bar3</FooBar3Package>
+    <ExistingDependencyPackage>Existing.Dependency</ExistingDependencyPackage>
+  </PropertyGroup>
+</Project>

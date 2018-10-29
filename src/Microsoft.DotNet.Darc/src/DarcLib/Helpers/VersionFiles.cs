@@ -15,10 +15,29 @@ namespace Microsoft.DotNet.DarcLib
         public const string VersionDetailsXml = "eng/Version.Details.xml";
         public const string VersionProps = "eng/Versions.props";
         public const string GlobalJson = "global.json";
+        public const string VersionPropsVersionElementSuffix = "PackageVersion";
+        public const string VersionPropsAlternateVersionElementSuffix = "Version";
+        public const string VersionPropsPackageElementSuffix = "Package";
 
-        public static string CalculateVersionPropsElementName(string dependencyName)
+        public static string GetVersionPropsPackageVersionElementName(string dependencyName)
         {
-            return $"{dependencyName.Replace(".", string.Empty)}Version";
+            return $"{dependencyName.Replace(".", string.Empty)}{VersionPropsVersionElementSuffix}";
+        }
+        /// <summary>
+        /// Special temporary alternative package version element names.  This is used where the
+        /// version props file already has "Version" instead of PackageVersion. Eventually this will
+        /// be replaced by use of configuration in Versions.Details.xml
+        /// </summary>
+        /// <param name="dependencyName">Original name of dependency</param>
+        /// <returns></returns>
+        public static string GetVersionPropsAlternatePackageVersionElementName(string dependencyName)
+        {
+            return $"{dependencyName.Replace(".", string.Empty)}{VersionPropsAlternateVersionElementSuffix}";
+        }
+
+        public static string GetVersionPropsPackageElementName(string dependencyName)
+        {
+            return $"{dependencyName.Replace(".", string.Empty)}{VersionPropsPackageElementSuffix}";
         }
 
         public static string CalculateGlobalJsonElementName(string dependencyName)
