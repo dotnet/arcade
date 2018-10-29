@@ -31,18 +31,23 @@ namespace Microsoft.DotNet.Darc.Operations
             {
                 Local local = new Local(LocalHelpers.GetGitDir(Logger), Logger);
                 IEnumerable<DependencyDetail> dependencies = await local.GetDependenciesAsync(_options.AssetName);
+                DarcSettings darcSettings = null;
 
                 if (_options.Remote)
                 {
-                    if (!string.IsNullOrEmpty(_options.RepoUri))
+                    if (string.IsNullOrEmpty(_options.RepoUri))
                     {
-                        DarcSettings darcSettings = LocalSettings.GetDarcSettings(_options, Logger, _options.RepoUri);
-                        Remote remote = new Remote(darcSettings, Logger);
-                        dependencies = await remote.GetDependenciesAsync(_options.RepoUri, _options.Branch, _options.AssetName);
+                        Logger.LogError("If '--remote' is set '--repo-uri' is required.");
+
+                        return Constants.ErrorCode;
                     }
+
+                    darcSettings = LocalSettings.GetDarcSettings(_options, Logger, _options.RepoUri);
+                    Remote remote = new Remote(darcSettings, Logger);
+                    dependencies = await remote.GetDependenciesAsync(_options.RepoUri, _options.Branch, _options.AssetName);
                 }
 
-                List<DependencyGraph> graph = await CreateGraphAsync(dependencies);
+                List<DependencyGraph> graph = await CreateGraphAsync(dependencies, darcSettings);
 
                 if (graph == null)
                 {
@@ -74,13 +79,13 @@ namespace Microsoft.DotNet.Darc.Operations
         /// <param name="dependencies">Input dependencies.</param>
         /// <param name="darcSettings">The Darc settings.</param>
         /// <returns>Collection of graph nodes.</returns>
-        private async Task<List<DependencyGraph>> CreateGraphAsync(IEnumerable<DependencyDetail> dependencies)
+        private async Task<List<DependencyGraph>> CreateGraphAsync(IEnumerable<DependencyDetail> dependencies, DarcSettings darcSettings)
         {
             List<DependencyGraph> graph = new List<DependencyGraph>();
 
             if (string.IsNullOrEmpty(_options.AssetName))
             {
-                await Task.WhenAll(dependencies.Select(dependency => AddNodeToGraphAsync(dependency, graph)));
+                await Task.WhenAll(dependencies.Select(dependency => AddNodeToGraphAsync(darcSettings, dependency, graph)));
             }
             else
             {
@@ -92,15 +97,15 @@ namespace Microsoft.DotNet.Darc.Operations
                     return null;
                 }
 
-                await AddNodeToGraphAsync(dependency, graph);
+                await AddNodeToGraphAsync(darcSettings, dependency, graph);
             }
 
             return graph;
         }
 
-        private async Task AddNodeToGraphAsync(DependencyDetail dependency, List<DependencyGraph> graph)
+        private async Task AddNodeToGraphAsync(DarcSettings darcSettings, DependencyDetail dependency, List<DependencyGraph> graph)
         {
-            DependencyGraph dependencyGraph = await CommonOperations.GetDependencyGraphAsync(dependency, _options.Remote, Logger, _options.ReposFolder, _options.RemotesMap);
+            DependencyGraph dependencyGraph = await DependencyGraph.GetDependencyGraphAsync(darcSettings, dependency, _options.Remote, Logger, _options.ReposFolder, _options.RemotesMap);
             graph.Add(dependencyGraph);
         }
 

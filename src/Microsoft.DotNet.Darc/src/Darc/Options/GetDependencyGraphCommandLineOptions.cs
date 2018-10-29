@@ -4,6 +4,7 @@
 
 using CommandLine;
 using Microsoft.DotNet.Darc.Operations;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Darc.Options
 {
@@ -25,9 +26,9 @@ namespace Microsoft.DotNet.Darc.Options
         [Option("repos-folder", HelpText = @"Full path to folder where all the repos are locally stored. i.e. C:\repos")]
         public string ReposFolder { get; set; }
 
-        [Option("remotes-map", HelpText = @"';' separated key value pair defining the remote to local path mapping. i.e 'https://github.com/dotnet/arcade,C:\repos\arcade;'"
+        [Option("remotes-map", Separator = ';', HelpText = @"';' separated key value pair defining the remote to local path mapping. i.e 'https://github.com/dotnet/arcade,C:\repos\arcade;'"
            + @"https://github.com/dotnet/corefx,C:\repos\corefx.")]
-        public string RemotesMap { get; set; }
+        public IEnumerable<string> RemotesMap { get; set; }
 
         [Option('f', "flat", HelpText = @"Returns a unique set of repository+sha combination.")]
         public bool Flat { get; set; }

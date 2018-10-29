@@ -12,14 +12,14 @@ namespace Microsoft.DotNet.DarcLib
         public DependencyGraphNode(DependencyDetail dependencyDetail)
         {
             DependencyDetail = dependencyDetail;
-            ParentStack = new HashSet<string>();
+            VisitedNodes = new HashSet<string>();
             ChildNodes = new List<DependencyGraphNode>();
         }
 
-        public DependencyGraphNode(DependencyDetail dependencyDetail, HashSet<string> parentStack) :
+        public DependencyGraphNode(DependencyDetail dependencyDetail, HashSet<string> visitedNodes) :
             this(dependencyDetail)
         {
-            ParentStack = parentStack;
+            VisitedNodes = new HashSet<string>(visitedNodes);
         }
 
         public DependencyGraphNode(DependencyDetail dependencyDetail, List<DependencyGraphNode> childNodes) :
@@ -28,32 +28,16 @@ namespace Microsoft.DotNet.DarcLib
             ChildNodes = childNodes;
         }
 
-        public DependencyGraphNode(DependencyDetail dependencyDetail, HashSet<string> parentStack, List<DependencyGraphNode> childNodes) :
-            this(dependencyDetail, parentStack)
+        public DependencyGraphNode(DependencyDetail dependencyDetail, HashSet<string> visitedNodes, List<DependencyGraphNode> childNodes) :
+            this(dependencyDetail, visitedNodes)
         {
             ChildNodes = childNodes;
         }
 
-        public HashSet<string> ParentStack { get; set; }
+        public HashSet<string> VisitedNodes { get; set; }
 
         public DependencyDetail DependencyDetail { get; set; }
 
         public List<DependencyGraphNode> ChildNodes { get; set; }
-
-        public override int GetHashCode()
-        {
-            return DependencyDetail.GetHashCode();
-        }
-        public override bool Equals(object obj)
-        {
-            var item = obj as DependencyGraphNode;
-
-            if (item == null)
-            {
-                return false;
-            }
-
-            return this.DependencyDetail == item.DependencyDetail;
-        }
     }
 }

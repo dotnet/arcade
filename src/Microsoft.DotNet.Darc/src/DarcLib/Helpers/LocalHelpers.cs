@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.DarcLib.Helpers
             return dir;
         }
 
-        public static string Show(string repoFolderPath, string commit, string fileName, ILogger logger)
+        public static string GitShow(string repoFolderPath, string commit, string fileName, ILogger logger)
         {
             string fileContents = ExecuteCommand("git", $"show {commit}:{fileName}", logger, repoFolderPath);
 

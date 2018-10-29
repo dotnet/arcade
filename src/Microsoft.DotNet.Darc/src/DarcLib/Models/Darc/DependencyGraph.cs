@@ -2,12 +2,19 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.DotNet.DarcLib.Helpers;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DarcLib
 {
     public class DependencyGraph
     {
+        private static Dictionary<string, string> _remotesMapping = null;
+
         public DependencyGraph(DependencyGraphNode graph, HashSet<DependencyGraphNode> flatGraph)
         {
             Graph = graph;
@@ -17,5 +24,146 @@ namespace Microsoft.DotNet.DarcLib
         public DependencyGraphNode Graph { get; set; }
 
         public HashSet<DependencyGraphNode> FlatGraph { get; set; }
+
+        public static async Task<DependencyGraph> GetDependencyGraphAsync(
+            DarcSettings darcSettings,
+            DependencyDetail dependency,
+            bool remote,
+            ILogger logger,
+            string reposFolder = null,
+            IEnumerable<string> remotesMap = null)
+        {
+            // Fail fast if we darcSettings is null in a remote scenario
+            if (remote && darcSettings == null)
+            {
+                throw new Exception("In a remote scenario 'DarcSettings' have to be set.");
+            }
+
+            HashSet<DependencyGraphNode> flatGraph = new HashSet<DependencyGraphNode>(new DependencyGraphNodeComparer());
+            DependencyGraphNode graphNode = new DependencyGraphNode(dependency);
+            Stack<DependencyGraphNode> nodesToVisit = new Stack<DependencyGraphNode>();
+
+            nodesToVisit.Push(graphNode);
+            flatGraph.Add(graphNode);
+
+            while (nodesToVisit.Count > 0)
+            {
+                DependencyGraphNode node = nodesToVisit.Pop();
+                IEnumerable<DependencyDetail> dependencies = await GetDependenciesAsync(darcSettings, remote, logger, node, remotesMap, reposFolder);
+
+                if (dependencies != null)
+                {
+                    foreach (DependencyDetail dependencyDetail in dependencies)
+                    {
+                        DependencyGraphNode dependencyGraphNode = new DependencyGraphNode(dependencyDetail, node.VisitedNodes);
+                        dependencyGraphNode.VisitedNodes.Add(node.DependencyDetail.RepoUri);
+
+                        if (!graphNode.VisitedNodes.Contains(dependencyDetail.RepoUri) && dependencyDetail.RepoUri != node.DependencyDetail.RepoUri)
+                        {
+                            node.ChildNodes.Add(dependencyGraphNode);
+                            nodesToVisit.Push(dependencyGraphNode);
+                            flatGraph.Add(dependencyGraphNode);
+                        }
+                    }
+                }
+            }
+
+            return new DependencyGraph(graphNode, flatGraph);
+        }
+
+        private static string GetRepoPath(DependencyDetail dependency, IEnumerable<string> remotesMap, string reposFolder, ILogger logger)
+        {
+            string repoPath = null;
+
+            if (remotesMap != null)
+            {
+                if (_remotesMapping == null)
+                {
+                    _remotesMapping = CreateRemotesMapping(remotesMap);
+                }
+
+                if (!_remotesMapping.ContainsKey(repoPath))
+                {
+                    throw new Exception($"A key matching '{dependency.RepoUri}' was not found in the mapping. Please make sure to include it...");
+                }
+
+                repoPath = _remotesMapping[repoPath];
+            }
+            else
+            {
+                string folder = null;
+
+                if (!string.IsNullOrEmpty(reposFolder))
+                {
+                    folder = reposFolder;
+                }
+                else
+                {
+                    // If a repo folder or a mapping was not set we use the current parent's parent folder.
+                    string gitDir = LocalHelpers.GetGitDir(logger);
+                    string parent = Directory.GetParent(gitDir).FullName;
+                    folder = Directory.GetParent(parent).FullName;
+                }
+
+                // There are cases when the sha is not specified in Version.Details.xml since owners want that Maestro++ fills this in. Without a sha
+                // we cannot walk the graph. We do not fail the process but display/return a dependency with no sha and for that graph path
+                // that would be the end of the walk
+                if (string.IsNullOrEmpty(dependency.Commit))
+                {
+                    return null;
+                }
+
+                repoPath = LocalHelpers.GetRepoPathFromFolder(folder, dependency.Commit, logger);
+
+                if (string.IsNullOrEmpty(repoPath))
+                {
+                    throw new Exception($"Commit '{dependency.Commit}' was not found in any folder in '{folder}'. Make sure a folder for '{dependency.RepoUri}' exists "
+                        + "and it has all the latest changes...");
+                }
+            }
+
+            return repoPath;
+        }
+
+        private static async Task<IEnumerable<DependencyDetail>> GetDependenciesAsync(DarcSettings darcSettings, bool remote, ILogger logger, DependencyGraphNode node, IEnumerable<string> remotesMap, string reposFolder)
+        {
+            IEnumerable<DependencyDetail> dependencies = null;
+
+            if (remote)
+            {
+                Remote remoteClient = new Remote(darcSettings, logger);
+                dependencies = await remoteClient.GetDependenciesAsync(node.DependencyDetail.RepoUri, node.DependencyDetail.Commit);
+            }
+            else
+            {
+                string repoPath = GetRepoPath(node.DependencyDetail, remotesMap, reposFolder, logger);
+
+                // Local's constructor expects the repo's .git folder to be passed in. In this particular case we could pass any folder under 'repoPath' or even a fake one
+                // but we use .git to keep things consistent to what Local expects
+                Local local = new Local($"{repoPath}/.git", logger);
+                string fileContents = LocalHelpers.GitShow(repoPath, node.DependencyDetail.Commit, VersionFiles.VersionDetailsXml, logger);
+                dependencies = local.GetDependenciesFromFileContents(fileContents);
+            }
+
+            return dependencies;
+        }
+
+        private static Dictionary<string, string> CreateRemotesMapping(IEnumerable<string> remotesMap)
+        {
+            Dictionary<string, string> remotesMapping = new Dictionary<string, string>();
+
+            foreach (string remotes in remotesMap)
+            {
+                string[] keyValuePairs = remotes.Split(';');
+
+                foreach (string keyValue in keyValuePairs)
+                {
+                    string[] kv = keyValue.Split(',');
+                    remotesMapping.Add(kv[0], kv[1]);
+                }
+            }
+
+            return remotesMapping;
+        }
     }
 }
