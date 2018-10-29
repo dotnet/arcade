@@ -309,7 +309,7 @@ namespace Microsoft.DotNet.DarcLib
                         }
                     }
 
-                    if (addedPackageVersionElement && addedPackageVersionElement)
+                    if (addedPackageVersionElement && addedPackageNameElement)
                     {
                         break;
                     }
