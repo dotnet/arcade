@@ -20,34 +20,48 @@ parameters:
 
 steps:
   - ${{ if ne(variables['Agent.OS'], 'Windows_NT') }}:
-    - script: PATH=$(Build.SourcesDirectory)/.dotnet:$PATH
-      displayName: Add dotnet to PATH
+    - script: eng/common/msbuild.sh
+              eng/common/helixpublish.proj /t:test
+      displayName: Send job to Helix
+      condition: ${{ parameters.condition }}
+      continueOnError: ${{ parameters.continueOnError }}
+      env:
+        HelixSource: ${{ parameters.HelixSource }}
+        HelixType: ${{ parameters.HelixType }}
+        HelixBuild: ${{ parameters.HelixBuild }}
+        HelixTargetQueues: ${{ parameters.HelixTargetQueues }}
+        HelixAccessToken: ${{ parameters.HelixAccessToken }}
+        HelixPreCommands: ${{ parameters.HelixPreCommands }}
+        HelixPostCommands: ${{ parameters.HelixPostCommands }}
+        HelixCorrelationPayload: ${{ parameters.HelixCorrelationPayload }}
+        WorkItemDirectory: ${{ parameters.WorkItemDirectory }}
+        WorkItemCommand: ${{ parameters.WorkItemCommand }}
+        IncludeDotNetCli: ${{ parameters.IncludeDotNetCli }}
+        DotNetCliPackageType: ${{ parameters.DotNetCliPackageType }}
+        DotNetCliVersion: ${{ parameters.DotNetCliVersion }}
+        EnableXUnitReporter: ${{ parameters.EnableXUnitReporter }}
+        WaitForWorkItemCompletion: ${{ parameters.WaitForWorkItemCompletion }}
+        WorkItemArchiveWildCard: ${{ parameters.WorkItemArchiveWildCard }}
   - ${{ if eq(variables['Agent.OS'], 'Windows_NT') }}:
-    - script: set PATH=$(Build.SourcesDirectory)\.dotnet;%PATH%
-      displayName: Add dotnet to PATH
-  - task: DotNetCoreCLI@2
-    inputs:
-      command: custom
-      projects: eng/common/helixpublish.proj
-      custom: msbuild
-      arguments: '/t:test /p:Language=msbuild'
-    displayName: Send job to Helix
-    env:
-      HelixSource: ${{ parameters.HelixSource }}
-      HelixType: ${{ parameters.HelixType }}
-      HelixBuild: ${{ parameters.HelixBuild }}
-      HelixTargetQueues: ${{ parameters.HelixTargetQueues }}
-      HelixAccessToken: ${{ parameters.HelixAccessToken }}
-      HelixPreCommands: ${{ parameters.HelixPreCommands }}
-      HelixPostCommands: ${{ parameters.HelixPostCommands }}
-      HelixCorrelationPayload: ${{ parameters.HelixCorrelationPayload }}
-      WorkItemDirectory: ${{ parameters.WorkItemDirectory }}
-      WorkItemCommand: ${{ parameters.WorkItemCommand }}
-      IncludeDotNetCli: ${{ parameters.IncludeDotNetCli }}
-      DotNetCliPackageType: ${{ parameters.DotNetCliPackageType }}
-      DotNetCliVersion: ${{ parameters.DotNetCliVersion }}
-      EnableXUnitReporter: ${{ parameters.EnableXUnitReporter }}
-      WaitForWorkItemCompletion: ${{ parameters.WaitForWorkItemCompletion }}
-      WorkItemArchiveWildCard: ${{ parameters.WorkItemArchiveWildCard }}
-    condition: ${{ parameters.condition }}
-    continueOnError: ${{ parameters.continueOnError }}
+    - script: eng\common\msbuild.ps1
+              eng\common\helixpublish.proj /t:test
+      displayName: Send job to Helix
+      condition: ${{ parameters.condition }}
+      continueOnError: ${{ parameters.continueOnError }}
+      env:
+        HelixSource: ${{ parameters.HelixSource }}
+        HelixType: ${{ parameters.HelixType }}
+        HelixBuild: ${{ parameters.HelixBuild }}
+        HelixTargetQueues: ${{ parameters.HelixTargetQueues }}
+        HelixAccessToken: ${{ parameters.HelixAccessToken }}
+        HelixPreCommands: ${{ parameters.HelixPreCommands }}
+        HelixPostCommands: ${{ parameters.HelixPostCommands }}
+        HelixCorrelationPayload: ${{ parameters.HelixCorrelationPayload }}
+        WorkItemDirectory: ${{ parameters.WorkItemDirectory }}
+        WorkItemCommand: ${{ parameters.WorkItemCommand }}
+        IncludeDotNetCli: ${{ parameters.IncludeDotNetCli }}
+        DotNetCliPackageType: ${{ parameters.DotNetCliPackageType }}
+        DotNetCliVersion: ${{ parameters.DotNetCliVersion }}
+        EnableXUnitReporter: ${{ parameters.EnableXUnitReporter }}
+        WaitForWorkItemCompletion: ${{ parameters.WaitForWorkItemCompletion }}
+        WorkItemArchiveWildCard: ${{ parameters.WorkItemArchiveWildCard }}
