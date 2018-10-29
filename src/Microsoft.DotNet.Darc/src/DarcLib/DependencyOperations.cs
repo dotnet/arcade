@@ -15,6 +15,7 @@ namespace Microsoft.DotNet.DarcLib
             new Dictionary<string, KnownDependencyType>
             {
                 {"Microsoft.DotNet.Arcade.Sdk", KnownDependencyType.GlobalJson},
+                {"Microsoft.DotNet.Helix.Sdk", KnownDependencyType.GlobalJson},
                 {"dotnet", KnownDependencyType.GlobalJson}
             };
 
@@ -48,6 +49,7 @@ namespace Microsoft.DotNet.DarcLib
             var dependencyMapping = new Dictionary<string, string>
             {
                 {"Microsoft.DotNet.Arcade.Sdk", "msbuild-sdks"},
+                {"Microsoft.DotNet.Helix.Sdk", "msbuild-sdks"},
                 {"dotnet", "tools"}
             };
 
