@@ -121,10 +121,10 @@ namespace Microsoft.DotNet.Darc.Operations
         {
             foreach (DependencyGraph flatGraph in flatGraphs)
             {
-                foreach (DependencyGraphNode graphNode in flatGraph.FlatGraph)
+                foreach (DependencyDetail graphNode in flatGraph.FlatGraph)
                 {
-                    Console.WriteLine($"- Repo:    {graphNode.DependencyDetail.RepoUri}");
-                    Console.WriteLine($"  Commit:  {graphNode.DependencyDetail.Commit}");
+                    Console.WriteLine($"- Repo:    {graphNode.RepoUri}");
+                    Console.WriteLine($"  Commit:  {graphNode.Commit}");
                 }
 
                 Console.WriteLine();

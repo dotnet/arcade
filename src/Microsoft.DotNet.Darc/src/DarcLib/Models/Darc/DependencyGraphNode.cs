@@ -13,22 +13,29 @@ namespace Microsoft.DotNet.DarcLib
         {
             DependencyDetail = dependencyDetail;
             VisitedNodes = new HashSet<string>();
-            ChildNodes = new List<DependencyGraphNode>();
+            ChildNodes = new HashSet<DependencyGraphNode>(new DependencyGraphNodeComparer());
         }
 
-        public DependencyGraphNode(DependencyDetail dependencyDetail, HashSet<string> visitedNodes) :
+        public DependencyGraphNode(
+            DependencyDetail dependencyDetail, 
+            HashSet<string> visitedNodes) :
             this(dependencyDetail)
         {
             VisitedNodes = new HashSet<string>(visitedNodes);
         }
 
-        public DependencyGraphNode(DependencyDetail dependencyDetail, List<DependencyGraphNode> childNodes) :
+        public DependencyGraphNode(
+            DependencyDetail dependencyDetail, 
+            HashSet<DependencyGraphNode> childNodes) :
             this(dependencyDetail)
         {
             ChildNodes = childNodes;
         }
 
-        public DependencyGraphNode(DependencyDetail dependencyDetail, HashSet<string> visitedNodes, List<DependencyGraphNode> childNodes) :
+        public DependencyGraphNode(
+            DependencyDetail dependencyDetail, 
+            HashSet<string> visitedNodes, 
+            HashSet<DependencyGraphNode> childNodes) :
             this(dependencyDetail, visitedNodes)
         {
             ChildNodes = childNodes;
@@ -38,6 +45,6 @@ namespace Microsoft.DotNet.DarcLib
 
         public DependencyDetail DependencyDetail { get; set; }
 
-        public List<DependencyGraphNode> ChildNodes { get; set; }
+        public HashSet<DependencyGraphNode> ChildNodes { get; set; }
     }
 }
