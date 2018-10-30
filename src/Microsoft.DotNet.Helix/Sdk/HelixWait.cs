@@ -7,7 +7,6 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Uri;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
 using Newtonsoft.Json;
@@ -23,10 +22,22 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public ITaskItem[] Jobs { get; set; }
 
+        [Required]
+        public string Source { get; set; }
+
+        [Required]
+        public string Type { get; set; }
+
+        [Required]
+        public string Build { get; set; }
+
         protected override async Task ExecuteCore()
         {
             // Wait 1 second to allow helix to register the job creation
             await Task.Delay(1000);
+
+            Source = Uri.EscapeUriString(Source);
+            Type = Uri.EscapeUriString(Type);
 
             string mcUri = await GetMissionControlResultUri();
             Log.LogMessage(MessageImportance.High, $"Results will be available from {mcUri}");
@@ -73,20 +84,18 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogMessage(MessageImportance.High, "Failed to connect to GitHub to retrieve username", e.StackTrace);
                     return "Mission Control (generation of MC link failed -- GitHub HTTP request error)";
                 }
+                string userName = "";
                 try
                 {
-                    string userName = JObject.Parse(githubJson)["login"].ToString();
+                    userName = JObject.Parse(githubJson)["login"].ToString();
                 }
-                catch (Exception e) // Don't check in without substituting this with the correct exception
+                catch (JsonException e)
                 {
-                    Log.LogMessage(MessageImportance.High, "Failed to find value 'login' in parsed JSON", e.StackTrace);
-                    return "Mission Control (generation of MC link failed -- JSON parsing error)"
+                    Log.LogMessage(MessageImportance.High, "Failed to parse JSON or find value in parsed JSON", e.StackTrace);
+                    return "Mission Control (generation of MC link failed -- JSON parsing error)";
                 }
 
-                string source =  EscapeUriString(GetMetadata("HelixSource"));
-                string type = EscapeUriString(GetMetadata("HelixType"));
-
-                return $"https://mc.dot.net/#/user/{userName}/builds/{source}/{type}/{Build}";
+                return $"https://mc.dot.net/#/user/{userName}/builds/{Source}/{Type}/{Build}";
             }
         }
     }
