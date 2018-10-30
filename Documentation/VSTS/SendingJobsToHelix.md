@@ -83,7 +83,7 @@ Example build output:
 ```Text
 Sent Helix Job 7a6bb019-ed0e-4e46-a065-a38391d90019
 Waiting on job completion...
-Results will be available from https://mc.dot.net/#/user/dotnet-github-anon-kaonashi-bot/pr~2Fdotnet~2Fwinforms~2Frefs~2Fpull~2F9~2Fmerge/type~2Ftests/20181029.7/workItem/WorkItem/wilogs
+Results will be available from https://mc.dot.net/#/user/dotnet-github-anon-kaonashi-bot/pr~2Fdotnet~2Fwinforms~2Frefs~2Fpull~2F9~2Fmerge/type~2Ftests/20181029.7
 ```
 
 ### Internal test results
