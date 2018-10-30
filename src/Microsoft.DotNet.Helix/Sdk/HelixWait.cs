@@ -48,6 +48,22 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var finishedCount = workItems.Count(wi => wi.State == "Finished");
                 if (waitingCount == 0 && runningCount == 0)
                 {
+                    var workItemSummary = await HelixApi.Aggregate.JobSummaryMethodAsync(new string[] { "job.source" }, 1, filtername: jobName);
+                    int? fail;
+                    workItemSummary[0].Data.WorkItemStatus.TryGetValue("fail", out fail);
+
+                    if ((fail ?? 0) > 0)
+                    {
+                        Log.LogError($"{fail ?? -1} work item(s) have failed.");
+                    }
+
+                    int? testFailures;
+                    workItemSummary[0].Data.Analysis[0].Status.TryGetValue("fail", out testFailures);
+                    if ((testFailures ?? 0) > 0)
+                    {
+                        Log.LogError($"{testFailures ?? -1} tests have failed.");
+                    }
+
                     Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
                     return;
                 }
