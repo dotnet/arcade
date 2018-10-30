@@ -10,6 +10,9 @@ parameters:
   # Optional: display name of the phase
   displayName: ''
 
+  # Optional: dependencies of the phase
+  dependsOn: ''
+
   # Required: A defined YAML queue
   queue: {}
 
@@ -39,13 +42,18 @@ parameters:
 
 phases:
 - phase: ${{ parameters.name }}
-  displayName: ${{ parameters.displayName }}
+
+  ${{ if ne(parameters.displayName, '') }}:
+    displayName: ${{ parameters.displayName }}
 
   queue: ${{ parameters.queue }}
 
   ${{ if ne(parameters.variables, '') }}:
     variables: 
       ${{ insert }}: ${{ parameters.variables }}
+
+  ${{ if ne(parameters.dependsOn, '') }}:
+    dependsOn: ${{ parameters.dependsOn }}
 
   steps:
   - checkout: self
