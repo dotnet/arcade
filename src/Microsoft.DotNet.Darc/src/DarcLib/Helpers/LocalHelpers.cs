@@ -104,20 +104,12 @@ namespace Microsoft.DotNet.DarcLib.Helpers
 
                     output = process.StandardOutput.ReadToEnd().Trim();
 
-                    // Workaround. With some git commands the non-error output is logged in the
-                    // StandardError and not in StandardOutput. If the error code is 0, we also
-                    // check the StandardError if output is null
-                    if (string.IsNullOrEmpty(output))
-                    {
-                        output = process.StandardError.ReadToEnd().Trim();
-                    }
-
-                    if (process.ExitCode != 0)
-                    {
-                        output = string.Empty;
-                    }
-
                     process.WaitForExit();
+                }
+
+                if (string.IsNullOrEmpty(output))
+                {
+                    logger.LogError($"There was an error while running git.exe {arguments}");
                 }
             }
             catch (Exception exc)
