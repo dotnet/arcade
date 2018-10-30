@@ -1,8 +1,8 @@
 variables:
   _HelixType: build/product
-  ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Repository.Provider'], 'GitHub')) }}:
+  ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'), contains(variables['Build.DefinitionName'], 'github')) }}:
     _HelixSource: pr/dotnet/arcade/$(Build.SourceBranch)
-  ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
+  ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), not(contains(variables['Build.DefinitionName'], 'github'))) }}:
     _TeamName: DotNetCore
     _HelixSource: official/dotnet/arcade/$(Build.SourceBranch)
 
@@ -18,9 +18,9 @@ phases:
       queue:
         # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
         # Will eventually change this to two BYOC pools.
-        ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Repository.Provider'], 'GitHub')) }}:
+        ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'), contains(variables['Build.DefinitionName'], 'github')) }}:
           name: dotnet-external-temp
-        ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
+        ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), not(contains(variables['Build.DefinitionName'], 'github'))) }}:
           name: dotnet-internal-temp
         parallel: 2
         matrix:
@@ -32,11 +32,11 @@ phases:
           Build_Release:
             _BuildConfig: Release
             # PRs or external builds are not signed.
-            ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Repository.Provider'], 'GitHub')) }}:
+            ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'), contains(variables['Build.DefinitionName'], 'github')) }}:
               _PublishType: none
               _SignType: test
               _DotNetPublishToBlobFeed : false
-            ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
+            ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), not(contains(variables['Build.DefinitionName'], 'github'))) }}:
               _PublishType: blob
               _SignType: real
               _DotNetPublishToBlobFeed : true
@@ -46,9 +46,9 @@ phases:
       name: Linux
       queue:
         container: LinuxContainer
-        ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Repository.Provider'], 'GitHub')) }}:
+        ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'), contains(variables['Build.DefinitionName'], 'github')) }}:
           name: dnceng-linux-external-temp
-        ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
+        ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), not(contains(variables['Build.DefinitionName'], 'github'))) }}:
           name: dnceng-linux-internal-temp
         parallel: 2
         matrix:
@@ -63,7 +63,7 @@ phases:
             _SignType: none
             _DotNetPublishToBlobFeed : false
 
-  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
+  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), not(contains(variables['Build.DefinitionName'], 'github'))) }}:
     - template: /eng/common/templates/phases/publish-build-assets.yml
       parameters:
         dependsOn:
