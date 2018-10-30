@@ -36,9 +36,8 @@ namespace Microsoft.DotNet.Helix.Sdk
             // Wait 1 second to allow helix to register the job creation
             await Task.Delay(1000);
 
-            Source = Uri.EscapeUriString(Source);
-            Type = Uri.EscapeUriString(Type);
-
+            Source = Uri.EscapeDataString(Source).Replace('%', '~');
+            Type = Uri.EscapeDataString(Type).Replace('%', '~');
             string mcUri = await GetMissionControlResultUri();
             Log.LogMessage(MessageImportance.High, $"Results will be available from {mcUri}");
 
@@ -95,7 +94,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     return "Mission Control (generation of MC link failed -- JSON parsing error)";
                 }
 
-                return $"https://mc.dot.net/#/user/{userName}/builds/{Source}/{Type}/{Build}";
+                return $"https://mc.dot.net/#/user/{userName}/{Source}/{Type}/{Build}";
             }
         }
     }
