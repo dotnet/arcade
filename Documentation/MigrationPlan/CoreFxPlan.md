@@ -19,4 +19,4 @@ standard
 Core-setup
 Ownership thread needs to be resolved.
 
-from @DanMosely on 10/29
+from @danmosemsft on 10/29
