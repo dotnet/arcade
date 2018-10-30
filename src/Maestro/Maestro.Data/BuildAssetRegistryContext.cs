@@ -24,8 +24,18 @@ namespace Maestro.Data
     {
         public BuildAssetRegistryContext CreateDbContext(string[] args)
         {
-            DbContextOptions options = new DbContextOptionsBuilder().UseSqlServer(
-                    @"Data Source=localhost\SQLEXPRESS;Initial Catalog=BuildAssetRegistry;Integrated Security=true")
+            var connectionString =
+                @"Data Source=localhost\SQLEXPRESS;Initial Catalog=BuildAssetRegistry;Integrated Security=true";
+
+            var envVarConnectionString = Environment.GetEnvironmentVariable("BUILD_ASSET_REGISTRY_DB_CONNECTION_STRING");
+            if (!string.IsNullOrEmpty(envVarConnectionString))
+            {
+                Console.WriteLine("Using Connection String from environment.");
+                connectionString = envVarConnectionString;
+            }
+
+            DbContextOptions options = new DbContextOptionsBuilder()
+                .UseSqlServer(connectionString)
                 .Options;
             return new BuildAssetRegistryContext(
                 new HostingEnvironment {EnvironmentName = EnvironmentName.Development},
