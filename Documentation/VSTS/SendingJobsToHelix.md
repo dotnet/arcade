@@ -6,7 +6,8 @@ The primary reason to use Helix is to leverage its scalability to run tests. Arc
 
 First, you have to import the SDK. Everything that follows requires dotnet-cli â‰¥ 2.1.300 and needs the following files in a directory at or above the project's directory.
 
-#### global.json
+### global.json
+
 ```json
 {
   "msbuild-sdks": {
@@ -16,7 +17,9 @@ First, you have to import the SDK. Everything that follows requires dotnet-cli â
 ```
 
 Example: `"Microsoft.DotNet.Helix.Sdk": "1.0.0-beta.18502.3"`
-#### NuGet.config
+
+### NuGet.config
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
@@ -29,11 +32,17 @@ Example: `"Microsoft.DotNet.Helix.Sdk": "1.0.0-beta.18502.3"`
 
 ## Helix Access Token
 
-If you plan to send a payload (such as a work item) to Helix, you will need to be authorized. For official builds you can use your current access token; however, sending jobs from public CI builds is a different story.
+If you plan to send a payload (such as a work item) to Helix, you will need to be authorized. 
 
-For these builds, you will need to copy the *BotAccount-dotnet-github-anon-kaonashi-bot-helix-token* secret from **ToolsKV** (subscription *Dotnet Engineering services*) and specify it as a build variable. This will allow you to send payloads to Helix while minimizing the risk of leaking secrets.
+### External builds (Public CI)
 
-In the dev.azure.com/dnceng/public project, you can use the `Helix Anonymous` variable group to provide this secret to your build
+For external builds, you will need to provide the *BotAccount-dotnet-github-anon-kaonashi-bot-helix-token* secret from **ToolsKV** (subscription *Dotnet Engineering services*). This will allow you to send payloads to Helix while minimizing the risk of leaking secrets.
+
+You can either copy this secret into your build definition as a variable and mark it as secret, or; in the dev.azure.com/dnceng/public project, you can use the `Helix Anonymous` variable group to provide this secret to your build
+
+### Internal builds
+
+In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-Access` variable group to provide this secret to your build.
 
 ## The Simple Case
 
@@ -62,3 +71,21 @@ You will need to create a script file to run your tests. In the future, it will 
 ## The More Complex Case
 
 For anything more complex than the above example, you'll want to create your own MSBuild proj file to specify the work items and correlation payloads you want to send up to Helix. Full documentation on how to do this can be found [in the SDK's readme](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Helix/Sdk/Readme.md).
+
+## Viewing test results
+
+### External test results
+
+Tests results for "public" projects are accessible via the link which is provided in the build output.
+
+Example build output:
+
+```Text
+Sent Helix Job 7a6bb019-ed0e-4e46-a065-a38391d90019
+Waiting on job completion...
+Results will be available from https://mc.dot.net/#/user/dotnet-github-anon-kaonashi-bot/pr~2Fdotnet~2Fwinforms~2Frefs~2Fpull~2F9~2Fmerge/type~2Ftests/20181029.7
+```
+
+### Internal test results
+
+Test results for "internal" projects are accessible via the link which is provided in the build output or via configurable [Mission Control views](https://github.com/dotnet/core-eng/blob/ad1d9dd5b9797f0e659a647dbce9e8c842fa3324/Documentation/HelixDocumentation.md#mission-control).
