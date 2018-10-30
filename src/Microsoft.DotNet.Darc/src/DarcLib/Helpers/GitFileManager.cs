@@ -60,73 +60,23 @@ namespace Microsoft.DotNet.DarcLib
 
         public IEnumerable<DependencyDetail> ParseVersionDetailsXml(string fileContents)
         {
-            _logger.LogInformation($"Getting a collection of BuildAsset objects from '{VersionFiles.VersionDetailsXml}'...");
+            _logger.LogInformation($"Getting a collection of dependencies from '{VersionFiles.VersionDetailsXml}'...");
 
             XmlDocument document = ReadVersionDetailsXml(fileContents);
 
-            IEnumerable<DependencyDetail> BuildAssets = GetBuildAssets(document);
-
-            _logger.LogInformation($"Getting a collection of BuildAsset objects from '{VersionFiles.VersionDetailsXml}' " +
-                $"succeeded!");
-
-            return BuildAssets;
+            return GetDependencyDetails(document);
         }
 
         public async Task<IEnumerable<DependencyDetail>> ParseVersionDetailsXmlAsync(string repoUri, string branch)
         {
             _logger.LogInformation(
-                $"Getting a collection of BuildAsset objects from '{VersionFiles.VersionDetailsXml}' in repo '{repoUri}' " +
+                $"Getting a collection of dependencies from '{VersionFiles.VersionDetailsXml}' in repo '{repoUri}' " +
                 $"and branch '{branch}'...");
 
             var dependencyDetails = new List<DependencyDetail>();
             XmlDocument document = await ReadVersionDetailsXmlAsync(repoUri, branch);
 
-            if (document != null)
-            {
-                BuildDependencies(document.DocumentElement.SelectNodes("//Dependency"));
-
-                void BuildDependencies(XmlNodeList dependencies)
-                {
-                    if (dependencies.Count > 0)
-                    {
-                        foreach (XmlNode dependency in dependencies)
-                        {
-                            if (dependency.NodeType != XmlNodeType.Comment &&
-                                dependency.NodeType != XmlNodeType.Whitespace)
-                            {
-                                var BuildAsset = new DependencyDetail
-                                {
-                                    Branch = branch,
-                                    Name = dependency.Attributes["Name"].Value,
-                                    RepoUri = dependency.SelectSingleNode("Uri").InnerText,
-                                    Commit = dependency.SelectSingleNode("Sha").InnerText,
-                                    Version = dependency.Attributes["Version"].Value
-                                };
-
-                                dependencyDetails.Add(BuildAsset);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogWarning("No dependencies defined in file.");
-                    }
-                }
-            }
-            else
-            {
-                _logger.LogError(
-                    $"There was an error while reading '{VersionFiles.VersionDetailsXml}' and it came back empty. " +
-                    $"Look for exceptions above.");
-
-                return dependencyDetails;
-            }
-
-            _logger.LogInformation(
-                $"Getting a collection of BuildAsset objects from '{VersionFiles.VersionDetailsXml}' in repo '{repoUri}' " +
-                $"and branch '{branch}' succeeded!");
-
-            return dependencyDetails;
+            return GetDependencyDetails(document);
         }
 
         /// <summary>
@@ -771,9 +721,9 @@ namespace Microsoft.DotNet.DarcLib
             return Task.FromResult(result);
         }
 
-        private IEnumerable<DependencyDetail> GetBuildAssets(XmlDocument document, string branch = null)
+        private IEnumerable<DependencyDetail> GetDependencyDetails(XmlDocument document, string branch = null)
         {
-            List<DependencyDetail> BuildAssets = new List<DependencyDetail>();
+            List<DependencyDetail> dependencyDetails = new List<DependencyDetail>();
 
             if (document != null)
             {
@@ -787,7 +737,7 @@ namespace Microsoft.DotNet.DarcLib
                         {
                             if (dependency.NodeType != XmlNodeType.Comment && dependency.NodeType != XmlNodeType.Whitespace)
                             {
-                                DependencyDetail BuildAsset = new DependencyDetail
+                                DependencyDetail dependencyDetail = new DependencyDetail
                                 {
                                     Branch = branch,
                                     Name = dependency.Attributes["Name"].Value,
@@ -796,7 +746,7 @@ namespace Microsoft.DotNet.DarcLib
                                     Version = dependency.Attributes["Version"].Value
                                 };
 
-                                BuildAssets.Add(BuildAsset);
+                                dependencyDetails.Add(dependencyDetail);
                             }
                         }
                     }
@@ -812,7 +762,7 @@ namespace Microsoft.DotNet.DarcLib
                     $"Look for exceptions above.");
             }
 
-            return BuildAssets;
+            return dependencyDetails;
         }
     }
 }

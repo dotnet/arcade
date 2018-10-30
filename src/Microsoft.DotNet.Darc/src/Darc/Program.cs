@@ -46,25 +46,27 @@ namespace Microsoft.DotNet.Darc
 
         private static Type[] GetOptions()
         {
+            // This order will mandate the order in which the commands are displayed if typing just 'darc'
+            // so keep these sorted.
             return new Type[]
                 {
-                    typeof(AuthenticateCommandLineOptions),
-                    typeof(GetDependenciesCommandLineOptions),
-                    typeof(AddCommandLineOptions),
-                    typeof(GetChannelsCommandLineOptions),
-                    typeof(GetSubscriptionsCommandLineOptions),
-                    typeof(AddSubscriptionCommandLineOptions),
-                    typeof(DeleteSubscriptionCommandLineOptions),
                     typeof(AddChannelCommandLineOptions),
-                    typeof(DeleteChannelCommandLineOptions),
-                    typeof(GetDefaultChannelsCommandLineOptions),
+                    typeof(AddCommandLineOptions),
                     typeof(AddDefaultChannelCommandLineOptions),
+                    typeof(AddSubscriptionCommandLineOptions),
+                    typeof(AuthenticateCommandLineOptions),
+                    typeof(DeleteChannelCommandLineOptions),
                     typeof(DeleteDefaultChannelCommandLineOptions),
+                    typeof(DeleteSubscriptionCommandLineOptions),
+                    typeof(GetChannelsCommandLineOptions),
+                    typeof(GetDefaultChannelsCommandLineOptions),
+                    typeof(GetDependenciesCommandLineOptions),
+                    typeof(GetDependencyGraphCommandLineOptions),
                     typeof(GetSubscriptionHistoryCommandLineOptions),
+                    typeof(GetSubscriptionsCommandLineOptions),
                     typeof(RetrySubscriptionUpdateCommandLineOptions),
                     typeof(UpdateDependenciesCommandLineOptions),
                     typeof(VerifyCommandLineOptions),
-                    typeof(GetDependencyGraphCommandLineOptions)
                 };
         }
     }
