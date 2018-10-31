@@ -15,7 +15,9 @@ namespace Microsoft.DotNet.DarcLib
     {
         private static Dictionary<string, string> _remotesMapping = null;
 
-        public DependencyGraph(DependencyGraphNode graph, HashSet<DependencyDetail> flatGraph)
+        public DependencyGraph(
+            DependencyGraphNode graph, 
+            HashSet<DependencyDetail> flatGraph)
         {
             Graph = graph;
             FlatGraph = flatGraph;
@@ -40,7 +42,8 @@ namespace Microsoft.DotNet.DarcLib
                 throw new DarcException("In a remote scenario 'DarcSettings' have to be set.");
             }
 
-            HashSet<DependencyDetail> uniqueDependencyDetails = new HashSet<DependencyDetail>(new DependencyDetailComparer());
+            HashSet<DependencyDetail> uniqueDependencyDetails = new HashSet<DependencyDetail>(
+                new DependencyDetailComparer());
             DependencyGraphNode graphNode = new DependencyGraphNode(dependency);
             Stack<DependencyGraphNode> nodesToVisit = new Stack<DependencyGraphNode>();
 
@@ -99,8 +102,8 @@ namespace Microsoft.DotNet.DarcLib
 
                 if (!_remotesMapping.ContainsKey(repoPath))
                 {
-                    throw new Exception($"A key matching '{dependency.RepoUri}' was not found in the mapping. " +
-                        $"Please make sure to include it...");
+                    throw new DarcException($"A key matching '{dependency.RepoUri}' was not " +
+                        $"found in the mapping. Please make sure to include it...");
                 }
 
                 repoPath = _remotesMapping[repoPath];
@@ -115,14 +118,16 @@ namespace Microsoft.DotNet.DarcLib
                 }
                 else
                 {
-                    // If a repo folder or a mapping was not set we use the current parent's parent folder.
+                    // If a repo folder or a mapping was not set we use the current parent's 
+                    // parent folder.
                     string gitDir = LocalHelpers.GetGitDir(logger);
                     string parent = Directory.GetParent(gitDir).FullName;
                     folder = Directory.GetParent(parent).FullName;
                 }
 
-                // There are cases when the sha is not specified in Version.Details.xml since owners want that Maestro++ 
-                // fills this in. Without a sha we cannot walk the graph. We do not fail the process but display/return 
+                // There are cases when the sha is not specified in Version.Details.xml 
+                // since owners want that Maestro++ fills this in. Without a sha we 
+                // cannot walk the graph. We do not fail the process but display/return 
                 // a dependency with no sha and for that graph path that would be the end of the walk
                 if (string.IsNullOrEmpty(dependency.Commit))
                 {
@@ -133,8 +138,9 @@ namespace Microsoft.DotNet.DarcLib
 
                 if (string.IsNullOrEmpty(repoPath))
                 {
-                    throw new Exception($"Commit '{dependency.Commit}' was not found in any folder in '{folder}'. " +
-                        $"Make sure a folder for '{dependency.RepoUri}' exists and it has all the latest changes...");
+                    throw new DarcException($"Commit '{dependency.Commit}' was not found in any " +
+                        $"folder in '{folder}'. Make sure a folder for '{dependency.RepoUri}' exists " +
+                        $"and it has all the latest changes...");
                 }
             }
 
@@ -156,10 +162,21 @@ namespace Microsoft.DotNet.DarcLib
 
                 if (!string.IsNullOrEmpty(testPath))
                 {
-                    Local local = new Local(
-                        $"{testPath}/{node.DependencyDetail.RepoUri}/{node.DependencyDetail.Commit}/.git", 
-                        logger);
-                    dependencies = await local.GetDependenciesAsync();
+                    testPath = Path.Combine(
+                                testPath,
+                                node.DependencyDetail.RepoUri,
+                                node.DependencyDetail.Commit);
+
+                    if (!string.IsNullOrEmpty(node.DependencyDetail.Commit) && 
+                        Directory.Exists(testPath))
+                    {
+                        Local local = new Local(
+                            Path.Combine(
+                                testPath,
+                                ".git"),
+                            logger);
+                        dependencies = await local.GetDependenciesAsync();
+                    }
                 }
                 else if (remote)
                 {
@@ -172,23 +189,29 @@ namespace Microsoft.DotNet.DarcLib
                 {
                     string repoPath = GetRepoPath(node.DependencyDetail, remotesMap, reposFolder, logger);
 
-                    // Local's constructor expects the repo's .git folder to be passed in. In this particular case we could 
-                    // pass any folder under 'repoPath' or even a fake one but we use .git to keep things consistent to what 
-                    // Local expects
-                    Local local = new Local($"{repoPath}/.git", logger);
-                    string fileContents = LocalHelpers.GitShow(
-                        repoPath, 
-                        node.DependencyDetail.Commit, 
-                        VersionFiles.VersionDetailsXml, 
-                        logger);
-                    dependencies = local.GetDependenciesFromFileContents(fileContents);
+                    if (!string.IsNullOrEmpty(repoPath))
+                    {
+                        // Local's constructor expects the repo's .git folder to be passed in. In this 
+                        // particular case we could pass any folder under 'repoPath' or even a fake one 
+                        // but we use .git to keep things consistent to what Local expects
+                        Local local = new Local($"{repoPath}/.git", logger);
+                        string fileContents = LocalHelpers.GitShow(
+                            repoPath,
+                            node.DependencyDetail.Commit,
+                            VersionFiles.VersionDetailsXml,
+                            logger);
+                        dependencies = local.GetDependenciesFromFileContents(fileContents);
+                    }
                 }
 
                 return dependencies;
             }
-            catch
+            catch (Exception exc)
             {
-                return null;
+                logger.LogError(exc, $"Something failed while trying the fetch the " +
+                    $"dependencies of repo '{node.DependencyDetail.RepoUri}' at sha " +
+                    $"'{node.DependencyDetail.Commit}'");
+                throw;
             }
         }
 
