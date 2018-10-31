@@ -48,10 +48,12 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var finishedCount = workItems.Count(wi => wi.State == "Finished");
                 if (waitingCount == 0 && runningCount == 0)
                 {
+                    int workItemSummaryCount = 0;
                     try
                     {
-                        var workItemSummary = await HelixApi.Aggregate.JobSummaryMethodAsync(new string[] { "job.source" }, 1, filtername: jobName);
-                        
+                        var workItemSummary = await HelixApi.Aggregate.JobSummaryMethodAsync(new string[] { "job.name" }, 1, filtername: jobName);
+                        workItemSummaryCount = workItemSummary.Count;
+
                         int? numWorkItemFailures;
                         workItemSummary[0].Data.WorkItemStatus.TryGetValue("fail", out numWorkItemFailures);
                         if ((numWorkItemFailures ?? 0) > 0)
@@ -72,9 +74,20 @@ namespace Microsoft.DotNet.Helix.Sdk
                     {
                         Log.LogError($"An error was encountered while attempting to query the Helix API for job {jobName}.\n\n{e.StackTrace}");
                     }
-                    catch (IndexOutOfRangeException e)
+                    catch (ArgumentOutOfRangeException e)
                     {
-                        Log.LogError($"The API returned no aggregated work item summary for job {jobName}.\n\n{e.StackTrace}");
+                        if (workItemSummaryCount < 1)
+                        {
+                            Log.LogError($"The API returned no aggregated work item summary for job {jobName}.\n\n{e.StackTrace}");
+                        }
+                        else
+                        {
+                            Log.LogError($"The API returned no data for the work items in job {jobName}.\n\n{e.StackTrace}");
+                        }
+                    }
+                    catch (NullReferenceException e)
+                    {
+                        Log.LogError($"Something was null!\n\n{e.StackTrace}\n{e.InnerException}");
                     }
 
                     Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
