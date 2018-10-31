@@ -54,14 +54,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                     if ((fail ?? 0) > 0)
                     {
-                        Log.LogError($"{fail ?? -1} work item(s) have failed.");
+                        Log.LogError($"{fail} work item(s) have failed.");
                     }
 
                     int? testFailures;
                     workItemSummary[0].Data.Analysis[0].Status.TryGetValue("fail", out testFailures);
                     if ((testFailures ?? 0) > 0)
                     {
-                        Log.LogError($"{testFailures ?? -1} tests have failed.");
+                        Log.LogError($"{testFailures} tests have failed.");
                     }
 
                     Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
