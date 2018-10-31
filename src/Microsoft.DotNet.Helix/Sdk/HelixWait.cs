@@ -22,11 +22,22 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public ITaskItem[] Jobs { get; set; }
 
+        [Required]
+        public string Source { get; set; }
+
+        [Required]
+        public string Type { get; set; }
+
+        [Required]
+        public string Build { get; set; }
+
         protected override async Task ExecuteCore()
         {
             // Wait 1 second to allow helix to register the job creation
             await Task.Delay(1000);
 
+            Source = Uri.EscapeDataString(Source).Replace('%', '~');
+            Type = Uri.EscapeDataString(Type).Replace('%', '~');
             string mcUri = await GetMissionControlResultUri();
             Log.LogMessage(MessageImportance.High, $"Results will be available from {mcUri}");
 
@@ -70,11 +81,20 @@ namespace Microsoft.DotNet.Helix.Sdk
                 catch (HttpRequestException e)
                 {
                     Log.LogMessage(MessageImportance.High, "Failed to connect to GitHub to retrieve username", e.StackTrace);
-                    return "Mission Control (generation of MC link failed)";
+                    return "Mission Control (generation of MC link failed -- GitHub HTTP request error)";
                 }
-                string userName = JObject.Parse(githubJson)["login"].ToString();
+                string userName = "";
+                try
+                {
+                    userName = JObject.Parse(githubJson)["login"].ToString();
+                }
+                catch (JsonException e)
+                {
+                    Log.LogMessage(MessageImportance.High, "Failed to parse JSON or find value in parsed JSON", e.StackTrace);
+                    return "Mission Control (generation of MC link failed -- JSON parsing error)";
+                }
 
-                return $"https://mc.dot.net/#/user/{userName}/builds";
+                return $"https://mc.dot.net/#/user/{userName}/{Source}/{Type}/{Build}";
             }
         }
     }
