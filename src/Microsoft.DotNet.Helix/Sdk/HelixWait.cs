@@ -54,7 +54,6 @@ namespace Microsoft.DotNet.Helix.Sdk
                         
                         int? numWorkItemFailures;
                         workItemSummary[0].Data.WorkItemStatus.TryGetValue("fail", out numWorkItemFailures);
-
                         if ((numWorkItemFailures ?? 0) > 0)
                         {
                             Log.LogError($"Job {jobName} had {numWorkItemFailures} work item(s) fail.");
