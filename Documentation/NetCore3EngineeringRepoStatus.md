@@ -273,18 +273,18 @@ Owners: licavalc
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
 | [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/716)         |                      | Not scheduled | No resources available yet for scheduling |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/714) |                      | Not scheduled | No resources available yet for scheduling |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/713)       |                      | Not scheduled | No resources available yet for scheduling |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/715)       |                      | Not scheduled | No resources available yet for scheduling |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/714) | November 2018        | Not scheduled | No resources available yet for scheduling |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/713)       | December 2018        | Not scheduled | No resources available yet for scheduling |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/715)       | December 2018        | Not scheduled | No resources available yet for scheduling |
 
 #### WebSdk
 
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
 | [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/721)         |                      | Not scheduled | No resources available yet for scheduling |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/719) |                      | Not scheduled | No resources available yet for scheduling |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/718)       |                      | Not scheduled | No resources available yet for scheduling |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/720)       |                      | Not scheduled | No resources available yet for scheduling |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/719) | November 2018        | Not scheduled | No resources available yet for scheduling |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/718)       | December 2018        | Not scheduled | No resources available yet for scheduling |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/720)       | December 2018        | Not scheduled | No resources available yet for scheduling |
 
 ---
 
