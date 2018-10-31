@@ -77,6 +77,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                     {
                         Log.LogError($"The API returned no aggregated work item summary for job {jobName}.\n\n{e.StackTrace}");
                     }
+
+                    Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
                     return;
                 }
 
