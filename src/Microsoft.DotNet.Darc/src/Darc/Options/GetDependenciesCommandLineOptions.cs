@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using CommandLine;
+using Microsoft.DotNet.Darc.Operations;
 
 namespace Microsoft.DotNet.Darc.Options
 {
@@ -11,5 +12,10 @@ namespace Microsoft.DotNet.Darc.Options
     {
         [Option('n', "name", HelpText = "Name of dependency to query for.")]
         public string Name { get; set; }
+
+        public override Operation GetOperation()
+        {
+            return new GetDependenciesOperation(this);
+        }
     }
 }

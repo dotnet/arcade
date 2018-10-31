@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Dependencies>
+  <ProductDependencies></ProductDependencies>
+  <ToolsetDependencies>
+    <Dependency Name="Dependency.From.Repo.E" Version="5.0.1">
+      <Uri>RepoE</Uri>
+      <Sha>shaE3</Sha>
+    </Dependency>
+  </ToolsetDependencies>
+</Dependencies>

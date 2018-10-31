@@ -18,8 +18,8 @@ namespace Microsoft.DotNet.Darc.Operations
     /// </summary>
     internal class GetDefaultChannelsOperation : Operation
     {
-        GetDefaultChannelCommandLineOptions _options;
-        public GetDefaultChannelsOperation(GetDefaultChannelCommandLineOptions options)
+        GetDefaultChannelsCommandLineOptions _options;
+        public GetDefaultChannelsOperation(GetDefaultChannelsCommandLineOptions options)
             : base(options)
         {
             _options = options;

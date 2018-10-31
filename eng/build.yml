@@ -84,3 +84,12 @@ phases:
         ArtifactName: $(Agent.Os)_$(Agent.JobName)
       continueOnError: true
       condition: always()
+
+    - task: PublishTestResults@2
+      displayName: Publish Test Results
+      inputs:
+        testResultsFormat: 'xUnit'
+        testResultsFiles: '*.xml' 
+        searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+      continueOnError: true
+      condition: always()

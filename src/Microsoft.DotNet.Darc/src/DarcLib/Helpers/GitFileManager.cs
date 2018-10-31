@@ -35,14 +35,17 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task<XmlDocument> ReadVersionDetailsXmlAsync(string repoUri, string branch)
         {
-            XmlDocument document = await ReadXmlFileAsync(VersionFiles.VersionDetailsXml, repoUri, branch);
-            return document;
+            return await ReadXmlFileAsync(VersionFiles.VersionDetailsXml, repoUri, branch);
+        }
+
+        public XmlDocument ReadVersionDetailsXml(string fileContent)
+        {
+            return ReadXmlFile(fileContent);
         }
 
         public async Task<XmlDocument> ReadVersionPropsAsync(string repoUri, string branch)
         {
-            XmlDocument document = await ReadXmlFileAsync(VersionFiles.VersionProps, repoUri, branch);
-            return document;
+            return await ReadXmlFileAsync(VersionFiles.VersionProps, repoUri, branch);
         }
 
         public async Task<JObject> ReadGlobalJsonAsync(string repoUri, string branch)
@@ -52,63 +55,28 @@ namespace Microsoft.DotNet.DarcLib
 
             string fileContent = await _gitClient.GetFileContentsAsync(VersionFiles.GlobalJson, repoUri, branch);
 
-            JObject jsonContent = JObject.Parse(fileContent);
+            return JObject.Parse(fileContent);
+        }
 
-            return jsonContent;
+        public IEnumerable<DependencyDetail> ParseVersionDetailsXml(string fileContents)
+        {
+            _logger.LogInformation($"Getting a collection of dependencies from '{VersionFiles.VersionDetailsXml}'...");
+
+            XmlDocument document = ReadVersionDetailsXml(fileContents);
+
+            return GetDependencyDetails(document);
         }
 
         public async Task<IEnumerable<DependencyDetail>> ParseVersionDetailsXmlAsync(string repoUri, string branch)
         {
             _logger.LogInformation(
-                $"Getting a collection of BuildAsset objects from '{VersionFiles.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}'...");
+                $"Getting a collection of dependencies from '{VersionFiles.VersionDetailsXml}' in repo '{repoUri}' " +
+                $"and branch '{branch}'...");
 
-            var BuildAssets = new List<DependencyDetail>();
+            var dependencyDetails = new List<DependencyDetail>();
             XmlDocument document = await ReadVersionDetailsXmlAsync(repoUri, branch);
 
-            if (document != null)
-            {
-                BuildDependencies(document.DocumentElement.SelectNodes("//Dependency"));
-
-                void BuildDependencies(XmlNodeList dependencies)
-                {
-                    if (dependencies.Count > 0)
-                    {
-                        foreach (XmlNode dependency in dependencies)
-                        {
-                            if (dependency.NodeType != XmlNodeType.Comment &&
-                                dependency.NodeType != XmlNodeType.Whitespace)
-                            {
-                                var BuildAsset = new DependencyDetail
-                                {
-                                    Branch = branch,
-                                    Name = dependency.Attributes["Name"].Value,
-                                    RepoUri = dependency.SelectSingleNode("Uri").InnerText,
-                                    Commit = dependency.SelectSingleNode("Sha").InnerText,
-                                    Version = dependency.Attributes["Version"].Value
-                                };
-
-                                BuildAssets.Add(BuildAsset);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogWarning("No dependencies defined in file.");
-                    }
-                }
-            }
-            else
-            {
-                _logger.LogError(
-                    $"There was an error while reading '{VersionFiles.VersionDetailsXml}' and it came back empty. Look for exceptions above.");
-
-                return BuildAssets;
-            }
-
-            _logger.LogInformation(
-                $"Getting a collection of BuildAsset objects from '{VersionFiles.VersionDetailsXml}' in repo '{repoUri}' and branch '{branch}' succeeded!");
-
-            return BuildAssets;
+            return GetDependencyDetails(document);
         }
 
         /// <summary>
@@ -161,7 +129,8 @@ namespace Microsoft.DotNet.DarcLib
             foreach (DependencyDetail itemToUpdate in itemsToUpdate)
             {
                 // Use a case-insensitive update.
-                XmlNodeList versionList = versionDetails.SelectNodes($"//Dependency[translate(@Name,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='{itemToUpdate.Name.ToLower()}']");
+                XmlNodeList versionList = versionDetails.SelectNodes($"//Dependency[translate(@Name,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'," +
+                    $"'abcdefghijklmnopqrstuvwxyz')='{itemToUpdate.Name.ToLower()}']");
 
                 if (versionList.Count != 1)
                 {
@@ -171,7 +140,8 @@ namespace Microsoft.DotNet.DarcLib
                     }
                     else
                     {
-                        throw new DarcException("The use of the same asset, even with a different version, is currently not supported.");
+                        throw new DarcException("The use of the same asset, even with a different version, is currently not " +
+                            "supported.");
                     }
                 }
 
@@ -229,12 +199,15 @@ namespace Microsoft.DotNet.DarcLib
 
             // TODO: This should not be done here.  This should return some kind of generic file container to the caller,
             // who will gather up all updates and then call the git client to write the files all at once:
-            // https://github.com/dotnet/arcade/issues/1095.  Today this is only called from the Local interface so it's okay for now.
+            // https://github.com/dotnet/arcade/issues/1095.  Today this is only called from the Local interface so 
+            // it's okay for now.
             var file = new GitFile(VersionFiles.VersionDetailsXml, versionDetails);
-            await _gitClient.PushFilesAsync(new List<GitFile> { file }, repo, branch, $"Add {dependency} to '{VersionFiles.VersionDetailsXml}'");
+            await _gitClient.PushFilesAsync(new List<GitFile> { file }, repo, branch, $"Add {dependency} to " +
+                $"'{VersionFiles.VersionDetailsXml}'");
 
             _logger.LogInformation(
-                $"Dependency '{dependency.Name}' with version '{dependency.Version}' successfully added to '{VersionFiles.VersionDetailsXml}'");
+                $"Dependency '{dependency.Name}' with version '{dependency.Version}' successfully added to " +
+                $"'{VersionFiles.VersionDetailsXml}'");
         }
 
         /// <summary>
@@ -262,7 +235,8 @@ namespace Microsoft.DotNet.DarcLib
 
             string packageNameElementName = VersionFiles.GetVersionPropsPackageElementName(dependency.Name);
             string packageVersionElementName = VersionFiles.GetVersionPropsPackageVersionElementName(dependency.Name);
-            string packageVersionAlternateElementName = VersionFiles.GetVersionPropsAlternatePackageVersionElementName(dependency.Name);
+            string packageVersionAlternateElementName = VersionFiles.GetVersionPropsAlternatePackageVersionElementName(
+                dependency.Name);
 
             // Select elements by local name, since the Project (DocumentElement) element often has a default
             // xmlns set.
@@ -283,7 +257,9 @@ namespace Microsoft.DotNet.DarcLib
                     {
                         if (!addedPackageVersionElement && propertyNode.Name.EndsWith(VersionFiles.VersionPropsVersionElementSuffix))
                         {
-                            XmlNode newPackageVersionElement = versionProps.CreateElement(packageVersionElementName, documentNamespaceUri);
+                            XmlNode newPackageVersionElement = versionProps.CreateElement(
+                                packageVersionElementName, 
+                                documentNamespaceUri);
                             newPackageVersionElement.InnerText = dependency.Version;
 
                             propertyGroupNode.AppendChild(newPackageVersionElement);
@@ -292,9 +268,12 @@ namespace Microsoft.DotNet.DarcLib
                         }
                         // Test for alternate suffixes.  This will eventually be replaced by repo-level configuration:
                         // https://github.com/dotnet/arcade/issues/1095
-                        else if (!addedPackageVersionElement && propertyNode.Name.EndsWith(VersionFiles.VersionPropsAlternateVersionElementSuffix))
+                        else if (!addedPackageVersionElement && propertyNode.Name.EndsWith(
+                            VersionFiles.VersionPropsAlternateVersionElementSuffix))
                         {
-                            XmlNode newPackageVersionElement = versionProps.CreateElement(packageVersionAlternateElementName, documentNamespaceUri);
+                            XmlNode newPackageVersionElement = versionProps.CreateElement(
+                                packageVersionAlternateElementName, 
+                                documentNamespaceUri);
                             newPackageVersionElement.InnerText = dependency.Version;
 
                             propertyGroupNode.AppendChild(newPackageVersionElement);
@@ -342,12 +321,15 @@ namespace Microsoft.DotNet.DarcLib
 
             // TODO: This should not be done here.  This should return some kind of generic file container to the caller,
             // who will gather up all updates and then call the git client to write the files all at once:
-            // https://github.com/dotnet/arcade/issues/1095.  Today this is only called from the Local interface so it's okay for now.
+            // https://github.com/dotnet/arcade/issues/1095.  Today this is only called from the Local interface so 
+            // it's okay for now.
             var file = new GitFile(VersionFiles.VersionProps, versionProps);
-            await _gitClient.PushFilesAsync(new List<GitFile> { file }, repo, branch, $"Add {dependency} to '{VersionFiles.VersionProps}'");
+            await _gitClient.PushFilesAsync(new List<GitFile> { file }, repo, branch, $"Add {dependency} to " +
+                $"'{VersionFiles.VersionProps}'");
 
             _logger.LogInformation(
-                $"Dependency '{dependency.Name}' with version '{dependency.Version}' successfully added to '{VersionFiles.VersionProps}'");
+                $"Dependency '{dependency.Name}' with version '{dependency.Version}' successfully added to " +
+                $"'{VersionFiles.VersionProps}'");
         }
 
         public async Task AddDependencyToGlobalJson(
@@ -371,10 +353,27 @@ namespace Microsoft.DotNet.DarcLib
             }
 
             var file = new GitFile(VersionFiles.GlobalJson, globalJson);
-            await _gitClient.PushFilesAsync(new List<GitFile> { file }, repo, branch, $"Add {dependencyName} to '{VersionFiles.GlobalJson}'");
+            await _gitClient.PushFilesAsync(new List<GitFile> { file }, repo, branch, $"Add {dependencyName} to " +
+                $"'{VersionFiles.GlobalJson}'");
 
             _logger.LogInformation(
                 $"Dependency '{dependencyName}' with version '{version}' successfully added to global.json");
+        }
+
+        private XmlDocument ReadXmlFile(string fileContent)
+        {
+            return GetXmlDocument(fileContent);
+        }
+
+        private XmlDocument GetXmlDocument(string fileContent)
+        {
+            XmlDocument document = new XmlDocument
+            {
+                PreserveWhitespace = true
+            };
+            document.LoadXml(fileContent);
+
+            return document;
         }
 
         private async Task<XmlDocument> ReadXmlFileAsync(string filePath, string repoUri, string branch)
@@ -382,22 +381,20 @@ namespace Microsoft.DotNet.DarcLib
             _logger.LogInformation($"Reading '{filePath}' in repo '{repoUri}' and branch '{branch}'...");
 
             string fileContent = await _gitClient.GetFileContentsAsync(filePath, repoUri, branch);
-            var document = new XmlDocument();
 
             try
             {
-                document.PreserveWhitespace = true;
-                document.LoadXml(fileContent);
+                XmlDocument document = GetXmlDocument(fileContent);
+
+                _logger.LogInformation($"Reading '{filePath}' from repo '{repoUri}' and branch '{branch}' succeeded!");
+
+                return document;
             }
             catch (Exception exc)
             {
-                _logger.LogError($"There was an exception while loading '{filePath}'. Exception: {exc}");
+                _logger.LogError(exc, $"There was an exception while loading '{filePath}'");
                 throw;
             }
-
-            _logger.LogInformation($"Reading '{filePath}' from repo '{repoUri}' and branch '{branch}' succeeded!");
-
-            return document;
         }
 
         /// <summary>
@@ -416,14 +413,16 @@ namespace Microsoft.DotNet.DarcLib
 
             // Select nodes case insensitively, then update the name.
             XmlNode packageVersionNode = versionProps.DocumentElement.SelectSingleNode(
-                $"//*[translate(local-name(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='{versionElementName.ToLower()}']");
+                $"//*[translate(local-name(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')=" +
+                $"'{versionElementName.ToLower()}']");
             string foundElementName = versionElementName;
 
             // Find alternate names
             if (packageVersionNode == null)
             {
                 packageVersionNode = versionProps.DocumentElement.SelectSingleNode(
-                    $"//*[translate(local-name(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='{alternateVersionElementName.ToLower()}']");
+                    $"//*[translate(local-name(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')=" +
+                    $"'{alternateVersionElementName.ToLower()}']");
                 foundElementName = alternateVersionElementName;
             }
 
@@ -436,7 +435,9 @@ namespace Microsoft.DotNet.DarcLib
                 {
                     {
                         XmlNode parentNode = packageVersionNode.ParentNode;
-                        XmlNode newPackageVersionElement = versionProps.CreateElement(foundElementName, versionProps.DocumentElement.NamespaceURI);
+                        XmlNode newPackageVersionElement = versionProps.CreateElement(
+                            foundElementName, 
+                            versionProps.DocumentElement.NamespaceURI);
                         newPackageVersionElement.InnerText = itemToUpdate.Version;
                         parentNode.ReplaceChild(newPackageVersionElement, packageVersionNode);
                     }
@@ -444,11 +445,14 @@ namespace Microsoft.DotNet.DarcLib
                         // Update the package name element too.
                         string packageNameElementName = VersionFiles.GetVersionPropsPackageElementName(itemToUpdate.Name);
                         XmlNode packageNameNode = versionProps.DocumentElement.SelectSingleNode(
-                            $"//*[translate(local-name(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='{packageNameElementName.ToLower()}']");
+                            $"//*[translate(local-name(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')=" +
+                            $"'{packageNameElementName.ToLower()}']");
                         if (packageNameNode != null)
                         {
                             XmlNode parentNode = packageNameNode.ParentNode;
-                            XmlNode newPackageNameElement = versionProps.CreateElement(packageNameElementName, versionProps.DocumentElement.NamespaceURI);
+                            XmlNode newPackageNameElement = versionProps.CreateElement(
+                                packageNameElementName, 
+                                versionProps.DocumentElement.NamespaceURI);
                             newPackageNameElement.InnerText = itemToUpdate.Name;
                             parentNode.ReplaceChild(newPackageNameElement, packageNameNode);
                         }
@@ -527,9 +531,21 @@ namespace Microsoft.DotNet.DarcLib
             List<Task<bool>> verificationTasks = new List<Task<bool>>()
             {
                 VerifyNoDuplicatedDependencies(await dependencyDetails),
-                VerifyMatchingVersionProps(await dependencyDetails, await versionProps, out Task<HashSet<string>> utilizedVersionPropsDependencies),
-                VerifyMatchingGlobalJson(await dependencyDetails, await globalJson, out Task<HashSet<string>> utilizedGlobalJsonDependencies),
-                VerifyUtilizedDependencies(await dependencyDetails, new List<HashSet<string>>{ await utilizedVersionPropsDependencies, await utilizedGlobalJsonDependencies})
+                VerifyMatchingVersionProps(
+                    await dependencyDetails, 
+                    await versionProps, 
+                    out Task<HashSet<string>> utilizedVersionPropsDependencies),
+                VerifyMatchingGlobalJson(
+                    await dependencyDetails, 
+                    await globalJson, 
+                    out Task<HashSet<string>> utilizedGlobalJsonDependencies),
+                VerifyUtilizedDependencies(
+                    await dependencyDetails, 
+                    new List<HashSet<string>>
+                    {
+                        await utilizedVersionPropsDependencies,
+                        await utilizedGlobalJsonDependencies
+                    })
             };
 
             var results = await Task.WhenAll<bool>(verificationTasks);
@@ -549,7 +565,8 @@ namespace Microsoft.DotNet.DarcLib
             {
                 if (dependenciesBitVector.Contains(dependency.Name, StringComparer.OrdinalIgnoreCase))
                 {
-                    _logger.LogError($"The dependency '{dependency.Name}' appears more than once in '{VersionFiles.VersionDetailsXml}'");
+                    _logger.LogError($"The dependency '{dependency.Name}' appears more than once in " +
+                        $"'{VersionFiles.VersionDetailsXml}'");
                     result = false;
                 }
                 dependenciesBitVector.Add(dependency.Name);
@@ -582,14 +599,16 @@ namespace Microsoft.DotNet.DarcLib
                     // Validate that the casing matches for consistency
                     if (versionNode.Name != versionElementName)
                     {
-                        _logger.LogError($"The dependency '{dependency.Name}' has a case mismatch between '{VersionFiles.VersionProps}' and '{VersionFiles.VersionDetailsXml}' " +
+                        _logger.LogError($"The dependency '{dependency.Name}' has a case mismatch between " +
+                            $"'{VersionFiles.VersionProps}' and '{VersionFiles.VersionDetailsXml}' " +
                             $"('{versionNode.Name}' vs. '{versionElementName}')");
                         result = false;
                     }
                     // Validate innner version matches
                     if (versionNode.InnerText != dependency.Version)
                     {
-                        _logger.LogError($"The dependency '{dependency.Name}' has a version mismatch between '{VersionFiles.VersionProps}' and '{VersionFiles.VersionDetailsXml}' " +
+                        _logger.LogError($"The dependency '{dependency.Name}' has a version mismatch between " +
+                            $"'{VersionFiles.VersionProps}' and '{VersionFiles.VersionDetailsXml}' " +
                             $"('{versionNode.InnerText}' vs. '{dependency.Version}')");
                         result = false;
                     }
@@ -607,7 +626,10 @@ namespace Microsoft.DotNet.DarcLib
         /// <param name="dependencies">Parsed dependencies in the repository.</param>
         /// <param name="rootToken">Root global.json token.</param>
         /// <returns></returns>
-        private Task<bool> VerifyMatchingGlobalJson(IEnumerable<DependencyDetail> dependencies, JObject rootToken, out Task<HashSet<string>> utilizedDependencies)
+        private Task<bool> VerifyMatchingGlobalJson(
+            IEnumerable<DependencyDetail> dependencies, 
+            JObject rootToken, 
+            out Task<HashSet<string>> utilizedDependencies)
         {
             HashSet<string> utilizedSet = new HashSet<string>();
             bool result = true;
@@ -620,7 +642,8 @@ namespace Microsoft.DotNet.DarcLib
                     // Should be a string with matching version.
                     if (dependencyNode.Type != JTokenType.Property || ((JProperty)dependencyNode).Value.Type != JTokenType.String)
                     {
-                        _logger.LogError($"The element '{dependency.Name}' in '{VersionFiles.GlobalJson}' should be a property with a value of type string.");
+                        _logger.LogError($"The element '{dependency.Name}' in '{VersionFiles.GlobalJson}' should be a property " +
+                            $"with a value of type string.");
                         result = false;
                         continue;
                     }
@@ -628,7 +651,8 @@ namespace Microsoft.DotNet.DarcLib
                     // Validate that the casing matches for consistency
                     if (property.Name != versionedName)
                     {
-                        _logger.LogError($"The dependency '{dependency.Name}' has a case mismatch between '{VersionFiles.GlobalJson}' and '{VersionFiles.VersionDetailsXml}' " +
+                        _logger.LogError($"The dependency '{dependency.Name}' has a case mismatch between " +
+                            $"'{VersionFiles.GlobalJson}' and '{VersionFiles.VersionDetailsXml}' " +
                             $"('{property.Name}' vs. '{versionedName}')");
                         result = false;
                     }
@@ -636,7 +660,8 @@ namespace Microsoft.DotNet.DarcLib
                     JToken value = (JToken)property.Value;
                     if (value.Value<string>() != dependency.Version)
                     {
-                        _logger.LogError($"The dependency '{dependency.Name}' has a version mismatch between '{VersionFiles.GlobalJson}' and '{VersionFiles.VersionDetailsXml}' " +
+                        _logger.LogError($"The dependency '{dependency.Name}' has a version mismatch between " +
+                            $"'{VersionFiles.GlobalJson}' and '{VersionFiles.VersionDetailsXml}' " +
                             $"('{value.Value<string>()}' vs. '{dependency.Version}')");
                     }
 
@@ -673,23 +698,71 @@ namespace Microsoft.DotNet.DarcLib
         }
 
         /// <summary>
-        ///     Check that each dependency in <paramref name="dependencies"/> exists in at least one of the <paramref name="utilizedDependencySets"/>
+        ///     Check that each dependency in <paramref name="dependencies"/> exists in at least one of the 
+        ///     <paramref name="utilizedDependencySets"/>
         /// </summary>
         /// <param name="dependencies">Parsed dependencies in the repository.</param>
         /// <param name="utilizedDependencySets">Bit vectors dependency expression locations.</param>
         /// <returns></returns>
-        private Task<bool> VerifyUtilizedDependencies(IEnumerable<DependencyDetail> dependencies, IEnumerable<HashSet<string>> utilizedDependencySets)
+        private Task<bool> VerifyUtilizedDependencies(
+            IEnumerable<DependencyDetail> dependencies, 
+            IEnumerable<HashSet<string>> utilizedDependencySets)
         {
             bool result = true;
             foreach (var dependency in dependencies)
             {
                 if (!utilizedDependencySets.Where(set => set.Contains(dependency.Name)).Any())
                 {
-                    _logger.LogWarning($"The dependency '{dependency.Name}' is unused in either '{VersionFiles.GlobalJson}' or '{VersionFiles.VersionProps}'");
+                    _logger.LogWarning($"The dependency '{dependency.Name}' is unused in either '{VersionFiles.GlobalJson}' " +
+                        $"or '{VersionFiles.VersionProps}'");
                     result = false;
                 }
             }
             return Task.FromResult(result);
+        }
+
+        private IEnumerable<DependencyDetail> GetDependencyDetails(XmlDocument document, string branch = null)
+        {
+            List<DependencyDetail> dependencyDetails = new List<DependencyDetail>();
+
+            if (document != null)
+            {
+                BuildDependencies(document.DocumentElement.SelectNodes("//Dependency"));
+
+                void BuildDependencies(XmlNodeList dependencies)
+                {
+                    if (dependencies.Count > 0)
+                    {
+                        foreach (XmlNode dependency in dependencies)
+                        {
+                            if (dependency.NodeType != XmlNodeType.Comment && dependency.NodeType != XmlNodeType.Whitespace)
+                            {
+                                DependencyDetail dependencyDetail = new DependencyDetail
+                                {
+                                    Branch = branch,
+                                    Name = dependency.Attributes["Name"].Value,
+                                    RepoUri = dependency.SelectSingleNode("Uri").InnerText,
+                                    Commit = dependency.SelectSingleNode("Sha").InnerText,
+                                    Version = dependency.Attributes["Version"].Value
+                                };
+
+                                dependencyDetails.Add(dependencyDetail);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("No dependencies defined in file.");
+                    }
+                }
+            }
+            else
+            {
+                _logger.LogError($"There was an error while reading '{VersionFiles.VersionDetailsXml}' and it came back empty. " +
+                    $"Look for exceptions above.");
+            }
+
+            return dependencyDetails;
         }
     }
 }

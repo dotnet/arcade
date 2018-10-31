@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using CommandLine;
+using Microsoft.DotNet.Darc.Operations;
 
 namespace Microsoft.DotNet.Darc.Options
 {
@@ -11,5 +12,10 @@ namespace Microsoft.DotNet.Darc.Options
     {
         [Option('i', "id", Required = true, HelpText = "ID of subscription.  To obtain subscription ID's, use the get-subscriptions verb.")]
         public string SubscriptionId { get; set; }
+
+        public override Operation GetOperation()
+        {
+            return new GetSubscriptionHistoryOperation(this);
+        }
     }
 }

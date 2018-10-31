@@ -439,6 +439,13 @@ namespace Microsoft.DotNet.DarcLib
             return _barClient.Builds.GetLatestAsync(repository: repoUri, channelId: channelId, loadCollections: true);
         }
 
+        public async Task<IEnumerable<DependencyDetail>> GetDependenciesAsync(string repoUri, string branch, string name = null)
+        {
+            CheckForValidGitClient();
+            return (await _fileManager.ParseVersionDetailsXmlAsync(repoUri, branch)).Where(
+                dependency => string.IsNullOrEmpty(name) || dependency.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        }
+
         /// <summary>
         ///     Called prior to operations requiring the BAR.  Throws if a bar client isn't available.
         /// </summary>

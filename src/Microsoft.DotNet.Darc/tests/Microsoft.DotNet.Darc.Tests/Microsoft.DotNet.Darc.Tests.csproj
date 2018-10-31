@@ -119,6 +119,39 @@
     <None Update="inputs\AddProductDependency5\output\global.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="inputs\DependencyGraph\input\RepoA\shaA\eng\Version.Details.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="inputs\DependencyGraph\input\RepoA\shaA\output1.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="inputs\DependencyGraph\input\RepoA\shaA\output.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="inputs\DependencyGraph\input\RepoB\shaB\eng\Version.Details.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="inputs\DependencyGraph\input\RepoB\shaB\output.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="inputs\DependencyGraph\input\RepoC\shaC\eng\Version.Details.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="inputs\DependencyGraph\input\RepoD\shaD\eng\Version.Details.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="inputs\DependencyGraph\input\RepoE\shaE1\eng\Version.Details.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="inputs\DependencyGraph\input\RepoE\shaE2\eng\Version.Details.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="inputs\DependencyGraph\input\RepoE\shaE3\eng\Version.Details.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="inputs\DependencyGraph\input\RepoF\shaF\eng\Version.Details.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="inputs\emptyversions1\input\eng\Version.Details.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

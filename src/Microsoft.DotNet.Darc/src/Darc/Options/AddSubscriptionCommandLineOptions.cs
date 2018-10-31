@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using CommandLine;
+using Microsoft.DotNet.Darc.Operations;
 using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Darc.Options
@@ -41,5 +42,10 @@ namespace Microsoft.DotNet.Darc.Options
 
         [Option('q', "quiet", HelpText = "Non-interactive mode (requires all elements to be passed on the command line).")]
         public bool Quiet { get; set; }
+
+        public override Operation GetOperation()
+        {
+            return new AddSubscriptionOperation(this);
+        }
     }
 }

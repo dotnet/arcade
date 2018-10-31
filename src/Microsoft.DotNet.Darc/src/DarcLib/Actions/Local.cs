@@ -3,13 +3,11 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Xml;
 
 namespace Microsoft.DotNet.DarcLib
 {
@@ -102,6 +100,15 @@ namespace Microsoft.DotNet.DarcLib
         public Task<bool> Verify()
         {
             return _fileManager.Verify(_repo, null);
+        }
+
+        /// <summary>
+        /// Gets local dependencies from a local repository
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<DependencyDetail> GetDependenciesFromFileContents(string fileContents)
+        {
+            return _fileManager.ParseVersionDetailsXml(fileContents);
         }
     }
 }
