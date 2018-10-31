@@ -86,6 +86,7 @@ phases:
       condition: always()
 
     - task: PublishTestResults@2
+      displayName: Publish Test Results
       inputs:
         testResultsFormat: 'xUnit'
         testResultsFiles: '*.xml' 
