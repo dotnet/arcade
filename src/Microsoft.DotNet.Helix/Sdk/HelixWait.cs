@@ -48,23 +48,35 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var finishedCount = workItems.Count(wi => wi.State == "Finished");
                 if (waitingCount == 0 && runningCount == 0)
                 {
-                    var workItemSummary = await HelixApi.Aggregate.JobSummaryMethodAsync(new string[] { "job.source" }, 1, filtername: jobName);
-                    int? fail;
-                    workItemSummary[0].Data.WorkItemStatus.TryGetValue("fail", out fail);
-
-                    if ((fail ?? 0) > 0)
+                    try
                     {
-                        Log.LogError($"{fail} work item(s) have failed.");
-                    }
+                        var workItemSummary = await HelixApi.Aggregate.JobSummaryMethodAsync(new string[] { "job.source" }, 1, filtername: jobName);
+                        
+                        int? numWorkItemFailures;
+                        workItemSummary[0].Data.WorkItemStatus.TryGetValue("fail", out numWorkItemFailures);
 
-                    int? testFailures;
-                    workItemSummary[0].Data.Analysis[0].Status.TryGetValue("fail", out testFailures);
-                    if ((testFailures ?? 0) > 0)
+                        if ((numWorkItemFailures ?? 0) > 0)
+                        {
+                            Log.LogError($"Job {jobName} had {numWorkItemFailures} work item(s) fail.");
+                        }
+
+                        int? numTestFailures;
+                        workItemSummary[0].Data.Analysis[0].Status.TryGetValue("fail", out numTestFailures);
+                        if ((numTestFailures ?? 0) > 0)
+                        {
+                            Log.LogError($"Job {jobName} had {numTestFailures} test failures.");
+                        }
+
+                        Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
+                    }
+                    catch (HttpRequestException e)
                     {
-                        Log.LogError($"{testFailures} tests have failed.");
+                        Log.LogError($"An error was encountered while attempting to query the Helix API for job {jobName}.\n\n{e.StackTrace}");
                     }
-
-                    Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
+                    catch (IndexOutOfRangeException e)
+                    {
+                        Log.LogError($"The API returned no aggregated work item summary for job {jobName}.\n\n{e.StackTrace}");
+                    }
                     return;
                 }
 
