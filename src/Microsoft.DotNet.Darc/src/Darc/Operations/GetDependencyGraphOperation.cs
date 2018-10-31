@@ -30,7 +30,8 @@ namespace Microsoft.DotNet.Darc.Operations
             try
             {
                 Local local = new Local(LocalHelpers.GetGitDir(Logger), Logger);
-                IEnumerable<DependencyDetail> dependencies = await local.GetDependenciesAsync(_options.AssetName);
+                IEnumerable<DependencyDetail> dependencies = await local.GetDependenciesAsync(
+                    _options.AssetName);
                 DarcSettings darcSettings = null;
 
                 if (_options.Remote)
@@ -42,9 +43,15 @@ namespace Microsoft.DotNet.Darc.Operations
                         return Constants.ErrorCode;
                     }
 
-                    darcSettings = LocalSettings.GetDarcSettings(_options, Logger, _options.RepoUri);
+                    darcSettings = LocalSettings.GetDarcSettings(
+                        _options, 
+                        Logger, 
+                        _options.RepoUri);
                     Remote remote = new Remote(darcSettings, Logger);
-                    dependencies = await remote.GetDependenciesAsync(_options.RepoUri, _options.Branch, _options.AssetName);
+                    dependencies = await remote.GetDependenciesAsync(
+                        _options.RepoUri, 
+                        _options.Branch, 
+                        _options.AssetName);
                 }
 
                 List<DependencyGraph> graph = await CreateGraphAsync(dependencies, darcSettings);
@@ -74,18 +81,25 @@ namespace Microsoft.DotNet.Darc.Operations
         }
 
         /// <summary>
-        /// Create the graph or graphs dependending on the amount of base dependencies passed in as an input.
+        /// Create the graph or graphs dependending on the amount of base dependencies 
+        /// passed in as an input.
         /// </summary>
         /// <param name="dependencies">Input dependencies.</param>
         /// <param name="darcSettings">The Darc settings.</param>
         /// <returns>Collection of graph nodes.</returns>
-        private async Task<List<DependencyGraph>> CreateGraphAsync(IEnumerable<DependencyDetail> dependencies, DarcSettings darcSettings)
+        private async Task<List<DependencyGraph>> CreateGraphAsync(
+            IEnumerable<DependencyDetail> dependencies, 
+            DarcSettings darcSettings)
         {
             List<DependencyGraph> graph = new List<DependencyGraph>();
 
             if (string.IsNullOrEmpty(_options.AssetName))
             {
-                await Task.WhenAll(dependencies.Select(dependency => AddNodeToGraphAsync(darcSettings, dependency, graph)));
+                await Task.WhenAll(dependencies.Select(
+                    dependency => AddNodeToGraphAsync(
+                        darcSettings, 
+                        dependency, 
+                        graph)));
             }
             else
             {
@@ -103,9 +117,18 @@ namespace Microsoft.DotNet.Darc.Operations
             return graph;
         }
 
-        private async Task AddNodeToGraphAsync(DarcSettings darcSettings, DependencyDetail dependency, List<DependencyGraph> graph)
+        private async Task AddNodeToGraphAsync(
+            DarcSettings darcSettings, 
+            DependencyDetail dependency, 
+            List<DependencyGraph> graph)
         {
-            DependencyGraph dependencyGraph = await DependencyGraph.GetDependencyGraphAsync(darcSettings, dependency, _options.Remote, Logger, _options.ReposFolder, _options.RemotesMap);
+            DependencyGraph dependencyGraph = await DependencyGraph.GetDependencyGraphAsync(
+                darcSettings, 
+                dependency, 
+                _options.Remote, 
+                Logger, 
+                _options.ReposFolder, 
+                _options.RemotesMap);
             graph.Add(dependencyGraph);
         }
 

@@ -37,15 +37,15 @@ namespace Microsoft.DotNet.DarcLib
             // Fail fast if darcSettings is null in a remote scenario
             if (remote && darcSettings == null)
             {
-                throw new Exception("In a remote scenario 'DarcSettings' have to be set.");
+                throw new DarcException("In a remote scenario 'DarcSettings' have to be set.");
             }
 
-            HashSet<DependencyDetail> flatGraph = new HashSet<DependencyDetail>(new DependencyDetailComparer());
+            HashSet<DependencyDetail> uniqueDependencyDetails = new HashSet<DependencyDetail>(new DependencyDetailComparer());
             DependencyGraphNode graphNode = new DependencyGraphNode(dependency);
             Stack<DependencyGraphNode> nodesToVisit = new Stack<DependencyGraphNode>();
 
             nodesToVisit.Push(graphNode);
-            flatGraph.Add(graphNode.DependencyDetail);
+            uniqueDependencyDetails.Add(graphNode.DependencyDetail);
 
             while (nodesToVisit.Count > 0)
             {
@@ -73,13 +73,13 @@ namespace Microsoft.DotNet.DarcLib
                         {
                             node.ChildNodes.Add(dependencyGraphNode);
                             nodesToVisit.Push(dependencyGraphNode);
-                            flatGraph.Add(dependencyGraphNode.DependencyDetail);
+                            uniqueDependencyDetails.Add(dependencyGraphNode.DependencyDetail);
                         }
                     }
                 }
             }
 
-            return new DependencyGraph(graphNode, flatGraph);
+            return new DependencyGraph(graphNode, uniqueDependencyDetails);
         }
 
         private static string GetRepoPath(
