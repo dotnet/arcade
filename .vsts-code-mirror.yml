@@ -2,7 +2,7 @@
 trigger: none
 
 # Moves code from GitHub into internal repos
-phases:
+jobs:
 - template: /eng/common/templates/phases/base.yml
   parameters:
     agentsOS: Windows_NT

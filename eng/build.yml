@@ -17,7 +17,7 @@ parameters:
 #   - or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest') - Running in public or a pull request.
 #   - eq(variables['Build.Repository.Provider'], 'GitHub') - Build source is in GitHub (even if the project is private)
 
-phases:
+jobs:
 - template: /eng/common/templates/phases/base.yml
   parameters:
     enableTelemetry: ${{ parameters.enableTelemetry }}

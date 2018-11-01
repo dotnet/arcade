@@ -35,8 +35,8 @@ parameters:
 # Internal resources (telemetry, microbuild) can only be accessed from non-public projects,
 # and some (Microbuild) should only be applied to non-PR cases for internal builds.
 
-phases:
-- phase: ${{ parameters.name }}
+jobs:
+- job: ${{ parameters.name }}
 
   queue: ${{ parameters.queue }}
 
