@@ -26,7 +26,7 @@ jobs:
 
     name: ${{ parameters.name }}
 
-    queue: ${{ parameters.queue }}
+    pool: ${{ parameters.queue }}
 
     variables: 
       ${{ insert }}: ${{ parameters.variables }}

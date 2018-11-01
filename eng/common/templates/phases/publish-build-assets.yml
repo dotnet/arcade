@@ -4,8 +4,8 @@ parameters:
   configuration: 'Debug'
   condition: succeeded()
   continueOnError: false
-phases:
-  - phase: Asset_Registry_Publish
+jobs:
+  - job: Asset_Registry_Publish
     displayName: Publish to Build Asset Registry
     dependsOn: ${{ parameters.dependsOn }}
     queue: ${{ parameters.queue }}

@@ -38,7 +38,7 @@ parameters:
 jobs:
 - job: ${{ parameters.name }}
 
-  queue: ${{ parameters.queue }}
+  pool: ${{ parameters.queue }}
 
   ${{ if ne(parameters.variables, '') }}:
     variables: 
