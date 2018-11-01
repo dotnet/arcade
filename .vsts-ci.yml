@@ -15,7 +15,7 @@ jobs:
   - template: /eng/build.yml
     parameters:
       name: Windows_NT
-      queue:
+      pool:
         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Repository.Provider'], 'GitHub')) }}:
           name: dotnet-external-temp
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
@@ -43,7 +43,7 @@ jobs:
   - template: /eng/build.yml
     parameters:
       name: Linux
-      queue:
+      pool:
         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Repository.Provider'], 'GitHub')) }}:
           name: dnceng-linux-external-temp
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
@@ -68,5 +68,6 @@ jobs:
         dependsOn:
           - Windows_NT
           - Linux
-        queue:
+        pool:
           name: Hosted VS2017
+ 

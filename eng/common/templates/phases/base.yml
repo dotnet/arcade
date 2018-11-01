@@ -9,12 +9,12 @@ parameters:
   name: ''
 
   # Required: A defined YAML queue
-  queue: {}
+  pool: {}
 
   # Required: build steps
   steps: []
 
-  # Required: Strategy
+  # Required: strategy
   strategy: {}
 
   # Optional: variables
@@ -41,7 +41,7 @@ parameters:
 jobs:
 - job: ${{ parameters.name }}
 
-  pool: ${{ parameters.queue }}
+  pool: ${{ parameters.pool }}
 
   strategy: ${{ parameters.strategy }}
 
