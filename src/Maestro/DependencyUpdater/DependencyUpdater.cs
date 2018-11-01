@@ -69,6 +69,36 @@ namespace DependencyUpdater
             }
         }
 
+        /// <summary>
+        ///     Run a single subscription
+        /// </summary>
+        /// <param name="subscriptionId">Subscription to run the update for.</param>
+        /// <returns></returns>
+        public Task StartSubscriptionUpdateAsync(Guid subscriptionId)
+        {
+            var subscriptionToUpdate = (from sub in Context.Subscriptions
+                                         where sub.Id == subscriptionId
+                                         where sub.Enabled
+                                         let latestBuild =
+                                             sub.Channel.BuildChannels.Select(bc => bc.Build)
+                                                 .Where(b => b.Repository == sub.SourceRepository)
+                                                 .OrderByDescending(b => b.DateProduced)
+                                                 .FirstOrDefault()
+                                         where latestBuild != null
+                                         where sub.LastAppliedBuildId == null || sub.LastAppliedBuildId != latestBuild.Id
+                                         select new
+                                         {
+                                             subscription = sub.Id,
+                                             latestBuild = latestBuild.Id
+                                         }).SingleOrDefault();
+
+            if (subscriptionToUpdate != null)
+            {
+                return UpdateSubscriptionAsync(subscriptionToUpdate.subscription, subscriptionToUpdate.latestBuild);
+            }
+            return Task.CompletedTask;
+        }
+
         public async Task RunAsync(CancellationToken cancellationToken)
         {
             IReliableConcurrentQueue<DependencyUpdateItem> queue =

@@ -15,6 +15,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         public string SourceRepository { get; set; }
 
         [Required]
+        [RepositoryUrl]
         public string TargetRepository { get; set; }
 
         [Required]
