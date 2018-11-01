@@ -6,12 +6,14 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.Unsign" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+
   <!--
     Required properties:
       IbcOptimizationDataDir           The directory containing IBC optimization data.
   -->
   <PropertyGroup>
-    <_OptimizationDataFile>$([System.IO.Path]::GetFullPath('$(IbcOptimizationDataDir)$(TargetName).pgo'))</_OptimizationDataFile>
+    <_PreviousOptimizedFile>$([System.IO.Path]::Combine($(IbcOptimizationDataDir), '$(TargetName).pgo'))</_PreviousOptimizedFile>
     <PostCompileBinaryModificationSentinelFile>$(IntermediateOutputPath)$(TargetFileName).pcbm</PostCompileBinaryModificationSentinelFile>
   </PropertyGroup>
 
@@ -21,8 +23,9 @@
   -->
   <Target Name="PostCompileBinaryModification"
           AfterTargets="CoreCompile"
-          DependsOnTargets="ApplyOptimizations"
-          Inputs="@(IntermediateAssembly)"
+          DependsOnTargets="_InitializeAssemblyOptimizationWithTargetAssembly;ApplyOptimizations"
+          Condition="'$(IsWpfTempProject)' != 'true' and Exists('$(_PreviousOptimizedFile)')"
+          Inputs="$(MSBuildAllProjects);@(IntermediateAssembly)"
           Outputs="@(IntermediateAssembly);$(PostCompileBinaryModificationSentinelFile)">
 
     <!-- Write out a sentinel timestamp file to prevent unnecessary work in incremental builds. -->
@@ -33,24 +36,53 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_InitializeAssemblyOptimizationWithTargetAssembly">
+    <ItemGroup>
+      <OptimizeAssembly Include="@(IntermediateAssembly)" PreviousOptimizedFile="$(_PreviousOptimizedFile)" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Merges optimization data to assemblies specified in OptimizeAssembly item group.
+
+    Non-incremental. Calling targets need to handle incremental build if necessary.
+    Runs during any CI build. Performs the actual merge only when IBCMerge tool is available. It is expected to be available in an official build.
+  -->
+  <Target Name="_CalculateIbcArgs">
+    <ItemGroup>
+      <OptimizeAssembly>
+        <!--
+          -delete to delete data previously embedded in the binary. This is a no-op for binaries produced by this build, but is needed for dependencies such as System.Reflection.Metadata.
+          -incremental to map data stored in the optimized binary, which comes from a previous build, to the new build of the binary.
+        -->
+        <_IbcArgs>-q -f -partialNGEN -minify -delete -mo "%(OptimizeAssembly.Identity)" -incremental "%(OptimizeAssembly.PreviousOptimizedFile)"</_IbcArgs>
+      </OptimizeAssembly>
+    </ItemGroup>
+  </Target>
+
   <Target Name="ApplyOptimizations"
-          Condition="Exists('$(_OptimizationDataFile)')"
-          Inputs="@(IntermediateAssembly)"
-          Outputs="@(IntermediateAssembly);$(PostCompileBinaryModificationSentinelFile)">
+          DependsOnTargets="_CalculateIbcArgs"
+          Condition="'@(OptimizeAssembly)' != '' and '$(Configuration)' == 'Release' and '$(ContinuousIntegrationBuild)' == 'true'">
 
     <PropertyGroup>
-      <_RunIbc>false</_RunIbc>
-      <_RunIbc Condition="'$(Configuration)' == 'Release' and '$(OfficialBuild)' == 'true'">true</_RunIbc>
-
       <_IbcMergePath>$(NuGetPackageRoot)microsoft.dotnet.ibcmerge\$(MicrosoftDotNetIBCMergeVersion)\lib\net45\ibcmerge.exe</_IbcMergePath>
-      <_IbcMergeCommandLineArgs>-q -f -partialNGEN -minify -mo "@(IntermediateAssembly)" -incremental "$(_OptimizationDataFile)"</_IbcMergeCommandLineArgs>
+
+      <_RunIbcMerge>false</_RunIbcMerge>
+      <_RunIbcMerge Condition="'$(OfficialBuild)' == 'true' or Exists('$(_IbcMergePath)')">true</_RunIbcMerge>
     </PropertyGroup>
 
-    <Message Text="IBCMerge tool will be run in an official build with arguments: $(_IbcMergeCommandLineArgs)" Condition="'$(_RunIbc)' != 'true'" Importance="normal"/>
+    <Message Text='IBCMerge tool will be run in an official build with arguments: %(OptimizeAssembly._IbcArgs)'
+             Condition="'$(_RunIbcMerge)' != 'true'" 
+             Importance="normal"/>
 
-    <Exec Command='"$(_IbcMergePath)" $(_IbcMergeCommandLineArgs)' ConsoleToMSBuild="true" Condition="'$(_RunIbc)' == 'true'">
+    <Exec Command='"$(_IbcMergePath)" %(OptimizeAssembly._IbcArgs)' 
+          ConsoleToMSBuild="true"
+          Condition="'$(_RunIbcMerge)' == 'true'">
       <Output TaskParameter="ConsoleOutput" PropertyName="IbcMergeOutput" />
     </Exec>
+
+    <!-- Remove Authenticode signing record if present. -->
+    <Microsoft.DotNet.Arcade.Sdk.Unsign FilePath="%(OptimizeAssembly.Identity)" />
 
     <Message Text="$(IbcMergeOutput)" />
   </Target>
