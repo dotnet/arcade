@@ -38,7 +38,7 @@ namespace Maestro.Web
         private readonly List<Regex> validUrlForms = new List<Regex>()
         {
             new Regex(@"^https://github\.com/[a-zA-Z0-9]+/[a-zA-Z0-9-]+$"),
-            new Regex(@"^https://dev\.azure\.com/[a-zA-Z0-9]+/[a-zA-Z0-9-]+/_git/[a-zA-Z0-9-]+$")
+            new Regex(@"^https://dev\.azure\.com/[a-zA-Z0-9]+/[a-zA-Z0-9-]+/_git/[a-zA-Z0-9-\.]+$")
         };
 
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
@@ -48,7 +48,7 @@ namespace Maestro.Web
             {
                 string validForms = validUrlForms.Aggregate<Regex, string>("",
                     (curr, form) => $"{curr}\n{form.ToString()}");
-                return new ValidationResult($"Repository URL should be one of the following forms:{validForms}");
+                return new ValidationResult($"Target repository URL should be one of the following forms:{validForms}");
             }
             return ValidationResult.Success;
         }
