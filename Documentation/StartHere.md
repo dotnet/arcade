@@ -86,11 +86,11 @@ some highlights:
 
 - Move out of .NET CI and into our new Azure DevOps project
   (https://dev.azure.com/dnceng/public) for your public CI. - See [Onboarding
-  Azure DevOps](AzureDevOps/Azure DevOpsOnboarding.md).
+  Azure DevOps](AzureDevOps/AzureDevOpsOnboarding.md).
 - Move out of the devdiv Azure DevOps instance (https://dev.azure.com/devdiv/ or
   https://devdiv.visualstudio.com) and into the internal project for
   (https://dev.azure.com/dnceng/internal) internal CI and official builds. - See
-  [Onboarding Azure DevOps](AzureDevOps/Azure DevOpsOnboarding.md) and [Moving Official Builds from
+  [Onboarding Azure DevOps](AzureDevOps/AzureDevOpsOnboarding.md) and [Moving Official Builds from
   DevDiv to DncEng](AzureDevOps/MovingFromDevDivToDncEng.md).
 - Onboard onto dependency flow (Darc). - See [Dependency Flow
   Onboarding](DependencyFlowOnboarding.md).
