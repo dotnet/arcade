@@ -8,7 +8,7 @@
   <!--
     Include both GitHub and Azure DevOps (formerly VSTS) packages to enable SourceLink in repositories that mirror to Azure DevOps (formerly VSTS).
   -->
-  <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
+  <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true' AND '$(ExcludePackageReferenceFromIndividualProjects)' != 'true'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.SourceLink.Vsts.Git" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
