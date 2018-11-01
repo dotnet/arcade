@@ -14,6 +14,9 @@ parameters:
   # Required: build steps
   steps: []
 
+  # Required: Strategy
+  strategy: {}
+
   # Optional: variables
   variables: {}
 
@@ -39,6 +42,8 @@ jobs:
 - job: ${{ parameters.name }}
 
   pool: ${{ parameters.queue }}
+
+  strategy: ${{ parameters.strategy }}
 
   ${{ if ne(parameters.variables, '') }}:
     variables: 

@@ -22,25 +22,25 @@ jobs:
           name: dotnet-external-temp
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
           name: dotnet-internal-temp
-    strategy:
-      maxParallel: 2
-      matrix:
-        Build_Debug:
-          _BuildConfig: Debug
-          _PublishType: none
-          _SignType: test
-          _DotNetPublishToBlobFeed : false
-        Build_Release:
-          _BuildConfig: Release
-          # PRs or external builds are not signed.
-          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Repository.Provider'], 'GitHub')) }}:
+      strategy:
+        maxParallel: 2
+        matrix:
+          Build_Debug:
+            _BuildConfig: Debug
             _PublishType: none
             _SignType: test
             _DotNetPublishToBlobFeed : false
-          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
-            _PublishType: blob
-            _SignType: real
-            _DotNetPublishToBlobFeed : true
+          Build_Release:
+            _BuildConfig: Release
+            # PRs or external builds are not signed.
+            ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Repository.Provider'], 'GitHub')) }}:
+              _PublishType: none
+              _SignType: test
+              _DotNetPublishToBlobFeed : false
+            ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
+              _PublishType: blob
+              _SignType: real
+              _DotNetPublishToBlobFeed : true
 
   - template: /eng/build.yml
     parameters:
@@ -51,7 +51,8 @@ jobs:
           name: dnceng-linux-external-temp
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
           name: dnceng-linux-internal-temp
-        parallel: 2
+      strategy:
+        maxParallel: 2
         matrix:
           Build_Debug:
             _BuildConfig: Debug

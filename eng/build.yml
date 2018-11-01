@@ -8,6 +8,7 @@ parameters:
   queue: {}
   # variables YAML object - https://github.com/Microsoft/vsts-agent/blob/master/docs/preview/yamlgettingstarted-schema.md#phase
   variables: {}
+  strategy: {}
 
 # Common conditionals:  There are a number of common conditionals that are useful.  Generally these are used to decide what resources can be accessed,
 #                       or what logic should be applied based on the context the build is being run in.
@@ -27,6 +28,8 @@ jobs:
     name: ${{ parameters.name }}
 
     pool: ${{ parameters.queue }}
+
+    strategy: ${{ parameters.strategy }}
 
     variables: 
       ${{ insert }}: ${{ parameters.variables }}
