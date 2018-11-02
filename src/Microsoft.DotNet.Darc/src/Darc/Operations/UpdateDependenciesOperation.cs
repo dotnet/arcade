@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Darc.Operations
 
                 if (!string.IsNullOrEmpty(_options.Name) && !string.IsNullOrEmpty(_options.Version))
                 {
-                    DependencyDetail dependency = dependencies.FirstOrDefault();
+                    DependencyDetail dependency = dependencies.First();
                     dependency.Version = _options.Version;
                     dependenciesToUpdate.Add(dependency);
 
@@ -165,12 +165,12 @@ namespace Microsoft.DotNet.Darc.Operations
                     // find matching dependencies so we should let the user know.
                     if (someUpToDate)
                     {
-                        Console.WriteLine($"All dependencies from channel '{_options.Channel}' are up to date.");
+                        Console.WriteLine($"All dependencies are up to date.");
                         return Constants.SuccessCode;
                     }
                     else
                     {
-                        Console.WriteLine($"Found no dependencies to update on channel '{_options.Channel}'.");
+                        Console.WriteLine($"Found no dependencies to update.");
                         return Constants.ErrorCode;
                     }
                 }
@@ -215,7 +215,7 @@ namespace Microsoft.DotNet.Darc.Operations
                 throw new DarcException($"Packages folder '{pathToFolder}' does not exist.");
             }
 
-            IEnumerable<string> packages = Directory.GetFiles(pathToFolder);
+            IEnumerable<string> packages = Directory.GetFiles(pathToFolder, "*.nupkg");
 
             foreach (string package in packages)
             {

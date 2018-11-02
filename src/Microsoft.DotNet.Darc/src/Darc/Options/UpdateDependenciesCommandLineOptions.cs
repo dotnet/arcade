@@ -17,11 +17,11 @@ namespace Microsoft.DotNet.Darc.Options
             "dependencies existing on 'channel' are updated.")]
         public string Name { get; set; }
 
-        [Option('v', "version", HelpText = "If name is provided this version in the update.")]
+        [Option('v', "version", HelpText = "The new version of dependency --name.")]
         public string Version { get; set; }
 
-        [Option("packages-folder", HelpText = "An optional path to a folder which contains the packages." +
-            "which version will be used to update the dependencies.")]
+        [Option("packages-folder", HelpText = "An optional path to a folder which contains the NuGet " +
+            "packages whose versions will be used to update existing dependencies.")]
         public string PackagesFolder { get; set; }
 
         [Option("dry-run", HelpText = "Show what will be updated, but make no changes.")]
