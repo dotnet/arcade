@@ -8,6 +8,8 @@ parameters:
   queue: {}
   # variables YAML object - https://github.com/Microsoft/vsts-agent/blob/master/docs/preview/yamlgettingstarted-schema.md#phase
   variables: {}
+  # run this build as a public build, even in the internal project
+  runAsPublic: false
 
 # Common conditionals:  There are a number of common conditionals that are useful.  Generally these are used to decide what resources can be accessed,
 #                       or what logic should be applied based on the context the build is being run in.
@@ -15,7 +17,6 @@ parameters:
 #   - eq/ne(variables['System.TeamProject'], 'public') - Running/not running on the dotnet public VSTS project 
 #   - and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest') - Not running in public and not a pull request.
 #   - or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest') - Running in public or a pull request.
-#   - eq(variables['Build.Repository.Provider'], 'GitHub') - Build source is in GitHub (even if the project is private)
 
 phases:
 - template: /eng/common/templates/phases/base.yml
@@ -28,11 +29,13 @@ phases:
 
     queue: ${{ parameters.queue }}
 
+    runAsPublic: ${{ parameters.runAsPublic }}
+
     variables: 
       ${{ insert }}: ${{ parameters.variables }}
       _HelixBuildConfig: $(_BuildConfig)
       # Only enable publishing in non-public, non PR scenarios.
-      ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
+      ${{ if and(not(parameters.runAsPublic), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         # This should be changed to an isolated blob feed per-build.
         # Right now a manual build of a random branch would get published alongside the normal branch artifacts.
         _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
@@ -44,13 +47,13 @@ phases:
           /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         _OfficialBuildIdArgs: /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
       # else
-      ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Repository.Provider'], 'GitHub')) }}:
+      ${{ if or(parameters.runAsPublic, eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
         _PublishArgs: ''
         _OfficialBuildIdArgs: ''
         _SignArgs: ''
 
     steps:
-    - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
+    - ${{ if and(not(parameters.runAsPublic), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         - task: AzureKeyVault@1
           inputs:
             azureSubscription: 'DotNet-Engineering-Services_KeyVault'
