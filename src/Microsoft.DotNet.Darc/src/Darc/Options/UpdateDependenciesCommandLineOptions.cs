@@ -10,11 +10,19 @@ namespace Microsoft.DotNet.Darc.Options
     [Verb("update-dependencies", HelpText = "Update local dependencies from a channel.")]
     class UpdateDependenciesCommandLineOptions : CommandLineOptions
     {
-        [Option('c', "channel", Required = true, HelpText = "Channel to pull dependencies from.")]
+        [Option('c', "channel", HelpText = "Channel to pull dependencies from.")]
         public string Channel { get; set; }
 
-        [Option('n', "name", HelpText = "Optional name of dependency to update.  Otherwise all dependencies existing on 'channel' are updated.")]
+        [Option('n', "name", HelpText = "Optional name of dependency to update.  Otherwise all " +
+            "dependencies existing on 'channel' are updated.")]
         public string Name { get; set; }
+
+        [Option('v', "version", HelpText = "If name is provided this version in the update.")]
+        public string Version { get; set; }
+
+        [Option("packages-folder", HelpText = "An optional path to a folder which contains the packages." +
+            "which version will be used to update the dependencies.")]
+        public string PackagesFolder { get; set; }
 
         [Option("dry-run", HelpText = "Show what will be updated, but make no changes.")]
         public bool DryRun { get; set; }
