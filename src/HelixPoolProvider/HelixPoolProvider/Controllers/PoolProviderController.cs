@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
 
             _logger.LogInformation($"Starting acquire operation for {queueId}");
             _logger.LogInformation($"  Pool: {agentRequestItem.agentPool}");
-            _logger.LogInformation($"  Agent Name: {agentSettings.AgentName}");
+            _logger.LogInformation($"  Agent ID: {agentRequestItem.agentId}");
 
             var jobCreator = await GetHelixJobCreator(agentRequestItem, queueId);
             if (jobCreator == null)
