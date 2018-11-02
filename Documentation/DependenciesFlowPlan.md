@@ -8,7 +8,7 @@ This document outlines the main stages to implement the work needed to accomplis
 In order for the dependency flow plan to be done, tier 1 product repositories need to:
  - Use Darc for dependency management.
  - Subscribe to Maestro++.
- - Builds for both CI and official builds happen in VSTS.
+ - Builds for both CI and official builds happen in Azure DevOps.
 
 # Prototype
 The goal of the prototype is to validate the interaction proposed between Darc and Maestro++, as well as the boundaries of each.
@@ -71,7 +71,7 @@ For triggers, PR and auto-merge management.
 **auto-merge**
 The minimum set of policies we need to enable this functionality are:
 - Set the group of checks/validations that are needed in order to determine the PR is green and ready to merge. Note that each repo will have a different request on what goes into a group of checks, for example:
-    - Green CI on GitHub/VSTS PR
+    - Green CI on GitHub/Azure DevOps PR
     - No newer version updates have been merged
     - No non-maestro bot commits have been added to the PR
     - Would committing the PR results in an invalid dependency graph (e.g. aspnet's core-setup dependency is no longer matching CLI's core-setup dependency)
