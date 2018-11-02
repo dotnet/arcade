@@ -17,7 +17,6 @@ parameters:
 #   - eq/ne(variables['System.TeamProject'], 'public') - Running/not running on the dotnet public VSTS project 
 #   - and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest') - Not running in public and not a pull request.
 #   - or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest') - Running in public or a pull request.
-#   - parameters.runAsPublic - Run this build as if it was a public build. No internal resources will be used regardless of the VSTS project.
 
 phases:
 - template: /eng/common/templates/phases/base.yml
