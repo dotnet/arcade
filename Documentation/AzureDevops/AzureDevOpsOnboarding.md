@@ -4,7 +4,7 @@
 - [GitHub to DncEng Internal mirror](#github-to-dnceng-internal-mirror)
 - [Azure DevOps Pull Request and CI builds](#Azure-DevOps-pull-request-and-ci-builds)
 - [Agent Queues](#agent-queues)
-- [Azure DevOps GitHub connection](#Azure DevOps-github-connection)
+- [Azure DevOps GitHub connection](#Azure-DevOps-github-connection)
 - [CI badge link](#ci-badge-link)
 - [Signed builds](#signed-builds)
 - [Security](#security)
@@ -23,7 +23,7 @@ Instructions for setting up the GitHub to dev.azure.com/dnceng/internal mirror a
 
 ## Azure DevOps Pull Request and CI builds
 
-Azure DevOps has detailed documentation on how to create builds that are linked from GitHub repositories which can be found [here](https://docs.microsoft.com/en-us/AzureDevOps/build-release/actions/ci-build-github?view=Azure DevOps); however, before going through those steps, keep in mind that our process differs from the steps in the official documentation in a few key places:
+Azure DevOps has detailed documentation on how to create builds that are linked from GitHub repositories which can be found [here](https://docs.microsoft.com/en-us/azure/devops/build-release/actions/ci-build-github?view=vsts); however, before going through those steps, keep in mind that our process differs from the steps in the official documentation in a few key places:
 
 * The YAML tutorial links to a .NET Core sample repository for an example of a simple `azurePipelines.yml` file. Instead of using that repository, use [our sample repository](https://github.com/dotnet/arcade-minimalci-sample).
 * Azure DevOps will require a GitHub Service Endpoint to communicate with github and setup web hooks.  Teams should use the `DotNet-Bot GitHub Connection` Service Endpoint.  The `DotNet-Bot GitHub Connection` requires that teams add the .NET Core owned [service account](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#github-service-account) as a [collaborator](https://help.github.com/articles/permission-levels-for-a-user-account-repository/#collaborator-access-on-a-repository-owned-by-a-user-account) (Admin access) on the GitHub repo.
@@ -54,7 +54,7 @@ Current machine pool recommendations:
 
 A couple of notes:
 
-- [Hosted pool](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=Azure DevOps&tabs=yaml) capabilities
+- [Hosted pool](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml) capabilities
 
 - dotnet-external-temp and dotnet-internal-temp queues:
 
@@ -92,7 +92,7 @@ dev.azure.com/dnceng now has support for signed builds.  Code should be mirrored
 
 ## Security
 
-[Security documentation](https://docs.microsoft.com/en-us/AzureDevOps/build-release/actions/ci-build-github?view=Azure DevOps#security-considerations)
+[Security documentation](https://docs.microsoft.com/en-us/azure/devops/build-release/actions/ci-build-github?view=vsts#security-considerations)
 
 It is recommended that you do **NOT** enable the checkbox labeled "Make secrets available to builds of forks".
 
