@@ -107,6 +107,7 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.CodeAnalysis", "src\Microsoft.DotNet.CodeAnalysis\Microsoft.DotNet.CodeAnalysis.csproj", "{AA00BFF4-D182-475F-85B9-BF4924F4D794}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Darc.Tests", "src\Microsoft.DotNet.Darc\tests\Microsoft.DotNet.Darc.Tests\Microsoft.DotNet.Darc.Tests.csproj", "{E9A56677-7C2E-4907-BF43-4630270D7A11}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HelixPoolProvider", "HelixPoolProvider", "{86AEE6AF-16D7-47FD-8D3E-6B87B249208D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.HelixPoolProvider", "src\HelixPoolProvider\HelixPoolProvider\Microsoft.DotNet.HelixPoolProvider.csproj", "{5ED29E38-A65D-4123-BFED-799ADA885F08}"
