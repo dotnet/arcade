@@ -64,7 +64,7 @@ phases:
 
   - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
     # Internal only resource, and Microbuild signing shouldn't be applied to PRs.
-    - ${{ if and(not(parameters.runAsPublic), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
+    - ${{ if and(not(parameters.runAsPublic), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
       - task: MicroBuildSigningPlugin@2
         displayName: Install MicroBuild plugin
         inputs:
@@ -82,7 +82,7 @@ phases:
 
   - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
     # Internal only resources
-    - ${{ if and(not(parameters.runAsPublic), ne(variables['System.TeamProject'], 'public'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
+    - ${{ if and(not(parameters.runAsPublic), ne(variables['System.TeamProject'], 'public')) }}:
       - task: MicroBuildCleanup@1
         displayName: Execute Microbuild cleanup tasks  
         condition: and(always(), in(variables['_SignType'], 'real', 'test'), eq(variables['Agent.Os'], 'Windows_NT'))
@@ -95,7 +95,7 @@ phases:
         helixSource: $(_HelixSource)
         helixType: $(_HelixType)
 
-  - ${{ if and(not(parameters.runAsPublic), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(variables['Build.Repository.Provider'], 'GitHub')) }}:
+  - ${{ if and(not(parameters.runAsPublic), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - task: CopyFiles@2
       displayName: Gather Asset Manifests
       inputs:
