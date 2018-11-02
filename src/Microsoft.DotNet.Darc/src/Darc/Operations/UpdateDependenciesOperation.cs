@@ -125,7 +125,9 @@ namespace Microsoft.DotNet.Darc.Operations
                         }
 
                         if (buildAsset.Version == dependency.Version &&
-                            buildAsset.Name == dependency.Name)
+                            buildAsset.Name == dependency.Name &&
+                            build.Repository == dependency.RepoUri &&
+                            build.Commit == dependency.Commit)
                         {
                             // No changes
                             someUpToDate = true;
