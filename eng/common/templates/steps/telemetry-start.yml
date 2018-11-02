@@ -5,7 +5,7 @@ parameters:
   runAsPublic: false
 
 steps:
-- ${{ if and(not(parameters.runAsPublic), not(eq(variables['System.TeamProject'], 'public'))) }}:
+- ${{ if and(eq(parameters.runAsPublic, 'false'), not(eq(variables['System.TeamProject'], 'public'))) }}:
   - task: AzureKeyVault@1
     inputs:
       azureSubscription: 'HelixProd_KeyVault'

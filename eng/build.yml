@@ -35,7 +35,7 @@ phases:
       ${{ insert }}: ${{ parameters.variables }}
       _HelixBuildConfig: $(_BuildConfig)
       # Only enable publishing in non-public, non PR scenarios.
-      ${{ if and(not(parameters.runAsPublic), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+      ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         # This should be changed to an isolated blob feed per-build.
         # Right now a manual build of a random branch would get published alongside the normal branch artifacts.
         _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
@@ -47,13 +47,13 @@ phases:
           /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         _OfficialBuildIdArgs: /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
       # else
-      ${{ if or(parameters.runAsPublic, eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+      ${{ if or(eq(parameters.runAsPublic, 'true'), eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
         _PublishArgs: ''
         _OfficialBuildIdArgs: ''
         _SignArgs: ''
 
     steps:
-    - ${{ if and(not(parameters.runAsPublic), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         - task: AzureKeyVault@1
           inputs:
             azureSubscription: 'DotNet-Engineering-Services_KeyVault'
