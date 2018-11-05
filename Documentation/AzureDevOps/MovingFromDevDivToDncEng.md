@@ -6,11 +6,11 @@ These are the general steps for moving an official build from https://dev.azure.
 
 1. Update the [agent pools](#agent-pools) used by your build.  Example: https://github.com/dotnet/dotnet-cli-archiver/pull/18/files
 
-2. Create an internal code repository for your [source code](https://github.com/dotnet/arcade/blob/master/Documentation/VSTS/VSTSGuidance.md#source-code) in https://dev.azure.com/dnceng/internal.
+2. Create an internal code repository for your [source code](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/AzureDevOpsGuidance.md#source-code) in https://dev.azure.com/dnceng/internal.
 
 3. Add your repo to the dnceng/internal mirror. Example: https://github.com/dotnet/versions/pull/361/files
 
-4. Create a build definition following the documented [guidance](https://github.com/dotnet/arcade/blob/master/Documentation/VSTS/VSTSGuidance.md#build-definitions).
+4. Create a Pipeline following the documented [guidance](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/AzureDevOpsGuidance.md#build-definitions).
 
 5. Request signing approval
 
@@ -18,7 +18,7 @@ These are the general steps for moving an official build from https://dev.azure.
 
     a. Go to Preview Features and turn off "New builds hub" (the "Request signing approval" link does not work in the "New builds hub")
 
-    b. Navigate to the build definition and select "Request signing approval" from "..."
+    b. Navigate to the Pipeline and select "Request signing approval" from "..."
 
       - M2's name: [Your M2's name]
 
@@ -26,7 +26,7 @@ These are the general steps for moving an official build from https://dev.azure.
 
       - Justification: .Net Core product repo
 
-    c. Your M2 will be notificed of the request and will have to approve the request before the MicroBuild team will review the request enable signing of your build definition.
+    c. Your M2 will be notificed of the request and will have to approve the request before the MicroBuild team will review the request enable signing of your Pipeline.
 
 ## Known issues
 
@@ -40,4 +40,4 @@ This is because RepoToolset is expecting a GitHub url but internal builds are bu
 
 ## Agent pools
 
-See [VSTS Onboarding documentation](./VSTSOnboarding.md#agent-queues)
+See [Azure DevOps Onboarding documentation](./AzureDevOpsOnboarding.md#agent-queues)

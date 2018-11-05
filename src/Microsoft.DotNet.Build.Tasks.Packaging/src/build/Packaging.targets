@@ -62,7 +62,7 @@
 
   <!-- Shared properties -->
   <PropertyGroup>
-    <SymbolPackageOutputPath Condition="'$(SymbolPackageOutputPath)' == ''">$(BaseOutputPath)symbolpkg/</SymbolPackageOutputPath>
+    <SymbolPackageOutputPath Condition="'$(SymbolPackageOutputPath)' == ''">$(PackageOutputPath)symbols/</SymbolPackageOutputPath>
     <OutputPath>$(PackageOutputPath)</OutputPath>
     <NuSpecOutputPath Condition="'$(NuSpecOutputPath)' == ''">$(PackageOutputPath)specs/</NuSpecOutputPath>
     <NuSpecPath>$(NuSpecOutputPath)$(Id)$(NuspecSuffix).nuspec</NuSpecPath>

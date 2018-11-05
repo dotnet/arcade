@@ -24,7 +24,7 @@ These pre-requisites are not hard requirements, but enabling dependency flow wil
 
 Copy the `eng/` folder from the [minimalci-sample](https://github.com/dotnet/arcade-minimalci-sample) repo. 
 
-This folder contains required version files as well as build definition templates used for publishing assets.
+This folder contains required version files as well as Pipeline templates used for publishing assets.
 
 For more information about version files go to: https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md
 
@@ -65,15 +65,15 @@ steps:
 
 #### 3. Enable assets publishing to the Build Asset Registry (BAR)
 
-To enable asset publishing to BAR we need to add a closing phase to `.vsts-ci.yml`. To do this add the following snippet at the end of `.vsts-ci.yml` and update the `dependsOn` parameter with the names of **all** the previous **build** phases:
+To enable asset publishing to BAR we need to add a closing phase to `azure-pipelines.yml`. To do this add the following snippet at the end of `azure-pipelines.yml` and update the `dependsOn` parameter with the names of **all** the previous **build** jobs:
 
 ```json
   - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - template: /eng/common/templates/phases/publish-build-assets.yml
       parameters:
         dependsOn:
-          - phase1
-          - phase2
+          - job1
+          - job2
         queue:
           name: Hosted VS2017
 ```

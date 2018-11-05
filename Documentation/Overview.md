@@ -13,11 +13,11 @@ This approach publishes what amounts to “public surface area” for the shared
 
 - MSBuild tasks/targets as NuGet packages
 - Known "entry points" (repo API) in each repo to build, test, package, sign, and publish
-- VSTS extensions  (check the box in VSTS)
+- Azure DevOps extensions  (check the box in Azure DevOps)
 - Hosted services with REST end points which are owned by the Engineering Services
 - Toolsets (think compilers, training tools, etc) as binaries in their own setup or NuGet packages
 - Machine (VM) images and/or Docker containers
-- "Resources" as planned by VSTS.
+- "Resources" as planned by Azure DevOps.
 
 ### Principles
 - Updates and changes should always be done with all the repos (not just yours) in mind.  This implies compromise by all to achieve a better common goal.
