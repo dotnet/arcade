@@ -10,6 +10,9 @@ parameters:
   # Optional: display name of the phase
   displayName: ''
 
+  # Optional: condition for the job to run
+  condition: ''
+
   # Optional: dependencies of the phase
   dependsOn: ''
 
@@ -51,6 +54,9 @@ phases:
   ${{ if ne(parameters.variables, '') }}:
     variables: 
       ${{ insert }}: ${{ parameters.variables }}
+
+  ${{ if ne(parameters.condition, '') }}:
+    condition: ${{ parameters.condition }}
 
   ${{ if ne(parameters.dependsOn, '') }}:
     dependsOn: ${{ parameters.dependsOn }}
