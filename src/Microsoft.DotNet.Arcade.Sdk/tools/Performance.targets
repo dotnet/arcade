@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <!-- The 'PerformanceTest' target is only viable for repos building their own performance-test harness. -->
-  <Target Name="PerformanceTest" DependsOnTargets="InitializeDotNetToolPath" Condition="'$(IsPerformanceTestProject)' == 'true'">
+  <Target Name="PerformanceTest" Condition="'$(IsPerformanceTestProject)' == 'true'">
     <PropertyGroup>
       <PerfIterations Condition="'$(PerfIterations)' == ''">10</PerfIterations>
       <PerfOutputDirectory Condition="'$(PerfOutputDirectory)' == ''">$(ArtifactsTestResultsDir)Performance</PerfOutputDirectory>

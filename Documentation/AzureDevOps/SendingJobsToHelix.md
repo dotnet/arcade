@@ -46,7 +46,7 @@ In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-A
 
 ## The Simple Case
 
-The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `helix-publish` template in `eng/common/templates/steps/helix-publish.yml` from your `.vsts-ci.yml` file.
+The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `helix-publish` template in `eng/common/templates/steps/helix-publish.yml` from your `.Azure DevOps-ci.yml` file.
 
 You will need to create a script file to run your tests. In the future, it will be possible to simply specify the directory where your xUnit tests live and the job sender will intelligently handle the rest of this for you; currently, however, this functionality does not exist.
 

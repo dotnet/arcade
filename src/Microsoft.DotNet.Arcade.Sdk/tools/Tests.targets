@@ -8,11 +8,17 @@
 
   <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
     <AutoGenerateBindingRedirects Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">true</AutoGenerateBindingRedirects>
+
     <_GetTestsToRunTarget Condition="'$(TargetFrameworks)' == ''">_InnerGetTestsToRun</_GetTestsToRunTarget>
     <_GetTestsToRunTarget Condition="'$(TargetFrameworks)' != ''">_OuterGetTestsToRun</_GetTestsToRunTarget>
+
+    <!-- The runtime to run tests on: 'Core', 'Mono', 'Full' (dekstop FX). -->
+    <TestRuntime Condition="'$(TestRuntime)' == '' and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'">Core</TestRuntime>
+    <TestRuntime Condition="'$(TestRuntime)' == '' and '$(MSBuildRuntimeType)' == 'Mono'">Mono</TestRuntime>
+    <TestRuntime Condition="'$(TestRuntime)' == '' and '$(OS)' == 'Windows_NT'">Full</TestRuntime>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TestArchitectures)' == ''">
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true' and '$(TestArchitectures)' == ''">
     <TestArchitectures>$(PlatformTarget)</TestArchitectures>
     <TestArchitectures Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu'">x64</TestArchitectures>
   </PropertyGroup>
@@ -29,11 +35,12 @@
           Inputs="*%(_TestArchitectureItems.Identity)"
           Outputs="*%(_TestArchitectureItems.Identity)"
           Returns="@(TestToRun)"
-          Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' or '$(OS)' == 'Windows_NT' or '$(MSBuildRuntimeType)' == 'Mono'">
+          Condition="'$(TestRuntime)' != '' and '$(SkipTests)' != 'true' and
+                     ('$(TestTargetFrameworks)' == '' or $([System.String]::new(';$(TestTargetFrameworks);').Contains(';$(TargetFramework);')))">
 
     <PropertyGroup>
       <_TestArchitecture>%(_TestArchitectureItems.Identity)</_TestArchitecture>
-      <_TestOutPathNoExt>$(ArtifactsTestResultsDir)$(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture)</_TestOutPathNoExt>
+      <_ResultFileNameNoExt>$(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture)</_ResultFileNameNoExt>
     </PropertyGroup>
 
     <Error Text="Architecture specified in TestArchitectures is not supported: '$(_TestArchitecture)'" File="XUnit"
@@ -43,12 +50,13 @@
       <TestToRun Include="$(TargetPath)">
         <TargetFramework>$(TargetFramework)</TargetFramework>
         <TargetFrameworkIdentifier>$(TargetFrameworkIdentifier)</TargetFrameworkIdentifier>
+        <TestRuntime>$(TestRuntime)</TestRuntime>
         <Architecture>$(_TestArchitecture)</Architecture>
         <EnvironmentDisplay>$(TargetFramework)|$(_TestArchitecture)</EnvironmentDisplay>
-        <ResultsFilePathWithoutExtension>$(_TestOutPathNoExt)</ResultsFilePathWithoutExtension>
-        <ResultsStdOutPath>$(_TestOutPathNoExt).log</ResultsStdOutPath>
-        <ResultsXmlPath>$(_TestOutPathNoExt).xml</ResultsXmlPath>
-        <ResultsHtmlPath>$(_TestOutPathNoExt).html</ResultsHtmlPath>
+        <ResultsFilePathWithoutExtension>$(_ResultFileNameNoExt)</ResultsFilePathWithoutExtension>
+        <ResultsXmlPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).xml</ResultsXmlPath>
+        <ResultsHtmlPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).html</ResultsHtmlPath>
+        <ResultsStdOutPath>$(ArtifactsLogDir)$(_ResultFileNameNoExt).log</ResultsStdOutPath>
       </TestToRun>
     </ItemGroup>
   </Target>

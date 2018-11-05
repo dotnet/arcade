@@ -8,7 +8,7 @@ Maestro++ is an automation of the work a developer would do to flow dependencies
     - Schedule task
     - Requested in a PR (i.e. @dotnet-bot test product build) by following a speculative product build.
     - Manual trigger
-- It must work for GitHub/VSTS and Public/Internal builds/repos (all combos).
+- It must work for GitHub/Azure DevOps and Public/Internal builds/repos (all combos).
 - Manage channels subscriptions for each repo.
 - It must be able to set policies for each repo:
     - When to trigger Maestro++
