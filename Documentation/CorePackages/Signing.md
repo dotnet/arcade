@@ -79,7 +79,12 @@ The Arcade SDK include a set of predefined configurations for the SignTool in th
 
 #### Signing 3rd Party Binaries
 
-Any 3rd party assembly which you distribute on public Microsoft feeds is supposed to be signed with the "3PartySHA2" certificate - a dual certificate. Arcade is configured to sign some known 3rd party libraries that we use with such dual certificate. In case you need to sign other 3rd party files take a look [how Arcade does it](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj).
+Any 3rd party assembly which is distributed on public Microsoft feeds is 
+supposed to be signed with the "3PartySHA2" certificate - a dual certificate. 
+Arcade itself use this SignTool and as such the Arcade SDK is configured to
+dual sign 3rd party libraries that it uses. In case you need to sign other 
+3rd party files take a look [how Arcade does it](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj)
+and put your custom configuration in the repo's `Signing.props` file.
 
 
 ## Usage Examples
