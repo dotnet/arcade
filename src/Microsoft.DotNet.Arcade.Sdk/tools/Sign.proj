@@ -35,6 +35,22 @@
     <FileExtensionSignInfo Include=".nupkg" CertificateName="NuGet" />
     <FileExtensionSignInfo Include=".vsix" CertificateName="VsixSHA2" />
     <FileExtensionSignInfo Include=".zip" CertificateName="None" />
+
+    <!--
+      These are third party libraries that we use in Arcade. We need to sign them even if they
+      are already signed. However, they must be signed with a 3rd party certificate.
+    -->
+    <FileSignInfo Include="AWSSDK.Core.dll" CertificateName="3PartyDual" />
+    <FileSignInfo Include="AWSSDK.S3.dll" CertificateName="3PartyDual" />
+    <FileSignInfo Include="CommandLine.dll" CertificateName="3PartyDual" />
+    <FileSignInfo Include="Handlebars.dll" CertificateName="3PartyDual" />
+    <FileSignInfo Include="SleetLib.dll" CertificateName="3PartyDual" />
+    <FileSignInfo Include="Swashbuckle.AspNetCore.Swagger.dll" CertificateName="3PartyDual" />
+    <FileSignInfo Include="Octokit.dll" CertificateName="3PartyDual" />
+    <FileSignInfo Include="YamlDotNet.dll" CertificateName="3PartyDual" />
+    <FileSignInfo Include="Mono.Options.dll" CertificateName="3PartyDual" />
+    <FileSignInfo Include="Newtonsoft.Json.dll" CertificateName="3PartyDual" />
+    <FileSignInfo Include="Newtonsoft.Json.Bsondll" CertificateName="3PartyDual" />
   </ItemGroup>
 
   <!-- Allow repository to customize signing configuration -->
