@@ -49,17 +49,17 @@ phases:
   ${{ if ne(parameters.displayName, '') }}:
     displayName: ${{ parameters.displayName }}
 
-  queue: ${{ parameters.queue }}
-
-  ${{ if ne(parameters.variables, '') }}:
-    variables: 
-      ${{ insert }}: ${{ parameters.variables }}
-
   ${{ if ne(parameters.condition, '') }}:
     condition: ${{ parameters.condition }}
 
   ${{ if ne(parameters.dependsOn, '') }}:
     dependsOn: ${{ parameters.dependsOn }}
+
+  queue: ${{ parameters.queue }}
+
+  ${{ if ne(parameters.variables, '') }}:
+    variables:
+      ${{ insert }}: ${{ parameters.variables }}
 
   steps:
   - checkout: self
