@@ -27,7 +27,8 @@
     </ResolveReferencesDependsOn>
 
     <TestDependsOn>
-      Build
+      Build;
+      ValidateTargetQueues
     </TestDependsOn>
 
     <CleanDependsOn>
@@ -47,6 +48,10 @@
   <ItemGroup>
     <HelixTargetQueue Include="$(HelixTargetQueues)" />
   </ItemGroup>
+
+  <Target Name="ValidateTargetQueues">
+    <Error Condition="'$(HelixTargetQueues)' == ''" Text="You must specify at least one target queue to send a job to helix. Use HelixTargetQueues property for multiple or HelixTargetQueue for a single queue." />
+  </Target>
 
   <Target Name="Test"
           DependsOnTargets="$(TestDependsOn)">
