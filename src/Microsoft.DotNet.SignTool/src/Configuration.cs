@@ -208,7 +208,7 @@ namespace Microsoft.DotNet.SignTool
                 return new FileSignInfo(fullPath, hash, signInfo, (targetFramework != "") ? targetFramework : null);
             }
 
-            if (SignToolConstants.SignableExtensions.Contains(extension))
+            if (SignToolConstants.SignableExtensions.Contains(extension) || SignToolConstants.SignableOSXExtensions.Contains(extension))
             {
                 _log.LogError($"Couldn't determine certificate name for signable file: {fullPath}");
             }

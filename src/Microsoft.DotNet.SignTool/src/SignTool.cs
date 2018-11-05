@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.Build.Framework;
 
@@ -31,13 +32,60 @@ namespace Microsoft.DotNet.SignTool
         public bool Sign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> filesToSign)
         {
             var signingDir = Path.Combine(_args.TempDir, "Signing");
-            var buildFilePath = Path.Combine(signingDir, $"Round{round}.proj");
-            var content = GenerateBuildFileContent(filesToSign);
+            var nonOSXFilesToSign = filesToSign.Where(fsi => !SignToolConstants.SignableOSXExtensions.Contains(Path.GetExtension(fsi.FileName)));
+            var osxFilesToSign = filesToSign.Where(fsi => SignToolConstants.SignableOSXExtensions.Contains(Path.GetExtension(fsi.FileName)));
+
+            var nonOSXSigningStatus = true;
+            var osxSigningStatus = true;
 
             Directory.CreateDirectory(signingDir);
-            File.WriteAllText(buildFilePath, content);
 
-            return RunMSBuild(buildEngine, buildFilePath, round);
+            if (nonOSXFilesToSign.Any())
+            {
+                var nonOSXBuildFilePath = Path.Combine(signingDir, $"Round{round}.proj");
+                var nonOSXProjContent = GenerateBuildFileContent(filesToSign);
+
+                File.WriteAllText(nonOSXBuildFilePath, nonOSXProjContent);
+                nonOSXSigningStatus = RunMSBuild(buildEngine, nonOSXBuildFilePath, round);
+            }
+
+            if (osxFilesToSign.Any())
+            {
+                // The OSX signing target requires all files to be in the same folder.
+                // Also all files on the folder will be signed using the same certificate.
+                // Therefore below we group the files to be signed by certificate.
+                var filesGroupedByCertificate = osxFilesToSign.GroupBy(fsi => fsi.SignInfo.Certificate);
+
+                var osxFilesZippingDir = Path.Combine(_args.TempDir, "OSXFilesZippingDir");
+
+                Directory.CreateDirectory(osxFilesZippingDir);
+
+                foreach (var osxFileGroup in filesGroupedByCertificate)
+                {
+                    var certificate = osxFileGroup.Key;
+                    var osxBuildFilePath = Path.Combine(signingDir, $"Round{round}-OSX-Cert{certificate}.proj");
+                    var osxProjContent = GenerateOSXBuildFileContent(osxFilesZippingDir, certificate);
+
+                    File.WriteAllText(osxBuildFilePath, osxProjContent);
+
+                    foreach (var item in osxFileGroup)
+                    {
+                        File.Copy(item.FullPath, Path.Combine(osxFilesZippingDir, item.FileName), overwrite: true);
+                    }
+
+                    osxSigningStatus = RunMSBuild(buildEngine, osxBuildFilePath, round);
+
+                    if (osxSigningStatus)
+                    {
+                        foreach (var item in osxFileGroup)
+                        {
+                            File.Copy(Path.Combine(osxFilesZippingDir, item.FileName), item.FullPath, overwrite: true);
+                        }
+                    }
+                }
+            }
+
+            return nonOSXSigningStatus && osxSigningStatus;
         }
 
         private string GenerateBuildFileContent(IEnumerable<FileSignInfo> filesToSign)
@@ -74,6 +122,29 @@ namespace Microsoft.DotNet.SignTool
             // The MicroBuild targets hook AfterBuild to do the signing hence we just make it our no-op default target
             AppendLine(builder, depth: 1, text: @"<Target Name=""AfterBuild"">");
             AppendLine(builder, depth: 2, text: @"<Message Text=""Running actual signing process"" />");
+            AppendLine(builder, depth: 1, text: @"</Target>");
+
+            AppendLine(builder, depth: 1, text: $@"<Import Project=""{Path.Combine(MicroBuildCorePath, "build", "MicroBuild.Core.targets")}"" />");
+            AppendLine(builder, depth: 0, text: @"</Project>");
+
+            return builder.ToString();
+        }
+
+        private string GenerateOSXBuildFileContent(string fullPathOSXFilesFolder, string osxCertificateName)
+        {
+            var builder = new StringBuilder();
+            AppendLine(builder, depth: 0, text: @"<?xml version=""1.0"" encoding=""utf-8""?>");
+            AppendLine(builder, depth: 0, text: @"<Project DefaultTargets=""SignMACFilesPlease"">");
+
+            AppendLine(builder, depth: 1, text: $@"<Import Project=""{Path.Combine(MicroBuildCorePath, "build", "MicroBuild.Core.props")}"" />");
+
+            AppendLine(builder, depth: 1, text: $@"<PropertyGroup>");
+            AppendLine(builder, depth: 2, text: $@"<MACFilesTarget>{fullPathOSXFilesFolder}</MACFilesTarget>");
+            AppendLine(builder, depth: 2, text: $@"<MACFilesCert>{osxCertificateName}</MACFilesCert>");
+            AppendLine(builder, depth: 1, text: $@"</PropertyGroup>");
+
+            AppendLine(builder, depth: 1, text: @"<Target Name=""SignMACFilesPlease"" DependsOnTargets=""SignMacFiles"">");
+            AppendLine(builder, depth: 2, text: @"<Message Text=""MAC files signed."" Importance=""High"" />");
             AppendLine(builder, depth: 1, text: @"</Target>");
 
             AppendLine(builder, depth: 1, text: $@"<Import Project=""{Path.Combine(MicroBuildCorePath, "build", "MicroBuild.Core.targets")}"" />");
