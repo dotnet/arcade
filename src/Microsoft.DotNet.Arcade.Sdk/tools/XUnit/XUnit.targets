@@ -33,7 +33,7 @@
   -->
   <Target Name="RunTests"
           Inputs="@(TestToRun);*"
-          Outputs="%(TestToRun.LogPath);%(TestToRun.ResultsXmlPath);%(TestToRun.ResultsHtmlPath)">
+          Outputs="%(TestToRun.ResultsStdOutPath);%(TestToRun.ResultsXmlPath);%(TestToRun.ResultsHtmlPath)">
 
     <PropertyGroup>
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
@@ -77,7 +77,7 @@
     <ItemGroup>
       <_OutputFiles Include="%(TestToRun.ResultsXmlPath)" />
       <_OutputFiles Include="%(TestToRun.ResultsHtmlPath)" />
-      <_OutputFiles Include="%(TestToRun.ResultsLogPath)" />
+      <_OutputFiles Include="%(TestToRun.ResultsStdOutPath)" />
     </ItemGroup>
 
     <MakeDir Directories="@(_OutputFiles->'%(RootDir)%(Directory)')"/>
