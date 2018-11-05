@@ -46,6 +46,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
         public bool OmitGetResourceString { get; set; }
 
         /// <summary>
+        /// If set to true, emits constant key strings instead of properties that retrieve values.
+        /// </summary>
+        /// <remarks>
+        /// This support can be removed when the following issue has been resolved:
+        ///     <see href="https://github.com/dotnet/wpf/issues/1">Use nameof(SRID.PropertyName) syntax instead of depending on GenerateResxSource.GenerateResourcesCodeAsConstants</see>
+        /// </remarks>
+        public bool AsConstants { get; set; }
+
+        /// <summary>
         /// If set to true calls to GetResourceString receive a default resource string value.
         /// </summary>
         public bool IncludeDefaultValues { get; set; }
@@ -158,13 +167,34 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 switch (language)
                 {
                     case Lang.CSharp:
-                        strings.AppendLine($"{memberIndent}internal static string {identifier} => GetResourceString(\"{name}\"{defaultValue});");
+                        if (AsConstants)
+                        {
+                            strings.AppendLine($"{memberIndent}internal const string {name} = nameof({name});");
+                        }
+                        else
+                        {
+                            strings.AppendLine($"{memberIndent}internal static string {identifier} => GetResourceString(\"{name}\"{defaultValue});");
+                        }
                         break;
 
                     case Lang.VisualBasic:
-                        strings.AppendLine($"{memberIndent}Friend Shared ReadOnly Property {identifier} As String");
+                        if (AsConstants)
+                        {
+                            strings.AppendLine($"{memberIndent}Friend Shared ReadOnly Property {name} As String");
+                        }
+                        else
+                        {
+                            strings.AppendLine($"{memberIndent}Friend Shared ReadOnly Property {identifier} As String");
+                        }
                         strings.AppendLine($"{memberIndent}  Get");
-                        strings.AppendLine($"{memberIndent}    Return GetResourceString(\"{name}\"{defaultValue})");
+                        if (AsConstants)
+                        {
+                            strings.AppendLine($"{memberIndent}    Return \"{name}\"");
+                        }
+                        else
+                        {
+                            strings.AppendLine($"{memberIndent}    Return GetResourceString(\"{name}\"{defaultValue})");
+                        }
                         strings.AppendLine($"{memberIndent}  End Get");
                         strings.AppendLine($"{memberIndent}End Property");
                         break;
