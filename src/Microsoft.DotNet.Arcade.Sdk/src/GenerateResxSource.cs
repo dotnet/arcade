@@ -48,10 +48,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
         /// <summary>
         /// If set to true, emits constant key strings instead of properties that retrieve values.
         /// </summary>
-        /// <remarks>
-        /// This support can be removed when the following issue has been resolved:
-        ///     <see href="https://github.com/dotnet/wpf/issues/1">Use nameof(SRID.PropertyName) syntax instead of depending on GenerateResxSource.GenerateResourcesCodeAsConstants</see>
-        /// </remarks>
         public bool AsConstants { get; set; }
 
         /// <summary>
@@ -180,23 +176,17 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     case Lang.VisualBasic:
                         if (AsConstants)
                         {
-                            strings.AppendLine($"{memberIndent}Friend Shared ReadOnly Property {name} As String");
+                            strings.AppendLine($"{memberIndent}Friend Const {name} As String = \"{name}\"");
                         }
                         else
                         {
                             strings.AppendLine($"{memberIndent}Friend Shared ReadOnly Property {identifier} As String");
-                        }
-                        strings.AppendLine($"{memberIndent}  Get");
-                        if (AsConstants)
-                        {
-                            strings.AppendLine($"{memberIndent}    Return \"{name}\"");
-                        }
-                        else
-                        {
+                            strings.AppendLine($"{memberIndent}  Get");
                             strings.AppendLine($"{memberIndent}    Return GetResourceString(\"{name}\"{defaultValue})");
+                            strings.AppendLine($"{memberIndent}  End Get");
+                            strings.AppendLine($"{memberIndent}End Property");
                         }
-                        strings.AppendLine($"{memberIndent}  End Get");
-                        strings.AppendLine($"{memberIndent}End Property");
+                        
                         break;
 
                     default:
