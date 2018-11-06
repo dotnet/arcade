@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.SignTool
 
         public abstract bool VerifySignedPEFile(Stream stream);
 
-        public abstract bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round);
+        public abstract bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath);
 
         public bool Sign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> filesToSign)
         {
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.SignTool
                 var nonOSXProjContent = GenerateBuildFileContent(filesToSign);
 
                 File.WriteAllText(nonOSXBuildFilePath, nonOSXProjContent);
-                nonOSXSigningStatus = RunMSBuild(buildEngine, nonOSXBuildFilePath, round);
+                nonOSXSigningStatus = RunMSBuild(buildEngine, nonOSXBuildFilePath, Path.Combine(_args.LogDir, $"Signing{round}.binlog"));
             }
 
             if (osxFilesToSign.Any())
@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.SignTool
                         File.Copy(item.FullPath, Path.Combine(osxFilesZippingDir, item.FileName), overwrite: true);
                     }
 
-                    osxSigningStatus = RunMSBuild(buildEngine, osxBuildFilePath, round);
+                    osxSigningStatus = RunMSBuild(buildEngine, osxBuildFilePath, Path.Combine(_args.LogDir, $"Signing{round}-OSX.binlog"));
 
                     if (osxSigningStatus)
                     {
@@ -141,10 +141,11 @@ namespace Microsoft.DotNet.SignTool
             AppendLine(builder, depth: 1, text: $@"<PropertyGroup>");
             AppendLine(builder, depth: 2, text: $@"<MACFilesTarget>{fullPathOSXFilesFolder}</MACFilesTarget>");
             AppendLine(builder, depth: 2, text: $@"<MACFilesCert>{osxCertificateName}</MACFilesCert>");
+            AppendLine(builder, depth: 2, text: $@"<MACFilesRealSigning>{!_args.TestSign}</MACFilesRealSigning>");
             AppendLine(builder, depth: 1, text: $@"</PropertyGroup>");
 
             AppendLine(builder, depth: 1, text: @"<Target Name=""SignMACFilesPlease"" DependsOnTargets=""SignMacFiles"">");
-            AppendLine(builder, depth: 2, text: @"<Message Text=""MAC files signed."" Importance=""High"" />");
+            AppendLine(builder, depth: 2, text: @"<Message Text=""MAC files signed."" />");
             AppendLine(builder, depth: 1, text: @"</Target>");
 
             AppendLine(builder, depth: 1, text: $@"<Import Project=""{Path.Combine(MicroBuildCorePath, "build", "MicroBuild.Core.targets")}"" />");

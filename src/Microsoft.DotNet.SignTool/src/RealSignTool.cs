@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.SignTool
             _logDir = args.LogDir;
         }
 
-        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round)
+        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath)
         {
             if (_msbuildPath == null)
             {
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.SignTool
             var process = Process.Start(new ProcessStartInfo()
             {
                 FileName = _msbuildPath,
-                Arguments = $@"""{projectFilePath}"" /bl:""{Path.Combine(_logDir, $"Signing{round}.binlog")}""",
+                Arguments = $@"""{projectFilePath}"" /bl:""{binLogPath}""",
                 UseShellExecute = false,
                 WorkingDirectory = TempDir,
             });

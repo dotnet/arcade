@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.SignTool
                    ByteSequenceComparer.Equals(buffer, _stamp);
         }
 
-        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round)
+        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath)
             => buildEngine.BuildProjectFile(projectFilePath, null, null, null);
 
         internal static void SignFile(string path)
