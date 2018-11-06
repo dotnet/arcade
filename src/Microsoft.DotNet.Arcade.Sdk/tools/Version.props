@@ -4,21 +4,21 @@
 
   <!--
     Specification: https://github.com/dotnet/arcade/blob/master/Documentation/Versioning.md
-    
+
     Properties:
       SemanticVersioningV1  "true" if the Version needs to respect SemVer 1.0. Default is false, which means format following SemVer 2.0.
-      
+
     Global settings:
-      DotNetUseShippingVersions   
+      DotNetUseShippingVersions
         - "true" to produce shipping versions in non-official builds, instead of default fixed dummy version number (42.42.42.42).
         - A builds target that produces MSI shall fail if DotNetUseShippingVersions == false, since MSIs require increasing file versions to function properly.
   -->
-    
+
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
-  <!-- 
+  <!--
     The project can specify version either directly using the .NET SDK recognized property VersionPrefix,
     or using MajorVersion and MinorVersion properties.
   -->
@@ -30,8 +30,8 @@
     <When Condition="'$(OfficialBuild)' == 'true' or '$(DotNetUseShippingVersions)' == 'true'">
       <PropertyGroup>
         <!--
-          Building MSIs from dev build requires file versions to be increasing. 
-          Use the current date in non-official builds. Note that this reduces the deterministic properties of the build 
+          Building MSIs from dev build requires file versions to be increasing.
+          Use the current date in non-official builds. Note that this reduces the deterministic properties of the build
           and should only be enabled when it's necessary to test-install the MSIs produced by the build.
         -->
         <_BuildNumber>$(OfficialBuildId)</_BuildNumber>
@@ -71,14 +71,14 @@
         <_BuildNumberSuffix/>
 
         <!--
-          Don't include a commit SHA to AssemblyInformationalVersion. 
+          Don't include a commit SHA to AssemblyInformationalVersion.
           It would reduce the possibility of sharing otherwise unchanged build artifacts across deterministic builds.
         -->
         <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
       </PropertyGroup>
     </Otherwise>
   </Choose>
-  
+
   <PropertyGroup>
     <_PreReleaseLabel>$(PreReleaseVersionLabel)</_PreReleaseLabel>
     <_PreReleaseLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">ci</_PreReleaseLabel>
@@ -94,8 +94,14 @@
     <VersionSuffix Condition="'$(DotNetFinalVersionKind)' == 'prerelease' and '$(SemanticVersioningV1)' != 'true'">$(_PreReleaseLabel).final</VersionSuffix>
     <VersionSuffix Condition="'$(DotNetFinalVersionKind)' == 'prerelease' and '$(SemanticVersioningV1)' == 'true'">$(_PreReleaseLabel)-final</VersionSuffix>
     <VersionSuffix Condition="'$(DotNetFinalVersionKind)' == ''">$(_PreReleaseLabel)$(_BuildNumberSuffix)</VersionSuffix>
-    
-    <!-- 
+
+    <!--
+      Some projects want to remain producing prerelease packages even if we are doing a final stable build because
+      they don't ship or aren't ready to ship stable. Those projects can set BlockStable property to true.
+    -->
+    <VersionSuffix Condition="'$(BlockStable)' == 'true'">$(_PreReleaseLabel)$(_BuildNumberSuffix)</VersionSuffix>
+
+    <!--
       Disable NuGet Pack warning that the version is SemVer 2.0.
       SemVer 2.0 is supported by NuGet since 3.0.0 (July 2015) in some capacity, and fully since 3.5.0 (October 2016).
     -->

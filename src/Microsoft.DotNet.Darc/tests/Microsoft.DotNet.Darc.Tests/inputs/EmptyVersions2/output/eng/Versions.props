@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--Package versions-->
+  <PropertyGroup>
+    <FooBarPackageVersion>1.2.3</FooBarPackageVersion>
+  </PropertyGroup>
+  <!--Package names-->
+  <PropertyGroup>
+    <FooBarPackage>Foo.Bar</FooBarPackage>
+  </PropertyGroup>
+</Project>

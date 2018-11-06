@@ -49,7 +49,7 @@
     <DeterministicSourcePaths>false</DeterministicSourcePaths>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(IsWpfTempProject)' == 'true' and '$(TargetFrameworkIdentifier)' == '.NETFramework'">
+  <PropertyGroup Condition="'$(IsWpfTempProject)' == 'true' and '$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(UsingToolNetFrameworkReferenceAssemblies)' == 'true'">
     <TargetFrameworkRootPath>$(NuGetPackageRoot)microsoft.netframework.referenceassemblies.$(TargetFramework)\$(MicrosoftNetFrameworkReferenceAssembliesVersion)\build</TargetFrameworkRootPath>
     <EnableFrameworkPathOverride>false</EnableFrameworkPathOverride>
     <NoStdLib>true</NoStdLib>

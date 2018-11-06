@@ -18,8 +18,8 @@ namespace Microsoft.DotNet.Darc.Operations
     /// </summary>
     internal class GetDefaultChannelsOperation : Operation
     {
-        GetDefaultChannelCommandLineOptions _options;
-        public GetDefaultChannelsOperation(GetDefaultChannelCommandLineOptions options)
+        GetDefaultChannelsCommandLineOptions _options;
+        public GetDefaultChannelsOperation(GetDefaultChannelsCommandLineOptions options)
             : base(options)
         {
             _options = options;
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Darc.Operations
         {
             try
             {
-                DarcSettings darcSettings = LocalCommands.GetSettings(_options, Logger);
+                DarcSettings darcSettings = LocalSettings.GetDarcSettings(_options, Logger);
                 // No need to set up a git type or PAT here.
                 Remote remote = new Remote(darcSettings, Logger);
 

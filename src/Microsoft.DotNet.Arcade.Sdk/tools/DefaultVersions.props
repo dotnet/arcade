@@ -35,12 +35,13 @@
     <UsingToolPdbConverter Condition="'$(UsingToolPdbConverter)' == ''">true</UsingToolPdbConverter>
 
     <!--
-      Always use compilers from the package on CI build, to get consistent results.
+      Use compilers from the package on CI build, to get consistent results.
       Locally we want to dogfood the compilers that come with the dotnet SDK or msbuild used to build the repo.
       The local compilers are also precompiled and thus faster.
-      Repo can set this property to true for local builds if it needs to use newer compiler than the one in the dotnet SDK.
+      Repo can set this property to true for local builds if it needs to use a different compiler than the one in the dotnet SDK.
+      Repo can set this property to false for CI builds to use the compiler version from the SDK.
     -->
-    <UsingToolMicrosoftNetCompilers Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</UsingToolMicrosoftNetCompilers>
+    <UsingToolMicrosoftNetCompilers Condition="'$(UsingToolMicrosoftNetCompilers)' == ''and '$(ContinuousIntegrationBuild)' == 'true'">true</UsingToolMicrosoftNetCompilers>
 
     <!-- Opt-in features -->
     <UsingToolVSSDK Condition="'$(UsingToolVSSDK)' == ''">false</UsingToolVSSDK>
@@ -68,7 +69,7 @@
     <XUnitRunnerConsoleVersion Condition="'$(XUnitRunnerConsoleVersion)' == ''">$(XUnitVersion)</XUnitRunnerConsoleVersion>
     <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">$(XUnitVersion)</XUnitRunnerVisualStudioVersion>
     <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">2.2.0-beta.18475.5</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftSourceLinkVersion Condition="'$(MicrosoftSourceLinkVersion)' == ''">1.0.0-beta-63201-01</MicrosoftSourceLinkVersion>
+    <MicrosoftSourceLinkVersion Condition="'$(MicrosoftSourceLinkVersion)' == ''">1.0.0-beta-63401-01</MicrosoftSourceLinkVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion Condition="'$(MicrosoftSymbolUploaderBuildTaskVersion)' == ''">1.0.0-beta-63008-01</MicrosoftSymbolUploaderBuildTaskVersion>
     <VSWhereVersion Condition="'$(VSWhereVersion)' == ''">2.5.2</VSWhereVersion>
     <MicrosoftDotNetMaestroTasksVersion Condition="'$(MicrosoftDotNetMaestroTasksVersion)' == ''">1.0.0-beta.18478.2</MicrosoftDotNetMaestroTasksVersion>

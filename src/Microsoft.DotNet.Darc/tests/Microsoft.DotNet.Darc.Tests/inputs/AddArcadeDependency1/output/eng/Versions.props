@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!--Package versions-->
+  <PropertyGroup>
+    <FooBarPackageVersion>0.0.0</FooBarPackageVersion>
+  </PropertyGroup>
+  <!--Package names-->
+  <PropertyGroup>
+    <FooBarPackage>Foo.bar</FooBarPackage>
+  </PropertyGroup>
+</Project>

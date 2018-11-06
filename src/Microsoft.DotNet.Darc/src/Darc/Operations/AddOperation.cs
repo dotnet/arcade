@@ -5,6 +5,7 @@
 using Microsoft.DotNet.Darc.Helpers;
 using Microsoft.DotNet.Darc.Options;
 using Microsoft.DotNet.DarcLib;
+using Microsoft.DotNet.DarcLib.Helpers;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -24,7 +25,7 @@ namespace Microsoft.DotNet.Darc.Operations
         {
             DependencyType type = _options.Type.ToLower() == "toolset" ? DependencyType.Toolset : DependencyType.Product;
 
-            Local local = new Local(LocalCommands.GetGitDir(Logger), Logger);
+            Local local = new Local(LocalHelpers.GetGitDir(Logger), Logger);
 
             DependencyDetail dependency = new DependencyDetail
             {
@@ -36,7 +37,7 @@ namespace Microsoft.DotNet.Darc.Operations
 
             try
             {
-                await local.AddDependenciesAsync(dependency, type);
+                await local.AddDependencyAsync(dependency, type);
                 return Constants.SuccessCode;
             }
             catch (Exception exc)

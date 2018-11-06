@@ -9,11 +9,6 @@
   <PropertyGroup>
     <PackageVersion Condition="'$(StableVersion)' != ''">$(StableVersion)</PackageVersion>
     <PackageVersion Condition="'$(PackageVersion)' == '' AND '$(Version)' != ''">$(Version)</PackageVersion>
-    <PreReleaseLabel Condition="'$(PreReleaseLabel)' == ''">rc2</PreReleaseLabel>
-    <IncludeBuildNumberInPackageVersion Condition="'$(IncludeBuildNumberInPackageVersion)' == ''">true</IncludeBuildNumberInPackageVersion>
-
-    <VersionSuffix Condition="'$(PreReleaseLabel)' != ''">-$(PreReleaseLabel)</VersionSuffix>
-    <VersionSuffix Condition="'$(IncludeBuildNumberInPackageVersion)' == 'true'">$(VersionSuffix)-$(BuildNumberMajor)-$(BuildNumberMinor)</VersionSuffix>
 
     <!--
       Empty out the project properties because we want configuration and platform to come from the individual
@@ -34,15 +29,6 @@
     <IdPrefix>runtime.</IdPrefix>
     <IdPrefix Condition="'$(PackageTargetRuntime)' != ''">$(IdPrefix)$(PackageTargetRuntime).</IdPrefix>
     <IdPrefix Condition="'$(PackageTargetFramework)' != ''">$(IdPrefix)$(PackageTargetFramework).</IdPrefix>
-  </PropertyGroup>
-   
-  <!-- If Signing is enabled, we'll always want to write *.nupkg_requires_signing files --> 
-  <UsingTask AssemblyFile="$(BuildToolsTaskDir)Microsoft.DotNet.Build.Tasks.dll" TaskName="WriteSigningRequired" />
-  <PropertyGroup>
-    <ShouldWritePkgSigningRequired Condition="'$(SkipSigning)' == 'true'">false</ShouldWritePkgSigningRequired>
-    <ShouldWritePkgSigningRequired Condition="'$(SignType)' == 'public' or '$(SignType)' == 'oss'">false</ShouldWritePkgSigningRequired>
-    <ShouldWritePkgSigningRequired Condition="'$(ShouldWritePkgSigningRequired)'==''">true</ShouldWritePkgSigningRequired>
-    <NuPkgAuthenticodeSig          Condition="'$(ShouldWritePkgSigningRequired)'=='true'">Microsoft</NuPkgAuthenticodeSig>    
   </PropertyGroup>
 
   <!--
@@ -76,7 +62,7 @@
 
   <!-- Shared properties -->
   <PropertyGroup>
-    <SymbolPackageOutputPath Condition="'$(SymbolPackageOutputPath)' == ''">$(BaseOutputPath)symbolpkg/</SymbolPackageOutputPath>
+    <SymbolPackageOutputPath Condition="'$(SymbolPackageOutputPath)' == ''">$(PackageOutputPath)symbols/</SymbolPackageOutputPath>
     <OutputPath>$(PackageOutputPath)</OutputPath>
     <NuSpecOutputPath Condition="'$(NuSpecOutputPath)' == ''">$(PackageOutputPath)specs/</NuSpecOutputPath>
     <NuSpecPath>$(NuSpecOutputPath)$(Id)$(NuspecSuffix).nuspec</NuSpecPath>
@@ -94,7 +80,7 @@
     <PlatformPackageVersion Condition="'$(PlatformPackageVersion)' == ''">1.0.1</PlatformPackageVersion>
   </PropertyGroup>
 
-  
+
   <!-- Determine if we actually need to build for this architecture -->
   <!-- Packages can specifically control their architecture by specifying the PackagePlatforms
        property as a semi-colon delimited list.
@@ -398,8 +384,8 @@
     </ItemGroup>
 
     <!-- Calculate the package version to harvest -->
-    <GetLastStablePackage Condition="'$(HarvestVersion)' == ''" 
-                          LatestPackages="@(_latestPackage)" 
+    <GetLastStablePackage Condition="'$(HarvestVersion)' == ''"
+                          LatestPackages="@(_latestPackage)"
                           StablePackages="@(StablePackage)"
                           PackageIndexes="@(PackageIndex)">
       <Output  TaskParameter="LastStablePackages" ItemName="_lastStablePackage"/>
@@ -410,20 +396,20 @@
     </PropertyGroup>
 
     <!-- Calculate the runtime package versions to use for applicability evaluation -->
-    <GetLastStablePackage Condition="'@(HarvestRuntimePackages)' == ''" 
-                          LatestPackages="@(_latestRuntimePackages)" 
+    <GetLastStablePackage Condition="'@(HarvestRuntimePackages)' == ''"
+                          LatestPackages="@(_latestRuntimePackages)"
                           StablePackages="@(StablePackage)"
                           PackageIndexes="@(PackageIndex)">
       <Output  TaskParameter="LastStablePackages" ItemName="HarvestRuntimePackages"/>
     </GetLastStablePackage>
 
-    <GetLastStablePackage Condition="'@(HarvestAdditionalPackageIds)' != ''" 
-                          LatestPackages="@(HarvestAdditionalPackageIds)" 
+    <GetLastStablePackage Condition="'@(HarvestAdditionalPackageIds)' != ''"
+                          LatestPackages="@(HarvestAdditionalPackageIds)"
                           StablePackages="@(StablePackage)"
                           PackageIndexes="@(PackageIndex)">
       <Output  TaskParameter="LastStablePackages" ItemName="HarvestAdditionalPackages"/>
     </GetLastStablePackage>
-    
+
     <PropertyGroup>
       <HarvestFiles Condition="'$(HarvestFiles)' == ''">true</HarvestFiles>
     </PropertyGroup>
@@ -436,7 +422,7 @@
                     PackageVersion="$(HarvestVersion)"
                     PackagesFolder="$(PackagesDir)"
                     Files="@(File)"
-                    RuntimeFile="$(RuntimeIdGraphDefinitionFile)" 
+                    RuntimeFile="$(RuntimeIdGraphDefinitionFile)"
                     RuntimePackages="@(HarvestRuntimePackages);@(HarvestAdditionalPackages)"
                     IncludeAllPaths="$(HarvestIncludeAllPaths)"
                     HarvestAssets="$(HarvestFiles)"
@@ -469,7 +455,7 @@
                     Condition="'@(HarvestAdditionalPackages)' != ''" >
       <Output TaskParameter="HarvestedFiles" ItemName="File"/>
     </HarvestPackage>
-    
+
     <ItemGroup>
       <SupportedFramework Include="@(_HarvestedSupportedFramework)" Exclude="@(NotSupportedOnTargetFramework)" />
     </ItemGroup>
@@ -584,13 +570,13 @@
     <PropertyGroup>
       <_TargetFramework>%(File.TargetFramework)</_TargetFramework>
     </PropertyGroup>
-    
+
     <ItemGroup>
       <_harvestFile Include="@(File)" Condition="'%(File.HarvestDependencies)' == 'true' and '%(File.Extension)' == '.dll'" />
       <_missingHarvestFile Include="@(_harvestFile)" Condition="!Exists('%(FullPath)')" />
       <_harvestFile Remove="@(_missingHarvestFile)" Condition="'$(AllowPartialPackages)' == 'true'" />
 
-      <!-- add a fake dependency to represent the dependencies of any missing file 
+      <!-- add a fake dependency to represent the dependencies of any missing file
            this will prevent the package from installing on that platform. -->
       <FilePackageDependency Include="Unavailable" Condition="'$(AllowPartialPackages)' == 'true' AND '@(_missingHarvestFile)' != '' AND '$(_TargetFramework)' != ''">
         <TargetFramework>$(_TargetFramework)</TargetFramework>
@@ -612,14 +598,14 @@
       <Output TaskParameter="FrameworkReferences" ItemName="_FileFrameworkReference"/>
       <Output TaskParameter="PackageReferences" ItemName="_FilePackageReferenceUnfiltered"/>
     </SplitReferences>
-    
+
     <FilterUnknownPackages Condition="'@(_FilePackageReferenceUnfiltered)' != ''"
                            OriginalDependencies="@(_FilePackageReferenceUnfiltered)"
                            BaseLinePackages="@(BaseLinePackage)"
                            PackageIndexes="@(PackageIndex)">
       <Output TaskParameter="FilteredDependencies" ItemName="_FilePackageReference" />
     </FilterUnknownPackages>
-                           
+
 
     <ItemGroup Condition="'@(_FilePackageReference)' != ''">
       <_FilePackageReference Remove="corefx;mscorlib;System;System.Core;System.Xml;Windows" />
@@ -648,7 +634,7 @@
   </Target>
 
   <Target Name="GetNuGetPackageDependencies"
-          DependsOnTargets="CreateVersionFileDuringBuild;GetFilePackageReferences;DetermineRuntimeDependencies">
+          DependsOnTargets="GetFilePackageReferences;DetermineRuntimeDependencies">
     <PropertyGroup>
       <!-- determine if we have any reference assets in the package (files in the ref folder) -->
       <_containsReferenceAsset Condition="'%(File.IsReferenceAsset)' == 'true'">true</_containsReferenceAsset>
@@ -732,14 +718,15 @@
       <Output TaskParameter="BaseLinedDependencies" ItemName="_BaseLinedDependencies" />
     </ApplyBaseLine>
 
-
-    <Error Condition="'@(_BaseLinedDependencies)' != '' AND '@(PackageIndex)' == '' AND '@(StablePackage)' == ''" 
+    <Error Text="No VersionSuffix was set. Ensure it is set before targets in packaging are ran."
+           Condition="'$(VersionSuffix)' == ''" />
+    <Error Condition="'@(_BaseLinedDependencies)' != '' AND '@(PackageIndex)' == '' AND '@(StablePackage)' == ''"
            Text="Neither PackageIndex nor StablePackage items are defined: ensure you have imported Microsoft.Private.PackageBaseLine.props from the Microsoft.Private.PackageBaseLine package" />
-    <ApplyPreReleaseSuffix Condition="'@(_BaseLinedDependencies)' != ''" 
-                           OriginalPackages="@(_BaseLinedDependencies)" 
+    <ApplyPreReleaseSuffix Condition="'@(_BaseLinedDependencies)' != ''"
+                           OriginalPackages="@(_BaseLinedDependencies)"
                            StablePackages="@(StablePackage)"
                            PackageIndexes="@(PackageIndex)"
-                           PreReleaseSuffix="$(VersionSuffix)">
+                           PreReleaseSuffix="-$(VersionSuffix)">
       <Output TaskParameter="UpdatedPackages" ItemName="Dependency"/>
     </ApplyPreReleaseSuffix>
   </Target>
@@ -775,7 +762,7 @@
                                  RuntimeJsonTemplate="$(RuntimeFileSource)"
                                  RuntimeJson="$(RuntimeFilePath)"
                                  />
-    
+
     <ItemGroup Condition="'$(CreatePackedPackage)' == 'true'">
       <PackedPackageRuntimeDependency Include="@(RuntimeDependency->'$(PackedPackageNamePrefix).%(Identity)')">
         <TargetPackage>$(PackedPackageNamePrefix).%(TargetPackage)</TargetPackage>
@@ -821,7 +808,10 @@
 
   <!-- Calculates the package version including any prerelease suffix -->
   <Target Name="CalculatePackageVersion"
-        DependsOnTargets="CreateVersionFileDuringBuild;GetAssemblyVersionFromProjects">
+        DependsOnTargets="GetAssemblyVersionFromProjects">
+
+    <Error Text="No VersionSuffix was set. Ensure it is set before targets in packaging are ran."
+           Condition="'$(VersionSuffix)' == ''" />
 
     <Error Text="No version could be detected.  Either specify the Version property or provide at least one managed assembly."
            Condition="'$(PackageVersion)' == '' AND '$(_AssemblyVersion)' == ''" />
@@ -834,10 +824,10 @@
     </ItemGroup>
 
     <ApplyPreReleaseSuffix Condition="'$(StableVersion)' == ''"
-                           OriginalPackages="@(_thisPackage)" 
+                           OriginalPackages="@(_thisPackage)"
                            StablePackages="@(StablePackage)"
                            PackageIndexes="@(PackageIndex)"
-                           PreReleaseSuffix="$(VersionSuffix)" >
+                           PreReleaseSuffix="-$(VersionSuffix)" >
       <Output TaskParameter="UpdatedPackages" ItemName="_thisPackageFinal"/>
     </ApplyPreReleaseSuffix>
 
@@ -1085,7 +1075,7 @@
                     Condition="'%(PackageFile.IsSourceCodeFile)'!='true'" />
     </ItemGroup>
   </Target>
-  
+
   <Target Name="GetPackageReport"
           DependsOnTargets="GetPackageAssets"
           Returns="$(PackageReportPath)">
@@ -1158,7 +1148,7 @@
                               ReportFile="$(PackageReportPath)"
                               Suppressions="@(ValidatePackageSuppression)" />
   </Target>
-  
+
   <Target Name="ValidatePackage"
           DependsOnTargets="ValidateLibraryPackage;ValidateFrameworkPackage"
           Condition="'$(SkipValidatePackage)' != 'true'" />
@@ -1262,18 +1252,6 @@
                       File="$(NuSpecPath).pkgpath"
                       Overwrite="true"
                       Condition="'$(_SkipCreatePackage)' != 'true'"/>
-                      
-    <WriteSigningRequired Condition="'$(ShouldWritePkgSigningRequired)'=='true'"
-                          AuthenticodeSig="$(NuPkgAuthenticodeSig)"
-                          MarkerFile="$(PackageOutputPath)$(Id).$(PackageVersion).nupkg.requires_nupkg_signing" />
-    <WriteSigningRequired Condition="'$(ShouldWritePkgSigningRequired)'=='true'"
-                          AuthenticodeSig="$(NuPkgAuthenticodeSig)"
-                          MarkerFile="$(SymbolPackageOutputPath)$(Id).$(PackageVersion).nupkg.requires_nupkg_signing" />                          
-    <ItemGroup Condition="'$(ShouldWritePkgSigningRequired)'=='true'">
-      <FileWrites Include="$(SymbolPackageOutputPath)$(Id).$(PackageVersion).nupkg.requires_nupkg_signing"/>
-      <FileWrites Include="$(PackageOutputPath)$(Id).$(PackageVersion).nupkg.requires_nupkg_signing"/>
-    </ItemGroup>                      
-
   </Target>
 
   <!-- Updates the packageIndex with information from the built package for this project -->

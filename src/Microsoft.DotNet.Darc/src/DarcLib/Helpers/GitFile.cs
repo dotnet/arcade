@@ -27,7 +27,14 @@ namespace Microsoft.DotNet.DarcLib
         public GitFile(string filePath, string content, string contentEncoding)
         {
             FilePath = filePath;
+            // TODO: Newline normalization should happen on the writer side,
+            // since the writer knows the local repo/remote repo context.
             Content = content.Replace(Environment.NewLine, "\n");
+            // Ensure it ends in a newline
+            if (!Content.EndsWith("\n"))
+            {
+                Content = $"{Content}\n";
+            }
             ContentEncoding = contentEncoding;
         }
 
@@ -39,10 +46,18 @@ namespace Microsoft.DotNet.DarcLib
 
         public string Mode { get; set; } = "100644";
 
+        public GitFileOperation Operation { get; set; } = GitFileOperation.Add;
+
         private static string GetIndentedXmlBody(XmlDocument xmlDocument)
         {
             XDocument doc = XDocument.Parse(xmlDocument.OuterXml);
             return $"{doc.Declaration}\n{doc}";
         }
+    }
+
+    public enum GitFileOperation
+    {
+        Add,
+        Delete
     }
 }

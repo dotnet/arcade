@@ -42,6 +42,11 @@
 
   <PropertyGroup>
     <EnableXUnitReporter Condition=" '$(EnableXUnitReporter)' != 'true' ">false</EnableXUnitReporter>
+
+    <IncludeDotNetCli Condition=" '$(IncludeDotNetCli)' != 'true' ">false</IncludeDotNetCli>
+    <DotNetCliPackageType Condition=" '$(DotNetCliPackageType)' == '' ">runtime</DotNetCliPackageType>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'runtime' ">2.1.5</DotNetCliVersion>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'sdk' ">2.1.403</DotNetCliVersion>
   </PropertyGroup>
 
   <Choose>
@@ -56,6 +61,55 @@
       </PropertyGroup>
     </Otherwise>
   </Choose>
+
+  <!--
+    Select DotNetCliRuntime based on TargetQueue if it isn't set
+    TODO: Use the Helix Queue Info api to determine this information
+  -->
+  <Choose>
+    <When Condition=" '$(DotNetCliRuntime)' != '' ">
+    </When>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().StartsWith('windows'))">
+      <PropertyGroup>
+        <DotNetCliRuntime>win-x64</DotNetCliRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().StartsWith('osx'))">
+      <PropertyGroup>
+        <DotNetCliRuntime>mac-x64</DotNetCliRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('arm32'))">
+      <PropertyGroup>
+        <DotNetCliRuntime>linux-arm-32</DotNetCliRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('arm64'))">
+      <PropertyGroup>
+        <DotNetCliRuntime>linux-arm-64</DotNetCliRuntime>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <DotNetCliRuntime>linux-x64</DotNetCliRuntime>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+
+  <Target Name="AddDotNetSdk" Condition="$(IncludeDotNetCli)" BeforeTargets="Test">
+    <FindDotNetCliPackage Version="$(DotNetCliVersion)" Runtime="$(DotNetCliRuntime)" PackageType="$(DotNetCliPackageType)">
+      <Output TaskParameter="PackageUri" PropertyName="DotNetCliPackageUri"/>
+    </FindDotNetCliPackage>
+    <ItemGroup>
+      <HelixCorrelationPayload Include="dotnet-cli">
+        <Uri>$(DotNetCliPackageUri)</Uri>
+      </HelixCorrelationPayload>
+    </ItemGroup>
+    <PropertyGroup>
+      <HelixPreCommands Condition="$(IsPosixShell)">$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD:$PATH</HelixPreCommands>
+      <HelixPreCommands Condition="!$(IsPosixShell)">$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%%3B%PATH%</HelixPreCommands> <!-- %3B is an escaped ; -->
+    </PropertyGroup>
+  </Target>
   
   <Target Name="AddXUnitReporter" Condition="$(EnableXUnitReporter)" BeforeTargets="Test">
     <ItemGroup>
@@ -69,6 +123,9 @@
 
   <Target Name="Test"
     DependsOnTargets="$(TestDependsOn)" Returns="@(SentJob)">
+    <PropertyGroup Condition="$(IsPosixShell)">
+      <HelixPreCommands>set -x;$(HelixPreCommands)</HelixPreCommands>
+    </PropertyGroup>
     <SendHelixJob Source="$(HelixSource)"
                   Type="$(HelixType)"
                   Build="$(HelixBuild)"

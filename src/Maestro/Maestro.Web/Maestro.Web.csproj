@@ -53,7 +53,7 @@
     <PackageReference Include="Microsoft.ServiceFabric.Services" Version="3.2.162" />
     <PackageReference Include="Microsoft.VisualStudio.Web.BrowserLink" Version="2.1.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.0" />
-    <PackageReference Include="Octokit" Version="0.31.0" />
+    <PackageReference Include="Octokit" Version="0.32.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using CommandLine;
+using Microsoft.DotNet.Darc.Operations;
 
 namespace Microsoft.DotNet.Darc.Options
 {
@@ -17,5 +18,10 @@ namespace Microsoft.DotNet.Darc.Options
 
         [Option("repo", Required = true, HelpText = "Build of this repo repo on 'branch' will be automatically applied to 'channel'")]
         public string Repository { get; set; }
+
+        public override Operation GetOperation()
+        {
+            return new AddDefaultChannelOperation(this);
+        }
     }
 }

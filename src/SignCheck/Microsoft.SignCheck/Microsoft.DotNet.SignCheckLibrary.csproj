@@ -21,7 +21,6 @@
     <PackageReference Include="NuGet.Versioning" Version="4.7.0" />
     <PackageReference Include="System.IO.Packaging" Version="4.5.0" />
     <PackageReference Include="WiX" Version="3.11.1" />
-    <PackageReference Include="NerdBank.GitVersioning" Version="2.1.17" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Resources.dll" />

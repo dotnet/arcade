@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!-- PInvokeChecker data files-->
+  <PropertyGroup Condition="'$(OSGroup)'=='Windows_NT'">
+    <EnablePinvokeUWPAnalyzer Condition="'$(EnablePinvokeUWPAnalyzer)' == ''">true</EnablePinvokeUWPAnalyzer>
+    <UseUWPPinvokeAnalyzer Condition="'$(UWPCompatible)'=='true' AND '$(EnablePinvokeUWPAnalyzer)' == 'true'">true</UseUWPPinvokeAnalyzer>
+
+    <!-- Just validate for OneCore: default -->
+    <ValidPInvokeMappings Condition="'$(ValidPInvokeMappings)' == '' AND '$(UseUWPPinvokeAnalyzer)' != 'true'">$(MSBuildThisFileDirectory)../content/PinvokeAnalyzer_Win32Apis.txt</ValidPInvokeMappings>
+
+    <!-- Further restrict to API allowed for UWP -->
+    <ValidPInvokeMappings Condition="'$(ValidPInvokeMappings)' == '' AND '$(UseUWPPinvokeAnalyzer)' == 'true'">$(MSBuildThisFileDirectory)../content/PinvokeAnalyzer_Win32UWPApis.txt</ValidPInvokeMappings>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <CodeAnalysisRuleSet Condition="'$(CodeAnalysisRuleSet)' == ''">$(MSBuildThisFileDirectory)../content/Default.ruleset</CodeAnalysisRuleSet>
+    <EnablePInvokeAnalyzer Condition="'$(EnablePInvokeAnalyzer)' == ''">true</EnablePInvokeAnalyzer>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildProjectDirectory)/*.analyzerdata" />
+    <AdditionalFiles Include="$(MSBuildProjectDirectory)/*.analyzerdata.$(Platform)" />
+    <AdditionalFiles Include="$(MSBuildProjectDirectory)/*.analyzerdata.$(TargetGroup)" />
+
+    <!-- Add the necessary valid Pinvoke mapping file -->
+    <AdditionalFiles Condition="'$(ValidPInvokeMappings)' != ''" Include="$(ValidPInvokeMappings)"/>
+
+    <!-- Disable any analyzers that should not run -->
+    <DisabledAnalyzers Condition="'$(IsTestProject)' == 'true' or '$(TargetsUnix)' == 'true' or '$(EnablePInvokeAnalyzer)' != 'true'" Include="PInvokeAnalyzer"/>
+    <DisabledAnalyzers Condition="'$(TargetsWindows)'=='true' and ($(TargetGroup.Contains('net46')) or $(TargetGroup.Contains('net45')))" Include="PInvokeAnalyzer" />
+  </ItemGroup>
+
+  <!-- If we have specified any analyzers that need to be disabled write them into the file -->
+  <Target Name="GenerateAnalyzerConfigFile" BeforeTargets="CoreCompile" Condition="'@(DisabledAnalyzers)'!=''">
+    <!-- Write the file only if it changed -->
+    <ReadLinesFromFile File="$(IntermediateOutputPath)/disabledAnalyzers.config">
+      <Output TaskParameter="Lines" ItemName="_DisabledAnalyzers" />
+    </ReadLinesFromFile>
+
+    <WriteLinesToFile File="$(IntermediateOutputPath)/disabledAnalyzers.config" Lines="@(DisabledAnalyzers)" Overwrite="true" 
+                      Condition="'@(DisabledAnalyzers)' != '@(_DisabledAnalyzers)'"/>
+
+    <ItemGroup>
+      <AdditionalFiles Include="$(IntermediateOutputPath)/disabledAnalyzers.config"/>
+      <FileWrites Include="$(IntermediateOutputPath)/disabledAnalyzers.config"/>
+    </ItemGroup>
+  </Target>
+
+</Project>

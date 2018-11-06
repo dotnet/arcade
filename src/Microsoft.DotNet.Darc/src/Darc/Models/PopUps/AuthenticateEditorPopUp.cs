@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Darc.Models
             try
             {
                 // Load current settings
-                settings = LocalSettings.LoadSettings();
+                settings = LocalSettings.LoadSettingsFile();
             }
             catch (Exception e)
             {
@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.Darc.Models
                 }
             }
 
-            return settings.SaveSettings(_logger);
+            return settings.SaveSettingsFile(_logger);
         }
     }
 }

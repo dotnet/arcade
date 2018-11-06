@@ -372,8 +372,22 @@ namespace Microsoft.DotNet.DarcLib
 
             if (arcadeItem != null && repoUri != arcadeItem.RepoUri)
             {
-                List<GitFile> engCommonFiles = await GetScriptFilesAsync(arcadeItem.RepoUri, arcadeItem.Commit);
+                // Files in arcade repository
+                List<GitFile> engCommonFiles = await GetCommonScriptFilesAsync(arcadeItem.RepoUri, arcadeItem.Commit);
                 filesToCommit.AddRange(engCommonFiles);
+
+                // Files in the target repo
+                string latestCommit = await _gitClient.GetLastCommitShaAsync(_gitClient.GetOwnerAndRepoFromRepoUri(repoUri), branch);
+                List<GitFile> targetEngCommonFiles = await GetCommonScriptFilesAsync(repoUri, latestCommit);
+
+                foreach (GitFile file in targetEngCommonFiles)
+                {
+                    if (!engCommonFiles.Where(f => f.FilePath == file.FilePath).Any())
+                    {
+                        file.Operation = GitFileOperation.Delete;
+                        filesToCommit.Add(file);
+                    }
+                }
             }
 
             await _gitClient.PushFilesAsync(filesToCommit, repoUri, branch, message);
@@ -398,6 +412,38 @@ namespace Microsoft.DotNet.DarcLib
         {
             CheckForValidBarClient();
             return await _barClient.Channels.GetAsync(classification);
+        }
+
+        /// <summary>
+        ///     Retrieve a specific channel by name.
+        /// </summary>
+        /// <param name="channel">Channel name.</param>
+        /// <returns>Channel or null if not found.</returns>
+        public async Task<Channel> GetChannelAsync(string channel)
+        {
+            CheckForValidBarClient();
+            return (await _barClient.Channels.GetAsync()).Where(c => c.Name.Equals(channel, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+        }
+
+        /// <summary>
+        ///     Retrieve the latest build of a repository on a specific channel.
+        /// </summary>
+        /// <param name="repoUri">URI of repository to obtain a build for.</param>
+        /// <param name="channelId">Channel the build was applied to.</param>
+        /// <returns>Latest build of <paramref name="repoUri"/> on channel <paramref name="channelId"/>,
+        /// or null if there is no latest.</returns>
+        /// <remarks>The build's assets are returned</remarks>
+        public Task<Build> GetLatestBuildAsync(string repoUri, int channelId)
+        {
+            CheckForValidBarClient();
+            return _barClient.Builds.GetLatestAsync(repository: repoUri, channelId: channelId, loadCollections: true);
+        }
+
+        public async Task<IEnumerable<DependencyDetail>> GetDependenciesAsync(string repoUri, string branch, string name = null)
+        {
+            CheckForValidGitClient();
+            return (await _fileManager.ParseVersionDetailsXmlAsync(repoUri, branch)).Where(
+                dependency => string.IsNullOrEmpty(name) || dependency.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
@@ -439,7 +485,7 @@ namespace Microsoft.DotNet.DarcLib
             }
         }
 
-        private async Task<List<GitFile>> GetScriptFilesAsync(string repoUri, string commit)
+        public async Task<List<GitFile>> GetCommonScriptFilesAsync(string repoUri, string commit)
         {
             CheckForValidGitClient();
             _logger.LogInformation("Generating commits for script files");

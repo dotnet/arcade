@@ -15,6 +15,7 @@ namespace Microsoft.DotNet.DarcLib
             new Dictionary<string, KnownDependencyType>
             {
                 {"Microsoft.DotNet.Arcade.Sdk", KnownDependencyType.GlobalJson},
+                {"Microsoft.DotNet.Helix.Sdk", KnownDependencyType.GlobalJson},
                 {"dotnet", KnownDependencyType.GlobalJson}
             };
 
@@ -23,7 +24,7 @@ namespace Microsoft.DotNet.DarcLib
             {
                 {
                     KnownDependencyType.GlobalJson,
-                    new Func<GitFileManager, string, DependencyDetail, Task>(UpdateGlobalJson)
+                    new Func<GitFileManager, string, string, DependencyDetail, Task>(UpdateGlobalJson)
                 }
             };
 
@@ -42,11 +43,13 @@ namespace Microsoft.DotNet.DarcLib
         public static async Task UpdateGlobalJson(
             GitFileManager fileManager,
             string repository,
+            string branch,
             DependencyDetail dependency)
         {
             var dependencyMapping = new Dictionary<string, string>
             {
                 {"Microsoft.DotNet.Arcade.Sdk", "msbuild-sdks"},
+                {"Microsoft.DotNet.Helix.Sdk", "msbuild-sdks"},
                 {"dotnet", "tools"}
             };
 
@@ -58,12 +61,14 @@ namespace Microsoft.DotNet.DarcLib
             string parent = dependencyMapping[dependency.Name];
 
             await fileManager.AddDependencyToGlobalJson(
-                Path.Combine(repository, VersionFilePath.GlobalJson),
+                repository,
+                branch,
                 parent,
                 dependency.Name,
                 dependency.Version);
-            await fileManager.AddDependencyToVersionDetails(
-                Path.Combine(repository, VersionFilePath.VersionDetailsXml),
+            await fileManager.AddDependencyToVersionDetailsAsync(
+                repository,
+                branch,
                 dependency,
                 DependencyType.Toolset);
         }

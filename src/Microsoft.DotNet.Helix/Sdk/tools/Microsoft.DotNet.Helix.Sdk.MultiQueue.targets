@@ -27,7 +27,8 @@
     </ResolveReferencesDependsOn>
 
     <TestDependsOn>
-      Build
+      Build;
+      ValidateTargetQueues
     </TestDependsOn>
 
     <CleanDependsOn>
@@ -40,9 +41,24 @@
     </CleanDependsOn>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <WaitForWorkItemCompletion Condition="'$(WaitForWorkItemCompletion)' != 'false'">true</WaitForWorkItemCompletion>
+
+    <!-- Split up HelixTargetQueues list
+         In order to support all delimiters (commas, plus and semicolons).
+         Note that queues will never have ',', '+' or ';' in their name, and this greatly simplifies providing a queue list in *nix.
+    -->
+    <_ProcessedTargetQueues>$([System.String]::Copy('$(HelixTargetQueues)').Replace(',',';').Replace('+',';'))</_ProcessedTargetQueues>
+  </PropertyGroup>
+
   <ItemGroup>
-    <HelixTargetQueue Include="$(HelixTargetQueues)" />
+    <!-- This Split() is needed since the semicolon in ProcessedTargetQueues is now a literal -->
+    <HelixTargetQueue Include="$(_ProcessedTargetQueues.Split(';'))" />
   </ItemGroup>
+
+  <Target Name="ValidateTargetQueues">
+    <Error Condition="'@(HelixTargetQueue)' == ''" Text="You must specify at least one target queue to send a job to helix. Use HelixTargetQueues property for multiple or HelixTargetQueue for a single queue." />
+  </Target>
 
   <Target Name="Test"
           DependsOnTargets="$(TestDependsOn)">
@@ -55,6 +71,6 @@
           AfterTargets="Test"
           Condition="$(WaitForWorkItemCompletion)">
     <Message Importance="High" Text="Waiting on job completion..." />
-    <HelixWait Jobs="@(SentJobs)" AccessToken="$(HelixAccessToken)" />
+    <HelixWait Jobs="@(SentJobs)" AccessToken="$(HelixAccessToken)" Source="$(HelixSource)" Type="$(HelixType)" Build="$(HelixBuild)" />
   </Target>
 </Project>

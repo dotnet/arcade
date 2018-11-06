@@ -1,10 +1,10 @@
 # Arcade SDK Publishing Implementation
 
-The publishing logic used by the Arcade SDK is implemented [here](../src/Microsoft.DotNet.Arcade.Sdk/tools/Publishing.proj) and [here](../src/Microsoft.DotNet.Build.Tasks.Feed). This document provides a brief outline of how to use the implementation and how it works.
+The publishing logic used by the Arcade SDK is implemented [here](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Publish.proj) and [here](../../src/Microsoft.DotNet.Build.Tasks.Feed). This document provides a brief outline of how to use the implementation and how it works.
 
 Arcade onboarded repos use this implementation automatically by using the Arcade SDK. *If the repo use the SDK you won't have to do anything else to use the publishing implementation.*
 
-The main entry point for the publishing implementation is the `Publish` target, which is invoked from within the `Execute` target from [Build.proj](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Build.proj) during the build (if `Public=true` flag was passed). The `Publish` target is able to publish to Azure and Source Build local folders. The logic includes the publishing of regular and symbol packages. If no symbol package is found for a specific package the regular package is duplicated and assumed to be a symbol package.
+The main entry point for the publishing implementation is the `Publish` target, which is invoked from within the `Execute` target from [Build.proj](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Build.proj) during the build (if `Publish=true` flag was passed). The `Publish` target is able to publish to Azure and Source Build local folders. The logic includes the publishing of regular and symbol packages. If no symbol package is found for a specific package the regular package is duplicated and assumed to be a symbol package.
 
 The [PushToBlobFeed](../../src/Microsoft.DotNet.Build.Tasks.Feed/src/PushToBlobFeed.cs) task is used to publish the packages to Azure. Below is a list of optional parameters that control the logic. These parameters are handled by the Arcade SDK and forwarded to the `Publish` target during publishing. You can find more documentation about some of the parameters mentioned below on the [ArcadeSdk documentation](../ArcadeSdk.md).
 

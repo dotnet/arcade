@@ -28,24 +28,52 @@
   <Choose>
     <When Condition="'$(StrongNameKeyId)' == 'Microsoft'">
       <PropertyGroup>
-        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)MSFT.snk</AssemblyOriginatorKeyFile>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)snk/MSFT.snk</AssemblyOriginatorKeyFile>
         <PublicKey>$(MicrosoftPublicKey)</PublicKey>
         <PublicKeyToken>b03f5f7f11d50a3a</PublicKeyToken>
       </PropertyGroup>
     </When>
     <When Condition="'$(StrongNameKeyId)' == 'MicrosoftShared'">
       <PropertyGroup>
-        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)snk/35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
         <PublicKey>$(MicrosoftSharedPublicKey)</PublicKey>
         <PublicKeyToken>31BF3856AD364E35</PublicKeyToken>
       </PropertyGroup>
     </When>
     <When Condition="'$(StrongNameKeyId)' == 'MicrosoftAspNet'">
       <PropertyGroup>
-        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)AspNet.snk</AssemblyOriginatorKeyFile>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)snk/AspNet.snk</AssemblyOriginatorKeyFile>
         <PublicKey>$(MicrosoftAspNetPublicKey)</PublicKey>
         <PublicKeyToken>adb9793829ddae60</PublicKeyToken>
         <PublicSign>false</PublicSign> <!-- The MicrosoftAspNet strong name key is a full key -->
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(StrongNameKeyId)' == 'ECMA'">
+      <PropertyGroup>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)snk/ECMA.snk</AssemblyOriginatorKeyFile>
+        <PublicKey>$(ECMAPublicKey)</PublicKey>
+        <PublicKeyToken>b77a5c561934e089</PublicKeyToken>
+      </PropertyGroup>
+    </When>
+    <!--
+      The Open key can be used by any library that needs strong name signing that doesn't
+      have to be protected by the closed MS based keys. The idea is to have a key for identity but
+      not for any security purposes.
+    -->
+    <When Condition="'$(StrongNameKeyId)' == 'Open'">
+      <PropertyGroup>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)snk/Open.snk</AssemblyOriginatorKeyFile>
+        <PublicKey>$(OpenPublicKey)</PublicKey>
+        <PublicKeyToken>cc7b13ffcd2ddd51</PublicKeyToken>
+        <DelaySign>false</DelaySign>
+        <PublicSign>false</PublicSign> <!-- The Open strong name key is a full key -->
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(StrongNameKeyId)' == 'SilverlightPlatform'">
+      <PropertyGroup>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)snk/SilverlightPlatformPublicKey.snk</AssemblyOriginatorKeyFile>
+        <PublicKey>$(SilverlightPlatformPublicKey)</PublicKey>
+        <PublicKeyToken>7cec85d7bea7798e</PublicKeyToken>
       </PropertyGroup>
     </When>
   </Choose>

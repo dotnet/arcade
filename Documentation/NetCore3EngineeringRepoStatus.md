@@ -1,6 +1,6 @@
 # .NET Core 3 Engineering transition status
 
-## Work Streams
+## Primary Deliverables / Work Streams
 
 1. Using Azure DevOps for CI
 2. Using shared toolset (Arcade SDK)
@@ -17,26 +17,26 @@ Target completion date for these workstreams is 12/14/2018.
 | [aspnet-AspNetCore](#aspnetcore)              | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 0 / 4             | | Internal builds in dnceng work is in progress - Need plan |
 | [aspnet-EntityFrameworkCore](#efcore)         | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 0 / 4             | | Internal builds in dnceng work is in progress - Need plan |
 | [aspnet-Extensions](#extensions)              | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 0 / 4             | | Internal builds in dnceng work is in progress - Need plan |
-| [CLI](#cli)                                   | [licavalc](#livar-cunha)      | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Good progress, but need plan to go green |
-| [CLICommandLineParser](#clicommandlineparser) | [licavalc](#livar-cunha)      | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 3 / 4             | | Almost done, but need plan to go green |
-| [CLI-Migrate](#climigrate)                    | [licavalc](#livar-cunha)      | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 3 / 4             | | Almost done, but need plan to go green |
-| [CoreClr](#coreclr)                           | [russellk](#russ-keldorph)    | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 0 / 4             | | Complex repo/build |
-| [CoreFx](#corefx)                             | [danmose](#dan-moseley)       | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 1 / 4             | | A LOT of great progress,  but need plan to go green |
-| [Core-SDK](#coresdk)                          | [licavalc](#livar-cunha)      | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Will follow Toolset repo - need plan to go green |
+| [CLI](#cli)                                   | [licavalc](#livar-cunha)      | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png)  | 1 / 4            |[plan](https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md) |  |
+| [CLICommandLineParser](#clicommandlineparser) | [licavalc](#livar-cunha)      | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 3 / 4             |[plan](https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md) |  |
+| [CLI-Migrate](#climigrate)                    | [licavalc](#livar-cunha)      | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 3 / 4             |[plan](https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md) |  |
+| [CoreClr](#coreclr)                           | [russellk](#russ-keldorph)    | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png)| 0 / 4             |[plan](MigrationPlan/CoreClrPlan.md) | Complex repo/build |
+| [CoreFx](#corefx)                             | [danmose](#dan-moseley)       | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             |[plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/CoreFxPlan.md) |  |
+| [Core-SDK](#coresdk)                          | [licavalc](#livar-cunha)      | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             |[plan](https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md) | Will follow Toolset repo - need plan to go green |
 | [Core-Setup](#coresetup)                      | [danmose](#dan-moseley)       | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 1 / 4             | | Need to establish ownership|
 | [MSBuild](#msbuild)                           | [raines](#rainer-sigwald)     | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Investigating requirements - need plan to go green |
-| [Roslyn](#roslyn)                             | [jaredpar](#jared-parsons)    | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Good progress, but need plan to go green |
-| [SDK](#sdk)                                   | [licavalc](#livar-cunha)      | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 3 / 4             | | Almost done, but need plan to go green |
-| [Standard](#standard)                         | [danmose](#dan-moseley)       | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 1 / 4             | | wtgodbe is working on this, but need plan to go green |
-| [SymReader](#symreader)                       | [tmat](#tomas-matousek)       | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Will follow Roslyn - need plan to go green |
-| [SymReader-Portable](#symreader-portable)     | [tmat](#tomas-matousek)       | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Will follow Roslyn - need plan to go green |
-| [Templating](#templating)                     | [vramak](#vijay-ramakrishnan) | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Need plan to go green |
-| [Test-Templates](#test-templates)             | [sasin](#vijay-ramakrishnan)  | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Need plan to go green |
-| [Toolset](#toolset)                           | [licavalc](#livar-cunha)      | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Will follow CLI - need plan to go green |
+| [Roslyn](#roslyn)                             | [jaredpar](#jared-parsons)    | On Track  | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png)  | 0 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/roslyn.md) | Good progress, but need plan to go green |
+| [SDK](#sdk)                                   | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | | |
+| [Standard](#standard)                         | [danmose](#dan-moseley)       | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             |[plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/CoreFxPlan.md) |  |
+| [SymReader](#symreader)                       | [tmat](#tomas-matousek)       | On Track  | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             |[plan](https://github.com/dotnet/symreader/issues/157) | ETA: End of November |
+| [SymReader-Portable](#symreader-portable)     | [tmat](#tomas-matousek)       | On Track  | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             |[plan](https://github.com/dotnet/symreader-portable/issues/144) | ETA: End of November |
+| [Templating](#templating)                     | [vramak](#vijay-ramakrishnan) | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/TemplatingAndWebSdkPlan.md) |  |
+| [Test-Templates](#test-templates)             | [sasin](#sarabjot-singh)      | On Track  | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/NetCore3EngineeringRepoStatus.md#test-templates) |  |
+| [Toolset](#toolset)                           | [licavalc](#livar-cunha)      | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             |[plan](https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md) | Will follow CLI - need plan to go green |
 | [Visual FSharp](#visual-fsharp)               | [brettfo](#brett-forsgren)    | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Need plan to go green |
-| [WebSDK](#websdk)                             | [vramak](#vijay-ramakrishnan) | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Need plan to go green |
-| [WinForms](#winforms)                         | [mmcgaw](#merrie-mcgaw)       | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | New repo, so understanding requirements better - Need plan |
-| [WPF](#wpf)                                   | [srivatsm](#vatsan-madhavan)  | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | New repo, so understanding requirements better - Need plan |
+| [WebSDK](#websdk)                             | [vramak](#vijay-ramakrishnan) | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/TemplatingAndWebSdkPlan.md) |  |
+| [WinForms](#winforms)                         | [mmcgaw](#merrie-mcgaw)       | On Track  | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | [plan](https://github.com/dotnet/winforms/blob/master/Documentation/MigrationPlan.md) |  |
+| [WPF](#wpf)                                   | [vatsan-madhavan](#vatsan-madhavan)  | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | New repo, so understanding requirements better - Need plan |
 
 | Status   | Description |
 | -------- | ----------- |
@@ -60,10 +60,10 @@ Target completion date for these workstreams is 12/14/2018.
 
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/731)         |                      | Not scheduled | Currently migrating to .NET Core 2 tools, scheduling this work is pending completion of that work |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/729) |                      | Not scheduled | Currently migrating to .NET Core 2 tools, scheduling this work is pending completion of that work |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/728)       |                      | Not scheduled | Currently migrating to .NET Core 2 tools, scheduling this work is pending completion of that work |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/730)       |                      | Not scheduled | Currently migrating to .NET Core 2 tools, scheduling this work is pending completion of that work |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/731)         | November 2018 (end)  | In progress   | Half-way done, need to finish migration to .NET Core 2 tools, first. |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/729) | December 2018 (mid)  | Not scheduled | Will be started immediately after the above. |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/728)       | December 2018 (mid)  | Not scheduled | Will be started immediately after the above. |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/730)       | January 2019         | Not scheduled | Lowest on our priority list, but should be reasonably fast once the above are complete. |
 
 ---
 
@@ -159,23 +159,45 @@ Owners: licavalc
 
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/706)         |                      | Not scheduled | Looking at documentation / requirements|
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/704) |                      | In progress   | advoker is engaged |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/703)       |                      | Not scheduled | Looking at documentation / requirements|
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/705)       |                      | Not scheduled | Looking at documentation / requirements|
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/706)         |         12/4         | In progress   |       |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/704) |         12/4         | In progress   |       |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/703)       |         12/4         | In progress   |       |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/705)       |         12/4         | In progress   |       |
 
 ---
 
 ### Vatsan Madhavan
 
-#### Wpf
+#### WPF
 
-| Work stream                                                                      | Est. Completion Date | Status        | Notes |
-| -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/701)         |                      | Not scheduled | Looking at documentation / requirements|
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/699) |                      | Not scheduled | Looking at documentation / requirements|
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/698)       |                      | Not scheduled | Looking at documentation / requirements|
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/700)       |                      | Not scheduled | Looking at documentation / requirements|
+The following work items are used to track work completion:
+
+- [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/701)
+
+- [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/699)
+
+- [Engineering dependency flow](https://github.com/dotnet/arcade/issues/698)
+
+- [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/700)
+
+
+The Arcade migration plan will be completed in two phases:
+
+- Phase 1: Migration of dotnet-wpf Repo
+
+- Phase 2: Migration of dotnet-trusted Repo 
+
+
+At the end of each phase, full migration would be completed for the corresponding repo, which includes the use of Azure DevOps, shared toolset (Arcade SDK), engineering dependency flow, and use of dnceng based internal builds. 
+
+
+
+| Phase                                                | Est. Completion Date | Status                                                       | Notes                                |
+| ---------------------------------------------------- | -------------------- | ------------------------------------------------------------ | ------------------------------------ |
+| 1. Migration of dotnet-wpf Repo and its internal clone | Dec 4, 2018          | The dotnet-wpf repo will be set-up on dnceng using the shared toolset (Arcade SDK), and will use Azure DevOps. This work is currently being prototyped and is expected to be deployed by Dec 4th. | No known project risks at this time. |
+| 2. Migration of dotnet-trusted Repo                   | Jan 31, 2019        | New C++/CLI support for .NET Core is being added in Dev16 Preview 2. We are testing this in Nov/Dec 2018, and will be prototyping our repo migration to shared toolset (Arcade SDK) during this time. The actual repo migration will happen in Jan 2019 on dnceng. At the end of this, we expect to be using Azure DevOps as well.|   There are some inherent risks here because we depend on untested/new techologies - notably C++/CLI support in Dev16. We also depend on the fact that this will get into Dev16 Preview 2 without delays or major bugs, and that we can set up Azure DevOps and setup to depend on Dev16 Preview 2.|
+
+
 
 ---
 
@@ -237,10 +259,10 @@ Owners: licavalc
 
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/645)         |                      | In progress   | |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/643) |                      | In progress   | |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/642)       |                      | Not scheduled | |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/644)       |                      | Not scheduled | |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/645)         |                      | In progress | |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/643) |                      | In progress | |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/642)       |                      | In progress | |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/644)       |                      | In progress | |
 
 ---
 
@@ -272,19 +294,19 @@ Owners: licavalc
 
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/716)         |                      | Not scheduled | No resources available yet for scheduling |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/714) |                      | Not scheduled | No resources available yet for scheduling |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/713)       |                      | Not scheduled | No resources available yet for scheduling |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/715)       |                      | Not scheduled | No resources available yet for scheduling |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/716)         |                      | Completed |  |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/714) | November 2018        | scheduled | @Joeloff will be working on this |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/713)       | December 2018        | scheduled | @Joeloff will be working on this |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/715)       | December 2018        | scheduled | @Joeloff will be working on this |
 
 #### WebSdk
 
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/721)         |                      | Not scheduled | No resources available yet for scheduling |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/719) |                      | Not scheduled | No resources available yet for scheduling |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/718)       |                      | Not scheduled | No resources available yet for scheduling |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/720)       |                      | Not scheduled | No resources available yet for scheduling |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/721)         |                      | Completed |  |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/719) | November 2018        | scheduled | @Joeloff will be working on this |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/718)       | December 2018        | scheduled | @Joeloff will be working on this |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/720)       | December 2018        | scheduled | @Joeloff will be working on this |
 
 ---
 
@@ -294,10 +316,10 @@ Owners: licavalc
 
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/661)         |                      | Not scheduled | Will follow Templating repo |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/658) |                      | Not scheduled | Will follow Templating repo |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/657)       |                      | Not scheduled | Will follow Templating repo |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/659)       |                      | Not scheduled | Will follow Templating repo |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/661)         |     November         | Scheduled     | Will follow Templating repo |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/658) |     November         | Scheduled     | Will follow Templating repo |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/657)       |     December         | Scheduled     | Will follow Templating repo |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/659)       |     December         | Scheduled     | Will follow Templating repo |
 
 ---
 

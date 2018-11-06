@@ -3,7 +3,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
-    
+
     <ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
 
     <IsPackable>true</IsPackable>
@@ -20,6 +20,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
+    <PackageReference Include="NuGet.Versioning" Version="$(NuGetVersioningVersion)" />
     <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)" />
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
@@ -29,8 +30,8 @@
     <None Include="sdk/Sdk.props;sdk/Sdk.targets" Pack="true">
       <PackagePath>sdk/%(Filename)%(Extension)</PackagePath>
     </None>
-    <None Include="tools/*.*" Pack="true">
-      <PackagePath>tools/%(Filename)%(Extension)</PackagePath>
+    <None Include="tools/**/*.*" Pack="true">
+      <PackagePath>tools/%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
     </None>
   </ItemGroup>
 

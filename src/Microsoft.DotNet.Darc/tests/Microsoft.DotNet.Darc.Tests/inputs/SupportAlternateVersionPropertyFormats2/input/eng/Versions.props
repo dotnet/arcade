@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!--Package versions-->
+  <PropertyGroup>
+    <ExistingDependencyVersion>1.2.3</ExistingDependencyVersion>
+  </PropertyGroup>
+  <!--Package names-->
+  <PropertyGroup>
+    <ExistingDependencyPackage>Existing.Dependency</ExistingDependencyPackage>
+  </PropertyGroup>
+</Project>
