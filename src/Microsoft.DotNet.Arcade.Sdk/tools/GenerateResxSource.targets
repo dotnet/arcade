@@ -51,6 +51,7 @@
       ResourceFile="%(EmbeddedResourceSG.FullPath)"
       ResourceName="%(EmbeddedResourceSG.ManifestResourceName)"
       ResourceClassName="%(EmbeddedResourceSG.ClassName)"
+      AsConstants="%(EmbeddedResourceSG.GenerateResourcesCodeAsConstants)"
       OmitGetResourceString="$(GenerateResxSourceOmitGetResourceString)"
       IncludeDefaultValues="$(GenerateResxSourceIncludeDefaultValues)"
       OutputPath="%(EmbeddedResourceSG.SourceOutputPath)" />
@@ -71,5 +72,4 @@
       </EmbeddedResourceSG>
     </ItemGroup>
   </Target>
-
 </Project>
