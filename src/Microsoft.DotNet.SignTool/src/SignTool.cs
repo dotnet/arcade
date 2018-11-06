@@ -38,50 +38,60 @@ namespace Microsoft.DotNet.SignTool
             var nonOSXSigningStatus = true;
             var osxSigningStatus = true;
 
-            Directory.CreateDirectory(signingDir);
-
-            if (nonOSXFilesToSign.Any())
+            try
             {
-                var nonOSXBuildFilePath = Path.Combine(signingDir, $"Round{round}.proj");
-                var nonOSXProjContent = GenerateBuildFileContent(filesToSign);
+                Directory.CreateDirectory(signingDir);
 
-                File.WriteAllText(nonOSXBuildFilePath, nonOSXProjContent);
-                nonOSXSigningStatus = RunMSBuild(buildEngine, nonOSXBuildFilePath, Path.Combine(_args.LogDir, $"Signing{round}.binlog"));
-            }
-
-            if (osxFilesToSign.Any())
-            {
-                // The OSX signing target requires all files to be in the same folder.
-                // Also all files on the folder will be signed using the same certificate.
-                // Therefore below we group the files to be signed by certificate.
-                var filesGroupedByCertificate = osxFilesToSign.GroupBy(fsi => fsi.SignInfo.Certificate);
-
-                var osxFilesZippingDir = Path.Combine(_args.TempDir, "OSXFilesZippingDir");
-
-                Directory.CreateDirectory(osxFilesZippingDir);
-
-                foreach (var osxFileGroup in filesGroupedByCertificate)
+                if (nonOSXFilesToSign.Any())
                 {
-                    var certificate = osxFileGroup.Key;
-                    var osxBuildFilePath = Path.Combine(signingDir, $"Round{round}-OSX-Cert{certificate}.proj");
-                    var osxProjContent = GenerateOSXBuildFileContent(osxFilesZippingDir, certificate);
+                    var nonOSXBuildFilePath = Path.Combine(signingDir, $"Round{round}.proj");
+                    var nonOSXProjContent = GenerateBuildFileContent(filesToSign);
 
-                    File.WriteAllText(osxBuildFilePath, osxProjContent);
+                    File.WriteAllText(nonOSXBuildFilePath, nonOSXProjContent);
+                    nonOSXSigningStatus = RunMSBuild(buildEngine, nonOSXBuildFilePath, Path.Combine(_args.LogDir, $"Signing{round}.binlog"));
+                }
 
-                    foreach (var item in osxFileGroup)
+                if (osxFilesToSign.Any())
+                {
+                    // The OSX signing target requires all files to be in the same folder.
+                    // Also all files on the folder will be signed using the same certificate.
+                    // Therefore below we group the files to be signed by certificate.
+                    var filesGroupedByCertificate = osxFilesToSign.GroupBy(fsi => fsi.SignInfo.Certificate);
+
+                    var osxFilesZippingDir = Path.Combine(_args.TempDir, "OSXFilesZippingDir");
+
+                    Directory.CreateDirectory(osxFilesZippingDir);
+
+                    foreach (var osxFileGroup in filesGroupedByCertificate)
                     {
-                        File.Copy(item.FullPath, Path.Combine(osxFilesZippingDir, item.FileName), overwrite: true);
-                    }
+                        var certificate = osxFileGroup.Key;
+                        var osxBuildFilePath = Path.Combine(signingDir, $"Round{round}-OSX-Cert{certificate}.proj");
+                        var osxProjContent = GenerateOSXBuildFileContent(osxFilesZippingDir, certificate);
 
-                    osxSigningStatus = RunMSBuild(buildEngine, osxBuildFilePath, Path.Combine(_args.LogDir, $"Signing{round}-OSX.binlog"));
+                        File.WriteAllText(osxBuildFilePath, osxProjContent);
 
-                    if (osxSigningStatus)
-                    {
                         foreach (var item in osxFileGroup)
                         {
-                            File.Copy(Path.Combine(osxFilesZippingDir, item.FileName), item.FullPath, overwrite: true);
+                            File.Copy(item.FullPath, Path.Combine(osxFilesZippingDir, item.FileName), overwrite: true);
+                        }
+
+                        osxSigningStatus = RunMSBuild(buildEngine, osxBuildFilePath, Path.Combine(_args.LogDir, $"Signing{round}-OSX.binlog"));
+
+                        if (osxSigningStatus)
+                        {
+                            foreach (var item in osxFileGroup)
+                            {
+                                File.Copy(Path.Combine(osxFilesZippingDir, item.FileName), item.FullPath, overwrite: true);
+                            }
                         }
                     }
+                }
+            }
+            finally
+            {
+                if (Directory.Exists(signingDir))
+                {
+                    Directory.Delete(signingDir, recursive: true);
                 }
             }
 
