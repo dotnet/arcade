@@ -58,12 +58,6 @@
     </PropertyGroup>
   </Target>
 
-  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.CheckRequiredDotNetVersion" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
-
-  <Target Name="_CheckRequiredDotNetVersion" BeforeTargets="BeforeBuild">
-    <Microsoft.DotNet.Arcade.Sdk.CheckRequiredDotNetVersion RepositoryRoot="$(RepoRoot)" SdkVersion="$(NETCoreSdkVersion)" />
-  </Target>
-
   <!--
     GenerateNativeVersionFile target is a standalone target intended to be pulled into a build once as
     a pre-step before kicking off a native build. It will generate a _version.h or _version.c depending
