@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, ValidRequestRequirement requirement)
         {
             HttpContext httpContext = _httpContextAccessor.HttpContext;
-            var signature = httpContext.Request.Cookies[signatureHeaderEntry];
+            var signature = httpContext.Request.Headers[signatureHeaderEntry];
             if (IsValidRequestSource(requirement.SharedSecret, signature, httpContext.Request.Body))
             {
                 context.Succeed(requirement);

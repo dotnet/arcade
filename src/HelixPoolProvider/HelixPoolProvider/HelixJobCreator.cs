@@ -58,11 +58,11 @@ namespace Microsoft.DotNet.HelixPoolProvider
         {
             string agentSettingsNode = JsonConvert.SerializeObject(jsonNode);
 
-            string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), _agentRequestItem.agentId);
-            System.IO.Directory.CreateDirectory(tempPath);
-            string fullFilePath = System.IO.Path.Combine(tempPath, fileName);
+            string tempPath = Path.Combine(System.IO.Path.GetTempPath(), _agentRequestItem.agentId);
+            Directory.CreateDirectory(tempPath);
+            string fullFilePath = Path.Combine(tempPath, fileName);
 
-            using (System.IO.StreamWriter writer = new System.IO.StreamWriter(fullFilePath))
+            using (StreamWriter writer = new StreamWriter(fullFilePath))
             {
                 writer.Write(agentSettingsNode);
             }
