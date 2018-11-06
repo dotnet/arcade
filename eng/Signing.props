@@ -14,6 +14,6 @@
     <FileSignInfo Include="YamlDotNet.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Mono.Options.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Newtonsoft.Json.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="Newtonsoft.Json.Bsondll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Newtonsoft.Json.Bson.dll" CertificateName="3PartySHA2" />
   </ItemGroup>
 </Project>
