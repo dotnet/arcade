@@ -77,6 +77,14 @@ At the end, if the file is signable but no signing information was determined fo
 
 The Arcade SDK include a set of predefined configurations for the SignTool in the [Sign.proj](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) file. However, you can override/remove/update any of these configurations by including a file named `Signing.props` in the `\eng\` folder of your repository. See examples on the next section.
 
+#### Signing 3rd Party Binaries
+
+Any 3rd party assembly which is distributed on public Microsoft feeds is 
+supposed to be signed with the "3PartySHA2" certificate - a dual certificate. 
+Arcade itself use the SignTool and as such the Arcade SDK is configured to
+dual sign 3rd party libraries that it uses. In case you need to sign 
+3rd party files take a look at [how Arcade does it](../../eng/Signing.props).
+
 ## Usage Examples
 
 #### 1. Use the SDK predefined configuration
