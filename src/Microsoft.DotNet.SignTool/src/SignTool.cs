@@ -143,6 +143,8 @@ namespace Microsoft.DotNet.SignTool
         private string GenerateOSXBuildFileContent(string fullPathOSXFilesFolder, string osxCertificateName)
         {
             var builder = new StringBuilder();
+            var signKind = _args.TestSign ? "test" : "real";
+
             AppendLine(builder, depth: 0, text: @"<?xml version=""1.0"" encoding=""utf-8""?>");
             AppendLine(builder, depth: 0, text: @"<Project DefaultTargets=""AfterBuild"">");
 
@@ -151,14 +153,10 @@ namespace Microsoft.DotNet.SignTool
             AppendLine(builder, depth: 1, text: $@"<PropertyGroup>");
             AppendLine(builder, depth: 2, text: $@"<MACFilesTarget>{fullPathOSXFilesFolder}</MACFilesTarget>");
             AppendLine(builder, depth: 2, text: $@"<MACFilesCert>{osxCertificateName}</MACFilesCert>");
-
-            // The MicroBuild.Core plugin requires this parameter
-            var signKind = _args.TestSign ? "test" : "real";
             AppendLine(builder, depth: 2, text: $@"<SignType>{signKind}</SignType>");
-            AppendLine(builder, depth: 2, text: $@"<MACFilesRealSigning>{!_args.TestSign}</MACFilesRealSigning>");
             AppendLine(builder, depth: 1, text: $@"</PropertyGroup>");
 
-            AppendLine(builder, depth: 1, text: @"<Target Name=""AfterBuild"" DependsOnTargets=""SignMacFiles"">");
+            AppendLine(builder, depth: 1, text: @"<Target Name=""AfterBuild"">");
             AppendLine(builder, depth: 2, text: @"<Message Text=""Running OSX files signing process."" />");
             AppendLine(builder, depth: 1, text: @"</Target>");
 
