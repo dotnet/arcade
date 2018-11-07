@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     return "Mission Control (generation of MC link failed -- JSON parsing error)";
                 }
 
-                return $"https://mc.dot.net/#/user/{userName}/{Source}/{Type}/{Build}";
+                return $"https://mc.dot.net/#/user/{userName}/{Source.ToLowerInvariant()}/{Type.ToLowerInvariant()}/{Build.ToLowerInvariant()}";
             }
         }
     }
