@@ -29,8 +29,10 @@ namespace Microsoft.DotNet.SignTool
 
         public abstract bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath);
 
-        public bool Sign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> filesToSign)
+        public bool Sign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> files)
         {
+            var filesToSign = _args.TestSign ? files.Where(fis => !Path.GetExtension(fis.FileName).Equals(".py", StringComparison.OrdinalIgnoreCase)) : files;
+
             var signingDir = Path.Combine(_args.TempDir, "Signing");
             var nonOSXFilesToSign = filesToSign.Where(fsi => !SignToolConstants.SignableOSXExtensions.Contains(Path.GetExtension(fsi.FileName)));
             var osxFilesToSign = filesToSign.Where(fsi => SignToolConstants.SignableOSXExtensions.Contains(Path.GetExtension(fsi.FileName)));
