@@ -60,9 +60,14 @@ namespace Microsoft.DotNet.ApiCompat
 
                 var rules = c.GetExports<IDifferenceRule>();
 
-                foreach (var rule in rules.Select(r => r.GetType().Name).OrderBy(r => r, StringComparer.OrdinalIgnoreCase))
+                foreach (var rule in rules.OrderBy(r => r.GetType().Name, StringComparer.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine(rule);
+                    string ruleName = rule.GetType().Name;
+
+                    if (IsOptionalRule(rule))
+                        ruleName += " (optional)";
+
+                    Console.WriteLine(ruleName);
                 }
 
                 return 0;
@@ -173,6 +178,9 @@ namespace Microsoft.DotNet.ApiCompat
             Func<IDifferenceRuleMetadata, bool> ruleFilter =
                 delegate (IDifferenceRuleMetadata ruleMetadata)
                 {
+                    if (ruleMetadata.OptionalRule && !s_enforceOptionalRules)
+                        return false;
+
                     if (ruleMetadata.MdilServicingRule && !s_mdil)
                         return false;
                     return true;
@@ -265,6 +273,11 @@ namespace Microsoft.DotNet.ApiCompat
             return d => d != DifferenceType.Unchanged;
         }
 
+        private static bool IsOptionalRule(IDifferenceRule rule)
+        {
+            return rule.GetType().GetTypeInfo().GetCustomAttribute<ExportDifferenceRuleAttribute>().OptionalRule;
+        }
+
         private static void ParseCommandLine(string[] args)
         {
             CommandLineParser p1 = new CommandLineParser(args);
@@ -299,6 +312,7 @@ namespace Microsoft.DotNet.ApiCompat
                 parser.DefineAliases("rightOperand", "rhs");
                 parser.DefineOptionalQualifier("rightOperand", ref s_implementationOperand, "Name for right operand in comparison, default is 'implementation'.");
                 parser.DefineOptionalQualifier("excludeAttributes", ref s_excludeAttributesList, "Specify a api list in the DocId format of which attributes to exclude.");
+                parser.DefineOptionalQualifier("enforceOptionalRules", ref s_enforceOptionalRules, "Enforce optional rules, in addition to the mandatory set of rules.");
                 parser.DefineParameter<string>("contracts", ref s_contractSet, "Comma delimited list of assemblies or directories of assemblies for all the contract assemblies.");
             }, args);
         }
@@ -322,5 +336,6 @@ namespace Microsoft.DotNet.ApiCompat
         private static bool s_ignoreDesignTimeFacades;
         private static bool s_excludeNonBrowsable;
         private static bool s_warnOnMissingAssemblies;
+        private static bool s_enforceOptionalRules;
     }
 }
