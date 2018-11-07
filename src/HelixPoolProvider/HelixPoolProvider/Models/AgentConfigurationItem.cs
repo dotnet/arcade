@@ -14,7 +14,6 @@ namespace Microsoft.DotNet.HelixPoolProvider.Models
         public string agentVersion { get; set; }
         [Required]
         public object agentCredentials { get; set; }
-        [Required]
         public object agentDownloadUrls { get; set; }
     }
 }

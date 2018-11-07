@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
             {
                 return Json(new AgentInfoItem() { accepted = false });
             }
-            return Json(jobCreator.CreateJob());
+            return Json(await jobCreator.CreateJob());
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
             IHelixApi api = ApiFactory.GetAuthenticated(_configuration.ApiAuthorizationPat);
             // Alter the base URI based on configuration.  It's also useful to note that in the current version of the API, the endpoint isn't
             // defaulted to https, and so unless this is done every request will fail.
-            api.BaseUri = new System.Uri(_configuration.HelixEndpoint);
+            api.BaseUri = new Uri(_configuration.HelixEndpoint);
             return api;
         }
 
@@ -254,7 +254,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
         [ValidateModelState]
         [Authorize(Policy = "ValidAzDORequestSource")]
         public IActionResult ReleaseAgent([FromBody] AgentReleaseItem agentReleaseItem)
-        {            
+        {
             _logger.LogInformation($"Starting new release agent operation for agent {agentReleaseItem.agentId}");
 
             // Nothing to do here AFAIK.  VSTS will have shut down the agent connection, causing the agent process to exit.

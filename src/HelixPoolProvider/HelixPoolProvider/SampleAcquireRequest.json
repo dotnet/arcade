@@ -1,26 +1,26 @@
 {
-  "agentId": "74d0bde6-0812-4692-86c7-4c46ca62dca1",
-  "agentPool": "BYOC2-Pool",
-  "accountId": "09031097-0b86-4e30-82e3-85f682b56aa5",
+  "agentId": "081fded5-0de7-4a0c-8dfe-548234a52cfc",
+  "agentPool": "NetCorePublic-Int-Pool",
+  "accountId": "b55de4ed-4b5a-4215-a8e4-0a0a5f71e7d8",
   "failRequestUrl": null,
   "appendRequestMessageUrl": null,
   "agentConfiguration": {
     "agentSettings": {
-      "AgentId": "7",
-      "AgentName": "BYOC2-Agent1",
+      "AgentId": "15233",
+      "AgentName": "NetCorePublic-Int-Agent0",
       "AutoUpdate": "False",
-      "PoolId": "7",
-      "ServerUrl": "https://codeapp.ms/talos-chjohn/netcore-test2/",
+      "PoolId": "50",
+      "ServerUrl": "https://dnceng.visualstudio.com/",
       "SkipCapabilitiesScan": "True",
       "SkipSessionRecover": "True",
       "workFolder": "_work"
     },
     "agentDownloadUrls": {},
     "agentCredentials": {
-      "data": { "token": "oosdfsdf.cH6ZCL0c9OqJiT_gqnoiqrjz-RLnt4J510fPiD9qwyeZ-STTKWXG5rgb1q2PMJMPa0Rr68hO-M9MJlbhapUb7urhZjW2ENMFDIeBhY7x5OxptUpVOiY4m1Fkvf_qqR-DCTlZAoea5UcxvygnoBuk7QM7rLX8KcsjG1W7bO_Dsa9mNsKCqPZMsaAIoTMqo65UBKU_mjQaCc3rNU9IjHN9-lxHoDzq5GawmKDq5aSz4i_yOnM4Ue7h7ImaI9Om2ea49IHStcG3GdLdXDr8Uax70PX9sdGlo4bGM6EgRJWfLXuZ5ToGh14i8HxJ913MzFPk5daCyBsL0MiNdVNDbJIrDw" },
+      "data": { "token": "JBgSEmEnDbj5B5oLFviHhMLuaZsG4d-ltu_wH5uyiiIbMSYg50q-gVh_G6Sfvx2mI9MO2OMPgCEsn-OgaAlDOEkiyBlQ" },
       "scheme": "PAT"
     },
-    "agentVersion": "2.138.6"
+    "agentVersion": "2.141.2"
   },
   "agentSpecification": { "queue": "Windows.10.Amd64.Open" },
   "isScheduled": false,

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.HelixPoolProvider
@@ -24,6 +25,8 @@ namespace Microsoft.DotNet.HelixPoolProvider
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, ValidRequestRequirement requirement)
         {
             HttpContext httpContext = _httpContextAccessor.HttpContext;
+            httpContext.Request.EnableBuffering();
+
             var signature = httpContext.Request.Headers[signatureHeaderEntry];
             if (IsValidRequestSource(requirement.SharedSecret, signature, httpContext.Request.Body))
             {
@@ -40,15 +43,13 @@ namespace Microsoft.DotNet.HelixPoolProvider
         private bool IsValidRequestSource(string sharedSecret, string signature, Stream requestBody)
         {
             // Convert the shared secrets to bytes (UTF8).
-            byte[] sharedSecretBytes = System.Text.Encoding.UTF8.GetBytes(sharedSecret);
+            byte[] sharedSecretBytes = Encoding.UTF8.GetBytes(sharedSecret);
             // Use this as an invarant in HMACSHA512 and compare against the header signature
             HMACSHA512 hmac = new HMACSHA512(sharedSecretBytes);
-            // Compute the hash using the request body.  Seek the request body
-            // to the beginning (current position is the end).  Note that once this happens,
-            // the request body stream will be disposed and unusable (e.g. for logging).
-            // If you need to reeanble logging of the raw request body, then remove the validation step.
-            requestBody.Seek(0, System.IO.SeekOrigin.Begin);
+            // Compute the hash using the full request body.
             byte[] hashBytes = hmac.ComputeHash(requestBody);
+            // Set the position back to zero for good measure.
+            requestBody.Position = 0;
             // Convert to hex and compare to request header.  Note that it's more convenient here to
             // convert the byte array back into a hex string and compare vs. converting the original
             // header string into the appropriate byte array.  Core currently doesn't have a string->byte array
