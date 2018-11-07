@@ -7,3 +7,9 @@ Migration status:
    - In place in a hacked manner, once we're on .NET 2 SDK we'll immediately start the Arcade integration.
 4. Internal builds from dnceng
    - Lowest priority, no current plans.
+
+Expected delivery dates:
+1. 23 November 2018.
+2. 23 November 2018.
+3. 30 November 2018.
+4. mid December 2018.
