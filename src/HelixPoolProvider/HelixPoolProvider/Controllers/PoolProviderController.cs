@@ -69,8 +69,6 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
         [Authorize(Policy = "ValidAzDORequestSource")]
         public async Task<IActionResult> AcquireAgent([FromBody] AgentAcquireItem agentRequestItem)
         {
-            _logger.LogInformation($"Starting new acquire agent operation");
-
             // To acquire a new agent, we'll need to do the following:
             // 1. Determine what queue VSTS is asking for.
             // 2. Determine whether such a queue exists in Helix (and whether we can use it)
@@ -93,9 +91,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
             }
             var agentSettings = agentRequestItem.agentConfiguration.agentSettings;
 
-            _logger.LogInformation($"Starting acquire operation for {queueId}");
-            _logger.LogInformation($"  Pool: {agentRequestItem.agentPool}");
-            _logger.LogInformation($"  Agent ID: {agentRequestItem.agentId}");
+            _logger.LogInformation($"Starting acquire operation.  Queue={queueId} Agent Id={agentRequestItem.agentId} Pool={agentRequestItem.agentPool}");
 
             var jobCreator = await GetHelixJobCreator(agentRequestItem, queueId);
             if (jobCreator == null)
@@ -114,8 +110,6 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
         private async Task<HelixJobCreator> GetHelixJobCreator(AgentAcquireItem agentRequestItem, string queueId)
         {
             // Check the queue.
-            _logger.LogInformation($"Looking up queue information for {queueId}");
-
             QueueInfo queueInfo = await GetQueueInfo(queueId);
             if (queueInfo == null)
             {
@@ -190,7 +184,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
         /// correct pool spec in a YAML file.</remarks>
         private string ExtractQueueId(object agentSpecification)
         {
-            _logger.LogInformation($"Extracting target queue from agent spec {agentSpecification}");
+            _logger.LogTrace($"Extracting target queue from agent spec {agentSpecification}");
              
             if (agentSpecification == null)
             {
@@ -255,8 +249,6 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
         [Authorize(Policy = "ValidAzDORequestSource")]
         public IActionResult ReleaseAgent([FromBody] AgentReleaseItem agentReleaseItem)
         {
-            _logger.LogInformation($"Starting new release agent operation for agent {agentReleaseItem.agentId}");
-
             // Nothing to do here AFAIK.  VSTS will have shut down the agent connection, causing the agent process to exit.
             // This means that the corresponding Helix work item will be done and can continue to process work.
             return Accepted();
@@ -407,8 +399,6 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
         {
             try
             {
-                _logger.LogTrace($"Getting pool provider information");
-
                 return new JsonResult(new
                 {
                     containerName = _configuration.ContainerName,

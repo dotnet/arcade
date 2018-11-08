@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
 
             try
             {
-                _logger.LogInformation($"Submitting new Helix job to queue {_queueInfo} for agent id {_agentRequestItem.agentId}");
+                _logger.LogInformation($"Submitting new Helix job to queue {_queueInfo.QueueId} for agent id {_agentRequestItem.agentId}");
 
                 credentialsPath = CreateAgentCredentialsPayload();
                 agentSettingsPath = CreateAgentSettingsPayload();
