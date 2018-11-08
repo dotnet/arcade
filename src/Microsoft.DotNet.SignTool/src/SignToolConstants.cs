@@ -93,5 +93,13 @@ namespace Microsoft.DotNet.SignTool
             ".py",
             ".pyd",
         };
+
+        /// <summary>
+        /// List of known signable extensions for OSX files.
+        /// </summary>
+        public static readonly HashSet<string> SignableOSXExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".pkg"
+        };
     }
 }

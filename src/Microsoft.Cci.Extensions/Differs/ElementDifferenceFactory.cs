@@ -10,6 +10,7 @@ using Microsoft.Cci.Mappings;
 
 #if COREFX
 using System.Reflection;
+using System.Composition;
 using System.Composition.Hosting;
 using CompositionContainer = System.Composition.Hosting.CompositionHost;
 #else
@@ -47,8 +48,12 @@ namespace Microsoft.Cci.Differs
             if (_diffRules == null)
             {
 #if COREFX
-                IEnumerable<IDifferenceRule> rules = _container.GetExports<IDifferenceRule>();
-                _diffRules = rules.ToArray();
+                var rules = _container.GetExports<ExportFactory<IDifferenceRule, DifferenceRuleMetadata>>();
+                if (_ruleFilter != null)
+                {
+                    rules = rules.Where(r => _ruleFilter(r.Metadata));
+                }
+                _diffRules = rules.Select(r => r.CreateExport().Value).ToArray();
 #else
                 IEnumerable<Lazy<IDifferenceRule, IDifferenceRuleMetadata>> lazyRules = _container.GetExports<IDifferenceRule, IDifferenceRuleMetadata>();
                 if (_ruleFilter != null)

@@ -8,8 +8,7 @@ using Microsoft.Cci.Extensions;
 
 namespace Microsoft.Cci.Differs.Rules
 {
-    // @todo: Candidate for strict mode.
-    //[ExportDifferenceRule]
+    [ExportDifferenceRule(OptionalRule = true)]
     internal class ParameterNamesCannotChange : CompatDifferenceRule
     {
         public override DifferenceType Diff(IDifferences differences, ITypeDefinitionMember impl, ITypeDefinitionMember contract)

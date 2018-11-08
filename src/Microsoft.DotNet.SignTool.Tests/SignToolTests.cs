@@ -594,6 +594,40 @@ $@"
         }
 
         [Fact]
+        public void MPackFile()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("test.mpack")
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            {
+                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2") }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'VisualStudio.Mac.Banana.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2'",
+                "File 'test.mpack' Certificate=''",
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "VisualStudio.Mac.Banana.dll")}"">
+  <Authenticode>3PartySHA2</Authenticode>
+</FilesToSign>
+"
+            });
+        }
+
+        [Fact]
         public void VsixPackage_DuplicateVsixAfter()
         {
             // List of files to be considered for signing
