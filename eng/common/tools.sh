@@ -6,11 +6,15 @@ ci=${ci:-false}
 # Build configuration. Common values include 'Debug' and 'Release', but the repository may use other names.
 configuration=${configuration:-'Debug'}
 
+# .NET Core install architecture. Common values include 'x64', 'x86', 'arm', 'arm64'.
+architecture=${architecture:-'<auto>'}
+
 # Set to true to output binary log from msbuild. Note that emitting binary log slows down the build.
 # Binary log must be enabled on CI.
 binary_log=${binary_log:-$ci}
 
 # Turns on machine preparation/clean up code that changes the machine state (e.g. kills build processes).
+nodereuse=${nodereuse:-true}
 prepare_machine=${prepare_machine:-false}
 
 # True to restore toolsets and dependencies.
@@ -123,7 +127,7 @@ function InitializeDotNetCli {
 
     if [[ ! -d "$DOTNET_INSTALL_DIR/sdk/$dotnet_sdk_version" ]]; then
       if [[ "$install" == true ]]; then
-        InstallDotNetSdk "$dotnet_root" "$dotnet_sdk_version"
+        InstallDotNetSdk "$dotnet_root" "$dotnet_sdk_version" "$architecture"
       else
         echo "Unable to find dotnet with SDK version '$dotnet_sdk_version'" >&2
         ExitWithExitCode 1
@@ -149,11 +153,12 @@ function InitializeDotNetCli {
 function InstallDotNetSdk {
   local root=$1
   local version=$2
+  local arch=$3
 
   GetDotNetInstallScript "$root"
   local install_script=$_GetDotNetInstallScript
 
-  bash "$install_script" --version $version --install-dir "$root" || {
+  bash "$install_script" --version $version --install-dir "$root" --architecture "$arch" || {
     local exit_code=$?
     echo "Failed to install dotnet SDK (exit code '$exit_code')." >&2
     ExitWithExitCode $exit_code

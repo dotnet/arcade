@@ -11,6 +11,7 @@ usage()
 {
   echo "Common settings:"
   echo "  --configuration <value>    Build configuration: 'Debug' or 'Release' (short: --c)"
+  echo "  --architecture <value>     Build architecture: 'x64', 'x86', 'arm', 'arm64'"
   echo "  --verbosity <value>        Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic] (short: -v)"
   echo "  --binaryLog                Create MSBuild binary log (short: -bl)"
   echo ""
@@ -64,6 +65,7 @@ binary_log=false
 
 projects=''
 configuration='Debug'
+architecture='<auto>'
 prepare_machine=false
 verbosity='minimal'
 properties=''
@@ -77,6 +79,10 @@ while [[ $# > 0 ]]; do
       ;;
     --configuration|-c)
       configuration=$2
+      shift
+      ;;
+    --architecture)
+      architecture=$2
       shift
       ;;
     --verbosity|-v)

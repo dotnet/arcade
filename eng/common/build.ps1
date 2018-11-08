@@ -2,6 +2,7 @@
 Param(
   [string][Alias('c')]$configuration = "Debug",
   [string] $projects,
+  [string] $architecture = "<auto>",
   [string][Alias('v')]$verbosity = "minimal",
   [string] $msbuildEngine = $null,
   [bool] $warnAsError = $true,
@@ -29,6 +30,7 @@ Param(
 function Print-Usage() {
     Write-Host "Common settings:"
     Write-Host "  -configuration <value>  Build configuration: 'Debug' or 'Release' (short: -c)"
+    Write-Host "  -architecture <value>   Build architecture: 'x64', 'x86', 'arm', 'arm64'"
     Write-Host "  -verbosity <value>      Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic] (short: -v)"
     Write-Host "  -binaryLog              Output binary log (short: -bl)"
     Write-Host "  -help                   Print help and exit"
@@ -50,7 +52,6 @@ function Print-Usage() {
 
     Write-Host "Advanced settings:"
     Write-Host "  -projects <value>       Semi-colon delimited list of sln/proj's to build. Globbing is supported (*.sln)"
-    Write-Host "  -ci                     Set when running on CI server"
     Write-Host "  -prepareMachine         Prepare machine for CI run"
     Write-Host "  -msbuildEngine <value>  Msbuild engine to use to run build ('dotnet', 'vs', or unspecified)."
     Write-Host ""
