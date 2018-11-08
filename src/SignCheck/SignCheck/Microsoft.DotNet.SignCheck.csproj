@@ -19,15 +19,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.2.0" />
+    <PackageReference Include="CommandLineParser" Version="2.2.0" PrivateAssets="All" Publish="true" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.SignCheck\Microsoft.DotNet.SignCheckLibrary.csproj" />
+    <ProjectReference Include="..\Microsoft.SignCheck\Microsoft.DotNet.SignCheckLibrary.csproj" PrivateAssets="All" Publish="true" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="System.Net" />
+    <Reference Include="System.Net" Pack="false" />
   </ItemGroup>
 
   <ItemGroup>
