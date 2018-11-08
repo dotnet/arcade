@@ -9,19 +9,21 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
     internal abstract class SignTool
     {
         private readonly SignToolArgs _args;
-
+        internal readonly TaskLoggingHelper _log;
         internal string TempDir => _args.TempDir;
         internal string MicroBuildCorePath => _args.MicroBuildCorePath;
 
-        internal SignTool(SignToolArgs args)
+        internal SignTool(SignToolArgs args, TaskLoggingHelper log)
         {
             _args = args;
+            _log = log;
         }
 
         public abstract void RemovePublicSign(string assemblyPath);
@@ -44,6 +46,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     if (!File.Exists(_args.SNBinaryPath) || !_args.SNBinaryPath.EndsWith("sn.exe"))
                     {
+                        _log.LogError($"Found file that need to be strong-name sign ({file.FullPath}) but path to 'sn.exe' wasn't specified.");
                         return false;
                     }
 
@@ -60,6 +63,7 @@ namespace Microsoft.DotNet.SignTool
 
                     if (process.ExitCode != 0)
                     {
+                        _log.LogError($"Failed to strong-name sign file {file.FullPath}");
                         return false;
                     }
                 }

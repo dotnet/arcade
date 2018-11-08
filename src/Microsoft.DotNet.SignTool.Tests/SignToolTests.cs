@@ -190,7 +190,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             // to the XML that store the content of the would be Microbuild sign request.
             var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir, enclosingDir: "", "");
 
-            var signTool = new FakeSignTool(signToolArgs);
+            var signTool = new FakeSignTool(signToolArgs, task.Log);
             var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
             var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput);
 
