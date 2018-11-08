@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 if (file.SignInfo.ShouldLocallyStrongNameSign)
                 {
-                    if (!File.Exists(_args.SNBinaryPath))
+                    if (!File.Exists(_args.SNBinaryPath) || !_args.SNBinaryPath.EndsWith("sn.exe"))
                     {
                         return false;
                     }
