@@ -25,15 +25,32 @@ namespace Microsoft.DotNet.HelixPoolProvider
         }
 
         public string SharedSecret => GetSecret(_configuration[$"{nameof(SharedSecret)}-Key"]);
+        public bool SharedSecretIsConfigured => TryGetSecret(_configuration[$"{nameof(SharedSecret)}-Key"], out string secretValue);
         public string ContainerName => _configuration[nameof(ContainerName)];
-        public string PayloadConnectionString => GetSecret(_configuration[$"{nameof(PayloadConnectionString)}-Key"]);
-        public string ResultsConnectionString => GetSecret(_configuration[$"{nameof(ResultsConnectionString)}-Key"]);
+        public string ConnectionString => GetSecret(_configuration[$"{nameof(ConnectionString)}-Key"]);
+        public bool ConnectionStringIsConfigured => TryGetSecret(_configuration[$"{nameof(ConnectionString)}-Key"], out string secretValue);
         public string ApiAuthorizationPat => GetSecret(_configuration[$"{nameof(ApiAuthorizationPat)}-Key"]);
+        public bool ApiAuthorizationPatIsConfigured => TryGetSecret(_configuration[$"{nameof(ApiAuthorizationPat)}-Key"], out string secretValue);
         public AllowableHelixQueues AllowedTargetQueues => Enum.Parse<AllowableHelixQueues>(_configuration[nameof(AllowedTargetQueues)]);
 
         public int TimeoutInMinutes => Int32.Parse(_configuration[nameof(TimeoutInMinutes)]);
         public string HelixEndpoint => _configuration[nameof(HelixEndpoint)];
         public int MaxParallelism => Int32.Parse(_configuration[nameof(MaxParallelism)]);
+
+        public bool TryGetSecret(string secretName, out string secretValue)
+        {
+            try
+            {
+                secretValue = GetSecret(secretName);
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Could not get secret {secretName}");
+                secretValue = null;
+                return false;
+            }
+        }
 
         public string GetSecret(string secretName)
         {
@@ -59,7 +76,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError($"Failed to obtain secret {secretName} from keyvault");
+                    _logger.LogError(e, $"Failed to obtain secret {secretName} from keyvault");
                     throw e;
                 }
             }

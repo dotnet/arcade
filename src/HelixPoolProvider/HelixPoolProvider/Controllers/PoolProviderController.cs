@@ -399,6 +399,35 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
         }
 
         /// <summary>
+        /// Returns information about the pool provider
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/info", Name = nameof(GetInformation))]
+        public IActionResult GetInformation()
+        {
+            try
+            {
+                _logger.LogTrace($"Getting pool provider information");
+
+                return new JsonResult(new
+                {
+                    containerName = _configuration.ContainerName,
+                    allowedTargetQueues = Enum.GetName(typeof(AllowableHelixQueues), _configuration.AllowedTargetQueues),
+                    helixEndpoint = _configuration.HelixEndpoint,
+                    timeoutInMinutes = _configuration.TimeoutInMinutes,
+                    availableConnectionString = _configuration.ConnectionStringIsConfigured,
+                    availablePat = _configuration.ApiAuthorizationPatIsConfigured,
+                    availableSharedSecret = _configuration.SharedSecretIsConfigured
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Failed to obtain pool provider information");
+                return BadRequest();
+            }
+        }
+
+        /// <summary>
         /// Returns the maximum parallelism for the account.  
         /// </summary>
         /// <param name="accountParallelismItem"></param>

@@ -17,6 +17,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .UseApplicationInsights()
                 .ConfigureLogging((hostingContext, logging) =>
                 {
                     logging.AddConsole();
