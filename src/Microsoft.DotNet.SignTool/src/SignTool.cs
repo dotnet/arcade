@@ -4,23 +4,26 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
     internal abstract class SignTool
     {
         private readonly SignToolArgs _args;
-
+        internal readonly TaskLoggingHelper _log;
         internal string TempDir => _args.TempDir;
         internal string MicroBuildCorePath => _args.MicroBuildCorePath;
 
-        internal SignTool(SignToolArgs args)
+        internal SignTool(SignToolArgs args, TaskLoggingHelper log)
         {
             _args = args;
+            _log = log;
         }
 
         public abstract void RemovePublicSign(string assemblyPath);
@@ -30,6 +33,46 @@ namespace Microsoft.DotNet.SignTool
         public abstract bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath);
 
         public bool Sign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> files)
+        {
+            return LocalStrongNameSign(buildEngine, round, files)
+                && AuthenticodeSign(buildEngine, round, files);
+        }
+
+        private bool LocalStrongNameSign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> files)
+        {
+            foreach (var file in files)
+            {
+                if (file.SignInfo.ShouldLocallyStrongNameSign)
+                {
+                    if (!File.Exists(_args.SNBinaryPath) || !_args.SNBinaryPath.EndsWith("sn.exe"))
+                    {
+                        _log.LogError($"Found file that need to be strong-name sign ({file.FullPath}) but path to 'sn.exe' wasn't specified.");
+                        return false;
+                    }
+
+                    // sn -R <path_to_file> <path_to_snk>
+                    var process = Process.Start(new ProcessStartInfo()
+                    {
+                        FileName = _args.SNBinaryPath,
+                        Arguments = $@"-R ""{file.FullPath}"" ""{file.SignInfo.StrongName}""",
+                        UseShellExecute = false,
+                        WorkingDirectory = TempDir,
+                    });
+
+                    process.WaitForExit();
+
+                    if (process.ExitCode != 0)
+                    {
+                        _log.LogError($"Failed to strong-name sign file {file.FullPath}");
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private bool AuthenticodeSign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> files)
         {
             var filesToSign = _args.TestSign ? files.Where(fis => !Path.GetExtension(fis.FileName).Equals(".py", StringComparison.OrdinalIgnoreCase)) : files;
 
@@ -122,7 +165,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 AppendLine(builder, depth: 2, text: $@"<FilesToSign Include=""{fileToSign.FullPath}"">");
                 AppendLine(builder, depth: 3, text: $@"<Authenticode>{fileToSign.SignInfo.Certificate}</Authenticode>");
-                if (fileToSign.SignInfo.StrongName != null)
+                if (fileToSign.SignInfo.StrongName != null && !fileToSign.SignInfo.ShouldLocallyStrongNameSign)
                 {
                     AppendLine(builder, depth: 3, text: $@"<StrongName>{fileToSign.SignInfo.StrongName}</StrongName>");
                 }

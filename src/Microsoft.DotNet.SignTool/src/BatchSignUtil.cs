@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.SignTool
             // Next sign all of the files
             if (!SignFiles())
             {
-                _log.LogError("Error during execution of Microbuild signing process.");
+                _log.LogError("Error during execution of signing process.");
                 return;
             }
 
