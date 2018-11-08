@@ -43,9 +43,6 @@
       <_ResultFileNameNoExt>$(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture)</_ResultFileNameNoExt>
     </PropertyGroup>
 
-    <Error Text="Architecture specified in TestArchitectures is not supported: '$(_TestArchitecture)'" File="XUnit"
-           Condition="'$(_TestArchitecture)' != 'x64' and ('$(_TestArchitecture)' != 'x86' or '$(TargetFrameworkIdentifier)' == '.NETCoreApp')"/>
-
     <ItemGroup>
       <TestToRun Include="$(TargetPath)">
         <TargetFramework>$(TargetFramework)</TargetFramework>
