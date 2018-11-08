@@ -6,6 +6,7 @@
     <Platforms>x86</Platforms>
     <Configurations>Release;Debug</Configurations>
     <SignAssembly>false</SignAssembly>
+    <RootNamespace>Microsoft.SignCheck</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Label="Nuget Package Settings">
     <IsTool>true</IsTool>
