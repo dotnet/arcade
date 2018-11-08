@@ -110,6 +110,14 @@
       <HelixPreCommands Condition="!$(IsPosixShell)">$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%%3B%PATH%</HelixPreCommands> <!-- %3B is an escaped ; -->
     </PropertyGroup>
   </Target>
+
+  <Target Name="AddXUnitConsoleRunner" Condition="$(XUnitProjects)' != ''" BeforeTargets="Test">
+    <ItemGroup>
+      <HelixCorrelationPayload Include="xunit-runner">
+        <Uri>https://www.nuget.org/api/v2/package/xunit.runner.console/$(XUnitRunnerVersion)</Uri>
+      </HelixCorrelationPayload>
+    </ItemGroup>
+  </Target>
   
   <Target Name="AddXUnitReporter" Condition="$(EnableXUnitReporter)" BeforeTargets="Test">
     <ItemGroup>
