@@ -42,6 +42,11 @@ namespace Microsoft.DotNet.SignTool
             {
                 if (file.SignInfo.ShouldLocallyStrongNameSign)
                 {
+                    if (!File.Exists(_args.SNBinaryPath))
+                    {
+                        return false;
+                    }
+
                     // sn -R <path_to_file> <path_to_snk>
                     var process = Process.Start(new ProcessStartInfo()
                     {
@@ -156,7 +161,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 AppendLine(builder, depth: 2, text: $@"<FilesToSign Include=""{fileToSign.FullPath}"">");
                 AppendLine(builder, depth: 3, text: $@"<Authenticode>{fileToSign.SignInfo.Certificate}</Authenticode>");
-                if (fileToSign.SignInfo.StrongName != null && !fileToSign.SignInfo.StrongName.EndsWith(".snk", StringComparison.OrdinalIgnoreCase))
+                if (fileToSign.SignInfo.StrongName != null && !fileToSign.SignInfo.ShouldLocallyStrongNameSign)
                 {
                     AppendLine(builder, depth: 3, text: $@"<StrongName>{fileToSign.SignInfo.StrongName}</StrongName>");
                 }
