@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             // The path to MSBuild will always be null in these tests, this will force
             // the signing logic to call our FakeBuildEngine.BuildProjectFile with a path
             // to the XML that store the content of the would be Microbuild sign request.
-            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir, enclosingDir: "");
+            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir, enclosingDir: "", "");
 
             var signTool = new FakeSignTool(signToolArgs);
             var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
