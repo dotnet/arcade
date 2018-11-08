@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 AppendLine(builder, depth: 2, text: $@"<FilesToSign Include=""{fileToSign.FullPath}"">");
                 AppendLine(builder, depth: 3, text: $@"<Authenticode>{fileToSign.SignInfo.Certificate}</Authenticode>");
-                if (fileToSign.SignInfo.StrongName != null)
+                if (fileToSign.SignInfo.StrongName != null && !fileToSign.SignInfo.StrongName.EndsWith(".snk", StringComparison.OrdinalIgnoreCase))
                 {
                     AppendLine(builder, depth: 3, text: $@"<StrongName>{fileToSign.SignInfo.StrongName}</StrongName>");
                 }
