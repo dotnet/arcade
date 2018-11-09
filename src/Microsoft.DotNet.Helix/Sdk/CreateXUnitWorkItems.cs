@@ -9,6 +9,9 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
+    /// <summary>
+    /// MSBuild custom task to create HelixWorkItems given xUnit project publish information
+    /// </summary>
     public class CreateXUnitWorkItems : Build.Utilities.Task
     {
         /// <summary>
@@ -36,30 +39,52 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Output]
         public ITaskItem[] XUnitWorkItems { get; set; }
 
+        /// <summary>
+        /// The main method of this MSBuild task which calls the asynchronous execution method and
+        /// collates logged errors in order to determine the success of HelixWorkItem creation per
+        /// provided xUnit project data.
+        /// </summary>
+        /// <returns>A boolean value indicating the success of HelixWorkItem creation per provided xUnit project data.</returns>
         public override bool Execute()
+        {
+            ExecuteAsync().GetAwaiter().GetResult();
+            return !Log.HasLoggedErrors;
+        }
+
+        /// <summary>
+        /// The asynchronous execution method for this MSBuild task which verifies the integrity of required properties
+        /// and validates their formatting, specifically determining whether the provided xUnit project data have a 
+        /// one-to-one mapping. It then creates this mapping before asynchronously preparing the HelixWorkItem TaskItem
+        /// objects via the PrepareWorkItem method.
+        /// </summary>
+        /// <returns></returns>
+        private async Task ExecuteAsync()
         {
             if (XUnitDllDirectories is null)
             {
                 Log.LogError("Required metadata XUnitDllDirectories is null");
-                return false;
+                return;
             }
             if (XUnitDllPaths is null)
             {
                 Log.LogError("Required metadata XUnitDllPaths is null");
-                return false;
+                return;
             }
 
             if (XUnitDllDirectories.Length < 1)
             {
                 Log.LogError("No XUnit Projects found");
+                return;
             }
             else if (XUnitDllDirectories.Length > XUnitDllPaths.Length)
             {
                 Log.LogError("Not all XUnit projects produced assemblies");
+                return;
             }
             else if (XUnitDllDirectories.Length < XUnitDllPaths.Length)
             {
                 Log.LogError("More XUnit assemblies were found than projects");
+                return;
             }
 
             _directoriesToPathMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -68,6 +93,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 if (_directoriesToPathMap.ContainsKey(XUnitDllDirectories[i]))
                 {
                     Log.LogError("Two identical publish paths were provided");
+                    return;
                 }
                 else
                 {
@@ -75,19 +101,18 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
             }
 
-            ExecuteAsync().GetAwaiter().GetResult();
-            return !Log.HasLoggedErrors;
-        }
-
-        private async Task ExecuteAsync()
-        {
             XUnitWorkItems = await Task.WhenAll(XUnitDllDirectories.Select(PrepareWorkItem));
-
             return;
         }
 
+        /// <summary>
+        /// Prepares HelixWorkItem given xUnit project information.
+        /// </summary>
+        /// <param name="publishPath">The non-relative path to the publish directory.</param>
+        /// <returns>An ITaskItem instance representing the prepared HelixWorkItem.</returns>
         private async Task<ITaskItem> PrepareWorkItem(string publishPath)
         {
+            // Forces this task to run asynchronously
             await Task.Yield();
 
             string assemblyName = Path.GetFileNameWithoutExtension(_directoriesToPathMap[publishPath]);
@@ -96,69 +121,13 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishPath}, Command: {command}");
 
-            ITaskItem workItem = new WorkItemTaskItem(assemblyName, publishPath, command);
+            ITaskItem workItem = new Build.Utilities.TaskItem(assemblyName, new Dictionary<string, string>()
+            {
+                { "Identity", assemblyName },
+                { "PayloadDirectory", publishPath },
+                { "Command", command }
+            });
             return workItem;
-        }
-
-        private class WorkItemTaskItem : ITaskItem
-        {
-            public WorkItemTaskItem()
-            {
-                _metadata = new Dictionary<string, string>();
-            }
-            public WorkItemTaskItem(string identity, string payloadDirectory, string command) : this()
-            {
-                ItemSpec = identity ?? "";
-                SetMetadata("Identity", identity ?? "");
-                SetMetadata("PayloadDirectory", payloadDirectory ?? "");
-                SetMetadata("Command", command ?? "");
-            }
-
-            public string ItemSpec { get; set; }
-
-            private Dictionary<string, string> _metadata;
-
-            public ICollection MetadataNames { get { return _metadata.Keys; } }
-
-            public int MetadataCount { get { return _metadata.Count; } }
-
-            public IDictionary CloneCustomMetadata()
-            {
-                return _metadata;
-            }
-
-            public void CopyMetadataTo(ITaskItem destinationItem)
-            {
-                foreach (string key in _metadata.Keys)
-                {
-                    destinationItem.SetMetadata(key, _metadata[key]);
-                }
-            }
-
-            public string GetMetadata(string metadataName)
-            {
-                return (_metadata.ContainsKey(metadataName) ? _metadata[metadataName] : "");
-            }
-
-            public void RemoveMetadata(string metadataName)
-            {
-                if (_metadata.ContainsKey(metadataName))
-                {
-                    _metadata.Remove(metadataName);
-                }
-            }
-
-            public void SetMetadata(string metadataName, string metadataValue)
-            {
-                if (_metadata.ContainsKey(metadataName))
-                {
-                    _metadata[metadataName] = metadataValue;
-                }
-                else
-                {
-                    _metadata.Add(metadataName, metadataValue);
-                }
-            }
         }
     }
 }
