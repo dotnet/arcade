@@ -113,12 +113,17 @@ namespace Microsoft.SignCheck.Verification
                     var timestampContext = (CRYPT_TIMESTAMP_CONTEXT)Marshal.PtrToStructure(TSContextPtr, typeof(CRYPT_TIMESTAMP_CONTEXT));
                     var timestampInfo = (CRYPT_TIMESTAMP_INFO)Marshal.PtrToStructure(timestampContext.pTimeStamp, typeof(CRYPT_TIMESTAMP_INFO));
 
-                    uint low = (uint)timestampInfo.ftTime.dwLowDateTime;
-                    long ftTimestamp = (((long)timestampInfo.ftTime.dwHighDateTime) << 32) | low;
+                    unchecked
+                    {
+                        uint low = (uint)timestampInfo.ftTime.dwLowDateTime;
+                        long ftTimestamp = (((long)timestampInfo.ftTime.dwHighDateTime) << 32) | low;
+
+                        timestamp.SignedOn = DateTime.FromFileTime(ftTimestamp);
+                    }
 
                     // Get the algorithm name based on the OID.
                     timestamp.SignatureAlgorithm = Oid.FromOidValue(timestampInfo.HashAlgorithm.pszObjId, OidGroup.HashAlgorithm).FriendlyName;
-                    timestamp.SignedOn = DateTime.FromFileTime(ftTimestamp);
+
                     X509Certificate2 certificate = new X509Certificate2(packageSignature.Signer);
                     timestamp.EffectiveDate = certificate.NotBefore;
                     timestamp.ExpiryDate = certificate.NotAfter;
