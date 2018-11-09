@@ -23,6 +23,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public string[] XUnitDllPaths { get; set; }
 
+        /// <summary>
+        /// The path to the dotnet executable on the Helix agent. Defaults to "dotnet"
+        /// </summary>
+        public string PathToDotnet { get; set; }
+
         private Dictionary<string, string> _directoriesToPathMap;
 
         /// <summary>
@@ -52,7 +57,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogError("More XUnit assemblies were found than projects");
             }
 
-            _directoriesToPathMap = new Dictionary<string, string>();
+            _directoriesToPathMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < XUnitDllDirectories.Length; i++)
             {
                 if (_directoriesToPathMap.ContainsKey(XUnitDllDirectories[i]))
@@ -81,7 +86,8 @@ namespace Microsoft.DotNet.Helix.Sdk
             await Task.Yield();
 
             string assemblyName = Path.GetFileNameWithoutExtension(_directoriesToPathMap[publishPath]);
-            string command = $"dotnet xunit.console.dll {assemblyName}.dll -xml testResults.xml";
+            string dotNetPath = string.IsNullOrEmpty(PathToDotnet) ? "dotnet" : PathToDotnet;
+            string command = $"{dotNetPath} xunit.console.dll {assemblyName}.dll -xml testResults.xml";
 
             Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishPath}, Command: {command}");
 
