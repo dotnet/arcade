@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var waitingCount = workItems.Count(wi => wi.State == "Waiting");
                 var runningCount = workItems.Count(wi => wi.State == "Running");
                 var finishedCount = workItems.Count(wi => wi.State == "Finished");
-                if (waitingCount == 0 && runningCount == 0)
+                if (waitingCount == 0 && runningCount == 0 && finishedCount > 0)
                 {
                     Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
                     return;
@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     return "Mission Control (generation of MC link failed -- JSON parsing error)";
                 }
 
-                return $"https://mc.dot.net/#/user/{userName}/{Source}/{Type}/{Build}";
+                return $"https://mc.dot.net/#/user/{userName}/{Source.ToLowerInvariant()}/{Type.ToLowerInvariant()}/{Build.ToLowerInvariant()}";
             }
         }
     }

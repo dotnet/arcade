@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -29,14 +30,14 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool TestSign { get; }
 
-        internal RealSignTool(SignToolArgs args) : base(args)
+        internal RealSignTool(SignToolArgs args, TaskLoggingHelper log) : base(args, log)
         {
             TestSign = args.TestSign;
             _msbuildPath = args.MSBuildPath;
             _logDir = args.LogDir;
         }
 
-        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round)
+        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath)
         {
             if (_msbuildPath == null)
             {
@@ -48,14 +49,20 @@ namespace Microsoft.DotNet.SignTool
             var process = Process.Start(new ProcessStartInfo()
             {
                 FileName = _msbuildPath,
-                Arguments = $@"""{projectFilePath}"" /bl:""{Path.Combine(_logDir, $"Signing{round}.binlog")}""",
+                Arguments = $@"""{projectFilePath}"" /bl:""{binLogPath}""",
                 UseShellExecute = false,
                 WorkingDirectory = TempDir,
             });
 
             process.WaitForExit();
 
-            return process.ExitCode == 0;
+            if (process.ExitCode != 0)
+            {
+                _log.LogError($"Failed to execute MSBuild on the project file {projectFilePath}");
+                return false;
+            }
+
+            return true;
         }
 
         public override void RemovePublicSign(string assemblyPath)

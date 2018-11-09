@@ -4,6 +4,7 @@
 
 using System.IO;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -15,8 +16,8 @@ namespace Microsoft.DotNet.SignTool
     {
         internal bool TestSign { get; }
 
-        internal ValidationOnlySignTool(SignToolArgs args) 
-            : base(args)
+        internal ValidationOnlySignTool(SignToolArgs args, TaskLoggingHelper log) 
+            : base(args, log)
         {
             TestSign = args.TestSign;
         }
@@ -28,7 +29,7 @@ namespace Microsoft.DotNet.SignTool
         public override bool VerifySignedPEFile(Stream assemblyStream) 
             => true;
 
-        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round)
+        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath)
         {
             if (TestSign)
             {

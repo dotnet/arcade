@@ -35,6 +35,8 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool IsAlreadySigned { get; }
 
+        public bool ShouldLocallyStrongNameSign => !string.IsNullOrEmpty(StrongName) && StrongName.EndsWith(".snk", StringComparison.OrdinalIgnoreCase);
+
         public bool ShouldSign => !IsAlreadySigned && !ShouldIgnore;
 
         public SignInfo(string certificate, string strongName, bool shouldIgnore, bool isAlreadySigned)

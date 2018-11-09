@@ -92,7 +92,7 @@
     <!-- C# specific settings -->
     <When Condition="'$(Language)' == 'C#'">
       <PropertyGroup>
-        <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+        <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
         <NoWarn>$(NoWarn);1701;1702;1705;1591</NoWarn>
       </PropertyGroup>
 

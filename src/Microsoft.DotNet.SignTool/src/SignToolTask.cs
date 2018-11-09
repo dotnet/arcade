@@ -79,11 +79,16 @@ namespace Microsoft.DotNet.SignTool
         ///     DualSigningAllowed:boolean - Tells whether this certificate can be used to sign already signed files.
         /// </summary>
         public ITaskItem[] CertificatesSignInfo { get; set; }
-        
+
         /// <summary>
         /// Path to msbuild.exe. Required if <see cref="DryRun"/> is <c>false</c>.
         /// </summary>
         public string MSBuildPath { get; set; }
+
+        /// <summary>
+        /// Path to sn.exe. Required if strong name signing files locally is needed.
+        /// </summary>
+        public string SNBinaryPath { get; set; }
 
         /// <summary>
         /// Directory to write log to.
@@ -137,8 +142,8 @@ namespace Microsoft.DotNet.SignTool
 
             if (Log.HasLoggedErrors) return;
 
-            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir);
-            var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
+            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir, SNBinaryPath);
+            var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
             var signingInput = new Configuration(TempDir, ItemsToSign, strongNameInfo, fileSignInfo, extensionSignInfo, dualCertificates, Log).GenerateListOfFiles();
 
             if (Log.HasLoggedErrors) return;
