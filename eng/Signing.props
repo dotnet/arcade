@@ -33,5 +33,9 @@
     <FileSignInfo Include="Microsoft.Deployment.Resources.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Microsoft.Deployment.WindowsInstaller.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Microsoft.Deployment.WindowsInstaller.Package.dll" CertificateName="3PartySHA2" />
+
+    <!-- Adding this just temporarily so we can get some packages published that have better handling of this. -->
+    <FileSignInfo Include="xunit-reporter.py" CertificateName="None" />
+    <FileSignInfo Include="ake_standalone_toolchain.py" CertificateName="None" />
 </ItemGroup>
 </Project>
