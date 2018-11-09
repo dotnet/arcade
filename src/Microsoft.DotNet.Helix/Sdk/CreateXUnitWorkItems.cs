@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string assemblyName = Path.GetFileNameWithoutExtension(DirectoriesToPathMap[publishPath]);
             string command = $"dotnet xunit.console.dll {assemblyName}.dll -xml testResults.xml";
 
-            Console.WriteLine($"Hi! Identity: {assemblyName}, PayloadDirectory: {publishPath}, Command: {command}");
+            Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishPath}, Command: {command}");
 
             ITaskItem workItem = new WiTaskItem(assemblyName, publishPath, command);
             return workItem;
