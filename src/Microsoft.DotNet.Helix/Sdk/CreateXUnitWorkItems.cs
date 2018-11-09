@@ -38,9 +38,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public override bool Execute()
         {
-            if (XUnitDllDirectories is null || XUnitDllPaths is null)
+            if (XUnitDllDirectories is null)
             {
-                Log.LogError($"Required metadata {(((XUnitDllDirectories is null) != (XUnitDllPaths is null)) ? (XUnitDllDirectories is null ? "XUnitDllDirectories is " : "XUnitDllPaths is ") : "XUnitDllDirectories and XUnitDllPaths are ")} null");
+                Log.LogError("Required metadata XUnitDllDirectories is null");
+                return false;
+            }
+            if (XUnitDllPaths is null)
+            {
+                Log.LogError("Required metadata XUnitDllPaths is null");
                 return false;
             }
 
