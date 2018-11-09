@@ -78,7 +78,8 @@
         TempDir="$(ArtifactsTmpDir)"
         LogDir="$(ArtifactsLogDir)"
         MSBuildPath="$(_DesktopMSBuildPath)"
-        MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"/>
+        MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"
+        SNBinaryPath="$(SNBinaryPath)"/>
 
   </Target>
 
