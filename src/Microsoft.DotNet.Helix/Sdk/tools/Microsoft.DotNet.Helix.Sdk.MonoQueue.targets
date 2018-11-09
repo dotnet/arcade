@@ -118,6 +118,22 @@
       </HelixCorrelationPayload>
     </ItemGroup>
   </Target>
+
+  <ItemGroup>
+    <XUnitProject Include="$(XUnitProjects)" />
+  </ItemGroup>
+
+  <Target Name="CreateXUnitWorkItems" Condition="'$(XUnitProjects)' != ''" BeforeTargets="Test">
+    <MSBuild Projects="@(XUnitProject)" Targets="PublishWithOutput" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.PublishingAfterTargets.targets">
+      <Output TaskParameter="TargetOutputs" ItemName="XUnitDllDirectory" />
+    </MSBuild>
+    <MSBuild Projects="@(XUnitProject)" Targets="GetTargetPath" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.PublishingAfterTargets.targets">
+      <Output TaskParameter="TargetOutputs" ItemName="XUnitDllPath" />
+    </MSBuild>
+    <CreateXUnitWorkItems XUnitDllPaths="@(XUnitDllPath)" XUnitDllDirectories="@(XUnitDllDirectory)" >
+      <Output TaskParameter="XUnitWorkItems" ItemName="HelixWorkItem"/>
+    </CreateXUnitWorkItems>
+  </Target>
   
   <Target Name="AddXUnitReporter" Condition="$(EnableXUnitReporter)" BeforeTargets="Test">
     <ItemGroup>

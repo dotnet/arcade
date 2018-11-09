@@ -28,8 +28,7 @@
 
     <TestDependsOn>
       Build;
-      ValidateTargetQueues;
-      CreateXUnitWorkItems
+      ValidateTargetQueues
     </TestDependsOn>
 
     <CleanDependsOn>
@@ -49,23 +48,9 @@
   <ItemGroup>
     <HelixTargetQueue Include="$(HelixTargetQueues)" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <XUnitProject Include="$(XUnitProjects)" />
-  </ItemGroup>
 
   <Target Name="ValidateTargetQueues">
     <Error Condition="'$(HelixTargetQueues)' == ''" Text="You must specify at least one target queue to send a job to helix. Use HelixTargetQueues property for multiple or HelixTargetQueue for a single queue." />
-  </Target>
-
-  <Target Name="CreateXUnitWorkItems">
-    <MSBuild Condition="'$(XUnitProjects)' != ''" Projects="@(XUnitProject)" Targets="PublishWithOutput" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)MIcrosoft.DotNet.Helix.PublishingAfterTargets.targets">
-      <Output TaskParameter="TargetOutputs" ItemName="XUnitDllPath" />
-    </MSBuild>
-    <Message Importance="High" Text="Found xUnit DLL path(s) $(XUnitDllPath)" />
-    <CreateXUnitWorkItems Condition="'$(XUnitProjects)' != ''" XUnitDlls="@(XUnitDllPath)" >
-      <Output TaskParameter="XUnitWorkItems" ItemName="HelixWorkItem"/>
-    </CreateXUnitWorkItems>
   </Target>
 
   <Target Name="Test"

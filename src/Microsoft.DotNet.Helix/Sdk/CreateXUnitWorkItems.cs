@@ -12,44 +12,65 @@ namespace Microsoft.DotNet.Helix.Sdk
     public class CreateXUnitWorkItems : Build.Utilities.Task
     {
         [Required]
-        public string[] XUnitDlls { get; set; }
+        public string[] XUnitDllDirectories { get; set; }
+
+        [Required]
+        public string[] XUnitDllPaths { get; set; }
+
+        private Dictionary<string, string> DirectoriesToPathMap;
 
         [Output]
         public ITaskItem[] XUnitWorkItems { get; set; }
 
         public override bool Execute()
         {
-            if (XUnitDlls.Length < 1)
+            if (XUnitDllDirectories.Length < 1)
             {
                 Log.LogError("No XUnit Projects found");
             }
-            Console.WriteLine("Execute 1");
+            else if (XUnitDllDirectories.Length > XUnitDllPaths.Length)
+            {
+                Log.LogError("Not all XUnit projects produced assemblies.");
+            }
+            else if (XUnitDllDirectories.Length < XUnitDllPaths.Length)
+            {
+                Log.LogError("More XUnit assemblies were found than projects which is alarming.");
+            }
+
+            DirectoriesToPathMap = new Dictionary<string, string>();
+            try
+            {
+                for (int i = 0; i < XUnitDllDirectories.Length; i++)
+                {
+                    DirectoriesToPathMap.Add(XUnitDllDirectories[i], XUnitDllPaths[i]);
+                }
+            }
+            catch (ArgumentException e)
+            {
+                Log.LogError("Two identical publish paths were provided", e.StackTrace);
+            }
+
             ExecuteAsync().GetAwaiter().GetResult();
-            Console.WriteLine("Execute 2");
             return !Log.HasLoggedErrors;
         }
 
         private async Task ExecuteAsync()
         {
-            Console.WriteLine("ExecuteAsync 1");
-
-            XUnitWorkItems = await Task.WhenAll(XUnitDlls.Select(PrepareWorkItem));
-
-            Console.WriteLine("ExecuteAsync 2");
+            XUnitWorkItems = await Task.WhenAll(XUnitDllDirectories.Select(PrepareWorkItem));
 
             return;
         }
 
-        private async Task<ITaskItem> PrepareWorkItem(string project)
+        private async Task<ITaskItem> PrepareWorkItem(string publishPath)
         {
             await Task.Yield();
 
-            string projectName = Path.GetFileNameWithoutExtension(project);
-            string command = $"dotnet xunit.console.dll {projectName}.dll -xml testResults.xml";
+            string assemblyName = Path.GetFileNameWithoutExtension(DirectoriesToPathMap[publishPath]);
+            string command = $"dotnet xunit.console.dll {assemblyName}.dll -xml testResults.xml";
 
-            Console.WriteLine($"Hi! Identity: {projectName}, PayloadDirectory: {project}, Command: {command}");
+            Console.WriteLine($"Hi! Identity: {assemblyName}, PayloadDirectory: {publishPath}, Command: {command}");
 
-            ITaskItem workItem = new WiTaskItem(projectName, project, command);
+            ITaskItem workItem = new WiTaskItem(assemblyName, publishPath, command);
             return workItem;
         }
 
@@ -61,6 +82,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
             public WiTaskItem(string identity, string payloadDirectory, string command)
             {
+                Metadata = new Dictionary<string, string>();
                 ItemSpec = identity;
                 SetMetadata("Identity", identity);
                 SetMetadata("PayloadDirectory", payloadDirectory);
@@ -82,22 +104,35 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             public void CopyMetadataTo(ITaskItem destinationItem)
             {
-                throw new NotImplementedException();
+                foreach (string key in Metadata.Keys)
+                {
+                    destinationItem.SetMetadata(key, Metadata[key]);
+                }
             }
 
             public string GetMetadata(string metadataName)
             {
-                return Metadata[metadataName];
+                return (Metadata.ContainsKey(metadataName) ? Metadata[metadataName] : "");
             }
 
             public void RemoveMetadata(string metadataName)
             {
-                Metadata.Remove(metadataName);
+                if (Metadata.ContainsKey(metadataName))
+                {
+                    Metadata.Remove(metadataName);
+                }
             }
 
             public void SetMetadata(string metadataName, string metadataValue)
             {
-                Metadata[metadataName] = metadataValue;
+                if (Metadata.ContainsKey(metadataName))
+                {
+                    Metadata[metadataName] = metadataValue;
+                }
+                else
+                {
+                    Metadata.Add(metadataName, metadataValue);
+                }
             }
         }
     }
