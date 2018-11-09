@@ -9,6 +9,7 @@ parameters:
   WorkItemDirectory: ''
   WorkItemCommand: ''
   CorrelationPayloadDirectory: ''
+  XUnitProjects: ''
   IncludeDotNetCli: false
   DotNetCliPackageType: ''
   DotNetCliVersion: ''
@@ -35,6 +36,8 @@ steps:
       HelixPostCommands: ${{ parameters.HelixPostCommands }}
       WorkItemDirectory: ${{ parameters.WorkItemDirectory }}
       WorkItemCommand: ${{ parameters.WorkItemCommand }}
+      CorrelationPayloadDirectory: ${{ parameters.CorrelationPayloadDirectory }}
+      XUnitProjects: ${{ parameters.XUnitProjects }}
       IncludeDotNetCli: ${{ parameters.IncludeDotNetCli }}
       DotNetCliPackageType: ${{ parameters.DotNetCliPackageType }}
       DotNetCliVersion: ${{ parameters.DotNetCliVersion }}
