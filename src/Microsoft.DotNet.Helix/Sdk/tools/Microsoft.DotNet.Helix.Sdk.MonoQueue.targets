@@ -111,7 +111,7 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="AddXUnitConsoleRunner" Condition="$(XUnitProjects)' != ''" BeforeTargets="Test">
+  <Target Name="AddXUnitConsoleRunner" Condition="'$(XUnitProjects)' != ''" BeforeTargets="Test">
     <ItemGroup>
       <HelixCorrelationPayload Include="xunit-runner">
         <Uri>https://www.nuget.org/api/v2/package/xunit.runner.console/$(XUnitRunnerVersion)</Uri>

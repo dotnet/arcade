@@ -3,16 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Helix.Client;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
-    class CreateXUnitWorkItems : Microsoft.Build.Utilities.Task
+    public class CreateXUnitWorkItems : Build.Utilities.Task
     {
         [Required]
         public string[] XUnitDlls { get; set; }
@@ -22,13 +19,23 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public override bool Execute()
         {
+            if (XUnitDlls.Length < 1)
+            {
+                Log.LogError("No XUnit Projects found");
+            }
+            Console.WriteLine("Execute 1");
             ExecuteAsync().GetAwaiter().GetResult();
+            Console.WriteLine("Execute 2");
             return !Log.HasLoggedErrors;
         }
 
         private async Task ExecuteAsync()
         {
+            Console.WriteLine("ExecuteAsync 1");
+
             XUnitWorkItems = await Task.WhenAll(XUnitDlls.Select(PrepareWorkItem));
+
+            Console.WriteLine("ExecuteAsync 2");
 
             return;
         }
@@ -39,6 +46,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string projectName = Path.GetFileNameWithoutExtension(project);
             string command = $"dotnet xunit.console.dll {projectName}.dll -xml testResults.xml";
+
+            Console.WriteLine($"Hi! Identity: {projectName}, PayloadDirectory: {project}, Command: {command}");
 
             ITaskItem workItem = new WiTaskItem(projectName, project, command);
             return workItem;

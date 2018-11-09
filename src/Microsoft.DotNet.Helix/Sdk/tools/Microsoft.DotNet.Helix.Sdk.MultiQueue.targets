@@ -59,11 +59,12 @@
   </Target>
 
   <Target Name="CreateXUnitWorkItems">
-    <MSBuild Condition="'$(XUnitProjects)' != ''" Projects="@(XUnitProject)" Targets="Publish">
+    <MSBuild Condition="'$(XUnitProjects)' != ''" Projects="@(XUnitProject)" Targets="PublishWithOutput" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)MIcrosoft.DotNet.Helix.PublishingAfterTargets.targets">
       <Output TaskParameter="TargetOutputs" ItemName="XUnitDllPath" />
     </MSBuild>
+    <Message Importance="High" Text="Found xUnit DLL path(s) $(XUnitDllPath)" />
     <CreateXUnitWorkItems Condition="'$(XUnitProjects)' != ''" XUnitDlls="@(XUnitDllPath)" >
-      <Output TaskParameter="TargetOutputs" ItemName="HelixWorkItem"/>
+      <Output TaskParameter="XUnitWorkItems" ItemName="HelixWorkItem"/>
     </CreateXUnitWorkItems>
   </Target>
 
