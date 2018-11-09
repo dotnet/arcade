@@ -277,6 +277,17 @@ namespace SignCheck
                 DownloadFilesAsync(downloadFiles).Wait();
             }
 
+            // Exclude log files in case they are created in the folder being scanned.
+            if (!String.IsNullOrEmpty(Options.ErrorLogFile))
+            {
+                inputFiles.Remove(Path.GetFullPath(Options.ErrorLogFile));
+            }
+
+            if (!String.IsNullOrEmpty(Options.LogFile))
+            {
+                inputFiles.Remove(Path.GetFullPath(Options.LogFile));
+            }
+
             return inputFiles;
         }
 

@@ -120,7 +120,7 @@ Once you are part of the `arcade-contrib` team
 5. Choose a name for your token and then "Create"
 6. Copy the created token
 7. Open a powershell or bash prompt and navigate to a repository that has the arcade toolset.
-8. Run `.\eng\common\darc-init.ps1` or `.\eng\common\darc-init.sh`.  This will install darc as a global tool.
+8. Run `.\eng\common\darc-init.ps1` or `./eng/common/darc-init.sh`.  This will install darc as a global tool.
 9. Run `darc authenticate`
 10. Place the token into the `bar_password` field.  You may leave the rest of the fields as-is.
 11. Save and close.
