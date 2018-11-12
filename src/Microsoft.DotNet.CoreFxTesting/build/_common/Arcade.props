@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <!--
+    Temporary till we leverage parts of the arcade testing framework.
+    Copied from https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/Tests.props
+  -->
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsPerformanceTestProject)' == ''">
+    <IsPerformanceTestProject>false</IsPerformanceTestProject>
+    <IsPerformanceTestProject Condition="$(MSBuildProjectName.EndsWith('.PerformanceTests'))">true</IsPerformanceTestProject>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsIntegrationTestProject)' == ''">
+    <IsIntegrationTestProject>false</IsIntegrationTestProject>
+    <IsIntegrationTestProject Condition="$(MSBuildProjectName.EndsWith('.IntegrationTests'))">true</IsIntegrationTestProject>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsUnitTestProject)' == ''">
+    <IsUnitTestProject>false</IsUnitTestProject>
+    <IsUnitTestProject Condition="$(MSBuildProjectName.EndsWith('.UnitTests')) or $(MSBuildProjectName.EndsWith('.Tests'))">true</IsUnitTestProject>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsTestProject>false</IsTestProject>
+    <IsTestProject Condition="'$(IsUnitTestProject)' == 'true' or '$(IsIntegrationTestProject)' == 'true' or '$(IsPerformanceTestProject)' == 'true'">true</IsTestProject>
+
+    <IsTestSupportProject>false</IsTestSupportProject>
+    <IsTestSupportProject Condition="($(MSBuildProjectFullPath.Contains('\tests\')) OR $(MSBuildProjectFullPath.Contains('/tests/'))) AND '$(IsTestProject)' != 'true'">true</IsTestSupportProject>
+    <IsTestProject Condition="'$(IsTestSupportProject)' == 'true'">true</IsTestProject>
+
+    <!-- Disable building Integration Test projects in LUT. -->
+    <BuildForLiveUnitTesting Condition="'$(BuildForLiveUnitTesting)' == '' and '$(IsIntegrationTestProject)' == 'true'">false</BuildForLiveUnitTesting>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <!-- Treat test assemblies as non-shipping (do not publish or sign them). -->
+    <IsShipping Condition="'$(IsShipping)' == ''">false</IsShipping>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <!-- TODO: Fix VB test project reference to Test SDK. -->
+  <Import Condition="'$(Language)' != 'VB' AND ('$(BuildingNETCoreAppVertical)' == 'true' OR '$(BuildingNETFxVertical)' == 'true')" Project="$(RuntimePath)Microsoft.Net.Test.Sdk.targets" />
+
+  <!-- TODO: Remove when https://github.com/Microsoft/vstest/pull/1829 is merged. -->
+  <PropertyGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(Language)' != 'VB'">
+    <OutputType>Exe</OutputType>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <GeneratedProgramFile Condition="'$(GeneratedProgramFile)' ==''">$(IntermediateOutputPath)$(MSBuildProjectName).Program$(DefaultLanguageSourceExtension)</GeneratedProgramFile>
+    <GenerateProgramFile Condition="'$(GenerateProgramFile)' == ''">true</GenerateProgramFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupplementalTestData Condition="'$(BuildingNETCoreAppVertical)' == 'true'" Include="$(RuntimePath)xunit.runner.visualstudio.dotnetcore.testadapter.dll" />
+    <SupplementalTestData Condition="'$(BuildingNETFxVertical)' == 'true'" Include="$(RuntimePath)xunit.runner.visualstudio.testadapter.dll" />
+  </ItemGroup>
+
+  <Target Name="AddVSTestReferences"
+          BeforeTargets="SetupDefaultReferences">
+
+    <ItemGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
+      <ReferenceFromRuntime Include="Microsoft.DotNet.PlatformAbstractions" />
+      <ReferenceFromRuntime Include="Microsoft.Extensions.DependencyModel" />
+      <ReferenceFromRuntime Include="Microsoft.TestPlatform.CommunicationUtilities" />
+      <ReferenceFromRuntime Include="Microsoft.TestPlatform.CoreUtilities" />
+      <ReferenceFromRuntime Include="Microsoft.TestPlatform.CrossPlatEngine" />
+      <ReferenceFromRuntime Include="Microsoft.TestPlatform.PlatformAbstractions" />
+      <ReferenceFromRuntime Include="Microsoft.VisualStudio.CodeCoverage.Shim" />
+      <ReferenceFromRuntime Include="Microsoft.VisualStudio.TestPlatform.Common" />
+      <ReferenceFromRuntime Include="Microsoft.VisualStudio.TestPlatform.ObjectModel" />
+      <ReferenceFromRuntime Include="testhost" />
+      <ReferenceFromRuntime Include="xunit.runner.visualstudio.dotnetcore.testadapter" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
+      <ReferenceFromRuntime Include="Microsoft.VisualStudio.CodeCoverage.Shim" />
+      <ReferenceFromRuntime Include="xunit.runner.visualstudio.testadapter" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(BuildingUAPVertical)' == 'true'">
+      <ReferenceFromRuntime Include="testhost" />
+      <ReferenceFromRuntime Include="xunit.runner.visualstudio.uwp.testadapter" />
+    </ItemGroup>
+
+  </Target>
+
+</Project>

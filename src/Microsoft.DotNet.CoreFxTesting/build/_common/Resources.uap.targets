@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <PropertyGroup>
+    <CompileDependsOn>CopyResxFilesToReswFiles;$(CompileDependsOn);</CompileDependsOn>
+  </PropertyGroup>
+
+  <Target Name="CalculateResourcesFileNames">
+
+    <ItemGroup>
+      <_AllResxFiles Include="@(EmbeddedResource->'%(FullPath)')" Condition="'%(Extension)' == '.resx'">
+        <ReswName Condition="'%(EmbeddedResource.ReswName)' == ''">%(EmbeddedResource.ManifestResourceName)</ReswName>
+      </_AllResxFiles>
+    </ItemGroup>
+
+    <PropertyGroup>
+      <!-- We need to binplace the resources as resw files to create the runner's pri file. -->
+      <ResourcesFolderPath Condition="'$(ResourcesFolderPath)' == ''">$(RuntimePath)resw</ResourcesFolderPath>
+
+      <ProjectHasResources Condition="'@(_AllResxFiles)' != ''">true</ProjectHasResources>
+      <TestProjectNeedsModifiedPriFile Condition="'$(IsTestProject)' == 'true' AND '$(ProjectHasResources)' == 'true'">true</TestProjectNeedsModifiedPriFile>
+      <TestResourcesFolderPath Condition="'$(TestProjectNeedsModifiedPriFile)' == 'true'">$(RuntimePath)$(AssemblyName).Resw</TestResourcesFolderPath>
+      <_ResWDestinationPath Condition="'$(TestResourcesFolderPath)' != ''">$(TestResourcesFolderPath)</_ResWDestinationPath>
+      <_ResWDestinationPath Condition="'$(TestResourcesFolderPath)' == ''">$(ResourcesFolderPath)</_ResWDestinationPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_ReswOutputFiles Include="@(_AllResxFiles->'$(_ResWDestinationPath)/%(ReswName).resw')" />
+    </ItemGroup>
+
+  </Target>
+
+  <Target Name="CopyResxFilesToReswFiles"
+          DependsOnTargets="CalculateResourcesFileNames"
+          Inputs="@(_AllResxFiles)"
+          Outputs="@(_ReswOutputFiles)" >
+
+    <Copy SourceFiles="@(_AllResxFiles)"
+          DestinationFiles="@(_ReswOutputFiles)"
+          SkipUnchangedFiles="true">
+          <Output TaskParameter="CopiedFiles" ItemName="FilesCreated" />
+    </Copy>
+
+    <!-- We need to touch the copied files so that the target that uses them can track the inputs and outputs with the copied timestamp -->
+    <Touch Files="@(FilesCreated)" />
+
+  </Target>
+
+</Project>

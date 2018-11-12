@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <UsingTask TaskName="GenerateRunScript" AssemblyFile="$(MSBuildTestAssemblyPath)"/>
+
+  <PropertyGroup>
+    <TestAssembly Condition="'$(TestAssembly)' == ''">$(TargetFileName)</TestAssembly>
+    <TestPath Condition="'$(TestPath)' == ''">$(OutDir)</TestPath>
+    <RunWorkingDirectory>$(TestPath)</RunWorkingDirectory>
+    
+    <!-- Publish the test data as part of the build to enable VS test runs. -->
+    <PrepareForRunDependsOn>$(PrepareForRunDependsOn);PublishSupplementalTestData;</PrepareForRunDependsOn>
+    <!-- Clean leftovers not tracked by FileWrites. -->
+    <CleanDependsOn>$(CleanDependsOn);CleanTestPath;</CleanDependsOn>
+  </PropertyGroup>
+
+  <!-- RunScript -->
+  <PropertyGroup>
+    <RunScriptInputName Condition="'$(TargetOS)' == 'Windows_NT'">RunnerTemplate.Windows.txt</RunScriptInputName>
+    <RunScriptInputName Condition="'$(TargetOS)' != 'Windows_NT'">RunnerTemplate.Unix.txt</RunScriptInputName>     
+    <RunScriptInputPath>$(TestAssetsDir)$(RunScriptInputName)</RunScriptInputPath>
+
+    <RunScriptOutputName Condition="'$(TargetOS)' == 'Windows_NT'">RunTests.cmd</RunScriptOutputName>
+    <RunScriptOutputName Condition="'$(TargetOS)' != 'Windows_NT'">RunTests.sh</RunScriptOutputName>     
+    <RunScriptOutputPath>$([MSBuild]::NormalizePath('$(TestPath)', '$(RunScriptOutputName)'))</RunScriptOutputPath>
+
+    <RunScriptHost Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' == 'Windows_NT'">%RUNTIME_PATH%\dotnet.exe</RunScriptHost>
+    <RunScriptHost Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' != 'Windows_NT'">$RUNTIME_PATH/dotnet</RunScriptHost>
+
+    <!-- In UAP we don't want the repro steps printed. -->
+    <RunScriptOutputEchoes Condition="'$(BuildingUAPVertical)' != 'true'">true</RunScriptOutputEchoes>
+  </PropertyGroup>
+
+  <!-- Binplace dirs for supplemental test data. -->
+  <ItemGroup>
+    <SupplementalTestDataDir Include="$(TestPath)" />
+    <SupplementalTestDataDir Include="$(OutDir)" />
+  </ItemGroup>
+
+  <Target Name="PublishSupplementalTestData"
+          Inputs="@(SupplementalTestDataDir);%(SupplementalTestDataDir.Identity)"
+          Outputs="unused">
+
+    <PropertyGroup>
+      <_SupplementalTestDataDir>%(SupplementalTestDataDir.Identity)</_SupplementalTestDataDir>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_SupplementalTestData Include="@(SupplementalTestData)">
+        <DestinationDir Condition="'%(SupplementalTestData.DestinationDir)' == ''">%(RecursiveDir)</DestinationDir>
+        <DestinationName Condition="'%(SupplementalTestData.DestinationName)' == ''">%(Filename)%(Extension)</DestinationName>
+      </_SupplementalTestData>
+    </ItemGroup>
+
+    <Copy SourceFiles="@(_SupplementalTestData)"
+          DestinationFiles="@(_SupplementalTestData -> '$([MSBuild]::NormalizePath('$(_SupplementalTestDataDir)', '%(DestinationDir)', '%(DestinationName)'))')"
+          SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
+          OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
+          Retries="$(CopyRetryCount)"
+          RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
+          UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)">
+      <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
+    </Copy>
+
+  </Target>
+
+  <!-- 
+    Archive test binaries along with supporting files.
+
+    Inputs:
+      - TestArchiveTestsDir: Expected to bet set in Directory.Build.props.
+  -->
+  <Target Name="ArchiveTestBuild"
+          DependsOnTargets="GenerateRunScript"
+          Condition="'$(ArchiveTests)' == 'true'">
+
+    <Error Condition="'$(TestArchiveTestsDir)' == ''" Text="TestArchiveTestsDir property to archive the test folder must be set." />
+
+    <!-- Copy additional test dependencies. -->
+    <Copy SourceFiles="@(TestArchiveDependencies)"
+          DestinationFolder="$(TestPath)"
+          SkipUnchangedFiles="true" />
+
+    <MakeDir Directories="$(TestArchiveTestsDir)" />
+    <ZipDirectory SourceDirectory="$(TestPath)" 
+                  DestinationFile="$([MSBuild]::NormalizePath('$(TestArchiveTestsDir)', '$(TestProjectName).zip'))" 
+                  Overwrite="true" />
+
+  </Target>
+
+  <Target Name="GenerateRunScript"
+          DependsOnTargets="$(GenerateRunScriptDependsOn)">
+
+    <PropertyGroup>
+      <RunScriptCommand Condition="'$(RunScriptCommand)' == ''">$(RunCommand) $(RunArguments)</RunScriptCommand>
+    </PropertyGroup>
+
+    <!-- Set $(TestDebugger) to eg c:\debuggers\windbg.exe to run tests under a debugger. -->
+    <PropertyGroup Condition="'$(TestDebugger)' != ''">
+      <RunScriptCommand Condition="!$(TestDebugger.Contains('devenv'))">$(TestDebugger) $(RunScriptCommand)</RunScriptCommand>
+      <RunScriptCommand Condition=" $(TestDebugger.Contains('devenv'))">$(TestDebugger) /debugexe $(RunScriptCommand)</RunScriptCommand>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(UseDotNetNativeToolchain)' == 'true' AND '$(ArchGroup)' == 'arm'">
+      <!-- 
+        Currently (and probably forever) we can't build AOT on ARM,
+        So if we're running on ARM, what we really want to do is encapsulate
+        the test command into a script that can be run on another machine
+      -->
+      <RunScriptCommand>echo $(RunScriptCommand)> .\RunContinuation.cmd</RunScriptCommand>  
+    </PropertyGroup>
+
+    <ItemGroup>
+      <!-- If the PreExecutionTestScript property is set, then it should be set to the full path to a script that will be directly incorporated
+      into the generated runtests script, immediately before the test is run. This can be used to set a number of JIT stress modes,
+      for example. It is intended that this be as late as possible in the generated script, as close as possible to the running of the
+      test. That is why this doesn't appear higher in this file. The idea is that if the included script alters managed code behavior, such as
+      setting various JIT stress modes, we don't want those changes to affect any other managed code invocation (such as test infrastructure
+      written in managed code).
+     -->
+      <RunScriptCommands Condition="'$(PreExecutionTestScript)' != ''" Include="$([System.IO.File]::ReadAllText('$(PreExecutionTestScript)'))" />
+
+      <RunScriptCommands Include="$(RunScriptCommand)" />
+
+      <!-- Do not put anything between this and the GenerateRunScript invocation. -->
+      <RunScriptCommands Include="@(PostRunScriptCommands)" />
+    </ItemGroup>
+
+    <GenerateRunScript
+      RunCommands="@(RunScriptCommands)"
+      TemplatePath="$(RunScriptInputPath)"
+      OutputPath ="$(RunScriptOutputPath)"
+      OutputEchoes="$(RunScriptOutputEchoes)" />
+
+  </Target>
+
+  <Target Name="DiscoverRunTestsInputs"
+          DependsOnTargets="ResolveReferences;GetCopyToOutputDirectoryItems">
+
+    <ItemGroup>
+      <RunTestsInputs Include="@(ReferenceCopyLocalPaths)" />
+      <RunTestsInputs Include="@(Content)" />
+      <RunTestsInputs Include="@(IntermediateAssembly)" />
+      <RunTestsInputs Include="@(_DebugSymbolsIntermediatePath)" />
+      <RunTestsInputs Include="@(AllItemsFullPathWithTargetPath)" />
+    </ItemGroup>
+
+  </Target>
+
+  <Target Name="DiscoverRunTestsOutputs">
+
+    <PropertyGroup>
+      <TestsSuccessfulSemaphorePath>$([MSBuild]::NormalizePath('$(TestPath)', '$(TestsSuccessfulSemaphoreName)'))</TestsSuccessfulSemaphorePath>
+      <TestResultsPath Condition="'$(TestResultsName)' != ''">$([MSBuild]::NormalizePath('$(TestPath)', '$(TestResultsName)'))</TestResultsPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <RunTestsOutputs Include="$(TestsSuccessfulSemaphorePath)" />
+      <RunTestsOutputs Condition="'$(TestResultsPath)' != ''" Include="$(TestResultsPath)" />
+    </ItemGroup>
+
+    <Delete Files="$(TestsSuccessfulSemaphorePath)"
+            Condition="'$(ForceRunTests)' == 'true' AND Exists($(TestsSuccessfulSemaphorePath))" />
+
+  </Target>
+
+  <Target Name="ValidateTestPlatform">
+
+    <ItemGroup>
+      <UnsupportedPlatformsItems Include="$(UnsupportedPlatforms)"/>
+    </ItemGroup>
+
+    <PropertyGroup>
+      <TestDisabled Condition="'%(UnsupportedPlatformsItems.Identity)' == '$(TargetOS)' OR '$(ConfigurationErrorMsg)' != ''">true</TestDisabled>
+    </PropertyGroup>
+    
+    <Message Text="ValidateTestPlatform found TargetOS of [$(TargetOS)]." Importance="Low" />
+    
+    <Message Condition="'%(UnsupportedPlatformsItems.Identity)' == '$(TargetOS)'"
+      Text="Skipping tests in $(AssemblyName) because it is not supported on $(TargetOS)" />
+    
+    <Message Condition="'$(ConfigurationErrorMsg)' != ''"
+      Text="Skipping tests in $(AssemblyName) because there is no configuration compatible with the current BuildConfiguration." />
+
+  </Target>
+
+  <!-- 
+    SkipTests is a global property used in CI runs. Skips the test execution but 
+    still generates the test execution script and archives the test dir for Helix consumption.
+  -->
+  <Target Name="RunTests"
+          Condition="'$(SkipTests)' != 'true' OR '$(TestDisabled)' == 'true'"
+          DependsOnTargets="$(RunTestsDependsOn)"
+          Inputs="@(RunTestsInputs)"
+          Outputs="@(RunTestsOutputs)">
+
+    <!-- Invoke the run script with the test host as the runtime path. -->
+    <Exec Command="$(RunScriptOutputPath) $(TestHostRootPath)"
+          ContinueOnError="true"
+          IgnoreStandardErrorWarningFormat="true">
+      <Output PropertyName="TestRunExitCode" TaskParameter="ExitCode" />
+    </Exec>
+
+    <PropertyGroup>
+      <TestRunErrorMessage>One or more tests failed while running tests from '$(TestProjectName)'.</TestRunErrorMessage>
+      <TestRunErrorMessage Condition="Exists('$(TestResultsPath)')">$(TestRunErrorMessage) Please check $(TestResultsPath) for details!</TestRunErrorMessage>
+    </PropertyGroup>
+
+    <Error Condition="'$(TestRunExitCode)' != '0'" Text="$(TestRunErrorMessage)" />
+    <Touch Condition="'$(TestRunExitCode)' == '0'" Files="$(TestsSuccessfulSemaphorePath)" AlwaysCreate="true" />
+
+  </Target>
+
+  <!-- 
+    Add a manual clean step for TestPath.
+    Necessary as we are copying files into the TestPath as part of the Test Target after the build.
+  -->
+  <Target Name="CleanTestPath" Condition="Exists('$(TestPath)')">
+    
+    <RemoveDir Directories="$(TestPath)"
+               ContinueOnError="WarnAndContinue" />
+
+  </Target>
+
+  <!-- Main test targets -->
+  <Target Name="Test" DependsOnTargets="$(TestDependsOn)" Condition="'$(DisableTestTargets)' != 'true'" />
+  <Target Name="BuildAndTest" DependsOnTargets="Build;Test" />
+  <Target Name="RebuildAndTest" DependsOnTargets="Rebuild;Test" />
+
+  <!-- Core testing framework -->
+  <Import Condition="'$(UseDotNetNativeToolchain)' == 'true'" Project="$(MSBuildThisFileDirectory)Core.ilc.targets" />
+  <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Core.uap.targets" />
+
+  <!-- Components -->
+  <Import Project="$(TestComponentsDir)Components.targets" />
+
+</Project>

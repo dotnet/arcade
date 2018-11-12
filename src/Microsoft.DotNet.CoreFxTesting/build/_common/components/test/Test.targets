@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <!-- General xunit options -->
+  <PropertyGroup>
+    <RunArguments>$(TestAssembly)</RunArguments>
+    <RunArguments>$(RunArguments) -xml $(TestResultsName)</RunArguments>
+    <RunArguments>$(RunArguments) -nologo</RunArguments>
+    <RunArguments>$(RunArguments) -notrait category=non$(_bc_TargetGroup)tests</RunArguments>
+
+    <TargetOSTrait Condition="'$(TargetOS)' == 'Windows_NT'">nonwindowstests</TargetOSTrait>
+    <TargetOSTrait Condition="'$(TargetOS)' == 'Linux'">nonlinuxtests</TargetOSTrait>
+    <TargetOSTrait Condition="'$(TargetOS)' == 'OSX'">nonosxtests</TargetOSTrait>
+    <TargetOSTrait Condition="'$(TargetOS)' == 'FreeBSD'">nonfreebsdtests</TargetOSTrait>
+    <TargetOSTrait Condition="'$(TargetOS)' == 'NetBSD'">nonnetbsdtests</TargetOSTrait>
+    <RunArguments Condition="'$(TargetOSTrait)' != ''">$(RunArguments) -notrait category=$(TargetOSTrait)</RunArguments>
+
+    <!-- Add local and global options to the argument stack. -->
+    <RunArguments Condition="'$(XUnitMaxThreads)' != ''">$(RunArguments) -maxthreads $(XUnitMaxThreads)</RunArguments>
+    <RunArguments Condition="'$(XUnitMethodName)' != ''">$(RunArguments) -method $(XUnitMethodName)</RunArguments>
+    <RunArguments Condition="'$(XUnitClassName)' != ''">$(RunArguments) -class $(XUnitClassName)</RunArguments>
+    <RunArguments Condition="'$(XUnitShowProgress)' == 'true'">$(RunArguments) -verbose</RunArguments>
+    <RunArguments Condition="'$(BuildingNETFxVertical)' == 'true' and '$(XUnitNoAppdomain)' == 'true'">$(RunArguments) -noappdomain</RunArguments>
+
+    <!-- Traits -->
+    <WithCategories Condition="'$(WithCategories)' != ''">;$(WithCategories.Trim(';'))</WithCategories>
+    <WithoutCategories Condition="'$(WithoutCategories)' != ''">;$(WithoutCategories.Trim(';'))</WithoutCategories>
+    <!-- Default non categories -->
+    <WithoutCategories Condition="!$(WithCategories.Contains('failing'))">$(WithoutCategories);failing</WithoutCategories>
+    <WithoutCategories Condition="'$(Outerloop)' != 'true'">$(WithoutCategories);Outerloop</WithoutCategories>
+    <RunArguments>$(RunArguments)$(WithCategories.Replace(';', ' -trait category='))</RunArguments>
+    <RunArguments>$(RunArguments)$(WithoutCategories.Replace(';', ' -notrait category='))</RunArguments>
+    
+    <!-- User passed in options. -->
+    <RunArguments Condition="'$(XUnitOptions)' != ''">$(RunArguments) $(XUnitOptions)</RunArguments>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TestsSuccessfulSemaphoreName Condition="'$(WithCategories)' != ''">$(TestsSuccessfulSemaphoreName).with$(WithCategories.Replace(';', '.'))</TestsSuccessfulSemaphoreName>
+    <TestsSuccessfulSemaphoreName Condition="'$(WithoutCategories)' != ''">$(TestsSuccessfulSemaphoreName).without$(WithoutCategories.Replace(';', '.'))</TestsSuccessfulSemaphoreName>
+  </PropertyGroup>
+
+  <!-- Test runner config file. -->
+  <ItemGroup>
+    <SupplementalTestData Condition="'$(SkipTestRunnerConfigCopying)' != 'true'" Include="$(TestRunnerConfigPath)" />
+  </ItemGroup>
+
+  <!-- Helix dependencies -->
+  <ItemGroup Condition="'$(ArchiveTests)' == 'true' AND '$(IncludeTestFrameworkReferences)' == 'true'">
+    <TestArchiveDependencies Include="$(RuntimePath)Microsoft.DotNet.XUnitExtensions.dll" />
+    <TestArchiveDependencies Include="$(RuntimePath)xunit.assert.dll" />
+    <TestArchiveDependencies Include="$(RuntimePath)xunit.core.dll" />
+    <TestArchiveDependencies Include="$(RuntimePath)xunit.abstractions.dll" />
+  </ItemGroup>
+
+  <Target Name="ValidateTargetOSTrait">
+
+    <Error Condition="'$(TargetOSTrait)' == ''" Text="TargetOS [$(TargetOS)] is unknown so we don't know how to configure the test run for this project [$(TestProjectName)]" />
+
+  </Target>
+
+  <Import Condition="'$(IncludeTestFrameworkReferences)' == 'true'" Project="$(MSBuildThisFileDirectory)References.targets" />
+
+  <Import Condition="'$(UseDotNetNativeToolchain)' == 'true'" Project="$(MSBuildThisFileDirectory)Test.ilc.targets" />
+  <Import Condition="'$(BuildingNETCoreAppVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Test.netcoreapp.targets" />
+  <Import Condition="'$(BuildingNETFxVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Test.netfx.targets" />
+  <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Test.uap.targets" />
+
+</Project>

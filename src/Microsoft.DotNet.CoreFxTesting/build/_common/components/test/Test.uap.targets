@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <PropertyGroup>
+    <!-- The location where the logs will be written by the test runner -->
+    <UAPResultsFolder Condition="'$(UAPResultsFolder)' == ''">%USERPROFILE%\Documents\TestResults\</UAPResultsFolder>
+    <!-- Globally registered UWP console app. -->
+    <TestRunnerName>XUnitRunnerUap</TestRunnerName>
+
+    <RunCommand>$(TestRunnerName)</RunCommand>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <!-- Copy the runner files over. -->
+    <RunScriptCommands Include="forfiles /p &quot;$(RunnerDir)&quot; /s /c &quot;cmd /c cd %EXECUTION_DIR% %26%26 if @isdir equ FALSE (if /I not @ext==\&quot;pri\&quot; if not exist @relpath mklink /H @relpath @path >1NUL) else (if not exist @relpath mkdir @relpath)&quot;" />
+
+    <!-- Copy the runtime binaries over. -->
+    <RunScriptCommands Include="for /R &quot;$(_RuntimePath)&quot; %25%25I in (%2A) do if not exist &quot;%25%25~nxI&quot; (mklink /H &quot;%25%25~nxI&quot; &quot;%25%25I&quot; >1NUL)" />
+
+    <!-- We need to have the ni as well as the non-ni version of the binary. The host (being a rather old build) looks for the ni name first (so we need that as well for now.) -->
+    <RunScriptCommands Include="copy /y &quot;$(_RuntimePath)System.Private.CoreLib.dll&quot; System.Private.CoreLib.ni.dll" />
+
+    <!-- Install -->
+    <RunScriptCommands Include="call &quot;$(LauncherPath)&quot; -install appxmanifest.xml $(TestAssembly)" />
+    <RunScriptCommands Include="echo." />
+    
+    <!-- Uninstall -->
+    <PostRunScriptCommands Include="echo." />
+    <!-- Save error level as the uninstall command overwrites the global one. -->
+    <PostRunScriptCommands Include="set ERRORLEVEL=%ERRORLEVEL%" />
+    <PostRunScriptCommands Include="call &quot;$(LauncherPath)&quot; -uninstall appxmanifest.xml $(TestAssembly)" />
+
+    <!-- Copy the log files and the results files from the Documents folder to the test folder -->
+    <PostRunScriptCommands Include="move /Y &quot;$(UAPResultsFolder)$(TestAssembly).xml&quot; .\$(TestResultsName)" />
+  </ItemGroup>
+
+</Project>

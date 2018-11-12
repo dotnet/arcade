@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <PropertyGroup>
+    <_TestILCFolder>%RUNTIME_PATH%\TestILC</_TestILCFolder>
+    <ILCBuildType Condition="'$(ILCBuildType)' == ''">ret</ILCBuildType>
+    <_UseSharedAssemblies Condition="'$(EnableMultiFileILCTests)' == 'true'">-useSharedAssemblies</_UseSharedAssemblies>
+    <_ILCWin32 Condition="'$(BuildingUAPAOTVertical)' != 'true'">-win32</_ILCWin32>
+
+    <RunTestsDependsOn>CheckILCToolsInstalled;$(RunTestsDependsOn);</RunTestsDependsOn>
+  </PropertyGroup>
+
+  <Target Name="CheckILCToolsInstalled">
+
+    <Error Condition="!Exists('$(InternalTestILCFolder)')"
+           Text="TestILCFolder property is required for running aot tests. Please pass in the full path to the directory that contains ilc.exe to msbuild using /p:TestILCFolder=path_to_ilc_dir when building from root." />
+
+  </Target>
+
+</Project>
