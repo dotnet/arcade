@@ -283,7 +283,7 @@ namespace Microsoft.DotNet.SignTool
 
                     if (string.IsNullOrWhiteSpace(certificateName))
                     {
-                        Log.LogError($"CertificateName metadata of {nameof(StrongNameSignInfo)} is invalid: '{certificateName}'");
+                        Log.LogMessage($"CertificateName metadata of {nameof(StrongNameSignInfo)} is invalid or empty: '{certificateName}'");
                         continue;
                     }
 

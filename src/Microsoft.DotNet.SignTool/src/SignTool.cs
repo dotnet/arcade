@@ -50,6 +50,8 @@ namespace Microsoft.DotNet.SignTool
                         return false;
                     }
 
+                    _log.LogMessage($"Strong-name signing {file.FullPath} locally.");
+
                     // sn -R <path_to_file> <path_to_snk>
                     var process = Process.Start(new ProcessStartInfo()
                     {
