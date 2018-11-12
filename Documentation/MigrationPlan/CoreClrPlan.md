@@ -5,7 +5,7 @@
 ### Internal builds from dnceng (overlaps dependency flow)
 |Task         |Estimate (days)    |Estimate confidence (%)  |Priority 1 |Priority 2| Done |
 |-------------|-------------------|---------------------|---|---|---|
-| decide what to do about native dependencies in official build|3|40|X||100%|
+| decide what to do about native dependencies in official build|3|40|X||X|
 | add signing to official product builds|3|60|X|||
 | add red hat product build job|2|50|X|||
 | add linux-musl product build job|2|50|X|||
@@ -26,7 +26,7 @@
 ### Using Azure DevOps for CI
 |Task         |Estimate (days)    |Estimate confidence (%)  |Priority 1 |Priority 2| Done |
 |-------------|-------------------|---------------------|---|---|---|
-| express test matrix with commented jobs for those I haven't implemented|1|90|X||100%|
+| express test matrix with commented jobs for those I haven't implemented|1|90|X||X|
 | add formatting jobs|1|50|X|||
 | add IBC collection and consumption|4|30||X||
 | add R2R jobs|1|60||X||
