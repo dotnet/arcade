@@ -11,6 +11,7 @@ parameters:
   CorrelationPayloadDirectory: ''
   XUnitProjects: ''
   XUnitTargetFramework: ''
+  XUnitRunnerVersion: ''
   IncludeDotNetCli: false
   DotNetCliPackageType: ''
   DotNetCliVersion: ''
