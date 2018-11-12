@@ -9,7 +9,7 @@
 | add signing to official product builds|3|60|X|||
 | add red hat product build job|2|50|X|||
 | add linux-musl product build job|2|50|X|||
-| publish packages to blob feed (this is part of dependency flow requirement)|0.5|70|X|||
+| publish packages to blob feed (this is part of dependency flow requirement)|0.5|70|X||X (ready to pull trigger once all assets are produced)|
 | publish symbols|1|70|X|||
 | update Build Assets Registry (this is part of dependency flow requirement)|0.5|60|X|||
 | validate output against buildpipeline official build|1|80|X|||
@@ -19,8 +19,8 @@
 ### Engineering dependency flow (beyond what required for official build)
 |Task         |Estimate (days)    |Estimate confidence (%)  |Priority 1 |Priority 2| Done |
 |-------------|-------------------|---------------------|---|---|---|
-| set up branches/channels/subscriptions|2|20|X|||
-| express package dependencies in new format|8|20|X|||
+| set up branches/channels/subscriptions|2|20|X||X|
+| express package dependencies in new format|8|20|X||X|
 |**Total**    |**10**                 |                    |10|||
 
 ### Using Azure DevOps for CI
