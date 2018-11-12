@@ -65,7 +65,7 @@
         <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)snk/Open.snk</AssemblyOriginatorKeyFile>
         <PublicKey>$(OpenPublicKey)</PublicKey>
         <PublicKeyToken>cc7b13ffcd2ddd51</PublicKeyToken>
-        <DelaySign>false</DelaySign>
+        <DelaySign>true</DelaySign>
         <PublicSign>false</PublicSign> <!-- The Open strong name key is a full key -->
       </PropertyGroup>
     </When>
