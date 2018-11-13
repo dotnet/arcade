@@ -121,6 +121,12 @@
     </PropertyGroup>
   </Target>
 
+  <ItemGroup>
+    <HelixProperties Condition="'$(HelixConfiguration)' != ''" Include="configuration" Value="$(HelixConfiguration)" />
+    <HelixProperties Condition="'$(HelixArchitecture)' != ''" Include="architecture" Value="$(HelixArchitecture)" />
+    <HelixProperties Include="operatingSystem" Value="$(HelixTargetQueue)" />
+  </ItemGroup>
+
   <Target Name="Test"
     DependsOnTargets="$(TestDependsOn)" Returns="@(SentJob)">
     <PropertyGroup Condition="$(IsPosixShell)">
@@ -136,7 +142,8 @@
                   PreCommands="$(HelixPreCommands)"
                   PostCommands="$(HelixPostCommands)"
                   CorrelationPayloads="@(HelixCorrelationPayload)"
-                  WorkItems="@(HelixWorkItem)">
+                  WorkItems="@(HelixWorkItem)"
+                  HelixProperties="@(HelixProperties)">
       <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
     </SendHelixJob>
     <ItemGroup>
