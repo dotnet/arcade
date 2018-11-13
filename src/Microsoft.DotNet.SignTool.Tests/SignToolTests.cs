@@ -246,6 +246,22 @@ namespace Microsoft.DotNet.SignTool.Tests
         }
 
         [Fact]
+        public void EmptySigningListForTask()
+        {
+            var task = new SignToolTask {
+                BuildEngine = new FakeBuildEngine(),
+                ItemsToSign = new string[0],
+                LogDir = "LogDir",
+                TempDir = "TempDir",
+                DryRun = false,
+                TestSign = true,
+                MSBuildPath = CreateTestResource("msbuild.fake")
+            };
+
+            Assert.True(task.Execute());
+        }
+
+        [Fact]
         public void OnlyContainer()
         {
             // List of files to be considered for signing

@@ -37,6 +37,11 @@
     <FileExtensionSignInfo Include=".zip" CertificateName="None" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <!-- Control whether an empty ItemsToSign item group is allowed when calling SignToolTask. -->
+    <AllowEmptySignList>false</AllowEmptySignList>
+  </PropertyGroup>
+
   <!-- Allow repository to customize signing configuration -->
   <Import Project="$(RepositoryEngineeringDir)Signing.props" Condition="Exists('$(RepositoryEngineeringDir)Signing.props')" />
 
@@ -66,6 +71,9 @@
     <PropertyGroup>
       <_DesktopMSBuildPath Condition="$(_DesktopMSBuildRequired)">$(_VSInstallDir)\MSBuild\15.0\Bin\msbuild.exe</_DesktopMSBuildPath>
     </PropertyGroup>
+
+    <Error Condition="'$(AllowEmptySignList)' != 'true' AND '@(ItemsToSign)' == ''" 
+           Text="List of files to sign is empty. Make sure that ItemsToSign is configured correctly." />
 
     <Microsoft.DotNet.SignTool.SignToolTask
         DryRun="$(_DryRun)"
