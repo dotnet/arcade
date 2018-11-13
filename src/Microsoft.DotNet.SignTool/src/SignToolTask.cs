@@ -126,7 +126,6 @@ namespace Microsoft.DotNet.SignTool
             if (ItemsToSign.Count() == 0)
             {
                 Log.LogWarning($"An empty list of files to sign was passed as parameter.");
-                return;
             }
 
             var enclosingDir = GetEnclosingDirectoryOfItemsToSign();
@@ -177,6 +176,11 @@ namespace Microsoft.DotNet.SignTool
         {
             var separators = new[] { '/', '\\' };
             string[] result = null;
+
+            if (ItemsToSign.Length == 0)
+            {
+                return string.Empty;
+            }
 
             foreach (var path in ItemsToSign)
             {
