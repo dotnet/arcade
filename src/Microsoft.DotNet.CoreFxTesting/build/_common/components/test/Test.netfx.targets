@@ -4,14 +4,8 @@
 
   <PropertyGroup>
     <TestRunnerName>xunit.console.exe</TestRunnerName>
-    <TestRunnerNameWithoutExtension>$([System.IO.Path]::GetFileNameWithoutExtension('$(TestRunnerName)'))</TestRunnerNameWithoutExtension>
-
     <RunCommand>$(TestRunnerName)</RunCommand>
   </PropertyGroup>
-
-  <ItemGroup>
-    <RunScriptCommands Include="set DEVPATH=%RUNTIME_PATH%" />
-  </ItemGroup>
 
   <ItemGroup>
     <SupplementalTestData Include="$(RuntimePath)$(TestRunnerName)" />

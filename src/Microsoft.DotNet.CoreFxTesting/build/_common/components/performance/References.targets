@@ -5,7 +5,7 @@
   <Target Name="AddPerformanceTestFrameworkReferences" 
           BeforeTargets="SetupDefaultReferences">
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(IsBenchmarkDotNetProject)' != 'true'">
       <ReferenceFromRuntime Include="Microsoft.DotNet.XUnitExtensions" />
       <ReferenceFromRuntime Include="xunit.abstractions" />
       <ReferenceFromRuntime Include="xunit.assert" />

@@ -2,26 +2,7 @@
 <!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
-  <!-- Sets the flags for the performance counters to be collected in this run. -->
-  <PropertyGroup Condition="'$(PerformanceType)' == 'Profile'">
-    <!-- Collect, per benchmark, execution time (stopwatch). -->
-    <CollectFlags>stopwatch</CollectFlags>
-    <RunId>Perf-Profile</RunId>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(PerformanceType)' == 'Diagnostic'">
-    <!-- Collect, per benchmark, the following metrics:
-      1. Allocated bytes in execution thread,
-      2. Any user defined Clr events (through the xUnit Performance Api attributes),
-      3. CPU Usage (Utilization by Process, Stack),
-      4. CPU Performance Counters (Pmc Rollovers)
-    -->
-    <CollectFlags>default+BranchMispredictions+CacheMisses+InstructionRetired+gcapi</CollectFlags>
-    <RunId>Perf-Diagnostic</RunId>
-  </PropertyGroup>
-
   <PropertyGroup>
-    <RunArguments>--perf:runid $(RunId) --perf:collect $(CollectFlags) || $(CliExitErrorCommand)</RunArguments>
     <MeasurementPyCommand>$(PythonCommand) "$(BenchviewDir)/measurement.py" xunit "$(RunId)-$(AssemblyName).xml" --better desc --drop-first-value --append -o "$(RepoRoot)measurement.json" || $(CliExitErrorCommand)</MeasurementPyCommand>
   </PropertyGroup>
 
@@ -59,20 +40,25 @@
   
   </Target>
 
-  <!-- Helix dependencies -->
-  <ItemGroup Condition="'$(ArchiveTests)' == 'true' AND '$(IncludePerformanceTestFrameworkReferences)' == 'true'">
-    <TestArchiveDependencies Include="$(RuntimePath)Microsoft.DotNet.XUnitExtensions.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.assert.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.core.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.abstractions.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.performance.api" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.performance.core" />
-  </ItemGroup>
+  <!-- runner -->
+  <Import Condition="'$(IsBenchmarkDotNetProject)' != 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'runner', 'xunit-performance.targets'))" />
+  <Import Condition="'$(IsBenchmarkDotNetProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'runner', 'BenchmarkDotNet.targets'))" />
+  
+  <Choose>
+    <When Condition="'$(BuildingNETCoreAppVertical)' == 'true'">  
+      <PropertyGroup>
+        <RunCommand>$(RunScriptHost)</RunCommand>
+        <RunArguments>$(PerfRunnerName) $(RunArguments)</RunArguments>
+      </PropertyGroup>
+    </When>  
+    <When Condition="'$(BuildingNETFxVertical)' == 'true'">  
+      <PropertyGroup>
+        <RunCommand>$(PerfRunnerName)</RunCommand>
+      </PropertyGroup>
+    </When>
+  </Choose>
 
   <Import Condition="'$(IncludePerformanceTestFrameworkReferences)' == 'true'" Project="$(MSBuildThisFileDirectory)References.targets" />
-
-  <Import Condition="'$(BuildingNETCoreAppVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Performance.netcoreapp.targets" />
-  <Import Condition="'$(BuildingNETFxVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Performance.netfx.targets" />
 
   <!-- Use arcade's perf test target name. -->
   <Target Name="PerformanceTest" DependsOnTargets="Test" />

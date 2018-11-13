@@ -9,13 +9,8 @@
     <TestsSuccessfulSemaphoreName>performance.passed</TestsSuccessfulSemaphoreName>
 
     <!-- Disable test targets if (global) property performance is set to false. -->
-    <DisableTestTargets Condition="'$(Performance)' == 'false'">true</DisableTestTargets>    
+    <DisableTestTargets Condition="'$(Performance)' == 'false'">true</DisableTestTargets>
   </PropertyGroup>
-  
-  <!-- Optimizations to configure Xunit for performance -->
-  <ItemGroup>
-    <AssemblyAttribute Include="Microsoft.Xunit.Performance.OptimizeForBenchmarks" />
-  </ItemGroup>
 
   <!-- Validate configurations and fail early if conditions are not met. -->
   <PropertyGroup>
