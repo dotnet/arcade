@@ -102,6 +102,16 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </remarks>
         public ITaskItem[] WorkItems { get; set; }
 
+        /// <summary>
+        ///  A set of properties for helix to map the job using architecture and configuration
+        /// </summary>
+        /// <remarks>
+        ///  Required Metadata:
+        ///     Identity - The property Key
+        ///     Value - The property Value mapped to the key.
+        /// </remarks>
+        public ITaskItem[] HelixProperties { get; set; }
+
         private CommandPayload _commandPayload;
 
         protected override async Task ExecuteCore()
@@ -139,6 +149,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                     def = def.WithCorrelationPayloadDirectory(directory);
                 }
 
+                if (HelixProperties != null)
+                {
+                    foreach (ITaskItem helixProperty in HelixProperties)
+                    {
+                        def = AddProperty(def, helixProperty);
+                    }
+                }
+
                 // don't send the job if we have errors
                 if (Log.HasLoggedErrors)
                 {
@@ -150,6 +168,22 @@ namespace Microsoft.DotNet.Helix.Sdk
                 ISentJob job = await def.SendAsync();
                 JobCorrelationId = job.CorrelationId;
             }
+        }
+
+        private IJobDefinition AddProperty(IJobDefinition def, ITaskItem property)
+        {
+            if (!GetRequiredMetadata(property, "Identity", out string key))
+            {
+                return def;
+            }
+
+            if (!GetRequiredMetadata(property, "Value", out string value))
+            {
+                return def;
+            }
+
+            def.WithProperty(key, value);
+            return def;
         }
 
         private IJobDefinition AddWorkItem(IJobDefinition def, ITaskItem workItem)
