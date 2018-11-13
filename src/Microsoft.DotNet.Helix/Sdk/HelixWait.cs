@@ -36,9 +36,13 @@ namespace Microsoft.DotNet.Helix.Sdk
             // Wait 1 second to allow helix to register the job creation
             await Task.Delay(1000);
 
-            Source = Uri.EscapeDataString(Source).Replace('%', '~');
-            Type = Uri.EscapeDataString(Type).Replace('%', '~');
+            // We need to set properties to lowercase so that URL matches MC routing.
+            // It needs to be done before escaping to not mutate escaping caracters to lower case.
+            Source = Uri.EscapeDataString(Source.ToLowerInvariant()).Replace('%', '~');
+            Type = Uri.EscapeDataString(Type.ToLowerInvariant()).Replace('%', '~');
+            Build = Build.ToLowerInvariant();
             string mcUri = await GetMissionControlResultUri();
+
             Log.LogMessage(MessageImportance.High, $"Results will be available from {mcUri}");
 
             List<string> jobNames = Jobs.Select(j => j.GetMetadata("Identity")).ToList();
@@ -94,7 +98,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     return "Mission Control (generation of MC link failed -- JSON parsing error)";
                 }
 
-                return $"https://mc.dot.net/#/user/{userName}/{Source.ToLowerInvariant()}/{Type.ToLowerInvariant()}/{Build.ToLowerInvariant()}";
+                return $"https://mc.dot.net/#/user/{userName}/{Source}/{Type}/{Build}";
             }
         }
     }
