@@ -15,7 +15,7 @@
     <TestComponentsDir>$([MSBuild]::NormalizeDirectory('$(TestCoreDir)', 'components'))</TestComponentsDir>
   </PropertyGroup>
 
-  <Import Project="$(TestCoreDir)TestProject.props" />
+  <Import Project="$(MSBuildThisFileDirectory)TestProject.props" />
 
   <!-- Import the core testing infrastructure only for test projects. -->
   <Import Condition="'$(IsTestProject)' == 'true' AND '$(IsTestSupportProject)' != 'true'" Project="$(TestCoreDir)Core.props" />

@@ -65,7 +65,7 @@
   -->
 
   <!-- UAP resource generation needed by both source and test projects. -->
-  <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(TestCoreDir)Resources.uap.targets" />
+  <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Resources.uap.targets" />
 
   <!-- Performance test data upload to Benchview. -->
   <Import Condition="'$(EnableBenchviewTarget)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'performance', 'Benchview.targets'))" />

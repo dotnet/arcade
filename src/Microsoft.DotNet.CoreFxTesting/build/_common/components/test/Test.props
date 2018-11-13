@@ -7,7 +7,8 @@
     <TestRunnerConfigPath>$(TestAssetsDir)xunit.runner.json</TestRunnerConfigPath>
     <TestResultsName>testResults.xml</TestResultsName>
 
-    <GenerateRunScriptDependsOn>ValidateTargetOSTrait;$(GenerateRunScriptDependsOn);</GenerateRunScriptDependsOn>
+    <GenerateRunScriptDependsOn>ValidateTargetOSTrait;$(GenerateRunScriptDependsOn);SetupTestProfile;</GenerateRunScriptDependsOn>
+    <PublishSupplementalTestDataDependsOn>$(PublishSupplementalTestDataDependsOn);SetupTestProfile</PublishSupplementalTestDataDependsOn>
   </PropertyGroup>
 
 </Project>

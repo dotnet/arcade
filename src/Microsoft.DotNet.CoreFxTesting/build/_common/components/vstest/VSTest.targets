@@ -13,38 +13,42 @@
     <GenerateProgramFile Condition="'$(GenerateProgramFile)' == ''">true</GenerateProgramFile>
   </PropertyGroup>
 
-  <ItemGroup>
-    <SupplementalTestData Condition="'$(BuildingNETCoreAppVertical)' == 'true'" Include="$(RuntimePath)xunit.runner.visualstudio.dotnetcore.testadapter.dll" />
-    <SupplementalTestData Condition="'$(BuildingNETFxVertical)' == 'true'" Include="$(RuntimePath)xunit.runner.visualstudio.testadapter.dll" />
-  </ItemGroup>
+  <Choose>
+    <When Condition="'$(BuildingNETCoreAppVertical)' == 'true'">  
+      <ItemGroup>
+        <ReferenceFromRuntime Include="Microsoft.DotNet.PlatformAbstractions" />
+        <ReferenceFromRuntime Include="Microsoft.Extensions.DependencyModel" />
+        <ReferenceFromRuntime Include="Microsoft.TestPlatform.CommunicationUtilities" />
+        <ReferenceFromRuntime Include="Microsoft.TestPlatform.CoreUtilities" />
+        <ReferenceFromRuntime Include="Microsoft.TestPlatform.CrossPlatEngine" />
+        <ReferenceFromRuntime Include="Microsoft.TestPlatform.PlatformAbstractions" />
+        <ReferenceFromRuntime Include="Microsoft.VisualStudio.CodeCoverage.Shim" />
+        <ReferenceFromRuntime Include="Microsoft.VisualStudio.TestPlatform.Common" />
+        <ReferenceFromRuntime Include="Microsoft.VisualStudio.TestPlatform.ObjectModel" />
+        <ReferenceFromRuntime Include="testhost" />
+        <ReferenceFromRuntime Include="xunit.runner.visualstudio.dotnetcore.testadapter" />
+      </ItemGroup>
 
-  <Target Name="AddVSTestReferences"
-          BeforeTargets="SetupDefaultReferences">
+      <ItemGroup>
+        <SupplementalTestData Include="$(RuntimePath)xunit.runner.visualstudio.dotnetcore.testadapter.dll" />
+      </ItemGroup>
+    </When>  
+    <When Condition="'$(BuildingNETFxVertical)' == 'true'">  
+      <ItemGroup>
+        <ReferenceFromRuntime Include="Microsoft.VisualStudio.CodeCoverage.Shim" />
+        <ReferenceFromRuntime Include="xunit.runner.visualstudio.testadapter" />
+      </ItemGroup>
 
-    <ItemGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
-      <ReferenceFromRuntime Include="Microsoft.DotNet.PlatformAbstractions" />
-      <ReferenceFromRuntime Include="Microsoft.Extensions.DependencyModel" />
-      <ReferenceFromRuntime Include="Microsoft.TestPlatform.CommunicationUtilities" />
-      <ReferenceFromRuntime Include="Microsoft.TestPlatform.CoreUtilities" />
-      <ReferenceFromRuntime Include="Microsoft.TestPlatform.CrossPlatEngine" />
-      <ReferenceFromRuntime Include="Microsoft.TestPlatform.PlatformAbstractions" />
-      <ReferenceFromRuntime Include="Microsoft.VisualStudio.CodeCoverage.Shim" />
-      <ReferenceFromRuntime Include="Microsoft.VisualStudio.TestPlatform.Common" />
-      <ReferenceFromRuntime Include="Microsoft.VisualStudio.TestPlatform.ObjectModel" />
-      <ReferenceFromRuntime Include="testhost" />
-      <ReferenceFromRuntime Include="xunit.runner.visualstudio.dotnetcore.testadapter" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
-      <ReferenceFromRuntime Include="Microsoft.VisualStudio.CodeCoverage.Shim" />
-      <ReferenceFromRuntime Include="xunit.runner.visualstudio.testadapter" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(BuildingUAPVertical)' == 'true'">
-      <ReferenceFromRuntime Include="testhost" />
-      <ReferenceFromRuntime Include="xunit.runner.visualstudio.uwp.testadapter" />
-    </ItemGroup>
-
-  </Target>
+      <ItemGroup>
+        <SupplementalTestData Include="$(RuntimePath)xunit.runner.visualstudio.testadapter.dll" />
+      </ItemGroup>
+    </When>
+    <When Condition="'$(BuildingUAPVertical)' == 'true'">
+      <ItemGroup Condition="'$(BuildingUAPVertical)' == 'true'">
+        <ReferenceFromRuntime Include="testhost" />
+        <ReferenceFromRuntime Include="xunit.runner.visualstudio.uwp.testadapter" />
+      </ItemGroup>
+    </When>
+  </Choose>
 
 </Project>

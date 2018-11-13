@@ -43,7 +43,12 @@
   <!-- runner -->
   <Import Condition="'$(IsBenchmarkDotNetProject)' != 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'runner', 'xunit-performance.targets'))" />
   <Import Condition="'$(IsBenchmarkDotNetProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'runner', 'BenchmarkDotNet.targets'))" />
-  
+
+  <Import Condition="'$(IncludePerformanceTestFrameworkReferences)' == 'true'" Project="$(MSBuildThisFileDirectory)References.targets" />
+
+  <!-- Use arcade's perf test target name. -->
+  <Target Name="PerformanceTest" DependsOnTargets="Test" />
+
   <Choose>
     <When Condition="'$(BuildingNETCoreAppVertical)' == 'true'">  
       <PropertyGroup>
@@ -57,10 +62,5 @@
       </PropertyGroup>
     </When>
   </Choose>
-
-  <Import Condition="'$(IncludePerformanceTestFrameworkReferences)' == 'true'" Project="$(MSBuildThisFileDirectory)References.targets" />
-
-  <!-- Use arcade's perf test target name. -->
-  <Target Name="PerformanceTest" DependsOnTargets="Test" />
 
 </Project>

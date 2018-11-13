@@ -29,8 +29,13 @@
     <RunScriptHost Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' != 'Windows_NT'">$RUNTIME_PATH/dotnet</RunScriptHost>
 
     <!-- In UAP we don't want the repro steps printed. -->
-    <RunScriptOutputEchoes Condition="'$(BuildingUAPVertical)' != 'true'">true</RunScriptOutputEchoes>
+    <RunScriptOutputEchoes Condition="'$(BuildingUAPVertical)' != 'true' AND '$(UseDotNetNativeToolchain)' != 'true'">true</RunScriptOutputEchoes>
   </PropertyGroup>
+
+  <!-- Set env variable to use the local netfx assemblies instead of the ones in the GAC. -->
+  <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
+    <RunScriptCommands Include="set DEVPATH=%RUNTIME_PATH%" />
+  </ItemGroup>
 
   <!-- Binplace dirs for supplemental test data. -->
   <ItemGroup>
@@ -39,6 +44,7 @@
   </ItemGroup>
 
   <Target Name="PublishSupplementalTestData"
+          DependsOnTargets="$(PublishSupplementalTestDataDependsOn)"
           Inputs="@(SupplementalTestDataDir);%(SupplementalTestDataDir.Identity)"
           Outputs="unused">
 
@@ -229,7 +235,6 @@
   <Target Name="RebuildAndTest" DependsOnTargets="Rebuild;Test" />
 
   <!-- Core testing framework -->
-  <Import Condition="'$(UseDotNetNativeToolchain)' == 'true'" Project="$(MSBuildThisFileDirectory)Core.ilc.targets" />
   <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Core.uap.targets" />
 
   <!-- Components -->
