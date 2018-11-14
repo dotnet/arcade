@@ -1,0 +1,3 @@
+<Project>
+  <Target Name="PublishWithOutput" DependsOnTargets="Restore;Publish" Returns="$(PublishDir)" />
+</Project>
