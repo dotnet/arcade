@@ -37,6 +37,13 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         public string PathToDotnet { get; set; }
 
+        /// <summary>
+        /// Boolean true if this is a posix shell, false if not.
+        /// This does not need to be set by a user; it is automatically determined in Microsoft.DotNet.Helix.Sdk.MonoQueue.targets
+        /// </summary>
+        [Required]
+        public bool IsPosixShell { get; set; }
+
         private Dictionary<string, string> _directoriesToPathMap;
         private Dictionary<string, string> _directoriesToArgumentsMap;
 
@@ -142,7 +149,17 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string assemblyName = Path.GetFileNameWithoutExtension(_directoriesToPathMap[publishPath]);
             string dotNetPath = string.IsNullOrEmpty(PathToDotnet) ? "dotnet" : PathToDotnet;
-            string command = $"{dotNetPath} xunit.console.dll {assemblyName}.dll -xml {Guid.NewGuid()}-testResults.xml {_directoriesToArgumentsMap[publishPath]}";
+            string xunitConsoleVariable = "";
+            if (IsPosixShell)
+            {
+                xunitConsoleVariable = "$XUNIT_CONSOLE_RUNNER";
+            }
+            else
+            {
+                xunitConsoleVariable = "%XUNIT_CONSOLE_RUNNER%";
+            }
+
+            string command = $"{dotNetPath} {xunitConsoleVariable} {assemblyName}.dll -xml {Guid.NewGuid()}-testResults.xml {_directoriesToArgumentsMap[publishPath]}";
 
             Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishPath}, Command: {command}");
 
