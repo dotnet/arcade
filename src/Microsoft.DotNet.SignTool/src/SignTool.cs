@@ -138,7 +138,14 @@ namespace Microsoft.DotNet.SignTool
             {
                 if (Directory.Exists(signingDir))
                 {
-                    Directory.Delete(signingDir, recursive: true);
+                    try
+                    {
+                        Directory.Delete(signingDir, recursive: true);
+                    }
+                    catch (Exception e)
+                    {
+                        _log.LogWarning($"Couldn't delete temp signing dir {signingDir}. Ignoring.");
+                    }
                 }
             }
 
