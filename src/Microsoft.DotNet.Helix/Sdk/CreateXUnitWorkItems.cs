@@ -27,11 +27,18 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string[] XUnitDllPaths { get; set; }
 
         /// <summary>
+        /// A list of arguments to be passed to xUnit.
+        /// Either specify one set per xUnit project (in order of project) or specify a single set to be applied to all projects
+        /// </summary>
+        public string[] XUnitArguments { get; set; }
+
+        /// <summary>
         /// The path to the dotnet executable on the Helix agent. Defaults to "dotnet"
         /// </summary>
         public string PathToDotnet { get; set; }
 
         private Dictionary<string, string> _directoriesToPathMap;
+        private Dictionary<string, string> _directoriesToArgumentsMap;
 
         /// <summary>
         /// An array of ITaskItems of type HelixWorkItem
@@ -87,7 +94,13 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return;
             }
 
+            if (XUnitArguments.Length != 1 && XUnitArguments.Length != XUnitDllDirectories.Length)
+            {
+                Log.LogError($"Number of XUnit arguments does not match number of XUnit projects: {XUnitArguments.Length} sets of arguments were provided for {XUnitDllDirectories.Length} projects");
+            }
+
             _directoriesToPathMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            _directoriesToArgumentsMap = new Dictionary<string, string>();
             for (int i = 0; i < XUnitDllDirectories.Length; i++)
             {
                 if (_directoriesToPathMap.ContainsKey(XUnitDllDirectories[i]))
@@ -98,6 +111,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                 else
                 {
                     _directoriesToPathMap.Add(XUnitDllDirectories[i], XUnitDllPaths[i]);
+                    if (XUnitArguments.Length == 1)
+                    {
+                        _directoriesToArgumentsMap.Add(XUnitDllDirectories[i], XUnitArguments[0]);
+                    }
+                    else
+                    {
+                        _directoriesToArgumentsMap.Add(XUnitDllDirectories[i], XUnitArguments[i]);
+                    }
                 }
             }
 
@@ -117,7 +138,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string assemblyName = Path.GetFileNameWithoutExtension(_directoriesToPathMap[publishPath]);
             string dotNetPath = string.IsNullOrEmpty(PathToDotnet) ? "dotnet" : PathToDotnet;
-            string command = $"{dotNetPath} xunit.console.dll {assemblyName}.dll -xml testResults.xml";
+            string command = $"{dotNetPath} xunit.console.dll {assemblyName}.dll -xml testResults.xml {_directoriesToArgumentsMap[publishPath]}";
 
             Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishPath}, Command: {command}");
 

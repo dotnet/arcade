@@ -12,6 +12,7 @@ parameters:
   XUnitProjects: ''
   XUnitTargetFramework: ''
   XUnitRunnerVersion: ''
+  XUnitRunnerArguments: ''
   IncludeDotNetCli: false
   DotNetCliPackageType: ''
   DotNetCliVersion: ''
@@ -41,6 +42,8 @@ steps:
       CorrelationPayloadDirectory: ${{ parameters.CorrelationPayloadDirectory }}
       XUnitProjects: ${{ parameters.XUnitProjects }}
       XUnitTargetFramework: ${{ parameters.XUnitTargetFramework }}
+      XUnitRunnerVersion: ${{ parameters.XUnitRunnerVersion }}
+      XUnitRunnerArguments: ${{ parameters.XUnitRunnerArguments }}
       IncludeDotNetCli: ${{ parameters.IncludeDotNetCli }}
       DotNetCliPackageType: ${{ parameters.DotNetCliPackageType }}
       DotNetCliVersion: ${{ parameters.DotNetCliVersion }}
