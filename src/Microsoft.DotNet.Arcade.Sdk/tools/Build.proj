@@ -42,12 +42,12 @@
   <ItemGroup>
     <ProjectToBuild Include="$(Projects)"/>
   </ItemGroup>
-  <ItemGroup Condition="'$(SdkProjects)' != ''">
-    <!-- SdkProjects and Projects are unlikely to define the same "_SolutionBuildTargets".  If SdkProjects are defined
+  <ItemGroup Condition="'$(SdkTaskProjects)' != ''">
+    <!-- SdkTaskProjects and Projects are unlikely to define the same "_SolutionBuildTargets".  If SdkTaskProjects are defined
          ignore Projects, these groups are mutually exclusive -->
     <ProjectToBuild Remove="@(ProjectToBuild)" />
     <_SdkTaskProject Include="$(SdkTaskProjects)"/>
-    <!-- SdkProjects are in the Arcade SDK, the user only knows the name of the projects, not the full path, so fully
+    <!-- SdkTaskProjects are in the Arcade SDK, the user only knows the name of the projects, not the full path, so fully
          qualify the path with 'MSBuildThisFileDirectory' -->
     <ProjectToBuild Include="@(_SdkTaskProject->'$(MSBuildThisFileDirectory)%(Identity)')" />
   </ItemGroup>
@@ -76,7 +76,7 @@
     <Error Text="Property 'Projects' must be specified" Condition="'$(Projects)' == ''"/>
     <Error Text="Property 'RepoRoot' must be specified" Condition="'$(_RepoRootOriginal)' == ''"/>
     <Error Text="File 'global.json' must exist in directory specified by RepoRoot: '$(_RepoRootOriginal)'" Condition="'$(_RepoRootOriginal)' != '' and !Exists('$(RepoRoot)global.json')"/>
-    <Error Text="Property 'Execute' only applies to 'SdkProjects' but no 'SdkProjects' are defined" Condition="'$(Execute)' == 'true' and '$(SdkProjects)' == ''" />
+    <Error Text="Property 'Execute' only applies to 'SdkTaskProjects' but no 'SdkTaskProjects' are defined" Condition="'$(Execute)' == 'true' and '$(SdkTaskProjects)' == ''" />
 
     <PropertyGroup>
       <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' != 'Core'">"$(MSBuildBinPath)\MSBuild.exe" /nodeReuse:false</_MSBuildCmd>
@@ -105,7 +105,7 @@
       <_SolutionBuildTargets Include="IntegrationTest" Condition="'$(IntegrationTest)' == 'true'" />
       <_SolutionBuildTargets Include="PerformanceTest" Condition="'$(PerformanceTest)' == 'true'" />
       <!-- Used for sdk projects to perform some task -->
-      <_SolutionBuildTargets Include="Execute" Condition="'$(Execute)' == 'true' and '$(SdkProjects)' != ''" />
+      <_SolutionBuildTargets Include="Execute" Condition="'$(Execute)' == 'true' and '$(SdkTaskProjects)' != ''" />
     </ItemGroup>
     <ItemGroup>
       <_CommonProps Include="Configuration=$(Configuration)"/>
@@ -166,7 +166,7 @@
           Condition="'$(_RestoreTools)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <Exec Command='$(_MSBuildCmd) "@(ProjectToBuild)" /bl:"$(ArtifactsLogDir)Restore.binlog" /nologo /m /v:quiet /t:Restore $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
-          Condition="'$(SdkProjects)' == '' and '$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
+          Condition="'$(SdkTaskProjects)' == '' and '$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <!--
       Restore built-in tools.
@@ -188,7 +188,7 @@
              RemoveProperties="$(_RemoveProps)"
              Targets="Restore"
              BuildInParallel="true"
-             Condition="'$(SdkProjects)' == '' and '$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
+             Condition="'$(SdkTaskProjects)' == '' and '$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
 
     <!--
       Build solution.
@@ -203,7 +203,7 @@
     <MSBuild Projects="AfterSolutionBuild.proj"
              Properties="@(_CommonProps)"
              Targets="@(_SolutionBuildTargets)"
-             Condition="'$(SdkProjects)' == ''" />
+             Condition="'$(SdkTaskProjects)' == ''" />
 
     <!--
       Sign artifacts.
@@ -216,7 +216,7 @@
     <MSBuild Projects="AfterSigning.proj"
              Properties="@(_CommonProps)"
              Targets="@(_SolutionBuildTargets)"
-             Condition="'$(SdkProjects)' == ''" />
+             Condition="'$(SdkTaskProjects)' == ''" />
 
     <MSBuild Projects="Publish.proj"
              Properties="@(_PublishProps)"
