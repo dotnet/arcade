@@ -10,12 +10,6 @@ import helix.logs
 
 log = helix.logs.get_logger()
 
-acceptableXUnitFileNames = [
-    r"testResults.xml",
-    r"test-results.xml",
-    r"test_results.xml"
-]
-
 class HelixHelper:
     def __init__(self, settings):
         self.settings = settings
@@ -48,11 +42,11 @@ class HelixHelper:
             self.error("FailedUpload", "Failed to upload "+file_path+"after retry")
 
 def findXUnitResults(search_dir):
-    # Regex for finding (guid)-testResults.xml files
-    results_regex = re.compile(r"([\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12})?-testResults.xml")
+    # Regex for finding (guid-)?[testResults|test-results|test_results].xml files
+    results_regex = re.compile(r"([\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}-)?test[-_]?[rR]esults.xml")
     for root, dirs, files in os.walk(search_dir):
         for file_name in files:
-            if file_name in acceptableXUnitFileNames or re.match(results_regex, file_name) is not None:
+            if re.match(results_regex, file_name) is not None:
                 return os.path.join(root, file_name)
     return None
 
