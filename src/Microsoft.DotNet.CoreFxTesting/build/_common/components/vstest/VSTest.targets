@@ -44,7 +44,7 @@
       </ItemGroup>
     </When>
     <When Condition="'$(BuildingUAPVertical)' == 'true'">
-      <ItemGroup Condition="'$(BuildingUAPVertical)' == 'true'">
+      <ItemGroup>
         <ReferenceFromRuntime Include="testhost" />
         <ReferenceFromRuntime Include="xunit.runner.visualstudio.uwp.testadapter" />
       </ItemGroup>

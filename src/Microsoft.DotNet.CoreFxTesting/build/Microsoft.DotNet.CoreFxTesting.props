@@ -3,10 +3,6 @@
 <Project>
 
   <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <MSBuildTestAssemblyPath Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)\..\tools\netcoreapp2.1\Microsoft.DotNet.CoreFxTesting.dll</MSBuildTestAssemblyPath>
     <MSBuildTestAssemblyPath Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.CoreFxTesting.exe</MSBuildTestAssemblyPath>
 
@@ -16,6 +12,10 @@
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)TestProject.props" />
+
+  <!-- Enable references to the test framework for test support libraries. -->
+  <Import Condition="'$(IsTestSupportProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'test', 'References.props'))" />
+  <Import Condition="'$(IsTestSupportProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'performance', 'References.props'))" />
 
   <!-- Import the core testing infrastructure only for test projects. -->
   <Import Condition="'$(IsTestProject)' == 'true' AND '$(IsTestSupportProject)' != 'true'" Project="$(TestCoreDir)Core.props" />

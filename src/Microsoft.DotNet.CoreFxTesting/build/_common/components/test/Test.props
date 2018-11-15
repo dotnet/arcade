@@ -11,4 +11,19 @@
     <PublishSupplementalTestDataDependsOn>$(PublishSupplementalTestDataDependsOn);SetupTestProfile</PublishSupplementalTestDataDependsOn>
   </PropertyGroup>
 
+  <!-- Test runner config file. -->
+  <ItemGroup>
+    <SupplementalTestData Condition="'$(SkipTestRunnerConfigCopying)' != 'true'" Include="$(TestRunnerConfigPath)" />
+  </ItemGroup>
+
+  <!-- Helix dependencies -->
+  <ItemGroup Condition="'$(ArchiveTests)' == 'true' AND '$(IncludeTestFrameworkReferences)' == 'true'">
+    <TestArchiveDependencies Include="$(RuntimePath)Microsoft.DotNet.XUnitExtensions.dll" />
+    <TestArchiveDependencies Include="$(RuntimePath)xunit.assert.dll" />
+    <TestArchiveDependencies Include="$(RuntimePath)xunit.core.dll" />
+    <TestArchiveDependencies Include="$(RuntimePath)xunit.abstractions.dll" />
+  </ItemGroup>
+  
+  <Import Project="$(MSBuildThisFileDirectory)References.props" />
+
 </Project>

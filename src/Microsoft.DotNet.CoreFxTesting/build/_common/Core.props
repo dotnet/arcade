@@ -7,6 +7,17 @@
     <TestsSuccessfulSemaphoreName>tests.passed</TestsSuccessfulSemaphoreName>
   </PropertyGroup>
 
+  <!-- Set env variable to use the local netfx assemblies instead of the ones in the GAC. -->
+  <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
+    <RunScriptCommands Include="set DEVPATH=%RUNTIME_PATH%" />
+  </ItemGroup>
+  
+  <!-- Binplace dirs for supplemental test data. -->
+  <ItemGroup>
+    <SupplementalTestDataDir Include="$(TestPath)" />
+    <SupplementalTestDataDir Include="$(OutDir)" />
+  </ItemGroup>
+
   <!-- Test target execution order. -->
   <PropertyGroup>
     <TestDependsOn>

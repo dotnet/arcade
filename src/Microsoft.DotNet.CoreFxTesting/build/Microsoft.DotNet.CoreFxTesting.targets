@@ -71,14 +71,6 @@
   <Import Condition="'$(EnableBenchviewTarget)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'performance', 'Benchview.targets'))" />
 
   <!--
-    Test support project imports.
-  -->
-
-  <!-- Enable references to the test framework for test support libraries. -->
-  <Import Condition="'$(IsTestSupportProject)' == 'true' AND '$(IncludeTestFrameworkReferences)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'test', 'References.targets'))" />
-  <Import Condition="'$(IsTestSupportProject)' == 'true' AND '$(IncludePerformanceTestFrameworkReferences)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'performance', 'References.targets'))" />
-
-  <!--
     Test project imports.
   -->
 

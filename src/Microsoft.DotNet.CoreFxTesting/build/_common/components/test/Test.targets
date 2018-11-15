@@ -41,26 +41,12 @@
     <TestsSuccessfulSemaphoreName Condition="'$(WithoutCategories)' != ''">$(TestsSuccessfulSemaphoreName).without$(WithoutCategories.Replace(';', '.'))</TestsSuccessfulSemaphoreName>
   </PropertyGroup>
 
-  <!-- Test runner config file. -->
-  <ItemGroup>
-    <SupplementalTestData Condition="'$(SkipTestRunnerConfigCopying)' != 'true'" Include="$(TestRunnerConfigPath)" />
-  </ItemGroup>
-
-  <!-- Helix dependencies -->
-  <ItemGroup Condition="'$(ArchiveTests)' == 'true' AND '$(IncludeTestFrameworkReferences)' == 'true'">
-    <TestArchiveDependencies Include="$(RuntimePath)Microsoft.DotNet.XUnitExtensions.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.assert.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.core.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.abstractions.dll" />
-  </ItemGroup>
-
   <Target Name="ValidateTargetOSTrait">
 
-    <Error Condition="'$(TargetOSTrait)' == ''" Text="TargetOS [$(TargetOS)] is unknown so we don't know how to configure the test run for this project [$(TestProjectName)]" />
+    <Error Condition="'$(TargetOSTrait)' == ''"
+           Text="TargetOS [$(TargetOS)] is unknown so we don't know how to configure the test run for this project [$(TestProjectName)]" />
 
   </Target>
-
-  <Import Condition="'$(IncludeTestFrameworkReferences)' == 'true'" Project="$(MSBuildThisFileDirectory)References.targets" />
 
   <Target Name="SetupTestProfile">
 
