@@ -28,6 +28,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         /// <summary>
         /// The framework for the XUnit console runner
+        /// Should match the name of the folder in the xunit.console.runner nupkg
         /// </summary>
         [Required]
         public string XUnitTargetFramework { get; set; }
@@ -107,13 +108,13 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return;
             }
 
-            if (XUnitArguments.Length != 0 && XUnitArguments.Length != 1 && XUnitArguments.Length != XUnitDllDirectories.Length)
+            if ((XUnitArguments is null ? 0 : XUnitArguments.Length) != 0 && XUnitArguments.Length != 1 && XUnitArguments.Length != XUnitDllDirectories.Length)
             {
                 Log.LogError($"Number of XUnit arguments does not match number of XUnit projects: {XUnitArguments.Length} sets of arguments were provided for {XUnitDllDirectories.Length} projects");
             }
 
             _directoriesToPathMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            _directoriesToArgumentsMap = new Dictionary<string, string>();
+            _directoriesToArgumentsMap = new Dictionary<string, string>(StringComparer.Ordinal);
             for (int i = 0; i < XUnitDllDirectories.Length; i++)
             {
                 if (_directoriesToPathMap.ContainsKey(XUnitDllDirectories[i]))
