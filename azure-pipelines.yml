@@ -1,6 +1,6 @@
 variables:
   - name: _HelixType
-    value: build/product
+    value: build/product/
   - name: _TeamName
     value: DotNetCore
 resources:
