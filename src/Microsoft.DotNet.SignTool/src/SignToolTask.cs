@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.SignTool
         /// List of file names that should be ignored when checking
         /// for correcteness of strong name signature.
         /// </summary>
-        public string[] RelaxStrongNameCheck { get; set; }
+        public string[] ItemsToSkipStrongNameCheck { get; set; }
 
         /// <summary>
         /// Mapping relating PublicKeyToken, CertificateName and Strong Name. 
@@ -159,7 +159,7 @@ namespace Microsoft.DotNet.SignTool
 
             if (Log.HasLoggedErrors) return;
 
-            var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput, RelaxStrongNameCheck);
+            var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput, ItemsToSkipStrongNameCheck);
 
             if (Log.HasLoggedErrors) return;
 

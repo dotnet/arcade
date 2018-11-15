@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.SignTool
             var process = Process.Start(new ProcessStartInfo()
             {
                 FileName = _snPath,
-                Arguments = $@"-v ""{fileFullPath}"" > nul",
+                Arguments = $@"-vf ""{fileFullPath}"" > nul",
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardError = false,

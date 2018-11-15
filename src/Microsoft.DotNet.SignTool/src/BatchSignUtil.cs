@@ -23,16 +23,16 @@ namespace Microsoft.DotNet.SignTool
         private readonly IBuildEngine _buildEngine;
         private readonly BatchSignInput _batchData;
         private readonly SignTool _signTool;
-        private readonly string[] _relaxStrongNameCheck;
+        private readonly string[] _itemsToSkipStrongNameCheck;
 
         internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool, 
-            BatchSignInput batchData, string[] relaxStrongNameCheck)
+            BatchSignInput batchData, string[] itemsToSkipStrongNameCheck)
         {
             _signTool = signTool;
             _batchData = batchData;
             _log = log;
             _buildEngine = buildEngine;
-            _relaxStrongNameCheck = relaxStrongNameCheck;
+            _itemsToSkipStrongNameCheck = itemsToSkipStrongNameCheck;
         }
 
         internal void Go()
@@ -311,12 +311,13 @@ namespace Microsoft.DotNet.SignTool
         {
             foreach (var file in _batchData.FilesToSign)
             {
-                if (_relaxStrongNameCheck.Contains(file.FileName))
+                if (_itemsToSkipStrongNameCheck.Contains(file.FileName))
                 {
+                    _log.LogMessage($"Skipping strong-name validation for {file.FullPath}.");
                     continue;
                 }
 
-                if (file.IsPEFile() && !_signTool.VerifyStrongNameSign(file.FullPath))
+                if (!string.IsNullOrEmpty(file.SignInfo.StrongName) && !_signTool.VerifyStrongNameSign(file.FullPath))
                 {
                     _log.LogError($"Assembly {file.FullPath} is not strong-name signed correctly.");
                 }
