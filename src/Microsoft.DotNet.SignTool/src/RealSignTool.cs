@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.SignTool
     {
         private readonly string _msbuildPath;
         private readonly string _logDir;
+        private readonly string _snPath;
 
         /// <summary>
         /// The number of bytes from the start of the <see cref="CorHeader"/> to its <see cref="CorFlags"/>.
@@ -34,6 +35,7 @@ namespace Microsoft.DotNet.SignTool
         {
             TestSign = args.TestSign;
             _msbuildPath = args.MSBuildPath;
+            _snPath = args.SNBinaryPath;
             _logDir = args.LogDir;
         }
 
@@ -90,6 +92,23 @@ namespace Microsoft.DotNet.SignTool
             }
 
             return ContentUtil.IsAuthenticodeSigned(assemblyStream);
+        }
+
+        public override bool VerifyStrongNameSign(string fileFullPath)
+        {
+            var process = Process.Start(new ProcessStartInfo()
+            {
+                FileName = _snPath,
+                Arguments = $@"-v ""{fileFullPath}"" > nul",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = false,
+                RedirectStandardOutput = false
+            });
+
+            process.WaitForExit();
+
+            return process.ExitCode == 0;
         }
     }
 }

@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.IO.Packaging;
@@ -22,13 +23,16 @@ namespace Microsoft.DotNet.SignTool
         private readonly IBuildEngine _buildEngine;
         private readonly BatchSignInput _batchData;
         private readonly SignTool _signTool;
+        private readonly string[] _relaxStrongNameCheck;
 
-        internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool, BatchSignInput batchData)
+        internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool, 
+            BatchSignInput batchData, string[] relaxStrongNameCheck)
         {
             _signTool = signTool;
             _batchData = batchData;
             _log = log;
             _buildEngine = buildEngine;
+            _relaxStrongNameCheck = relaxStrongNameCheck;
         }
 
         internal void Go()
@@ -54,6 +58,9 @@ namespace Microsoft.DotNet.SignTool
             {
                 return;
             }
+
+            // Check that all files have a strong name signature
+            VerifyStrongNameSigning();
 
             // Validate the signing worked and produced actual signed binaries in all locations.
             VerifyAfterSign(_log);
@@ -296,6 +303,22 @@ namespace Microsoft.DotNet.SignTool
                             }
                         }
                     }
+                }
+            }
+        }
+
+        private void VerifyStrongNameSigning()
+        {
+            foreach (var file in _batchData.FilesToSign)
+            {
+                if (_relaxStrongNameCheck.Contains(file.FileName))
+                {
+                    continue;
+                }
+
+                if (file.IsPEFile() && !_signTool.VerifyStrongNameSign(file.FullPath))
+                {
+                    _log.LogError($"Assembly {file.FullPath} is not strong-name signed correctly.");
                 }
             }
         }
