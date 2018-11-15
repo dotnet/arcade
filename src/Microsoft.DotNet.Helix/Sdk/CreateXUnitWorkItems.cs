@@ -27,6 +27,12 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string[] XUnitDllPaths { get; set; }
 
         /// <summary>
+        /// The framework for the XUnit console runner
+        /// </summary>
+        [Required]
+        public string XUnitTargetFramework { get; set; }
+
+        /// <summary>
         /// A list of arguments to be passed to xUnit.
         /// Either specify one set per xUnit project (in order of project) or specify a single set to be applied to all projects
         /// </summary>
@@ -148,18 +154,19 @@ namespace Microsoft.DotNet.Helix.Sdk
             await Task.Yield();
 
             string assemblyName = Path.GetFileNameWithoutExtension(_directoriesToPathMap[publishPath]);
-            string dotNetPath = string.IsNullOrEmpty(PathToDotnet) ? "dotnet" : PathToDotnet;
-            string xunitConsoleVariable = "";
+            string dotNetPath =  XUnitTargetFramework.Contains("core") ? (string.IsNullOrEmpty(PathToDotnet) ? "dotnet exec " : $"{PathToDotnet} exec ") : "";
+
+            string xunitConsoleRunner = "";
             if (IsPosixShell)
             {
-                xunitConsoleVariable = "$XUNIT_CONSOLE_RUNNER";
+                xunitConsoleRunner = "$XUNIT_CONSOLE_RUNNER";
             }
             else
             {
-                xunitConsoleVariable = "%XUNIT_CONSOLE_RUNNER%";
+                xunitConsoleRunner = "%XUNIT_CONSOLE_RUNNER%";
             }
 
-            string command = $"{dotNetPath} {xunitConsoleVariable} {assemblyName}.dll -xml {Guid.NewGuid()}-testResults.xml {_directoriesToArgumentsMap[publishPath]}";
+            string command = $"{dotNetPath}{xunitConsoleRunner} {assemblyName}.dll -xml {Guid.NewGuid()}-testResults.xml {_directoriesToArgumentsMap[publishPath]}";
 
             Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishPath}, Command: {command}");
 
