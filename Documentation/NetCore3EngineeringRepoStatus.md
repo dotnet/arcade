@@ -194,7 +194,7 @@ At the end of each phase, full migration would be completed for the correspondin
 
 | Phase                                                | Est. Completion Date | Status                                                       | Notes                                |
 | ---------------------------------------------------- | -------------------- | ------------------------------------------------------------ | ------------------------------------ |
-| 1. Migration of dotnet-wpf Repo and its internal clone | Dec 4, 2018          | The dotnet-wpf repo will be set-up on dnceng using the shared toolset (Arcade SDK), and will use Azure DevOps. This work is currently being prototyped and is expected to be deployed by Dec 4th. | No known project risks at this time. |
+| 1. Migration of dotnet-wpf Repo and its internal clone | Dec 4, 2018          | The dotnet-wpf repo will be set-up on dnceng using the shared toolset (Arcade SDK), and will use Azure DevOps. **This work has been completed as of 11/13/2018** |  |
 | 2. Migration of dotnet-trusted Repo                   | Jan 31, 2019        | New C++/CLI support for .NET Core is being added in Dev16 Preview 2. We are testing this in Nov/Dec 2018, and will be prototyping our repo migration to shared toolset (Arcade SDK) during this time. The actual repo migration will happen in Jan 2019 on dnceng. At the end of this, we expect to be using Azure DevOps as well.|   There are some inherent risks here because we depend on untested/new techologies - notably C++/CLI support in Dev16. We also depend on the fact that this will get into Dev16 Preview 2 without delays or major bugs, and that we can set up Azure DevOps and setup to depend on Dev16 Preview 2.|
 
 
