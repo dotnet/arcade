@@ -18,7 +18,7 @@ parameters:
   runAsPublic: false
 
 jobs:
-- job: Asset_Registry_Publish_v2
+- job: Asset_Registry_Publish
 
   dependsOn: ${{ parameters.dependsOn }}
 
