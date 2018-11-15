@@ -60,9 +60,12 @@
     <Error Condition="'@(HelixTargetQueue)' == ''" Text="You must specify at least one target queue to send a job to helix. Use HelixTargetQueues property for multiple or HelixTargetQueue for a single queue." />
   </Target>
 
+  <Import Project="$(MSBuildThisFileDirectory)azure-pipelines/AzurePipelines.MultiQueue.targets"
+          Condition="$(ImportAzurePipelinesTargets)"/>
+
   <Target Name="Test"
           DependsOnTargets="$(TestDependsOn)">
-    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Test" Properties="HelixTargetQueue=%(HelixTargetQueue.Identity)">
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Test" Properties="HelixTargetQueue=%(HelixTargetQueue.Identity);%(HelixTargetQueue.AdditionalProperties)">
       <Output TaskParameter="TargetOutputs" ItemName="SentJobs" />
     </MSBuild>
   </Target>

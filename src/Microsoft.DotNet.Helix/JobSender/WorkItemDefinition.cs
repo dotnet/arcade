@@ -56,7 +56,12 @@ namespace Microsoft.DotNet.Helix.Client
 
         public IWorkItemDefinition WithDirectoryPayload(string directory)
         {
-            Payload = new DirectoryPayload(directory);
+            return WithDirectoryPayload(directory, false);
+        }
+
+        public IWorkItemDefinition WithDirectoryPayload(string directory, bool includeDirectoryName)
+        {
+            Payload = new DirectoryPayload(directory, includeDirectoryName);
             return this;
         }
 

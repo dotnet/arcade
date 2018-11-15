@@ -376,8 +376,11 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (Directory.Exists(path))
             {
+                string includeDirectoryNameStr = correlationPayload.GetMetadata("IncludeDirectoryName");
+                bool.TryParse(includeDirectoryNameStr, out bool includeDirectoryName);
+
                 Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Directory '{path}'");
-                return def.WithCorrelationPayloadDirectory(path);
+                return def.WithCorrelationPayloadDirectory(path, includeDirectoryName);
             }
 
             if (File.Exists(path))

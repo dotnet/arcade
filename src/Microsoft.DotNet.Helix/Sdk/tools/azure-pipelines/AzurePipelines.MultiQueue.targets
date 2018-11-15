@@ -1,0 +1,25 @@
+<Project>
+  <Target Name="StartTestRuns"
+          BeforeTargets="Test"
+          Inputs="@(HelixTargetQueue)"
+          Outputs="%(HelixTargetQueue.Identity)">
+    <PropertyGroup>
+      <_CurrentTargetQueue>%(HelixTargetQueue.Identity)</_CurrentTargetQueue>
+    </PropertyGroup>
+    <StartAzurePipelinesTestRun TestRunName="$(_CurrentTargetQueue)">
+      <Output TaskParameter="TestRunId" PropertyName="TestRunId"/>
+    </StartAzurePipelinesTestRun>
+    <ItemGroup>
+      <HelixTargetQueue Condition="'%(Identity)' == '$(_CurrentTargetQueue)'">
+        <TestRunId>$(TestRunId)</TestRunId>
+        <AdditionalProperties>TestRunId=$(TestRunId)</AdditionalProperties>
+      </HelixTargetQueue>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="StopTestRuns"
+          AfterTargets="Wait">
+    <StopAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)">
+    </StopAzurePipelinesTestRun>
+  </Target>
+</Project>

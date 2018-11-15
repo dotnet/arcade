@@ -59,7 +59,12 @@ namespace Microsoft.DotNet.Helix.Client
 
         public IJobDefinition WithCorrelationPayloadDirectory(string directory)
         {
-            CorrelationPayloads.Add(new DirectoryPayload(directory));
+            return WithCorrelationPayloadDirectory(directory, false);
+        }
+
+        public IJobDefinition WithCorrelationPayloadDirectory(string directory, bool includeDirectoryName)
+        {
+            CorrelationPayloads.Add(new DirectoryPayload(directory, includeDirectoryName));
             return this;
         }
 

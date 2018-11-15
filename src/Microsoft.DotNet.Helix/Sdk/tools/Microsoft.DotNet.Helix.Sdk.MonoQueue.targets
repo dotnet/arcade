@@ -96,6 +96,9 @@
     </Otherwise>
   </Choose>
 
+  <Import Project="$(MSBuildThisFileDirectory)azure-pipelines/AzurePipelines.MonoQueue.targets"
+          Condition="$(ImportAzurePipelinesTargets)"/>
+
   <Target Name="AddDotNetSdk" Condition="$(IncludeDotNetCli)" BeforeTargets="Test">
     <FindDotNetCliPackage Version="$(DotNetCliVersion)" Runtime="$(DotNetCliRuntime)" PackageType="$(DotNetCliPackageType)">
       <Output TaskParameter="PackageUri" PropertyName="DotNetCliPackageUri"/>
