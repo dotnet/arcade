@@ -310,7 +310,8 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             // but we should add an entry in the repositories table, as this is required when
             // adding a new subscription policy.
             // NOTE:
-            // There is a good chance here that we will need to 
+            // There is a good chance here that we will need to also handle <account>.visualstudio.com
+            // but leaving it out for now as it would be preferred to use the new format
             else if (subscription.TargetRepository.Contains("dev.azure.com"))
             {
                 if (repo == null)
