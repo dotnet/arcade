@@ -31,6 +31,11 @@ namespace Microsoft.DotNet.SignTool
                    ByteSequenceComparer.Equals(buffer, _stamp);
         }
 
+        public override bool VerifyStrongNameSign(string fileFullPath)
+        {
+            return true;
+        }
+
         public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath)
             => buildEngine.BuildProjectFile(projectFilePath, null, null, null);
 
