@@ -10,7 +10,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
-    public class FindDotNetCliPackage : Microsoft.Build.Utilities.Task
+    public class FindDotNetCliPackage : Build.Utilities.Task
     {
         private static readonly HttpClient _client = new HttpClient();
         private const string DotNetCoreReleasesUrl = "https://raw.githubusercontent.com/dotnet/core/master/release-notes/releases.json";

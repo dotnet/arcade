@@ -32,7 +32,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
                 : ImmutableList<MergePolicy>.Empty;
         }
 
-        public bool Batchable { get; set; } = true;
+        public bool Batchable { get; set; } = false;
 
         [Required]
         public UpdateFrequency UpdateFrequency { get; set; }

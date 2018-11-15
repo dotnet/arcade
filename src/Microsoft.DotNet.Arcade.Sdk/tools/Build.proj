@@ -26,6 +26,7 @@
     QuietRestore                    "true" to suppress Restore output.
     Build                           "true" to build solution
     Rebuild                         "true" to rebuild solution
+    Execute                         "true" to execute an sdk project "execute" target
     Deploy                          "true" to deploy assets (e.g. VSIXes)
     Test                            "true" to run tests
     IntegrationTest                 "true" to run integration tests
@@ -33,7 +34,6 @@
     Pack                            "true" to build NuGet packages and VS insertion manifests
     Sign                            "true" to sign built binaries
     Publish                         "true" to publish artifacts (e.g. symbols)
-    PublishBuildAssets                 "true" to push build and asset information to the Build Asset Registry
   -->
 
   <!--
@@ -42,12 +42,21 @@
   <ItemGroup>
     <ProjectToBuild Include="$(Projects)"/>
   </ItemGroup>
+  <ItemGroup Condition="'$(SdkTaskProjects)' != ''">
+    <!-- SdkTaskProjects and Projects are unlikely to define the same "_SolutionBuildTargets".  If SdkTaskProjects are defined
+         ignore Projects, these groups are mutually exclusive -->
+    <ProjectToBuild Remove="@(ProjectToBuild)" />
+    <_SdkTaskProject Include="$(SdkTaskProjects)"/>
+    <!-- SdkTaskProjects are in the Arcade SDK, the user only knows the name of the projects, not the full path, so fully
+         qualify the path with 'MSBuildThisFileDirectory' -->
+    <ProjectToBuild Include="@(_SdkTaskProject->'$(MSBuildThisFileDirectory)%(Identity)')" />
+  </ItemGroup>
 
   <PropertyGroup>
     <_RepoRootOriginal>$(RepoRoot)</_RepoRootOriginal>
     <RepoRoot>$([System.IO.Path]::GetFullPath('$(RepoRoot)/'))</RepoRoot>
 
-    <_RemoveProps>Projects;Restore;QuietRestore;Build;Rebuild;Deploy;Test;IntegrationTest;PerformanceTest;Pack;Sign;Publish</_RemoveProps>
+    <_RemoveProps>Projects;Restore;QuietRestore;Build;Rebuild;Deploy;Test;IntegrationTest;PerformanceTest;Pack;Sign;Publish;Execute</_RemoveProps>
   </PropertyGroup>
 
   <Import Project="RepoLayout.props"/>
@@ -59,9 +68,6 @@
     <_PublishToBlobStorage>false</_PublishToBlobStorage>
     <_PublishToBlobStorage Condition="'$(DotNetPublishToBlobFeed)' == 'true'">true</_PublishToBlobStorage>
 
-    <_PublishingAssetsToRegistry>false</_PublishingAssetsToRegistry>
-    <_PublishingAssetsToRegistry Condition="'$(PublishBuildAssets)' == 'true'">true</_PublishingAssetsToRegistry>
-
     <_DotNetOutputBlobFeedDir>$(DotNetOutputBlobFeedDir)</_DotNetOutputBlobFeedDir>
     <_DotNetOutputBlobFeedDir Condition="'$(_DotNetOutputBlobFeedDir)' != '' and !HasTrailingSlash('$(_DotNetOutputBlobFeedDir)')">$(_DotNetOutputBlobFeedDir)\</_DotNetOutputBlobFeedDir>
   </PropertyGroup>
@@ -70,6 +76,7 @@
     <Error Text="Property 'Projects' must be specified" Condition="'$(Projects)' == ''"/>
     <Error Text="Property 'RepoRoot' must be specified" Condition="'$(_RepoRootOriginal)' == ''"/>
     <Error Text="File 'global.json' must exist in directory specified by RepoRoot: '$(_RepoRootOriginal)'" Condition="'$(_RepoRootOriginal)' != '' and !Exists('$(RepoRoot)global.json')"/>
+    <Error Text="Property 'Execute' only applies to 'SdkTaskProjects' but no 'SdkTaskProjects' are defined" Condition="'$(Execute)' == 'true' and '$(SdkTaskProjects)' == ''" />
 
     <PropertyGroup>
       <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' != 'Core'">"$(MSBuildBinPath)\MSBuild.exe" /nodeReuse:false</_MSBuildCmd>
@@ -97,8 +104,9 @@
       <_SolutionBuildTargets Include="Pack" Condition="'$(Pack)' == 'true'" />
       <_SolutionBuildTargets Include="IntegrationTest" Condition="'$(IntegrationTest)' == 'true'" />
       <_SolutionBuildTargets Include="PerformanceTest" Condition="'$(PerformanceTest)' == 'true'" />
+      <!-- Used for sdk projects to perform some task -->
+      <_SolutionBuildTargets Include="Execute" Condition="'$(Execute)' == 'true' and '$(SdkTaskProjects)' != ''" />
     </ItemGroup>
-
     <ItemGroup>
       <_CommonProps Include="Configuration=$(Configuration)"/>
       <_CommonProps Include="ContinuousIntegrationBuild=$(ContinuousIntegrationBuild)"/>
@@ -122,7 +130,6 @@
       <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
       <_RestoreToolsProps Include="PublishingToBlobStorage=$(_PublishToBlobStorage)"/>
-      <_RestoreToolsProps Include="PublishingAssetsToRegistry=$(_PublishingAssetsToRegistry)"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -135,16 +142,6 @@
     <ItemGroup>
       <_SolutionBuildProps Include="@(_CommonProps)"/>
       <_SolutionBuildProps Include="__DeployProjectOutput=$(Deploy)" Condition="'$(Deploy)' != ''"/>
-    </ItemGroup>
-
-    <!--
-        These are set in the eng\common\templates\phases\publish-build-asset.yml template
-    -->
-    <ItemGroup>
-      <_PushProps Include="@(_CommonProps)"/>
-      <_PushProps Include="ManifestsPath=$(ManifestsPath)"/>
-      <_PushProps Include="BuildAssetRegistryToken=$(BuildAssetRegistryToken)"/>
-      <_PushProps Include="MaestroApiEndpoint=$(MaestroApiEndpoint)"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -169,7 +166,7 @@
           Condition="'$(_RestoreTools)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <Exec Command='$(_MSBuildCmd) "@(ProjectToBuild)" /bl:"$(ArtifactsLogDir)Restore.binlog" /nologo /m /v:quiet /t:Restore $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
-          Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
+          Condition="'$(SdkTaskProjects)' == '' and '$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <!--
       Restore built-in tools.
@@ -191,7 +188,7 @@
              RemoveProperties="$(_RemoveProps)"
              Targets="Restore"
              BuildInParallel="true"
-             Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
+             Condition="'$(SdkTaskProjects)' == '' and '$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
 
     <!--
       Build solution.
@@ -205,7 +202,8 @@
 
     <MSBuild Projects="AfterSolutionBuild.proj"
              Properties="@(_CommonProps)"
-             Targets="@(_SolutionBuildTargets)" />
+             Targets="@(_SolutionBuildTargets)"
+             Condition="'$(SdkTaskProjects)' == ''" />
 
     <!--
       Sign artifacts.
@@ -217,16 +215,12 @@
 
     <MSBuild Projects="AfterSigning.proj"
              Properties="@(_CommonProps)"
-             Targets="@(_SolutionBuildTargets)" />
+             Targets="@(_SolutionBuildTargets)"
+             Condition="'$(SdkTaskProjects)' == ''" />
 
     <MSBuild Projects="Publish.proj"
              Properties="@(_PublishProps)"
              Targets="Publish"
              Condition="'$(Publish)' == 'true'"/>
-
-    <MSBuild Projects="PublishBuildAssets.proj"
-             Properties="@(_PushProps)"
-             Targets="PublishBuildAssets"
-             Condition="'$(PublishBuildAssets)' == 'true'" />
   </Target>
 </Project>
