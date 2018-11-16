@@ -39,9 +39,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public bool IsPosixShell { get; set; }
 
-        private Dictionary<string, string> _directoriesToPathMap;
-        private Dictionary<string, string> _directoriesToArgumentsMap;
-
         /// <summary>
         /// An array of ITaskItems of type HelixWorkItem
         /// </summary>

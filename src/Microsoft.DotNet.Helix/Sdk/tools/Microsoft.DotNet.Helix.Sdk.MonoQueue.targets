@@ -119,8 +119,8 @@
       <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)xunit-runner-setup"/>
     </ItemGroup>
     <PropertyGroup>
-      <HelixPreCommands Condition="$(IsPosixShell)">$(HelixPostCommands);$HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/xunit-runner-setup.py $(XUnitTargetFramework)</HelixPreCommands>
-      <HelixPreCommands Condition="!$(IsPosixShell)">$(HelixPostCommands);%HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\xunit-runner-setup.py $(XUnitTargetFramework)</HelixPreCommands>
+      <HelixPreCommands Condition="$(IsPosixShell)">$(HelixPreCommands);$HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/xunit-runner-setup.py $(XUnitTargetFramework)</HelixPreCommands>
+      <HelixPreCommands Condition="!$(IsPosixShell)">$(HelixPreCommands);%HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\xunit-runner-setup.py $(XUnitTargetFramework)</HelixPreCommands>
     </PropertyGroup>
   </Target>
 
