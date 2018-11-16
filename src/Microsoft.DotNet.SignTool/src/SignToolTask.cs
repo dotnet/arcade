@@ -33,6 +33,12 @@ namespace Microsoft.DotNet.SignTool
         public bool TestSign { get; set; }
 
         /// <summary>
+        /// True to perform strong name check on signed files.
+        /// If enabled it will require SNBinaryPath to be informed.
+        /// </summary>
+        public bool DoStrongNameCheck { get; set; }
+
+        /// <summary>
         /// Working directory used for storing files created during signing.
         /// </summary>
         [Required]
@@ -134,10 +140,21 @@ namespace Microsoft.DotNet.SignTool
                 Log.LogWarning($"An empty list of files to sign was passed as parameter.");
             }
 
-            if (!DryRun && (string.IsNullOrEmpty(SNBinaryPath) || !File.Exists(SNBinaryPath) || !SNBinaryPath.EndsWith("sn.exe")))
+            if (!DryRun)
             {
-                Log.LogError($"An incorrect full path to 'sn.exe' was specified: {SNBinaryPath}");
-                return;
+                var isValidSNPath = string.IsNullOrEmpty(SNBinaryPath) || !File.Exists(SNBinaryPath) || !SNBinaryPath.EndsWith("sn.exe");
+
+                if (DoStrongNameCheck && !isValidSNPath)
+                {
+                    Log.LogError($"An incorrect full path to 'sn.exe' was specified: {SNBinaryPath}");
+                    return;
+                }
+
+                if (StrongNameSignInfo?.Where(ti => ti?.ItemSpec?.EndsWith(".snk") ?? false) != null && !isValidSNPath)
+                {
+                    Log.LogError($"An incorrect full path to 'sn.exe' was specified: {SNBinaryPath}");
+                    return;
+                }
             }
 
             var enclosingDir = GetEnclosingDirectoryOfItemsToSign();
@@ -163,7 +180,7 @@ namespace Microsoft.DotNet.SignTool
 
             if (Log.HasLoggedErrors) return;
 
-            util.Go();
+            util.Go(DoStrongNameCheck);
         }
 
         private void PrintConfigInformation()

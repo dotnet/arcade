@@ -18,13 +18,16 @@ This is a MSBuild custom task that provides batch signing and simple verificatio
 | ---------------------- | -------- | ------------------------------------------------------------ |
 | DryRun                 | bool     | When true the list of files to be signed will be created but won't be sent to the signing server. Default is false. |
 | TestSign               | bool     | When true the binaries will be test signed. The default is to real sign. |
+| DoStrongNameCheck      | bool     | When true binaries will be checked for valid strong name signature. The default is false. |
 | **ItemsToSign**        | Array    | This is a list of *full path* to files that need to be signed. Container files will be expanded to look for nested files that need to be signed. |
+| **ItemsToSkipStrongNameCheck** | Array  | This is a list of *file names* that should be skipped when performing strong-name check. |
 | StrongNameSignInfo     | Array    | Should store the default certificate name and strong name to be used for a given Public Key Token. See details below. |
 | FileSignInfo           | Array    | Used to override the default certificate information for specific files and target frameworks combinations. If not specified default information is used or error occurs. See details below. |
 | FileExtensionSignInfo  | Array    | This is a mapping between extension (in the format ".ext") to default sign information for those kind of files. Overriding of the default sign info is done using the other parameters. |
 | CertificatesSignInfo   | Array    | List of certificate names that can be flagged using the `DualSigningAllowed` attribute as dual certificates. |
 | **MicroBuildCorePath** | Dir Path | Path to MicroBuild.Core package directory.                   |
 | MSBuildPath            | Exe path | Path to the MSBuild.exe binary used to run the signing process on MicroBuild. |
+| SNBinaryPath           | Exe path | Path to the sn.exe binary used to strong-name sign / validate signature of managed files. |
 | **TempDir**            | Dir path | Used to store temporary files during the process of calling MicroBuild signing. |
 | LogDir                 | Dir path | MSBuild binary log information from the signing rounds will be stored in this directory. |
 
@@ -32,7 +35,7 @@ This is a MSBuild custom task that provides batch signing and simple verificatio
 
 ​	Items in bold are required: `ItemsToSign`, `MicroBuildCorePath` and `TempDir`.
 
-​	`MSBuildPath` and `LogDir` are only required if `DryRun == false`.
+​	`MSBuildPath`, `SNBinaryPath` and `LogDir` are only required if `DryRun == false`.
 
 
 # Arguments Metadata

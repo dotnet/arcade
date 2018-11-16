@@ -96,6 +96,12 @@ namespace Microsoft.DotNet.SignTool
 
         public override bool VerifyStrongNameSign(string fileFullPath)
         {
+            // The assembly won't verify by design when doing test signing.
+            if (TestSign)
+            {
+                return true;
+            }
+
             var process = Process.Start(new ProcessStartInfo()
             {
                 FileName = _snPath,

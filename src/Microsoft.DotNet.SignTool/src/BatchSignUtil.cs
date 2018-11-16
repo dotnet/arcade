@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.SignTool
             _itemsToSkipStrongNameCheck = itemsToSkipStrongNameCheck;
         }
 
-        internal void Go()
+        internal void Go(bool doStrongNameCheck)
         {
             VerifyCertificates(_log);
 
@@ -60,7 +60,10 @@ namespace Microsoft.DotNet.SignTool
             }
 
             // Check that all files have a strong name signature
-            VerifyStrongNameSigning();
+            if (doStrongNameCheck)
+            {
+                VerifyStrongNameSigning();
+            }
 
             // Validate the signing worked and produced actual signed binaries in all locations.
             VerifyAfterSign(_log);
@@ -317,7 +320,7 @@ namespace Microsoft.DotNet.SignTool
                     continue;
                 }
 
-                if (!string.IsNullOrEmpty(file.SignInfo.StrongName) && !_signTool.VerifyStrongNameSign(file.FullPath))
+                if (file.IsManaged() && !_signTool.VerifyStrongNameSign(file.FullPath))
                 {
                     _log.LogError($"Assembly {file.FullPath} is not strong-name signed correctly.");
                 }
