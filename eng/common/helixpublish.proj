@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk">
 
+  <PropertyGroup>
+    <Language>msbuild</Language>
+  </PropertyGroup>
+
   <ItemGroup>
     <HelixCorrelationPayload Include="$(CorrelationPayloadDirectory)">
       <PayloadDirectory>%(Identity)</PayloadDirectory>
