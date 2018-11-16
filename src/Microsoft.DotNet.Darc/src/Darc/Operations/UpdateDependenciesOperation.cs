@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.Darc.Operations
 
                     // Limit the number of BAR queries by grabbing the repo URIs and making a hash set.
                     var repositoryUrisForQuery = dependencies.Select(dependency => dependency.RepoUri).ToHashSet();
-                    ConcurrentDictionary<string, Task<Build>> buildDictionary = new ConcurrentDictionary<string, Task<Build>>();
+                    ConcurrentDictionary<string, Task<Build>> getLatestBuildTaskDictionary = new ConcurrentDictionary<string, Task<Build>>();
 
                     Channel channelInfo = await channel;
                     if (channelInfo == null)
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Darc.Operations
                     foreach (string repoToQuery in repositoryUrisForQuery)
                     {
                         var latestBuild = remote.GetLatestBuildAsync(repoToQuery, channelInfo.Id.Value);
-                        buildDictionary.TryAdd(repoToQuery, latestBuild);
+                        getLatestBuildTaskDictionary.TryAdd(repoToQuery, latestBuild);
                     }
 
                     // Now walk dependencies again and attempt the update
@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.Darc.Operations
                         Build build;
                         try
                         {
-                            build = await buildDictionary[dependency.RepoUri];
+                            build = await getLatestBuildTaskDictionary[dependency.RepoUri];
                         }
                         catch (ApiErrorException e) when (e.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
                         {
