@@ -124,17 +124,27 @@
     </PropertyGroup>
   </Target>
 
-  <ItemGroup>
-    <XUnitProject Include="$(XUnitProjects)" />
-  </ItemGroup>
+  <Target Name="EvaluateXUnitWorkItems" Condition="'@(XUnitProject)' != ''" BeforeTargets="Test"
+          Inputs="@(XUnitProject)" Outputs="%(XUnitProject.Identity)">
+    <PropertyGroup>
+      <_CurrentXUnitProject>%(XUnitProject.Identity)</_CurrentXUnitProject>
+    </PropertyGroup>
+    <MSBuild Projects="$(_CurrentXUnitProject)" Targets="PublishWithOutput" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.PublishingAfterTargets.targets">
+      <Output TaskParameter="TargetOutputs" PropertyName="_PublishOutputDir" />
+    </MSBuild>
+    <MSBuild Projects="$(_CurrentXUnitProject)" Targets="GetTargetPath" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.PublishingAfterTargets.targets">
+      <Output TaskParameter="TargetOutputs" PropertyName="_TargetPath" />
+    </MSBuild>
 
-  <Target Name="CreateXUnitWorkItems" Condition="'$(XUnitProjects)' != ''" BeforeTargets="Test">
-    <MSBuild Projects="@(XUnitProject)" Targets="PublishWithOutput" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.PublishingAfterTargets.targets">
-      <Output TaskParameter="TargetOutputs" ItemName="XUnitDllDirectory" />
-    </MSBuild>
-    <MSBuild Projects="@(XUnitProject)" Targets="GetTargetPath" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.PublishingAfterTargets.targets">
-      <Output TaskParameter="TargetOutputs" ItemName="XUnitDllPath" />
-    </MSBuild>
+    <ItemGroup>
+      <XUnitProject Condition="'%(Identity)' == '$(_CurrentXUnitProject)">
+        <PublishDirectory>$(_PublishOutputDir)</PublishDirectory>
+        <TargetPath>$(_TargetPath)</TargetPath>
+      </XUnitProject>
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="CreateXUnitWorkItems">    
     <CreateXUnitWorkItems XUnitDllPaths="@(XUnitDllPath)" XUnitDllDirectories="@(XUnitDllDirectory)" >
       <Output TaskParameter="XUnitWorkItems" ItemName="HelixWorkItem"/>
     </CreateXUnitWorkItems>

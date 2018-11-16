@@ -33,7 +33,7 @@ def main():
         log.info("Found xUnit console runner of target framework " + target_framework + " at " + runner_dll_loc)
 
     os.environ["XUNIT_CONSOLE_RUNNER"] = runner_dll_loc
-    log.info("Set environment varialbe XUNIT_CONSOLE_RUNNER to " + runner_dll_loc)
+    log.info("Set environment variable XUNIT_CONSOLE_RUNNER to " + runner_dll_loc)
     
     return 0
 

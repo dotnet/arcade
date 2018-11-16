@@ -172,12 +172,12 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private IJobDefinition AddProperty(IJobDefinition def, ITaskItem property)
         {
-            if (!GetRequiredMetadata(property, "Identity", out string key))
+            if (!property.GetRequiredMetadata(Log, "Identity", out string key))
             {
                 return def;
             }
 
-            if (!GetRequiredMetadata(property, "Value", out string value))
+            if (!property.GetRequiredMetadata(Log, "Value", out string value))
             {
                 return def;
             }
@@ -188,12 +188,12 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private IJobDefinition AddWorkItem(IJobDefinition def, ITaskItem workItem)
         {
-            if (!GetRequiredMetadata(workItem, "Identity", out string name))
+            if (!workItem.GetRequiredMetadata(Log, "Identity", out string name))
             {
                 return def;
             }
 
-            if (!GetRequiredMetadata(workItem, "Command", out string command))
+            if (!workItem.GetRequiredMetadata(Log, "Command", out string command))
             {
                 return def;
             }
@@ -273,7 +273,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
             }
 
-            if (TryGetMetadata(workItem, "PreCommands", out string workItemPreCommandsString))
+            if (workItem.TryGetMetadata("PreCommands", out string workItemPreCommandsString))
             {
                 foreach (string command in SplitCommands(workItemPreCommandsString))
                 {
@@ -283,7 +283,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             yield return workItemCommand;
 
-            if (TryGetMetadata(workItem, "PostCommands", out string workItemPostCommandsString))
+            if (workItem.TryGetMetadata("PostCommands", out string workItemPostCommandsString))
             {
                 foreach (string command in SplitCommands(workItemPostCommandsString))
                 {
@@ -343,24 +343,6 @@ namespace Microsoft.DotNet.Helix.Sdk
                     yield return part;
                 }
             }
-        }
-
-        private bool TryGetMetadata(ITaskItem item, string key, out string value)
-        {
-            value = item.GetMetadata(key);
-            return !string.IsNullOrEmpty(value);
-        }
-
-        private bool GetRequiredMetadata(ITaskItem item, string key, out string value)
-        {
-            value = item.GetMetadata(key);
-            if (string.IsNullOrEmpty(value))
-            {
-                Log.LogError($"Item '{item.ItemSpec}' missing required metadata '{key}'.");
-                return false;
-            }
-
-            return true;
         }
 
         private IJobDefinition AddCorrelationPayload(IJobDefinition def, ITaskItem correlationPayload)

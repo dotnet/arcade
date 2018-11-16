@@ -12,7 +12,6 @@ parameters:
   XUnitProjects: ''
   XUnitTargetFramework: ''
   XUnitRunnerVersion: ''
-  XUnitRunnerArguments: ''
   IncludeDotNetCli: false
   DotNetCliPackageType: ''
   DotNetCliVersion: ''
@@ -27,7 +26,7 @@ steps:
       command: custom
       projects: eng/common/helixpublish.proj
       custom: msbuild
-      arguments: '/t:test /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/SendToHelix.binlog'
+      arguments: '/bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/SendToHelix.binlog'
     displayName: Send job to Helix
     env:
       HelixSource: ${{ parameters.HelixSource }}
@@ -43,7 +42,6 @@ steps:
       XUnitProjects: ${{ parameters.XUnitProjects }}
       XUnitTargetFramework: ${{ parameters.XUnitTargetFramework }}
       XUnitRunnerVersion: ${{ parameters.XUnitRunnerVersion }}
-      XUnitRunnerArguments: ${{ parameters.XUnitRunnerArguments }}
       IncludeDotNetCli: ${{ parameters.IncludeDotNetCli }}
       DotNetCliPackageType: ${{ parameters.DotNetCliPackageType }}
       DotNetCliVersion: ${{ parameters.DotNetCliVersion }}
