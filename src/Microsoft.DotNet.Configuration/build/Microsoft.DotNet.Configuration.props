@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <BuildConfigurationFolder Condition="'$(BuildConfigurationFolder)' == ''">$(ToolSetCommonDirectory)configuration\</BuildConfigurationFolder>
+    <BuildConfigurationImportFile>$(BuildConfigurationFolder)configuration.props</BuildConfigurationImportFile>
+  </PropertyGroup>
+
+  <!-- first pull in the project-specific BuildConfigurations -->
+  <Import Condition="Exists('$(MSBuildProjectDirectory)\Configurations.props')" Project="$(MSBuildProjectDirectory)\Configurations.props" />
+
+  <!-- pull in the generated build configuration props to parse out Configuration and choose the best applicable of BuildConfigurations -->
+  <Import Condition="Exists('$(BuildConfigurationImportFile)')" Project="$(BuildConfigurationImportFile)" />
+</Project>
