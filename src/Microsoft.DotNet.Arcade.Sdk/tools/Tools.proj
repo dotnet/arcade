@@ -51,7 +51,7 @@
     <PackageReference Include="Microsoft.DotNet.SignTool" Version="$(MicrosoftDotNetSignToolVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="RoslynTools.ModifyVsixManifest" Version="$(RoslynToolsModifyVsixManifestVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" Condition="'$(UsingToolSymbolUploader)' == 'true'" IsImplicitlyDefined="true" />
-    <PackageReference Include="Microsoft.DotNet.Maestro.Tasks" Version="$(MicrosoftDotNetMaestroTasksVersion)" Condition="'$(PublishingAssetsToRegistry)' == 'true'" IsImplicitlyDefined="true" />  
+    <PackageReference Include="Microsoft.DotNet.Maestro.Tasks" Version="$(MicrosoftDotNetMaestroTasksVersion)" Condition="'$(PublishBuildAssets)' == 'true'" IsImplicitlyDefined="true" />  
   </ItemGroup>
 
   <!-- Repository extensibility point -->
