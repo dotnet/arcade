@@ -117,6 +117,29 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return source;
         }
 
+        public static string TrimAndGetNullForEmpty(this string s)
+        {
+            if (s == null)
+            {
+                return null;
+            }
+
+            s = s.Trim();
+
+            return s.Length == 0 ? null : s;
+        }
+
+        public static IEnumerable<string> TrimAndExcludeNullOrEmpty(this string[] strings)
+        {
+            if (strings == null)
+            {
+                return Enumerable.Empty<string>();
+            }
+
+            return strings
+                .Select(s => TrimAndGetNullForEmpty(s))
+                .Where(s => s != null);
+        }
         public static string ToStringSafe(this object value)
         {
             if (value == null)
