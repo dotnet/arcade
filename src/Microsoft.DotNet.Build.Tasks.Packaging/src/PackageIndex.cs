@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -272,7 +272,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         public IEnumerable<NuGetFramework> GetInboxFrameworks(string assemblyName, string assemblyVersionString)
         {
-            Version assemblyVersion = FrameworkUtilities.Ensure4PartVersion(String.IsNullOrEmpty(assemblyVersionString) ? new Version(0, 0, 0, 0) : new Version(assemblyVersionString));
+            Version assemblyVersion = FrameworkUtilities.Ensure4PartVersion(assemblyVersionString);
 
             return GetInboxFrameworks(assemblyName, assemblyVersion);
         }
@@ -292,7 +292,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         public bool IsInbox(string assemblyName, NuGetFramework framework, string assemblyVersionString)
         {
-            Version assemblyVersion = FrameworkUtilities.Ensure4PartVersion(String.IsNullOrEmpty(assemblyVersionString) ? new Version(0, 0, 0, 0) : new Version(assemblyVersionString));
+            Version assemblyVersion = FrameworkUtilities.Ensure4PartVersion(assemblyVersionString);
 
             return IsInbox(assemblyName, framework, assemblyVersion);
         }
