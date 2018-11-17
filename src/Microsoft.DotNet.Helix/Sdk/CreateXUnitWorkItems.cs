@@ -15,7 +15,11 @@ namespace Microsoft.DotNet.Helix.Sdk
     public class CreateXUnitWorkItems : Build.Utilities.Task
     {
         /// <summary>
-        /// An array of XUnit project publish directories
+        /// An array of XUnit project workitems containing the following metadata:
+        /// - [Required] PublishDirectory: the publish output directory of the XUnit project
+        /// - [Required] TargetPath: the output dll path
+        /// - [Optional] Arguments: a string of arguments to be passed to the XUnit console runner
+        /// The two required parameters will be automatically created if XUnitProject.Identity is set to the path of the XUnit csproj file
         /// </summary>
         [Required]
         public ITaskItem[] XUnitProjects { get; set; }
