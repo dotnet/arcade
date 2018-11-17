@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             xunitProject.TryGetMetadata("Assembly", out string arguments);
 
             string assemblyName = Path.GetFileName(targetPath);
-            string dotNetPath =  XUnitTargetFramework.Contains("core") ? (string.IsNullOrEmpty(PathToDotnet) ? "dotnet exec " : $"{PathToDotnet} exec ") : "";
+            string dotNetPath = XUnitTargetFramework.Contains("core") ? (string.IsNullOrEmpty(PathToDotnet) ? "dotnet exec " : $"{PathToDotnet} exec ") : "";
 
             string xunitConsoleRunner = "";
             if (IsPosixShell)

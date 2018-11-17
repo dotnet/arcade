@@ -124,8 +124,8 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="EvaluateXUnitWorkItems" Condition="'@(XUnitProject)' != ''" BeforeTargets="Test"
-          Inputs="@(XUnitProject)" Outputs="%(XUnitProject.Identity)">
+  <Target Name="EvaluateXUnitWorkItems" Condition="'@(XUnitProject)' != ''" BeforeTargets="CreateXUnitWorkItems"
+          Outputs="%(XUnitProject.Identity)">
     <PropertyGroup>
       <_CurrentXUnitProject>%(XUnitProject.Identity)</_CurrentXUnitProject>
     </PropertyGroup>
@@ -137,15 +137,15 @@
     </MSBuild>
 
     <ItemGroup>
-      <XUnitProject Condition="'%(Identity)' == '$(_CurrentXUnitProject)">
+      <XUnitProject Condition="'%(Identity)' == '$(_CurrentXUnitProject)'">
         <PublishDirectory>$(_PublishOutputDir)</PublishDirectory>
         <TargetPath>$(_TargetPath)</TargetPath>
       </XUnitProject>
     </ItemGroup>
   </Target>
   
-  <Target Name="CreateXUnitWorkItems">    
-    <CreateXUnitWorkItems XUnitDllPaths="@(XUnitDllPath)" XUnitDllDirectories="@(XUnitDllDirectory)" >
+  <Target Name="CreateXUnitWorkItems" BeforeTargets="Test">    
+    <CreateXUnitWorkItems XUnitProjects="@(XUnitProject)" XUnitTargetFramework="$(XUnitTargetFramework)" IsPosixShell="$(IsPosixShell)" >
       <Output TaskParameter="XUnitWorkItems" ItemName="HelixWorkItem"/>
     </CreateXUnitWorkItems>
   </Target>

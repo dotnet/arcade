@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <XUnitProject Include="$(XUnitProjects)">
+    <XUnitProject Include="$(XUnitProjects.Split(';'))">
       <Arguments />
     </XUnitProject>
   </ItemGroup>
