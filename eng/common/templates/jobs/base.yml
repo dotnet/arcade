@@ -20,17 +20,18 @@ parameters:
   # Optional: enable sending telemetry
   #           if 'true', these "variables" must be specified in the variables object or as part of the queue matrix
   #             _HelixBuildConfig - differentiate between Debug, Release, other
-  #             _HelixSource - Example: build/product
+  #             _HelixSource - Example: build/product/
   #             _HelixType - Example: official/dotnet/arcade/$(Build.SourceBranch)
   enableTelemetry: false
 
   # Required: A collection of jobs to run - https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&tabs=schema#job
   jobs: []
 
-  # Optional: If specified, 
+  # Optional: If specified, then automatically derive "_HelixType" variable for telemetry
   helixRepo: ''
 
-  publishBuildAssetsDependsOn: ''
+  # Optional: Override automatically derived dependsOn value for "publish build assets" job
+  publishBuildAssetsDependsOn: []
 
   # Optional: should run as a public build even in the internal project
   #           if 'true', the build won't run any of the internal only steps, even if it is running in non-public projects.
@@ -42,7 +43,7 @@ parameters:
 jobs:
 - ${{ each job in parameters.jobs }}:
   - template: ../job/base.yml
-    parameters:
+    parameters: 
       # pass along parameters
       continueOnError: ${{ parameters.continueOnError }}
 
@@ -69,6 +70,8 @@ jobs:
 
       displayName: ${{ job.displayName }}
 
+      helixRepo: ${{ helixRepo }}
+
       name: ${{ job.job }}
 
       pool: ${{ job.pool }}
@@ -77,21 +80,7 @@ jobs:
 
       timeoutInMinutes: ${{ job.timeoutInMinutes }}
 
-      variables:
-      # Insert provided variables into variables object
-      - ${{ each variable in job.variables }}:
-        - ${{ if ne(variable.name, '') }}:
-          - name: ${{ variable.name }}
-            value: ${{ variable.value }}
-        - ${{ if ne(variable.group, '') }}:
-          - group: ${{ variable.group }}
-      # Add additional variables
-      - ${{ if and(ne(parameters.helixRepo, ''), eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notIn(variables['Build.Reason'], 'PullRequest')) }}:
-        - name: _HelixSource
-          value: official/${{ parameters.helixRepo }}/$(Build.SourceBranch)
-      - ${{ if and(ne(parameters.helixRepo, ''), or(ne(parameters.runAsPublic, 'false'), eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'))) }}:
-        - name: _HelixSource
-          value: pr/${{ parameters.helixRepo }}/$(Build.SourceBranch)
+      variables: ${{ job.variables }}
 
       workspace: ${{ job.workspace }}
 
