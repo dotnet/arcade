@@ -27,8 +27,11 @@ parameters:
   # Required: A collection of jobs to run - https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&tabs=schema#job
   jobs: []
 
-  # Optional: If specified, then automatically derive "_HelixType" variable for telemetry
+  # Optional: If specified, then automatically derive "_HelixSource" variable for telemetry
   helixRepo: ''
+
+  # Optional: Define the type for helix telemetry (must end in '/')
+  helixType: build/product/
 
   # Optional: Override automatically derived dependsOn value for "publish build assets" job
   publishBuildAssetsDependsOn: []
@@ -71,6 +74,8 @@ jobs:
       displayName: ${{ job.displayName }}
 
       helixRepo: ${{ parameters.helixRepo }}
+
+      helixType: ${{ parameters.helixType }}
 
       name: ${{ job.job }}
 

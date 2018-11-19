@@ -47,8 +47,11 @@ parameters:
   #             _HelixType - Example: official/dotnet/arcade/$(Build.SourceBranch)
   enableTelemetry: false
 
-  # Optional: If specified, then automatically derive "_HelixType" variable for telemetry
+  # Optional: If specified, then automatically derive "_HelixSource" variable for telemetry
   helixRepo: ''
+
+  # Optional: Define the type for helix telemetry (must end in '/')
+  helixType: build/product/
 
   # Required: name of the job
   name: ''
@@ -105,6 +108,10 @@ jobs:
     - ${{ if and(ne(parameters.helixRepo, ''), or(ne(parameters.runAsPublic, 'false'), eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest'))) }}:
       - name: _HelixSource
         value: pr/${{ parameters.helixRepo }}/$(Build.SourceBranch)
+    - name: _HelixType
+      value: ${{ parameters.helixType }}
+    - name: _HelixBuildConfig
+      value: $(_BuildConfig)
 
   ${{ if ne(parameters.workspace, '') }}:
     workspace: ${{ parameters.workspace }}
