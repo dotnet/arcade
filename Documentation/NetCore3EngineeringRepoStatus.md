@@ -35,7 +35,7 @@ Target completion date for these workstreams is 12/14/2018.
 | [Toolset](#toolset)                           | [licavalc](#livar-cunha)      | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md) | Will follow CLI - need plan to go green |
 | [Visual FSharp](#visual-fsharp)               | [brettfo](#brett-forsgren)    | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/VisualFSharp.md) |  |
 | [WebSDK](#websdk)                             | [vramak](#vijay-ramakrishnan) | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/TemplatingAndWebSdkPlan.md) |  |
-| [WinForms](#winforms)                         | [mmcgaw](#merrie-mcgaw)       | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | [plan](https://github.com/dotnet/winforms/blob/master/Documentation/MigrationPlan.md) |  |
+| [WinForms](#winforms)                         | [mmcgaw](#merrie-mcgaw)       | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | | |
 | [WPF](#wpf)                                   | [vatsan-madhavan](#vatsan-madhavan)  | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4      | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/NetCore3EngineeringRepoStatus.md#wpf) | |
 
 | Status   | Description |
@@ -159,10 +159,10 @@ Owners: licavalc
 
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/706)         |         12/4         | In progress   |       |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/704) |         12/4         | In progress   |       |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/703)       |         12/4         | In progress   |       |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/705)       |         12/4         | In progress   |       |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/706)         |         12/4         | Complete      | System.Windows.Forms.dll is done, other assemblies will be coming soon      |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/704) |         12/4         | Complete      | See above      |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/703)       |         12/4         | Complete      | See above      |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/705)       |         12/4         | Complete      | See above      |
 
 ---
 
