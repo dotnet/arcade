@@ -110,6 +110,35 @@
       <HelixPreCommands Condition="!$(IsPosixShell)">$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%%3B%PATH%</HelixPreCommands> <!-- %3B is an escaped ; -->
     </PropertyGroup>
   </Target>
+
+  <Target Name="AddXUnitConsoleRunner" Condition="'$(XUnitProjects)' != ''" BeforeTargets="Test">
+    <ItemGroup>
+      <HelixCorrelationPayload Include="xunit-runner">
+        <Uri>https://api.nuget.org/v3-flatcontainer/xunit.runner.console/$(XUnitRunnerVersion)/xunit.runner.console.$(XUnitRunnerVersion).nupkg</Uri>
+      </HelixCorrelationPayload>
+      <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)xunit-runner-setup"/>
+    </ItemGroup>
+    <PropertyGroup>
+      <HelixPreCommands Condition="$(IsPosixShell)">$(HelixPostCommands);$HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/xunit-runner-setup.py $(XUnitTargetFramework)</HelixPreCommands>
+      <HelixPreCommands Condition="!$(IsPosixShell)">$(HelixPostCommands);%HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\xunit-runner-setup.py $(XUnitTargetFramework)</HelixPreCommands>
+    </PropertyGroup>
+  </Target>
+
+  <ItemGroup>
+    <XUnitProject Include="$(XUnitProjects)" />
+  </ItemGroup>
+
+  <Target Name="CreateXUnitWorkItems" Condition="'$(XUnitProjects)' != ''" BeforeTargets="Test">
+    <MSBuild Projects="@(XUnitProject)" Targets="PublishWithOutput" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.PublishingAfterTargets.targets">
+      <Output TaskParameter="TargetOutputs" ItemName="XUnitDllDirectory" />
+    </MSBuild>
+    <MSBuild Projects="@(XUnitProject)" Targets="GetTargetPath" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.PublishingAfterTargets.targets">
+      <Output TaskParameter="TargetOutputs" ItemName="XUnitDllPath" />
+    </MSBuild>
+    <CreateXUnitWorkItems XUnitDllPaths="@(XUnitDllPath)" XUnitDllDirectories="@(XUnitDllDirectory)" >
+      <Output TaskParameter="XUnitWorkItems" ItemName="HelixWorkItem"/>
+    </CreateXUnitWorkItems>
+  </Target>
   
   <Target Name="AddXUnitReporter" Condition="$(EnableXUnitReporter)" BeforeTargets="Test">
     <ItemGroup>
@@ -120,6 +149,12 @@
       <HelixPostCommands Condition="!$(IsPosixShell)">$(HelixPostCommands);%HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\xunit-reporter.py</HelixPostCommands>
     </PropertyGroup>
   </Target>
+
+  <ItemGroup>
+    <HelixProperties Condition="'$(HelixConfiguration)' != ''" Include="configuration" Value="$(HelixConfiguration)" />
+    <HelixProperties Condition="'$(HelixArchitecture)' != ''" Include="architecture" Value="$(HelixArchitecture)" />
+    <HelixProperties Include="operatingSystem" Value="$(HelixTargetQueue)" />
+  </ItemGroup>
 
   <Target Name="Test"
     DependsOnTargets="$(TestDependsOn)" Returns="@(SentJob)">
@@ -136,7 +171,8 @@
                   PreCommands="$(HelixPreCommands)"
                   PostCommands="$(HelixPostCommands)"
                   CorrelationPayloads="@(HelixCorrelationPayload)"
-                  WorkItems="@(HelixWorkItem)">
+                  WorkItems="@(HelixWorkItem)"
+                  HelixProperties="@(HelixProperties)">
       <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
     </SendHelixJob>
     <ItemGroup>

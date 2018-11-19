@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using CommandLine;
+using Microsoft.DotNet.Darc.Operations;
 
 namespace Microsoft.DotNet.Darc.Options
 {
@@ -20,5 +21,10 @@ namespace Microsoft.DotNet.Darc.Options
 
         [Option("target-branch", HelpText = "Filter by target branch (matches substring).")]
         public string TargetBranch { get; set; }
+
+        public override Operation GetOperation()
+        {
+            return new GetSubscriptionsOperation(this);
+        }
     }
 }

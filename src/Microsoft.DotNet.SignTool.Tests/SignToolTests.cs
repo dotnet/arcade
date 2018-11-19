@@ -188,9 +188,9 @@ namespace Microsoft.DotNet.SignTool.Tests
             // The path to MSBuild will always be null in these tests, this will force
             // the signing logic to call our FakeBuildEngine.BuildProjectFile with a path
             // to the XML that store the content of the would be Microbuild sign request.
-            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir, enclosingDir: "");
+            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir, enclosingDir: "", "");
 
-            var signTool = new FakeSignTool(signToolArgs);
+            var signTool = new FakeSignTool(signToolArgs, task.Log);
             var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
             var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput);
 
@@ -243,6 +243,22 @@ namespace Microsoft.DotNet.SignTool.Tests
             Assert.Empty(signingInput.FilesToSign);
             Assert.Empty(signingInput.ZipDataMap);
             Assert.False(task.Log.HasLoggedErrors);
+        }
+
+        [Fact]
+        public void EmptySigningListForTask()
+        {
+            var task = new SignToolTask {
+                BuildEngine = new FakeBuildEngine(),
+                ItemsToSign = new string[0],
+                LogDir = "LogDir",
+                TempDir = "TempDir",
+                DryRun = false,
+                TestSign = true,
+                MSBuildPath = CreateTestResource("msbuild.fake")
+            };
+
+            Assert.True(task.Execute());
         }
 
         [Fact]
@@ -588,6 +604,40 @@ $@"
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "FD4596180FC1AB63B2D6A9C6E4086CC15891E41E34F835B593C3879CECAA86B6", "SOS.NETCore.dll")}"">
   <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+"
+            });
+        }
+
+        [Fact]
+        public void MPackFile()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("test.mpack")
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            {
+                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2") }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'VisualStudio.Mac.Banana.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2'",
+                "File 'test.mpack' Certificate=''",
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "VisualStudio.Mac.Banana.dll")}"">
+  <Authenticode>3PartySHA2</Authenticode>
 </FilesToSign>
 "
             });

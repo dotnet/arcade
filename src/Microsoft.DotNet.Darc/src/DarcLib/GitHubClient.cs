@@ -414,31 +414,92 @@ namespace Microsoft.DotNet.DarcLib
 
         public async Task<IList<Check>> GetPullRequestChecksAsync(string pullRequestUrl)
         {
-            string url = $"{GetPrPartialAbsolutePath(pullRequestUrl)}/commits";
-
-            HttpResponseMessage response = await this.ExecuteGitCommand(HttpMethod.Get, url, _logger);
-            JArray content = JArray.Parse(await response.Content.ReadAsStringAsync());
-            JToken lastCommit = content.Last;
-            string lastCommitSha = lastCommit["sha"].ToString();
-
             (string owner, string repo, int id) = ParsePullRequestUri(pullRequestUrl);
-            response = await this.ExecuteGitCommand(
-                HttpMethod.Get,
-                $"repos/{owner}/{repo}/commits/{lastCommitSha}/status",
-                _logger);
 
-            JObject statusContent = JObject.Parse(await response.Content.ReadAsStringAsync());
+            var commits = await Client.Repository.PullRequest.Commits(owner, repo, id);
+            var lastCommitSha = commits.Last().Sha;
 
-            IList<Check> statuses = new List<Check>();
-            foreach (JToken status in statusContent["statuses"])
-            {
-                if (Enum.TryParse(status["state"].ToString(), true, out CheckState state))
+            return (await GetChecksFromStatusApiAsync(owner, repo, lastCommitSha))
+                .Concat(await GetChecksFromChecksApiAsync(owner, repo, lastCommitSha))
+                .ToList();
+        }
+
+        private async Task<IList<Check>> GetChecksFromStatusApiAsync(string owner, string repo, string @ref)
+        {
+            var status = await Client.Repository.Status.GetCombined(owner, repo, @ref);
+
+            return status.Statuses.Select(
+                    s =>
+                    {
+                        var name = s.Context;
+                        var url = s.TargetUrl;
+                        CheckState state;
+                        switch (s.State.Value)
+                        {
+                            case CommitState.Pending:
+                                state = CheckState.Pending;
+                                break;
+                            case CommitState.Error:
+                                state = CheckState.Error;
+                                break;
+                            case CommitState.Failure:
+                                state = CheckState.Failure;
+                                break;
+                            case CommitState.Success:
+                                state = CheckState.Success;
+                                break;
+                            default:
+                                state = CheckState.None;
+                                break;
+                        }
+
+                        return new Check(state, name, url);
+                    })
+                .ToList();
+        }
+
+        private async Task<IList<Check>> GetChecksFromChecksApiAsync(string owner, string repo, string @ref)
+        {
+            var checkRuns = await Client.Check.Run.GetAllForReference(owner, repo, @ref);
+            return checkRuns.CheckRuns.Select(
+                run =>
                 {
-                    statuses.Add(new Check(state, status["context"].ToString(), status["target_url"].ToString()));
-                }
-            }
+                    var name = run.Name;
+                    var url = run.HtmlUrl;
+                    CheckState state;
+                    switch (run.Status.Value)
+                    {
+                        case CheckStatus.Queued:
+                        case CheckStatus.InProgress:
+                            state = CheckState.Pending;
+                            break;
+                        case CheckStatus.Completed:
+                            switch (run.Conclusion?.Value)
+                            {
+                                case CheckConclusion.Success:
+                                    state = CheckState.Success;
+                                    break;
+                                case CheckConclusion.ActionRequired:
+                                case CheckConclusion.Cancelled:
+                                case CheckConclusion.Failure:
+                                case CheckConclusion.Neutral:
+                                case CheckConclusion.TimedOut:
+                                    state = CheckState.Failure;
+                                    break;
+                                default:
+                                    state = CheckState.None;
+                                    break;
+                            }
 
-            return statuses;
+                            break;
+                        default:
+                            state = CheckState.None;
+                            break;
+                    }
+
+                    return new Check(state, name, url);
+                })
+                .ToList();
         }
 
         public async Task<string> GetPullRequestBaseBranch(string pullRequestUrl)

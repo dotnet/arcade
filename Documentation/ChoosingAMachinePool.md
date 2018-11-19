@@ -9,7 +9,7 @@ All Azure Pipelines builds should use the following agent queues
  * Official Signed Builds
    * Windows - [dotnet-internal-temp]
    * Linux - [dnceng-linux-internal-temp]
-   * Max - [Hosted macOS](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml)
+   * Mac - [Hosted mac Internal](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml)
    
 Pools for an Azure DevOps Pipeline can be specified at the build and/or job level in the yaml file ([documentation](https://github.com/Microsoft/azure-pipelines-agent/blob/master/docs/preview/yamlgettingstarted-pools.md)).
 
@@ -23,8 +23,8 @@ All test execution should run through helix. An up to date list of helix queues 
  * Submit your test jobs to helix using the [Helix Sdk].
 
 
-[Helix Sdk]: /Documentation/VSTS/SendingJobsToHelix.md
-[Bootstrapping System]: /Documentation/Projects/NativeDependencies/Design.md
+[Helix Sdk]: /Documentation/AzureDevOps/SendingJobsToHelix.md
+[Bootstrapping System]: /Documentation/NativeToolBootstrapping.md
 [@dotnet/dnceng]: https://github.com/orgs/dotnet/teams/dnceng
 
 [dotnet-internal-temp]: https://dev.azure.com/dnceng/internal/_settings/agentqueues?queueId=67&_a=agents

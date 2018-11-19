@@ -48,7 +48,9 @@ namespace Maestro.Web.Controllers
                 case "deleted":
                     await RemoveInstallationRepositoriesAsync(payload.Installation.Id);
                     break;
-                case "created":
+                case "created": // installation was created
+                case "removed": // repository removed from installation
+                case "added":   // repository added to installation
                     await SynchronizeInstallationRepositoriesAsync(payload.Installation.Id);
                     break;
                 default:

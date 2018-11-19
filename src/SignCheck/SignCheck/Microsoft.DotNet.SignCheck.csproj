@@ -11,6 +11,7 @@
     <IsPackable>true</IsPackable>
     <Description>Build artifact signing validation tool</Description>
     <PackageTags>Arcade Signing Validation Tool</PackageTags>
+    <RootNamespace>SignCheck</RootNamespace>
   </PropertyGroup>
 
   <PropertyGroup Label="Nuget Package Settings">
@@ -18,22 +19,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.2.0" />
+    <PackageReference Include="CommandLineParser" Version="2.2.0" PrivateAssets="All" Publish="true" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(OutputPath)\*.dll">
-      <PackagePath>tools/</PackagePath>
-      <Pack>true</Pack>
-    </None>
+    <ProjectReference Include="..\Microsoft.SignCheck\Microsoft.DotNet.SignCheckLibrary.csproj" PrivateAssets="All" Publish="true" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.SignCheck\Microsoft.DotNet.SignCheckLibrary.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="System.Net" />
+    <Reference Include="System.Net" Pack="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -50,4 +44,14 @@
       <LastGenOutput>SignCheckResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+
+  <!-- This glob must run after the build and before _GetPackageFiles to ensure all dependencies end up in the .nupkg file. -->
+  <Target Name="CollectAllBuildOutputForPack" BeforeTargets="_GetPackageFiles" DependsOnTargets="CopyFilesToOutputDirectory">
+    <ItemGroup>
+      <!-- Exclude TargetPath to avoid NU5118: duplicate files -->
+      <Content Include="$(TargetDir)**\*" Exclude="$(TargetPath)">
+        <PackagePath>tools/</PackagePath>
+      </Content>
+    </ItemGroup>
+  </Target>
 </Project>

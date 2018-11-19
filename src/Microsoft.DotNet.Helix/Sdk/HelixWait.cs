@@ -22,12 +22,27 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public ITaskItem[] Jobs { get; set; }
 
+        [Required]
+        public string Source { get; set; }
+
+        [Required]
+        public string Type { get; set; }
+
+        [Required]
+        public string Build { get; set; }
+
         protected override async Task ExecuteCore()
         {
             // Wait 1 second to allow helix to register the job creation
             await Task.Delay(1000);
 
+            // We need to set properties to lowercase so that URL matches MC routing.
+            // It needs to be done before escaping to not mutate escaping caracters to lower case.
+            Source = Uri.EscapeDataString(Source.ToLowerInvariant()).Replace('%', '~');
+            Type = Uri.EscapeDataString(Type.ToLowerInvariant()).Replace('%', '~');
+            Build = Build.ToLowerInvariant();
             string mcUri = await GetMissionControlResultUri();
+
             Log.LogMessage(MessageImportance.High, $"Results will be available from {mcUri}");
 
             List<string> jobNames = Jobs.Select(j => j.GetMetadata("Identity")).ToList();
@@ -46,7 +61,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var waitingCount = workItems.Count(wi => wi.State == "Waiting");
                 var runningCount = workItems.Count(wi => wi.State == "Running");
                 var finishedCount = workItems.Count(wi => wi.State == "Finished");
-                if (waitingCount == 0 && runningCount == 0)
+                if (waitingCount == 0 && runningCount == 0 && finishedCount > 0)
                 {
                     Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
                     return;
@@ -70,11 +85,20 @@ namespace Microsoft.DotNet.Helix.Sdk
                 catch (HttpRequestException e)
                 {
                     Log.LogMessage(MessageImportance.High, "Failed to connect to GitHub to retrieve username", e.StackTrace);
-                    return "Mission Control (generation of MC link failed)";
+                    return "Mission Control (generation of MC link failed -- GitHub HTTP request error)";
                 }
-                string userName = JObject.Parse(githubJson)["login"].ToString();
+                string userName = "";
+                try
+                {
+                    userName = JObject.Parse(githubJson)["login"].ToString();
+                }
+                catch (JsonException e)
+                {
+                    Log.LogMessage(MessageImportance.High, "Failed to parse JSON or find value in parsed JSON", e.StackTrace);
+                    return "Mission Control (generation of MC link failed -- JSON parsing error)";
+                }
 
-                return $"https://mc.dot.net/#/user/{userName}/builds";
+                return $"https://mc.dot.net/#/user/{userName}/{Source}/{Type}/{Build}";
             }
         }
     }

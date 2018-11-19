@@ -13,39 +13,8 @@ namespace Microsoft.DotNet.Darc
     {
         static int Main(string[] args)
         {
-            return Parser.Default.ParseArguments<AuthenticateCommandLineOptions,
-                                                 GetDependenciesCommandLineOptions,
-                                                 AddCommandLineOptions,
-                                                 GetChannelsCommandLineOptions,
-                                                 GetSubscriptionsCommandLineOptions,
-                                                 AddSubscriptionCommandLineOptions,
-                                                 DeleteSubscriptionCommandLineOptions,
-                                                 AddChannelCommandLineOptions,
-                                                 DeleteChannelCommandLineOptions,
-                                                 GetDefaultChannelCommandLineOptions,
-                                                 AddDefaultChannelCommandLineOptions,
-                                                 DeleteDefaultChannelCommandLineOptions,
-                                                 GetSubscriptionHistoryCommandLineOptions,
-                                                 RetrySubscriptionUpdateCommandLineOptions,
-                                                 UpdateDependenciesCommandLineOptions,
-                                                 VerifyCommandLineOptions>(args)
-                .MapResult(
-                    (AuthenticateCommandLineOptions opts) => { return RunOperation(new AuthenticateOperation(opts)); },
-                    (GetDependenciesCommandLineOptions opts) => { return RunOperation(new GetDependenciesOperation(opts)); },
-                    (AddCommandLineOptions opts) => { return RunOperation(new AddOperation(opts)); },
-                    (GetChannelsCommandLineOptions opts) => { return RunOperation(new GetChannelsOperation(opts)); },
-                    (GetSubscriptionsCommandLineOptions opts) => { return RunOperation(new GetSubscriptionsOperation(opts)); },
-                    (AddSubscriptionCommandLineOptions opts) => { return RunOperation(new AddSubscriptionOperation(opts)); },
-                    (DeleteSubscriptionCommandLineOptions opts) => { return RunOperation(new DeleteSubscriptionOperation(opts)); },
-                    (AddChannelCommandLineOptions opts) => { return RunOperation(new AddChannelOperation(opts)); },
-                    (DeleteChannelCommandLineOptions opts) => { return RunOperation(new DeleteChannelOperation(opts)); },
-                    (GetDefaultChannelCommandLineOptions opts) => { return RunOperation(new GetDefaultChannelsOperation(opts)); },
-                    (AddDefaultChannelCommandLineOptions opts) => { return RunOperation(new AddDefaultChannelOperation(opts)); },
-                    (DeleteDefaultChannelCommandLineOptions opts) => { return RunOperation(new DeleteDefaultChannelOperation(opts)); },
-                    (GetSubscriptionHistoryCommandLineOptions opts) => { return RunOperation(new GetSubscriptionHistoryOperation(opts)); },
-                    (RetrySubscriptionUpdateCommandLineOptions opts) => { return RunOperation(new RetrySubscriptionUpdateOperation(opts)); },
-                    (UpdateDependenciesCommandLineOptions opts) => { return RunOperation(new UpdateDependenciesOperation(opts)); },
-                    (VerifyCommandLineOptions opts) => { return RunOperation(new VerifyOperation(opts)); },
+            return Parser.Default.ParseArguments(args, GetOptions())
+                .MapResult( (CommandLineOptions opts) => RunOperation(opts),
                     (errs => 1));
         }
 
@@ -57,10 +26,12 @@ namespace Microsoft.DotNet.Darc
         /// <remarks>The primary reason for this is a workaround for an issue in the logging factory which
         /// causes it to not dispose the logging providers on process exit.  This causes missed logs, logs that end midway through
         /// and cause issues with the console coloring, etc.</remarks>
-        private static int RunOperation(Operation operation)
+        private static int RunOperation(CommandLineOptions opts)
         {
             try
             {
+                Operation operation = opts.GetOperation();
+
                 int returnValue = operation.ExecuteAsync().GetAwaiter().GetResult();
                 operation.Dispose();
                 return returnValue;
@@ -71,6 +42,32 @@ namespace Microsoft.DotNet.Darc
                 Console.WriteLine(e);
                 return Constants.ErrorCode;
             }
+        }
+
+        private static Type[] GetOptions()
+        {
+            // This order will mandate the order in which the commands are displayed if typing just 'darc'
+            // so keep these sorted.
+            return new Type[]
+                {
+                    typeof(AddChannelCommandLineOptions),
+                    typeof(AddCommandLineOptions),
+                    typeof(AddDefaultChannelCommandLineOptions),
+                    typeof(AddSubscriptionCommandLineOptions),
+                    typeof(AuthenticateCommandLineOptions),
+                    typeof(DeleteChannelCommandLineOptions),
+                    typeof(DeleteDefaultChannelCommandLineOptions),
+                    typeof(DeleteSubscriptionCommandLineOptions),
+                    typeof(GetChannelsCommandLineOptions),
+                    typeof(GetDefaultChannelsCommandLineOptions),
+                    typeof(GetDependenciesCommandLineOptions),
+                    typeof(GetDependencyGraphCommandLineOptions),
+                    typeof(GetSubscriptionHistoryCommandLineOptions),
+                    typeof(GetSubscriptionsCommandLineOptions),
+                    typeof(RetrySubscriptionUpdateCommandLineOptions),
+                    typeof(UpdateDependenciesCommandLineOptions),
+                    typeof(VerifyCommandLineOptions),
+                };
         }
     }
 }

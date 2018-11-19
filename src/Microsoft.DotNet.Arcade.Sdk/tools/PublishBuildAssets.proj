@@ -17,6 +17,9 @@
   
   <UsingTask TaskName="PushMetadataToBuildAssetRegistry" AssemblyFile="$(_MicrosoftDotNetMaestroTasksDir)\Microsoft.DotNet.Maestro.Tasks.dll"/>
   
+  <Target Name="Execute" 
+          DependsOnTargets="PublishBuildAssets" />
+
   <Target Name="PublishBuildAssets">
     <Error Text="The ManifestsPath  property must be set on the command line." Condition="'$(ManifestsPath)' == ''" />
     <Error Text="The BuildAssetRegistryToken property must be set on the command line." Condition="'$(BuildAssetRegistryToken)' == ''" />

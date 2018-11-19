@@ -26,6 +26,7 @@
 
   <!-- Binaries are delay or public-signed with one of these keys; later, the signing system will finish the strong-name signing. -->
   <Choose>
+    <When Condition="'$(SignAssembly)' == 'false'" />
     <When Condition="'$(StrongNameKeyId)' == 'Microsoft'">
       <PropertyGroup>
         <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)snk/MSFT.snk</AssemblyOriginatorKeyFile>
@@ -65,7 +66,7 @@
         <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)snk/Open.snk</AssemblyOriginatorKeyFile>
         <PublicKey>$(OpenPublicKey)</PublicKey>
         <PublicKeyToken>cc7b13ffcd2ddd51</PublicKeyToken>
-        <DealySign>false</DealySign>
+        <DelaySign>false</DelaySign>
         <PublicSign>false</PublicSign> <!-- The Open strong name key is a full key -->
       </PropertyGroup>
     </When>

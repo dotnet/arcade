@@ -1,0 +1,45 @@
+# Disable CI triggers, only called using Maestro
+trigger: none
+
+# Moves code from GitHub into internal repos
+phases:
+- template: /eng/common/templates/phases/base.yml
+  parameters:
+    agentsOS: Windows_NT
+    name: Mirror_GitHub_to_Azure_DevOps
+    queue:
+      name: Hosted VS2017
+    variables:
+      WorkingDirectoryName: repo-dir
+    steps:
+    - task: PowerShell@1
+      displayName: Calculate Mirrored Branch Names
+      inputs:
+        scriptType: inlineScript
+        arguments: '$(GithubRepo) $(BranchToMirror)'
+        inlineScript: |
+          param([string]$repo, [string]$branch)
+        
+          $azDORepo = $repo.Replace("/", "-");
+          # Check that the parameters look correct
+          if ($azDORepo -eq "" -or $branch -eq "")
+          {
+            Write-Error "Expected valid branch and GitHub repo in the form of owner/repo"
+          }
+          Write-Host "##vso[task.setvariable variable=AzDORepoName]$azDORepo"
+          Write-Host "Mirroring branch '$branch' from GitHub repo '$repo' to Azure DevOps repo '$azDORepo'."
+    - script: |
+        git clone https://dotnet-maestro-bot:$(BotAccount-dotnet-maestro-bot-PAT)@github.com/$(GithubRepo) $(WorkingDirectoryName) -b $(BranchToMirror)
+      displayName: Clone GitHub repo
+    - script: |
+        git remote add azdo-mirror https://dn-bot:$(dn-bot-dnceng-build-rw-code-rw)@dev.azure.com/dnceng/internal/_git/$(AzDORepoName)
+      displayName: Add Azure DevOps remote
+      workingDirectory: $(WorkingDirectoryName)
+    - script: |
+        git reset --hard origin/$(BranchToMirror)
+      displayName: Hard reset local branch to GitHub branch
+      workingDirectory: $(WorkingDirectoryName)
+    - script: |
+        git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
+      displayName: Push changes to Azure DevOps repo
+      workingDirectory: $(WorkingDirectoryName)

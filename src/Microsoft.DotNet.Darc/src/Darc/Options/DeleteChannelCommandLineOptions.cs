@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using CommandLine;
+using Microsoft.DotNet.Darc.Operations;
 
 namespace Microsoft.DotNet.Darc.Options
 {
@@ -11,5 +12,10 @@ namespace Microsoft.DotNet.Darc.Options
     {
         [Option('n', "name", Required = true, HelpText = "Name of channel to delete.")]
         public string Name { get; set; }
+
+        public override Operation GetOperation()
+        {
+            return new DeleteChannelOperation(this);
+        }
     }
 }

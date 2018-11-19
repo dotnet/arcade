@@ -1,10 +1,10 @@
-using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.DotNet.DarcLib;
 using Microsoft.Extensions.Logging.Abstractions;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace Microsoft.DotNet.Darc.Tests
 {
@@ -74,7 +74,20 @@ namespace Microsoft.DotNet.Darc.Tests
                 _gitClient.PushFilesAsync(filesToUpdate, TemporaryRepositoryPath, null, null);
         }
 
-        private async static void TestAndCompareImpl(string testInputsName, bool compareOutput, Func<DependencyTestDriver, Task> testFunc)
+        public async Task<DependencyGraph> GetDependencyGraph(DependencyDetail dependency)
+        {
+            return await DependencyGraph.GetDependencyGraphAsync(
+                null, 
+                dependency, 
+                false, 
+                NullLogger.Instance, 
+                testPath: TemporaryRepositoryPath);
+        }
+
+        private async static void TestAndCompareImpl(
+            string testInputsName, 
+            bool compareOutput, 
+            Func<DependencyTestDriver, Task> testFunc)
         {
             DependencyTestDriver dependencyTestDriver = new DependencyTestDriver(testInputsName);
             try
@@ -104,6 +117,93 @@ namespace Microsoft.DotNet.Darc.Tests
             TestAndCompareImpl(testInputsName, false, testFunc);
         }
 
+        public async static void GetGraphAndCompare(string testInputsName, 
+            Func<DependencyTestDriver, Task<DependencyGraph>> testFunc,
+            Func<DependencyDetail, string, string, Task<DependencyGraph>> getExpectedDependencyGraph,
+            DependencyDetail rootDependency,
+            string outputFileName,
+            bool equal)
+        {
+            DependencyTestDriver dependencyTestDriver = new DependencyTestDriver(testInputsName);
+
+            try
+            {
+                dependencyTestDriver.Setup();
+                DependencyGraph dependencyGraph = await testFunc(dependencyTestDriver);
+                DependencyGraph expectedDependencyGraph = await getExpectedDependencyGraph(
+                    rootDependency, 
+                    dependencyTestDriver.TemporaryRepositoryPath, 
+                    outputFileName);
+
+                if (equal)
+                {
+                    dependencyTestDriver.AssertEqual(dependencyGraph, expectedDependencyGraph);
+                }
+                else
+                {
+                    dependencyTestDriver.AssertNotEqual(dependencyGraph, expectedDependencyGraph);
+                }
+            }
+            finally
+            {
+                dependencyTestDriver.Cleanup();
+            }
+        }
+
+        /// <summary>
+        ///     Determine whether a file in the input path is the same a file in the output path.
+        /// </summary>
+        /// <param name="actualOutputPath">Subpath to the outputs in the temporary repo</param>
+        /// <param name="expectedOutputPath">Subpath to the expected outputs</param>
+        public async Task AssertEqual(string actualOutputPath, string expectedOutputPath)
+        {
+            string expectedOutputFilePath = Path.Combine(RootExpectedOutputsPath, expectedOutputPath);
+            string actualOutputFilePath = Path.Combine(TemporaryRepositoryPath, actualOutputPath);
+            using (StreamReader expectedOutputsReader = new StreamReader(expectedOutputFilePath))
+            using (StreamReader actualOutputsReader = new StreamReader(actualOutputFilePath))
+            {
+                string expectedOutput = await expectedOutputsReader.ReadToEndAsync();
+                string actualOutput = await actualOutputsReader.ReadToEndAsync();
+                Assert.Equal(
+                    expectedOutput,
+                    actualOutput);
+            }
+        }
+
+        /// <summary>
+        ///     Determine whether two DependencyGraphs are the same.
+        /// </summary>
+        /// <param name="actualDependencyGraph">The generated graph</param>
+        /// <param name="expectedDependencyGraph">The expected graph</param>
+        public void AssertEqual(DependencyGraph actualDependencyGraph, DependencyGraph expectedDependencyGraph)
+        {
+            Assert.Equal(actualDependencyGraph.Graph.DependencyDetail.Commit, expectedDependencyGraph.Graph.DependencyDetail.Commit);
+            Assert.Equal(actualDependencyGraph.Graph.DependencyDetail.Name, expectedDependencyGraph.Graph.DependencyDetail.Name);
+            Assert.Equal(actualDependencyGraph.Graph.DependencyDetail.RepoUri, expectedDependencyGraph.Graph.DependencyDetail.RepoUri);
+            Assert.Equal(actualDependencyGraph.Graph.DependencyDetail.Version, expectedDependencyGraph.Graph.DependencyDetail.Version);
+            Assert.True(actualDependencyGraph.FlatGraph.SetEquals(expectedDependencyGraph.FlatGraph));
+            Assert.True(actualDependencyGraph.Graph.ChildNodes.SetEquals(expectedDependencyGraph.Graph.ChildNodes));
+        }
+
+        /// <summary>
+        ///     Determine whether two DependencyGraphs are different.
+        /// </summary>
+        /// <param name="actualDependencyGraph">The generated graph</param>
+        /// <param name="expectedDependencyGraph">The expected graph</param>
+        public void AssertNotEqual(DependencyGraph actualDependencyGraph, DependencyGraph expectedDependencyGraph)
+        {
+            Assert.False(actualDependencyGraph.FlatGraph.SetEquals(expectedDependencyGraph.FlatGraph));
+            Assert.False(actualDependencyGraph.Graph.ChildNodes.SetEquals(expectedDependencyGraph.Graph.ChildNodes));
+        }
+
+        /// <summary>
+        ///     Clean temporary files
+        /// </summary>
+        public void Cleanup()
+        {
+            Directory.Delete(TemporaryRepositoryPath, true);
+        }
+
         /// <summary>
         ///     Copy a directory, subdirectories and files from <paramref name="source"/> to <paramref name="destination"/>
         /// </summary>
@@ -129,36 +229,6 @@ namespace Microsoft.DotNet.Darc.Tests
             {
                 CopyDirectory(dir.FullName, Path.Combine(destination, dir.Name));
             }
-        }
-
-
-
-        /// <summary>
-        ///     Determine whether a file in the input path is the same a file in the output path.
-        /// </summary>
-        /// <param name="actualOutputPath">Subpath to the outputs in the temporary repo</param>
-        /// <param name="expectedOutputPath">Subpath to the expected outputs</param>
-        public async Task AssertEqual(string actualOutputPath, string expectedOutputPath)
-        {
-            string expectedOutputFilePath = Path.Combine(RootExpectedOutputsPath, expectedOutputPath);
-            string actualOutputFilePath = Path.Combine(TemporaryRepositoryPath, actualOutputPath);
-            using (StreamReader expectedOutputsReader = new StreamReader(expectedOutputFilePath))
-            using (StreamReader actualOutputsReader = new StreamReader(actualOutputFilePath))
-            {
-                string expectedOutput = await expectedOutputsReader.ReadToEndAsync();
-                string actualOutput = await actualOutputsReader.ReadToEndAsync();
-                Xunit.Assert.Equal(
-                    expectedOutput,
-                    actualOutput);
-            }
-        }
-
-        /// <summary>
-        ///     Clean temporary files
-        /// </summary>
-        public void Cleanup()
-        {
-            Directory.Delete(TemporaryRepositoryPath, true);
         }
     }
 }

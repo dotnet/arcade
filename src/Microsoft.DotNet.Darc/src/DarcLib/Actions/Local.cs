@@ -3,13 +3,11 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Xml;
 
 namespace Microsoft.DotNet.DarcLib
 {
@@ -77,8 +75,18 @@ namespace Microsoft.DotNet.DarcLib
 
             if (arcadeItem != null)
             {
-                List<GitFile> engCommonFiles = await remote.GetCommonScriptFilesAsync(arcadeItem.RepoUri, arcadeItem.Commit);
-                filesToUpdate.AddRange(engCommonFiles);
+                try
+                {
+                    List<GitFile> engCommonFiles = await remote.GetCommonScriptFilesAsync(arcadeItem.RepoUri, arcadeItem.Commit);
+                    filesToUpdate.AddRange(engCommonFiles);
+                }
+                catch (Exception exc) when 
+                (exc.Message == "Not Found")
+                {
+                    _logger.LogWarning("Could not update 'eng/common'. Most likely this is a scenario " +
+                        "where a packages folder was passed and the commit which generated them is not " +
+                        "yet pushed.");
+                }
             }
 
             // Push on local does not commit.
@@ -102,6 +110,15 @@ namespace Microsoft.DotNet.DarcLib
         public Task<bool> Verify()
         {
             return _fileManager.Verify(_repo, null);
+        }
+
+        /// <summary>
+        /// Gets local dependencies from a local repository
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<DependencyDetail> GetDependenciesFromFileContents(string fileContents)
+        {
+            return _fileManager.ParseVersionDetailsXml(fileContents);
         }
     }
 }

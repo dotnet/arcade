@@ -8,6 +8,8 @@ parameters:
   queue: {}
   # variables YAML object - https://github.com/Microsoft/vsts-agent/blob/master/docs/preview/yamlgettingstarted-schema.md#phase
   variables: {}
+  # run this build as a public build, even in the internal project
+  runAsPublic: false
 
 # Common conditionals:  There are a number of common conditionals that are useful.  Generally these are used to decide what resources can be accessed,
 #                       or what logic should be applied based on the context the build is being run in.
@@ -27,11 +29,13 @@ phases:
 
     queue: ${{ parameters.queue }}
 
+    runAsPublic: ${{ parameters.runAsPublic }}
+
     variables: 
       ${{ insert }}: ${{ parameters.variables }}
       _HelixBuildConfig: $(_BuildConfig)
       # Only enable publishing in non-public, non PR scenarios.
-      ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+      ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         # This should be changed to an isolated blob feed per-build.
         # Right now a manual build of a random branch would get published alongside the normal branch artifacts.
         _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
@@ -43,13 +47,13 @@ phases:
           /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         _OfficialBuildIdArgs: /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
       # else
-      ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+      ${{ if or(eq(parameters.runAsPublic, 'true'), eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
         _PublishArgs: ''
         _OfficialBuildIdArgs: ''
         _SignArgs: ''
 
     steps:
-    - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         - task: AzureKeyVault@1
           inputs:
             azureSubscription: 'DotNet-Engineering-Services_KeyVault'
@@ -81,5 +85,14 @@ phases:
         PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
         PublishLocation: Container
         ArtifactName: $(Agent.Os)_$(Agent.JobName)
+      continueOnError: true
+      condition: always()
+
+    - task: PublishTestResults@2
+      displayName: Publish Test Results
+      inputs:
+        testResultsFormat: 'xUnit'
+        testResultsFiles: '*.xml' 
+        searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
       continueOnError: true
       condition: always()

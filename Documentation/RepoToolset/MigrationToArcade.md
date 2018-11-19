@@ -64,7 +64,7 @@ The following applies to CI build definition, not PR validation build definition
 - pipeline variables (settable in build definition web UI)
   - Add SignType definition variable settable at queue time
     ![Pipeline Variables](PipelineVariables.png)
-  - Link DotNet-Symbol-Publish variable group. If you don’t see the group in the UI you might not have permissions. Let me know and I'll add it to your definition.
+  - Link DotNet-Symbol-Server-Pats variable group. If you don’t see the group in the UI you might not have permissions. Let me know and I'll add it to your definition.
     ![Variable Groups](VariableGroups.png)
 
 ### Versioning changes
