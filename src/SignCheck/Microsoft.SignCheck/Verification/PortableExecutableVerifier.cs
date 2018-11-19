@@ -80,6 +80,10 @@ namespace Microsoft.SignCheck.Verification
                     svr.AddDetail(DetailKeys.StrongName, SignCheckResources.DetailNativeImage);
                 }
             }
+            else
+            {
+                svr.IsNativeImage = true;
+            }
         }
     }
 }
