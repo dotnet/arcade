@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Darc.Operations
                         return Constants.ErrorCode;
                     }
 
-                    darcSettings = LocalSettings.GetDarcSettings(
+                    darcSettings = await LocalSettings.GetDarcSettingsAsync(
                         _options, 
                         Logger, 
                         _options.RepoUri);

@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Darc.Operations
         {
             try
             {
-                DarcSettings darcSettings = LocalSettings.GetDarcSettings(_options, Logger);
+                DarcSettings darcSettings = await LocalSettings.GetDarcSettingsAsync(_options, Logger);
                 // No need to set up a git type or PAT here.
                 Remote remote = new Remote(darcSettings, Logger);
 

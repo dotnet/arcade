@@ -128,6 +128,13 @@ namespace Microsoft.DotNet.DarcLib
         {
             foreach (GitFile file in filesToCommit)
             {
+                string parentDirectory = Directory.GetParent(file.FilePath).FullName;
+
+                if (!Directory.Exists(parentDirectory))
+                {
+                    Directory.CreateDirectory(parentDirectory);
+                }
+
                 string fullPath = Path.Combine(repoUri, file.FilePath);
                 using (var streamWriter = new StreamWriter(fullPath))
                 {
