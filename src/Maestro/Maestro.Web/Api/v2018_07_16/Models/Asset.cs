@@ -22,6 +22,7 @@ namespace Maestro.Web.Api.v2018_07_16.Models
             Name = other.Name;
             Version = other.Version;
             BuildId = other.BuildId;
+            NonShipping = other.NonShipping;
             Locations = other.Locations?.Select(al => new AssetLocation(al)).ToList();
         }
 
@@ -32,6 +33,8 @@ namespace Maestro.Web.Api.v2018_07_16.Models
         public string Version { get; }
 
         public int BuildId { get; set; }
+
+        public bool NonShipping { get; set; }
 
         public List<AssetLocation> Locations { get; }
     }

@@ -20,6 +20,8 @@ namespace Maestro.Data.Models
 
         public int BuildId { get; set; }
 
+        public bool NonShipping { get; set; }
+
         public List<AssetLocation> Locations { get; set; }
     }
 }
