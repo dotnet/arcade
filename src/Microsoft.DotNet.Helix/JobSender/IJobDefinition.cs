@@ -9,6 +9,7 @@ namespace Microsoft.DotNet.Helix.Client
         IJobDefinition WithCorrelationPayloadUris(params Uri[] payloadUris);
         IJobDefinition WithCorrelationPayloadDirectory(string directory);
         IJobDefinition WithCorrelationPayloadDirectory(string directory, bool includeDirectoryName);
+        IJobDefinition WithCorrelationPayloadDirectory(string directory, string archiveEntryPrefix);
         IJobDefinition WithCorrelationPayloadArchive(string archive);
         IJobDefinition WithCorrelationPayloadFiles(params string[] files);
         IJobDefinition WithProperty(string key, string value);

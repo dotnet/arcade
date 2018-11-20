@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 
         protected async Task LogFailedRequest(HttpRequestMessage req, HttpResponseMessage res)
         {
-            Log.LogError($"Request to {req.RequestUri} returned failed status {res.StatusCode} {res.ReasonPhrase}\n\n{await res.Content.ReadAsStringAsync()}");
+            Log.LogError($"Request to {req.RequestUri} returned failed status {res.StatusCode} {res.ReasonPhrase}\n\n{(res.Content != null ? await res.Content.ReadAsStringAsync() : "")}");
         }
 
         private string GetVersion()

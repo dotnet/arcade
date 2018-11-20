@@ -9,6 +9,7 @@ namespace Microsoft.DotNet.Helix.Client
         IWorkItemDefinition WithFiles(params string[] files);
         IWorkItemDefinition WithDirectoryPayload(string directory);
         IWorkItemDefinition WithDirectoryPayload(string directory, bool includeDirectoryName);
+        IWorkItemDefinition WithDirectoryPayload(string directory, string archiveEntryPrefix);
         IWorkItemDefinition WithArchivePayload(string archive);
         IWorkItemDefinition WithSingleFilePayload(string name, string content);
         IWorkItemDefinition WithSingleFilePayload(string name, string content, Encoding encoding);
