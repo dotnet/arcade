@@ -34,9 +34,8 @@ jobs:
         - name: _SignArgs
           value: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
         - name: _PublishArgs
-          value: |
-            /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1) 
-            /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl) 
+          value: /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
+            /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
             /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
             /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
             /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
