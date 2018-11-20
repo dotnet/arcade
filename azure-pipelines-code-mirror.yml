@@ -32,8 +32,6 @@ phases:
         git clone https://dotnet-maestro-bot:$(BotAccount-dotnet-maestro-bot-PAT)@github.com/$(GithubRepo) $(WorkingDirectoryName) -b $(BranchToMirror)
       displayName: Clone GitHub repo
     - script: |
-        echo WorkingDirectoryName - '$(WorkingDirectoryName)'
-    - script: |
         git remote add azdo-mirror https://dn-bot:$(dn-bot-dnceng-build-rw-code-rw)@dev.azure.com/dnceng/internal/_git/$(AzDORepoName)
       displayName: Add Azure DevOps remote
       workingDirectory: $(WorkingDirectoryName)
