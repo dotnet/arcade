@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Darc.Helpers
         /// <param name="options">Command line options</param>
         /// <returns>Darc settings for use in remote commands</returns>
         /// <remarks>The command line takes precedence over the darc settings file.</remarks>
-        public static async Task<DarcSettings> GetDarcSettingsAsync(CommandLineOptions options, ILogger logger, string repoUri = null)
+        public static DarcSettings GetDarcSettings(CommandLineOptions options, ILogger logger, string repoUri = null)
         {
             LocalSettings localSettings = null;
             DarcSettings darcSettings = new DarcSettings();
@@ -64,19 +64,14 @@ namespace Microsoft.DotNet.Darc.Helpers
                 }
                 catch (Exception exc) when (exc is DirectoryNotFoundException || exc is FileNotFoundException)
                 {
-                    // If a user has never run darc authenticate and is not passing a git token and BAR password
-                    // we pop up the authentication settings file.
-                    logger.LogInformation("User is not authenticated and no authentication options are been set. " +
-                        "Popping up settings file...");
-
                     if (string.IsNullOrEmpty(options.AzureDevOpsPat) &&
                         string.IsNullOrEmpty(options.GitHubPat) &&
                         string.IsNullOrEmpty(options.BuildAssetRegistryPassword))
                     {
-                        AuthenticateCommandLineOptions authenticateCommandLineOptions = new AuthenticateCommandLineOptions();
-                        AuthenticateOperation authenticateOperation = new AuthenticateOperation(authenticateCommandLineOptions);
-                        await authenticateOperation.ExecuteAsync();
-                        localSettings = LoadSettingsFile();
+                        throw new DarcException("Please make sure to run darc authenticate and set" +
+                            " 'bar_password' and 'github_token' or 'azure_devops_token' or append" +
+                            "'-p <bar_password>' [--github-pat <githug_token> | " +
+                            "--azdev-pat <azure_devops_token> to your command");
                     }
                 }
 

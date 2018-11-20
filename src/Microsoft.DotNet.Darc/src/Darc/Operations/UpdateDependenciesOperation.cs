@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Darc.Operations
         {
             try
             {
-                DarcSettings darcSettings = darcSettings = await LocalSettings.GetDarcSettingsAsync(_options, Logger);
+                DarcSettings darcSettings = darcSettings = LocalSettings.GetDarcSettings(_options, Logger);
 
                 // TODO: PAT only used for pulling the arcade eng/common dir,
                 // so hardcoded to GitHub PAT right now. Must be more generic in the future.
