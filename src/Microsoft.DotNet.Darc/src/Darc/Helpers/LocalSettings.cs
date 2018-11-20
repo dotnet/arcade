@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Darc.Helpers
                     // If a user has never run darc authenticate and is not passing a git token and BAR password
                     // we pop up the authentication settings file.
                     logger.LogInformation("User is not authenticated and no authentication options are been set. " +
-                        "Popping up setting file...");
+                        "Popping up settings file...");
 
                     if (string.IsNullOrEmpty(options.AzureDevOpsPat) &&
                         string.IsNullOrEmpty(options.GitHubPat) &&
