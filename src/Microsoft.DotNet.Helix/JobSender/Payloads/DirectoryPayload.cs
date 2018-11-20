@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Helix.Client
 
                     foreach (FileInfo file in DirectoryInfo.EnumerateFiles("*", SearchOption.AllDirectories))
                     {
-                        string relativePath = file.FullName.Substring(basePath.Length+1); // +1 prevents it from including the leading backslash
+                        string relativePath = file.FullName.Substring(basePath.Length).Trim('/', '\\');
                         zip.CreateEntryFromFile(file.FullName, relativePath);
                     }
                 }
