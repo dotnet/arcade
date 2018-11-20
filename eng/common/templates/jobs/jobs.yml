@@ -34,7 +34,7 @@ parameters:
   helixType: build/product/
 
   # Optional: Override automatically derived dependsOn value for "publish build assets" job
-  publishBuildAssetsDependsOn: []
+  publishBuildAssetsDependsOn: ''
 
   # Optional: should run as a public build even in the internal project
   #           if 'true', the build won't run any of the internal only steps, even if it is running in non-public projects.
