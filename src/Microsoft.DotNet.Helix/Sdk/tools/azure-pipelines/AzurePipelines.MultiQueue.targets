@@ -5,8 +5,10 @@
           Outputs="%(HelixTargetQueue.Identity)">
     <PropertyGroup>
       <_CurrentTargetQueue>%(HelixTargetQueue.Identity)</_CurrentTargetQueue>
+      <_CurrentTestRunName>%(HelixTargetQueue.TestRunName)</_CurrentTestRunName>
+      <_CurrentTestRunName Condition="'$(_CurrentTestRunName)' == ''">$(TestRunNamePrefix)$(_CurrentTargetQueue)$(TestRunNameSuffix)</_CurrentTestRunName>
     </PropertyGroup>
-    <StartAzurePipelinesTestRun TestRunName="$(_CurrentTargetQueue)">
+    <StartAzurePipelinesTestRun TestRunName="$(_CurrentTestRunName)">
       <Output TaskParameter="TestRunId" PropertyName="TestRunId"/>
     </StartAzurePipelinesTestRun>
     <ItemGroup>

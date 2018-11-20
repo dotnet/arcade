@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +26,28 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             {
                 var res = await Client.SendAsync(req);
                 res.EnsureSuccessStatusCode();
+            }
+
+            using (var req = new HttpRequestMessage(
+                HttpMethod.Get,
+                $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}?api-version=5.0-preview.2"))
+            {
+                var res = await Client.SendAsync(req);
+                res.EnsureSuccessStatusCode();
+
+                var data = JObject.Parse(await res.Content.ReadAsStringAsync());
+                if (data["runStatistics"] is JArray runStatistics)
+                {
+                    var failed = runStatistics.Children().First(stat => stat["outcome"]?.ToString() == "Failed");
+                    if (failed != null)
+                    {
+                        Log.LogError($"Test run {TestRunId} has one or more failing tests.");
+                    }
+                    else
+                    {
+                        Log.LogMessage(MessageImportance.Low, $"Test run {TestRunId} has not failed.");
+                    }
+                }
             }
         }
     }
