@@ -152,7 +152,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         private string GetSuffix(string packageId)
         {
-            return _index?.GetPreRelease(packageId) ?? PreReleaseSuffix;
+            var suffix = _index?.GetPreRelease(packageId) ?? PreReleaseSuffix;
+
+            if (!string.IsNullOrEmpty(suffix) && suffix[0] != '-')
+            {
+                suffix = "-" + suffix;
+            }
+
+            return suffix;
         }
 
         private static Version ParseAs3PartVersion(string versionString)

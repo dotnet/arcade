@@ -3,14 +3,14 @@ trigger: none
 
 # Moves code from GitHub into internal repos
 phases:
-- template: /eng/common/templates/phases/base.yml
+- template: /eng/common/templates/job/job.yml
   parameters:
-    agentsOS: Windows_NT
     name: Mirror_GitHub_to_Azure_DevOps
-    queue:
-      name: Hosted VS2017
+    pool:
+      vmImage: vs2017-win2016
     variables:
-      WorkingDirectoryName: repo-dir
+    - name: WorkingDirectoryName
+      value: repo-dir
     steps:
     - task: PowerShell@1
       displayName: Calculate Mirrored Branch Names

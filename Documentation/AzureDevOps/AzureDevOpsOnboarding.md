@@ -29,15 +29,21 @@ Azure DevOps has detailed documentation on how to create builds that are linked 
 
 ## Azure DevOps service connection
 
+### GitHub connections
+
 When creating an Azure DevOps build definition with a GitHub source, you will need a GitHub Service Endpoint to communicate with GitHub and setup web hooks.  Teams should use the "dotnet" GitHub app service connection to manage the GitHub <-> Azure DevOps pipeline connection.
 
 The Azure Pipelines app ("dotnet" connection) will work for repos that are a member of the dotnet organization.  If you have a repo that should be supported but does not show up, you will need to work with @dnceng to update repository access for the app.
 
 The "dotnet" service connection is the only dnceng supported connection.  Other available connections may be removed and we strongly encourage devs to create OAuth connections only when needed and to clean them up when they are no longer necessary.
 
-### Switching service connections
+#### Switching service connections
 
 There is no way to update an existing build definition to use a different service connection.  Instead, you will need to deprecate your current build definition (disable triggers, change the name), and create a new build definition with the same properites.  You should then delete your deprecated definition when you are convinced the new definition works as expected.
+
+### Git (internal) connections
+
+See the [dotnet-bot-github-service-endpoint documentation](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#dotnet-bot-github-service-endpoint)
 
 ## Agent queues
 
@@ -109,11 +115,11 @@ It is recommended that you do **NOT** enable the checkbox labeled "Make secrets 
 
 - Code reuse
 
-  For *most* teams, it is recommended that you author your yaml to use the [same yaml files for internal, CI, and Pull Request builds](./WritingBuildDefinitions.md).  See https://github.com/dotnet/arcade/blob/master/eng/build.yml, for how this is being done in Arcade with build steps conditioned on "build reason".
+  For *most* teams, it is recommended that you author your yaml to use the [same yaml files for internal, CI, and Pull Request builds](./WritingBuildDefinitions.md).  See https://github.com/dotnet/arcade/blob/master/azure-pipelines.yml, for how this is being done in Arcade with build steps conditioned on "build reason".
 
 - Shared templates
 
-  Arcade currently provides a handful for [shared templates](https://github.com/dotnet/arcade/tree/master/eng/common/templates).  At the moment, it is only recommended that you add the `base` template to your yml phases ([example](https://github.com/dotnet/arcade/blob/master/eng/build.yml#L19)).  More templates will be provided when Azure DevOps fixes some current bugs (see "Notes about templates")
+  Arcade currently provides a handful for [shared templates](https://github.com/dotnet/arcade/tree/master/eng/common/templates).
 
   - [base.yml](https://github.com/dotnet/arcade/blob/master/eng/common/templates/phases/base.yml) defines docker variables, and enables telemetry to be sent for non-CI builds.
 

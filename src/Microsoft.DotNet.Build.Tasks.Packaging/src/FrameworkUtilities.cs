@@ -39,6 +39,23 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return nuGetFramework == null ? false : nuGetFramework.Framework == FrameworkConstants.FrameworkIdentifiers.Portable ||
                 nuGetFramework.GetShortFolderName().StartsWith("portable-");
         }
+
+        public static Version Ensure4PartVersion(string versionString)
+        {
+            if (String.IsNullOrEmpty(versionString))
+            {
+                return new Version(0, 0, 0, 0);
+            }
+
+            int dashIndex = versionString.IndexOf('-');
+            if (dashIndex != -1)
+            {
+                versionString = versionString.Substring(0, dashIndex);
+            }
+
+            return Ensure4PartVersion(new Version(versionString));
+        }
+
         public static Version Ensure4PartVersion(Version version)
         {
             if (version.Minor == -1 || version.Build == -1 || version.Revision == -1)

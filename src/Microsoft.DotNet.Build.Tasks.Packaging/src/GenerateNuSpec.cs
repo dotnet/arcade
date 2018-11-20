@@ -69,6 +69,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         public string Tags { get; set; }
 
+        public string[] PackageTypes { get; set; }
         public ITaskItem[] Dependencies { get; set; }
 
         public ITaskItem[] References { get; set; }
@@ -183,6 +184,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             manifestMetadata.UpdateMember(x => x.Tags, Tags);
             manifestMetadata.UpdateMember(x => x.Title, Title);
             manifestMetadata.UpdateMember(x => x.Version, Version != null ? new NuGetVersion(Version) : null);
+            manifestMetadata.UpdateMember(x => x.PackageTypes, GetPackageTypes());
             manifestMetadata.Serviceable |= Serviceable;
 
             manifest.AddRangeToMember(x => x.Files, GetManifestFiles());
@@ -284,6 +286,28 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     ).ToList();
         }
 
+        private List<PackageType> GetPackageTypes()
+        {
+            var listOfPackageTypes = new List<PackageType>();
+
+            // Copied and slightly modified from ParsePackageTypes():
+            // https://github.com/NuGet/NuGet.Client/blob/50af5271b98ac5cb2896a707569bc4cd1e87a017/src/NuGet.Core/NuGet.Build.Tasks.Pack/PackTaskLogic.cs#L338
+
+            foreach (var packageType in PackageTypes.TrimAndExcludeNullOrEmpty())
+            {
+                string[] packageTypeSplitInPart = packageType.Split(new char[] { ',' });
+                string packageTypeName = packageTypeSplitInPart[0].Trim();
+                var version = PackageType.EmptyVersion;
+                if (packageTypeSplitInPart.Length > 1)
+                {
+                    string versionString = packageTypeSplitInPart[1];
+                    System.Version.TryParse(versionString, out version);
+                }
+                listOfPackageTypes.Add(new PackageType(packageTypeName, version));
+            }
+
+            return listOfPackageTypes;
+        }
         private static VersionRange AggregateVersions(VersionRange aggregate, VersionRange next)
         {
             var versionRange = new VersionRange();

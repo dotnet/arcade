@@ -35,7 +35,7 @@ Target completion date for these workstreams is 12/14/2018.
 | [Toolset](#toolset)                           | [licavalc](#livar-cunha)      | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md) | Will follow CLI - need plan to go green |
 | [Visual FSharp](#visual-fsharp)               | [brettfo](#brett-forsgren)    | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/VisualFSharp.md) |  |
 | [WebSDK](#websdk)                             | [vramak](#vijay-ramakrishnan) | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/TemplatingAndWebSdkPlan.md) |  |
-| [WinForms](#winforms)                         | [mmcgaw](#merrie-mcgaw)       | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | [plan](https://github.com/dotnet/winforms/blob/master/Documentation/MigrationPlan.md) |  |
+| [WinForms](#winforms)                         | [mmcgaw](#merrie-mcgaw)       | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | | |
 | [WPF](#wpf)                                   | [vatsan-madhavan](#vatsan-madhavan)  | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4      | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/NetCore3EngineeringRepoStatus.md#wpf) | |
 
 | Status   | Description |
@@ -159,10 +159,10 @@ Owners: licavalc
 
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/706)         |         12/4         | In progress   |       |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/704) |         12/4         | In progress   |       |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/703)       |         12/4         | In progress   |       |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/705)       |         12/4         | In progress   |       |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/706)         |         12/4         | Complete      | System.Windows.Forms.dll is done, other assemblies will be coming soon      |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/704) |         12/4         | Complete      | See above      |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/703)       |         12/4         | Complete      | See above      |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/705)       |         12/4         | Complete      | See above      |
 
 ---
 
@@ -194,7 +194,7 @@ At the end of each phase, full migration would be completed for the correspondin
 
 | Phase                                                | Est. Completion Date | Status                                                       | Notes                                |
 | ---------------------------------------------------- | -------------------- | ------------------------------------------------------------ | ------------------------------------ |
-| 1. Migration of dotnet-wpf Repo and its internal clone | Dec 4, 2018          | The dotnet-wpf repo will be set-up on dnceng using the shared toolset (Arcade SDK), and will use Azure DevOps. This work is currently being prototyped and is expected to be deployed by Dec 4th. | No known project risks at this time. |
+| 1. Migration of dotnet-wpf Repo and its internal clone | Dec 4, 2018          | The dotnet-wpf repo will be set-up on dnceng using the shared toolset (Arcade SDK), and will use Azure DevOps. **This work has been completed as of 11/13/2018** |  |
 | 2. Migration of dotnet-trusted Repo                   | Jan 31, 2019        | New C++/CLI support for .NET Core is being added in Dev16 Preview 2. We are testing this in Nov/Dec 2018, and will be prototyping our repo migration to shared toolset (Arcade SDK) during this time. The actual repo migration will happen in Jan 2019 on dnceng. At the end of this, we expect to be using Azure DevOps as well.|   There are some inherent risks here because we depend on untested/new techologies - notably C++/CLI support in Dev16. We also depend on the fact that this will get into Dev16 Preview 2 without delays or major bugs, and that we can set up Azure DevOps and setup to depend on Dev16 Preview 2.|
 
 
