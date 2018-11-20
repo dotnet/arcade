@@ -38,6 +38,11 @@ function InitializeDotNetCli([bool]$install) {
   }
 
   $dotnetSdkVersion = $GlobalJson.tools.dotnet
+  $dotnetSdkChannel = "LTS"
+
+  if (Get-Member -inputobject $GlobalJson.tools -name "dotnetChannel" -Membertype Properties) {
+    $dotnetSdkChannel = $GlobalJson.tools.dotnetChannel
+  }
 
   # Use dotnet installation specified in DOTNET_INSTALL_DIR if it contains the required SDK version,
   # otherwise install the dotnet CLI and SDK to repo local .dotnet directory to avoid potential permission issues.
@@ -49,7 +54,7 @@ function InitializeDotNetCli([bool]$install) {
 
     if (-not (Test-Path(Join-Path $env:DOTNET_INSTALL_DIR "sdk\$dotnetSdkVersion"))) {
       if ($install) {
-        InstallDotNetSdk $dotnetRoot $dotnetSdkVersion
+        InstallDotNetSdk $dotnetRoot $dotnetSdkVersion $dotnetSdkChannel
       } else {
         Write-Host "Unable to find dotnet with SDK version '$dotnetSdkVersion'" -ForegroundColor Red
         ExitWithExitCode 1
@@ -70,9 +75,9 @@ function GetDotNetInstallScript([string] $dotnetRoot) {
   return $installScript
 }
 
-function InstallDotNetSdk([string] $dotnetRoot, [string] $version) {
+function InstallDotNetSdk([string] $dotnetRoot, [string] $version, [string] $channel) {
   $installScript = GetDotNetInstallScript $dotnetRoot
-  & $installScript -Version $version -InstallDir $dotnetRoot
+  & $installScript -Version $version -Channel $channel -InstallDir $dotnetRoot
   if ($lastExitCode -ne 0) {
     Write-Host "Failed to install dotnet cli (exit code '$lastExitCode')." -ForegroundColor Red
     ExitWithExitCode $lastExitCode
