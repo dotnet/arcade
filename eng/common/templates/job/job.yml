@@ -20,7 +20,7 @@ parameters:
 
   timeoutInMinutes: ''
 
-  variables: []
+  variables: ''
 
   workspace: ''
 

@@ -9,7 +9,8 @@ phases:
     pool:
       vmImage: vs2017-win2016
     variables:
-      WorkingDirectoryName: repo-dir
+    - name: WorkingDirectoryName
+      value: repo-dir
     steps:
     - task: PowerShell@1
       displayName: Calculate Mirrored Branch Names
@@ -30,6 +31,8 @@ phases:
     - script: |
         git clone https://dotnet-maestro-bot:$(BotAccount-dotnet-maestro-bot-PAT)@github.com/$(GithubRepo) $(WorkingDirectoryName) -b $(BranchToMirror)
       displayName: Clone GitHub repo
+    - script: |
+        echo WorkingDirectoryName - '$(WorkingDirectoryName)'
     - script: |
         git remote add azdo-mirror https://dn-bot:$(dn-bot-dnceng-build-rw-code-rw)@dev.azure.com/dnceng/internal/_git/$(AzDORepoName)
       displayName: Add Azure DevOps remote
