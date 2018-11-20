@@ -30,6 +30,8 @@ namespace Microsoft.DotNet.SignTool
 
         public abstract bool VerifySignedPEFile(Stream stream);
 
+        public abstract bool VerifyStrongNameSign(string fileFullPath);
+
         public abstract bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath);
 
         public bool Sign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> files)

@@ -192,9 +192,9 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             var signTool = new FakeSignTool(signToolArgs, task.Log);
             var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
-            var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput);
+            var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput, new string[] { });
 
-            util.Go();
+            util.Go(false);
 
             Assert.Same(ByteSequenceComparer.Instance, signingInput.ZipDataMap.KeyComparer);
 
@@ -255,7 +255,8 @@ namespace Microsoft.DotNet.SignTool.Tests
                 TempDir = "TempDir",
                 DryRun = false,
                 TestSign = true,
-                MSBuildPath = CreateTestResource("msbuild.fake")
+                MSBuildPath = CreateTestResource("msbuild.fake"),
+                SNBinaryPath = CreateTestResource("fake.sn.exe")
             };
 
             Assert.True(task.Execute());

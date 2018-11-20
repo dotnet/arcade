@@ -29,6 +29,9 @@ namespace Microsoft.DotNet.SignTool
         public override bool VerifySignedPEFile(Stream assemblyStream) 
             => true;
 
+        public override bool VerifyStrongNameSign(string fileFullPath)
+            => true;
+
         public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath)
         {
             if (TestSign)

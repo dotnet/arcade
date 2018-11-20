@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.IO.Packaging;
@@ -22,16 +23,19 @@ namespace Microsoft.DotNet.SignTool
         private readonly IBuildEngine _buildEngine;
         private readonly BatchSignInput _batchData;
         private readonly SignTool _signTool;
+        private readonly string[] _itemsToSkipStrongNameCheck;
 
-        internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool, BatchSignInput batchData)
+        internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool, 
+            BatchSignInput batchData, string[] itemsToSkipStrongNameCheck)
         {
             _signTool = signTool;
             _batchData = batchData;
             _log = log;
             _buildEngine = buildEngine;
+            _itemsToSkipStrongNameCheck = itemsToSkipStrongNameCheck;
         }
 
-        internal void Go()
+        internal void Go(bool doStrongNameCheck)
         {
             VerifyCertificates(_log);
 
@@ -53,6 +57,12 @@ namespace Microsoft.DotNet.SignTool
             if (!CopyFiles())
             {
                 return;
+            }
+
+            // Check that all files have a strong name signature
+            if (doStrongNameCheck)
+            {
+                VerifyStrongNameSigning();
             }
 
             // Validate the signing worked and produced actual signed binaries in all locations.
@@ -296,6 +306,23 @@ namespace Microsoft.DotNet.SignTool
                             }
                         }
                     }
+                }
+            }
+        }
+
+        private void VerifyStrongNameSigning()
+        {
+            foreach (var file in _batchData.FilesToSign)
+            {
+                if (_itemsToSkipStrongNameCheck.Contains(file.FileName))
+                {
+                    _log.LogMessage($"Skipping strong-name validation for {file.FullPath}.");
+                    continue;
+                }
+
+                if (file.IsManaged() && !_signTool.VerifyStrongNameSign(file.FullPath))
+                {
+                    _log.LogError($"Assembly {file.FullPath} is not strong-name signed correctly.");
                 }
             }
         }

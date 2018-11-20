@@ -33,6 +33,12 @@ namespace Microsoft.DotNet.SignTool
         public bool TestSign { get; set; }
 
         /// <summary>
+        /// True to perform strong name check on signed files.
+        /// If enabled it will require SNBinaryPath to be informed.
+        /// </summary>
+        public bool DoStrongNameCheck { get; set; }
+
+        /// <summary>
         /// Working directory used for storing files created during signing.
         /// </summary>
         [Required]
@@ -50,6 +56,12 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         [Required]
         public string[] ItemsToSign { get; set; }
+
+        /// <summary>
+        /// List of file names that should be ignored when checking
+        /// for correcteness of strong name signature.
+        /// </summary>
+        public string[] ItemsToSkipStrongNameCheck { get; set; }
 
         /// <summary>
         /// Mapping relating PublicKeyToken, CertificateName and Strong Name. 
@@ -128,6 +140,23 @@ namespace Microsoft.DotNet.SignTool
                 Log.LogWarning($"An empty list of files to sign was passed as parameter.");
             }
 
+            if (!DryRun)
+            {
+                var isValidSNPath = !string.IsNullOrEmpty(SNBinaryPath) && File.Exists(SNBinaryPath) && SNBinaryPath.EndsWith("sn.exe");
+
+                if (DoStrongNameCheck && !isValidSNPath)
+                {
+                    Log.LogError($"An incorrect full path to 'sn.exe' was specified: {SNBinaryPath}");
+                    return;
+                }
+
+                if (!isValidSNPath && StrongNameSignInfo?.Where(ti => ti?.ItemSpec?.EndsWith(".snk") ?? false) != null)
+                {
+                    Log.LogError($"An incorrect full path to 'sn.exe' was specified: {SNBinaryPath}");
+                    return;
+                }
+            }
+
             var enclosingDir = GetEnclosingDirectoryOfItemsToSign();
 
             PrintConfigInformation();
@@ -147,11 +176,11 @@ namespace Microsoft.DotNet.SignTool
 
             if (Log.HasLoggedErrors) return;
 
-            var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput);
+            var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput, ItemsToSkipStrongNameCheck);
 
             if (Log.HasLoggedErrors) return;
 
-            util.Go();
+            util.Go(DoStrongNameCheck);
         }
 
         private void PrintConfigInformation()

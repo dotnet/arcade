@@ -11,6 +11,7 @@ using System.Reflection.PortableExecutable;
 using System.Reflection.Metadata;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Reflection;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -54,6 +55,18 @@ namespace Microsoft.DotNet.SignTool
 
             CorHeader header = peReader.PEHeaders.CorHeader;
             return (header.Flags & CorFlags.StrongNameSigned) == CorFlags.StrongNameSigned;
+        }
+
+        public static AssemblyName GetAssemblyName(string fullFilePath)
+        {
+            try
+            {
+                return AssemblyName.GetAssemblyName(fullFilePath);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public static bool IsAuthenticodeSigned(Stream assemblyStream)
