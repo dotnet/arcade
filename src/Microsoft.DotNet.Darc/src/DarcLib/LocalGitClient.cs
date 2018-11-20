@@ -4,8 +4,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -63,7 +63,21 @@ namespace Microsoft.DotNet.DarcLib
 
         public Task<List<GitFile>> GetFilesForCommitAsync(string repoUri, string commit, string path)
         {
-            throw new NotImplementedException();
+            string gitDir = LocalHelpers.GetGitDir(_logger);
+            string repoDir = Directory.GetParent(gitDir).FullName;
+            string sourceFolder = Path.Combine(repoDir, path);
+            return Task.Run(() => Directory.GetFiles(
+                sourceFolder,
+                "*.*",
+                SearchOption.AllDirectories).Select(
+                    file =>
+                    {
+                        return new GitFile(
+                            file.Remove(0, repoDir.Length + 1).Replace("\\", "/"),
+                            File.ReadAllText(file)
+                            );
+                    }
+                ).ToList());
         }
 
         public Task<string> GetLastCommitShaAsync(string ownerAndRepo, string branch)
@@ -126,7 +140,7 @@ namespace Microsoft.DotNet.DarcLib
         /// <returns></returns>
         public async Task PushFilesAsync(List<GitFile> filesToCommit, string repoUri, string branch, string commitMessage)
         {
-            foreach (GitFile file in filesToCommit)
+            foreach (GitFile file in filesToCommit.Where(f => f.Operation != GitFileOperation.Delete))
             {
                 string parentDirectory = Directory.GetParent(file.FilePath).FullName;
 
@@ -153,6 +167,14 @@ namespace Microsoft.DotNet.DarcLib
                     }
                     finalContent = NormalizeLineEndings(fullPath, finalContent);
                     await streamWriter.WriteAsync(finalContent);
+                }
+            }
+
+            foreach (GitFile file in filesToCommit.Where(f => f.Operation == GitFileOperation.Delete))
+            {
+                if (File.Exists(file.FilePath))
+                {
+                    File.Delete(file.FilePath);
                 }
             }
         }
