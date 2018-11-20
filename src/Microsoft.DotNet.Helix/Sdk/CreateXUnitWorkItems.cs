@@ -15,23 +15,33 @@ namespace Microsoft.DotNet.Helix.Sdk
     public class CreateXUnitWorkItems : Build.Utilities.Task
     {
         /// <summary>
-        /// An array of XUnit project publish directories
+        /// An array of XUnit project workitems containing the following metadata:
+        /// - [Required] PublishDirectory: the publish output directory of the XUnit project
+        /// - [Required] TargetPath: the output dll path
+        /// - [Optional] Arguments: a string of arguments to be passed to the XUnit console runner
+        /// The two required parameters will be automatically created if XUnitProject.Identity is set to the path of the XUnit csproj file
         /// </summary>
         [Required]
-        public string[] XUnitDllDirectories { get; set; }
+        public ITaskItem[] XUnitProjects { get; set; }
 
         /// <summary>
-        /// An array of paths to the DLLs created by an XUnit project
+        /// The framework for the XUnit console runner
+        /// Should match the name of the folder in the xunit.console.runner nupkg
         /// </summary>
         [Required]
-        public string[] XUnitDllPaths { get; set; }
+        public string XUnitTargetFramework { get; set; }
 
         /// <summary>
         /// The path to the dotnet executable on the Helix agent. Defaults to "dotnet"
         /// </summary>
         public string PathToDotnet { get; set; }
 
-        private Dictionary<string, string> _directoriesToPathMap;
+        /// <summary>
+        /// Boolean true if this is a posix shell, false if not.
+        /// This does not need to be set by a user; it is automatically determined in Microsoft.DotNet.Helix.Sdk.MonoQueue.targets
+        /// </summary>
+        [Required]
+        public bool IsPosixShell { get; set; }
 
         /// <summary>
         /// An array of ITaskItems of type HelixWorkItem
@@ -60,48 +70,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <returns></returns>
         private async Task ExecuteAsync()
         {
-            if (XUnitDllDirectories is null)
-            {
-                Log.LogError("Required metadata XUnitDllDirectories is null");
-                return;
-            }
-            if (XUnitDllPaths is null)
-            {
-                Log.LogError("Required metadata XUnitDllPaths is null");
-                return;
-            }
-
-            if (XUnitDllDirectories.Length < 1)
-            {
-                Log.LogError("No XUnit Projects found");
-                return;
-            }
-            else if (XUnitDllDirectories.Length > XUnitDllPaths.Length)
-            {
-                Log.LogError("Not all XUnit projects produced assemblies");
-                return;
-            }
-            else if (XUnitDllDirectories.Length < XUnitDllPaths.Length)
-            {
-                Log.LogError("More XUnit assemblies were found than projects");
-                return;
-            }
-
-            _directoriesToPathMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            for (int i = 0; i < XUnitDllDirectories.Length; i++)
-            {
-                if (_directoriesToPathMap.ContainsKey(XUnitDllDirectories[i]))
-                {
-                    Log.LogError("Two identical publish paths were provided");
-                    return;
-                }
-                else
-                {
-                    _directoriesToPathMap.Add(XUnitDllDirectories[i], XUnitDllPaths[i]);
-                }
-            }
-
-            XUnitWorkItems = await Task.WhenAll(XUnitDllDirectories.Select(PrepareWorkItem));
+            XUnitWorkItems = await Task.WhenAll(XUnitProjects.Select(PrepareWorkItem));
             return;
         }
 
@@ -110,21 +79,42 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         /// <param name="publishPath">The non-relative path to the publish directory.</param>
         /// <returns>An ITaskItem instance representing the prepared HelixWorkItem.</returns>
-        private async Task<ITaskItem> PrepareWorkItem(string publishPath)
+        private async Task<ITaskItem> PrepareWorkItem(ITaskItem xunitProject)
         {
             // Forces this task to run asynchronously
             await Task.Yield();
+            
+            if (!xunitProject.GetRequiredMetadata(Log, "PublishDirectory", out string publishDirectory))
+            {
+                return null;
+            }
+            if (!xunitProject.GetRequiredMetadata(Log, "TargetPath", out string targetPath))
+            {
+                return null;
+            }
+            xunitProject.TryGetMetadata("Assembly", out string arguments);
 
-            string assemblyName = Path.GetFileNameWithoutExtension(_directoriesToPathMap[publishPath]);
-            string dotNetPath = string.IsNullOrEmpty(PathToDotnet) ? "dotnet" : PathToDotnet;
-            string command = $"{dotNetPath} xunit.console.dll {assemblyName}.dll -xml testResults.xml";
+            string assemblyName = Path.GetFileName(targetPath);
+            string dotNetPath = XUnitTargetFramework.Contains("core") ? (string.IsNullOrEmpty(PathToDotnet) ? "dotnet exec " : $"{PathToDotnet} exec ") : "";
 
-            Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishPath}, Command: {command}");
+            string xunitConsoleRunner = "";
+            if (IsPosixShell)
+            {
+                xunitConsoleRunner = "$XUNIT_CONSOLE_RUNNER";
+            }
+            else
+            {
+                xunitConsoleRunner = "%XUNIT_CONSOLE_RUNNER%";
+            }
+
+            string command = $"{dotNetPath}{xunitConsoleRunner} {assemblyName} -xml {Guid.NewGuid()}-testResults.xml {arguments}";
+
+            Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishDirectory}, Command: {command}");
 
             ITaskItem workItem = new Build.Utilities.TaskItem(assemblyName, new Dictionary<string, string>()
             {
                 { "Identity", assemblyName },
-                { "PayloadDirectory", publishPath },
+                { "PayloadDirectory", publishDirectory },
                 { "Command", command }
             });
             return workItem;

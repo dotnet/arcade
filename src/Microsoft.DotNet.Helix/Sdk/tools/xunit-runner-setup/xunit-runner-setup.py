@@ -3,7 +3,6 @@
 import sys
 import os
 import re
-import shutil
 import helix.settings
 import helix.logs
 
@@ -13,7 +12,7 @@ def find_runner(search_dir, framework):
     for root, dirs, files in os.walk(search_dir):
         for file_name in files:
             if re.search(framework.replace(r".", r"\.") + r"[\\/]xunit\.console\.(dll|exe)$", os.path.join(root, file_name)):
-                return os.path.dirname(os.path.join(root, file_name))
+                os.path.join(root, file_name)
     return None
 
 def main():
@@ -24,7 +23,6 @@ def main():
     else:
         target_framework = sys.argv[1]
 
-    workitem_dir = settings.workitem_working_dir
     correlation_dir = settings.correlation_payload_dir
 
     runner_dll_loc = find_runner(correlation_dir, target_framework)
@@ -34,18 +32,8 @@ def main():
     else:
         log.info("Found xUnit console runner of target framework " + target_framework + " at " + runner_dll_loc)
 
-    files = dict()
-    for file in os.listdir(runner_dll_loc):
-        files[file] =  os.path.join(runner_dll_loc, file)
-
-    for file in files:
-        try:
-            shutil.copy2(files[file], workitem_dir)
-            log.info("Copied xUnit console runner file " + files[file] + " to " + workitem_dir)
-        except:
-            import traceback
-            log.error("Unable to run xUnit tests: failed to copy runner file " + files[file] + " to work item directory " + workitem_dir + ": " + traceback.format_exc())
-            return 1
+    os.environ["XUNIT_CONSOLE_RUNNER"] = runner_dll_loc
+    log.info("Set environment variable XUNIT_CONSOLE_RUNNER to " + runner_dll_loc)
     
     return 0
 

@@ -119,23 +119,33 @@
       <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)xunit-runner-setup"/>
     </ItemGroup>
     <PropertyGroup>
-      <HelixPreCommands Condition="$(IsPosixShell)">$(HelixPostCommands);$HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/xunit-runner-setup.py $(XUnitTargetFramework)</HelixPreCommands>
-      <HelixPreCommands Condition="!$(IsPosixShell)">$(HelixPostCommands);%HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\xunit-runner-setup.py $(XUnitTargetFramework)</HelixPreCommands>
+      <HelixPreCommands Condition="$(IsPosixShell)">$(HelixPreCommands);$HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/xunit-runner-setup.py $(XUnitTargetFramework)</HelixPreCommands>
+      <HelixPreCommands Condition="!$(IsPosixShell)">$(HelixPreCommands);%HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\xunit-runner-setup.py $(XUnitTargetFramework)</HelixPreCommands>
     </PropertyGroup>
   </Target>
 
-  <ItemGroup>
-    <XUnitProject Include="$(XUnitProjects)" />
-  </ItemGroup>
+  <Target Name="EvaluateXUnitWorkItems" Condition="'@(XUnitProject)' != ''" BeforeTargets="CreateXUnitWorkItems"
+          Outputs="%(XUnitProject.Identity)">
+    <PropertyGroup>
+      <_CurrentXUnitProject>%(XUnitProject.Identity)</_CurrentXUnitProject>
+    </PropertyGroup>
+    <MSBuild Projects="$(_CurrentXUnitProject)" Targets="PublishWithOutput" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.PublishingAfterTargets.targets">
+      <Output TaskParameter="TargetOutputs" PropertyName="_PublishOutputDir" />
+    </MSBuild>
+    <MSBuild Projects="$(_CurrentXUnitProject)" Targets="GetTargetPath" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.PublishingAfterTargets.targets">
+      <Output TaskParameter="TargetOutputs" PropertyName="_TargetPath" />
+    </MSBuild>
 
-  <Target Name="CreateXUnitWorkItems" Condition="'$(XUnitProjects)' != ''" BeforeTargets="Test">
-    <MSBuild Projects="@(XUnitProject)" Targets="PublishWithOutput" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.PublishingAfterTargets.targets">
-      <Output TaskParameter="TargetOutputs" ItemName="XUnitDllDirectory" />
-    </MSBuild>
-    <MSBuild Projects="@(XUnitProject)" Targets="GetTargetPath" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.PublishingAfterTargets.targets">
-      <Output TaskParameter="TargetOutputs" ItemName="XUnitDllPath" />
-    </MSBuild>
-    <CreateXUnitWorkItems XUnitDllPaths="@(XUnitDllPath)" XUnitDllDirectories="@(XUnitDllDirectory)" >
+    <ItemGroup>
+      <XUnitProject Condition="'%(Identity)' == '$(_CurrentXUnitProject)'">
+        <PublishDirectory>$(_PublishOutputDir)</PublishDirectory>
+        <TargetPath>$(_TargetPath)</TargetPath>
+      </XUnitProject>
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="CreateXUnitWorkItems" BeforeTargets="Test">    
+    <CreateXUnitWorkItems XUnitProjects="@(XUnitProject)" XUnitTargetFramework="$(XUnitTargetFramework)" IsPosixShell="$(IsPosixShell)" >
       <Output TaskParameter="XUnitWorkItems" ItemName="HelixWorkItem"/>
     </CreateXUnitWorkItems>
   </Target>
