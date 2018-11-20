@@ -3,7 +3,7 @@ trigger: none
 
 # Moves code from GitHub into internal repos
 phases:
-- template: /eng/common/templates/job/base.yml
+- template: /eng/common/templates/job/job.yml
   parameters:
     name: Mirror_GitHub_to_Azure_DevOps
     pool:

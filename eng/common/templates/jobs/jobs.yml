@@ -1,5 +1,5 @@
 parameters:
-  # Optional: 'true' if failures in base.yml job should not fail the job
+  # Optional: 'true' if failures in job.yml job should not fail the job
   continueOnError: false
 
   # Optional: Enable installing Microbuild plugin
@@ -45,7 +45,7 @@ parameters:
 
 jobs:
 - ${{ each job in parameters.jobs }}:
-  - template: ../job/base.yml
+  - template: ../job/job.yml
     parameters: 
       # pass along parameters
       continueOnError: ${{ parameters.continueOnError }}

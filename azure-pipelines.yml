@@ -7,7 +7,7 @@ resources:
     image: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
 
 jobs:
-- template: /eng/common/templates/jobs/base.yml
+- template: /eng/common/templates/jobs/jobs.yml
   parameters:
     enableMicrobuild: true
     enablePublishBuildArtifacts: true
