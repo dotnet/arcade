@@ -112,7 +112,8 @@ namespace Microsoft.DotNet.SignTool
         {
             foreach (var fullPath in _itemsToSign)
             {
-                var fileUniqueKey = new SignedFileContentKey(fullPath);
+                var contentHash = ContentUtil.GetContentHash(fullPath);
+                var fileUniqueKey = new SignedFileContentKey(contentHash, fullPath);
 
                 if (!_whichPackagesTheFileIsIn.TryGetValue(fileUniqueKey, out var packages))
                 {
@@ -122,7 +123,7 @@ namespace Microsoft.DotNet.SignTool
                 packages.Add(fullPath);
                 _whichPackagesTheFileIsIn[fileUniqueKey] = packages;
 
-                TrackFile(fullPath, ContentUtil.GetContentHash(fullPath), isNested: false);
+                TrackFile(fullPath, contentHash, isNested: false);
             }
 
             if (_errors.Any())
@@ -282,7 +283,12 @@ namespace Microsoft.DotNet.SignTool
 
             if (SignToolConstants.SignableExtensions.Contains(extension) || SignToolConstants.SignableOSXExtensions.Contains(extension))
             {
-                LogError(SigningToolErrorCode.ERR001, new SignedFileContentKey(fullPath));
+                // Extract the relative path inside the package / otherwise just return the full path of the file
+                var contentHash = ContentUtil.GetContentHash(fullPath);
+                var tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
+                var relativePath = fullPath.Replace(tempDir, "");
+
+                LogError(SigningToolErrorCode.ERR001, new SignedFileContentKey(contentHash, relativePath));
             }
             else
             {

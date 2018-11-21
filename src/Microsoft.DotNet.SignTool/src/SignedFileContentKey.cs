@@ -28,14 +28,6 @@ namespace Microsoft.DotNet.SignTool
             FileName = fileName;
         }
 
-        public SignedFileContentKey(string fullPath)
-        {
-            Debug.Assert(fullPath != null);
-
-            ContentHash = ContentUtil.GetContentHash(fullPath);
-            FileName = Path.GetFileName(fullPath);
-        }
-
         public override bool Equals(object obj)
             => obj is SignedFileContentKey key && Equals(key);
 
