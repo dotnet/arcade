@@ -4,13 +4,13 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <HelixPostCommands Condition="!$(IsPosixShell)">
-      $(HelixPostCommands);
-      %HELIX_CORRELATION_PAYLOAD%\reporter\run.bat $(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI) $(SYSTEM_TEAMPROJECT) $(TestRunId) $(SYSTEM_ACCESSTOKEN)
-    </HelixPostCommands>
     <HelixPostCommands Condition="$(IsPosixShell)">
       $(HelixPostCommands);
       /bin/sh $HELIX_CORRELATION_PAYLOAD/reporter/run.sh $(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI) $(SYSTEM_TEAMPROJECT) $(TestRunId) $(SYSTEM_ACCESSTOKEN)
+    </HelixPostCommands>
+    <HelixPostCommands Condition="!$(IsPosixShell)">
+      $(HelixPostCommands);
+      %HELIX_CORRELATION_PAYLOAD%\reporter\run.bat $(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI) $(SYSTEM_TEAMPROJECT) $(TestRunId) $(SYSTEM_ACCESSTOKEN)
     </HelixPostCommands>
   </PropertyGroup>
 </Project>

@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         [Required]
         public int TestRunId { get; set; }
 
-        protected override async Task ExecuteCore()
+        protected override async Task ExecuteCoreAsync(HttpClient client)
         {
             using (var req = new HttpRequestMessage(new HttpMethod("PATCH"), $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}?api-version=5.0-preview.2")
             {
@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                 }), Encoding.UTF8, "application/json"),
             })
             {
-                var res = await Client.SendAsync(req);
+                var res = await client.SendAsync(req);
                 res.EnsureSuccessStatusCode();
             }
 
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                 HttpMethod.Get,
                 $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}?api-version=5.0-preview.2"))
             {
-                var res = await Client.SendAsync(req);
+                var res = await client.SendAsync(req);
                 res.EnsureSuccessStatusCode();
 
                 var data = JObject.Parse(await res.Content.ReadAsStringAsync());

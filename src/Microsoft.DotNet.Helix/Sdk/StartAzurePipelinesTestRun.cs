@@ -1,4 +1,4 @@
-﻿using System.Net.Http;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         [Output]
         public int TestRunId { get; set; }
         
-        protected override async Task ExecuteCore()
+        protected override async Task ExecuteCoreAsync(HttpClient client)
         {
             using (var req = new HttpRequestMessage(HttpMethod.Post, $"{CollectionUri}{TeamProject}/_apis/test/runs?api-version=5.0-preview.2")
             {
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                 }), Encoding.UTF8, "application/json"),
             })
             {
-                var res = await Client.SendAsync(req);
+                var res = await client.SendAsync(req);
                 if (!res.IsSuccessStatusCode)
                 {
                     await LogFailedRequest(req, res);

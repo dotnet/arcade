@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 {
     public abstract class AzureDevOpsTask : Microsoft.Build.Utilities.Task
     {
-        private bool InAzDev => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_BUILDNUMBER"));
+        private bool InAzurePipeline => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_BUILDNUMBER"));
 
         protected string GetEnvironmentVariable(string name)
         {
@@ -30,21 +30,19 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 
         protected string BuildId => GetEnvironmentVariable("BUILD_BUILDID");
 
-        protected HttpClient Client { get; private set; }
-
-        protected abstract Task ExecuteCore();
+        protected abstract Task ExecuteCoreAsync(HttpClient client);
 
         public override bool Execute()
         {
             try
             {
-                if (!InAzDev)
+                if (!InAzurePipeline)
                 {
                     Log.LogWarning("Not running inside Azure Pipelines. Task will not be executed.");
                 }
                 else
                 {
-                    using (Client = new HttpClient
+                    using (var client = new HttpClient
                     {
                         DefaultRequestHeaders =
                         {
@@ -56,7 +54,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         },
                     })
                     {
-                        ExecuteCore().GetAwaiter().GetResult();
+                        ExecuteCoreAsync(client).GetAwaiter().GetResult();
                     }
                 }
             }
