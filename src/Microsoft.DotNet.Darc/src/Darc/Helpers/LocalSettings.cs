@@ -70,8 +70,8 @@ namespace Microsoft.DotNet.Darc.Helpers
                     {
                         throw new DarcException("Please make sure to run darc authenticate and set" +
                             " 'bar_password' and 'github_token' or 'azure_devops_token' or append" +
-                            "'-p <bar_password>' [--github-pat <githug_token> | " +
-                            "--azdev-pat <azure_devops_token> to your command");
+                            "'-p <bar_password>' [--github-pat <github_token> | " +
+                            "--azdev-pat <azure_devops_token>] to your command");
                     }
                 }
 
