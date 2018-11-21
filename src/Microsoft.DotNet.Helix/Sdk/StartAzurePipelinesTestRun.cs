@@ -17,19 +17,24 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         
         protected override async Task ExecuteCoreAsync(HttpClient client)
         {
-            using (var req = new HttpRequestMessage(HttpMethod.Post, $"{CollectionUri}{TeamProject}/_apis/test/runs?api-version=5.0-preview.2")
-            {
-                Content = new StringContent(JsonConvert.SerializeObject(new JObject
+            var req =
+                new HttpRequestMessage(
+                    HttpMethod.Post,
+                    $"{CollectionUri}{TeamProject}/_apis/test/runs?api-version=5.0-preview.2")
                 {
-                    ["automated"] = true,
-                    ["build"] = new JObject
-                    {
-                        ["id"] = BuildId,
-                    },
-                    ["name"] = TestRunName,
-                    ["state"] = "InProgress",
-                }), Encoding.UTF8, "application/json"),
-            })
+                    Content = new StringContent(
+                        JsonConvert.SerializeObject(
+                            new JObject
+                            {
+                                ["automated"] = true,
+                                ["build"] = new JObject {["id"] = BuildId,},
+                                ["name"] = TestRunName,
+                                ["state"] = "InProgress",
+                            }),
+                        Encoding.UTF8,
+                        "application/json"),
+                };
+            using (req)
             {
                 var res = await client.SendAsync(req);
                 if (!res.IsSuccessStatusCode)
