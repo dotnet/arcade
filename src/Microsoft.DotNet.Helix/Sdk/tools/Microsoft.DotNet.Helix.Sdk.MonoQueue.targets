@@ -147,7 +147,9 @@
     </ItemGroup>
   </Target>
   
-  <Target Name="CreateXUnitWorkItems" BeforeTargets="Test">    
+  <Target Name="CreateXUnitWorkItems" Condition="'@(XunitProject)' != ''" BeforeTargets="Test">    
+    <Error Condition="'$(XUnitTargetFramework)' == ''" Message="XUnitTargetFramework property value should be specified." />
+    
     <CreateXUnitWorkItems XUnitProjects="@(XUnitProject)" XUnitTargetFramework="$(XUnitTargetFramework)" IsPosixShell="$(IsPosixShell)" >
       <Output TaskParameter="XUnitWorkItems" ItemName="HelixWorkItem"/>
     </CreateXUnitWorkItems>
