@@ -42,11 +42,6 @@
 
   <PropertyGroup>
     <EnableXUnitReporter Condition=" '$(EnableXUnitReporter)' != 'true' ">false</EnableXUnitReporter>
-
-    <IncludeDotNetCli Condition=" '$(IncludeDotNetCli)' != 'true' ">false</IncludeDotNetCli>
-    <DotNetCliPackageType Condition=" '$(DotNetCliPackageType)' == '' ">runtime</DotNetCliPackageType>
-    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'runtime' ">2.1.5</DotNetCliVersion>
-    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'sdk' ">2.1.403</DotNetCliVersion>
   </PropertyGroup>
 
   <Choose>
@@ -62,96 +57,7 @@
     </Otherwise>
   </Choose>
 
-  <!--
-    Select DotNetCliRuntime based on TargetQueue if it isn't set
-    TODO: Use the Helix Queue Info api to determine this information
-  -->
-  <Choose>
-    <When Condition=" '$(DotNetCliRuntime)' != '' ">
-    </When>
-    <When Condition="$(HelixTargetQueue.ToLowerInvariant().StartsWith('windows'))">
-      <PropertyGroup>
-        <DotNetCliRuntime>win-x64</DotNetCliRuntime>
-      </PropertyGroup>
-    </When>
-    <When Condition="$(HelixTargetQueue.ToLowerInvariant().StartsWith('osx'))">
-      <PropertyGroup>
-        <DotNetCliRuntime>mac-x64</DotNetCliRuntime>
-      </PropertyGroup>
-    </When>
-    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('arm32'))">
-      <PropertyGroup>
-        <DotNetCliRuntime>linux-arm-32</DotNetCliRuntime>
-      </PropertyGroup>
-    </When>
-    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('arm64'))">
-      <PropertyGroup>
-        <DotNetCliRuntime>linux-arm-64</DotNetCliRuntime>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <PropertyGroup>
-        <DotNetCliRuntime>linux-x64</DotNetCliRuntime>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
-
-  <Import Project="$(MSBuildThisFileDirectory)azure-pipelines/AzurePipelines.MonoQueue.targets"
-          Condition="$(ImportAzurePipelinesTargets)"/>
-
-  <Target Name="AddDotNetSdk" Condition="$(IncludeDotNetCli)" BeforeTargets="Test">
-    <FindDotNetCliPackage Version="$(DotNetCliVersion)" Runtime="$(DotNetCliRuntime)" PackageType="$(DotNetCliPackageType)">
-      <Output TaskParameter="PackageUri" PropertyName="DotNetCliPackageUri"/>
-    </FindDotNetCliPackage>
-    <ItemGroup>
-      <HelixCorrelationPayload Include="dotnet-cli">
-        <Uri>$(DotNetCliPackageUri)</Uri>
-      </HelixCorrelationPayload>
-    </ItemGroup>
-    <PropertyGroup>
-      <HelixPreCommands Condition="$(IsPosixShell)">$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD:$PATH</HelixPreCommands>
-      <HelixPreCommands Condition="!$(IsPosixShell)">$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%%3B%PATH%</HelixPreCommands> <!-- %3B is an escaped ; -->
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="AddXUnitConsoleRunner" Condition="'$(XUnitProjects)' != ''" BeforeTargets="Test">
-    <ItemGroup>
-      <HelixCorrelationPayload Include="xunit-runner">
-        <Uri>https://api.nuget.org/v3-flatcontainer/xunit.runner.console/$(XUnitRunnerVersion)/xunit.runner.console.$(XUnitRunnerVersion).nupkg</Uri>
-      </HelixCorrelationPayload>
-      <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)xunit-runner-setup"/>
-    </ItemGroup>
-    <PropertyGroup>
-      <HelixPreCommands Condition="$(IsPosixShell)">$(HelixPreCommands);$HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/xunit-runner-setup.py $(XUnitTargetFramework)</HelixPreCommands>
-      <HelixPreCommands Condition="!$(IsPosixShell)">$(HelixPreCommands);%HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\xunit-runner-setup.py $(XUnitTargetFramework)</HelixPreCommands>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="EvaluateXUnitWorkItems" Condition="'@(XUnitProject)' != ''" BeforeTargets="CreateXUnitWorkItems"
-          Outputs="%(XUnitProject.Identity)">
-    <PropertyGroup>
-      <_CurrentXUnitProject>%(XUnitProject.Identity)</_CurrentXUnitProject>
-    </PropertyGroup>
-    <MSBuild Projects="$(_CurrentXUnitProject)" Targets="PublishWithOutput" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.PublishingAfterTargets.targets">
-      <Output TaskParameter="TargetOutputs" PropertyName="_PublishOutputDir" />
-    </MSBuild>
-    <MSBuild Projects="$(_CurrentXUnitProject)" Targets="GetTargetPath" Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.PublishingAfterTargets.targets">
-      <Output TaskParameter="TargetOutputs" PropertyName="_TargetPath" />
-    </MSBuild>
-
-    <ItemGroup>
-      <XUnitProject Condition="'%(Identity)' == '$(_CurrentXUnitProject)'">
-        <PublishDirectory>$(_PublishOutputDir)</PublishDirectory>
-        <TargetPath>$(_TargetPath)</TargetPath>
-      </XUnitProject>
-    </ItemGroup>
-  </Target>
-  
-  <Target Name="CreateXUnitWorkItems" BeforeTargets="Test">    
-    <CreateXUnitWorkItems XUnitProjects="@(XUnitProject)" XUnitTargetFramework="$(XUnitTargetFramework)" IsPosixShell="$(IsPosixShell)" >
-      <Output TaskParameter="XUnitWorkItems" ItemName="HelixWorkItem"/>
-    </CreateXUnitWorkItems>
-  </Target>
+  <Import Project="$(_HelixMonoQueueTargets)" Condition="'$(_HelixMonoQueueTargets)' != ''"/>
   
   <Target Name="AddXUnitReporter" Condition="$(EnableXUnitReporter)" BeforeTargets="Test">
     <ItemGroup>
