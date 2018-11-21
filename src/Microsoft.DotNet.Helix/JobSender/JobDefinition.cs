@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
@@ -59,7 +60,22 @@ namespace Microsoft.DotNet.Helix.Client
 
         public IJobDefinition WithCorrelationPayloadDirectory(string directory)
         {
-            CorrelationPayloads.Add(new DirectoryPayload(directory));
+            return WithCorrelationPayloadDirectory(directory, false);
+        }
+
+        public IJobDefinition WithCorrelationPayloadDirectory(string directory, bool includeDirectoryName)
+        {
+            string archiveEntryPrefix = null;
+            if (includeDirectoryName)
+            {
+                archiveEntryPrefix = new DirectoryInfo(directory).Name;
+            }
+            return WithCorrelationPayloadDirectory(directory, archiveEntryPrefix);
+        }
+
+        public IJobDefinition WithCorrelationPayloadDirectory(string directory, string archiveEntryPrefix)
+        {
+            CorrelationPayloads.Add(new DirectoryPayload(directory, archiveEntryPrefix));
             return this;
         }
 

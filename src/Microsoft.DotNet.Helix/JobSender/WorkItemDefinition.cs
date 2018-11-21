@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -56,7 +57,22 @@ namespace Microsoft.DotNet.Helix.Client
 
         public IWorkItemDefinition WithDirectoryPayload(string directory)
         {
-            Payload = new DirectoryPayload(directory);
+            return WithDirectoryPayload(directory, false);
+        }
+
+        public IWorkItemDefinition WithDirectoryPayload(string directory, bool includeDirectoryName)
+        {
+            string archiveEntryPrefix = null;
+            if (includeDirectoryName)
+            {
+                archiveEntryPrefix = new DirectoryInfo(directory).Name;
+            }
+            return WithDirectoryPayload(directory, archiveEntryPrefix);
+        }
+
+        public IWorkItemDefinition WithDirectoryPayload(string directory, string archiveEntryPrefix)
+        {
+            Payload = new DirectoryPayload(directory, archiveEntryPrefix);
             return this;
         }
 

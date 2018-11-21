@@ -7,8 +7,9 @@ namespace Microsoft.DotNet.Helix.Client
 {
     internal class DirectoryPayload : IPayload
     {
-        public DirectoryPayload(string directory)
+        public DirectoryPayload(string directory, string archiveEntryPrefix)
         {
+            ArchiveEntryPrefix = archiveEntryPrefix;
             DirectoryInfo = new DirectoryInfo(directory);
             if (!DirectoryInfo.Exists)
             {
@@ -18,6 +19,8 @@ namespace Microsoft.DotNet.Helix.Client
 
         public DirectoryInfo DirectoryInfo { get; }
 
+        public string ArchiveEntryPrefix { get; }
+
         public async Task<string> UploadAsync(IBlobContainer payloadContainer)
         {
             using (var stream = new MemoryStream())
@@ -25,11 +28,19 @@ namespace Microsoft.DotNet.Helix.Client
                 using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, true))
                 {
                     string basePath = DirectoryInfo.FullName;
+                    basePath = basePath.TrimEnd('/', '\\');
 
                     foreach (FileInfo file in DirectoryInfo.EnumerateFiles("*", SearchOption.AllDirectories))
                     {
-                        string relativePath = file.FullName.Substring(basePath.Length+1); // +1 prevents it from including the leading backslash
-                        zip.CreateEntryFromFile(file.FullName, relativePath);
+                        string relativePath = file.FullName.Substring(basePath.Length + 1); // +1 prevents it from including the leading backslash
+                        string zipEntryName = relativePath.Replace('\\', '/'); // Normalize slashes
+
+                        if (!string.IsNullOrEmpty(ArchiveEntryPrefix))
+                        {
+                            zipEntryName = ArchiveEntryPrefix + "/" + zipEntryName;
+                        }
+
+                        zip.CreateEntryFromFile(file.FullName, zipEntryName);
                     }
                 }
                 stream.Position = 0;

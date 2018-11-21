@@ -126,3 +126,7 @@ config.ps1
 
 # Node.js modules
 node_modules/
+
+# Python Compile Outputs
+
+*.pyc
