@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 
 namespace Microsoft.DotNet.SignTool
@@ -26,14 +25,6 @@ namespace Microsoft.DotNet.SignTool
 
             ContentHash = contentHash;
             FileName = fileName;
-        }
-
-        public SignedFileContentKey(string fullPath)
-        {
-            Debug.Assert(fullPath != null);
-
-            ContentHash = ContentUtil.GetContentHash(fullPath);
-            FileName = Path.GetFileName(fullPath);
         }
 
         public override bool Equals(object obj)

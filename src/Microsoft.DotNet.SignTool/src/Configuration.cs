@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.SignTool
         {
             foreach (var fullPath in _itemsToSign)
             {
-                var fileUniqueKey = new SignedFileContentKey(fullPath);
+                var fileUniqueKey = new SignedFileContentKey(ContentUtil.GetContentHash(fullPath), fullPath);
 
                 if (!_whichPackagesTheFileIsIn.TryGetValue(fileUniqueKey, out var packages))
                 {
