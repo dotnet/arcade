@@ -282,7 +282,11 @@ namespace Microsoft.DotNet.SignTool
 
             if (SignToolConstants.SignableExtensions.Contains(extension) || SignToolConstants.SignableOSXExtensions.Contains(extension))
             {
-                LogError(SigningToolErrorCode.ERR001, new SignedFileContentKey(fullPath));
+                // Extract the relative path inside the package / otherwise just return the full path of the file
+                var contentHash = ContentUtil.GetContentHash(fullPath);
+                var tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
+                var relativePath = fullPath.Replace($@"{tempDir}\", "");
+                LogError(SigningToolErrorCode.ERR001, new SignedFileContentKey(contentHash, relativePath));
             }
             else
             {
@@ -445,8 +449,7 @@ namespace Microsoft.DotNet.SignTool
                             contentHash = ContentUtil.GetContentHash(stream);
                         }
 
-                        var fileName = Path.GetFileName(relativePath);
-                        var fileUniqueKey = new SignedFileContentKey(contentHash, fileName);
+                        var fileUniqueKey = new SignedFileContentKey(contentHash, relativePath);
 
                         if (!_whichPackagesTheFileIsIn.TryGetValue(fileUniqueKey, out var packages))
                         {
@@ -457,11 +460,11 @@ namespace Microsoft.DotNet.SignTool
                         _whichPackagesTheFileIsIn[fileUniqueKey] = packages;
 
                         // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
-                        if (!_filesByContentKey.TryGetValue(fileUniqueKey, out var fileSignInfo))
+                        var fileName = Path.GetFileName(relativePath);
+                        if (!_filesByContentKey.TryGetValue(new SignedFileContentKey(contentHash, fileName), out var fileSignInfo))
                         {
-                            string tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
-                            string tempPath = Path.Combine(tempDir, Path.GetFileName(relativePath));
-                            Directory.CreateDirectory(tempDir);
+                            string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash), relativePath);
+                            Directory.CreateDirectory(Path.GetDirectoryName(tempPath));
 
                             using (var stream = entry.Open())
                             using (var tempFileStream = File.OpenWrite(tempPath))
