@@ -1,0 +1,16 @@
+<Project>
+  <Target Name="AddDotNetSdk" Condition="$(IncludeDotNetCli)" BeforeTargets="Test">
+    <FindDotNetCliPackage Version="$(DotNetCliVersion)" Runtime="$(DotNetCliRuntime)" PackageType="$(DotNetCliPackageType)">
+      <Output TaskParameter="PackageUri" PropertyName="DotNetCliPackageUri"/>
+    </FindDotNetCliPackage>
+    <ItemGroup>
+      <HelixCorrelationPayload Include="dotnet-cli">
+        <Uri>$(DotNetCliPackageUri)</Uri>
+      </HelixCorrelationPayload>
+    </ItemGroup>
+    <PropertyGroup>
+      <HelixPreCommands Condition="$(IsPosixShell)">$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD:$PATH</HelixPreCommands>
+      <HelixPreCommands Condition="!$(IsPosixShell)">$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%%3B%PATH%</HelixPreCommands> <!-- %3B is an escaped ; -->
+    </PropertyGroup>
+  </Target>
+</Project>

@@ -7,6 +7,12 @@
 
     <ImportAzurePipelinesTargets Condition="$(EnableAzurePipelinesReporter) AND $(AzurePipelinesAvaliable)">true</ImportAzurePipelinesTargets>
     <ImportAzurePipelinesTargets Condition="'$(ImportAzurePipelinesTargets)' != 'true'">false</ImportAzurePipelinesTargets>
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(ImportAzurePipelinesTargets)">
+    <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.MonoQueue.targets</_HelixMonoQueueTargets>
+    <_HelixMultiQueueTargets>$(_HelixMultiQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.MultiQueue.targets</_HelixMultiQueueTargets>
   </PropertyGroup>
 
   <Target Name="ValidateAzurePipelinesConfiguration" Condition="$(EnableAzurePipelinesReporter) AND '$(HelixTargetQueue)' == ''" BeforeTargets="StartTestRuns;Test">

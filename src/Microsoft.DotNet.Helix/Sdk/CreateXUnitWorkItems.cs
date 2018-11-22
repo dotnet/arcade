@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// An array of XUnit project workitems containing the following metadata:
         /// - [Required] PublishDirectory: the publish output directory of the XUnit project
         /// - [Required] TargetPath: the output dll path
+        /// - [Required] RuntimeTargetFramework: the target framework to run tests on
         /// - [Optional] Arguments: a string of arguments to be passed to the XUnit console runner
         /// The two required parameters will be automatically created if XUnitProject.Identity is set to the path of the XUnit csproj file
         /// </summary>
@@ -25,16 +26,9 @@ namespace Microsoft.DotNet.Helix.Sdk
         public ITaskItem[] XUnitProjects { get; set; }
 
         /// <summary>
-        /// The framework for the XUnit console runner
-        /// Should match the name of the folder in the xunit.console.runner nupkg
-        /// </summary>
-        [Required]
-        public string XUnitTargetFramework { get; set; }
-
-        /// <summary>
         /// The path to the dotnet executable on the Helix agent. Defaults to "dotnet"
         /// </summary>
-        public string PathToDotnet { get; set; }
+        public string PathToDotnet { get; set; } = "dotnet";
 
         /// <summary>
         /// Boolean true if this is a posix shell, false if not.
@@ -70,7 +64,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <returns></returns>
         private async Task ExecuteAsync()
         {
-            XUnitWorkItems = await Task.WhenAll(XUnitProjects.Select(PrepareWorkItem));
+            XUnitWorkItems = (await Task.WhenAll(XUnitProjects.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
             return;
         }
 
@@ -92,32 +86,29 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 return null;
             }
-            xunitProject.TryGetMetadata("Assembly", out string arguments);
+            if (!xunitProject.GetRequiredMetadata(Log, "RuntimeTargetFramework", out string runtimeTargetFramework))
+            {
+                return null;
+            }
+
+            xunitProject.TryGetMetadata("Arguments", out string arguments);
 
             string assemblyName = Path.GetFileName(targetPath);
-            string dotNetPath = XUnitTargetFramework.Contains("core") ? (string.IsNullOrEmpty(PathToDotnet) ? "dotnet exec " : $"{PathToDotnet} exec ") : "";
+            string driver = runtimeTargetFramework.Contains("core") ? $"{PathToDotnet} exec " : "";
+            string runnerName = runtimeTargetFramework.Contains("core") ? "xunit.console.dll" : "xunit.console.exe";
+            string correlationPayload = IsPosixShell ? "$HELIX_CORRELATION_PAYLOAD" : "%HELIX_CORRELATION_PAYLOAD%";
+            string xUnitRunner = $"{correlationPayload}/tools/{runtimeTargetFramework}/{runnerName}";
 
-            string xunitConsoleRunner = "";
-            if (IsPosixShell)
-            {
-                xunitConsoleRunner = "$XUNIT_CONSOLE_RUNNER";
-            }
-            else
-            {
-                xunitConsoleRunner = "%XUNIT_CONSOLE_RUNNER%";
-            }
-
-            string command = $"{dotNetPath}{xunitConsoleRunner} {assemblyName} -xml {Guid.NewGuid()}-testResults.xml {arguments}";
+            string command = $"{driver}{xUnitRunner} {assemblyName} -xml testResults.xml {arguments}";
 
             Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishDirectory}, Command: {command}");
 
-            ITaskItem workItem = new Build.Utilities.TaskItem(assemblyName, new Dictionary<string, string>()
+            return new Build.Utilities.TaskItem(assemblyName, new Dictionary<string, string>()
             {
                 { "Identity", assemblyName },
                 { "PayloadDirectory", publishDirectory },
                 { "Command", command }
             });
-            return workItem;
         }
     }
 }
