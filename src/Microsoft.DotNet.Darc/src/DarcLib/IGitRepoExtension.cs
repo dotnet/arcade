@@ -37,8 +37,15 @@ namespace Microsoft.DotNet.DarcLib
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
 
-            byte[] content = Convert.FromBase64String(encodedContent);
-            return Encoding.UTF8.GetString(content);
+            try
+            {
+                byte[] content = Convert.FromBase64String(encodedContent);
+                return Encoding.UTF8.GetString(content);
+            }
+            catch
+            {
+                return encodedContent;
+            }
         }
     }
 }
