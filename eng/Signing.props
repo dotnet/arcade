@@ -26,6 +26,7 @@
     <FileSignInfo Include="SevenZip.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="winterop.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="wix.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="LibGit2Sharp.dll" CertificateName="3PartySHA2" />
 
     <!-- Despite being called "Microsoft.*", these are not produced by Microsoft. These assemblies come from the Wix toolset project. -->
     <FileSignInfo Include="Microsoft.Deployment.Compression.Cab.dll" CertificateName="3PartySHA2" />

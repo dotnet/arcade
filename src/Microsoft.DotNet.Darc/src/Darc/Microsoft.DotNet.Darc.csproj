@@ -18,6 +18,7 @@
   
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="$(CommandLineParserVersion)" />
+    <PackageReference Include="LibGit2Sharp" Version="0.25.3" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.1.1" />
     <PackageReference Include="YamlDotNet.Signed" Version="5.1.0" />
