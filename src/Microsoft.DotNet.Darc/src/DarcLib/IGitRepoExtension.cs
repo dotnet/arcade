@@ -32,20 +32,21 @@ namespace Microsoft.DotNet.DarcLib
 
         public static string GetDecodedContent(this IGitRepo gitRepo, string encodedContent)
         {
-            var serializerSettings = new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            };
-
             try
             {
                 byte[] content = Convert.FromBase64String(encodedContent);
                 return Encoding.UTF8.GetString(content);
             }
-            catch
+            catch (FormatException)
             {
                 return encodedContent;
             }
+        }
+
+        public static byte[] GetContentBytes(this IGitRepo gitRepo, string content)
+        {
+            string decodedContent = GetDecodedContent(gitRepo, content);
+            return Encoding.UTF8.GetBytes(decodedContent);
         }
     }
 }

@@ -163,87 +163,82 @@ namespace Microsoft.DotNet.DarcLib
             string branch,
             string commitMessage)
         {
-            await Task.Run(() =>
+            string dotnetMaestro = "dotnet-maestro";
+            using (_logger.BeginScope("Pushing files to {branch}", branch))
             {
-                string dotnetMaestro = "dotnet-maestro";
-                using (_logger.BeginScope("Pushing files to {branch}", branch))
+                (string owner, string repo) = ParseRepoUri(repoUri);
+
+                string tempRepoFolder = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+
+                try
                 {
-                    (string owner, string repo) = ParseRepoUri(repoUri);
-
-                    string tempRepoFolder = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-
-                    try
+                    string repoPath = LibGit2Sharp.Repository.Clone(repoUri, tempRepoFolder, new LibGit2Sharp.CloneOptions
                     {
-                        string repoPath = LibGit2Sharp.Repository.Clone(repoUri, tempRepoFolder, new LibGit2Sharp.CloneOptions
-                        {
-                            BranchName = branch,
-                            Checkout = true
-                        });
+                        BranchName = branch,
+                        Checkout = true
+                    });
 
-                        using (LibGit2Sharp.Repository localRepo = new LibGit2Sharp.Repository(repoPath))
+                    using (LibGit2Sharp.Repository localRepo = new LibGit2Sharp.Repository(repoPath))
+                    {
+                        foreach (GitFile file in filesToCommit)
                         {
-                            foreach (GitFile file in filesToCommit)
+                            string filePath = Path.Combine(tempRepoFolder, file.FilePath);
+
+                            if (file.Operation == GitFileOperation.Add)
                             {
-                                string filePath = Path.Combine(tempRepoFolder, file.FilePath);
-
-                                if (file.Operation == GitFileOperation.Add)
+                                if (!File.Exists(filePath))
                                 {
-                                    if (!File.Exists(filePath))
-                                    {
-                                        string parentFolder = Directory.GetParent(filePath).FullName;
+                                    string parentFolder = Directory.GetParent(filePath).FullName;
 
-                                        if (!Directory.Exists(parentFolder))
-                                        {
-                                            Directory.CreateDirectory(parentFolder);
-                                        }
-
-                                        using (File.Create(filePath))
-                                        { }
-                                    }
-
-                                    File.WriteAllText(filePath, this.GetDecodedContent(file.Content));
+                                    Directory.CreateDirectory(parentFolder);
                                 }
-                                else
+
+                                using (FileStream stream = File.Create(filePath))
                                 {
-                                    File.Delete(Path.Combine(tempRepoFolder, file.FilePath));
+                                    byte[] contentBytes = this.GetContentBytes(file.Content);
+                                    await stream.WriteAsync(contentBytes, 0, contentBytes.Length);
                                 }
                             }
-
-                            LibGit2Sharp.Commands.Stage(localRepo, "*");
-
-                            LibGit2Sharp.Signature author = new LibGit2Sharp.Signature(dotnetMaestro, $"@{dotnetMaestro}", DateTime.Now);
-                            LibGit2Sharp.Signature commiter = author;
-                            localRepo.Commit(commitMessage, author, commiter, new LibGit2Sharp.CommitOptions
+                            else
                             {
-                                AllowEmptyCommit = false,
-                                PrettifyMessage = true
-                            });
-
-                            localRepo.Network.Push(localRepo.Branches[branch], new LibGit2Sharp.PushOptions
-                            {
-                                CredentialsProvider = (url, user, cred) =>
-                                new LibGit2Sharp.UsernamePasswordCredentials
-                                {
-                                    Username = dotnetMaestro,
-                                    Password = Client.Credentials.Password
-                                }
-                            });
+                                File.Delete(Path.Combine(tempRepoFolder, file.FilePath));
+                            }
                         }
-                    }
-                    catch (Exception exc)
-                    {
-                        _logger.LogError(exc, $"Something went wrong when pushing the files to repo {repo} in branch {branch}");
-                    }
-                    finally
-                    {
-                        // Libgit2Sharp behaves similarly to git and marks files under the .git/objects hierarchy as read-only, 
-                        // thus if the read-only attribute is not unset an UnauthorizedAccessException is thrown.
-                        GitFileManager.NormalizeAttributes(tempRepoFolder);
 
-                        Directory.Delete(tempRepoFolder, true);
+                        LibGit2Sharp.Commands.Stage(localRepo, "*");
+
+                        LibGit2Sharp.Signature author = new LibGit2Sharp.Signature(dotnetMaestro, $"@{dotnetMaestro}", DateTime.Now);
+                        LibGit2Sharp.Signature commiter = author;
+                        localRepo.Commit(commitMessage, author, commiter, new LibGit2Sharp.CommitOptions
+                        {
+                            AllowEmptyCommit = false,
+                            PrettifyMessage = true
+                        });
+
+                        localRepo.Network.Push(localRepo.Branches[branch], new LibGit2Sharp.PushOptions
+                        {
+                            CredentialsProvider = (url, user, cred) =>
+                            new LibGit2Sharp.UsernamePasswordCredentials
+                            {
+                                Username = dotnetMaestro,
+                                Password = Client.Credentials.Password
+                            }
+                        });
                     }
                 }
-            });
+                catch (Exception exc)
+                {
+                    _logger.LogError(exc, $"Something went wrong when pushing the files to repo {repo} in branch {branch}");
+                }
+                finally
+                {
+                    // Libgit2Sharp behaves similarly to git and marks files under the .git/objects hierarchy as read-only, 
+                    // thus if the read-only attribute is not unset an UnauthorizedAccessException is thrown.
+                    GitFileManager.NormalizeAttributes(tempRepoFolder);
+
+                    Directory.Delete(tempRepoFolder, true);
+                }
+            }
         }
 
         public async Task<IEnumerable<int>> SearchPullRequestsAsync(
