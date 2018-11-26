@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.SignTool
 
         private readonly string[] _itemsToSign;
 
-        private enum SigningToolErrorCode { ERR001 };
+        private enum SigningToolErrorCode { SIGN002 };
 
         /// <summary>
         /// This store content information for container files.
@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     switch (errorGroup.Key)
                     {
-                        case SigningToolErrorCode.ERR001:
+                        case SigningToolErrorCode.SIGN002:
                             _log.LogError("Could not determine certificate name for signable file(s):");
                             break;
                     }
@@ -286,7 +286,7 @@ namespace Microsoft.DotNet.SignTool
                 var contentHash = ContentUtil.GetContentHash(fullPath);
                 var tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
                 var relativePath = fullPath.Replace($@"{tempDir}\", "");
-                LogError(SigningToolErrorCode.ERR001, new SignedFileContentKey(contentHash, relativePath));
+                LogError(SigningToolErrorCode.SIGN002, new SignedFileContentKey(contentHash, relativePath));
             }
             else
             {
