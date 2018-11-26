@@ -5,11 +5,7 @@ trigger: none
 jobs:
 - template: /eng/common/templates/jobs/jobs.yml
   parameters:
-    enableMicrobuild: false
-    enablePublishBuildArtifacts: false
-    enablePublishTestResults: false
-    enablePublishBuildAssets: false
-    enableTelemetry: false
+    enableTelemetry: true
     helixRepo: dotnet/arcade
     jobs:
     - job: Merge_GitHub_to_Azure_DevOps
