@@ -25,8 +25,10 @@
     <RunScriptOutputName Condition="'$(TargetOS)' != 'Windows_NT'">RunTests.sh</RunScriptOutputName>     
     <RunScriptOutputPath>$([MSBuild]::NormalizePath('$(TestPath)', '$(RunScriptOutputName)'))</RunScriptOutputPath>
 
-    <RunScriptHost Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' == 'Windows_NT'">%RUNTIME_PATH%\dotnet.exe</RunScriptHost>
-    <RunScriptHost Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' != 'Windows_NT'">$RUNTIME_PATH/dotnet</RunScriptHost>
+    <RunScriptHostDir Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' == 'Windows_NT'">%RUNTIME_PATH%\</RunScriptHostDir>
+    <RunScriptHostDir Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' != 'Windows_NT'">$RUNTIME_PATH/</RunScriptHostDir>
+    <RunScriptHost Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' == 'Windows_NT'">$(RunScriptHostDir)dotnet.exe</RunScriptHost>
+    <RunScriptHost Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' != 'Windows_NT'">$(RunScriptHostDir)dotnet</RunScriptHost>
 
     <!-- In UAP we don't want the repro steps printed. -->
     <RunScriptOutputEchoes Condition="'$(BuildingUAPVertical)' != 'true' AND '$(UseDotNetNativeToolchain)' != 'true'">true</RunScriptOutputEchoes>

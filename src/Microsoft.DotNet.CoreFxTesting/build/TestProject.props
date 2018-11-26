@@ -31,11 +31,9 @@
 
     <!-- Disable building Integration Test projects in LUT. -->
     <BuildForLiveUnitTesting Condition="'$(BuildForLiveUnitTesting)' == '' and '$(IsIntegrationTestProject)' == 'true'">false</BuildForLiveUnitTesting>
-  </PropertyGroup>
 
-  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
     <!-- Treat test assemblies as non-shipping (do not publish or sign them). -->
-    <IsShipping Condition="'$(IsShipping)' == ''">false</IsShipping>
+    <IsShipping Condition="'$(IsTestProject)' == 'true'">false</IsShipping>
   </PropertyGroup>
 
 </Project>

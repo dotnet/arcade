@@ -35,7 +35,7 @@
     </ItemGroup>
 
     <Copy SourceFiles="@(TraceEventNativeFiles)"
-          DestinationFolder="$(TestPath)"
+          DestinationFiles="@(TraceEventNativeFiles -> '$([MSBuild]::NormalizePath('$(TestPath)', '%(RecursiveDir)', '%(Filename)%(Extension)'))')"
           SkipUnchangedFiles="true" />
   
   </Target>

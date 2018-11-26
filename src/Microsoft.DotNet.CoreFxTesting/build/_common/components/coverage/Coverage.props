@@ -3,9 +3,21 @@
 <Project>
 
   <PropertyGroup>
-    <RunTestsDependsOn>$(RunTestsDependsOn);SetupOutDir;</RunTestsDependsOn>
-    <!-- Use code coverage runtimeconfig to use the dedicated runtime instead. -->
-    <TestsSuccessfulSemaphoreName>coverage.passed</TestsSuccessfulSemaphoreName>
+    <CoverageOutputPath Condition="'$(CoverageOutputPath)' == ''">coverage.xml</CoverageOutputPath>
+    <CoverageThreshold Condition="$(CoverageThreshold) == ''">0</CoverageThreshold>
+    <CoverageThresholdType Condition="$(CoverageThresholdType) == ''">line,branch,method</CoverageThresholdType>
+    <CoverageFormat Condition="'$(CoverageFormat)' == ''">opencover</CoverageFormat>
+    
+    <CoverageReportDir Condition="'$(CoverageReportDir)' == ''">report</CoverageReportDir>
+    <CoverageReportTypes Condition="'$(CoverageReportTypes)' == ''">Html</CoverageReportTypes>
+    <CoverageReportVerbosity Condition="'$(CoverageReportVerbosity)' == ''">Info</CoverageReportVerbosity>
+
+    <!--
+      As we are instrumenting System.Private.CoreLib.dll for each test assembly we disable parallelization
+      for now and should find a better way to avoid the re-instrumentation of it (which takes time).
+    -->
+    <SerializeProjects>true</SerializeProjects>
+    <GenerateRunScriptDependsOn>$(GenerateRunScriptDependsOn);SetupCoverageFilter</GenerateRunScriptDependsOn>
   </PropertyGroup>
 
 </Project>

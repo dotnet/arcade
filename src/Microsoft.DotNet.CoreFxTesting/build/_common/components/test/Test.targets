@@ -48,92 +48,83 @@
 
   </Target>
 
-  <Target Name="SetupTestProfile">
+  <!-- Setup run commands. -->
+  <Choose>
 
-    <!-- ==================== netcoreapp ==================== -->
+    <When Condition="'$(BuildingNETCoreAppVertical)' == 'true'">  
+      <PropertyGroup>
+        <TestRunnerName>xunit.console.dll</TestRunnerName>
+        <TestRunnerNameWithoutExtension>$([System.IO.Path]::GetFileNameWithoutExtension('$(TestRunnerName)'))</TestRunnerNameWithoutExtension>
 
-    <PropertyGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
-      <TestRunnerName>xunit.console.dll</TestRunnerName>
-      <TestRunnerNameWithoutExtension>$([System.IO.Path]::GetFileNameWithoutExtension('$(TestRunnerName)'))</TestRunnerNameWithoutExtension>
+        <RunCommand>$(RunScriptHost)</RunCommand>
+        <RunArguments>$(TestRunnerName) $(RunArguments)</RunArguments>
+      </PropertyGroup>
+    </When>
 
-      <RunCommand>$(RunScriptHost)</RunCommand>
-      <RunArguments>$(TestRunnerName) $(RunArguments)</RunArguments>
-    </PropertyGroup>
+    <When Condition="'$(BuildingNETFxVertical)' == 'true'">  
+      <PropertyGroup>
+        <TestRunnerName>xunit.console.exe</TestRunnerName>
+        <RunCommand>$(TestRunnerName)</RunCommand>
+      </PropertyGroup>
+    </When>
 
-    <ItemGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
-      <SupplementalTestData Include="$(RuntimePath)$(TestRunnerName)" />
-      <SupplementalTestData Include="$(TestRuntimeConfigPath)" DestinationName="$(TestRunnerNameWithoutExtension).runtimeconfig.json" />
-      <SupplementalTestData Include="$(RuntimePath)xunit.execution.dotnet.dll" />
-      <SupplementalTestData Include="$(RuntimePath)xunit.runner.reporters.netcoreapp10.dll" />
-      <SupplementalTestData Include="$(RuntimePath)xunit.runner.utility.netcoreapp10.dll" />
-    </ItemGroup>
+    <When Condition="'$(BuildingUAPVertical)' == 'true'">  
+      <PropertyGroup>
+        <!-- Globally registered UWP console app. -->
+        <TestRunnerName>XUnitRunnerUap</TestRunnerName>
+        <RunCommand>$(TestRunnerName)</RunCommand>
+        
+        <!-- The location where the logs will be written by the test runner -->
+        <UAPResultsFolder Condition="'$(UAPResultsFolder)' == ''">%USERPROFILE%\Documents\TestResults\</UAPResultsFolder>
+      </PropertyGroup>
 
-    <!-- ==================== netfx ==================== -->
+      <ItemGroup>
+        <!-- Copy the runner files over. -->
+        <RunScriptCommands Include="forfiles /p &quot;$(RunnerDir)&quot; /s /c &quot;cmd /c cd %EXECUTION_DIR% %26%26 if @isdir equ FALSE (if /I not @ext==\&quot;pri\&quot; if not exist @relpath mklink /H @relpath @path >1NUL) else (if not exist @relpath mkdir @relpath)&quot;" />
 
-    <PropertyGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
-      <TestRunnerName>xunit.console.exe</TestRunnerName>
-      <RunCommand>$(TestRunnerName)</RunCommand>
-    </PropertyGroup>
+        <!-- Copy the runtime binaries over. -->
+        <RunScriptCommands Include="for /R &quot;$(_RuntimePath)&quot; %25%25I in (%2A) do if not exist &quot;%25%25~nxI&quot; (mklink /H &quot;%25%25~nxI&quot; &quot;%25%25I&quot; >1NUL)" />
 
-    <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
-      <SupplementalTestData Include="$(RuntimePath)$(TestRunnerName)" />
-      <SupplementalTestData Include="$(TestRuntimeConfigPath)" DestinationName="$(TestRunnerName).config" />
-      <SupplementalTestData Include="$(RuntimePath)xunit.execution.desktop.dll" />
-      <SupplementalTestData Include="$(RuntimePath)xunit.runner.reporters.net452.dll" />
-      <SupplementalTestData Include="$(RuntimePath)xunit.runner.utility.net452.dll" />
-    </ItemGroup>
+        <!-- We need to have the ni as well as the non-ni version of the binary. The host (being a rather old build) looks for the ni name first (so we need that as well for now.) -->
+        <RunScriptCommands Include="copy /y &quot;$(_RuntimePath)System.Private.CoreLib.dll&quot; System.Private.CoreLib.ni.dll" />
 
-    <!-- ==================== uap ==================== -->
+        <!-- Install -->
+        <RunScriptCommands Include="call &quot;$(LauncherPath)&quot; -install appxmanifest.xml $(TestAssembly)" />
+        <RunScriptCommands Include="echo." />
+        
+        <!-- Uninstall -->
+        <PostRunScriptCommands Include="echo." />
+        <!-- Save error level as the uninstall command overwrites the global one. -->
+        <PostRunScriptCommands Include="set ERRORLEVEL=%ERRORLEVEL%" />
+        <PostRunScriptCommands Include="call &quot;$(LauncherPath)&quot; -uninstall appxmanifest.xml $(TestAssembly)" />
 
-    <PropertyGroup Condition="'$(BuildingUAPVertical)' == 'true'">
-      <!-- The location where the logs will be written by the test runner -->
-      <UAPResultsFolder Condition="'$(UAPResultsFolder)' == ''">%USERPROFILE%\Documents\TestResults\</UAPResultsFolder>
-      <!-- Globally registered UWP console app. -->
-      <TestRunnerName>XUnitRunnerUap</TestRunnerName>
-      <RunCommand>$(TestRunnerName)</RunCommand>
-    </PropertyGroup>
-    
-    <ItemGroup Condition="'$(BuildingUAPVertical)' == 'true'">
-      <!-- Copy the runner files over. -->
-      <RunScriptCommands Include="forfiles /p &quot;$(RunnerDir)&quot; /s /c &quot;cmd /c cd %EXECUTION_DIR% %26%26 if @isdir equ FALSE (if /I not @ext==\&quot;pri\&quot; if not exist @relpath mklink /H @relpath @path >1NUL) else (if not exist @relpath mkdir @relpath)&quot;" />
+        <!-- Copy the log files and the results files from the Documents folder to the test folder -->
+        <PostRunScriptCommands Include="move /Y &quot;$(UAPResultsFolder)$(TestAssembly).xml&quot; .\$(TestResultsName)" />
+      </ItemGroup>
+    </When>
 
-      <!-- Copy the runtime binaries over. -->
-      <RunScriptCommands Include="for /R &quot;$(_RuntimePath)&quot; %25%25I in (%2A) do if not exist &quot;%25%25~nxI&quot; (mklink /H &quot;%25%25~nxI&quot; &quot;%25%25I&quot; >1NUL)" />
+    <When Condition="'$(UseDotNetNativeToolchain)' == 'true'">  
+      <PropertyGroup>
+        <TestRunnerName>xunit.console.exe</TestRunnerName>
+        <RunCommand>$(TestRunnerName)</RunCommand>
+        
+        <!-- We use the netcoreapp runner for ILC but change its extension to .exe to satisfy ILC. -->
+        <OriginalTestRunnerName>xunit.console.dll</OriginalTestRunnerName>
 
-      <!-- We need to have the ni as well as the non-ni version of the binary. The host (being a rather old build) looks for the ni name first (so we need that as well for now.) -->
-      <RunScriptCommands Include="copy /y &quot;$(_RuntimePath)System.Private.CoreLib.dll&quot; System.Private.CoreLib.ni.dll" />
+        <RemoteExecutorConsoleAppName>RemoteExecutorConsoleApp.exe</RemoteExecutorConsoleAppName>
+        <RemoteExecutorConsoleAppNameWithoutExtension>RemoteExecutorConsoleApp</RemoteExecutorConsoleAppNameWithoutExtension>
+        <_TestILCFolder>%RUNTIME_PATH%\TestILC</_TestILCFolder>
+        <ILCBuildType Condition="'$(ILCBuildType)' == ''">ret</ILCBuildType>
+        <_UseSharedAssemblies Condition="'$(EnableMultiFileILCTests)' == 'true'">-useSharedAssemblies</_UseSharedAssemblies>
+        <_ILCWin32 Condition="'$(BuildingUAPAOTVertical)' != 'true'">-win32</_ILCWin32>
+      </PropertyGroup>
+    </When>
 
-      <!-- Install -->
-      <RunScriptCommands Include="call &quot;$(LauncherPath)&quot; -install appxmanifest.xml $(TestAssembly)" />
-      <RunScriptCommands Include="echo." />
-      
-      <!-- Uninstall -->
-      <PostRunScriptCommands Include="echo." />
-      <!-- Save error level as the uninstall command overwrites the global one. -->
-      <PostRunScriptCommands Include="set ERRORLEVEL=%ERRORLEVEL%" />
-      <PostRunScriptCommands Include="call &quot;$(LauncherPath)&quot; -uninstall appxmanifest.xml $(TestAssembly)" />
+  </Choose>
 
-      <!-- Copy the log files and the results files from the Documents folder to the test folder -->
-      <PostRunScriptCommands Include="move /Y &quot;$(UAPResultsFolder)$(TestAssembly).xml&quot; .\$(TestResultsName)" />
-    </ItemGroup>
+  <Target Name="SetupILCTestProfile" Condition="'$(UseDotNetNativeToolchain)' == 'true'">
 
-    <!-- ==================== uapaot ==================== -->
-
-    <PropertyGroup Condition="'$(UseDotNetNativeToolchain)' == 'true'">
-      <!-- We use the netcoreapp runner for ILC but change its extension to .exe to satisfy ILC. -->
-      <OriginalTestRunnerName>xunit.console.dll</OriginalTestRunnerName>
-      <TestRunnerName>xunit.console.exe</TestRunnerName>
-      <RunCommand>$(TestRunnerName)</RunCommand>
-
-      <RemoteExecutorConsoleAppName>RemoteExecutorConsoleApp.exe</RemoteExecutorConsoleAppName>
-      <RemoteExecutorConsoleAppNameWithoutExtension>RemoteExecutorConsoleApp</RemoteExecutorConsoleAppNameWithoutExtension>
-      <_TestILCFolder>%RUNTIME_PATH%\TestILC</_TestILCFolder>
-      <ILCBuildType Condition="'$(ILCBuildType)' == ''">ret</ILCBuildType>
-      <_UseSharedAssemblies Condition="'$(EnableMultiFileILCTests)' == 'true'">-useSharedAssemblies</_UseSharedAssemblies>
-      <_ILCWin32 Condition="'$(BuildingUAPAOTVertical)' != 'true'">-win32</_ILCWin32>
-    </PropertyGroup>
-
-    <ItemGroup Condition="'$(UseDotNetNativeToolchain)' == 'true'">
+    <ItemGroup>
       <TargetExecutableNames Include="$(TestRunnerName)"/>
       <TargetExecutableNames Condition="'%(ProjectReference.Filename)' == '$(RemoteExecutorConsoleAppNameWithoutExtension)'" Include="$(RemoteExecutorConsoleAppName)"/>
       

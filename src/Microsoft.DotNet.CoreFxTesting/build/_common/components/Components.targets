@@ -39,6 +39,6 @@
     Inputs:
       - Coverage: Expected to be passed in as a global property.
   -->
-  <Import Condition="'$(Coverage)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'coverage', 'Coverage.targets'))" />
+  <Import Condition="'$(_CoverageSupported)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'coverage', 'Coverage.targets'))" />
 
 </Project>

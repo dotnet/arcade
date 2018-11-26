@@ -15,6 +15,10 @@
     <RunTestsDependsOn>ValidatePerfConfigurations;$(RunTestsDependsOn);PublishPerfRunnerDependencies;</RunTestsDependsOn>
   </PropertyGroup>
 
+  <ItemGroup>
+    <SupplementalTestData Include="$(RuntimePath)Microsoft.Diagnostics.Tracing.TraceEvent.dll" />
+  </ItemGroup>
+
   <Import Condition="'$(IncludePerformanceTestFrameworkReferences)' == 'true'" Project="$(MSBuildThisFileDirectory)References.props" />
 
 </Project>

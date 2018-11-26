@@ -7,13 +7,29 @@
     <TestRunnerConfigPath>$(TestAssetsDir)xunit.runner.json</TestRunnerConfigPath>
     <TestResultsName>testResults.xml</TestResultsName>
 
-    <GenerateRunScriptDependsOn>ValidateTargetOSTrait;$(GenerateRunScriptDependsOn);SetupTestProfile;</GenerateRunScriptDependsOn>
-    <PublishSupplementalTestDataDependsOn>$(PublishSupplementalTestDataDependsOn);SetupTestProfile</PublishSupplementalTestDataDependsOn>
+    <GenerateRunScriptDependsOn>ValidateTargetOSTrait;$(GenerateRunScriptDependsOn);SetupILCTestProfile;</GenerateRunScriptDependsOn>
   </PropertyGroup>
 
   <!-- Test runner config file. -->
   <ItemGroup>
     <SupplementalTestData Condition="'$(SkipTestRunnerConfigCopying)' != 'true'" Include="$(TestRunnerConfigPath)" />
+  </ItemGroup>
+  
+  <!-- Supplemental test data. -->
+  <ItemGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
+    <SupplementalTestData Include="$(RuntimePath)$(TestRunnerName)" />
+    <SupplementalTestData Include="$(TestRuntimeConfigPath)" DestinationName="$(TestRunnerNameWithoutExtension).runtimeconfig.json" />
+    <SupplementalTestData Include="$(RuntimePath)xunit.execution.dotnet.dll" />
+    <SupplementalTestData Include="$(RuntimePath)xunit.runner.reporters.netcoreapp10.dll" />
+    <SupplementalTestData Include="$(RuntimePath)xunit.runner.utility.netcoreapp10.dll" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
+    <SupplementalTestData Include="$(RuntimePath)$(TestRunnerName)" />
+    <SupplementalTestData Include="$(TestRuntimeConfigPath)" DestinationName="$(TestRunnerName).config" />
+    <SupplementalTestData Include="$(RuntimePath)xunit.execution.desktop.dll" />
+    <SupplementalTestData Include="$(RuntimePath)xunit.runner.reporters.net452.dll" />
+    <SupplementalTestData Include="$(RuntimePath)xunit.runner.utility.net452.dll" />
   </ItemGroup>
 
   <!-- Helix dependencies -->

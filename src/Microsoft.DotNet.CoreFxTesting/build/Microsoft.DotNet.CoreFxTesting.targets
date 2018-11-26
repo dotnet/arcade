@@ -20,7 +20,6 @@
     <TestRuntimeConfigName Condition="'$(BuildingNETFxVertical)' == 'true'">netfx.exe.config</TestRuntimeConfigName>
     <TestRuntimeConfigExtension Condition="'$(BuildingNETCoreAppVertical)' == 'true'">.runtimeconfig.json</TestRuntimeConfigExtension>
     <TestRuntimeConfigExtension Condition="'$(BuildingNETFxVertical)' == 'true'">.exe.config</TestRuntimeConfigExtension>
-    <TestRuntimeConfigPath Condition="'$(TestRuntimeConfigPath)' == '' AND '$(BuildingNETCoreAppVertical)' == 'true' AND '$(UseCoverageDedicatedRuntime)' == 'true'">$(TestAssetsDir)netcoreapp.coverage.runtimeconfig.json</TestRuntimeConfigPath>
     <TestRuntimeConfigPath Condition="'$(TestRuntimeConfigPath)' == ''">$(TestAssetsDir)$(TestRuntimeConfigName)</TestRuntimeConfigPath>
 
     <!-- By default copy the test runtime config file for test projects and executable test support projects. -->

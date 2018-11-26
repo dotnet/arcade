@@ -2,6 +2,10 @@
 <!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
+  <PropertyGroup>
+    <_CoverageSupported Condition="'$(Coverage)' == 'true' AND '$(CoverageSupported)' != 'false' AND '$(IsPerformanceTestProject)' != 'true'">true</_CoverageSupported>
+  </PropertyGroup>
+
   <!--
     Unit/Functional/Integration test support.
     Supported runners: xunit.
@@ -21,6 +25,6 @@
     Inputs:
       - Coverage: Intended to be passed in as a global property.
   -->
-  <Import Condition="'$(Coverage)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'coverage', 'Coverage.props'))" />
+  <Import Condition="'$(_CoverageSupported)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'coverage', 'Coverage.props'))" />
 
 </Project>
