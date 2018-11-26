@@ -232,7 +232,7 @@ namespace Microsoft.DotNet.DarcLib
                 }
                 catch (Exception exc)
                 {
-                    _logger.LogError(exc, $"Something went wrong when pushing the files to repo {repo} in branch {branch}");
+                    throw new DarcException($"Something went wrong when pushing the files to repo {repo} in branch {branch}", exc);
                 }
                 finally
                 {
