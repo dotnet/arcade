@@ -226,6 +226,10 @@ namespace Microsoft.DotNet.DarcLib
                         });
                     }
                 }
+                catch (LibGit2Sharp.EmptyCommitException)
+                {
+                    _logger.LogInformation("There was nothing to commit...");
+                }
                 catch (Exception exc)
                 {
                     _logger.LogError(exc, $"Something went wrong when pushing the files to repo {repo} in branch {branch}");
