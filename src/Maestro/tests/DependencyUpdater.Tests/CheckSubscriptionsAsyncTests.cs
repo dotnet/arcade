@@ -45,6 +45,7 @@ namespace DependencyUpdater.Tests
                     {
                         Name = "source.asset",
                         Version = "1.0.1",
+                        NonShipping = false,
                         Locations = new List<AssetLocation>
                         {
                             new AssetLocation
@@ -121,6 +122,7 @@ namespace DependencyUpdater.Tests
                     {
                         Name = "source.asset",
                         Version = "1.0.1",
+                        NonShipping = true,
                         Locations = new List<AssetLocation>
                         {
                             new AssetLocation
