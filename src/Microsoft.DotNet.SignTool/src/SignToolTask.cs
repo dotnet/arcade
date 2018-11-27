@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Resources;
 using System.Runtime.Versioning;
 
 namespace Microsoft.DotNet.SignTool
@@ -93,6 +92,11 @@ namespace Microsoft.DotNet.SignTool
         public ITaskItem[] CertificatesSignInfo { get; set; }
 
         /// <summary>
+        /// Used to disable specific warning messages across the whole signing process.
+        /// </summary>
+        public ITaskItem[] NoWarn { get; set; }
+
+        /// <summary>
         /// Path to msbuild.exe. Required if <see cref="DryRun"/> is <c>false</c>.
         /// </summary>
         public string MSBuildPath { get; set; }
@@ -163,16 +167,18 @@ namespace Microsoft.DotNet.SignTool
 
             if (Log.HasLoggedErrors) return;
 
+            ParseFileSignInfo(out var fileSignInfo, out var supressedMessageCodes);
+
             var strongNameInfo = ParseStrongNameSignInfo();
-            var fileSignInfo = ParseFileSignInfo();
             var extensionSignInfo = ParseFileExtensionSignInfo();
             var dualCertificates = ParseCertificateInfo();
+            var globallySuppWarnings = ParseNoWarn();
 
             if (Log.HasLoggedErrors) return;
 
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir, SNBinaryPath);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
-            var signingInput = new Configuration(TempDir, ItemsToSign, strongNameInfo, fileSignInfo, extensionSignInfo, dualCertificates, Log).GenerateListOfFiles();
+            var signingInput = new Configuration(TempDir, ItemsToSign, strongNameInfo, fileSignInfo, globallySuppWarnings, supressedMessageCodes, extensionSignInfo, dualCertificates, Log).GenerateListOfFiles();
 
             if (Log.HasLoggedErrors) return;
 
@@ -190,6 +196,27 @@ namespace Microsoft.DotNet.SignTool
             Log.LogMessage(MessageImportance.High, $"Signing mode: { (TestSign ? "Test" : "Real") }");
             Log.LogMessage(MessageImportance.High, $"MicroBuild signing logs will be in (Signing*.binlog): {LogDir}");
             Log.LogMessage(MessageImportance.High, $"MicroBuild signing configuration will be in (Round*.proj): {TempDir}");
+        }
+
+        private HashSet<SignToolConstants.SigningToolMSGCodes> ParseNoWarn()
+        {
+            var warnings = new HashSet<SignToolConstants.SigningToolMSGCodes>();
+
+            if (NoWarn != null)
+            {
+                foreach (var warningCode in NoWarn)
+                {
+                    if (!Enum.TryParse<SignToolConstants.SigningToolMSGCodes>(warningCode.ItemSpec, true, out var value))
+                    {
+                        Log.LogError($"Unrecognized message code was informed in {nameof(NoWarn)} -> {warningCode}");
+                        continue;
+                    }
+
+                    warnings.Add(value);
+                }
+            }
+
+            return warnings;
         }
 
         private string[] ParseCertificateInfo()
@@ -335,9 +362,10 @@ namespace Microsoft.DotNet.SignTool
             return map;
         }
 
-        private Dictionary<ExplicitCertificateKey, string> ParseFileSignInfo()
+        private void ParseFileSignInfo(out Dictionary<ExplicitCertificateKey, string> explicitCertificateNames, out Dictionary<ExplicitCertificateKey, HashSet<SignToolConstants.SigningToolMSGCodes>> suppressedMessageCodes)
         {
-            var map = new Dictionary<ExplicitCertificateKey, string>();
+            explicitCertificateNames = new Dictionary<ExplicitCertificateKey, string>();
+            suppressedMessageCodes = new Dictionary<ExplicitCertificateKey, HashSet<SignToolConstants.SigningToolMSGCodes>>();
 
             if (FileSignInfo != null)
             {
@@ -347,6 +375,7 @@ namespace Microsoft.DotNet.SignTool
                     var targetFramework = item.GetMetadata("TargetFramework");
                     var publicKeyToken = item.GetMetadata("PublicKeyToken");
                     var certificateName = item.GetMetadata("CertificateName");
+                    var noWarning = item.GetMetadata("NoWarn");
 
                     if (fileName.IndexOfAny(new[] {'/', '\\'}) >= 0)
                     {
@@ -360,12 +389,6 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    if (string.IsNullOrWhiteSpace(certificateName))
-                    {
-                        Log.LogError($"CertificateName metadata of {nameof(FileSignInfo)} is invalid: '{certificateName}'");
-                        continue;
-                    }
-
                     if (!string.IsNullOrEmpty(publicKeyToken) && !IsValidPublicKeyToken(publicKeyToken))
                     {
                         Log.LogError($"PublicKeyToken metadata for {nameof(FileSignInfo)} is invalid: '{publicKeyToken}'");
@@ -373,17 +396,52 @@ namespace Microsoft.DotNet.SignTool
                     }
 
                     var key = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework);
-                    if (map.TryGetValue(key, out var existingCert))
+
+                    if (string.IsNullOrWhiteSpace(certificateName) && string.IsNullOrEmpty(noWarning))
                     {
-                        Log.LogError($"Duplicate entries in {nameof(FileSignInfo)} with the same key ('{fileName}', '{publicKeyToken}', '{targetFramework}'): '{existingCert}', '{certificateName}'.");
+                        Log.LogError($"CertificateName or NoWarn attribute for {nameof(FileSignInfo)} is required.");
                         continue;
                     }
 
-                    map.Add(key, certificateName);
+                    if (!string.IsNullOrWhiteSpace(certificateName))
+                    {
+                        if (explicitCertificateNames.TryGetValue(key, out var existingCert))
+                        {
+                            Log.LogError($"Duplicate entries in {nameof(FileSignInfo)} with the same key ('{fileName}', '{publicKeyToken}', '{targetFramework}') for CertificateName attribute: '{existingCert}', '{certificateName}'. Keeping the previous one.");
+                        }
+                        else
+                        {
+                            explicitCertificateNames.Add(key, certificateName);
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(noWarning))
+                    {
+                        var warnings = new HashSet<SignToolConstants.SigningToolMSGCodes>();
+
+                        foreach (var warningCode in noWarning.Split(new char[] { ';', ',' }))
+                        {
+                            if (!Enum.TryParse<SignToolConstants.SigningToolMSGCodes>(warningCode, true, out var value))
+                            {
+                                Log.LogError($"Unrecognized message code was informed in {nameof(FileSignInfo)} -> {warningCode}");
+                            }
+                            else
+                            {
+                                warnings.Add(value);
+                            }
+                        }
+
+                        if (suppressedMessageCodes.TryGetValue(key, out var existingCert))
+                        {
+                            Log.LogError($"Duplicate entries in {nameof(FileSignInfo)} with the same key ('{fileName}', '{publicKeyToken}', '{targetFramework}') for NoWarn attribute. Keeping the previous one.");
+                        }
+                        else
+                        {
+                            suppressedMessageCodes.Add(key, warnings);
+                        }
+                    }
                 }
             }
-
-            return map;
         }
 
         private bool IsValidTargetFrameworkName(string tfn)

@@ -179,7 +179,9 @@ namespace Microsoft.DotNet.SignTool.Tests
             Dictionary<ExplicitCertificateKey, string> fileSignInfo,
             Dictionary<string, SignInfo> extensionsSignInfo,
             string[] expectedXmlElementsPerSingingRound,
-            string[] dualCertificates = null)
+            string[] dualCertificates = null,
+            HashSet<SignToolConstants.SigningToolMSGCodes> globallySupressedMessageCodes = null,
+            Dictionary<ExplicitCertificateKey, HashSet<SignToolConstants.SigningToolMSGCodes>> supressedMessageCodes = null)
         {
             var buildEngine = new FakeBuildEngine();
 
@@ -191,7 +193,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir, enclosingDir: "", "");
 
             var signTool = new FakeSignTool(signToolArgs, task.Log);
-            var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, globallySupressedMessageCodes, supressedMessageCodes, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
             var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput, new string[] { });
 
             util.Go(false);
@@ -215,11 +217,13 @@ namespace Microsoft.DotNet.SignTool.Tests
             string[] expectedCopyFiles = null,
             string[] dualCertificates = null,
             string[] expectedErrors = null,
-            string[] expectedWarnings = null)
+            string[] expectedWarnings = null,
+            HashSet<SignToolConstants.SigningToolMSGCodes> globallySupressedMessageCodes = null,
+            Dictionary<ExplicitCertificateKey, HashSet<SignToolConstants.SigningToolMSGCodes>> supressedMessageCodes = null)
         {
             var engine = new FakeBuildEngine();
             var task = new SignToolTask { BuildEngine = engine };
-            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, globallySupressedMessageCodes, supressedMessageCodes, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
 
             AssertEx.Equal(expected, signingInput.FilesToSign.Select(f => f.ToString()));
             AssertEx.Equal(expectedCopyFiles ?? Array.Empty<string>(), signingInput.FilesToCopy.Select(f => $"{f.Key} -> {f.Value}"));
@@ -238,7 +242,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
-            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, null, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, globallySupressedMessageCodes: null, suppressedMessageCodes: null, s_fileExtensionSignInfo, null, task.Log).GenerateListOfFiles();
 
             Assert.Empty(signingInput.FilesToSign);
             Assert.Empty(signingInput.ZipDataMap);
@@ -1072,6 +1076,8 @@ $@"
                 new string[] { inputFilePath },
                 new Dictionary<string, SignInfo>(),
                 new Dictionary<ExplicitCertificateKey, string>(),
+                globallySupressedMessageCodes: null,
+                suppressedMessageCodes: null,
                 new Dictionary<string, SignInfo>(),
                 new string[0], task.Log)
                 .GenerateListOfFiles();
@@ -1101,12 +1107,91 @@ $@"
                 new string[] { inputFilePath },
                 new Dictionary<string, SignInfo>(),
                 new Dictionary<ExplicitCertificateKey, string>(),
+                globallySupressedMessageCodes: null,
+                suppressedMessageCodes: null,
                 new Dictionary<string, SignInfo>() { { extension, SignInfo.Ignore } },
                 new string[0], 
                 task.Log)
                 .GenerateListOfFiles();
 
             Assert.False(task.Log.HasLoggedErrors);
+        }
+
+        [Fact]
+        public void SuppressSomeWarningThirdPartyLibraryMicrosoftCertificate()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("EmptyPKT.dll"),
+                GetResourcePath("Simple.exe"),
+                GetResourcePath("ContainerOne.1.0.0.nupkg")
+            };
+
+            var strongNameSignInfo = new Dictionary<string, SignInfo>() { };
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>() { };
+
+            var supressedMessages = new Dictionary<ExplicitCertificateKey, HashSet<SignToolConstants.SigningToolMSGCodes>>()
+            {
+                {new ExplicitCertificateKey("EmptyPKT.dll"), new HashSet<SignToolConstants.SigningToolMSGCodes> { SignToolConstants.SigningToolMSGCodes.SIGN001 } },
+                {new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETCoreApp,Version=v2.0"), new HashSet<SignToolConstants.SigningToolMSGCodes> { SignToolConstants.SigningToolMSGCodes.SIGN001 } }
+            };
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'EmptyPKT.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
+                "File 'Simple.exe' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='Microsoft400'",
+                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='Microsoft400'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='Microsoft400'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='Microsoft400'",
+                "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
+            },
+            expectedWarnings: new[]
+            {
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "Simple.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "9F8CCEE4CECF286C80916F13EAB8DF1FC6C9BED5F81E3AFF26747C008D265E5C", "lib/netcoreapp2.0/ContainerOne.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "CC1D99EE8C2F627E77D019E94B06EBB6D87A4D19E65DDAEF62B6137E49167BAF", "lib/netcoreapp2.1/ProjectOne.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
+            },
+            supressedMessageCodes: supressedMessages);
+        }
+
+        [Fact]
+        public void SuppressAllWarningThirdPartyLibraryMicrosoftCertificate()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("EmptyPKT.dll"),
+                GetResourcePath("Simple.exe"),
+                GetResourcePath("ContainerOne.1.0.0.nupkg")
+            };
+
+            var strongNameSignInfo = new Dictionary<string, SignInfo>() { };
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>() { };
+
+            var globallySupressedMessageCodes = new HashSet<SignToolConstants.SigningToolMSGCodes>()
+            {
+                SignToolConstants.SigningToolMSGCodes.SIGN001
+            };
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'EmptyPKT.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
+                "File 'Simple.exe' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='Microsoft400'",
+                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='Microsoft400'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='Microsoft400'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='Microsoft400'",
+                "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
+            },
+            globallySupressedMessageCodes: globallySupressedMessageCodes);
         }
     }
 }

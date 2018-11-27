@@ -14,6 +14,7 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.Versioning;
 using Microsoft.Build.Utilities;
+using static Microsoft.DotNet.SignTool.SignToolConstants;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -22,8 +23,6 @@ namespace Microsoft.DotNet.SignTool
         private readonly TaskLoggingHelper _log;
 
         private readonly string[] _itemsToSign;
-
-        private enum SigningToolErrorCode { SIGN002 };
 
         /// <summary>
         /// This store content information for container files.
@@ -70,14 +69,18 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// Keeps track of all files that produced a given error code.
         /// </summary>
-        private readonly Dictionary<SigningToolErrorCode, HashSet<SignedFileContentKey>> _errors;
+        private readonly Dictionary<SigningToolMSGCodes, HashSet<SignedFileContentKey>> _errors;
 
         /// <summary>
         /// This is a list of the friendly name of certificates that can be used to
         /// sign already signed binaries.
         /// </summary>
         private readonly string[] _dualCertificates;
-        
+
+        private readonly Dictionary<ExplicitCertificateKey, HashSet<SignToolConstants.SigningToolMSGCodes>> _suppressedMessageCodes;
+
+        private readonly HashSet<SignToolConstants.SigningToolMSGCodes> _globallySupressedMessageCodes;
+
         /// <summary>
         /// A list of files whose content needs to be overwritten by signed content from a different file.
         /// Copy the content of file with full path specified in Key to file with full path specified in Value.
@@ -85,8 +88,9 @@ namespace Microsoft.DotNet.SignTool
         internal List<KeyValuePair<string, string>> _filesToCopy;
 
         public Configuration(string tempDir, string[] itemsToSign, Dictionary<string, SignInfo> strongNameInfo,
-            Dictionary<ExplicitCertificateKey, string> fileSignInfo, Dictionary<string, SignInfo> extensionSignInfo,
-            string[] dualCertificates, TaskLoggingHelper log)
+            Dictionary<ExplicitCertificateKey, string> fileSignInfo, HashSet<SignToolConstants.SigningToolMSGCodes> globallySupressedMessageCodes,
+            Dictionary<ExplicitCertificateKey, HashSet<SignToolConstants.SigningToolMSGCodes>> suppressedMessageCodes,
+            Dictionary<string, SignInfo> extensionSignInfo, string[] dualCertificates, TaskLoggingHelper log)
         {
             Debug.Assert(tempDir != null);
             Debug.Assert(itemsToSign != null && !itemsToSign.Any(i => i == null));
@@ -97,6 +101,8 @@ namespace Microsoft.DotNet.SignTool
             _log = log;
             _strongNameInfo = strongNameInfo;
             _fileSignInfo = fileSignInfo;
+            _globallySupressedMessageCodes = globallySupressedMessageCodes ?? new HashSet<SignToolConstants.SigningToolMSGCodes>();
+            _suppressedMessageCodes = suppressedMessageCodes ?? new Dictionary<ExplicitCertificateKey, HashSet<SigningToolMSGCodes>>();
             _fileExtensionSignInfo = extensionSignInfo;
             _filesToSign = new List<FileSignInfo>();
             _filesToCopy = new List<KeyValuePair<string, string>>();
@@ -105,7 +111,7 @@ namespace Microsoft.DotNet.SignTool
             _itemsToSign = itemsToSign;
             _dualCertificates = dualCertificates ?? new string[0];
             _whichPackagesTheFileIsIn = new Dictionary<SignedFileContentKey, HashSet<string>>();
-            _errors = new Dictionary<SigningToolErrorCode, HashSet<SignedFileContentKey>>();
+            _errors = new Dictionary<SigningToolMSGCodes, HashSet<SignedFileContentKey>>();
         }
 
         internal BatchSignInput GenerateListOfFiles()
@@ -133,7 +139,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     switch (errorGroup.Key)
                     {
-                        case SigningToolErrorCode.SIGN002:
+                        case SigningToolMSGCodes.SIGN002:
                             _log.LogError("Could not determine certificate name for signable file(s):");
                             break;
                     }
@@ -197,15 +203,16 @@ namespace Microsoft.DotNet.SignTool
             var hasSignInfo = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out var signInfo);
             var fileName = Path.GetFileName(fullPath);
             var extension = Path.GetExtension(fullPath);
-            string explicitCertificateName = null;
-            string copyright = string.Empty;
             var targetFramework = string.Empty;
             var fileSpec = string.Empty;
             var isAlreadySigned = false;
             var matchedNameTokenFramework = false;
             var matchedNameToken = false;
-            var matchedName = false;
             var isManagedPE = false;
+
+            string explicitCertificateName = null;
+            string copyright = string.Empty;
+            HashSet<SignToolConstants.SigningToolMSGCodes> suppressedMessages = null;
 
             if (FileSignInfo.IsPEFile(fullPath))
             {
@@ -229,12 +236,25 @@ namespace Microsoft.DotNet.SignTool
 
                 fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {publicKeyToken}, Framework = {targetFramework})" :
                         matchedNameToken ? $" (PublicKeyToken = {publicKeyToken})" : string.Empty;
+
+                // Check if there is any configuration to disable messages for this specific file
+                if (!_suppressedMessageCodes.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework), out suppressedMessages))
+                {
+                    _suppressedMessageCodes.TryGetValue(new ExplicitCertificateKey(fileName, publicKeyToken), out suppressedMessages);
+                }
             }
 
             // We didn't find any specific information for PE files using PKT + TargetFramework
             if (explicitCertificateName == null)
             {
-                matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName), out explicitCertificateName);
+                _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName), out explicitCertificateName);
+            }
+
+            // So far we didn't find any information for disabling messages for this file,
+            // at least not by checking with PKT + TargetFramework.
+            if (suppressedMessages == null)
+            {
+                _suppressedMessageCodes.TryGetValue(new ExplicitCertificateKey(fileName), out suppressedMessages);
             }
 
             // If has overriding info, is it for ignoring the file?
@@ -262,17 +282,20 @@ namespace Microsoft.DotNet.SignTool
                 // extract copyright from native resource (.rsrc section) 
                 if (signInfo.ShouldSign && isManagedPE)
                 {
-                    bool isMicrosoftLibrary = IsMicrosoftLibrary(copyright);
-                    bool isMicrosoftCertificate = !IsThirdPartyCertificate(signInfo.Certificate);
-                    if (isMicrosoftLibrary != isMicrosoftCertificate)
+                    if (!_globallySupressedMessageCodes.Contains(SigningToolMSGCodes.SIGN001) && (suppressedMessages == null || !suppressedMessages.Contains(SigningToolMSGCodes.SIGN001))) 
                     {
-                        if (isMicrosoftLibrary)
+                        bool isMicrosoftLibrary = IsMicrosoftLibrary(copyright);
+                        bool isMicrosoftCertificate = !IsThirdPartyCertificate(signInfo.Certificate);
+                        if (isMicrosoftLibrary != isMicrosoftCertificate)
                         {
-                            LogWarning("SIGN001", $"Signing Microsoft library '{fullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{copyright}'.");
-                        }
-                        else
-                        {
-                            LogWarning("SIGN001", $"Signing 3rd party library '{fullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{copyright}'.");
+                            if (isMicrosoftLibrary)
+                            {
+                                LogWarning(SigningToolMSGCodes.SIGN001, $"Signing Microsoft library '{fullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{copyright}'.");
+                            }
+                            else
+                            {
+                                LogWarning(SigningToolMSGCodes.SIGN001, $"Signing 3rd party library '{fullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{copyright}'.");
+                            }
                         }
                     }
                 }
@@ -286,7 +309,7 @@ namespace Microsoft.DotNet.SignTool
                 var contentHash = ContentUtil.GetContentHash(fullPath);
                 var tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
                 var relativePath = fullPath.Replace($@"{tempDir}\", "");
-                LogError(SigningToolErrorCode.SIGN002, new SignedFileContentKey(contentHash, relativePath));
+                LogError(SigningToolMSGCodes.SIGN002, new SignedFileContentKey(contentHash, relativePath));
             }
             else
             {
@@ -296,10 +319,10 @@ namespace Microsoft.DotNet.SignTool
             return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
         }
 
-        private void LogWarning(string code, string message)
-            => _log.LogWarning(subcategory: null, warningCode: code, helpKeyword: null, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message);
+        private void LogWarning(SigningToolMSGCodes code, string message)
+            => _log.LogWarning(subcategory: null, warningCode: code.ToString(), helpKeyword: null, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message);
 
-        private void LogError(SigningToolErrorCode code, SignedFileContentKey targetFile)
+        private void LogError(SigningToolMSGCodes code, SignedFileContentKey targetFile)
         {
             if (!_errors.TryGetValue(code, out var filesErrored))
             {

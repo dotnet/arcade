@@ -11,6 +11,9 @@ namespace Microsoft.DotNet.SignTool
     {
         public const string IgnoreFileCertificateSentinel = "None";
 
+        public enum SigningToolMSGCodes { SIGN001, SIGN002 };
+
+
         /// <summary>
         /// List of known signable extensions. Copied, removing duplicates, from here:
         /// https://microsoft.sharepoint.com/teams/codesigninfo/Wiki/Signable%20Files.aspx
