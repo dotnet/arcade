@@ -1,12 +1,4 @@
 <Project>
-  <ItemGroup>
-    <!-- 
-      Suppresses code signing on this file because it causes a false-positive on SIGN001. This assembly comes from https://www.nuget.org/packages/Microsoft.VisualStudio.OLE.Interop/, but isn't code signed.
-      TODO: Make SIGN001 suppressable.
-    -->
-    <FileSignInfo Include="Microsoft.VisualStudio.OLE.Interop.dll" CertificateName="None" />
-  </ItemGroup>
-
   <!--
     These are third party libraries that we use in Arcade. We need to sign them even if they
     are already signed. However, they must be signed with a 3rd party certificate.
