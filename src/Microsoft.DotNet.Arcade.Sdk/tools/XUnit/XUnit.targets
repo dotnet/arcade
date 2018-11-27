@@ -7,9 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit" Version="$(XUnitVersion)" IsImplicitlyDefined="true" PrivateAssets="all"/>
-    <PackageReference Include="xunit.runner.visualstudio" Version="$(XUnitRunnerVisualStudioVersion)" IsImplicitlyDefined="true" PrivateAssets="all"/>
-    <PackageReference Include="xunit.runner.console" Version="$(XUnitRunnerConsoleVersion)" IsImplicitlyDefined="true" PrivateAssets="all"/>
+    <PackageReference Include="xunit" Version="$(XUnitVersion)" IsImplicitlyDefined="true"/>
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(XUnitRunnerVisualStudioVersion)" IsImplicitlyDefined="true"/>
+    <PackageReference Include="xunit.runner.console" Version="$(XUnitRunnerConsoleVersion)" IsImplicitlyDefined="true"/>
   </ItemGroup>
 
   <!--

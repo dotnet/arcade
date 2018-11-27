@@ -6,6 +6,8 @@
     <XUnitRunnerVersion Condition="'$(XUnitRunnerVersion)' == ''">2.4.1</XUnitRunnerVersion>
 
     <_XUnitPublishTargetsPath>$(MSBuildThisFileDirectory)XUnitPublish.targets</_XUnitPublishTargetsPath>
+
+    <XUnitArguments Condition="'$(XUnitArguments)' == ''">-nocolor<XUnitArguments>
   </PropertyGroup>
 
   <ItemGroup Condition="'@(XUnitProject)' != ''">
@@ -24,6 +26,8 @@
       <_CurrentRuntimeTargetFramework Condition="'$(_CurrentRuntimeTargetFramework)' == ''">$(XUnitRuntimeTargetFramework)</_CurrentRuntimeTargetFramework>
       <_CurrentAdditionalProperties>%(XUnitProject.AdditionalProperties)</_CurrentAdditionalProperties>
     </PropertyGroup>
+    <MSBuild Projects="$(_CurrentXUnitProject)" Targets="Restore" Properties="CustomAfterMicrosoftCommonTargets=$(_XUnitPublishTargetsPath);$(_CurrentAdditionalProperties)">
+    </MSBuild>
     <MSBuild Projects="$(_CurrentXUnitProject)" Targets="PublishWithOutput" Properties="CustomAfterMicrosoftCommonTargets=$(_XUnitPublishTargetsPath);TargetFramework=$(_CurrentPublishTargetFramework);$(_CurrentAdditionalProperties)">
       <Output TaskParameter="TargetOutputs" PropertyName="_PublishOutputDir" />
     </MSBuild>
@@ -42,7 +46,7 @@
   </Target>
   
   <Target Name="CreateXUnitWorkItems" Condition="'@(XUnitProject)' != ''" BeforeTargets="Test">    
-    <CreateXUnitWorkItems XUnitProjects="@(XUnitProject)" IsPosixShell="$(IsPosixShell)" >
+    <CreateXUnitWorkItems XUnitProjects="@(XUnitProject)" IsPosixShell="$(IsPosixShell)" XUnitArguments="$(XUnitArguments)">
       <Output TaskParameter="XUnitWorkItems" ItemName="HelixWorkItem"/>
     </CreateXUnitWorkItems>
   </Target>
