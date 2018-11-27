@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.SignTool
             string[] dualCertificates, TaskLoggingHelper log)
         {
             Debug.Assert(tempDir != null);
-   Debug.Assert(itemsToSign != null && !itemsToSign.Any(i => i == null));
+            Debug.Assert(itemsToSign != null && !itemsToSign.Any(i => i == null));
             Debug.Assert(strongNameInfo != null);
             Debug.Assert(fileSignInfo != null);
 
