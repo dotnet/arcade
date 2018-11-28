@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string correlationPayload = IsPosixShell ? "$HELIX_CORRELATION_PAYLOAD" : "%HELIX_CORRELATION_PAYLOAD%";
             string xUnitRunner = $"{correlationPayload}/tools/{runtimeTargetFramework}/{runnerName}";
 
-            string command = $"{driver}{xUnitRunner}{(XUnitArguments != null ? " " + XUnitArguments : "")} {assemblyName} -xml testResults.xml {arguments}";
+            string command = $"{driver}{xUnitRunner} {assemblyName}{(XUnitArguments != null ? " " + XUnitArguments : "")} -xml testResults.xml {arguments}";
 
             Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishDirectory}, Command: {command}");
 
