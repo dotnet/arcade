@@ -86,9 +86,9 @@ namespace SubscriptionActorService.Tests
             ContextUpdates.Add(context => context.Subscriptions.Add(Subscription));
         }
 
-        internal Build GivenANewBuild((string name, string version)[] assets = null)
+        internal Build GivenANewBuild((string name, string version, bool nonShipping)[] assets = null)
         {
-            assets = assets ?? new[] {("quail.eating.ducks", "1.1.0"), ("quite.expensive.device", "2.0.1")};
+            assets = assets ?? new[] {("quail.eating.ducks", "1.1.0", false), ("quite.expensive.device", "2.0.1", true)};
             var build = new Build
             {
                 Branch = SourceBranch,
@@ -102,6 +102,7 @@ namespace SubscriptionActorService.Tests
                         {
                             Name = a.name,
                             Version = a.version,
+                            NonShipping = a.nonShipping,
                             Locations = new List<AssetLocation>
                             {
                                 new AssetLocation

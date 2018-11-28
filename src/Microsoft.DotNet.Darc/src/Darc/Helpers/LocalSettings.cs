@@ -2,12 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.DotNet.Darc.Operations;
 using Microsoft.DotNet.Darc.Options;
 using Microsoft.DotNet.DarcLib;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Darc.Helpers
 {
@@ -50,12 +52,29 @@ namespace Microsoft.DotNet.Darc.Helpers
         /// <remarks>The command line takes precedence over the darc settings file.</remarks>
         public static DarcSettings GetDarcSettings(CommandLineOptions options, ILogger logger, string repoUri = null)
         {
+            LocalSettings localSettings = null;
             DarcSettings darcSettings = new DarcSettings();
             darcSettings.GitType = GitRepoType.None;
 
             try
             {
-                LocalSettings localSettings = LoadSettingsFile();
+                try
+                {
+                    localSettings = LoadSettingsFile();
+                }
+                catch (Exception exc) when (exc is DirectoryNotFoundException || exc is FileNotFoundException)
+                {
+                    if (string.IsNullOrEmpty(options.AzureDevOpsPat) &&
+                        string.IsNullOrEmpty(options.GitHubPat) &&
+                        string.IsNullOrEmpty(options.BuildAssetRegistryPassword))
+                    {
+                        throw new DarcException("Please make sure to run darc authenticate and set" +
+                            " 'bar_password' and 'github_token' or 'azure_devops_token' or append" +
+                            "'-p <bar_password>' [--github-pat <github_token> | " +
+                            "--azdev-pat <azure_devops_token>] to your command");
+                    }
+                }
+
                 darcSettings.BuildAssetRegistryBaseUri = localSettings.BuildAssetRegistryBaseUri;
                 darcSettings.BuildAssetRegistryPassword = localSettings.BuildAssetRegistryPassword;
 
@@ -76,10 +95,6 @@ namespace Microsoft.DotNet.Darc.Helpers
                         logger.LogWarning($"Unknown repository '{repoUri}'");
                     }
                 }
-            }
-            catch (FileNotFoundException)
-            {
-                // Doesn't have a settings file, which is not an error
             }
             catch (Exception e)
             {

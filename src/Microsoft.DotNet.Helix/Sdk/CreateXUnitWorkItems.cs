@@ -37,6 +37,8 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public bool IsPosixShell { get; set; }
 
+        public string XUnitArguments { get; set; }
+
         /// <summary>
         /// An array of ITaskItems of type HelixWorkItem
         /// </summary>
@@ -99,7 +101,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string correlationPayload = IsPosixShell ? "$HELIX_CORRELATION_PAYLOAD" : "%HELIX_CORRELATION_PAYLOAD%";
             string xUnitRunner = $"{correlationPayload}/tools/{runtimeTargetFramework}/{runnerName}";
 
-            string command = $"{driver}{xUnitRunner} {assemblyName} -xml testResults.xml {arguments}";
+            string command = $"{driver}{xUnitRunner}{(XUnitArguments != null ? " " + XUnitArguments : "")} {assemblyName} -xml testResults.xml {arguments}";
 
             Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishDirectory}, Command: {command}");
 

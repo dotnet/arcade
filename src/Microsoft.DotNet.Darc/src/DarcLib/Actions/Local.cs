@@ -79,6 +79,17 @@ namespace Microsoft.DotNet.DarcLib
                 {
                     List<GitFile> engCommonFiles = await remote.GetCommonScriptFilesAsync(arcadeItem.RepoUri, arcadeItem.Commit);
                     filesToUpdate.AddRange(engCommonFiles);
+
+                    List<GitFile> localEngCommonFiles = await _gitClient.GetFilesForCommitAsync(null, null, "eng/common");
+
+                    foreach (GitFile file in localEngCommonFiles)
+                    {
+                        if (!engCommonFiles.Where(f => f.FilePath == file.FilePath).Any())
+                        {
+                            file.Operation = GitFileOperation.Delete;
+                            filesToUpdate.Add(file);
+                        }
+                    }
                 }
                 catch (Exception exc) when 
                 (exc.Message == "Not Found")

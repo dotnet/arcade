@@ -546,7 +546,7 @@ namespace SubscriptionActorService.Tests
                         Batchable = batchable,
                         UpdateFrequency = UpdateFrequency.EveryBuild
                     });
-                Build b = GivenANewBuild(Array.Empty<(string, string)>());
+                Build b = GivenANewBuild(Array.Empty<(string, string, bool)>());
 
                 WithRequiredUpdates(b);
 

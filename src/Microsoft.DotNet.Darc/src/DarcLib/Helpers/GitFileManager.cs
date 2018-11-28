@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
@@ -548,6 +549,24 @@ namespace Microsoft.DotNet.DarcLib
 
             var results = await Task.WhenAll<bool>(verificationTasks);
             return results.All(result => result);
+        }
+
+        public static void NormalizeAttributes(string directoryPath)
+        {
+            string[] filePaths = Directory.GetFiles(directoryPath);
+            string[] subdirectoryPaths = Directory.GetDirectories(directoryPath);
+
+            foreach (string filePath in filePaths)
+            {
+                File.SetAttributes(filePath, FileAttributes.Normal);
+            }
+
+            foreach (string subdirectoryPath in subdirectoryPaths)
+            {
+                NormalizeAttributes(subdirectoryPath);
+            }
+
+            File.SetAttributes(directoryPath, FileAttributes.Normal);
         }
 
         /// <summary>

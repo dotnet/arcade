@@ -23,6 +23,8 @@ namespace Microsoft.DotNet.SignTool
 
         private readonly string[] _itemsToSign;
 
+        private enum SigningToolErrorCode { SIGN002 };
+
         /// <summary>
         /// This store content information for container files.
         /// Key is the content hash of the file.
@@ -61,6 +63,16 @@ namespace Microsoft.DotNet.SignTool
         private readonly Dictionary<SignedFileContentKey, FileSignInfo> _filesByContentKey;
 
         /// <summary>
+        /// For each uniquely identified file keeps track of all containers where the file appeared.
+        /// </summary>
+        private readonly Dictionary<SignedFileContentKey, HashSet<string>> _whichPackagesTheFileIsIn;
+
+        /// <summary>
+        /// Keeps track of all files that produced a given error code.
+        /// </summary>
+        private readonly Dictionary<SigningToolErrorCode, HashSet<SignedFileContentKey>> _errors;
+
+        /// <summary>
         /// This is a list of the friendly name of certificates that can be used to
         /// sign already signed binaries.
         /// </summary>
@@ -92,13 +104,52 @@ namespace Microsoft.DotNet.SignTool
             _filesByContentKey = new Dictionary<SignedFileContentKey, FileSignInfo>();
             _itemsToSign = itemsToSign;
             _dualCertificates = dualCertificates ?? new string[0];
+            _whichPackagesTheFileIsIn = new Dictionary<SignedFileContentKey, HashSet<string>>();
+            _errors = new Dictionary<SigningToolErrorCode, HashSet<SignedFileContentKey>>();
         }
 
         internal BatchSignInput GenerateListOfFiles()
         {
             foreach (var fullPath in _itemsToSign)
             {
+                var fileUniqueKey = new SignedFileContentKey(ContentUtil.GetContentHash(fullPath), fullPath);
+
+                if (!_whichPackagesTheFileIsIn.TryGetValue(fileUniqueKey, out var packages))
+                {
+                    packages = new HashSet<string>();
+                }
+
+                packages.Add(fullPath);
+                _whichPackagesTheFileIsIn[fileUniqueKey] = packages;
+
                 TrackFile(fullPath, ContentUtil.GetContentHash(fullPath), isNested: false);
+            }
+
+            if (_errors.Any())
+            {
+                // Iterate over each pair of <error code, unique file identity>. 
+                // We can be sure here that the same file won't have the same error code twice.
+                foreach (var errorGroup in _errors)
+                {
+                    switch (errorGroup.Key)
+                    {
+                        case SigningToolErrorCode.SIGN002:
+                            _log.LogError("Could not determine certificate name for signable file(s):");
+                            break;
+                    }
+
+                    // For each file that had that error
+                    foreach (var erroedFile in errorGroup.Value)
+                    {
+                        _log.LogError($"\tFile: {erroedFile.FileName}");
+
+                        // Get a list of all containers where the file showed up
+                        foreach (var containerName in _whichPackagesTheFileIsIn[erroedFile])
+                        {
+                            _log.LogError($"\t\t{containerName}");
+                        }
+                    }
+                }
             }
 
             return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(ByteSequenceComparer.Instance), _filesToCopy.ToImmutableArray());
@@ -231,7 +282,11 @@ namespace Microsoft.DotNet.SignTool
 
             if (SignToolConstants.SignableExtensions.Contains(extension) || SignToolConstants.SignableOSXExtensions.Contains(extension))
             {
-                _log.LogError($"Couldn't determine certificate name for signable file: {fullPath}");
+                // Extract the relative path inside the package / otherwise just return the full path of the file
+                var contentHash = ContentUtil.GetContentHash(fullPath);
+                var tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
+                var relativePath = fullPath.Replace($@"{tempDir}\", "");
+                LogError(SigningToolErrorCode.SIGN002, new SignedFileContentKey(contentHash, relativePath));
             }
             else
             {
@@ -243,6 +298,17 @@ namespace Microsoft.DotNet.SignTool
 
         private void LogWarning(string code, string message)
             => _log.LogWarning(subcategory: null, warningCode: code, helpKeyword: null, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message);
+
+        private void LogError(SigningToolErrorCode code, SignedFileContentKey targetFile)
+        {
+            if (!_errors.TryGetValue(code, out var filesErrored))
+            {
+                filesErrored = new HashSet<SignedFileContentKey>();
+            }
+
+            filesErrored.Add(targetFile);
+            _errors[code] = filesErrored;
+        }
 
         private static bool IsMicrosoftLibrary(string copyright)
             => copyright.Contains("Microsoft");
@@ -383,13 +449,22 @@ namespace Microsoft.DotNet.SignTool
                             contentHash = ContentUtil.GetContentHash(stream);
                         }
 
+                        var fileUniqueKey = new SignedFileContentKey(contentHash, relativePath);
+
+                        if (!_whichPackagesTheFileIsIn.TryGetValue(fileUniqueKey, out var packages))
+                        {
+                            packages = new HashSet<string>();
+                        }
+
+                        packages.Add(zipFileSignInfo.FileName);
+                        _whichPackagesTheFileIsIn[fileUniqueKey] = packages;
+
                         // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
-                        string fileName = Path.GetFileName(relativePath);
+                        var fileName = Path.GetFileName(relativePath);
                         if (!_filesByContentKey.TryGetValue(new SignedFileContentKey(contentHash, fileName), out var fileSignInfo))
                         {
-                            string tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
-                            string tempPath = Path.Combine(tempDir, Path.GetFileName(relativePath));
-                            Directory.CreateDirectory(tempDir);
+                            string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash), relativePath);
+                            Directory.CreateDirectory(Path.GetDirectoryName(tempPath));
 
                             using (var stream = entry.Open())
                             using (var tempFileStream = File.OpenWrite(tempPath))

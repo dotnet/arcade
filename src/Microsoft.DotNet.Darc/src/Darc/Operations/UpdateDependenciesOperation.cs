@@ -36,11 +36,13 @@ namespace Microsoft.DotNet.Darc.Operations
         {
             try
             {
-                DarcSettings darcSettings = LocalSettings.GetDarcSettings(_options, Logger);
+                DarcSettings darcSettings = darcSettings = LocalSettings.GetDarcSettings(_options, Logger);
+
                 // TODO: PAT only used for pulling the arcade eng/common dir,
                 // so hardcoded to GitHub PAT right now. Must be more generic in the future.
                 darcSettings.GitType = GitRepoType.GitHub;
                 LocalSettings localSettings = LocalSettings.LoadSettingsFile();
+
                 darcSettings.PersonalAccessToken = !string.IsNullOrEmpty(localSettings.GitHubToken) ?
                                                     localSettings.GitHubToken :
                                                     _options.GitHubPat;

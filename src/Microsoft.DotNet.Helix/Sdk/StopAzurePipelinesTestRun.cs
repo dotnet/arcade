@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                 var data = JObject.Parse(await res.Content.ReadAsStringAsync());
                 if (data["runStatistics"] is JArray runStatistics)
                 {
-                    var failed = runStatistics.Children().First(stat => stat["outcome"]?.ToString() == "Failed");
+                    var failed = runStatistics.Children().FirstOrDefault(stat => stat["outcome"]?.ToString() == "Failed");
                     if (failed != null)
                     {
                         Log.LogError($"Test run {TestRunId} has one or more failing tests.");

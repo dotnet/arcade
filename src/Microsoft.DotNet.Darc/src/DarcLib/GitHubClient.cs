@@ -146,25 +146,102 @@ namespace Microsoft.DotNet.DarcLib
             _logger.LogInformation($"Branch '{newBranch}' exists.");
         }
 
+        /// <summary>
+        /// We used to group commits in a tree object so there would be only one commit per 
+        /// change but this doesn't work for trees that end up being too big (around 20K files).
+        /// By using LibGit2Sharp we still group changes in one and we don't need to create a new
+        /// tree. Everything happens locally in the host executing the push.
+        /// </summary>
+        /// <param name="filesToCommit">Collection of files to update.</param>
+        /// <param name="repoUri">The repository to push the files to.</param>
+        /// <param name="branch">The branch to push the files to.</param>
+        /// <param name="commitMessage">The commmit message.</param>
+        /// <returns></returns>
         public async Task PushFilesAsync(
             List<GitFile> filesToCommit,
             string repoUri,
             string branch,
             string commitMessage)
         {
+            string dotnetMaestro = "dotnet-maestro";
             using (_logger.BeginScope("Pushing files to {branch}", branch))
             {
                 (string owner, string repo) = ParseRepoUri(repoUri);
 
-                string baseCommitSha = await Client.Repository.Commit.GetSha1(owner, repo, branch);
-                Octokit.Commit baseCommit = await Client.Git.Commit.Get(owner, repo, baseCommitSha);
-                TreeResponse baseTree = await Client.Git.Tree.Get(owner, repo, baseCommit.Tree.Sha);
-                TreeResponse newTree = await CreateGitHubTreeAsync(owner, repo, filesToCommit, baseTree);
-                Octokit.Commit newCommit = await Client.Git.Commit.Create(
-                    owner,
-                    repo,
-                    new NewCommit(commitMessage, newTree.Sha, baseCommit.Sha));
-                await Client.Git.Reference.Update(owner, repo, $"heads/{branch}", new ReferenceUpdate(newCommit.Sha));
+                string tempRepoFolder = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+
+                try
+                {
+                    string repoPath = LibGit2Sharp.Repository.Clone(repoUri, tempRepoFolder, new LibGit2Sharp.CloneOptions
+                    {
+                        BranchName = branch,
+                        Checkout = true
+                    });
+
+                    using (LibGit2Sharp.Repository localRepo = new LibGit2Sharp.Repository(repoPath))
+                    {
+                        foreach (GitFile file in filesToCommit)
+                        {
+                            string filePath = Path.Combine(tempRepoFolder, file.FilePath);
+
+                            if (file.Operation == GitFileOperation.Add)
+                            {
+                                if (!File.Exists(filePath))
+                                {
+                                    string parentFolder = Directory.GetParent(filePath).FullName;
+
+                                    Directory.CreateDirectory(parentFolder);
+                                }
+
+                                using (FileStream stream = File.Create(filePath))
+                                {
+                                    byte[] contentBytes = this.GetContentBytes(file.Content);
+                                    await stream.WriteAsync(contentBytes, 0, contentBytes.Length);
+                                }
+                            }
+                            else
+                            {
+                                File.Delete(Path.Combine(tempRepoFolder, file.FilePath));
+                            }
+                        }
+
+                        LibGit2Sharp.Commands.Stage(localRepo, "*");
+
+                        LibGit2Sharp.Signature author = new LibGit2Sharp.Signature(dotnetMaestro, $"@{dotnetMaestro}", DateTime.Now);
+                        LibGit2Sharp.Signature commiter = author;
+                        localRepo.Commit(commitMessage, author, commiter, new LibGit2Sharp.CommitOptions
+                        {
+                            AllowEmptyCommit = false,
+                            PrettifyMessage = true
+                        });
+
+                        localRepo.Network.Push(localRepo.Branches[branch], new LibGit2Sharp.PushOptions
+                        {
+                            CredentialsProvider = (url, user, cred) =>
+                            new LibGit2Sharp.UsernamePasswordCredentials
+                            {
+                                Username = dotnetMaestro,
+                                Password = Client.Credentials.Password
+                            }
+                        });
+                    }
+                }
+                catch (LibGit2Sharp.EmptyCommitException)
+                {
+                    _logger.LogInformation("There was nothing to commit...");
+                }
+                catch (Exception exc)
+                {
+                    throw new DarcException($"Something went wrong when pushing the files to repo {repo} in branch {branch}", exc);
+                }
+                finally
+                {
+                    // Libgit2Sharp behaves similarly to git and marks files under the .git/objects hierarchy as read-only, 
+                    // thus if the read-only attribute is not unset an UnauthorizedAccessException is thrown.
+                    GitFileManager.NormalizeAttributes(tempRepoFolder);
+
+                    Directory.Delete(tempRepoFolder, true);
+                }
             }
         }
 
@@ -709,194 +786,6 @@ namespace Microsoft.DotNet.DarcLib
         {
             var uri = new Uri(prLink);
             return uri.PathAndQuery;
-        }
-
-
-        private async Task<TreeResponse> CreateGitHubTreeAsync(
-            string owner,
-            string repo,
-            IEnumerable<GitFile> filesToCommit,
-            TreeResponse baseTree)
-        {
-            string baseTreeSha = baseTree.Sha;
-
-            IEnumerable<GitFile> filesToRemove = filesToCommit.Where(f => f.Operation == GitFileOperation.Delete);
-
-            if (filesToRemove.Any())
-            {
-                baseTreeSha = await RemoveFilesFromTree(owner, repo, baseTree.Sha, filesToRemove);
-            }
-
-            var newTree = new NewTree {BaseTree = baseTreeSha };
-
-            foreach (GitFile file in filesToCommit.Where(f => f.Operation == GitFileOperation.Add))
-            {
-                BlobReference newBlob = await Client.Git.Blob.Create(
-                    owner,
-                    repo,
-                    new NewBlob
-                    {
-                        Content = file.Content,
-                        Encoding = file.ContentEncoding == "base64" ? EncodingType.Base64 : EncodingType.Utf8
-                    });
-                newTree.Tree.Add(
-                    new NewTreeItem
-                    {
-                        Path = file.FilePath,
-                        Sha = newBlob.Sha,
-                        Mode = file.Mode,
-                        Type = TreeType.Blob
-                    });
-            }
-
-            return await Client.Git.Tree.Create(owner, repo, newTree);
-        }
-
-        private async Task<string> PushCommitAsync(
-            string ownerAndRepo,
-            string commitMessage,
-            string treeSha,
-            string baseTreeSha)
-        {
-            var gitHubCommit = new GitHubCommit
-            {
-                Message = commitMessage,
-                Tree = treeSha,
-                Parents = new List<string> {baseTreeSha}
-            };
-
-            string body = JsonConvert.SerializeObject(gitHubCommit, _serializerSettings);
-            HttpResponseMessage response = await this.ExecuteGitCommand(
-                HttpMethod.Post,
-                $"repos/{ownerAndRepo}/git/commits",
-                _logger,
-                body);
-            JToken parsedResponse = JToken.Parse(response.Content.ReadAsStringAsync().Result);
-            return parsedResponse["sha"].ToString();
-        }
-
-        private async Task<List<GitHubTreeItem>> GetTreeItems(string repoUri, string commit)
-        {
-            string ownerAndRepo = GetOwnerAndRepoFromRepoUri(repoUri);
-            HttpResponseMessage response = await this.ExecuteGitCommand(
-                HttpMethod.Get,
-                $"repos/{ownerAndRepo}/commits/{commit}",
-                _logger);
-            JToken parsedResponse = JToken.Parse(response.Content.ReadAsStringAsync().Result);
-            var treeUrl = new Uri(parsedResponse["commit"]["tree"]["url"].ToString());
-
-            response = await this.ExecuteGitCommand(HttpMethod.Get, $"{treeUrl.PathAndQuery}?recursive=1", _logger);
-            parsedResponse = JToken.Parse(response.Content.ReadAsStringAsync().Result);
-
-            JArray tree = JArray.Parse(parsedResponse["tree"].ToString());
-
-            var treeItems = new List<GitHubTreeItem>();
-
-            foreach (JToken item in tree)
-            {
-                var treeItem = new GitHubTreeItem
-                {
-                    Mode = item["mode"].ToString(),
-                    Path = item["path"].ToString(),
-                    Type = item["type"].ToString()
-                };
-
-                treeItems.Add(treeItem);
-            }
-
-            return treeItems;
-        }
-
-        /// <summary>
-        /// This approach was based on https://github.com/octokit/octokit.net/issues/1610 which suggests
-        /// to clone the base tree without the files to be removed. If when getting the recursive tree it is
-        /// truncated, instead we iteratively walk the tree attempting to get the files on each tree
-        /// object. If a given tree object is truncated we return the original base tree sha. Calling GetRecursive
-        /// is way faster than the iterative approach.
-        /// </summary>
-        /// <param name="owner">Repo owner.</param>
-        /// <param name="repo">The repo.</param>
-        /// <param name="baseTreeSha">The base tree sha.</param>
-        /// <param name="filesToRemove">The files to remove.</param>
-        /// <returns>The new tree sha.</returns>
-        private async Task<string> RemoveFilesFromTree(string owner, string repo, string baseTreeSha, IEnumerable<GitFile> filesToRemove)
-        {
-            NewTree newTree = new NewTree();
-            TreeResponse rootTree = await Client.Git.Tree.GetRecursive(owner, repo, baseTreeSha);
-
-            if (rootTree.Truncated)
-            {
-                newTree = await ConstructNewTreeAsync(owner, repo, baseTreeSha, filesToRemove);
-
-                if (newTree == null)
-                {
-                    _logger.LogWarning("One of the trees was truncated and not all the files were cloned. Not possible to remove files from tree...");
-                    return baseTreeSha;
-                }
-            }
-            else
-            {
-                rootTree.Tree.Where(tree => tree.Type != TreeType.Tree)
-                    .Select(tree => new NewTreeItem
-                    {
-                        Path = tree.Path,
-                        Mode = tree.Mode,
-                        Type = tree.Type.Value,
-                        Sha = tree.Sha
-                    }).ToList()
-                        .ForEach(tree =>
-                        {
-                            if (!filesToRemove.Any(f => f.FilePath == tree.Path))
-                            {
-                                newTree.Tree.Add(tree);
-                            }
-                        });
-            }
-
-            TreeResponse createdTree = await Client.Git.Tree.Create(owner, repo, newTree);
-            return createdTree.Sha;
-        }
-
-        private async Task<NewTree> ConstructNewTreeAsync(string owner, string repo, string treeSha, IEnumerable<GitFile> filesToRemove)
-        {
-            NewTree newTree = new NewTree();
-            Queue<(string, string)> treeShas = new Queue<(string, string)>();
-            treeShas.Enqueue((treeSha, string.Empty));
-
-            while (treeShas.Count > 0)
-            {
-                (string sha, string path) = treeShas.Dequeue();
-
-                TreeResponse rootTree = await Client.Git.Tree.Get(owner, repo, sha);
-
-                if (rootTree.Truncated)
-                {
-                    return null;
-                }
-
-                rootTree.Tree.Where(tree => tree.Type != TreeType.Tree)
-                    .Select(tree => new NewTreeItem
-                    {
-                        Path = string.IsNullOrEmpty(path) ? tree.Path : $"{path}/{tree.Path}",
-                        Mode = tree.Mode,
-                        Type = tree.Type.Value,
-                        Sha = tree.Sha
-                    }).ToList()
-                        .ForEach(tree =>
-                        {
-                            if (!filesToRemove.Any(f => f.FilePath == tree.Path))
-                            {
-                                newTree.Tree.Add(tree);
-                            }
-                        });
-
-                foreach (TreeItem treeItem in rootTree.Tree.Where(tree => tree.Type == TreeType.Tree))
-                {
-                    treeShas.Enqueue((treeItem.Sha, string.IsNullOrEmpty(path) ? treeItem.Path : $"{path}/{treeItem.Path}"));
-                }
-            }
-
-            return newTree;
         }
     }
 }

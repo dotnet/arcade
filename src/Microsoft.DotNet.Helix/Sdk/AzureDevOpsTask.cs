@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
             catch (Exception ex)
             {
-                Log.LogErrorFromException(ex);
+                Log.LogErrorFromException(ex, true);
             }
 
             return !Log.HasLoggedErrors;
