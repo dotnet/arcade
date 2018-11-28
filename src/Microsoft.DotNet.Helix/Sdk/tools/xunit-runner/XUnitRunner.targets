@@ -7,7 +7,7 @@
 
     <_XUnitPublishTargetsPath>$(MSBuildThisFileDirectory)XUnitPublish.targets</_XUnitPublishTargetsPath>
 
-    <XUnitArguments Condition="'$(XUnitArguments)' == ''">-nocolor<XUnitArguments>
+    <XUnitArguments Condition="'$(XUnitArguments)' == ''">-nocolor</XUnitArguments>
   </PropertyGroup>
 
   <ItemGroup Condition="'@(XUnitProject)' != ''">
