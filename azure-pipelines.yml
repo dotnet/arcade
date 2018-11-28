@@ -44,7 +44,7 @@ jobs:
         - name: _OfficialBuildIdArgs
           value: /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
         - name: _SelfBuildOptions
-          value: -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -barToken $(MaestroAccessToken)
+          value: -updatesdk -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -barToken $(MaestroAccessToken)
       # else
       - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
         - name: _PublishArgs
