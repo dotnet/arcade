@@ -30,18 +30,21 @@ jobs:
       - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         - group: DotNet-Blob-Feed
         - group: DotNet-Symbol-Server-Pats
+        - group: Publish-Build-Assets
         - name: _PublishBlobFeedUrl
           value: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
         - name: _SignArgs
           value: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
         - name: _PublishArgs
-          value: /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
+          value: /p:DotNetPublishBlobFeedKey="$(dotnetfeed-storage-access-key-1)"
             /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
             /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
             /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
             /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         - name: _OfficialBuildIdArgs
           value: /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+        - name: _SelfBuildOptions
+          value: -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -barToken $(MaestroAccessToken)
       # else
       - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
         - name: _PublishArgs
@@ -49,6 +52,8 @@ jobs:
         - name: _OfficialBuildIdArgs
           value: ''
         - name: _SignArgs
+          value: ''
+        - name: _SelfBuildOptions
           value: ''
       strategy:
         matrix:
@@ -72,9 +77,10 @@ jobs:
       - checkout: self
         clean: true
       # Use utility script to run script command dependent on agent OS.
-      - script: eng\common\cibuild.cmd
+      - script: eng\cibuild.cmd
           -configuration $(_BuildConfig) 
           -prepareMachine
+          $(_SelfBuildOptions)
           $(_PublishArgs)
           $(_SignArgs)
           $(_OfficialBuildIdArgs)

@@ -4,6 +4,7 @@ Param(
   [string] $projects = "",
   [string] $verbosity = "minimal",
   [string] $msbuildEngine = $null,
+  [string] $restoreSources = "",
   [bool] $warnaserror = $true,
   [bool] $nodereuse = $true,
   [switch] $execute,
@@ -54,6 +55,7 @@ function Print-Usage() {
     Write-Host "  -ci                     Set when running on CI server"
     Write-Host "  -prepareMachine         Prepare machine for CI run"
     Write-Host "  -msbuildEngine <value>  Msbuild engine to use to run build ('dotnet', 'vs', or unspecified)."
+    Write-Host "  -restoreSources <value> ';' list of additional Nuget restore sources."
     Write-Host ""
     Write-Host "Command line arguments not listed above are passed thru to msbuild."
     Write-Host "The above arguments can be shortened as much as to be unambiguous (e.g. -co for configuration, -t for test, etc.)."
@@ -72,6 +74,11 @@ try {
   InitializeTools
 
   $BuildLog = Join-Path $LogDir "Build.binlog"
+  
+  $restoreSourcesCommand = ""
+  if ($restoreSources -ne "") {
+    $restoreSourcesCommand = "/p:RestoreSources=$restoreSources"
+  }
 
   MSBuild $ToolsetBuildProj `
     /bl:$BuildLog `
@@ -91,6 +98,7 @@ try {
     /p:Publish=$publish `
     /p:Execute=$execute `
     /p:ContinuousIntegrationBuild=$ci `
+    $restoreSourcesCommand `
     @properties
 
   if ($lastExitCode -ne 0) {
