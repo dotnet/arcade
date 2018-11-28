@@ -44,7 +44,7 @@ The final workflow is as follows:
 5. The release pipeline associated with the new build uses the artifacts from the build (one of which is the manifest) to process and push the outputs of this build to appropriate locations. At the end of the release pipeline, new outputs locations (e.g. myget, nuget, etc.) and potentially new assets (e.g. checksums) are added to the build's assets. *Note: These new assets can be applied to subscription updates as subscription actions will not have taken place until the build is through the release pipeline.*
 6. Any time a new channel is associated with a build, a release pipeline for that channel may be run. This allows for the promotion of builds through channels (e.g. internal dev build -> public release build)
 
-*Note: This plan allows for a backup release strategy, where a release pipeline may be triggered on a build manually by a user. The same release pipeline would work with or without the Maestro, though additional output locations may not be records *
+*Note: This plan allows for a backup release strategy, where a release pipeline may be triggered on a build manually by a user. The same release pipeline would work with or without the Maestro, though additional output locations may not be records*
 
 ### Options for intermediate feeds
 Intermediate feeds used for the build could take a number of forms:
