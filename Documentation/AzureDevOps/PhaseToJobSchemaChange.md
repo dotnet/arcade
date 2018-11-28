@@ -207,7 +207,7 @@ trigger:
 pr:
 - master
 
-phases:
+jobs:
 - template: /eng/common/templates/job/job.yml
   parameters:
     name: Windows_NT
@@ -295,7 +295,7 @@ trigger:
 pr:
 - master
 
-phases:
+jobs:
 - template: /eng/common/templates/jobs/jobs.yml
   parameters:
     enableTelemetry: true
