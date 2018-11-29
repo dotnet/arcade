@@ -34,9 +34,12 @@ The final desired workflow is intended to utilize a few key pieces of infrastruc
 - Isolated blob feeds (eventually Azure DevOps feeds + additional artifact storage) for per-build storage
 
 The final workflow is as follows:
-1. Each leg of a build that wants to publish outputs uses the arcade publishing package to push outputs. These outputs are sent to an intermediate, isolated and private storage feed (see below for options). As outputs are pushed, the package records metadata about each item in a manifest which is also pushed for later use. The manifest identifies any such information that may be needed to perform subsequent release activities.  This manifest should look like:
+1. Each leg of a build that wants to publish outputs uses the arcade publishing package to push outputs. These outputs are sent to an intermediate, isolated and private storage feed (see below for options). As outputs are pushed, the package records metadata about each item in a manifest which is also pushed for later use. The manifest identifies any such information that may be needed to perform subsequent release activities. This manifest should look much like it does today, with some tweaks:
     - **Include** - Which bits 'ship' vs. those which are just inter-repo transport.
-    - **Include** - Eventual output locations (e.g. cli blob storage, cli checksum storage, dotnet core nuget feed) to be interpreted by the release pipelines.
+    - **Include** - Categories/generalized names for output locations to be interpreted by the release pipelines. Examples:
+        - 'SDK blob storage'
+        - 'SDK checksum storage'
+        - '.NET Core Nuget Package'
     - **Do not include** - Specific storage accounts or resources. For example, the manifest should not identify the specific 'dotnetcli' storage account as the target for blobs, as an internal CLI release will want to push to an internal dev release account, while a public dev release will push to the dotnetcli storage account.  These details should be abstracted in a way that allows for interpretation based on the *intent* of the build.
 2. At the finalization join point in the build, the BAR/Maestro build upload happens. This joins the manifests from various legs into one, then provides that information to Maestro/BAR. Initially, the build assets locations are recorded as their intermediate locations.
 3. Maestro/BAR associates the build with a specific channel. This can happen either automatically, via a default repo+branch->channel mapping, or manually for a specific build by a user.
@@ -44,7 +47,7 @@ The final workflow is as follows:
 5. The release pipeline associated with the new build uses the artifacts from the build (one of which is the manifest) to process and push the outputs of this build to appropriate locations. At the end of the release pipeline, new outputs locations (e.g. myget, nuget, etc.) and potentially new assets (e.g. checksums) are added to the build's assets. *Note: These new assets can be applied to subscription updates as subscription actions will not have taken place until the build is through the release pipeline.*
 6. Any time a new channel is associated with a build, a release pipeline for that channel may be run. This allows for the promotion of builds through channels (e.g. internal dev build -> public release build)
 
-*Note: This plan allows for a backup release strategy, where a release pipeline may be triggered on a build manually by a user. The same release pipeline would work with or without the Maestro, though additional output locations may not be records*
+*Note: This plan allows for a backup release strategy, where a release pipeline may be triggered on a build manually by a user. The same release pipeline would work with or without the Maestro, though additional output locations may not be recorded*
 
 ### Options for intermediate feeds
 Intermediate feeds used for the build could take a number of forms:
@@ -55,18 +58,18 @@ Intermediate feeds used for the build could take a number of forms:
     - Advantages - Implicitly associated with a specific build. Built in auth (AD auth). Can be accessed from UI.
     - Disadvantages - Can't be used as a nuget feed. Retention is limited.
 
-Until it becomes clear that using Azure DevOps build storage for pre-release storage is a better option, blob feeds should be used as intermediate storage for build outputs. If necessary, outputs could be duplicated (e.g. upload manifest to both blob feed and build storage).
+Today blob feeds are used as intermediate storage. We should transition to using Azure DevOps build storage. Because Azure DevOps allows for identification of artificats during the build using artifact logging commands (https://github.com/Microsoft/azure-pipelines-tasks/blob/master/docs/authoring/commands.md#artifact-logging-commands) this transition can be made transparent to a repository.
 
 ## Implementation Roadmap
-It is an explicit goal to make this transition to a new system of publishing as painless as possible. For typical user scenarios, developers should notice little difference in day to day operations. The implementation of this new system should proceed in 2 phases:
+It is an explicit goal to make this transition to a new system of publishing as painless as possible. For typical user scenarios, developers should notice little difference in day to day operations. Required repository changes should be minimized or eliminated if possible. The implementation of this new system should proceed in phases.
 
-### Phase 1 - Reduce lock contention and introduce public dev release pipelines for feeds only
-The first phase is intended to remove most of the "Waiting for exclusive lock on the feed" issues seen in the builds, as well as set up for phase 2. To implement this phase, the following steps will be taken:
+### Phase 1 - Remove lock contention and introduce public dev release pipelines for feeds only
+The first phase is intended to remove the "Waiting for exclusive lock on the feed" issues seen in the builds, as well as set up for phase 2. To implement this phase, the following steps will be taken:
 
 1. Introduce an Azure DevOps release pipeline concept into Maestro/Bar. Release pipelines are associated with a channel. Upon assignment of a build to a channel, if that channel has an associated release pipeline, the release pipeline should be triggered for the build. Execution of additional post-build actions (e.g. subscription updates) will block on the completion of the release pipeline.
 2. Introduce the ability for build assets to have multiple locations, and for those locations to be added to (additive only) at the end of the release pipeline. Additionally, new assets may be added.
-3. Create a 'public dev release' Azure DevOps pipeline which pushes outputs from one blob feed to another based on the build manifest and an input feed. For now, the manifest should record that the current ExpectedFeedUrl is the target of the release pipeline, and the source is the intermediate feed used. At the end of the release pipeline, the BAR should be updated with the new asset locations.
-4. Change PushToBlobFeed to push an intermediate, per build blob feed rather than to the ExpectedFeedUrl. This intermediate feed should be unique based on the input parameters to the PushToBlobFeed task. This blob feed should not be public.  Initially, only nuget packages should be pushed.
+3. Create a 'public dev release' Azure DevOps pipeline which pushes outputs from a build to a blob feed based on the build manifest. For now, the manifest should record that the current ExpectedFeedUrl is the target of the release pipeline, and the source is the intermediate feed used. At the end of the release pipeline, the BAR should be updated with the new asset locations.
+4. Change PushToBlobFeed to upload package artifacts to Azure DevOps build storage rather than ExpectedFeedUrl. Initially, only nuget packages should be pushed. Using artifact logging commands (https://github.com/Microsoft/azure-pipelines-tasks/blob/master/docs/authoring/commands.md#artifact-logging-commands) this should be doable without disruptive changes in the repository. The initial upload to the BAR should note the direct link to each package within Azure DevOps build storage.
 
 At the end of this, when a build is done, it pushes its nuget packages to the private intermediate feed, then uploads to BAR as usual. As the build associates with a channel, the associated release pipeline will run, pushing the outputs to the final feed (typically dotnet-core blob feed).  Developers will not see "Waiting for exclusive lock on the feed" except in cases where multiple legs of the same build are publishing to the intermediate feed at the same time.  This is relatively rare.
 
@@ -74,11 +77,11 @@ At the end of this, when a build is done, it pushes its nuget packages to the pr
 In the second phase, we will move the rest of existing publishing (blobs and symbols) for day to day development into the public dev release.  This involves:
 
 1. Altering the public dev release pipeline to enable publishing of symbols to mdsl, symweb, as well as regular blobs (e.g. installers).  We should use existing arcade tasks do this.
-2. Altering the arcade publishing package to stop explicit publishing of those items during the build, instead moving these to push to intermediate storage first.  Examples:
+2. Altering the arcade publishing package to stop explicit publishing of those items during the build, instead moving these to push to intermediate storage (Azure DevOps build storage) first.  Examples:
     - Remove PublishSymbols call from publish.proj
-    - Alter PushToBlobFeed to do appropriate things when pushing flat files.  Flat files should go to the intermediate storage first, then to final locations (categories of output locations are noted in the manifest, actual output locations are defined by the release pipeline).
+    - Alter PushToBlobFeed to do appropriate things when pushing flat files. Flat files should go to the intermediate storage first, then to final locations (categories of output locations are noted in the manifest, actual output locations are defined by the release pipeline).
 
 ### Phase 3 - Introduce additional piplines for internal and stable releases
 In the third phase, we will introduce additional release pipelines for other scenarios:
 - Internal only - Push to common, authenticated Azure DevOps feed rather than regular dotnet-core feed.  Output blob storage should only be a private common location.
-- Stable only (may be internal) - Push to predictable locations that can be deleted and recreated as necessary. The analog to this today would be stabilized ProdCon v1 blob feeds, which are based on a "product build id".  The feed can be deleted and recreated so that packages with identical versions can be re-uploaded.
+- Support for stable only (may be internal) - Push to predictable locations that can be deleted and recreated as necessary. The analog to this today would be stabilized ProdCon v1 blob feeds, which are based on a "product build id".  The feed can be deleted and recreated so that packages with identical versions can be re-uploaded. Whether or not a build is stable can be noted by build tags, which can be set within the build based on parameters using Azure DevOps logging commands (https://github.com/Microsoft/azure-pipelines-tasks/blob/master/docs/authoring/commands.md).
