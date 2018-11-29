@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.AzureDevOps
 {
@@ -74,6 +75,28 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         private string GetVersion()
         {
             return GetType().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+        }
+
+        protected async Task<JObject> ParseResponseAsync(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            if (!res.IsSuccessStatusCode)
+            {
+                await LogFailedRequest(req, res);
+                return null;
+            }
+
+            var responseContent = await res.Content.ReadAsStringAsync();
+
+            try
+            {
+                return JObject.Parse(responseContent);
+            }
+            catch (Exception)
+            {
+                Log.LogError($"VSTS returned unexpected response: {responseContent}");
+            }
+
+            return null;
         }
     }
 }
