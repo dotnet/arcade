@@ -2,13 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using log4net;
+using Microsoft.Azure.KeyVault;
+using Microsoft.Azure.KeyVault.Models;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.Azure.KeyVault;
-using log4net;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.GitSync
 {
@@ -16,8 +17,6 @@ namespace Microsoft.DotNet.GitSync
     {
         private readonly string _path;
         private readonly ILog _logger;
-        private string _clientId;
-        private string _clientSecret;
 
         public ConfigFile(string path, ILog logger)
         {
@@ -25,7 +24,7 @@ namespace Microsoft.DotNet.GitSync
             _logger = logger;
         }
 
-        public Configuration Get()
+        public async Task<Configuration> GetAsync()
         {
             if (!File.Exists(_path))
             {
@@ -37,11 +36,21 @@ namespace Microsoft.DotNet.GitSync
                 PreserveReferencesHandling = PreserveReferencesHandling.All,
             });
 
-            _clientId = config.ClientId;
-            _clientSecret = config.ClientSecret;
+            var kvc = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(
+                async (authority, resource, scope) => 
+                {
+                    var authContext = new AuthenticationContext(authority);
+                    var clientCred = new ClientCredential(config.ClientId, config.ClientSecret);
+                    var result = await authContext.AcquireTokenAsync(resource, clientCred);
 
-            var kvc = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(GetToken));
-            config.Password = kvc.GetSecretAsync(config.SecretUri).Result.Value;
+                    if (result == null)
+                        throw new InvalidOperationException("Failed to obtain the github token");
+
+                    return result.AccessToken;
+                }));
+
+            SecretBundle secretBundle = await kvc.GetSecretAsync(config.SecretUri); //.Result.Value;
+            config.Password = secretBundle.Value;
 
             return config;
         }
@@ -56,18 +65,6 @@ namespace Microsoft.DotNet.GitSync
                     PreserveReferencesHandling = PreserveReferencesHandling.All
                 }));
             _logger.Info("Configuration file updated");
-        }
-
-        public async Task<string> GetToken(string authority, string resource, string scope)
-        {
-            var authContext = new AuthenticationContext(authority);
-            var clientCred = new ClientCredential(_clientId, _clientSecret);
-            var result = await authContext.AcquireTokenAsync(resource, clientCred);
-
-            if (result == null)
-                throw new InvalidOperationException("Failed to obtain the github token");
-
-            return result.AccessToken;
         }
     }
 }

@@ -43,14 +43,14 @@ namespace Microsoft.DotNet.GitSync
             XmlConfigurator.Configure();
         }
 
-        private void Run()
+        private async Task RunAsync()
         {
-            var config = ConfigFile.Get();
+            var config = await ConfigFile.GetAsync();
             if (config == null)
             {
                 s_logger.Error("Config File does not exist, Configuring.");
                 Configure(ConfigFile);
-                config = ConfigFile.Get();
+                config = await ConfigFile.GetAsync();
             }
             Setup(config.ConnectionString, config.Server, config.Destinations);
 
@@ -94,9 +94,9 @@ namespace Microsoft.DotNet.GitSync
             }
         }
 
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            new Program(args).Run();
+            await new Program(args).RunAsync();
         }
 
         private void Step(CancellationToken token)
@@ -106,7 +106,7 @@ namespace Microsoft.DotNet.GitSync
 
         private async Task ProcessAsync(CancellationToken token)
         {
-            var config = ConfigFile.Get();
+            var config = await ConfigFile.GetAsync();
 
             if (token.IsCancellationRequested)
             {

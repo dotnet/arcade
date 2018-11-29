@@ -3,6 +3,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net461</TargetFramework>
     <SignAssembly>false</SignAssembly>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
