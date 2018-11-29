@@ -58,7 +58,7 @@ Intermediate feeds used for the build could take a number of forms:
     - Advantages - Implicitly associated with a specific build. Built in auth (AD auth). Can be accessed from UI.
     - Disadvantages - Can't be used as a nuget feed. Retention is limited.
 
-Today blob feeds are used as intermediate storage. We should transition to using Azure DevOps build storage. Because Azure DevOps allows for identification of artificats during the build using artifact logging commands (https://github.com/Microsoft/azure-pipelines-tasks/blob/master/docs/authoring/commands.md#artifact-logging-commands) this transition can be made transparent to a repository.
+Today blob feeds are used as intermediate storage. We should transition to using Azure DevOps build storage. Because Azure DevOps allows for identification of artifacts during the build using artifact logging commands (https://github.com/Microsoft/azure-pipelines-tasks/blob/master/docs/authoring/commands.md#artifact-logging-commands) this transition can be made transparent to a repository.
 
 ## Implementation Roadmap
 It is an explicit goal to make this transition to a new system of publishing as painless as possible. For typical user scenarios, developers should notice little difference in day to day operations. Required repository changes should be minimized or eliminated if possible. The implementation of this new system should proceed in phases.
