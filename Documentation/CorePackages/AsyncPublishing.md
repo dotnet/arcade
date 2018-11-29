@@ -34,7 +34,7 @@ The final desired workflow is intended to utilize a few key pieces of infrastruc
 - Isolated blob feeds (eventually Azure DevOps feeds + additional artifact storage) for per-build storage
 
 The final workflow is as follows:
-1. Each leg of a build that wants to publish outputs uses the arcade publishing package to push outputs. These outputs are sent to an intermediate, isolated and private storage feed (see below for options). As outputs are pushed, the package records metadata about each item in a manifest which is also pushed for later use. The manifest identifies any such information that may be needed to perform subsequent release activities. This manifest should look much like it does today, with some tweaks:
+1. Each leg of a build that wants to publish outputs uses the Arcade publishing package to push outputs. These outputs are sent to an intermediate, isolated and private storage feed (see below for options). As outputs are pushed, the package records metadata about each item in a manifest which is also pushed for later use. The manifest identifies any such information that may be needed to perform subsequent release activities. This manifest should look much like it does today, with some tweaks:
     - **Include** - Which bits 'ship' vs. those which are just inter-repo transport.
     - **Include** - Categories/generalized names for output locations to be interpreted by the release pipelines. Examples:
         - 'SDK blob storage'
@@ -76,8 +76,8 @@ At the end of this, when a build is done, it pushes its nuget packages to the pr
 ### Phase 2 - Move additional publishing steps into public dev release pipelines
 In the second phase, we will move the rest of existing publishing (blobs and symbols) for day to day development into the public dev release. This involves:
 
-1. Altering the public dev release pipeline to enable publishing of symbols to mdsl, symweb, as well as regular blobs (e.g. installers). We should use existing arcade tasks do this.
-2. Altering the arcade publishing package to stop explicit publishing of those items during the build, instead moving these to push to intermediate storage (Azure DevOps build storage) first. Examples:
+1. Altering the public dev release pipeline to enable publishing of symbols to mdsl, symweb, as well as regular blobs (e.g. installers). We should use existing Arcade tasks do this.
+2. Altering the Arcade publishing package to stop explicit publishing of those items during the build, instead moving these to push to intermediate storage (Azure DevOps build storage) first. Examples:
     - Remove PublishSymbols call from publish.proj
     - Alter PushToBlobFeed to do appropriate things when pushing flat files. Flat files should go to the intermediate storage first, then to final locations (categories of output locations are noted in the manifest, actual output locations are defined by the release pipeline).
 
