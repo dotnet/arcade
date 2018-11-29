@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.DotNet.Helix.Sdk" DefaultTargets="Test">
+  <PropertyGroup>
+    <HelixSource>pr/dotnet/arcade/master</HelixSource>
+    <HelixType>test/product</HelixType>
+    <HelixBuild>$(BUILD_BUILDNUMBER)</HelixBuild>
+    <HelixBuild Condition="'$(HelixBuild)' == ''">12345.01</HelixBuild>
+
+    <IncludeDotNetCli>true</IncludeDotNetCli>
+    <DotNetCliPackageType>sdk</DotNetCliPackageType>
+
+    <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
+    <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
+
+    <XUnitProjects>true</XUnitProjects>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <HelixTargetQueue Include="Ubuntu.1604.Amd64"/>
+    <!--
+      TODO:
+      The OS onboarding queues don't have the required client changes for the xunit runner to work yet
+      Uncoment this once those changes are updated in the os onboarding queues
+    -->
+    <!-- <HelixTargetQueue Include="Windows.10.Amd64"/> -->
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(HelixTargetQueue)' == 'Ubuntu.1604.Amd64'">
+    <HelixPreCommands>$(HelixPreCommands);find $HELIX_CORRELATION_PAYLOAD -type f</HelixPreCommands>
+    <HelixPreCommands>$(HelixPreCommands);find . -type f</HelixPreCommands>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(HelixTargetQueue)' == 'Windows.10.Amd64'">
+    <HelixPreCommands>$(HelixPreCommands);dir /s %HELIX_CORRELATION_PAYLOAD%</HelixPreCommands>
+    <HelixPreCommands>$(HelixPreCommands);dir /s</HelixPreCommands>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <XUnitProject Include="..\src\**\*.Tests.csproj"/>
+  </ItemGroup>
+
+  <!-- Useless stuff to make Arcade SDK happy -->
+  <PropertyGroup>
+    <Language>msbuild</Language>
+  </PropertyGroup>
+  <Target Name="Pack"/>
+
+</Project>

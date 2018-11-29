@@ -28,6 +28,7 @@ jobs:
       variables:
       # Only enable publishing in non-public, non PR scenarios.
       - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+        - group: DotNet-HelixApi-Access
         - group: DotNet-Blob-Feed
         - group: DotNet-Symbol-Server-Pats
         - name: _PublishBlobFeedUrl
@@ -44,6 +45,9 @@ jobs:
           value: /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
       # else
       - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+        - group: Helix Anonymous
+        - name: HelixApiAccessToken
+          value: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token)
         - name: _PublishArgs
           value: ''
         - name: _OfficialBuildIdArgs
@@ -80,6 +84,14 @@ jobs:
           $(_OfficialBuildIdArgs)
         displayName: Windows Build / Publish
 
+      - powershell: eng\common\build.ps1
+          -test
+          -projects $(Build.SourcesDirectory)/tests/UnitTests.proj
+        displayName: Run Helix Tests
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          HelixAccessToken: $(HelixApiAccessToken)
+
     - job: Linux
       container: LinuxContainer
       pool:
@@ -87,6 +99,14 @@ jobs:
           name: dnceng-linux-external-temp
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           name: dnceng-linux-internal-temp
+      variables:
+      - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+        - group: DotNet-HelixApi-Access
+      # else
+      - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+        - group: Helix Anonymous
+        - name: HelixApiAccessToken
+          value: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token)
       strategy:
         matrix:
           Build_Debug:
@@ -106,3 +126,11 @@ jobs:
           --configuration $(_BuildConfig)
           --prepareMachine
         displayName: Unix Build / Publish
+
+      - script: eng/common/build.sh
+          --test
+          --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
+        displayName: Run Helix Tests
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          HelixAccessToken: $(HelixApiAccessToken)

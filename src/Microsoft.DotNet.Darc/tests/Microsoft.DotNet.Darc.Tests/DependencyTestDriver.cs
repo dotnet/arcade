@@ -164,6 +164,9 @@ namespace Microsoft.DotNet.Darc.Tests
             {
                 string expectedOutput = await expectedOutputsReader.ReadToEndAsync();
                 string actualOutput = await actualOutputsReader.ReadToEndAsync();
+                // normalize line endings because we don't actually care what they are
+                expectedOutput = expectedOutput.Replace("\r\n", "\n");
+                actualOutput = actualOutput.Replace("\r\n", "\n");
                 Assert.Equal(
                     expectedOutput,
                     actualOutput);
