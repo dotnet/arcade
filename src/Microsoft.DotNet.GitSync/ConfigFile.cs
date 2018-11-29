@@ -4,8 +4,10 @@
 
 using System;
 using System.IO;
-using CredentialManagement;
+using System.Threading.Tasks;
+using Microsoft.Azure.KeyVault;
 using log4net;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.GitSync
@@ -14,6 +16,8 @@ namespace Microsoft.DotNet.GitSync
     {
         private readonly string _path;
         private readonly ILog _logger;
+        private string _clientId;
+        private string _clientSecret;
 
         public ConfigFile(string path, ILog logger)
         {
@@ -32,19 +36,12 @@ namespace Microsoft.DotNet.GitSync
                 ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
                 PreserveReferencesHandling = PreserveReferencesHandling.All,
             });
-            using (var cred = new Credential())
-            {
-                cred.Target = config.CredentialTarget;
-                if (cred.Exists())
-                {
-                    cred.Load();
-                    config.Password = cred.Password;
-                }
-                else
-                {
-                    throw new ArgumentException("No Github Account Linked with the Mirror");
-                }
-            }
+
+            _clientId = config.ClientId;
+            _clientSecret = config.ClientSecret;
+
+            var kvc = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(GetToken));
+            config.Password = kvc.GetSecretAsync(config.SecretUri).Result.Value;
 
             return config;
         }
@@ -59,6 +56,18 @@ namespace Microsoft.DotNet.GitSync
                     PreserveReferencesHandling = PreserveReferencesHandling.All
                 }));
             _logger.Info("Configuration file updated");
+        }
+
+        public async Task<string> GetToken(string authority, string resource, string scope)
+        {
+            var authContext = new AuthenticationContext(authority);
+            var clientCred = new ClientCredential(_clientId, _clientSecret);
+            var result = await authContext.AcquireTokenAsync(resource, clientCred);
+
+            if (result == null)
+                throw new InvalidOperationException("Failed to obtain the github token");
+
+            return result.AccessToken;
         }
     }
 }

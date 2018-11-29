@@ -11,6 +11,8 @@
     <PackageReference Include="log4net" Version="$(log4netVersion)" />
     <PackageReference Include="Microsoft.Azure.DocumentDB" Version="$(MicrosoftAzureDocumentDBVersion)" />
     <PackageReference Include="Microsoft.Azure.CosmosDB.Table" Version="$(MicrosoftAzureCosmosDBTableVersion)" />
+    <PackageReference Include="Microsoft.Azure.KeyVault" Version="$(MicrosoftAzureKeyVaultVersion)" />
+    <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="$(MicrosoftIdentityModelClientsActiveDirectoryVersion)" />
     <PackageReference Include="Octokit" Version="$(OctokitVersion)" />
   </ItemGroup>
 </Project>
