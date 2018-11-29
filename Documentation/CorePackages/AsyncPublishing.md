@@ -19,10 +19,10 @@ The two approaches above are roughly equivalent, with more tracability and integ
 - **Build intention must be known prior to build** - Because most outputs are being published publicly by default during the build, repo owners are essentially declaring the intent of a build at the time of the build. Every build is a public dev build. This is fundamentally wrong, and inconsistent with how we ship software.
 
 ## Goals
-The improved publishing story has the following goals
+The improved publishing story has the following goals:
 - **Publishing is largely lock free** - Build completion should not be blocked on other builds' actions.
 - **Publishing is fast** - Reduce much of the publishing time in builds by moving expensive steps elsewhere. For example, core-setup's publishing steps to myget and the dotnet-core blob feed take about 40 minutes, about as long as the rest of the build.
-- **Outputs are isolated** - Build outputs should not initially mix with other build outputs.
+- **Outputs are isolated** - Build outputs should not initially mix with outputs of other builds.
 - **Outputs don't always need to be public** - For security, stabilized, or other internal builds, final publishing should happen to internal locations, rather than public locations.
 - **Publishing steps can vary based on build intent (assigned channel)** - .NET Core 3 models build intent by assigned channel. Depending on what channel a build is assigned to, publishing steps can vary. Publishing happens when build intent is declared (channel assignment).
 - **All build outputs are private by default**
