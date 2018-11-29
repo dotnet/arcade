@@ -81,7 +81,7 @@ In the second phase, we will move the rest of existing publishing (blobs and sym
     - Remove PublishSymbols call from publish.proj
     - Alter PushToBlobFeed to do appropriate things when pushing flat files. Flat files should go to the intermediate storage first, then to final locations (categories of output locations are noted in the manifest, actual output locations are defined by the release pipeline).
 
-### Phase 3 - Introduce additional piplines for internal and stable releases
+### Phase 3 - Introduce additional pipelines for internal and stable releases
 In the third phase, we will introduce additional release pipelines for other scenarios:
 - Internal only - Push to common, authenticated Azure DevOps feed rather than regular dotnet-core feed. Output blob storage should only be a private common location.
 - Support for stable only (may be internal) - Push to predictable locations that can be deleted and recreated as necessary. The analog to this today would be stabilized ProdCon v1 blob feeds, which are based on a "product build id". The feed can be deleted and recreated so that packages with identical versions can be re-uploaded. Whether or not a build is stable can be noted by build tags, which can be set within the build based on parameters using Azure DevOps logging commands (https://github.com/Microsoft/azure-pipelines-tasks/blob/master/docs/authoring/commands.md).
