@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
             catch (Exception)
             {
-                Log.LogError($"VSTS returned unexpected response: {responseContent}");
+                Log.LogError($"Request to {req.RequestUri} returned unexpected response: {responseContent}");
             }
 
             return null;
