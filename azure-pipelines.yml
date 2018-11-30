@@ -16,6 +16,28 @@ jobs:
     enableTelemetry: true
     helixRepo: dotnet/arcade
     jobs:
+    - job: Validation
+      pool:
+        # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
+        # Will eventually change this to two BYOC pools.
+        ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+          name: NetCorePublic-Int-Pool
+          queue: Windows.10.Amd64.Open
+        ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+          name: dotnet-internal-temp
+      variables:
+      # Only enable publishing in non-public, non PR scenarios.
+      - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+        - group: Publish-Build-Assets
+        - name: _ValidationArgs
+          value: -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -barToken $(MaestroAccessToken)
+      steps:
+      - checkout: self
+        clean: true
+      # Use utility script to run script command dependent on agent OS.
+      - script: eng\ValidateSdk.cmd
+          $(_ValidationArgs)
+        displayName: Validate SDK
     - job: Windows_NT
       pool:
         # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
@@ -33,27 +55,18 @@ jobs:
         - group: Publish-Build-Assets
         - name: _PublishBlobFeedUrl
           value: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
-        - name: _SignArgs
+        - name: _InternalBuildArgs
           value: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
-        - name: _PublishArgs
-          value: /p:DotNetPublishBlobFeedKey="$(dotnetfeed-storage-access-key-1)"
+            /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
             /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
             /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
             /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
             /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
-        - name: _OfficialBuildIdArgs
-          value: /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-        - name: _SelfBuildOptions
-          value: -updatesdk -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -barToken $(MaestroAccessToken)
+            /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+            -updatesdk -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -barToken $(MaestroAccessToken)
       # else
       - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-        - name: _PublishArgs
-          value: ''
-        - name: _OfficialBuildIdArgs
-          value: ''
-        - name: _SignArgs
-          value: ''
-        - name: _SelfBuildOptions
+        - name: _InternalBuildArgs
           value: ''
       strategy:
         matrix:
@@ -77,13 +90,10 @@ jobs:
       - checkout: self
         clean: true
       # Use utility script to run script command dependent on agent OS.
-      - script: eng\cibuild.cmd
+      - script: eng\common\cibuild.cmd
           -configuration $(_BuildConfig) 
           -prepareMachine
-          $(_SelfBuildOptions)
-          $(_PublishArgs)
-          $(_SignArgs)
-          $(_OfficialBuildIdArgs)
+          $(_InternalBuildArgs)
         displayName: Windows Build / Publish
 
     - job: Linux
