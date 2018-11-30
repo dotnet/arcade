@@ -12,7 +12,9 @@ namespace Microsoft.DotNet.GitSync
         public List<RepositoryInfo> Repos{ get; set; }
         public string RepositoryBasePath { get; set; }
         public string UserName { get; set; }
-        public string CredentialTarget { get; set; }
+        public string ClientId { get; set; }
+        public string ClientSecret { get; set; }
+        public string SecretUri { get; set; }
         public string UpstreamOwner { get; set; }
         [JsonIgnore]
         public string Password { get; set; }

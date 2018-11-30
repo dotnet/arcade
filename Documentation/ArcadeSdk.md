@@ -91,7 +91,6 @@ eng
     cibuild.sh
     ...
   Versions.props
-  FixedVersions.props (optional)
   Tools.props (optional)
   AfterSolutionBuild.targets (optional)
   AfterSigning.targets (optional)
@@ -152,11 +151,6 @@ The toolset also defines default versions for various tools and dependencies, su
 
 See [DefaultVersions](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/DefaultVersions.props) for a list of *UsingTool* properties and default versions.
 
-#### /eng/FixedVersions.props (Orchestrated Build)
-
-Versions of dependencies specified in Versions.props may be overriden by Orchestrated Build.
-FixedVersions.props specifies versions that should not flow from Orchestrated Build.
-
 #### /eng/Tools.props (optional)
 
 Specify package references to additional tools that are needed for the build.
@@ -187,17 +181,28 @@ For example,
 }
 ```
 
-Include `vswhere` version under `tools` if the repository should be built via desktop `msbuild` instead of dotnet cli:
+Include `vs` entry under `tools` if the repository should be built via `msbuild` from Visual Studio installation instead of dotnet cli:
 
 ```json
 {
   "tools": {
-    "vswhere": "2.2.7"    
+    "vs": {
+      "version": "15.9"
+    }
   }
 }
 ```
 
-`/nuget.config` file is present and specifies the MyGet feed to retrieve Arcade SDK from like so:
+Optionally, a list of Visual Studio [workload component ids](https://docs.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-enterprise) may be specified under `vs`:
+
+```json
+"vs": {
+  "version": "15.9",
+  "components": ["Microsoft.VisualStudio.Component.VSSDK"]
+}
+```
+
+`/NuGet.config` file is present and specifies the MyGet feed to retrieve Arcade SDK from like so:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -207,10 +212,13 @@ Include `vswhere` version under `tools` if the repository should be built via de
     <clear />
     <add key="dotnet-core" value="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" />
   </packageSources>
+  <disabledPackageSources>
+    <clear />
+  </disabledPackageSources>
 </configuration>
 ```
 
-> An improvement in SKD resolver is proposed to be able to specify the feed in `global.json` file to avoid the need for extra configuration in `nuget.config`. See https://github.com/Microsoft/msbuild/issues/2982.
+> An improvement in SKD resolver is proposed to be able to specify the feed in `global.json` file to avoid the need for extra configuration in `NuGet.config`. See https://github.com/Microsoft/msbuild/issues/2982.
 
 #### /src/Directory.Build.props
 
