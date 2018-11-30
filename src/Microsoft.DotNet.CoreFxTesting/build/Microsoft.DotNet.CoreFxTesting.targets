@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <PropertyGroup>
+    <TargetOS Condition="'$(TargetOS)' == ''">$(DefaultOSGroup)</TargetOS>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IncludeDefaultTestReferences Condition="'$(IncludeDefaultTestReferences)' == '' AND '$(IsTestProject)' == 'true'">true</IncludeDefaultTestReferences>
+  </PropertyGroup>
+
+  <!-- 
+    Runtime settings support.
+    Copies the app.config / runtimeSettings.json file to the OutDir.
+  -->
+
+  <PropertyGroup>
+    <TestRuntimeConfigName Condition="'$(BuildingNETCoreAppVertical)' == 'true'">netcoreapp.runtimeconfig.json</TestRuntimeConfigName>
+    <TestRuntimeConfigName Condition="'$(BuildingNETFxVertical)' == 'true'">netfx.exe.config</TestRuntimeConfigName>
+    <TestRuntimeConfigExtension Condition="'$(BuildingNETCoreAppVertical)' == 'true'">.runtimeconfig.json</TestRuntimeConfigExtension>
+    <TestRuntimeConfigExtension Condition="'$(BuildingNETFxVertical)' == 'true'">.exe.config</TestRuntimeConfigExtension>
+    <TestRuntimeConfigPath Condition="'$(TestRuntimeConfigPath)' == ''">$(TestAssetsDir)$(TestRuntimeConfigName)</TestRuntimeConfigPath>
+
+    <!-- By default copy the test runtime config file for test projects and executable test support projects. -->
+    <EnableTestRuntimeConfig Condition="'$(EnableTestRuntimeConfig)' == '' AND '$(IsTestProject)' == 'true' AND ('$(IsTestSupportProject)' != 'true' OR '$(OutputType.ToLower())' == 'exe')">true</EnableTestRuntimeConfig>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(TestRuntimeConfigPath)"
+          Link="$(TargetName)$(TestRuntimeConfigExtension)"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false"
+          Condition="'$(EnableTestRuntimeConfig)' == 'true' AND
+                    ('$(BuildingNETCoreAppVertical)' == 'true' OR '$(BuildingNETFxVertical)' == 'true')" />
+  </ItemGroup>
+
+  <!--
+    Auto references support.
+    Used by test projects and companions.
+  -->
+
+  <Target Name="AddDefaultTestReferences"
+          Condition="'$(IncludeDefaultReferences)' == 'true' AND '$(IncludeDefaultTestReferences)' == 'true'"
+          BeforeTargets="SetupDefaultReferences">
+
+    <ItemGroup>
+      <!-- Harmless, but causes PRI targets to run -->
+      <DefaultReferenceExclusions Include="System.Runtime.WindowsRuntime.UI.Xaml" />
+      <DefaultReferenceExclusions Include="@(ReferenceFromRuntime)"/>
+
+      <!-- Reference everything in the targeting pack directory -->
+      <DefaultReferenceDirs Include="$(RefPath)" />
+      <DefaultReferenceItems Include="%(DefaultReferenceDirs.Identity)/*.dll" />
+
+      <DefaultReference Include="%(DefaultReferenceItems.Filename)" Exclude="@(DefaultReferenceExclusions)" />
+    </ItemGroup>
+
+  </Target>
+
+  <!--
+    Outer build imports.
+  -->
+
+  <!-- UAP resource generation needed by both source and test projects. -->
+  <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Resources.uap.targets" />
+
+  <!-- Performance test data upload to Benchview. -->
+  <Import Condition="'$(EnableBenchviewTarget)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'performance', 'Benchview.targets'))" />
+
+  <!-- Full coverage report. -->
+  <Import Condition="'$(EnableFullCoverageReportTarget)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'coverage', 'CoverageReport.targets'))" />
+
+  <!--
+    Test project imports.
+  -->
+
+  <!-- Import the core testing infrastructure only for test projects. -->
+  <Import Condition="'$(IsTestProject)' == 'true' AND '$(IsTestSupportProject)' != 'true'"  Project="$(TestCoreDir)Core.targets" />
+
+</Project>

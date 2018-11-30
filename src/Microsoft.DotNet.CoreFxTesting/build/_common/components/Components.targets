@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <!--
+    LaunchSettings.json support.
+    Generates launchSettings.json files during compilation or on demand.
+
+    Inputs:
+      - EnableLaunchSettings: Intended to be passed in as a global property or being set.
+  -->
+  <Import Condition="'$(EnableLaunchSettings)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'launchSettings', 'LaunchSettings.targets'))" />
+
+  <!--
+    Visual Studio Test Framework (vstest) support.
+    References the Microsoft.Net.Test.Sdk and the VS test runner.
+
+    Inputs:
+      - EnableVSTestReferences: Intended to be passed in as a global property or being set.
+  -->
+  <Import Condition="'$(EnableVSTestReferences)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'vstest', 'VSTest.targets'))" />
+
+  <!--
+    Unit/Functional/Integration test support.
+    Supported runners: xunit.
+  -->
+  <Import Condition="'$(IsUnitTestProject)' == 'true' OR '$(IsIntegrationTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.targets'))" />
+
+  <!--
+    Performance test support.
+    Supported runners: xunit-performance.
+  -->
+  <Import Condition="'$(IsPerformanceTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'performance', 'Performance.targets'))" />
+
+  <!--
+    Code Coverage support.
+    Supported runners: OpenCover.
+
+    Inputs:
+      - Coverage: Expected to be passed in as a global property.
+  -->
+  <Import Condition="'$(_CoverageSupported)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'coverage', 'Coverage.targets'))" />
+
+</Project>
