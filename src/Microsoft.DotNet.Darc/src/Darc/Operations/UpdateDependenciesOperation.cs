@@ -41,9 +41,9 @@ namespace Microsoft.DotNet.Darc.Operations
                 // TODO: PAT only used for pulling the arcade eng/common dir,
                 // so hardcoded to GitHub PAT right now. Must be more generic in the future.
                 darcSettings.GitType = GitRepoType.GitHub;
-                LocalSettings localSettings = LocalSettings.LoadSettingsFile();
+                LocalSettings localSettings = LocalSettings.LoadSettingsFile(_options);
 
-                darcSettings.PersonalAccessToken = !string.IsNullOrEmpty(localSettings.GitHubToken) ?
+                darcSettings.PersonalAccessToken = localSettings != null && !string.IsNullOrEmpty(localSettings.GitHubToken) ?
                                                     localSettings.GitHubToken :
                                                     _options.GitHubPat;
 
@@ -191,7 +191,6 @@ namespace Microsoft.DotNet.Darc.Operations
                 // Now call the local updater to run the update
                 await local.UpdateDependenciesAsync(dependenciesToUpdate, remote);
 
-                
                 Console.WriteLine(finalMessage);
 
                 return Constants.SuccessCode;
