@@ -101,6 +101,12 @@ function InitializeDotNetCli {
     fi
   fi
 
+  if [[ $ci == true ]]; then
+    echo "##vso[task.prependpath]$dotnet_root"
+    echo "##vso[task.setvariable variable=DOTNET_MULTILEVEL_LOOKUP]0"
+    echo "##vso[task.setvariable variable=DOTNET_SKIP_FIRST_TIME_EXPERIENCE]1"
+  fi
+
   # return value
   _InitializeDotNetCli="$dotnet_root"
 }
