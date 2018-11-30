@@ -4,6 +4,7 @@ Param(
   [string] $projects = "",
   [string] $verbosity = "minimal",
   [string] $msbuildEngine = $null,
+  [string] $logFileName = "Build.binlog"
   [bool] $warnaserror = $true,
   [bool] $nodereuse = $true,
   [switch] $execute,
@@ -71,7 +72,7 @@ try {
 
   InitializeTools
 
-  $BuildLog = Join-Path $LogDir "Build.binlog"
+  $BuildLog = Join-Path $LogDir $logFileName
   
   MSBuild $ToolsetBuildProj `
     /bl:$BuildLog `

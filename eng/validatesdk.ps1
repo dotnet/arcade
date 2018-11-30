@@ -2,7 +2,8 @@
 Param(
   [string] $BarToken,
   [string] $GitHubPat,
-  [string] $PackageSource
+  [string] $PackageSource,
+  [string] $Configuration = "Debug"
 )
 
 $ErrorActionPreference = "Stop"
@@ -22,7 +23,7 @@ try {
   Write-Host "STEP 1: Build and create local packages"
   
   Push-Location $PSScriptRoot
-  . .\common\build.ps1 -restore -build -pack
+  . .\common\build.ps1 -restore -build -pack -configuration $Configuration -logFileName "Build_Step1.binlog"
   Check-ExitCode $lastExitCode
   
   Write-Host "STEP 2: Build using the local packages"
@@ -51,7 +52,7 @@ try {
   
   Write-Host "Building with updated dependencies"
 
-  . .\common\build.ps1 -configuration $Configuration -restore -build -pack -test -sign /p:RestoreSources=$PackageSource
+  . .\common\build.ps1 -restore -build -pack -test -sign -configuration $Configuration -logFileName "Build_Step2.binlog" /p:RestoreSources=$PackageSource
   Check-ExitCode $lastExitCode
 }
 catch {
