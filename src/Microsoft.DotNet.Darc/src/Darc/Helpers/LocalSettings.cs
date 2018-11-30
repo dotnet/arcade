@@ -39,20 +39,20 @@ namespace Microsoft.DotNet.Darc.Helpers
             return EncodedFile.Create(Constants.SettingsFileName, settings, logger);
         }
 
-        public static LocalSettings LoadSettingsFile(CommandLineOptions options = null)
+        public static LocalSettings LoadSettingsFile()
+        {
+            string settings = EncodedFile.Read(Constants.SettingsFileName);
+            return JsonConvert.DeserializeObject<LocalSettings>(settings);
+        }
+
+        public static LocalSettings LoadSettingsFile(CommandLineOptions options)
         {
             try
             {
-                string settings = EncodedFile.Read(Constants.SettingsFileName);
-                return JsonConvert.DeserializeObject<LocalSettings>(settings);
+                LoadSettingsFile();
             }
             catch (Exception exc) when (exc is DirectoryNotFoundException || exc is FileNotFoundException)
             {
-                if (options == null)
-                {
-                    throw;
-                }
-
                 if (string.IsNullOrEmpty(options.AzureDevOpsPat) &&
                     string.IsNullOrEmpty(options.GitHubPat) &&
                     string.IsNullOrEmpty(options.BuildAssetRegistryPassword))
