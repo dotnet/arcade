@@ -396,10 +396,13 @@ By default Portable and Embedded PDBs produced by _shipping_ projects are conver
 `true` (default) if the PDBs produced by the project should be converted to Windows PDB and published to Microsoft symbol servers.
 Set to `false` to override the default (uncommon).
 
+#### `ApplyPartialNgenOptimization` (bool)
+
+Set to `true` in a shipping project to require IBC optimization data to be available for the project and embed them into the binary during official build. 
 
 #### `SkipTests` (bool)
 
-Set to `true` in project to skip running tests.
+Set to `true` in a test project to skip running tests.
 
 #### `TestArchitectures` (list of strings) [deprecated]
 
