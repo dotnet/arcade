@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk" DefaultTargets="Test">
   <PropertyGroup>
-    <HelixSource>pr/dotnet/arcade/master</HelixSource>
-    <HelixType>test/product</HelixType>
+    <HelixSource>pr/dotnet/arcade/$(BUILD_SOURCEBRANCH)/</HelixSource>
+    <HelixType>test/product/</HelixType>
     <HelixBuild>$(BUILD_BUILDNUMBER)</HelixBuild>
     <HelixBuild Condition="'$(HelixBuild)' == ''">12345.01</HelixBuild>
 
