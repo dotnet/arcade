@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.GitSync
             {
                 try
                 {
-                    Step(cts.Token);
+                    await StepAsync(cts.Token);
                     s_logger.Info("Waiting");
                     Task.Delay(new TimeSpan(0, 5, 0), cts.Token).Wait();
                 }
@@ -99,9 +99,9 @@ namespace Microsoft.DotNet.GitSync
             await new Program(args).RunAsync();
         }
 
-        private void Step(CancellationToken token)
+        private async Task StepAsync(CancellationToken token)
         {
-            Task.Run(() => ProcessAsync(token)).GetAwaiter().GetResult();
+            await ProcessAsync(token);
         }
 
         private async Task ProcessAsync(CancellationToken token)
