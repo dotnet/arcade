@@ -11,17 +11,6 @@
     <RunCommand>$(CoverageExecutablePath)</RunCommand>
   </PropertyGroup>
 
-  <!-- Code coverage report. -->
-  <PropertyGroup>
-    <CoverageReportExecutablePath Condition="'$(CoverageReportExecutablePath)' == ''">$(GlobalToolsDir)reportgenerator</CoverageReportExecutablePath>
-    <CoverageReportResultsPath>$(CoverageReportDir)\index.htm</CoverageReportResultsPath>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PostRunScriptCommands Include="$(CoverageReportExecutablePath) &quot;-reports:$(CoverageOutputPath)&quot; &quot;-targetdir:$(CoverageReportDir)&quot; &quot;-reporttypes:$(CoverageReportTypes)&quot; &quot;-verbosity:$(CoverageReportVerbosity)&quot;" />
-    <PostRunScriptCommands Condition="'$(PopCoverageReport)' == 'true' AND '$(TargetOS)' == 'Windows_NT'" Include="start $(CoverageReportResultsPath)" />
-  </ItemGroup>
-
   <Target Name="SetupCoverageFilter">
 
     <PropertyGroup>
@@ -61,5 +50,7 @@
     </PropertyGroup>
 
   </Target>
+
+  <Import Project="$(MSBuildThisFileDirectory)CoverageReport.targets" />
 
 </Project>

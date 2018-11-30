@@ -23,8 +23,7 @@
     <TestRuntimeConfigPath Condition="'$(TestRuntimeConfigPath)' == ''">$(TestAssetsDir)$(TestRuntimeConfigName)</TestRuntimeConfigPath>
 
     <!-- By default copy the test runtime config file for test projects and executable test support projects. -->
-    <EnableTestRuntimeConfig Condition="'$(EnableTestRuntimeConfig)' == '' AND '$(IsTestProject)' == 'true' AND '$(IsTestSupportProject)' != 'true'">true</EnableTestRuntimeConfig>
-    <EnableTestRuntimeConfig Condition="'$(EnableTestRuntimeConfig)' == '' AND '$(IsTestSupportProject)' == 'true' AND '$(OutputType.ToLower())' == 'exe'">true</EnableTestRuntimeConfig>
+    <EnableTestRuntimeConfig Condition="'$(EnableTestRuntimeConfig)' == '' AND '$(IsTestProject)' == 'true' AND ('$(IsTestSupportProject)' != 'true' OR '$(OutputType.ToLower())' == 'exe')">true</EnableTestRuntimeConfig>
   </PropertyGroup>
 
   <ItemGroup>
@@ -68,6 +67,9 @@
 
   <!-- Performance test data upload to Benchview. -->
   <Import Condition="'$(EnableBenchviewTarget)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'performance', 'Benchview.targets'))" />
+
+  <!-- Full coverage report. -->
+  <Import Condition="'$(EnableFullCoverageReportTarget)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'coverage', 'CoverageReport.targets'))" />
 
   <!--
     Test project imports.

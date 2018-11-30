@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Build.Tasks
 
             if (RunCommands.Length == 0)
             {
-                throw new InvalidOperationException("Please provide at least one test command To execute via the RunCommands property.");
+                throw new InvalidOperationException("Please provide at least one test command to execute via the RunCommands property.");
             }
 
             if (!File.Exists(TemplatePath))
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Build.Tasks
                     WriteRunScript(templateContent, extension);
                     break;
                 default:
-                    throw new System.NotSupportedException($"Generating runner scripts with extension '{extension}' is not supported.");
+                    throw new NotSupportedException($"Generating runner scripts with extension '{extension}' is not supported.");
             }
 
             return true;
@@ -59,8 +59,8 @@ namespace Microsoft.DotNet.Build.Tasks
 
         private void WriteRunScript(string templateContent, string extension)
         {
-            bool unixLineEnding = extension == ".sh";
-            string lineFeed = unixLineEnding ? "\n" : "\r\n";
+            bool isUnix = extension == ".sh";
+            string lineFeed = isUnix ? "\n" : "\r\n";
 
             var runCommandsBuilder = new StringBuilder();
             foreach (string runCommand in RunCommands)
@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.Build.Tasks
                                                            .Replace("\r","")
                                                            .Replace("\n"," ");
 
-                    if (unixLineEnding)
+                    if (isUnix)
                     {
                         sanitizedRunCommand = $"\"{sanitizedRunCommand}\"";
                     }
@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Build.Tasks
             }
             templateContent = templateContent.Replace("[[RunCommandsEcho]]", testRunEchoesText);
 
-            if (unixLineEnding)
+            if (isUnix)
             {
                 // Just in case any Windows EOLs have made it in by here, clean any up.
                 templateContent = templateContent.Replace("\r\n", "\n");
