@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.GitSync
                     return result.AccessToken;
                 }));
 
-            SecretBundle secretBundle = await kvc.GetSecretAsync(config.SecretUri); //.Result.Value;
+            SecretBundle secretBundle = await kvc.GetSecretAsync(config.SecretUri);
             config.Password = secretBundle.Value;
 
             return config;
