@@ -46,14 +46,14 @@
 
     <ItemGroup>
       <!-- Harmless, but causes PRI targets to run -->
-      <TargetingPackExclusions Include="System.Runtime.WindowsRuntime.UI.Xaml" />
-      
-      <TargetingPackExclusions Include="@(ReferenceFromRuntime)"/>
+      <DefaultReferenceExclusions Include="System.Runtime.WindowsRuntime.UI.Xaml" />
+      <DefaultReferenceExclusions Include="@(ReferenceFromRuntime)"/>
 
       <!-- Reference everything in the targeting pack directory -->
-      <TargetingPackItems Include="%(TargetingPackDirs.Identity)/*.dll" />
+      <DefaultReferenceDirs Include="$(RefPath)" />
+      <DefaultReferenceItems Include="%(DefaultReferenceDirs.Identity)/*.dll" />
 
-      <DefaultReference Include="%(TargetingPackItems.Filename)" Exclude="@(TargetingPackExclusions)" />
+      <DefaultReference Include="%(DefaultReferenceItems.Filename)" Exclude="@(DefaultReferenceExclusions)" />
     </ItemGroup>
 
   </Target>

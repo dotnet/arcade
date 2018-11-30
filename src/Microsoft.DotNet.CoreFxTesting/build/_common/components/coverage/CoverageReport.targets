@@ -17,10 +17,10 @@
   </ItemGroup>
 
   <Target Name="GenerateCoverageReport"
-         AfterTargets="TestAllProjects"
-         Inputs="$(CoverageReportInputPath)"
-         Outputs="$(CoverageReportResultsPath)"
-         Condition="'$(GenerateFullCoverageReport)' == 'true'">
+          AfterTargets="TestAllProjects"
+          Inputs="$(CoverageReportInputPath)"
+          Outputs="$(CoverageReportResultsPath)"
+          Condition="'$(GenerateFullCoverageReport)' == 'true'">
 
     <Exec Command="$(CoverageReportCommandLine)"
           ContinueOnError="ErrorAndContinue" />

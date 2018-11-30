@@ -25,16 +25,16 @@ namespace Microsoft.DotNet.Build.Tasks
 
         public override bool Execute()
         {
-            Log.LogMessage(OutputEchoes.ToString());
-
             if (RunCommands.Length == 0)
             {
-                throw new InvalidOperationException("Please provide at least one test command to execute via the RunCommands property.");
+                Log.LogError("Please provide at least one test command to execute via the RunCommands property.");
+                return false;
             }
 
             if (!File.Exists(TemplatePath))
             {
-                throw new FileNotFoundException($"Runner script template {TemplatePath} was not found.");
+                Log.LogError($"Runner script template {TemplatePath} was not found.");
+                return false;
             }
 
             string templateContent = File.ReadAllText(TemplatePath);
@@ -51,7 +51,8 @@ namespace Microsoft.DotNet.Build.Tasks
                     WriteRunScript(templateContent, extension);
                     break;
                 default:
-                    throw new NotSupportedException($"Generating runner scripts with extension '{extension}' is not supported.");
+                    Log.LogError($"Generating runner scripts with extension '{extension}' is not supported.");
+                    return false;
             }
 
             return true;
