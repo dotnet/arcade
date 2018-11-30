@@ -18,13 +18,15 @@ namespace Microsoft.DotNet.Darc.Helpers
     /// </summary>
     internal class LocalSettings
     {
+        private static string _defaultBuildAssetRegistryBaseUri = "https://maestro-prod.westus2.cloudapp.azure.com/";
+
         public string BuildAssetRegistryPassword { get; set; }
 
         public string GitHubToken { get; set; }
 
         public string AzureDevOpsToken { get; set; }
 
-        public string BuildAssetRegistryBaseUri { get; set; } = "https://maestro-prod.westus2.cloudapp.azure.com/";
+        public string BuildAssetRegistryBaseUri { get; set; } = _defaultBuildAssetRegistryBaseUri;
 
         /// <summary>
         /// Saves the settings in the settings files
@@ -37,10 +39,32 @@ namespace Microsoft.DotNet.Darc.Helpers
             return EncodedFile.Create(Constants.SettingsFileName, settings, logger);
         }
 
-        public static LocalSettings LoadSettingsFile()
+        public static LocalSettings LoadSettingsFile(CommandLineOptions options = null)
         {
-            string settings = EncodedFile.Read(Constants.SettingsFileName);
-            return JsonConvert.DeserializeObject<LocalSettings>(settings);
+            try
+            {
+                string settings = EncodedFile.Read(Constants.SettingsFileName);
+                return JsonConvert.DeserializeObject<LocalSettings>(settings);
+            }
+            catch (Exception exc) when (exc is DirectoryNotFoundException || exc is FileNotFoundException)
+            {
+                if (options == null)
+                {
+                    throw;
+                }
+
+                if (string.IsNullOrEmpty(options.AzureDevOpsPat) &&
+                    string.IsNullOrEmpty(options.GitHubPat) &&
+                    string.IsNullOrEmpty(options.BuildAssetRegistryPassword))
+                {
+                    throw new DarcException("Please make sure to run darc authenticate and set" +
+                        " 'bar_password' and 'github_token' or 'azure_devops_token' or append" +
+                        "'-p <bar_password>' [--github-pat <github_token> | " +
+                        "--azdev-pat <azure_devops_token>] to your command");
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -58,25 +82,18 @@ namespace Microsoft.DotNet.Darc.Helpers
 
             try
             {
-                try
-                {
-                    localSettings = LoadSettingsFile();
-                }
-                catch (Exception exc) when (exc is DirectoryNotFoundException || exc is FileNotFoundException)
-                {
-                    if (string.IsNullOrEmpty(options.AzureDevOpsPat) &&
-                        string.IsNullOrEmpty(options.GitHubPat) &&
-                        string.IsNullOrEmpty(options.BuildAssetRegistryPassword))
-                    {
-                        throw new DarcException("Please make sure to run darc authenticate and set" +
-                            " 'bar_password' and 'github_token' or 'azure_devops_token' or append" +
-                            "'-p <bar_password>' [--github-pat <github_token> | " +
-                            "--azdev-pat <azure_devops_token>] to your command");
-                    }
-                }
+                localSettings = LoadSettingsFile(options);
 
-                darcSettings.BuildAssetRegistryBaseUri = localSettings.BuildAssetRegistryBaseUri;
-                darcSettings.BuildAssetRegistryPassword = localSettings.BuildAssetRegistryPassword;
+                if (localSettings != null)
+                {
+                    darcSettings.BuildAssetRegistryBaseUri = localSettings.BuildAssetRegistryBaseUri;
+                    darcSettings.BuildAssetRegistryPassword = localSettings.BuildAssetRegistryPassword;
+                }
+                else
+                {
+                    darcSettings.BuildAssetRegistryBaseUri = _defaultBuildAssetRegistryBaseUri;
+                    darcSettings.BuildAssetRegistryPassword = options.BuildAssetRegistryPassword;
+                }
 
                 if (!string.IsNullOrEmpty(repoUri))
                 {
