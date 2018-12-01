@@ -118,14 +118,14 @@ namespace Microsoft.DotNet.SignTool
             return process.ExitCode == 0;
         }
 
-        public override bool VerifySignedPowershellFile(string filePath)
+        public override bool VerifySignedPowerShellFile(string filePath)
         {
             return File.ReadLines(filePath).Contains("# SIG # Begin Signature Block");
         }
 
         public override bool VerifySignedNugetFileMarker(string filePath)
         {
-            return filePath.EndsWith(".signature.p7s", StringComparison.OrdinalIgnoreCase);
+            return Path.GetFileName(filePath).Equals(".signature.p7s", StringComparison.OrdinalIgnoreCase);
         }
 
         public override bool VerifySignedVSIXFileMarker(string filePath)

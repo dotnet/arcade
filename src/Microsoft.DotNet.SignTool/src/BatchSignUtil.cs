@@ -279,11 +279,9 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
             }
-            else if (Path.GetExtension(file.FullPath).Equals(".ps1", StringComparison.OrdinalIgnoreCase)
-                || Path.GetExtension(file.FullPath).Equals(".psd1", StringComparison.OrdinalIgnoreCase)
-                || Path.GetExtension(file.FullPath).Equals(".psm1", StringComparison.OrdinalIgnoreCase))
+            else if (file.IsPowerShellScript())
             {
-                if (!_signTool.VerifySignedPowershellFile(file.FullPath))
+                if (!_signTool.VerifySignedPowerShellFile(file.FullPath))
                 {
                     _log.LogError($"Powershell file {file.FullPath} does not have a signature mark.");
                 }

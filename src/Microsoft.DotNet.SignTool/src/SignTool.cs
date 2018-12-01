@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.SignTool
         public abstract void RemovePublicSign(string assemblyPath);
 
         public abstract bool VerifySignedPEFile(Stream stream);
-        public abstract bool VerifySignedPowershellFile(string filePath);
+        public abstract bool VerifySignedPowerShellFile(string filePath);
         public abstract bool VerifySignedNugetFileMarker(string filePath);
         public abstract bool VerifySignedVSIXFileMarker(string filePath);
 

@@ -35,6 +35,11 @@ namespace Microsoft.DotNet.SignTool
         internal static bool IsZip(string path)
             => Path.GetExtension(path).Equals(".zip", StringComparison.OrdinalIgnoreCase);
 
+        internal static bool IsPowerShellScript(string path)
+            => Path.GetExtension(path).Equals(".ps1", StringComparison.OrdinalIgnoreCase)
+            || Path.GetExtension(path).Equals(".psd1", StringComparison.OrdinalIgnoreCase)
+            || Path.GetExtension(path).Equals(".psm1", StringComparison.OrdinalIgnoreCase);
+
         internal static bool IsPackage(string path)
             => IsVsix(path) || IsNupkg(path);
 
@@ -54,6 +59,8 @@ namespace Microsoft.DotNet.SignTool
         internal bool IsZipContainer() => IsZipContainer(FileName);
 
         internal bool IsPackage() => IsPackage(FileName);
+
+        internal bool IsPowerShellScript() => IsPowerShellScript(FileName);
 
         internal FileSignInfo(string fullPath, ImmutableArray<byte> contentHash, SignInfo signInfo, string targetFramework = null)
         {

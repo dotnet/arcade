@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        public override bool VerifySignedPowershellFile(string filePath)
+        public override bool VerifySignedPowerShellFile(string filePath)
         {
             return true;
         }
