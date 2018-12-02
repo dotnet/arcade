@@ -42,7 +42,6 @@ while [[ -h "$source" ]]; do
 done
 scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
-help=false
 restore=false
 build=false
 rebuild=false
