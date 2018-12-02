@@ -5,12 +5,18 @@ set -u
 
 ci=${ci:-false}
 configuration=${configuration:-'Debug'}
-nodereuse=${nodereuse:-true}
+binary_log=${binary_log:-$ci}
 prepare_machine=${prepare_machine:-false}
 restore=${restore:-true}
 verbosity=${verbosity:-'minimal'}
 warnaserror=${warnaserror:-true}
 useInstalledDotNetCli=${useInstalledDotNetCli:-true}
+
+if [[ "$ci" == true ]]; then
+  nodereuse=${nodereuse:-false}
+else
+  nodereuse=${nodereuse:-true}
+fi
 
 repo_root="$scriptroot/../.."
 eng_root="$scriptroot/.."
@@ -20,8 +26,6 @@ log_dir="$artifacts_dir/log/$configuration"
 temp_dir="$artifacts_dir/tmp/$configuration"
 
 global_json_file="$repo_root/global.json"
-build_driver=""
-toolset_build_proj=""
 
 function ResolvePath {
   local path=$1
@@ -57,6 +61,10 @@ function ReadGlobalVersion {
 }
 
 function InitializeDotNetCli {
+  if [[ -n "${_InitializeDotNetCli:-}" ]]; then
+    return
+  fi
+
   local install=$1
 
   # Don't resolve runtime, shared framework, or SDK from other locations to ensure build determinism
@@ -64,6 +72,10 @@ function InitializeDotNetCli {
 
   # Disable first run since we want to control all package sources
   export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+
+  # LTTNG is the logging infrastructure used by Core CLR. Need this variable set
+  # so it doesn't output warnings to the console.
+  export LTTNG_HOME="$HOME"
 
   # Source Build uses DotNetCoreSdkDir variable
   if [[ -n "${DotNetCoreSdkDir:-}" ]]; then
@@ -143,7 +155,22 @@ function GetDotNetInstallScript {
   _GetDotNetInstallScript="$install_script"
 }
 
+function InitializeBuildTool {
+  if [[ -n "${_InitializeBuildTool:-}" ]]; then
+    return
+  fi
+  
+  InitializeDotNetCli $restore
+
+  # return value
+  _InitializeBuildTool="$_InitializeDotNetCli/dotnet"  
+}
+
 function InitializeToolset {
+  if [[ -n "${_InitializeToolset:-}" ]]; then
+    return
+  fi
+
   ReadGlobalVersion "Microsoft.DotNet.Arcade.Sdk"
 
   local toolset_version=$_ReadGlobalVersion
@@ -152,7 +179,8 @@ function InitializeToolset {
   if [[ -a "$toolset_location_file" ]]; then
     local path=`cat "$toolset_location_file"`
     if [[ -a "$path" ]]; then
-      toolset_build_proj="$path"
+      # return value
+      _InitializeToolset="$path"
       return
     fi
   fi
@@ -166,47 +194,17 @@ function InitializeToolset {
   local proj="$toolset_dir/restore.proj"
 
   echo '<Project Sdk="Microsoft.DotNet.Arcade.Sdk"/>' > "$proj"
+  MSBuild "$proj" /t:__WriteToolsetLocation /noconsolelogger /bl:"$toolset_restore_log" /p:__ToolsetLocationOutputFile="$toolset_location_file"
 
-  MSBuild "$proj" /t:__WriteToolsetLocation /clp:None /bl:"$toolset_restore_log" /p:__ToolsetLocationOutputFile="$toolset_location_file"
-  local lastexitcode=$?
-
-  if [[ $lastexitcode != 0 ]]; then
-    echo "Failed to restore toolset (exit code '$lastexitcode'). See log: $toolset_restore_log" >&2
-    ExitWithExitCode $lastexitcode
-  fi
-
-  toolset_build_proj=`cat "$toolset_location_file"`
+  local toolset_build_proj=`cat "$toolset_location_file"`
 
   if [[ ! -a "$toolset_build_proj" ]]; then
     echo "Invalid toolset path: $toolset_build_proj" >&2
     ExitWithExitCode 3
   fi
-}
 
-function InitializeCustomToolset {
-  local script="$eng_root/restore-toolset.sh"
-
-  if [[ -a "$script" ]]; then
-    . "$script"
-  fi
-}
-
-function ConfigureTools {
-  local script="$eng_root/configure-toolset.sh"
-
-  if [[ -a "$script" ]]; then
-    . "$script"
-  fi
-}
-
-function InitializeTools {
-  ConfigureTools
-
-  InitializeDotNetCli $restore
-  build_driver="$_InitializeDotNetCli/dotnet"
-
-  InitializeToolset
-  InitializeCustomToolset
+  # return value
+  _InitializeToolset="$toolset_build_proj"
 }
 
 function ExitWithExitCode {
@@ -224,14 +222,20 @@ function StopProcesses {
 }
 
 function MSBuild {
+  InitializeBuildTool
+
   local warnaserror_switch=""
   if [[ $warnaserror == true ]]; then
     warnaserror_switch="/warnaserror"
   fi
 
-  "$build_driver" msbuild /m /nologo /clp:Summary /v:$verbosity /nr:$nodereuse $warnaserror_switch "$@"
+  "$_InitializeBuildTool" msbuild /m /nologo /clp:Summary /v:$verbosity /nr:$nodereuse $warnaserror_switch /p:TreatWarningsAsErrors=$warnaserror "$@"
+  lastexitcode=$?
 
-  return $?
+  if [[ $lastexitcode != 0 ]]; then
+    echo "Build failed (exit code '$lastexitcode')." >&2
+    ExitWithExitCode $lastexitcode
+  fi
 }
 
 # HOME may not be defined in some scenarios, but it is required by NuGet

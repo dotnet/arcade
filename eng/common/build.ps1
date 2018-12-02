@@ -19,6 +19,7 @@ Param(
   [switch] $pack,
   [switch] $publish,
   [switch] $publishBuildAssets,
+  [switch][Alias('bl')]$binaryLog,
   [switch] $ci,
   [switch] $prepareMachine,
   [switch] $help,
@@ -31,6 +32,7 @@ function Print-Usage() {
     Write-Host "Common settings:"
     Write-Host "  -configuration <value>  Build configuration Debug, Release"
     Write-Host "  -verbosity <value>      Msbuild verbosity (q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic])"
+    Write-Host "  -binaryLog              Output binary log"
     Write-Host "  -help                   Print help and exit"
     Write-Host ""
 
@@ -64,17 +66,45 @@ if ($help -or (($properties -ne $null) -and ($properties.Contains("/help") -or $
   exit 0
 }
 
+function ConfigureToolset { 
+  # Include custom tools configuration
+  $script = Join-Path $EngRoot "configure-toolset.ps1"
+
+  if (Test-Path $script) {
+    . $script
+  }
+}
+
+function InitializeCustomToolset {
+  if (-not $restore) {
+    return
+  }
+
+  $script = Join-Path $EngRoot "restore-toolset.ps1"
+
+  if (Test-Path $script) {
+    . $script
+  }
+}
+
 try {
   if ($projects -eq "") {
     $projects = Join-Path $RepoRoot "*.sln"
   }
 
-  InitializeTools
+  if ($ci) {
+    $binaryLog = $true
+  }
 
-  $BuildLog = Join-Path $LogDir "Build.binlog"
+  ConfigureToolset
+  $toolsetBuildProj = InitializeToolset
+  InitializeCustomToolset
 
-  MSBuild $ToolsetBuildProj `
-    /bl:$BuildLog `
+  $buildLog = Join-Path $LogDir "Build.binlog"
+  $bl = if ($binaryLog) { "/bl:$buildLog" } else { "" }
+
+  MSBuild $toolsetBuildProj `
+    $bl `
     /p:Configuration=$configuration `
     /p:Projects=$projects `
     /p:RepoRoot=$RepoRoot `
@@ -92,13 +122,6 @@ try {
     /p:Execute=$execute `
     /p:ContinuousIntegrationBuild=$ci `
     @properties
-
-  if ($lastExitCode -ne 0) {
-    Write-Host "Build Failed (exit code '$lastExitCode'). See log: $BuildLog" -ForegroundColor Red
-    ExitWithExitCode $lastExitCode
-  }
-
-  ExitWithExitCode $lastExitCode
 }
 catch {
   Write-Host $_
@@ -106,3 +129,5 @@ catch {
   Write-Host $_.ScriptStackTrace
   ExitWithExitCode 1
 }
+
+ExitWithExitCode 0
