@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <!-- Runs during traversal when BuildAllConfigurations is set to expand each project
-       to a seperate instance for each of its BuildConfigurations -->
+       to a separate instance for each of its BuildConfigurations -->
   <Target Name="ExpandAllBuildConfigurations"
           Condition="'$(BuildAllConfigurations)' == 'true'">
     <MSBuild Targets="GetBuildConfigurations"
@@ -20,7 +20,7 @@
     </MSBuild>
 
     <ItemGroup>
-      <!-- assign configuration as a seperate step to prevent batching during the transform which can reorder the list.
+      <!-- assign configuration as a separate step to prevent batching during the transform which can reorder the list.
            order or projects matters here since this applies to traversal projects which build projects serially. -->
       <_projectBuildConfigurations>
         <AdditionalProperties>Configuration=%(Identity);%(_projectBuildConfigurations.AdditionalProperties)</AdditionalProperties>
@@ -49,7 +49,7 @@
     </MSBuild>
 
     <ItemGroup>
-      <!-- assign configuration as a seperate step to prevent batching during the transform which can reorder the list.
+      <!-- assign configuration as a separate step to prevent batching during the transform which can reorder the list.
            order or projects matters here since this applies to traversal projects which build projects serially. -->
       <_NonPkgProjProjectReferenceBuildConfigurations>
         <AdditionalProperties>Configuration=%(Identity);%(_NonPkgProjProjectReferenceBuildConfigurations.AdditionalProperties)</AdditionalProperties>
@@ -90,7 +90,7 @@
     </FindBestConfigurations>
 
     <ItemGroup>
-      <!-- Apply configuration, this does a catesian product between @(Project) and @(_projectBestConfigurations) -->
+      <!-- Apply configuration, this does a Cartesian product between @(Project) and @(_projectBestConfigurations) -->
       <_projectWithConfiguration Include="@(Project)" Condition="'@(_projectBestConfigurations)' != ''">
         <AdditionalProperties>Configuration=%(_projectBestConfigurations.Identity);%(_projectWithConfiguration.AdditionalProperties)</AdditionalProperties>
       </_projectWithConfiguration>
@@ -110,14 +110,6 @@
       <_AllBuildConfigurations>$(BuildConfigurations)</_AllBuildConfigurations>
       <_AllBuildConfigurations Condition="'$(BuildConfigurations)' == ''">$(_traversalBuildConfigurations)</_AllBuildConfigurations>
     </PropertyGroup>
-
-    <!-- Filter out configurations for things not in netcoreapp when building only netcoreapp -->
-    <PropertyGroup Condition="'$(BuildNETCoreAppOnly)' == 'true' and ('$(MSBuildProjectExtension)' == '.csproj' or '$(MSBuildProjectExtension)' == '.vbproj' or '$(MSBuildProjectExtension)' == '.ilproj')">
-      <PartOfNETCoreAppBuild Condition="'$(PartOfNETCoreAppBuild)' == ''">$(IsNETCoreApp)</PartOfNETCoreAppBuild>
-
-      <_AllBuildConfigurations Condition="'$(PartOfNETCoreAppBuild)' != 'true'"></_AllBuildConfigurations>
-    </PropertyGroup>
-
   </Target>
 
   <!-- Runs in a leaf project (eg: csproj) to determine configurations to package -->
