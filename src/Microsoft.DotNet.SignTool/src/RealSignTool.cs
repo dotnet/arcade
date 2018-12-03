@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.SignTool
 
         public override bool VerifySignedVSIXFileMarker(string filePath)
         {
-            return filePath.IndexOf("package/services/digital-signature/", StringComparison.OrdinalIgnoreCase) >= 0;
+            return filePath.StartsWith("package/services/digital-signature/", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
