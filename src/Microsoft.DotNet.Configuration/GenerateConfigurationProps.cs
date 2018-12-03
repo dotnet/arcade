@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.Configuration
 {
     public class GenerateConfigurationProps : ConfigurationTask
     {

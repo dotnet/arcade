@@ -7,7 +7,7 @@ using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.Configuration
 {
     public abstract partial class ConfigurationTask : BuildTask
     {

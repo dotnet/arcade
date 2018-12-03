@@ -13,7 +13,7 @@ using System.Diagnostics;
 using Microsoft.Build.Construction;
 using System.Collections;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.Configuration
 {
     [DebuggerDisplay("{Name}")]
     public class PropertyInfo

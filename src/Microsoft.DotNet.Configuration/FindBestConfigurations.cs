@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.Configuration
 {
     public class FindBestConfigurations : ConfigurationTask
     {
