@@ -4,12 +4,12 @@ This document describes changes to publishing to support asynchronicity and read
 ## Current State
 Currently, publishing is done in one of two ways by each repo:
 - **Use of Arcade to do publishing** - Repository selects what kinds of assets need publishing (e.g. symbols, flat files, packages), provides targets and keys for the output locations (e.g. blob feed URL + storage key) and Arcade's publish package handles the ferrying of outputs to the target locations. During this publishing, Arcade records a manifest of the outputs. At the final join point in the build (e.g. Windows and Linux are both done), the build joins all manifests and uploads the build information to the Build Asset Registry (BAR). 
-- **Existing non-Arcade publishing tasks** - Repository uses some existing tasks (e.g. from buildtools, or custom within the repo's build infrastructure) and publishes what it needs to various feeds and output storage accounts. The outputs are not tracked.
+- **Existing non-Arcade publishing tasks** - Repository uses some existing tasks (e.g. from buildtools, or custom within the repo's build infrastructure) and publishes what it needs to various feeds and output storage accounts. The outputs are not tracked. These non-Arcade publishing tasks will go away over time and are not accounted for in the asynchronous publishing solution.
 
 Typically these publishing steps are done unconditionally on each official build.
 
 ## Problems
-The two approaches above are roughly equivalent, with more tracability and integration into the Maestro/BAR in the Arcade approach. Over time as repositories onboard onto Arcade, it is expected that non-standard publishing workflows will disappear. However, there are still significant issues with the current Arcade approach.
+The two approaches above are roughly equivalent, with more traceability and integration into the Maestro/BAR in the Arcade approach. Over time as repositories onboard onto Arcade, it is expected that non-standard publishing workflows will disappear. However, there are still significant issues with the current Arcade approach.
 - **Blob feed publishing is lock heavy** - Most repositories are using a single feed target for blob feed publishing (https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json). The tooling that mimics nuget pushes on top of Azure storage requires a lock when pushing. When multiple builds are attempting to push to the same feed at the same time, only one may push at a time. This leads to significant wait times to finish publishing, potentially causing builds to time out.
 
   *It should be noted that this particular issue is somewhat point-in-time. When anonymous feeds are available on Azure DevOps, we can switch to using those instead, and lock contention will no longer be an issue*
@@ -43,7 +43,7 @@ The final workflow is as follows:
     - **Do not include** - Specific storage accounts or resources. For example, the manifest should not identify the specific 'dotnetcli' storage account as the target for blobs, as an internal CLI release will want to push to an internal dev release account, while a public dev release will push to the dotnetcli storage account. These details should be abstracted in a way that allows for interpretation based on the *intent* of the build.
 2. At the finalization join point in the build, the BAR/Maestro build upload happens. This joins the manifests from various legs into one, then provides that information to Maestro/BAR. Initially, the build assets locations are recorded as their intermediate locations.
 3. Maestro/BAR associates the build with a specific channel. This can happen either automatically, via a default repo+branch->channel mapping, or manually for a specific build by a user.
-4. Each channel may have a release pipeline associated with it. If a pipeline is associated with the channel, Maestro/BAR triggers the release pipeline associated with the channel on the build that was just assigned to the channel. Maestro waits until this release is done to do any additional actions, like subscription updates.
+4. Each channel may have a one ore more release pipelines associated with it. If a pipeline is associated with the channel, Maestro/BAR triggers the release pipeline associated with the channel on the build that was just assigned to the channel. Maestro waits until this release is done to do any additional actions, like subscription updates.
 5. The release pipeline associated with the new build uses the artifacts from the build (one of which is the manifest) to process and push the outputs of this build to appropriate locations. At the end of the release pipeline, new outputs locations (e.g. myget, nuget, etc.) and potentially new assets (e.g. checksums) are added to the build's assets. *Note: These new assets can be applied to subscription updates as subscription actions will not have taken place until the build is through the release pipeline.*
 6. Any time a new channel is associated with a build, a release pipeline for that channel may be run. This allows for the promotion of builds through channels (e.g. internal dev build -> public release build)
 
@@ -76,7 +76,7 @@ At the end of this, when a build is done, it pushes its nuget packages to the pr
 ### Phase 2 - Move additional publishing steps into public dev release pipelines
 In the second phase, we will move the rest of existing publishing (blobs and symbols) for day to day development into the public dev release. This involves:
 
-1. Altering the public dev release pipeline to enable publishing of symbols to mdsl, symweb, as well as regular blobs (e.g. installers). We should use existing Arcade tasks do this.
+1. Altering the public dev release pipeline to enable publishing of symbols to msdl and symweb, as well as regular blobs (e.g. installers) to final blob storage locations. We should use existing Arcade tasks do this.
 2. Altering the Arcade publishing package to stop explicit publishing of those items during the build, instead moving these to push to intermediate storage (Azure DevOps build storage) first. Examples:
     - Remove PublishSymbols call from publish.proj
     - Alter PushToBlobFeed to do appropriate things when pushing flat files. Flat files should go to the intermediate storage first, then to final locations (categories of output locations are noted in the manifest, actual output locations are defined by the release pipeline).
