@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.Build.Tasks
                 project.AppendChild(parseConfigurationPropertyGroup);
             }
 
-            // delimit property for parsing, this gaurntees that every property value is surrounded in delimiters
+            // delimit property for parsing, this guarantees that every property value is surrounded in delimiters
             var parsePropertyName = $"_parse_{propertyName}";
             var parseConfigurationValue = $"{ConfigurationFactory.PropertySeparator}$({propertyName}){ConfigurationFactory.PropertySeparator}";
             parseConfigurationPropertyGroup.AddProperty(parsePropertyName, parseConfigurationValue);
@@ -161,10 +161,10 @@ namespace Microsoft.DotNet.Build.Tasks
         {
             var buildConfigurationProps = ProjectRootElement.Create();
 
-            // pull apart BuildConfiguration, but don't set any derived properties]
+            // pull apart BuildConfiguration, but don't set any derived properties
             // we do this even when Configuration is already set because we want to
             // parse out the BuildConfiguration-derived property values as _bc_*.
-            // In the case Configration is set we'll not use the parsed values,
+            // In the case Configuration is set we'll not use the parsed values,
             // and immediately overwrite them with the values parsed from Configuration.
             ParseProperties(BuildConfigurationProperty, buildConfigurationProps, false, p => !p.Independent, "_bc_");
 
@@ -189,7 +189,8 @@ namespace Microsoft.DotNet.Build.Tasks
             var buildConfigurationsIsSet = $"'$({AvailableBuildConfigurationsProperty})' != ''";
 
             // Set error on missing import
-            var missingImportError = buildConfigurationsPropertyGroup.AddProperty(ErrorMessageProperty, $"$({ErrorMessageProperty}){ConfigurationProperty} is not set and $({BuildConfigurationProperty}) is not a known value for {BuildConfigurationProperty}.");
+            var missingImportError = buildConfigurationsPropertyGroup.AddProperty(ErrorMessageProperty, 
+                $"$({ErrorMessageProperty}){ConfigurationProperty} is not set and $({BuildConfigurationProperty}) is not a known value for {BuildConfigurationProperty}.");
             missingImportError.Condition = $"{buildConfigurationsIsSet} AND !Exists('$({buildConfigurationImportName})')";
 
             // import props to set ProjectConfiguration
@@ -259,7 +260,7 @@ namespace Microsoft.DotNet.Build.Tasks
                 $"from {AvailableBuildConfigurationsProperty} '$({parseBuildConfigurationsName})'.  " +
                 $"Considered {compatibleConfigurationStrings}.");
 
-            // save a copy of for each synonymous config string
+            // save a copy of for each synonymous configuration string
             foreach (var configurationString in buildConfiguration.GetSignificantConfigurationStrings())
             {
                 var configurationProjectPath = Path.Combine(PropsFolder, $"{ConfigurationPropsPrefix}.{configurationString}{PropsFileExtension}");
