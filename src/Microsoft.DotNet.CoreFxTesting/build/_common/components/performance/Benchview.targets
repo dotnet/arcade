@@ -4,7 +4,9 @@
 
   <Import Project="$(MSBuildThisFileDirectory)Common.props" />
 
-  <Target Name="UploadToBenchview" Condition="'$(LogToBenchview)' == 'true'" AfterTargets="TestAllProjects">
+  <Target Name="UploadToBenchview"
+          Condition="'$(LogToBenchview)' == 'true'"
+          AfterTargets="TestAllProjects">
 
     <PropertyGroup>
       <SubmissionPyCommand>$(PythonCommand) "$(BenchviewDir)/submission.py" "$(RepoRoot)measurement.json" --build "$(RepoRoot)build.json" --machine-data "$(RepoRoot)machinedata.json" --metadata "$(RepoRoot)submission-metadata.json" --group "CoreFx" --type "$(BenchviewRuntype)" --config-name "$(ConfigurationGroup)" --config Configuration "$(ConfigurationGroup)" --config OS "$(TargetOS)" --config "RunType" "$(PerformanceType)" -arch "$(Platform)" --machinepool "PerfSnake" -o "$(RepoRoot)submission.json" || $(CliExitErrorCommand)</SubmissionPyCommand>
