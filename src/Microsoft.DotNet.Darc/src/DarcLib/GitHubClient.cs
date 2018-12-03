@@ -172,11 +172,14 @@ namespace Microsoft.DotNet.DarcLib
 
                 try
                 {
-                    string repoPath = LibGit2Sharp.Repository.Clone(repoUri, tempRepoFolder, new LibGit2Sharp.CloneOptions
-                    {
-                        BranchName = branch,
-                        Checkout = true
-                    });
+                    string repoPath = LibGit2Sharp.Repository.Clone(
+                        repoUri, 
+                        tempRepoFolder, 
+                        new LibGit2Sharp.CloneOptions
+                        {
+                            BranchName = branch,
+                            Checkout = true
+                        });
 
                     using (LibGit2Sharp.Repository localRepo = new LibGit2Sharp.Repository(repoPath))
                     {
