@@ -405,6 +405,13 @@ namespace Microsoft.DotNet.DarcLib
 
             (string owner, string repo) = ParseRepoUri(repoUri);
 
+            if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo))
+            {
+                _logger.LogInformation($"'owner' or 'repository' couldn't be inferred from '{repoUri}'. " +
+                    $"Not getting files from 'eng/common...'");
+                return new List<GitFile>();
+            }
+
             TreeResponse pathTree = await GetTreeForPathAsync(owner, repo, commit, path);
 
             TreeResponse recursiveTree = await GetRecursiveTreeAsync(owner, repo, pathTree.Sha);
