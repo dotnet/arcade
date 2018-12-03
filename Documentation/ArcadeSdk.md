@@ -412,14 +412,12 @@ Set to `true` in a shipping project to require IBC optimization data to be avail
 
 Set to `true` in a test project to skip running tests.
 
-#### `TestArchitectures` (list of strings) [deprecated]
+#### `TestArchitectures` (list of strings)
 
 List of test architectures (`x64`, `x86`) to run tests on.
 If not specified by the project defaults to the value of `PlatformTarget` property, or `x64` if `Platform` is `AnyCPU` or unspecified.
 
 For example, a project that targets `AnyCPU` can opt-into running tests using both 32-bit and 64-bit test runners on .NET Framework by setting `TestArchitectures` to `x64;x86`.
-
-> Considering removing this. Repos commonly use distinct 64-bit and 32-bit (and other) legs of their CI builds to test multiple architectures, which makes this setting is redundant.
 
 #### `TestTargetFrameworks` (list of strings)
 
