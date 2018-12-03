@@ -76,19 +76,18 @@ namespace Microsoft.DotNet.Build.Tasks
                 var runCommandEchoesBuilder = new StringBuilder();
                 foreach (string runCommand in RunCommands)
                 {
-                    // Remove parentheses and quotes from echo command before wrapping it in quotes to avoid errors on Linux.
-                    // Also, escape backtick and question mark characters to avoid running commands instead of echo'ing them.
-                    string sanitizedRunCommand = runCommand.Replace("\"", "")
-                                                           .Replace("(", "")
-                                                           .Replace(")", "")
-                                                           .Replace("`", "\\`")
+                    // Escape backtick and question mark characters to avoid running commands instead of echo'ing them.
+                    string sanitizedRunCommand = runCommand.Replace("`", "\\`")
                                                            .Replace("?", "\\")
                                                            .Replace("\r","")
                                                            .Replace("\n"," ");
 
                     if (isUnix)
                     {
-                        sanitizedRunCommand = $"\"{sanitizedRunCommand}\"";
+                        // Remove parentheses and quotes from echo command before wrapping it in quotes to avoid errors on Linux.
+                        sanitizedRunCommand = "\"" + sanitizedRunCommand.Replace("\"", "")
+                                           .Replace("(", "")
+                                           .Replace(")", "") + "\"";
                     }
                     
                     runCommandEchoesBuilder.Append($"echo {sanitizedRunCommand}{lineFeed}");

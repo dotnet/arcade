@@ -16,6 +16,6 @@
     <SupplementalTestData Include="$(RuntimePath)Microsoft.Diagnostics.Tracing.TraceEvent.dll" />
   </ItemGroup>
 
-  <Import Condition="'$(IncludePerformanceTestFrameworkReferences)' == 'true'" Project="$(MSBuildThisFileDirectory)References.props" />
+  <Import Project="$(MSBuildThisFileDirectory)References.props" />
 
 </Project>
