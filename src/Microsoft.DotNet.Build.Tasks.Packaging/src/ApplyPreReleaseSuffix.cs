@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
     /// This task will determine if a set of packages need to be stable based on another set.
     /// If not stable, it will append a pre-release suffix.  It will also standardize on 3-part versions.
     /// </summary>
-    public class ApplyPreReleaseSuffix : PackagingTask
+    public class ApplyPreReleaseSuffix : BuildTask
     {
         private Dictionary<string, Version> _stablePackageVersions;
         private PackageIndex _index;

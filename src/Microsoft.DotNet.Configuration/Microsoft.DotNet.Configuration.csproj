@@ -16,14 +16,18 @@
     <DefaultItemExcludes Condition="'$(TargetFramework)' != '$(NetFxTfm)'">**/*.Desktop.*</DefaultItemExcludes>
   </PropertyGroup>
 
-  <!-- Dependencies and sources that are specific to desktop -->
   <ItemGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'">
     <Compile Include="..\Common\AssemblyResolver.cs" />
+    <Compile Include="..\Common\BuildTask.Desktop.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)"/>
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)"/>
+    <Compile Include="..\Common\BuildTask.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
     <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="$(MicrosoftDotNetPlatformAbstractionsVersion)" />
   </ItemGroup>
 

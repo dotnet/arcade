@@ -14,7 +14,7 @@ using NuGet.Common;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class NuGetPack : PackagingTask
+    public class NuGetPack : BuildTask
     {
         /// <summary>
         /// Target file paths to exclude when building the lib package for symbol server scenario

@@ -47,8 +47,8 @@ namespace Microsoft.DotNet.Build.Tasks
 
                 if (bestConfiguration == null)
                 {
-                    Log.LogMessage(MessageImportance.Low, $"Could not find any applicable configuration for '{buildConfiguration}' among projectConfigurations {string.Join(", ", supportedProjectConfigurations.Select(c => c.ToString()))}");
-                    Log.LogMessage(MessageImportance.Low, $"Compatible configurations: {string.Join(", ", compatibleConfigurations.Select(c => c.ToString()))}");
+                    Log.LogMessage(LogImportance.Low, $"Could not find any applicable configuration for '{buildConfiguration}' among projectConfigurations {string.Join(", ", supportedProjectConfigurations.Select(c => c.ToString()))}");
+                    Log.LogMessage(LogImportance.Low, $"Compatible configurations: {string.Join(", ", compatibleConfigurations.Select(c => c.ToString()))}");
                 }
                 else
                 {
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Build.Tasks
                         continue;
                     }
 
-                    Log.LogMessage(MessageImportance.Low, $"Chose configuration {bestConfiguration}");
+                    Log.LogMessage(LogImportance.Low, $"Chose configuration {bestConfiguration}");
                     var bestConfigurationItem = new TaskItem(bestConfiguration.ToString(), (IDictionary)bestConfiguration.GetProperties());
 
                     // preserve metadata on the configuration that selected this
