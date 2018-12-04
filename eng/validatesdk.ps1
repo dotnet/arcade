@@ -2,7 +2,6 @@
 Param(
   [string] $BarToken,
   [string] $GitHubPat,
-  [string] $PackageSource,
   [string] $Configuration = "Debug"
 )
 
@@ -27,8 +26,6 @@ try {
   Check-ExitCode $lastExitCode
   
   Write-Host "STEP 2: Build using the local packages"
-
-  $PackageSource = Resolve-Path $PackageSource
   
   Write-Host "Downloading nuget.exe"
   $nugetTempFolder = "$PSScriptRoot\..\nuget"
@@ -37,22 +34,24 @@ try {
   Invoke-WebRequest -Uri https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile $nugetExe
   
   Write-Host "Adding local nuget source..."
-  & $nugetExe sources add -Name arcade-local -Source $PackageSource
-  
+  $packagesSource = "$PSScriptRoot\..\artifacts\packages\debug\NonShipping"
+  & $nugetExe sources add -Name arcade-local -Source $packagesSource
+   
   Write-Host "Updating Dependencies using Darc..."
 
   . .\common\darc-init.ps1
   
   $DarcExe = "$env:USERPROFILE\.dotnet\tools"
   $DarcExe = Resolve-Path $DarcExe
-  & $DarcExe\darc.exe update-dependencies --packages-folder $PackageSource --password $BarToken --github-pat $GitHubPat
+
+  & $DarcExe\darc.exe update-dependencies --packages-folder $packagesSource --password $BarToken --github-pat $GitHubPat --channel ".NET Tools - Latest"
   
   Check-ExitCode $lastExitCode
   Stop-Process -Name "dotnet"
   
   Write-Host "Building with updated dependencies"
-
-  . .\common\build.ps1 -restore -build -pack -test -sign -configuration $Configuration -logFileName "Build_Step2.binlog" /p:RestoreSources=$PackageSource
+  
+  . .\common\build.ps1 -restore -build -pack -test -sign -configuration $Configuration -logFileName "Build_Step2.binlog" /p:RestoreSources=$packagesSource
   Check-ExitCode $lastExitCode
 }
 catch {

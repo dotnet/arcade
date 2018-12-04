@@ -1,3 +1,3 @@
 @echo off
-powershell -ExecutionPolicy ByPass -NoProfile -command "& """%~dp0validatesdk.ps1""" -packageSource "%~dp0..\artifacts\packages\debug\NonShipping" %*"
+powershell -ExecutionPolicy ByPass -NoProfile -command "& """%~dp0validatesdk.ps1""" %*"
 exit /b %ErrorLevel%

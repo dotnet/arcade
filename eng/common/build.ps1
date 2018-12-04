@@ -4,7 +4,7 @@ Param(
   [string] $projects = "",
   [string] $verbosity = "minimal",
   [string] $msbuildEngine = $null,
-  [string] $logFileName = "Build.binlog"
+  [string] $logFileName = "Build.binlog",
   [bool] $warnaserror = $true,
   [bool] $nodereuse = $true,
   [switch] $execute,
