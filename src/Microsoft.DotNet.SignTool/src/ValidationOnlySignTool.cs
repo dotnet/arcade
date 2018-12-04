@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.SignTool
     {
         internal bool TestSign { get; }
 
-        internal ValidationOnlySignTool(SignToolArgs args, TaskLoggingHelper log) 
+        internal ValidationOnlySignTool(SignToolArgs args, TaskLoggingHelper log)
             : base(args, log)
         {
             TestSign = args.TestSign;
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.SignTool
         {
         }
 
-        public override bool VerifySignedPEFile(Stream assemblyStream) 
+        public override bool VerifySignedPEFile(Stream assemblyStream)
             => true;
 
         public override bool VerifyStrongNameSign(string fileFullPath)
@@ -42,6 +42,21 @@ namespace Microsoft.DotNet.SignTool
             {
                 return true;
             }
+        }
+
+        public override bool VerifySignedPowerShellFile(string filePath)
+        {
+            return true;
+        }
+
+        public override bool VerifySignedNugetFileMarker(string filePath)
+        {
+            return true;
+        }
+
+        public override bool VerifySignedVSIXFileMarker(string filePath)
+        {
+            return true;
         }
     }
 }
