@@ -222,8 +222,9 @@ Optionally, a list of Visual Studio [workload component ids](https://docs.micros
 
 #### /src/Directory.Build.props
 
-`Directory.Build.props` shall import Arcade SDK.
-It may also specify public keys for `InternalsVisibleTo` project items and other properties applicable to all projects to the repository. 
+`Directory.Build.props` shall import Arcade SDK as shown below. The `Sdk.props` file sets various properties and item groups to default values. It is recommended to perform any customizations _after_ importing the SDK.
+
+It is a common practice to specify properties applicable to all (most) projects in the repository in `Directory.Build.props`, e.g. public keys for `InternalsVisibleTo` project items.
 
 ```xml
 <PropertyGroup>  
