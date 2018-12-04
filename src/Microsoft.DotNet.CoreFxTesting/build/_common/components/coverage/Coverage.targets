@@ -43,7 +43,7 @@
 
     <!--
       By default, code coverage data is only gathered for the assembly being tested.
-      CodeCoverageAssemblies can be passed in to the build to gather coverage on additional assemblies.
+      CoverageAssemblies can be passed in to the build to gather coverage on additional assemblies.
     -->
     <ItemGroup>
       <_CoverageAssemblies Include="$(AssemblyBeingTested)" />
