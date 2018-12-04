@@ -43,7 +43,7 @@
     </When>
     <When Condition="'$(StrongNameKeyId)' == 'MicrosoftAspNetCore'">
       <PropertyGroup>
-        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)snk/AspNet.snk</AssemblyOriginatorKeyFile>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)snk/AspNetCore.snk</AssemblyOriginatorKeyFile>
         <PublicKey>$(MicrosoftAspNetCorePublicKey)</PublicKey>
         <PublicKeyToken>adb9793829ddae60</PublicKeyToken>
         <PublicSign>false</PublicSign> <!-- The MicrosoftAspNetCore strong name key is a full key -->
