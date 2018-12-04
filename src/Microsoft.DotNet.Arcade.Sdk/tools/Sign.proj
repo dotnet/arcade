@@ -79,6 +79,7 @@
     <Microsoft.DotNet.SignTool.SignToolTask
         DryRun="$(_DryRun)"
         TestSign="$(_TestSign)"
+        DoStrongNameCheck="$(DoStrongNameCheck)"
         CertificatesSignInfo="$(CertificatesSignInfo)"
         ItemsToSign="@(ItemsToSign)"
         StrongNameSignInfo="@(StrongNameSignInfo)"
