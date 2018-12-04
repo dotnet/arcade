@@ -41,12 +41,12 @@
         <PublicKeyToken>31BF3856AD364E35</PublicKeyToken>
       </PropertyGroup>
     </When>
-    <When Condition="'$(StrongNameKeyId)' == 'MicrosoftAspNet'">
+    <When Condition="'$(StrongNameKeyId)' == 'MicrosoftAspNetCore'">
       <PropertyGroup>
         <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)snk/AspNet.snk</AssemblyOriginatorKeyFile>
-        <PublicKey>$(MicrosoftAspNetPublicKey)</PublicKey>
+        <PublicKey>$(MicrosoftAspNetCorePublicKey)</PublicKey>
         <PublicKeyToken>adb9793829ddae60</PublicKeyToken>
-        <PublicSign>false</PublicSign> <!-- The MicrosoftAspNet strong name key is a full key -->
+        <PublicSign>false</PublicSign> <!-- The MicrosoftAspNetCore strong name key is a full key -->
       </PropertyGroup>
     </When>
     <When Condition="'$(StrongNameKeyId)' == 'ECMA'">

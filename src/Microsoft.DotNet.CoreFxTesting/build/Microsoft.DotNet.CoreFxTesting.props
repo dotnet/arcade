@@ -17,9 +17,6 @@
   <Import Condition="'$(IsTestSupportProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'test', 'References.props'))" />
   <Import Condition="'$(IsTestSupportProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'performance', 'References.props'))" />
 
-  <!-- Full coverage report. -->
-  <Import Condition="'$(EnableFullCoverageReportTarget)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'coverage', 'CoverageReport.props'))" />
-
   <!-- Import the core testing infrastructure only for test projects. -->
   <Import Condition="'$(IsTestProject)' == 'true' AND '$(IsTestSupportProject)' != 'true'" Project="$(TestCoreDir)Core.props" />
 

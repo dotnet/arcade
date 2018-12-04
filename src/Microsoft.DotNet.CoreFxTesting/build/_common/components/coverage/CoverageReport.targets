@@ -3,6 +3,10 @@
 <Project>
 
   <PropertyGroup>
+    <CoverageReportInputPath Condition="'$(CoverageReportInputPath)' == ''">$(CoverageOutputPath)</CoverageReportInputPath>
+    <CoverageReportDir Condition="'$(CoverageReportDir)' == ''">report</CoverageReportDir>
+    <CoverageReportTypes Condition="'$(CoverageReportTypes)' == ''">Html</CoverageReportTypes>
+    <CoverageReportVerbosity Condition="'$(CoverageReportVerbosity)' == ''">Info</CoverageReportVerbosity>
     <CoverageReportResultsPath>$(CoverageReportDir)\index.htm</CoverageReportResultsPath>
     <CoverageReportExecutablePath Condition="'$(CoverageReportExecutablePath)' == ''">$(GlobalToolsDir)reportgenerator</CoverageReportExecutablePath>
 
