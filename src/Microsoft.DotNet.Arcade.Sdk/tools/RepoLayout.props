@@ -5,17 +5,6 @@
      Properties describing the layout of the repo.
   -->
 
-  <!-- 
-    Repositories are required to follow the following conventions:
-      
-    - global.json file in the repository root
-      This file specifies the version of Arcade SDK like so:
-      "msbuild-sdks": { "Microsoft.DotNet.Arcade.Sdk": "version" }
-      
-    - build/Versions.props 
-      Specifies versions of dependencies
-  -->
-
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
