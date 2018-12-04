@@ -169,11 +169,6 @@
       <ProjectReference>
         <AdditionalProperties>Configuration=$(_projectReferenceConfiguration);%(ProjectReference.AdditionalProperties)</AdditionalProperties>
       </ProjectReference>
-
-      <!-- Project references for non-test assemblies should never be copied to the output. -->
-      <ProjectReference Condition="'$(IsTestProject)' != 'true'">
-        <Private>false</Private>
-      </ProjectReference>
     </ItemGroup>
   </Target>
 
