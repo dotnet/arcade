@@ -5,14 +5,6 @@
   <!-- TODO: Fix VB test project reference to Test SDK. -->
   <Import Condition="'$(Language)' != 'VB' AND ('$(BuildingNETCoreAppVertical)' == 'true' OR '$(BuildingNETFxVertical)' == 'true')" Project="$(RuntimePath)Microsoft.Net.Test.Sdk.targets" />
 
-  <!-- TODO: Remove when https://github.com/Microsoft/vstest/pull/1829 is merged. -->
-  <PropertyGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(Language)' != 'VB'">
-    <OutputType>Exe</OutputType>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-    <GeneratedProgramFile Condition="'$(GeneratedProgramFile)' ==''">$(IntermediateOutputPath)$(MSBuildProjectName).Program$(DefaultLanguageSourceExtension)</GeneratedProgramFile>
-    <GenerateProgramFile Condition="'$(GenerateProgramFile)' == ''">true</GenerateProgramFile>
-  </PropertyGroup>
-
   <Choose>
     <When Condition="'$(BuildingNETCoreAppVertical)' == 'true'">  
       <ItemGroup>
