@@ -1,6 +1,6 @@
 parameters:
   HelixSource: 'pr/dotnet-github-anon-kaonashi-bot'     # required
-  HelixType: ̓'tests/default/'                           # required
+  HelixType: 'tests/default/'                           # required
   HelixBuild: $(Build.BuildNumber)                      # required
   HelixTargetQueues: ''                                 # required
   HelixAccessToken: ''                                  # required
