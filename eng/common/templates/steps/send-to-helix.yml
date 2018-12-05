@@ -17,6 +17,7 @@ parameters:
   DotNetCliVersion: ''
   EnableXUnitReporter: false
   WaitForWorkItemCompletion: true
+  IsExternal: false
   condition: succeeded()
   continueOnError: false
 
@@ -43,6 +44,7 @@ steps:
       DotNetCliVersion: ${{ parameters.DotNetCliVersion }}
       EnableXUnitReporter: ${{ parameters.EnableXUnitReporter }}
       WaitForWorkItemCompletion: ${{ parameters.WaitForWorkItemCompletion }}
+      IsExternal: ${{ parameters.IsExternal }}
     condition: and(${{ parameters.condition }}, eq(variables['Agent.Os'], 'Windows_NT'))
     continueOnError: ${{ parameters.continueOnError }}
   - script: $BUILD_SOURCESDIRECTORY/eng/common/msbuild.sh $BUILD_SOURCESDIRECTORY/eng/common/helixpublish.proj /bl:$BUILD_SOURCESDIRECTORY/artifacts/log/$BuildConfig/SendToHelix.binlog
@@ -67,5 +69,6 @@ steps:
       DotNetCliVersion: ${{ parameters.DotNetCliVersion }}
       EnableXUnitReporter: ${{ parameters.EnableXUnitReporter }}
       WaitForWorkItemCompletion: ${{ parameters.WaitForWorkItemCompletion }}
+      IsExternal: ${{ parameters.IsExternal }}
     condition: and(${{ parameters.condition }}, ne(variables['Agent.Os'], 'Windows_NT'))
     continueOnError: ${{ parameters.continueOnError }}
