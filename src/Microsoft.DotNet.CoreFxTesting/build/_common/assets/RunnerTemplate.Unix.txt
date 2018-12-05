@@ -1,6 +1,6 @@
 ﻿#!/usr/bin/env bash
 
-export RUNTIME_PATH=$1
+export RUNTIME_PATH=${1%/}
 export EXECUTION_DIR=$(dirname "$0")
 
 exitcode_list[0]="Exited Successfully"

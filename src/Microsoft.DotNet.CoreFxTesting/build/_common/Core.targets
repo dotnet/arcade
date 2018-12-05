@@ -25,8 +25,8 @@
     <RunScriptOutputName Condition="'$(TargetOS)' != 'Windows_NT'">RunTests.sh</RunScriptOutputName>     
     <RunScriptOutputPath>$([MSBuild]::NormalizePath('$(TestPath)', '$(RunScriptOutputName)'))</RunScriptOutputPath>
 
-    <RunScriptHostDir Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' == 'Windows_NT'">%RUNTIME_PATH%</RunScriptHostDir>
-    <RunScriptHostDir Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' != 'Windows_NT'">$RUNTIME_PATH</RunScriptHostDir>
+    <RunScriptHostDir Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' == 'Windows_NT'">%RUNTIME_PATH%\</RunScriptHostDir>
+    <RunScriptHostDir Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' != 'Windows_NT'">$RUNTIME_PATH/</RunScriptHostDir>
     <RunScriptHost Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' == 'Windows_NT'">$(RunScriptHostDir)dotnet.exe</RunScriptHost>
     <RunScriptHost Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' != 'Windows_NT'">$(RunScriptHostDir)dotnet</RunScriptHost>
 

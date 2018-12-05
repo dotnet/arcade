@@ -3,6 +3,7 @@ SETLOCAL enabledelayedexpansion
 
 SET RUNTIME_PATH=%1
 set RUNTIME_PATH=%RUNTIME_PATH:/=\%
+IF %RUNTIME_PATH:~-1%==\ SET RUNTIME_PATH=%RUNTIME_PATH:~0,-1%
 IF DEFINED RUNTIME_PATH ( echo Using %RUNTIME_PATH% as the test runtime folder.) ELSE (
 echo Please specify a test runtime folder using the RUNTIME_PATH parameter
 goto ShowUsage
