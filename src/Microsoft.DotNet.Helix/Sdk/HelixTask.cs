@@ -24,9 +24,9 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         protected IHelixApi AnonymousApi { get; private set; }
 
-        private IHelixApi GetHelixApi(bool requestAnonymous = false)
+        private IHelixApi GetHelixApi()
         {
-            if (string.IsNullOrEmpty(AccessToken) || requestAnonymous)
+            if (string.IsNullOrEmpty(AccessToken))
             {
                 Log.LogMessage(MessageImportance.Low, "No AccessToken provided, using anonymous access to helix api.");
                 return ApiFactory.GetAnonymous(BaseUri);
