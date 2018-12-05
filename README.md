@@ -12,7 +12,8 @@ Azure DevOps [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/st
 
 Packages are published daily to our tools feed:
 
-> `https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json`
+>
+`https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json`
 
 ### Source Code
 
