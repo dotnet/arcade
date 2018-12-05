@@ -2,7 +2,7 @@
 
 Dnceng.visualstudio.com does not have support for signed builds.  
 
-Code should still be mirrored to dnceng.visualstudio.com/internal as outlined in the [VSTS Guidance](https://github.com/dotnet/arcade/blob/master/Documentation/VSTS/VSTSGuidance.md#projects).
+Code should still be mirrored to dnceng.visualstudio.com/internal as outlined in the [Azure DevOps Guidance](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/VSTSGuidance.md#projects).
 
 ## Task based build definitions
 
