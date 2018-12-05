@@ -3,9 +3,9 @@
 <Project>
 
   <PropertyGroup>
-    <RunnerDir>$([MSBuild]::NormalizePath('$(TestHostRootPath)', 'Runner'))</RunnerDir>
-    <LauncherPath>%RUNTIME_PATH%\Launcher\WindowsStoreAppLauncher.exe</LauncherPath>
-    <_RuntimePath>%RUNTIME_PATH%\UAPLayout\</_RuntimePath>
+    <RunnerDir>%RUNTIME_PATH%Runner\</RunnerDir>
+    <LauncherPath>%RUNTIME_PATH%Launcher\WindowsStoreAppLauncher.exe</LauncherPath>
+    <_RuntimePath>%RUNTIME_PATH%UAPLayout\</_RuntimePath>
 
     <RunTestsDependsOn>CheckUAPToolsInstalled;$(RunTestsDependsOn);MakeTestSpecificResourcesPriFile</RunTestsDependsOn>
   </PropertyGroup>

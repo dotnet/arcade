@@ -80,10 +80,10 @@
 
       <ItemGroup>
         <!-- Copy the runner files over. -->
-        <RunScriptCommands Include="forfiles /p &quot;$(RunnerDir)&quot; /s /c &quot;cmd /c cd %EXECUTION_DIR% %26%26 if @isdir equ FALSE (if /I not @ext==\&quot;pri\&quot; if not exist @relpath mklink /H @relpath @path >1NUL) else (if not exist @relpath mkdir @relpath)&quot;" />
+        <RunScriptCommands Include="for /F %%f in ('dir /b /s &quot;$(RunnerDir)&quot;^|find /i /v &quot;.pri&quot;') do @(set relPath=%%f%26 set relPath=!relPath:$(RunnerDir)=!%26 if exist %%f\nul (if not exist !relPath! mkdir !relPath!) else (if not exist !relPath! mklink /h !relPath! %%f 1>NUL))" />
 
         <!-- Copy the runtime binaries over. -->
-        <RunScriptCommands Include="for /R &quot;$(_RuntimePath)&quot; %25%25I in (%2A) do if not exist &quot;%25%25~nxI&quot; (mklink /H &quot;%25%25~nxI&quot; &quot;%25%25I&quot; >1NUL)" />
+        <RunScriptCommands Include="for /R &quot;$(_RuntimePath)&quot; %25%25I in (%2A) do @if not exist &quot;%25%25~nxI&quot; (mklink /H &quot;%25%25~nxI&quot; &quot;%25%25I&quot; 1>NUL)" />
 
         <!-- We need to have the ni as well as the non-ni version of the binary. The host (being a rather old build) looks for the ni name first (so we need that as well for now.) -->
         <RunScriptCommands Include="copy /y &quot;$(_RuntimePath)System.Private.CoreLib.dll&quot; System.Private.CoreLib.ni.dll" />
@@ -113,7 +113,7 @@
 
         <RemoteExecutorConsoleAppName>RemoteExecutorConsoleApp.exe</RemoteExecutorConsoleAppName>
         <RemoteExecutorConsoleAppNameWithoutExtension>RemoteExecutorConsoleApp</RemoteExecutorConsoleAppNameWithoutExtension>
-        <_TestILCFolder>%RUNTIME_PATH%\TestILC</_TestILCFolder>
+        <_TestILCFolder>%RUNTIME_PATH%TestILC</_TestILCFolder>
         <ILCBuildType Condition="'$(ILCBuildType)' == ''">ret</ILCBuildType>
         <_UseSharedAssemblies Condition="'$(EnableMultiFileILCTests)' == 'true'">-useSharedAssemblies</_UseSharedAssemblies>
         <_ILCWin32 Condition="'$(BuildingUAPAOTVertical)' != 'true'">-win32</_ILCWin32>
@@ -128,7 +128,7 @@
       <TargetExecutableNames Include="$(TestRunnerName)"/>
       <TargetExecutableNames Condition="'%(ProjectReference.Filename)' == '$(RemoteExecutorConsoleAppNameWithoutExtension)'" Include="$(RemoteExecutorConsoleAppName)"/>
       
-      <RunScriptCommands Include="for /R &quot;$(ILCFXInputFolder)&quot; %25%25I in (%2A) do if not exist &quot;%25%25~nxI&quot; (mklink /H &quot;%25%25~nxI&quot; &quot;%25%25I&quot; >1NUL)" />
+      <RunScriptCommands Include="for /R &quot;$(ILCFXInputFolder)&quot; %25%25I in (%2A) do @if not exist &quot;%25%25~nxI&quot; (mklink /H &quot;%25%25~nxI&quot; &quot;%25%25I&quot; 1>NUL)" />
       <RunScriptCommands Include="copy /y $(_TestILCFolder)\default.rd.xml %EXECUTION_DIR%" />
       <RunScriptCommands Include="move /y $(OriginalTestRunnerName) $(TestRunnerName)" />
       <RunScriptCommands Include="if exist %EXECUTION_DIR%int rmdir /S /Q %EXECUTION_DIR%int" />

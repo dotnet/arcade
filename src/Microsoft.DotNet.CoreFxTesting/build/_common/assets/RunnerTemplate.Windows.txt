@@ -1,5 +1,5 @@
 ﻿@ECHO OFF
-SETLOCAL
+SETLOCAL enabledelayedexpansion
 
 SET RUNTIME_PATH=%1
 set RUNTIME_PATH=%RUNTIME_PATH:/=\%
