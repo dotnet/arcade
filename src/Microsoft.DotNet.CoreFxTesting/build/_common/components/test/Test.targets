@@ -113,7 +113,7 @@
 
         <RemoteExecutorConsoleAppName>RemoteExecutorConsoleApp.exe</RemoteExecutorConsoleAppName>
         <RemoteExecutorConsoleAppNameWithoutExtension>RemoteExecutorConsoleApp</RemoteExecutorConsoleAppNameWithoutExtension>
-        <_TestILCFolder>%RUNTIME_PATH%TestILC</_TestILCFolder>
+        <_TestILCFolder>%RUNTIME_PATH%\TestILC</_TestILCFolder>
         <ILCBuildType Condition="'$(ILCBuildType)' == ''">ret</ILCBuildType>
         <_UseSharedAssemblies Condition="'$(EnableMultiFileILCTests)' == 'true'">-useSharedAssemblies</_UseSharedAssemblies>
         <_ILCWin32 Condition="'$(BuildingUAPAOTVertical)' != 'true'">-win32</_ILCWin32>
