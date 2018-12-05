@@ -20,11 +20,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         public string AccessToken { get; set; }
 
-        /// <summary>
-        /// A boolean value determining whether this job should be considered "external" for creation purposes
-        /// </summary>
-        public bool IsExternal { get; set; } = false;
-
         protected IHelixApi HelixApi { get; private set; }
 
         protected IHelixApi AnonymousApi { get; private set; }
@@ -45,11 +40,8 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             try
             {
-                if (IsExternal)
-                {
-                    AnonymousApi = GetHelixApi(requestAnonymous: true);
-                }
                 HelixApi = GetHelixApi();
+                AnonymousApi = ApiFactory.GetAnonymous(BaseUri);
                 System.Threading.Tasks.Task.Run(ExecuteCore).GetAwaiter().GetResult();
             }
             catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.Unauthorized)

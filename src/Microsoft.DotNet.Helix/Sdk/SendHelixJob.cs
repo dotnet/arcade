@@ -48,6 +48,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string TargetQueue { get; set; }
 
         /// <summary>
+        /// <see langword="true"/> when the this job is external (i.e. should be submitted anonymously); false when not
+        /// </summary>
+        public bool IsExternal { get; set; } = false;
+
+        /// <summary>
         ///   <see langword="true"/> when the work items are executing on a Posix shell; <see langword="false"/> otherwise.
         /// </summary>
         public bool IsPosixShell { get; set; }
