@@ -118,7 +118,15 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             using (_commandPayload = new CommandPayload(this))
             {
-                IJobDefinition def = HelixApi.Job.Define()
+                var currentHelixApi = HelixApi;
+                if (IsExternal)
+                {
+                    currentHelixApi = AnonymousApi;
+                    var storageApi = new Storage((HelixApi)HelixApi);
+                    typeof(HelixApi).GetProperty("Storage").SetValue(AnonymousApi, storageApi);
+                }
+
+                IJobDefinition def = currentHelixApi.Job.Define()
                     .WithSource(Source)
                     .WithType(Type)
                     .WithBuild(Build)

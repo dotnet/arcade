@@ -20,11 +20,18 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         public string AccessToken { get; set; }
 
+        /// <summary>
+        /// A boolean value determining whether this job should be considered "external" for creation purposes
+        /// </summary>
+        public bool IsExternal { get; set; } = false;
+
         protected IHelixApi HelixApi { get; private set; }
 
-        private IHelixApi GetHelixApi()
+        protected IHelixApi AnonymousApi { get; private set; }
+
+        private IHelixApi GetHelixApi(bool requestAnonymous = false)
         {
-            if (string.IsNullOrEmpty(AccessToken))
+            if (string.IsNullOrEmpty(AccessToken) || requestAnonymous)
             {
                 Log.LogMessage(MessageImportance.Low, "No AccessToken provided, using anonymous access to helix api.");
                 return ApiFactory.GetAnonymous(BaseUri);
@@ -38,6 +45,10 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             try
             {
+                if (IsExternal)
+                {
+                    AnonymousApi = GetHelixApi(requestAnonymous: true);
+                }
                 HelixApi = GetHelixApi();
                 System.Threading.Tasks.Task.Run(ExecuteCore).GetAwaiter().GetResult();
             }
