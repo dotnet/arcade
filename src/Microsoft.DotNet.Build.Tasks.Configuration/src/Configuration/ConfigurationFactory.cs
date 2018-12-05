@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
         /// </summary>
         /// <param name="configurationString"></param>
         /// <returns></returns>
-        internal Configuration ParseConfiguration(string configurationString, bool permitUnknownValues = false)
+        public Configuration ParseConfiguration(string configurationString, bool permitUnknownValues = false)
         {
             bool isPlaceHolderConfiguration = false;
 

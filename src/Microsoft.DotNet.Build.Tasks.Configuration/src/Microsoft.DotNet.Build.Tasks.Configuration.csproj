@@ -18,12 +18,12 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'">
-    <Compile Include="..\Common\AssemblyResolver.cs" />
-    <Compile Include="..\Common\BuildTask.Desktop.cs" />
+    <Compile Include="..\..\Common\AssemblyResolver.cs" />
+    <Compile Include="..\..\Common\BuildTask.Desktop.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Common\BuildTask.cs" />
+    <Compile Include="..\..\Common\BuildTask.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,4 @@
-# Microsoft.DotNet.Configuration
+# Microsoft.DotNet.Build.Tasks.Configuration
 
 ## Configuration system
 

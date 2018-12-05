@@ -114,7 +114,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.HelixPoolP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.CoreFxTesting", "src\Microsoft.DotNet.CoreFxTesting\Microsoft.DotNet.CoreFxTesting.csproj", "{73389197-EBB2-4FB7-B599-9573971A7197}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Configuration", "src\Microsoft.DotNet.Configuration\Microsoft.DotNet.Configuration.csproj", "{357E3759-EAF2-4F9C-918E-64F801DE3B57}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Configuration", "src\Microsoft.DotNet.Build.Tasks.Configuration\src\Microsoft.DotNet.Build.Tasks.Configuration.csproj", "{357E3759-EAF2-4F9C-918E-64F801DE3B57}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Configuration.Tests", "src\Microsoft.DotNet.Build.Tasks.Configuration\tests\Microsoft.DotNet.Build.Tasks.Configuration.Tests.csproj", "{8693536F-E31B-4841-8D82-7162E9D753D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -718,6 +720,18 @@ Global
 		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Release|x64.Build.0 = Release|Any CPU
 		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Release|x86.ActiveCfg = Release|Any CPU
 		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Release|x86.Build.0 = Release|Any CPU
+		{8693536F-E31B-4841-8D82-7162E9D753D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8693536F-E31B-4841-8D82-7162E9D753D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8693536F-E31B-4841-8D82-7162E9D753D9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8693536F-E31B-4841-8D82-7162E9D753D9}.Debug|x64.Build.0 = Debug|Any CPU
+		{8693536F-E31B-4841-8D82-7162E9D753D9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8693536F-E31B-4841-8D82-7162E9D753D9}.Debug|x86.Build.0 = Debug|Any CPU
+		{8693536F-E31B-4841-8D82-7162E9D753D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8693536F-E31B-4841-8D82-7162E9D753D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8693536F-E31B-4841-8D82-7162E9D753D9}.Release|x64.ActiveCfg = Release|Any CPU
+		{8693536F-E31B-4841-8D82-7162E9D753D9}.Release|x64.Build.0 = Release|Any CPU
+		{8693536F-E31B-4841-8D82-7162E9D753D9}.Release|x86.ActiveCfg = Release|Any CPU
+		{8693536F-E31B-4841-8D82-7162E9D753D9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
