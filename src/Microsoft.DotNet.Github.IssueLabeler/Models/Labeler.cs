@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             {
                 var issueUpdate = new IssueUpdate();
                 issueUpdate.AddLabel(label);
-                issueUpdate.Milestone = 1;
+                issueUpdate.Milestone = 1; // The number of milestones an issue could have.
 
                 await _client.Issue.Update(_repoOwner, _repoName, number, issueUpdate);
             }
