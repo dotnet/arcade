@@ -222,8 +222,9 @@ Optionally, a list of Visual Studio [workload component ids](https://docs.micros
 
 #### /src/Directory.Build.props
 
-`Directory.Build.props` shall import Arcade SDK.
-It may also specify public keys for `InternalsVisibleTo` project items and other properties applicable to all projects to the repository. 
+`Directory.Build.props` shall import Arcade SDK as shown below. The `Sdk.props` file sets various properties and item groups to default values. It is recommended to perform any customizations _after_ importing the SDK.
+
+It is a common practice to specify properties applicable to all (most) projects in the repository in `Directory.Build.props`, e.g. public keys for `InternalsVisibleTo` project items.
 
 ```xml
 <PropertyGroup>  
@@ -412,14 +413,12 @@ Set to `true` in a shipping project to require IBC optimization data to be avail
 
 Set to `true` in a test project to skip running tests.
 
-#### `TestArchitectures` (list of strings) [deprecated]
+#### `TestArchitectures` (list of strings)
 
 List of test architectures (`x64`, `x86`) to run tests on.
 If not specified by the project defaults to the value of `PlatformTarget` property, or `x64` if `Platform` is `AnyCPU` or unspecified.
 
 For example, a project that targets `AnyCPU` can opt-into running tests using both 32-bit and 64-bit test runners on .NET Framework by setting `TestArchitectures` to `x64;x86`.
-
-> Considering removing this. Repos commonly use distinct 64-bit and 32-bit (and other) legs of their CI builds to test multiple architectures, which makes this setting is redundant.
 
 #### `TestTargetFrameworks` (list of strings)
 

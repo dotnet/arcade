@@ -172,11 +172,14 @@ namespace Microsoft.DotNet.DarcLib
 
                 try
                 {
-                    string repoPath = LibGit2Sharp.Repository.Clone(repoUri, tempRepoFolder, new LibGit2Sharp.CloneOptions
-                    {
-                        BranchName = branch,
-                        Checkout = true
-                    });
+                    string repoPath = LibGit2Sharp.Repository.Clone(
+                        repoUri, 
+                        tempRepoFolder, 
+                        new LibGit2Sharp.CloneOptions
+                        {
+                            BranchName = branch,
+                            Checkout = true
+                        });
 
                     using (LibGit2Sharp.Repository localRepo = new LibGit2Sharp.Repository(repoPath))
                     {
@@ -404,6 +407,13 @@ namespace Microsoft.DotNet.DarcLib
             path = path.TrimStart('/').TrimEnd('/');
 
             (string owner, string repo) = ParseRepoUri(repoUri);
+
+            if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo))
+            {
+                _logger.LogInformation($"'owner' or 'repository' couldn't be inferred from '{repoUri}'. " +
+                    $"Not getting files from 'eng/common...'");
+                return new List<GitFile>();
+            }
 
             TreeResponse pathTree = await GetTreeForPathAsync(owner, repo, commit, path);
 

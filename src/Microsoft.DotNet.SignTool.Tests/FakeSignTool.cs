@@ -54,5 +54,20 @@ namespace Microsoft.DotNet.SignTool
                 stream.Write(_stamp, 0, _stamp.Length);
             }
         }
+
+        public override bool VerifySignedPowerShellFile(string filePath)
+        {
+            return true;
+        }
+
+        public override bool VerifySignedNugetFileMarker(string filePath)
+        {
+            return true;
+        }
+
+        public override bool VerifySignedVSIXFileMarker(string filePath)
+        {
+            return true;
+        }
     }
 }

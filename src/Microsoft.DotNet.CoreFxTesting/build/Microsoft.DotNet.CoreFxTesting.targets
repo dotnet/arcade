@@ -58,22 +58,14 @@
 
   </Target>
 
-  <!--
-    Outer build imports.
-  -->
-
   <!-- UAP resource generation needed by both source and test projects. -->
   <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Resources.uap.targets" />
 
   <!-- Performance test data upload to Benchview. -->
-  <Import Condition="'$(EnableBenchviewTarget)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'performance', 'Benchview.targets'))" />
+  <Import Condition="'$(EnableBenchviewTarget)' == 'true' AND '$(Performance)' == 'true' AND '$(SkipTests)' != 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'performance', 'Benchview.targets'))" />
 
   <!-- Full coverage report. -->
-  <Import Condition="'$(EnableFullCoverageReportTarget)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'coverage', 'CoverageReport.targets'))" />
-
-  <!--
-    Test project imports.
-  -->
+  <Import Condition="'$(EnableFullCoverageReportTarget)' == 'true' AND '$(Coverage)' == 'true' AND '$(SkipTests)' != 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'coverage', 'CoverageReport.targets'))" />
 
   <!-- Import the core testing infrastructure only for test projects. -->
   <Import Condition="'$(IsTestProject)' == 'true' AND '$(IsTestSupportProject)' != 'true'"  Project="$(TestCoreDir)Core.targets" />

@@ -11,6 +11,4 @@
     <GenerateRunScriptDependsOn>$(GenerateRunScriptDependsOn);SetupCoverageFilter</GenerateRunScriptDependsOn>
   </PropertyGroup>
 
-  <Import Project="$(MSBuildThisFileDirectory)CoverageReport.props" />
-
 </Project>

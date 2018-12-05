@@ -38,11 +38,46 @@ If you plan to send a payload (such as a work item) to Helix, you will need to b
 
 For external builds, you will need to provide the *BotAccount-dotnet-github-anon-kaonashi-bot-helix-token* secret from **ToolsKV** (subscription *Dotnet Engineering services*). This will allow you to send payloads to Helix while minimizing the risk of leaking secrets.
 
-You can either copy this secret into your build definition as a variable and mark it as secret, or; in the dev.azure.com/dnceng/public project, you can use the `Helix Anonymous` variable group to provide this secret to your build
+In the dev.azure.com/dnceng/public project, you can use the `Helix Anonymous` variable group to provide this secret to your build
+
+Example:
+
+```yaml
+variables:
+- group: Helix Anonymous
+
+steps:
+- script: $(Build.SourcesDirectory)/.dotnet/dotnet
+          eng/sendtohelix.proj
+          /t:test
+          /p:HelixTargetQueues=Windows.10.Amd64.Open
+          /p:HelixBuild=$(Build.BuildNumber)
+          /p:HelixAccessToken=$HelixAccessToken
+  displayName: Send to Helix
+  env:
+    HelixAccessToken: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token)
+```
 
 ### Internal builds
 
 In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-Access` variable group to provide this secret to your build.
+
+
+Example:
+
+```yaml
+variables:
+- group: DotNet-HelixApi-Access
+
+steps:
+- script: $(Build.SourcesDirectory)/.dotnet/dotnet
+          eng/sendtohelix.proj
+          /t:test
+          /p:HelixTargetQueues=Windows.10.Amd64.Open
+          /p:HelixBuild=$(Build.BuildNumber)
+          /p:HelixAccessToken=$HelixAccessToken
+  displayName: Send to Helix
+```
 
 ## The Simple Case
 
