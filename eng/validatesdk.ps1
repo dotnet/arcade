@@ -1,8 +1,8 @@
-[CmdletBinding(PositionalBinding=$false)]
 Param(
-  [string] $BarToken,
-  [string] $GitHubPat,
-  [string] $Configuration = "Debug"
+  [string] $barToken,
+  [string] $gitHubPat,
+  [string] $configuration = "Debug",
+  [switch] $validateSdk
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,26 +16,80 @@ function Check-ExitCode ($exitCode)
   }
 }
 
+function StopDotnetIfRunning
+{
+    $dotnet = Get-Process "dotnet" -ErrorAction SilentlyContinue
+    if ($dotnet) {
+        stop-process $dotnet
+    }
+}
+
+function AddSourceToNugetConfig([string]$nugetConfigPath, [string]$source) 
+{
+    Write-Host "Adding '$source' to '$nugetConfigPath'..."
+    
+    $nugetConfig = New-Object XML
+    $nugetConfig.Load($nugetConfigPath)
+    $packageSources = $nugetConfig.SelectSingleNode("//packageSources")
+    $keyAttribute = $nugetConfig.CreateAttribute("key")
+    $keyAttribute.Value = "arcade-local"
+    $valueAttribute = $nugetConfig.CreateAttribute("value")
+    $valueAttribute.Value = $source
+    $newSource = $nugetConfig.CreateElement("add")
+    $newSource.Attributes.Append($keyAttribute)
+    $newSource.Attributes.Append($valueAttribute)
+    $packageSources.AppendChild($newSource)
+    $nugetConfig.Save($nugetConfigPath)
+}
+
+function AddSourceToToolsProj([string]$toolsProjPath, [string]$source) 
+{
+    Write-Host "Adding '$source' to '$toolsProjPath'..."
+
+    $toolsProj = New-Object XML
+    $toolsProj.Load($toolsProjPath)
+    $restoreSources = $toolsProj.SelectSingleNode("//RestoreSources[not(@*)]")
+    $restoreSources.InnerText = $restoreSources.InnerText + "$source;"
+    $toolsProj.Save($toolsProjPath)
+}
+
+function RemoveSourceFromToolsProj([string]$toolsProjPath, [string]$source) 
+{
+    Write-Host "Removing '$source' from '$toolsProjPath'..."
+
+    $toolsProj = New-Object XML
+    $toolsProj.Load($toolsProjPath)
+    $restoreSources = $toolsProj.SelectSingleNode("//RestoreSources[. = '$source;']")
+    $restoreSources.InnerText = $restoreSources.InnerText.Replace("$source;", "")
+    $toolsProj.Save($toolsProjPath)
+}
+
 try {
-  Write-Host "Starting Arcade SDK Package Update"
-  
   Write-Host "STEP 1: Build and create local packages"
   
   Push-Location $PSScriptRoot
-  . .\common\build.ps1 -restore -build -pack -configuration $Configuration -logFileName "Build_Step1.binlog"
-  Check-ExitCode $lastExitCode
+  
+  $validateSdkDir = "$PSScriptRoot\..\artifacts\validatesdk\"
+  $packagesSource = "$validateSdkDir\packages\$configuration\NonShipping"  
+  $toolsProjPath = "$PSScriptRoot\..\src\Microsoft.DotNet.Arcade.Sdk\tools\Tools.proj"
+  
+  # When restoring, we check if local sources defined in Tools.proj actually exist so we need to create
+  # the validation SDK folder before hand
+  if (!(Test-Path -Path $packagesSource)) {
+    New-Item $packagesSource -ItemType Directory
+  }
+  
+  # Adding a source by using /p:RestoreSources sets the system to just use that source, but if this source has packages
+  # which depend in different sources, the restore process fails since the dependencies are not found. Workaround is to
+  # append the new source to the existing collection of sources
+  AddSourceToToolsProj $toolsProjPath $packagesSource
+  
+  . .\common\build.ps1 -restore -build -pack -configuration $configuration -logFileName "Build_Local.binlog" /p:ArtifactsDir=$validateSdkDir
+   Check-ExitCode $lastExitCode
   
   Write-Host "STEP 2: Build using the local packages"
   
-  Write-Host "Downloading nuget.exe"
-  $nugetTempFolder = "$PSScriptRoot\..\nuget"
-  $nugetExe = "$nugetTempFolder\nuget.exe"
-  mkdir $nugetTempFolder
-  Invoke-WebRequest -Uri https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile $nugetExe
-  
-  Write-Host "Adding local nuget source..."
-  $packagesSource = "$PSScriptRoot\..\artifacts\packages\debug\NonShipping"
-  & $nugetExe sources add -Name arcade-local -Source $packagesSource
+  AddSourceToNugetConfig "$PSScriptRoot\..\NuGet.config" $packagesSource
    
   Write-Host "Updating Dependencies using Darc..."
 
@@ -44,14 +98,14 @@ try {
   $DarcExe = "$env:USERPROFILE\.dotnet\tools"
   $DarcExe = Resolve-Path $DarcExe
 
-  & $DarcExe\darc.exe update-dependencies --packages-folder $packagesSource --password $BarToken --github-pat $GitHubPat --channel ".NET Tools - Latest"
+  & $DarcExe\darc.exe update-dependencies --packages-folder $packagesSource --password $barToken --github-pat $gitHubPat --channel ".NET Tools - Latest"
   
   Check-ExitCode $lastExitCode
-  Stop-Process -Name "dotnet"
+  StopDotnetIfRunning
   
   Write-Host "Building with updated dependencies"
-  
-  . .\common\build.ps1 -restore -build -pack -test -sign -configuration $Configuration -logFileName "Build_Step2.binlog" /p:RestoreSources=$packagesSource
+
+  . .\common\build.ps1 -configuration $configuration @Args
   Check-ExitCode $lastExitCode
 }
 catch {
@@ -62,9 +116,9 @@ catch {
 }
 finally {
   Write-Host "Cleaning up workspace..."
-  & $nugetExe sources remove -Name arcade-local
-  stop-process -Name "dotnet"
-  Remove-Item -Path $nugetTempFolder -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+  git checkout -- "$PSScriptRoot\..\NuGet.config"
+  RemoveSourceFromToolsProj $toolsProjPath $packagesSource
+  StopDotnetIfRunning
   Pop-Location
-  Write-Host "Finished building Arcade SDK with updated packages"
+  Write-Host "Finished building Arcade SDK with validation enabled!"
 }

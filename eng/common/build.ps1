@@ -32,6 +32,7 @@ function Print-Usage() {
     Write-Host "Common settings:"
     Write-Host "  -configuration <value>  Build configuration Debug, Release"
     Write-Host "  -verbosity <value>      Msbuild verbosity (q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic])"
+    Write-Host "  -logFileName <value>    Binlog file name"
     Write-Host "  -help                   Print help and exit"
     Write-Host ""
 
@@ -73,7 +74,7 @@ try {
   InitializeTools
 
   $BuildLog = Join-Path $LogDir $logFileName
-  
+
   MSBuild $ToolsetBuildProj `
     /bl:$BuildLog `
     /p:Configuration=$configuration `

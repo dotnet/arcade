@@ -16,30 +16,6 @@ jobs:
     enableTelemetry: true
     helixRepo: dotnet/arcade
     jobs:
-    - job: Validation
-      pool:
-        # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
-        # Will eventually change this to two BYOC pools.
-        ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-          name: NetCorePublic-Int-Pool
-          queue: Windows.10.Amd64.Open
-        ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-          name: dotnet-internal-temp
-      variables:
-      # Only enable publishing in non-public, non PR scenarios.
-      - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-        - group: Publish-Build-Assets
-        - name: _ValidationArgs
-          value: -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -barToken $(MaestroAccessToken)
-        - name: _BuildConfig
-          value: Debug
-      steps:
-      - checkout: self
-        clean: true
-      # Use utility script to run script command dependent on agent OS.
-      - script: eng\ValidateSdk.cmd
-          $(_ValidationArgs)
-        displayName: Validate SDK
     - job: Windows_NT
       pool:
         # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
@@ -76,6 +52,7 @@ jobs:
             _PublishType: none
             _SignType: test
             _DotNetPublishToBlobFeed : false
+            _ValidateSdk: ''
           Build_Release:
             _BuildConfig: Release
             # PRs or external builds are not signed.
@@ -87,6 +64,7 @@ jobs:
               _PublishType: blob
               _SignType: real
               _DotNetPublishToBlobFeed : true
+              _ValidateSdk: -validateSdk -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -barToken $(MaestroAccessToken)
       steps:
       - checkout: self
         clean: true
@@ -95,6 +73,7 @@ jobs:
           -configuration $(_BuildConfig) 
           -prepareMachine
           $(_InternalBuildArgs)
+          $(_ValidateSdk)
         displayName: Windows Build / Publish
 
     - job: Linux
