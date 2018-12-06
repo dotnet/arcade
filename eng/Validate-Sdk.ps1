@@ -1,8 +1,7 @@
 Param(
   [string] $barToken,
   [string] $gitHubPat,
-  [string] $configuration = "Debug",
-  [switch] $validateSdk
+  [string] $configuration = "Debug"
 )
 
 $ErrorActionPreference = "Stop"
