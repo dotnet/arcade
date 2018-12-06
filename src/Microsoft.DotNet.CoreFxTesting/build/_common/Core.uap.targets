@@ -3,7 +3,7 @@
 <Project>
 
   <PropertyGroup>
-    <RunnerDir>$([MSBuild]::NormalizePath('$(TestHostRootPath)', 'Runner'))</RunnerDir>
+    <RunnerDir>%RUNTIME_PATH%\Runner\</RunnerDir>
     <LauncherPath>%RUNTIME_PATH%\Launcher\WindowsStoreAppLauncher.exe</LauncherPath>
     <_RuntimePath>%RUNTIME_PATH%\UAPLayout\</_RuntimePath>
 
