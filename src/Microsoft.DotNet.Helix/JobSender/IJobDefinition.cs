@@ -16,6 +16,7 @@ namespace Microsoft.DotNet.Helix.Client
         IJobDefinition WithCreator(string creator);
         IJobDefinition WithContainerName(string targetContainerName);
         IJobDefinition WithStorageAccountConnectionString(string accountConnectionString);
+        IJobDefinition WithMaxRetryCount(int? maxRetryCount);
         Task<ISentJob> SendAsync();
     }
 }
