@@ -7,6 +7,7 @@ Param(
 
 $ErrorActionPreference = "Stop"
 . $PSScriptRoot\common\tools.ps1
+$LocalNugetConfigSourceName = "arcade-local"
 
 function Check-ExitCode ($exitCode)
 {
@@ -29,10 +30,11 @@ function AddSourceToNugetConfig([string]$nugetConfigPath, [string]$source)
     Write-Host "Adding '$source' to '$nugetConfigPath'..."
     
     $nugetConfig = New-Object XML
+    $nugetConfig.PreserveWhitespace = $true
     $nugetConfig.Load($nugetConfigPath)
     $packageSources = $nugetConfig.SelectSingleNode("//packageSources")
     $keyAttribute = $nugetConfig.CreateAttribute("key")
-    $keyAttribute.Value = "arcade-local"
+    $keyAttribute.Value = $LocalNugetConfigSourceName
     $valueAttribute = $nugetConfig.CreateAttribute("value")
     $valueAttribute.Value = $source
     $newSource = $nugetConfig.CreateElement("add")
@@ -45,22 +47,11 @@ function AddSourceToNugetConfig([string]$nugetConfigPath, [string]$source)
 function AddSourceToToolsProj([string]$toolsProjPath, [string]$source) 
 {
     Write-Host "Adding '$source' to '$toolsProjPath'..."
-
+    
     $toolsProj = New-Object XML
     $toolsProj.Load($toolsProjPath)
     $restoreSources = $toolsProj.SelectSingleNode("//RestoreSources[not(@*)]")
     $restoreSources.InnerText = $restoreSources.InnerText + "$source;"
-    $toolsProj.Save($toolsProjPath)
-}
-
-function RemoveSourceFromToolsProj([string]$toolsProjPath, [string]$source) 
-{
-    Write-Host "Removing '$source' from '$toolsProjPath'..."
-
-    $toolsProj = New-Object XML
-    $toolsProj.Load($toolsProjPath)
-    $restoreSources = $toolsProj.SelectSingleNode("//RestoreSources[. = '$source;']")
-    $restoreSources.InnerText = $restoreSources.InnerText.Replace("$source;", "")
     $toolsProj.Save($toolsProjPath)
 }
 
@@ -72,9 +63,10 @@ try {
   $validateSdkDir = "$PSScriptRoot\..\artifacts\validatesdk\"
   $packagesSource = "$validateSdkDir\packages\$configuration\NonShipping"  
   $toolsProjPath = "$PSScriptRoot\..\src\Microsoft.DotNet.Arcade.Sdk\tools\Tools.proj"
+  $nugetConfigPath = "$PSScriptRoot\..\NuGet.config"
   
   # When restoring, we check if local sources defined in Tools.proj actually exist so we need to create
-  # the validation SDK folder before hand
+  # the validation SDK folder beforehand
   if (!(Test-Path -Path $packagesSource)) {
     New-Item $packagesSource -ItemType Directory
   }
@@ -89,7 +81,7 @@ try {
   
   Write-Host "STEP 2: Build using the local packages"
   
-  AddSourceToNugetConfig "$PSScriptRoot\..\NuGet.config" $packagesSource
+  AddSourceToNugetConfig $nugetConfigPath $packagesSource
    
   Write-Host "Updating Dependencies using Darc..."
 
@@ -116,8 +108,6 @@ catch {
 }
 finally {
   Write-Host "Cleaning up workspace..."
-  git checkout -- "$PSScriptRoot\..\NuGet.config"
-  RemoveSourceFromToolsProj $toolsProjPath $packagesSource
   StopDotnetIfRunning
   Pop-Location
   Write-Host "Finished building Arcade SDK with validation enabled!"

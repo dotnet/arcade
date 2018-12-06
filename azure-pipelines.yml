@@ -28,6 +28,9 @@ jobs:
       variables:
       # Only enable publishing in non-public, non PR scenarios.
       - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+        # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
+        # DotNet-Symbol-Server-Pats provides: microsoft-symbol-server-pat, symweb-symbol-server-pat
+        # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
         - group: DotNet-Blob-Feed
         - group: DotNet-Symbol-Server-Pats
         - group: Publish-Build-Assets
@@ -52,7 +55,7 @@ jobs:
             _PublishType: none
             _SignType: test
             _DotNetPublishToBlobFeed : false
-            _ValidateSdk: ''
+            _ValidateSdkArgs: ''
           Build_Release:
             _BuildConfig: Release
             # PRs or external builds are not signed.
@@ -64,7 +67,7 @@ jobs:
               _PublishType: blob
               _SignType: real
               _DotNetPublishToBlobFeed : true
-              _ValidateSdk: -validateSdk -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -barToken $(MaestroAccessToken)
+              _ValidateSdkArgs: -validateSdk -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -barToken $(MaestroAccessToken)
       steps:
       - checkout: self
         clean: true
@@ -73,7 +76,7 @@ jobs:
           -configuration $(_BuildConfig) 
           -prepareMachine
           $(_InternalBuildArgs)
-          $(_ValidateSdk)
+          $(_ValidateSdkArgs)
         displayName: Windows Build / Publish
 
     - job: Linux
