@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <RestoreSources/>
+    <RestoreSources>$(DotNetRestoreSources)</RestoreSources>
     <RestoreSources>
       $(RestoreSources);
       https://api.nuget.org/v3/index.json;

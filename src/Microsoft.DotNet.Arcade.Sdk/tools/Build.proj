@@ -87,12 +87,8 @@
       <_QuietRestore>false</_QuietRestore>
       <_QuietRestore Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(QuietRestore)' == 'true'">true</_QuietRestore>
 
-      <!--
-        Do not restore toolset tools when building from source.
-        The tools are not needed and not all of them are actually available.
-      -->
       <_RestoreTools>false</_RestoreTools>
-      <_RestoreTools Condition="'$(Restore)' == 'true' and '$(DotNetBuildFromSource)' != 'true'">true</_RestoreTools>
+      <_RestoreTools Condition="'$(Restore)' == 'true'">true</_RestoreTools>
     </PropertyGroup>
 
     <ItemGroup>
