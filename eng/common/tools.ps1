@@ -176,7 +176,7 @@ function InstallXCopyMSBuild([string] $packageVersion) {
 # or $null if no instance meeting the requirements is found on the machine.
 #
 function LocateVisualStudio {
-  $vswhereVersion = Get-Member -InputObject $GlobalJson.tools -Name "vswhere"
+  $vswhereVersion = $GlobalJson.tools.vswhere
   if ($vsWhereVersion -eq $null) {
     $vswhereVersion = "2.5.2"
   }
