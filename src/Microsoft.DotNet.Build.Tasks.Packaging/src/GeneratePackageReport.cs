@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GeneratePackageReport : PackagingTask
+    public class GeneratePackageReport : BuildTask
     {
         private Dictionary<string, PackageItem> _targetPathToPackageItem;
         private AggregateNuGetAssetResolver _resolver;

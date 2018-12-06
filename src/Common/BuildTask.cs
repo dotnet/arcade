@@ -5,8 +5,36 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Microsoft.DotNet.Build.Tasks.Packaging
+namespace Microsoft.DotNet.Build.Tasks
 {
+    public abstract partial class BuildTask : ITask
+    {
+        private Log _log = null;
+
+        internal Log Log
+        {
+            get { return _log ?? (_log = new Log(new TaskLoggingHelper(this))); }
+        }
+
+        public BuildTask()
+        {
+        }
+
+        public IBuildEngine BuildEngine
+        {
+            get;
+            set;
+        }
+
+        public ITaskHost HostObject
+        {
+            get;
+            set;
+        }
+
+        public abstract bool Execute();
+    }
+
     internal class Log : ILog
     {
         private readonly TaskLoggingHelper _logger;

@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
     /// <summary>
     /// Verifies no type overlap in a set of DLLs
     /// </summary>
-    public class VerifyTypes : PackagingTask
+    public class VerifyTypes : BuildTask
     {
 
         /// <summary>

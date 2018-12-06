@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetInboxFrameworks : PackagingTask
+    public class GetInboxFrameworks : BuildTask
     {
         [Required]
         public ITaskItem[] PackageIndexes

@@ -15,7 +15,7 @@ using System.Text;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GenerateNetStandardSupportTable : PackagingTask
+    public class GenerateNetStandardSupportTable : BuildTask
     {
         const string startMarker = "<!-- begin NetStandardSupportTable -->";
         const string endMarker = "<!-- end NetStandardSupportTable -->";

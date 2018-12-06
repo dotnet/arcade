@@ -14,7 +14,7 @@ using System.Text;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetApplicableAssetsFromPackages : PackagingTask
+    public class GetApplicableAssetsFromPackages : BuildTask
     {
         private Dictionary<string, List<PackageItem>> _packageToPackageItems;
         private Dictionary<string, PackageItem> _targetPathToPackageItem;

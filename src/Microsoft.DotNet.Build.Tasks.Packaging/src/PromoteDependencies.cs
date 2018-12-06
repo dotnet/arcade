@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
     /// reference differ so in order to ensure the correct dependencies are applied we have to promote dependencies
     /// from a less specific ref to the more specific lib, and from a less specific lib to a more specific ref.
     /// </summary>
-    public class PromoteDependencies : PackagingTask
+    public class PromoteDependencies : BuildTask
     {
         private const string TargetFrameworkMetadataName = "TargetFramework";
 
