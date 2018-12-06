@@ -40,6 +40,7 @@ namespace Microsoft.DotNet.Helix.Client
         public string TargetQueueId { get; private set; }
         public string Creator { get; private set; }
         public IList<IPayload> CorrelationPayloads { get; } = new List<IPayload>();
+        public int? MaxRetryCount { get; private set; }
         public string StorageAccountConnectionString { get; private set; }
         public string TargetContainerName { get; set; } = DefaultContainerName;
         public static string DefaultContainerName => $"helix-job-{Guid.NewGuid()}";
@@ -156,7 +157,8 @@ namespace Microsoft.DotNet.Helix.Client
                     storageContainer.Uri,
                     storageContainer.ReadSas,
                     storageContainer.WriteSas,
-                    Creator));
+                    Creator,
+                    maxRetryCount: MaxRetryCount));
 
             return new SentJob(JobApi, newJob);
         }
@@ -182,6 +184,12 @@ namespace Microsoft.DotNet.Helix.Client
         public IJobDefinitionWithBuild WithType(string type)
         {
             Type = type;
+            return this;
+        }
+
+        public IJobDefinition WithMaxRetryCount(int? maxRetryCount)
+        {
+            MaxRetryCount = maxRetryCount;
             return this;
         }
 
