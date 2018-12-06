@@ -4,8 +4,8 @@ Param(
   [string] $projects = "",
   [string] $verbosity = "minimal",
   [string] $msbuildEngine = $null,
-  [bool] $warnaserror = $true,
-  [bool] $nodereuse = $true,
+  [bool] $warnAsError = $true,
+  [bool] $nodeReuse = $true,
   [switch] $execute,
   [switch] $restore,
   [switch] $deployDeps,
@@ -61,19 +61,6 @@ function Print-Usage() {
     Write-Host "The above arguments can be shortened as much as to be unambiguous (e.g. -co for configuration, -t for test, etc.)."
 }
 
-if ($help -or (($properties -ne $null) -and ($properties.Contains("/help") -or $properties.Contains("/?")))) {
-  Print-Usage
-  exit 0
-}
-
-function ConfigureToolset { 
-  # Include custom tools configuration
-  $script = Join-Path $EngRoot "configure-toolset.ps1"
-
-  if (Test-Path $script) {
-    . $script
-  }
-}
 
 function InitializeCustomToolset {
   if (-not $restore) {
@@ -87,21 +74,10 @@ function InitializeCustomToolset {
   }
 }
 
-try {
-  if ($projects -eq "") {
-    $projects = Join-Path $RepoRoot "*.sln"
-  }
-
-  if ($ci) {
-    $binaryLog = $true
-  }
-
-  ConfigureToolset
+function Build {
   $toolsetBuildProj = InitializeToolset
   InitializeCustomToolset
-
-  $buildLog = Join-Path $LogDir "Build.binlog"
-  $bl = if ($binaryLog) { "/bl:$buildLog" } else { "" }
+  $bl = if ($binaryLog) { "/bl:" + (Join-Path $LogDir "Build.binlog") } else { "" }
 
   MSBuild $toolsetBuildProj `
     $bl `
@@ -122,6 +98,31 @@ try {
     /p:Execute=$execute `
     /p:ContinuousIntegrationBuild=$ci `
     @properties
+}
+
+try {
+  if ($help -or (($properties -ne $null) -and ($properties.Contains("/help") -or $properties.Contains("/?")))) {
+    Print-Usage
+    exit 0
+  }
+
+  if ($projects -eq "") {
+    $projects = Join-Path $RepoRoot "*.sln"
+  }
+
+  if ($ci) {
+    $binaryLog = $true
+    $nodeReuse = $false
+  }
+
+  # Import custom tools configuration, if present in the repo.
+  # Note: Import in global scope so that the script set top-level variables without qualification.
+  $configureToolsetScript = Join-Path $EngRoot "configure-toolset.ps1"
+  if (Test-Path $configureToolsetScript) {
+    . $configureToolsetScript
+  }
+
+  Build
 }
 catch {
   Write-Host $_

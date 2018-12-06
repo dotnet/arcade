@@ -54,8 +54,8 @@ sign=false
 public=false
 ci=false
 
-warnaserror=true
-nodereuse=true
+warn_as_error=true
+node_reuse=true
 binary_log=false
 
 projects=''
@@ -120,11 +120,11 @@ while [[ $# > 0 ]]; do
       ci=true
       ;;
     --warnaserror)
-      warnaserror=$2
+      warn_as_error=$2
       shift
       ;;
     --nodereuse)
-      nodereuse=$2
+      node_reuse=$2
       shift
       ;;
     /p:*)
@@ -140,15 +140,12 @@ while [[ $# > 0 ]]; do
   shift
 done
 
+if [[ "$ci" == true ]]; then
+  binary_log=true
+  node_reuse=false
+fi
+
 . "$scriptroot/tools.sh"
-
-function ConfigureToolset {
-  local script="$eng_root/configure-toolset.sh"
-
-  if [[ -a "$script" ]]; then
-    . "$script"
-  fi
-}
 
 function InitializeCustomToolset {
   local script="$eng_root/restore-toolset.sh"
@@ -158,41 +155,50 @@ function InitializeCustomToolset {
   fi
 }
 
-if [[ -z $projects ]]; then
-  projects="$repo_root/*.sln"
+function Build {
+  InitializeToolset
+  InitializeCustomToolset
+
+  if [[ -z $projects ]]; then
+    projects="$repo_root/*.sln"
+  fi
+
+  local bl=""
+  if [[ "$binary_log" == true ]]; then
+    bl="/bl:\"$log_dir/Build.binlog\""
+  fi
+
+  MSBuild $_InitializeToolset \
+    $bl \
+    /p:Configuration=$configuration \
+    /p:Projects="$projects" \
+    /p:RepoRoot="$repo_root" \
+    /p:Restore=$restore \
+    /p:Build=$build \
+    /p:Rebuild=$rebuild \
+    /p:Test=$test \
+    /p:Pack=$pack \
+    /p:IntegrationTest=$integration_test \
+    /p:PerformanceTest=$performance_test \
+    /p:Sign=$sign \
+    /p:Publish=$publish \
+    /p:ContinuousIntegrationBuild=$ci \
+    $properties
+
+  ExitWithExitCode 0
+}
+
+# Import custom tools configuration, if present in the repo.
+configure_toolset_script="$eng_root/configure-toolset.sh"
+if [[ -a "$configure_toolset_script" ]]; then
+  . "$configure_toolset_script"
 fi
 
-if [[ "$ci" == true ]]; then
-  $binary_log = true
+# TODO: https://github.com/dotnet/arcade/issues/1468
+# Temporary workaround to avoid breaking change.
+# Remove once repos are updated.
+if [[ -n "${useInstalledDotNetCli:-}" ]]; then
+  use_installed_dotnet_cli="$useInstalledDotNetCli"
 fi
 
-ConfigureToolset
-InitializeToolset
-InitializeCustomToolset
-
-build_log="$log_dir/Build.binlog"
-
-if [[ "$binary_log" == true ]]; then
-  bl="/bl:\"$build_log\""
-else
-  bl=""
-fi
-
-MSBuild $_InitializeToolset \
-  $bl \
-  /p:Configuration=$configuration \
-  /p:Projects="$projects" \
-  /p:RepoRoot="$repo_root" \
-  /p:Restore=$restore \
-  /p:Build=$build \
-  /p:Rebuild=$rebuild \
-  /p:Test=$test \
-  /p:Pack=$pack \
-  /p:IntegrationTest=$integration_test \
-  /p:PerformanceTest=$performance_test \
-  /p:Sign=$sign \
-  /p:Publish=$publish \
-  /p:ContinuousIntegrationBuild=$ci \
-  $properties
-
-ExitWithExitCode 0
+Build
