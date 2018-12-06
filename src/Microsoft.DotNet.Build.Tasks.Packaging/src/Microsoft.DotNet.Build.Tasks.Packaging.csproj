@@ -55,8 +55,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)"/>
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)"/>
+    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="NuGet.Commands" Version="$(NuGetVersion)" />
     <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
@@ -65,9 +65,13 @@
     <PackageReference Include="Microsoft.NETCore.Platforms" Version="$(MicrosoftNETCorePlatformsVersion)" />
   </ItemGroup>
 
-  <!-- Dependencies and sources that are specific to desktop -->
   <ItemGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'">
     <Compile Include="..\..\Common\AssemblyResolver.cs" />
+    <Compile Include="..\..\Common\BuildTask.Desktop.cs" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Include="..\..\Common\BuildTask.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -75,9 +79,7 @@
   </ItemGroup>
 
   <!-- Find the packages from one of many package folders -->
-  <Target Name="FindRuntimeJson"
-          Inputs="%(_candidatPackageFolders.Identity)"
-          Outputs="unused">
+  <Target Name="FindRuntimeJson" Inputs="%(_candidatPackageFolders.Identity)" Outputs="unused">
     <PropertyGroup>
       <_candidatePackageFolder>%(_candidatPackageFolders.Identity)</_candidatePackageFolder>
       <_runtimeJsonSubPath>Microsoft.NETCore.Platforms\2.1.0\runtime.json</_runtimeJsonSubPath>
@@ -86,11 +88,8 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="AddRuntimeJson"
-          DependsOnTargets="FindRuntimeJson"
-          AfterTargets="ResolveReferences">
-     <Error Condition="'$(_runtimeJsonPath)'==''"
-            Text="Could not locate '$(_runtimeJsonSubPath)' under any of '$(NuGetPackageFolders)'" />
+  <Target Name="AddRuntimeJson" DependsOnTargets="FindRuntimeJson" AfterTargets="ResolveReferences">
+     <Error Condition="'$(_runtimeJsonPath)'==''" Text="Could not locate '$(_runtimeJsonSubPath)' under any of '$(NuGetPackageFolders)'" />
      <ItemGroup>
        <None Include="$(_runtimeJsonPath)" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="build\runtime.json" />
      </ItemGroup>

@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
     /// <summary>
     /// Examines all dependencies 
     /// </summary>
-    public class SplitDependenciesBySupport : PackagingTask
+    public class SplitDependenciesBySupport : BuildTask
     {
         [Required]
         public ITaskItem[] OriginalDependencies { get; set; }

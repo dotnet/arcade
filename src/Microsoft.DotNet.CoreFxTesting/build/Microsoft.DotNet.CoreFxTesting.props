@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <PropertyGroup>
+    <MSBuildTestAssemblyPath Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)\..\tools\netcoreapp2.1\Microsoft.DotNet.CoreFxTesting.dll</MSBuildTestAssemblyPath>
+    <MSBuildTestAssemblyPath Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.CoreFxTesting.exe</MSBuildTestAssemblyPath>
+
+    <TestCoreDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '_common'))</TestCoreDir>
+    <TestAssetsDir>$([MSBuild]::NormalizeDirectory('$(TestCoreDir)', 'assets'))</TestAssetsDir>
+    <TestComponentsDir>$([MSBuild]::NormalizeDirectory('$(TestCoreDir)', 'components'))</TestComponentsDir>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)TestProject.props" />
+
+  <!-- Enable references to the test framework for test support libraries. -->
+  <Import Condition="'$(IsTestSupportProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'test', 'References.props'))" />
+  <Import Condition="'$(IsTestSupportProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestComponentsDir)', 'performance', 'References.props'))" />
+
+  <!-- Import the core testing infrastructure only for test projects. -->
+  <Import Condition="'$(IsTestProject)' == 'true' AND '$(IsTestSupportProject)' != 'true'" Project="$(TestCoreDir)Core.props" />
+
+</Project>

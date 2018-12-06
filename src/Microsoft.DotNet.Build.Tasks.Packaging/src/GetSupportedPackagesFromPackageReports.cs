@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetSupportedPackagesFromPackageReports : PackagingTask
+    public class GetSupportedPackagesFromPackageReports : BuildTask
     {
         [Required]
         public string[] PackageReports { get; set; }

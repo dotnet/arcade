@@ -2,11 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using log4net;
+using Microsoft.Azure.KeyVault;
+using Microsoft.Azure.KeyVault.Models;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Newtonsoft.Json;
 using System;
 using System.IO;
-using CredentialManagement;
-using log4net;
-using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.GitSync
 {
@@ -21,7 +24,7 @@ namespace Microsoft.DotNet.GitSync
             _logger = logger;
         }
 
-        public Configuration Get()
+        public async Task<Configuration> GetAsync()
         {
             if (!File.Exists(_path))
             {
@@ -32,19 +35,22 @@ namespace Microsoft.DotNet.GitSync
                 ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
                 PreserveReferencesHandling = PreserveReferencesHandling.All,
             });
-            using (var cred = new Credential())
-            {
-                cred.Target = config.CredentialTarget;
-                if (cred.Exists())
+
+            var kvc = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(
+                async (authority, resource, scope) => 
                 {
-                    cred.Load();
-                    config.Password = cred.Password;
-                }
-                else
-                {
-                    throw new ArgumentException("No Github Account Linked with the Mirror");
-                }
-            }
+                    var authContext = new AuthenticationContext(authority);
+                    var clientCred = new ClientCredential(config.ClientId, config.ClientSecret);
+                    var result = await authContext.AcquireTokenAsync(resource, clientCred);
+
+                    if (result == null)
+                        throw new InvalidOperationException("Failed to obtain the github token");
+
+                    return result.AccessToken;
+                }));
+
+            SecretBundle secretBundle = await kvc.GetSecretAsync(config.SecretUri);
+            config.Password = secretBundle.Value;
 
             return config;
         }

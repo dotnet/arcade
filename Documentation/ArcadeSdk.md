@@ -91,7 +91,6 @@ eng
     cibuild.sh
     ...
   Versions.props
-  FixedVersions.props (optional)
   Tools.props (optional)
   AfterSolutionBuild.targets (optional)
   AfterSigning.targets (optional)
@@ -152,11 +151,6 @@ The toolset also defines default versions for various tools and dependencies, su
 
 See [DefaultVersions](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/DefaultVersions.props) for a list of *UsingTool* properties and default versions.
 
-#### /eng/FixedVersions.props (Orchestrated Build)
-
-Versions of dependencies specified in Versions.props may be overriden by Orchestrated Build.
-FixedVersions.props specifies versions that should not flow from Orchestrated Build.
-
 #### /eng/Tools.props (optional)
 
 Specify package references to additional tools that are needed for the build.
@@ -187,17 +181,28 @@ For example,
 }
 ```
 
-Include `vswhere` version under `tools` if the repository should be built via desktop `msbuild` instead of dotnet cli:
+Include `vs` entry under `tools` if the repository should be built via `msbuild` from Visual Studio installation instead of dotnet cli:
 
 ```json
 {
   "tools": {
-    "vswhere": "2.2.7"    
+    "vs": {
+      "version": "15.9"
+    }
   }
 }
 ```
 
-`/nuget.config` file is present and specifies the MyGet feed to retrieve Arcade SDK from like so:
+Optionally, a list of Visual Studio [workload component ids](https://docs.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-enterprise) may be specified under `vs`:
+
+```json
+"vs": {
+  "version": "15.9",
+  "components": ["Microsoft.VisualStudio.Component.VSSDK"]
+}
+```
+
+`/NuGet.config` file is present and specifies the MyGet feed to retrieve Arcade SDK from like so:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -207,15 +212,19 @@ Include `vswhere` version under `tools` if the repository should be built via de
     <clear />
     <add key="dotnet-core" value="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" />
   </packageSources>
+  <disabledPackageSources>
+    <clear />
+  </disabledPackageSources>
 </configuration>
 ```
 
-> An improvement in SKD resolver is proposed to be able to specify the feed in `global.json` file to avoid the need for extra configuration in `nuget.config`. See https://github.com/Microsoft/msbuild/issues/2982.
+> An improvement in SKD resolver is proposed to be able to specify the feed in `global.json` file to avoid the need for extra configuration in `NuGet.config`. See https://github.com/Microsoft/msbuild/issues/2982.
 
 #### /src/Directory.Build.props
 
-`Directory.Build.props` shall import Arcade SDK.
-It may also specify public keys for `InternalsVisibleTo` project items and other properties applicable to all projects to the repository. 
+`Directory.Build.props` shall import Arcade SDK as shown below. The `Sdk.props` file sets various properties and item groups to default values. It is recommended to perform any customizations _after_ importing the SDK.
+
+It is a common practice to specify properties applicable to all (most) projects in the repository in `Directory.Build.props`, e.g. public keys for `InternalsVisibleTo` project items.
 
 ```xml
 <PropertyGroup>  
@@ -396,19 +405,20 @@ By default Portable and Embedded PDBs produced by _shipping_ projects are conver
 `true` (default) if the PDBs produced by the project should be converted to Windows PDB and published to Microsoft symbol servers.
 Set to `false` to override the default (uncommon).
 
+#### `ApplyPartialNgenOptimization` (bool)
+
+Set to `true` in a shipping project to require IBC optimization data to be available for the project and embed them into the binary during official build. 
 
 #### `SkipTests` (bool)
 
-Set to `true` in project to skip running tests.
+Set to `true` in a test project to skip running tests.
 
-#### `TestArchitectures` (list of strings) [deprecated]
+#### `TestArchitectures` (list of strings)
 
 List of test architectures (`x64`, `x86`) to run tests on.
 If not specified by the project defaults to the value of `PlatformTarget` property, or `x64` if `Platform` is `AnyCPU` or unspecified.
 
 For example, a project that targets `AnyCPU` can opt-into running tests using both 32-bit and 64-bit test runners on .NET Framework by setting `TestArchitectures` to `x64;x86`.
-
-> Considering removing this. Repos commonly use distinct 64-bit and 32-bit (and other) legs of their CI builds to test multiple architectures, which makes this setting is redundant.
 
 #### `TestTargetFrameworks` (list of strings)
 

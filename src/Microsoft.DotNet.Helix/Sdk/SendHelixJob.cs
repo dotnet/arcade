@@ -112,6 +112,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </remarks>
         public ITaskItem[] HelixProperties { get; set; }
 
+        /// <summary>
+        /// Max automatic retry of workitems which do not return 0
+        /// </summary>
+        public int MaxRetryCount { get; set; }
+
         private CommandPayload _commandPayload;
 
         protected override async Task ExecuteCore()
@@ -122,7 +127,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                     .WithSource(Source)
                     .WithType(Type)
                     .WithBuild(Build)
-                    .WithTargetQueue(TargetQueue);
+                    .WithTargetQueue(TargetQueue)
+                    .WithMaxRetryCount(MaxRetryCount);
 
                 if (CorrelationPayloads != null)
                 {

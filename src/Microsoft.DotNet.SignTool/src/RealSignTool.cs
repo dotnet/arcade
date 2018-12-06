@@ -7,6 +7,7 @@ using Microsoft.Build.Utilities;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection.PortableExecutable;
 
 namespace Microsoft.DotNet.SignTool
@@ -115,6 +116,21 @@ namespace Microsoft.DotNet.SignTool
             process.WaitForExit();
 
             return process.ExitCode == 0;
+        }
+
+        public override bool VerifySignedPowerShellFile(string filePath)
+        {
+            return File.ReadLines(filePath).Contains("# SIG # Begin Signature Block");
+        }
+
+        public override bool VerifySignedNugetFileMarker(string filePath)
+        {
+            return Path.GetFileName(filePath).Equals(".signature.p7s", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public override bool VerifySignedVSIXFileMarker(string filePath)
+        {
+            return filePath.StartsWith("package/services/digital-signature/", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

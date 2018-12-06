@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class HarvestPackage : PackagingTask
+    public class HarvestPackage : BuildTask
     {
         /// <summary>
         /// Package ID to harvest

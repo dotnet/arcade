@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetPackageFromModule : PackagingTask
+    public class GetPackageFromModule : BuildTask
     {
         /// <summary>
         /// Modules referenced that need to be mapped to packages

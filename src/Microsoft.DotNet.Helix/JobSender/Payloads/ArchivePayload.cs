@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         public async Task<string> UploadAsync(IBlobContainer payloadContainer)
         {
-            using (var stream = new FileStream(Archive.FullName, FileMode.Open))
+            using (var stream = File.OpenRead(Archive.FullName))
             {
                 Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Archive.Name}");
                 return zipUri.AbsoluteUri;

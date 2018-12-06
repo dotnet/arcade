@@ -13,7 +13,7 @@ using System.Reflection.PortableExecutable;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetAssemblyReferences : PackagingTask
+    public class GetAssemblyReferences : BuildTask
     {
         [Required]
         public ITaskItem[] Assemblies

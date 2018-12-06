@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
     /// <summary>
     /// Verifies the closure of a set of DLLs, making sure all files are present and no cycles exist
     /// </summary>
-    public class VerifyClosure : PackagingTask
+    public class VerifyClosure : BuildTask
     {
 
         /// <summary>

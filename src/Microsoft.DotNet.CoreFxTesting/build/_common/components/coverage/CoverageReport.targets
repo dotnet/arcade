@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <PropertyGroup>
+    <CoverageReportInputPath Condition="'$(CoverageReportInputPath)' == ''">$(CoverageOutputPath)</CoverageReportInputPath>
+    <CoverageReportDir Condition="'$(CoverageReportDir)' == ''">report</CoverageReportDir>
+    <CoverageReportTypes Condition="'$(CoverageReportTypes)' == ''">Html</CoverageReportTypes>
+    <CoverageReportVerbosity Condition="'$(CoverageReportVerbosity)' == ''">Info</CoverageReportVerbosity>
+    <CoverageReportResultsPath>$(CoverageReportDir)\index.htm</CoverageReportResultsPath>
+    <CoverageReportExecutablePath Condition="'$(CoverageReportExecutablePath)' == ''">$(GlobalToolsDir)reportgenerator</CoverageReportExecutablePath>
+
+    <CoverageReportCommandLine>$(CoverageReportExecutablePath) "-reports:$(CoverageReportInputPath)" "-targetdir:$(CoverageReportDir)" "-reporttypes:$(CoverageReportTypes)" "-verbosity:$(CoverageReportVerbosity)"</CoverageReportCommandLine>
+    <CoverageReportOpenCommandLine Condition="'$(PopCoverageReport)' == 'true' AND '$(TargetOS)' == 'Windows_NT'">start $(CoverageReportResultsPath)</CoverageReportOpenCommandLine>
+  </PropertyGroup>
+
+  <!-- Skip generating individual reports if a full report is generated. -->
+  <ItemGroup Condition="'$(GenerateFullCoverageReport)' != 'true'">
+    <PostRunScriptCommands Include="$(CoverageReportCommandLine)" />
+    <PostRunScriptCommands Condition="'$(CoverageReportOpenCommandLine)' != ''" Include="$(CoverageReportOpenCommandLine)" />
+  </ItemGroup>
+
+  <Target Name="GenerateCoverageReport"
+          AfterTargets="TestAllProjects"
+          Inputs="$(CoverageReportInputPath)"
+          Outputs="$(CoverageReportResultsPath)"
+          Condition="'$(GenerateFullCoverageReport)' == 'true'">
+
+    <Exec Command="$(CoverageReportCommandLine)"
+          ContinueOnError="ErrorAndContinue" />
+
+    <Exec Command="$(CoverageReportOpenCommandLine)"
+          Condition="'$(CoverageReportOpenCommandLine)' != ''" />
+
+  </Target>
+
+</Project>

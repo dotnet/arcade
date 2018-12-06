@@ -13,7 +13,7 @@ using System.Text;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetPackageDestination : PackagingTask
+    public class GetPackageDestination : BuildTask
     {
         /// <summary>
         /// All target monikers that this project wants to support

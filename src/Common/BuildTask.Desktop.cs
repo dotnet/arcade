@@ -4,11 +4,11 @@
 
 using Microsoft.DotNet.Build.Common.Desktop;
 
-namespace Microsoft.DotNet.Build.Tasks.Packaging
+namespace Microsoft.DotNet.Build.Tasks
 {
-    public partial class PackagingTask
+    public partial class BuildTask
     {
-        static PackagingTask()
+        static BuildTask()
         {
             AssemblyResolver.Enable();
         }

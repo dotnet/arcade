@@ -13,7 +13,7 @@
   <Import Project="DefaultVersions.props"/>
   <Import Project="StrongName.props"/>
   <Import Project="ProjectDefaults.props"/>
-  <Import Project="Tests.props" />
+  <Import Project="Tests.props" Condition="'$(DisableArcadeTestFramework)' != 'true'" />
   
   <Import Project="Compiler.props" Condition="'$(UsingToolMicrosoftNetCompilers)' == 'true'" />  
   <Import Project="VisualStudio.props" Condition="'$(UsingToolVSSDK)' == 'true'"/>
