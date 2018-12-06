@@ -63,6 +63,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var finishedCount = workItems.Count(wi => wi.State == "Finished");
                 if (waitingCount == 0 && runningCount == 0 && finishedCount > 0)
                 {
+                    // determines whether any of the work items failed (fireballed)
+                    await Task.WhenAll(workItems.Select(wi => wi.Name).ToArray().Select((workItemId) => GetWorkItemDetailsAsync(workItemId, jobName)));
                     Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
                     return;
                 }
@@ -70,6 +72,19 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogMessage($"Job {jobName} is not yet completed with Waiting: {waitingCount}, Running: {runningCount}, Finished: {finishedCount}");
                 await Task.Delay(10000);
             }
+        }
+
+        private async Task GetWorkItemDetailsAsync(string workItemId, string jobName)
+        {
+            await Task.Yield();
+
+            var details = await HelixApi.WorkItem.DetailsAsync(jobName, workItemId);
+            if (details.State == "Failed")
+            {
+                Log.LogError($"Work item {workItemId} on job {jobName} has failed with exit code {details.ExitCode}.");
+            }
+
+            return;
         }
 
         private async Task<string> GetMissionControlResultUri()
