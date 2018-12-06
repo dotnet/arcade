@@ -19,7 +19,14 @@
 
     <!-- The convention for names of Azure DevOps repositories mirrored from GitHub is "{GitHub org name}-{GitHub repository name}" -->
     <PropertyGroup>
-      <_Pattern>https://dnceng.visualstudio\.com/internal/_git/([^/-]+)-(.+)|https://dev.azure.com/dnceng/internal/_git/([^/-]+)-(.+)|https://dnceng@dev.azure.com/dnceng/internal/_git/([^/-]+)-(.+)</_Pattern>
+      <!-- There are quite a few git repo forms:
+        https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-services
+        https://dev.azure.com/dnceng/internal/_git/dotnet-arcade-services
+        https://dnceng.visualstudio.com/internal/_git/dotnet-arcade-services
+        dnceng@vs-ssh.visualstudio.com:v3/dnceng/internal/dotnet-arcade-services
+        git@ssh.dev.azure.com:v3/dnceng/internal/dotnet-arcade-services
+      -->
+      <_Pattern>(https://dnceng%40dev\.azure\.com/dnceng/internal/_git|https://dev\.azure\.com/dnceng/internal/_git|https://dnceng\.visualstudio\.com/internal/_git|dnceng%40vs-ssh\.visualstudio\.com:v3/dnceng/internal|git%40ssh\.dev\.azure\.com:v3/dnceng/internal)/([^/-]+)-(.+)</_Pattern>
       <_Replacement>https://github.com/$1/$2</_Replacement>
     </PropertyGroup>
 
