@@ -45,8 +45,10 @@ else
   use_global_nuget_cache=${use_global_nuget_cache:-true}
 fi
 
-repo_root="$scriptroot/../.."
-eng_root="$scriptroot/.."
+ResolvePath "${BASH_SOURCE[0]}"
+
+eng_root="$_ResolvePath/.."
+repo_root="$eng_root/.."
 artifacts_dir="$repo_root/artifacts"
 toolset_dir="$artifacts_dir/toolset"
 log_dir="$artifacts_dir/log/$configuration"
