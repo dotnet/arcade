@@ -4,9 +4,10 @@ Arcade SDK is a set of msbuild props and targets files and packages that provide
 
 The infrastructure of each [repository that contributes to .NET Core 3.0 stack](TierOneRepos.md) is built on top of Arcade SDK. This allows us to orchestrate the build of the entire stack as well as build the stack from source. These repositories are expected to be on the latest version of the Arcade SDK.
 
-Repositories that do not participate in .NET Core 3.0 build may also use Arcade SDK in order to take advantage of the common  infrastructure.
+Repositories that do not participate in .NET Core 3.0 build may also use Arcade SDK in order to take advantage of the common infrastructure.
 
 The goals are
+
 - to reduce the number of copies of the same or similar props, targets and script files across repos
 - enable cross-platform build that relies on a standalone dotnet cli (downloaded during restore) as well as desktop msbuild based build
 - be as close to the latest shipping .NET Core SDK as possible, with minimal overrides and tweaks
@@ -15,6 +16,7 @@ The goals are
 - unify Azure DevOps Build Pipelines used to produce official builds
 
 The toolset has four kinds of features and helpers:
+
 - Common conventions applicable to all repos using the toolset.
 - Infrastructure required for Azure DevOps CI builds, MicroBuild and build from source.
 - Workarounds for bugs in shipping tools (dotnet SDK, VS SDK, msbuild, VS, NuGet client, etc.).
@@ -24,13 +26,14 @@ The toolset has four kinds of features and helpers:
 The toolset has following requirements on the repository layout.
 
 ### Single build output
+
 All build outputs are located under a single directory called `artifacts`. 
 The Arcade SDK defines the following output structure:
 
-```
+```text
 artifacts
   bin
-    $(MSBuildProjectName)    
+    $(MSBuildProjectName)
       $(Configuration)
   packages
     $(Configuration)
@@ -45,7 +48,6 @@ artifacts
         $(VsixPackageId).vsmand
         $(VsixContainerName).vsix
         $(VisualStudioInsertionComponent).vsman
-         
       $(VsixPackageId).json
       $(VsixContainerName).vsix
   VSSetup.obj
@@ -82,38 +84,63 @@ Having a common output directory structure makes it possible to unify MicroBuild
 
 ### Build scripts and extensibility points
 
-```
-eng
-  common
-    build.ps1
-    build.sh
-    CIBuild.cmd
-    cibuild.sh
-    ...
-  Versions.props
-  Tools.props (optional)
-  AfterSolutionBuild.targets (optional)
-  AfterSigning.targets (optional)
-src
-  Directory.Build.props
-  Directory.Build.targets
-global.json
-nuget.config
-azure-pipelines.yml
-Build.cmd
-build.sh
-Restore.cmd
-restore.sh
-Test.cmd
-test.sh
-```
+#### Build scripts
+
+Some common build scripts for using Arcade are provided in the [eng/common](https://github.com/dotnet/arcade/tree/master/eng/common) folder.  The general entry points are `cmd` or `sh` files and they provide common arguments to the `build.ps1` or `build.sh` files.
+
+Common build scripts include:
+
+- [CIBuld.cmd](https://github.com/dotnet/arcade/blob/master/eng/common/CIBuild.cmd) | [cibuild.sh](https://github.com/dotnet/arcade/blob/master/eng/common/cibuild.sh) - build script for running an Arcade build in CI or official builds
+
+Most repos additionally create repo specific build scripts which reference the `eng/common/build.ps1` or `eng/common/build.sh` files.  They provide default arguments to those scripts but pass along any additional arguments you specify.
+
+Repo script examples include:
+
+- [Build.cmd](https://github.com/dotnet/arcade/blob/master/Build.cmd) | [build.sh](https://github.com/dotnet/arcade/blob/master/build.sh) - default wrapper script for building and restoring the repo.
+- [Restore.cmd](https://github.com/dotnet/arcade/blob/master/Restore.cmd) | [restore.sh](https://github.com/dotnet/arcade/blob/master/restore.sh) - default wrapper script for restoring the repo.
+- [Test.cmd](https://github.com/dotnet/arcade/blob/master/Test.cmd) | [test.sh](https://github.com/dotnet/arcade/blob/master/test.sh) - default wrapper script for running tests in the repo.
+
+Since the default scripts pass along additional arguments, you could restore, build, and test a repo by running `Build.cmd -test`.
+
+You should feel free to create more repo specific scripts as appropriate to meet common dev scenarios for your repo.
 
 #### /eng/common/*
 
 The Arcade SDK requires bootstrapper scripts to be present in the repo.
+
 The scripts in this directory shall be present and the same across all repositories using Arcade SDK.
 
+#### /eng/Build.props
+
+Provide repo specific Build properties such as the list of projects to build.
+
+##### Arcade project building
+
+By default, Arcade [builds solutions in the root of the repo](https://github.com/dotnet/arcade/blob/440b2dae3a206b28f6aba727b7818873358fcc0a/eng/common/build.ps1#L69).  Overriding the default build behavior may be done by either of these methods.
+
+- Provide the project list on the command-line.
+
+  Example: `build.cmd -projects MyProject.proj`
+
+  See https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/common/build.ps1#L51
+
+- Provide a repo default override in `eng/Build.props`.
+
+  Example:
+
+  ```xml
+  <?xml version="1.0" encoding="utf-8"?>
+  <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <ItemGroup>
+      <ProjectToBuild Include="$(MSBuildThisFileDirectory)..\MyProject.proj" />
+    </ItemGroup>
+  </Project>
+  ```
+
+  CoreFx does not use the default build projects in its repo - https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/Build.props
+
 #### /eng/Versions.props: A single file listing component versions and used tools
+
 The file is present in the repo and defines versions of all dependencies used in the repository, the NuGet feeds they should be restored from and the version of the components produced by the repo build.
 
 ```xml
@@ -127,7 +154,7 @@ The file is present in the repo and defines versions of all dependencies used in
     <!-- Opt-in repo features -->
     <UsingToolVSSDK>true</UsingToolVSSDK>
     <UsingToolIbcOptimization>true</UsingToolIbcOptimization>
-        
+
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
   
@@ -250,6 +277,7 @@ It is a common practice to specify properties applicable to all (most) projects 
 ```
 
 ### Source Projects
+
 Projects are located under `src` directory under root repo, in any subdirectory structure appropriate for the repo. 
 
 Projects shall use `Microsoft.NET.Sdk` SDK like so:
@@ -318,7 +346,7 @@ For example,
 
 Where .swr file is:
 
-```
+```text
 use vs
 
 package name=Microsoft.VisualStudio.ProjectSystem.Managed.CommonFiles
