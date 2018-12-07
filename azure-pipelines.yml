@@ -64,11 +64,12 @@ jobs:
               _PublishType: none
               _SignType: test
               _DotNetPublishToBlobFeed : false
+              _Script: eng\common\cibuild.cmd
             ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
               _PublishType: blob
               _SignType: real
               _DotNetPublishToBlobFeed : true
-              _Script: eng\Validate-Sdk.cmd
+              _Script: eng\validate-sdk.cmd
               _ValidateSdkArgs: -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -barToken $(MaestroAccessToken)
       steps:
       - checkout: self
