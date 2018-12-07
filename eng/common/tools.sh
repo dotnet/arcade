@@ -289,9 +289,10 @@ function MSBuild {
 }
 
 ResolvePath "${BASH_SOURCE[0]}"
+_script_dir=`dirname "$_ResolvePath"`
 
-eng_root="$( cd -P "$( dirname "$_ResolvePath" )/.." && pwd )"
-repo_root="$( cd -P "$( dirname "$_ResolvePath" )/../.." && pwd )"
+eng_root=`cd -P "$_script_dir/.." && pwd`
+repo_root=`cd -P "$_script_dir/../.." && pwd`
 artifacts_dir="$repo_root/artifacts"
 toolset_dir="$artifacts_dir/toolset"
 log_dir="$artifacts_dir/log/$configuration"
