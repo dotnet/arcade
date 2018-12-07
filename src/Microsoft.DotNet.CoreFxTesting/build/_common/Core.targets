@@ -130,6 +130,8 @@
       OutputPath ="$(RunScriptOutputPath)"
       OutputEchoes="$(RunScriptOutputEchoes)" />
 
+    <Exec Condition="'$(TargetOS)' != 'Windows_NT'" Command="chmod +x $(RunScriptOutputPath)" />
+
   </Target>
 
   <Target Name="DiscoverRunTestsInputs"
