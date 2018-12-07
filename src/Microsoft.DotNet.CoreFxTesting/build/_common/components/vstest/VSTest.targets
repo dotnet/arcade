@@ -3,7 +3,7 @@
 <Project>
 
   <!-- TODO: Fix VB test project reference to Test SDK. -->
-  <Import Condition="'$(Language)' != 'VB' AND ('$(BuildingNETCoreAppVertical)' == 'true' OR '$(BuildingNETFxVertical)' == 'true')" Project="$(RuntimePath)Microsoft.Net.Test.Sdk.targets" />
+  <Import Condition="'$(Language)' != 'VB' AND ('$(BuildingNETCoreAppVertical)' == 'true' OR '$(BuildingNETFxVertical)' == 'true')" Project="$(RuntimePath)Microsoft.NET.Test.Sdk.targets" />
 
   <Choose>
     <When Condition="'$(BuildingNETCoreAppVertical)' == 'true'">  
