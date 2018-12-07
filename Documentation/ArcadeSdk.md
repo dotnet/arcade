@@ -122,7 +122,7 @@ By default, Arcade [builds solutions in the root of the repo](https://github.com
 
   Example: `build.cmd -projects MyProject.proj`
 
-  See CoreFx for another [example](https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/common/build.ps1#L51)
+  See [source code](https://github.com/dotnet/arcade/blob/440b2dae3a206b28f6aba727b7818873358fcc0a/eng/common/build.ps1#L53)
 
 - Provide a repo default override in `eng/Build.props`.
 
@@ -137,7 +137,7 @@ By default, Arcade [builds solutions in the root of the repo](https://github.com
   </Project>
   ```
 
-  CoreFx does not use the default build projects in its repo - https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/Build.props
+  CoreFx does not use the default build projects in its repo - [example](https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/Build.props)
 
 ### /eng/Versions.props: A single file listing component versions and used tools
 
