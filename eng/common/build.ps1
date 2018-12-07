@@ -1,15 +1,15 @@
 [CmdletBinding(PositionalBinding=$false)]
 Param(
-  [string] $configuration = "Debug",
+  [string][Alias('c')]$configuration = "Debug",
   [string] $projects = "",
-  [string] $verbosity = "minimal",
+  [string][Alias('v')]$verbosity = "minimal",
   [string] $msbuildEngine = $null,
   [bool] $warnAsError = $true,
   [bool] $nodeReuse = $true,
   [switch] $execute,
-  [switch] $restore,
+  [switch][Alias('r')]$restore,
   [switch] $deployDeps,
-  [switch] $build,
+  [switch][Alias('b')]$build,
   [switch] $rebuild,
   [switch] $deploy,
   [switch] $test,
@@ -30,15 +30,15 @@ Param(
 
 function Print-Usage() {
     Write-Host "Common settings:"
-    Write-Host "  -configuration <value>  Build configuration Debug, Release"
-    Write-Host "  -verbosity <value>      Msbuild verbosity (q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic])"
-    Write-Host "  -binaryLog              Output binary log"
+    Write-Host "  -configuration <value>  Build configuration: 'Debug' or 'Release' (short: -c)"
+    Write-Host "  -verbosity <value>      Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic] (short: -v)"
+    Write-Host "  -binaryLog              Output binary log (short: -bl)"
     Write-Host "  -help                   Print help and exit"
     Write-Host ""
 
     Write-Host "Actions:"
-    Write-Host "  -restore                Restore dependencies"
-    Write-Host "  -build                  Build solution"
+    Write-Host "  -restore                Restore dependencies (short: -r)"
+    Write-Host "  -build                  Build solution (short: -b)"
     Write-Host "  -rebuild                Rebuild solution"
     Write-Host "  -deploy                 Deploy built VSIXes"
     Write-Host "  -deployDeps             Deploy dependencies (e.g. VSIXes for integration tests)"
@@ -48,7 +48,7 @@ function Print-Usage() {
     Write-Host "  -performanceTest        Run all performance tests in the solution"
     Write-Host "  -sign                   Sign build outputs"
     Write-Host "  -publish                Publish artifacts (e.g. symbols)"
-    Write-Host "  -publishBuildAssets        Push assets to BAR"
+    Write-Host "  -publishBuildAssets     Push assets to BAR"
     Write-Host ""
 
     Write-Host "Advanced settings:"

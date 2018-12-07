@@ -45,21 +45,10 @@ else
   use_global_nuget_cache=${use_global_nuget_cache:-true}
 fi
 
-ResolvePath "${BASH_SOURCE[0]}"
-
-eng_root="$_ResolvePath/.."
-repo_root="$eng_root/.."
-artifacts_dir="$repo_root/artifacts"
-toolset_dir="$artifacts_dir/toolset"
-log_dir="$artifacts_dir/log/$configuration"
-temp_dir="$artifacts_dir/tmp/$configuration"
-
-global_json_file="$repo_root/global.json"
-
+# Resolve any symlinks in the given path.
 function ResolvePath {
   local path=$1
 
-  # resolve $path until the file is no longer a symlink
   while [[ -h $path ]]; do
     local dir="$( cd -P "$( dirname "$path" )" && pwd )"
     path="$(readlink "$path")"
@@ -298,6 +287,17 @@ function MSBuild {
     ExitWithExitCode $lastexitcode
   fi
 }
+
+ResolvePath "${BASH_SOURCE[0]}"
+
+eng_root="$( cd -P "$( dirname "$_ResolvePath" )/.." && pwd )"
+repo_root="$( cd -P "$( dirname "$_ResolvePath" )/../.." && pwd )"
+artifacts_dir="$repo_root/artifacts"
+toolset_dir="$artifacts_dir/toolset"
+log_dir="$artifacts_dir/log/$configuration"
+temp_dir="$artifacts_dir/tmp/$configuration"
+
+global_json_file="$repo_root/global.json"
 
 # HOME may not be defined in some scenarios, but it is required by NuGet
 if [[ -z $HOME ]]; then
