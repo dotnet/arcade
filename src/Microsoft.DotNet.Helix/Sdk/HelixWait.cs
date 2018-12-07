@@ -31,6 +31,10 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public string Build { get; set; }
 
+        public bool IsExternal { get; set; } = false;
+
+        public string Creator { get; set; }
+
         protected override async Task ExecuteCore()
         {
             // Wait 1 second to allow helix to register the job creation
@@ -91,29 +95,45 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             using (HttpClient client = new HttpClient())
             {
-                client.DefaultRequestHeaders.Add("User-Agent", "AzureDevOps");
-                string githubJson = "";
-                try
+                if (IsExternal)
                 {
-                    githubJson = await client.GetStringAsync($"https://api.github.com/user?access_token={AccessToken}");
+                    Log.LogMessage($"Job recognized as external. Using Creator property ('{Creator}') in MC link.");
+                    if (string.IsNullOrEmpty(Creator))
+                    {
+                        Log.LogMessage(MessageImportance.High, $"Creator not specified for an anonymous job.");
+                        return "Mission Control (link generation failed -- creator not specified for anonymous job)";
+                    }
+                    else
+                    {
+                        return $"https://mc.dot.net/#/user/{Creator}/{Source}/{Type}/{Build}";
+                    }
                 }
-                catch (HttpRequestException e)
+                else
                 {
-                    Log.LogMessage(MessageImportance.High, "Failed to connect to GitHub to retrieve username", e.StackTrace);
-                    return "Mission Control (generation of MC link failed -- GitHub HTTP request error)";
-                }
-                string userName = "";
-                try
-                {
-                    userName = JObject.Parse(githubJson)["login"].ToString();
-                }
-                catch (JsonException e)
-                {
-                    Log.LogMessage(MessageImportance.High, "Failed to parse JSON or find value in parsed JSON", e.StackTrace);
-                    return "Mission Control (generation of MC link failed -- JSON parsing error)";
-                }
+                    client.DefaultRequestHeaders.Add("User-Agent", "AzureDevOps");
+                    string githubJson = "";
+                    try
+                    {
+                        githubJson = await client.GetStringAsync($"https://api.github.com/user?access_token={AccessToken}");
+                    }
+                    catch (HttpRequestException e)
+                    {
+                        Log.LogMessage(MessageImportance.High, "Failed to connect to GitHub to retrieve username", e.StackTrace);
+                        return "Mission Control (generation of MC link failed -- GitHub HTTP request error)";
+                    }
+                    string userName = "";
+                    try
+                    {
+                        userName = JObject.Parse(githubJson)["login"].ToString();
+                    }
+                    catch (JsonException e)
+                    {
+                        Log.LogMessage(MessageImportance.High, "Failed to parse JSON or find value in parsed JSON", e.StackTrace);
+                        return "Mission Control (generation of MC link failed -- JSON parsing error)";
+                    }
 
-                return $"https://mc.dot.net/#/user/{userName}/{Source}/{Type}/{Build}";
+                    return $"https://mc.dot.net/#/user/{userName}/{Source}/{Type}/{Build}";
+                }
             }
         }
     }
