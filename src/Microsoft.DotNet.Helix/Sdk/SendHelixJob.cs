@@ -147,7 +147,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     .WithSource(Source)
                     .WithType(Type)
                     .WithBuild(Build)
-                    .WithTargetQueue(TargetQueue);
+                    .WithTargetQueue(TargetQueue)
                     .WithMaxRetryCount(MaxRetryCount);
                 Log.LogMessage($"Initialized job definition with source '{Source}', type '{Type}', build number '{Build}', and target queue '{TargetQueue}'");
 
