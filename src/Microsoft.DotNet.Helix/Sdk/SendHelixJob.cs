@@ -53,6 +53,12 @@ namespace Microsoft.DotNet.Helix.Sdk
         public bool IsExternal { get; set; } = false;
 
         /// <summary>
+        /// Required if the build is external
+        /// The GitHub username of the job creator
+        /// </summary>
+        public string Creator { get; set; }
+
+        /// <summary>
         ///   <see langword="true"/> when the work items are executing on a Posix shell; <see langword="false"/> otherwise.
         /// </summary>
         public bool IsPosixShell { get; set; }
@@ -136,6 +142,18 @@ namespace Microsoft.DotNet.Helix.Sdk
                     .WithType(Type)
                     .WithBuild(Build)
                     .WithTargetQueue(TargetQueue);
+
+                if (IsExternal)
+                {
+                    if (string.IsNullOrEmpty(Creator))
+                    {
+                        Log.LogError("The Creator property was left unspecified for an external job. Please set the Creator property or use set IsExternal to false.");
+                    }
+                    else
+                    {
+                        def.WithCreator(Creator);
+                    }
+                }
 
                 if (CorrelationPayloads != null)
                 {
