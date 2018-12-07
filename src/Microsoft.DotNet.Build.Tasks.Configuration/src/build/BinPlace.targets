@@ -46,7 +46,7 @@
     </Copy>
   </Target>
 
-  <UsingTask TaskName="SaveItems" AssemblyFile="$(BuildToolsTaskDir)Microsoft.DotNet.Build.Tasks.dll"/>
+  <UsingTask TaskName="SaveItems" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)"/>
   <Target Name="BinPlaceProps"
           Condition="'@(PackageFileDir)' != ''"
           DependsOnTargets="GetBinPlaceItems"
@@ -92,8 +92,8 @@
 
     <SaveItems ItemName="%(_packageFileDir.SaveItemName)"
                Items="@(_itemsToSave)"
-               Files="%(_packageFileDir.Identity)\$(_propsFilename).props">
-      <Output TaskParameter="Files" ItemName="FileWrites" />
+               File="%(_packageFileDir.Identity)\$(_propsFilename).props">
+      <Output TaskParameter="File" ItemName="FileWrites" />
     </SaveItems>
   </Target>
 
@@ -116,7 +116,7 @@
     </ItemGroup>
   </Target>
 
-  <UsingTask TaskName="FindBestConfigurations" AssemblyFile="$(BuildToolsTaskDir)Microsoft.DotNet.Build.Tasks.dll"/>
+  <UsingTask TaskName="FindBestConfigurations" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
   <Target Name="GetBinPlaceConfiguration" DependsOnTargets="GetBuildConfigurations">
     <!-- find which, if any, build configuration of this project is best
          for each binplace configuration -->
