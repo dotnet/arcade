@@ -7,8 +7,8 @@
 |-------------|-------------------|---------------------|---|---|---|
 | decide what to do about native dependencies in official build|3|40|X||X|
 | add signing to official product builds|3|60|X|||
-| add red hat product build job|2|50|X|||
-| add linux-musl product build job|2|50|X|||
+| add red hat product build job|2|50|X||X|
+| add linux-musl product build job|2|50|X||X|
 | publish packages to blob feed (this is part of dependency flow requirement)|0.5|70|X||X (ready to pull trigger once all assets are produced)|
 | publish symbols|1|70|X|||
 | update Build Assets Registry (this is part of dependency flow requirement)|0.5|60|X|||

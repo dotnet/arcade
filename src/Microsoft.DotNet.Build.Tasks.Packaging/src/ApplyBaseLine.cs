@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
     /// Dependencies with a version will be raised to the lowest baseline version that satisfies
     /// the requested version.
     /// </summary>
-    public class ApplyBaseLine : PackagingTask
+    public class ApplyBaseLine : BuildTask
     {
         /// <summary>
         /// Original dependencies

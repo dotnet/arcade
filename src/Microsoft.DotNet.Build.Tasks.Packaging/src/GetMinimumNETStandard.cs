@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetMinimumNETStandard : PackagingTask
+    public class GetMinimumNETStandard : BuildTask
     {
         [Required]
         public ITaskItem[] Frameworks

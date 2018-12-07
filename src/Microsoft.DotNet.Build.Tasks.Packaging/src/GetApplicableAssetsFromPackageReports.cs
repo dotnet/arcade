@@ -13,7 +13,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetApplicableAssetsFromPackageReports : PackagingTask
+    public class GetApplicableAssetsFromPackageReports : BuildTask
     {
         [Required]
         public string[] PackageReports { get; set; }

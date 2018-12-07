@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class SplitReferences : PackagingTask
+    public class SplitReferences : BuildTask
     {
         [Required]
         public ITaskItem[] References

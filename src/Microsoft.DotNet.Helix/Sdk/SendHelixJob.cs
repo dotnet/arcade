@@ -123,6 +123,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </remarks>
         public ITaskItem[] HelixProperties { get; set; }
 
+        /// <summary>
+        /// Max automatic retry of workitems which do not return 0
+        /// </summary>
+        public int MaxRetryCount { get; set; }
+
         private CommandPayload _commandPayload;
 
         protected override async Task ExecuteCore()
@@ -143,6 +148,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     .WithType(Type)
                     .WithBuild(Build)
                     .WithTargetQueue(TargetQueue);
+                    .WithMaxRetryCount(MaxRetryCount);
                 Log.LogMessage($"Initialized job definition with source '{Source}', type '{Type}', build number '{Build}', and target queue '{TargetQueue}'");
 
                 if (IsExternal)
