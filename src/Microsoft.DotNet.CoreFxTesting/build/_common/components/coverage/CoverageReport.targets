@@ -4,7 +4,12 @@
 
   <PropertyGroup>
     <CoverageReportInputPath Condition="'$(CoverageReportInputPath)' == ''">$(CoverageOutputPath)</CoverageReportInputPath>
-    <CoverageReportDir Condition="'$(CoverageReportDir)' == ''">$([MSBuild]::NormalizeDirectory('$(TestPath)', 'report'))</CoverageReportDir>
+    <!-- 
+      Report generator currently crashes if the targetdir contains a trailing slash.
+      https://github.com/danielpalme/ReportGenerator/issues/184
+      Replace with NormalizeDirectory instead of NormalizePath when fixed.
+    -->
+    <CoverageReportDir Condition="'$(CoverageReportDir)' == ''">$([MSBuild]::NormalizePath('$(TestPath)', 'report'))</CoverageReportDir>
     <CoverageReportTypes Condition="'$(CoverageReportTypes)' == ''">Html</CoverageReportTypes>
     <CoverageReportVerbosity Condition="'$(CoverageReportVerbosity)' == ''">Info</CoverageReportVerbosity>
     <CoverageReportResultsPath>$([MSBuild]::NormalizePath('$(CoverageReportDir)', 'index.htm'))</CoverageReportResultsPath>
