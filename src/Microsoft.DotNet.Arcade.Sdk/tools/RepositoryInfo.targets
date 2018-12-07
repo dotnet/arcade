@@ -27,7 +27,7 @@
         git@ssh.dev.azure.com:v3/dnceng/internal/dotnet-arcade-services
       -->
       <_Pattern>(https://dnceng%40dev\.azure\.com/dnceng/internal/_git|https://dev\.azure\.com/dnceng/internal/_git|https://dnceng\.visualstudio\.com/internal/_git|dnceng%40vs-ssh\.visualstudio\.com:v3/dnceng/internal|git%40ssh\.dev\.azure\.com:v3/dnceng/internal)/([^/-]+)-(.+)</_Pattern>
-      <_Replacement>https://github.com/$1/$2</_Replacement>
+      <_Replacement>https://github.com/$2/$3</_Replacement>
     </PropertyGroup>
 
     <PropertyGroup>
