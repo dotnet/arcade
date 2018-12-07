@@ -4,10 +4,10 @@
 
   <PropertyGroup>
     <CoverageReportInputPath Condition="'$(CoverageReportInputPath)' == ''">$(CoverageOutputPath)</CoverageReportInputPath>
-    <CoverageReportDir Condition="'$(CoverageReportDir)' == ''">report</CoverageReportDir>
+    <CoverageReportDir Condition="'$(CoverageReportDir)' == ''">$([MSBuild]::NormalizeDirectory('$(TestPath)', 'report'))</CoverageReportDir>
     <CoverageReportTypes Condition="'$(CoverageReportTypes)' == ''">Html</CoverageReportTypes>
     <CoverageReportVerbosity Condition="'$(CoverageReportVerbosity)' == ''">Info</CoverageReportVerbosity>
-    <CoverageReportResultsPath>$(CoverageReportDir)\index.htm</CoverageReportResultsPath>
+    <CoverageReportResultsPath>$([MSBuild]::NormalizePath('$(CoverageReportDir)', 'index.htm'))</CoverageReportResultsPath>
     <CoverageReportExecutablePath Condition="'$(CoverageReportExecutablePath)' == ''">$(GlobalToolsDir)reportgenerator</CoverageReportExecutablePath>
 
     <CoverageReportCommandLine>$(CoverageReportExecutablePath) "-reports:$(CoverageReportInputPath)" "-targetdir:$(CoverageReportDir)" "-reporttypes:$(CoverageReportTypes)" "-verbosity:$(CoverageReportVerbosity)"</CoverageReportCommandLine>
@@ -26,8 +26,9 @@
           Outputs="$(CoverageReportResultsPath)"
           Condition="'$(GenerateFullCoverageReport)' == 'true'">
 
-    <Exec Command="$(CoverageReportCommandLine)"
-          ContinueOnError="ErrorAndContinue" />
+    <Exec Command="$(CoverageReportCommandLine)" />
+
+    <Message Importance="High" Text="Coverage report created: $(CoverageReportResultsPath)" />
 
     <Exec Command="$(CoverageReportOpenCommandLine)"
           Condition="'$(CoverageReportOpenCommandLine)' != ''" />
