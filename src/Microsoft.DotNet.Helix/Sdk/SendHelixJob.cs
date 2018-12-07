@@ -155,7 +155,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 {
                     if (string.IsNullOrEmpty(Creator))
                     {
-                        Log.LogError("The Creator property was left unspecified for an external job. Please set the Creator property or use set IsExternal to false.");
+                        Log.LogError("The Creator property was left unspecified for an external job. Please set the Creator property or set IsExternal to false.");
                     }
                     else
                     {
