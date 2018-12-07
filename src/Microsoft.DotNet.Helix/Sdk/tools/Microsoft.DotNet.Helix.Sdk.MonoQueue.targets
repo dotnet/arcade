@@ -85,6 +85,7 @@
                   Build="$(HelixBuild)"
                   TargetQueue="$(HelixTargetQueue)"
                   IsPosixShell="$(IsPosixShell)"
+                  IsExternal="$(IsExternal)"
                   BaseUri="$(HelixBaseUri)"
                   AccessToken="$(HelixAccessToken)"
                   PreCommands="$(HelixPreCommands)"
