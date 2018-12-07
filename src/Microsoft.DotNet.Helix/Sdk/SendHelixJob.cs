@@ -132,6 +132,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var currentHelixApi = HelixApi;
                 if (IsExternal)
                 {
+                    Log.LogMessage($"Job is external. Switching to anonymous API.");
                     currentHelixApi = AnonymousApi;
                     var storageApi = new Storage((HelixApi)HelixApi);
                     typeof(HelixApi).GetProperty("Storage").SetValue(AnonymousApi, storageApi);
@@ -142,6 +143,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     .WithType(Type)
                     .WithBuild(Build)
                     .WithTargetQueue(TargetQueue);
+                Log.LogMessage($"Initialized job definition with source '{Source}', type '{Type}', build number '{Build}', and target queue '{TargetQueue}'");
 
                 if (IsExternal)
                 {
@@ -152,6 +154,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     else
                     {
                         def.WithCreator(Creator);
+                        Log.LogMessage($"Setting creator to '{Creator}'");
                     }
                 }
 
@@ -214,6 +217,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             def.WithProperty(key, value);
+            Log.LogMessage($"Added property '{key}' (value: '{value}') to job definition.");
             return def;
         }
 

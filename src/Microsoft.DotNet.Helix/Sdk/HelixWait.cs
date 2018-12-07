@@ -97,9 +97,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 if (IsExternal)
                 {
+                    Log.LogMessage($"Job recognized as external. Using Creator property ('{Creator}') in MC link.");
                     if (string.IsNullOrEmpty(Creator))
                     {
-                        Log.LogMessage(MessageImportance.High, $"Creator not specified for an anonymous job");
+                        Log.LogMessage(MessageImportance.High, $"Creator not specified for an anonymous job.");
                         return "Mission Control (link generation failed -- creator not specified for anonymous job)";
                     }
                     else
