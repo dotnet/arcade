@@ -60,8 +60,6 @@ namespace Microsoft.DotNet.XUnitExtensions
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonUapTest);
                 if (frameworks.HasFlag(TargetFrameworkMonikers.UapAot))
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonUapAotTest);
-                if (frameworks.HasFlag(TargetFrameworkMonikers.NetcoreCoreRT))
-                    yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcoreCoreRTTest);
                 if (frameworks == (TargetFrameworkMonikers)0)
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing);
 
