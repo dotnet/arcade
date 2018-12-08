@@ -17,17 +17,17 @@ Registry to we participate in Dependency Flow, and we are on track to finish tha
 
 |Task         |Estimate remaining (days)|Estimate confidence (%)  |Priority 1 |Priority 2| Done |
 |-------------|-------------------|---------------------|---|---|---|
-| Decide what to do about native dependencies in official build|0|-|X|\&nbsp|X|
-| Add signing to official product builds|0.5|90|X|\&nbsp|(Working through the last set of issues on this)|
-| Add red hat product build job|0|-|X|\&nbsp|X|
-| Add linux-musl product build job|0|-|X|\&nbsp|X|
-| Publish packages to blob feed (this is part of dependency flow requirement)|1|50|X|\&nbsp|Need to add step to YAML to build packages and upload|
-| Publish symbols|1|50|X|\&nbsp|\&nbsp|
-| Update Build Assets Registry (this is part of dependency flow requirement)|0.5|60|X|\&nbsp|\&nbsp|
-| IBC and PGO data|3|30|\&nbsp|X||
-| Validate output against buildpipeline official build|1|80|\&nbsp|X|\&nbsp|
-| Turn off buildpipeline official build and remove old scripts|1|80|\&nbsp|X|\&nbsp|
-|**Total**    |**8**                 |\&nbsp|\&nbsp|\&nbsp|\&nbsp|
+| Decide what to do about native dependencies in official build|0|-|X| |X|
+| Add signing to official product builds|0.5|90|X| |(Working through the last set of issues on this)|
+| Add red hat product build job|0|-|X| |X|
+| Add linux-musl product build job|0|-|X| |X|
+| Publish packages to blob feed (this is part of dependency flow requirement)|1|50|X| |Need to add step to YAML to build packages and upload|
+| Publish symbols|1|50|X| | |
+| Update Build Assets Registry (this is part of dependency flow requirement)|0.5|60|X| | |
+| IBC and PGO data|3|30| |X||
+| Validate output against buildpipeline official build|1|80| |X| |
+| Turn off buildpipeline official build and remove old scripts|1|80| |X| |
+|**Total**    |**8**                 | | | | |
 
 ### Engineering dependency flow (beyond what required for official build)
 These Dependency Flow tasks are done, though they have only been lightly tested.  We won't be able
@@ -36,9 +36,9 @@ enable Dependency Flow end to end.
 
 |Task         |Estimate remaining (days)|Estimate confidence (%)  |Priority 1 |Priority 2| Done |
 |-------------|-------------------|---------------------|---|---|---|
-| Set up branches/channels/subscriptions|0|-|X|\&nbsp|X|
-| Express package dependencies in new format|0|-|X|\&nbsp|X|
-|**Total**    |**0**                 |\&nbsp|\&nbsp|\&nbsp|\&nbsp|
+| Set up branches/channels/subscriptions|0|-|X| |X|
+| Express package dependencies in new format|0|-|X| |X|
+|**Total**    |**0**                 | | | | |
 
 ### Using Azure DevOps for CI
 Unlike the existing Jenkins system, the AzDO-based CI system will *heavily* leverage Official Build logic,
@@ -61,17 +61,17 @@ work is TBD.
 
 |Task         |Estimate remaining (days)|Estimate confidence (%)  |Priority 1 |Priority 2| Done |
 |-------------|-------------------|---------------------|---|---|---|
-| Express test matrix with commented jobs for those not implemented|0|-|X|\&nbsp|X|
-| Group test jobs into useful subsets--each with its own pipeline|0|-|X|\&nbsp|X|
-| Add Formatting jobs|1|80|\&nbsp|X|\&nbsp|
-| Add IBC collection and consumption|4|30|\&nbsp|X|\&nbsp|
-| Add R2R jobs|1|80|\&nbsp|X|\&nbsp|
-| Add Perf Jobs|4|30|\&nbsp|X|\&nbsp|
-| Add SuperPMI jobs|3|50|\&nbsp|X|\&nbsp|
-| Run various test legs at job queue time|1|80|X|\&nbsp|\&nbsp|
-| Validate ~~mission control~~AzDO reporting for xunit results with different test legs|0|-|X|\&nbsp|X|
-| Set up a way to trigger certain test legs from github PRs|0|-|X|\&nbsp|X|
-|**Total**    |**14**                 |\&nbsp|\&nbsp|\&nbsp|\&nbsp|
+| Express test matrix with commented jobs for those not implemented|0|-|X| |X|
+| Group test jobs into useful subsets--each with its own pipeline|0|-|X| |X|
+| Add Formatting jobs|1|80| |X| |
+| Add IBC collection and consumption|4|30| |X| |
+| Add R2R jobs|1|80| |X| |
+| Add Perf Jobs|4|30| |X| |
+| Add SuperPMI jobs|3|50| |X| |
+| Run various test legs at job queue time|1|80|X| | |
+| Validate ~~mission control~~AzDO reporting for xunit results with different test legs|0|-|X| |X|
+| Set up a way to trigger certain test legs from github PRs|0|-|X| |X|
+|**Total**    |**14**                 | | | | |
 
 ### Using shared toolset (Arcade SDK)
 CoreCLR made a conscious decision to deprioritize the Arcade transition in favor of getting the Official
@@ -81,12 +81,12 @@ time we are bringing the rest of the test jobs over.
 
 |Task         |Estimate remaining (days)|Estimate confidence (%)  |Priority 1 |Priority 2| Done |
 |-------------|-------------------|---------------------|---|---|---|
-| Conform to their directory structure for build output (not sure we should do this)|8|20|\&nbsp|X|\&nbsp|
-| Factor our build to go through the arcade entry point project (not sure we should do this) |8|20|\&nbsp|X|\&nbsp|
-| Use arcade conventions for package directories and MSBuild imports|2|40|\&nbsp|X|\&nbsp|
-| Migrate our tests to SDK-style projects|6|30|\&nbsp|X|\&nbsp|
-| Remove config.json and run.exe from our build scripts (easiest once buildpipeline no longer uses them)|4|40|\&nbsp|X|\&nbsp|
-|**Total**    |**28**                 |\&nbsp|\&nbsp|\&nbsp|\&nbsp|
+| Conform to their directory structure for build output (not sure we should do this)|8|20| |X| |
+| Factor our build to go through the arcade entry point project (not sure we should do this) |8|20| |X| |
+| Use arcade conventions for package directories and MSBuild imports|2|40| |X| |
+| Migrate our tests to SDK-style projects|6|30| |X| |
+| Remove config.json and run.exe from our build scripts (easiest once buildpipeline no longer uses them)|4|40| |X| |
+|**Total**    |**28**                 | | | | |
 
 ## Delivery dates
 |Priority |Expected Delivery|
