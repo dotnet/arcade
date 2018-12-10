@@ -16,7 +16,7 @@
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 
   <ItemGroup>
-    <None Include="build\_common\assets\**" Pack="True" PackagePath="build\_common\assets\" />
+    <None Include="build\assets\**" Pack="True" PackagePath="build\assets\" />
   </ItemGroup>
 
 </Project>
