@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Microsoft.DotNet.Darc.Helpers
@@ -86,7 +87,7 @@ namespace Microsoft.DotNet.Darc.Helpers
                             _popUpClosed = true;
                         };
                         process.StartInfo.FileName = parsedCommand.FileName;
-                        process.StartInfo.UseShellExecute = true;
+                        process.StartInfo.UseShellExecute = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
                         process.StartInfo.Arguments = $"{parsedCommand.Arguments} {path}";
                         process.Start();
 
