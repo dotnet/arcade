@@ -23,7 +23,6 @@
 
     ContinuousIntegrationBuild      "true" when building on a CI server (PR build or official build)
     Restore                         "true" to restore toolset and solution
-    QuietRestore                    "true" to suppress Restore output.
     Build                           "true" to build solution
     Rebuild                         "true" to rebuild solution
     Execute                         "true" to execute an sdk project "execute" target
@@ -34,6 +33,10 @@
     Pack                            "true" to build NuGet packages and VS insertion manifests
     Sign                            "true" to sign built binaries
     Publish                         "true" to publish artifacts (e.g. symbols)
+
+    Workaround for https://github.com/NuGet/Home/issues/4695
+    QuietRestore                    "true" to suppress Restore output.
+    QuietRestoreBinaryLog           "true" to produce binary log for Restore.
   -->
 
   <!--
@@ -56,7 +59,7 @@
     <_RepoRootOriginal>$(RepoRoot)</_RepoRootOriginal>
     <RepoRoot>$([System.IO.Path]::GetFullPath('$(RepoRoot)/'))</RepoRoot>
 
-    <_RemoveProps>Projects;Restore;QuietRestore;Build;Rebuild;Deploy;Test;IntegrationTest;PerformanceTest;Pack;Sign;Publish;Execute</_RemoveProps>
+    <_RemoveProps>Projects;Restore;QuietRestore;QuietRestoreBinaryLog;Build;Rebuild;Deploy;Test;IntegrationTest;PerformanceTest;Pack;Sign;Publish;Execute</_RemoveProps>
   </PropertyGroup>
 
   <Import Project="RepoLayout.props"/>
@@ -80,7 +83,7 @@
 
     <PropertyGroup>
       <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' != 'Core'">"$(MSBuildBinPath)\MSBuild.exe" /nodeReuse:false</_MSBuildCmd>
-      <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' == 'Core'">"$(MSBuildBinPath)\..\..\dotnet" msbuild</_MSBuildCmd>
+      <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' == 'Core'">"$(DotNetTool)" msbuild</_MSBuildCmd>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -107,6 +110,7 @@
       <!-- Used for sdk projects to perform some task -->
       <_SolutionBuildTargets Include="Execute" Condition="'$(Execute)' == 'true' and '$(SdkTaskProjects)' != ''" />
     </ItemGroup>
+
     <ItemGroup>
       <_CommonProps Include="Configuration=$(Configuration)"/>
       <_CommonProps Include="ContinuousIntegrationBuild=$(ContinuousIntegrationBuild)"/>
@@ -145,13 +149,20 @@
     </ItemGroup>
 
     <ItemGroup>
-      <_SolutionBuildPropsArgs Include="@(_SolutionBuildProps->'/p:%(Identity)')" />
-      <_RestoreToolsPropArgs Include="@(_RestoreToolsProps->'/p:%(Identity)')" />
+      <_SolutionBuildPropsArgs Include="@(_SolutionBuildProps->'/p:%(Identity)\')" Condition="$([MSBuild]::ValueOrDefault(%(_SolutionBuildProps.Identity), '').EndsWith('\'))" />
+      <_SolutionBuildPropsArgs Include="@(_SolutionBuildProps->'/p:%(Identity)')" Condition="!$([MSBuild]::ValueOrDefault(%(_SolutionBuildProps.Identity), '').EndsWith('\'))" />
+      <_RestoreToolsPropArgs Include="@(_RestoreToolsProps->'/p:%(Identity)\')" Condition="$([MSBuild]::ValueOrDefault(%(_RestoreToolsProps.Identity), '').EndsWith('\'))" />
+      <_RestoreToolsPropArgs Include="@(_RestoreToolsProps->'/p:%(Identity)')" Condition="!$([MSBuild]::ValueOrDefault(%(_RestoreToolsProps.Identity), '').EndsWith('\'))" />
     </ItemGroup>
 
     <PropertyGroup>
-      <_SolutionBuildPropsCmdLine>@(_SolutionBuildPropsArgs, ' ')</_SolutionBuildPropsCmdLine>
-      <_RestoreToolsPropsCmdLine>@(_RestoreToolsPropArgs, ' ')</_RestoreToolsPropsCmdLine>
+      <_SolutionBuildPropsCmdLine>"@(_SolutionBuildPropsArgs, '" "')"</_SolutionBuildPropsCmdLine>
+      <_RestoreToolsPropsCmdLine>"@(_RestoreToolsPropArgs, '" "')"</_RestoreToolsPropsCmdLine>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(QuietRestoreBinaryLog)' == 'true'">
+      <_SolutionBuildPropsCmdLine>$(_SolutionBuildPropsCmdLine) /bl:"$(ArtifactsLogDir)RestoreRepoTools.binlog"</_SolutionBuildPropsCmdLine>
+      <_RestoreToolsPropsCmdLine>$(_RestoreToolsPropsCmdLine) /bl:"$(ArtifactsLogDir)Restore.binlog"</_RestoreToolsPropsCmdLine>
     </PropertyGroup>
 
     <!--
@@ -162,11 +173,11 @@
 
     <MakeDir Directories="$(ArtifactsLogDir)" Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" />
 
-    <Exec Command='$(_MSBuildCmd) "$(MSBuildProjectDirectory)\Tools.proj" /bl:"$(ArtifactsLogDir)RestoreRepoTools.binlog" /nologo /m /v:quiet /t:Restore $(_RestoreToolsPropsCmdLine)'
+    <Exec Command='$(_MSBuildCmd) "$(MSBuildProjectDirectory)\Tools.proj" /nologo /m /v:quiet /t:Restore $(_RestoreToolsPropsCmdLine)'
           Condition="'$(_RestoreTools)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
-    <Exec Command='$(_MSBuildCmd) "@(ProjectToBuild)" /bl:"$(ArtifactsLogDir)Restore.binlog" /nologo /m /v:quiet /t:Restore $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
-          Condition="'$(SdkTaskProjects)' == '' and '$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
+    <Exec Command='$(_MSBuildCmd) "@(ProjectToBuild)" /nologo /m /v:quiet /t:Restore $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
+          Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <!--
       Restore built-in tools.

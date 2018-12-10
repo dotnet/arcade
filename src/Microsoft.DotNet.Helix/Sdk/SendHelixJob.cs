@@ -48,6 +48,17 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string TargetQueue { get; set; }
 
         /// <summary>
+        /// <see langword="true"/> when the this job is external (i.e. should be submitted anonymously); false when not
+        /// </summary>
+        public bool IsExternal { get; set; } = false;
+
+        /// <summary>
+        /// Required if the build is external
+        /// The GitHub username of the job creator
+        /// </summary>
+        public string Creator { get; set; }
+
+        /// <summary>
         ///   <see langword="true"/> when the work items are executing on a Posix shell; <see langword="false"/> otherwise.
         /// </summary>
         public bool IsPosixShell { get; set; }
@@ -123,12 +134,35 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             using (_commandPayload = new CommandPayload(this))
             {
-                IJobDefinition def = HelixApi.Job.Define()
+                var currentHelixApi = HelixApi;
+                if (IsExternal)
+                {
+                    Log.LogMessage($"Job is external. Switching to anonymous API.");
+                    currentHelixApi = AnonymousApi;
+                    var storageApi = new Storage((HelixApi)HelixApi);
+                    typeof(HelixApi).GetProperty("Storage").SetValue(AnonymousApi, storageApi);
+                }
+
+                IJobDefinition def = currentHelixApi.Job.Define()
                     .WithSource(Source)
                     .WithType(Type)
                     .WithBuild(Build)
                     .WithTargetQueue(TargetQueue)
                     .WithMaxRetryCount(MaxRetryCount);
+                Log.LogMessage($"Initialized job definition with source '{Source}', type '{Type}', build number '{Build}', and target queue '{TargetQueue}'");
+
+                if (IsExternal)
+                {
+                    if (string.IsNullOrEmpty(Creator))
+                    {
+                        Log.LogError("The Creator property was left unspecified for an external job. Please set the Creator property or use set IsExternal to false.");
+                    }
+                    else
+                    {
+                        def.WithCreator(Creator);
+                        Log.LogMessage($"Setting creator to '{Creator}'");
+                    }
+                }
 
                 if (CorrelationPayloads != null)
                 {
@@ -189,6 +223,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             def.WithProperty(key, value);
+            Log.LogMessage($"Added property '{key}' (value: '{value}') to job definition.");
             return def;
         }
 

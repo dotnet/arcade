@@ -33,7 +33,6 @@ namespace Microsoft.DotNet.XUnitExtensions
         internal static string NonUapTest = "nonuaptests";
         internal static string NonUapAotTest = "nonuapaottests";
         internal static string NonNetcoreappTest = "nonnetcoreapptests";
-        internal static string NonNetcoreCoreRTTest = "nonnetcorecorerttests";
 
         internal const string Failing = "failing";
         internal const string ActiveIssue = "activeissue";

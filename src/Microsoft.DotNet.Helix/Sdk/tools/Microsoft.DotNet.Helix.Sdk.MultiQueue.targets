@@ -73,6 +73,6 @@
           AfterTargets="Test"
           Condition="$(WaitForWorkItemCompletion)">
     <Message Importance="High" Text="Waiting on job completion..." />
-    <HelixWait Jobs="@(SentJobs)" AccessToken="$(HelixAccessToken)" Source="$(HelixSource)" Type="$(HelixType)" Build="$(HelixBuild)" />
+    <HelixWait Jobs="@(SentJobs)" AccessToken="$(HelixAccessToken)" Source="$(HelixSource)" Type="$(HelixType)" Build="$(HelixBuild)" IsExternal="$(IsExternal)" Creator="$(Creator)" />
   </Target>
 </Project>
