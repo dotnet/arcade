@@ -7,7 +7,6 @@
     <CoverageExecutablePath Condition="'$(CoverageExecutablePath)' == ''">$(GlobalToolsDir)coverlet</CoverageExecutablePath>
     <RunArguments>"$(TestAssembly)" --target "$(RunCommand)" --targetargs "$(RunArguments)" --format "$(CoverageFormat)" --output "$(CoverageOutputPath)" --threshold "$(CoverageThreshold)" --threshold-type "$(CoverageThresholdType)"</RunArguments>
     <RunArguments Condition="'$(CoverageSourceLink)' == 'true'">$(RunArguments) --use-source-link</RunArguments>
-    <RunArguments Condition="'$(CoverageExcludeByFile)' != ''">$(RunArguments) --exclude-by-file $(CoverageExcludeByFile)</RunArguments>
     <RunArguments Condition="'$(CoverageExclude)' != ''">$(RunArguments) --exclude "$(CoverageExclude)"</RunArguments>
     <RunCommand>$(CoverageExecutablePath)</RunCommand>
   </PropertyGroup>
@@ -15,13 +14,12 @@
   <Target Name="SetupCoverageFilter">
 
     <PropertyGroup>
-      <CoverageExcludeByFile>--exclude-by-file @(CoverageExcludeFile -> '%(Identity)', ' --exclude-by-file ')</CoverageExcludeByFile>
+      <CoverageExcludeByFile>--exclude-by-file @(CoverageExcludeFile -> '"%(Identity)"', ' --exclude-by-file ')</CoverageExcludeByFile>
       <RunArguments>$(RunArguments) $(CoverageExcludeByFile)</RunArguments>
     </PropertyGroup>
 
     <PropertyGroup>
-      <IncludeDirectoriesFilter>--include-directory @(CoverageProbePath -> '$(RunScriptHostDir)%(Identity)', ' --include-directory ')</IncludeDirectoriesFilter>
-      <IncludeDirectoriesFilter Condition="'$(TargetOS)' != 'Windows_NT'">$(CoverageProbePath.Replace('\', '/'))</IncludeDirectoriesFilter>
+      <IncludeDirectoriesFilter>--include-directory @(CoverageProbePath -> '"$(RunScriptHostDir)%(Identity)"', ' --include-directory ')</IncludeDirectoriesFilter>
       <RunArguments>$(RunArguments) $(IncludeDirectoriesFilter)</RunArguments>
     </PropertyGroup>
 
@@ -46,7 +44,7 @@
     </ItemGroup>
 
     <PropertyGroup Condition="'$(CoverageType)' != 'all'">
-      <CoverageFilter>--include @(_CoverageAssemblies -> '[%(Identity)]*', ' --include ')</CoverageFilter>
+      <CoverageFilter>--include @(_CoverageAssemblies -> '"[%(Identity)]*"', ' --include ')</CoverageFilter>
       <RunArguments>$(RunArguments) $(CoverageFilter)</RunArguments>
     </PropertyGroup>
 
