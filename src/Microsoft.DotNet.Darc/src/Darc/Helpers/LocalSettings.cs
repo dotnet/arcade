@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Darc.Helpers
         {
             try
             {
-                LoadSettingsFile();
+                return LoadSettingsFile();
             }
             catch (Exception exc) when (exc is DirectoryNotFoundException || exc is FileNotFoundException)
             {
