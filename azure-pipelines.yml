@@ -44,7 +44,7 @@ jobs:
             /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
             /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
             /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-        - name: _Script:
+        - name: _Script
           value: eng\common\cibuild.cmd
         - name: _ValidateSdkArgs
           value: ''
