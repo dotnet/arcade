@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             };
         }
 
-        public async Task PredictAndApplyLabelAsync(int number, string title, string body, ILogger logger)
+        public async Task PredictAndApplyLabelAsync(int number, string title, string body, int? milestone, ILogger logger)
         {
             if (_client == null)
             {
@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             {
                 var issueUpdate = new IssueUpdate();
                 issueUpdate.AddLabel(label);
-                issueUpdate.Milestone = 1; // The number of milestones an issue could have.
+                issueUpdate.Milestone = milestone; // The number of milestone associated with the issue.
 
                 await _client.Issue.Update(_repoOwner, _repoName, number, issueUpdate);
             }
