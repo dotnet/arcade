@@ -79,12 +79,12 @@ steps:
 
 ## The Simple Case
 
-The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `helix-publish` template in `eng/common/templates/steps/helix-publish.yml` from your `.Azure DevOps-ci.yml` file.
+The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `send-to-helix` template in `eng/common/templates/steps/send-to-helix.yml` from your `.Azure DevOps-ci.yml` file.
 
 Simply specify the xUnit project(s) you wish to run (semicolon delimited) with the `XUnitProjects` parameter. Then, specify the `XUnitTargetFramework` (e.g. `netcoreapp2.0`) and the `XUnitRunnerVersion` (e.g. `2.4.1`; this is just the version of the xUnit nuget package you want to use). Finally, set `IncludeDotNetCli` to true and specify which `DotNetCliPackageType` (`sdk` or `runtime`) and `DotNetCliVersion` you wish to use. (For a full list of .NET CLI versions/package types, see these links: [2.1](https://dotnet.microsoft.com/download/dotnet-core/2.1), [2.2](https://dotnet.microsoft.com/download/dotnet-core/2.2).)
 
 ```yaml
-  - template: /eng/common/templates/steps/helix-publish.yml
+  - template: /eng/common/templates/steps/send-to-helix.yml
     parameters:
       HelixSource: pr/your/helix/source # sources must start with pr/, official/, prodcon/, or agent/
       HelixType: type/tests
@@ -103,6 +103,9 @@ Simply specify the xUnit project(s) you wish to run (semicolon delimited) with t
       # WaitForWorkItemCompletion: true -- defaults to true
       # condition: succeeded() - defaults to succeeded()
 ```
+
+### `send-to-helix` vs `helix-publish`
+Previously, the supported template for sending jobs to helix was `helix-publish.yml`. This template will still be available for the foreseeable future; however, as of December 2018 it will no longer be updated. The `helix-publish` template uses the built-in Azure DevOps `DotNetCoreCLI` task rather than the CLI that Arcade bootstraps onto the machine. If you are seeing errors using the `helix-publish` template that relate to versions of the dotnet CLI, try switching to the `send-to-helix` template.
 
 ## The More Complex Case
 
