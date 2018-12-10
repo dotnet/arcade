@@ -7,14 +7,11 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <!--When we are doing SDK validation we place the locally built packages in a custom path. This has to be propagated so the next
+        build can restore the local packages.-->
     <RestoreSources Condition="'$(ArcadeSelfTest)' == 'true'">
-      $(ArtifactsDir)validatesdk\packages\$(Configuration)\NonShipping;
-      https://api.nuget.org/v3/index.json;
-      https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
-      https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json;
-      https://dotnet.myget.org/F/dotnet-buildtools/api/v3/index.json;
-      https://dotnet.myget.org/F/symreader-converter/api/v3/index.json;
-
+        $(RestoreSources);
+        $(ArtifactsDir)validatesdk\packages\$(Configuration)\NonShipping
     </RestoreSources>
   </PropertyGroup>
 </Project>

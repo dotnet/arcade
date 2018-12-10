@@ -34,7 +34,6 @@ function Print-Usage() {
     Write-Host "  -configuration <value>  Build configuration: 'Debug' or 'Release' (short: -c)"
     Write-Host "  -verbosity <value>      Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic] (short: -v)"
     Write-Host "  -binaryLog              Output binary log (short: -bl)"
-    Write-Host "  -logFileName <value>    Binlog file name"
     Write-Host "  -help                   Print help and exit"
     Write-Host ""
 
@@ -59,6 +58,8 @@ function Print-Usage() {
     Write-Host "  -prepareMachine         Prepare machine for CI run"
     Write-Host "  -msbuildEngine <value>  Msbuild engine to use to run build ('dotnet', 'vs', or unspecified)."
     Write-Host ""
+    Write-Host "Optional settings:"
+    Write-Host "  -logFileName <value>    Binlog file name"
     Write-Host "Command line arguments not listed above are passed thru to msbuild."
     Write-Host "The above arguments can be shortened as much as to be unambiguous (e.g. -co for configuration, -t for test, etc.)."
 }
