@@ -43,18 +43,6 @@ function AddSourceToNugetConfig([string]$nugetConfigPath, [string]$source)
     $nugetConfig.Save($nugetConfigPath)
 }
 
-function AddSourceToToolsProj([string]$toolsProjPath, [string]$source) 
-{
-    Write-Host "Adding '$source' to '$toolsProjPath'..."
-    
-    $toolsProj = New-Object XML
-    $toolsProj.PreserveWhitespace = $true
-    $toolsProj.Load($toolsProjPath)
-    $restoreSources = $toolsProj.SelectSingleNode("//RestoreSources[not(@*)]")
-    $restoreSources.InnerText = $restoreSources.InnerText + "$source;"
-    $toolsProj.Save($toolsProjPath)
-}
-
 try {
   Write-Host "STEP 1: Build and create local packages"
   
@@ -70,11 +58,6 @@ try {
   if (!(Test-Path -Path $packagesSource)) {
     Create-Directory $packagesSource
   }
-  
-  # Adding a source by using /p:RestoreSources sets the system to just use that source, but if this source has packages
-  # which depend in different sources, the restore process fails since the dependencies are not found. Workaround is to
-  # append the new source to the existing collection of sources
-  # AddSourceToToolsProj $toolsProjPath $packagesSource
   
   . .\common\build.ps1 -restore -build -pack -configuration $configuration -logFileName "Build_Local.binlog" /p:ArtifactsDir=$validateSdkDir
     
