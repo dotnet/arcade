@@ -4,6 +4,7 @@ Param(
   [string] $projects = "",
   [string][Alias('v')]$verbosity = "minimal",
   [string] $msbuildEngine = $null,
+  [string] $logFileName = "Build.binlog",
   [bool] $warnAsError = $true,
   [bool] $nodeReuse = $true,
   [switch] $execute,
@@ -33,6 +34,7 @@ function Print-Usage() {
     Write-Host "  -configuration <value>  Build configuration: 'Debug' or 'Release' (short: -c)"
     Write-Host "  -verbosity <value>      Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic] (short: -v)"
     Write-Host "  -binaryLog              Output binary log (short: -bl)"
+    Write-Host "  -logFileName <value>    Binlog file name"
     Write-Host "  -help                   Print help and exit"
     Write-Host ""
 
@@ -77,7 +79,7 @@ function InitializeCustomToolset {
 function Build {
   $toolsetBuildProj = InitializeToolset
   InitializeCustomToolset
-  $bl = if ($binaryLog) { "/bl:" + (Join-Path $LogDir "Build.binlog") } else { "" }
+  $bl = if ($binaryLog) { "/bl:" + (Join-Path $LogDir $logFileName) } else { "" }
 
   MSBuild $toolsetBuildProj `
     $bl `

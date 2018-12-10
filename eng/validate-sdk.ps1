@@ -48,6 +48,7 @@ function AddSourceToToolsProj([string]$toolsProjPath, [string]$source)
     Write-Host "Adding '$source' to '$toolsProjPath'..."
     
     $toolsProj = New-Object XML
+    $toolsProj.PreserveWhitespace = $true
     $toolsProj.Load($toolsProjPath)
     $restoreSources = $toolsProj.SelectSingleNode("//RestoreSources[not(@*)]")
     $restoreSources.InnerText = $restoreSources.InnerText + "$source;"
@@ -59,25 +60,24 @@ try {
   
   Push-Location $PSScriptRoot
   
-  $validateSdkDir = "$PSScriptRoot\..\artifacts\validatesdk\"
+  $validateSdkDir = "$ArtifactsDir\validatesdk\\"
   $packagesSource = "$validateSdkDir\packages\$configuration\NonShipping"  
-  $toolsProjPath = "$PSScriptRoot\..\src\Microsoft.DotNet.Arcade.Sdk\tools\Tools.proj"
-  $nugetConfigPath = "$PSScriptRoot\..\NuGet.config"
+  $toolsProjPath = "$RepoRoot\src\Microsoft.DotNet.Arcade.Sdk\tools\Tools.proj"
+  $nugetConfigPath = "$RepoRoot\NuGet.config"
   
   # When restoring, we check if local sources defined in Tools.proj actually exist so we need to create
   # the validation SDK folder beforehand
   if (!(Test-Path -Path $packagesSource)) {
-    New-Item $packagesSource -ItemType Directory
+    Create-Directory $packagesSource
   }
   
   # Adding a source by using /p:RestoreSources sets the system to just use that source, but if this source has packages
   # which depend in different sources, the restore process fails since the dependencies are not found. Workaround is to
   # append the new source to the existing collection of sources
-  AddSourceToToolsProj $toolsProjPath $packagesSource
+  # AddSourceToToolsProj $toolsProjPath $packagesSource
   
   . .\common\build.ps1 -restore -build -pack -configuration $configuration -logFileName "Build_Local.binlog" /p:ArtifactsDir=$validateSdkDir
-   Check-ExitCode $lastExitCode
-  
+    
   Write-Host "STEP 2: Build using the local packages"
   
   AddSourceToNugetConfig $nugetConfigPath $packagesSource
@@ -96,8 +96,7 @@ try {
   
   Write-Host "Building with updated dependencies"
 
-  . .\common\build.ps1 -configuration $configuration @Args
-  Check-ExitCode $lastExitCode
+  . .\common\build.ps1 -configuration $configuration @Args  /p:ArcadeSelfTest=true
 }
 catch {
   Write-Host $_

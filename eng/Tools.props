@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RestoreSources Condition="'$(ArcadeSelfTest)' == 'true'">
+      $(ArtifactsDir)validatesdk\packages\$(Configuration)\NonShipping;
+      https://api.nuget.org/v3/index.json;
+      https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
+      https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json;
+      https://dotnet.myget.org/F/dotnet-buildtools/api/v3/index.json;
+      https://dotnet.myget.org/F/symreader-converter/api/v3/index.json;
+
+    </RestoreSources>
+  </PropertyGroup>
+</Project>
