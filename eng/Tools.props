@@ -9,9 +9,9 @@
   <PropertyGroup>
     <!--When we are doing SDK validation we place the locally built packages in a custom path. This has to be propagated so the next
         build can restore the local packages.-->
-    <RestoreSources Condition="'$(ArcadeSelfTest)' == 'true'">
+    <RestoreSources Condition="'$(AdditionalRestoreSources)' != ''">
         $(RestoreSources);
-        $(ArtifactsDir)validatesdk\packages\$(Configuration)\NonShipping
+        $(AdditionalRestoreSources)
     </RestoreSources>
   </PropertyGroup>
 </Project>

@@ -79,7 +79,7 @@ try {
   
   Write-Host "Building with updated dependencies"
 
-  . .\common\build.ps1 -configuration $configuration @Args  /p:ArcadeSelfTest=true
+  . .\common\build.ps1 -configuration $configuration @Args  /p:AdditionalRestoreSources=$packagesSource
 }
 catch {
   Write-Host $_

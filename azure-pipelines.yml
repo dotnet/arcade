@@ -44,6 +44,10 @@ jobs:
             /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
             /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
             /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+        - name: _Script:
+          value: eng\common\cibuild.cmd
+        - name: _ValidateSdkArgs
+          value: ''
       # else
       - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
         - name: _InternalBuildArgs
@@ -55,8 +59,6 @@ jobs:
             _PublishType: none
             _SignType: test
             _DotNetPublishToBlobFeed : false
-            _Script: eng\common\cibuild.cmd
-            _ValidateSdkArgs: ''
           Build_Release:
             _BuildConfig: Release
             # PRs or external builds are not signed.
@@ -64,7 +66,6 @@ jobs:
               _PublishType: none
               _SignType: test
               _DotNetPublishToBlobFeed : false
-              _Script: eng\common\cibuild.cmd
             ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
               _PublishType: blob
               _SignType: real
