@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Helix.Client
     {
         private readonly Dictionary<string, string> _properties;
         private readonly List<WorkItemDefinition> _workItems;
+        private readonly string _jobStartIdentifier;
 
         public JobDefinition(IJob jobApi)
         {
@@ -26,6 +27,7 @@ namespace Microsoft.DotNet.Helix.Client
             _properties = new Dictionary<string, string>();
             Properties = new ReadOnlyDictionary<string, string>(_properties);
             JobApi = jobApi;
+            _jobStartIdentifier = Guid.NewGuid().ToString("N");
             HelixApi = ((IServiceOperations<HelixApi>) JobApi).Client;
         }
 
