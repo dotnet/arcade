@@ -92,18 +92,7 @@
     <!-- C# specific settings -->
     <When Condition="'$(Language)' == 'C#'">
       <PropertyGroup>
-        <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
         <NoWarn>$(NoWarn);1701;1702;1705;1591</NoWarn>
-      </PropertyGroup>
-
-      <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-        <DebugSymbols>true</DebugSymbols>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-      </PropertyGroup>
-
-      <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-        <DefineConstants>TRACE</DefineConstants>
-        <Optimize>true</Optimize>
       </PropertyGroup>
     </When>
 
@@ -112,22 +101,8 @@
       <PropertyGroup>
         <MyType>Empty</MyType>
         <OptionCompare>Binary</OptionCompare>
-        <OptionExplicit>On</OptionExplicit>
-        <OptionInfer>On</OptionInfer>
         <OptionStrict>On</OptionStrict>
-        <VBRuntime>Embed</VBRuntime>
         <RemoveIntegerChecks>true</RemoveIntegerChecks>
-      </PropertyGroup>
-
-      <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-        <DebugSymbols>true</DebugSymbols>
-        <DefineDebug>true</DefineDebug>
-        <DefineTrace>true</DefineTrace>
-      </PropertyGroup>
-
-      <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-        <DefineTrace>true</DefineTrace>
-        <Optimize>true</Optimize>
       </PropertyGroup>
     </When>
 
