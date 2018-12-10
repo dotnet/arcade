@@ -7,6 +7,7 @@
     <CoverageThreshold Condition="$(CoverageThreshold) == ''">0</CoverageThreshold>
     <CoverageThresholdType Condition="$(CoverageThresholdType) == ''">line,branch,method</CoverageThresholdType>
     <CoverageFormat Condition="'$(CoverageFormat)' == ''">opencover</CoverageFormat>
+    <CoverageSourceLink Condition="'$(CoverageSourceLink)' == ''">true</CoverageSourceLink>
 
     <GenerateRunScriptDependsOn>$(GenerateRunScriptDependsOn);SetupCoverageFilter</GenerateRunScriptDependsOn>
   </PropertyGroup>

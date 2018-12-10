@@ -6,6 +6,7 @@
   <PropertyGroup>
     <CoverageExecutablePath Condition="'$(CoverageExecutablePath)' == ''">$(GlobalToolsDir)coverlet</CoverageExecutablePath>
     <RunArguments>"$(TestAssembly)" --target "$(RunCommand)" --targetargs "$(RunArguments)" --format "$(CoverageFormat)" --output "$(CoverageOutputPath)" --threshold "$(CoverageThreshold)" --threshold-type "$(CoverageThresholdType)"</RunArguments>
+    <RunArguments Condition="'$(CoverageSourceLink)' == 'true'">$(RunArguments) --use-source-link</RunArguments>
     <RunArguments Condition="'$(CoverageExcludeByFile)' != ''">$(RunArguments) --exclude-by-file $(CoverageExcludeByFile)</RunArguments>
     <RunArguments Condition="'$(CoverageExclude)' != ''">$(RunArguments) --exclude "$(CoverageExclude)"</RunArguments>
     <RunCommand>$(CoverageExecutablePath)</RunCommand>
