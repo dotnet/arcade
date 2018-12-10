@@ -12,14 +12,6 @@
     <RunCommand>$(CoverageExecutablePath)</RunCommand>
   </PropertyGroup>
 
-  <!--
-    Temporary till we consume System.Private.CoreLib sources via SourceLink.
-    https://github.com/dotnet/corefx/issues/30974
-   -->
-  <ItemGroup>
-    <PostRunScriptCommands Condition="'$(TargetOS)' == 'Windows_NT'" Include="powershell -Command &quot;(gc $(CoverageOutputPath)) -replace '$(CoverageTransformSource)', '$(CoverageTransformDestination)' | Out-File $(CoverageOutputPath) -encoding ASCII&quot;" />
-  </ItemGroup>
-
   <Target Name="SetupCoverageFilter">
 
     <PropertyGroup>
