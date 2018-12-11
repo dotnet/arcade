@@ -9,8 +9,9 @@ parameters:
   WorkItemDirectory: ''              # optional -- a payload directory to zip up and send to Helix; requires WorkItemCommand; incompatible with XUnitProjects
   WorkItemCommand: ''                # optional -- a command to execute on the payload; requires WorkItemDirectory; incompatible with XUnitProjects
   CorrelationPayloadDirectory: ''    # optional -- a directory to zip up and send to Helix as a correlation payload
-  XUnitProjects: ''                  # optional -- semicolon delimited list of XUnitProjects to parse and send to Helix; requires XUnitRuntimeTargetFramework, XUnitPUblishTargetFramework, XUnitRunnerVersion, and IncludeDotNetCli=true
-  XUnitTargetFramework: ''           # optional --
+  XUnitProjects: ''                  # optional -- semicolon delimited list of XUnitProjects to parse and send to Helix; requires XUnitRuntimeTargetFramework, XUnitPublishTargetFramework, XUnitRunnerVersion, and IncludeDotNetCli=true
+  XUnitPublishTargetFramework: ''    # optional -- framework to use to publish your xUnit projects
+  XUnitRuntimeTargetFramework: ''    # optional -- framework to use for the xUnit console runner
   XUnitRunnerVersion: ''             # optional -- version of the xUnit nuget package you wish to use on Helix; required for XUnitProjects
   IncludeDotNetCli: false            # optional -- true will download a version of the .NET CLI onto the Helix machine as a correlation payload; requires DotNetCliPackageType and DotNetCliVersion
   DotNetCliPackageType: ''           # optional -- either 'sdk' or 'runtime'; determines whether the sdk or runtime will be sent to Helix; see https://raw.githubusercontent.com/dotnet/core/master/release-notes/releases.json
@@ -23,7 +24,7 @@ parameters:
   continueOnError: false             # optional -- determines whether to continue the build if the step errors; defaults to false
 
 steps:
-  - script: '%BUILD_SOURCESDIRECTORY%\eng\common\msbuild.ps1 %BUILD_SOURCESDIRECTORY%\eng\common\helixpublish.proj /bl:%BUILD_SOURCESDIRECTORY%\artifacts\log\%BuildConfig%\SendToHelix.binlog'
+  - powershell: 'powershell "$env:BUILD_SOURCESDIRECTORY\eng\common\msbuild.ps1 $env:BUILD_SOURCESDIRECTORY\eng\common\helixpublish.proj /bl:$env:BUILD_SOURCESDIRECTORY\artifacts\log\$env:BuildConfig\SendToHelix.binlog"'
     displayName: Send job to Helix (Windows)
     env:
       BuildConfig: $(_BuildConfig)
@@ -38,7 +39,8 @@ steps:
       WorkItemCommand: ${{ parameters.WorkItemCommand }}
       CorrelationPayloadDirectory: ${{ parameters.CorrelationPayloadDirectory }}
       XUnitProjects: ${{ parameters.XUnitProjects }}
-      XUnitTargetFramework: ${{ parameters.XUnitTargetFramework }}
+      XUnitPublishTargetFramework: ${{ parameters.XUnitPublishTargetFramework }}
+      XUnitRuntimeTargetFramework: ${{ parameters.XUnitRuntimeTargetFramework }}
       XUnitRunnerVersion: ${{ parameters.XUnitRunnerVersion }}
       IncludeDotNetCli: ${{ parameters.IncludeDotNetCli }}
       DotNetCliPackageType: ${{ parameters.DotNetCliPackageType }}
@@ -64,7 +66,8 @@ steps:
       WorkItemCommand: ${{ parameters.WorkItemCommand }}
       CorrelationPayloadDirectory: ${{ parameters.CorrelationPayloadDirectory }}
       XUnitProjects: ${{ parameters.XUnitProjects }}
-      XUnitTargetFramework: ${{ parameters.XUnitTargetFramework }}
+      XUnitPublishTargetFramework: ${{ parameters.XUnitPublishTargetFramework }}
+      XUnitRuntimeTargetFramework: ${{ parameters.XUnitRuntimeTargetFramework }}
       XUnitRunnerVersion: ${{ parameters.XUnitRunnerVersion }}
       IncludeDotNetCli: ${{ parameters.IncludeDotNetCli }}
       DotNetCliPackageType: ${{ parameters.DotNetCliPackageType }}

@@ -20,7 +20,7 @@ Target completion date for these workstreams is 12/14/2018.
 | [CLI](#cli)                                   | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | | |
 | [CLICommandLineParser](#clicommandlineparser) | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | | |
 | [CLI-Migrate](#climigrate)                    | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | | |
-| [CoreClr](#coreclr)                           | [russellk](#russ-keldorph)    | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png)| 0 / 4             | [plan](MigrationPlan/CoreClrPlan.md) | Complex repo/build and risk is still somewhat high - however still tracking as of 11/27 |
+| [CoreClr](#coreclr)                           | [russellk](#russ-keldorph)    | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | [plan](MigrationPlan/CoreClrPlan.md) | Complex repo/build and much work remains but is understood (last upd. 12/7) |
 | [CoreFx](#corefx)                             | [danmose](#dan-moseley)       | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/CoreFxPlan.md) | On track as of 11/27 |
 | [Core-SDK](#coresdk)                          | [licavalc](#livar-cunha)      | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md) | On track as of 12/4 |
 | [Core-Setup](#coresetup)                      | [dleeapho](#dan-leeaphon)     | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://microsoft.sharepoint.com/teams/dotNETDeployment/_layouts/15/WopiFrame.aspx?sourcedoc={55410205-ac38-469b-81b0-9a93cc71b07c}&action=edit&wd=target%28Syncs.one%7C0a903b24-10b7-4c18-918c-5a380ba66433%2FCore-Setup%20%20pipebuild%20to%20yaml%7C4fb71b1d-1f36-41ee-8438-f1ea531c99e2%2F%29)| Will be tight, but still on track as of 12/3 |
@@ -259,10 +259,10 @@ At the end of each phase, full migration would be completed for the correspondin
 
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/645)         |                      | In progress | |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/643) |                      | In progress | |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/642)       |                      | In progress | |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/644)       |                      | In progress | |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/645)         | 1/31/2019            | In progress | |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/643) | 3/15/2019            | In progress | |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/642)       | 12/7/2018            | In progress | |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/644)       | 12/7/2018            | In progress | |
 
 ---
 

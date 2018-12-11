@@ -4,7 +4,8 @@
 
   <PropertyGroup>
     <CoverageReportInputPath Condition="'$(CoverageReportInputPath)' == ''">$(CoverageOutputPath)</CoverageReportInputPath>
-    <CoverageReportDir Condition="'$(CoverageReportDir)' == ''">$([MSBuild]::NormalizeDirectory('$(TestPath)', 'report'))</CoverageReportDir>
+    <!-- We use NormalizePath as ReportGenerator's command line argument syntax doesn't work well with trailing slashes. -->
+    <CoverageReportDir Condition="'$(CoverageReportDir)' == ''">$([MSBuild]::NormalizePath('$(TestPath)', 'report'))</CoverageReportDir>
     <CoverageReportTypes Condition="'$(CoverageReportTypes)' == ''">Html</CoverageReportTypes>
     <CoverageReportVerbosity Condition="'$(CoverageReportVerbosity)' == ''">Info</CoverageReportVerbosity>
     <CoverageReportResultsPath>$([MSBuild]::NormalizePath('$(CoverageReportDir)', 'index.htm'))</CoverageReportResultsPath>
@@ -27,8 +28,6 @@
           Condition="'$(GenerateFullCoverageReport)' == 'true'">
 
     <Exec Command="$(CoverageReportCommandLine)" />
-
-    <Message Importance="High" Text="Coverage report created: $(CoverageReportResultsPath)" />
 
     <Exec Command="$(CoverageReportOpenCommandLine)"
           Condition="'$(CoverageReportOpenCommandLine)' != ''" />
