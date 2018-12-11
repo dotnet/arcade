@@ -114,9 +114,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         blobArtifacts = ConcatBlobArtifacts(blobArtifacts, symbolItems);
                     }
 
-                    BuildManifestUtil.CreateBuildManifest(Log, blobArtifacts, packageArtifacts,
-                        AssetManifestPath, ManifestRepoUri, ManifestBuildId,
-                        ManifestBranch, ManifestCommit, ManifestBuildData);
+                    BuildManifestUtil.CreateBuildManifest(Log, 
+                        blobArtifacts, 
+                        packageArtifacts,
+                        AssetManifestPath, 
+                        ManifestRepoUri, 
+                        ManifestBuildId,
+                        ManifestBranch, 
+                        ManifestCommit, 
+                        ManifestBuildData);
                 }
             }
             catch (Exception e)

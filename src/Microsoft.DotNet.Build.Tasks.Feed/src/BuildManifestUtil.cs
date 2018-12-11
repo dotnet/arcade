@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -19,12 +19,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public const string AssetsVirtualDir = "assets/";
 
-        public static void CreateBuildManifest(
-            TaskLoggingHelper log,
-            IEnumerable<BlobArtifactModel> blobArtifacts,
-            IEnumerable<PackageArtifactModel> packageArtifacts,
-            string assetManifestPath, string manifestRepoUri, string manifestBuildId,
-            string manifestBranch, string manifestCommit, string manifestBuildData)
+        public static void CreateBuildManifest(TaskLoggingHelper log, IEnumerable<BlobArtifactModel> blobArtifacts, IEnumerable<PackageArtifactModel> packageArtifacts, string assetManifestPath, string manifestRepoUri, string manifestBuildId, string manifestBranch, string manifestCommit, string manifestBuildData)
         {
             log.LogMessage(MessageImportance.High, $"Creating build manifest file '{assetManifestPath}'...");
 

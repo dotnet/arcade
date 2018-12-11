@@ -68,21 +68,29 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         foreach (var packagePath in packageItems)
                         {
-                            Log.LogMessage(MessageImportance.High, $"##vso[artifact.upload containerfolder=PackageArtifacts;artifactname=PackageArtifacts]{packagePath.ItemSpec}");
+                            Log.LogMessage(MessageImportance.High, 
+                                $"##vso[artifact.upload containerfolder=PackageArtifacts;artifactname=PackageArtifacts]{packagePath.ItemSpec}");
                         }
 
                         foreach (var symbolPath in symbolItems)
                         {
-                            Log.LogMessage(MessageImportance.High, $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{symbolPath.ItemSpec}");
+                            Log.LogMessage(MessageImportance.High, 
+                                $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{symbolPath.ItemSpec}");
                         }
 
                         packageArtifacts = packageItems.Select(BuildManifestUtil.CreatePackageArtifactModel);
                         blobArtifacts = symbolItems.Select(BuildManifestUtil.CreateBlobArtifactModel).Where(blob => blob != null);
                     }
 
-                    BuildManifestUtil.CreateBuildManifest(Log, blobArtifacts, packageArtifacts,
-                        AssetManifestPath, ManifestRepoUri, ManifestBuildId,
-                        ManifestBranch, ManifestCommit, ManifestBuildData);
+                    BuildManifestUtil.CreateBuildManifest(Log, 
+                        blobArtifacts, 
+                        packageArtifacts,
+                        AssetManifestPath, 
+                        ManifestRepoUri, 
+                        ManifestBuildId,
+                        ManifestBranch, 
+                        ManifestCommit, 
+                        ManifestBuildData);
                 }
             }
             catch (Exception e)
