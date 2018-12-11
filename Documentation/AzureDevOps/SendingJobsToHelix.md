@@ -79,7 +79,7 @@ steps:
 
 ## The Simple Case
 
-The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `send-to-helix` template in `eng/common/templates/steps/send-to-helix.yml` from your `.Azure DevOps-ci.yml` file.
+The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `send-to-helix` template in `eng/common/templates/steps/send-to-helix.yml` from your `azure-pipelines.yml` file.
 
 Simply specify the xUnit project(s) you wish to run (semicolon delimited) with the `XUnitProjects` parameter. Then, specify the `XUnitPublishTargetFramework` (the framework you want to publish your xUnit projects as, e.g. `netcoreapp2.1`), `XUnitRuntimeTargetFramework` (the framework version of xUnit you want to use from the xUnit nuget package, e.g. `netcoreapp2.0`) and the `XUnitRunnerVersion` (the version of the xUnit nuget package you want to use, e.g. `2.4.1`). Finally, set `IncludeDotNetCli` to true and specify which `DotNetCliPackageType` (`sdk` or `runtime`) and `DotNetCliVersion` you wish to use. (For a full list of .NET CLI versions/package types, see these links: [3.0](https://dotnet.microsoft.com/download/dotnet-core/3.0), [2.1](https://dotnet.microsoft.com/download/dotnet-core/2.1), [2.2](https://dotnet.microsoft.com/download/dotnet-core/2.2).)
 
