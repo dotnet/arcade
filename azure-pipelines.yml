@@ -26,29 +26,31 @@ jobs:
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           name: dotnet-internal-temp
       variables:
+      - name: _Script
+        value: eng\common\cibuild.cmd
+      - name: _ValidateSdkArgs
+        value: ''          
       # Only enable publishing in non-public, non PR scenarios.
       - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+        # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
+        # DotNet-Symbol-Server-Pats provides: microsoft-symbol-server-pat, symweb-symbol-server-pat
+        # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
         - group: DotNet-Blob-Feed
         - group: DotNet-Symbol-Server-Pats
+        - group: Publish-Build-Assets
         - name: _PublishBlobFeedUrl
           value: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
-        - name: _SignArgs
+        - name: _InternalBuildArgs
           value: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
-        - name: _PublishArgs
-          value: /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
+            /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
             /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
             /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
             /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
             /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
-        - name: _OfficialBuildIdArgs
-          value: /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+            /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
       # else
       - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-        - name: _PublishArgs
-          value: ''
-        - name: _OfficialBuildIdArgs
-          value: ''
-        - name: _SignArgs
+        - name: _InternalBuildArgs
           value: ''
       strategy:
         matrix:
@@ -68,16 +70,17 @@ jobs:
               _PublishType: blob
               _SignType: real
               _DotNetPublishToBlobFeed : true
+              _Script: eng\validate-sdk.cmd
+              _ValidateSdkArgs: -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -barToken $(MaestroAccessToken)
       steps:
       - checkout: self
         clean: true
       # Use utility script to run script command dependent on agent OS.
-      - script: eng\common\cibuild.cmd
+      - script: $(_Script)
           -configuration $(_BuildConfig) 
           -prepareMachine
-          $(_PublishArgs)
-          $(_SignArgs)
-          $(_OfficialBuildIdArgs)
+          $(_InternalBuildArgs)
+          $(_ValidateSdkArgs)
         displayName: Windows Build / Publish
 
     - job: Linux
