@@ -102,6 +102,7 @@ Simply specify the xUnit project(s) you wish to run (semicolon delimited) with t
       DotNetCliVersion: 2.1.403 # full list of versions here: https://raw.githubusercontent.com/dotnet/core/master/release-notes/releases.json
       EnableXUnitReporter: true # required for reporting out xUnit test results to Mission Control
       # WaitForWorkItemCompletion: true -- defaults to true
+      IsExternal: true # for specifying external jobs -- set this true whenever you would use the anon-kaonashi token for HelixAccessToken
       # condition: succeeded() - defaults to succeeded()
 ```
 
