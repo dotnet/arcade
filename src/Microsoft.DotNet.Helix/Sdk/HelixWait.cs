@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     if (e.CancellationToken != cancellationToken)
                     {
                         // This was an HTTP timeout; log and retry
-                        Log.LogMessage($"An HttpRequest timeout occurred while querying the Helix WorkItem List API for {jobName}. Retrying.");
+                        Log.LogMessage($"An HttpClient timeout occurred while querying the Helix WorkItem List API for {jobName}. Retrying.");
                         Log.LogMessage($"Exception Message: {e.Message}");
                         Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
                     }
@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     if (e.CancellationToken != cancellationToken)
                     {
                         // An HTTP timeout occurred; log and retry
-                        Log.LogMessage($"An HttpRequest timeout occurred while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
+                        Log.LogMessage($"An HttpClient timeout occurred while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
                         Log.LogMessage($"Exception Message: {e.Message}");
                         Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
                     }
@@ -165,7 +165,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogMessage($"Exception Message: {e.Message}");
                     Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
                 }
-                await Task.Delay(1000);
+                await Task.Delay((i + 1) * 1000);
             }
             Log.LogError($"Exceeded maximum {MAX_FAILURE_RETRIES} failure retries while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}");
             return;

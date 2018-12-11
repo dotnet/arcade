@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Helix.Client
             Properties = new ReadOnlyDictionary<string, string>(_properties);
             JobApi = jobApi;
             _jobStartIdentifier = Guid.NewGuid().ToString("N");
-            HelixApi = ((IServiceOperations<HelixApi>) JobApi).Client;
+            HelixApi = ((IServiceOperations<HelixApi>)JobApi).Client;
         }
 
         public IHelixApi HelixApi { get; }
@@ -192,8 +192,10 @@ namespace Microsoft.DotNet.Helix.Client
                 }
                 catch (HttpRequestException e)
                 {
-                    log?.Invoke(LogLevel.Informational, $"Exception thrown attempting to submit job to Helix. Job will retry.\nException details: {e.Message}");
+                    log?.Invoke(LogLevel.Informational, $"HttpRequestException thrown attempting to submit job to Helix. Job will retry.\nException details: {e.Message}");
                 }
+
+                await Task.Delay((counter + 1) * 1000);
             }
             // if we went through all attempts and keepTrying is still true, we failed to send the job
             if (keepTrying)
