@@ -17,7 +17,7 @@
 
 ## GitHub to DncEng Internal mirror
 
-If your repository has internal builds, you will need to set up a DncEng Internal mirror. This is *required* for internal builds; if your repository only does PR or public CI builds, you can skip this step.
+If your repository has internal builds (that is, the repo authenticode signs), you will need to set up a DncEng Internal mirror. This is *required* for internal builds; if your repository only does PR or public CI builds, you can skip this step.
 
 Instructions for setting up the GitHub to dev.azure.com/dnceng/internal mirror are available in the [dev.azure.com/dnceng internal mirror documentation](./internal-mirror.md)
 
