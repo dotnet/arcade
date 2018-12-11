@@ -92,6 +92,12 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogWarning($"Caught HttpRequestException while querying the Helix WorkItem List API for {jobName}. Retrying.");
                     Log.LogWarningFromException(e);
                 }
+                catch (NullReferenceException e)
+                {
+                    failureRetries++;
+                    Log.LogWarning($"Caught NullReferenceException while querying the Helix WorkItem List API for {jobName}. Retrying.");
+                    Log.LogWarningFromException(e);
+                }
                 if (failureRetries > MAX_FAILURE_RETRIES)
                 {
                     Log.LogError($"Exceeded maximum {MAX_FAILURE_RETRIES} failure retries while querying the Helix WorkItem List API for {jobName}. Quitting.");
@@ -125,6 +131,11 @@ namespace Microsoft.DotNet.Helix.Sdk
                 catch (HttpRequestException e)
                 {
                     Log.LogWarning($"Caught HttpRequestException while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
+                    Log.LogWarningFromException(e);
+                }
+                catch (NullReferenceException e)
+                {
+                    Log.LogWarning($"Caught NullReferenceException while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
                     Log.LogWarningFromException(e);
                 }
                 await Task.Delay(1000);
