@@ -61,12 +61,13 @@ namespace Microsoft.DotNet.Helix.Sdk
             await Task.Yield();
             Log.LogMessage($"Waiting for completion of job {jobName}");
             int failureRetries = 0;
+            CancellationToken cancellationToken = new CancellationToken();
 
             while (true)
             {
                 try
                 {
-                    var workItems = await HelixApi.WorkItem.ListAsync(jobName);
+                    var workItems = await HelixApi.WorkItem.ListAsync(jobName, cancellationToken);
                     var waitingCount = workItems.Count(wi => wi.State == "Waiting");
                     var runningCount = workItems.Count(wi => wi.State == "Running");
                     var finishedCount = workItems.Count(wi => wi.State == "Finished");
@@ -83,15 +84,23 @@ namespace Microsoft.DotNet.Helix.Sdk
                 catch (TaskCanceledException e)
                 {
                     failureRetries++;
-                    Log.LogMessage($"Caught TaskCanceledException while querying the Helix WorkItem List API for {jobName}. Retrying.");
-                    Log.LogMessage($"Exception Message: {e.Message}");
-                    Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
+                    if (e.CancellationToken != cancellationToken)
+                    {
+                        // This was an HTTP timeout; log and retry
+                        Log.LogMessage($"An HttpRequest timeout occurred while querying the Helix WorkItem List API for {jobName}. Retrying.");
+                        Log.LogMessage($"Exception Message: {e.Message}");
+                        Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
+                    }
+                    else
+                    {
+                        // Something else caused this cancellation; throw
+                        throw;
+                    }
                 }
                 catch (HttpRequestException e)
                 {
                     failureRetries++;
                     Log.LogMessage($"Caught HttpRequestException while querying the Helix WorkItem List API for {jobName}. Retrying.");
-
                     Log.LogMessage($"Exception Message: {e.Message}");
                     Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
                 }
@@ -115,12 +124,13 @@ namespace Microsoft.DotNet.Helix.Sdk
         private async Task GetWorkItemDetailsAsync(string workItemId, string jobName)
         {
             await Task.Yield();
+            CancellationToken cancellationToken = new CancellationToken();
 
             for (int i = 0; i < MAX_FAILURE_RETRIES; i++)
             {
                 try
                 {
-                    var details = await HelixApi.WorkItem.DetailsAsync(jobName, workItemId);
+                    var details = await HelixApi.WorkItem.DetailsAsync(jobName, workItemId, cancellationToken);
                     if (details.State == "Failed")
                     {
                         Log.LogError($"Work item {workItemId} on job {jobName} has failed with exit code {details.ExitCode}.");
@@ -130,9 +140,18 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
                 catch (TaskCanceledException e)
                 {
-                    Log.LogMessage($"Caught TaskCanceled Exception while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
-                    Log.LogMessage($"Exception Message: {e.Message}");
-                    Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
+                    if (e.CancellationToken != cancellationToken)
+                    {
+                        // An HTTP timeout occurred; log and retry
+                        Log.LogMessage($"An HttpRequest timeout occurred while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
+                        Log.LogMessage($"Exception Message: {e.Message}");
+                        Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
+                    }
+                    else
+                    {
+                        // Something else caused this exception; throw
+                        throw;
+                    }
                 }
                 catch (HttpRequestException e)
                 {
