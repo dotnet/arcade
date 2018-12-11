@@ -38,7 +38,7 @@ If you plan to send a payload (such as a work item) to Helix, you will need to b
 
 For external builds, you will need to provide the *BotAccount-dotnet-github-anon-kaonashi-bot-helix-token* secret from **ToolsKV** (subscription *Dotnet Engineering services*). This will allow you to send payloads to Helix while minimizing the risk of leaking secrets.
 
-In the dev.azure.com/dnceng/public project, you can use the `Helix Anonymous` variable group to provide this secret to your build.
+In the dev.azure.com/dnceng/public project, you can use the `Helix Anonymous` variable group to provide this secret to your build.  You will need to check the box labeled "Make secrets available to builds of forks" in your build definition under the "Pull Request validation" trigger of the build definition in order to make this secret available to your build.  Note: Do NOT mark this check box if there are other secrets in your build that you are concerned about exposing.
 
 Furthermore, you will need to specify the *IsExternal* flag for your build and specify a *Creator* in order to send the jobs to Helix anonymously. The "creator" should be an identifiable username which is clearly related to your build. For example, Arcade might specify a creator of `arcade`. This will make collating your results on Mission Control much easier.
 
