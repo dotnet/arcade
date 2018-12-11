@@ -89,17 +89,17 @@ Simply specify the xUnit project(s) you wish to run (semicolon delimited) with t
       HelixSource: pr/your/helix/source # sources must start with pr/, official/, prodcon/, or agent/
       HelixType: type/tests
       # HelixBuild: $(Build.BuildNumber) -- This property is set by default
-      HelixTargetQueues: Windows.10.Amd64.Open;Windows.81.Amd64.Open;Windows.7.Amd64.Open # specify appropriate queues here
-      HelixAccessToken: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token) # only for external (public) builds
+      HelixTargetQueues: Windows.10.Amd64.Open;Windows.81.Amd64.Open;Windows.7.Amd64.Open # specify appropriate queues here; see https://helix.dot.net/api/2018-03-14/info/queues for a list of queues
+      HelixAccessToken: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token) # this token is only for external (public) builds
       # HelixPreCommands: '' -- any commands that you would like to run prior to running your job
       # HelixPostCommands: '' -- any commands that you would like to run after running your job
-      XUnitProjects: $(Build.SourcesDirectory)/HelloTests/HelloTests.csproj # specify your xUnit projects (semicolon delimited) here instead!
+      XUnitProjects: $(Build.SourcesDirectory)/HelloTests/HelloTests.csproj # specify your xUnit projects (semicolon delimited) here!
       XUnitPublishTargetFramework: netcoreapp2.1 # specify your publish target framework here
       XUnitRuntimeTargetFramework: netcoreapp2.0 # specify the framework you want to use for the xUnit runner
       XUnitRunnerVersion: 2.4.1 # specify the version of xUnit runner you wish to use here
       IncludeDotNetCli: true
       DotNetCliPackageType: sdk
-      DotNetCliVersion: 2.1.403
+      DotNetCliVersion: 2.1.403 # full list of versions here: https://raw.githubusercontent.com/dotnet/core/master/release-notes/releases.json
       EnableXUnitReporter: true # required for reporting out xUnit test results to Mission Control
       # WaitForWorkItemCompletion: true -- defaults to true
       # condition: succeeded() - defaults to succeeded()
