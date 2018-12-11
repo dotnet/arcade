@@ -35,6 +35,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public string Creator { get; set; }
 
+        private const int MAX_FAILURE_RETRIES = 15;
+
         protected override async Task ExecuteCore()
         {
             // Wait 1 second to allow helix to register the job creation
@@ -58,22 +60,43 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             await Task.Yield();
             Log.LogMessage($"Waiting for completion of job {jobName}");
+            int failureRetries = 0;
 
             while (true)
             {
-                var workItems = await HelixApi.WorkItem.ListAsync(jobName);
-                var waitingCount = workItems.Count(wi => wi.State == "Waiting");
-                var runningCount = workItems.Count(wi => wi.State == "Running");
-                var finishedCount = workItems.Count(wi => wi.State == "Finished");
-                if (waitingCount == 0 && runningCount == 0 && finishedCount > 0)
+                try
                 {
-                    // determines whether any of the work items failed (fireballed)
-                    await Task.WhenAll(workItems.Select(wi => wi.Name).ToArray().Select((workItemId) => GetWorkItemDetailsAsync(workItemId, jobName)));
-                    Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
+                    var workItems = await HelixApi.WorkItem.ListAsync(jobName);
+                    var waitingCount = workItems.Count(wi => wi.State == "Waiting");
+                    var runningCount = workItems.Count(wi => wi.State == "Running");
+                    var finishedCount = workItems.Count(wi => wi.State == "Finished");
+                    if (waitingCount == 0 && runningCount == 0 && finishedCount > 0)
+                    {
+                        // determines whether any of the work items failed (fireballed)
+                        await Task.WhenAll(workItems.Select(wi => wi.Name).ToArray().Select((workItemId) => GetWorkItemDetailsAsync(workItemId, jobName)));
+                        Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
+                        return;
+                    }
+
+                    Log.LogMessage($"Job {jobName} is not yet completed with Waiting: {waitingCount}, Running: {runningCount}, Finished: {finishedCount}");
+                }
+                catch (TaskCanceledException e)
+                {
+                    failureRetries++;
+                    Log.LogWarning($"Caught TaskCanceledException while querying the Helix WorkItem List API for {jobName}. Retrying.");
+                    Log.LogWarningFromException(e);
+                }
+                catch (HttpRequestException e)
+                {
+                    failureRetries++;
+                    Log.LogWarning($"Caught HttpRequestException while querying the Helix WorkItem List API for {jobName}. Retrying.");
+                    Log.LogWarningFromException(e);
+                }
+                if (failureRetries > MAX_FAILURE_RETRIES)
+                {
+                    Log.LogError($"Exceeded maximum {MAX_FAILURE_RETRIES} failure retries while querying the Helix WorkItem List API for {jobName}. Quitting.");
                     return;
                 }
-
-                Log.LogMessage($"Job {jobName} is not yet completed with Waiting: {waitingCount}, Running: {runningCount}, Finished: {finishedCount}");
                 await Task.Delay(10000);
             }
         }
@@ -82,12 +105,31 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             await Task.Yield();
 
-            var details = await HelixApi.WorkItem.DetailsAsync(jobName, workItemId);
-            if (details.State == "Failed")
+            for (int i = 0; i < MAX_FAILURE_RETRIES; i++)
             {
-                Log.LogError($"Work item {workItemId} on job {jobName} has failed with exit code {details.ExitCode}.");
-            }
+                try
+                {
+                    var details = await HelixApi.WorkItem.DetailsAsync(jobName, workItemId);
+                    if (details.State == "Failed")
+                    {
+                        Log.LogError($"Work item {workItemId} on job {jobName} has failed with exit code {details.ExitCode}.");
+                    }
 
+                    return;
+                }
+                catch (TaskCanceledException e)
+                {
+                    Log.LogWarning($"Caught TaskCanceled Exception while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
+                    Log.LogWarningFromException(e);
+                }
+                catch (HttpRequestException e)
+                {
+                    Log.LogWarning($"Caught HttpRequestException while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
+                    Log.LogWarningFromException(e);
+                }
+                await Task.Delay(1000);
+            }
+            Log.LogError($"Exceeded maximum {MAX_FAILURE_RETRIES} failure retries while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}");
             return;
         }
 
