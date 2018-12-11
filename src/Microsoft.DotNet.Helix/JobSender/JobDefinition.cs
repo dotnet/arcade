@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
-        public async Task<ISentJob> SendAsync(Action<LogLevel, string> log)
+        public async Task<ISentJob> SendAsync(Action<LogLevel, string> log = null)
         {
             IBlobHelper storage;
             if (string.IsNullOrEmpty(StorageAccountConnectionString))
@@ -182,7 +182,7 @@ namespace Microsoft.DotNet.Helix.Client
                     // check to see if this is really an HttpClient timeout
                     if (e.CancellationToken != cancellationToken)
                     {
-                        log(LogLevel.Warning, $"HttpClient timeout occurred while attempting to post new job to '{TargetQueueId}', will retry. Job Start Identifier: ${_jobStartIdentifier}");
+                        log?.Invoke(LogLevel.Warning, $"HttpClient timeout occurred while attempting to post new job to '{TargetQueueId}', will retry. Job Start Identifier: ${_jobStartIdentifier}");
                     }
                     else
                     {
@@ -192,13 +192,13 @@ namespace Microsoft.DotNet.Helix.Client
                 }
                 catch (HttpRequestException e)
                 {
-                    log(LogLevel.Warning, $"Exception thrown attempting to submit job to Helix. Job will retry.\nException details: {e.Message}");
+                    log?.Invoke(LogLevel.Warning, $"Exception thrown attempting to submit job to Helix. Job will retry.\nException details: {e.Message}");
                 }
             }
             // if we went through all attempts and keepTrying is still true, we failed to send the job
             if (keepTrying)
             {
-                log(LogLevel.Error, $"Unable to publish to queue '{TargetQueueId} after {MAX_RETRIES} attempts.");
+                log?.Invoke(LogLevel.Error, $"Unable to publish to queue '{TargetQueueId} after {MAX_RETRIES} attempts.");
             }
 
             return new SentJob(JobApi, newJob);
