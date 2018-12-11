@@ -182,7 +182,7 @@ namespace Microsoft.DotNet.Helix.Client
                     // check to see if this is really an HttpClient timeout
                     if (e.CancellationToken != cancellationToken)
                     {
-                        log?.Invoke(LogLevel.Warning, $"HttpClient timeout occurred while attempting to post new job to '{TargetQueueId}', will retry. Job Start Identifier: ${_jobStartIdentifier}");
+                        log?.Invoke(LogLevel.Informational, $"HttpClient timeout occurred while attempting to post new job to '{TargetQueueId}', will retry. Job Start Identifier: ${_jobStartIdentifier}");
                     }
                     else
                     {
@@ -192,7 +192,7 @@ namespace Microsoft.DotNet.Helix.Client
                 }
                 catch (HttpRequestException e)
                 {
-                    log?.Invoke(LogLevel.Warning, $"Exception thrown attempting to submit job to Helix. Job will retry.\nException details: {e.Message}");
+                    log?.Invoke(LogLevel.Informational, $"Exception thrown attempting to submit job to Helix. Job will retry.\nException details: {e.Message}");
                 }
             }
             // if we went through all attempts and keepTrying is still true, we failed to send the job

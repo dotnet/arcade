@@ -83,20 +83,25 @@ namespace Microsoft.DotNet.Helix.Sdk
                 catch (TaskCanceledException e)
                 {
                     failureRetries++;
-                    Log.LogWarning($"Caught TaskCanceledException while querying the Helix WorkItem List API for {jobName}. Retrying.");
-                    Log.LogWarningFromException(e);
+                    Log.LogMessage($"Caught TaskCanceledException while querying the Helix WorkItem List API for {jobName}. Retrying.");
+                    Log.LogMessage($"Exception Message: {e.Message}");
+                    Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
                 }
                 catch (HttpRequestException e)
                 {
                     failureRetries++;
-                    Log.LogWarning($"Caught HttpRequestException while querying the Helix WorkItem List API for {jobName}. Retrying.");
-                    Log.LogWarningFromException(e);
+                    Log.LogMessage($"Caught HttpRequestException while querying the Helix WorkItem List API for {jobName}. Retrying.");
+
+                    Log.LogMessage($"Exception Message: {e.Message}");
+                    Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
                 }
                 catch (NullReferenceException e)
                 {
                     failureRetries++;
-                    Log.LogWarning($"Caught NullReferenceException while querying the Helix WorkItem List API for {jobName}. Retrying.");
-                    Log.LogWarningFromException(e);
+                    Log.LogMessage($"Caught NullReferenceException while querying the Helix WorkItem List API for {jobName}. Retrying.");
+                    Log.LogMessage($"Exception Message: {e.Message}");
+                    Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
+                    Log.LogMessage($"Inner Exception:\n{e.InnerException?.Message}");
                 }
                 if (failureRetries > MAX_FAILURE_RETRIES)
                 {
@@ -125,18 +130,21 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
                 catch (TaskCanceledException e)
                 {
-                    Log.LogWarning($"Caught TaskCanceled Exception while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
-                    Log.LogWarningFromException(e);
+                    Log.LogMessage($"Caught TaskCanceled Exception while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
+                    Log.LogMessage($"Exception Message: {e.Message}");
+                    Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
                 }
                 catch (HttpRequestException e)
                 {
-                    Log.LogWarning($"Caught HttpRequestException while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
-                    Log.LogWarningFromException(e);
+                    Log.LogMessage($"Caught HttpRequestException while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
+                    Log.LogMessage($"Exception Message: {e.Message}");
+                    Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
                 }
                 catch (NullReferenceException e)
                 {
-                    Log.LogWarning($"Caught NullReferenceException while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
-                    Log.LogWarningFromException(e);
+                    Log.LogMessage($"Caught NullReferenceException while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
+                    Log.LogMessage($"Exception Message: {e.Message}");
+                    Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
                 }
                 await Task.Delay(1000);
             }
