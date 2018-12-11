@@ -27,8 +27,6 @@ usage()
   echo "  --nodeReuse <value>      Sets nodereuse msbuild parameter ('true' or 'false')"
   echo "  --warnAsError <value>    Sets warnaserror msbuild parameter ('true' or 'false')"
   echo ""
-  echo "Optional settings:"
-  echo "  -logFileName <value>    Binlog file name"
   echo "Command line arguments starting with '/p:' are passed through to MSBuild."
 }
 
@@ -64,8 +62,7 @@ projects=''
 configuration='Debug'
 prepare_machine=false
 verbosity='minimal'
-logFileName='Build.binlog'
-properties=''
+roperties=''
 
 while [[ $# > 0 ]]; do
   opt="$(echo "$1" | awk '{print tolower($0)}')"
@@ -168,7 +165,7 @@ function Build {
 
   local bl=""
   if [[ "$binary_log" == true ]]; then
-    bl="/bl:\"$log_dir/$logFileName\""
+    bl="/bl:\"$log_dir/Build.binlog\""
   fi
 
   MSBuild $_InitializeToolset \
