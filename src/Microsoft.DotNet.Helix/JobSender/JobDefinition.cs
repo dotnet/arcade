@@ -20,7 +20,6 @@ namespace Microsoft.DotNet.Helix.Client
     {
         private readonly Dictionary<string, string> _properties;
         private readonly List<WorkItemDefinition> _workItems;
-        private readonly string _jobStartIdentifier;
         private const int MAX_RETRIES = 15;
 
         public JobDefinition(IJob jobApi)
@@ -30,7 +29,6 @@ namespace Microsoft.DotNet.Helix.Client
             _properties = new Dictionary<string, string>();
             Properties = new ReadOnlyDictionary<string, string>(_properties);
             JobApi = jobApi;
-            _jobStartIdentifier = Guid.NewGuid().ToString("N");
             HelixApi = ((IServiceOperations<HelixApi>)JobApi).Client;
         }
 
@@ -152,10 +150,11 @@ namespace Microsoft.DotNet.Helix.Client
                 $"job-list-{Guid.NewGuid()}.json");
 
 
-            bool keepTrying = true;
             JobCreationResult newJob = null;
+            string jobStartIdentifier = Guid.NewGuid().ToString("N");
             System.Threading.CancellationToken cancellationToken = new System.Threading.CancellationToken();
-            for (int counter = 0; keepTrying && counter < MAX_RETRIES; counter++)
+            Random rand = new Random();
+            for (int counter = 0; counter < MAX_RETRIES; counter++)
             {
                 try
                 {
@@ -172,17 +171,17 @@ namespace Microsoft.DotNet.Helix.Client
                             storageContainer.WriteSas,
                             Creator,
                             maxRetryCount: MaxRetryCount,
-                            jobStartIdentifier: _jobStartIdentifier),
+                            jobStartIdentifier: jobStartIdentifier),
                         cancellationToken);
 
-                    keepTrying = false;
+                    break;
                 }
                 catch (TaskCanceledException e)
                 {
                     // check to see if this is really an HttpClient timeout
                     if (e.CancellationToken != cancellationToken)
                     {
-                        log?.Invoke(LogLevel.Informational, $"HttpClient timeout occurred while attempting to post new job to '{TargetQueueId}', will retry. Job Start Identifier: ${_jobStartIdentifier}");
+                        log?.Invoke(LogLevel.Informational, $"HttpClient timeout occurred while attempting to post new job to '{TargetQueueId}', will retry. Job Start Identifier: ${jobStartIdentifier}");
                     }
                     else
                     {
@@ -195,15 +194,24 @@ namespace Microsoft.DotNet.Helix.Client
                     log?.Invoke(LogLevel.Informational, $"HttpRequestException thrown attempting to submit job to Helix. Job will retry.\nException details: {e.Message}");
                 }
 
-                await Task.Delay((counter + 1) * 1000);
+                await Task.Delay((int)(Math.Pow(rand.NextDouble() * counter, 1.3) * 1000));
             }
             // if we went through all attempts and keepTrying is still true, we failed to send the job
-            if (keepTrying)
+            if (newJob == null)
             {
                 log?.Invoke(LogLevel.Error, $"Unable to publish to queue '{TargetQueueId} after {MAX_RETRIES} attempts.");
             }
 
             return new SentJob(JobApi, newJob);
+        }
+
+        private int getTimeout(int times)
+        {
+            Random rand = new Random();
+            double factor = 1.3;
+            var min = Math.Pow(factor, times) * 1000;
+            var max = Math.Pow(factor, times + 1) * 1000;
+            return rand.Next((int)min, (int)max);
         }
 
         public IJobDefinitionWithTargetQueue WithBuild(string buildNumber)
