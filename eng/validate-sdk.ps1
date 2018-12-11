@@ -48,10 +48,10 @@ try {
   
   Push-Location $PSScriptRoot
   
-  $validateSdkDir = "$ArtifactsDir\validatesdk\\"
-  $packagesSource = "$validateSdkDir\packages\$configuration\NonShipping"  
-  $toolsProjPath = "$RepoRoot\src\Microsoft.DotNet.Arcade.Sdk\tools\Tools.proj"
-  $nugetConfigPath = "$RepoRoot\NuGet.config"
+  $validateSdkDir = Join-Path $ArtifactsDir "validatesdk"
+  $packagesSource = Join-Path (Join-Path (Join-Path $validateSdkDir "packages") $configuration) "NonShipping"
+  $toolsProjPath = Join-Path (Join-Path (Join-Path (Join-Path $RepoRoot "src") "Microsoft.DotNet.Arcade.Sdk") "tools") "Tools.proj"
+  $nugetConfigPath = Join-Path $RepoRoot "NuGet.config"
   
   # When restoring, we check if local sources defined in Tools.proj actually exist so we need to create
   # the validation SDK folder beforehand
