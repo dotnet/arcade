@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
@@ -17,9 +16,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     public class PushToBlobFeed : MSBuild.Task
     {
-        private static readonly char[] ManifestDataPairSeparators = { ';' };
-        private const string AssetsVirtualDir = "assets/";
-
         [Required]
         public string ExpectedFeedUrl { get; set; }
 
@@ -100,7 +96,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             .Select(i =>
                             {
                                 string fileName = Path.GetFileName(i.ItemSpec);
-                                i.SetMetadata("RelativeBlobPath", $"{AssetsVirtualDir}symbols/{fileName}");
+                                i.SetMetadata("RelativeBlobPath", $"{BuildManifestUtil.AssetsVirtualDir}symbols/{fileName}");
                                 return i;
                             })
                             .ToArray();
@@ -118,7 +114,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         blobArtifacts = ConcatBlobArtifacts(blobArtifacts, symbolItems);
                     }
 
-                    CreateBuildManifest(blobArtifacts, packageArtifacts);
+                    BuildManifestUtil.CreateBuildManifest(Log, blobArtifacts, packageArtifacts,
+                        AssetManifestPath, ManifestRepoUri, ManifestBuildId,
+                        ManifestBranch, ManifestCommit, ManifestBuildData);
                 }
             }
             catch (Exception e)
@@ -127,32 +125,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             return !Log.HasLoggedErrors;
-        }
-
-        private void CreateBuildManifest(
-            IEnumerable<BlobArtifactModel> blobArtifacts,
-            IEnumerable<PackageArtifactModel> packageArtifacts)
-        {
-            Log.LogMessage(MessageImportance.High, $"Creating build manifest file '{AssetManifestPath}'...");
-
-            BuildModel buildModel = new BuildModel(
-                    new BuildIdentity
-                    {
-                        Attributes = ParseManifestMetadataString(ManifestBuildData),
-                        Name = ManifestRepoUri,
-                        BuildId = ManifestBuildId,
-                        Branch = ManifestBranch,
-                        Commit = ManifestCommit
-                    });
-
-            buildModel.Artifacts.Blobs.AddRange(blobArtifacts);
-            buildModel.Artifacts.Packages.AddRange(packageArtifacts);
-
-            string dirPath = Path.GetDirectoryName(AssetManifestPath);
-
-            Directory.CreateDirectory(dirPath);
-
-            File.WriteAllText(AssetManifestPath, buildModel.ToXml().ToString());
         }
 
         private async Task PublishToFlatContainerAsync(IEnumerable<ITaskItem> taskItems, BlobFeedAction blobFeedAction)
@@ -182,7 +154,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IEnumerable<ITaskItem> items)
         {
             return artifacts.Concat(items
-                .Select(CreatePackageArtifactModel));
+                .Select(BuildManifestUtil.CreatePackageArtifactModel));
         }
 
         private static IEnumerable<BlobArtifactModel> ConcatBlobArtifacts(
@@ -190,66 +162,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IEnumerable<ITaskItem> items)
         {
             return artifacts.Concat(items
-                .Select(CreateBlobArtifactModel)
+                .Select(BuildManifestUtil.CreateBlobArtifactModel)
                 .Where(blob => blob != null));
-        }
-
-        private static PackageArtifactModel CreatePackageArtifactModel(ITaskItem item)
-        {
-            NupkgInfo info = new NupkgInfo(item.ItemSpec);
-
-            return new PackageArtifactModel
-            {
-                Attributes = ParseCustomAttributes(item),
-                Id = info.Id,
-                Version = info.Version
-            };
-        }
-
-        private static BlobArtifactModel CreateBlobArtifactModel(ITaskItem item)
-        {
-            string path = item.GetMetadata("RelativeBlobPath");
-
-            // Only include assets in the manifest if they're in "assets/".
-            if (path?.StartsWith(AssetsVirtualDir, StringComparison.Ordinal) == true)
-            {
-                return new BlobArtifactModel
-                {
-                    Attributes = ParseCustomAttributes(item),
-                    Id = path.Substring(AssetsVirtualDir.Length)
-                };
-            }
-            return null;
-        }
-
-        private static Dictionary<string, string> ParseCustomAttributes(ITaskItem item)
-        {
-            return ParseManifestMetadataString(item.GetMetadata("ManifestArtifactData"));
-        }
-
-        private static Dictionary<string, string> ParseManifestMetadataString(string data)
-        {
-            if (string.IsNullOrEmpty(data))
-            {
-                return new Dictionary<string, string>();
-            }
-
-            return data.Split(ManifestDataPairSeparators, StringSplitOptions.RemoveEmptyEntries)
-                .Select(pair =>
-                {
-                    int keyValueSeparatorIndex = pair.IndexOf('=');
-                    if (keyValueSeparatorIndex > 0)
-                    {
-                        return new
-                        {
-                            Key = pair.Substring(0, keyValueSeparatorIndex).Trim(),
-                            Value = pair.Substring(keyValueSeparatorIndex + 1).Trim()
-                        };
-                    }
-                    return null;
-                })
-                .Where(pair => pair != null)
-                .ToDictionary(pair => pair.Key, pair => pair.Value);
         }
 
         private PushOptions CreatePushOptions()
