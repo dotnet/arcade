@@ -62,7 +62,7 @@ projects=''
 configuration='Debug'
 prepare_machine=false
 verbosity='minimal'
-roperties=''
+properties=''
 
 while [[ $# > 0 ]]; do
   opt="$(echo "$1" | awk '{print tolower($0)}')"
