@@ -179,6 +179,10 @@ namespace Microsoft.DotNet.SignTool
                 {
                     _zipDataMap[contentHash] = zipData;
                 }
+                else
+                {
+                    _log.LogError($"Problem parsing content of container: {fullPath}");
+               }
             }
 
             _filesByContentKey.Add(key, fileSignInfo);
@@ -464,6 +468,29 @@ namespace Microsoft.DotNet.SignTool
                         if (!_filesByContentKey.TryGetValue(new SignedFileContentKey(contentHash, fileName), out var fileSignInfo))
                         {
                             string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash), relativePath);
+
+                            if (tempPath.Length > 259)
+                            {
+                                tempPath = Path.Combine(_pathToContainerUnpackingDirectory, zipFileSignInfo.FileName, relativePath);
+
+                                if (File.Exists(tempPath) || tempPath.Length > 259)
+                                {
+                                    tempPath = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash).Substring(0, 8), relativePath);
+
+                                    if (File.Exists(tempPath) || tempPath.Length > 259)
+                                    {
+                                        tempPath = Path.Combine(_pathToContainerUnpackingDirectory, Path.GetRandomFileName().Replace(".", ""), relativePath);
+
+                                        if (File.Exists(tempPath) || tempPath.Length > 259)
+                                        {
+                                            _log.LogError($"Wasn't able to shorten the path to the file: {tempPath}");
+                                            zipData = null;
+                                            return false;
+                                        }
+                                    }
+                                }
+                            }
+
                             Directory.CreateDirectory(Path.GetDirectoryName(tempPath));
 
                             using (var stream = entry.Open())
