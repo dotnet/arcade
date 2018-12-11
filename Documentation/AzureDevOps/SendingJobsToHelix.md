@@ -81,7 +81,7 @@ steps:
 
 The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `send-to-helix` template in `eng/common/templates/steps/send-to-helix.yml` from your `.Azure DevOps-ci.yml` file.
 
-Simply specify the xUnit project(s) you wish to run (semicolon delimited) with the `XUnitProjects` parameter. Then, specify the `XUnitTargetFramework` (e.g. `netcoreapp2.0`) and the `XUnitRunnerVersion` (e.g. `2.4.1`; this is just the version of the xUnit nuget package you want to use). Finally, set `IncludeDotNetCli` to true and specify which `DotNetCliPackageType` (`sdk` or `runtime`) and `DotNetCliVersion` you wish to use. (For a full list of .NET CLI versions/package types, see these links: [2.1](https://dotnet.microsoft.com/download/dotnet-core/2.1), [2.2](https://dotnet.microsoft.com/download/dotnet-core/2.2).)
+Simply specify the xUnit project(s) you wish to run (semicolon delimited) with the `XUnitProjects` parameter. Then, specify the `XUnitPublishTargetFramework` (the framework you want to publish your xUnit projects as, e.g. `netcoreapp2.1`), `XUnitRuntimeTargetFramework` (the framework version of xUnit you want to use from the xUnit nuget package, e.g. `netcoreapp2.0`) and the `XUnitRunnerVersion` (the version of the xUnit nuget package you want to use, e.g. `2.4.1`). Finally, set `IncludeDotNetCli` to true and specify which `DotNetCliPackageType` (`sdk` or `runtime`) and `DotNetCliVersion` you wish to use. (For a full list of .NET CLI versions/package types, see these links: [3.0](https://dotnet.microsoft.com/download/dotnet-core/3.0), [2.1](https://dotnet.microsoft.com/download/dotnet-core/2.1), [2.2](https://dotnet.microsoft.com/download/dotnet-core/2.2).)
 
 ```yaml
   - template: /eng/common/templates/steps/send-to-helix.yml
@@ -94,7 +94,8 @@ Simply specify the xUnit project(s) you wish to run (semicolon delimited) with t
       # HelixPreCommands: '' -- any commands that you would like to run prior to running your job
       # HelixPostCommands: '' -- any commands that you would like to run after running your job
       XUnitProjects: $(Build.SourcesDirectory)/HelloTests/HelloTests.csproj # specify your xUnit projects (semicolon delimited) here instead!
-      XUnitTargetFramework: netcoreapp2.0 # specify your target framework here
+      XUnitPublishTargetFramework: netcoreapp2.1 # specify your publish target framework here
+      XUnitRuntimeTargetFramework: netcoreapp2.0 # specify the framework you want to use for the xUnit runner
       XUnitRunnerVersion: 2.4.1 # specify the version of xUnit runner you wish to use here
       IncludeDotNetCli: true
       DotNetCliPackageType: sdk
