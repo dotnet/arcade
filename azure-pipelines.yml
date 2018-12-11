@@ -52,6 +52,10 @@ jobs:
       - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
         - name: _InternalBuildArgs
           value: ''
+        - name: _Script
+          value: eng\common\cibuild.cmd
+        - name: _ValidateSdkArgs
+          value: ''          
       strategy:
         matrix:
           Build_Debug:

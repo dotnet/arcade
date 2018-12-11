@@ -4,7 +4,6 @@ Param(
   [string] $projects = "",
   [string][Alias('v')]$verbosity = "minimal",
   [string] $msbuildEngine = $null,
-  [string] $logFileName = "Build.binlog",
   [bool] $warnAsError = $true,
   [bool] $nodeReuse = $true,
   [switch] $execute,
@@ -58,8 +57,6 @@ function Print-Usage() {
     Write-Host "  -prepareMachine         Prepare machine for CI run"
     Write-Host "  -msbuildEngine <value>  Msbuild engine to use to run build ('dotnet', 'vs', or unspecified)."
     Write-Host ""
-    Write-Host "Optional settings:"
-    Write-Host "  -logFileName <value>    Binlog file name"
     Write-Host "Command line arguments not listed above are passed thru to msbuild."
     Write-Host "The above arguments can be shortened as much as to be unambiguous (e.g. -co for configuration, -t for test, etc.)."
 }
@@ -80,7 +77,7 @@ function InitializeCustomToolset {
 function Build {
   $toolsetBuildProj = InitializeToolset
   InitializeCustomToolset
-  $bl = if ($binaryLog) { "/bl:" + (Join-Path $LogDir $logFileName) } else { "" }
+  $bl = if ($binaryLog) { "/bl:" + (Join-Path $LogDir "Build.binlog") } else { "" }
 
   MSBuild $toolsetBuildProj `
     $bl `

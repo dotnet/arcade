@@ -43,24 +43,34 @@ function AddSourceToNugetConfig([string]$nugetConfigPath, [string]$source)
     $nugetConfig.Save($nugetConfigPath)
 }
 
+function MoveArtifactsToValidateSdkFolder([string]$artifactsDir, [string]$validateSdkFolderName, [string]$repoRoot)
+{
+    Rename-Item -Path $artifactsDir -NewName $validateSdkFolderName -Force
+  
+    if (!(Test-Path -Path $artifactsDir)) {
+        Create-Directory $artifactsDir
+    }
+  
+    Move-Item -Path (Join-Path $repoRoot $validateSdkFolderName) -Destination $artifactsDir -Force
+}
+
 try {
   Write-Host "STEP 1: Build and create local packages"
   
   Push-Location $PSScriptRoot
   
-  $validateSdkDir = Join-Path $ArtifactsDir "validatesdk"
+  $validateSdkFolderName = "validatesdk"
+  $validateSdkDir = Join-Path $ArtifactsDir $validateSdkFolderName
   $packagesSource = Join-Path (Join-Path (Join-Path $validateSdkDir "packages") $configuration) "NonShipping"
-  $toolsProjPath = Join-Path (Join-Path (Join-Path (Join-Path $RepoRoot "src") "Microsoft.DotNet.Arcade.Sdk") "tools") "Tools.proj"
   $nugetConfigPath = Join-Path $RepoRoot "NuGet.config"
   
-  # When restoring, we check if local sources defined in Tools.proj actually exist so we need to create
-  # the validation SDK folder beforehand
-  if (!(Test-Path -Path $packagesSource)) {
-    Create-Directory $packagesSource
-  }
+  . .\common\build.ps1 -restore -build -pack -configuration $configuration
   
-  . .\common\build.ps1 -restore -build -pack -configuration $configuration -logFileName "Build_Local.binlog" /p:ArtifactsDir=$validateSdkDir
-    
+  # This is a temporary solution. When https://github.com/dotnet/arcade/issues/1293 is closed
+  # we'll be able to pass a container name to build.ps1 which will put the outputs in the
+  # artifacts-<container-name> folder.
+  MoveArtifactsToValidateSdkFolder $ArtifactsDir $validateSdkFolderName $RepoRoot
+  
   Write-Host "STEP 2: Build using the local packages"
   
   AddSourceToNugetConfig $nugetConfigPath $packagesSource
