@@ -26,6 +26,10 @@ jobs:
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           name: dotnet-internal-temp
       variables:
+      - name: _Script
+        value: eng\common\cibuild.cmd
+      - name: _ValidateSdkArgs
+        value: ''          
       # Only enable publishing in non-public, non PR scenarios.
       - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
@@ -44,18 +48,10 @@ jobs:
             /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
             /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
             /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-        - name: _Script
-          value: eng\common\cibuild.cmd
-        - name: _ValidateSdkArgs
-          value: ''
       # else
       - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
         - name: _InternalBuildArgs
           value: ''
-        - name: _Script
-          value: eng\common\cibuild.cmd
-        - name: _ValidateSdkArgs
-          value: ''          
       strategy:
         matrix:
           Build_Debug:
