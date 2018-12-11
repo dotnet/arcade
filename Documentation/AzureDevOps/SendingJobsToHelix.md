@@ -107,7 +107,8 @@ Simply specify the xUnit project(s) you wish to run (semicolon delimited) with t
 ```
 
 ### `send-to-helix` vs `helix-publish`
-Previously, the supported template for sending jobs to helix was `helix-publish.yml`. This template will still be available for the foreseeable future; however, as of December 2018 it will no longer be updated. The `helix-publish` template uses the built-in Azure DevOps `DotNetCoreCLI` task rather than the CLI that Arcade bootstraps onto the machine. If you are seeing errors using the `helix-publish` template that relate to versions of the dotnet CLI, try switching to the `send-to-helix` template.
+
+`helix-publish.yml` is deprecated and replaced by `send-to-helix.yml`. Contact DncEng with any migration issues.
 
 ## The More Complex Case
 
