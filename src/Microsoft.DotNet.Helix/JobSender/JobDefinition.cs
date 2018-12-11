@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.Rest;
+using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -19,6 +21,7 @@ namespace Microsoft.DotNet.Helix.Client
         private readonly Dictionary<string, string> _properties;
         private readonly List<WorkItemDefinition> _workItems;
         private readonly string _jobStartIdentifier;
+        private const int MAX_RETRIES = 15;
 
         public JobDefinition(IJob jobApi)
         {
@@ -118,7 +121,7 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
-        public async Task<ISentJob> SendAsync()
+        public async Task<ISentJob> SendAsync(Action<LogLevel, string> log)
         {
             IBlobHelper storage;
             if (string.IsNullOrEmpty(StorageAccountConnectionString))
@@ -148,19 +151,55 @@ namespace Microsoft.DotNet.Helix.Client
                 jobListJson,
                 $"job-list-{Guid.NewGuid()}.json");
 
-            JobCreationResult newJob = await JobApi.NewOperationAsync(
-                new JobCreationRequest(
-                    Source,
-                    Type,
-                    Build,
-                    _properties,
-                    jobListUri.ToString(),
-                    TargetQueueId,
-                    storageContainer.Uri,
-                    storageContainer.ReadSas,
-                    storageContainer.WriteSas,
-                    Creator,
-                    maxRetryCount: MaxRetryCount));
+
+            bool keepTrying = true;
+            JobCreationResult newJob = null;
+            System.Threading.CancellationToken cancellationToken = new System.Threading.CancellationToken();
+            for (int counter = 0; keepTrying && counter < MAX_RETRIES; counter++)
+            {
+                try
+                {
+                    newJob = await JobApi.NewOperationAsync(
+                        new JobCreationRequest(
+                            Source,
+                            Type,
+                            Build,
+                            _properties,
+                            jobListUri.ToString(),
+                            TargetQueueId,
+                            storageContainer.Uri,
+                            storageContainer.ReadSas,
+                            storageContainer.WriteSas,
+                            Creator,
+                            maxRetryCount: MaxRetryCount,
+                            jobStartIdentifier: _jobStartIdentifier),
+                        cancellationToken);
+
+                    keepTrying = false;
+                }
+                catch (TaskCanceledException e)
+                {
+                    // check to see if this is really an HttpClient timeout
+                    if (e.CancellationToken != cancellationToken)
+                    {
+                        log(LogLevel.Warning, $"HttpClient timeout occurred while attempting to post new job to '{TargetQueueId}', will retry. Job Start Identifier: ${_jobStartIdentifier}");
+                    }
+                    else
+                    {
+                        // Something else cancelled this task so we need to throw this up; should never occur
+                        throw;
+                    }
+                }
+                catch (HttpRequestException e)
+                {
+                    log(LogLevel.Warning, $"Exception thrown attempting to submit job to Helix. Job will retry.\nException details: {e.Message}");
+                }
+            }
+            // if we went through all attempts and keepTrying is still true, we failed to send the job
+            if (keepTrying)
+            {
+                log(LogLevel.Error, $"Unable to publish to queue '{TargetQueueId} after {MAX_RETRIES} attempts.");
+            }
 
             return new SentJob(JobApi, newJob);
         }
