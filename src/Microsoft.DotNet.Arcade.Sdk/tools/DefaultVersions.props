@@ -34,21 +34,18 @@
     <UsingToolXUnit Condition="'$(UsingToolXUnit)' == ''">true</UsingToolXUnit>
     <UsingToolPdbConverter Condition="'$(UsingToolPdbConverter)' == ''">true</UsingToolPdbConverter>
 
-    <!--
-      Use compilers from the package on CI build, to get consistent results.
-      Locally we want to dogfood the compilers that come with the dotnet SDK or msbuild used to build the repo.
-      The local compilers are also precompiled and thus faster.
-      Repo can set this property to true for local builds if it needs to use a different compiler than the one in the dotnet SDK.
-      Repo can set this property to false for CI builds to use the compiler version from the SDK.
-    -->
-    <UsingToolMicrosoftNetCompilers Condition="'$(UsingToolMicrosoftNetCompilers)' == ''and '$(ContinuousIntegrationBuild)' == 'true'">true</UsingToolMicrosoftNetCompilers>
-
     <!-- Opt-in features -->
     <UsingToolVSSDK Condition="'$(UsingToolVSSDK)' == ''">false</UsingToolVSSDK>
     <UsingToolIbcOptimization Condition="'$(UsingToolIbcOptimization)' == ''">false</UsingToolIbcOptimization>
     <UsingToolNetFrameworkReferenceAssemblies Condition="'$(UsingToolNetFrameworkReferenceAssemblies)' == ''">false</UsingToolNetFrameworkReferenceAssemblies>
     <UsingToolNuGetRepack Condition="'$(UsingToolNuGetRepack)' == ''">false</UsingToolNuGetRepack>
     <UsingToolSymbolUploader Condition="'$(UsingToolSymbolUploader)' == ''">false</UsingToolSymbolUploader>
+
+    <!--
+      Use compilers from the Microsoft.Net.Compilers/Microsoft.NETCore.Compilers package.
+      Repo can set this property to true if it needs to use a different version of the compiler than the one in the dotnet SDK.
+    -->
+    <UsingToolMicrosoftNetCompilers Condition="'$(UsingToolMicrosoftNetCompilers)' == ''">false</UsingToolMicrosoftNetCompilers>
 
     <!-- Default versions -->
     <MicroBuildPluginsSwixBuildVersion Condition="'$(MicroBuildPluginsSwixBuildVersion)' == ''">1.0.422</MicroBuildPluginsSwixBuildVersion>
