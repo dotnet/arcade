@@ -348,6 +348,7 @@ This PR will not be auto-merged. When pull request checks pass, please complete 
 You can also do this on command line:
 
 ``````
+git branch -D ${mergeBranchName}
 git checkout -b ${mergeBranchName} $BaseBranch
 git pull https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 git checkout $BaseBranch
@@ -373,6 +374,17 @@ git pull https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 git commit -m "Updated PR with my changes"
 git push https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 ``````
+<details>
+ <summary>or if you are using SSH</summary>
+
+``````
+git checkout -b ${mergeBranchName} $BaseBranch
+git pull git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
+(make changes)
+git commit -m "Updated PR with my changes"
+git push git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
+``````
+</details>
 
 Please contact .NET Core Engineering if you have questions or issues.
 Also, if this PR was generated incorrectly, help us fix it. See https://github.com/dotnet/arcade/blob/master/scripts/GitHubMergeBranches.ps1.
