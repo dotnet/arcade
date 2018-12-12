@@ -608,10 +608,10 @@ $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "FD4596180FC1AB63B2D6A9C6E4086CC15891E41E34F835B593C3879CECAA86B6", "SOS.NETCore.dll")}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "", "3D446671" + Path.DirectorySeparatorChar + "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "", "3D446" + Path.DirectorySeparatorChar + "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "", "FD459618" + Path.DirectorySeparatorChar + "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "", "FD459" + Path.DirectorySeparatorChar + "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll")}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
 "

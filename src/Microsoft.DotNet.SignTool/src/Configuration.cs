@@ -471,23 +471,13 @@ namespace Microsoft.DotNet.SignTool
 
                             if (tempPath.Length > 259)
                             {
-                                tempPath = Path.Combine(_pathToContainerUnpackingDirectory, zipFileSignInfo.FileName, relativePath);
+                                tempPath = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash).Substring(0, 5), relativePath);
 
-                                if (File.Exists(tempPath) || tempPath.Length > 259)
+                                if (tempPath.Length > 259 || (File.Exists(tempPath) && ContentUtil.GetContentHash(tempPath).Equals(contentHash)))
                                 {
-                                    tempPath = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash).Substring(0, 8), relativePath);
-
-                                    if (File.Exists(tempPath) || tempPath.Length > 259)
-                                    {
-                                        tempPath = Path.Combine(_pathToContainerUnpackingDirectory, Path.GetRandomFileName().Replace(".", ""), relativePath);
-
-                                        if (File.Exists(tempPath) || tempPath.Length > 259)
-                                        {
-                                            _log.LogError($"Wasn't able to shorten the path to the file: {tempPath}");
-                                            zipData = null;
-                                            return false;
-                                        }
-                                    }
+                                    _log.LogError($"Wasn't able to shorten the path to the file: {tempPath}");
+                                    zipData = null;
+                                    return false;
                                 }
                             }
 
