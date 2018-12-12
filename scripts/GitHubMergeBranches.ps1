@@ -126,6 +126,19 @@ function RepoExists($owner, $name) {
     }
 }
 
+function RepoAllowsMergeCommits($owner, $name)
+{
+    try {
+        $resp = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/$owner/$name"
+        $resp | Write-Verbose
+
+        return $resp.allow_merge_commit;
+    }
+    catch {
+        return $true;
+    }
+}
+
 function GetOrCreateFork() {
     $resp = Invoke-RestMethod -Method Post -Headers $Headers `
         "https://api.github.com/repos/$RepoOwner/$RepoName/forks"
@@ -334,11 +347,9 @@ You may need to fix this problem by merging branches with this PR. Contact .NET 
             Authorization = "bearer $AuthToken"
         }
 
-        $prBody = @"
-I detected changes in the $HeadBranch branch which have not been merged yet to $BaseBranch. I'm a robot and am configured to help you automatically keep $BaseBranch up to date, so I've opened this PR.
-
-$committersList
-
+        if (RepoAllowsMergeCommits($RepoOwner, $RepoName))
+        {
+            $mergeInstructions = @"
 ## Instructions for merging
 
 This PR will not be auto-merged. When pull request checks pass, please complete this PR by creating a merge commit, *not* a squash or rebase commit.
@@ -376,9 +387,9 @@ git push https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 ``````
 
 <details>
- <summary>or if you are using SSH</summary>
+    <summary>or if you are using SSH</summary>
 
-``````
+    ``````
 git checkout -b ${mergeBranchName} $BaseBranch
 git pull git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
 (make changes)
@@ -387,10 +398,44 @@ git push git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
 ``````
 
 </details>
+"@;
+        }
+        else
+        {
+            $mergeInstructions = @"
+## Instructions for merging
+
+This repo does not appear to allow merge commits from the GitHub UI, so you will need to update this PR with a merge commit before closing this PR.
+
+`````` sh
+
+git checkout ${HeadBranch}
+git pull --ff-only
+git checkout ${baseBranch}
+git pull --ff-only
+git merge --no-ff ${HeadBranch}
+# If there are merge conflicts, resolve them and then run `git commit` to complete the merge
+git push ${forkUrl} HEAD:${mergeBranchName}
+``````
+
+After PR checks complete push the branch
+``````
+git push
+``````
+"@;
+        }
+
+        $prBody = @"
+I detected changes in the $HeadBranch branch which have not been merged yet to $BaseBranch. I'm a robot and am configured to help you automatically keep $BaseBranch up to date, so I've opened this PR.
+
+$committersList
+
+$mergeInstructions
 
 Please contact .NET Core Engineering if you have questions or issues.
 Also, if this PR was generated incorrectly, help us fix it. See https://github.com/dotnet/arcade/blob/master/scripts/GitHubMergeBranches.ps1.
-"@
+
+"@;
 
         $data = @{
             title                 = "[automated] Merge branch '$HeadBranch' => '$BaseBranch'"
