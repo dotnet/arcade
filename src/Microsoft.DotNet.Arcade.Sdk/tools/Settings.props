@@ -17,7 +17,4 @@
   
   <Import Project="Compiler.props" Condition="'$(UsingToolMicrosoftNetCompilers)' == 'true'" />  
   <Import Project="VisualStudio.props" Condition="'$(UsingToolVSSDK)' == 'true'"/>
-
-  <!-- Directory.Build.props are imported next by .NET SDK (via Common.targets) -->
-  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition="'$(ImportNetSdkFromRepoToolset)' == 'true'" />
 </Project>
