@@ -18,5 +18,6 @@
   <Target Name="Build"/>
   <Target Name="Test"/>
   <Target Name="Pack"/>
+  <Target Name="Publish"/>
 
 </Project>
