@@ -75,7 +75,8 @@
       ManifestBranch="$(BUILD_SOURCEBRANCH)"
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
       ManifestCommit="$(BUILD_SOURCEVERSION)"
-      AssetManifestPath="$(ArtifactsLogDir)BuildAssetManifest\$(OS)-$(PlatformName).xml"
+      PublishFlatContainer="false"
+      AssetManifestPath="$(ArtifactsLogDir)PipelineArtifactsPublishingManifests\$(OS)-$(PlatformName)-$(AGENT_JOBNAME).xml"
       Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"/>
     
     <PushToBlobFeed 
