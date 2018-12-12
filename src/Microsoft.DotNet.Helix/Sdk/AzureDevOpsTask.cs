@@ -4,6 +4,8 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Build.Framework;
+using Microsoft.DotNet.Helix.Client;
 
 namespace Microsoft.DotNet.Helix.AzureDevOps
 {
@@ -64,6 +66,20 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
 
             return !Log.HasLoggedErrors;
+        }
+
+        protected Task RetryAsync(Func<Task> function)
+        {
+            // Grab the retry logic from the helix api client
+            return ApiFactory.GetAnonymous()
+                .RetryAsync(
+                    async () =>
+                    {
+                        await function();
+                        return false; // the retry function requires a return, give it one
+                    },
+                    ex => Log.LogMessage(MessageImportance.Low, $"Azure Dev Ops Operation failed: {ex}\nRetrying..."));
+
         }
 
         protected async Task LogFailedRequest(HttpRequestMessage req, HttpResponseMessage res)

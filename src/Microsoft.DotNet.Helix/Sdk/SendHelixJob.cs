@@ -206,24 +206,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 Log.LogMessage(MessageImportance.Normal, "Sending Job...");
 
-                ISentJob job = await def.SendAsync(LogWithinJobSender);
+                ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg));
                 JobCorrelationId = job.CorrelationId;
-            }
-        }
-
-        private void LogWithinJobSender(LogLevel level, string message)
-        {
-            switch (level)
-            {
-                case LogLevel.Error:
-                    Log.LogError(message);
-                    break;
-                case LogLevel.Warning:
-                    Log.LogWarning(message);
-                    break;
-                default:
-                    Log.LogMessage(message);
-                    break;
             }
         }
 
