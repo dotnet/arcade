@@ -348,7 +348,7 @@ This PR will not be auto-merged. When pull request checks pass, please complete 
 You can also do this on command line:
 
 ``````
-git branch -D ${mergeBranchName}
+git branch -d ${mergeBranchName}
 git checkout -b ${mergeBranchName} $BaseBranch
 git pull https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 git checkout $BaseBranch
