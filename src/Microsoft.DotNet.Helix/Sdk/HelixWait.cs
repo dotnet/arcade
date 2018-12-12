@@ -35,6 +35,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public string Creator { get; set; }
 
+        private const int MAX_FAILURE_RETRIES = 15;
+
         protected override async Task ExecuteCore()
         {
             // Wait 1 second to allow helix to register the job creation
@@ -58,22 +60,63 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             await Task.Yield();
             Log.LogMessage($"Waiting for completion of job {jobName}");
+            int failureRetries = 0;
+            CancellationToken cancellationToken = new CancellationToken();
 
             while (true)
             {
-                var workItems = await HelixApi.WorkItem.ListAsync(jobName);
-                var waitingCount = workItems.Count(wi => wi.State == "Waiting");
-                var runningCount = workItems.Count(wi => wi.State == "Running");
-                var finishedCount = workItems.Count(wi => wi.State == "Finished");
-                if (waitingCount == 0 && runningCount == 0 && finishedCount > 0)
+                try
                 {
-                    // determines whether any of the work items failed (fireballed)
-                    await Task.WhenAll(workItems.Select(wi => wi.Name).ToArray().Select((workItemId) => GetWorkItemDetailsAsync(workItemId, jobName)));
-                    Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
+                    var workItems = await HelixApi.WorkItem.ListAsync(jobName, cancellationToken);
+                    var waitingCount = workItems.Count(wi => wi.State == "Waiting");
+                    var runningCount = workItems.Count(wi => wi.State == "Running");
+                    var finishedCount = workItems.Count(wi => wi.State == "Finished");
+                    if (waitingCount == 0 && runningCount == 0 && finishedCount > 0)
+                    {
+                        // determines whether any of the work items failed (fireballed)
+                        await Task.WhenAll(workItems.Select(wi => wi.Name).ToArray().Select((workItemId) => GetWorkItemDetailsAsync(workItemId, jobName)));
+                        Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
+                        return;
+                    }
+
+                    Log.LogMessage($"Job {jobName} is not yet completed with Waiting: {waitingCount}, Running: {runningCount}, Finished: {finishedCount}");
+                }
+                catch (TaskCanceledException e)
+                {
+                    failureRetries++;
+                    if (e.CancellationToken != cancellationToken)
+                    {
+                        // This was an HTTP timeout; log and retry
+                        Log.LogMessage($"An HttpClient timeout occurred while querying the Helix WorkItem List API for {jobName}. Retrying.");
+                        Log.LogMessage($"Exception Message: {e.Message}");
+                        Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
+                    }
+                    else
+                    {
+                        // Something else caused this cancellation; throw
+                        throw;
+                    }
+                }
+                catch (HttpRequestException e)
+                {
+                    failureRetries++;
+                    Log.LogMessage($"Caught HttpRequestException while querying the Helix WorkItem List API for {jobName}. Retrying.");
+                    Log.LogMessage($"Exception Message: {e.Message}");
+                    Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
+                }
+                catch (NullReferenceException e)
+                {
+                    failureRetries++;
+                    Log.LogMessage($"Caught NullReferenceException while querying the Helix WorkItem List API for {jobName}. Retrying.");
+                    Log.LogMessage($"Exception Message: {e.Message}");
+                    Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
+                    Log.LogMessage($"Inner Exception:\n{e.InnerException?.Message}");
+                }
+                if (failureRetries > MAX_FAILURE_RETRIES)
+                {
+                    Log.LogError($"Exceeded maximum {MAX_FAILURE_RETRIES} failure retries while querying the Helix WorkItem List API for {jobName}. Quitting.");
                     return;
                 }
-
-                Log.LogMessage($"Job {jobName} is not yet completed with Waiting: {waitingCount}, Running: {runningCount}, Finished: {finishedCount}");
                 await Task.Delay(10000);
             }
         }
@@ -81,13 +124,50 @@ namespace Microsoft.DotNet.Helix.Sdk
         private async Task GetWorkItemDetailsAsync(string workItemId, string jobName)
         {
             await Task.Yield();
+            CancellationToken cancellationToken = new CancellationToken();
 
-            var details = await HelixApi.WorkItem.DetailsAsync(jobName, workItemId);
-            if (details.State == "Failed")
+            for (int i = 0; i < MAX_FAILURE_RETRIES; i++)
             {
-                Log.LogError($"Work item {workItemId} on job {jobName} has failed with exit code {details.ExitCode}.");
-            }
+                try
+                {
+                    var details = await HelixApi.WorkItem.DetailsAsync(jobName, workItemId, cancellationToken);
+                    if (details.State == "Failed")
+                    {
+                        Log.LogError($"Work item {workItemId} on job {jobName} has failed with exit code {details.ExitCode}.");
+                    }
 
+                    return;
+                }
+                catch (TaskCanceledException e)
+                {
+                    if (e.CancellationToken != cancellationToken)
+                    {
+                        // An HTTP timeout occurred; log and retry
+                        Log.LogMessage($"An HttpClient timeout occurred while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
+                        Log.LogMessage($"Exception Message: {e.Message}");
+                        Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
+                    }
+                    else
+                    {
+                        // Something else caused this exception; throw
+                        throw;
+                    }
+                }
+                catch (HttpRequestException e)
+                {
+                    Log.LogMessage($"Caught HttpRequestException while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
+                    Log.LogMessage($"Exception Message: {e.Message}");
+                    Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
+                }
+                catch (NullReferenceException e)
+                {
+                    Log.LogMessage($"Caught NullReferenceException while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}. Retrying.");
+                    Log.LogMessage($"Exception Message: {e.Message}");
+                    Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
+                }
+                await Task.Delay(GetTimeout(i));
+            }
+            Log.LogError($"Exceeded maximum {MAX_FAILURE_RETRIES} failure retries while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}");
             return;
         }
 
@@ -135,6 +215,15 @@ namespace Microsoft.DotNet.Helix.Sdk
                     return $"https://mc.dot.net/#/user/{userName}/{Source}/{Type}/{Build}";
                 }
             }
+        }
+
+        private int GetTimeout(int times)
+        {
+            Random rand = new Random();
+            double factor = 1.3;
+            var min = Math.Pow(factor, times) * 1000;
+            var max = Math.Pow(factor, times + 1) * 1000;
+            return rand.Next((int)min, (int)max);
         }
     }
 }

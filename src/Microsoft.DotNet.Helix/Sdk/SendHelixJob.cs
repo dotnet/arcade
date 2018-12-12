@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
+using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
@@ -205,8 +206,24 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 Log.LogMessage(MessageImportance.Normal, "Sending Job...");
 
-                ISentJob job = await def.SendAsync();
+                ISentJob job = await def.SendAsync(LogWithinJobSender);
                 JobCorrelationId = job.CorrelationId;
+            }
+        }
+
+        private void LogWithinJobSender(LogLevel level, string message)
+        {
+            switch (level)
+            {
+                case LogLevel.Error:
+                    Log.LogError(message);
+                    break;
+                case LogLevel.Warning:
+                    Log.LogWarning(message);
+                    break;
+                default:
+                    Log.LogMessage(message);
+                    break;
             }
         }
 

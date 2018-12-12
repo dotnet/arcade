@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.Rest;
+using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -18,6 +20,7 @@ namespace Microsoft.DotNet.Helix.Client
     {
         private readonly Dictionary<string, string> _properties;
         private readonly List<WorkItemDefinition> _workItems;
+        private const int MAX_RETRIES = 15;
 
         public JobDefinition(IJob jobApi)
         {
@@ -26,7 +29,7 @@ namespace Microsoft.DotNet.Helix.Client
             _properties = new Dictionary<string, string>();
             Properties = new ReadOnlyDictionary<string, string>(_properties);
             JobApi = jobApi;
-            HelixApi = ((IServiceOperations<HelixApi>) JobApi).Client;
+            HelixApi = ((IServiceOperations<HelixApi>)JobApi).Client;
         }
 
         public IHelixApi HelixApi { get; }
@@ -116,7 +119,7 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
-        public async Task<ISentJob> SendAsync()
+        public async Task<ISentJob> SendAsync(Action<LogLevel, string> log = null)
         {
             IBlobHelper storage;
             if (string.IsNullOrEmpty(StorageAccountConnectionString))
@@ -146,21 +149,69 @@ namespace Microsoft.DotNet.Helix.Client
                 jobListJson,
                 $"job-list-{Guid.NewGuid()}.json");
 
-            JobCreationResult newJob = await JobApi.NewOperationAsync(
-                new JobCreationRequest(
-                    Source,
-                    Type,
-                    Build,
-                    _properties,
-                    jobListUri.ToString(),
-                    TargetQueueId,
-                    storageContainer.Uri,
-                    storageContainer.ReadSas,
-                    storageContainer.WriteSas,
-                    Creator,
-                    maxRetryCount: MaxRetryCount));
+
+            JobCreationResult newJob = null;
+            string jobStartIdentifier = Guid.NewGuid().ToString("N");
+            System.Threading.CancellationToken cancellationToken = new System.Threading.CancellationToken();
+            Random rand = new Random();
+            for (int counter = 0; counter < MAX_RETRIES; counter++)
+            {
+                try
+                {
+                    newJob = await JobApi.NewOperationAsync(
+                        new JobCreationRequest(
+                            Source,
+                            Type,
+                            Build,
+                            _properties,
+                            jobListUri.ToString(),
+                            TargetQueueId,
+                            storageContainer.Uri,
+                            storageContainer.ReadSas,
+                            storageContainer.WriteSas,
+                            Creator,
+                            maxRetryCount: MaxRetryCount,
+                            jobStartIdentifier: jobStartIdentifier),
+                        cancellationToken);
+
+                    break;
+                }
+                catch (TaskCanceledException e)
+                {
+                    // check to see if this is really an HttpClient timeout
+                    if (e.CancellationToken != cancellationToken)
+                    {
+                        log?.Invoke(LogLevel.Informational, $"HttpClient timeout occurred while attempting to post new job to '{TargetQueueId}', will retry. Job Start Identifier: ${jobStartIdentifier}");
+                    }
+                    else
+                    {
+                        // Something else cancelled this task so we need to throw this up; should never occur
+                        throw;
+                    }
+                }
+                catch (HttpRequestException e)
+                {
+                    log?.Invoke(LogLevel.Informational, $"HttpRequestException thrown attempting to submit job to Helix. Job will retry.\nException details: {e.Message}");
+                }
+
+                await Task.Delay(GetTimeout(counter));
+            }
+            // if we went through all attempts and keepTrying is still true, we failed to send the job
+            if (newJob == null)
+            {
+                log?.Invoke(LogLevel.Error, $"Unable to publish to queue '{TargetQueueId} after {MAX_RETRIES} attempts.");
+            }
 
             return new SentJob(JobApi, newJob);
+        }
+
+        private int GetTimeout(int times)
+        {
+            Random rand = new Random();
+            double factor = 1.3;
+            var min = Math.Pow(factor, times) * 1000;
+            var max = Math.Pow(factor, times + 1) * 1000;
+            return rand.Next((int)min, (int)max);
         }
 
         public IJobDefinitionWithTargetQueue WithBuild(string buildNumber)

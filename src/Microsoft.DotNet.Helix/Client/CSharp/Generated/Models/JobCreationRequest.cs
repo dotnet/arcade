@@ -53,7 +53,11 @@ namespace Microsoft.DotNet.Helix.Client.Models
         /// run</param>
         /// <param name="attempt">Identifier for a given attempt. Must be
         /// lexically sortable.</param>
-        public JobCreationRequest(string source, string type, string build, IDictionary<string, string> properties, string listUri, string queueId, string resultsUri, string resultsUriRSAS, string resultsUriWSAS, string creator = default(string), string pullRequestId = default(string), int? maxRetryCount = default(int?), string attempt = default(string))
+        /// <param name="jobStartIdentifier">Unique string sent with job; if
+        /// included, users can safely re-post jobs
+        /// supplying the same value, and the API will indicate success if the
+        /// job was successfully enqueued once.</param>
+        public JobCreationRequest(string source, string type, string build, IDictionary<string, string> properties, string listUri, string queueId, string resultsUri, string resultsUriRSAS, string resultsUriWSAS, string creator = default(string), string pullRequestId = default(string), int? maxRetryCount = default(int?), string attempt = default(string), string jobStartIdentifier = default(string))
         {
             Source = source;
             Type = type;
@@ -68,6 +72,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
             PullRequestId = pullRequestId;
             MaxRetryCount = maxRetryCount;
             Attempt = attempt;
+            JobStartIdentifier = jobStartIdentifier;
             CustomInit();
         }
 
@@ -161,6 +166,15 @@ namespace Microsoft.DotNet.Helix.Client.Models
         /// </summary>
         [JsonProperty(PropertyName = "Attempt")]
         public string Attempt { get; set; }
+
+        /// <summary>
+        /// Gets or sets unique string sent with job; if included, users can
+        /// safely re-post jobs
+        /// supplying the same value, and the API will indicate success if the
+        /// job was successfully enqueued once.
+        /// </summary>
+        [JsonProperty(PropertyName = "JobStartIdentifier")]
+        public string JobStartIdentifier { get; set; }
 
         /// <summary>
         /// Validate the object.
