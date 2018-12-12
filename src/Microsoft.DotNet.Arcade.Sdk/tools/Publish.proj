@@ -70,7 +70,7 @@
 
     <PushToAzureDevOpsArtifacts 
       ItemsToPush="@(ItemsToPushToBlobFeed)"
-      ManifestBuildData="Location=$(AzureFeedUrl)"
+      ManifestBuildData="Location=$(AzureFeedUrl);ShortBuildId=$(BUILD_BUILDID)"
       ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
       ManifestBranch="$(BUILD_SOURCEBRANCH)"
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
