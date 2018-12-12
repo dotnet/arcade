@@ -62,7 +62,7 @@
 
   <Target Name="ApplyOptimizations"
           DependsOnTargets="_CalculateIbcArgs"
-          Condition="'@(OptimizeAssembly)' != '' and '$(Configuration)' == 'Release' and '$(ContinuousIntegrationBuild)' == 'true'">
+          Condition="'@(OptimizeAssembly)' != '' and '$(Configuration)' == 'Release' and '$(ContinuousIntegrationBuild)' == 'true' and '$(ApplyPartialNgenOptimization)' == 'true'">
 
     <PropertyGroup>
       <_IbcMergePath>$(NuGetPackageRoot)microsoft.dotnet.ibcmerge\$(MicrosoftDotNetIBCMergeVersion)\lib\net45\ibcmerge.exe</_IbcMergePath>
