@@ -40,8 +40,6 @@ namespace Microsoft.DotNet.XUnitRunnerUap
 
         public int? MaxParallelThreads { get; set; }
 
-        public bool NoAppDomain { get; protected set; }
-
         public bool NoColor { get; protected set; }
 
         public bool NoLogo { get; protected set; }
@@ -54,10 +52,9 @@ namespace Microsoft.DotNet.XUnitRunnerUap
 
         public bool Serialize { get; protected set; }
 
-        public bool ShowProgress { get; protected set; }
+        public bool Verbose { get; protected set; }
 
         public bool Wait { get; protected set; }
-        public string InstallLocation { get; internal set; }
 
         public static CommandLine Parse(params string[] args)
         {
@@ -136,13 +133,7 @@ namespace Microsoft.DotNet.XUnitRunnerUap
 
                 optionName = optionName.Substring(1);
 
-                if (optionName == "installlocation")
-                {
-                    if (option.Value == null)
-                        throw new ArgumentException("missing argument for -installlocation");
-                    InstallLocation = option.Value;
-                }
-                else if (optionName == "nologo")
+                if (optionName == "nologo")
                 {
                     GuardNoOptionValue(option);
                     NoLogo = true;
@@ -157,11 +148,6 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                     GuardNoOptionValue(option);
                     NoColor = true;
                 }
-                else if (optionName == "noappdomain")
-                {
-                    GuardNoOptionValue(option);
-                    NoAppDomain = true;
-                }
                 else if (optionName == "debug")
                 {
                     GuardNoOptionValue(option);
@@ -172,10 +158,10 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                     GuardNoOptionValue(option);
                     Serialize = true;
                 }
-                else if (optionName == "showprogress")
+                else if (optionName == "verbose")
                 {
                     GuardNoOptionValue(option);
-                    ShowProgress = true;
+                    Verbose = true;
                 }
                 else if (optionName == "wait")
                 {
@@ -243,12 +229,6 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                             break;
                     }
                 }
-                else if (optionName == "noshadow")
-                {
-                    GuardNoOptionValue(option);
-                    foreach (var assembly in project.Assemblies)
-                        assembly.Configuration.ShadowCopy = false;
-                }
                 else if (optionName == "trait")
                 {
                     if (option.Value == null)
@@ -282,6 +262,13 @@ namespace Microsoft.DotNet.XUnitRunnerUap
 
                     project.Filters.IncludedClasses.Add(option.Value);
                 }
+                else if (optionName == "noclass")
+                {
+                    if (option.Value == null)
+                        throw new ArgumentException("missing argument for -noclass");
+
+                    project.Filters.ExcludedClasses.Add(option.Value);
+                }
                 else if (optionName == "method")
                 {
                     if (option.Value == null)
@@ -289,12 +276,26 @@ namespace Microsoft.DotNet.XUnitRunnerUap
 
                     project.Filters.IncludedMethods.Add(option.Value);
                 }
+                else if (optionName == "nomethod")
+                {
+                    if (option.Value == null)
+                        throw new ArgumentException("missing argument for -nomethod");
+
+                    project.Filters.ExcludedMethods.Add(option.Value);
+                }
                 else if (optionName == "namespace")
                 {
                     if (option.Value == null)
                         throw new ArgumentException("missing argument for -namespace");
 
                     project.Filters.IncludedNamespaces.Add(option.Value);
+                }
+                else if (optionName == "nonamespace")
+                {
+                    if (option.Value == null)
+                        throw new ArgumentException("missing argument for -nonamespace");
+
+                    project.Filters.ExcludedNamespaces.Add(option.Value);
                 }
                 else if (optionName == "xml")
                 {
