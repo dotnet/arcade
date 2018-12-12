@@ -19,7 +19,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public const string AssetsVirtualDir = "assets/";
 
-        public static void CreateBuildManifest(TaskLoggingHelper log, IEnumerable<BlobArtifactModel> blobArtifacts, IEnumerable<PackageArtifactModel> packageArtifacts, string assetManifestPath, string manifestRepoUri, string manifestBuildId, string manifestBranch, string manifestCommit, string manifestBuildData)
+        public static void CreateBuildManifest(TaskLoggingHelper log, 
+            IEnumerable<BlobArtifactModel> blobArtifacts, 
+            IEnumerable<PackageArtifactModel> packageArtifacts, 
+            string assetManifestPath, 
+            string manifestRepoUri, 
+            string manifestBuildId, 
+            string manifestBranch, 
+            string manifestCommit, 
+            string manifestBuildData)
         {
             log.LogMessage(MessageImportance.High, $"Creating build manifest file '{assetManifestPath}'...");
 
