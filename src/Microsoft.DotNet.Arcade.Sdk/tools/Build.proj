@@ -39,21 +39,10 @@
     QuietRestoreBinaryLog           "true" to produce binary log for Restore.
   -->
 
-  <!--
-    Default values.
-  -->
-  <ItemGroup>
-    <ProjectToBuild Include="$(Projects)"/>
-  </ItemGroup>
-  <ItemGroup Condition="'$(SdkTaskProjects)' != ''">
-    <!-- SdkTaskProjects and Projects are unlikely to define the same "_SolutionBuildTargets".  If SdkTaskProjects are defined
-         ignore Projects, these groups are mutually exclusive -->
-    <ProjectToBuild Remove="@(ProjectToBuild)" />
-    <_SdkTaskProject Include="$(SdkTaskProjects)"/>
-    <!-- SdkTaskProjects are in the Arcade SDK, the user only knows the name of the projects, not the full path, so fully
-         qualify the path with 'MSBuildThisFileDirectory' -->
-    <ProjectToBuild Include="@(_SdkTaskProject->'$(MSBuildThisFileDirectory)%(Identity)')" />
-  </ItemGroup>
+  <PropertyGroup Condition=" '$(NuGetRestoreTargets)' == '' ">
+    <NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'=='' and '$([MSBuild]::IsRunningFromVisualStudio())'=='true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</NuGetRestoreTargets>
+    <NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'==''">$(MSBuildToolsPath)\NuGet.targets</NuGetRestoreTargets>
+  </PropertyGroup>
 
   <PropertyGroup>
     <_RepoRootOriginal>$(RepoRoot)</_RepoRootOriginal>
@@ -67,6 +56,28 @@
   <!-- Allow for repo specific Build properties such as the list of Projects to build -->
   <Import Project="$(RepositoryEngineeringDir)Build.props" Condition="Exists('$(RepositoryEngineeringDir)Build.props')" />
 
+  <!--
+    Default values.
+  -->
+  <PropertyGroup>
+    <Projects Condition="'$(Projects)' == '' AND '$(BuildSolutions)' != 'false' ">$(RepoRoot)*.sln</Projects>
+  </PropertyGroup>
+  
+  <ItemGroup Condition=" '$(Projects)' != '' ">
+    <ProjectToBuild Include="$(Projects)"/>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(SdkTaskProjects)' != ''">
+    <!-- SdkTaskProjects and Projects are unlikely to define the same "_SolutionBuildTargets".  If SdkTaskProjects are defined
+         ignore Projects, these groups are mutually exclusive -->
+    <ProjectToBuild Remove="@(ProjectToBuild)" />
+    <_SdkTaskProject Include="$(SdkTaskProjects)"/>
+    <!-- SdkTaskProjects are in the Arcade SDK, the user only knows the name of the projects, not the full path, so fully
+         qualify the path with 'MSBuildThisFileDirectory' -->
+    <ProjectToBuild Include="@(_SdkTaskProject->'$(MSBuildThisFileDirectory)%(Identity)')" />
+  </ItemGroup>
+
+
   <PropertyGroup>
     <_PublishToBlobStorage>false</_PublishToBlobStorage>
     <_PublishToBlobStorage Condition="'$(DotNetPublishToBlobFeed)' == 'true'">true</_PublishToBlobStorage>
@@ -76,7 +87,7 @@
   </PropertyGroup>
 
   <Target Name="Execute">
-    <Error Text="Property 'Projects' must be specified" Condition="'$(Projects)' == ''"/>
+    <Error Text="No projects were found to build. Either the 'Projects' property or 'ProjectToBuild' item group must be specified." Condition="'@(ProjectToBuild)' == ''"/>
     <Error Text="Property 'RepoRoot' must be specified" Condition="'$(_RepoRootOriginal)' == ''"/>
     <Error Text="File 'global.json' must exist in directory specified by RepoRoot: '$(_RepoRootOriginal)'" Condition="'$(_RepoRootOriginal)' != '' and !Exists('$(RepoRoot)global.json')"/>
     <Error Text="Property 'Execute' only applies to 'SdkTaskProjects' but no 'SdkTaskProjects' are defined" Condition="'$(Execute)' == 'true' and '$(SdkTaskProjects)' == ''" />
@@ -165,6 +176,11 @@
       <_RestoreToolsPropsCmdLine>$(_RestoreToolsPropsCmdLine) /bl:"$(ArtifactsLogDir)Restore.binlog"</_RestoreToolsPropsCmdLine>
     </PropertyGroup>
 
+    <PropertyGroup>
+      <!-- Normalize paths to avoid false warnings by NuGet about missing project references. -->
+      <ProjectToBuildList>@(ProjectToBuild->'%(FullPath)')</ProjectToBuildList>
+    </PropertyGroup>
+
     <!--
       Workaround for https://github.com/NuGet/Home/issues/4695.
       We launch a new msbuild process to restore.
@@ -177,7 +193,10 @@
           Condition="'$(_RestoreTools)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <Exec Command='$(_MSBuildCmd) "@(ProjectToBuild)" /nologo /m /v:quiet /t:Restore $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
-          Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
+          Condition="'$(BuildSolutions)' != 'false' AND '$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
+
+    <Exec Command='$(_MSBuildCmd) "$(NuGetRestoreTargets)" "/p:RestoreGraphProjectInput:$(ProjectToBuildList)" /nologo /m /v:quiet /t:Restore $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
+          Condition="'$(BuildSolutions)' == 'false' AND '$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <!--
       Restore built-in tools.
@@ -199,7 +218,14 @@
              RemoveProperties="$(_RemoveProps)"
              Targets="Restore"
              BuildInParallel="true"
-             Condition="'$(SdkTaskProjects)' == '' and '$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
+             Condition="'$(BuildSolutions)' != 'false' AND '$(SdkTaskProjects)' == '' and '$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
+
+    <!-- Invoke restore by winvoking a build on NuGet.targets directly. This avoids duplicate calls to RestoreTask and race conditions on writing restore results to disk. -->
+    <MSBuild Projects="$(NuGetRestoreTargets)"
+             Properties="@(_SolutionBuildProps);RestoreGraphProjectInput=$(ProjectToBuildList);__BuildPhase=SolutionRestore"
+             RemoveProperties="$(_RemoveProps)"
+             Targets="Restore"
+             Condition="'$(BuildSolutions)' == 'false' AND '$(SdkTaskProjects)' == '' and '$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
 
     <!--
       Build solution.

@@ -7,6 +7,5 @@
 
   <PropertyGroup>
     <PackageProjectUrl>https://localhost/</PackageProjectUrl>
-    <IsPackable>true</IsPackable>
   </PropertyGroup>
 </Project>
