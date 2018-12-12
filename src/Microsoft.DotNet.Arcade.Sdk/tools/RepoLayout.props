@@ -45,9 +45,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!-- TODO: remove condition once all repos update their dir structure (https://github.com/dotnet/roslyn-tools/issues/177) -->
-    <RepositoryEngineeringDir Condition="Exists('$(RepoRoot)eng')">$(RepoRoot)eng\</RepositoryEngineeringDir>
-    <RepositoryEngineeringDir Condition="'$(RepositoryEngineeringDir)' == ''">$(RepoRoot)build\</RepositoryEngineeringDir>
+    <RepositoryEngineeringDir>$(RepoRoot)eng\</RepositoryEngineeringDir>
 
     <VersionsPropsPath>$(RepositoryEngineeringDir)Versions.props</VersionsPropsPath>
 
