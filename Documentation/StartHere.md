@@ -55,6 +55,33 @@ some highlights:
     - [Telemetry](CorePackages/Telemetry.md)
     - [Versioning](CorePackages/Versioning.md)
 
+Documentation on the tools we are using and how we are using them:
+
+Code
+  - GitHub and Azure Repos
+    - [Mirroring public projects](AzureDevOps/internal-mirror.md)
+    - Bots and connectors
+
+Building projects
+  - Azure Pipelines: Orchestrating continuous integration
+    - [Goals](AzureDevOps/WritingBuildDefinitions.md)
+    - [Onboarding to AzDO](AzureDevOps/AzureDevOpsOnboarding.md)
+    - Tasks and Templates
+  - MSBuild tasks
+  - [Darc](Darc.md): Arcade's dependency management system
+  - [Maestro](Maestro.md): CI automation of dependency flow
+  - Mission Control
+
+Testing projects
+  - Helix: [SDK](../src/Microsoft.DotNet.Helix/Sdk/Readme.md), [JobSender](../src/Microsoft.DotNet.Helix/Sdk/Readme.md)
+  - Azure Agent pools and queues
+  - Docker support
+
+Deploying projects
+  - [SignTool](CorePackages/Signing.md) (and Microbuild)
+  - BAR
+
+
 ## I'm ready to get started, what do I do?
 
 - Onboard onto the arcade SDK, which provides templates (building blocks) for
