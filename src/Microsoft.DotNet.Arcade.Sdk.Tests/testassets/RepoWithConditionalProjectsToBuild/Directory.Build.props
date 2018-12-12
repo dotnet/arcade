@@ -1,0 +1,13 @@
+<!-- Intentionall does not import -->
+<Project>
+  <PropertyGroup>
+    <ImportNetSdkFromRepoToolset>false</ImportNetSdkFromRepoToolset>
+  </PropertyGroup>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+
+  <PropertyGroup>
+    <PackageProjectUrl>https://localhost/</PackageProjectUrl>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+</Project>

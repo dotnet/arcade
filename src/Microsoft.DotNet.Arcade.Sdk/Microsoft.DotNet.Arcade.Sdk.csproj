@@ -7,6 +7,7 @@
     <ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
 
     <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 
     <Description>Common toolset for repositories</Description>
     <PackageTags>Roslyn Build Repository Toolset MSBuild SDK</PackageTags>
