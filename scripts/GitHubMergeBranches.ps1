@@ -347,7 +347,7 @@ You may need to fix this problem by merging branches with this PR. Contact .NET 
             Authorization = "bearer $AuthToken"
         }
 
-        if (RepoAllowsMergeCommits($RepoOwner, $RepoName))
+        if (RepoAllowsMergeCommits $RepoOwner $RepoName)
         {
             $mergeInstructions = @"
 ## Instructions for merging
@@ -389,7 +389,7 @@ git push https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 <details>
     <summary>or if you are using SSH</summary>
 
-    ``````
+``````
 git checkout -b ${mergeBranchName} $BaseBranch
 git pull git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
 (make changes)
@@ -408,17 +408,27 @@ git push git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
 This repo does not appear to allow merge commits from the GitHub UI, so you will need to update this PR with a merge commit before closing this PR.
 
 `````` sh
-
+git fetch
 git checkout ${HeadBranch}
 git pull --ff-only
 git checkout ${baseBranch}
 git pull --ff-only
 git merge --no-ff ${HeadBranch}
-# If there are merge conflicts, resolve them and then run `git commit` to complete the merge
-git push ${forkUrl} HEAD:${mergeBranchName}
+# If there are merge conflicts, resolve them and then run `git merge --continue` to complete the merge
+git push https://github.com/$prOwnerName/$prRepoName HEAD:${mergeBranchName}
 ``````
 
-After PR checks complete push the branch
+<details>
+<summary>or if you are using SSH</summary>
+
+``````
+git push git@github.com:$prOwnerName/$prRepoName HEAD:${mergeBranchName}
+``````
+
+</details>
+
+
+After PR checks are complete push the branch
 ``````
 git push
 ``````
