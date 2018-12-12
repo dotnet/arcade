@@ -165,7 +165,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogMessage($"Exception Message: {e.Message}");
                     Log.LogMessage($"Stack Trace:\n{e.StackTrace}");
                 }
-                await Task.Delay((i + 1) * 1000);
+                await Task.Delay(GetTimeout(i));
             }
             Log.LogError($"Exceeded maximum {MAX_FAILURE_RETRIES} failure retries while querying the Helix WorkItem Details API for work item {workItemId} of job {jobName}");
             return;
@@ -215,6 +215,15 @@ namespace Microsoft.DotNet.Helix.Sdk
                     return $"https://mc.dot.net/#/user/{userName}/{Source}/{Type}/{Build}";
                 }
             }
+        }
+
+        private int GetTimeout(int times)
+        {
+            Random rand = new Random();
+            double factor = 1.3;
+            var min = Math.Pow(factor, times) * 1000;
+            var max = Math.Pow(factor, times + 1) * 1000;
+            return rand.Next((int)min, (int)max);
         }
     }
 }

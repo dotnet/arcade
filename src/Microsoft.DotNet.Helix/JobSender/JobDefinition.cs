@@ -194,7 +194,7 @@ namespace Microsoft.DotNet.Helix.Client
                     log?.Invoke(LogLevel.Informational, $"HttpRequestException thrown attempting to submit job to Helix. Job will retry.\nException details: {e.Message}");
                 }
 
-                await Task.Delay((int)(Math.Pow(rand.NextDouble() * counter, 1.3) * 1000));
+                await Task.Delay(GetTimeout(counter));
             }
             // if we went through all attempts and keepTrying is still true, we failed to send the job
             if (newJob == null)
@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.Helix.Client
             return new SentJob(JobApi, newJob);
         }
 
-        private int getTimeout(int times)
+        private int GetTimeout(int times)
         {
             Random rand = new Random();
             double factor = 1.3;
