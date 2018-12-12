@@ -4,7 +4,7 @@
 
   <PropertyGroup>
     <PerformanceType Condition="'$(PerformanceType)' == ''">Profile</PerformanceType>
-    <BenchviewDir>$([MSBuild]::NormalizeDirectory('$(ToolsDir)', 'Microsoft.BenchView.JSONFormat', 'tools'))</BenchviewDir>
+    <BenchviewDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'Microsoft.BenchView.JSONFormat', 'tools'))</BenchviewDir>
 
     <PythonCommand Condition="'$(TargetOS)' != 'Windows_NT'">python3.5</PythonCommand>
     <PythonCommand Condition="'$(TargetOS)' == 'Windows_NT'">py.exe</PythonCommand>
