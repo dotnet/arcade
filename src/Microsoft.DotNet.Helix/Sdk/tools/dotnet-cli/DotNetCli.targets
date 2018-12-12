@@ -1,6 +1,6 @@
 <Project>
   <Target Name="AddDotNetSdk" Condition="$(IncludeDotNetCli)" BeforeTargets="Test">
-    <FindDotNetCliPackage Version="$(DotNetCliVersion)" Runtime="$(DotNetCliRuntime)" PackageType="$(DotNetCliPackageType)">
+    <FindDotNetCliPackage Version="$(DotNetCliVersion)" Runtime="$(DotNetCliRuntime)" PackageType="$(DotNetCliPackageType)" Channel="$(DotNetCliChannel)">
       <Output TaskParameter="PackageUri" PropertyName="DotNetCliPackageUri"/>
     </FindDotNetCliPackage>
     <ItemGroup>
