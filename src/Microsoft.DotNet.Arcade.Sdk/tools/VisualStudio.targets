@@ -37,7 +37,6 @@
     <TargetVsixContainerName Condition="'$(TargetVsixContainerName)' == ''">$(TargetName).vsix</TargetVsixContainerName>
     <TargetVsixContainer Condition="'$(TargetVsixContainer)' == ''">$(_TargetVsixContainerDir)$(TargetVsixContainerName)</TargetVsixContainer>
 
-    <DeployExtension>false</DeployExtension>
     <DeployExtension Condition="'$(DeployProjectOutput)' == 'true'">true</DeployExtension>
   </PropertyGroup>
 
