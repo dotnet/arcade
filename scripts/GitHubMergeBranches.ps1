@@ -374,6 +374,7 @@ git pull https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 git commit -m "Updated PR with my changes"
 git push https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 ``````
+
 <details>
  <summary>or if you are using SSH</summary>
 
@@ -384,6 +385,7 @@ git pull git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
 git commit -m "Updated PR with my changes"
 git push git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
 ``````
+
 </details>
 
 Please contact .NET Core Engineering if you have questions or issues.
