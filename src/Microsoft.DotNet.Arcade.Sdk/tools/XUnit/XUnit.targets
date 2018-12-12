@@ -63,8 +63,6 @@
       <_TestRunner Condition="'$(_TestRuntime)' != 'Mono'">$(_XUnitConsoleExePath)</_TestRunner>
     </PropertyGroup>
 
-    <Error Text="File not found: '$(_TestRunner)'" Condition="!Exists('$(_TestRunner)')"/>
-
     <PropertyGroup>
       <_TestRunnerCommand>"$(_TestRunner)" $(_TestRunnerArgs)</_TestRunnerCommand>
 
@@ -107,7 +105,11 @@
       <_ResultsFileToDisplay Condition="!Exists('$(_ResultsFileToDisplay)')">%(TestToRun.ResultsStdOutPath)</_ResultsFileToDisplay>
     </PropertyGroup>
 
-    <Error Text="Tests failed: $(_ResultsFileToDisplay) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0'" File="XUnit" ContinueOnError="true" />
+    <!-- 
+      Ideally we would set ContinueOnError="ErrorAndContinue" so that when a test fails in multi-targeted test project
+      we'll still run tests for all target frameworks. ErrorAndContinue doesn't work well on Linux though: https://github.com/Microsoft/msbuild/issues/3961.
+    -->
+    <Error Text="Tests failed: $(_ResultsFileToDisplay) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0'" File="XUnit" />
 
     <ItemGroup>
       <FileWrites Include="@(_OutputFiles)"/>
