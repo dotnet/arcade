@@ -76,7 +76,7 @@
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
       ManifestCommit="$(BUILD_SOURCEVERSION)"
       AssetManifestPath="$(ArtifactsLogDir)BuildAssetManifest\$(OS)-$(PlatformName).xml"
-      Condition="$(PublishToAzure) AND '$(PushToAzureDevOps)' == 'true'"/>
+      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"/>
     
     <PushToBlobFeed 
       ExpectedFeedUrl="$(AzureFeedUrl)"
