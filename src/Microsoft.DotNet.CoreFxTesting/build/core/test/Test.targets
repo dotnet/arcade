@@ -24,13 +24,13 @@
     <RunArguments Condition="'$(BuildingNETFxVertical)' == 'true' and '$(XUnitNoAppdomain)' == 'true'">$(RunArguments) -noappdomain</RunArguments>
 
     <!-- Traits -->
-    <WithCategories Condition="'$(WithCategories)' != ''">;$(WithCategories.Trim(';'))</WithCategories>
-    <WithoutCategories Condition="'$(WithoutCategories)' != ''">;$(WithoutCategories.Trim(';'))</WithoutCategories>
+    <_withCategories Condition="'$(WithCategories)' != ''">;$(WithCategories.Trim(';'))</_withCategories>
+    <_withoutCategories Condition="'$(WithoutCategories)' != ''">;$(WithoutCategories.Trim(';'))</_withoutCategories>
     <!-- Default non categories -->
-    <WithoutCategories Condition="!$(WithCategories.Contains('failing'))">$(WithoutCategories);failing</WithoutCategories>
-    <WithoutCategories Condition="'$(Outerloop)' != 'true'">$(WithoutCategories);Outerloop</WithoutCategories>
-    <RunArguments>$(RunArguments)$(WithCategories.Replace(';', ' -trait category='))</RunArguments>
-    <RunArguments>$(RunArguments)$(WithoutCategories.Replace(';', ' -notrait category='))</RunArguments>
+    <_withoutCategories Condition="!$(_withCategories.Contains('failing'))">$(_withoutCategories);failing</_withoutCategories>
+    <_withoutCategories Condition="'$(Outerloop)' != 'true'">$(_withoutCategories);Outerloop</_withoutCategories>
+    <RunArguments>$(RunArguments)$(_withCategories.Replace(';', ' -trait category='))</RunArguments>
+    <RunArguments>$(RunArguments)$(_withoutCategories.Replace(';', ' -notrait category='))</RunArguments>
     
     <!-- User passed in options. -->
     <RunArguments Condition="'$(XUnitOptions)' != ''">$(RunArguments) $(XUnitOptions)</RunArguments>
