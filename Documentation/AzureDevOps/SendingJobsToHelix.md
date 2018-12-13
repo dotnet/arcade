@@ -32,13 +32,15 @@ Example: `"Microsoft.DotNet.Helix.Sdk": "1.0.0-beta.18502.3"`
 
 ## Helix Access Token
 
-If you plan to send a payload (such as a work item) to Helix, you will need to be authorized. 
+If you plan to send a payload (such as a work item) to Helix, you will need to be authorized.
 
 ### External builds (Public CI)
 
 For external builds, you will need to provide the *BotAccount-dotnet-github-anon-kaonashi-bot-helix-token* secret from **ToolsKV** (subscription *Dotnet Engineering services*). This will allow you to send payloads to Helix while minimizing the risk of leaking secrets.
 
-In the dev.azure.com/dnceng/public project, you can use the `Helix Anonymous` variable group to provide this secret to your build
+In the dev.azure.com/dnceng/public project, you can use the `Helix Anonymous` variable group to provide this secret to your build.  You will need to check the box labeled "Make secrets available to builds of forks" in your build definition under the "Pull Request validation" trigger of the build definition in order to make this secret available to your build.  Note: Do NOT mark this check box if there are other secrets in your build that you are concerned about exposing.
+
+Furthermore, you will need to specify the *IsExternal* flag for your build and specify a *Creator* in order to send the jobs to Helix anonymously. The "creator" should be an identifiable username which is clearly related to your build. For example, Arcade might specify a creator of `arcade`. This will make collating your results on Mission Control much easier.
 
 Example:
 
@@ -47,20 +49,18 @@ variables:
 - group: Helix Anonymous
 
 steps:
-- script: $(Build.SourcesDirectory)/.dotnet/dotnet
-          eng/sendtohelix.proj
-          /t:test
-          /p:HelixTargetQueues=Windows.10.Amd64.Open
-          /p:HelixBuild=$(Build.BuildNumber)
-          /p:HelixAccessToken=$HelixAccessToken
+- template: /eng/common/templates/steps/send-to-helix.yml
   displayName: Send to Helix
-  env:
+  parameters:
+    ## more variables go here
     HelixAccessToken: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token)
+    IsExternal: true
+    Creator: # specify your creator here
 ```
 
 ### Internal builds
 
-In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-Access` variable group to provide this secret to your build.
+In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-Access` variable group to provide this secret to your build. This secret is automatically injected into the environment, so specifying it explicitly is unnecessary.
 
 
 Example:
@@ -70,44 +70,56 @@ variables:
 - group: DotNet-HelixApi-Access
 
 steps:
-- script: $(Build.SourcesDirectory)/.dotnet/dotnet
-          eng/sendtohelix.proj
-          /t:test
-          /p:HelixTargetQueues=Windows.10.Amd64.Open
-          /p:HelixBuild=$(Build.BuildNumber)
-          /p:HelixAccessToken=$HelixAccessToken
+# $HelixAccessToken is automatically injected into the environment
+- template: /eng/common/templates/steps/send-to-helix.yml
   displayName: Send to Helix
+  parameters:
+    # other parameters here
 ```
 
 ## The Simple Case
 
-The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `helix-publish` template in `eng/common/templates/steps/helix-publish.yml` from your `.Azure DevOps-ci.yml` file.
+The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `send-to-helix` template in `eng/common/templates/steps/send-to-helix.yml` from your `azure-pipelines.yml` file.
 
-You will need to create a script file to run your tests. In the future, it will be possible to simply specify the directory where your xUnit tests live and the job sender will intelligently handle the rest of this for you; currently, however, this functionality does not exist.
+Simply specify the xUnit project(s) you wish to run (semicolon delimited) with the `XUnitProjects` parameter. Then, specify the `XUnitPublishTargetFramework` (the framework you want to publish your xUnit projects as, e.g. `netcoreapp2.1`), `XUnitRuntimeTargetFramework` (the framework version of xUnit you want to use from the xUnit nuget package, e.g. `netcoreapp2.0`) and the `XUnitRunnerVersion` (the version of the xUnit nuget package you want to use, e.g. `2.4.1`). Finally, set `IncludeDotNetCli` to true and specify which `DotNetCliPackageType` (`sdk` or `runtime`) and `DotNetCliVersion` you wish to use. (For a full list of .NET CLI versions/package types, see these links: [3.0](https://dotnet.microsoft.com/download/dotnet-core/3.0), [2.1](https://dotnet.microsoft.com/download/dotnet-core/2.1), [2.2](https://dotnet.microsoft.com/download/dotnet-core/2.2).)
+
+The list of available Helix queues can be found [here](https://helix.dot.net/api/2018-03-14/info/queues).
 
 ```yaml
-  - template: /eng/common/templates/steps/helix-publish.yml
+  - template: /eng/common/templates/steps/send-to-helix.yml
     parameters:
       HelixSource: pr/your/helix/source # sources must start with pr/, official/, prodcon/, or agent/
       HelixType: type/tests
       # HelixBuild: $(Build.BuildNumber) -- This property is set by default
-      HelixTargetQueues: Windows.10.Amd64.Open;Windows.7.Amd64.Open
-      HelixAccessToken: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token)
+      HelixTargetQueues: Windows.10.Amd64.Open;Windows.81.Amd64.Open;Windows.7.Amd64.Open # specify appropriate queues here; see https://helix.dot.net/api/2018-03-14/info/queues for a list of queues
+      HelixAccessToken: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token) # this token is only for external (public) builds
       # HelixPreCommands: '' -- any commands that you would like to run prior to running your job
       # HelixPostCommands: '' -- any commands that you would like to run after running your job
-      WorkItemDirectory: $(Build.SourcesDirectory)/artifacts/bin/test/$(_BuildConfig)/netcoreapp2.0 # specify the directory where your tests live here
-      WorkItemCommand: # specify the command to run your tests
+      XUnitProjects: $(Build.SourcesDirectory)/HelloTests/HelloTests.csproj # specify your xUnit projects (semicolon delimited) here!
+      XUnitPublishTargetFramework: netcoreapp2.1 # specify your publish target framework here
+      XUnitRuntimeTargetFramework: netcoreapp2.0 # specify the framework you want to use for the xUnit runner
+      XUnitRunnerVersion: 2.4.1 # specify the version of xUnit runner you wish to use here
+      IncludeDotNetCli: true
+      DotNetCliPackageType: sdk
+      DotNetCliVersion: 2.1.403 # full list of versions here: https://raw.githubusercontent.com/dotnet/core/master/release-notes/releases.json
       EnableXUnitReporter: true # required for reporting out xUnit test results to Mission Control
       # WaitForWorkItemCompletion: true -- defaults to true
+      IsExternal: true # for specifying external jobs -- set this true whenever you would use the anon-kaonashi token for HelixAccessToken; true requires Creator
+      Creator: arcade # specify an appropriate Creator here -- required for IsExternal true
       # condition: succeeded() - defaults to succeeded()
-      # continueOnError: false -- defaults to false
 ```
+
+### `send-to-helix` vs `helix-publish`
+
+`helix-publish.yml` is deprecated and replaced by `send-to-helix.yml`. Contact DncEng with any migration issues.
 
 ## The More Complex Case
 
 For anything more complex than the above example, you'll want to create your own MSBuild proj file to specify the work items and correlation payloads you want to send up to Helix. Full documentation on how to do this can be found [in the SDK's readme](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Helix/Sdk/Readme.md).
 
 ## Viewing test results
+
+All test results will be downloaded to the Azure DevOps build and viewable through the **Tests** tab. However, you can also view the results on Mission Control.
 
 ### External test results
 

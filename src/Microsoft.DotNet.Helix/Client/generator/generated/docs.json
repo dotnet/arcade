@@ -3,7 +3,7 @@
   "info": {
     "version": "2018-03-14",
     "title": "Helix API (2018-03-14)",
-    "description": "This API provides mechanisms for creating Helix jobs and querying their state and final results. Any API method that requires authentication (indicated in the description of each method) requires an API key to be passed either in the form of a query parameter named 'access_token', or as a header in the form 'Authentication: token APIKEY', where APIKEY is your key. You can obtain your API key from /UserProfileAll API's that deal with jobs have optional authentication. Any anonmyous access will be scoped to a limited set of jobs."
+    "description": "This API provides mechanisms for creating Helix jobs and querying their state and final results. Any API method that requires authentication (indicated in the description of each method) requires an API key to be passed either in the form of a query parameter named 'access_token', or as a header in the form 'Authentication: token APIKEY', where APIKEY is your key. You can obtain your API key from /UserProfileAll API's that deal with jobs have optional authentication. Any anonymous access will be scoped to a limited set of jobs. The 'Telemetry' endpoint only requires authentication on the initial POST, subsequent calls that pass the token inherit the authentication from the initial token, so don't need the api_key passed."
   },
   "host": "helix.dot.net",
   "schemes": [
@@ -1367,12 +1367,7 @@
               "type": "string"
             }
           }
-        },
-        "security": [
-          {
-            "access_token": []
-          }
-        ]
+        }
       }
     },
     "/api/2018-03-14/telemetry/job/build": {
@@ -2475,6 +2470,10 @@
         },
         "Attempt": {
           "description": "Identifier for a given attempt. Must be lexically sortable.",
+          "type": "string"
+        },
+        "JobStartIdentifier": {
+          "description": "Unique string sent with job; if included, users can safely re-post jobs \r\nsupplying the same value, and the API will indicate success if the job was successfully enqueued once.",
           "type": "string"
         }
       }

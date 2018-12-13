@@ -1,16 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -61,14 +57,16 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             while (true)
             {
-                var workItems = await HelixApi.WorkItem.ListAsync(jobName);
+                var workItems = await HelixApi.RetryAsync(
+                    () => HelixApi.WorkItem.ListAsync(jobName),
+                    LogExceptionRetry);
                 var waitingCount = workItems.Count(wi => wi.State == "Waiting");
                 var runningCount = workItems.Count(wi => wi.State == "Running");
                 var finishedCount = workItems.Count(wi => wi.State == "Finished");
                 if (waitingCount == 0 && runningCount == 0 && finishedCount > 0)
                 {
                     // determines whether any of the work items failed (fireballed)
-                    await Task.WhenAll(workItems.Select(wi => wi.Name).ToArray().Select((workItemId) => GetWorkItemDetailsAsync(workItemId, jobName)));
+                    await Task.WhenAll(workItems.Select(wi => CheckForWorkItemFailureAsync(wi.Name, jobName)));
                     Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
                     return;
                 }
@@ -78,17 +76,29 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
         }
 
-        private async Task GetWorkItemDetailsAsync(string workItemId, string jobName)
+        private void LogExceptionRetry(Exception ex)
+        {
+            Log.LogMessage(MessageImportance.Low, $"Checking for job completion failed with: {ex}\nRetrying...");
+        }
+
+        private async Task CheckForWorkItemFailureAsync(string workItemName, string jobName)
         {
             await Task.Yield();
-
-            var details = await HelixApi.WorkItem.DetailsAsync(jobName, workItemId);
-            if (details.State == "Failed")
+            try
             {
-                Log.LogError($"Work item {workItemId} on job {jobName} has failed with exit code {details.ExitCode}.");
+                var details = await HelixApi.RetryAsync(
+                    () => HelixApi.WorkItem.DetailsAsync(jobName, workItemName),
+                    LogExceptionRetry);
+                if (details.State == "Failed")
+                {
+                    Log.LogError(
+                        $"Work item {workItemName} on job {jobName} has failed with exit code {details.ExitCode}.");
+                }
             }
-
-            return;
+            catch (Exception ex)
+            {
+                Log.LogError($"Unable to get work item status for '{workItemName}', assuming failure. Exception: {ex}");
+            }
         }
 
         private async Task<string> GetMissionControlResultUri()

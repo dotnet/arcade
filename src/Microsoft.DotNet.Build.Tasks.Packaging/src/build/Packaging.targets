@@ -139,7 +139,6 @@
        Walking the closure is very expensive for many of our packages and is unecessary since we are very
        strict about assets that are included in the package.  -->
   <Target Name="_GetProjectClosure"
-          DependsOnTargets="ConvertCommonMetadataToAdditionalProperties"
           Returns="@(_ProjectReferenceClosure)">
 
     <!-- Get closure of indirect references if they opt-in -->

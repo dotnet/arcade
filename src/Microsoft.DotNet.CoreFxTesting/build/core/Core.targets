@@ -227,10 +227,45 @@
   <Target Name="BuildAndTest" DependsOnTargets="Build;Test" />
   <Target Name="RebuildAndTest" DependsOnTargets="Rebuild;Test" />
 
-  <!-- Core testing framework -->
   <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Core.uap.targets" />
+  
+  <!--
+    LaunchSettings.json support.
+    Generates launchSettings.json files during compilation or on demand.
 
-  <!-- Components -->
-  <Import Project="$(TestComponentsDir)Components.targets" />
+    Inputs:
+      - EnableLaunchSettings: Intended to be passed in as a global property or being set.
+  -->
+  <Import Condition="'$(EnableLaunchSettings)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'launchSettings', 'LaunchSettings.targets'))" />
+
+  <!--
+    Visual Studio Test Framework (vstest) support.
+    References the Microsoft.Net.Test.Sdk and the VS test runner.
+
+    Inputs:
+      - EnableVSTestReferences: Intended to be passed in as a global property or being set.
+  -->
+  <Import Condition="'$(EnableVSTestReferences)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'vstest', 'VSTest.targets'))" />
+
+  <!--
+    Unit/Functional/Integration test support.
+    Supported runners: xunit.
+  -->
+  <Import Condition="'$(IsUnitTestProject)' == 'true' OR '$(IsIntegrationTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.targets'))" />
+
+  <!--
+    Performance test support.
+    Supported runners: xunit-performance.
+  -->
+  <Import Condition="'$(IsPerformanceTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'performance', 'Performance.targets'))" />
+
+  <!--
+    Code Coverage support.
+    Supported runners: OpenCover.
+
+    Inputs:
+      - Coverage: Expected to be passed in as a global property.
+  -->
+  <Import Condition="'$(_CoverageSupported)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'coverage', 'Coverage.targets'))" />
 
 </Project>

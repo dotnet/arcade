@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
+using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
@@ -155,7 +156,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 {
                     if (string.IsNullOrEmpty(Creator))
                     {
-                        Log.LogError("The Creator property was left unspecified for an external job. Please set the Creator property or use set IsExternal to false.");
+                        Log.LogError("The Creator property was left unspecified for an external job. Please set the Creator property or set IsExternal to false.");
                     }
                     else
                     {
@@ -205,7 +206,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 Log.LogMessage(MessageImportance.Normal, "Sending Job...");
 
-                ISentJob job = await def.SendAsync();
+                ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg));
                 JobCorrelationId = job.CorrelationId;
             }
         }

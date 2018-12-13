@@ -3,8 +3,10 @@
 ## Overall status
 We are on track to have Official Builds working in AzDO and participating in Dependency Flow by
 Dec 12.  The new Azure DevOps (AzDO) CI will be based on the Official Build logic and is therefore
-waiting for that to complete.  We've prototyped how tests will run in Helix and what the
-PR-triggered test experience will look like--including how test results will be viewed.
+waiting for that to complete.  Full transition off Jenkins will not happen until late Jan at the
+earliest but you should expect to see some new badges on PRs as AzDO begins to take over for Jenkins.
+We've prototyped how tests will run in Helix and what the PR-triggered test experience will look
+like--including how test results will be viewed at the AzDO portal!
 
 ## Primary Deliverable Breakdown of remaining work
 

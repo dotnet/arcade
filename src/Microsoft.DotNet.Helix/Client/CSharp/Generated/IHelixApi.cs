@@ -18,8 +18,11 @@ namespace Microsoft.DotNet.Helix.Client
     /// passed either in the form of a query parameter named 'access_token', or
     /// as a header in the form 'Authentication: token APIKEY', where APIKEY is
     /// your key. You can obtain your API key from /UserProfileAll API's that
-    /// deal with jobs have optional authentication. Any anonmyous access will
-    /// be scoped to a limited set of jobs.
+    /// deal with jobs have optional authentication. Any anonymous access will
+    /// be scoped to a limited set of jobs. The 'Telemetry' endpoint only
+    /// requires authentication on the initial POST, subsequent calls that pass
+    /// the token inherit the authentication from the initial token, so don't
+    /// need the api_key passed.
     /// </summary>
     public partial interface IHelixApi : System.IDisposable
     {
