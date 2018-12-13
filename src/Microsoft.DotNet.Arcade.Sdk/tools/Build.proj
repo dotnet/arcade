@@ -39,7 +39,7 @@
     QuietRestoreBinaryLog           "true" to produce binary log for Restore.
   -->
 
-  <PropertyGroup Condition=" '$(NuGetRestoreTargets)' == '' ">
+  <PropertyGroup>
     <NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'=='' and '$([MSBuild]::IsRunningFromVisualStudio())'=='true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</NuGetRestoreTargets>
     <NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'==''">$(MSBuildToolsPath)\NuGet.targets</NuGetRestoreTargets>
   </PropertyGroup>
