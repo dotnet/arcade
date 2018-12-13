@@ -1,6 +1,5 @@
 using Microsoft.Rest;
 using System;
-using System.Net.Http;
 
 namespace Microsoft.DotNet.Helix.Client
 {
