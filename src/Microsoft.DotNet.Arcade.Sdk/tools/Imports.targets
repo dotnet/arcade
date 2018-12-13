@@ -44,11 +44,4 @@
   <Import Project="OptimizationData.targets" Condition="'$(UsingToolIbcOptimization)' == 'true' and '$(IbcOptimizationDataDir)' != ''"/>
   <Import Project="SymStore.targets" Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OS)' == 'Windows_NT'"/>
 
-  <!--
-    By default the SDK sets RootNamespace to the name of the project. Clear it here to avoid prefixing our namespaces.
-  -->
-  <PropertyGroup Condition="'$(Language)' == 'VB'">
-    <RootNamespace />
-  </PropertyGroup>
-
 </Project>
