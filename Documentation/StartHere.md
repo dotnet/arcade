@@ -43,31 +43,30 @@ striving to move as many people towards the new infrastructure as possible.
 
 There is quite a bit of documentation living under the
 [Documentation](../Documentation/) folder in the dotnet/arcade repo.  Here are
-some highlights:
+some highlights
+
+### Concepts and Goals
+
 - [Arcade overview](Overview.md)
-- [The Arcade Build SDK](ArcadeSdk.md)
 - [How dependency flow works in .NET Core
   3](BranchesChannelsAndSubscriptions.md)
-- [Packages](CorePackages/)
     - [Roadmap](CorePackages/PackagesRoadmap.md)
-    - [Publishing](CorePackages/Publishing.md)
-    - [Signing](CorePackages/Signing.md)
-    - [Telemetry](CorePackages/Telemetry.md)
-    - [Versioning](CorePackages/Versioning.md)
+    - [Versioning rules](CorePackages/Versioning.md)
 
-Documentation on the tools we are using and how we are using them:
+### Tools we are using and how we are using them
 
-Code
+Code and repository configuration
+  - [The Arcade Build SDK](ArcadeSdk.md)
   - GitHub and Azure Repos
     - [Mirroring public projects](AzureDevOps/internal-mirror.md)
     - Bots and connectors
 
 Building projects
+  - [Telemetry](CorePackages/Telemetry.md)
   - Azure Pipelines: Orchestrating continuous integration
     - [Goals](AzureDevOps/WritingBuildDefinitions.md)
     - [Onboarding to AzDO](AzureDevOps/AzureDevOpsOnboarding.md)
     - Tasks and Templates
-  - MSBuild tasks
   - [Darc](Darc.md): Arcade's dependency management system
   - [Maestro](Maestro.md): CI automation of dependency flow
   - Mission Control
@@ -78,6 +77,7 @@ Testing projects
   - Docker support
 
 Deploying projects
+  - [Publishing](CorePackages/Publishing.md)
   - [SignTool](CorePackages/Signing.md) (and Microbuild)
   - BAR
 
