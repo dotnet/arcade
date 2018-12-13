@@ -159,8 +159,8 @@ function Build {
   InitializeToolset
   InitializeCustomToolset
 
-  if [[ -z $projects ]]; then
-    properties="$properties /p:Projects='$projects'"
+  if [[ ! -z "$projects" ]]; then
+    properties="$properties /p:Projects=$projects"
   fi
 
   local bl=""

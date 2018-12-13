@@ -59,12 +59,13 @@
   <!--
     Default values.
   -->
-  <PropertyGroup>
-    <Projects Condition="'$(Projects)' == '' AND '$(BuildSolutions)' != 'false' ">$(RepoRoot)*.sln</Projects>
-  </PropertyGroup>
-  
   <ItemGroup Condition=" '$(Projects)' != '' ">
-    <ProjectToBuild Include="$(Projects)"/>
+    <ProjectToBuild Include="$(Projects)" />
+  </ItemGroup>
+
+  <!-- If Projects is unspecified and ProjectToBuild was not set via Build.props, fallback to building .sln files in the repo root. -->
+  <ItemGroup Condition=" '$(Projects)' == '' and '$(BuildSolutions)' != 'false' and '@(ProjectToBuild)' == '' ">
+    <ProjectToBuild Include="$(RepoRoot)*.sln" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(SdkTaskProjects)' != ''">
@@ -134,8 +135,8 @@
       <_CommonProps Include="DisableWarnForInvalidRestoreProjects=true" Condition="'$(DotNetBuildFromSource)' == 'true'"/>
 
       <!--
-        C++ projects expect VCTargetsPath property to be set. MSBuild generates this property to solution 
-        metaproject when solution is build directly, but doesn't do so when the solution is built using MSBuild task. 
+        C++ projects expect VCTargetsPath property to be set. MSBuild generates this property to solution
+        metaproject when solution is build directly, but doesn't do so when the solution is built using MSBuild task.
       -->
       <_CommonProps Include="VCTargetsPath=$([MSBuild]::ValueOrDefault('$(VCTargetsPath)', '$([MSBuild]::GetVsInstallRoot())\Common7\IDE\VC\VCTargets\'))" Condition="'$(MSBuildRuntimeType)' != 'Core'"/>
     </ItemGroup>
@@ -176,10 +177,19 @@
       <_RestoreToolsPropsCmdLine>$(_RestoreToolsPropsCmdLine) /bl:"$(ArtifactsLogDir)Restore.binlog"</_RestoreToolsPropsCmdLine>
     </PropertyGroup>
 
+    <ItemGroup>
+      <!-- Find any ProjectToBuild items that are not .sln. We don't currently support mixing .sln with other types. We could make it work, but don't have a customer for it yet. -->
+      <_ProjectToBuildExtension Include="%(ProjectToBuild.Extension)" Condition="'%(ProjectToBuild.Extension)' != '' and '%(ProjectToBuild.Extension)' != '.sln' " />
+    </ItemGroup>
+
     <PropertyGroup>
       <!-- Normalize paths to avoid false warnings by NuGet about missing project references. -->
       <ProjectToBuildList>@(ProjectToBuild->'%(FullPath)')</ProjectToBuildList>
+      <BuildSolutions Condition="'$(BuildSolutions)' == ''">@(ProjectToBuild->AnyHaveMetadataValue('Extension', '.sln'))</BuildSolutions>
     </PropertyGroup>
+
+    <Error Condition="'$(BuildSolutions)' == 'true' and '@(_ProjectToBuildExtension)' != '' "
+           Text="Mixing .sln and other project formats in ProjectToBuild is not supported." />
 
     <!--
       Workaround for https://github.com/NuGet/Home/issues/4695.
@@ -193,10 +203,10 @@
           Condition="'$(_RestoreTools)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <Exec Command='$(_MSBuildCmd) "@(ProjectToBuild)" /nologo /m /v:quiet /t:Restore $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
-          Condition="'$(BuildSolutions)' != 'false' AND '$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
+          Condition="'$(BuildSolutions)' != 'false' and '$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <Exec Command='$(_MSBuildCmd) "$(NuGetRestoreTargets)" "/p:RestoreGraphProjectInput:$(ProjectToBuildList)" /nologo /m /v:quiet /t:Restore $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
-          Condition="'$(BuildSolutions)' == 'false' AND '$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
+          Condition="'$(BuildSolutions)' == 'false' and '$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <!--
       Restore built-in tools.
@@ -218,14 +228,14 @@
              RemoveProperties="$(_RemoveProps)"
              Targets="Restore"
              BuildInParallel="true"
-             Condition="'$(BuildSolutions)' != 'false' AND '$(SdkTaskProjects)' == '' and '$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
+             Condition="'$(BuildSolutions)' != 'false' and '$(SdkTaskProjects)' == '' and '$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
 
-    <!-- Invoke restore by winvoking a build on NuGet.targets directly. This avoids duplicate calls to RestoreTask and race conditions on writing restore results to disk. -->
+    <!-- Invoke restore using NuGet.targets directly. This avoids duplicate calls to RestoreTask and race conditions on writing restore results to disk. -->
     <MSBuild Projects="$(NuGetRestoreTargets)"
              Properties="@(_SolutionBuildProps);RestoreGraphProjectInput=$(ProjectToBuildList);__BuildPhase=SolutionRestore"
              RemoveProperties="$(_RemoveProps)"
              Targets="Restore"
-             Condition="'$(BuildSolutions)' == 'false' AND '$(SdkTaskProjects)' == '' and '$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
+             Condition="'$(BuildSolutions)' == 'false' and '$(SdkTaskProjects)' == '' and '$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
 
     <!--
       Build solution.

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -10,13 +12,15 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
 
     public class TestApp : IDisposable
     {
-        private readonly string _binlogOutputDir;
+        private readonly string _logOutputDir;
 
-        public TestApp(string workDir, string binlogOutputDir, string[] sourceDirectories)
+        public TestApp(string workDir, string logOutputDir, string[] sourceDirectories)
         {
             WorkingDirectory = workDir;
-            _binlogOutputDir = binlogOutputDir;
+            _logOutputDir = Path.Combine(logOutputDir, Path.GetFileName(workDir));
+
             Directory.CreateDirectory(workDir);
+            Directory.CreateDirectory(_logOutputDir);
 
             foreach (var dir in sourceDirectories)
             {
@@ -32,15 +36,13 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                     ? @".\build.cmd"
                     : "./build.sh";
 
-            return ExecuteScript(output, cmd, scriptArgs);
+            return ExecuteScript(output, cmd, new [] { "-bl" }.Concat(scriptArgs));
         }
 
-        private int ExecuteScript(ITestOutputHelper output, string fileName, string[] scriptArgs)
+        private int ExecuteScript(ITestOutputHelper output, string fileName, IEnumerable<string> scriptArgs)
         {
-            var binLogFile = Path.Combine(_binlogOutputDir, Path.GetFileName(WorkingDirectory), "build.binlog");
-
-            output.WriteLine("Working dir   = " + WorkingDirectory);
-            output.WriteLine("Binlog output = " + binLogFile);
+            output.WriteLine("Working dir = " + WorkingDirectory);
+            output.WriteLine("Log output  = " + _logOutputDir);
 
             var cmd = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                     ? "cmd.exe"
@@ -63,8 +65,6 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
 
             psi.ArgumentList.Add(fileName);
             psi.ArgumentList.AddRange(scriptArgs);
-
-            psi.ArgumentList.Add("/bl:" + binLogFile);
 
             return Run(output, psi);
         }
@@ -94,6 +94,8 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             process.BeginOutputReadLine();
 
             process.WaitForExit(1000 * 60 * 3);
+
+            CopyRecursive(Path.Combine(WorkingDirectory, "artifacts", "log"), _logOutputDir);
 
             process.OutputDataReceived -= Write;
             process.ErrorDataReceived -= Write;
