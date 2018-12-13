@@ -58,6 +58,16 @@
     </ProjectReference>
   </ItemGroup>
 
+  <!-- 
+    Assemblies that are NGEN'd should be loaded to Load context, otherwise NGEN would not work.
+    UseCodebase causes assemblies to be loaded to LoadFrom context, so it's incompatible with NGEN setting.
+  -->
+  <Target Name="_WarnOnUsingCodebaseWithNgen" 
+          BeforeTargets="GeneratePkgDef" 
+          Condition="'$(Ngen)' == 'true' and '$(UseCodebase)' == 'true'">
+    <Warning Text="UseCodebase should not be true for VSIX project that turns NGEN on." />
+  </Target>
+
   <!--
     Calculate name of a stub file that will be saved to ComponentIntermediateDir (Setup.obj subdirectory for the target insertion component).
   -->
