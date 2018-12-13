@@ -14,9 +14,9 @@ Target completion date for these workstreams is 12/14/2018.
 | Repo                                          | Owner                         | Status   | Risk Assessment                                                                           | Plan | Notes |
 | --------------------------------------------- | ----------------------------- | -------- |:-----------------------------------------------------------------------------------------:| ----- |----- |
 | [Arcade](#arcade)                             | [mawilkie](#mark-wilkie)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | | |
-| [aspnet-AspNetCore](#aspnetcore)              | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | | Actively working on plan - intent is to have dependency flow working in time for PII as of 12/4|
-| [aspnet-EntityFrameworkCore](#efcore)         | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | | same |
-| [aspnet-Extensions](#extensions)              | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   |  | same |
+| [aspnet-AspNetCore](#aspnetcore)              | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | | Complex. Plan is to implement as dependnecy flow without adopting the Arcade SDK yet. |
+| [aspnet-EntityFrameworkCore](#efcore)         | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | |  |
+| [aspnet-Extensions](#extensions)              | [namc](#nate-mcmaster)        | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) |  | Almost done. Working around issues in the Arcade SDK. |
 | [CLI](#cli)                                   | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | | |
 | [CLICommandLineParser](#clicommandlineparser) | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     |  | |
 | [CLI-Migrate](#climigrate)                    | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     |  | |
@@ -209,10 +209,10 @@ At the end of each phase, full migration would be completed for the correspondin
 
 | Work stream                                                                      | Est. Completion Date | Status      | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ----------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/676)         | ?                    | Scheduled   | Planning to start mid-November |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/673) | ?                    | Scheduled   | Planning to start mid-November |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/673)       | ?                    | Scheduled   | Planning to start mid-November |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/675)       | ?                    | In progress | |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/676)         |                     | Done   | |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/673) | ?                    | Scheduled   | Planning to start mid-January |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/673)       | Dec. 20                  | Scheduled   |  |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/675)       | ?                    | In progress | Blocked on https://github.com/dotnet/core-eng/issues/4764 |
 
 <a id="efcore"></a>
 
@@ -222,10 +222,10 @@ At the end of each phase, full migration would be completed for the correspondin
 
 | Work stream                                                                       | Est. Completion Date | Status      | Notes |
 | --------------------------------------------------------------------------------- |:--------------------:| ----------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/1053)         | ?                    | Scheduled   | Planning to start mid-November |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/1053)         |                    | Done   |  |
 | [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/1051) | ?                    | Scheduled   | Planning to start mid-November |
 | [Engineering dependency flow](https://github.com/dotnet/arcade/issues/1050)       | ?                    | Scheduled   | Planning to start mid-November |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/1052)       | ?                    | In progress | |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/1052)       |                     | Done | |
 
 #### Extensions
 
@@ -233,10 +233,10 @@ At the end of each phase, full migration would be completed for the correspondin
 
 | Work stream                                                                       | Est. Completion Date | Status      | Notes |
 | --------------------------------------------------------------------------------- |:--------------------:| ----------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/1048)         | ?                    | Scheduled   | Planning to start mid-November |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/1046) | ?                    | Scheduled   | Planning to start mid-November |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/1045)       | ?                    | Scheduled   | Planning to start mid-November |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/1047)       | ?                    | In progress | |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/1048)         | -                    | Done        | |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/1046) | Dec.  20             | In progress   | https://github.com/aspnet/Extensions/pull/586 |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/1045)       |                     | Done   | |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/1047)       |                     | Done | |
 
 ---
 
