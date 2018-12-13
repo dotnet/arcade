@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
+using Microsoft.Rest;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Auth;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -14,15 +15,20 @@ namespace Microsoft.DotNet.Helix.Client
     internal class ApiBlobHelper : IBlobHelper
     {
         private readonly IStorage _helixApiStorage;
+        private readonly IHelixApi _helixApi;
 
         public ApiBlobHelper(IStorage helixApiStorage)
         {
             _helixApiStorage = helixApiStorage;
+            _helixApi = ((IServiceOperations<HelixApi>) helixApiStorage).Client;
         }
 
         public async Task<IBlobContainer> GetContainerAsync(string requestedName)
         {
-            ContainerInformation info = await _helixApiStorage.NewOperationAsync(new ContainerCreationRequest(desiredName: requestedName, expirationInDays: 30));
+            ContainerInformation info = await _helixApi.RetryAsync(
+                () => _helixApiStorage.NewOperationAsync(
+                    new ContainerCreationRequest(desiredName: requestedName, expirationInDays: 30)),
+                ex => { });
             var client = new CloudBlobClient(new Uri($"https://{info.StorageAccountName}.blob.core.windows.net/"), new StorageCredentials(info.WriteToken));
             CloudBlobContainer container = client.GetContainerReference(info.ContainerName);
             return new Container(container, info);
