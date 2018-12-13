@@ -30,8 +30,10 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                                 "application/json"),
                         })
                     {
-                        var res = await client.SendAsync(req);
-                        res.EnsureSuccessStatusCode();
+                        using (var res = await client.SendAsync(req))
+                        {
+                            res.EnsureSuccessStatusCode();
+                        }
                     }
                 });
 
@@ -42,21 +44,23 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         HttpMethod.Get,
                         $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}?api-version=5.0-preview.2"))
                     {
-                        var res = await client.SendAsync(req);
-                        res.EnsureSuccessStatusCode();
-
-                        var data = JObject.Parse(await res.Content.ReadAsStringAsync());
-                        if (data["runStatistics"] is JArray runStatistics)
+                        using (var res = await client.SendAsync(req))
                         {
-                            var failed = runStatistics.Children()
-                                .FirstOrDefault(stat => stat["outcome"]?.ToString() == "Failed");
-                            if (failed != null)
+                            res.EnsureSuccessStatusCode();
+
+                            var data = JObject.Parse(await res.Content.ReadAsStringAsync());
+                            if (data["runStatistics"] is JArray runStatistics)
                             {
-                                Log.LogError($"Test run {TestRunId} has one or more failing tests.");
-                            }
-                            else
-                            {
-                                Log.LogMessage(MessageImportance.Low, $"Test run {TestRunId} has not failed.");
+                                var failed = runStatistics.Children()
+                                    .FirstOrDefault(stat => stat["outcome"]?.ToString() == "Failed");
+                                if (failed != null)
+                                {
+                                    Log.LogError($"Test run {TestRunId} has one or more failing tests.");
+                                }
+                                else
+                                {
+                                    Log.LogMessage(MessageImportance.Low, $"Test run {TestRunId} has not failed.");
+                                }
                             }
                         }
                     }

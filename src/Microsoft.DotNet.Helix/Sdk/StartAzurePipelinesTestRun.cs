@@ -39,16 +39,18 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         };
                     using (req)
                     {
-                        var res = await client.SendAsync(req);
-                        if (!res.IsSuccessStatusCode)
+                        using (var res = await client.SendAsync(req))
                         {
-                            await LogFailedRequest(req, res);
-                            return;
+                            if (!res.IsSuccessStatusCode)
+                            {
+                                await LogFailedRequest(req, res);
+                                return;
+                            }
+
+                            var result = JObject.Parse(await res.Content.ReadAsStringAsync());
+
+                            TestRunId = result["id"].ToObject<int>();
                         }
-
-                        var result = JObject.Parse(await res.Content.ReadAsStringAsync());
-
-                        TestRunId = result["id"].ToObject<int>();
                     }
                 });
         }
