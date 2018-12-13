@@ -179,10 +179,6 @@ namespace Microsoft.DotNet.SignTool
                 {
                     _zipDataMap[contentHash] = zipData;
                 }
-                else
-                {
-                    _log.LogError($"Problem parsing content of container: {fullPath}");
-               }
             }
 
             _filesByContentKey.Add(key, fileSignInfo);
@@ -468,13 +464,6 @@ namespace Microsoft.DotNet.SignTool
                         if (!_filesByContentKey.TryGetValue(new SignedFileContentKey(contentHash, fileName), out var fileSignInfo))
                         {
                             string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, _filesByContentKey.Count().ToString(), relativePath);
-
-                            if (tempPath.Length > 259)
-                            {
-                                _log.LogError($"Wasn't able to shorten the path to the file: {tempPath}");
-                                zipData = null;
-                                return false;
-                            }
 
                             Directory.CreateDirectory(Path.GetDirectoryName(tempPath));
 
