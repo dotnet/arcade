@@ -467,18 +467,13 @@ namespace Microsoft.DotNet.SignTool
                         var fileName = Path.GetFileName(relativePath);
                         if (!_filesByContentKey.TryGetValue(new SignedFileContentKey(contentHash, fileName), out var fileSignInfo))
                         {
-                            string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash), relativePath);
+                            string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, _filesByContentKey.Count().ToString(), relativePath);
 
                             if (tempPath.Length > 259)
                             {
-                                tempPath = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash).Substring(0, 5), relativePath);
-
-                                if (tempPath.Length > 259 || (File.Exists(tempPath) && ContentUtil.GetContentHash(tempPath).Equals(contentHash)))
-                                {
-                                    _log.LogError($"Wasn't able to shorten the path to the file: {tempPath}");
-                                    zipData = null;
-                                    return false;
-                                }
+                                _log.LogError($"Wasn't able to shorten the path to the file: {tempPath}");
+                                zipData = null;
+                                return false;
                             }
 
                             Directory.CreateDirectory(Path.GetDirectoryName(tempPath));
