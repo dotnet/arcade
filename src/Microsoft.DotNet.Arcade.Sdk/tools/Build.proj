@@ -53,18 +53,19 @@
 
   <Import Project="RepoLayout.props"/>
 
+  <!-- Setting the Projects property is only supported from the command line, not using Build.props. Build.props should only add items to <ProjectToBuild> -->
+  <ItemGroup Condition=" '$(Projects)' != '' ">
+    <ProjectToBuild Include="$(Projects)" />
+  </ItemGroup>
+
   <!-- Allow for repo specific Build properties such as the list of Projects to build -->
   <Import Project="$(RepositoryEngineeringDir)Build.props" Condition="Exists('$(RepositoryEngineeringDir)Build.props')" />
 
   <!--
     Default values.
   -->
-  <ItemGroup Condition=" '$(Projects)' != '' ">
-    <ProjectToBuild Include="$(Projects)" />
-  </ItemGroup>
-
   <!-- If Projects is unspecified and ProjectToBuild was not set via Build.props, fallback to building .sln files in the repo root. -->
-  <ItemGroup Condition=" '$(Projects)' == '' and '$(BuildSolutions)' != 'false' and '@(ProjectToBuild)' == '' ">
+  <ItemGroup Condition="'$(BuildSolutions)' != 'false' and '@(ProjectToBuild)' == '' ">
     <ProjectToBuild Include="$(RepoRoot)*.sln" />
   </ItemGroup>
 

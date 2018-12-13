@@ -146,9 +146,9 @@ This is often required for repos which have multiple .sln files in the root dire
 ```xml
 <!-- eng/Build.props -->
 <Project>
-  <PropertyGroup>
-    <Projects>$(RepoRoot)MySolution1.sln</Projects>
-  </PropertyGroup>
+  <ItemGroup>
+    <ProjectToBuild Include="$(RepoRoot)MySolution1.sln" />
+  </ItemGroup>
 </Project>
 ```
 
@@ -159,10 +159,6 @@ You can also specify a list of projects to build instead of building .sln files.
 ```xml
 <!-- eng/Build.props -->
 <Project>
-  <PropertyGroup>
-    <BuildSolutions>false</BuildSolutions>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectToBuild Include="$(RepoRoot)src\**\*.csproj" />
   </ItemGroup>
@@ -176,10 +172,6 @@ You can use custom MSBuild properties to control the list of projects which buil
 ```xml
 <!-- eng/Build.props -->
 <Project>
-  <PropertyGroup>
-    <BuildSolutions>false</BuildSolutions>
-  </PropertyGroup>
-
   <ItemGroup>
     <!-- Usage: build.cmd /p:BuildMyOptionalGroupOfStuff=true -->
     <ProjectToBuild Condition="'$(BuildMyOptionalGroupOfStuff)' == 'true"

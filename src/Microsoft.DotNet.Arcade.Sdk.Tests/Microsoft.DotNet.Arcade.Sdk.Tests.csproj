@@ -9,7 +9,7 @@
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(RepoRoot)eng\common\**\*" LinkBase="testassets\boilerplate\eng\common\" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(RepoRoot)build.sh" LinkBase="testassets\boilerplate\" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(RepoRoot)build.cmd" LinkBase="testassets\boilerplate\" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(RepoRoot)Build.cmd" LinkBase="testassets\boilerplate\" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
