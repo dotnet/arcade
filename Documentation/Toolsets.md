@@ -29,7 +29,7 @@ At a high level, toolsets not built by Arcade are managed by:
 * Community uses the same Azure blob storage end points MSFT does to get the tools from
 
 ## Servicing
-* See the ["Servicing" document](Documentation/Servicing.md) for a broader discussion of servicing and its policies
+* See the ["Servicing" document](Servicing.md) for a broader discussion of servicing and its policies
 * New tools and tool versions are added to the Azure blob location.  (no replacements, only adds)
 * Script updates are deployed to each repo using automation
 * When absolutely necessary, a repo can "pin" to a specific "channel", or branch/fork.  (see "servicing" document for policy around this)
