@@ -1,4 +1,8 @@
-# Principles
+# Documentation Principles
+
+This document is to provide value guidance when creating Arcade documentation. This supplements the [.NET Core Engineering Services Principles](https://microsoft.sharepoint.com/:w:/r/teams/netfx/engineering/_layouts/15/Doc.aspx?sourcedoc={ef69fcfc-3475-415a-b3ab-651a352b9bbe}&action=view&wdAccPdf=0&wdparaid=3E030EA3).
+
+## Principles
 Documentation, not code, is the primary source of information for customers.
 
 Documentation is written for the customer.
@@ -13,7 +17,7 @@ Features are documented. Feature documentation explains why the feature is neede
 
 Questions are documented. If someone had to ask, it was overlooked in the docs.
 
-# Plan
+## Plan
 
 Value ease of maintenance and information quality.
 
