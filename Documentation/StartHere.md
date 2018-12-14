@@ -50,8 +50,15 @@ some highlights
 - [Arcade overview](Overview.md)
 - [How dependency flow works in .NET Core
   3](BranchesChannelsAndSubscriptions.md)
-    - [Roadmap](CorePackages/PackagesRoadmap.md)
-    - [Versioning rules](CorePackages/Versioning.md)
+- [Roadmap](CorePackages/PackagesRoadmap.md)
+- [Versioning rules](CorePackages/Versioning.md)
+- [Dependencies Flow Plan](DependenciesFlowPlan.md): Flowing dependencies with Darc, Maestro and BAR.
+- [How to Create and Arcade Package](HowToCreatePackages.md)
+- [.NET Core Infrastructure Ecosystem Overview](InfrastructureEcosystemOverview.md)
+- [Toolset Publish/Consume Contract](PublishConsumeCOntract.md)
+- [Servicing](Servicing.md)
+- [Toolsets](Toolsets.md)
+- [Version Querying and Updating](VersionQueryingAndUpdating.md)
 
 ### Tools we are using and how we are using them
 
@@ -59,13 +66,18 @@ Code and repository configuration
   - [The Arcade Build SDK](ArcadeSdk.md)
   - GitHub and Azure Repos
     - [Mirroring public projects](AzureDevOps/internal-mirror.md)
+    - [Git Sync Tools](GitSyncTools.md)
     - Bots and connectors
+  - [Dependency Description Format](DependencyDescriptionFormat.md)
+  - [How to See What's the Latest Version of an Arcade Package](SeePackagesLatestVersion.md)
 
 Building projects
   - [Telemetry](CorePackages/Telemetry.md)
+  - [MSBuild Task Packages](TaskPackages.md)
   - Azure Pipelines: Orchestrating continuous integration
     - [Goals](AzureDevOps/WritingBuildDefinitions.md)
     - [Onboarding to AzDO](AzureDevOps/AzureDevOpsOnboarding.md)
+    - [Choosing a Machine Pool](ChoosingAMachinePool.md)
     - Tasks and Templates
   - [Darc](Darc.md): Arcade's dependency management system
   - [Maestro](Maestro.md): CI automation of dependency flow
