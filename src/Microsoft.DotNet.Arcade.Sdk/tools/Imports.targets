@@ -6,6 +6,11 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
+  <!--
+    Import NuGet targets to WPF temp projects (workaround for https://github.com/dotnet/sourcelink/issues/91) 
+  -->
+  <Import Project="$(_WpfTempProjectNuGetFilePathNoExt).targets" Condition="'$(_WpfTempProjectNuGetFilePathNoExt)' != '' and Exists('$(_WpfTempProjectNuGetFilePathNoExt).targets')"/>
+
   <PropertyGroup>
     <DeployProjectOutput Condition="'$(DeployProjectOutput)' == ''">$(__DeployProjectOutput)</DeployProjectOutput>
     
