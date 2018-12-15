@@ -136,6 +136,11 @@ function InitializeDotNetCli([bool]$install) {
     $env:DOTNET_INSTALL_DIR = $dotnetRoot
   }
 
+  # Add dotnet to PATH. This prevents any bare invocation of dotnet in custom
+  # build steps from using anything other than what we've downloaded.
+  # It also  ensures that VS msbuild will use the downloaded sdk targets.
+  $env:PATH = "$dotnetRoot;$env:PATH"
+
   return $global:_DotNetInstallDir = $dotnetRoot
 }
 
