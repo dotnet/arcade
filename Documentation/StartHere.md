@@ -76,8 +76,9 @@ some highlights
   - [MSBuild Task Packages](TaskPackages.md)
   - Azure Pipelines: Orchestrating continuous integration
     - [Goals](AzureDevOps/WritingBuildDefinitions.md)
-    - [Onboarding to AzDO](AzureDevOps/AzureDevOpsOnboarding.md)
+    - [Onboarding to Azure DevOps](AzureDevOps/AzureDevOpsOnboarding.md)
     - [Choosing a Machine Pool](ChoosingAMachinePool.md)
+    - [Migrating from `phase` to `job`](AzureDevOps/PhaseToJobSchemaChange.md) in Pipeline build definitions
     - Tasks and Templates
   - [Darc](Darc.md): Arcade's dependency management system
   - [Maestro](Maestro.md): CI automation of dependency flow
@@ -89,6 +90,7 @@ some highlights
   - Docker support
 
 #### Deploying projects
+  - [Packaging](CorePackages/Packaging.md)
   - [Publishing](CorePackages/Publishing.md)
   - [SignTool](CorePackages/Signing.md) (and Microbuild)
   - BAR
