@@ -62,7 +62,7 @@ some highlights
 
 ### Tools we are using and how we are using them
 
-Code and repository configuration
+#### Code and repository configuration
   - [The Arcade Build SDK](ArcadeSdk.md)
   - GitHub and Azure Repos
     - [Mirroring public projects](AzureDevOps/internal-mirror.md)
@@ -71,7 +71,7 @@ Code and repository configuration
   - [Dependency Description Format](DependencyDescriptionFormat.md)
   - [How to See What's the Latest Version of an Arcade Package](SeePackagesLatestVersion.md)
 
-Building projects
+#### Building projects
   - [Telemetry](CorePackages/Telemetry.md)
   - [MSBuild Task Packages](TaskPackages.md)
   - Azure Pipelines: Orchestrating continuous integration
@@ -83,12 +83,12 @@ Building projects
   - [Maestro](Maestro.md): CI automation of dependency flow
   - Mission Control
 
-Testing projects
+#### Testing projects
   - Helix: [SDK](../src/Microsoft.DotNet.Helix/Sdk/Readme.md), [JobSender](../src/Microsoft.DotNet.Helix/Sdk/Readme.md)
   - Azure Agent pools and queues
   - Docker support
 
-Deploying projects
+#### Deploying projects
   - [Publishing](CorePackages/Publishing.md)
   - [SignTool](CorePackages/Signing.md) (and Microbuild)
   - BAR
