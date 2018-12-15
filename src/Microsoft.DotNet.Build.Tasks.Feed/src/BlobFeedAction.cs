@@ -108,6 +108,31 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return !Log.HasLoggedErrors;
         }
 
+        public async Task PublishToFlatContainerAsync(IEnumerable<ITaskItem> taskItems,
+            int maxClients,
+            int uploadTimeoutInMinutes,
+            PushOptions pushOptions)
+        {
+            if (taskItems.Any())
+            {
+                using (var clientThrottle = new SemaphoreSlim(maxClients, maxClients))
+                {
+                    Log.LogMessage(MessageImportance.High, $"Uploading {taskItems.Count()} items:");
+                    await System.Threading.Tasks.Task.WhenAll(taskItems.Select(
+                        item =>
+                        {
+                            Log.LogMessage(MessageImportance.High, $"Async uploading {item.ItemSpec}");
+                            return UploadAssetAsync(
+                                item,
+                                clientThrottle,
+                                uploadTimeoutInMinutes,
+                                pushOptions);
+                        }
+                    ));
+                }
+            }
+        }
+
         public async Task UploadAssetAsync(
             ITaskItem item,
             SemaphoreSlim clientThrottle,
