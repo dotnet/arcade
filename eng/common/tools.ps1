@@ -179,7 +179,7 @@ function InitializeVisualStudioMSBuild([bool]$install) {
     return $global:_MSBuildExe
   }
 
-  $vsMinVersionStr = if (!$GlobalJson.tools.vs.version) { $GlobalJson.tools.vs.version } else { "15.9" }
+  $vsMinVersionStr = if ($GlobalJson.tools.vs.version) { $GlobalJson.tools.vs.version } else { "15.9" }
   $vsMinVersion = [Version]::new($vsMinVersionStr) 
 
   # Try msbuild command available in the environment.
