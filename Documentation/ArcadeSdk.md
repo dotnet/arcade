@@ -420,9 +420,9 @@ The Build Pipeline also needs to link the following variable group:
 
 `true` if the asset (library, NuGet or VSIX) produced by the project is _shipping_, i.e. delivered to customers via an official channel. This channel can be NuGet.org, an official installer, etc.
 
-Set `IsShipping` property to `false`
+Set `IsShipping` property to `false` in
 
-- projects that produce NuGet packages that are only shipping on MyGet, internal blob feeds, etc. 
+- projects that produce NuGet packages that are meant to be published only on MyGet, internal blob feeds, etc. 
 - projects that produce VSIX packages that are only used only within the repository (e.g. to facilitate integration tests or VS F5) and not expected to be installed by customers,
 - Test/build/automation utility projects (test projects are automatically marked as non-shipping by Arcade SDK targets).
 
