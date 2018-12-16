@@ -13,11 +13,7 @@ Below is a list of changes required to migrate to Arcade.
 
 ### Shipping vs NonShipping packages
 
-Shipping packages are the ones that are pushed to NuGet.org, non-shipping are pushed to myget or Azure blob feed only.
-  1. Set IsShipping property to false in 
-     - projects that produce NuGet packages that are not shipping on NuGet.org or other official channel (like part of an official installer), 
-     - projects that produce VSIX packages that are only used only within the repository (e.g. to facilitate integration tests or VS F5) and not expected to be installed by customers,
-     - Test/build utility projects (test projects are automatically marked as non-shipping).
+  1. Set `IsShipping` property according to the Arcade SDK [guidelines]
   2. Update package directory used by `NuGetPublisher@0` task in `.vsts-ci.yml`
      - Add `*Shipping` subdir, which will match `Shipping` and `NonShipping` like so:
        searchPattern: `artifacts\$(BuildConfiguration)\packages\*Shipping\*.nupkg`
