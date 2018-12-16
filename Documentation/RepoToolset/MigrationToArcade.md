@@ -13,7 +13,7 @@ Below is a list of changes required to migrate to Arcade.
 
 ### Shipping vs NonShipping packages
 
-  1. Set `IsShipping` property according to the Arcade SDK [guidelines]
+  1. Set `IsShipping` property according to the Arcade SDK [guidelines](https://github.com/dotnet/arcade/blob/master/Documentation/ArcadeSdk.md#isshipping-bool)
   2. Update package directory used by `NuGetPublisher@0` task in `.vsts-ci.yml`
      - Add `*Shipping` subdir, which will match `Shipping` and `NonShipping` like so:
        searchPattern: `artifacts\$(BuildConfiguration)\packages\*Shipping\*.nupkg`
