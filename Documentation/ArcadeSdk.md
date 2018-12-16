@@ -418,16 +418,17 @@ The Build Pipeline also needs to link the following variable group:
 
 ### `IsShipping` (bool)
 
-`true` if the package (NuGet or VSIX) produced by the project is _shipping_. 
+`true` if the asset (library, NuGet or VSIX) produced by the project is _shipping_, i.e. delivered to customers via an official channel. This channel can be NuGet.org, an official installer, etc.
 
 Set `IsShipping` property to `false`
 
-- projects that produce NuGet packages that are not shipping on NuGet.org or via other official channel (like part of an official installer), 
+- projects that produce NuGet packages that are only shipping on MyGet, internal blob feeds, etc. 
 - projects that produce VSIX packages that are only used only within the repository (e.g. to facilitate integration tests or VS F5) and not expected to be installed by customers,
-- Test/build utility projects (test projects are automatically marked as non-shipping).
+- Test/build/automation utility projects (test projects are automatically marked as non-shipping by Arcade SDK targets).
 
-All packages are VSIXes are signed by default, regardless of whether they are _shipping_ or not.
-By default Portable and Embedded PDBs produced by _shipping_ projects are converted to Windows PDBs and published to Microsoft symbol servers.
+All libraries, packages and VSIXes are signed by default, regardless of whether they are _shipping_ or not.
+By default, Portable and Embedded PDBs produced by _shipping_ projects are converted to Windows PDBs and published to Microsoft symbol servers.
+By default, all _shipping_ libraries are localized.
 
 ### `PublishWindowsPdb` (bool)
 
