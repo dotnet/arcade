@@ -40,6 +40,7 @@
   -->
 
   <PropertyGroup>
+    <!-- IsRunningFromVisualStudio may be true even when running msbuild.exe from command line. This generally means that MSBUild is Visual Studio installation and therefore we need to find NuGet.targets in a different location.  -->
     <NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'=='' and '$([MSBuild]::IsRunningFromVisualStudio())'=='true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</NuGetRestoreTargets>
     <NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'==''">$(MSBuildToolsPath)\NuGet.targets</NuGetRestoreTargets>
   </PropertyGroup>
@@ -54,7 +55,7 @@
   <Import Project="RepoLayout.props"/>
 
   <!-- Setting the Projects property is only supported from the command line, not using Build.props. Build.props should only add items to <ProjectToBuild> -->
-  <ItemGroup Condition=" '$(Projects)' != '' ">
+  <ItemGroup Condition="'$(Projects)' != ''">
     <ProjectToBuild Include="$(Projects)" />
   </ItemGroup>
 
@@ -65,7 +66,7 @@
     Default values.
   -->
   <!-- If Projects is unspecified and ProjectToBuild was not set via Build.props, fallback to building .sln files in the repo root. -->
-  <ItemGroup Condition="'$(BuildSolutions)' != 'false' and '@(ProjectToBuild)' == '' ">
+  <ItemGroup Condition="'$(BuildSolutions)' != 'false' and '@(ProjectToBuild)' == ''">
     <ProjectToBuild Include="$(RepoRoot)*.sln" />
   </ItemGroup>
 
