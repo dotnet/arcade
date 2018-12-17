@@ -70,8 +70,12 @@ namespace Microsoft.DotNet.Darc.Tests
                 TemporaryRepositoryPath,
                 null);
             List<GitFile> filesToUpdate = container.GetFilesToCommit();
-            await 
-                _gitClient.PushFilesAsync(filesToUpdate, TemporaryRepositoryPath, null, null);
+            await _gitClient.PushFilesAsync(filesToUpdate, TemporaryRepositoryPath, null, null);
+        }
+
+        public async Task VerifyAsync()
+        {
+            await _gitFileManager.Verify(TemporaryRepositoryPath, null);
         }
 
         public async Task<DependencyGraph> GetDependencyGraph(DependencyDetail dependency)

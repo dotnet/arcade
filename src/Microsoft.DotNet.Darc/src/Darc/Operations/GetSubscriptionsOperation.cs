@@ -62,28 +62,31 @@ namespace Microsoft.DotNet.Darc.Operations
                     foreach (var mergePolicy in subscription.Policy.MergePolicies)
                     {
                         Console.WriteLine($"    {mergePolicy.Name}");
-                        foreach (var mergePolicyProperty in mergePolicy.Properties)
+                        if (mergePolicy.Properties != null)
                         {
-                            // The merge policy property is a key value pair.  For formatting, turn it into a string.
-                            // It's often a JToken, so handle appropriately
-                            // 1. If the number of lines in the string is 1, write on same line as key
-                            // 2. If the number of lines in the string is more than one, start on new
-                            //    line and indent.
-                            string valueString = mergePolicyProperty.Value.ToString();
-                            string[] valueLines = valueString.Split(System.Environment.NewLine);
-                            string keyString = $"      {mergePolicyProperty.Key} = ";
-                            Console.Write(keyString);
-                            if (valueLines.Length == 1)
+                            foreach (var mergePolicyProperty in mergePolicy.Properties)
                             {
-                                Console.WriteLine(valueString);
-                            }
-                            else
-                            {
-                                string indentString = new string(' ', keyString.Length);
-                                Console.WriteLine();
-                                foreach (string line in valueLines)
+                                // The merge policy property is a key value pair.  For formatting, turn it into a string.
+                                // It's often a JToken, so handle appropriately
+                                // 1. If the number of lines in the string is 1, write on same line as key
+                                // 2. If the number of lines in the string is more than one, start on new
+                                //    line and indent.
+                                string valueString = mergePolicyProperty.Value.ToString();
+                                string[] valueLines = valueString.Split(System.Environment.NewLine);
+                                string keyString = $"      {mergePolicyProperty.Key} = ";
+                                Console.Write(keyString);
+                                if (valueLines.Length == 1)
                                 {
-                                    Console.WriteLine($"{indentString}{line}");
+                                    Console.WriteLine(valueString);
+                                }
+                                else
+                                {
+                                    string indentString = new string(' ', keyString.Length);
+                                    Console.WriteLine();
+                                    foreach (string line in valueLines)
+                                    {
+                                        Console.WriteLine($"{indentString}{line}");
+                                    }
                                 }
                             }
                         }
