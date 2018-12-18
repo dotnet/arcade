@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -19,14 +20,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public const string AssetsVirtualDir = "assets/";
 
-        public static void CreateBuildManifest(TaskLoggingHelper log, 
-            IEnumerable<BlobArtifactModel> blobArtifacts, 
-            IEnumerable<PackageArtifactModel> packageArtifacts, 
-            string assetManifestPath, 
-            string manifestRepoUri, 
-            string manifestBuildId, 
-            string manifestBranch, 
-            string manifestCommit, 
+        public static void CreateBuildManifest(TaskLoggingHelper log,
+            IEnumerable<BlobArtifactModel> blobArtifacts,
+            IEnumerable<PackageArtifactModel> packageArtifacts,
+            string assetManifestPath,
+            string manifestRepoUri,
+            string manifestBuildId,
+            string manifestBranch,
+            string manifestCommit,
             string manifestBuildData)
         {
             log.LogMessage(MessageImportance.High, $"Creating build manifest file '{assetManifestPath}'...");
@@ -49,6 +50,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Directory.CreateDirectory(dirPath);
 
             File.WriteAllText(assetManifestPath, buildModel.ToXml().ToString());
+        }
+
+        public static BuildModel ManifestFileToModel(string assetManifestPath, TaskLoggingHelper log)
+        {
+            try
+            {
+                return BuildModel.Parse(XElement.Load(assetManifestPath));
+            }
+            catch (Exception e)
+            {
+                log.LogError($"Could not parse asset manifest file: {assetManifestPath}");
+                log.LogErrorFromException(e);
+                return null;
+            }
         }
 
         public static PackageArtifactModel CreatePackageArtifactModel(ITaskItem item)
