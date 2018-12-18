@@ -77,6 +77,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.Clie
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.SourceRewriter", "src\Microsoft.DotNet.SourceRewriter\Microsoft.DotNet.SourceRewriter.csproj", "{464D41D0-D1C4-4D3C-BD43-28A2B4260EFF}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "xunit.console", "src\xunit.console\src\xunit.console.csproj", "{DC2495F7-733F-4971-8F85-BFD8CC19EA00}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -463,6 +465,18 @@ Global
 		{464D41D0-D1C4-4D3C-BD43-28A2B4260EFF}.Release|x64.Build.0 = Release|Any CPU
 		{464D41D0-D1C4-4D3C-BD43-28A2B4260EFF}.Release|x86.ActiveCfg = Release|Any CPU
 		{464D41D0-D1C4-4D3C-BD43-28A2B4260EFF}.Release|x86.Build.0 = Release|Any CPU
+		{DC2495F7-733F-4971-8F85-BFD8CC19EA00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC2495F7-733F-4971-8F85-BFD8CC19EA00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC2495F7-733F-4971-8F85-BFD8CC19EA00}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DC2495F7-733F-4971-8F85-BFD8CC19EA00}.Debug|x64.Build.0 = Debug|Any CPU
+		{DC2495F7-733F-4971-8F85-BFD8CC19EA00}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DC2495F7-733F-4971-8F85-BFD8CC19EA00}.Debug|x86.Build.0 = Debug|Any CPU
+		{DC2495F7-733F-4971-8F85-BFD8CC19EA00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC2495F7-733F-4971-8F85-BFD8CC19EA00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC2495F7-733F-4971-8F85-BFD8CC19EA00}.Release|x64.ActiveCfg = Release|Any CPU
+		{DC2495F7-733F-4971-8F85-BFD8CC19EA00}.Release|x64.Build.0 = Release|Any CPU
+		{DC2495F7-733F-4971-8F85-BFD8CC19EA00}.Release|x86.ActiveCfg = Release|Any CPU
+		{DC2495F7-733F-4971-8F85-BFD8CC19EA00}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
