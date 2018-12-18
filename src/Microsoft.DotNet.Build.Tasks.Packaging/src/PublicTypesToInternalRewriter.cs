@@ -35,8 +35,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         private SyntaxNode ChangePublicDeclarationToInternal(BaseTypeDeclarationSyntax node)
         {
-            SyntaxToken publicToken;
-            if (HasPublicModifier(node, out publicToken))
+            if (HasPublicModifier(node, out SyntaxToken publicToken))
             {
                 return node.ReplaceToken(publicToken, SyntaxFactory.Token(SyntaxKind.InternalKeyword)
                                                                     .WithLeadingTrivia(publicToken.LeadingTrivia)
@@ -50,9 +49,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         private bool HasPublicModifier(BaseTypeDeclarationSyntax token, out SyntaxToken publicToken)
         {
-            foreach (var modifier in token.Modifiers)
+            foreach (SyntaxToken modifier in token.Modifiers)
             {
-                if (modifier.Text.ToLowerInvariant() == "public")
+                if (modifier.Text == "public")
                 {
                     publicToken = modifier;
                     return true;

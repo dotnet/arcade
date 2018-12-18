@@ -5,6 +5,7 @@
 using Microsoft.Build.Framework;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,11 +14,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     public class GenerateSourceWithPublicTypesAsInternal : BuildTask
     {
-        /// <summary>
-        /// Collection that will hold the map of the paths to the original files, and the path to the generated ones which will be rewritten.
-        /// </summary>
-        private Dictionary<string, string> _sourceFiles;
-
         [Required]
         public ITaskItem[] Files
         {
@@ -27,34 +23,43 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         public override bool Execute()
         {
-            _sourceFiles = new Dictionary<string, string>();
+            Dictionary<string, string> sourceFiles = new Dictionary<string, string>(StringComparer.InvariantCulture);
+            if (Files.Count() == 0)
+            {
+                Log.LogError("The Files Item cannot be empty.");
+                return false;
+            }
             foreach (ITaskItem file in Files)
             {
                 string sourcePath = file.GetMetadata("SourcePath");
                 string destinationPath = file.GetMetadata("DestinationPath");
                 if (string.IsNullOrEmpty(sourcePath) || string.IsNullOrEmpty(destinationPath))
                 {
-                    Log.LogError($"Item {file.GetMetadata("Identity")} doesn't define SourcePath or DestinationPath metdata.");
+                    Log.LogError($"Item {file.GetMetadata("Identity")} doesn't define SourcePath or DestinationPath metadata.");
+                    return false;
                 }
-                _sourceFiles.Add(sourcePath, destinationPath);
+                sourceFiles.Add(sourcePath, destinationPath);
             }
 
-            var sourceTrees = GetSourceTrees();
+            IEnumerable<SyntaxTree> sourceTrees = GetSourceTrees(sourceFiles);
             foreach (SyntaxTree sourceTree in sourceTrees)
             {
                 PublicTypesToInternalRewriter rewriter = new PublicTypesToInternalRewriter();
                 SyntaxNode newRootNode = rewriter.Visit(sourceTree.GetRoot());
-
+                if (!Directory.Exists(Path.GetDirectoryName(sourceTree.FilePath)))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(sourceTree.FilePath));
+                }
                 File.WriteAllText(sourceTree.FilePath, newRootNode.ToFullString());
             }
 
             return !Log.HasLoggedErrors;
         }
 
-        private IEnumerable<SyntaxTree> GetSourceTrees()
+        private IEnumerable<SyntaxTree> GetSourceTrees(Dictionary<string, string> sourceFiles)
         {
             List<SyntaxTree> result = new List<SyntaxTree>();
-            foreach (var sourceFile in _sourceFiles)
+            foreach (KeyValuePair<string, string> sourceFile in sourceFiles)
             {
                 string rawText = File.ReadAllText(sourceFile.Key);
                 SyntaxTree tree = CSharpSyntaxTree.ParseText(rawText).WithFilePath(sourceFile.Value);
