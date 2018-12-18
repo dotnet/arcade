@@ -10,20 +10,16 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- Which version of the Tasks.Feed package should be used. -->
-    <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">2.2.0-beta.18614.10</MicrosoftDotNetBuildTasksFeedVersion>
-  </PropertyGroup>
-
+  <Import Project="$(MSBuildThisFileDirectory)MicrosoftDotNetBuildTasksFeedVersion.props" />
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets" />
 
   <Target Name="PublishToFeed">
-    <Error Condition="'$(TargetStaticFeed)' == ''" Text="TargetStaticFeed: Target feed for publishing assets wasn't informed." />
-    <Error Condition="'$(AccountKeyToStaticFeed)' == ''" Text="AccountKeyToStaticFeed: Account key for target feed wasn't informed." />
-    <Error Condition="'$(FullPathAssetManifest)' == ''" Text="Full path to asset manifest wasn't informed." />
+    <Error Condition="'$(TargetStaticFeed)' == ''" Text="TargetStaticFeed: Target feed for publishing assets wasn't provided." />
+    <Error Condition="'$(AccountKeyToStaticFeed)' == ''" Text="AccountKeyToStaticFeed: Account key for target feed wasn't provided." />
+    <Error Condition="'$(FullPathAssetManifest)' == ''" Text="Full path to asset manifest wasn't provided." />
     <Error Condition="'$(FullPathBlobBasePath)' == '' AND '$(FullPathPackageBasePath)' == ''" Text="A valid full path to BlobBasePath of PackageBasePath is required." />
 
-    <PushToStaticFeed
+    <PushArtifactsInManifestToFeed
       ExpectedFeedUrl="$(TargetStaticFeed)"
       AccountKey="$(AccountKeyToStaticFeed)"
       Overwrite="$(OverrideAssetsWithSameName)"
