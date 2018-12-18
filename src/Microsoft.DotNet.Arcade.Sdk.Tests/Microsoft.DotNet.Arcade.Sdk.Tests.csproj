@@ -21,9 +21,10 @@
       <_Parameter1>PackageVersion</_Parameter1>
       <_Parameter2>$(PackageVersion)</_Parameter2>
     </AssemblyAttribute>
+    <!-- Captures the logs from functional test. Useful for debugging test failures when developing Arcade SDK features. -->
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>LogOutputDir</_Parameter1>
-      <_Parameter2>$(ArtifactsLogDir)testlogs\</_Parameter2>
+      <_Parameter2>$(ArtifactsLogDir)tests\</_Parameter2>
     </AssemblyAttribute>
   </ItemGroup>
 
