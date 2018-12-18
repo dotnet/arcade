@@ -91,7 +91,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     if (PublishFlatContainer)
                     {
-                        await blobFeedAction.PublishToFlatContainerAsync(ItemsToPush, MaxClients, UploadTimeoutInMinutes, pushOptions);
+                        await blobFeedAction.PublishToFlatContainerAsync(ItemsToPush, 
+                            MaxClients, 
+                            UploadTimeoutInMinutes, 
+                            pushOptions);
                         blobArtifacts = ConcatBlobArtifacts(blobArtifacts, ItemsToPush);
                     }
                     else
@@ -113,7 +116,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         var packagePaths = packageItems.Select(i => i.ItemSpec);
 
                         await blobFeedAction.PushToFeedAsync(packagePaths, pushOptions);
-                        await blobFeedAction.PublishToFlatContainerAsync(symbolItems, MaxClients, UploadTimeoutInMinutes, pushOptions);
+                        await blobFeedAction.PublishToFlatContainerAsync(symbolItems, 
+                            MaxClients, 
+                            UploadTimeoutInMinutes, 
+                            pushOptions);
 
                         packageArtifacts = ConcatPackageArtifacts(packageArtifacts, packageItems);
                         blobArtifacts = ConcatBlobArtifacts(blobArtifacts, symbolItems);

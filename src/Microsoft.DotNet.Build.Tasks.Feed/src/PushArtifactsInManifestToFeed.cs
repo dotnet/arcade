@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// The intended use of this task is to push artifacts described in
     /// a build manifest to a static package feed.
     /// </summary>
-    public class PushToStaticFeed : MSBuild.Task
+    public class PushArtifactsInManifestToFeed : MSBuild.Task
     {
         /// <summary>
         /// Target to where the assets should be published.
@@ -84,11 +84,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 Log.LogMessage(MessageImportance.High, "Performing push feeds.");
 
-                if (string.IsNullOrEmpty(ExpectedFeedUrl) || string.IsNullOrEmpty(AccountKey))
+                if (string.IsNullOrWhiteSpace(ExpectedFeedUrl) || string.IsNullOrWhiteSpace(AccountKey))
                 {
                     Log.LogError($"{nameof(ExpectedFeedUrl)} / {nameof(AccountKey)} is not set properly.");
                 }
-                else if (string.IsNullOrEmpty(AssetManifestPath) || !File.Exists(AssetManifestPath))
+                else if (string.IsNullOrWhiteSpace(AssetManifestPath) || !File.Exists(AssetManifestPath))
                 {
                     Log.LogError($"Problem reading asset manifest path from {AssetManifestPath}");
                 }
@@ -102,6 +102,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
 
                 var buildModel = BuildManifestUtil.ManifestFileToModel(AssetManifestPath, Log);
+
+                // Parsing the manifest may fail for several reasons
+                if (Log.HasLoggedErrors)
+                {
+                    return false;
+                }
+
                 var blobFeedAction = new BlobFeedAction(ExpectedFeedUrl, AccountKey, Log);
                 var pushOptions = new PushOptions
                 {
@@ -111,9 +118,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (buildModel.Artifacts.Packages.Any())
                 {
-                    if (string.IsNullOrEmpty(PackageAssetsBasePath) || !Directory.Exists(PackageAssetsBasePath))
+                    if (!Directory.Exists(PackageAssetsBasePath))
                     {
-                        Log.LogError($"Invalid {nameof(PackageAssetsBasePath)} was informed: {PackageAssetsBasePath}");
+                        Log.LogError($"Invalid {nameof(PackageAssetsBasePath)} was supplied: {PackageAssetsBasePath}");
                         return false;
                     }
 
@@ -127,9 +134,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (buildModel.Artifacts.Blobs.Any())
                 {
-                    if (string.IsNullOrEmpty(BlobAssetsBasePath) || !Directory.Exists(BlobAssetsBasePath))
+                    if (!Directory.Exists(BlobAssetsBasePath))
                     {
-                        Log.LogError($"Invalid {nameof(BlobAssetsBasePath)} was informed: {BlobAssetsBasePath}");
+                        Log.LogError($"Invalid {nameof(BlobAssetsBasePath)} was supplied: {BlobAssetsBasePath}");
                         return false;
                     }
 
