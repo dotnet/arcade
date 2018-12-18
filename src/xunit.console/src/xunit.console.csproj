@@ -4,17 +4,21 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputType>Exe</OutputType>
     <RootNamespace>Xunit.ConsoleClient</RootNamespace>
-    <TargetFrameworks>net452;net46;net461;net462;net47;net471;net472;netcoreapp1.0;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp1.0;netcoreapp2.0</TargetFrameworks>
+    <IsPackable>true</IsPackable>
+    <!-- Incrememnt minor version to ensure differentiation from nuget package coming from xunit repo (no longer maintained) -->
+    <VersionPrefix>2.5.0</VersionPrefix>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="..\common\AssemblyExtensions.cs" LinkBase="Common" />
-    <Compile Include="..\common\ConsoleHelper.cs" LinkBase="Common" />
-    <Compile Include="..\common\DictionaryExtensions.cs" LinkBase="Common" />
-    <Compile Include="..\common\Guard.cs" LinkBase="Common" />
-    <Compile Include="..\common\Json.cs" LinkBase="Common" />
-    <Compile Include="..\common\AssemblyResolution\**\*.cs" LinkBase="Common\AssemblyResolution" />
-  </ItemGroup>
+  <!-- <ItemGroup>
+    <Compile Include="common\AssemblyExtensions.cs" />
+    <Compile Include="common\ConsoleHelper.cs" />
+    <Compile Include="common\DictionaryExtensions.cs" />
+    <Compile Include="common\Guard.cs" />
+    <Compile Include="common\Json.cs" />
+    <Compile Include="common\AssemblyResolution\**\*.cs" />
+  </ItemGroup> -->
 
   <ItemGroup>
     <EmbeddedResource Include="HTML.xslt" />
@@ -24,7 +28,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\xunit.runner.reporters\xunit.runner.reporters.csproj" />
+    <!-- <ProjectReference Include="..\xunit.runner.reporters\xunit.runner.reporters.csproj" /> -->
+    <PackageReference Include="xunit.runner.reporters" Version="$(XUnitVersion)" />
+    <PackageReference Include="xunit.runner.utility" Version="$(XUnitVersion)" />
+    <PackageReference Include="xunit.abstractions" Version="$(XUnitAbstractionsVersion)" />
+    <PackageReference Include="xunit.extensibility.core" Version="$(XUnitVersion)" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug_x86' OR '$(Configuration)' == 'Release_x86' ">
