@@ -11,15 +11,6 @@
     <LangVersion>7.1</LangVersion>
   </PropertyGroup>
 
-  <!-- <ItemGroup>
-    <Compile Include="common\AssemblyExtensions.cs" />
-    <Compile Include="common\ConsoleHelper.cs" />
-    <Compile Include="common\DictionaryExtensions.cs" />
-    <Compile Include="common\Guard.cs" />
-    <Compile Include="common\Json.cs" />
-    <Compile Include="common\AssemblyResolution\**\*.cs" />
-  </ItemGroup> -->
-
   <ItemGroup>
     <EmbeddedResource Include="HTML.xslt" />
     <EmbeddedResource Include="NUnitXml.xslt" />
@@ -28,7 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- <ProjectReference Include="..\xunit.runner.reporters\xunit.runner.reporters.csproj" /> -->
     <PackageReference Include="xunit.runner.reporters" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.runner.utility" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.abstractions" Version="$(XUnitAbstractionsVersion)" />
