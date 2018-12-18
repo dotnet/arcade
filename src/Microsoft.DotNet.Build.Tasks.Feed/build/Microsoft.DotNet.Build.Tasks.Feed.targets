@@ -61,9 +61,9 @@
   </PropertyGroup>
 
   <Target Name="PublishPackagesToBlobFeed" DependsOnTargets="@(PublishPackagesToBlobFeedDependsOn)" >
-    <Error Text="The ExpectedFeedUrl  property must be set on the command line."
+    <Error Text="The ExpectedFeedUrl property wasn't supplied."
           Condition="'$(ExpectedFeedUrl)' == ''" />
-    <Error Text="The AccountKey property must be set on the command line."
+    <Error Text="The AccountKey property wasn't supplied."
           Condition="'$(AccountKey)' == ''" />
 
     <ItemGroup>
@@ -79,18 +79,18 @@
                     ItemsToPush="@(_ItemsToPush)"
                     Overwrite="$(PushToBlobFeed_Overwrite)"
                     MaxClients="$(PushToBlobFeed_MaxClients)"
-                    ManifestName="$(ManifestName)"
                     ManifestBuildId="$(ManifestBuildId)"
                     ManifestBranch="$(ManifestBranch)"
                     ManifestCommit="$(ManifestCommit)"
                     ManifestBuildData="$(ManifestBuildData)"
-                    SkipCreateManifest="$(SkipCreateManifest)" />
+                    ManifestRepoUri="$(ManifestRepoUri)"
+                    AssetManifestPath="$(AssetManifestFilePath)" />
   </Target>
 
   <Target Name="PublishFilesToBlobFeed">
-    <Error Text="The ExpectedFeedUrl  property must be set on the command line."
+    <Error Text="The ExpectedFeedUrl property wasn't supplied."
           Condition="'$(ExpectedFeedUrl)' == ''" />
-    <Error Text="The AccountKey property must be set on the command line."
+    <Error Text="The AccountKey property wasn't supplied."
           Condition="'$(AccountKey)' == ''" />
 
     <ItemGroup>
@@ -110,12 +110,13 @@
                     PublishFlatContainer="true"
                     Overwrite="$(PushToBlobFeed_Overwrite)"
                     MaxClients="$(PushToBlobFeed_MaxClients)"
-                    ManifestName="$(ManifestName)"
                     ManifestBuildId="$(ManifestBuildId)"
                     ManifestBranch="$(ManifestBranch)"
                     ManifestCommit="$(ManifestCommit)"
                     ManifestBuildData="$(ManifestBuildData)"
-                    SkipCreateManifest="$(SkipCreateManifest)" />
+                    SkipCreateManifest="$(SkipCreateManifest)"
+                    ManifestRepoUri="$(ManifestRepoUri)"
+                    AssetManifestPath="$(AssetManifestFilePath)" />
 
   </Target>
 

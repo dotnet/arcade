@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return ExecuteAsync().GetAwaiter().GetResult();
         }
 
-        public async Task<bool> ExecuteAsync()
+        private async Task<bool> ExecuteAsync()
         {
             try
             {
@@ -72,69 +72,88 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     Log.LogError($"No items to push. Please check ItemGroup ItemsToPush.");
                 }
+                else if (string.IsNullOrWhiteSpace(ExpectedFeedUrl) || string.IsNullOrWhiteSpace(AccountKey))
+                {
+                    Log.LogError($"{nameof(ExpectedFeedUrl)} / {nameof(AccountKey)} is not set properly.");
+                }
+                else if (string.IsNullOrWhiteSpace(AssetManifestPath))
+                {
+                    Log.LogError($"{nameof(AssetManifestPath)} is not set properly.");
+                }
+                else if (MaxClients <= 0)
+                {
+                    Log.LogError($"{nameof(MaxClients)} should be greater than zero.");
+                }
+                else if (UploadTimeoutInMinutes <= 0)
+                {
+                    Log.LogError($"{nameof(UploadTimeoutInMinutes)} should be greater than zero.");
+                }
+
+                if (Log.HasLoggedErrors)
+                {
+                    return false;
+                }
+
+                BlobFeedAction blobFeedAction = new BlobFeedAction(ExpectedFeedUrl, AccountKey, Log);
+                var pushOptions = new PushOptions
+                {
+                    AllowOverwrite = Overwrite,
+                    PassIfExistingItemIdentical = PassIfExistingItemIdentical
+                };
+
+                IEnumerable<BlobArtifactModel> blobArtifacts = Enumerable.Empty<BlobArtifactModel>();
+                IEnumerable<PackageArtifactModel> packageArtifacts = Enumerable.Empty<PackageArtifactModel>();
+
+                if (!SkipCreateContainer)
+                {
+                    await blobFeedAction.CreateContainerAsync(BuildEngine, PublishFlatContainer);
+                }
+
+                if (PublishFlatContainer)
+                {
+                    await blobFeedAction.PublishToFlatContainerAsync(ItemsToPush, 
+                        MaxClients, 
+                        UploadTimeoutInMinutes, 
+                        pushOptions);
+                    blobArtifacts = ConcatBlobArtifacts(blobArtifacts, ItemsToPush);
+                }
                 else
                 {
-                    BlobFeedAction blobFeedAction = new BlobFeedAction(ExpectedFeedUrl, AccountKey, Log);
-                    var pushOptions = new PushOptions
-                    {
-                        AllowOverwrite = Overwrite,
-                        PassIfExistingItemIdentical = PassIfExistingItemIdentical
-                    };
+                    ITaskItem[] symbolItems = ItemsToPush
+                        .Where(i => i.ItemSpec.Contains("symbols.nupkg"))
+                        .Select(i =>
+                        {
+                            string fileName = Path.GetFileName(i.ItemSpec);
+                            i.SetMetadata("RelativeBlobPath", $"{BuildManifestUtil.AssetsVirtualDir}symbols/{fileName}");
+                            return i;
+                        })
+                        .ToArray();
 
-                    IEnumerable<BlobArtifactModel> blobArtifacts = Enumerable.Empty<BlobArtifactModel>();
-                    IEnumerable<PackageArtifactModel> packageArtifacts = Enumerable.Empty<PackageArtifactModel>();
+                    ITaskItem[] packageItems = ItemsToPush
+                        .Where(i => !symbolItems.Contains(i))
+                        .ToArray();
 
-                    if (!SkipCreateContainer)
-                    {
-                        await blobFeedAction.CreateContainerAsync(BuildEngine, PublishFlatContainer);
-                    }
+                    var packagePaths = packageItems.Select(i => i.ItemSpec);
 
-                    if (PublishFlatContainer)
-                    {
-                        await blobFeedAction.PublishToFlatContainerAsync(ItemsToPush, 
-                            MaxClients, 
-                            UploadTimeoutInMinutes, 
-                            pushOptions);
-                        blobArtifacts = ConcatBlobArtifacts(blobArtifacts, ItemsToPush);
-                    }
-                    else
-                    {
-                        ITaskItem[] symbolItems = ItemsToPush
-                            .Where(i => i.ItemSpec.Contains("symbols.nupkg"))
-                            .Select(i =>
-                            {
-                                string fileName = Path.GetFileName(i.ItemSpec);
-                                i.SetMetadata("RelativeBlobPath", $"{BuildManifestUtil.AssetsVirtualDir}symbols/{fileName}");
-                                return i;
-                            })
-                            .ToArray();
+                    await blobFeedAction.PushToFeedAsync(packagePaths, pushOptions);
+                    await blobFeedAction.PublishToFlatContainerAsync(symbolItems, 
+                        MaxClients, 
+                        UploadTimeoutInMinutes, 
+                        pushOptions);
 
-                        ITaskItem[] packageItems = ItemsToPush
-                            .Where(i => !symbolItems.Contains(i))
-                            .ToArray();
-
-                        var packagePaths = packageItems.Select(i => i.ItemSpec);
-
-                        await blobFeedAction.PushToFeedAsync(packagePaths, pushOptions);
-                        await blobFeedAction.PublishToFlatContainerAsync(symbolItems, 
-                            MaxClients, 
-                            UploadTimeoutInMinutes, 
-                            pushOptions);
-
-                        packageArtifacts = ConcatPackageArtifacts(packageArtifacts, packageItems);
-                        blobArtifacts = ConcatBlobArtifacts(blobArtifacts, symbolItems);
-                    }
-
-                    BuildManifestUtil.CreateBuildManifest(Log,
-                        blobArtifacts,
-                        packageArtifacts,
-                        AssetManifestPath,
-                        ManifestRepoUri,
-                        ManifestBuildId,
-                        ManifestBranch,
-                        ManifestCommit,
-                        ManifestBuildData);
+                    packageArtifacts = ConcatPackageArtifacts(packageArtifacts, packageItems);
+                    blobArtifacts = ConcatBlobArtifacts(blobArtifacts, symbolItems);
                 }
+
+                BuildManifestUtil.CreateBuildManifest(Log,
+                    blobArtifacts,
+                    packageArtifacts,
+                    AssetManifestPath,
+                    ManifestRepoUri,
+                    ManifestBuildId,
+                    ManifestBranch,
+                    ManifestCommit,
+                    ManifestBuildData);
             }
             catch (Exception e)
             {
