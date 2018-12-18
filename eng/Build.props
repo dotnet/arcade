@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Temporary until we upgrade Arcade to build with a version of Arcade that doesn't require this to be set. -->
+    <Projects>$(RepoRoot)*.sln</Projects>
+  </PropertyGroup>
+</Project>

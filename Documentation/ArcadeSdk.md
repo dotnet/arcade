@@ -116,15 +116,15 @@ Provide repo specific Build properties such as the list of projects to build.
 
 #### Arcade project building
 
-By default, Arcade [builds solutions in the root of the repo](https://github.com/dotnet/arcade/blob/440b2dae3a206b28f6aba727b7818873358fcc0a/eng/common/build.ps1#L69).  Overriding the default build behavior may be done by either of these methods.
+By default, Arcade builds solutions in the root of the repo.  Overriding the default build behavior may be done by either of these methods.
 
-- Provide the project list on the command-line.
+- Provide the project list on the command-line. This will override any list of projects set in `eng/Build.props`.
 
   Example: `build.cmd -projects MyProject.proj`
 
   See [source code](https://github.com/dotnet/arcade/blob/440b2dae3a206b28f6aba727b7818873358fcc0a/eng/common/build.ps1#L53)
 
-- Provide a repo default override in `eng/Build.props`.
+- Provide a list of projects or solutions in `eng/Build.props`.
 
   Example:
 
@@ -138,6 +138,57 @@ By default, Arcade [builds solutions in the root of the repo](https://github.com
   ```
 
   CoreFx does not use the default build projects in its repo - [example](https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/Build.props)
+
+Note: listing both project files formats (such as .csproj) and solution files (.sln) at the same time is not currently supported.
+
+#### Example: specifying a solution to build
+
+This is often required for repos which have multiple .sln files in the root directory.
+
+```xml
+<!-- eng/Build.props -->
+<Project>
+  <ItemGroup>
+    <ProjectToBuild Include="$(RepoRoot)MySolution1.sln" />
+  </ItemGroup>
+</Project>
+```
+
+#### Example: building project files instead of solutions
+
+You can also specify a list of projects to build instead of building .sln files.
+
+```xml
+<!-- eng/Build.props -->
+<Project>
+  <ItemGroup>
+    <ProjectToBuild Include="$(RepoRoot)src\**\*.csproj" />
+  </ItemGroup>
+</Project>
+```
+
+#### Example: conditionally specifying which projects to build
+
+You can use custom MSBuild properties to control the list of projects which build.
+
+```xml
+<!-- eng/Build.props -->
+<Project>
+  <ItemGroup>
+    <!-- Usage: build.cmd /p:BuildMyOptionalGroupOfStuff=true -->
+    <ProjectToBuild Condition="'$(BuildMyOptionalGroupOfStuff)' == 'true"
+                    Include="$(RepoRoot)src\feature1\**\*.csproj" />
+
+    <!-- Only build some projects when building on Windows  -->
+    <ProjectToBuild Condition="'$(OS)' == 'Windows_NT"
+                    Include="$(RepoRoot)src\**\*.vcxproj" />
+
+    <!-- You can also use MSBuild Include/Exclude syntax -->
+    <ProjectToBuild Include="$(RepoRoot)src\**\*.csproj"
+                    Exclude="$(RepoRoot)src\samples\**\*.csproj" />
+  </ItemGroup>
+</Project>
+```
 
 ### /eng/Versions.props: A single file listing component versions and used tools
 
