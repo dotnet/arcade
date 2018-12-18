@@ -46,9 +46,10 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             {
                 PublicTypesToInternalRewriter rewriter = new PublicTypesToInternalRewriter();
                 SyntaxNode newRootNode = rewriter.Visit(sourceTree.GetRoot());
-                if (!Directory.Exists(Path.GetDirectoryName(sourceTree.FilePath)))
+                string directoryPath = Path.GetDirectoryName(sourceTree.FilePath);
+                if (!Directory.Exists(directoryPath))
                 {
-                    Directory.CreateDirectory(Path.GetDirectoryName(sourceTree.FilePath));
+                    Directory.CreateDirectory(directoryPath);
                 }
                 File.WriteAllText(sourceTree.FilePath, newRootNode.ToFullString());
             }
