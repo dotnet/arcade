@@ -306,10 +306,6 @@ It is a common practice to specify properties applicable to all (most) projects 
 
 ```xml
 <PropertyGroup>  
-  <PropertyGroup>
-    <ImportNetSdkFromRepoToolset>false</ImportNetSdkFromRepoToolset>
-  </PropertyGroup>
-
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />    
 
   <!-- Public keys used by InternalsVisibleTo project items -->
