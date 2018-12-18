@@ -55,10 +55,6 @@
 
   <Import Project="RepoLayout.props"/>
 
-  <!-- Setting the Projects property is only supported from the command line, not using Build.props. Build.props should only add items to <ProjectToBuild> -->
-  <ItemGroup Condition="'$(Projects)' != ''">
-  </ItemGroup>
-
   <!-- Allow for repo specific Build properties such as the list of Projects to build -->
   <Import Project="$(RepositoryEngineeringDir)Build.props" Condition="Exists('$(RepositoryEngineeringDir)Build.props')" />
 
