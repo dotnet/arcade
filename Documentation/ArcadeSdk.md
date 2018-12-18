@@ -116,15 +116,15 @@ Provide repo specific Build properties such as the list of projects to build.
 
 #### Arcade project building
 
-By default, Arcade [builds solutions in the root of the repo](https://github.com/natemcmaster/arcade/blob/5b83384fa2b2534491314794f6da2338f90ffbc7/src/Microsoft.DotNet.Arcade.Sdk/tools/Build.proj#L62-L64).  Overriding the default build behavior may be done by either of these methods.
+By default, Arcade builds solutions in the root of the repo.  Overriding the default build behavior may be done by either of these methods.
 
-- Provide the project list on the command-line.
+- Provide the project list on the command-line. This will override any list of projects set in `eng/Build.props`.
 
   Example: `build.cmd -projects MyProject.proj`
 
   See [source code](https://github.com/dotnet/arcade/blob/440b2dae3a206b28f6aba727b7818873358fcc0a/eng/common/build.ps1#L53)
 
-- Provide a repo default override in `eng/Build.props`.
+- Provide a list of projects or solutions in `eng/Build.props`.
 
   Example:
 
@@ -138,6 +138,8 @@ By default, Arcade [builds solutions in the root of the repo](https://github.com
   ```
 
   CoreFx does not use the default build projects in its repo - [example](https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/Build.props)
+
+Note: listing both project files formats (such as .csproj) and solution files (.sln) at the same time is not currently supported.
 
 #### Example: specifying a solution to build
 
