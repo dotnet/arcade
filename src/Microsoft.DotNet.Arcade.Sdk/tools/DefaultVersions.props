@@ -34,15 +34,6 @@
     <UsingToolXUnit Condition="'$(UsingToolXUnit)' == ''">true</UsingToolXUnit>
     <UsingToolPdbConverter Condition="'$(UsingToolPdbConverter)' == ''">true</UsingToolPdbConverter>
 
-    <!--
-      Use compilers from the package on CI build, to get consistent results.
-      Locally we want to dogfood the compilers that come with the dotnet SDK or msbuild used to build the repo.
-      The local compilers are also precompiled and thus faster.
-      Repo can set this property to true for local builds if it needs to use a different compiler than the one in the dotnet SDK.
-      Repo can set this property to false for CI builds to use the compiler version from the SDK.
-    -->
-    <UsingToolMicrosoftNetCompilers Condition="'$(UsingToolMicrosoftNetCompilers)' == ''and '$(ContinuousIntegrationBuild)' == 'true'">true</UsingToolMicrosoftNetCompilers>
-
     <!-- Opt-in features -->
     <UsingToolVSSDK Condition="'$(UsingToolVSSDK)' == ''">false</UsingToolVSSDK>
     <UsingToolIbcOptimization Condition="'$(UsingToolIbcOptimization)' == ''">false</UsingToolIbcOptimization>
@@ -50,20 +41,25 @@
     <UsingToolNuGetRepack Condition="'$(UsingToolNuGetRepack)' == ''">false</UsingToolNuGetRepack>
     <UsingToolSymbolUploader Condition="'$(UsingToolSymbolUploader)' == ''">false</UsingToolSymbolUploader>
 
+    <!--
+      Use compilers from the Microsoft.Net.Compilers/Microsoft.NETCore.Compilers package.
+      Repo can set this property to true if it needs to use a different version of the compiler than the one in the dotnet SDK.
+    -->
+    <UsingToolMicrosoftNetCompilers Condition="'$(UsingToolMicrosoftNetCompilers)' == ''">false</UsingToolMicrosoftNetCompilers>
+
     <!-- Default versions -->
     <MicroBuildPluginsSwixBuildVersion Condition="'$(MicroBuildPluginsSwixBuildVersion)' == ''">1.0.422</MicroBuildPluginsSwixBuildVersion>
     <MicroBuildCoreVersion Condition="'$(MicroBuildCoreVersion)' == ''">0.2.0</MicroBuildCoreVersion>
-    <MicrosoftDotNetIBCMergeVersion Condition="'$(MicrosoftDotNetIBCMergeVersion)' == ''">4.7.1-alpha-00001</MicrosoftDotNetIBCMergeVersion>
+    <MicrosoftDotNetIBCMergeVersion Condition="'$(MicrosoftDotNetIBCMergeVersion)' == ''">4.7.2-alpha-00001</MicrosoftDotNetIBCMergeVersion>
     <MicrosoftNetCompilersVersion Condition="'$(MicrosoftNetCompilersVersion)' == ''">2.8.0</MicrosoftNetCompilersVersion>
     <MicrosoftNETCoreCompilersVersion Condition="'$(MicrosoftNETCoreCompilersVersion)' == ''">$(MicrosoftNetCompilersVersion)</MicrosoftNETCoreCompilersVersion>
-    <!-- Using a private build of Microsoft.Net.Test.SDK to work around issue https://github.com/Microsoft/vstest/issues/373 -->
-    <MicrosoftNETTestSdkVersion Condition="'$(MicrosoftNETTestSdkVersion)' == ''">15.6.0-dev</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion Condition="'$(MicrosoftNETTestSdkVersion)' == ''">15.9.0</MicrosoftNETTestSdkVersion>
     <MicrosoftNetFrameworkReferenceAssembliesVersion Condition="'$(MicrosoftNetFrameworkReferenceAssembliesVersion)' == ''">1.0.0-alpha-004</MicrosoftNetFrameworkReferenceAssembliesVersion>
     <MicrosoftVSSDKBuildToolsVersion Condition="'$(MicrosoftVSSDKBuildToolsVersion)' == ''">15.1.192</MicrosoftVSSDKBuildToolsVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion Condition="'$(MicrosoftDiaSymReaderPdb2PdbVersion)' == ''">1.1.0-beta1-62506-02</MicrosoftDiaSymReaderPdb2PdbVersion>
-    <RoslynToolsModifyVsixManifestVersion Condition="'$(RoslynToolsModifyVsixManifestVersion)' == ''">1.0.0-beta2-63208-02</RoslynToolsModifyVsixManifestVersion>
-    <RoslynToolsNuGetRepackVersion Condition="'$(RoslynToolsNuGetRepackVersion)' == ''">1.0.0-beta2-63223-01</RoslynToolsNuGetRepackVersion>
-    <MicrosoftDotNetSignToolVersion Condition="'$(MicrosoftDotNetSignToolVersion)' == ''">1.0.0-beta.18604.15</MicrosoftDotNetSignToolVersion>
+    <RoslynToolsModifyVsixManifestVersion Condition="'$(RoslynToolsModifyVsixManifestVersion)' == ''">1.0.0-beta2-63222-01</RoslynToolsModifyVsixManifestVersion>
+    <RoslynToolsNuGetRepackVersion Condition="'$(RoslynToolsNuGetRepackVersion)' == ''">1.0.0-beta3.18526.1</RoslynToolsNuGetRepackVersion>
+    <MicrosoftDotNetSignToolVersion Condition="'$(MicrosoftDotNetSignToolVersion)' == ''">1.0.0-beta.18614.3</MicrosoftDotNetSignToolVersion>
     <XliffTasksVersion Condition="'$(XliffTasksVersion)' == ''">0.2.0-beta-63004-01</XliffTasksVersion>
     <XUnitVersion Condition="'$(XUnitVersion)' == ''">2.4.1-pre.build.4059</XUnitVersion>
     <XUnitRunnerConsoleVersion Condition="'$(XUnitRunnerConsoleVersion)' == ''">$(XUnitVersion)</XUnitRunnerConsoleVersion>

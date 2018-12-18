@@ -6,8 +6,11 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition="'$(ImportNetSdkFromRepoToolset)' == 'true'" />
-  
+  <!--
+    Import NuGet targets to WPF temp projects (workaround for https://github.com/dotnet/sourcelink/issues/91) 
+  -->
+  <Import Project="$(_WpfTempProjectNuGetFilePathNoExt).targets" Condition="'$(_WpfTempProjectNuGetFilePathNoExt)' != '' and Exists('$(_WpfTempProjectNuGetFilePathNoExt).targets')"/>
+
   <PropertyGroup>
     <DeployProjectOutput Condition="'$(DeployProjectOutput)' == ''">$(__DeployProjectOutput)</DeployProjectOutput>
     
@@ -45,12 +48,5 @@
   <Import Project="VisualStudio.targets" Condition="'$(UsingToolVSSDK)' == 'true' and '$(DesignTimeBuild)' != 'true' and '$(BuildingForLiveUnitTesting)' != 'true' and '$(MSBuildRuntimeType)' != 'Core'"/>
   <Import Project="OptimizationData.targets" Condition="'$(UsingToolIbcOptimization)' == 'true' and '$(IbcOptimizationDataDir)' != ''"/>
   <Import Project="SymStore.targets" Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OS)' == 'Windows_NT'"/>
-
-  <!--
-    By default the SDK sets RootNamespace to the name of the project. Clear it here to avoid prefixing our namespaces.
-  -->
-  <PropertyGroup Condition="'$(Language)' == 'VB'">
-    <RootNamespace />
-  </PropertyGroup>
 
 </Project>

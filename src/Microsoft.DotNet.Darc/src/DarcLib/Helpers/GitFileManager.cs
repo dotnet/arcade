@@ -608,7 +608,8 @@ namespace Microsoft.DotNet.DarcLib
                 XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"//*[local-name()='{versionElementName}']");
                 if (versionNode == null)
                 {
-                    versionNode = versionProps.DocumentElement.SelectSingleNode($"////*[local-name()='{alternateVersionElementName}']");
+                    versionNode = versionProps.DocumentElement.SelectSingleNode($"//*[local-name()='{alternateVersionElementName}']");
+                    versionElementName = alternateVersionElementName;
                 }
 
                 if (versionNode != null)

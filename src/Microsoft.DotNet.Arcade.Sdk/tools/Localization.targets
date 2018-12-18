@@ -18,7 +18,7 @@
     -->
     <UpdateXlfOnBuild Condition="'$(ContinuousIntegrationBuild)' != 'true'">true</UpdateXlfOnBuild>
 
-    <!-- 
+    <!--
       Use Satellite assembly generation task from Microsoft.NET.Sdk even when building with
       full Framework MSBuild. This will support public signing, is deterministic, and always
       generates them as AnyCPU. 

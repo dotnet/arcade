@@ -17,6 +17,7 @@ namespace Microsoft.DotNet.Darc.Tests
             DependencyTestDriver.TestAndCompareOutput(nameof(EmptyVersions1), async driver =>
             {
                 await driver.UpdateDependenciesAsync(new List<DependencyDetail>());
+                await driver.VerifyAsync();
             });
         }
 
@@ -29,6 +30,7 @@ namespace Microsoft.DotNet.Darc.Tests
             DependencyTestDriver.TestAndCompareOutput(nameof(EmptyVersions2), async driver =>
             {
                 await driver.UpdateDependenciesAsync(new List<DependencyDetail>());
+                await driver.VerifyAsync();
             });
         }
 
@@ -49,6 +51,7 @@ namespace Microsoft.DotNet.Darc.Tests
                         Version = "1.2.3"
                     },
                     DependencyType.Product);
+                await driver.VerifyAsync();
             });
         }
 
@@ -69,6 +72,7 @@ namespace Microsoft.DotNet.Darc.Tests
                         Version = "1.2.3"
                     },
                     DependencyType.Product);
+                await driver.VerifyAsync();
             });
         }
 
@@ -102,6 +106,8 @@ namespace Microsoft.DotNet.Darc.Tests
                         Version = "1.2.4"
                     },
                     DependencyType.Product));
+
+                await driver.VerifyAsync();
             });
         }
 
@@ -139,6 +145,7 @@ namespace Microsoft.DotNet.Darc.Tests
                         Version = "1.2.4"
                     },
                     DependencyType.Toolset);
+                await driver.VerifyAsync();
             });
         }
 
@@ -160,6 +167,7 @@ namespace Microsoft.DotNet.Darc.Tests
                         Version = "1.2.3"
                     },
                     DependencyType.Product);
+                await driver.VerifyAsync();
             });
         }
 
@@ -181,6 +189,7 @@ namespace Microsoft.DotNet.Darc.Tests
                             Version = "4.5.6"
                         }
                     });
+                await driver.VerifyAsync();
             });
         }
 
@@ -225,6 +234,7 @@ namespace Microsoft.DotNet.Darc.Tests
                             Version = "4.5.6"
                         }
                     });
+                await driver.VerifyAsync();
             });
         }
 
@@ -247,6 +257,7 @@ namespace Microsoft.DotNet.Darc.Tests
                             Version = "4.5.6"
                         }
                     });
+                await driver.VerifyAsync();
             });
         }
 
@@ -268,6 +279,7 @@ namespace Microsoft.DotNet.Darc.Tests
                         Version = "4.5.6"
                     },
                     DependencyType.Product);
+                await driver.VerifyAsync();
             });
         }
 
@@ -298,6 +310,7 @@ namespace Microsoft.DotNet.Darc.Tests
                             Version = "4.5.6"
                         }
                     });
+                await driver.VerifyAsync();
             });
         }
 
@@ -319,6 +332,7 @@ namespace Microsoft.DotNet.Darc.Tests
                         Version = "1.0"
                     },
                     DependencyType.Toolset);
+                await driver.VerifyAsync();
             });
         }
 
@@ -340,6 +354,7 @@ namespace Microsoft.DotNet.Darc.Tests
                         Version = "2.0"
                     },
                     DependencyType.Toolset);
+                await driver.VerifyAsync();
             });
         }
 
@@ -362,6 +377,7 @@ namespace Microsoft.DotNet.Darc.Tests
                             Version = "2.0"
                         }
                     });
+                await driver.VerifyAsync();
             });
         }
 
@@ -383,6 +399,7 @@ namespace Microsoft.DotNet.Darc.Tests
                             Version = "2.0"
                         }
                     });
+                await driver.VerifyAsync();
             });
         }
 
