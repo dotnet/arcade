@@ -137,8 +137,6 @@ By default, Arcade builds solutions in the root of the repo.  Overriding the def
   </Project>
   ```
 
-  CoreFx does not use the default build projects in its repo - [example](https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/Build.props)
-
 Note: listing both project files formats (such as .csproj) and solution files (.sln) at the same time is not currently supported.
 
 #### Example: specifying a solution to build
@@ -189,6 +187,26 @@ You can use custom MSBuild properties to control the list of projects which buil
   </ItemGroup>
 </Project>
 ```
+
+#### Example: custom implementations of 'Restore'
+
+By default, Arcade assumes that the 'Restore' target on projects is implemented using NuGet's restore. If that is not the case, you can opt-out of some Arcade
+optimizations by setting 'RestoreUsingNuGetTargets' to false.
+
+```xml
+<!-- eng/Build.props -->
+<Project>
+  <PropertyGroup>
+    <RestoreUsingNuGetTargets>false</RestoreUsingNuGetTargets>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectToBuild Include="$(RepoRoot)src\dir.proj" />
+  </ItemGroup>
+</Project>
+```
+
+CoreFx does not use the default build projects in its repo - [example](https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/Build.props).
+
 
 ### /eng/Versions.props: A single file listing component versions and used tools
 
