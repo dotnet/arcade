@@ -7,7 +7,6 @@
     <RootNamespace>Xunit.ConsoleClient</RootNamespace>
     <TargetFrameworks>netcoreapp1.0;netcoreapp2.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
-    <!-- Incrememnt minor version to ensure differentiation from nuget package coming from xunit repo (no longer maintained) -->
     <VersionPrefix>2.5.0</VersionPrefix>
     <LangVersion>7.1</LangVersion>
   </PropertyGroup>
