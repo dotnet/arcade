@@ -15,6 +15,9 @@
 
   <Import Project="BuildStep.props" />
 
+  <!-- Allow for repo specific Publish properties such as add additional files to be published -->
+  <Import Project="$(RepositoryEngineeringDir)Publish.props" Condition="Exists('$(RepositoryEngineeringDir)Publish.props')" />
+
   <PropertyGroup>
     <PublishToAzure>false</PublishToAzure>
     <PublishToAzure Condition="'$(AzureFeedUrl)' != ''">true</PublishToAzure>
@@ -33,6 +36,8 @@
   <Target Name="Publish" Condition="$(PublishToAzure) or $(PublishToSourceBuildStorage) or $(PublishToSymbolServer)">
     <PropertyGroup>
       <SymbolPackagesDir>$(ArtifactsTmpDir)SymbolPackages\</SymbolPackagesDir>
+
+      <PublishToBlobFeedFlatContainer Condition=" '$(PublishToBlobFeedFlatContainer)' == '' ">false</PublishToBlobFeedFlatContainer>
     </PropertyGroup>
 
     <ItemGroup>
