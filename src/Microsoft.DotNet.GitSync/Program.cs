@@ -25,6 +25,7 @@ namespace Microsoft.DotNet.GitSync
     internal class Program
     {
         private const string TableName = "CommitHistory";
+        private const string RepoTableName = "MirrorRepos";
         private static CloudTable s_table;
         private static Dictionary<string, List<string>> s_repos { get; set; } = new Dictionary<string, List<string>>();
         private ConfigFile ConfigFile { get; }
@@ -532,9 +533,20 @@ namespace Microsoft.DotNet.GitSync
             s_table = storageAccount.CreateCloudTableClient().GetTableReference(TableName);
             s_table.CreateIfNotExists();
             s_logger.Info("Connected with azure table Successfully");
-            s_repos.Add("corefx", new List<string> { "coreclr", "corert" });
-            s_repos.Add("coreclr", new List<string> { "corefx", "corert" });
-            s_repos.Add("corert", new List<string> { "coreclr", "corefx" });
+
+            var RepoTable = storageAccount.CreateCloudTableClient().GetTableReference(RepoTableName);
+            RepoTable.CreateIfNotExists();
+
+            TableQuery getAllMirrorPairs = new TableQuery()
+                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.NotEqual, null));
+
+            var repos = RepoTable.ExecuteQuery(getAllMirrorPairs);
+            foreach (var item in repos)
+            {
+                s_repos.Add(item.PartitionKey, item["ReposToMirrorInto"].StringValue.Split(';').ToList());
+                s_logger.Info($"The commits in  {item.PartitionKey} repo will be mirrored into {item["ReposToMirrorInto"].StringValue} Repos");
+            }
+
             s_emailManager = new EmailManager(server, destinations, s_logger);
             s_logger.Info("Setup Completed");
         }
