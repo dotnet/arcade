@@ -25,6 +25,13 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <!-- 
+      Initialize VsixVersion. The project may specify prefix if it's different from VersionPrefix.
+    -->
+    <VsixVersionPrefix Condition="'$(VsixVersionPrefix)' == ''">$(VersionPrefix)</VsixVersionPrefix>
+    <VsixVersion Condition="'$(VersionSuffixDateStamp)' != ''">$(VsixVersionPrefix).$(VersionSuffixDateStamp)$(VersionSuffixBuildOfTheDayPadded)</VsixVersion>
+    <VsixVersion Condition="'$(VersionSuffixDateStamp)' == ''">42.42.42.4242424</VsixVersion>
+
     <!--
       TODO: Currently we need to erase Experimental flag from VSIXes that are inserted into VS.
       The build produces VSIXes with the flag on and FinalizeInsertionVsixFiles target then makes a copy to VisualStudioSetupInsertionPath
