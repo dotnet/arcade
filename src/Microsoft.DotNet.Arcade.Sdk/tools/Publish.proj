@@ -68,6 +68,30 @@
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
+    <!--
+      This file will be used by the publishing release pipeline to parse the asset manifest
+      and push the assets to target feeds.
+    -->
+    <WriteLinesToFile
+      File="$(MSBuildThisFileDirectory)MicrosoftDotNetBuildTasksFeedVersion.props"
+      Lines="&lt;Project>&lt;PropertyGroup>&lt;MicrosoftDotNetBuildTasksFeedVersion>$(MicrosoftDotNetBuildTasksFeedVersion)&lt;/MicrosoftDotNetBuildTasksFeedVersion>&lt;/PropertyGroup>&lt;/Project>"
+      Overwrite="true"
+      Encoding="Unicode" />
+
+    <Message
+      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(MSBuildThisFileDirectory)MicrosoftDotNetBuildTasksFeedVersion.props"
+      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
+      Importance="high" />
+
+    <Message
+      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(RepositoryEngineeringDir)common\PublishToPackageFeed.proj"
+      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
+      Importance="high" />
+
+    <!--
+      Work in progress drop-in replacement for PushToBlobFeed task below.
+      This is part of the work on https://github.com/dotnet/arcade/issues/1179
+    -->
     <PushToAzureDevOpsArtifacts 
       ItemsToPush="@(ItemsToPushToBlobFeed)"
       ManifestBuildData="Location=$(AzureFeedUrl)"
