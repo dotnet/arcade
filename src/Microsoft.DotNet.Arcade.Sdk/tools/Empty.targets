@@ -18,5 +18,18 @@
   <Target Name="Build"/>
   <Target Name="Test"/>
   <Target Name="Pack"/>
+  <Target Name="Publish"/>
+
+  <!--
+    Implement this file to specify more targets that must be suppressed to allow projects to
+    participate in the build without doing anything.
+
+    For example, if a project specifies '<Target Name="CustomTarget" BeforeTargets="Build"> ...', it
+    could cause failures if it relies on Restore assets that were suppressed. The custom target must
+    also be suppressed to prevent build failure. The repo would create eng/Empty.targets and add a
+    line '<Target Name="CustomTarget" />'.
+  -->
+  <Import Project="$(RepositoryEngineeringDir)Empty.targets"
+          Condition="Exists('$(RepositoryEngineeringDir)Empty.targets')"/>
 
 </Project>
