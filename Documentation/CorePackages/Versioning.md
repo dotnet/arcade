@@ -202,7 +202,7 @@ Packages produced by projects that reference SourceLink package and use standard
 
 ## Implementation
 
-The Arcade SDK implements [here](../src/Microsoft.DotNet.Arcade.Sdk/tools/Version.targets) the Versioning schema described in this document. This section provides a brief outline of how to use the implementation and how it works. More documentation is available in the respective [.target/.props](../src/Microsoft.DotNet.Arcade.Sdk/tools/Version.targets) file.
+The Arcade SDK implements [here](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Version.targets) the Versioning schema described in this document. This section provides a brief outline of how to use the implementation and how it works. More documentation is available in the respective [.target/.props](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Version.targets) file.
 
 Arcade onboarded repos use this implementation automatically by using the Arcade SDK. *If you use the SDK you won't have to do anything else to use the format strings described in the proposal.* 
 
