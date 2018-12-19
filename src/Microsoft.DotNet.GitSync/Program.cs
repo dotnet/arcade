@@ -532,9 +532,10 @@ namespace Microsoft.DotNet.GitSync
             s_table = storageAccount.CreateCloudTableClient().GetTableReference(TableName);
             s_table.CreateIfNotExists();
             s_logger.Info("Connected with azure table Successfully");
-            s_repos.Add("corefx", new List<string> { "coreclr", "corert" });
-            s_repos.Add("coreclr", new List<string> { "corefx", "corert" });
-            s_repos.Add("corert", new List<string> { "coreclr", "corefx" });
+            s_repos.Add("corefx", new List<string> { "coreclr", "corert", "mono" });
+            s_repos.Add("coreclr", new List<string> { "corefx", "corert", "mono" });
+            s_repos.Add("corert", new List<string> { "coreclr", "corefx", "mono" });
+            s_repos.Add("mono", new List<string> { "coreclr", "corefx", "corert" });
             s_emailManager = new EmailManager(server, destinations, s_logger);
             s_logger.Info("Setup Completed");
         }

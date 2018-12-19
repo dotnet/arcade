@@ -38,9 +38,10 @@ namespace Microsoft.DotNet.GitSync.CommitManager
             var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
             XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
 
-            s_repos.Add("corefx", new List<string> { "coreclr", "corert" });
-            s_repos.Add("coreclr", new List<string> { "corefx", "corert" });
-            s_repos.Add("corert", new List<string> { "coreclr", "corefx" });
+            s_repos.Add("corefx", new List<string> { "coreclr", "corert", "mono" });
+            s_repos.Add("coreclr", new List<string> { "corefx", "corert", "mono" });
+            s_repos.Add("corert", new List<string> { "coreclr", "corefx", "mono" });
+            s_repos.Add("mono", new List<string> { "coreclr", "corefx", "corert" });
 
             s_table = new Table(username, key, _cloudTableName);
             await s_table.CommitTable.CreateIfNotExistsAsync();
