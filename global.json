@@ -1,6 +1,7 @@
 {
   "tools": {
-    "dotnet": "2.1.401"
+    "dotnet": "2.1.401",
+    "Microsoft.DotNet.Darc": "1.0.0-beta.18618.7"
   },
   "msbuild-sdks": {
     "Microsoft.DotNet.Arcade.Sdk": "1.0.0-beta.18618.7"
