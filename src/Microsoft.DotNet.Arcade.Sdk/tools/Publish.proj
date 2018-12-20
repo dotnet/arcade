@@ -16,7 +16,7 @@
   <Import Project="BuildStep.props" />
 
   <!-- Allow for repo specific Publish properties such as add additional files to be published -->
-  <Import Project="$(RepositoryEngineeringDir)Publish.props" Condition="Exists('$(RepositoryEngineeringDir)Publish.props')" />
+  <Import Project="$(RepositoryEngineeringDir)Publishing.props" Condition="Exists('$(RepositoryEngineeringDir)Publishing.props')" />
 
   <PropertyGroup>
     <PublishToAzure>false</PublishToAzure>
