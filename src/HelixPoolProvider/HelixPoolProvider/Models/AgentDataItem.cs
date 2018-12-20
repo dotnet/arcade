@@ -14,5 +14,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Models
         public string queueId { get; set; }
         [Required]
         public string workItemId { get; set; }
+        [Required]
+        public bool isPublicQueue { get; set; }
     }
 }
