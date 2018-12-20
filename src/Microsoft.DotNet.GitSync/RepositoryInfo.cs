@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.GitSync
         public string SharedPath { get; set; }
         public Configuration Configuration { get; set; }
         public Dictionary<string, string> LastSynchronizedCommits { get; set; }
+        public string UpstreamOwner { get; set; }
         public Dictionary<string, PullRequestInfo> PendingPRs { get; set; }
         [JsonIgnore]
         public Uri Url => new Uri($"https://github.com/{Owner}/{Name}");
