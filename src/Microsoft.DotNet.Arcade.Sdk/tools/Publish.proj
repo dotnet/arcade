@@ -118,8 +118,8 @@
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
       ManifestCommit="$(BUILD_SOURCEVERSION)" 
       AssetManifestPath="$(AssetManifestFilePath)"
-      Condition="$(PublishToAzure)"
-      PublishFlatContainer="$(PublishToBlobFeedFlatContainer)"/>
+      PublishFlatContainer="$(PublishToBlobFeedFlatContainer)"                    
+      Condition="$(PublishToAzure)"/>
 
     <!-- Source Build local storage -->    
     <Copy SourceFiles="@(PackagesToPublish)" DestinationFolder="$(DotNetOutputBlobFeedDir)packages" Condition="$(PublishToSourceBuildStorage)" />
