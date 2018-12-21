@@ -118,6 +118,7 @@
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
       ManifestCommit="$(BUILD_SOURCEVERSION)" 
       AssetManifestPath="$(AssetManifestFilePath)"
+      PublishFlatContainer="$(PublishToBlobFeedFlatContainer)"                    
       Condition="$(PublishToAzure)"/>
 
     <!-- Source Build local storage -->    
