@@ -4,18 +4,20 @@ Given the list from the main migration status page:
 3.	Engineering dependency flow
 4.	Internal builds from dnceng
 
-dotnet/Templating (https://github.com/dotnet/templating)
-1.	Completed
-2.	November
-3.	End of November / Early December
-4.	Mid-December
-
 aspnet/WebSDK (https://github.com/aspnet/websdk)
 1.	Completed
-2.	November
-3.	End of November / Early December
-4.	Mid-December
+2.	Completed
+3.	Completed
+4.	Completed
+
+dotnet/Templating (https://github.com/dotnet/templating)
+1.	Completed
+2.	Week of 12/24
+3.	End of December - There is not much work here for templating. Just need to flow the Package versions to the cli toolset.
+4.	End of December
+
+Now that the WebSdk is migrated completely, it should be much easier to complete dotnet/templating.
 
 @Joeloff will be doing the work for both dotnet/Templating & aspnet/WebSDK
 
-from @vijayrkn on 11/1/2018
+from @vijayrkn on 12/21/2018

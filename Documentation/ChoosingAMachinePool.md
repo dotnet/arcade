@@ -10,8 +10,8 @@ All Azure Pipelines builds should use the following agent queues
    * Windows - [dotnet-internal-temp]
    * Linux - [dnceng-linux-internal-temp]
    * Mac - [Hosted mac Internal](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml)
-   
-Pools for an Azure DevOps Pipeline can be specified at the build and/or job level in the yaml file ([documentation](https://github.com/Microsoft/azure-pipelines-agent/blob/master/docs/preview/yamlgettingstarted-pools.md)).
+
+Pools for an Azure DevOps Pipeline can be specified at the build and/or job level in the yaml file ([documentation](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=vsts&tabs=yaml)).
 
 Detailed information about the machines in an agent queue can be found in the [dotnet-helix-machines] repo. Additional dependencies not avaliable on the machines should be bootstrapped in using our [Bootstrapping System]. If bootstrapping doesn't work for a specific dependency contact [@dotnet/dnceng] for guidance.
 

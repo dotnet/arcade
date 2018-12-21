@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
             }
             var agentSettings = agentRequestItem.agentConfiguration.agentSettings;
 
-            _logger.LogInformation($"Starting acquire operation.  Queue={queueId} Agent Id={agentRequestItem.agentId} Pool={agentRequestItem.agentPool}");
+            _logger.LogInformation($"Starting acquire operation. Queue={queueId} Agent Id={agentRequestItem.agentId} Pool={agentRequestItem.agentPool}");
 
             var jobCreator = await GetHelixJobCreator(agentRequestItem, queueId);
             if (jobCreator == null)
@@ -131,11 +131,11 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
             switch (queueInfo.OperatingSystemGroup.ToLowerInvariant())
             {
                 case "windows":
-                    return new HelixWindowsOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(), _loggerFactory, _hostingEnvironment, _configuration);
+                    return new HelixWindowsOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value), _loggerFactory, _hostingEnvironment, _configuration);
                 case "linux":
-                    return new HelixLinuxOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(), _loggerFactory, _hostingEnvironment, _configuration);
+                    return new HelixLinuxOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value), _loggerFactory, _hostingEnvironment, _configuration);
                 case "osx":
-                    return new HelixMacOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(), _loggerFactory, _hostingEnvironment, _configuration);
+                    return new HelixMacOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value), _loggerFactory, _hostingEnvironment, _configuration);
                 default:
                     throw new NotImplementedException($"Operating system group {queueInfo.OperatingSystemGroup} unexpected");
             }
@@ -145,9 +145,17 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
         /// Get the HelixApi based on the settings of this pool provider
         /// </summary>
         /// <returns>For now, just an unauthenticated api client</returns>
-        private IHelixApi GetHelixApi()
+        private IHelixApi GetHelixApi(bool isAnonymous)
         {
-            IHelixApi api = ApiFactory.GetAuthenticated(_configuration.ApiAuthorizationPat);
+            IHelixApi api;
+            if (isAnonymous)
+            {
+                api = ApiFactory.GetAnonymous();
+            }
+            else
+            {
+                api = ApiFactory.GetAuthenticated(_configuration.ApiAuthorizationPat);
+            }
             // Alter the base URI based on configuration.  It's also useful to note that in the current version of the API, the endpoint isn't
             // defaulted to https, and so unless this is done every request will fail.
             api.BaseUri = new Uri(_configuration.HelixEndpoint);
@@ -157,7 +165,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
         // Verify the queue is available, can be used by this pool provider, etc.
         private async Task<Helix.Client.Models.QueueInfo> GetQueueInfo(string queueId)
         {
-            var helixApi = GetHelixApi();
+            var helixApi = GetHelixApi(true /*isAnonymous*/);
             try
             {
                 return await helixApi.Information.QueueInfoMethodAsync(queueId);
@@ -274,7 +282,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
             {
                 _logger.LogTrace($"Looking up work item details for agent {workItemId} in Helix Job {correlationId}");
 
-                using (IHelixApi api = GetHelixApi())
+                using (IHelixApi api = GetHelixApi(agentRequestStatusItem.agentData.isPublicQueue))
                 {
                     workItemDetails = await api.WorkItem.DetailsAsync(correlationId, workItemId);
                 }
@@ -336,7 +344,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
             {
                 _logger.LogTrace($"Looking up available helix queues.");
 
-                using (IHelixApi api = GetHelixApi())
+                using (IHelixApi api = GetHelixApi(false))
                 {
                     var helixQueues = await api.Information.QueueInfoListAsync();
 
@@ -368,7 +376,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
             {
                 _logger.LogTrace($"Looking helix queue named {agentDefinitionId}");
 
-                using (IHelixApi api = GetHelixApi())
+                using (IHelixApi api = GetHelixApi(false))
                 {
                     var queueInfo = await api.Information.QueueInfoMethodAsync(agentDefinitionId);
 

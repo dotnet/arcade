@@ -116,15 +116,15 @@ Provide repo specific Build properties such as the list of projects to build.
 
 #### Arcade project building
 
-By default, Arcade [builds solutions in the root of the repo](https://github.com/dotnet/arcade/blob/440b2dae3a206b28f6aba727b7818873358fcc0a/eng/common/build.ps1#L69).  Overriding the default build behavior may be done by either of these methods.
+By default, Arcade builds solutions in the root of the repo.  Overriding the default build behavior may be done by either of these methods.
 
-- Provide the project list on the command-line.
+- Provide the project list on the command-line. This will override any list of projects set in `eng/Build.props`.
 
   Example: `build.cmd -projects MyProject.proj`
 
   See [source code](https://github.com/dotnet/arcade/blob/440b2dae3a206b28f6aba727b7818873358fcc0a/eng/common/build.ps1#L53)
 
-- Provide a repo default override in `eng/Build.props`.
+- Provide a list of projects or solutions in `eng/Build.props`.
 
   Example:
 
@@ -137,7 +137,76 @@ By default, Arcade [builds solutions in the root of the repo](https://github.com
   </Project>
   ```
 
-  CoreFx does not use the default build projects in its repo - [example](https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/Build.props)
+Note: listing both project files formats (such as .csproj) and solution files (.sln) at the same time is not currently supported.
+
+#### Example: specifying a solution to build
+
+This is often required for repos which have multiple .sln files in the root directory.
+
+```xml
+<!-- eng/Build.props -->
+<Project>
+  <ItemGroup>
+    <ProjectToBuild Include="$(RepoRoot)MySolution1.sln" />
+  </ItemGroup>
+</Project>
+```
+
+#### Example: building project files instead of solutions
+
+You can also specify a list of projects to build instead of building .sln files.
+
+```xml
+<!-- eng/Build.props -->
+<Project>
+  <ItemGroup>
+    <ProjectToBuild Include="$(RepoRoot)src\**\*.csproj" />
+  </ItemGroup>
+</Project>
+```
+
+#### Example: conditionally specifying which projects to build
+
+You can use custom MSBuild properties to control the list of projects which build.
+
+```xml
+<!-- eng/Build.props -->
+<Project>
+  <ItemGroup>
+    <!-- Usage: build.cmd /p:BuildMyOptionalGroupOfStuff=true -->
+    <ProjectToBuild Condition="'$(BuildMyOptionalGroupOfStuff)' == 'true"
+                    Include="$(RepoRoot)src\feature1\**\*.csproj" />
+
+    <!-- Only build some projects when building on Windows  -->
+    <ProjectToBuild Condition="'$(OS)' == 'Windows_NT"
+                    Include="$(RepoRoot)src\**\*.vcxproj" />
+
+    <!-- You can also use MSBuild Include/Exclude syntax -->
+    <ProjectToBuild Include="$(RepoRoot)src\**\*.csproj"
+                    Exclude="$(RepoRoot)src\samples\**\*.csproj" />
+  </ItemGroup>
+</Project>
+```
+
+#### Example: custom implementations of 'Restore'
+
+By default, Arcade assumes that the 'Restore' target on projects is implemented using NuGet's restore. If that is not the case, you can opt-out of some Arcade
+optimizations by setting 'RestoreUsingNuGetTargets' to false.
+
+```xml
+<!-- eng/Build.props -->
+<Project>
+  <PropertyGroup>
+    <RestoreUsingNuGetTargets>false</RestoreUsingNuGetTargets>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectToBuild Include="$(RepoRoot)src\dir.proj" />
+  </ItemGroup>
+</Project>
+```
+
+CoreFx does not use the default build projects in its repo - [example](https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/Build.props).
+
 
 ### /eng/Versions.props: A single file listing component versions and used tools
 
@@ -255,10 +324,6 @@ It is a common practice to specify properties applicable to all (most) projects 
 
 ```xml
 <PropertyGroup>  
-  <PropertyGroup>
-    <ImportNetSdkFromRepoToolset>false</ImportNetSdkFromRepoToolset>
-  </PropertyGroup>
-
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />    
 
   <!-- Public keys used by InternalsVisibleTo project items -->
@@ -418,16 +483,17 @@ The Build Pipeline also needs to link the following variable group:
 
 ### `IsShipping` (bool)
 
-`true` if the package (NuGet or VSIX) produced by the project is _shipping_. 
+`true` if the asset (library, NuGet or VSIX) produced by the project is _shipping_, i.e. delivered to customers via an official channel. This channel can be NuGet.org, an official installer, etc.
 
-Set `IsShipping` property to `false`
+Set `IsShipping` property to `false` in
 
-- projects that produce NuGet packages that are not shipping on NuGet.org or via other official channel (like part of an official installer), 
+- projects that produce NuGet packages that are meant to be published only on MyGet, internal blob feeds, etc. 
 - projects that produce VSIX packages that are only used only within the repository (e.g. to facilitate integration tests or VS F5) and not expected to be installed by customers,
-- Test/build utility projects (test projects are automatically marked as non-shipping).
+- Test/build/automation utility projects (test projects are automatically marked as non-shipping by Arcade SDK targets).
 
-All packages are VSIXes are signed by default, regardless of whether they are _shipping_ or not.
-By default Portable and Embedded PDBs produced by _shipping_ projects are converted to Windows PDBs and published to Microsoft symbol servers.
+All libraries, packages and VSIXes are signed by default, regardless of whether they are _shipping_ or not.
+By default, Portable and Embedded PDBs produced by _shipping_ projects are converted to Windows PDBs and published to Microsoft symbol servers.
+By default, all _shipping_ libraries are localized.
 
 ### `PublishWindowsPdb` (bool)
 

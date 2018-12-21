@@ -20,9 +20,7 @@ Packages are published daily to our tools feed:
 
 ### How to use Arcade
 
-Arcade tools may be consumed by following the guidelines defined in the [Task Packages](./Documentation/TaskPackages.md) documentation.
-
-You can view the available Arcade produced packages by adding the Arcade [package feed](#getting-started), to your [Visual Studio package source](https://docs.microsoft.com/en-us/nuget/tools/package-manager-ui).
+Documentation, tutorials, and guides may be found in the [Start Here](Documentation/StartHere.md) index. 
 
 ### How to contribute
 
