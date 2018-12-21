@@ -59,6 +59,7 @@ some highlights
 - [Servicing](Servicing.md)
 - [Toolsets](Toolsets.md)
 - [Version Querying and Updating](VersionQueryingAndUpdating.md)
+- [How Arcade tests itself](Validation/Overview.md)
 
 ### Tools we are using and how we are using them
 
