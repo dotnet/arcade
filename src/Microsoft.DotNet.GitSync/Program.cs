@@ -125,7 +125,9 @@ namespace Microsoft.DotNet.GitSync
 
                 foreach (RepositoryInfo repo in config.Repos)
                 {
-                    SanityCheck(repo, prBranch);
+                    if (repo.LastSynchronizedCommits != null)
+                        SanityCheck(repo, prBranch);
+
                     if (!await WaitForPendingPRAsync(repo, prBranch))
                     {
                         continue;
@@ -223,12 +225,12 @@ namespace Microsoft.DotNet.GitSync
             var match = Regex.Match(line, @"Subject: \[PATCH\].*\(#[0-9]+\)$");
             if (match.Success)
             {
-                return Regex.Replace(line, @"\(#([0-9]+)\)$", $"({sourceRepository.Configuration.UpstreamOwner}/{sourceRepository.Name}#$1)");
+                return Regex.Replace(line, @"\(#([0-9]+)\)$", $"({sourceRepository.UpstreamOwner}/{sourceRepository.Name}#$1)");
             }
             match = Regex.Match(line, @"Subject: \[PATCH\] Merge pull request #[0-9]+ from");
             if (match.Success)
             {
-                return Regex.Replace(line, "#([0-9]+)", $"{sourceRepository.Configuration.UpstreamOwner}/{sourceRepository.Name}#$1");
+                return Regex.Replace(line, "#([0-9]+)", $"{sourceRepository.UpstreamOwner}/{sourceRepository.Name}#$1");
             }
             return line;
         }
@@ -267,20 +269,20 @@ namespace Microsoft.DotNet.GitSync
                 });
             }
             var targetRepo = newChanges.TargetRepository;
-            var newPr = new NewPullRequest($"Mirror changes from { targetRepo.Configuration.UpstreamOwner }/{string.Join(",", newChanges.changes.Keys)}", $"{ targetRepo.Owner}:{branch}", prBranch)
+            var newPr = new NewPullRequest($"Mirror changes from { targetRepo.UpstreamOwner }/{string.Join(",", newChanges.changes.Keys)}", $"{ targetRepo.Owner}:{branch}", prBranch)
             {
-                Body = $"This PR contains mirrored changes from { targetRepo.Configuration.UpstreamOwner }/{string.Join(",", newChanges.changes.Keys)}\n\n\n**Please REBASE this PR when merging**"
+                Body = $"This PR contains mirrored changes from { targetRepo.UpstreamOwner }/{string.Join(",", newChanges.changes.Keys)}\n\n\n**Please REBASE this PR when merging**"
             };
-            s_logger.Debug($"Creating pull request in {newChanges.TargetRepository.Configuration.UpstreamOwner}");
-            var pr = await Client.PullRequest.Create(targetRepo.Configuration.UpstreamOwner, targetRepo.Name, newPr);
+            s_logger.Debug($"Creating pull request in {newChanges.TargetRepository.UpstreamOwner}");
+            var pr = await Client.PullRequest.Create(targetRepo.UpstreamOwner, targetRepo.Name, newPr);
             s_logger.Debug($"Adding the commits");
-            var commits = await Client.Repository.PullRequest.Commits(targetRepo.Configuration.UpstreamOwner, targetRepo.Name, pr.Number);
+            var commits = await Client.Repository.PullRequest.Commits(targetRepo.UpstreamOwner, targetRepo.Name, pr.Number);
             s_logger.Debug($"Getting Assignees");
             var additionalAssignees = await Task.WhenAll(commits.Select(c => GetAuthorAsync(targetRepo, c.Sha)).Distinct());
             try
             {
                 var update = new PullRequestUpdate() { Body = pr.Body + "\n\n cc " + string.Join(" ", additionalAssignees.Select(a => "@" + a)) };
-                await Client.PullRequest.Update(targetRepo.Configuration.UpstreamOwner, targetRepo.Name, pr.Number, update);
+                await Client.PullRequest.Update(targetRepo.UpstreamOwner, targetRepo.Name, pr.Number, update);
             }
             catch (Exception)
             {
@@ -351,7 +353,7 @@ namespace Microsoft.DotNet.GitSync
             var prNum = pendingPr.Number;
 
             var client = Client;
-            var pr = await client.PullRequest.Get(repo.Configuration.UpstreamOwner, repo.Name, prNum);
+            var pr = await client.PullRequest.Get(repo.UpstreamOwner, repo.Name, prNum);
             if (pr.State == ItemState.Open)
             {
                 s_logger.Info($"{repo}/{branch} has pending pull request {prNum}");
@@ -423,7 +425,7 @@ namespace Microsoft.DotNet.GitSync
                     remote = repository.Network.Remotes["upstream"];
                     if (remote == null)
                     {
-                        repository.Network.Remotes.Add("upstream", @"https://github.com/" + repo.Configuration.UpstreamOwner + @"/" + repo.Name + ".git");
+                        repository.Network.Remotes.Add("upstream", @"https://github.com/" + repo.UpstreamOwner + @"/" + repo.Name + ".git");
                     }
                 }
             }

@@ -16,18 +16,19 @@ namespace Microsoft.DotNet.GitSync
 
     public class RepositoryInfo
     {
-        public string Owner { get; set; }
-        public string Name { get; set; }
-        public string SharedPath { get; set; }
-        public Configuration Configuration { get; set; }
-        public Dictionary<string, string> LastSynchronizedCommits { get; set; }
-        public Dictionary<string, PullRequestInfo> PendingPRs { get; set; }
-        [JsonIgnore]
-        public Uri Url => new Uri($"https://github.com/{Owner}/{Name}");
         [JsonIgnore]
         public string CloneUrl => Url.ToString().EndsWith(".git") ? Url.ToString() : Url + ".git";
+        public Configuration Configuration { get; set; }
+        public Dictionary<string, string> LastSynchronizedCommits { get; set; }
+        public string Name { get; set; }
+        public string Owner { get; set; }
         [JsonIgnore]
         public string Path => System.IO.Path.Combine(Configuration.RepositoryBasePath, Name);
+        public Dictionary<string, PullRequestInfo> PendingPRs { get; set; }
+        public string SharedPath { get; set; }
+        public string UpstreamOwner { get; set; }
+        [JsonIgnore]
+        public Uri Url => new Uri($"https://github.com/{Owner}/{Name}");
         public override string ToString()
         {
             return $"{Owner}/{Name}";
