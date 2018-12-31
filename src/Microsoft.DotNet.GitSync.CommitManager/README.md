@@ -1,8 +1,8 @@
 # Microsoft.DotNet.GitSync.CommitManager
 
-It runs on maestro triggers. It adds commits that need to be ported to the azure storage table.
+It runs on maestro triggers. It adds commits that need to be ported to the Azure storage table.
 Webhook sends the payload to the maestro after every push event in any of the 3 repositories (corefx, coreclr, corert).
-The payload contains the path of the changed files in that commit. If any of these path is in the shared folder, then that commit is a candidate for azure table.
+The payload contains the path of the changed files in that commit. If any of these path is in the shared folder, then that commit is a candidate for Azure table.
 
 ## Arguments
 The Arguments that need to be supplied to this tool are 
@@ -18,15 +18,15 @@ dotnet run Microsoft.DotNet.GitSync.CommitManager.csproj -- -u $(AccountName) -k
 ```
 
 ## How to handle failures
-The tool is currently being run as a build defination. You can look at the logs of the build defination in order to get more info about the failure. The information about the build defination is present [here](https://github.com/dotnet/versions/blob/master/Maestro/subscriptions.json#L153)
+The tool is currently being run as a build definition. You can look at the logs of the build definition in order to get more info about the failure. The information about the build definition is present [here](https://github.com/dotnet/versions/blob/master/Maestro/subscriptions.json#L153)
 
 ## How to use it for other repos
 In order to use this tool for any other pair of repos, you need to take following actions :-
 
-- You first need an azure storage account. You then need to create an azure cosmos db table with columns such as TargetRepo(PartitionKey), commitID(RowKey), Branch, Mirrored, PR and SourceRepo.
+- You first need an Azure storage account. You then need to create an Azure cosmos db table with columns such as TargetRepo(PartitionKey), commitID(RowKey), Branch, Mirrored, PR and SourceRepo.
 - You also need another table with information about repositories i.e. which repos need to be mirrored into which repos. The columns required will be SourceRepo and ReposToMirrorInto.
-- You also need to setup the [webhook](https://developer.github.com/webhooks/creating/) in all the repos whose commits need to be mirroed. You then need to check if the commit is in the shared path by looking at the webhook payload.
+- You also need to setup the [webhook](https://developer.github.com/webhooks/creating/) in all the repos whose commits need to be mirrored. You then need to check if the commit is in the shared path by looking at the webhook payload.
 - If the commit is in the shared path, you need to build and run this tool with appropiate arguments.
-- The webhook part could be done through [maestro](https://github.com/dotnet/versions/tree/master/Maestro) or you can write an azure function which recieves the webhook payload and takes the required actions.
+- The webhook part could be done through [maestro](https://github.com/dotnet/versions/tree/master/Maestro) or you can write an Azure function which recieves the webhook payload and takes the required actions.
 
 [Related Documentation](../../Documentation/GitSyncTools.md )

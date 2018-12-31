@@ -27,7 +27,7 @@ In order to deploy the tool you need to take the following steps :-
 - You can then publish the tool and input all the required settings in the settings.json(configuration) file.
 
 ## How to handle missing commits
-We are storing all the commits(occuring in the shared path) in the Azure Table. You can go to the azure table and retrieve the entires with the value of commit id as the missing commit. There is a boolean field called "mirrored", switch its value to be false and then this commit will be picked up by the tool in the next iteration.
+We are storing all the commits(occuring in the shared path) in the Azure Table. You can go to the Azure table and retrieve the entires with the value of commit id as the missing commit. There is a boolean field called "mirrored", switch its value to be false and then this commit will be picked up by the tool in the next iteration.
 There is also another column called "PR" which will contain the reason about why this commit was skipped in the first place. 
 
 ## How to resolve merge conflicts
@@ -37,7 +37,7 @@ Sometimes the tool encounters merge conflicts. They need to be handled manually.
 ## How to use this for other repos
 In order to use this tool for any other pair of repos, you need to take following actions :-
 
-- You first need an azure storage account. You then need to create an azure cosmos db table with columns such as TargetRepo(PartitionKey), commitID(RowKey), Branch, Mirrored, PR and SourceRepo.
+- You first need an Azure storage account. You then need to create an Azure cosmos db table with columns such as TargetRepo(PartitionKey), commitID(RowKey), Branch, Mirrored, PR and SourceRepo.
 - You also need another table with information about repositories i.e. which repos need to be mirrored into which repos. The columns required will be SourceRepo and ReposToMirrorInto.
 - You can now follow the steps listed in deployment section.
 
