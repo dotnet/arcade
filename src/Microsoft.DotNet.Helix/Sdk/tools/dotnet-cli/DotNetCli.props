@@ -21,7 +21,7 @@
     </When>
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().StartsWith('osx'))">
       <PropertyGroup>
-        <DotNetCliRuntime>mac-x64</DotNetCliRuntime>
+        <DotNetCliRuntime>osx-x64</DotNetCliRuntime>
       </PropertyGroup>
     </When>
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('arm32'))">
