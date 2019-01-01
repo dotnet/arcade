@@ -46,9 +46,9 @@
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.4.1-pre.build.4059</XUnitVersion>
     <XUnitVSRunnerVersion>2.4.1-pre.build.4059</XUnitVSRunnerVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.18630.2</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetMaestroTasksVersion>1.0.0-beta.18630.2</MicrosoftDotNetMaestroTasksVersion>
-    <MicrosoftDotNetSignToolVersion>1.0.0-beta.18630.2</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.18631.2</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.0.0-beta.18631.2</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetSignToolVersion>1.0.0-beta.18631.2</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
