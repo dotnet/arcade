@@ -32,11 +32,13 @@ Example: `"Microsoft.DotNet.Helix.Sdk": "1.0.0-beta.18502.3"`
 
 ## Helix Access Token
 
+Helix access tokens are used to authenticate users sending jobs to Helix. For open queues,
+
 ### External builds (Public CI)
 
 For external builds, you don't need to specify an access token (indeed, doing so is prohibited). Simply specify the *IsExternal* flag for your build and specify a *Creator* in order to send the jobs to Helix anonymously. The "creator" should be an identifiable username which is clearly related to your build. For example, Arcade might specify a creator of `arcade`. This will make collating your results on Mission Control much easier.
 
-Please note that external jobs may only be submitted to queues which end with **.Open**.
+Please note that external jobs may only be submitted to queues which end with the value `IsInternalOnly` set to false. To determine this value for a particular queue, see the list of available queues [here](https://helix.dot.net/api/2018-03-14/info/queues).
 
 Example:
 
@@ -52,9 +54,9 @@ steps:
 
 ### Internal builds
 
-In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-Access` variable group to provide this secret to your build and then specify the `HelixApiAccessToken` for the `HelixAccessToken` parameter.
+In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-Access` variable group to provide this secret to your build and then specify the `HelixApiAccessToken` secret for the `HelixAccessToken` parameter.
 
-Please note that authorized jobs *cannot* be submitted to .Open queues.
+Please note that authorized jobs *cannot* be submitted to queues with `IsInternalOnly` set to false. To determine this value for a particular queue, see the list of available queues [here](https://helix.dot.net/api/2018-03-14/info/queues).
 
 Example:
 
