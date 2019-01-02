@@ -32,7 +32,7 @@ Example: `"Microsoft.DotNet.Helix.Sdk": "1.0.0-beta.18502.3"`
 
 ## Helix Access Token
 
-Helix access tokens are used to authenticate users sending jobs to Helix. For open queues,
+Helix access tokens are used to authenticate users sending jobs to Helix.
 
 ### External builds (Public CI)
 
