@@ -32,8 +32,6 @@ Example: `"Microsoft.DotNet.Helix.Sdk": "1.0.0-beta.18502.3"`
 
 ## Helix Access Token
 
-If you plan to send a payload (such as a work item) to Helix, you may need to be authorized.
-
 ### External builds (Public CI)
 
 For external builds, you don't need to specify an access token (indeed, doing so is prohibited). Simply specify the *IsExternal* flag for your build and specify a *Creator* in order to send the jobs to Helix anonymously. The "creator" should be an identifiable username which is clearly related to your build. For example, Arcade might specify a creator of `arcade`. This will make collating your results on Mission Control much easier.
@@ -54,7 +52,7 @@ steps:
 
 ### Internal builds
 
-In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-Access` variable group to provide this secret to your build. This secret is automatically injected into the environment, so specifying it explicitly is unnecessary.
+In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-Access` variable group to provide this secret to your build and then specify the `HelixApiAccessToken` for the `HelixAccessToken` parameter.
 
 Please note that authorized jobs *cannot* be submitted to .Open queues.
 
@@ -69,6 +67,7 @@ steps:
 - template: /eng/common/templates/steps/send-to-helix.yml
   displayName: Send to Helix
   parameters:
+    HelixAccessToken: $(HelixApiAccessToken)
     # other parameters here
 ```
 
