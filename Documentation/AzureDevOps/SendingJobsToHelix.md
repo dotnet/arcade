@@ -56,7 +56,7 @@ steps:
 
 In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-Access` variable group to provide this secret to your build and then specify the `HelixApiAccessToken` secret for the `HelixAccessToken` parameter.
 
-Please note that authorized jobs *cannot* be submitted to queues with `IsInternalOnly` set to false. To determine this value for a particular queue, see the list of available queues [here](https://helix.dot.net/api/2018-03-14/info/queues).
+Please note that authorized jobs *cannot* be submitted to queues with `IsInternalOnly` set to false. In general, these queues end with **.Open**; however, this is not necessarily true. To determine this value for a particular queue, see the list of available queues [here](https://helix.dot.net/api/2018-03-14/info/queues).
 
 Example:
 
