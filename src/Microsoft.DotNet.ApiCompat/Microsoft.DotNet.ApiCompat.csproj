@@ -15,17 +15,11 @@
     <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.0.0" />
     <PackageReference Include="System.Diagnostics.TraceSource" Version="4.0.0" />
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="$(McMasterExtensionsCommandLineUtils)" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
-  </ItemGroup>
-
-  <!-- Common command-line helper sources -->
-  <ItemGroup>
-    <Compile Include="..\Common\CommandLine.cs" />
-    <Compile Include="..\Common\CommandLineTraceHandler.cs" />
-    <Compile Include="..\Common\ConsoleTraceListener.cs" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
