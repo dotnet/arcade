@@ -42,3 +42,5 @@ Product documentation contains all knowledge necessary for a user to be successf
   - Examples illustrating the use of the product
 
 The Arcade Project is itself a product, though it may also be viewed as a collection of smaller products. As such, Arcade also benefits from having product documentation.
+
+A "Frequently Asked Questions" section within product documentation is an easy place to address a question or provide some piece of information that otherwise does not have a home (perhaps because that part of the documentation has not yet been written, or perhaps because the question is so common it benefits from being highlighted). The Arcade repository has a FAQ document to act both as a place for questions about Arcade and to provide a central hub for links to other, product-specific FAQs. 
