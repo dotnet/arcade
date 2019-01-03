@@ -32,36 +32,31 @@ Example: `"Microsoft.DotNet.Helix.Sdk": "1.0.0-beta.18502.3"`
 
 ## Helix Access Token
 
-If you plan to send a payload (such as a work item) to Helix, you will need to be authorized.
+Helix access tokens are used to authenticate users sending jobs to Helix.
 
 ### External builds (Public CI)
 
-For external builds, you will need to provide the *BotAccount-dotnet-github-anon-kaonashi-bot-helix-token* secret from **ToolsKV** (subscription *Dotnet Engineering services*). This will allow you to send payloads to Helix while minimizing the risk of leaking secrets.
+For external builds, you don't need to specify an access token (indeed, doing so is prohibited). Simply specify the *IsExternal* flag for your build and specify a *Creator* in order to send the jobs to Helix anonymously. The "creator" should be an identifiable username which is clearly related to your build. For example, Arcade might specify a creator of `arcade`. This will make collating your results on Mission Control much easier.
 
-In the dev.azure.com/dnceng/public project, you can use the `Helix Anonymous` variable group to provide this secret to your build.  You will need to check the box labeled "Make secrets available to builds of forks" in your build definition under the "Pull Request validation" trigger of the build definition in order to make this secret available to your build.  Note: Do NOT mark this check box if there are other secrets in your build that you are concerned about exposing.
-
-Furthermore, you will need to specify the *IsExternal* flag for your build and specify a *Creator* in order to send the jobs to Helix anonymously. The "creator" should be an identifiable username which is clearly related to your build. For example, Arcade might specify a creator of `arcade`. This will make collating your results on Mission Control much easier.
+Please note that external jobs may only be submitted to queues which end with the value `IsInternalOnly` set to false. In general, these queues end with **.Open**; however, this is not necessarily true.  To determine this value for a particular queue, see the list of available queues [here](https://helix.dot.net/api/2018-03-14/info/queues).
 
 Example:
 
 ```yaml
-variables:
-- group: Helix Anonymous
-
 steps:
 - template: /eng/common/templates/steps/send-to-helix.yml
   displayName: Send to Helix
   parameters:
     ## more variables go here
-    HelixAccessToken: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token)
     IsExternal: true
     Creator: # specify your creator here
 ```
 
 ### Internal builds
 
-In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-Access` variable group to provide this secret to your build. This secret is automatically injected into the environment, so specifying it explicitly is unnecessary.
+In the dev.azure.com/dnceng/internal project, you can use the `DotNet-HelixApi-Access` variable group to provide this secret to your build and then specify the `HelixApiAccessToken` secret for the `HelixAccessToken` parameter.
 
+Please note that authorized jobs *cannot* be submitted to queues with `IsInternalOnly` set to false. To determine this value for a particular queue, see the list of available queues [here](https://helix.dot.net/api/2018-03-14/info/queues).
 
 Example:
 
@@ -74,6 +69,7 @@ steps:
 - template: /eng/common/templates/steps/send-to-helix.yml
   displayName: Send to Helix
   parameters:
+    HelixAccessToken: $(HelixApiAccessToken)
     # other parameters here
 ```
 
