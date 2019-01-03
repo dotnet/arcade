@@ -39,6 +39,12 @@ striving to move as many people towards the new infrastructure as possible.
 - If you publish dependencies used by other repos, you'll need to onboard onto
   Arcade, so that other repos may consume your outputs.
 
+## I'm ready to get started, what do I do?
+
+See the [Arcade Onboarding](Onboarding.md) guide.
+
+Additionally, the WinForms team published [Arcade - Starting from Scratch](https://microsoft.sharepoint.com/:w:/t/MerriesWinFormsandSetup/EdJpqtiLVdtFuS6p10E0o_IBVu2WsETAd4zBf6YdVKsLcQ?rtime=MyHzd7Rx1kg), documenting their path to adopt Arcade, including moving their repositories public.
+
 ## Where can I find general information on .NET Core 3 infrastructure?
 
 There is quite a bit of documentation living under the
@@ -96,12 +102,6 @@ some highlights
   - [SignTool](CorePackages/Signing.md) (and Microbuild)
   - BAR
 
-
-## I'm ready to get started, what do I do?
-
-See the [Arcade Onboarding](Onboarding.md) guide.
-
-Additionally, the WinForms team published [Arcade - Starting from Scratch](https://microsoft.sharepoint.com/:w:/t/MerriesWinFormsandSetup/EdJpqtiLVdtFuS6p10E0o_IBVu2WsETAd4zBf6YdVKsLcQ?rtime=MyHzd7Rx1kg), documenting their path to adopt Arcade, including moving their repositories public.
 
 ## I need help, who should I talk to?
 
