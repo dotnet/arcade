@@ -62,15 +62,22 @@
 
   <Import Project="$(_HelixMultiQueueTargets)" Condition="'$(_HelixMultiQueueTargets)' != ''"/>
 
-  <Target Name="Test"
+  <Target Name="CoreTest"
           DependsOnTargets="$(TestDependsOn)">
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="Test" Properties="HelixTargetQueue=%(HelixTargetQueue.Identity);%(HelixTargetQueue.AdditionalProperties)">
       <Output TaskParameter="TargetOutputs" ItemName="SentJobs" />
     </MSBuild>
   </Target>
 
+  <!-- Work around https://github.com/Microsoft/msbuild/issues/3345
+       (failures in AfterTargets of the entry target don't fail the build)
+       by ensuring that the entry-point target Test has simple dependencies
+       and hooking Wait to CoreTest instead of the entry-point. -->
+  <Target Name="Test"
+          DependsOnTargets="CoreTest" />
+
   <Target Name="Wait"
-          AfterTargets="Test"
+          AfterTargets="CoreTest"
           Condition="$(WaitForWorkItemCompletion)">
     <Message Importance="High" Text="Waiting on job completion..." />
     <HelixWait Jobs="@(SentJobs)" AccessToken="$(HelixAccessToken)" Source="$(HelixSource)" Type="$(HelixType)" Build="$(HelixBuild)" IsExternal="$(IsExternal)" Creator="$(Creator)" />
