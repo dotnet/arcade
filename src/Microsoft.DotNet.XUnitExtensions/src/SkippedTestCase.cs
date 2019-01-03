@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -12,6 +13,102 @@ using Xunit.Sdk;
 
 namespace Microsoft.DotNet.XUnitExtensions
 {
+
+    public class SkipTestException : Exception
+    {
+        public SkipTestException(string reason)
+            : base(reason) { }
+    }
+
+    /// <summary>Implements message buss to communicate tests skipped via SkipTestException.</summary>
+    public class ConditionalTestMessageBus : IMessageBus
+    {
+        readonly IMessageBus innerBus;
+
+        public ConditionalTestMessageBus(IMessageBus innerBus)
+        {
+            this.innerBus = innerBus;
+        }
+
+        public int SkippedTestCount { get; private set; }
+
+        public void Dispose() { }
+
+        public bool QueueMessage(IMessageSinkMessage message)
+        {
+            var testFailed = message as ITestFailed;
+
+            if (testFailed != null)
+            {
+                var exceptionType = testFailed.ExceptionTypes.FirstOrDefault();
+                if (exceptionType == typeof(SkipTestException).FullName)
+                {
+                    SkippedTestCount++;
+                    return innerBus.QueueMessage(new TestSkipped(testFailed.Test, testFailed.Messages.FirstOrDefault()));
+                }
+            }
+
+            // Nothing we care about, send it on its way
+            return innerBus.QueueMessage(message);
+        }
+    }
+
+    /// <summary>Wraps RunAsync for ConditionalTheory.</summary>
+    public class SkippedTheoryTestCase : XunitTheoryTestCase
+    {
+        [Obsolete("Called by the de-serializer; should only be called by deriving classes for de-serialization purposes")]
+        public SkippedTheoryTestCase() { }
+
+        public SkippedTheoryTestCase(IMessageSink diagnosticMessageSink, TestMethodDisplay defaultMethodDisplay, TestMethodDisplayOptions defaultMethodDisplayOptions, ITestMethod testMethod)
+            : base(diagnosticMessageSink, defaultMethodDisplay, defaultMethodDisplayOptions, testMethod) { }
+
+        public override async Task<RunSummary> RunAsync(IMessageSink diagnosticMessageSink,
+                                                        IMessageBus messageBus,
+                                                        object[] constructorArguments,
+                                                        ExceptionAggregator aggregator,
+                                                        CancellationTokenSource cancellationTokenSource)
+        {
+            // Duplicated code from SkippableFactTestCase. I'm sure we could find a way to de-dup with some thought.
+            var skipMessageBus = new ConditionalTestMessageBus(messageBus);
+            var result = await base.RunAsync(diagnosticMessageSink, skipMessageBus, constructorArguments, aggregator, cancellationTokenSource);
+            if (skipMessageBus.SkippedTestCount > 0)
+            {
+                result.Failed -= skipMessageBus.SkippedTestCount;
+                result.Skipped += skipMessageBus.SkippedTestCount;
+            }
+
+            return result;
+        }
+    }
+
+    /// <summary>Wraps RunAsync for ConditionalFact.</summary>
+    public class SkippedFactTestCase : XunitTestCase
+    {
+        [Obsolete("Called by the de-serializer; should only be called by deriving classes for de-serialization purposes")]
+        public SkippedFactTestCase() { }
+
+        public SkippedFactTestCase(IMessageSink diagnosticMessageSink, TestMethodDisplay defaultMethodDisplay, TestMethodDisplayOptions defaultMethodDisplayOptions, ITestMethod testMethod, object[] testMethodArguments = null)
+            : base(diagnosticMessageSink, defaultMethodDisplay, defaultMethodDisplayOptions, testMethod, testMethodArguments) { }
+
+        public override async Task<RunSummary> RunAsync(IMessageSink diagnosticMessageSink,
+                                                        IMessageBus messageBus,
+                                                        object[] constructorArguments,
+                                                        ExceptionAggregator aggregator,
+                                                        CancellationTokenSource cancellationTokenSource)
+        {
+            // Duplicated code from SkippableFactTestCase. I'm sure we could find a way to de-dup with some thought.
+            var skipMessageBus = new ConditionalTestMessageBus(messageBus);
+            var result = await base.RunAsync(diagnosticMessageSink, skipMessageBus, constructorArguments, aggregator, cancellationTokenSource);
+            if (skipMessageBus.SkippedTestCount > 0)
+            {
+                result.Failed -= skipMessageBus.SkippedTestCount;
+                result.Skipped += skipMessageBus.SkippedTestCount;
+            }
+
+            return result;
+        }
+    }
+
     /// <summary>Wraps another test case that should be skipped.</summary>
     internal sealed class SkippedTestCase : LongLivedMarshalByRefObject, IXunitTestCase
     {
