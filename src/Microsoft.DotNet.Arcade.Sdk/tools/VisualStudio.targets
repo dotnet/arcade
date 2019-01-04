@@ -63,9 +63,19 @@
       <NgenArchitecture Condition="'%(NgenArchitecture)' == '' and '%(Ngen)' != 'false'">All</NgenArchitecture>
       <NgenPriority Condition="'%(NgenPriority)' == '' and '%(Ngen)' != 'false'">3</NgenPriority>
     </ProjectReference>
+
+    <PackageReference Include="MicroBuild.Plugins.SwixBuild" Version="$(MicroBuildPluginsSwixBuildVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
-  <!-- 
+  <ItemGroup Condition="'$(IsVsixProject)' == 'true'">
+    <PackageReference Include="RoslynTools.ModifyVsixManifest" Version="$(RoslynToolsModifyVsixManifestVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsVsixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true'">
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="$(MicrosoftVSSDKBuildToolsVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
+  </ItemGroup>
+
+  <!--
     Assemblies that are NGEN'd should be loaded to Load context, otherwise NGEN would not work.
     UseCodebase causes assemblies to be loaded to LoadFrom context, so it's incompatible with NGEN setting.
   -->
@@ -183,12 +193,16 @@
           DependsOnTargets="_CalculateSwixBuildOutputs;_WriteComponentStubFile"
           AfterTargets="Build"
           Outputs="$(_SwixBuildOutputs)"
-          Condition="'@(SwrFile)' != ''">
+          Condition="'$(IsSwixProject)' == 'true'">
+
+    <Error Text="Visual Studio insertion component must either have extension.vsixmanifest or specify SwrFile items"
+           Condition="'@(SwrFile)' == ''" />
 
     <PropertyGroup>
       <_SwrProperties>@(SwrProperty)</_SwrProperties>
       <_SwrFiles>@(SwrFile->'%(FullPath)')</_SwrFiles>
     </PropertyGroup>
+
     <ItemGroup>
       <_SwixArgs Include="SwrProperties=$([MSBuild]::Escape($(_SwrProperties)))"/>
       <_SwixArgs Include="SwrFiles=$([MSBuild]::Escape($(_SwrFiles)))"/>

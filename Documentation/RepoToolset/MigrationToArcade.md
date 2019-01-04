@@ -32,7 +32,7 @@ Below is a list of changes required to migrate to Arcade.
 ### New `-publish` build parameter
 A new option `-publish` was added to `build.ps1` script that needs to be set for CI builds. If the repo uses a custom `CIBuild.cmd` pass `-publish` when invoking `build.ps1`. See [CIBuild.cmd](https://github.com/dotnet/symreader/blob/master/eng/common/CIBuild.cmd#L2).
 
-## Arcade.SDK
+## Arcade.SDK 
 
 ### Global.json
 ```
@@ -125,3 +125,8 @@ The following applies to CI build definition, not PR validation build definition
 
 <Target Name="_CorePublish" DependsOnTargets="Publish" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
 ```
+
+## Arcade SDK (19055.1)
+
+- MicroBuildSwixPlugin installation step not required anymore: https://github.com/dotnet/arcade/pull/1692
+- A project that generates pkgdef file but does not produce a VSIX container does _not_ need to include the `Microsoft.VSSDK.BuildTools` PackageReference explicitly anymore.

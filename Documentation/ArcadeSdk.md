@@ -252,6 +252,32 @@ See [DefaultVersions](https://github.com/dotnet/arcade/blob/master/src/Microsoft
 Specify package references to additional tools that are needed for the build.
 These tools are only used for build operations performed outside of the repository solution (such as additional packaging, signing, publishing, etc.).
 
+### /eng/Signing.props (optional)
+
+Customization of Authenticode signing process.
+
+Configurable item groups:
+- `ItemsToSign`
+  List of files to sign in-place. May list individual files to sign (e.g. .dll, .exe, .ps1, etc.) as well as container files (.nupkg, .vsix, .zip, etc.). All files embedded in a container file are signed (recursively) unless specified otherwise.
+- `FileSignInfo`
+  Specifies Authenticode certificate to use to sign files with given file name.
+- `FileExtensionSignInfo`
+  Specifies Authenticode certificate to use to sign files with given extension.
+- `CertificatesSignInfo`
+  Specifies Authenticode certificate properties, such as whether a certificate allows dual signing.
+- `StrongNameSignInfo`
+  Strong Name key to use to sign a specific managed assembly.
+
+Properties:
+- `AllowEmptySignList`
+  True to allow ItemsToSign to be empty (the repository doesn't have any file to sign).
+
+See [Signing.md](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Signing.md#arguments-metadata) for details.
+
+### /eng/Publishing.props (optional)
+
+Customization of publishing process.
+
 ### /eng/AfterSolutionBuild.targets (optional)
 
 Targets executed in a step right after the solution is built.
@@ -260,7 +286,7 @@ Targets executed in a step right after the solution is built.
 
 Targets executed in a step right after artifacts has been signed.
 
-### /global.json, /nuget.config: SDK configuration
+### /global.json, /NuGet.config
 
 `/global.json` file is present and specifies the version of the dotnet and `Microsoft.DotNet.Arcade.Sdk` SDKs.
 
@@ -316,7 +342,7 @@ Optionally, a list of Visual Studio [workload component ids](https://docs.micros
 
 > An improvement in SKD resolver is proposed to be able to specify the feed in `global.json` file to avoid the need for extra configuration in `NuGet.config`. See https://github.com/Microsoft/msbuild/issues/2982.
 
-### /src/Directory.Build.props
+### /Directory.Build.props
 
 `Directory.Build.props` shall import Arcade SDK as shown below. The `Sdk.props` file sets various properties and item groups to default values. It is recommended to perform any customizations _after_ importing the SDK.
 
@@ -331,7 +357,7 @@ It is a common practice to specify properties applicable to all (most) projects 
 </PropertyGroup>
 ```
 
-### Directory.Build.targets
+### /Directory.Build.targets
 
 `Directory.Build.targets` shall import Arcade SDK. It may specify additional targets applicable to all source projects.
 
@@ -370,9 +396,8 @@ Building Visual Studio components is an opt-in feature of the Arcade SDK. Proper
 
 Set `VSSDKTargetPlatformRegRootSuffix` property to specify the root suffix of the VS hive to deploy to.
 
-If `source.extension.vsixmanifest` is present next to a project file the project is by default considered to be a VSIX producing project. 
+If `source.extension.vsixmanifest` is present next to a project file the project is by default considered to be a VSIX producing project (`IsVsixProject` property is set to true). 
 A package reference to `Microsoft.VSSDK.BuildTools` is automatically added to such project. 
-A project that needs `Microsoft.VSSDK.BuildTools` for generating pkgdef file needs to include the PackageReference explicitly.
 
 Arcade SDK include build target for generating VS Template VSIXes. Adding `VSTemplate` items to project will trigger the target.
 
@@ -382,12 +407,15 @@ VSIX packages are built to `VSSetup` directory.
 
 ## Visual Studio Insertion components (optional)
 
-To include the output VSIX of a project in Visual Studio Insertion, set the `VisualStudioInsertionComponent` property.
+Repository that builds VS insertion components must set `VisualStudioDropName` global property (see [Common steps in Azure DevOps pipeline](#common-steps-in-azure-devops-pipeline))
+
+To include the output VSIX of a project in Visual Studio insertion, set the `VisualStudioInsertionComponent` property.
 Multiple VSIXes can specify the same component name, in which case their manifests will be merged into a single insertion unit.
 
 The Visual Studio insertion manifests and VSIXes are generated during Pack task into `VSSetup\Insertion` directory, where they are picked by by MicroBuild Azure DevOps publishing task during official builds.
 
 Arcade SDK also enables building VS Setup Components from .swr files (as opposed to components comprised of one or more VSIXes).
+Projects that set `VisualStudioInsertionComponent` but do not have `source.extension.vsixmanifest` are considered to be _swix projects_ (`IsSwixProject` property is set to true).
 
 Use `SwrProperty` and `SwrFile` items to define a property that will be substituted in .swr files for given value and the set of .swr files, respectively.
 
@@ -429,11 +457,16 @@ folder "InstallDir:MSBuild\Microsoft\VisualStudio\Managed"
   file source="$(VisualStudioXamlRulesDir)Microsoft.Managed.DesignTime.targets"
 ```
 
-## MicroBuild
+## Common steps in Azure DevOps pipeline
 
-The repository shall define a YAML Pipeline that uses MicroBuild (e.g. `azure-pipelines.yml`).
+The steps below assume the following variables to be defined:
 
-The following step shall be included in the definition:
+- `SignType` - the signing type: "real" (default) or "test"
+- `BuildConfiguration` - the build configuration "Debug" or "Release"
+- `OperatingSystemName` - "Windows", "Linux", etc.
+- `VisualStudioDropName` - VS insertion component drop name (if the repository builds these), usually `Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)`
+
+### Signing plugin installation
 
 ```yml
 - task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
@@ -444,15 +477,26 @@ The following step shall be included in the definition:
   condition: and(succeeded(), ne(variables['SignType'], ''))
 ```
 
+### Official build script
+
 ```yml
 - script: eng\common\CIBuild.cmd 
           -configuration $(BuildConfiguration)
           /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+          /p:VisualStudioDropName=$(VisualStudioDropName) # required if repository builds VS insertion components
           /p:DotNetSignType=$(SignType)
           /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
           /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
   displayName: Build
 ```
+
+The Build Pipeline needs to link the following variable group:
+
+- DotNet-Symbol-Publish 
+  - `microsoft-symbol-server-pat`
+  - `symweb-symbol-server-pat`
+
+### Publishing test results
 
 ```yml
 - task: PublishTestResults@1
@@ -462,18 +506,33 @@ The following step shall be included in the definition:
     testResultsFiles: 'artifacts/$(BuildConfiguration)/TestResults/*.xml'
     mergeTestResults: true
     testRunTitle: 'Unit Tests'
-  condition: succeededOrFailed()
+  condition: always()
 ```
 
-The above build steps assume the following variables to be defined:
+### Publishing logs
 
-- `SignType`, which specified the kind signing type: "real" (default) or "test"
+```yml
+- task: PublishBuildArtifacts@1
+    displayName: Publish Logs
+    inputs:
+      PathtoPublish: '$(Build.SourcesDirectory)\artifacts\log\$(BuildConfiguration)'
+      ArtifactName: '$(OperatingSystemName) $(BuildConfiguration)'
+    continueOnError: true
+    condition: not(succeeded())
+```
 
-The Build Pipeline also needs to link the following variable group:
+### Publishing VS insertion artifacts to a drop
 
-- DotNet-Symbol-Publish 
-  - `microsoft-symbol-server-pat`
-  - `symweb-symbol-server-pat`
+This step is required for repositories that build VS insertion components.
+
+```yml
+- task: ms-vseng.MicroBuildTasks.4305a8de-ba66-4d8b-b2d1-0dc4ecbbf5e8.MicroBuildUploadVstsDropFolder@1
+  displayName: Upload VSTS Drop
+  inputs:
+    DropName: $(VisualStudioDropName)
+    DropFolder: 'artifacts\VSSetup\$(BuildConfiguration)\Insertion'
+    condition: succeeded()
+```
 
 ## Project Properties Defined by the SDK
 

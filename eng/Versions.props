@@ -30,6 +30,7 @@
     <MicrosoftNetTestSdkVersion>15.7.2</MicrosoftNetTestSdkVersion>
     <MoqVersion>4.8.3</MoqVersion>
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
+    <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <NuGetVersion>4.4.0</NuGetVersion>
@@ -46,9 +47,9 @@
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.4.1-pre.build.4059</XUnitVersion>
     <XUnitVSRunnerVersion>2.4.1-pre.build.4059</XUnitVSRunnerVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.19051.1</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetMaestroTasksVersion>1.0.0-beta.19051.1</MicrosoftDotNetMaestroTasksVersion>
-    <MicrosoftDotNetSignToolVersion>1.0.0-beta.19051.1</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.19053.2</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.0.0-beta.19053.2</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetSignToolVersion>1.0.0-beta.19053.2</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>

@@ -31,22 +31,6 @@
 
   </Target>
 
-  <Target Name ="PublishPerfRunnerDependencies">
-
-    <PropertyGroup>
-      <TraceEventDir Condition="'$(TraceEventDir)' == ''">$([MSBuild]::NormalizeDirectory('$(RuntimePath)', 'Microsoft.Diagnostics.Tracing.TraceEvent'))</TraceEventDir>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <TraceEventNativeFiles Include="$(TraceEventDir)\**\*.*" />
-    </ItemGroup>
-
-    <Copy SourceFiles="@(TraceEventNativeFiles)"
-          DestinationFiles="@(TraceEventNativeFiles -> '$([MSBuild]::NormalizePath('$(TestPath)', '%(RecursiveDir)', '%(Filename)%(Extension)'))')"
-          SkipUnchangedFiles="true" />
-  
-  </Target>
-
   <!-- Use arcade's perf test target name. -->
   <Target Name="PerformanceTest" DependsOnTargets="Test" />
 
