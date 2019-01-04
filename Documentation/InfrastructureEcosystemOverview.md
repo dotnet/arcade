@@ -146,7 +146,7 @@ Specific infrastructure ecosystem requirements are implied from the set of produ
     - CI/Build Automation
      - Dependency Flow Automation
      - Repository contracts
-- **All automation should be instrumented** – Infrastructure systems must be reliable, and instrumentation is also used to ensure that reporting and quality assesements are available for all components.
+- **All automation should be instrumented** – Infrastructure systems must be reliable, and instrumentation is also used to ensure that reporting and quality assessments are available for all components.
   - Implements Requirements
     - All
   - Affects Components
