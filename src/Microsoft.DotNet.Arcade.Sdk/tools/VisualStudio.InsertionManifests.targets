@@ -22,6 +22,11 @@
       <_ComponentName>$(_ComponentDir.TrimEnd('\'))</_ComponentName>
     </PropertyGroup>
 
+    <Message Text="Generating manifest for VS component '$(_ComponentName)'" Importance="high"/>
+
+    <Error Condition="'$(VisualStudioDropName)' == '' and '$(OfficialBuild)' == 'true'"
+           Text="Property VisualStudioDropName must be specified in official build that produces Visual Studio insertion components." />
+
     <ItemGroup>
       <_Args Include="OfficialBuild=$(OfficialBuild)" />
       <_Args Include="ComponentName=$(_ComponentName)"/>
@@ -29,9 +34,8 @@
       <_Args Include="ComponentIntermediateOutputPath=$(VisualStudioSetupIntermediateOutputPath)$(_ComponentName)\"/>
       <_Args Include="SwixBuildPath=$(NuGetPackageRoot)microbuild.plugins.swixbuild\$(MicroBuildPluginsSwixBuildVersion)\"/>
       <_Args Include="ManifestBuildVersion=$(VsixVersion)" />
+      <_Args Include="VisualStudioDropName=$(VisualStudioDropName)" />
     </ItemGroup>
-
-    <Message Text="Generating manifest for VS component '$(_ComponentName)'" Importance="high"/>
 
     <MSBuild Projects="VisualStudio.SetupPackage.vsmanproj" Properties="@(_Args)"/>
   </Target>
