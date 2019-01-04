@@ -7,7 +7,7 @@
     <TestsSuccessfulSemaphoreName>performance.passed</TestsSuccessfulSemaphoreName>
 
     <!-- Validate configurations and fail early if conditions are not met. -->
-    <RunTestsDependsOn>ValidatePerfConfigurations;$(RunTestsDependsOn);PublishPerfRunnerDependencies;</RunTestsDependsOn>
+    <RunTestsDependsOn>ValidatePerfConfigurations;$(RunTestsDependsOn);</RunTestsDependsOn>
   </PropertyGroup>
 
   <ItemGroup>
