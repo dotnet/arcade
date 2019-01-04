@@ -381,7 +381,7 @@ VSIX packages are built to `VSSetup` directory.
 
 ## Visual Studio Insertion components (optional)
 
-Repository that builds VS insertion components must set `VisualStudioDropName` global property (see [Common steps in Azure DevOps pipeline](Common-steps-in-Azure-DevOps-pipeline))
+Repository that builds VS insertion components must set `VisualStudioDropName` global property (see [Common steps in Azure DevOps pipeline](common-steps-in-azure-devops-pipeline))
 
 To include the output VSIX of a project in Visual Studio insertion, set the `VisualStudioInsertionComponent` property.
 Multiple VSIXes can specify the same component name, in which case their manifests will be merged into a single insertion unit.
