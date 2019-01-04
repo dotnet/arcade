@@ -252,6 +252,32 @@ See [DefaultVersions](https://github.com/dotnet/arcade/blob/master/src/Microsoft
 Specify package references to additional tools that are needed for the build.
 These tools are only used for build operations performed outside of the repository solution (such as additional packaging, signing, publishing, etc.).
 
+### /eng/Signing.props (optional)
+
+Customization of Authenticode signing process.
+
+Configurable item groups:
+- `ItemsToSign`
+  List of files to sign in-place. May list individual files to sign (e.g. .dll, .exe, .ps1, etc.) as well as container files (.nupkg, .vsix, .zip, etc.). All files embedded in a container file are signed (recursively) unless specified otherwise.
+- `FileSignInfo`
+  Specifies Authenticode certificate to use to sign files with given file name.
+- `FileExtensionSignInfo`
+  Specifies Authenticode certificate to use to sign files with given extension.
+- `CertificatesSignInfo`
+  Specifies Authenticode certificate properties, such as whether a certificate allows dual signing.
+- `StrongNameSignInfo`
+  Strong Name key to use to sign a specific managed assembly.
+
+Properties:
+- `AllowEmptySignList`
+  True to allow ItemsToSign to be empty (the repository doesn't have any file to sign).
+
+See [Signing.md](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Signing.md#arguments-metadata) for details.
+
+### /eng/Publishing.props (optional)
+
+Customization of publishing process.
+
 ### /eng/AfterSolutionBuild.targets (optional)
 
 Targets executed in a step right after the solution is built.
@@ -260,7 +286,7 @@ Targets executed in a step right after the solution is built.
 
 Targets executed in a step right after artifacts has been signed.
 
-### /global.json, /NuGet.config: SDK configuration
+### /global.json, /NuGet.config
 
 `/global.json` file is present and specifies the version of the dotnet and `Microsoft.DotNet.Arcade.Sdk` SDKs.
 
@@ -316,7 +342,7 @@ Optionally, a list of Visual Studio [workload component ids](https://docs.micros
 
 > An improvement in SKD resolver is proposed to be able to specify the feed in `global.json` file to avoid the need for extra configuration in `NuGet.config`. See https://github.com/Microsoft/msbuild/issues/2982.
 
-### /src/Directory.Build.props
+### /Directory.Build.props
 
 `Directory.Build.props` shall import Arcade SDK as shown below. The `Sdk.props` file sets various properties and item groups to default values. It is recommended to perform any customizations _after_ importing the SDK.
 
@@ -331,7 +357,7 @@ It is a common practice to specify properties applicable to all (most) projects 
 </PropertyGroup>
 ```
 
-### Directory.Build.targets
+### /Directory.Build.targets
 
 `Directory.Build.targets` shall import Arcade SDK. It may specify additional targets applicable to all source projects.
 
