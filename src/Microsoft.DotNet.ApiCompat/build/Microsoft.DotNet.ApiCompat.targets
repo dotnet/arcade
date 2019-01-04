@@ -54,10 +54,10 @@
 
     <PropertyGroup>
       <ApiCompatArgs>$(ApiCompatArgs) "$(ReferenceAssembly)"</ApiCompatArgs>
-      <ApiCompatArgs>$(ApiCompatArgs) --contractDepends "@(_ContractDependencyDirectories, ','),"</ApiCompatArgs>
-      <ApiCompatArgs>$(ApiCompatArgs) --implDirs "$(IntermediateOutputPath),@(_DependencyDirectories, ','),"</ApiCompatArgs>
-      <ApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(ApiCompatArgs) --excludeAttributes "$(ApiCompatExcludeAttributeList)"</ApiCompatArgs>
-      <ApiCompatArgs Condition="'$(ApiCompatEnforceOptionalRules)' == 'true'">$(ApiCompatArgs) --enforceOptionalRules</ApiCompatArgs>
+      <ApiCompatArgs>$(ApiCompatArgs) --contract-depends "@(_ContractDependencyDirectories, ','),"</ApiCompatArgs>
+      <ApiCompatArgs>$(ApiCompatArgs) --impl-dirs "$(IntermediateOutputPath),@(_DependencyDirectories, ','),"</ApiCompatArgs>
+      <ApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(ApiCompatArgs) --exclude-attributes "$(ApiCompatExcludeAttributeList)"</ApiCompatArgs>
+      <ApiCompatArgs Condition="'$(ApiCompatEnforceOptionalRules)' == 'true'">$(ApiCompatArgs) --enforce-optional-rules</ApiCompatArgs>
       <ApiCompatArgs Condition="'$(BaselineAllAPICompatError)' != 'true' and Exists('$(ApiCompatBaseline)')">$(ApiCompatArgs) --baseline "$(ApiCompatBaseline)"</ApiCompatArgs>
       <ApiCompatBaselineAll Condition="'$(BaselineAllAPICompatError)' == 'true'">&gt; $(ApiCompatBaseline)</ApiCompatBaselineAll>
       <ApiCompatExitCode>0</ApiCompatExitCode>
@@ -104,12 +104,12 @@
 
     <PropertyGroup>
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) "$(ImplemetnationAssemblyAsContract)"</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --contractDepends "@(_ContractDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) -lhs implementation</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --implDirs:"@(_ImplementationDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) -rhs reference</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(MatchingRefApiCompatArgs) --excludeAttributes "$(ApiCompatExcludeAttributeList)"</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs Condition="'$(ApiCompatEnforceOptionalRules)' == 'true'">$(MatchingRefApiCompatArgs) --enforceOptionalRules</MatchingRefApiCompatArgs>
+      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --contract-depends "@(_ContractDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
+      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --left-operand implementation</MatchingRefApiCompatArgs>
+      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --impl-dirs:"@(_ImplementationDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
+      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --right-operand reference</MatchingRefApiCompatArgs>
+      <MatchingRefApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(MatchingRefApiCompatArgs) --exclude-attributes "$(ApiCompatExcludeAttributeList)"</MatchingRefApiCompatArgs>
+      <MatchingRefApiCompatArgs Condition="'$(ApiCompatEnforceOptionalRules)' == 'true'">$(MatchingRefApiCompatArgs) --enforce-optional-rules</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs Condition="'$(BaselineAllMatchingRefApiCompatError)' != 'true' and Exists('$(MatchingRefApiCompatBaseline)')">$(MatchingRefApiCompatArgs) --baseline "$(MatchingRefApiCompatBaseline)"</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatBaselineAll Condition="'$(BaselineAllMatchingRefApiCompatError)' == 'true'">&gt; $(MatchingRefApiCompatBaseline)</MatchingRefApiCompatBaselineAll>
 

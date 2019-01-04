@@ -37,26 +37,26 @@ namespace Microsoft.DotNet.ApiCompat
 
             CommandArgument contracts = app.Argument("contracts", "Comma delimited list of assemblies or directories of assemblies for all the contract assemblies.");
             contracts.IsRequired();
-            CommandOption implDirs = app.Option("--implDirs", "Comma delimited list of directories to find the implementation assemblies for each contract assembly.", CommandOptionType.SingleValue);
+            CommandOption implDirs = app.Option("-i|--impl-dirs", "Comma delimited list of directories to find the implementation assemblies for each contract assembly.", CommandOptionType.SingleValue);
             implDirs.IsRequired(allowEmptyStrings: true);
-            CommandOption listRules = app.Option("--listRules", "Outputs all the rules. If this options is supplied all other options are ignored.", CommandOptionType.NoValue);
-            CommandOption baseline = app.Option("--baseline", "Baseline file to skip known diffs.", CommandOptionType.SingleValue);
-            CommandOption remapFile = app.Option("--remapFile", "File with a list of type and/or namespace remappings to consider apply to names while diffing.", CommandOptionType.SingleValue);
-            CommandOption skipGroupByAssembly = app.Option("--skipGroupByAssembly", "Skip grouping the differences by assembly instead of flattening the namespaces.", CommandOptionType.NoValue);
-            CommandOption skipUnifyToLibPath = app.Option("--skipUnifyToLibPath", "Skip unifying the assembly references to the loaded assemblies and the assemblies found in the given directories (contractDepends and implDirs).", CommandOptionType.NoValue);
-            CommandOption outFilePath = app.Option("--out", "Output file path. Default is the console.", CommandOptionType.SingleValue);
-            CommandOption resolveFx = app.Option("--resolveFx", "If a contract or implementation dependency cannot be found in the given directories, fallback to try to resolve against the framework directory on the machine.", CommandOptionType.NoValue);
-            CommandOption contractDepends = app.Option("--contractDepends", "Comma delimited list of directories used to resolve the dependencies of the contract assemblies.", CommandOptionType.SingleValue);
-            CommandOption contractCoreAssembly = app.Option("--contractCoreAssembly", "Simple name for the core assembly to use.", CommandOptionType.SingleValue);
-            CommandOption ignoreDesignTimeFacades = app.Option("-idtf|--ignoreDesignTimeFacades", "Ignore design time facades in the contract set while analyzing.", CommandOptionType.NoValue);
-            CommandOption warnOnIncorrectVersion = app.Option("--warnOnIncorrectVersion", "Warn if the contract version number doesn't match the found implementation version number.", CommandOptionType.NoValue);
-            CommandOption warnOnMissingAssemblies = app.Option("--warnOnMissingAssemblies", "Warn if the contract assembly cannot be found in the implementation directories. Default is to error and not do anlysis.", CommandOptionType.NoValue);
-            CommandOption mdil = app.Option("--mdil", "Enforce MDIL servicing rules in addition to IL rules.", CommandOptionType.NoValue);
-            CommandOption excludeNonBrowsable = app.Option("-enb|--excludeNonBrowsable", "When MDIL servicing rules are not being enforced, exclude validation on types that are marked with EditorBrowsable(EditorBrowsableState.Never).", CommandOptionType.NoValue);
-            CommandOption leftOperand = app.Option("-lhs|--leftOperand", "Name for left operand in comparison, default is 'contract'.", CommandOptionType.SingleValue);
-            CommandOption rightOperand = app.Option("-rhs|--rightOperand", "Name for right operand in comparison, default is 'implementation'.", CommandOptionType.SingleValue);
-            CommandOption excludeAttributes = app.Option("--excludeAttributes", "Specify a api list in the DocId format of which attributes to exclude.", CommandOptionType.SingleValue);
-            CommandOption enforceOptionalRules = app.Option("--enforceOptionalRules", "Enforce optional rules, in addition to the mandatory set of rules.", CommandOptionType.NoValue);
+            CommandOption baseline = app.Option("-b|--baseline", "Baseline file to skip known diffs.", CommandOptionType.SingleValue);
+            CommandOption mdil = app.Option("-m|--mdil", "Enforce MDIL servicing rules in addition to IL rules.", CommandOptionType.NoValue);
+            CommandOption outFilePath = app.Option("-o|--out", "Output file path. Default is the console.", CommandOptionType.SingleValue);
+            CommandOption leftOperand = app.Option("-l|--left-operand", "Name for left operand in comparison, default is 'contract'.", CommandOptionType.SingleValue);
+            CommandOption rightOperand = app.Option("-r|--right-operand", "Name for right operand in comparison, default is 'implementation'.", CommandOptionType.SingleValue);
+            CommandOption listRules = app.Option("--list-rules", "Outputs all the rules. If this options is supplied all other options are ignored.", CommandOptionType.NoValue);
+            CommandOption remapFile = app.Option("--remap-file", "File with a list of type and/or namespace remappings to consider apply to names while diffing.", CommandOptionType.SingleValue);
+            CommandOption skipGroupByAssembly = app.Option("--skip-group-by-assembly", "Skip grouping the differences by assembly instead of flattening the namespaces.", CommandOptionType.NoValue);
+            CommandOption skipUnifyToLibPath = app.Option("--skip-unify-to-lib-path", "Skip unifying the assembly references to the loaded assemblies and the assemblies found in the given directories (contractDepends and implDirs).", CommandOptionType.NoValue);
+            CommandOption resolveFx = app.Option("--resolve-fx", "If a contract or implementation dependency cannot be found in the given directories, fallback to try to resolve against the framework directory on the machine.", CommandOptionType.NoValue);
+            CommandOption contractDepends = app.Option("--contract-depends", "Comma delimited list of directories used to resolve the dependencies of the contract assemblies.", CommandOptionType.SingleValue);
+            CommandOption contractCoreAssembly = app.Option("--contract-core-assembly", "Simple name for the core assembly to use.", CommandOptionType.SingleValue);
+            CommandOption ignoreDesignTimeFacades = app.Option("--ignore-design-time-facades", "Ignore design time facades in the contract set while analyzing.", CommandOptionType.NoValue);
+            CommandOption warnOnIncorrectVersion = app.Option("--warn-on-incorrect-version", "Warn if the contract version number doesn't match the found implementation version number.", CommandOptionType.NoValue);
+            CommandOption warnOnMissingAssemblies = app.Option("--warn-on-missing-assemblies", "Warn if the contract assembly cannot be found in the implementation directories. Default is to error and not do anlysis.", CommandOptionType.NoValue);
+            CommandOption excludeNonBrowsable = app.Option("--exclude-non-browsable", "When MDIL servicing rules are not being enforced, exclude validation on types that are marked with EditorBrowsable(EditorBrowsableState.Never).", CommandOptionType.NoValue);
+            CommandOption excludeAttributes = app.Option("--exclude-attributes", "Specify a api list in the DocId format of which attributes to exclude.", CommandOptionType.SingleValue);
+            CommandOption enforceOptionalRules = app.Option("--enforce-optional-rules", "Enforce optional rules, in addition to the mandatory set of rules.", CommandOptionType.NoValue);
 
             app.OnExecute(() =>
             {

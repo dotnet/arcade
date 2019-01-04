@@ -40,7 +40,7 @@
       <_referencePathDirectories Include="%(_referencePathDirectoriesWithDuplicates.Identity)" />
     </ItemGroup>
 
-    <Exec Command="$(_GenAPICommand) &quot;$(TargetPath)&quot; --libPath &quot;@(_referencePathDirectories)&quot; --out &quot;$(GenAPITargetPath)&quot; $(GenAPIAdditionalParameters)" />
+    <Exec Command="$(_GenAPICommand) &quot;$(TargetPath)&quot; --lib-path &quot;@(_referencePathDirectories)&quot; --out &quot;$(GenAPITargetPath)&quot; $(GenAPIAdditionalParameters)" />
 
     <ItemGroup>
       <FileWrites Include="$(GenAPITargetPath)"/>
@@ -80,7 +80,7 @@
 
     <PropertyGroup>
       <GenAPIArgs>"%(ResolvedMatchingContract.Identity)"</GenAPIArgs>
-      <GenAPIArgs>$(GenAPIArgs) --libPath "@(_referencePathDirectories)"</GenAPIArgs>
+      <GenAPIArgs>$(GenAPIArgs) --lib-path "@(_referencePathDirectories)"</GenAPIArgs>
       <GenAPIArgs>$(GenAPIArgs) --out "$(NotSupportedSourceFile)"</GenAPIArgs>
       <GenAPIArgs Condition="'$(GeneratePlatformNotSupportedAssembly)' == 'true' or '$(GeneratePlatformNotSupportedAssemblyMessage)' != ''">$(GenAPIArgs) --throw "$(GeneratePlatformNotSupportedAssemblyMessage)"</GenAPIArgs>
       <GenAPIArgs Condition="'$(GeneratePlatformNotSupportedAssemblyWithGlobalPrefix)' == 'true'">$(GenAPIArgs) --global</GenAPIArgs>

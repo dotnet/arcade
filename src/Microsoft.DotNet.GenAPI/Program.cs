@@ -30,24 +30,24 @@ namespace Microsoft.DotNet.GenAPI
 
             CommandArgument assemblyArg = app.Argument("assembly", "Path for an specific assembly or a directory to get all assemblies.");
             assemblyArg.IsRequired();
-            CommandOption libPath = app.Option("--libPath", "Delimited (',' or ';') set of paths to use for resolving assembly references", CommandOptionType.SingleValue);
-            CommandOption apiList = app.Option("-al|--apiList", "Specify a api list in the DocId format of which APIs to include.", CommandOptionType.SingleValue);
-            CommandOption excludeApiList = app.Option("-xal|--excludeApiList", "Specify a api list in the DocId format of which APIs to exclude.", CommandOptionType.SingleValue);
-            CommandOption excludeAttributesList = app.Option("--excludeAttributesList", "Specify a list in the DocId format of which attributes should be excluded from being applied on apis.", CommandOptionType.SingleValue);
+            CommandOption libPath = app.Option("-l|--lib-path", "Delimited (',' or ';') set of paths to use for resolving assembly references", CommandOptionType.SingleValue);
+            CommandOption apiList = app.Option("-a|--api-list", "Specify a api list in the DocId format of which APIs to include.", CommandOptionType.SingleValue);
+            CommandOption outFilePath = app.Option("-o|--out", "Output path. Default is the console. Can specify an existing directory as well and then a file will be created for each assembly with the matching name of the assembly.", CommandOptionType.SingleValue);
+            CommandOption headerFile = app.Option("-h|--header-file", "Specify a file with header content to prepend to output.", CommandOptionType.SingleValue);
             CommandOption<WriterType> writerType = app.Option<WriterType>("-w|--writer", "Specify the writer type to use. Legal values: CSDecl, DocIds, TypeForwards, TypeList. Default is CSDecl.", CommandOptionType.SingleValue);
             CommandOption<SyntaxWriterType> syntaxWriterType = app.Option<SyntaxWriterType>("-s|--syntax", "Specific the syntax writer type. Only used if the writer is CSDecl. Legal values: Text, Html, Xml. Default is Text.", CommandOptionType.SingleValue);
-            CommandOption outFilePath = app.Option("--out", "Output path. Default is the console. Can specify an existing directory as well and then a file will be created for each assembly with the matching name of the assembly.", CommandOptionType.SingleValue);
-            CommandOption headerFile = app.Option("-h|--headerFile", "Specify a file with header content to prepend to output.", CommandOptionType.SingleValue);
-            CommandOption apiOnly = app.Option("-api|--apiOnly", "[CSDecl] Include only API's not CS code that compiles.", CommandOptionType.NoValue);
-            CommandOption all = app.Option("--all", "Include all API's not just public APIs. Default is public only.", CommandOptionType.NoValue);
-            CommandOption memberHeadings = app.Option("-mh|--memberHeadings", "[CSDecl] Include member headings for each type of member.", CommandOptionType.NoValue);
-            CommandOption hightlightBaseMembers = app.Option("-hbm|--hightlightBaseMembers", "[CSDecl] Highlight overridden base members.", CommandOptionType.NoValue);
-            CommandOption hightlightInterfaceMembers = app.Option("-him|--hightlightInterfaceMembers", "[CSDecl] Highlight interface implementation members.", CommandOptionType.NoValue);
+            CommandOption<DocIdKinds> docIdKinds = app.Option<DocIdKinds>("-d|--doc-id-kinds", "Only include API of the specified kinds. Legal values: A, Assembly, Namespace, N, T, Type, Field, F, P, Property, Method, M, Event, E, All. Default is All.", CommandOptionType.SingleValue);
             CommandOption exceptionMessage = app.Option("-t|--throw", "Method bodies should throw PlatformNotSupportedException.", CommandOptionType.SingleValue);
             CommandOption globalPrefix = app.Option("-g|--global", "Include global prefix for compilation.", CommandOptionType.NoValue);
-            CommandOption alwaysIncludeBase = app.Option("-aib|--alwaysIncludeBase", "[CSDecl] Include base types, interfaces, and attributes, even when those types are filtered.", CommandOptionType.NoValue);
-            CommandOption excludeMembers = app.Option("-em|--excludeMembers", "Exclude members when return value or parameter types are excluded.", CommandOptionType.NoValue);
-            CommandOption<DocIdKinds> docIdKinds = app.Option<DocIdKinds>("-dk|--docIdKinds", "Only include API of the specified kinds. Legal values: A, Assembly, Namespace, N, T, Type, Field, F, P, Property, Method, M, Event, E, All. Default is All.", CommandOptionType.SingleValue);
+            CommandOption excludeApiList = app.Option("--exclude-api-list", "Specify a api list in the DocId format of which APIs to exclude.", CommandOptionType.SingleValue);
+            CommandOption excludeAttributesList = app.Option("--exclude-attributes-list", "Specify a list in the DocId format of which attributes should be excluded from being applied on apis.", CommandOptionType.SingleValue);
+            CommandOption apiOnly = app.Option("--api-only", "[CSDecl] Include only API's not CS code that compiles.", CommandOptionType.NoValue);
+            CommandOption all = app.Option("--all", "Include all API's not just public APIs. Default is public only.", CommandOptionType.NoValue);
+            CommandOption memberHeadings = app.Option("--member-headings", "[CSDecl] Include member headings for each type of member.", CommandOptionType.NoValue);
+            CommandOption hightlightBaseMembers = app.Option("--hightlight-base-members", "[CSDecl] Highlight overridden base members.", CommandOptionType.NoValue);
+            CommandOption hightlightInterfaceMembers = app.Option("--hightlight-interface-members", "[CSDecl] Highlight interface implementation members.", CommandOptionType.NoValue);
+            CommandOption alwaysIncludeBase = app.Option("--always-include-base", "[CSDecl] Include base types, interfaces, and attributes, even when those types are filtered.", CommandOptionType.NoValue);
+            CommandOption excludeMembers = app.Option("--exclude-members", "Exclude members when return value or parameter types are excluded.", CommandOptionType.NoValue);
 
             app.OnExecute(() =>
             {
