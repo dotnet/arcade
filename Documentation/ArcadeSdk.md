@@ -531,7 +531,7 @@ This step is required for repositories that build VS insertion components.
   inputs:
     DropName: $(VisualStudioDropName)
     DropFolder: 'artifacts\VSSetup\$(BuildConfiguration)\Insertion'
-    condition: succeeded()
+  condition: succeeded()
 ```
 
 ## Project Properties Defined by the SDK
