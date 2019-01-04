@@ -137,7 +137,7 @@ namespace Microsoft.DotNet.GenAPI
 
         private static string GetHeaderText(string headerFile)
         {
-            if (!string.IsNullOrEmpty(headerFile))
+            if (string.IsNullOrEmpty(headerFile))
             {
                 return null;
             }
