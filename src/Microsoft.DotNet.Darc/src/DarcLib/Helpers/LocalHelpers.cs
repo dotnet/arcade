@@ -30,6 +30,13 @@ namespace Microsoft.DotNet.DarcLib.Helpers
                 }
             }
 
+            // Split this by newline in case where are multiple paths;
+            int newlineIndex = editor.IndexOf(System.Environment.NewLine);
+            if (newlineIndex != -1)
+            {
+                editor = editor.Substring(0, newlineIndex);
+            }
+
             return editor;
         }
 
@@ -105,11 +112,6 @@ namespace Microsoft.DotNet.DarcLib.Helpers
                     output = process.StandardOutput.ReadToEnd().Trim();
 
                     process.WaitForExit();
-                }
-
-                if (string.IsNullOrEmpty(output))
-                {
-                    logger.LogError($"There was an error while running git.exe {arguments}");
                 }
             }
             catch (Exception exc)

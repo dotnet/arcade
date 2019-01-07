@@ -66,6 +66,8 @@
     <PropertyGroup>
       <HelixPostCommands Condition="$(IsPosixShell)">$(HelixPostCommands);$HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/xunit-reporter.py</HelixPostCommands>
       <HelixPostCommands Condition="!$(IsPosixShell)">$(HelixPostCommands);%HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\xunit-reporter.py</HelixPostCommands>
+
+      <MaxRetryCount Condition="'$(MaxRetryCount)' == ''">0</MaxRetryCount>
     </PropertyGroup>
   </Target>
 
@@ -85,8 +87,11 @@
                   Build="$(HelixBuild)"
                   TargetQueue="$(HelixTargetQueue)"
                   IsPosixShell="$(IsPosixShell)"
+                  IsExternal="$(IsExternal)"
+                  Creator="$(Creator)"
                   BaseUri="$(HelixBaseUri)"
                   AccessToken="$(HelixAccessToken)"
+                  MaxRetryCount="$(MaxRetryCount)"
                   PreCommands="$(HelixPreCommands)"
                   PostCommands="$(HelixPostCommands)"
                   CorrelationPayloads="@(HelixCorrelationPayload)"

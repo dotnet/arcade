@@ -20,7 +20,8 @@
   </Target>
 
   <Target Name="StopTestRuns"
-          AfterTargets="Wait">
+          AfterTargets="Wait"
+          Condition="$(WaitForWorkItemCompletion)">
     <StopAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)">
     </StopAzurePipelinesTestRun>
   </Target>

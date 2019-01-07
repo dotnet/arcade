@@ -7,6 +7,7 @@ using Microsoft.DotNet.Helix.Client;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.HelixPoolProvider.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Rest;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -93,7 +94,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
                     .WithType(string.Empty)
                     .WithBuild("1.0")
                     .WithTargetQueue(_queueInfo.QueueId)
-                    .WithCreator(string.Empty)
+                    .WithCreator(_configuration.HelixCreator)
                     .WithContainerName(_configuration.ContainerName)
                     .WithCorrelationPayloadUris(AgentPayloadUri)
                     .WithStorageAccountConnectionString(_configuration.ConnectionString)
@@ -110,13 +111,21 @@ namespace Microsoft.DotNet.HelixPoolProvider
                 return new AgentInfoItem()
                 {
                     accepted = true,
-                    agentData = new AgentDataItem() { correlationId = job.CorrelationId, queueId = _queueInfo.QueueId, workItemId = _agentRequestItem.agentId }
+                    agentData = new AgentDataItem() { correlationId = job.CorrelationId,
+                                                      queueId = _queueInfo.QueueId,
+                                                      workItemId = _agentRequestItem.agentId,
+                                                      isPublicQueue = !_queueInfo.IsInternalOnly.Value }
                 };
+            }
+            catch (HttpOperationException e)
+            {
+                _logger.LogError(e, $"Failed to submit new Helix job to queue {_queueInfo.QueueId} for agent id {_agentRequestItem.agentId}: {e.Response.Content}");
+
+                return new AgentInfoItem() { accepted = false };
             }
             catch (Exception e)
             {
-                _logger.LogError($"Failed to submit new Helix job to queue {_queueInfo.QueueId} for agent id {_agentRequestItem.agentId}:");
-                _logger.LogError(e.ToString());
+                _logger.LogError(e, $"Failed to submit new Helix job to queue {_queueInfo.QueueId} for agent id {_agentRequestItem.agentId}");
 
                 // TODO Add extra info into the agent info item blob
                 return new AgentInfoItem() { accepted = false };

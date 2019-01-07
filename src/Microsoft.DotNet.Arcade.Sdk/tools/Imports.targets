@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition="'$(ImportNetSdkFromRepoToolset)' == 'true'" />
-  
+  <!--
+    Import NuGet targets to WPF temp projects (workaround for https://github.com/dotnet/sourcelink/issues/91) 
+  -->
+  <Import Project="$(_WpfTempProjectNuGetFilePathNoExt).targets" Condition="'$(_WpfTempProjectNuGetFilePathNoExt)' != '' and Exists('$(_WpfTempProjectNuGetFilePathNoExt).targets')"/>
+
   <PropertyGroup>
     <DeployProjectOutput Condition="'$(DeployProjectOutput)' == ''">$(__DeployProjectOutput)</DeployProjectOutput>
     
@@ -30,6 +33,9 @@
 
     <PackageOutputPath Condition="'$(IsShipping)' == 'true'">$(ArtifactsShippingPackagesDir)</PackageOutputPath>
     <PackageOutputPath Condition="'$(IsShipping)' != 'true'">$(ArtifactsNonShippingPackagesDir)</PackageOutputPath>
+
+    <IsSwixProject>false</IsSwixProject>
+    <IsSwixProject Condition="'$(VisualStudioInsertionComponent)' != '' and '$(IsVsixProject)' != 'true'">true</IsSwixProject>
   </PropertyGroup>
 
   <Import Project="StrongName.targets"/>
@@ -42,15 +48,8 @@
 
   <Import Project="Performance.targets" Condition="'$(DisableArcadeTestFramework)' != 'true'" />
   <Import Project="Localization.targets" Condition="'$(UsingToolXliff)' == 'true'"/>
-  <Import Project="VisualStudio.targets" Condition="'$(UsingToolVSSDK)' == 'true' and '$(DesignTimeBuild)' != 'true' and '$(BuildingForLiveUnitTesting)' != 'true' and '$(MSBuildRuntimeType)' != 'Core'"/>
+  <Import Project="VisualStudio.targets" Condition="'$(UsingToolVSSDK)' == 'true' and ('$(IsVsixProject)' == 'true' or '$(IsSwixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true') and '$(DesignTimeBuild)' != 'true' and '$(BuildingForLiveUnitTesting)' != 'true' and '$(MSBuildRuntimeType)' != 'Core'"/>
   <Import Project="OptimizationData.targets" Condition="'$(UsingToolIbcOptimization)' == 'true' and '$(IbcOptimizationDataDir)' != ''"/>
   <Import Project="SymStore.targets" Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OS)' == 'Windows_NT'"/>
-
-  <!--
-    By default the SDK sets RootNamespace to the name of the project. Clear it here to avoid prefixing our namespaces.
-  -->
-  <PropertyGroup Condition="'$(Language)' == 'VB'">
-    <RootNamespace />
-  </PropertyGroup>
 
 </Project>

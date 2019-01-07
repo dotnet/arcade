@@ -357,10 +357,10 @@ namespace Microsoft.DotNet.SignTool.Tests
             },
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "lib/netcoreapp2.0/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "CC1D99EE8C2F627E77D019E94B06EBB6D87A4D19E65DDAEF62B6137E49167BAF", "lib/netcoreapp2.1/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''."
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "3", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "5", "lib/netcoreapp2.0/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp2.1/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 
@@ -398,7 +398,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             }, 
             expectedWarnings: new[] 
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "9F8CCEE4CECF286C80916F13EAB8DF1FC6C9BED5F81E3AFF26747C008D265E5C", "lib/netcoreapp2.0/ContainerOne.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''."
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "4", "lib/netcoreapp2.0/ContainerOne.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 
@@ -532,36 +532,36 @@ namespace Microsoft.DotNet.SignTool.Tests
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3D4466713FF60CA2747166CD22B097B67DAFC7F3487B7F7725945502D66D0B65", "lib/native/NativeLibrary.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "lib/net461/ProjectOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3", "lib/net461/ProjectOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "9F8CCEE4CECF286C80916F13EAB8DF1FC6C9BED5F81E3AFF26747C008D265E5C", "lib/netcoreapp2.0/ContainerTwo.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "4", "lib/netcoreapp2.0/ContainerTwo.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "lib/netcoreapp2.0/ProjectOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "5", "lib/netcoreapp2.0/ProjectOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "CC1D99EE8C2F627E77D019E94B06EBB6D87A4D19E65DDAEF62B6137E49167BAF", "lib/netcoreapp2.1/ProjectOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp2.1/ProjectOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "lib/netstandard2.0/ProjectOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/netstandard2.0/ProjectOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "9F8CCEE4CECF286C80916F13EAB8DF1FC6C9BED5F81E3AFF26747C008D265E5C", "lib/netcoreapp2.0/ContainerOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "9", "lib/netcoreapp2.0/ContainerOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "19C85C55CB56D9A2533A53A9654D4FDF4B4AEF60A7760DB872CE895EB9B48825", "ContainerOne.1.0.0.nupkg")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8", "ContainerOne.1.0.0.nupkg")}"">
   <Authenticode>NuGet</Authenticode>
 </FilesToSign>",
 
@@ -594,16 +594,24 @@ $@"
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'test.zip' Certificate=''",
             });
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3D4466713FF60CA2747166CD22B097B67DAFC7F3487B7F7725945502D66D0B65", "NativeLibrary.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "FD4596180FC1AB63B2D6A9C6E4086CC15891E41E34F835B593C3879CECAA86B6", "SOS.NETCore.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "1", "SOS.NETCore.dll")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll")}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
 "
@@ -637,7 +645,7 @@ $@"
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "VisualStudio.Mac.Banana.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "1", "VisualStudio.Mac.Banana.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
 </FilesToSign>
 "
@@ -673,27 +681,27 @@ $@"
             },
             new[]
             {
-                $"{Path.Combine(_tmpDir, "ContainerSigning", "8CE04F803804FF47F7F96E6D993262E295456CE7A11D65E81530DC030C8BB03C", "PackageWithRelationships.vsix")} -> {Path.Combine(_tmpDir, "PackageWithRelationships.vsix")}"
+                $"{Path.Combine(_tmpDir, "ContainerSigning", "6", "PackageWithRelationships.vsix")} -> {Path.Combine(_tmpDir, "PackageWithRelationships.vsix")}"
             });
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "lib/net461/ProjectOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "1", "lib/net461/ProjectOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "lib/netstandard2.0/ProjectOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/netstandard2.0/ProjectOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8CE04F803804FF47F7F96E6D993262E295456CE7A11D65E81530DC030C8BB03C", "PackageWithRelationships.vsix")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "6", "PackageWithRelationships.vsix")}"">
   <Authenticode>VsixSHA2</Authenticode>
 </FilesToSign>",
 
@@ -736,15 +744,15 @@ $@"
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "lib/net461/ProjectOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/net461/ProjectOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "lib/netstandard2.0/ProjectOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8", "lib/netstandard2.0/ProjectOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
@@ -798,15 +806,15 @@ $@"
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "lib/net461/ProjectOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/net461/ProjectOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "lib/netstandard2.0/ProjectOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8", "lib/netstandard2.0/ProjectOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
@@ -851,7 +859,7 @@ $@"
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
@@ -1043,10 +1051,10 @@ $@"
             expectedWarnings: new[]
             {
                 $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'DLLCertificate'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "B306A318B3A11BF342995F6A1FC5AADF5DB4DD49F4EFF7E013D31208DD58EBDC", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate3'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "47F202CA51AD708535A01E96B95027042F8448333D86FA7D5F8D66B67644ACEC", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate4'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "8492D8CE69F362AAB589989D6B9687C53B732E73493492D06A5650A86B6D4D20", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate5'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "DCD5A867480FEE469A37FF890446F4A34B7770EDDE4DD939A0313F1D3B3AAF99", "Simple.dll")}' with Microsoft certificate 'DLLCertificate2'. The library is considered 3rd party library due to its copyright: ''."
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "9", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate3'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "10", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate4'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "16", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate5'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "23", "Simple.dll")}' with Microsoft certificate 'DLLCertificate2'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 

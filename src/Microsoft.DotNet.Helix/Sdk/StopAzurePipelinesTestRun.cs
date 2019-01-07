@@ -15,37 +15,53 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 
         protected override async Task ExecuteCoreAsync(HttpClient client)
         {
-            using (var req = new HttpRequestMessage(new HttpMethod("PATCH"), $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}?api-version=5.0-preview.2")
-            {
-                Content = new StringContent(JsonConvert.SerializeObject(new JObject
+            await RetryAsync(
+                async () =>
                 {
-                    ["state"] = "Completed",
-                }), Encoding.UTF8, "application/json"),
-            })
-            {
-                var res = await client.SendAsync(req);
-                res.EnsureSuccessStatusCode();
-            }
+                    using (var req =
+                        new HttpRequestMessage(
+                            new HttpMethod("PATCH"),
+                            $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}?api-version=5.0-preview.2")
+                        {
+                            Content = new StringContent(
+                                JsonConvert.SerializeObject(new JObject {["state"] = "Completed",}),
+                                Encoding.UTF8,
+                                "application/json"),
+                        })
+                    {
+                        using (var res = await client.SendAsync(req))
+                        {
+                            res.EnsureSuccessStatusCode();
+                        }
+                    }
+                });
 
-            using (var req = new HttpRequestMessage(
-                HttpMethod.Get,
-                $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}?api-version=5.0-preview.2"))
-            {
-                var res = await client.SendAsync(req);
-                var data = await ParseResponseAsync(req, res);
-                if (data != null && data["runStatistics"] is JArray runStatistics)
+            await RetryAsync(
+                async () =>
                 {
-                    var failed = runStatistics.Children().FirstOrDefault(stat => stat["outcome"]?.ToString() == "Failed");
-                    if (failed != null)
+                    using (var req = new HttpRequestMessage(
+                        HttpMethod.Get,
+                        $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}?api-version=5.0-preview.2"))
                     {
-                        Log.LogError($"Test run {TestRunId} has one or more failing tests.");
+                        using (var res = await client.SendAsync(req))
+                        {
+                            var data = await ParseResponseAsync(req, res);
+                            if (data != null && data["runStatistics"] is JArray runStatistics)
+                            {
+                                var failed = runStatistics.Children()
+                                    .FirstOrDefault(stat => stat["outcome"]?.ToString() == "Failed");
+                                if (failed != null)
+                                {
+                                    Log.LogError($"Test run {TestRunId} has one or more failing tests.");
+                                }
+                                else
+                                {
+                                    Log.LogMessage(MessageImportance.Low, $"Test run {TestRunId} has not failed.");
+                                }
+                            }
+                        }
                     }
-                    else
-                    {
-                        Log.LogMessage(MessageImportance.Low, $"Test run {TestRunId} has not failed.");
-                    }
-                }
-            }
+                });
         }
     }
 }

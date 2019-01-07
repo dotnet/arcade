@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using CommandLine;
@@ -17,6 +18,7 @@ namespace Microsoft.DotNet.GitSync.CommitManager
     public class Program
     {
         private const string _cloudTableName = "CommitHistory";
+        private const string _repoTableName = "MirrorRepos";
         private static Table s_table { get; set; }
         private static Dictionary<string, List<string>> s_repos { get; set; } = new Dictionary<string, List<string>>();
         private static ILog s_logger = LogManager.GetLogger(typeof(Program));
@@ -38,12 +40,26 @@ namespace Microsoft.DotNet.GitSync.CommitManager
             var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
             XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
 
-            s_repos.Add("corefx", new List<string> { "coreclr", "corert" });
-            s_repos.Add("coreclr", new List<string> { "corefx", "corert" });
-            s_repos.Add("corert", new List<string> { "coreclr", "corefx" });
-
-            s_table = new Table(username, key, _cloudTableName);
+            s_table = new Table(username, key, _cloudTableName, _repoTableName);
             await s_table.CommitTable.CreateIfNotExistsAsync();
+            await s_table.RepoTable.CreateIfNotExistsAsync();
+
+            TableQuery getAllMirrorPairs = new TableQuery()
+                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.NotEqual, null));
+
+            TableContinuationToken token = null;
+            do
+            {
+                var segmentedResults = await s_table.RepoTable.ExecuteQuerySegmentedAsync(getAllMirrorPairs, token);
+                token = segmentedResults.ContinuationToken;
+                var tableRows = segmentedResults.Results;
+
+                foreach (var item in tableRows)
+                {
+                    s_repos.Add(item.PartitionKey, item.Properties["ReposToMirrorInto"].StringValue.Split(';').ToList());
+                    s_logger.Info($"The commits in  {item.PartitionKey} repo will be mirrored into {item.Properties["ReposToMirrorInto"].StringValue} Repos");
+                }
+            } while (token != null);
         }
 
         private static async Task InsertCommitsAsync(string sourceRepoFullname, string commitList, string branch)

@@ -1,16 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -30,6 +26,10 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         [Required]
         public string Build { get; set; }
+
+        public bool IsExternal { get; set; } = false;
+
+        public string Creator { get; set; }
 
         protected override async Task ExecuteCore()
         {
@@ -57,12 +57,16 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             while (true)
             {
-                var workItems = await HelixApi.WorkItem.ListAsync(jobName);
+                var workItems = await HelixApi.RetryAsync(
+                    () => HelixApi.WorkItem.ListAsync(jobName),
+                    LogExceptionRetry);
                 var waitingCount = workItems.Count(wi => wi.State == "Waiting");
                 var runningCount = workItems.Count(wi => wi.State == "Running");
                 var finishedCount = workItems.Count(wi => wi.State == "Finished");
                 if (waitingCount == 0 && runningCount == 0 && finishedCount > 0)
                 {
+                    // determines whether any of the work items failed (fireballed)
+                    await Task.WhenAll(workItems.Select(wi => CheckForWorkItemFailureAsync(wi.Name, jobName)));
                     Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
                     return;
                 }
@@ -72,33 +76,74 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
         }
 
+        private void LogExceptionRetry(Exception ex)
+        {
+            Log.LogMessage(MessageImportance.Low, $"Checking for job completion failed with: {ex}\nRetrying...");
+        }
+
+        private async Task CheckForWorkItemFailureAsync(string workItemName, string jobName)
+        {
+            await Task.Yield();
+            try
+            {
+                var details = await HelixApi.RetryAsync(
+                    () => HelixApi.WorkItem.DetailsAsync(jobName, workItemName),
+                    LogExceptionRetry);
+                if (details.State == "Failed")
+                {
+                    Log.LogError(
+                        $"Work item {workItemName} on job {jobName} has failed with exit code {details.ExitCode}.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.LogError($"Unable to get work item status for '{workItemName}', assuming failure. Exception: {ex}");
+            }
+        }
+
         private async Task<string> GetMissionControlResultUri()
         {
             using (HttpClient client = new HttpClient())
             {
-                client.DefaultRequestHeaders.Add("User-Agent", "AzureDevOps");
-                string githubJson = "";
-                try
+                if (IsExternal)
                 {
-                    githubJson = await client.GetStringAsync($"https://api.github.com/user?access_token={AccessToken}");
+                    Log.LogMessage($"Job recognized as external. Using Creator property ('{Creator}') in MC link.");
+                    if (string.IsNullOrEmpty(Creator))
+                    {
+                        Log.LogMessage(MessageImportance.High, $"Creator not specified for an anonymous job.");
+                        return "Mission Control (link generation failed -- creator not specified for anonymous job)";
+                    }
+                    else
+                    {
+                        return $"https://mc.dot.net/#/user/{Creator}/{Source}/{Type}/{Build}";
+                    }
                 }
-                catch (HttpRequestException e)
+                else
                 {
-                    Log.LogMessage(MessageImportance.High, "Failed to connect to GitHub to retrieve username", e.StackTrace);
-                    return "Mission Control (generation of MC link failed -- GitHub HTTP request error)";
-                }
-                string userName = "";
-                try
-                {
-                    userName = JObject.Parse(githubJson)["login"].ToString();
-                }
-                catch (JsonException e)
-                {
-                    Log.LogMessage(MessageImportance.High, "Failed to parse JSON or find value in parsed JSON", e.StackTrace);
-                    return "Mission Control (generation of MC link failed -- JSON parsing error)";
-                }
+                    client.DefaultRequestHeaders.Add("User-Agent", "AzureDevOps");
+                    string githubJson = "";
+                    try
+                    {
+                        githubJson = await client.GetStringAsync($"https://api.github.com/user?access_token={AccessToken}");
+                    }
+                    catch (HttpRequestException e)
+                    {
+                        Log.LogMessage(MessageImportance.High, "Failed to connect to GitHub to retrieve username", e.StackTrace);
+                        return "Mission Control (generation of MC link failed -- GitHub HTTP request error)";
+                    }
+                    string userName = "";
+                    try
+                    {
+                        userName = JObject.Parse(githubJson)["login"].ToString();
+                    }
+                    catch (JsonException e)
+                    {
+                        Log.LogMessage(MessageImportance.High, "Failed to parse JSON or find value in parsed JSON", e.StackTrace);
+                        return "Mission Control (generation of MC link failed -- JSON parsing error)";
+                    }
 
-                return $"https://mc.dot.net/#/user/{userName}/{Source}/{Type}/{Build}";
+                    return $"https://mc.dot.net/#/user/{userName}/{Source}/{Type}/{Build}";
+                }
             }
         }
     }

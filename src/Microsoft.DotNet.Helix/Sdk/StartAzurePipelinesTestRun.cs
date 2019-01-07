@@ -15,35 +15,40 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         [Output]
         public int TestRunId { get; set; }
         
-        protected override async Task ExecuteCoreAsync(HttpClient client)
+        protected override Task ExecuteCoreAsync(HttpClient client)
         {
-            var req =
-                new HttpRequestMessage(
-                    HttpMethod.Post,
-                    $"{CollectionUri}{TeamProject}/_apis/test/runs?api-version=5.0-preview.2")
+            return RetryAsync(
+                async () =>
                 {
-                    Content = new StringContent(
-                        JsonConvert.SerializeObject(
-                            new JObject
+                    var req =
+                        new HttpRequestMessage(
+                            HttpMethod.Post,
+                            $"{CollectionUri}{TeamProject}/_apis/test/runs?api-version=5.0-preview.2")
+                        {
+                            Content = new StringContent(
+                                JsonConvert.SerializeObject(
+                                    new JObject
+                                    {
+                                        ["automated"] = true,
+                                        ["build"] = new JObject {["id"] = BuildId,},
+                                        ["name"] = TestRunName,
+                                        ["state"] = "InProgress",
+                                    }),
+                                Encoding.UTF8,
+                                "application/json"),
+                        };
+                    using (req)
+                    {
+                        using (var res = await client.SendAsync(req))
+                        {
+                            var result = await ParseResponseAsync(req, res);
+                            if (result != null)
                             {
-                                ["automated"] = true,
-                                ["build"] = new JObject {["id"] = BuildId,},
-                                ["name"] = TestRunName,
-                                ["state"] = "InProgress",
-                            }),
-                        Encoding.UTF8,
-                        "application/json"),
-                };
-            using (req)
-            {
-                var res = await client.SendAsync(req);
-                var result = await ParseResponseAsync(req, res);
-
-                if (result != null)
-                {
-                    TestRunId = result["id"].ToObject<int>();
-                }
-            }
+                                TestRunId = result["id"].ToObject<int>();
+                            }
+                        }
+                    }
+                });
         }
     }
 }

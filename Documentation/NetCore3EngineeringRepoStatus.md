@@ -2,41 +2,41 @@
 
 ## Primary Deliverables / Work Streams
 
-1. Using Azure DevOps for CI
-2. Using shared toolset (Arcade SDK)
-3. Engineering dependency flow
-4. Internal builds from dnceng
+1. Using Azure DevOps for CI  (no Jenkins)
+2. Arcade SDK Adoption (build uses supported tools/infra)
+3. Engineering dependency flow (requirement product construction)
+4. Internal builds from dnceng (signing)
 
 Target completion date for these workstreams is 12/14/2018.
 
 ## Status Overview
 
-| Repo                                          | Owner                         | Status   | Risk Assessment                                                                           | Completion Status | Plan | Notes |
-| --------------------------------------------- | ----------------------------- | -------- |:-----------------------------------------------------------------------------------------:|:-----------------:| ----- |----- |
-| [Arcade](#arcade)                             | [mawilkie](#mark-wilkie)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | | |
-| [aspnet-AspNetCore](#aspnetcore)              | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 0 / 4             | | Internal builds in dnceng work is in progress - Need plan |
-| [aspnet-EntityFrameworkCore](#efcore)         | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 0 / 4             | | Internal builds in dnceng work is in progress - Need plan |
-| [aspnet-Extensions](#extensions)              | [namc](#nate-mcmaster)        | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | 0 / 4             | | Internal builds in dnceng work is in progress - Need plan |
-| [CLI](#cli)                                   | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | | |
-| [CLICommandLineParser](#clicommandlineparser) | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | | |
-| [CLI-Migrate](#climigrate)                    | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | | |
-| [CoreClr](#coreclr)                           | [russellk](#russ-keldorph)    | At risk  | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png)| 0 / 4             | [plan](MigrationPlan/CoreClrPlan.md) | Complex repo/build - No change in status as of 11/27 |
-| [CoreFx](#corefx)                             | [danmose](#dan-moseley)       | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/CoreFxPlan.md) | On track as of 11/27 |
-| [Core-SDK](#coresdk)                          | [licavalc](#livar-cunha)      | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md) | |
-| [Core-Setup](#coresetup)                      | [dleeapho](#dan-leeaphon)     | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://microsoft.sharepoint.com/teams/dotNETDeployment/_layouts/15/WopiFrame.aspx?sourcedoc={55410205-ac38-469b-81b0-9a93cc71b07c}&action=edit&wd=target%28Syncs.one%7C0a903b24-10b7-4c18-918c-5a380ba66433%2FCore-Setup%20%20pipebuild%20to%20yaml%7C4fb71b1d-1f36-41ee-8438-f1ea531c99e2%2F%29)| |
-| [MSBuild](#msbuild)                           | [licavalc](#livar-cunha)      | At risk  | ![at risk](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png) | 0 / 4             | | Investigating requirements - need plan to go green |
-| [Roslyn](#roslyn)                             | [jaredpar](#jared-parsons)    | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/roslyn.md) | |
-| [SDK](#sdk)                                   | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | | |
-| [Standard](#standard)                         | [danmose](#dan-moseley)       | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/CoreFxPlan.md) | On track as of 11/27 |
-| [SymReader](#symreader)                       | [tmat](#tomas-matousek)       | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/symreader/issues/157) | ETA: End of November - on track as of 11/27|
-| [SymReader-Portable](#symreader-portable)     | [tmat](#tomas-matousek)       | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/symreader-portable/issues/144) | ETA: End of November - on track as of 11/27 |
-| [Templating](#templating)                     | [vramak](#vijay-ramakrishnan) | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/TemplatingAndWebSdkPlan.md) |  |
-| [Test-Templates](#test-templates)             | [sasin](#sarabjot-singh)      | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/NetCore3EngineeringRepoStatus.md#test-templates) |  |
-| [Toolset](#toolset)                           | [licavalc](#livar-cunha)      | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md) | Will follow CLI - need plan to go green |
-| [Visual FSharp](#visual-fsharp)               | [brettfo](#brett-forsgren)    | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/VisualFSharp.md) | On track as of 11/27 |
-| [WebSDK](#websdk)                             | [vramak](#vijay-ramakrishnan) | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 1 / 4             | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/TemplatingAndWebSdkPlan.md) |  |
-| [WinForms](#winforms)                         | [mmcgaw](#merrie-mcgaw)       | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | 4 / 4             | | |
-| [WPF](#wpf)                                   | [vatsan-madhavan](#vatsan-madhavan)  | On Track | ![on track](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png) | 0 / 4      | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/NetCore3EngineeringRepoStatus.md#wpf) | |
+| Repo                                          | Owner                         | Status   | Risk Assessment                                                                           | Plan | Notes |
+| --------------------------------------------- | ----------------------------- | -------- |:-----------------------------------------------------------------------------------------:| ----- |----- |
+| [Arcade](#arcade)                             | [mawilkie](#mark-wilkie)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | | |
+| [aspnet-AspNetCore](#aspnetcore)              | [namc](#nate-mcmaster)        | Late     | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | | Complex. Plan is to implement as dependnecy flow without adopting the Arcade SDK yet. (updated 12/13)|
+| [aspnet-EntityFrameworkCore](#efcore)         | [namc](#nate-mcmaster)        | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | |  |
+| [aspnet-Extensions](#extensions)              | [namc](#nate-mcmaster)        | Late     | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   | | Dependency flow done! Working around issues in the Arcade SDK. (updated 12/17)|
+| [CLI](#cli)                                   | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | | |
+| [CLICommandLineParser](#clicommandlineparser) | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     |  | |
+| [CLI-Migrate](#climigrate)                    | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     |  | |
+| [CoreClr](#coreclr)                           | [russellk](#russ-keldorph)    | Late     | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   |  [plan](MigrationPlan/CoreClrPlan.md) | Dependency done.  Late, BUT on track according to the plan... (last upd. 12/17) |
+| [CoreFx](#corefx)                             | [danmose](#dan-moseley)       | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     |  [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/CoreFxPlan.md) | |
+| [Core-SDK](#coresdk)                          | [licavalc](#livar-cunha)      | Late     | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   |  [plan](https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md) | Just missing publishing to DARC now. |
+| [Core-Setup](#coresetup)                      | [dleeapho](#dan-leeaphon)     | Late     | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   |  [plan](https://microsoft.sharepoint.com/teams/dotNETDeployment/_layouts/15/WopiFrame.aspx?sourcedoc={55410205-ac38-469b-81b0-9a93cc71b07c}&action=edit&wd=target%28Syncs.one%7C0a903b24-10b7-4c18-918c-5a380ba66433%2FCore-Setup%20%20pipebuild%20to%20yaml%7C4fb71b1d-1f36-41ee-8438-f1ea531c99e2%2F%29)| Currently targeting 12/19 for everything BUT the Arcade SDK itself as of 12/13|
+| [MSBuild](#msbuild)                           | [licavalc](#livar-cunha)      | Late     | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   |  | Just missing DARC now.|
+| [Roslyn](#roslyn)                             | [jaredpar](#jared-parsons)    | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     |  [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/roslyn.md) | |
+| [SDK](#sdk)                                   | [licavalc](#livar-cunha)      | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | | |
+| [Standard](#standard)                         | [danmose](#dan-moseley)       | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/CoreFxPlan.md) |  |
+| [SymReader](#symreader)                       | [tmat](#tomas-matousek)       | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     | [plan](https://github.com/dotnet/symreader/issues/157) | |
+| [SymReader-Portable](#symreader-portable)     | [tmat](#tomas-matousek)       | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     |  [plan](https://github.com/dotnet/symreader-portable/issues/144) | |
+| [Templating](#templating)                     | [vramak](#vijay-ramakrishnan) | Complete     | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)   |  [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/TemplatingAndWebSdkPlan.md) | Build definition is complete.  signing approval is pending - https://dnceng.visualstudio.com/internal/_build?definitionId=303&_a=summary . Needs localization setup but should not block arcade pipeline build.|
+| [Test-Templates](#test-templates)             | [sasin](#sarabjot-singh)      | Late     | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   |  [plan](https://github.com/dotnet/arcade/blob/master/Documentation/NetCore3EngineeringRepoStatus.md#test-templates) | will follow templating of 12/13 |
+| [Toolset](#toolset)                           | [licavalc](#livar-cunha)      | Late     | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   |  [plan](https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md) | Arcade and official builds done. Missing publishing to DARC only. |
+| [Visual FSharp](#visual-fsharp)               | [brettfo](#brett-forsgren)    | Late     | ![negative](http://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png)   |  [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/VisualFSharp.md) | Output shape has been re-written, integrating Arcade SDK now.  ETA by 4 January. |
+| [WebSDK](#websdk)                             | [vramak](#vijay-ramakrishnan) | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)   |  [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/TemplatingAndWebSdkPlan.md) | Signed build definition - https://dnceng.visualstudio.com/internal/_build/results?buildId=55436  |
+| [WinForms](#winforms)                         | [mmcgaw](#merrie-mcgaw)       | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png)     |  | |
+| [WPF](#wpf)                                   | [vatsan-madhavan](#vatsan-madhavan)  | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png) | | Considering this complete as WPF is migrated, however there are more assemblies to move from dotnet-trusted, and some VC tooling issues to work out |
 
 | Status   | Description |
 | -------- | ----------- |
@@ -209,10 +209,10 @@ At the end of each phase, full migration would be completed for the correspondin
 
 | Work stream                                                                      | Est. Completion Date | Status      | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ----------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/676)         | ?                    | Scheduled   | Planning to start mid-November |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/673) | ?                    | Scheduled   | Planning to start mid-November |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/673)       | ?                    | Scheduled   | Planning to start mid-November |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/675)       | ?                    | In progress | |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/676)         |                     | Done   | |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/673) | ?                    | Scheduled   | Planning to start mid-January |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/673)       | Dec. 20                  | Scheduled   |  |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/675)       | ?                    | In progress | Blocked on https://github.com/dotnet/core-eng/issues/4764 |
 
 <a id="efcore"></a>
 
@@ -222,10 +222,10 @@ At the end of each phase, full migration would be completed for the correspondin
 
 | Work stream                                                                       | Est. Completion Date | Status      | Notes |
 | --------------------------------------------------------------------------------- |:--------------------:| ----------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/1053)         | ?                    | Scheduled   | Planning to start mid-November |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/1053)         |                    | Done   |  |
 | [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/1051) | ?                    | Scheduled   | Planning to start mid-November |
 | [Engineering dependency flow](https://github.com/dotnet/arcade/issues/1050)       | ?                    | Scheduled   | Planning to start mid-November |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/1052)       | ?                    | In progress | |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/1052)       |                     | Done | |
 
 #### Extensions
 
@@ -233,10 +233,10 @@ At the end of each phase, full migration would be completed for the correspondin
 
 | Work stream                                                                       | Est. Completion Date | Status      | Notes |
 | --------------------------------------------------------------------------------- |:--------------------:| ----------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/1048)         | ?                    | Scheduled   | Planning to start mid-November |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/1046) | ?                    | Scheduled   | Planning to start mid-November |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/1045)       | ?                    | Scheduled   | Planning to start mid-November |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/1047)       | ?                    | In progress | |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/1048)         | -                    | Done        | |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/1046) | Dec.  20             | In progress   | https://github.com/aspnet/Extensions/pull/586 |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/1045)       |                     | Done   | |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/1047)       |                     | Done | |
 
 ---
 
@@ -259,10 +259,10 @@ At the end of each phase, full migration would be completed for the correspondin
 
 | Work stream                                                                      | Est. Completion Date | Status        | Notes |
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
-| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/645)         |                      | In progress | |
-| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/643) |                      | In progress | |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/642)       |                      | In progress | |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/644)       |                      | In progress | |
+| [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/645)         | 1/31/2019            | In progress | |
+| [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/643) | 3/15/2019            | In progress | |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/642)       | 12/7/2018            | In progress | |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/644)       | 12/7/2018            | In progress | |
 
 ---
 

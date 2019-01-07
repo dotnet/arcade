@@ -100,9 +100,10 @@ namespace Microsoft.DotNet.Darc.Models.PopUps
                     case "AllChecksSuccessful":
                         // Should either have no properties, or one called "ignoreChecks"
                         object ignoreChecksProperty = null;
-                        if (policy.Properties.Count > 1 ||
+                        if (policy.Properties != null &&
+                            (policy.Properties.Count > 1 ||
                             (policy.Properties.Count == 1 &&
-                            !policy.Properties.TryGetValue("ignoreChecks", out ignoreChecksProperty)))
+                            !policy.Properties.TryGetValue("ignoreChecks", out ignoreChecksProperty))))
                         {
                             _logger.LogError($"AllChecksSuccessful merge policy should have no properties, or an 'ignoreChecks' property. See help.");
                             return false;
@@ -111,8 +112,9 @@ namespace Microsoft.DotNet.Darc.Models.PopUps
                     case "RequireChecks":
                         // Should have 'checks' property.
                         object checksProperty = null;
-                        if (policy.Properties.Count != 1 ||
-                            !policy.Properties.TryGetValue("checks", out checksProperty))
+                        if (policy.Properties != null &&
+                            (policy.Properties.Count != 1 ||
+                            !policy.Properties.TryGetValue("checks", out checksProperty)))
                         {
                             _logger.LogError($"RequireChecks merge policy should have a list of required checks specified with 'checks'. See help.");
                             return false;

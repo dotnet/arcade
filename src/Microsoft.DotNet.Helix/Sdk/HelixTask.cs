@@ -22,6 +22,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         protected IHelixApi HelixApi { get; private set; }
 
+        protected IHelixApi AnonymousApi { get; private set; }
+
         private IHelixApi GetHelixApi()
         {
             if (string.IsNullOrEmpty(AccessToken))
@@ -39,6 +41,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             try
             {
                 HelixApi = GetHelixApi();
+                AnonymousApi = ApiFactory.GetAnonymous(BaseUri);
                 System.Threading.Tasks.Task.Run(ExecuteCore).GetAwaiter().GetResult();
             }
             catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.Unauthorized)

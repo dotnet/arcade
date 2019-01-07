@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class FilterUnknownPackages : PackagingTask
+    public class FilterUnknownPackages : BuildTask
     {
         /// <summary>
         /// Original dependencies

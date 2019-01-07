@@ -1,3 +1,4 @@
+using Microsoft.WindowsAzure.Storage;
 using System;
 using System.Threading.Tasks;
 
@@ -16,6 +17,7 @@ namespace Microsoft.DotNet.Helix.Client
         IJobDefinition WithCreator(string creator);
         IJobDefinition WithContainerName(string targetContainerName);
         IJobDefinition WithStorageAccountConnectionString(string accountConnectionString);
-        Task<ISentJob> SendAsync();
+        IJobDefinition WithMaxRetryCount(int? maxRetryCount);
+        Task<ISentJob> SendAsync(Action<string> log = null);
     }
 }

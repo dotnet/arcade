@@ -463,7 +463,8 @@ namespace Microsoft.DotNet.SignTool
                         var fileName = Path.GetFileName(relativePath);
                         if (!_filesByContentKey.TryGetValue(new SignedFileContentKey(contentHash, fileName), out var fileSignInfo))
                         {
-                            string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash), relativePath);
+                            string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, _filesByContentKey.Count().ToString(), relativePath);
+
                             Directory.CreateDirectory(Path.GetDirectoryName(tempPath));
 
                             using (var stream = entry.Open())

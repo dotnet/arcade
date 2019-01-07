@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.Rest;
+using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -40,6 +42,7 @@ namespace Microsoft.DotNet.Helix.Client
         public string TargetQueueId { get; private set; }
         public string Creator { get; private set; }
         public IList<IPayload> CorrelationPayloads { get; } = new List<IPayload>();
+        public int? MaxRetryCount { get; private set; }
         public string StorageAccountConnectionString { get; private set; }
         public string TargetContainerName { get; set; } = DefaultContainerName;
         public static string DefaultContainerName => $"helix-job-{Guid.NewGuid()}";
@@ -115,7 +118,7 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
-        public async Task<ISentJob> SendAsync()
+        public async Task<ISentJob> SendAsync(Action<string> log = null)
         {
             IBlobHelper storage;
             if (string.IsNullOrEmpty(StorageAccountConnectionString))
@@ -145,18 +148,25 @@ namespace Microsoft.DotNet.Helix.Client
                 jobListJson,
                 $"job-list-{Guid.NewGuid()}.json");
 
-            JobCreationResult newJob = await JobApi.NewOperationAsync(
-                new JobCreationRequest(
-                    Source,
-                    Type,
-                    Build,
-                    _properties,
-                    jobListUri.ToString(),
-                    TargetQueueId,
-                    storageContainer.Uri,
-                    storageContainer.ReadSas,
-                    storageContainer.WriteSas,
-                    Creator));
+
+            string jobStartIdentifier = Guid.NewGuid().ToString("N");
+            JobCreationResult newJob = await HelixApi.RetryAsync(
+                () => JobApi.NewOperationAsync(
+                    new JobCreationRequest(
+                        Source,
+                        Type,
+                        Build,
+                        _properties,
+                        jobListUri.ToString(),
+                        TargetQueueId,
+                        storageContainer.Uri,
+                        storageContainer.ReadSas,
+                        storageContainer.WriteSas,
+                        Creator,
+                        maxRetryCount: MaxRetryCount,
+                        jobStartIdentifier: jobStartIdentifier)),
+                ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."));
+
 
             return new SentJob(JobApi, newJob);
         }
@@ -182,6 +192,12 @@ namespace Microsoft.DotNet.Helix.Client
         public IJobDefinitionWithBuild WithType(string type)
         {
             Type = type;
+            return this;
+        }
+
+        public IJobDefinition WithMaxRetryCount(int? maxRetryCount)
+        {
+            MaxRetryCount = maxRetryCount;
             return this;
         }
 

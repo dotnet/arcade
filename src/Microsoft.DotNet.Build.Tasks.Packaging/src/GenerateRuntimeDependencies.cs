@@ -13,7 +13,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GenerateRuntimeDependencies : PackagingTask
+    public class GenerateRuntimeDependencies : BuildTask
     {
         private const string c_emptyDependency = "none";
 

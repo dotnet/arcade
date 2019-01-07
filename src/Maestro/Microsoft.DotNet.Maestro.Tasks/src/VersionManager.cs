@@ -61,6 +61,11 @@ namespace Microsoft.DotNet.Maestro.Tasks
 
             if (versionStart == versionEnd)
             {
+                if (!string.IsNullOrEmpty(pathVersion))
+                {
+                    return pathVersion;
+                }
+
                 return null;
             }
 

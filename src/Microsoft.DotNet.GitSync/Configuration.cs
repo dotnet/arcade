@@ -15,7 +15,6 @@ namespace Microsoft.DotNet.GitSync
         public string ClientId { get; set; }
         public string ClientSecret { get; set; }
         public string SecretUri { get; set; }
-        public string UpstreamOwner { get; set; }
         [JsonIgnore]
         public string Password { get; set; }
         public string MirrorSignatureUser { get; set; }

@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackagingTaskDir Condition="'$(PackagingTaskDir)' == '' AND '$(RunningOnCore)' == 'true'">$(MSBuildThisFileDirectory)../tools/netcoreapp2.1/</PackagingTaskDir>
-    <PackagingTaskDir Condition="'$(PackagingTaskDir)' == '' AND '$(RunningOnCore)' != 'true'">$(MSBuildThisFileDirectory)../tools/net461/</PackagingTaskDir>
+    <PackagingTaskDir Condition="'$(PackagingTaskDir)' == '' AND '$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)../tools/netcoreapp2.1/</PackagingTaskDir>
+    <PackagingTaskDir Condition="'$(PackagingTaskDir)' == '' AND '$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)../tools/net461/</PackagingTaskDir>
     <RuntimeIdGraphDefinitionFile Condition="'$(RuntimeIdGraphDefinitionFile)' == ''">$(MSBuildThisFileDirectory)runtime.json</RuntimeIdGraphDefinitionFile>
 
     <PackageOutputPath Condition="'$(PackageOutputPath)' == ''">$(BaseOutputPath)pkg/</PackageOutputPath>
@@ -27,6 +27,7 @@
   <UsingTask TaskName="GeneratePackageReport" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll"/>
   <UsingTask TaskName="GenerateRuntimeGraph" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll"/>
   <UsingTask TaskName="GenerateRuntimeDependencies" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll"/>
+  <UsingTask TaskName="GenerateSourceWithPublicTypesAsInternal" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll" />
   <UsingTask TaskName="GetApplicableAssetsFromPackages" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll"/>
   <UsingTask TaskName="GetAssemblyReferences" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll"/>
   <UsingTask TaskName="GetInboxFrameworks" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll"/>

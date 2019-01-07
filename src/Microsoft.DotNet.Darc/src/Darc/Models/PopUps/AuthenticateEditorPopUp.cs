@@ -39,9 +39,12 @@ namespace Microsoft.DotNet.Darc.Models
             // Initialize line contents.
             Contents = new ReadOnlyCollection<Line>(new List<Line>
             {
-                new Line($"{barPasswordElement}={GetCurrentSettingForDisplay(settings.BuildAssetRegistryPassword, "<token-from-https://maestro-prod.westus2.cloudapp.azure.com/>", true)}"),
-                new Line($"{githubTokenElement}={GetCurrentSettingForDisplay(settings.GitHubToken, "<github-personal-access-token>", true)}"),
-                new Line($"{azureDevOpsTokenElement}={GetCurrentSettingForDisplay(settings.AzureDevOpsToken, "<azure-devops-personal-access-token>", true)}"),
+                new Line("Create new BAR tokens at https://maestro-prod.westus2.cloudapp.azure.com/Account/Tokens", isComment: true),
+                new Line($"{barPasswordElement}={GetCurrentSettingForDisplay(settings.BuildAssetRegistryPassword, string.Empty, true)}"),
+                new Line("Create new GitHub personal access tokens at https://github.com/settings/tokens", isComment: true),
+                new Line($"{githubTokenElement}={GetCurrentSettingForDisplay(settings.GitHubToken, string.Empty, true)}"),
+                new Line("Create new Azure Dev Ops tokens at https://dev.azure.com/dnceng/_details/security/tokens", isComment: true),
+                new Line($"{azureDevOpsTokenElement}={GetCurrentSettingForDisplay(settings.AzureDevOpsToken, string.Empty, true)}"),
                 new Line($"{barBaseUriElement}={GetCurrentSettingForDisplay(settings.BuildAssetRegistryBaseUri, "<alternate build asset registry uri if needed, otherwise leave as is>", false)}"),
                 new Line(""),
                 new Line("Storing the required settings...", true),
