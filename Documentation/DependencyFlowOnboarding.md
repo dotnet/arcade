@@ -172,9 +172,9 @@ You only need to create a channel in  rare cases.  Most .NET Core 3 builds shoul
    ```
    The classification is typically 'product'.  Later on this will be used to differentiate dev or non-product builds, etc.
 
-##### 3.6. Associate a branch with a channel (optional)
+##### 3.6. Associate a branch with a channel
 
-This will associate each new build of a specific branch in a repository with a channel.
+This will associate each new build of a specific branch in a repository with a channel.  For most .NET Core repositories, 'master' shoulid be associated with '.NET Core 3 Dev'.
 
 1. Run the following darc command:
    ```
