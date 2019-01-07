@@ -45,7 +45,10 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                 }
                 else
                 {
-                    using (var client = new HttpClient
+                    using (var client = new HttpClient(new HttpClientHandler
+                    {
+                        AllowAutoRedirect = false,
+                    })
                     {
                         DefaultRequestHeaders =
                         {

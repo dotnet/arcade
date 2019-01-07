@@ -103,11 +103,6 @@ jobs:
       variables:
       - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         - group: DotNet-HelixApi-Access
-      # else
-      - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-        - group: Helix Anonymous
-        - name: HelixApiAccessToken
-          value: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token)
       strategy:
         matrix:
           Build_Debug:
