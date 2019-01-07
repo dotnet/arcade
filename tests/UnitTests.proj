@@ -14,6 +14,13 @@
     <XUnitProjects>true</XUnitProjects>
   </PropertyGroup>
 
+  <ItemGroup>
+    <XUnitProject Include="..\src\**\*.Tests.csproj"/>
+
+    <!-- Remove the arcade sdk tests project because it depends heavily on machine/repo state and doesn't work properly in helix yet -->
+    <XUnitProject Remove="..\src\Microsoft.DotNet.Arcade.Sdk.Tests\Microsoft.DotNet.Arcade.Sdk.Tests.csproj"/>
+  </ItemGroup>
+
   <!-- Use the locally built version of Helix Tasks temporaraily -->
   <PropertyGroup>
     <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(_BuildConfig)/netcoreapp2.1/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
@@ -24,6 +31,12 @@
     <HelixTargetQueue Include="Ubuntu.1604.Amd64"/>
     <HelixTargetQueue Include="Windows.10.Amd64"/>
   </ItemGroup>
+
+  <PropertyGroup Condition=" '$(HelixApiAcccessToken)' == '' ">
+    <IsExternal>true</IsExternal>
+    <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
+    <Creator Condition=" '$(Creator)' == ''">anon</Creator>
+  </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixApiAcccessToken)' == '' ">
     <HelixTargetQueue Include="Ubuntu.1604.Amd64.Open"/>
@@ -39,10 +52,6 @@
     <HelixPreCommands>$(HelixPreCommands);dir /s %HELIX_CORRELATION_PAYLOAD%</HelixPreCommands>
     <HelixPreCommands>$(HelixPreCommands);dir /s</HelixPreCommands>
   </PropertyGroup>
-
-  <ItemGroup>
-    <XUnitProject Include="..\src\**\*.Tests.csproj"/>
-  </ItemGroup>
 
   <!-- Useless stuff to make Arcade SDK happy -->
   <PropertyGroup>

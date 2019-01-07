@@ -10,6 +10,12 @@
 
   </PropertyGroup>
 
+  <!-- We don't currently support reporting tests from builds of forks -->
+  <PropertyGroup Condition=" '$(SYSTEM_PULLREQUEST_ISFORK)' == 'True'">
+    <AzurePipelinesAvaliable>false</AzurePipelinesAvaliable>
+    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
+  </PropertyGroup>
+
   <PropertyGroup Condition="$(ImportAzurePipelinesTargets)">
     <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.MonoQueue.targets</_HelixMonoQueueTargets>
     <_HelixMultiQueueTargets>$(_HelixMultiQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.MultiQueue.targets</_HelixMultiQueueTargets>
