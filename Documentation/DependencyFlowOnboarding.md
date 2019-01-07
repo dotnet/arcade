@@ -174,7 +174,9 @@ You only need to create a channel in  rare cases.  Most .NET Core 3 builds shoul
 
 ##### 3.6. Associate a branch with a channel
 
-This will associate each new build of a specific branch in a repository with a channel.  For most .NET Core repositories, 'master' should be associated with '.NET Core 3 Dev'.
+This will associate each new build of a specific branch in a repository with a channel. This is not technically required. Outputs from any build of any branch could be associated with a channel after the upload the build asset registry.  For example, I might decide that 'dev/foobar', containing a one off fix, is what I want to flow into downstream repositories. In practice, it's tedious to manually associate each new build with a channel. Most of the time, each build 'master' is intended for '.NET Core 3 Dev', each build of release/2.1 is intended for '.NET Core Release 2.1', etc. Associating a branch with a channel causes every new build of that branch to be automatically applied to the channel.
+
+For most .NET Core repositories, 'master' should be associated with '.NET Core 3 Dev'.
 
 1. Run the following darc command:
    ```
