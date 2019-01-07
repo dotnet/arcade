@@ -12,7 +12,6 @@
     <!-- Publish the test data as part of the build to enable VS test runs. -->
     <PrepareForRunDependsOn>$(PrepareForRunDependsOn);PublishSupplementalTestData;</PrepareForRunDependsOn>
     <PrepareForRunDependsOn Condition="'$(ArchiveTests)' == 'true'">$(PrepareForRunDependsOn);ArchiveTestBuild;</PrepareForRunDependsOn>
-    <PrepareForRunDependsOn Condition="'$(GenerateTestScripts)' == 'true'">$(PrepareForRunDependsOn);GenerateRunScript;</PrepareForRunDependsOn>
     <!-- Clean leftovers not tracked by FileWrites. -->
     <CleanDependsOn>$(CleanDependsOn);CleanTestPath;</CleanDependsOn>
   </PropertyGroup>
