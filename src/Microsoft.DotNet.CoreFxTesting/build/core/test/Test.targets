@@ -150,4 +150,13 @@
 
   </Choose>
 
+  <!-- Main test targets -->
+  <Target Name="Test" DependsOnTargets="$(TestDependsOn)" Condition="'$(IsUnitTestProject)' == 'true'" />
+  <Target Name="BuildAndTest" DependsOnTargets="Build;Test" Condition="'$(IsUnitTestProject)' == 'true'" />
+  <Target Name="RebuildAndTest" DependsOnTargets="Rebuild;Test" Condition="'$(IsUnitTestProject)' == 'true'" />
+
+  <Target Name="IntegrationTest" DependsOnTargets="$(TestDependsOn)" Condition="'$(IsIntegrationTestProject)' == 'true'" />
+  <Target Name="BuildAndIntegrationTest" DependsOnTargets="Build;IntegrationTest" Condition="'$(IsIntegrationTestProject)' == 'true'" />
+  <Target Name="RebuildAndIntegrationTest" DependsOnTargets="Rebuild;IntegrationTest" Condition="'$(IsIntegrationTestProject)' == 'true'" />
+
 </Project>

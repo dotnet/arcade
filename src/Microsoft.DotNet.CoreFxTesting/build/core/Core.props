@@ -24,7 +24,6 @@
       $(TestDependsOn);
       GenerateRunScript;
       RunTests;
-      ArchiveTestBuild;
     </TestDependsOn>
   </PropertyGroup>
 
@@ -45,7 +44,7 @@
 
   <!--
     Performance test support.
-    Supported runners: xunit-performance.
+    Supported runners: xunit-performance, BenchmarkDotNet.
   -->
   <Import Condition="'$(IsPerformanceTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'performance', 'Performance.props'))" />
 
