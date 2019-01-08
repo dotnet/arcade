@@ -13,6 +13,10 @@
     <ProjectReference Include="..\..\src\Microsoft.DotNet.SignTool\Microsoft.DotNet.SignTool.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Common\TestUtilities\AssertEx.cs" Link="TestUtilities\AssertEx.cs" />
+    <Compile Include="..\Common\TestUtilities\DiffUtil.cs" Link="TestUtilities\DiffUtil.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="Resources\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
