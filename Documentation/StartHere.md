@@ -55,7 +55,7 @@ some highlights
 - [Dependencies Flow Plan](DependenciesFlowPlan.md): Flowing dependencies with Darc, Maestro and BAR.
 - [How to Create and Arcade Package](HowToCreatePackages.md)
 - [.NET Core Infrastructure Ecosystem Overview](InfrastructureEcosystemOverview.md)
-- [Toolset Publish/Consume Contract](PublishConsumeCOntract.md)
+- [Toolset Publish/Consume Contract](PublishConsumeContract.md)
 - [Servicing](Servicing.md)
 - [Toolsets](Toolsets.md)
 - [Version Querying and Updating](VersionQueryingAndUpdating.md)
