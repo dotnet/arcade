@@ -405,7 +405,9 @@ git push git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
             $mergeInstructions = @"
 ## Instructions for merging
 
-This repo does not appear to allow merge commits from the GitHub UI, so you will need to update this PR with a merge commit before closing this PR.
+This repo does not appear to allow merge commits from the GitHub UI. Do *not* use the GitHub UI to merge this PR.
+
+You will need to update this PR with a merge commit before closing this PR.
 
 `````` sh
 git fetch
