@@ -88,6 +88,7 @@ jobs:
       - powershell: eng\common\build.ps1
           -test
           -projects $(Build.SourcesDirectory)/tests/UnitTests.proj
+          /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
         displayName: Run Helix Tests
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -126,6 +127,7 @@ jobs:
       - script: eng/common/build.sh
           --test
           --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
+          /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
         displayName: Run Helix Tests
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
