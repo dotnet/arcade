@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         /// <summary>
         /// Frameworks to consider for support evaluation.
         ///   Identity: Framework
-        ///   RuntimeIDs: Semi-colon seperated list of runtime IDs
+        ///   RuntimeIDs: Semi-colon separated list of runtime IDs
         /// </summary>
         public ITaskItem[] Frameworks { get; set; }
 
@@ -114,6 +114,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         [Output]
         public ITaskItem[] UpdatedFiles { get; set; }
 
+        private Dictionary<string, string> _packageFolders = new Dictionary<string, string>();
+
         /// <summary>
         /// Generates a table in markdown that lists the API version supported by 
         /// various packages at all levels of NETStandard.
@@ -121,7 +123,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         /// <returns></returns>
         public override bool Execute()
         {
-            if (HasPackagesToHarvest())
+            if (LocatePackages())
             {
                 if (HarvestAssets)
                 {
@@ -137,19 +139,19 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return !Log.HasLoggedErrors;
         }
 
-        private bool HasPackagesToHarvest()
+        private bool LocatePackages()
         {
-            bool result = LocatePackageFolder(PackageId, PackageVersion) != null;
+            _packageFolders.Add(PackageId, LocatePackageFolder(PackageId, PackageVersion));
 
             if (RuntimePackages != null)
             {
                 foreach (var runtimePackage in RuntimePackages)
                 {
-                    result &= LocatePackageFolder(runtimePackage.ItemSpec, runtimePackage.GetMetadata("Version")) != null;
+                    _packageFolders.Add(runtimePackage.ItemSpec, LocatePackageFolder(runtimePackage.ItemSpec, runtimePackage.GetMetadata("Version")));
                 }
             }
 
-            return result;
+            return _packageFolders.Values.All(f => f != null);
         }
 
         private void HarvestSupportedFrameworks()
@@ -157,22 +159,11 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             List<ITaskItem> supportedFrameworks = new List<ITaskItem>();
 
             AggregateNuGetAssetResolver resolver = new AggregateNuGetAssetResolver(RuntimeFile);
-            string packagePath = LocatePackageFolder(PackageId, PackageVersion);
+            string packagePath = _packageFolders[PackageId];
 
-            // add the primary package
-            resolver.AddPackageItems(PackageId, GetPackageItems(packagePath));
-
-            if (RuntimePackages != null)
+            foreach (var packageFolder in _packageFolders)
             {
-                // add any split runtime packages
-                foreach (var runtimePackage in RuntimePackages)
-                {
-                    var runtimePackageId = runtimePackage.ItemSpec;
-                    var runtimePackageVersion = runtimePackage.GetMetadata("Version");
-                    var runtimePackageFolder = LocatePackageFolder(runtimePackageId, runtimePackageVersion);
-
-                    resolver.AddPackageItems(runtimePackageId, GetPackageItems(runtimePackageFolder));
-                }
+                resolver.AddPackageItems(packageFolder.Key, GetPackageItems(packageFolder.Value));
             }
 
             // create a resolver that can be used to determine the API version for inbox assemblies
@@ -275,12 +266,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         public void HarvestFilesFromPackage()
         {
-            string pathToPackage = LocatePackageFolder(PackageId, PackageVersion);
-
-            if (pathToPackage == null)
-            {
-                return;
-            }
+            string pathToPackage = _packageFolders[PackageId];
 
             var livePackageItems = Files.NullAsEmpty()
                 .Where(f => IsIncludedExtension(f.GetMetadata("Extension")))
@@ -492,7 +478,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 }
 
                 // handle lower-case restore path
-                candidateFolder = Path.Combine(packageId.ToLowerInvariant(), packageVersion.ToLowerInvariant());
+                candidateFolder = Path.Combine(packageFolder, packageId.ToLowerInvariant(), packageVersion.ToLowerInvariant());
 
                 if (Directory.Exists(candidateFolder))
                 {
