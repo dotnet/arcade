@@ -1,19 +1,20 @@
 <Project>
   <Target Name="StartTestRuns"
           BeforeTargets="Test"
-          Inputs="@(HelixTargetQueue)"
           Outputs="%(HelixTargetQueue.Identity)">
     <PropertyGroup>
       <_CurrentTargetQueue>%(HelixTargetQueue.Identity)</_CurrentTargetQueue>
       <_CurrentTestRunName>%(HelixTargetQueue.TestRunName)</_CurrentTestRunName>
       <_CurrentTestRunName Condition="'$(_CurrentTestRunName)' == ''">$(TestRunNamePrefix)$(_CurrentTargetQueue)$(TestRunNameSuffix)</_CurrentTestRunName>
     </PropertyGroup>
+    <Message Text="Starting Azure Pipelines Test Run $(_CurrentTestRunName)" Importance="High"/>
     <StartAzurePipelinesTestRun TestRunName="$(_CurrentTestRunName)">
       <Output TaskParameter="TestRunId" PropertyName="TestRunId"/>
     </StartAzurePipelinesTestRun>
     <ItemGroup>
       <HelixTargetQueue Condition="'%(Identity)' == '$(_CurrentTargetQueue)'">
         <TestRunId>$(TestRunId)</TestRunId>
+        <TestRunName>$(_CurrentTestRunName)</TestRunName>
         <AdditionalProperties>TestRunId=$(TestRunId)</AdditionalProperties>
       </HelixTargetQueue>
     </ItemGroup>
@@ -21,7 +22,9 @@
 
   <Target Name="StopTestRuns"
           AfterTargets="Wait"
-          Condition="$(WaitForWorkItemCompletion)">
+          Condition="$(WaitForWorkItemCompletion)"
+          Outputs="%(HelixTargetQueue.Identity)">
+    <Message Text="Stopping Azure Pipelines Test Run %(HelixTargetQueue.TestRunName)" Importance="High"/>
     <StopAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)">
     </StopAzurePipelinesTestRun>
   </Target>
