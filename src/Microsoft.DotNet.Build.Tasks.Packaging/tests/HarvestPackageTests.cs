@@ -1,4 +1,4 @@
-﻿using Microsoft.Build.Framework;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
@@ -68,8 +68,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                 string packagesCandidate = Path.Combine(candidate, "packages");
 
                 string packageFolder = Path.Combine(packagesCandidate, packageId, packageVersion);
+                string packageFolderLower = Path.Combine(packagesCandidate, packageId.ToLowerInvariant(), packageVersion.ToLowerInvariant());
 
-                if (Directory.Exists(packageFolder))
+                if (Directory.Exists(packageFolder) || Directory.Exists(packageFolderLower))
                 {
                     result = packagesCandidate;
                     break;
@@ -94,7 +95,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                 RuntimeFile = "runtime.json"
             };
 
-            task.PackagesFolder = FindPackageFolder(task.PackageId, task.PackageVersion);
+            task.PackagesFolders = new[] { FindPackageFolder(task.PackageId, task.PackageVersion) };
             
             _log.Reset();
             task.Execute();
@@ -107,7 +108,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             Assert.Equal("1.2.1.0", ns10asset.GetMetadata("AssemblyVersion"));
             Assert.Equal(_frameworks.Length, task.SupportedFrameworks.Length);
         }
-
 
         [Fact]
         public void TestRefLibPackage()
@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                 PackageVersion = "4.3.0",
                 RuntimeFile = "runtime.json"
             };
-            task.PackagesFolder = FindPackageFolder(task.PackageId, task.PackageVersion);
+            task.PackagesFolders = new[] { FindPackageFolder(task.PackageId, task.PackageVersion) };
 
             _log.Reset();
             task.Execute();
@@ -155,7 +155,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                     CreateRuntimePackage("runtime.aot.System.Runtime", "4.3.0")
                 }
             };
-            task.PackagesFolder = FindPackageFolder(task.PackageId, task.PackageVersion);
+            task.PackagesFolders = new[] { FindPackageFolder(task.PackageId, task.PackageVersion) };
 
             _log.Reset();
             task.Execute();

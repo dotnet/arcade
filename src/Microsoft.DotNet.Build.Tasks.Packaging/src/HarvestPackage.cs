@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         /// Folder where packages have been restored
         /// </summary>
         [Required]
-        public string PackagesFolder { get; set; }
+        public string[] PackagesFolders { get; set; }
 
         /// <summary>
         /// Path to runtime.json that contains the runtime graph.
@@ -121,11 +121,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         /// <returns></returns>
         public override bool Execute()
         {
-            if (!Directory.Exists(PackagesFolder))
-            {
-                Log.LogError($"PackagesFolder {PackagesFolder} does not exist.");
-            }
-
             if (HasPackagesToHarvest())
             {
                 if (HarvestAssets)
@@ -144,23 +139,13 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         private bool HasPackagesToHarvest()
         {
-            bool result = true;
-
-            IEnumerable<string> packageDirs = new[] { Path.Combine(PackageId, PackageVersion) };
+            bool result = LocatePackageFolder(PackageId, PackageVersion) != null;
 
             if (RuntimePackages != null)
             {
-                packageDirs = packageDirs.Concat(
-                    RuntimePackages.Select(p => Path.Combine(p.ItemSpec, p.GetMetadata("Version"))));
-            }
-
-            foreach (var packageDir in packageDirs)
-            {
-                var pathToPackage = Path.Combine(PackagesFolder, packageDir);
-                if (!Directory.Exists(pathToPackage))
+                foreach (var runtimePackage in RuntimePackages)
                 {
-                    Log.LogError($"Cannot harvest package '{PackageId}' version '{PackageVersion}' because {pathToPackage} does not exist.  Harvesting is needed to redistribute assets and ensure compatiblity with the previous release.  You can disable this by setting HarvestStablePackage=false.");
-                    result = false;
+                    result &= LocatePackageFolder(runtimePackage.ItemSpec, runtimePackage.GetMetadata("Version")) != null;
                 }
             }
 
@@ -172,7 +157,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             List<ITaskItem> supportedFrameworks = new List<ITaskItem>();
 
             AggregateNuGetAssetResolver resolver = new AggregateNuGetAssetResolver(RuntimeFile);
-            string packagePath = Path.Combine(PackagesFolder, PackageId, PackageVersion);
+            string packagePath = LocatePackageFolder(PackageId, PackageVersion);
 
             // add the primary package
             resolver.AddPackageItems(PackageId, GetPackageItems(packagePath));
@@ -184,8 +169,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 {
                     var runtimePackageId = runtimePackage.ItemSpec;
                     var runtimePackageVersion = runtimePackage.GetMetadata("Version");
+                    var runtimePackageFolder = LocatePackageFolder(runtimePackageId, runtimePackageVersion);
 
-                    resolver.AddPackageItems(runtimePackageId, GetPackageItems(PackagesFolder, runtimePackageId, runtimePackageVersion));
+                    resolver.AddPackageItems(runtimePackageId, GetPackageItems(runtimePackageFolder));
                 }
             }
 
@@ -289,11 +275,10 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         public void HarvestFilesFromPackage()
         {
-            string pathToPackage = Path.Combine(PackagesFolder, PackageId, PackageVersion);
+            string pathToPackage = LocatePackageFolder(PackageId, PackageVersion);
 
-            if (!Directory.Exists(pathToPackage))
+            if (pathToPackage == null)
             {
-                Log.LogError($"Cannot harvest from package {PackageId}/{PackageVersion} because {pathToPackage} does not exist.");
                 return;
             }
 
@@ -495,6 +480,31 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             }
         }
 
+        private string LocatePackageFolder(string packageId, string packageVersion)
+        {
+            foreach (var packageFolder in PackagesFolders)
+            {
+                var candidateFolder = Path.Combine(packageFolder, packageId, packageVersion);
+
+                if (Directory.Exists(candidateFolder))
+                {
+                    return candidateFolder;
+                }
+
+                // handle lower-case restore path
+                candidateFolder = Path.Combine(packageId.ToLowerInvariant(), packageVersion.ToLowerInvariant());
+
+                if (Directory.Exists(candidateFolder))
+                {
+                    return candidateFolder;
+                }
+            }
+
+            Log.LogError($"Cannot locate package '{PackageId}' version '{PackageVersion}' under '{string.Join(", ", PackagesFolders)}'.  Harvesting is needed to redistribute assets and ensure compatibility with the previous release.  You can disable this by setting HarvestStablePackage=false.");
+
+            return null;
+        }
+
         private void LogSkipIncludedFile(string packagePath, string reason)
         {
             if (IncludeAllPaths)
@@ -613,13 +623,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         private static bool IsReferencePackagePath(string path)
         {
             return path.StartsWith("ref", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private IEnumerable<string> GetPackageItems(string packagesFolder, string packageId, string packageVersion)
-        {
-            string packageFolder = Path.Combine(packagesFolder, packageId, packageVersion);
-
-            return GetPackageItems(packageFolder);
         }
 
         private IEnumerable<string> GetPackageItems(string packageFolder)
