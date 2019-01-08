@@ -33,18 +33,24 @@
           Inputs="$(TargetPath)"
           Outputs="$(GenAPITargetPath)">
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(GenAPILibPath)' == ''">
       <!-- build out a list of directories where dependencies are located -->
       <_referencePathDirectoriesWithDuplicates Include="@(ReferencePath->'%(RootDir)%(Directory)'->TrimEnd('\'))" />
       <!-- strip metadata, removing duplicates -->
       <_referencePathDirectories Include="%(_referencePathDirectoriesWithDuplicates.Identity)" />
     </ItemGroup>
 
-    <Exec Command="$(_GenAPICommand) &quot;$(TargetPath)&quot; --lib-path &quot;@(_referencePathDirectories)&quot; --out &quot;$(GenAPITargetPath)&quot; $(GenAPIAdditionalParameters)" />
+    <PropertyGroup Condition="'$(GenAPILibPath)' == ''">
+      <GenAPILibPath>@(_referencePathDirectories)</GenAPILibPath>
+    </PropertyGroup>
+
+    <Exec Command="$(_GenAPICommand) &quot;$(TargetPath)&quot; --lib-path &quot;$(GenAPILibPath)&quot; --out &quot;$(GenAPITargetPath)&quot; $(GenAPIAdditionalParameters)" />
 
     <ItemGroup>
-      <FileWrites Include="$(GenAPITargetPath)"/>
+      <FileWrites Condition="'$(SkipGenAPITargetPathFileWrite)' != 'true'" Include="$(GenAPITargetPath)"/>
     </ItemGroup>
+
+    <Message Text="Generated reference assembly source code: $(GenAPITargetPath)" Importance="high" />
 
   </Target>
 
