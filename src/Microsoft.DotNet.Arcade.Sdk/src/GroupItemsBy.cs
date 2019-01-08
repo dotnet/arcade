@@ -27,6 +27,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     /// <ItemGroup>
     ///   <Stuff Include="A" Value="X;Y"/>
     ///   <Stuff Include="B" Value="Z"/>
+    /// </ItemGroup>
     /// ]]>
     /// 
     /// </summary>
