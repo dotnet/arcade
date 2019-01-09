@@ -52,4 +52,4 @@ $body = @{
   state="Completed";
 } | ConvertTo-Json
 Write-Output $body
-Invoke-RestMethod "$collectionUri$teamProject/_apis/test/runs/$runId?api-version=5.0-preview.2" -Method Patch -ContentType 'application/json' -Body $body -Verbose -Headers $headers
+Invoke-RestMethod "$collectionUri$teamProject/_apis/test/runs/$($runId)?api-version=5.0-preview.2" -Method Patch -ContentType 'application/json' -Body $body -Verbose -Headers $headers
