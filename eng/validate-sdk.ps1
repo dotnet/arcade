@@ -88,8 +88,9 @@ try {
   StopDotnetIfRunning
   
   Write-Host "Building with updated dependencies"
-
-  . .\common\build.ps1 -configuration $configuration @Args  /p:AdditionalRestoreSources=$packagesSource
+  # Clear this global variable so that we don't use the cached toolset that we restored in Step 1.
+  Remove-Variable _ToolsetBuildProj -Scope Global
+  & .\common\build.ps1 -configuration $configuration @Args  /p:AdditionalRestoreSources=$packagesSource
 }
 catch {
   Write-Host $_
