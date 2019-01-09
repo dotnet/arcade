@@ -1,14 +1,18 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
-<Project DefaultTargets="PublishBuildAssets">
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="PublishBuildAssets">
   <!--
     Required variables:
       ManifestsPath                     Path to file containing manifest files.
       BuildAssetRegistryToken           Token required to insert metadata into BAR.
       MaestroApiEndpoint            	Maestro's endpoint.
   -->
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+  </PropertyGroup>
 
-  <Import Project="BuildStep.props" />
-  
+  <Import Project="$(MSBuildThisFileDirectory)../RepoLayout.props"/>
+  <Import Project="$(MSBuildThisFileDirectory)Versions.props"/>
+
   <PropertyGroup>
     <_MicrosoftDotNetMaestroTasksBaseDir>$(NuGetPackageRoot)microsoft.dotnet.maestro.tasks\$(MicrosoftDotNetMaestroTasksVersion)\tools\</_MicrosoftDotNetMaestroTasksBaseDir>
     <_MicrosoftDotNetMaestroTasksDir>$(_MicrosoftDotNetMaestroTasksBaseDir)net461</_MicrosoftDotNetMaestroTasksDir>
@@ -16,12 +20,12 @@
   </PropertyGroup>
   
   <UsingTask TaskName="PushMetadataToBuildAssetRegistry" AssemblyFile="$(_MicrosoftDotNetMaestroTasksDir)\Microsoft.DotNet.Maestro.Tasks.dll"/>
-  
+
   <Target Name="Execute" 
           DependsOnTargets="PublishBuildAssets" />
 
   <Target Name="PublishBuildAssets">
-    <Error Text="The ManifestsPath  property must be set on the command line." Condition="'$(ManifestsPath)' == ''" />
+    <Error Text="The ManifestsPath property must be set on the command line." Condition="'$(ManifestsPath)' == ''" />
     <Error Text="The BuildAssetRegistryToken property must be set on the command line." Condition="'$(BuildAssetRegistryToken)' == ''" />
     <Error Text="The MaestroApiEndpoint property must be set on the command line." Condition="'$(MaestroApiEndpoint)' == ''" />
     

@@ -1,0 +1,82 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project DefaultTargets="Execute" TreatAsLocalProperty="RepoRoot">
+  <!--
+
+  Required parameters:
+    RepoRoot                        Repository root.
+    Projects                        List of projects to build. Semicolon separated, may include globs.
+
+  Optional parameters:
+    ContinuousIntegrationBuild      "true" when building on a CI server (PR build or official build)
+  -->
+
+  <!--
+    Default values.
+  -->
+  <ItemGroup>
+    <ProjectToBuild Include="$(Projects)"/>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <_RepoRootOriginal>$(RepoRoot)</_RepoRootOriginal>
+    <RepoRoot>$([System.IO.Path]::GetFullPath('$(RepoRoot)/'))</RepoRoot>
+
+    <_RemoveProps>Projects</_RemoveProps>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)../RepoLayout.props"/>
+  <Import Project="$(MSBuildThisFileDirectory)Versions.props"/>
+
+  <Target Name="Execute">
+    <Error Text="Property 'Projects' must be specified" Condition="'$(Projects)' == ''"/>
+    <Error Text="File 'global.json' must exist in directory specified by RepoRoot: '$(_RepoRootOriginal)'" Condition="'$(_RepoRootOriginal)' != '' and !Exists('$(RepoRoot)global.json')"/>
+
+    <PropertyGroup>
+      <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' != 'Core'">"$(MSBuildBinPath)\MSBuild.exe" /nodeReuse:false</_MSBuildCmd>
+      <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' == 'Core'">"$(DotNetTool)" msbuild</_MSBuildCmd>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <_RestoreTools>true</_RestoreTools>
+      <_RestoreTools Condition="'$(Restore)' == 'true'">true</_RestoreTools>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_SolutionBuildTargets Include="Execute" Condition="'$(Execute)' == 'true'" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_CommonProps Include="ContinuousIntegrationBuild=$(ContinuousIntegrationBuild)" />
+      <_CommonProps Include="RepoRoot=$(RepoRoot)" />
+      <!--
+        When building from source we suppress restore for projects that set ExcludeFromSourceBuild=true.
+        NuGet Restore task reports a warning for such projects, which we suppress here.
+      -->
+      <_CommonProps Include="DisableWarnForInvalidRestoreProjects=true" Condition="'$(DotNetBuildFromSource)' == 'true'"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="$(_RestoreTools)">
+      <_RestoreToolsProps Include="@(_CommonProps)"/>
+      <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
+      <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
+    </ItemGroup>
+
+    <!--
+      Restore built-in tools.
+    -->
+    <MSBuild Projects="@(ProjectToBuild)"
+             Targets="Restore"
+             Properties="@(_RestoreToolsProps)"
+             RemoveProperties="$(_RemoveProps)"
+             Condition="'$(_RestoreTools)' == 'true'"/>
+
+    <!--
+      Execute projects
+    -->
+    <MSBuild Projects="@(ProjectToBuild)"
+             Properties="@(_SolutionBuildProps);__BuildPhase=SolutionBuild"
+             RemoveProperties="$(_RemoveProps)"
+             Targets="Execute"
+             BuildInParallel="true" />
+  </Target>
+</Project>
