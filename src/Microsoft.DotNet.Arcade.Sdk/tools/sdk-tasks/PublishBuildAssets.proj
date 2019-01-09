@@ -7,11 +7,19 @@
       MaestroApiEndpoint            	Maestro's endpoint.
   -->
   <PropertyGroup>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
   </PropertyGroup>
 
-  <Import Project="$(MSBuildThisFileDirectory)../RepoLayout.props"/>
-  <Import Project="$(MSBuildThisFileDirectory)Versions.props"/>
+  <PropertyGroup>
+    <MicrosoftDotNetMaestroTasksVersion Condition="'$(MicrosoftDotNetMaestroTasksVersion)' == ''">1.0.0-beta.18478.2</MicrosoftDotNetMaestroTasksVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Maestro.Tasks" Version="$(MicrosoftDotNetMaestroTasksVersion)" IsImplicitlyDefined="true" />  
+  </ItemGroup>
+
+  <Import Project="../RepoLayout.props"/>
+  <Import Project="Versions.props"/>
 
   <PropertyGroup>
     <_MicrosoftDotNetMaestroTasksBaseDir>$(NuGetPackageRoot)microsoft.dotnet.maestro.tasks\$(MicrosoftDotNetMaestroTasksVersion)\tools\</_MicrosoftDotNetMaestroTasksBaseDir>

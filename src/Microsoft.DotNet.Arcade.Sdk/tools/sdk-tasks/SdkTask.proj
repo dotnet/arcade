@@ -48,11 +48,6 @@
     <ItemGroup>
       <_CommonProps Include="ContinuousIntegrationBuild=$(ContinuousIntegrationBuild)" />
       <_CommonProps Include="RepoRoot=$(RepoRoot)" />
-      <!--
-        When building from source we suppress restore for projects that set ExcludeFromSourceBuild=true.
-        NuGet Restore task reports a warning for such projects, which we suppress here.
-      -->
-      <_CommonProps Include="DisableWarnForInvalidRestoreProjects=true" Condition="'$(DotNetBuildFromSource)' == 'true'"/>
     </ItemGroup>
 
     <ItemGroup Condition="$(_RestoreTools)">
