@@ -16,7 +16,9 @@ $body = @{
   name="TestTestRun";
   state="InProgress";
 } | ConvertTo-Json
-$run = Invoke-RestMethod -Verbose -Headers $headers -Method Post -ContentType 'application/json' -Uri "$collectionUri$teamProject/_apis/test/runs?api-version=5.0-preview.2" -Body $body
+Write-Output $body
+$run = Invoke-RestMethod "$collectionUri$teamProject/_apis/test/runs?api-version=5.0-preview.2" -Method Post -ContentType 'application/json' -Body $body -Verbose -Headers $headers
+Write-Output $run
 
 $runId = $run.id
 
@@ -33,7 +35,8 @@ $body = @(
     stackTrace="This is a stack trace";
   }
 ) | ConvertTo-Json
-Invoke-RestMethod -Verbose -Headers $headers -Method Patch -ContentType 'application/json' -Uri "$collectionUri$teamProject/_apis/test/runs/$runId/results?api-version=5.0-preview.5" -Body $body
+Write-Output $body
+Invoke-RestMethod "$collectionUri$teamProject/_apis/test/runs/$runId/results?api-version=5.0-preview.5" -Method Post -ContentType 'application/json' -Body $body -Verbose -Headers $headers
 
 
 
@@ -41,4 +44,5 @@ Invoke-RestMethod -Verbose -Headers $headers -Method Patch -ContentType 'applica
 $body = @{
   state="Completed";
 } | ConvertTo-Json
-Invoke-RestMethod -Verbose -Headers $headers -Method Patch -ContentType 'application/json' -Uri "$collectionUri$teamProject/_apis/test/runs/$runId?api-version=5.0-preview.2" -Body $body
+Write-Output $body
+Invoke-RestMethod "$collectionUri$teamProject/_apis/test/runs/$runId?api-version=5.0-preview.2" -Method Patch -ContentType 'application/json' -Body $body -Verbose -Headers $headers
