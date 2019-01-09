@@ -37,12 +37,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string BuildId { get; set; } = "no build id provided";
 
         /// <summary>
-        /// Named properties, and abitrary list of metadata about the current build.
+        /// Named properties, and arbitrary list of metadata about the current build.
         /// </summary>
         public string[] BuildData { get; set; }
 
         /// <summary>
-        /// The URI of the source code repostory used to produce the artifacts.
+        /// The URI of the repository used to produce the artifacts.
         /// </summary>
         public string RepoUri { get; set; }
 
