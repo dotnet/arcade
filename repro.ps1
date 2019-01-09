@@ -3,7 +3,7 @@ $collectionUri = $env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI
 $teamProject = $env:SYSTEM_TEAMPROJECT
 $buildId = $env:BUILD_BUILDID
 
-$heaers = @{
+$headers = @{
   Authorization="Basic " + [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("unused:$token"));
   'User-Agent'='HelixSdk';
 }
