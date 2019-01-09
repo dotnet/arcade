@@ -136,16 +136,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             string path = item.GetMetadata("RelativeBlobPath");
 
-            // Only include assets in the manifest if they're in "assets/".
-            if (path?.StartsWith(AssetsVirtualDir, StringComparison.Ordinal) == true)
+            return new BlobArtifactModel
             {
-                return new BlobArtifactModel
-                {
-                    Attributes = ParseCustomAttributes(item),
-                    Id = path.Substring(AssetsVirtualDir.Length)
-                };
-            }
-            return null;
+                Attributes = ParseCustomAttributes(item),
+                Id = path
+            };
         }
 
         private static IDictionary<string, string> ParseCustomAttributes(ITaskItem item)
