@@ -37,7 +37,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-      <_RestoreTools>true</_RestoreTools>
+      <_RestoreTools>false</_RestoreTools>
       <_RestoreTools Condition="'$(Restore)' == 'true'">true</_RestoreTools>
     </PropertyGroup>
 
