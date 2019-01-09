@@ -1,4 +1,5 @@
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Common.Desktop;
 using Microsoft.DotNet.Helix.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -12,6 +13,11 @@ namespace Microsoft.DotNet.Helix.Sdk
 {
     public class HelixWait : HelixTask
     {
+        static HelixWait()
+        {
+            AssemblyResolver.Enable();
+        }
+    
         /// <summary>
         /// An array of Helix Jobs to be waited on
         /// </summary>
