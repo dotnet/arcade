@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.AzureDevOps
 {
@@ -44,7 +45,10 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                 }
                 else
                 {
-                    using (var client = new HttpClient
+                    using (var client = new HttpClient(new HttpClientHandler
+                    {
+                        AllowAutoRedirect = false,
+                    })
                     {
                         DefaultRequestHeaders =
                         {
@@ -90,6 +94,28 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         private string GetVersion()
         {
             return GetType().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+        }
+
+        protected async Task<JObject> ParseResponseAsync(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            if (!res.IsSuccessStatusCode)
+            {
+                await LogFailedRequest(req, res);
+                return null;
+            }
+
+            var responseContent = await res.Content.ReadAsStringAsync();
+
+            try
+            {
+                return JObject.Parse(responseContent);
+            }
+            catch (Exception)
+            {
+                Log.LogError($"Request to {req.RequestUri} returned unexpected response: {responseContent}");
+            }
+
+            return null;
         }
     }
 }
