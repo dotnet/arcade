@@ -4,6 +4,6 @@ jobs:
     name: NetCorePublic-Int-Pool
     queue: Windows.10.Amd64.Open
   steps:
-  - powershell: repro.ps1
+  - powershell: ./repro.ps1
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
