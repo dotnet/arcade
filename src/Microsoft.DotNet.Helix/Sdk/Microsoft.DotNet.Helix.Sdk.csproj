@@ -19,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\Common\AssemblyResolver.cs" />
+  </ItemGroup>
+   
+  <ItemGroup>
     <None Include="**\*.py;**\*.bat;**\*.sh" Pack="true">
       <PackagePath>%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
     </None>
