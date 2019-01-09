@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
+using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
@@ -46,6 +47,17 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         [Required]
         public string TargetQueue { get; set; }
+
+        /// <summary>
+        /// <see langword="true"/> when the this job is external (i.e. should be submitted anonymously); false when not
+        /// </summary>
+        public bool IsExternal { get; set; } = false;
+
+        /// <summary>
+        /// Required if the build is external
+        /// The GitHub username of the job creator
+        /// </summary>
+        public string Creator { get; set; }
 
         /// <summary>
         ///   <see langword="true"/> when the work items are executing on a Posix shell; <see langword="false"/> otherwise.
@@ -102,17 +114,56 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </remarks>
         public ITaskItem[] WorkItems { get; set; }
 
+        /// <summary>
+        ///  A set of properties for helix to map the job using architecture and configuration
+        /// </summary>
+        /// <remarks>
+        ///  Required Metadata:
+        ///     Identity - The property Key
+        ///     Value - The property Value mapped to the key.
+        /// </remarks>
+        public ITaskItem[] HelixProperties { get; set; }
+
+        /// <summary>
+        /// Max automatic retry of workitems which do not return 0
+        /// </summary>
+        public int MaxRetryCount { get; set; }
+
         private CommandPayload _commandPayload;
 
         protected override async Task ExecuteCore()
         {
             using (_commandPayload = new CommandPayload(this))
             {
-                IJobDefinition def = HelixApi.Job.Define()
+                var currentHelixApi = HelixApi;
+                if (IsExternal)
+                {
+                    Log.LogMessage($"Job is external. Switching to anonymous API.");
+                    currentHelixApi = AnonymousApi;
+                    var storageApi = new Storage((HelixApi)HelixApi);
+                    typeof(HelixApi).GetProperty("Storage").SetValue(AnonymousApi, storageApi);
+                }
+
+                IJobDefinition def = currentHelixApi.Job.Define()
                     .WithSource(Source)
                     .WithType(Type)
                     .WithBuild(Build)
-                    .WithTargetQueue(TargetQueue);
+                    .WithTargetQueue(TargetQueue)
+                    .WithMaxRetryCount(MaxRetryCount);
+                Log.LogMessage($"Initialized job definition with source '{Source}', type '{Type}', build number '{Build}', and target queue '{TargetQueue}'");
+
+                if (IsExternal)
+                {
+                    if (string.IsNullOrEmpty(Creator))
+                    {
+                        Log.LogError("The Creator property was left unspecified for an external job. Please set the Creator property or set IsExternal to false.");
+                    }
+                    else
+                    {
+                        def.WithCreator(Creator);
+                        Log.LogMessage($"Setting creator to '{Creator}'");
+                    }
+                }
 
                 if (CorrelationPayloads != null)
                 {
@@ -139,6 +190,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                     def = def.WithCorrelationPayloadDirectory(directory);
                 }
 
+                if (HelixProperties != null)
+                {
+                    foreach (ITaskItem helixProperty in HelixProperties)
+                    {
+                        def = AddProperty(def, helixProperty);
+                    }
+                }
+
                 // don't send the job if we have errors
                 if (Log.HasLoggedErrors)
                 {
@@ -147,19 +206,36 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 Log.LogMessage(MessageImportance.Normal, "Sending Job...");
 
-                ISentJob job = await def.SendAsync();
+                ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg));
                 JobCorrelationId = job.CorrelationId;
             }
         }
 
-        private IJobDefinition AddWorkItem(IJobDefinition def, ITaskItem workItem)
+        private IJobDefinition AddProperty(IJobDefinition def, ITaskItem property)
         {
-            if (!GetRequiredMetadata(workItem, "Identity", out string name))
+            if (!property.GetRequiredMetadata(Log, "Identity", out string key))
             {
                 return def;
             }
 
-            if (!GetRequiredMetadata(workItem, "Command", out string command))
+            if (!property.GetRequiredMetadata(Log, "Value", out string value))
+            {
+                return def;
+            }
+
+            def.WithProperty(key, value);
+            Log.LogMessage($"Added property '{key}' (value: '{value}') to job definition.");
+            return def;
+        }
+
+        private IJobDefinition AddWorkItem(IJobDefinition def, ITaskItem workItem)
+        {
+            if (!workItem.GetRequiredMetadata(Log, "Identity", out string name))
+            {
+                return def;
+            }
+
+            if (!workItem.GetRequiredMetadata(Log, "Command", out string command))
             {
                 return def;
             }
@@ -239,7 +315,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
             }
 
-            if (TryGetMetadata(workItem, "PreCommands", out string workItemPreCommandsString))
+            if (workItem.TryGetMetadata("PreCommands", out string workItemPreCommandsString))
             {
                 foreach (string command in SplitCommands(workItemPreCommandsString))
                 {
@@ -249,7 +325,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             yield return workItemCommand;
 
-            if (TryGetMetadata(workItem, "PostCommands", out string workItemPostCommandsString))
+            if (workItem.TryGetMetadata("PostCommands", out string workItemPostCommandsString))
             {
                 foreach (string command in SplitCommands(workItemPostCommandsString))
                 {
@@ -311,24 +387,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
         }
 
-        private bool TryGetMetadata(ITaskItem item, string key, out string value)
-        {
-            value = item.GetMetadata(key);
-            return !string.IsNullOrEmpty(value);
-        }
-
-        private bool GetRequiredMetadata(ITaskItem item, string key, out string value)
-        {
-            value = item.GetMetadata(key);
-            if (string.IsNullOrEmpty(value))
-            {
-                Log.LogError($"Item '{item.ItemSpec}' missing required metadata '{key}'.");
-                return false;
-            }
-
-            return true;
-        }
-
         private IJobDefinition AddCorrelationPayload(IJobDefinition def, ITaskItem correlationPayload)
         {
             string path = correlationPayload.GetMetadata("FullPath");
@@ -342,8 +400,11 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (Directory.Exists(path))
             {
+                string includeDirectoryNameStr = correlationPayload.GetMetadata("IncludeDirectoryName");
+                bool.TryParse(includeDirectoryNameStr, out bool includeDirectoryName);
+
                 Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Directory '{path}'");
-                return def.WithCorrelationPayloadDirectory(path);
+                return def.WithCorrelationPayloadDirectory(path, includeDirectoryName);
             }
 
             if (File.Exists(path))

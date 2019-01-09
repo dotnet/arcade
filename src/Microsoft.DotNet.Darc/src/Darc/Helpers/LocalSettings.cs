@@ -2,12 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.DotNet.Darc.Operations;
 using Microsoft.DotNet.Darc.Options;
 using Microsoft.DotNet.DarcLib;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Darc.Helpers
 {
@@ -16,13 +18,15 @@ namespace Microsoft.DotNet.Darc.Helpers
     /// </summary>
     internal class LocalSettings
     {
+        private static string _defaultBuildAssetRegistryBaseUri = "https://maestro-prod.westus2.cloudapp.azure.com/";
+
         public string BuildAssetRegistryPassword { get; set; }
 
         public string GitHubToken { get; set; }
 
         public string AzureDevOpsToken { get; set; }
 
-        public string BuildAssetRegistryBaseUri { get; set; } = "https://maestro-prod.westus2.cloudapp.azure.com/";
+        public string BuildAssetRegistryBaseUri { get; set; } = _defaultBuildAssetRegistryBaseUri;
 
         /// <summary>
         /// Saves the settings in the settings files
@@ -41,6 +45,28 @@ namespace Microsoft.DotNet.Darc.Helpers
             return JsonConvert.DeserializeObject<LocalSettings>(settings);
         }
 
+        public static LocalSettings LoadSettingsFile(CommandLineOptions options)
+        {
+            try
+            {
+                return LoadSettingsFile();
+            }
+            catch (Exception exc) when (exc is DirectoryNotFoundException || exc is FileNotFoundException)
+            {
+                if (string.IsNullOrEmpty(options.AzureDevOpsPat) &&
+                    string.IsNullOrEmpty(options.GitHubPat) &&
+                    string.IsNullOrEmpty(options.BuildAssetRegistryPassword))
+                {
+                    throw new DarcException("Please make sure to run darc authenticate and set" +
+                        " 'bar_password' and 'github_token' or 'azure_devops_token' or append" +
+                        "'-p <bar_password>' [--github-pat <github_token> | " +
+                        "--azdev-pat <azure_devops_token>] to your command");
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Retrieve the settings from the combination of the command line
         /// options and the user's darc settings file.
@@ -50,14 +76,24 @@ namespace Microsoft.DotNet.Darc.Helpers
         /// <remarks>The command line takes precedence over the darc settings file.</remarks>
         public static DarcSettings GetDarcSettings(CommandLineOptions options, ILogger logger, string repoUri = null)
         {
+            LocalSettings localSettings = null;
             DarcSettings darcSettings = new DarcSettings();
             darcSettings.GitType = GitRepoType.None;
 
             try
             {
-                LocalSettings localSettings = LoadSettingsFile();
-                darcSettings.BuildAssetRegistryBaseUri = localSettings.BuildAssetRegistryBaseUri;
-                darcSettings.BuildAssetRegistryPassword = localSettings.BuildAssetRegistryPassword;
+                localSettings = LoadSettingsFile(options);
+
+                if (localSettings != null)
+                {
+                    darcSettings.BuildAssetRegistryBaseUri = localSettings.BuildAssetRegistryBaseUri;
+                    darcSettings.BuildAssetRegistryPassword = localSettings.BuildAssetRegistryPassword;
+                }
+                else
+                {
+                    darcSettings.BuildAssetRegistryBaseUri = _defaultBuildAssetRegistryBaseUri;
+                    darcSettings.BuildAssetRegistryPassword = options.BuildAssetRegistryPassword;
+                }
 
                 if (!string.IsNullOrEmpty(repoUri))
                 {
@@ -76,10 +112,6 @@ namespace Microsoft.DotNet.Darc.Helpers
                         logger.LogWarning($"Unknown repository '{repoUri}'");
                     }
                 }
-            }
-            catch (FileNotFoundException)
-            {
-                // Doesn't have a settings file, which is not an error
             }
             catch (Exception e)
             {

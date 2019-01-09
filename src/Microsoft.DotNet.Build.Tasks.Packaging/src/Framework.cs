@@ -249,7 +249,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             }
 
             // if no version is specified just use 0.0.0.0 to evaluate for any version of the contract
-            Version version = FrameworkUtilities.Ensure4PartVersion(String.IsNullOrEmpty(assemblyVersion) ? new Version(0, 0, 0, 0) : new Version(assemblyVersion));
+            Version version = FrameworkUtilities.Ensure4PartVersion(assemblyVersion);
             FrameworkSet fxs = GetInboxFrameworks(frameworkListsPath);
 
             Version latestLegacyVersion = null;

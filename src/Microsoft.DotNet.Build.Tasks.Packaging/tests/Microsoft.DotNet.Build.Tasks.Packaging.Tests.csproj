@@ -25,7 +25,6 @@
   <!-- test packages - these packages aren't needed for compilation but are copied
                        to the output and used for testing. -->
   <ItemGroup>
-    <TestPackage Include="Microsoft.NETCore.Platforms" Version="2.1.0" />
     <TestPackage Include="System.Collections.Immutable" Version="1.3.1" />
     <TestPackage Include="Microsoft.Win32.Registry" Version="4.3.0" />
     <TestPackage Include="System.Runtime" Version="4.3.0" />
@@ -64,9 +63,6 @@
      <ItemGroup>
        <TestPackageContent Include="%(TestPackage.Folder)\**\*" LinkBase="packages\%(TestPackage.Identity)\%(TestPackage.Version)\" />
        <Content Include="@(TestPackageContent)" Link="%(TestPackageContent.LinkBase)%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-
-       <!-- put the runtime.json from platforms in the root as it is needed by multiple tests -->
-       <Content Condition="'%(TestPackage.Identity)' == 'Microsoft.NETCore.Platforms'" Include="%(TestPackage.Folder)\runtime.json" CopyToOutputDirectory="PreserveNewest" />
      </ItemGroup>
   </Target>
 </Project>

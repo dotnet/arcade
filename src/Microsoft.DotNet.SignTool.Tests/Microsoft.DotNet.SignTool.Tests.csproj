@@ -1,7 +1,7 @@
-﻿<!-- Copyright (c)  Microsoft.  All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <LangVersion>Latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
@@ -11,6 +11,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.DotNet.SignTool\Microsoft.DotNet.SignTool.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Common\TestUtilities\AssertEx.cs" Link="TestUtilities\AssertEx.cs" />
+    <Compile Include="..\Common\TestUtilities\DiffUtil.cs" Link="TestUtilities\DiffUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\**">

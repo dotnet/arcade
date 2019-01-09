@@ -2,15 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
-using System.Xml.XPath;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.DarcLib
 {
@@ -460,10 +459,10 @@ namespace Microsoft.DotNet.DarcLib
                 }
                 
             }
-            else
-            {
-                UpdateVersionGlobalJson(itemToUpdate, token);
-            }
+
+            // Update the global json too, even if there was an element in the props file, in case
+            // it was listed in both
+            UpdateVersionGlobalJson(itemToUpdate, token);
         }
 
         private void UpdateVersionGlobalJson(DependencyDetail itemToUpdate, JToken token)
@@ -552,6 +551,24 @@ namespace Microsoft.DotNet.DarcLib
             return results.All(result => result);
         }
 
+        public static void NormalizeAttributes(string directoryPath)
+        {
+            string[] filePaths = Directory.GetFiles(directoryPath);
+            string[] subdirectoryPaths = Directory.GetDirectories(directoryPath);
+
+            foreach (string filePath in filePaths)
+            {
+                File.SetAttributes(filePath, FileAttributes.Normal);
+            }
+
+            foreach (string subdirectoryPath in subdirectoryPaths)
+            {
+                NormalizeAttributes(subdirectoryPath);
+            }
+
+            File.SetAttributes(directoryPath, FileAttributes.Normal);
+        }
+
         /// <summary>
         ///     Ensure that the dependency structure only contains one of each named dependency.
         /// </summary>
@@ -591,7 +608,8 @@ namespace Microsoft.DotNet.DarcLib
                 XmlNode versionNode = versionProps.DocumentElement.SelectSingleNode($"//*[local-name()='{versionElementName}']");
                 if (versionNode == null)
                 {
-                    versionNode = versionProps.DocumentElement.SelectSingleNode($"////*[local-name()='{alternateVersionElementName}']");
+                    versionNode = versionProps.DocumentElement.SelectSingleNode($"//*[local-name()='{alternateVersionElementName}']");
+                    versionElementName = alternateVersionElementName;
                 }
 
                 if (versionNode != null)

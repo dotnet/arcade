@@ -108,6 +108,8 @@ namespace Maestro.Data.Migrations
 
                     b.Property<string>("Name");
 
+                    b.Property<bool>("NonShipping");
+
                     b.Property<string>("Version");
 
                     b.HasKey("Id");

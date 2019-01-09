@@ -1,0 +1,28 @@
+<Project>
+  <PropertyGroup>
+    <EnableAzurePipelinesReporter Condition="'$(EnableAzurePipelinesReporter)' != 'true'">false</EnableAzurePipelinesReporter>
+
+    <AzurePipelinesAvaliable Condition="'$(SYSTEM_ACCESSTOKEN)' != ''">true</AzurePipelinesAvaliable>
+    <AzurePipelinesAvaliable Condition="'$(AzurePipelinesAvaliable)' != 'true'">false</AzurePipelinesAvaliable>
+  </PropertyGroup>
+
+  <!-- We don't currently support reporting tests from builds of forks -->
+  <PropertyGroup Condition=" '$(SYSTEM_PULLREQUEST_ISFORK)' == 'True'">
+    <AzurePipelinesAvaliable>false</AzurePipelinesAvaliable>
+    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ImportAzurePipelinesTargets Condition="$(EnableAzurePipelinesReporter) AND $(AzurePipelinesAvaliable)">true</ImportAzurePipelinesTargets>
+    <ImportAzurePipelinesTargets Condition="'$(ImportAzurePipelinesTargets)' != 'true'">false</ImportAzurePipelinesTargets>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(ImportAzurePipelinesTargets)">
+    <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.MonoQueue.targets</_HelixMonoQueueTargets>
+    <_HelixMultiQueueTargets>$(_HelixMultiQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.MultiQueue.targets</_HelixMultiQueueTargets>
+  </PropertyGroup>
+
+  <Target Name="ValidateAzurePipelinesConfiguration" Condition="$(EnableAzurePipelinesReporter) AND '$(HelixTargetQueue)' == ''" BeforeTargets="StartTestRuns;Test">
+    <Error Condition="!$(AzurePipelinesAvaliable)" Text="Azure Pipelines SYSTEM_ACCESSTOKEN variable not found. Either the build is not running in Azure Pipelines, or the current step is not configured correctly. Please configure this step with the System.AccessToken variable, see: https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=vsts&amp;tabs=yaml%2Cbatch#systemaccesstoken"/>
+  </Target>
+</Project>

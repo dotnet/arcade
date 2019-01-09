@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="**\*.py" Pack="true">
+    <None Include="**\*.py;**\*.bat;**\*.sh" Pack="true">
       <PackagePath>%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
     </None>
   </ItemGroup>

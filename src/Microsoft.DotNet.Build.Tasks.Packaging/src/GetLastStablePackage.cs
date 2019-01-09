@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetLastStablePackage : PackagingTask
+    public class GetLastStablePackage : BuildTask
     {
         /// <summary>
         /// List of packages to look up.

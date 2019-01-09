@@ -13,11 +13,7 @@ Below is a list of changes required to migrate to Arcade.
 
 ### Shipping vs NonShipping packages
 
-Shipping packages are the ones that are pushed to NuGet.org, non-shipping are pushed to myget or Azure blob feed only.
-  1. Set IsShipping property to false in 
-     - projects that produce NuGet packages that are not shipping on NuGet.org or other official channel (like part of an official installer), 
-     - projects that produce VSIX packages that are only used only within the repository (e.g. to facilitate integration tests or VS F5) and not expected to be installed by customers,
-     - Test/build utility projects (test projects are automatically marked as non-shipping).
+  1. Set `IsShipping` property according to the Arcade SDK [guidelines](https://github.com/dotnet/arcade/blob/master/Documentation/ArcadeSdk.md#isshipping-bool)
   2. Update package directory used by `NuGetPublisher@0` task in `.vsts-ci.yml`
      - Add `*Shipping` subdir, which will match `Shipping` and `NonShipping` like so:
        searchPattern: `artifacts\$(BuildConfiguration)\packages\*Shipping\*.nupkg`
@@ -36,7 +32,7 @@ Shipping packages are the ones that are pushed to NuGet.org, non-shipping are pu
 ### New `-publish` build parameter
 A new option `-publish` was added to `build.ps1` script that needs to be set for CI builds. If the repo uses a custom `CIBuild.cmd` pass `-publish` when invoking `build.ps1`. See [CIBuild.cmd](https://github.com/dotnet/symreader/blob/master/eng/common/CIBuild.cmd#L2).
 
-## Arcade.SDK
+## Arcade.SDK 
 
 ### Global.json
 ```
@@ -64,7 +60,7 @@ The following applies to CI build definition, not PR validation build definition
 - pipeline variables (settable in build definition web UI)
   - Add SignType definition variable settable at queue time
     ![Pipeline Variables](PipelineVariables.png)
-  - Link DotNet-Symbol-Publish variable group. If you don’t see the group in the UI you might not have permissions. Let me know and I'll add it to your definition.
+  - Link DotNet-Symbol-Server-Pats variable group. If you don’t see the group in the UI you might not have permissions. Let me know and I'll add it to your definition.
     ![Variable Groups](VariableGroups.png)
 
 ### Versioning changes
@@ -129,3 +125,8 @@ The following applies to CI build definition, not PR validation build definition
 
 <Target Name="_CorePublish" DependsOnTargets="Publish" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
 ```
+
+## Arcade SDK (19055.1)
+
+- MicroBuildSwixPlugin installation step not required anymore: https://github.com/dotnet/arcade/pull/1692
+- A project that generates pkgdef file but does not produce a VSIX container does _not_ need to include the `Microsoft.VSSDK.BuildTools` PackageReference explicitly anymore.

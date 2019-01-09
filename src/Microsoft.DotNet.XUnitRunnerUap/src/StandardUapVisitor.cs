@@ -15,15 +15,15 @@ namespace Microsoft.DotNet.XUnitRunnerUap
     {
         private string _assemblyName;
         private readonly ConcurrentDictionary<string, ExecutionSummary> _completionMessages;
-        private readonly bool _showProgress;
+        private readonly bool _verbose;
         private readonly bool _failSkips;
 
         public StandardUapVisitor(XElement assemblyElement, Func<bool> cancelThunk,
-            ConcurrentDictionary<string, ExecutionSummary> completionMessages, bool showProgress, bool failSkips)
+            ConcurrentDictionary<string, ExecutionSummary> completionMessages, bool verbose, bool failSkips)
             : base(assemblyElement, cancelThunk)
         {
             _completionMessages = completionMessages;
-            _showProgress = showProgress;
+            _verbose = verbose;
             _failSkips = failSkips;
         }
 
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.XUnitRunnerUap
 
         protected override bool Visit(ITestStarting testStarting)
         {
-            if (_showProgress)
+            if (_verbose)
             {
                 Console.WriteLine($"   {XmlEscape(testStarting.Test.DisplayName)} [STARTING]");
             }
@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.XUnitRunnerUap
 
         protected override bool Visit(ITestFinished testFinished)
         {
-            if (_showProgress)
+            if (_verbose)
             {
                 Console.WriteLine($"   {XmlEscape(testFinished.Test.DisplayName)} [FINISHED] Time: {testFinished.ExecutionTime}s");
             }

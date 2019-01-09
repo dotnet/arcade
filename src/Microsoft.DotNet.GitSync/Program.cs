@@ -25,6 +25,7 @@ namespace Microsoft.DotNet.GitSync
     internal class Program
     {
         private const string TableName = "CommitHistory";
+        private const string RepoTableName = "MirrorRepos";
         private static CloudTable s_table;
         private static Dictionary<string, List<string>> s_repos { get; set; } = new Dictionary<string, List<string>>();
         private ConfigFile ConfigFile { get; }
@@ -43,14 +44,14 @@ namespace Microsoft.DotNet.GitSync
             XmlConfigurator.Configure();
         }
 
-        private void Run()
+        private async Task RunAsync()
         {
-            var config = ConfigFile.Get();
+            var config = await ConfigFile.GetAsync();
             if (config == null)
             {
                 s_logger.Error("Config File does not exist, Configuring.");
                 Configure(ConfigFile);
-                config = ConfigFile.Get();
+                config = await ConfigFile.GetAsync();
             }
             Setup(config.ConnectionString, config.Server, config.Destinations);
 
@@ -71,7 +72,7 @@ namespace Microsoft.DotNet.GitSync
             {
                 try
                 {
-                    Step(cts.Token);
+                    await StepAsync(cts.Token);
                     s_logger.Info("Waiting");
                     Task.Delay(new TimeSpan(0, 5, 0), cts.Token).Wait();
                 }
@@ -94,19 +95,19 @@ namespace Microsoft.DotNet.GitSync
             }
         }
 
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            new Program(args).Run();
+            await new Program(args).RunAsync();
         }
 
-        private void Step(CancellationToken token)
+        private async Task StepAsync(CancellationToken token)
         {
-            Task.Run(() => ProcessAsync(token)).GetAwaiter().GetResult();
+            await ProcessAsync(token);
         }
 
         private async Task ProcessAsync(CancellationToken token)
         {
-            var config = ConfigFile.Get();
+            var config = await ConfigFile.GetAsync();
 
             if (token.IsCancellationRequested)
             {
@@ -124,7 +125,9 @@ namespace Microsoft.DotNet.GitSync
 
                 foreach (RepositoryInfo repo in config.Repos)
                 {
-                    SanityCheck(repo, prBranch);
+                    if (repo.LastSynchronizedCommits != null)
+                        SanityCheck(repo, prBranch);
+
                     if (!await WaitForPendingPRAsync(repo, prBranch))
                     {
                         continue;
@@ -222,12 +225,12 @@ namespace Microsoft.DotNet.GitSync
             var match = Regex.Match(line, @"Subject: \[PATCH\].*\(#[0-9]+\)$");
             if (match.Success)
             {
-                return Regex.Replace(line, @"\(#([0-9]+)\)$", $"({sourceRepository.Configuration.UpstreamOwner}/{sourceRepository.Name}#$1)");
+                return Regex.Replace(line, @"\(#([0-9]+)\)$", $"({sourceRepository.UpstreamOwner}/{sourceRepository.Name}#$1)");
             }
             match = Regex.Match(line, @"Subject: \[PATCH\] Merge pull request #[0-9]+ from");
             if (match.Success)
             {
-                return Regex.Replace(line, "#([0-9]+)", $"{sourceRepository.Configuration.UpstreamOwner}/{sourceRepository.Name}#$1");
+                return Regex.Replace(line, "#([0-9]+)", $"{sourceRepository.UpstreamOwner}/{sourceRepository.Name}#$1");
             }
             return line;
         }
@@ -266,20 +269,20 @@ namespace Microsoft.DotNet.GitSync
                 });
             }
             var targetRepo = newChanges.TargetRepository;
-            var newPr = new NewPullRequest($"Mirror changes from { targetRepo.Configuration.UpstreamOwner }/{string.Join(",", newChanges.changes.Keys)}", $"{ targetRepo.Owner}:{branch}", prBranch)
+            var newPr = new NewPullRequest($"Mirror changes from { targetRepo.UpstreamOwner }/{string.Join(",", newChanges.changes.Keys)}", $"{ targetRepo.Owner}:{branch}", prBranch)
             {
-                Body = $"This PR contains mirrored changes from { targetRepo.Configuration.UpstreamOwner }/{string.Join(",", newChanges.changes.Keys)}\n\n\n**Please REBASE this PR when merging**"
+                Body = $"This PR contains mirrored changes from { targetRepo.UpstreamOwner }/{string.Join(",", newChanges.changes.Keys)}\n\n\n**Please REBASE this PR when merging**"
             };
-            s_logger.Debug($"Creating pull request in {newChanges.TargetRepository.Configuration.UpstreamOwner}");
-            var pr = await Client.PullRequest.Create(targetRepo.Configuration.UpstreamOwner, targetRepo.Name, newPr);
+            s_logger.Debug($"Creating pull request in {newChanges.TargetRepository.UpstreamOwner}");
+            var pr = await Client.PullRequest.Create(targetRepo.UpstreamOwner, targetRepo.Name, newPr);
             s_logger.Debug($"Adding the commits");
-            var commits = await Client.Repository.PullRequest.Commits(targetRepo.Configuration.UpstreamOwner, targetRepo.Name, pr.Number);
+            var commits = await Client.Repository.PullRequest.Commits(targetRepo.UpstreamOwner, targetRepo.Name, pr.Number);
             s_logger.Debug($"Getting Assignees");
             var additionalAssignees = await Task.WhenAll(commits.Select(c => GetAuthorAsync(targetRepo, c.Sha)).Distinct());
             try
             {
                 var update = new PullRequestUpdate() { Body = pr.Body + "\n\n cc " + string.Join(" ", additionalAssignees.Select(a => "@" + a)) };
-                await Client.PullRequest.Update(targetRepo.Configuration.UpstreamOwner, targetRepo.Name, pr.Number, update);
+                await Client.PullRequest.Update(targetRepo.UpstreamOwner, targetRepo.Name, pr.Number, update);
             }
             catch (Exception)
             {
@@ -350,7 +353,7 @@ namespace Microsoft.DotNet.GitSync
             var prNum = pendingPr.Number;
 
             var client = Client;
-            var pr = await client.PullRequest.Get(repo.Configuration.UpstreamOwner, repo.Name, prNum);
+            var pr = await client.PullRequest.Get(repo.UpstreamOwner, repo.Name, prNum);
             if (pr.State == ItemState.Open)
             {
                 s_logger.Info($"{repo}/{branch} has pending pull request {prNum}");
@@ -422,7 +425,7 @@ namespace Microsoft.DotNet.GitSync
                     remote = repository.Network.Remotes["upstream"];
                     if (remote == null)
                     {
-                        repository.Network.Remotes.Add("upstream", @"https://github.com/" + repo.Configuration.UpstreamOwner + @"/" + repo.Name + ".git");
+                        repository.Network.Remotes.Add("upstream", @"https://github.com/" + repo.UpstreamOwner + @"/" + repo.Name + ".git");
                     }
                 }
             }
@@ -532,9 +535,20 @@ namespace Microsoft.DotNet.GitSync
             s_table = storageAccount.CreateCloudTableClient().GetTableReference(TableName);
             s_table.CreateIfNotExists();
             s_logger.Info("Connected with azure table Successfully");
-            s_repos.Add("corefx", new List<string> { "coreclr", "corert" });
-            s_repos.Add("coreclr", new List<string> { "corefx", "corert" });
-            s_repos.Add("corert", new List<string> { "coreclr", "corefx" });
+
+            var RepoTable = storageAccount.CreateCloudTableClient().GetTableReference(RepoTableName);
+            RepoTable.CreateIfNotExists();
+
+            TableQuery getAllMirrorPairs = new TableQuery()
+                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.NotEqual, null));
+
+            var repos = RepoTable.ExecuteQuery(getAllMirrorPairs);
+            foreach (var item in repos)
+            {
+                s_repos.Add(item.PartitionKey, item["ReposToMirrorInto"].StringValue.Split(';').ToList());
+                s_logger.Info($"The commits in  {item.PartitionKey} repo will be mirrored into {item["ReposToMirrorInto"].StringValue} Repos");
+            }
+
             s_emailManager = new EmailManager(server, destinations, s_logger);
             s_logger.Info("Setup Completed");
         }

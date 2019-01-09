@@ -25,5 +25,6 @@ namespace Microsoft.Cci.Differs
 
         public bool NonAPIConformanceRule { get; set; }
         public bool MdilServicingRule { get; set; }
+        public bool OptionalRule { get; set; }
     }
 }

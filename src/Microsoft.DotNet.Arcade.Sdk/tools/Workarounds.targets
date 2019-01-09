@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
   <PropertyGroup>
@@ -27,32 +27,13 @@
     </PropertyGroup>
   </Target>
 
-  <PropertyGroup>
-    <IsWpfTempProject>false</IsWpfTempProject>
-    <IsWpfTempProject Condition="'$(MSBuildProjectExtension)' == '.tmp_proj' or $(MSBuildProjectName.EndsWith('_wpftmp'))">true</IsWpfTempProject>
-  </PropertyGroup>
-
   <!--
-    Workaround for WPF temp projects.
-
-    XAML targets create a temp project with OutDir set, which makes the SDK create an empty directory for it,
+    WPF temp project sets OutDir, which makes the SDK create an empty directory for it,
     polluting the output dir. Avoid creating these directories.
     https://github.com/dotnet/sdk/issues/1367
-
-    WPF temp-projects do not import .props and .targets files from NuGet packages.
-    (see https://github.com/dotnet/sourcelink/issues/91).
-
-    This breaks SourceLink and Microsoft.NetFramework.ReferenceAssemblies.
   -->
   <PropertyGroup Condition="'$(IsWpfTempProject)' == 'true'">
     <OutDir/>
-    <DeterministicSourcePaths>false</DeterministicSourcePaths>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(IsWpfTempProject)' == 'true' and '$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(UsingToolNetFrameworkReferenceAssemblies)' == 'true'">
-    <TargetFrameworkRootPath>$(NuGetPackageRoot)microsoft.netframework.referenceassemblies.$(TargetFramework)\$(MicrosoftNetFrameworkReferenceAssembliesVersion)\build</TargetFrameworkRootPath>
-    <EnableFrameworkPathOverride>false</EnableFrameworkPathOverride>
-    <NoStdLib>true</NoStdLib>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(IsWpfTempProject)' == 'true' and '$(TargetFrameworkIdentifier)' == '.NETFramework'">

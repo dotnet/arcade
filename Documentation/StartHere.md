@@ -43,64 +43,63 @@ striving to move as many people towards the new infrastructure as possible.
 
 There is quite a bit of documentation living under the
 [Documentation](../Documentation/) folder in the dotnet/arcade repo.  Here are
-some highlights:
+some highlights
+
+### Concepts and Goals
+
 - [Arcade overview](Overview.md)
-- [The Arcade Build SDK](ArcadeSdk.md)
 - [How dependency flow works in .NET Core
   3](BranchesChannelsAndSubscriptions.md)
-- [Packages](CorePackages/)
-    - [Roadmap](CorePackages/PackagesRoadmap.md)
-    - [Publishing](CorePackages/Publishing.md)
-    - [Signing](CorePackages/Signing.md)
-    - [Telemetry](CorePackages/Telemetry.md)
-    - [Versioning](CorePackages/Versioning.md)
+- [Roadmap](CorePackages/PackagesRoadmap.md)
+- [Versioning rules](CorePackages/Versioning.md)
+- [Dependencies Flow Plan](DependenciesFlowPlan.md): Flowing dependencies with Darc, Maestro and BAR.
+- [How to Create and Arcade Package](HowToCreatePackages.md)
+- [.NET Core Infrastructure Ecosystem Overview](InfrastructureEcosystemOverview.md)
+- [Toolset Publish/Consume Contract](PublishConsumeContract.md)
+- [Servicing](Servicing.md)
+- [Toolsets](Toolsets.md)
+- [Version Querying and Updating](VersionQueryingAndUpdating.md)
+- [How Arcade tests itself](Validation/Overview.md)
+
+### Tools we are using and how we are using them
+
+#### Code and repository configuration
+  - [The Arcade Build SDK](ArcadeSdk.md)
+  - GitHub and Azure Repos
+    - [Mirroring public projects](AzureDevOps/internal-mirror.md)
+    - [Git Sync Tools](GitSyncTools.md)
+    - Bots and connectors
+  - [Dependency Description Format](DependencyDescriptionFormat.md)
+  - [How to See What's the Latest Version of an Arcade Package](SeePackagesLatestVersion.md)
+
+#### Building projects
+  - [Telemetry](CorePackages/Telemetry.md)
+  - [MSBuild Task Packages](TaskPackages.md)
+  - Azure Pipelines: Orchestrating continuous integration
+    - [Goals](AzureDevOps/WritingBuildDefinitions.md)
+    - [Onboarding to Azure DevOps](AzureDevOps/AzureDevOpsOnboarding.md)
+    - [Choosing a Machine Pool](ChoosingAMachinePool.md)
+    - [Migrating from `phase` to `job`](AzureDevOps/PhaseToJobSchemaChange.md) in Pipeline build definitions
+    - Tasks and Templates
+  - [Darc](Darc.md): Arcade's dependency management system
+  - [Maestro](Maestro.md): CI automation of dependency flow
+  - Mission Control
+
+#### Testing projects
+  - Helix: [SDK](../src/Microsoft.DotNet.Helix/Sdk/Readme.md), [JobSender](../src/Microsoft.DotNet.Helix/Sdk/Readme.md)
+  - Azure Agent pools and queues
+  - Docker support
+
+#### Deploying projects
+  - [Packaging](CorePackages/Packaging.md)
+  - [Publishing](CorePackages/Publishing.md)
+  - [SignTool](CorePackages/Signing.md) (and Microbuild)
+  - BAR
+
 
 ## I'm ready to get started, what do I do?
 
-- Onboard onto the arcade SDK, which provides templates (building blocks) for
-  interacting with Azure DevOps, as well as shared tooling for signing,
-  packaging, publishing and general build infrastructure.  (Here's a [video of a walkthough](https://msit.microsoftstream.com/video/e22d2dad-ef72-4cca-9b62-7e33621f86a1) which might help too)
-
-    **Arcade SDK onboarding**
-    1. Add a
-       [global.json](https://github.com/dotnet/arcade-minimalci-sample/blob/master/global.json).
-    2. Add (or copy)
-       [Directory.Build.props](https://github.com/dotnet/arcade-minimalci-sample/blob/master/Directory.Build.props)
-       and
-       [Directory.build.targets](https://github.com/dotnet/arcade-minimalci-sample/blob/master/Directory.Build.targets).
-    3. Copy `eng\common` from
-       [Arcade](https://github.com/dotnet/arcade-minimalci-sample/tree/master/eng/common)
-       into repo.
-    4. Add (or copy) the
-       [Versions.props](https://github.com/dotnet/arcade-minimalci-sample/blob/master/eng/Versions.props)
-       and
-       [Version.Details.xml](https://github.com/dotnet/arcade-minimalci-sample/blob/master/eng/Version.Details.xml)
-       files to your eng\ folder. Adjust the version prefix and prerelease label
-       as necessary.
-    5. Add dotnet-core feed to
-       [NuGet.config](https://github.com/dotnet/arcade-minimalci-sample/blob/master/NuGet.config).
-    6. Must have a root project/solution file for the repo to build.
-
-    **Using Arcade packages** - See [documentation](CorePackages/) for
-    information on specific packages.
-
-- Move out of .NET CI and into our new Azure DevOps project
-  (https://dev.azure.com/dnceng/public) for your public CI. - See [Onboarding
-  VSTS](VSTS/VSTSOnboarding.md).
-- Move out of the devdiv Azure DevOps instance (https://dev.azure.com/devdiv/ or
-  https://devdiv.visualstudio.com) and into the internal project for
-  (https://dev.azure.com/dnceng/internal) internal CI and official builds. - See
-  [Onboarding VSTS](VSTS/VSTSOnboarding.md) and [Moving Official Builds from
-  DevDiv to DncEng](VSTS/MovingFromDevDivToDncEng.md).
-- Onboard onto dependency flow (Darc). - See [Dependency Flow
-  Onboarding](DependencyFlowOnboarding.md).
-- Use Helix for testing where possible - See [Sending Jobs to Helix](https://github.com/dotnet/arcade/blob/master/Documentation/VSTS/SendingJobsToHelix.md)
-
-### Which branches should I make these changes in?
-
-Prioritize branches that are producing bits for .NET Core 3.  Given the extended
-support lifecyle for .NET Core 2.1, backporting infrastructure to .NET Core 2.1
-release branches is desired, but .NET Core 3 branches should go first.
+See the [Arcade Onboarding](Onboarding.md) guide.
 
 ## I need help, who should I talk to?
 
@@ -135,9 +134,9 @@ dnceng@microsoft.com
   In addition, we are pushing to bootstrap in native tools (e.g. cmake) rather
   than bake them into the images.  This means that setting up a developer
   machine becomes a simpler process.  Documentation on the process of
-  bootstrapping can be found [here](Projects/NativeDependencies/).
+  bootstrapping can be found [here](./NativeToolBootstrapping.md).
 
-  See [here](VSTS/VSTSOnboarding.md#agent-queues) for more information. For
+  See [here](AzureDevOps/AzureDevOpsOnboarding.md#agent-queues) for more information. For
   additional questions contact 'dnceng'. Either @dotnet/dnceng on GitHub, or
   dnceng@microsoft.com.  Also, you can post to the [Arcade Teams channel](https://teams.microsoft.com/l/channel/19%3acf9dc0ac9753432dbac4023239a9965f%40thread.skype/Arcade?groupId=147df318-61de-4f04-8f7b-ecd328c256bb&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47).
 

@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class UpdatePackageIndex : PackagingTask
+    public class UpdatePackageIndex : BuildTask
     {
         private HashSet<string> _packageIdsToInclude;
 

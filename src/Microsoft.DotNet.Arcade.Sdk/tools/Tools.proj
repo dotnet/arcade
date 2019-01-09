@@ -1,4 +1,4 @@
-<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
     Used to restore global toolset packages. 
@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <RestoreSources/>
+    <RestoreSources>$(DotNetRestoreSources)</RestoreSources>
     <RestoreSources>
       $(RestoreSources);
       https://api.nuget.org/v3/index.json;
@@ -39,17 +39,17 @@
     </RestoreSources>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Copy of 'sn.exe' in form of NuGet package. -->
+    <PackageReference Include="sn" Version="$(SNVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)"  IsImplicitlyDefined="true" />
     <PackageReference Include="MicroBuild.Core.Sentinel" Version="1.0.0" IsImplicitlyDefined="true" />
     <PackageReference Include="vswhere" Version="$(VSWhereVersion)" IsImplicitlyDefined="true" />
-    <PackageReference Include="MicroBuild.Plugins.SwixBuild" Version="$(MicroBuildPluginsSwixBuildVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="$(MicrosoftDiaSymReaderPdb2PdbVersion)" Condition="'$(UsingToolPdbConverter)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" Condition="'$(PublishingToBlobStorage)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="RoslynTools.NuGetRepack.BuildTasks" Version="$(RoslynToolsNuGetRepackVersion)" Condition="'$(UsingToolNuGetRepack)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.SignTool" Version="$(MicrosoftDotNetSignToolVersion)" IsImplicitlyDefined="true" />
-    <PackageReference Include="RoslynTools.ModifyVsixManifest" Version="$(RoslynToolsModifyVsixManifestVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" Condition="'$(UsingToolSymbolUploader)' == 'true'" IsImplicitlyDefined="true" />
-    <PackageReference Include="Microsoft.DotNet.Maestro.Tasks" Version="$(MicrosoftDotNetMaestroTasksVersion)" Condition="'$(PublishingAssetsToRegistry)' == 'true'" IsImplicitlyDefined="true" />  
+    <PackageReference Include="Microsoft.DotNet.Maestro.Tasks" Version="$(MicrosoftDotNetMaestroTasksVersion)" Condition="'$(PublishBuildAssets)' == 'true'" IsImplicitlyDefined="true" />  
   </ItemGroup>
 
   <!-- Repository extensibility point -->

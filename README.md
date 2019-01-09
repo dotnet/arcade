@@ -6,8 +6,7 @@ Arcade is intended to provide well-understood and consistent mechanisms for cons
 
 ## Build & Test Status
 
-VSTS [![Build Status](https://dev.azure.com/dnceng/_apis/public/build/definitions/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/17/badge
-)](https://dev.azure.com/dnceng/public/_build/index?definitionId=17&branchName=master)
+Azure DevOps [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/arcade/arcade-ci)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=208)
 
 ## Getting Started
 
@@ -21,9 +20,7 @@ Packages are published daily to our tools feed:
 
 ### How to use Arcade
 
-Arcade tools may be consumed by following the guidelines defined in the [Task Packages](./Documentation/TaskPackages.md) documentation.
-
-You can view the available Arcade produced packages by adding the Arcade [package feed](#getting-started), to your [Visual Studio package source](https://docs.microsoft.com/en-us/nuget/tools/package-manager-ui).
+Documentation, tutorials, and guides may be found in the [Start Here](Documentation/StartHere.md) index. 
 
 ### How to contribute
 

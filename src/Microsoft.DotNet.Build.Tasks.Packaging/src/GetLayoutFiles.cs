@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetLayoutFiles : PackagingTask
+    public class GetLayoutFiles : BuildTask
     {
         /// <summary>
         /// Package report files

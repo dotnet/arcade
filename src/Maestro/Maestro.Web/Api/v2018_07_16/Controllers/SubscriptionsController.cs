@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Maestro.Contracts;
 using Maestro.Data;
@@ -15,6 +16,7 @@ using Microsoft.AspNetCore.ApiPagination;
 using Microsoft.AspNetCore.ApiVersioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.ServiceFabric.Actors;
 using Swashbuckle.AspNetCore.Annotations;
 using Channel = Maestro.Data.Models.Channel;
@@ -29,15 +31,18 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
     {
         private readonly BuildAssetRegistryContext _context;
         private readonly BackgroundQueue _queue;
+        private readonly IDependencyUpdater _dependencyUpdater;
         private readonly Func<ActorId, ISubscriptionActor> _subscriptionActorFactory;
 
         public SubscriptionsController(
             BuildAssetRegistryContext context,
             BackgroundQueue queue,
+            IDependencyUpdater dependencyUpdater,
             Func<ActorId, ISubscriptionActor> subscriptionActorFactory)
         {
             _context = context;
             _queue = queue;
+            _dependencyUpdater = dependencyUpdater;
             _subscriptionActorFactory = subscriptionActorFactory;
         }
 
@@ -91,6 +96,34 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             }
 
             return Ok(new Subscription(subscription));
+        }
+
+        /// <summary>
+        ///     Trigger a subscription manually by ID
+        /// </summary>
+        /// <param name="id">ID of subscription</param>
+        /// <returns></returns>
+        [HttpPost("{id}/trigger")]
+        [SwaggerResponse((int)HttpStatusCode.Accepted, Type = typeof(Subscription))]
+        [ValidateModelState]
+        public async Task<IActionResult> TriggerSubscription(Guid id)
+        {
+            Data.Models.Subscription subscription = await _context.Subscriptions.Include(sub => sub.LastAppliedBuild)
+                .Include(sub => sub.Channel)
+                .FirstOrDefaultAsync(sub => sub.Id == id);
+
+            if (subscription == null)
+            {
+                return NotFound();
+            }
+
+            _queue.Post(
+                async () =>
+                {
+                    await _dependencyUpdater.StartSubscriptionUpdateAsync(id);
+                });
+
+            return Accepted(new Subscription(subscription));
         }
 
         [HttpPatch("{id}")]
@@ -255,11 +288,12 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                         new[] {$"The channel '{subscription.ChannelName}' could not be found."}));
             }
 
+            Repository repo = await _context.Repositories.FindAsync(subscription.TargetRepository);
+
             if (subscription.TargetRepository.Contains("github.com"))
             {
                 // If we have no repository information or an invalid installation id
                 // then we will fail when trying to update things, so we fail early.
-                Repository repo = await _context.Repositories.FindAsync(subscription.TargetRepository);
                 if (repo == null || repo.InstallationId <= 0)
                 {
                     return BadRequest(
@@ -270,6 +304,24 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
                                 $"The repository '{subscription.TargetRepository}' does not have an associated github installation. " +
                                 "The Maestro github application must be installed by the repository's owner and given access to the repository."
                             }));
+                }
+            }
+            // In the case of a dev.azure.com repository, we don't have an app installation,
+            // but we should add an entry in the repositories table, as this is required when
+            // adding a new subscription policy.
+            // NOTE:
+            // There is a good chance here that we will need to also handle <account>.visualstudio.com
+            // but leaving it out for now as it would be preferred to use the new format
+            else if (subscription.TargetRepository.Contains("dev.azure.com"))
+            {
+                if (repo == null)
+                {
+                    _context.Repositories.Add(
+                        new Data.Models.Repository
+                        {
+                            RepositoryName = subscription.TargetRepository,
+                            InstallationId = default
+                        });
                 }
             }
 

@@ -24,7 +24,7 @@ These pre-requisites are not hard requirements, but enabling dependency flow wil
 
 Copy the `eng/` folder from the [minimalci-sample](https://github.com/dotnet/arcade-minimalci-sample) repo. 
 
-This folder contains required version files as well as build definition templates used for publishing assets.
+This folder contains required version files as well as Pipeline templates used for publishing assets.
 
 For more information about version files go to: https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md
 
@@ -65,15 +65,15 @@ steps:
 
 #### 3. Enable assets publishing to the Build Asset Registry (BAR)
 
-To enable asset publishing to BAR we need to add a closing phase to `.vsts-ci.yml`. To do this add the following snippet at the end of `.vsts-ci.yml` and update the `dependsOn` parameter with the names of **all** the previous **build** phases:
+To enable asset publishing to BAR we need to add a closing phase to `azure-pipelines.yml`. To do this add the following snippet at the end of `azure-pipelines.yml` and update the `dependsOn` parameter with the names of **all** the previous **build** jobs:
 
 ```json
   - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - template: /eng/common/templates/phases/publish-build-assets.yml
       parameters:
         dependsOn:
-          - phase1
-          - phase2
+          - job1
+          - job2
         queue:
           name: Hosted VS2017
 ```
@@ -120,7 +120,7 @@ Once you are part of the `arcade-contrib` team
 5. Choose a name for your token and then "Create"
 6. Copy the created token
 7. Open a powershell or bash prompt and navigate to a repository that has the arcade toolset.
-8. Run `.\eng\common\darc-init.ps1` or `.\eng\common\darc-init.sh`.  This will install darc as a global tool.
+8. Run `.\eng\common\darc-init.ps1` or `./eng/common/darc-init.sh`.  This will install darc as a global tool.
 9. Run `darc authenticate`
 10. Place the token into the `bar_password` field.  You may leave the rest of the fields as-is.
 11. Save and close.
@@ -172,9 +172,18 @@ You only need to create a channel in  rare cases.  Most .NET Core 3 builds shoul
    ```
    The classification is typically 'product'.  Later on this will be used to differentiate dev or non-product builds, etc.
 
-##### 3.6. Associate a branch with a channel (optional)
+##### 3.6. Associate a branch with a channel
 
-This will associate each new build of a specific branch in a repository with a channel.
+This will associate each new build of a specific branch in a repository with a channel. This is not technically required.
+Outputs from any build of any branch could be associated with a channel after the upload to the build asset registry.
+For example, I might decide that 'dev/foobar', containing a one off fix, is what I want to flow into downstream repositories.
+
+In practice, it's tedious to manually associate each new build with a channel.
+Most of the time, each build 'master' is intended for '.NET Core 3 Dev', each build of release/2.1 is intended for
+'.NET Core Release 2.1', etc. Associating a branch with a channel causes every new build of that branch to be automatically
+applied to the channel.
+
+For most .NET Core repositories, 'master' should be associated with '.NET Core 3 Dev'.
 
 1. Run the following darc command:
    ```

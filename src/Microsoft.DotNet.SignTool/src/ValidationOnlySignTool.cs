@@ -4,6 +4,7 @@
 
 using System.IO;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -15,8 +16,8 @@ namespace Microsoft.DotNet.SignTool
     {
         internal bool TestSign { get; }
 
-        internal ValidationOnlySignTool(SignToolArgs args) 
-            : base(args)
+        internal ValidationOnlySignTool(SignToolArgs args, TaskLoggingHelper log)
+            : base(args, log)
         {
             TestSign = args.TestSign;
         }
@@ -25,10 +26,13 @@ namespace Microsoft.DotNet.SignTool
         {
         }
 
-        public override bool VerifySignedPEFile(Stream assemblyStream) 
+        public override bool VerifySignedPEFile(Stream assemblyStream)
             => true;
 
-        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round)
+        public override bool VerifyStrongNameSign(string fileFullPath)
+            => true;
+
+        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath)
         {
             if (TestSign)
             {
@@ -38,6 +42,21 @@ namespace Microsoft.DotNet.SignTool
             {
                 return true;
             }
+        }
+
+        public override bool VerifySignedPowerShellFile(string filePath)
+        {
+            return true;
+        }
+
+        public override bool VerifySignedNugetFileMarker(string filePath)
+        {
+            return true;
+        }
+
+        public override bool VerifySignedVSIXFileMarker(string filePath)
+        {
+            return true;
         }
     }
 }

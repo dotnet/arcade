@@ -15,7 +15,7 @@ using System.Xml.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GenerateRuntimeGraph : PackagingTask
+    public class GenerateRuntimeGraph : BuildTask
     {
 
         /// <summary>

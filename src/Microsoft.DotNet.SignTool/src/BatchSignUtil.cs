@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.IO.Packaging;
@@ -22,16 +23,19 @@ namespace Microsoft.DotNet.SignTool
         private readonly IBuildEngine _buildEngine;
         private readonly BatchSignInput _batchData;
         private readonly SignTool _signTool;
+        private readonly string[] _itemsToSkipStrongNameCheck;
 
-        internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool, BatchSignInput batchData)
+        internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool,
+            BatchSignInput batchData, string[] itemsToSkipStrongNameCheck)
         {
             _signTool = signTool;
             _batchData = batchData;
             _log = log;
             _buildEngine = buildEngine;
+            _itemsToSkipStrongNameCheck = itemsToSkipStrongNameCheck;
         }
 
-        internal void Go()
+        internal void Go(bool doStrongNameCheck)
         {
             VerifyCertificates(_log);
 
@@ -46,7 +50,7 @@ namespace Microsoft.DotNet.SignTool
             // Next sign all of the files
             if (!SignFiles())
             {
-                _log.LogError("Error during execution of Microbuild signing process.");
+                _log.LogError("Error during execution of signing process.");
                 return;
             }
 
@@ -55,8 +59,18 @@ namespace Microsoft.DotNet.SignTool
                 return;
             }
 
+            // Check that all files have a strong name signature
+            if (doStrongNameCheck)
+            {
+                VerifyStrongNameSigning();
+            }
+
             // Validate the signing worked and produced actual signed binaries in all locations.
-            VerifyAfterSign(_log);
+            // This is a recursive process since we process nested containers.
+            foreach (var file in _batchData.FilesToSign)
+            {
+                VerifyAfterSign(file);
+            }
 
             if (_log.HasLoggedErrors)
             {
@@ -253,49 +267,75 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        private void VerifyAfterSign(TaskLoggingHelper log)
+        private void VerifyAfterSign(FileSignInfo file)
+        {
+            if (file.IsPEFile())
+            {
+                using (var stream = File.OpenRead(file.FullPath))
+                {
+                    if (!_signTool.VerifySignedPEFile(stream))
+                    {
+                        _log.LogError($"Assembly {file.FullPath} is not signed properly");
+                    }
+                }
+            }
+            else if (file.IsPowerShellScript())
+            {
+                if (!_signTool.VerifySignedPowerShellFile(file.FullPath))
+                {
+                    _log.LogError($"Powershell file {file.FullPath} does not have a signature mark.");
+                }
+            }
+            else if (file.IsZipContainer())
+            {
+                var zipData = _batchData.ZipDataMap[file.ContentHash];
+                bool signedContainer = false;
+
+                using (var archive = new ZipArchive(File.OpenRead(file.FullPath), ZipArchiveMode.Read))
+                {
+                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    {
+                        string relativeName = entry.FullName;
+
+                        if (file.IsNupkg() && _signTool.VerifySignedNugetFileMarker(relativeName))
+                        {
+                            signedContainer = true;
+                        }
+                        else if (file.IsVsix() && _signTool.VerifySignedVSIXFileMarker(relativeName))
+                        {
+                            signedContainer = true;
+                        }
+
+                        var zipPart = zipData.FindNestedPart(relativeName);
+                        if (!zipPart.HasValue)
+                        {
+                            continue;
+                        }
+
+                        VerifyAfterSign(zipPart.Value.FileSignInfo);
+                    }
+                }
+
+                if ((file.IsNupkg() || file.IsVsix()) && !signedContainer)
+                {
+                    _log.LogError($"Container {file.FullPath} does not have signature marker.");
+                }
+            }
+        }
+
+        private void VerifyStrongNameSigning()
         {
             foreach (var file in _batchData.FilesToSign)
             {
-                if (file.IsPEFile())
+                if (_itemsToSkipStrongNameCheck.Contains(file.FileName))
                 {
-                    using (var stream = File.OpenRead(file.FullPath))
-                    {
-                        if (!_signTool.VerifySignedPEFile(stream))
-                        {
-                            log.LogError($"Assembly {file} is not signed properly");
-                        }
-                    }
+                    _log.LogMessage($"Skipping strong-name validation for {file.FullPath}.");
+                    continue;
                 }
-                else if (file.IsZipContainer())
+
+                if (file.IsManaged() && !_signTool.VerifyStrongNameSign(file.FullPath))
                 {
-                    var zipData = _batchData.ZipDataMap[file.ContentHash];
-
-                    using (var archive = new ZipArchive(File.OpenRead(file.FullPath), ZipArchiveMode.Read))
-                    {
-                        foreach (ZipArchiveEntry entry in archive.Entries)
-                        {
-                            string relativeName = entry.FullName;
-                            var zipPart = zipData.FindNestedPart(relativeName);
-                            if (!zipPart.HasValue || !zipPart.Value.FileSignInfo.IsPEFile())
-                            {
-                                continue;
-                            }
-
-                            // PEReader requires a seekable stream
-                            var peStream = new MemoryStream((int)entry.Length);
-                            using (var stream = entry.Open())
-                            {
-                                stream.CopyTo(peStream);
-                                peStream.Position = 0;
-                            }
-
-                            if (!_signTool.VerifySignedPEFile(peStream))
-                            {
-                                log.LogError($"Zip container {file} has part {relativeName} which is not signed.");
-                            }
-                        }
-                    }
+                    _log.LogError($"Assembly {file.FullPath} is not strong-name signed correctly.");
                 }
             }
         }

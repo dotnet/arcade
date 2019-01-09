@@ -15,7 +15,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class CreateTrimDependencyGroups : PackagingTask
+    public class CreateTrimDependencyGroups : BuildTask
     {
         private const string PlaceHolderDependency = "_._";
 
@@ -201,20 +201,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 if (string.IsNullOrEmpty(versionString))
                 {
                     versionString = dependency.GetMetadata("Version");
-
-                    int prereleaseIndex = versionString.IndexOf('-');
-                    if (prereleaseIndex != -1)
-                    {
-                        versionString = versionString.Substring(0, prereleaseIndex);
-                    }
                 }
-                
-                Version assemblyVersion = FrameworkUtilities.Ensure4PartVersion(
-                    String.IsNullOrEmpty(versionString) ? 
-                        new Version(0, 0, 0, 0) : 
-                        new Version(versionString));
 
-                return assemblyVersion;
+                return FrameworkUtilities.Ensure4PartVersion(versionString);
             }
 
             public ITaskItem Item { get; }

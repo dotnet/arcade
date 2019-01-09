@@ -29,7 +29,7 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
         [HttpGet]
         [SwaggerResponse((int) HttpStatusCode.OK, Type = typeof(List<Asset>))]
         [ValidateModelState]
-        public IActionResult Get(string name, [FromQuery] string version, int? buildId, bool? loadLocations)
+        public IActionResult Get(string name, [FromQuery] string version, int? buildId, bool? nonShipping, bool? loadLocations)
         {
             IQueryable<Data.Models.Asset> query = _context.Assets;
             if (!string.IsNullOrEmpty(name))
@@ -45,6 +45,11 @@ namespace Maestro.Web.Api.v2018_07_16.Controllers
             if (buildId.HasValue)
             {
                 query = query.Where(asset => asset.BuildId == buildId.Value);
+            }
+
+            if (nonShipping.HasValue)
+            {
+                query = query.Where(asset => asset.NonShipping == nonShipping.Value);
             }
 
             if (loadLocations ?? false)

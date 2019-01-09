@@ -4,16 +4,16 @@ setlocal
     set LauncherSourceFolder=%2
     set DestinationFolder=%3
     
-    call :LauncherMain x86 x86
+    call :LauncherMain x86
     call :RunnerMain x86
 
-    call :LauncherMain x64 x64
+    call :LauncherMain x64
     call :RunnerMain x64
 
-    call :LauncherMain x86 arm
+    call :LauncherMain arm
     call :RunnerMain arm
 
-    call :LauncherMain arm64 arm64
+    call :LauncherMain arm64
     call :RunnerMain arm64
 
     echo on
@@ -21,13 +21,12 @@ setlocal
 
 :LauncherMain
     set _platform=%~1
-    set _destPlatform=%~2
 
     REM Rebuild the launcher project
     msbuild /t:rebuild "%LauncherSourceFolder%\WindowsStoreAppLauncher.vcxproj" /p:Platform=%_platform% /p:Configuration=Release
 
     REM Copy the launcher executable
-    xcopy /y "%LauncherSourceFolder%\bin\%_platform%\Release\WindowsStoreAppLauncher.exe" "%DestinationFolder%\%_destPlatform%\Launcher\"
+    xcopy /y "%LauncherSourceFolder%\bin\%_platform%\Release\WindowsStoreAppLauncher.exe" "%DestinationFolder%\%_platform%\Launcher\"
     GOTO :EOF
 
 :RunnerMain

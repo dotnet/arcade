@@ -5,19 +5,29 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
-    public class FindDotNetCliPackage : Microsoft.Build.Utilities.Task
+    public class FindDotNetCliPackage : Build.Utilities.Task
     {
         private static readonly HttpClient _client = new HttpClient();
-        private const string DotNetCoreReleasesUrl = "https://raw.githubusercontent.com/dotnet/core/master/release-notes/releases.json";
+        private const string DotNetCliAzureFeed = "https://dotnetcli.azureedge.net/dotnet";
 
+        /// <summary>
+        ///   'LTS' or 'Current'
+        /// </summary>
+        [Required]
+        public string Channel { get; set; }
+
+        /// <summary>
+        ///   'latest' or specific version
+        /// </summary>
         [Required]
         public string Version { get; set; }
 
+        /// <summary>
+        ///   RID of dotnet cli to get
+        /// </summary>
         [Required]
         public string Runtime { get; set; }
 
@@ -38,54 +48,92 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private async Task ExecuteAsync()
         {
-            var releases = await GetDotNetCliReleasesAsync();
-            var type = PackageType;
+            NormalizeParameters();
+            await ResolveVersionAsync();
 
-            if (!releases.TryGetValue((type, Version), out var release))
+            var downloadUrl = GetDownloadUrl();
+
+            Log.LogMessage($"Retrieved dotnet cli {PackageType} version {Version} package uri {downloadUrl}, testing...");
+
+            using (var req = new HttpRequestMessage(HttpMethod.Head, downloadUrl))
             {
-                Log.LogError($"Unable to find dotnet cli {type} version {Version}");
-                return;
+                var res = await _client.SendAsync(req);
+                res.EnsureSuccessStatusCode();
             }
 
-            var uriId = type + "-" + Runtime;
-            if (!release.TryGetValue(uriId, out var uri))
-            {
-                Log.LogError($"Dotnet cli {type} version {Version} does not contain a package for {uriId}");
-                return;
-            }
+            Log.LogMessage($"Url {downloadUrl} is valid.");
 
-            Log.LogMessage($"Retrieved dotnet cli {type} version {Version} package uri {uri}");
-            PackageUri = uri;
+            PackageUri = downloadUrl;
         }
 
-        private async Task<Dictionary<(string type, string version), Dictionary<string, string>>> GetDotNetCliReleasesAsync()
+        private string GetDownloadUrl()
         {
-            var result = new Dictionary<(string type, string version), Dictionary<string, string>>();
-            using (var stream = await _client.GetStreamAsync(DotNetCoreReleasesUrl))
-            using (var tReader = new StreamReader(stream))
-            using (var reader = new JsonTextReader(tReader))
+            var extension = Runtime.StartsWith("win") ? "zip" : "tar.gz";
+            if (PackageType == "sdk")
             {
-                var releases = JArray.Load(reader);
-                Log.LogMessage(releases.ToString());
-                foreach (var release in releases.OfType<JObject>())
-                {
-                    var data = release.Properties()
-                        .Where(p => p.Name.StartsWith("runtime") || p.Name.StartsWith("sdk"))
-                        .ToDictionary(p => p.Name, p => p.Value.ToObject<string>());
-                    if (release.TryGetValue("version-sdk", out JToken sdkVersion))
-                    {
-                        result[("sdk", sdkVersion.ToString())] = data;
-                    }
+                return $"{DotNetCliAzureFeed}/Sdk/{Version}/dotnet-sdk-{Version}-{Runtime}.{extension}";
+            }
+            else // PackageType == "runtime"
+            {
+                return $"{DotNetCliAzureFeed}/Runtime/{Version}/dotnet-runtime-{Version}-{Runtime}.{extension}";
+            }
+        }
 
-                    if (release.TryGetValue("version-runtime", out JToken runtimeVersion))
-                    {
-                        result[("runtime", runtimeVersion.ToString())] = data;
-                    }
-                }
+        private void NormalizeParameters()
+        {
+            if (string.Equals(Channel, "lts", StringComparison.OrdinalIgnoreCase))
+            {
+                Channel = "LTS";
+            }
+            else if (string.Equals(Channel, "current", StringComparison.OrdinalIgnoreCase))
+            {
+                Channel = "Current";
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid value '{Channel}' for parameter {nameof(Channel)}");
             }
 
-            Log.LogMessage(JObject.FromObject(result).ToString());
-            return result;
+            if (string.Equals(Version, "latest", StringComparison.OrdinalIgnoreCase))
+            {
+                Version = "latest";
+            }
+
+            if (string.Equals(PackageType, "sdk", StringComparison.OrdinalIgnoreCase))
+            {
+                PackageType = "sdk";
+            }
+            else if (string.Equals(PackageType, "runtime", StringComparison.OrdinalIgnoreCase))
+            {
+                PackageType = "runtime";
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid value '{PackageType}' for parameter {nameof(PackageType)}");
+            }
+        }
+
+        private async Task ResolveVersionAsync()
+        {
+            if (Version == "latest")
+            {
+                Log.LogMessage(MessageImportance.Low, "Resolving latest dotnet cli version.");
+                string latestVersionUrl;
+                if (PackageType == "sdk")
+                {
+                    latestVersionUrl = $"{DotNetCliAzureFeed}/Sdk/{Channel}/latest.version";
+                }
+                else // PackageType == "runtime"
+                {
+                    latestVersionUrl = $"{DotNetCliAzureFeed}/Runtime/{Channel}/latest.version";
+                }
+
+                Log.LogMessage(MessageImportance.Low, $"Resolving latest version from url {latestVersionUrl}");
+                var latestVersionContent = await _client.GetStringAsync(latestVersionUrl);
+                var versionData = latestVersionContent.Split(Array.Empty<char>(), StringSplitOptions.RemoveEmptyEntries);
+                Version = versionData[1];
+                Log.LogMessage(MessageImportance.Low, $"Got latest dotnet cli version {Version}");
+            }
         }
     }
 }

@@ -33,6 +33,12 @@ namespace Microsoft.DotNet.SignTool
         public bool TestSign { get; set; }
 
         /// <summary>
+        /// True to perform strong name check on signed files.
+        /// If enabled it will require SNBinaryPath to be informed.
+        /// </summary>
+        public bool DoStrongNameCheck { get; set; }
+
+        /// <summary>
         /// Working directory used for storing files created during signing.
         /// </summary>
         [Required]
@@ -50,6 +56,12 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         [Required]
         public string[] ItemsToSign { get; set; }
+
+        /// <summary>
+        /// List of file names that should be ignored when checking
+        /// for correcteness of strong name signature.
+        /// </summary>
+        public string[] ItemsToSkipStrongNameCheck { get; set; }
 
         /// <summary>
         /// Mapping relating PublicKeyToken, CertificateName and Strong Name. 
@@ -79,11 +91,16 @@ namespace Microsoft.DotNet.SignTool
         ///     DualSigningAllowed:boolean - Tells whether this certificate can be used to sign already signed files.
         /// </summary>
         public ITaskItem[] CertificatesSignInfo { get; set; }
-        
+
         /// <summary>
         /// Path to msbuild.exe. Required if <see cref="DryRun"/> is <c>false</c>.
         /// </summary>
         public string MSBuildPath { get; set; }
+
+        /// <summary>
+        /// Path to sn.exe. Required if strong name signing files locally is needed.
+        /// </summary>
+        public string SNBinaryPath { get; set; }
 
         /// <summary>
         /// Directory to write log to.
@@ -121,7 +138,23 @@ namespace Microsoft.DotNet.SignTool
             if (ItemsToSign.Count() == 0)
             {
                 Log.LogWarning($"An empty list of files to sign was passed as parameter.");
-                return;
+            }
+
+            if (!DryRun)
+            {
+                var isValidSNPath = !string.IsNullOrEmpty(SNBinaryPath) && File.Exists(SNBinaryPath) && SNBinaryPath.EndsWith("sn.exe");
+
+                if (DoStrongNameCheck && !isValidSNPath)
+                {
+                    Log.LogError($"An incorrect full path to 'sn.exe' was specified: {SNBinaryPath}");
+                    return;
+                }
+
+                if (!isValidSNPath && StrongNameSignInfo?.Where(ti => ti?.ItemSpec?.EndsWith(".snk") ?? false) != null)
+                {
+                    Log.LogError($"An incorrect full path to 'sn.exe' was specified: {SNBinaryPath}");
+                    return;
+                }
             }
 
             var enclosingDir = GetEnclosingDirectoryOfItemsToSign();
@@ -137,17 +170,17 @@ namespace Microsoft.DotNet.SignTool
 
             if (Log.HasLoggedErrors) return;
 
-            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir);
-            var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs) : (SignTool)new RealSignTool(signToolArgs);
+            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir, SNBinaryPath);
+            var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
             var signingInput = new Configuration(TempDir, ItemsToSign, strongNameInfo, fileSignInfo, extensionSignInfo, dualCertificates, Log).GenerateListOfFiles();
 
             if (Log.HasLoggedErrors) return;
 
-            var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput);
+            var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput, ItemsToSkipStrongNameCheck);
 
             if (Log.HasLoggedErrors) return;
 
-            util.Go();
+            util.Go(DoStrongNameCheck);
         }
 
         private void PrintConfigInformation()
@@ -172,6 +205,11 @@ namespace Microsoft.DotNet.SignTool
         {
             var separators = new[] { '/', '\\' };
             string[] result = null;
+
+            if (ItemsToSign.Length == 0)
+            {
+                return string.Empty;
+            }
 
             foreach (var path in ItemsToSign)
             {
@@ -278,7 +316,7 @@ namespace Microsoft.DotNet.SignTool
 
                     if (string.IsNullOrWhiteSpace(certificateName))
                     {
-                        Log.LogError($"CertificateName metadata of {nameof(StrongNameSignInfo)} is invalid: '{certificateName}'");
+                        Log.LogMessage($"CertificateName metadata of {nameof(StrongNameSignInfo)} is invalid or empty: '{certificateName}'");
                         continue;
                     }
 

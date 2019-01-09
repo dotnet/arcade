@@ -13,6 +13,8 @@ namespace Maestro.Web.Api.v2018_07_16.Models
 
         public string Version { get; set; }
 
+        public bool NonShipping { get; set; }
+
         public List<AssetLocationData> Locations { get; set; }
 
         public Data.Models.Asset ToDb()

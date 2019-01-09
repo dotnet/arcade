@@ -1,4 +1,4 @@
-<!-- All Rights Reserved. Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(MSBuildThisFileDirectory)\ResxWorkaround.props" />
   <PropertyGroup>
@@ -6,13 +6,16 @@
     <Platforms>x86</Platforms>
     <Configurations>Release;Debug</Configurations>
     <SignAssembly>false</SignAssembly>
+    <RootNamespace>Microsoft.SignCheck</RootNamespace>
+    <!-- This assembly is bundled in the Microsoft.DotNet.SignCheck package and is not mean to be used as a class library package. -->
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
   <PropertyGroup Label="Nuget Package Settings">
     <IsTool>true</IsTool>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="LZMA-SDK" Version="18.1.0" />
-    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="7.10.6070" />
+    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="7.10.6071" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="NuGet.Common" Version="4.7.0" />
     <PackageReference Include="NuGet.Frameworks" Version="4.7.0" />

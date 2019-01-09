@@ -3,9 +3,11 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection.PortableExecutable;
 
 namespace Microsoft.DotNet.SignTool
@@ -17,6 +19,7 @@ namespace Microsoft.DotNet.SignTool
     {
         private readonly string _msbuildPath;
         private readonly string _logDir;
+        private readonly string _snPath;
 
         /// <summary>
         /// The number of bytes from the start of the <see cref="CorHeader"/> to its <see cref="CorFlags"/>.
@@ -29,14 +32,15 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool TestSign { get; }
 
-        internal RealSignTool(SignToolArgs args) : base(args)
+        internal RealSignTool(SignToolArgs args, TaskLoggingHelper log) : base(args, log)
         {
             TestSign = args.TestSign;
             _msbuildPath = args.MSBuildPath;
+            _snPath = args.SNBinaryPath;
             _logDir = args.LogDir;
         }
 
-        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round)
+        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath)
         {
             if (_msbuildPath == null)
             {
@@ -48,14 +52,20 @@ namespace Microsoft.DotNet.SignTool
             var process = Process.Start(new ProcessStartInfo()
             {
                 FileName = _msbuildPath,
-                Arguments = $@"""{projectFilePath}"" /bl:""{Path.Combine(_logDir, $"Signing{round}.binlog")}""",
+                Arguments = $@"""{projectFilePath}"" /bl:""{binLogPath}""",
                 UseShellExecute = false,
                 WorkingDirectory = TempDir,
             });
 
             process.WaitForExit();
 
-            return process.ExitCode == 0;
+            if (process.ExitCode != 0)
+            {
+                _log.LogError($"Failed to execute MSBuild on the project file {projectFilePath}");
+                return false;
+            }
+
+            return true;
         }
 
         public override void RemovePublicSign(string assemblyPath)
@@ -83,6 +93,44 @@ namespace Microsoft.DotNet.SignTool
             }
 
             return ContentUtil.IsAuthenticodeSigned(assemblyStream);
+        }
+
+        public override bool VerifyStrongNameSign(string fileFullPath)
+        {
+            // The assembly won't verify by design when doing test signing.
+            if (TestSign)
+            {
+                return true;
+            }
+
+            var process = Process.Start(new ProcessStartInfo()
+            {
+                FileName = _snPath,
+                Arguments = $@"-vf ""{fileFullPath}"" > nul",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = false,
+                RedirectStandardOutput = false
+            });
+
+            process.WaitForExit();
+
+            return process.ExitCode == 0;
+        }
+
+        public override bool VerifySignedPowerShellFile(string filePath)
+        {
+            return File.ReadLines(filePath).Any(line => line.IndexOf("# SIG # Begin Signature Block", StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        public override bool VerifySignedNugetFileMarker(string filePath)
+        {
+            return Path.GetFileName(filePath).Equals(".signature.p7s", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public override bool VerifySignedVSIXFileMarker(string filePath)
+        {
+            return filePath.StartsWith("package/services/digital-signature/", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

@@ -75,8 +75,29 @@ namespace Microsoft.DotNet.DarcLib
 
             if (arcadeItem != null)
             {
-                List<GitFile> engCommonFiles = await remote.GetCommonScriptFilesAsync(arcadeItem.RepoUri, arcadeItem.Commit);
-                filesToUpdate.AddRange(engCommonFiles);
+                try
+                {
+                    List<GitFile> engCommonFiles = await remote.GetCommonScriptFilesAsync(arcadeItem.RepoUri, arcadeItem.Commit);
+                    filesToUpdate.AddRange(engCommonFiles);
+
+                    List<GitFile> localEngCommonFiles = await _gitClient.GetFilesForCommitAsync(null, null, "eng/common");
+
+                    foreach (GitFile file in localEngCommonFiles)
+                    {
+                        if (!engCommonFiles.Where(f => f.FilePath == file.FilePath).Any())
+                        {
+                            file.Operation = GitFileOperation.Delete;
+                            filesToUpdate.Add(file);
+                        }
+                    }
+                }
+                catch (Exception exc) when 
+                (exc.Message == "Not Found")
+                {
+                    _logger.LogWarning("Could not update 'eng/common'. Most likely this is a scenario " +
+                        "where a packages folder was passed and the commit which generated them is not " +
+                        "yet pushed.");
+                }
             }
 
             // Push on local does not commit.

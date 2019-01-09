@@ -70,8 +70,12 @@ namespace Microsoft.DotNet.Darc.Tests
                 TemporaryRepositoryPath,
                 null);
             List<GitFile> filesToUpdate = container.GetFilesToCommit();
-            await 
-                _gitClient.PushFilesAsync(filesToUpdate, TemporaryRepositoryPath, null, null);
+            await _gitClient.PushFilesAsync(filesToUpdate, TemporaryRepositoryPath, null, null);
+        }
+
+        public async Task VerifyAsync()
+        {
+            await _gitFileManager.Verify(TemporaryRepositoryPath, null);
         }
 
         public async Task<DependencyGraph> GetDependencyGraph(DependencyDetail dependency)
@@ -164,6 +168,9 @@ namespace Microsoft.DotNet.Darc.Tests
             {
                 string expectedOutput = await expectedOutputsReader.ReadToEndAsync();
                 string actualOutput = await actualOutputsReader.ReadToEndAsync();
+                // normalize line endings because we don't actually care what they are
+                expectedOutput = expectedOutput.Replace("\r\n", "\n");
+                actualOutput = actualOutput.Replace("\r\n", "\n");
                 Assert.Equal(
                     expectedOutput,
                     actualOutput);

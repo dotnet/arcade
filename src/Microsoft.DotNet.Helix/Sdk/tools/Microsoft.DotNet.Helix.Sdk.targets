@@ -6,6 +6,8 @@
 
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 
+  <Import Project="$(MSBuildThisFileDirectory)*/*.props"/>
+
   <PropertyGroup>
     <HelixSdkTargets Condition="'$(HelixTargetQueue)' != ''">$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.Sdk.MonoQueue.targets</HelixSdkTargets>
     <HelixSdkTargets Condition="'$(HelixTargetQueue)' == ''">$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.Sdk.MultiQueue.targets</HelixSdkTargets>

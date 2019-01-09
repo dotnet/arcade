@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Packaging;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -14,8 +15,8 @@ namespace Microsoft.DotNet.SignTool
     {
         private static readonly byte[] _stamp = Guid.NewGuid().ToByteArray();
 
-        internal FakeSignTool(SignToolArgs args)
-            : base(args)
+        internal FakeSignTool(SignToolArgs args, TaskLoggingHelper log)
+            : base(args, log)
         {
         }
 
@@ -30,7 +31,12 @@ namespace Microsoft.DotNet.SignTool
                    ByteSequenceComparer.Equals(buffer, _stamp);
         }
 
-        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, int round)
+        public override bool VerifyStrongNameSign(string fileFullPath)
+        {
+            return true;
+        }
+
+        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath)
             => buildEngine.BuildProjectFile(projectFilePath, null, null, null);
 
         internal static void SignFile(string path)
@@ -47,6 +53,21 @@ namespace Microsoft.DotNet.SignTool
             {
                 stream.Write(_stamp, 0, _stamp.Length);
             }
+        }
+
+        public override bool VerifySignedPowerShellFile(string filePath)
+        {
+            return true;
+        }
+
+        public override bool VerifySignedNugetFileMarker(string filePath)
+        {
+            return true;
+        }
+
+        public override bool VerifySignedVSIXFileMarker(string filePath)
+        {
+            return true;
         }
     }
 }

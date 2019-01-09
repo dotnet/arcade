@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
+    <Description>This package provides support for running tests inside CoreFx.</Description>
+    <PackageType>MSBuildSdk</PackageType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
+    <PackageReference Include="System.Reflection.Metadata" Version="1.6.0" Condition="'$(TargetFramework)' == 'net472'" />
+  </ItemGroup>
+
+  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
+
+  <ItemGroup>
+    <None Include="build\assets\**" Pack="True" PackagePath="build\assets\" />
+  </ItemGroup>
+
+</Project>
