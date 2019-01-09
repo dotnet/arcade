@@ -13,7 +13,7 @@ All Azure Pipelines builds should use the following agent queues
 
 Pools for an Azure DevOps Pipeline can be specified at the build and/or job level in the yaml file ([documentation](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=vsts&tabs=yaml)).
 
-Detailed information about the machines in an agent queue can be found in the [dotnet-helix-machines] repo. Additional dependencies not avaliable on the machines should be bootstrapped in using our [Bootstrapping System]. If bootstrapping doesn't work for a specific dependency contact [@dotnet/dnceng] for guidance.
+Detailed information about the machines in an agent queue can be found in the [dotnet-helix-machines] repo. Additional dependencies not available on the machines should be bootstrapped in using our [Bootstrapping System]. If bootstrapping doesn't work for a specific dependency contact [@dotnet/dnceng] for guidance.
 
 ## Test Execution
 All test execution should run through helix. An up to date list of helix queues can be obtained from the [Helix Queue Info Api] using the following steps.
