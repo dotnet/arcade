@@ -33,6 +33,13 @@ $body = @(
     state="Completed";
     errorMessage="An Error Occured";
     stackTrace="This is a stack trace";
+  },
+  @{
+    testCaseTitle="TestTestTest";
+    automatedTestName="TestAssembly.TestTestTest";
+    priority=1;
+    outcome="Passed";
+    state="Completed";
   }
 ) | ConvertTo-Json
 Write-Output $body
