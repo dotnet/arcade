@@ -97,7 +97,7 @@ The list of available Helix queues can be found [here](https://helix.dot.net/api
       XUnitRunnerVersion: 2.4.1 # specify the version of xUnit runner you wish to use here
       # WorkItemDirectory: '' -- payload directory to zip up and send to Helix; requires WorkItemCommand; incompatible with XUnitProjects
       # WorkItemCommand: '' -- a command to execute on the payload; requires WorkItemDirectory; incompatible with XUnitProjects
-      # WorkItemTimeout: '' -- a timeout in milliseconds for the work item command; requires WorkItemDirectory; incompatible with XUnitProjects
+      # WorkItemTimeout: '' -- a timeout in seconds for the work item command; requires WorkItemDirectory; incompatible with XUnitProjects
       IncludeDotNetCli: true
       DotNetCliPackageType: sdk
       DotNetCliVersion: 2.1.403 # full list of versions here: https://raw.githubusercontent.com/dotnet/core/master/release-notes/releases.json
