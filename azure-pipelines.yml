@@ -83,8 +83,6 @@ jobs:
           $(_ValidateSdkArgs)
         displayName: Windows Build / Publish
 
-      - script: set
-
       - powershell: eng\common\build.ps1
           -test
           -projects $(Build.SourcesDirectory)/tests/UnitTests.proj
