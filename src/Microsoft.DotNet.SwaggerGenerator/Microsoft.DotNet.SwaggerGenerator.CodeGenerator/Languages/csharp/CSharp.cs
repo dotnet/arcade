@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
     {
         private class CSharp : Language
         {
+            [HelperMethod]
             public static string PascalCaseNs(string value)
             {
                 string[] parts = value.Split('.');
@@ -29,7 +30,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
 
                 if (reference is TypeReference.TypeModelReference typeModelRef)
                 {
-                    return typeModelRef.Model.Name;
+                    return Helpers.PascalCase(typeModelRef.Model.Name.AsSpan());
                 }
 
                 if (reference is TypeReference.ArrayTypeReference arrayTypeRef)
@@ -144,7 +145,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                     method == HttpMethod.Options || method == HttpMethod.Post || method == HttpMethod.Put ||
                     method == HttpMethod.Trace)
                 {
-                    return $"HttpMethod.{Helpers.PascalCase(method.Method.AsSpan())}";
+                    return $"HttpMethod.{Helpers.PascalCase(method.Method.ToLower().AsSpan())}";
                 }
 
                 return $"new HttpMethod(\"{method.Method}\")";
@@ -162,7 +163,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
 
                 foreach (TypeModel type in model.Types)
                 {
-                    context.WriteTemplate($"Models/{type.Name}", context.Templates["Model"], type);
+                    context.WriteTemplate($"Models/{Helpers.PascalCase(type.Name.AsSpan())}", context.Templates["Model"], type);
                 }
 
                 foreach (MethodGroupModel group in model.MethodGroups)

@@ -51,7 +51,6 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
             _languages = new Dictionary<string, Language>(StringComparer.OrdinalIgnoreCase)
             {
                 ["csharp"] = new CSharp(),
-                ["typescript-fetch"] = new TypescriptFetch(),
             };
         }
 

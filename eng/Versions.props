@@ -43,6 +43,7 @@
     <SystemIOFileSystemPrimitivesVersion>4.3.0</SystemIOFileSystemPrimitivesVersion>
     <SystemMemoryVersion>4.5.1</SystemMemoryVersion>
     <SystemReflectionMetadataVersion>1.4.2</SystemReflectionMetadataVersion>
+    <SystemTextEncodingsWebVersion>4.5.0</SystemTextEncodingsWebVersion>
     <SystemValueTupleVersion>4.4.0</SystemValueTupleVersion>
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.4.1-pre.build.4059</XUnitVersion>

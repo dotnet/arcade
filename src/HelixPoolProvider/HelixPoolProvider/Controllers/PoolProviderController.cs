@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
                 _logger.LogInformation($"Queue {queueId} does not exist");
                 return null;
             }
-            else if (!queueInfo.IsAvailable.HasValue || !queueInfo.IsAvailable.Value)
+            else if (!queueInfo.IsAvailable)
             {
                 _logger.LogInformation($"{queueId} exists but is not available");
                 return null;
@@ -131,11 +131,11 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
             switch (queueInfo.OperatingSystemGroup.ToLowerInvariant())
             {
                 case "windows":
-                    return new HelixWindowsOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value), _loggerFactory, _hostingEnvironment, _configuration);
+                    return new HelixWindowsOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly), _loggerFactory, _hostingEnvironment, _configuration);
                 case "linux":
-                    return new HelixLinuxOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value), _loggerFactory, _hostingEnvironment, _configuration);
+                    return new HelixLinuxOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly), _loggerFactory, _hostingEnvironment, _configuration);
                 case "osx":
-                    return new HelixMacOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value), _loggerFactory, _hostingEnvironment, _configuration);
+                    return new HelixMacOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly), _loggerFactory, _hostingEnvironment, _configuration);
                 default:
                     throw new NotImplementedException($"Operating system group {queueInfo.OperatingSystemGroup} unexpected");
             }
@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
             var helixApi = GetHelixApi(true /*isAnonymous*/);
             try
             {
-                return await helixApi.Information.QueueInfoMethodAsync(queueId);
+                return await helixApi.Information.QueueInfoAsync(queueId);
             }
             catch (Exception e)
             {
@@ -236,14 +236,9 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
                 return true;
             }
 
-            if (!queueInfo.IsInternalOnly.HasValue)
-            {
-                _logger.LogWarning($"Warning, unknown whether {queueInfo.QueueId} is internal only or not");
-                return false;
-            }
 
-            return (_configuration.AllowedTargetQueues == AllowableHelixQueues.NoInternal && !queueInfo.IsInternalOnly.Value) ||
-                (_configuration.AllowedTargetQueues == AllowableHelixQueues.OnlyInternal && queueInfo.IsInternalOnly.Value);
+            return (_configuration.AllowedTargetQueues == AllowableHelixQueues.NoInternal && !queueInfo.IsInternalOnly) ||
+                (_configuration.AllowedTargetQueues == AllowableHelixQueues.OnlyInternal && queueInfo.IsInternalOnly);
         }
 
         /// <summary>
@@ -378,7 +373,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
 
                 using (IHelixApi api = GetHelixApi(false))
                 {
-                    var queueInfo = await api.Information.QueueInfoMethodAsync(agentDefinitionId);
+                    var queueInfo = await api.Information.QueueInfoAsync(agentDefinitionId);
 
                     // Filter the queue info based on the allowable helix queues.
                     if(!IsAllowableQueue(queueInfo))
