@@ -261,8 +261,8 @@ At the end of each phase, full migration would be completed for the correspondin
 | -------------------------------------------------------------------------------- |:--------------------:| ------------- | ----- |
 | [Using Azure DevOps for CI](https://github.com/dotnet/arcade/issues/645)         | 1/31/2019            | In progress | |
 | [Using shared toolset (Arcade SDK)](https://github.com/dotnet/arcade/issues/643) | 3/15/2019            | In progress | |
-| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/642)       | 12/7/2018            | In progress | |
-| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/644)       | 12/7/2018            | In progress | |
+| [Engineering dependency flow](https://github.com/dotnet/arcade/issues/642)       | 12/7/2018            | Done | |
+| [Internal builds from dnceng](https://github.com/dotnet/arcade/issues/644)       | 12/7/2018            | Done | |
 
 ---
 
