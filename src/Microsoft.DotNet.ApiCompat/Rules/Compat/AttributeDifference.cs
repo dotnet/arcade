@@ -128,10 +128,6 @@ namespace Microsoft.Cci.Differs.Rules
                             differences.Add(new Difference("AddedAttribute",
                                 $"Attribute '{type.FullName()}' exists on '{target.FullName()}' in the {Implementation} but not the {Contract}."));
 
-                            if (difference < DifferenceType.Added)
-                            {
-                                difference = DifferenceType.Added;
-                            }
                             break;
                         }
                     case DifferenceType.Changed:
@@ -147,10 +143,7 @@ namespace Microsoft.Cci.Differs.Rules
                             differences.AddIncompatibleDifference("CannotChangeAttribute",
                                 $"Attribute '{type.FullName()}' on '{target.FullName()}' changed from '{contractKey}' in the {Contract} to '{implementationKey}' in the {Implementation}.");
 
-                            if (difference < DifferenceType.Changed)
-                            {
-                                difference = DifferenceType.Changed;
-                            }
+                            difference = DifferenceType.Changed;
                             break;
                         }
 
@@ -164,7 +157,9 @@ namespace Microsoft.Cci.Differs.Rules
                             differences.AddIncompatibleDifference("CannotRemoveAttribute",
                                 $"Attribute '{type.FullName()}' exists on '{target.FullName()}' in the {Contract} but not the {Implementation}.");
 
-                            difference = DifferenceType.Removed;
+
+                            // removals of an attribute are considered a "change" of the type
+                            difference = DifferenceType.Changed;
                             break;
                         }
                 }
