@@ -4,10 +4,17 @@
 
     <AzurePipelinesAvaliable Condition="'$(SYSTEM_ACCESSTOKEN)' != ''">true</AzurePipelinesAvaliable>
     <AzurePipelinesAvaliable Condition="'$(AzurePipelinesAvaliable)' != 'true'">false</AzurePipelinesAvaliable>
+  </PropertyGroup>
 
+  <!-- We don't currently support reporting tests from builds of forks -->
+  <PropertyGroup Condition=" '$(SYSTEM_PULLREQUEST_ISFORK)' == 'True'">
+    <AzurePipelinesAvaliable>false</AzurePipelinesAvaliable>
+    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <ImportAzurePipelinesTargets Condition="$(EnableAzurePipelinesReporter) AND $(AzurePipelinesAvaliable)">true</ImportAzurePipelinesTargets>
     <ImportAzurePipelinesTargets Condition="'$(ImportAzurePipelinesTargets)' != 'true'">false</ImportAzurePipelinesTargets>
-
   </PropertyGroup>
 
   <PropertyGroup Condition="$(ImportAzurePipelinesTargets)">
