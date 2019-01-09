@@ -1,8 +1,7 @@
 jobs:
 - job: Repro
   pool:
-    name: NetCorePublic-Int-Pool
-    queue: Windows.10.Amd64.Open
+    name: dotnet-external-temp
   steps:
   - powershell: ./repro.ps1
     env:
