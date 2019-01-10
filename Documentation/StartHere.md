@@ -43,7 +43,7 @@ striving to move as many people towards the new infrastructure as possible.
 
 See the [Arcade Onboarding](Onboarding.md) guide.
 
-Additionally, the WinForms team published [Arcade - Starting from Scratch](https://microsoft.sharepoint.com/:w:/t/MerriesWinFormsandSetup/EdJpqtiLVdtFuS6p10E0o_IBVu2WsETAd4zBf6YdVKsLcQ?rtime=MyHzd7Rx1kg), documenting their path to adopt Arcade, including moving their repositories public.
+Additionally, the WinForms team has documented their path to adopt Arcade from scratch, including moving their repositories public. Their guide can be found here: [Arcade - Starting from Scratch](https://microsoft.sharepoint.com/:w:/t/MerriesWinFormsandSetup/EdJpqtiLVdtFuS6p10E0o_IBVu2WsETAd4zBf6YdVKsLcQ?rtime=MyHzd7Rx1kg)
 
 ## Where can I find general information on .NET Core 3 infrastructure?
 
