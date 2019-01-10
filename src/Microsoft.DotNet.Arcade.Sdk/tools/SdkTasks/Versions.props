@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <MicrosoftDotNetMaestroTasksVersion>1.0.0-beta.18478.2</MicrosoftDotNetMaestroTasksVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <RestoreSources>
       https://api.nuget.org/v3/index.json;
       https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;

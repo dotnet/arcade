@@ -1,5 +1,5 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
-<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="PublishBuildAssets">
+<Project Sdk="Microsoft.NET.Sdk">
   <!--
     Required variables:
       ManifestsPath                     Path to file containing manifest files.
@@ -10,16 +10,12 @@
     <TargetFramework>net472</TargetFramework>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <MicrosoftDotNetMaestroTasksVersion Condition="'$(MicrosoftDotNetMaestroTasksVersion)' == ''">1.0.0-beta.18478.2</MicrosoftDotNetMaestroTasksVersion>
-  </PropertyGroup>
+  <Import Project="../RepoLayout.props"/>
+  <Import Project="Versions.props"/>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Maestro.Tasks" Version="$(MicrosoftDotNetMaestroTasksVersion)" IsImplicitlyDefined="true" />  
   </ItemGroup>
-
-  <Import Project="../RepoLayout.props"/>
-  <Import Project="Versions.props"/>
 
   <PropertyGroup>
     <_MicrosoftDotNetMaestroTasksBaseDir>$(NuGetPackageRoot)microsoft.dotnet.maestro.tasks\$(MicrosoftDotNetMaestroTasksVersion)\tools\</_MicrosoftDotNetMaestroTasksBaseDir>
@@ -38,7 +34,7 @@
     <Error Text="The MaestroApiEndpoint property must be set on the command line." Condition="'$(MaestroApiEndpoint)' == ''" />
     
     <PushMetadataToBuildAssetRegistry ManifestsPath="$(ManifestsPath)"
-                    BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
-                    MaestroApiEndpoint="$(MaestroApiEndpoint)" />
+                                      BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
+                                      MaestroApiEndpoint="$(MaestroApiEndpoint)" />
   </Target>
 </Project>

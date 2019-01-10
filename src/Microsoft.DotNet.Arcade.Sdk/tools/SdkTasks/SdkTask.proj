@@ -24,8 +24,7 @@
     <_RemoveProps>Projects</_RemoveProps>
   </PropertyGroup>
 
-  <Import Project="$(MSBuildThisFileDirectory)../RepoLayout.props"/>
-  <Import Project="$(MSBuildThisFileDirectory)Versions.props"/>
+  <Import Project="../RepoLayout.props"/>
 
   <Target Name="Execute">
     <Error Text="Property 'Projects' must be specified" Condition="'$(Projects)' == ''"/>
@@ -50,7 +49,7 @@
       Execute projects
     -->
     <MSBuild Projects="@(ProjectToBuild)"
-             Properties="__BuildPhase=SolutionBuild"
+             Properties="@(_CommonProps);__BuildPhase=SolutionBuild"
              RemoveProperties="$(_RemoveProps)"
              Targets="Execute"
              BuildInParallel="true" />
