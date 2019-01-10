@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.SignTool
     /// </summary>
     internal struct SignedFileContentKey : IEquatable<SignedFileContentKey>
     {
-        public readonly ImmutableArray<byte> ContentHash;
+        public readonly string StringHash;
         public readonly string FileName;
 
         public SignedFileContentKey(ImmutableArray<byte> contentHash, string fileName)
@@ -23,7 +23,13 @@ namespace Microsoft.DotNet.SignTool
             Debug.Assert(!contentHash.IsDefault);
             Debug.Assert(fileName != null);
 
-            ContentHash = contentHash;
+            StringHash = ContentUtil.HashToString(contentHash);
+            FileName = fileName;
+        }
+
+        public SignedFileContentKey(string stringHash, string fileName)
+        {
+            StringHash = stringHash;
             FileName = fileName;
         }
 
@@ -31,10 +37,10 @@ namespace Microsoft.DotNet.SignTool
             => obj is SignedFileContentKey key && Equals(key);
 
         public override int GetHashCode()
-            => Hash.Combine(FileName, ByteSequenceComparer.GetHashCode(ContentHash));
+            => Hash.Combine(FileName, StringHash.GetHashCode());
 
         bool IEquatable<SignedFileContentKey>.Equals(SignedFileContentKey other)
-            => FileName == other.FileName && ByteSequenceComparer.Equals(ContentHash, other.ContentHash);
+            => FileName == other.FileName && StringHash == other.StringHash;
 
         public static bool operator ==(SignedFileContentKey key1, SignedFileContentKey key2)
             => key1.Equals(key2);
