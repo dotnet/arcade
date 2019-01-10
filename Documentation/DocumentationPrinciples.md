@@ -48,7 +48,7 @@ Topics typical for product documentation include:
   - *Requirements* and specifications for the product's execution and operation
   - *Architecture* and design details about the product's construction
   - *Concepts* or in-depth explanations fundamental to understanding and use
-  - *How-to guides* or detailed explanation of the product's use
+  - *How-to guides* or task-based recipes of the product's use
   - *Examples* or samples illustrating the use of the product
   - *Reference* information or detailed product APIs, CLI commands
 
@@ -56,9 +56,56 @@ An ideal documentation set would contain all of these items at an appropriate le
 
 Be mindful of the differences between documentation intended for users of a product and documentation intended for developers of a product. Keeping the two separate can improve a user's experience, and providing design information to users can improve a user's self-sufficiency.
 
+Documentation reflects the latest version of the product. The documentation should be updated whenever product functionality changes. If needed, consider document migration issues and breaking changes in a separate "Migration Issues" section.
+
 ## Resources for writing
 
 Some information to guide writers.
 
 - [The 5 Writing Principles](https://aka.ms/writingprinciples)
 - [Microsoft Writing Style Guide](https://aka.ms/style)
+
+## A Template
+
+Below is a simple template for user-facing documentation. 
+
+```markdown
+# Product++
+
+Product++ is a tool that moves bits from Here to There, performing all of the tedious and error-prone authentication and error-checking along the way. It runs very fast.
+
+This product is owned by Us. For support, see [How To Get Help](how-to-get-help.md).
+
+## Requirements and Architecture
+
+The Product is a web-based service. See [https://github.com/dotnet/core-eng/blob/master/Documentation/Product/ProductDesign.md](the design document) for more information on its construction.
+
+## Concepts
+
+### Speculative File Copy
+
+Speculative File Copy is the idea that the file being copied is already present at the destination. When this is true, the copy operation runs very fast.
+
+## How to Use
+Product++ is a RESTful webservice driven entirely by simple JSON statements. A typical operation requires a payload of two URLs.
+
+### Copying two files from remote locations.
+Provide the source files in the *source* array payload and the destination files in the *destination* array payload.
+
+### How do I use this with Other Project?
+See also [Other Project FAQ](other-project-faq.md) for questions related to interoperability with Other Project.
+
+### How fast does this copy files?
+Really fast.
+
+### I'm getting HTTP Error 429.
+This indicates the server received too many requests from you. Use batching to send fewer requests or send requests at a slower rate. Use the information sent in the Retry-After header to determine maximum rate.
+
+### Migration from previous versions
+#### Migrating from versions 0.2 to 0.3
+See [Migrating from v0.2](Migrating-0.2.md).
+
+#### Migrating to 1.0 from earlier versions
+Version 1.0 works always; there is no change needed.
+
+```
