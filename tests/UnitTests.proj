@@ -32,18 +32,18 @@
     <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(_BuildConfig)/net472/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(HelixApiAcccessToken)' != '' ">
+  <ItemGroup Condition=" '$(HelixAcccessToken)' != '' ">
     <HelixTargetQueue Include="Ubuntu.1604.Amd64"/>
     <HelixTargetQueue Include="Windows.10.Amd64"/>
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$(HelixApiAcccessToken)' == '' ">
+  <PropertyGroup Condition=" '$(HelixAcccessToken)' == '' ">
     <IsExternal>true</IsExternal>
     <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
     <Creator Condition=" '$(Creator)' == ''">anon</Creator>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(HelixApiAcccessToken)' == '' ">
+  <ItemGroup Condition=" '$(HelixAcccessToken)' == '' ">
     <HelixTargetQueue Include="Ubuntu.1604.Amd64.Open"/>
     <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
   </ItemGroup>
