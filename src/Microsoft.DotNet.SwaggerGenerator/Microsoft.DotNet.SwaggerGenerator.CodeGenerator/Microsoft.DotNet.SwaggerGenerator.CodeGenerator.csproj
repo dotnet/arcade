@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Handlebars.Net" Version="$(HandlebarsNetVersion)" />
-    <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
+    <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" PrivateAssets="All" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="$(SwashbuckleAspNetCoreSwaggerVersion)" />
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageReference Include="System.Memory" Version="$(SystemMemoryVersion)" />
