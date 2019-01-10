@@ -5,6 +5,7 @@ Param(
   [string] $msbuildEngine = $null,
   [bool] $warnAsError = $true,
   [switch][Alias('bl')]$binaryLog,
+  [switch][Alias('r')]$restore,
   [switch] $ci,
   [switch] $prepareMachine,
   [switch] $help,
@@ -21,6 +22,7 @@ function Print-Usage() {
     Write-Host ""
 
     Write-Host "Advanced settings:"
+    Write-Host "  -restore                Restore dependencies (short: -r)"
     Write-Host "  -projects <value>       Semi-colon delimited list of sln/proj's from the Arcade sdk to build. Globbing is supported (*.sln)"
     Write-Host "  -ci                     Set when running on CI server"
     Write-Host "  -prepareMachine         Prepare machine for CI run"
@@ -38,6 +40,7 @@ function Build {
   MSBuild $toolsetBuildProj `
     $bl `
     /p:Projects=$projects `
+    /p:Restore=$restore `
     /p:RepoRoot=$RepoRoot `
     /p:ContinuousIntegrationBuild=$ci `
     @properties

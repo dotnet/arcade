@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <MicrosoftDotNetMaestroTasksVersion Condition="'$(MicrosoftDotNetMaestroTasksVersion)' == ''">1.0.0-beta.18478.2</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetMaestroTasksVersion Condition="'$(MicrosoftDotNetMaestroTasksVersion)' == ''">1.0.0-ci</MicrosoftDotNetMaestroTasksVersion>
   </PropertyGroup>
 
   <ItemGroup>
