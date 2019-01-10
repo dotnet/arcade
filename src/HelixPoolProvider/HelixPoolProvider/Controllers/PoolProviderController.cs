@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
             var helixApi = GetHelixApi(true /*isAnonymous*/);
             try
             {
-                return await helixApi.Information.QueueInfoMethodAsync(queueId);
+                return await helixApi.Information.QueueInfoAsync(queueId);
             }
             catch (Exception e)
             {
@@ -378,7 +378,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
 
                 using (IHelixApi api = GetHelixApi(false))
                 {
-                    var queueInfo = await api.Information.QueueInfoMethodAsync(agentDefinitionId);
+                    var queueInfo = await api.Information.QueueInfoAsync(agentDefinitionId);
 
                     // Filter the queue info based on the allowable helix queues.
                     if(!IsAllowableQueue(queueInfo))

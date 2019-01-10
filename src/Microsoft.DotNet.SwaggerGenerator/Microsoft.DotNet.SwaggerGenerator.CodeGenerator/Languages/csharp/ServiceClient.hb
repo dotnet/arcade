@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
@@ -17,8 +17,10 @@ using Newtonsoft.Json.Serialization;
 
 namespace {{pascalCaseNs Namespace}}
 {
-    public partial interface I{{pascalCase Name}}
+    public partial interface I{{pascalCase Name}} : IDisposable
     {
+        Uri BaseUri { get; set; }
+
         {{#each MethodGroups}}
         I{{pascalCase Name}} {{pascalCase Name}} { get; }
         {{/each}}
@@ -29,7 +31,7 @@ namespace {{pascalCaseNs Namespace}}
         /// <summary>
         ///   The base URI of the service.
         /// </summary>
-        public Uri BaseUri { get; }
+        public Uri BaseUri { get; set; }
 
         /// <summary>
         ///   Credentials to authenticate requests.
@@ -76,6 +78,15 @@ namespace {{pascalCaseNs Namespace}}
                 NullValueHandling = NullValueHandling.Ignore,
             };
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void OnFailedRequest(RestApiException ex)
+        {
+            HandleFailedRequest(ex);
+        }
+
+        partial void HandleFailedRequest(RestApiException ex);
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string Serialize(string value)

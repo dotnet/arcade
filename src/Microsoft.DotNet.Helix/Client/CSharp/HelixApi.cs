@@ -1,11 +1,36 @@
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.Client
 {
     partial class HelixApi
     {
+        partial void HandleFailedRequest(RestApiException ex)
+        {
+            if (ex.Response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                JObject content;
+                try
+                {
+                    content = JObject.Parse(ex.Response.Content);
+                }
+                catch (Exception)
+                {
+                    return;
+                }
+
+                if (content["Message"] is JValue value && value.Type == JTokenType.String)
+                {
+                    string message = (string)value.Value;
+
+                    throw new ArgumentException(message, ex);
+                }
+            }
+        }
+
         private static readonly Random s_rand = new Random();
 
         public int RetryCount { get; set; } = 15;
