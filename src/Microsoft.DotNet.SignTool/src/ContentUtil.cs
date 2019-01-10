@@ -79,6 +79,62 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
+        public static bool IsManaged(string fullFilePath)
+        {
+            uint peHeader;
+            uint peHeaderSignature;
+            ushort machine;
+            ushort sections;
+            uint timestamp;
+            uint pSymbolTable;
+            uint noOfSymbol;
+            ushort optionalHeaderSize;
+            ushort characteristics;
+            ushort dataDictionaryStart;
+            uint[] dataDictionaryRVA = new uint[16];
+            uint[] dataDictionarySize = new uint[16];
+
+            Stream fs = new FileStream(fullFilePath, FileMode.Open, FileAccess.Read);
+            BinaryReader reader = new BinaryReader(fs);
+
+            //PE Header starts @ 0x3C (60). Its a 4 byte header.
+            fs.Position = 0x3C;
+            peHeader = reader.ReadUInt32();
+
+            //Moving to PE Header start location...
+            fs.Position = peHeader;
+            peHeaderSignature = reader.ReadUInt32();
+
+            if (peHeaderSignature != 0x00004550)
+            {
+                return false;
+            }
+
+            machine = reader.ReadUInt16();
+            sections = reader.ReadUInt16();
+            timestamp = reader.ReadUInt32();
+            pSymbolTable = reader.ReadUInt32();
+            noOfSymbol = reader.ReadUInt32();
+            optionalHeaderSize = reader.ReadUInt16();
+            characteristics = reader.ReadUInt16();
+
+            dataDictionaryStart = Convert.ToUInt16(Convert.ToUInt16(fs.Position) + 0x60);
+            fs.Position = dataDictionaryStart;
+            for (int i = 0; i < 15; i++)
+            {
+                dataDictionaryRVA[i] = reader.ReadUInt32();
+                dataDictionarySize[i] = reader.ReadUInt32();
+            }
+            fs.Close();
+
+            if (dataDictionaryRVA[14] != 0x2008 || dataDictionarySize[14] != 0x48)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         public static bool IsAuthenticodeSigned(Stream assemblyStream)
         {
             using (var peReader = new PEReader(assemblyStream))
