@@ -1,6 +1,6 @@
 # Writing Azure DevOps Build Pipelines
 
-The purpose of this document is to detail how Azure DevOps YAML Pipelines should be written to integrate into the .NET Core Ecosystem and take advantage of the scaffolding availabe in the Arcade repository.
+The purpose of this document is to detail how Azure DevOps YAML Pipelines should be written to integrate into the .NET Core Ecosystem and take advantage of the scaffolding available in the Arcade repository.
 
 ## General Goals For Pipelines
 

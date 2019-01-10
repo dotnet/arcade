@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net.Http;
@@ -32,7 +32,11 @@ namespace {{pascalCaseNs Namespace}}
         }
 
         public {{clientName null}} Client { get; }
+
+        partial void HandleFailedRequest(RestApiException ex);
         {{#each Methods}}
+
+        partial void HandleFailed{{Name}}Request(RestApiException ex);
 
         public async Task{{#unless ResponseIsVoid}}<{{typeRef ResponseType}}>{{/unless}} {{Name}}Async(
             {{#each FormalParameters}}
@@ -143,9 +147,9 @@ namespace {{pascalCaseNs Namespace}}
                 if (!_res.IsSuccessStatusCode)
                 {
                     {{#if ErrorType}}
-                    throw new RestApiException<{{typeRef ErrorType}}>
+                    var ex = new RestApiException<{{typeRef ErrorType}}>
                     {{else}}
-                    throw new RestApiException
+                    var ex = new RestApiException
                     {{/if}}
                     {
                         Request = new HttpRequestMessageWrapper(_req, {{#if BodyParameter}}_requestContent{{else}}null{{/if}}),
@@ -154,6 +158,10 @@ namespace {{pascalCaseNs Namespace}}
                         Body = Client.Deserialize<{{typeRef ErrorType}}>(_responseContent),
                         {{/if}}
                     };
+                    HandleFailed{{Name}}Request(ex);
+                    HandleFailedRequest(ex);
+                    Client.OnFailedRequest(ex);
+                    throw ex;
                 }
                 {{#if ResponseIsVoid}}
                 return new HttpOperationResponse

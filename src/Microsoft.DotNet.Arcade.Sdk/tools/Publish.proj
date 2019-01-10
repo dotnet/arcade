@@ -8,9 +8,6 @@
       DotNetSymbolServerTokenMsdl       Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.
       DotNetSymbolServerTokenSymWeb     Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.
       DotNetSymbolExpirationInDays      Symbol expiration time in days (defaults to 10 years).
-
-    TODO: 
-      Unify this logic between Source and Orchestrated build (https://github.com/dotnet/arcade/issues/101)
   -->
 
   <Import Project="BuildStep.props" />
@@ -69,7 +66,7 @@
     <!-- Orchestrated Build blob storage -->
     <ItemGroup>
       <ItemsToPushToBlobFeed Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)">
-        <ManifestArtifactData Condition="!%(IsShipping)">NonShipping=true</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 

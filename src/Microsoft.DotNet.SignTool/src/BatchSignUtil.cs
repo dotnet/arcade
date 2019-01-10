@@ -25,6 +25,8 @@ namespace Microsoft.DotNet.SignTool
         private readonly SignTool _signTool;
         private readonly string[] _itemsToSkipStrongNameCheck;
 
+        internal bool SkipZipContainerSignatureMarkerCheck { get; set; }
+
         internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool,
             BatchSignInput batchData, string[] itemsToSkipStrongNameCheck)
         {
@@ -32,7 +34,7 @@ namespace Microsoft.DotNet.SignTool
             _batchData = batchData;
             _log = log;
             _buildEngine = buildEngine;
-            _itemsToSkipStrongNameCheck = itemsToSkipStrongNameCheck;
+            _itemsToSkipStrongNameCheck = itemsToSkipStrongNameCheck ?? Array.Empty<string>();
         }
 
         internal void Go(bool doStrongNameCheck)
@@ -297,13 +299,16 @@ namespace Microsoft.DotNet.SignTool
                     {
                         string relativeName = entry.FullName;
 
-                        if (file.IsNupkg() && _signTool.VerifySignedNugetFileMarker(relativeName))
+                        if (!SkipZipContainerSignatureMarkerCheck)
                         {
-                            signedContainer = true;
-                        }
-                        else if (file.IsVsix() && _signTool.VerifySignedVSIXFileMarker(relativeName))
-                        {
-                            signedContainer = true;
+                            if (file.IsNupkg() && _signTool.VerifySignedNugetFileMarker(relativeName))
+                            {
+                                signedContainer = true;
+                            }
+                            else if (file.IsVsix() && _signTool.VerifySignedVSIXFileMarker(relativeName))
+                            {
+                                signedContainer = true;
+                            }
                         }
 
                         var zipPart = zipData.FindNestedPart(relativeName);
@@ -316,7 +321,7 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
 
-                if ((file.IsNupkg() || file.IsVsix()) && !signedContainer)
+                if (!SkipZipContainerSignatureMarkerCheck && (file.IsNupkg() || file.IsVsix()) && !signedContainer)
                 {
                     _log.LogError($"Container {file.FullPath} does not have signature marker.");
                 }

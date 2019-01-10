@@ -36,6 +36,16 @@ namespace Microsoft.DotNet.SignTool
         public static string HashToString(ImmutableArray<byte> hash)
             => BitConverter.ToString(hash.ToArray()).Replace("-", "");
 
+        public static ImmutableArray<byte> StringToHash(string hash)
+        {
+            int NumberChars = hash.Length;
+            byte[] bytes = new byte[NumberChars / 2];
+            for (int i = 0; i < NumberChars; i += 2)
+                bytes[i / 2] = Convert.ToByte(hash.Substring(i, 2), 16);
+            return bytes.ToImmutableArray<byte>();
+
+        }
+
         /// <summary>
         /// Returns true if the PE file meets all of the pre-conditions to be Open Source Signed.
         /// Returns false and logs msbuild errors otherwise.
