@@ -129,4 +129,4 @@ jobs:
         displayName: Run Helix Tests
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-          HelixAccessToken: $(HelixApiAccessToken)
+          HelixApiAccessToken: $(HelixApiAccessToken)
