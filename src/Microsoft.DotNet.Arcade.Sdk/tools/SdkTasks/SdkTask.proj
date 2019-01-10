@@ -31,36 +31,26 @@
     <Error Text="Property 'Projects' must be specified" Condition="'$(Projects)' == ''"/>
     <Error Text="File 'global.json' must exist in directory specified by RepoRoot: '$(_RepoRootOriginal)'" Condition="'$(_RepoRootOriginal)' != '' and !Exists('$(RepoRoot)global.json')"/>
 
-    <PropertyGroup>
-      <_RestoreTools>false</_RestoreTools>
-      <_RestoreTools Condition="'$(Restore)' == 'true'">true</_RestoreTools>
-    </PropertyGroup>
-
     <ItemGroup>
+      <_CommonProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_CommonProps Include="ContinuousIntegrationBuild=$(ContinuousIntegrationBuild)" />
       <_CommonProps Include="RepoRoot=$(RepoRoot)" />
     </ItemGroup>
 
-    <ItemGroup Condition="$(_RestoreTools)">
-      <_RestoreToolsProps Include="@(_CommonProps)"/>
-      <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
-      <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
-    </ItemGroup>
-
     <!--
-      Restore built-in tools.
+      Restore projects.
     -->
     <MSBuild Projects="@(ProjectToBuild)"
              Targets="Restore"
-             Properties="@(_RestoreToolsProps)"
+             Properties="@(_CommonProps)"
              RemoveProperties="$(_RemoveProps)"
-             Condition="'$(_RestoreTools)' == 'true'"/>
+             Condition="'$(Restore)' == 'true'"/>
 
     <!--
       Execute projects
     -->
     <MSBuild Projects="@(ProjectToBuild)"
-             Properties="@(_SolutionBuildProps);__BuildPhase=SolutionBuild"
+             Properties="__BuildPhase=SolutionBuild"
              RemoveProperties="$(_RemoveProps)"
              Targets="Execute"
              BuildInParallel="true" />
