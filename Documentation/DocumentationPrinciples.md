@@ -4,19 +4,21 @@ This document is to provide value guidance when creating Arcade documentation. T
 
 ## Principles
 
-1. Documentation, not code, is the primary source of information for customers.
+1. Documentation is successful only if the customer is successful.
 
-2. Documentation is written for the customer.
+2. Documentation, not code, is the primary source of information for customers.
 
-3. Documentation is up-to-date.
+3. Documentation is written for the customer.
 
-4. Documentation is explicit.
+4. Documentation is up-to-date.
 
-5. Developers, including First Responders, are able to contribute documentation easily and without disruption.
+5. Documentation is explicit.
 
-6. Features are documented. Feature documentation explains why the feature is needed, what the feature does, and how the feature is used.
+6. Developers, including First Responders, are able to contribute documentation easily and without disruption.
 
-7. Questions are documented. If someone had to ask, it was overlooked in the docs.
+7. Features are documented. Feature documentation explains why the feature is needed, what the feature does, and how the feature is used.
+
+8. Questions are documented. If someone had to ask, it was overlooked in the docs.
 
 ## Project assumptions
 
@@ -67,7 +69,7 @@ Some information to guide writers.
 
 ## A Template
 
-Below is a simple template for user-facing documentation. 
+Below is a simple template for user-facing documentation.
 
 ```markdown
 # Product++
