@@ -1,0 +1,14 @@
+using System.Net.Http.Headers;
+using System.Reflection;
+
+namespace Microsoft.DotNet.Helix.Sdk
+{
+    public static class Helpers
+    {
+        public static ProductInfoHeaderValue UserAgentHeaderValue =>
+            new ProductInfoHeaderValue(new ProductHeaderValue("HelixSdk", ProductVersion));
+
+        public static string ProductVersion =>
+            typeof(Helpers).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+    }
+}

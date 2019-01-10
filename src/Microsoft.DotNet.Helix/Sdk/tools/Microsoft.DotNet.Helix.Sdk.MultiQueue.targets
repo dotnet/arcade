@@ -42,8 +42,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <WaitForWorkItemCompletion Condition="'$(WaitForWorkItemCompletion)' != 'false'">true</WaitForWorkItemCompletion>
-
     <!-- Split up HelixTargetQueues list
          In order to support all delimiters (commas, plus and semicolons).
          Note that queues will never have ',', '+' or ';' in their name, and this greatly simplifies providing a queue list in *nix.
@@ -61,6 +59,11 @@
   </Target>
 
   <Import Project="$(_HelixMultiQueueTargets)" Condition="'$(_HelixMultiQueueTargets)' != ''"/>
+
+  <PropertyGroup>
+    <WaitForWorkItemCompletion Condition="'$(WaitForWorkItemCompletion)' != 'false'">true</WaitForWorkItemCompletion>
+    <FailOnWorkItemFailure Condition="'$(FailOnWorkItemFailure)' != 'false'">true</FailOnWorkItemFailure>
+  </PropertyGroup>
 
   <Target Name="CoreTest"
           DependsOnTargets="$(TestDependsOn)">
@@ -80,6 +83,14 @@
           AfterTargets="CoreTest"
           Condition="$(WaitForWorkItemCompletion)">
     <Message Importance="High" Text="Waiting on job completion..." />
-    <HelixWait Jobs="@(SentJobs)" AccessToken="$(HelixAccessToken)" Source="$(HelixSource)" Type="$(HelixType)" Build="$(HelixBuild)" IsExternal="$(IsExternal)" Creator="$(Creator)" />
+    <HelixWait
+      Jobs="@(SentJobs)"
+      AccessToken="$(HelixAccessToken)"
+      Source="$(HelixSource)"
+      Type="$(HelixType)"
+      Build="$(HelixBuild)"
+      Creator="$(Creator)"
+      FailOnWorkItemFailure="$(FailOnWorkItemFailure)"
+      />
   </Target>
 </Project>
