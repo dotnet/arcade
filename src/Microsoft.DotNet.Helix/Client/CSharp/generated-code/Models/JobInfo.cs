@@ -35,6 +35,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("InitialWorkItemCount")]
         public int InitialWorkItemCount { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

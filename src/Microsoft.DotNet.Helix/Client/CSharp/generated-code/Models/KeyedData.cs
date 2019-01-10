@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Data")]
         public AggregateAnalysisSummary Data { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

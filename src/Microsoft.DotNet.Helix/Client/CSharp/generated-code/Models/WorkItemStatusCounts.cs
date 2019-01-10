@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("WorkItemStatus")]
         public IImmutableDictionary<string, int> WorkItemStatus { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

@@ -36,6 +36,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("StorageAccountName")]
         public string StorageAccountName { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

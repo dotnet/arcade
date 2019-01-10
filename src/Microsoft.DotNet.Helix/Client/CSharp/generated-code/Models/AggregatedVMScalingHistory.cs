@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("TotalVMCount")]
         public int TotalVMCount { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

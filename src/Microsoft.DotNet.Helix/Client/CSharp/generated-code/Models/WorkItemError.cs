@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("LogUri")]
         public string LogUri { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

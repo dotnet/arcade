@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Passed")]
         public bool Passed { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

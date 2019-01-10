@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Status")]
         public IImmutableDictionary<string, int> Status { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

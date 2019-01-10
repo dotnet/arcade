@@ -26,6 +26,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Key")]
         public IImmutableDictionary<string, string> Key { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

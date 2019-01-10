@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Data")]
         public IImmutableDictionary<string, IImmutableList<Newtonsoft.Json.Linq.JToken>> Data { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

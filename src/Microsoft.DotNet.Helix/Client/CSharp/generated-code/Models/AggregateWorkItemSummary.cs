@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Analyses")]
         public IImmutableList<KeyedData> Analyses { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

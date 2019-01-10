@@ -32,6 +32,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Timestamp")]
         public DateTimeOffset Timestamp { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

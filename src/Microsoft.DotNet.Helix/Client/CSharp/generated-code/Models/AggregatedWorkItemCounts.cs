@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Data")]
         public WorkItemStatusCounts Data { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

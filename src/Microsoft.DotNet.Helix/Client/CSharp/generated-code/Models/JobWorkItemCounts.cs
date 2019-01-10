@@ -30,6 +30,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("ListUrl")]
         public string ListUrl { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

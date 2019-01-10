@@ -54,6 +54,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("State")]
         public string State { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

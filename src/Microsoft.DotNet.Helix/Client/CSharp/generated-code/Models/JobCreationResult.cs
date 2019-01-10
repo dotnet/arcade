@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("WaitUrl")]
         public string WaitUrl { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

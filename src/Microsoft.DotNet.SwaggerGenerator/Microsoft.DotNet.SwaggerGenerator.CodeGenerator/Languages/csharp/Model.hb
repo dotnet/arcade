@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 {{#if IsEnum}}
 using System.Runtime.Serialization;
@@ -29,6 +29,7 @@ namespace {{pascalCaseNs Namespace}}.Models
         {{/if}}
         {{#if Verifyable}}
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

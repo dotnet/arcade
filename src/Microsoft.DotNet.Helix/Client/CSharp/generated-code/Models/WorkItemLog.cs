@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Uri")]
         public string Uri { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

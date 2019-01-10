@@ -61,6 +61,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("JobStartIdentifier")]
         public string JobStartIdentifier { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

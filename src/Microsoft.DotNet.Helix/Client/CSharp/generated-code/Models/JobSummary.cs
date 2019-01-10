@@ -58,6 +58,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Errors")]
         public IImmutableList<WorkItemError> Errors { get; set; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get

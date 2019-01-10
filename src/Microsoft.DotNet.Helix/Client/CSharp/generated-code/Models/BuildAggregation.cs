@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Sources")]
         public IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken> Sources { get; }
 
+        [JsonIgnore]
         public bool IsValid
         {
             get
