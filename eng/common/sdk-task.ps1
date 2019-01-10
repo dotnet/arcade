@@ -35,7 +35,7 @@ function Print-Usage() {
 function Build {
   $toolsetBuildProj = InitializeToolset
 
-  $toolsetBuildProj = Join-Path (Split-Path $toolsetBuildProj -Parent) "sdktasks\SdkTask.proj"
+  $toolsetBuildProj = Join-Path (Split-Path $toolsetBuildProj -Parent) "SdkTasks\SdkTask.proj"
   $bl = if ($binaryLog) { "/bl:" + (Join-Path $LogDir "SdkTask.binlog") } else { "" }
   MSBuild $toolsetBuildProj `
     $bl `
