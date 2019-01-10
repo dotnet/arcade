@@ -95,7 +95,7 @@ $body = @(
     errorMessage="An Error Occured";
     stackTrace="This is a stack trace";
   }
-) | ConvertTo-Json
+) | ConvertTo-Json -Depth 50
 Write-Output $body
 Invoke-RestMethod "$collectionUri$teamProject/_apis/test/runs/$runId/results?api-version=5.0-preview.5" -Method Post -ContentType 'application/json' -Body $body -Verbose -Headers $headers
 
