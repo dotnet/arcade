@@ -11,10 +11,10 @@ namespace Microsoft.DotNet.Helix.Client.Models
         }
 
         [JsonProperty("JobId")]
-        public int JobId { get; set; }
+        public int? JobId { get; set; }
 
         [JsonProperty("WorkItemId")]
-        public int WorkItemId { get; set; }
+        public int? WorkItemId { get; set; }
 
         [JsonProperty("MachineName")]
         public string MachineName { get; set; }
@@ -29,16 +29,16 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string Guid { get; set; }
 
         [JsonProperty("QueueTime")]
-        public DateTimeOffset QueueTime { get; set; }
+        public DateTimeOffset? QueueTime { get; set; }
 
         [JsonProperty("StartTime")]
-        public DateTimeOffset StartTime { get; set; }
+        public DateTimeOffset? StartTime { get; set; }
 
         [JsonProperty("FinishedTime")]
-        public DateTimeOffset FinishedTime { get; set; }
+        public DateTimeOffset? FinishedTime { get; set; }
 
         [JsonProperty("ExitCode")]
-        public int ExitCode { get; set; }
+        public int? ExitCode { get; set; }
 
         [JsonProperty("ConsoleOutputUri")]
         public string ConsoleOutputUri { get; set; }
@@ -56,10 +56,10 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public IImmutableList<UnknownWorkItemEvent> OtherEvents { get; set; }
 
         [JsonProperty("Passed")]
-        public bool Passed { get; set; }
+        public bool? Passed { get; set; }
 
         [JsonProperty("Attempt")]
-        public int Attempt { get; set; }
+        public int? Attempt { get; set; }
 
         [JsonProperty("State")]
         public string State { get; set; }

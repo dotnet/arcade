@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string Milestone { get; set; }
 
         [JsonProperty("sortByBuild")]
-        public bool SortByBuild { get; set; }
+        public bool? SortByBuild { get; set; }
 
         [JsonProperty("releaseLinks")]
         public IImmutableList<ViewConfigurationExternalTelemetry> ReleaseLinks { get; set; }

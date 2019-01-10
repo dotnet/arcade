@@ -14,13 +14,13 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string Description { get; set; }
 
         [JsonProperty("IsAvailable")]
-        public bool IsAvailable { get; set; }
+        public bool? IsAvailable { get; set; }
 
         [JsonProperty("IsInternalOnly")]
-        public bool IsInternalOnly { get; set; }
+        public bool? IsInternalOnly { get; set; }
 
         [JsonProperty("IsOnPremises")]
-        public bool IsOnPremises { get; set; }
+        public bool? IsOnPremises { get; set; }
 
         [JsonProperty("OperatingSystemGroup")]
         public string OperatingSystemGroup { get; set; }
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string QueueId { get; set; }
 
         [JsonProperty("QueueDepth")]
-        public long QueueDepth { get; set; }
+        public long? QueueDepth { get; set; }
 
         [JsonProperty("UserList")]
         public string UserList { get; set; }

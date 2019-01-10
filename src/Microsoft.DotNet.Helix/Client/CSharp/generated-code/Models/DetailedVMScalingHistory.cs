@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string QueueName { get; set; }
 
         [JsonProperty("MessageCount")]
-        public int MessageCount { get; set; }
+        public int? MessageCount { get; set; }
 
         [JsonProperty("Timestamp")]
         public DateTimeOffset Timestamp { get; set; }

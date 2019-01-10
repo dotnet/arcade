@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string Reason { get; set; }
 
         [JsonProperty("Duration")]
-        public long Duration { get; set; }
+        public long? Duration { get; set; }
 
         [JsonProperty("Output")]
         public string Output { get; set; }

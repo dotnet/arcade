@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
                     agentData = new AgentDataItem() { correlationId = job.CorrelationId,
                                                       queueId = _queueInfo.QueueId,
                                                       workItemId = _agentRequestItem.agentId,
-                                                      isPublicQueue = !_queueInfo.IsInternalOnly }
+                                                      isPublicQueue = !_queueInfo.IsInternalOnly.Value }
                 };
             }
             catch (HttpOperationException e)

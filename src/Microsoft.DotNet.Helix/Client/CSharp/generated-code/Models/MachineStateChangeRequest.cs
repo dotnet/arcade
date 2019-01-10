@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         }
 
         [JsonProperty("Enabled")]
-        public bool Enabled { get; set; }
+        public bool? Enabled { get; set; }
 
         [JsonProperty("Reason")]
         public string Reason { get; set; }

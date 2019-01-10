@@ -14,8 +14,8 @@ namespace Microsoft.DotNet.HelixPoolProvider.Models
             url = agentDefinitionUrl;
             metadataDocumentUrl = null;
             workspacePath = info.WorkspacePath;
-            isInternal = info.IsInternalOnly;
-            available = info.IsAvailable;
+            isInternal = info.IsInternalOnly.Value;
+            available = info.IsAvailable.Value;
         }
 
         // Required data

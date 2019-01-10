@@ -6,19 +6,19 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class MachineInformation
     {
-        public MachineInformation(bool isOnline)
+        public MachineInformation(bool? isOnline)
         {
             IsOnline = isOnline;
         }
 
         [JsonProperty("Created")]
-        public DateTimeOffset Created { get; set; }
+        public DateTimeOffset? Created { get; set; }
 
         [JsonProperty("State")]
         public string State { get; set; }
 
         [JsonProperty("IsOnline")]
-        public bool IsOnline { get; }
+        public bool? IsOnline { get; }
 
         [JsonProperty("OperatingSystemGroup")]
         public string OperatingSystemGroup { get; set; }

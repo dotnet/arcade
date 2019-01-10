@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string MachineName { get; set; }
 
         [JsonProperty("ExitCode")]
-        public int ExitCode { get; set; }
+        public int? ExitCode { get; set; }
 
         [JsonProperty("ConsoleOutputUri")]
         public string ConsoleOutputUri { get; set; }

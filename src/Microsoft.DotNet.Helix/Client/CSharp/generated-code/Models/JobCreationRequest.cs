@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string PullRequestId { get; set; }
 
         [JsonProperty("MaxRetryCount")]
-        public int MaxRetryCount { get; set; }
+        public int? MaxRetryCount { get; set; }
 
         [JsonProperty("Attempt")]
         public string Attempt { get; set; }

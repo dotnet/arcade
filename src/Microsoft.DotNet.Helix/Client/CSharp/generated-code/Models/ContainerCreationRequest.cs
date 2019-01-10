@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         }
 
         [JsonProperty("ExpirationInDays")]
-        public double ExpirationInDays { get; set; }
+        public double? ExpirationInDays { get; set; }
 
         [JsonProperty("DesiredName")]
         public string DesiredName { get; set; }

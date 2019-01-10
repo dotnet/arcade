@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         }
 
         [JsonProperty("Queued")]
-        public DateTimeOffset Queued { get; set; }
+        public DateTimeOffset? Queued { get; set; }
 
         [JsonProperty("Build")]
         public string Build { get; set; }

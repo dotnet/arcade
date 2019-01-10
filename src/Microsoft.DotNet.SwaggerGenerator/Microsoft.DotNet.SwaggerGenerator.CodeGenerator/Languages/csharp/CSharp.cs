@@ -28,6 +28,11 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                     return "string";
                 }
 
+                if (reference is TypeReference.NullableTypeReference nullableType)
+                {
+                    return $"{ResolveReference(nullableType.BaseType, args)}?";
+                }
+
                 if (reference is TypeReference.TypeModelReference typeModelRef)
                 {
                     return Helpers.PascalCase(typeModelRef.Model.Name.AsSpan());

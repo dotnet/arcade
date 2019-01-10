@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class MultiSourceRequest
     {
-        public MultiSourceRequest(IImmutableList<SingleSourceRequest> sources, int buildCount)
+        public MultiSourceRequest(IImmutableList<SingleSourceRequest> sources, int? buildCount)
         {
             Sources = sources;
             BuildCount = buildCount;
@@ -16,6 +16,6 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public IImmutableList<SingleSourceRequest> Sources { get; }
 
         [JsonProperty("BuildCount")]
-        public int BuildCount { get; }
+        public int? BuildCount { get; }
     }
 }

@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public IImmutableDictionary<string, string> Properties { get; set; }
 
         [JsonProperty("InitialWorkItemCount")]
-        public int InitialWorkItemCount { get; set; }
+        public int? InitialWorkItemCount { get; set; }
 
         [JsonIgnore]
         public bool IsValid

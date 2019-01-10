@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
                 _logger.LogInformation($"Queue {queueId} does not exist");
                 return null;
             }
-            else if (!queueInfo.IsAvailable)
+            else if (!queueInfo.IsAvailable.HasValue || !queueInfo.IsAvailable.Value)
             {
                 _logger.LogInformation($"{queueId} exists but is not available");
                 return null;
@@ -131,11 +131,11 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
             switch (queueInfo.OperatingSystemGroup.ToLowerInvariant())
             {
                 case "windows":
-                    return new HelixWindowsOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly), _loggerFactory, _hostingEnvironment, _configuration);
+                    return new HelixWindowsOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value), _loggerFactory, _hostingEnvironment, _configuration);
                 case "linux":
-                    return new HelixLinuxOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly), _loggerFactory, _hostingEnvironment, _configuration);
+                    return new HelixLinuxOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value), _loggerFactory, _hostingEnvironment, _configuration);
                 case "osx":
-                    return new HelixMacOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly), _loggerFactory, _hostingEnvironment, _configuration);
+                    return new HelixMacOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value), _loggerFactory, _hostingEnvironment, _configuration);
                 default:
                     throw new NotImplementedException($"Operating system group {queueInfo.OperatingSystemGroup} unexpected");
             }
@@ -236,9 +236,14 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
                 return true;
             }
 
+            if (!queueInfo.IsInternalOnly.HasValue)
+            {
+                _logger.LogWarning($"Warning, unknown whether {queueInfo.QueueId} is internal only or not");
+                return false;
+            }
 
-            return (_configuration.AllowedTargetQueues == AllowableHelixQueues.NoInternal && !queueInfo.IsInternalOnly) ||
-                (_configuration.AllowedTargetQueues == AllowableHelixQueues.OnlyInternal && queueInfo.IsInternalOnly);
+            return (_configuration.AllowedTargetQueues == AllowableHelixQueues.NoInternal && !queueInfo.IsInternalOnly.Value) ||
+                (_configuration.AllowedTargetQueues == AllowableHelixQueues.OnlyInternal && queueInfo.IsInternalOnly.Value);
         }
 
         /// <summary>

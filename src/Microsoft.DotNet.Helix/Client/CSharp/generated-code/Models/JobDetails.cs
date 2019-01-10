@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string Finished { get; set; }
 
         [JsonProperty("InitialWorkItemCount")]
-        public int InitialWorkItemCount { get; set; }
+        public int? InitialWorkItemCount { get; set; }
 
         [JsonProperty("WaitUrl")]
         public string WaitUrl { get; set; }

@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public IImmutableList<Displayable> OtherProperties { get; set; }
 
         [JsonProperty("noWorkitems")]
-        public bool NoWorkitems { get; set; }
+        public bool? NoWorkitems { get; set; }
 
         [JsonProperty("name")]
         public string Name { get; set; }
