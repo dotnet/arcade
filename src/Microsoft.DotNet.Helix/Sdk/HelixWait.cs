@@ -38,6 +38,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             // We need to set properties to lowercase so that URL matches MC routing.
             // It needs to be done before escaping to not mutate escaping caracters to lower case.
+            Creator = Uri.EscapeDataString(Creator.ToLowerInvariant()).Replace('%', '~');
             Source = Uri.EscapeDataString(Source.ToLowerInvariant()).Replace('%', '~');
             Type = Uri.EscapeDataString(Type.ToLowerInvariant()).Replace('%', '~');
             Build = Build.ToLowerInvariant();
