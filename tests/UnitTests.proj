@@ -13,7 +13,6 @@
 
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-    <FailOnTestFailure>false</FailOnTestFailure>
     
     <EnableXUnitReporter>true</EnableXUnitReporter>
 
