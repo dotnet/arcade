@@ -63,6 +63,7 @@
   <PropertyGroup>
     <WaitForWorkItemCompletion Condition="'$(WaitForWorkItemCompletion)' != 'false'">true</WaitForWorkItemCompletion>
     <FailOnWorkItemFailure Condition="'$(FailOnWorkItemFailure)' != 'false'">true</FailOnWorkItemFailure>
+    <FailOnMissionControlTestFailure Condition="'$(FailOnMissionControlTestFailure)' != 'true'">false</FailOnMissionControlTestFailure>
   </PropertyGroup>
 
   <Target Name="CoreTest"
@@ -91,6 +92,7 @@
       Build="$(HelixBuild)"
       Creator="$(Creator)"
       FailOnWorkItemFailure="$(FailOnWorkItemFailure)"
+      FailOnMissionControlTestFailure="$(FailOnMissionControlTestFailure)"
       />
   </Target>
 </Project>

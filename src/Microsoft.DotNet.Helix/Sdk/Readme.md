@@ -115,6 +115,8 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
         test_results.xml
     -->
     <EnableXUnitReporter>false</EnableXUnitReporter>
+    <!-- Instruct the sdk to wait for test result injestion by MC and fail if there are any failed tests. -->
+    <FailOnMissionControlTestFailure>false</FailOnMissionControlTestFailure>
 
     <!--
       Commands that are run before each workitem's command
