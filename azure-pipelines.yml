@@ -19,6 +19,7 @@ jobs:
     helixRepo: dotnet/arcade
     jobs:
     - job: Windows_NT
+      timeoutInMinutes: 90
       pool:
         # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
         # Will eventually change this to two BYOC pools.
@@ -32,15 +33,18 @@ jobs:
       - _Script: eng\common\cibuild.cmd
       - _ValidateSdkArgs: ''
       - _InternalBuildArgs: ''
+      - HelixApiAccessToken: ''
 
       # Only enable publishing in non-public, non PR scenarios.
       - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
         # DotNet-Symbol-Server-Pats provides: microsoft-symbol-server-pat, symweb-symbol-server-pat
         # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
+        # DotNet-HelixApi-Access provides: HelixApiAccessToken
         - group: DotNet-Blob-Feed
         - group: DotNet-Symbol-Server-Pats
         - group: Publish-Build-Assets
+        - group: DotNet-HelixApi-Access
         - _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
         - _InternalBuildArgs: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
             /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
@@ -81,6 +85,15 @@ jobs:
           $(_ValidateSdkArgs)
         displayName: Windows Build / Publish
 
+      - powershell: eng\common\build.ps1
+          -test
+          -projects $(Build.SourcesDirectory)/tests/UnitTests.proj
+          /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
+        displayName: Run Helix Tests
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          HelixAccessToken: $(HelixApiAccessToken)
+
     - job: Linux
       container: LinuxContainer
       pool:
@@ -88,6 +101,10 @@ jobs:
           name: dnceng-linux-external-temp
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           name: dnceng-linux-internal-temp
+      variables:
+      - HelixApiAccessToken: ''
+      - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+        - group: DotNet-HelixApi-Access
       strategy:
         matrix:
           Build_Debug:
@@ -107,3 +124,12 @@ jobs:
           --configuration $(_BuildConfig)
           --prepareMachine
         displayName: Unix Build / Publish
+
+      - script: eng/common/build.sh
+          --test
+          --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
+          /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
+        displayName: Run Helix Tests
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          HelixAccessToken: $(HelixApiAccessToken)

@@ -41,15 +41,11 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     {
                         using (var res = await client.SendAsync(req))
                         {
-                            if (!res.IsSuccessStatusCode)
+                            var result = await ParseResponseAsync(req, res);
+                            if (result != null)
                             {
-                                await LogFailedRequest(req, res);
-                                return;
+                                TestRunId = result["id"].ToObject<int>();
                             }
-
-                            var result = JObject.Parse(await res.Content.ReadAsStringAsync());
-
-                            TestRunId = result["id"].ToObject<int>();
                         }
                     }
                 });

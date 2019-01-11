@@ -1,5 +1,0 @@
-{
-  "BuildAssetRegistry": {
-    "ConnectionString": "[vault(build-asset-registry-sql-connection-string)]"
-  }
-}

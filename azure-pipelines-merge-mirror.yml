@@ -46,7 +46,7 @@ jobs:
         displayName: Fetch AzDO repo
         workingDirectory: $(WorkingDirectoryName)
       - script: |
-          git checkout -b $(TargetBranchName) -t azdo-mirror/$(TargetBranchName) || git checkout -b $(TargetBranchName) -t azdo-mirror/$(TargetBranchName)
+          git checkout -b $(TargetBranchName) -t azdo-mirror/$(TargetBranchName) || git checkout -b $(TargetBranchName) -t azdo-mirror/$(BranchToMirror)
         displayName: Check out target branch
         workingDirectory: $(WorkingDirectoryName)
       - script: |

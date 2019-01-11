@@ -1,0 +1,69 @@
+<Project DefaultTargets="Test">
+  <!-- <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/> -->
+  <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.props"/>
+
+  <PropertyGroup>
+    <HelixSource>pr/dotnet/arcade/$(BUILD_SOURCEBRANCH)/</HelixSource>
+    <HelixType>test/product/</HelixType>
+    <HelixBuild>$(BUILD_BUILDNUMBER)</HelixBuild>
+    <HelixBuild Condition="'$(HelixBuild)' == ''">12345.01</HelixBuild>
+
+    <IncludeDotNetCli>true</IncludeDotNetCli>
+    <DotNetCliPackageType>sdk</DotNetCliPackageType>
+
+    <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
+    <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
+    
+    <EnableXUnitReporter>true</EnableXUnitReporter>
+
+    <XUnitProjects>true</XUnitProjects>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <XUnitProject Include="..\src\**\*.Tests.csproj"/>
+
+    <!-- Remove the arcade sdk tests project because it depends heavily on machine/repo state and doesn't work properly in helix yet -->
+    <XUnitProject Remove="..\src\Microsoft.DotNet.Arcade.Sdk.Tests\Microsoft.DotNet.Arcade.Sdk.Tests.csproj"/>
+  </ItemGroup>
+
+  <!-- Use the locally built version of Helix Tasks temporaraily -->
+  <PropertyGroup>
+    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(_BuildConfig)/netcoreapp2.1/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
+    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(_BuildConfig)/net472/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
+    <HelixTargetQueue Include="Ubuntu.1604.Amd64"/>
+    <HelixTargetQueue Include="Windows.10.Amd64"/>
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <IsExternal>true</IsExternal>
+    <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
+    <Creator Condition=" '$(Creator)' == ''">anon</Creator>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <HelixTargetQueue Include="Ubuntu.1604.Amd64.Open"/>
+    <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(HelixTargetQueue)' == 'Ubuntu.1604.Amd64'">
+    <HelixPreCommands>$(HelixPreCommands);find $HELIX_CORRELATION_PAYLOAD -type f</HelixPreCommands>
+    <HelixPreCommands>$(HelixPreCommands);find . -type f</HelixPreCommands>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(HelixTargetQueue)' == 'Windows.10.Amd64'">
+    <HelixPreCommands>$(HelixPreCommands);dir /s %HELIX_CORRELATION_PAYLOAD%</HelixPreCommands>
+    <HelixPreCommands>$(HelixPreCommands);dir /s</HelixPreCommands>
+  </PropertyGroup>
+
+  <!-- Useless stuff to make Arcade SDK happy -->
+  <PropertyGroup>
+    <Language>msbuild</Language>
+  </PropertyGroup>
+  <Target Name="Pack"/>
+
+  <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.targets"/>
+  <!-- <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/> -->
+</Project>

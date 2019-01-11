@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -46,10 +45,8 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     {
                         using (var res = await client.SendAsync(req))
                         {
-                            res.EnsureSuccessStatusCode();
-
-                            var data = JObject.Parse(await res.Content.ReadAsStringAsync());
-                            if (data["runStatistics"] is JArray runStatistics)
+                            var data = await ParseResponseAsync(req, res);
+                            if (data != null && data["runStatistics"] is JArray runStatistics)
                             {
                                 var failed = runStatistics.Children()
                                     .FirstOrDefault(stat => stat["outcome"]?.ToString() == "Failed");

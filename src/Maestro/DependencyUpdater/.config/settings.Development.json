@@ -1,6 +1,0 @@
-{
-  "KeyVaultUri": "https://maestrolocal.vault.azure.net/",
-  "BuildAssetRegistry": {
-    "ConnectionString": "Data Source=localhost\\SQLEXPRESS;Initial Catalog=BuildAssetRegistry;Integrated Security=true"
-  }
-}

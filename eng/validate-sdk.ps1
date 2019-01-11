@@ -64,7 +64,7 @@ try {
   $packagesSource = Join-Path (Join-Path (Join-Path $validateSdkDir "packages") $configuration) "NonShipping"
   $nugetConfigPath = Join-Path $RepoRoot "NuGet.config"
   
-  . .\common\build.ps1 -restore -build -pack -configuration $configuration
+  . .\common\build.ps1 -ci -restore -build -pack -configuration $configuration
   
   # This is a temporary solution. When https://github.com/dotnet/arcade/issues/1293 is closed
   # we'll be able to pass a container name to build.ps1 which will put the outputs in the
@@ -88,8 +88,9 @@ try {
   StopDotnetIfRunning
   
   Write-Host "Building with updated dependencies"
-
-  . .\common\build.ps1 -configuration $configuration @Args  /p:AdditionalRestoreSources=$packagesSource
+  # Clear this global variable so that we don't use the cached toolset that we restored in Step 1.
+  Remove-Variable _ToolsetBuildProj -Scope Global
+  & .\common\build.ps1 -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource
 }
 catch {
   Write-Host $_

@@ -38,6 +38,9 @@ This document is to provide value guidance when creating Arcade documentation. T
 
 - The Arcade Project is itself a product, though it may also be viewed as a collection of smaller products. As such, Arcade also benefits from having product documentation.
 
+- A "Frequently Asked Questions" section within product documentation is an easy place to address a question or provide some piece of information that otherwise does not have a home (perhaps because that part of the documentation has not yet been written, or perhaps because the question is so common it benefits from being highlighted). The Arcade repository has a FAQ document to act both as a place for questions about Arcade and to provide a central hub for links to other, product-specific FAQs. 
+
+
 ## Writing documentation
 
 Documentation is centered around a product. Product documentation contains all knowledge necessary for a user to be successful. They may be a single page or many as best fits the needs. Documentation spanning multiple documents should be anchored from a single starting document, perhaps as a table of contents or integrated with the Overview section.

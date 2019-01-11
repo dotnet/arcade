@@ -416,14 +416,10 @@
     <Error Condition="'$(HarvestVersion)' == '' AND '@(HarvestIncludePaths)' != ''"
            Text="HarvestIncludePaths was specified but no previous stable version of this package was found." />
 
-    <PropertyGroup>
-      <IdToLower>$(Id.ToLowerInvariant())</IdToLower>
-    </PropertyGroup>
-
     <!-- Harvest files from old package and determine support using both runtime and additional packages -->
-    <HarvestPackage PackageId="$(IdToLower)"
+    <HarvestPackage PackageId="$(Id)"
                     PackageVersion="$(HarvestVersion)"
-                    PackagesFolder="$(PackagesDir)"
+                    PackagesFolders="$(NuGetPackageFolders)"
                     Files="@(File)"
                     RuntimeFile="$(RuntimeIdGraphDefinitionFile)"
                     RuntimePackages="@(HarvestRuntimePackages);@(HarvestAdditionalPackages)"

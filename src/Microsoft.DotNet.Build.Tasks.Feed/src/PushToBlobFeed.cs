@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string ManifestCommit { get; set; }
 
-        public string ManifestBuildData { get; set; }
+        public string[] ManifestBuildData { get; set; }
 
         public string AssetManifestPath { get; set; }
 
