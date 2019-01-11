@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool IsPEFile() => IsPEFile(FileName);
 
-        internal bool IsManaged() => ContentUtil.GetAssemblyName(FullPath) != null;
+        internal bool IsManaged() => ContentUtil.IsManaged(FullPath);
 
         internal bool IsVsix() => IsVsix(FileName);
 

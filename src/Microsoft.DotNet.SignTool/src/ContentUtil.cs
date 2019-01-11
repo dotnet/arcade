@@ -67,15 +67,14 @@ namespace Microsoft.DotNet.SignTool
             return (header.Flags & CorFlags.StrongNameSigned) == CorFlags.StrongNameSigned;
         }
 
-        public static AssemblyName GetAssemblyName(string fullFilePath)
+        public static bool IsManaged(string filePath)
         {
-            try
+            using (var stream = new FileStream(filePath, FileMode.Open))
+            using (var peReader = new PEReader(stream))
             {
-                return AssemblyName.GetAssemblyName(fullFilePath);
-            }
-            catch
-            {
-                return null;
+                var corEntry = peReader.PEHeaders.PEHeader.CorHeaderTableDirectory;
+
+                return corEntry.RelativeVirtualAddress == 0x2008 && corEntry.Size == 0x48;
             }
         }
 
