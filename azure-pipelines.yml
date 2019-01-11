@@ -32,6 +32,7 @@ jobs:
       - _Script: eng\common\cibuild.cmd
       - _ValidateSdkArgs: ''
       - _InternalBuildArgs: ''
+      - HelixApiAccessToken: ''
 
       # Only enable publishing in non-public, non PR scenarios.
       - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -101,6 +102,7 @@ jobs:
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           name: dnceng-linux-internal-temp
       variables:
+      - HelixApiAccessToken: ''
       - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
         - group: DotNet-HelixApi-Access
       strategy:
