@@ -1,11 +1,11 @@
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Helix.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Sdk
@@ -27,26 +27,27 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public string Build { get; set; }
 
-        public bool IsExternal { get; set; } = false;
-
         public string Creator { get; set; }
+
+        public bool FailOnWorkItemFailure { get; set; } = true;
 
         protected override async Task ExecuteCore()
         {
+            if (string.IsNullOrEmpty(AccessToken) && string.IsNullOrEmpty(Creator))
+            {
+                Log.LogError("Creator is required when using anonymous access.");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(AccessToken) && !string.IsNullOrEmpty(Creator))
+            {
+                Log.LogError("Creator is forbidden when using authenticated access.");
+                return;
+            }
+
             // Wait 1 second to allow helix to register the job creation
             await Task.Delay(1000);
 
-            // We need to set properties to lowercase so that URL matches MC routing.
-            // It needs to be done before escaping to not mutate escaping caracters to lower case.
-            if (!string.IsNullOrEmpty(Creator))
-            {
-                // Creator is optional, only required for non-authenticated Helix API Access
-                // All other times the creator will be inferred from the access token. 
-                Creator = Uri.EscapeDataString(Creator.ToLowerInvariant()).Replace('%', '~');
-            }
-            Source = Uri.EscapeDataString(Source.ToLowerInvariant()).Replace('%', '~');
-            Type = Uri.EscapeDataString(Type.ToLowerInvariant()).Replace('%', '~');
-            Build = Build.ToLowerInvariant();
             string mcUri = await GetMissionControlResultUri();
 
             Log.LogMessage(MessageImportance.High, $"Results will be available from {mcUri}");
@@ -71,8 +72,12 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var finishedCount = workItems.Count(wi => wi.State == "Finished");
                 if (waitingCount == 0 && runningCount == 0 && finishedCount > 0)
                 {
-                    // determines whether any of the work items failed (fireballed)
-                    await Task.WhenAll(workItems.Select(wi => CheckForWorkItemFailureAsync(wi.Name, jobName)));
+                    if (FailOnWorkItemFailure)
+                    {
+                        // determines whether any of the work items failed (fireballed)
+                        await Task.WhenAll(workItems.Select(wi => CheckForWorkItemFailureAsync(wi.Name, jobName)));
+                    }
+
                     Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
                     return;
                 }
@@ -109,48 +114,42 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private async Task<string> GetMissionControlResultUri()
         {
-            using (HttpClient client = new HttpClient())
+            var creator = Creator;
+            if (string.IsNullOrEmpty(creator))
             {
-                if (IsExternal)
+                using (var client = new HttpClient
                 {
-                    Log.LogMessage($"Job recognized as external. Using Creator property ('{Creator}') in MC link.");
-                    if (string.IsNullOrEmpty(Creator))
+                    DefaultRequestHeaders =
                     {
-                        Log.LogMessage(MessageImportance.High, $"Creator not specified for an anonymous job.");
-                        return "Mission Control (link generation failed -- creator not specified for anonymous job)";
-                    }
-                    else
-                    {
-                        return $"https://mc.dot.net/#/user/{Creator}/{Source}/{Type}/{Build}";
-                    }
-                }
-                else
+                        UserAgent = { Helpers.UserAgentHeaderValue },
+                    },
+                })
                 {
-                    client.DefaultRequestHeaders.Add("User-Agent", "AzureDevOps");
-                    string githubJson = "";
                     try
                     {
-                        githubJson = await client.GetStringAsync($"https://api.github.com/user?access_token={AccessToken}");
-                    }
-                    catch (HttpRequestException e)
-                    {
-                        Log.LogMessage(MessageImportance.High, "Failed to connect to GitHub to retrieve username", e.StackTrace);
-                        return "Mission Control (generation of MC link failed -- GitHub HTTP request error)";
-                    }
-                    string userName = "";
-                    try
-                    {
-                        userName = JObject.Parse(githubJson)["login"].ToString();
-                    }
-                    catch (JsonException e)
-                    {
-                        Log.LogMessage(MessageImportance.High, "Failed to parse JSON or find value in parsed JSON", e.StackTrace);
-                        return "Mission Control (generation of MC link failed -- JSON parsing error)";
-                    }
+                        string githubJson =
+                            await client.GetStringAsync($"https://api.github.com/user?access_token={AccessToken}");
+                        var data = JObject.Parse(githubJson);
+                        if (data["login"] == null)
+                        {
+                            throw new Exception("Github user has no login");
+                        }
 
-                    return $"https://mc.dot.net/#/user/{userName}/{Source}/{Type}/{Build}";
+                        creator = data["login"].ToString();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogMessage(MessageImportance.High, "Failed to retrieve username from GitHub -- {0}", ex.ToString());
+                        return $"Mission Control (generation of MC link failed -- {ex.Message})";
+                    }
                 }
             }
+
+            var build = UrlEncoder.Default.Encode(Build).Replace('%', '~');
+            var type = UrlEncoder.Default.Encode(Type).Replace('%', '~');
+            var source = UrlEncoder.Default.Encode(Source).Replace('%', '~');
+            var encodedCreator = UrlEncoder.Default.Encode(creator).Replace('%', '~');
+            return $"https://mc.dot.net/#/user/{encodedCreator}/{source}/{type}/{build}";
         }
     }
 }

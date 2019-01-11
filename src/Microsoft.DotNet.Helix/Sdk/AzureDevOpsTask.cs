@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
+using Microsoft.DotNet.Helix.Sdk;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.AzureDevOps
@@ -55,7 +56,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                             Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes("unused:" + AccessToken))),
                             UserAgent =
                             {
-                                new ProductInfoHeaderValue(new ProductHeaderValue("HelixSdk", GetVersion())),
+                                Helpers.UserAgentHeaderValue
                             },
                         },
                     })
@@ -89,11 +90,6 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         protected async Task LogFailedRequest(HttpRequestMessage req, HttpResponseMessage res)
         {
             Log.LogError($"Request to {req.RequestUri} returned failed status {res.StatusCode} {res.ReasonPhrase}\n\n{(res.Content != null ? await res.Content.ReadAsStringAsync() : "")}");
-        }
-
-        private string GetVersion()
-        {
-            return GetType().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
         }
 
         protected async Task<JObject> ParseResponseAsync(HttpRequestMessage req, HttpResponseMessage res)
