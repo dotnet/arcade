@@ -430,6 +430,41 @@ namespace Microsoft.DotNet.SignTool.Tests
         }
 
         [Fact]
+        public void CrossGenNative()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("CoreLibCrossARM.dll")
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            {
+                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            {
+                { new ExplicitCertificateKey("EmptyPKT.dll"), "3PartySHA2" }
+            };
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'CoreLibCrossARM.dll' Certificate='Microsoft400'",
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>",
+            });
+        }
+
+
+        [Fact]
         public void DefaultCertificateForAssemblyWithoutStrongName()
         {
             // List of files to be considered for signing
