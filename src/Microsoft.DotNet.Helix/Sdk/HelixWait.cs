@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Encodings.Web;
@@ -30,6 +31,8 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string Creator { get; set; }
 
         public bool FailOnWorkItemFailure { get; set; } = true;
+
+        public bool FailOnMissionControlTestFailure { get; set; } = false;
 
         protected override async Task ExecuteCore()
         {
@@ -62,7 +65,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             await Task.Yield();
             Log.LogMessage($"Waiting for completion of job {jobName}");
 
-            while (true)
+            for (;; await Task.Delay(10000)) // delay every time this loop repeats
             {
                 var workItems = await HelixApi.RetryAsync(
                     () => HelixApi.WorkItem.ListAsync(jobName),
@@ -78,13 +81,78 @@ namespace Microsoft.DotNet.Helix.Sdk
                         await Task.WhenAll(workItems.Select(wi => CheckForWorkItemFailureAsync(wi.Name, jobName)));
                     }
 
+                    if (FailOnMissionControlTestFailure)
+                    {
+                        if (!(await MissionControlTestProcessingDoneAsync(jobName)))
+                        {
+                            Log.LogMessage($"Job {jobName} is still processing xunit results.");
+                            continue;
+                        }
+                    }
+
                     Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
                     return;
                 }
 
                 Log.LogMessage($"Job {jobName} is not yet completed with Waiting: {waitingCount}, Running: {runningCount}, Finished: {finishedCount}");
-                await Task.Delay(10000);
             }
+        }
+
+        private async Task<bool> MissionControlTestProcessingDoneAsync(string jobName)
+        {
+            var results = await HelixApi.Aggregate.JobSummaryAsync(
+                groupBy: ImmutableList.Create("job.name"),
+                maxResultSets: 1,
+                filterName: jobName
+                );
+
+            if (results.Count != 1)
+            {
+                Log.LogError($"Not exactly 1 result from aggregate api for job '{jobName}': {JsonConvert.SerializeObject(results)}");
+                return true;
+            }
+
+            var data = results[0].Data;
+            if (data == null)
+            {
+                Log.LogError($"No data found in first result for job '{jobName}'.");
+                return true;
+            }
+
+            if (data.WorkItemStatus.ContainsKey("fail"))
+            {
+                Log.LogError($"Job '{jobName}' has {data.WorkItemStatus["fail"]} failed work items.");
+                return true;
+            }
+
+            if (data.WorkItemStatus.ContainsKey("none"))
+            {
+                return false;
+            }
+
+            var analysis = data.Analysis;
+            if (analysis.Any())
+            {
+                var xunitAnalysis = analysis.FirstOrDefault(a => a.Name == "xunit");
+                if (xunitAnalysis == null)
+                {
+                    Log.LogError($"Job '{jobName}' has no xunit analysis.");
+                    return true;
+                }
+
+                var pass = xunitAnalysis.Status.GetValueOrDefault("pass", 0);
+                var fail = xunitAnalysis.Status.GetValueOrDefault("fail", 0);
+                var skip = xunitAnalysis.Status.GetValueOrDefault("skip", 0);
+                var total = pass + fail + skip;
+
+                if (fail > 0)
+                {
+                    Log.LogError($"Job '{jobName}' failed {fail} out of {total} tests.");
+                }
+                return true;
+            }
+
+            return false;
         }
 
         private void LogExceptionRetry(Exception ex)
