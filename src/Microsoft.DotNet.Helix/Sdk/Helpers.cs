@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public static ProductInfoHeaderValue UserAgentHeaderValue =>
             new ProductInfoHeaderValue(new ProductHeaderValue("HelixSdk", ProductVersion));
 
-        public static string ProductVersion =>
+        public static string ProductVersion { get; } =
             typeof(Helpers).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
     }
 }
