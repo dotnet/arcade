@@ -371,7 +371,7 @@ namespace Microsoft.DotNet.SignTool
                 return;
             }
 
-            AssemblyName assemblyName = ContentUtil.GetAssemblyName(fullPath);
+            AssemblyName assemblyName = AssemblyName.GetAssemblyName(fullPath);
             var pktBytes = assemblyName.GetPublicKeyToken();
 
             publicKeyToken = (pktBytes == null || pktBytes.Length == 0) ? string.Empty : string.Join("", pktBytes.Select(b => b.ToString("x2")));
