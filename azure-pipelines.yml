@@ -81,6 +81,7 @@ jobs:
           -prepareMachine
           $(_InternalBuildArgs)
           $(_ValidateSdkArgs)
+          /p:Test=false
         displayName: Windows Build / Publish
 
       - powershell: eng\common\build.ps1
