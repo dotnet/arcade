@@ -487,6 +487,24 @@
       </PackageFile>
     </ItemGroup>
   </Target>
+
+  <!--Target that will add the specified source files into the package.
+      In order for this target to run, define SourcePackageFiles item by includding
+      all source files that need to be packaged into it. Each source file must have the 
+      PackagePath metadata defined, which is the location of where the source file will
+      end up in the package-->
+  <Target Name="AddSourceToFilesToPackage" BeforeTargets="GetFiles"
+                                           DependsOnTargets="$(AddSourceToFilesToPackageDependsOn)"
+                                           Condition="'@(SourcePackageFiles)' != ''">
+    <Error Condition="'%(SourcePackageFiles.PackagePath)' == ''"
+           Text="Item &quot;%(SourcePackageFiles.Identity)&quot; does not define required metadata &quot;PackagePath&quot;" />
+
+    <ItemGroup>
+      <File Include="@(SourcePackageFiles)">
+        <TargetPath>%(SourcePackageFiles.PackagePath)</TargetPath>
+      </File>
+    </ItemGroup>
+  </Target>
   <!-- END files-->
 
   <!-- BEGIN dependencies-->

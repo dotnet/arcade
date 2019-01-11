@@ -2,6 +2,8 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
   <PropertyGroup>
+    <AddSourceToFilesToPackageDependsOn>$(AddSourceToFilesToPackageDependsOn);GenerateInternalTypesSource</AddSourceToFilesToPackageDependsOn>
+
     <!-- If ToolHostCmd is undefined, we default to assuming 'dotnet' is on the path -->
     <ToolHostCmd Condition="'$(ToolHostCmd)' == ''">dotnet</ToolHostCmd>
 
@@ -37,23 +39,5 @@
       <Output TaskParameter="ExitCode" PropertyName="SourceRewriterExitCode" />
     </Exec>
     <Error Condition="'$(SourceRewriterExitCode)' != '0'" Text="There was an error while rewriting the source with the command: $(_SourceRewriterCommand)" />
-  </Target>
-  
-  <!--Target that will add the specified source files into the package.
-      In order for this target to run, define SourcePackageFiles item by includding
-      all source files that need to be packaged into it. Each source file must have the 
-      PackagePath metadata defined, which is the location of where the source file will
-      end up in the package-->
-  <Target Name="AddSourceToFilesToPackage" BeforeTargets="GetFiles"
-                                           DependsOnTargets="GenerateInternalTypesSource"
-                                           Condition="'@(SourcePackageFiles)' != ''">
-    <Error Condition="'%(SourcePackageFiles.PackagePath)' == ''"
-           Text="Item &quot;%(SourcePackageFiles.Identity)&quot; does not define required metadata &quot;PackagePath&quot;" />
-
-    <ItemGroup>
-      <File Include="@(SourcePackageFiles)">
-        <TargetPath>%(SourcePackageFiles.PackagePath)</TargetPath>
-      </File>
-    </ItemGroup>
   </Target>
 </Project>
