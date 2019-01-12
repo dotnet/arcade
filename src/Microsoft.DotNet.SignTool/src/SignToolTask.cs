@@ -159,7 +159,7 @@ namespace Microsoft.DotNet.SignTool
                 return;
             }
 
-            if (!DryRun && !AllowEmptySignList && ItemsToSign.Count() == 0)
+            if (!AllowEmptySignList && ItemsToSign.Count() == 0)
             {
                 Log.LogWarning(subcategory: null,
                     warningCode: SignToolConstants.SigningToolErrorCode.SIGN003.ToString(),
