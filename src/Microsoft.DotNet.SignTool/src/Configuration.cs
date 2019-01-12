@@ -14,7 +14,6 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.Versioning;
 using Microsoft.Build.Utilities;
-using static Microsoft.DotNet.SignTool.SignToolConstants;
 
 namespace Microsoft.DotNet.SignTool
 {

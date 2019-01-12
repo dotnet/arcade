@@ -7,10 +7,10 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.SignTool
 {
+    public enum SigningToolErrorCode { SIGN001, SIGN002, SIGN003 };
+        
     internal static class SignToolConstants
     {
-        public enum SigningToolErrorCode { SIGN001, SIGN002, SIGN003 };
-        
         public const string IgnoreFileCertificateSentinel = "None";
 
         /// <summary>

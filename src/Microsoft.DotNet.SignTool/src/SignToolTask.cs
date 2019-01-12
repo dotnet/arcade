@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.SignTool
             if (!AllowEmptySignList && ItemsToSign.Count() == 0)
             {
                 Log.LogWarning(subcategory: null,
-                    warningCode: SignToolConstants.SigningToolErrorCode.SIGN003.ToString(),
+                    warningCode: SigningToolErrorCode.SIGN003.ToString(),
                     helpKeyword: null,
                     file: null,
                     lineNumber: 0,
