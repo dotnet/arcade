@@ -39,6 +39,11 @@ namespace Microsoft.DotNet.SignTool
         public bool DoStrongNameCheck { get; set; }
 
         /// <summary>
+        /// Allow the sign tool task to be called with an empty list of files to be signed.
+        /// </summary>
+        public bool AllowEmptySignList { get; set; }
+
+        /// <summary>
         /// By default in non-DryRun cases we verify the vsix and nuget packages contain a signature file
         /// This option disables that check in cases you want to sign the container at a later step. 
         /// </summary>
@@ -154,9 +159,17 @@ namespace Microsoft.DotNet.SignTool
                 return;
             }
 
-            if (ItemsToSign.Count() == 0)
+            if (!AllowEmptySignList && ItemsToSign.Count() == 0)
             {
-                Log.LogWarning($"An empty list of files to sign was passed as parameter.");
+                Log.LogWarning(subcategory: null,
+                    warningCode: SigningToolErrorCode.SIGN003.ToString(),
+                    helpKeyword: null,
+                    file: null,
+                    lineNumber: 0,
+                    columnNumber: 0,
+                    endLineNumber: 0,
+                    endColumnNumber: 0,
+                    message: $"An empty list of files to sign was passed as parameter.");
             }
 
             if (!DryRun)
