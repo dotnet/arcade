@@ -9,6 +9,8 @@ namespace Microsoft.DotNet.SignTool
 {
     internal static class SignToolConstants
     {
+        public enum SigningToolErrorCode { SIGN001, SIGN002, SIGN003 };
+        
         public const string IgnoreFileCertificateSentinel = "None";
 
         /// <summary>

@@ -14,6 +14,7 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.Versioning;
 using Microsoft.Build.Utilities;
+using static Microsoft.DotNet.SignTool.SignToolConstants;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -22,8 +23,6 @@ namespace Microsoft.DotNet.SignTool
         private readonly TaskLoggingHelper _log;
 
         private readonly string[] _itemsToSign;
-
-        private enum SigningToolErrorCode { SIGN002 };
 
         /// <summary>
         /// This store content information for container files.
@@ -310,11 +309,11 @@ namespace Microsoft.DotNet.SignTool
                     {
                         if (isMicrosoftLibrary)
                         {
-                            LogWarning("SIGN001", $"Signing Microsoft library '{fullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{copyright}'.");
+                            LogWarning(SigningToolErrorCode.SIGN001, $"Signing Microsoft library '{fullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{copyright}'.");
                         }
                         else
                         {
-                            LogWarning("SIGN001", $"Signing 3rd party library '{fullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{copyright}'.");
+                            LogWarning(SigningToolErrorCode.SIGN001, $"Signing 3rd party library '{fullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{copyright}'.");
                         }
                     }
                 }
@@ -338,8 +337,8 @@ namespace Microsoft.DotNet.SignTool
             return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
         }
 
-        private void LogWarning(string code, string message)
-            => _log.LogWarning(subcategory: null, warningCode: code, helpKeyword: null, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message);
+        private void LogWarning(SigningToolErrorCode code, string message)
+            => _log.LogWarning(subcategory: null, warningCode: code.ToString(), helpKeyword: null, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message);
 
         private void LogError(SigningToolErrorCode code, SignedFileContentKey targetFile)
         {
