@@ -154,7 +154,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 if (!string.IsNullOrEmpty(Creator))
                 {
-                    def.WithCreator(Creator);
+                    def = def.WithCreator(Creator);
                     Log.LogMessage($"Setting creator to '{Creator}'");
                 }
 
