@@ -6,13 +6,18 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
+  <!--
+    Properties:
+      IbcOptimizationDataDir             The directory containing IBC optimization data. Optimization data are not applied if unset.
+      ApplyPartialNgenOptimization       Set to true in a project to apply Partial NGEN optimization data to the built binary.
+
+    Items:  
+      OptimizeAssembly                   Set of assemblies to apply Partial NGEN optimization data to.
+  -->
+
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.Unsign" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GroupItemsBy" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
 
-  <!--
-    Required properties:
-      IbcOptimizationDataDir           The directory containing IBC optimization data.
-  -->
   <PropertyGroup>
     <PostCompileBinaryModificationSentinelFile>$(IntermediateOutputPath)$(TargetFileName).pcbm</PostCompileBinaryModificationSentinelFile>
   </PropertyGroup>
@@ -24,7 +29,7 @@
   <Target Name="PostCompileBinaryModification"
           AfterTargets="CoreCompile"
           DependsOnTargets="_InitializeAssemblyOptimizationWithTargetAssembly;ApplyOptimizations"
-          Condition="'$(IsWpfTempProject)' != 'true' and '$(ApplyPartialNgenOptimization)' == 'true'"
+          Condition="'$(IsWpfTempProject)' != 'true' and '$(ApplyPartialNgenOptimization)' == 'true' and '$(IbcOptimizationDataDir)' != ''"
           Inputs="$(MSBuildAllProjects);@(IntermediateAssembly)"
           Outputs="@(IntermediateAssembly);$(PostCompileBinaryModificationSentinelFile)">
 
@@ -52,6 +57,10 @@
   </Target>
 
   <Target Name="_CalculateIbcMergeInvocations">
+
+    <Error Text="ApplyPartialNgenOptimization is true but directory specified in IbcOptimizationDataDir does not exist: '$(IbcOptimizationDataDir)'" 
+           Condition="!Exists('$(IbcOptimizationDataDir)')" />
+
     <ItemGroup>
       <!--
         Find all .ibc files generated for assemblies to optimize.
@@ -69,6 +78,8 @@
       -->
       <_IbcFile Include="$(IbcOptimizationDataDir)\**\%(OptimizeAssembly.FileName)%(OptimizeAssembly.Extension)\*.ibc" OptimizeAssemblyPath="%(OptimizeAssembly.Identity)"/>
 
+      <_AssemblyWithoutRawIbcData Include="@(OptimizeAssembly)" Exclude="@(_IbcFile->'%(OptimizeAssemblyPath)')" />
+
       <_IbcFile>
         <PreviousAssemblyDir>$([System.IO.Path]::GetDirectoryName('%(Identity)'))</PreviousAssemblyDir>
         <AssemblyFileName>$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName('%(Identity)'))))</AssemblyFileName>
@@ -81,13 +92,12 @@
                               OptimizeAssemblyPath="%(_IbcFile.OptimizeAssemblyPath)" />
     </ItemGroup>
 
+    <Error Text="No optimization data found for assemblies: @(_AssemblyWithoutRawIbcData, ', ')"
+           Condition="'@(_AssemblyWithoutRawIbcData)' != ''" />
+
     <Microsoft.DotNet.Arcade.Sdk.GroupItemsBy Items="@(_IbcFileByAssemblyName)" GroupMetadata="IbcFiles">
       <Output TaskParameter="GroupedItems" ItemName="_AssemblyWithRawIbcData" />
     </Microsoft.DotNet.Arcade.Sdk.GroupItemsBy>
-
-    <ItemGroup>
-      <_AssemblyWithoutRawIbcData Include="@(_AssemblyWithRawIbcData)" Condition="'%(_AssemblyWithRawIbcData.IbcFiles)' == ''" />
-    </ItemGroup>
 
     <ItemGroup>
       <_IbcMergeInvocation Include="%(_AssemblyWithRawIbcData.AssemblyFileName) [MergeRawToPrevious]">
@@ -120,7 +130,7 @@
   -->
   <Target Name="ApplyOptimizations"
           DependsOnTargets="_LocateIbcMerge;_CalculateIbcMergeInvocations"
-          Condition="'@(OptimizeAssembly)' != '' and '$(Configuration)' == 'Release' and '$(ContinuousIntegrationBuild)' == 'true' and '$(ApplyPartialNgenOptimization)' == 'true'">
+          Condition="'@(OptimizeAssembly)' != '' and '$(Configuration)' == 'Release' and '$(ContinuousIntegrationBuild)' == 'true' and '$(ApplyPartialNgenOptimization)' == 'true' and '$(IbcOptimizationDataDir)' != ''">
 
     <Message Text='IBCMerge tool will be run in an official build with arguments: %(_IbcMergeInvocation.IbcMergeArgs)'
              Condition="'$(_RunIbcMerge)' != 'true'" 
