@@ -31,8 +31,14 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <_SourceRewriterCommand>$(_SourceRewriterCommand) &quot;@(SourcePackageFiles -> '%(OriginalIdentity)')&quot; &quot;$(IntermediateOutputPath.TrimEnd('/').TrimEnd('\\'))&quot;</_SourceRewriterCommand>
+      <_SourceRewriterResponseFile>$(IntermediateOutputPath)sourcerewriter.rsp</_SourceRewriterResponseFile>
+      <!-- Escaping the semicolon with %3B so that it gets written correctly into the response file -->
+      <_SourceRewriterArgs>&quot;@(SourcePackageFiles -> '%(OriginalIdentity)', '%3B')&quot; &quot;$(IntermediateOutputPath.TrimEnd('/').TrimEnd('\\'))&quot;</_SourceRewriterArgs>
+      <_SourceRewriterCommand>$(_SourceRewriterCommand) @&quot;$(_SourceRewriterResponseFile)&quot;</_SourceRewriterCommand>
     </PropertyGroup>
+
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <WriteLinesToFile File="$(_SourceRewriterResponseFile)" Lines="$(_SourceRewriterArgs)" Overwrite="true" />
 
     <Exec Command="$(_SourceRewriterCommand)"
           StandardOutputImportance="Low">
