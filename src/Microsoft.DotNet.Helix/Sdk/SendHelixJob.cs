@@ -7,7 +7,6 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Common.Desktop;
 using Microsoft.DotNet.Helix.Client;
 using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
@@ -16,11 +15,6 @@ namespace Microsoft.DotNet.Helix.Sdk
 {
     public class SendHelixJob : HelixTask
     {
-        static SendHelixJob()
-        {
-            AssemblyResolver.Enable();
-        }
-    
         /// <summary>
         ///   The 'source' value reported to Helix
         /// </summary>
