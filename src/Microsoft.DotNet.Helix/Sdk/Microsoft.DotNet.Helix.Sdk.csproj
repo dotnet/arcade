@@ -20,7 +20,6 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'"> 
     <Compile Include="..\..\Common\AssemblyResolver.cs" /> 
-    <Compile Include="..\..\Common\HelixTask.Desktop.cs" /> 
   </ItemGroup> 
    
   <ItemGroup>
