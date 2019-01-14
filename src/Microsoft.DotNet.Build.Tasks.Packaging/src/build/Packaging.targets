@@ -488,36 +488,13 @@
     </ItemGroup>
   </Target>
 
-  <!--This target will run when building a source package and
-      property GenerateInternalTypesSource is set to true. It will
-      take the source files that need to be packaged, and it will use
-      a roslyn-based task to convert all of the public exposed types on
-      those files into internal types instead.-->
-  <Target Name="GenerateInternalTypesSource" Condition="'$(GenerateInternalTypesSource)' == 'true' AND '@(SourcePackageFiles)' != ''">
-    <ItemGroup>
-      <_NewSourcesToPackage Include="@(SourcePackageFiles)">
-        <SourcePath>%(Identity)</SourcePath>
-        <DestinationPath>$(IntermediateOutputPath)%(RecursiveDir)%(FileName)%(Extension)</DestinationPath>
-      </_NewSourcesToPackage>
-
-      <SourcePackageFiles Remove="@(SourcePackageFiles)" />
-      <SourcePackageFiles Include="@(_NewSourcesToPackage -> '%(DestinationPath)')">
-        <OriginalIdentity>%(Identity)</OriginalIdentity>
-      </SourcePackageFiles>
-      <FileWrites Include="@(SourcePackageFiles)" />
-    </ItemGroup>
-
-    <GenerateSourceWithPublicTypesAsInternal
-                            Files="@(SourcePackageFiles)" />
-  </Target>
-  
   <!--Target that will add the specified source files into the package.
       In order for this target to run, define SourcePackageFiles item by includding
       all source files that need to be packaged into it. Each source file must have the 
       PackagePath metadata defined, which is the location of where the source file will
       end up in the package-->
   <Target Name="AddSourceToFilesToPackage" BeforeTargets="GetFiles"
-                                           DependsOnTargets="GenerateInternalTypesSource"
+                                           DependsOnTargets="$(AddSourceToFilesToPackageDependsOn)"
                                            Condition="'@(SourcePackageFiles)' != ''">
     <Error Condition="'%(SourcePackageFiles.PackagePath)' == ''"
            Text="Item &quot;%(SourcePackageFiles.Identity)&quot; does not define required metadata &quot;PackagePath&quot;" />
