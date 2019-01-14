@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Common.Desktop;
 using Microsoft.DotNet.Helix.Client;
 using Newtonsoft.Json.Linq;
 
@@ -13,11 +12,6 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 {
     public abstract class AzureDevOpsTask : Microsoft.Build.Utilities.Task
     {
-        static AzureDevOpsTask()
-        {
-            AssemblyResolver.Enable();
-        }
-    
         private bool InAzurePipeline => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_BUILDNUMBER"));
 
         protected string GetEnvironmentVariable(string name)

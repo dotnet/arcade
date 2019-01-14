@@ -2,20 +2,14 @@ using System;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Common.Desktop;
 using Microsoft.DotNet.Helix.Client;
 using Microsoft.Rest;
 using Task = Microsoft.Build.Utilities.Task;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
-    public abstract class HelixTask : Task
+    public abstract partial class HelixTask : Task
     {
-        static HelixTask()
-        {
-            AssemblyResolver.Enable();
-        }
-    
         /// <summary>
         /// The Helix Api Base Uri
         /// </summary>
