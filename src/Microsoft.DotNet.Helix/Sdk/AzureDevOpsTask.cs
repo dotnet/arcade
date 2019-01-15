@@ -11,7 +11,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.AzureDevOps
 {
-    public abstract class AzureDevOpsTask : Microsoft.Build.Utilities.Task
+    public abstract partial class AzureDevOpsTask : Microsoft.Build.Utilities.Task
     {
         private bool InAzurePipeline => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_BUILDNUMBER"));
 
