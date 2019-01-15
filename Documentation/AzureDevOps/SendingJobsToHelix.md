@@ -36,7 +36,7 @@ Helix access tokens are used to authenticate users sending jobs to Helix.
 
 ### External builds (Public CI)
 
-For external builds, you don't need to specify an access token (indeed, doing so is prohibited). Simply specify the *IsExternal* flag for your build and specify a *Creator* in order to send the jobs to Helix anonymously. The "creator" should be an identifiable username which is clearly related to your build. For example, Arcade might specify a creator of `arcade`. This will make collating your results on Mission Control much easier.
+For external builds, you don't need to specify an access token (indeed, doing so is prohibited). Simply specify a *Creator* in order to send the jobs to Helix anonymously. The "creator" should be an identifiable username which is clearly related to your build. For example, Arcade might specify a creator of `arcade`. This will make collating your results on Mission Control much easier.
 
 Please note that external jobs may only be submitted to queues which end with the value `IsInternalOnly` set to false. In general, these queues end with **.Open**; however, this is not necessarily true.  To determine this value for a particular queue, see the list of available queues [here](https://helix.dot.net/api/2018-03-14/info/queues).
 
@@ -48,7 +48,6 @@ steps:
   displayName: Send to Helix
   parameters:
     ## more variables go here
-    IsExternal: true
     Creator: # specify your creator here
 ```
 
@@ -103,7 +102,6 @@ The list of available Helix queues can be found [here](https://helix.dot.net/api
       DotNetCliVersion: 2.1.403 # full list of versions here: https://raw.githubusercontent.com/dotnet/core/master/release-notes/releases.json
       EnableXUnitReporter: true # required for reporting out xUnit test results to Mission Control
       # WaitForWorkItemCompletion: true -- defaults to true
-      IsExternal: true # for specifying external jobs -- set this true whenever you would use the anon-kaonashi token for HelixAccessToken; true requires Creator
       Creator: arcade # specify an appropriate Creator here -- required for IsExternal true
       # condition: succeeded() - defaults to succeeded()
 ```

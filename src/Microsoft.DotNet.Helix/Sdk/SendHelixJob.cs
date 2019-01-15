@@ -49,12 +49,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string TargetQueue { get; set; }
 
         /// <summary>
-        /// <see langword="true"/> when the this job is external (i.e. should be submitted anonymously); false when not
-        /// </summary>
-        public bool IsExternal { get; set; } = false;
-
-        /// <summary>
-        /// Required if the build is external
+        /// Required if sending anonymous, not allowed if authenticated
         /// The GitHub username of the job creator
         /// </summary>
         public string Creator { get; set; }
@@ -133,16 +128,21 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         protected override async Task ExecuteCore()
         {
+            if (string.IsNullOrEmpty(AccessToken) && string.IsNullOrEmpty(Creator))
+            {
+                Log.LogError("Creator is required when using anonymous access.");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(AccessToken) && !string.IsNullOrEmpty(Creator))
+            {
+                Log.LogError("Creator is forbidden when using authenticated access.");
+                return;
+            }
+
             using (_commandPayload = new CommandPayload(this))
             {
                 var currentHelixApi = HelixApi;
-                if (IsExternal)
-                {
-                    Log.LogMessage($"Job is external. Switching to anonymous API.");
-                    currentHelixApi = AnonymousApi;
-                    var storageApi = new Storage((HelixApi)HelixApi);
-                    typeof(HelixApi).GetProperty("Storage").SetValue(AnonymousApi, storageApi);
-                }
 
                 IJobDefinition def = currentHelixApi.Job.Define()
                     .WithSource(Source)
@@ -152,17 +152,10 @@ namespace Microsoft.DotNet.Helix.Sdk
                     .WithMaxRetryCount(MaxRetryCount);
                 Log.LogMessage($"Initialized job definition with source '{Source}', type '{Type}', build number '{Build}', and target queue '{TargetQueue}'");
 
-                if (IsExternal)
+                if (!string.IsNullOrEmpty(Creator))
                 {
-                    if (string.IsNullOrEmpty(Creator))
-                    {
-                        Log.LogError("The Creator property was left unspecified for an external job. Please set the Creator property or set IsExternal to false.");
-                    }
-                    else
-                    {
-                        def.WithCreator(Creator);
-                        Log.LogMessage($"Setting creator to '{Creator}'");
-                    }
+                    def = def.WithCreator(Creator);
+                    Log.LogMessage($"Setting creator to '{Creator}'");
                 }
 
                 if (CorrelationPayloads != null)

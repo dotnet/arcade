@@ -112,6 +112,29 @@ namespace Microsoft.DotNet.SwaggerGenerator
 
             return builder.ToString();
         }
+
+        public static string KebabCase(ReadOnlySpan<char> value)
+        {
+            var builder = new StringBuilder();
+            ReadOnlySpan<char> word;
+            var pos = 0;
+            var first = true;
+            while ((word = GetNextWord(value, ref pos)).Length != 0)
+            {
+                if (!first)
+                {
+                    builder.Append("-");
+                }
+                for (var i = 0; i < word.Length; i++)
+                {
+                    builder.Append(char.ToLowerInvariant(word[i]));
+                }
+
+                first = false;
+            }
+
+            return builder.ToString();
+        }
     }
 
     public static class SwaggerSerializer

@@ -89,6 +89,23 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
 
 
     <!--
+      'true' to download dotnet cli and add it to the path for every workitem. Default 'false'
+    -->
+    <IncludeDotNetCli>true</IncludeDotNetCli>
+    <!-- 'sdk' or 'runtime' -->
+    <DotNetCliPackageType>sdk</DotNetCliPackageType>
+    <!-- 'latest' or a specific version of dotnet cli -->
+    <DotNetCliVersion>2.1.403</DotNetCliVersion>
+    <!-- 'Current' or 'LTS', determines what channel that 'latest' version pulls from -->
+    <DotNetCliChannel>Current</DotNetCliChannel>
+
+
+    <!-- Enable reporting of test results to azure dev ops -->
+    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
+    <!-- 'true' to produce a build error when tests fail. Default 'true' -->
+    <FailOnTestFailure>true</FailOnTestFailure>
+
+    <!--
       'true' to enable the xunit reporter. Default 'false'
       The xunit reporter will report test results from a test results
       xml file found in the work item working directory.
@@ -98,6 +115,8 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
         test_results.xml
     -->
     <EnableXUnitReporter>false</EnableXUnitReporter>
+    <!-- Instruct the sdk to wait for test result injestion by MC and fail if there are any failed tests. -->
+    <FailOnMissionControlTestFailure>false</FailOnMissionControlTestFailure>
 
     <!--
       Commands that are run before each workitem's command
@@ -112,7 +131,35 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <HelixPostCommands>$(HelixPostCommands);echo 'One Pepperoni Pizza'</HelixPostCommands>
   </PropertyGroup>
 
+  <!--
+    XUnit Runner
+      Enabling this will create one work item for each xunit test project specified
+      This is enabled by specifying one or more XUnitProject items
+  -->
   <ItemGroup>
+    <XUnitProject Include="..\tests\foo.Tests.csproj"/>
+  </ItemGroup>
+  <PropertyGroup>
+    <!-- TargetFramework to publish the xunit test projects for -->
+    <XUnitPublishTargetFramework>netcoreapp2.1</XUnitPublishTargetFramework>
+    <!-- TargetFramework of the xunit.runner.dll to use to run the tests -->
+    <XUnitRuntimeTargetFramework>netcoreapp2.0</XUnitRuntimeTargetFramework>
+    <!-- PackageVersion of xunit.runner.console to use -->
+    <XUnitRunnerVersion>2.4.1</XUnitRunnerVersion>
+    <!-- Additional command line arguments to pass to xunit.console.exe -->
+    <XUnitArguments></XUnitArguments>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <!--
+      Another way to specify target queues
+      This can be used to specify more properties to use for each queue.
+    -->
+    <HelixTargetQueue Include="Windows.10.Amd64.Open">
+      <AdditionalProperties>Platform=x64;Configuration=Debug</AdditionalProperties>
+    </HelixTargetQueue>
+
     <!-- Directory that is zipped up and sent as a correlation payload -->
     <HelixCorrelationPayload Include="some\directory\that\exists" />
 

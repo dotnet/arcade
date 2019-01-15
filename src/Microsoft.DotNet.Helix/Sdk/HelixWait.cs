@@ -1,11 +1,12 @@
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Helix.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Sdk
@@ -27,20 +28,29 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public string Build { get; set; }
 
-        public bool IsExternal { get; set; } = false;
-
         public string Creator { get; set; }
+
+        public bool FailOnWorkItemFailure { get; set; } = true;
+
+        public bool FailOnMissionControlTestFailure { get; set; } = false;
 
         protected override async Task ExecuteCore()
         {
+            if (string.IsNullOrEmpty(AccessToken) && string.IsNullOrEmpty(Creator))
+            {
+                Log.LogError("Creator is required when using anonymous access.");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(AccessToken) && !string.IsNullOrEmpty(Creator))
+            {
+                Log.LogError("Creator is forbidden when using authenticated access.");
+                return;
+            }
+
             // Wait 1 second to allow helix to register the job creation
             await Task.Delay(1000);
 
-            // We need to set properties to lowercase so that URL matches MC routing.
-            // It needs to be done before escaping to not mutate escaping caracters to lower case.
-            Source = Uri.EscapeDataString(Source.ToLowerInvariant()).Replace('%', '~');
-            Type = Uri.EscapeDataString(Type.ToLowerInvariant()).Replace('%', '~');
-            Build = Build.ToLowerInvariant();
             string mcUri = await GetMissionControlResultUri();
 
             Log.LogMessage(MessageImportance.High, $"Results will be available from {mcUri}");
@@ -55,7 +65,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             await Task.Yield();
             Log.LogMessage($"Waiting for completion of job {jobName}");
 
-            while (true)
+            for (;; await Task.Delay(10000)) // delay every time this loop repeats
             {
                 var workItems = await HelixApi.RetryAsync(
                     () => HelixApi.WorkItem.ListAsync(jobName),
@@ -65,15 +75,84 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var finishedCount = workItems.Count(wi => wi.State == "Finished");
                 if (waitingCount == 0 && runningCount == 0 && finishedCount > 0)
                 {
-                    // determines whether any of the work items failed (fireballed)
-                    await Task.WhenAll(workItems.Select(wi => CheckForWorkItemFailureAsync(wi.Name, jobName)));
+                    if (FailOnWorkItemFailure)
+                    {
+                        // determines whether any of the work items failed (fireballed)
+                        await Task.WhenAll(workItems.Select(wi => CheckForWorkItemFailureAsync(wi.Name, jobName)));
+                    }
+
+                    if (FailOnMissionControlTestFailure)
+                    {
+                        if (!(await MissionControlTestProcessingDoneAsync(jobName)))
+                        {
+                            Log.LogMessage($"Job {jobName} is still processing xunit results.");
+                            continue;
+                        }
+                    }
+
                     Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
                     return;
                 }
 
                 Log.LogMessage($"Job {jobName} is not yet completed with Waiting: {waitingCount}, Running: {runningCount}, Finished: {finishedCount}");
-                await Task.Delay(10000);
             }
+        }
+
+        private async Task<bool> MissionControlTestProcessingDoneAsync(string jobName)
+        {
+            var results = await HelixApi.Aggregate.JobSummaryAsync(
+                groupBy: ImmutableList.Create("job.name"),
+                maxResultSets: 1,
+                filterName: jobName
+                );
+
+            if (results.Count != 1)
+            {
+                Log.LogError($"Not exactly 1 result from aggregate api for job '{jobName}': {JsonConvert.SerializeObject(results)}");
+                return true;
+            }
+
+            var data = results[0].Data;
+            if (data == null)
+            {
+                Log.LogError($"No data found in first result for job '{jobName}'.");
+                return true;
+            }
+
+            if (data.WorkItemStatus.ContainsKey("fail"))
+            {
+                Log.LogError($"Job '{jobName}' has {data.WorkItemStatus["fail"]} failed work items.");
+                return true;
+            }
+
+            if (data.WorkItemStatus.ContainsKey("none"))
+            {
+                return false;
+            }
+
+            var analysis = data.Analysis;
+            if (analysis.Any())
+            {
+                var xunitAnalysis = analysis.FirstOrDefault(a => a.Name == "xunit");
+                if (xunitAnalysis == null)
+                {
+                    Log.LogError($"Job '{jobName}' has no xunit analysis.");
+                    return true;
+                }
+
+                var pass = xunitAnalysis.Status.GetValueOrDefault("pass", 0);
+                var fail = xunitAnalysis.Status.GetValueOrDefault("fail", 0);
+                var skip = xunitAnalysis.Status.GetValueOrDefault("skip", 0);
+                var total = pass + fail + skip;
+
+                if (fail > 0)
+                {
+                    Log.LogError($"Job '{jobName}' failed {fail} out of {total} tests.");
+                }
+                return true;
+            }
+
+            return false;
         }
 
         private void LogExceptionRetry(Exception ex)
@@ -103,48 +182,42 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private async Task<string> GetMissionControlResultUri()
         {
-            using (HttpClient client = new HttpClient())
+            var creator = Creator;
+            if (string.IsNullOrEmpty(creator))
             {
-                if (IsExternal)
+                using (var client = new HttpClient
                 {
-                    Log.LogMessage($"Job recognized as external. Using Creator property ('{Creator}') in MC link.");
-                    if (string.IsNullOrEmpty(Creator))
+                    DefaultRequestHeaders =
                     {
-                        Log.LogMessage(MessageImportance.High, $"Creator not specified for an anonymous job.");
-                        return "Mission Control (link generation failed -- creator not specified for anonymous job)";
-                    }
-                    else
-                    {
-                        return $"https://mc.dot.net/#/user/{Creator}/{Source}/{Type}/{Build}";
-                    }
-                }
-                else
+                        UserAgent = { Helpers.UserAgentHeaderValue },
+                    },
+                })
                 {
-                    client.DefaultRequestHeaders.Add("User-Agent", "AzureDevOps");
-                    string githubJson = "";
                     try
                     {
-                        githubJson = await client.GetStringAsync($"https://api.github.com/user?access_token={AccessToken}");
-                    }
-                    catch (HttpRequestException e)
-                    {
-                        Log.LogMessage(MessageImportance.High, "Failed to connect to GitHub to retrieve username", e.StackTrace);
-                        return "Mission Control (generation of MC link failed -- GitHub HTTP request error)";
-                    }
-                    string userName = "";
-                    try
-                    {
-                        userName = JObject.Parse(githubJson)["login"].ToString();
-                    }
-                    catch (JsonException e)
-                    {
-                        Log.LogMessage(MessageImportance.High, "Failed to parse JSON or find value in parsed JSON", e.StackTrace);
-                        return "Mission Control (generation of MC link failed -- JSON parsing error)";
-                    }
+                        string githubJson =
+                            await client.GetStringAsync($"https://api.github.com/user?access_token={AccessToken}");
+                        var data = JObject.Parse(githubJson);
+                        if (data["login"] == null)
+                        {
+                            throw new Exception("Github user has no login");
+                        }
 
-                    return $"https://mc.dot.net/#/user/{userName}/{Source}/{Type}/{Build}";
+                        creator = data["login"].ToString();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogMessage(MessageImportance.High, "Failed to retrieve username from GitHub -- {0}", ex.ToString());
+                        return $"Mission Control (generation of MC link failed -- {ex.Message})";
+                    }
                 }
             }
+
+            var build = UrlEncoder.Default.Encode(Build).Replace('%', '~');
+            var type = UrlEncoder.Default.Encode(Type).Replace('%', '~');
+            var source = UrlEncoder.Default.Encode(Source).Replace('%', '~');
+            var encodedCreator = UrlEncoder.Default.Encode(creator).Replace('%', '~');
+            return $"https://mc.dot.net/#/user/{encodedCreator}/{source}/{type}/{build}";
         }
     }
 }

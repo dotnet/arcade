@@ -36,6 +36,16 @@ namespace Microsoft.DotNet.SignTool
         public static string HashToString(ImmutableArray<byte> hash)
             => BitConverter.ToString(hash.ToArray()).Replace("-", "");
 
+        public static ImmutableArray<byte> StringToHash(string hash)
+        {
+            int NumberChars = hash.Length;
+            byte[] bytes = new byte[NumberChars / 2];
+            for (int i = 0; i < NumberChars; i += 2)
+                bytes[i / 2] = Convert.ToByte(hash.Substring(i, 2), 16);
+            return bytes.ToImmutableArray<byte>();
+
+        }
+
         /// <summary>
         /// Returns true if the PE file meets all of the pre-conditions to be Open Source Signed.
         /// Returns false and logs msbuild errors otherwise.
@@ -57,15 +67,14 @@ namespace Microsoft.DotNet.SignTool
             return (header.Flags & CorFlags.StrongNameSigned) == CorFlags.StrongNameSigned;
         }
 
-        public static AssemblyName GetAssemblyName(string fullFilePath)
+        public static bool IsManaged(string filePath)
         {
-            try
+            using (var stream = new FileStream(filePath, FileMode.Open))
+            using (var peReader = new PEReader(stream))
             {
-                return AssemblyName.GetAssemblyName(fullFilePath);
-            }
-            catch
-            {
-                return null;
+                var corEntry = peReader.PEHeaders.PEHeader.CorHeaderTableDirectory;
+
+                return corEntry.RelativeVirtualAddress == 0x2008 && corEntry.Size == 0x48;
             }
         }
 
