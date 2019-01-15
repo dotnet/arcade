@@ -99,7 +99,14 @@ namespace {{pascalCaseNs Namespace}}
             {{else}}
             if ({{#notNullCheck Type}}{{camelCase Name}}{{/notNullCheck}})
             {
+                {{#if IsArray}}
+                foreach (var _item in {{camelCase Name}})
+                {
+                    _query.Add("{{Name}}", Client.Serialize(_item));
+                }
+                {{else}}
                 _query.Add("{{Name}}", Client.Serialize({{camelCase Name}}));
+                {{/if}}
             }
             {{/if}}
             {{/each}}
