@@ -1,5 +1,4 @@
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Helix.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
