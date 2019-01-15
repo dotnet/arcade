@@ -22,7 +22,7 @@
     those files into internal types instead.-->
   <Target Name="GenerateInternalTypesSource" Condition="'$(GenerateInternalTypesSource)' == 'true' AND '@(SourcePackageFiles)' != ''">
     <ItemGroup>
-      <_NewSourcesToPackage Include="@(SourcePackageFiles -> '$(IntermediateOutputPath)%(RecursiveDir)%(FileName)%(Extension)')">
+      <_NewSourcesToPackage Include="@(SourcePackageFiles -> '$(IntermediateOutputPath)%(FileName)%(Extension)')">
         <OriginalIdentity>%(Identity)</OriginalIdentity>
       </_NewSourcesToPackage>
       <SourcePackageFiles Remove="@(SourcePackageFiles)" />
