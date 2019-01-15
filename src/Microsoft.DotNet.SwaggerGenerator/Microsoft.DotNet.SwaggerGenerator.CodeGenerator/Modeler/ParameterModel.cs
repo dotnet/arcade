@@ -19,6 +19,7 @@
         public TypeReference Type { get; }
         public bool Verifyable { get; }
         public bool IsConstant => Type is TypeReference.ConstantTypeReference;
+        public bool IsArray => Type is TypeReference.ArrayTypeReference;
 
         public override string ToString()
         {
