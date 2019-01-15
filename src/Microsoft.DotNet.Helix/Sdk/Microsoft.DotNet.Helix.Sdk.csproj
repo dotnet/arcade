@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>$(NetFxTfm);netcoreapp2.1</TargetFrameworks>
     <PackageType>MSBuildSdk</PackageType>
     <LangVersion>latest</LangVersion>
     <DefaultItemExcludes Condition="'$(TargetFramework)' != '$(NetFxTfm)'">**/*.Desktop.*</DefaultItemExcludes>
