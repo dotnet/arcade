@@ -5,7 +5,7 @@
     <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
     <PackageType>MSBuildSdk</PackageType>
     <LangVersion>latest</LangVersion>
-    <DefaultItemExcludes Condition="'$(TargetFramework)' != '$(NetFxTfm)'">**/*.Desktop.*</DefaultItemExcludes>
+    <DefaultItemExcludes Condition="'$(TargetFramework)' != 'net472'">**/*.Desktop.*</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
