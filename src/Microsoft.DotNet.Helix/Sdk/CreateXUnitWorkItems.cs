@@ -109,6 +109,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     assemblyBaseName = assemblyBaseName.Substring(0, assemblyBaseName.Length - 4);
                 }
 
+                Log.LogMessage($"Adding runtimeconfig and depsfile parameters for assembly {assemblyBaseName}.");
                 driver +=
                     $"--runtimeconfig {assemblyBaseName}.runtimeconfig.json --depsfile {assemblyBaseName}.deps.json ";
             }
