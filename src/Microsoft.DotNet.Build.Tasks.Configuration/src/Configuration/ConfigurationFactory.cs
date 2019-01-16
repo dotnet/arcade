@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
         /// </summary>
         /// <param name="configurationString"></param>
         /// <returns></returns>
-        public Configuration ParseConfiguration(string configurationString, bool permitUnknownValues = false)
+        public Configuration ParseConfiguration(string configurationString, bool permitUnknownValues = false, Configuration baseConfiguration = null)
         {
             bool isPlaceHolderConfiguration = false;
 
@@ -188,11 +188,25 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                 var value = valueIndex < values.Length ? values[valueIndex] : null;
                 var property = PropertiesByOrder[propertyIndex];
 
+                var defaultValue = property.DefaultValue;
+
+                if (baseConfiguration != null && property.Independent)
+                {
+                    if (baseConfiguration.Values == null || 
+                        baseConfiguration.Values.Length < propertyIndex || 
+                        baseConfiguration.Values[propertyIndex].Property != property)
+                    {
+                        throw new ArgumentException($"Cannot use {nameof(baseConfiguration)} {baseConfiguration} since it doesn't define a matching property {property} at index {propertyIndex}.");
+                    }
+
+                    defaultValue = baseConfiguration.Values[propertyIndex];
+                }
+
                 if (String.IsNullOrEmpty(value))
                 {
-                    if (property.DefaultValue != null)
+                    if (defaultValue != null)
                     {
-                        valueSet[propertyIndex] = property.DefaultValue;
+                        valueSet[propertyIndex] = defaultValue;
                         continue;
                     }
                     else
@@ -222,14 +236,14 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                     // so long as we have properties with defaultValues, set them
                     while(propertyValue.Property != property)
                     {
-                        if (property.DefaultValue == null)
+                        if (defaultValue == null)
                         {
                             // we can't use this property at this index
                             throw new ArgumentException($"Property '{propertyValue.Property.Name}' value '{propertyValue.Value}' occurred at unexpected position in configuration '{configurationString}'");
                         }
 
                         // give this property its default value and advance to the next property
-                        valueSet[propertyIndex++] = property.DefaultValue;
+                        valueSet[propertyIndex++] = defaultValue;
 
                         if (propertyIndex > PropertiesByOrder.Length)
                         {
