@@ -14,10 +14,6 @@ namespace Xunit
 
         static ConsoleHelper()
         {
-#if NETFRAMEWORK
-            ResetColor = ResetColorConsole;
-            SetForegroundColor = SetForegroundColorConsole;
-#else
             if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
             {
                 ResetColor = ResetColorConsole;
@@ -28,7 +24,6 @@ namespace Xunit
                 ResetColor = ResetColorANSI;
                 SetForegroundColor = SetForegroundColorANSI;
             }
-#endif
         }
 
         static void SetForegroundColorANSI(ConsoleColor c)

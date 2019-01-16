@@ -1,6 +1,4 @@
-﻿#if NETFRAMEWORK || NETCOREAPP
-
-using System.Linq;
+﻿using System.Linq;
 using Internal.Microsoft.Extensions.DependencyModel;
 
 namespace System.Collections.Generic
@@ -40,5 +38,3 @@ namespace System.Collections.Generic
         }
     }
 }
-
-#endif

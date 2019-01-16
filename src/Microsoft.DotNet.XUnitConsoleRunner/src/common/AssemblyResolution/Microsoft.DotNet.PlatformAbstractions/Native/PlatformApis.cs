@@ -1,8 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK || NETCOREAPP
-
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -141,39 +139,6 @@ namespace Internal.Microsoft.DotNet.PlatformAbstractions.Native
             return distroInfo;
         }
 
-        // I could probably have just done one method signature and put the #if inside the body but the implementations
-        // are just completely different so I wanted to make that clear by putting the whole thing inside the #if.
-#if NETFRAMEWORK
-        private static Platform DetermineOSPlatform()
-        {
-            var platform = (int)Environment.OSVersion.Platform;
-            var isWindows = (platform != 4) && (platform != 6) && (platform != 128);
-
-            if (isWindows)
-            {
-                return Platform.Windows;
-            }
-            else
-            {
-                try
-                {
-                    var uname = NativeMethods.Unix.GetUname();
-                    if (string.Equals(uname, "Darwin", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return Platform.Darwin;
-                    }
-                    if (string.Equals(uname, "Linux", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return Platform.Linux;
-                    }
-                }
-                catch
-                {
-                }
-                return Platform.Unknown;
-            }
-        }
-#else
         private static Platform DetermineOSPlatform()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -190,8 +155,5 @@ namespace Internal.Microsoft.DotNet.PlatformAbstractions.Native
             }
             return Platform.Unknown;
         }
-#endif
     }
 }
-
-#endif

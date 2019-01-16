@@ -44,10 +44,6 @@ namespace Xunit.ConsoleClient
                 if (commandLine.Project.Assemblies.Count == 0)
                     throw new ArgumentException("must specify at least one assembly");
 
-#if NETFRAMEWORK
-                AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
-#endif
-
                 Console.CancelKeyPress += (sender, e) =>
                 {
                     if (!cancel)
@@ -136,11 +132,7 @@ namespace Xunit.ConsoleClient
 
                 try
                 {
-#if NETFRAMEWORK
-                    var assembly = Assembly.LoadFile(dllFile);
-#else
                     var assembly = Assembly.Load(new AssemblyName(Path.GetFileNameWithoutExtension(dllFile)));
-#endif
                     types = assembly.GetTypes();
                 }
                 catch (ReflectionTypeLoadException ex)
@@ -174,18 +166,6 @@ namespace Xunit.ConsoleClient
             return result;
         }
 
-#if NETFRAMEWORK
-        void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            if (e.ExceptionObject is Exception ex)
-                Console.WriteLine(ex.ToString());
-            else
-                Console.WriteLine("Error of unknown type thrown in application domain");
-
-            Environment.Exit(1);
-        }
-#endif
-
         void PrintHeader()
         {
 #if NET452
@@ -214,21 +194,13 @@ namespace Xunit.ConsoleClient
 
         void PrintUsage(IReadOnlyList<IRunnerReporter> reporters)
         {
-#if NETFRAMEWORK
-            var executableName = Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().GetLocalCodeBase());
-#else
             var executableName = "dotnet xunit";
-#endif
 
             Console.WriteLine("Copyright (C) .NET Foundation.");
             Console.WriteLine();
             Console.WriteLine($"usage: {executableName} <assemblyFile> [configFile] [assemblyFile [configFile]...] [options] [reporter] [resultFormat filename [...]]");
             Console.WriteLine();
-#if NETFRAMEWORK
-            Console.WriteLine("Note: Configuration files must end in .json (for JSON) or .config (for XML)");
-#else
             Console.WriteLine("Note: Configuration files must end in .json (XML is not supported on .NET Core)");
-#endif
             Console.WriteLine();
             Console.WriteLine("Valid options:");
             Console.WriteLine("  -nologo                : do not show the copyright message");
@@ -244,13 +216,6 @@ namespace Xunit.ConsoleClient
             Console.WriteLine("                         :   default   - run with default (1 thread per CPU thread)");
             Console.WriteLine("                         :   unlimited - run with unbounded thread count");
             Console.WriteLine("                         :   (number)  - limit task thread pool size to 'count'");
-#if NETFRAMEWORK
-            Console.WriteLine("  -appdomains mode       : choose an app domain mode");
-            Console.WriteLine("                         :   ifavailable - choose based on library type");
-            Console.WriteLine("                         :   required    - force app domains on");
-            Console.WriteLine("                         :   denied      - force app domains off");
-            Console.WriteLine("  -noshadow              : do not shadow copy assemblies");
-#endif
             Console.WriteLine("  -wait                  : wait for input after completion");
             Console.WriteLine("  -diagnostics           : enable diagnostics messages for all test assemblies");
             Console.WriteLine("  -internaldiagnostics   : enable internal diagnostics messages for all test assemblies");
