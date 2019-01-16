@@ -40,11 +40,7 @@ namespace Internal.Microsoft.Extensions.DependencyModel.Resolution
 
         internal static string[] GetDefaultProbeDirectories(Platform osPlatform, IEnvironment environment)
         {
-#if NETCOREAPP1_0
-            var probeDirectories = AppContext.GetData("PROBING_DIRECTORIES");
-#else
-            var probeDirectories = AppDomain.CurrentDomain.GetData("PROBING_DIRECTORIES");
-#endif
+           var probeDirectories = AppContext.GetData("PROBING_DIRECTORIES");
 
            var listOfDirectories = probeDirectories as string;
 

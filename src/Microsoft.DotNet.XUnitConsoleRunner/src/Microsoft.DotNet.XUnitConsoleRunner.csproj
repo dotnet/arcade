@@ -5,7 +5,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputType>Exe</OutputType>
     <RootNamespace>Xunit.ConsoleClient</RootNamespace>
-    <TargetFrameworks>netcoreapp1.0;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <VersionPrefix>2.5.0</VersionPrefix>
     <LangVersion>7.1</LangVersion>
