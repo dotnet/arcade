@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Helix.Sdk
     /// <summary>
     /// MSBuild custom task to create HelixWorkItems given xUnit project publish information
     /// </summary>
-    public class CreateXUnitWorkItems : Build.Utilities.Task
+    public class CreateXUnitWorkItems : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// An array of XUnit project workitems containing the following metadata:
@@ -118,7 +118,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishDirectory}, Command: {command}");
 
-            return new Build.Utilities.TaskItem(assemblyName, new Dictionary<string, string>()
+            return new Microsoft.Build.Utilities.TaskItem(assemblyName, new Dictionary<string, string>()
             {
                 { "Identity", assemblyName },
                 { "PayloadDirectory", publishDirectory },
