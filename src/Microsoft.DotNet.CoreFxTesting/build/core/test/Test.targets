@@ -38,7 +38,7 @@
     <_withoutCategories Condition="'$(WithoutCategories)' != ''">;$(WithoutCategories.Trim(';'))</_withoutCategories>
     <!-- Default non categories -->
     <_withoutCategories Condition="!$(_withCategories.Contains('failing'))">$(_withoutCategories);failing</_withoutCategories>
-    <_withoutCategories Condition="'$(Outerloop)' != 'true'">$(_withoutCategories);Outerloop</_withoutCategories>
+    <_withoutCategories Condition="'$(OuterLoop)' != 'true'">$(_withoutCategories);OuterLoop</_withoutCategories>
     <RunArguments>$(RunArguments)$(_withCategories.Replace(';', ' -trait category='))</RunArguments>
     <RunArguments>$(RunArguments)$(_withoutCategories.Replace(';', ' -notrait category='))</RunArguments>
 
