@@ -43,10 +43,10 @@
 
   <PropertyGroup>
     <!-- Split up HelixTargetQueues list
-         In order to support all delimiters (commas, plus and semicolons).
-         Note that queues will never have ',', '+' or ';' in their name, and this greatly simplifies providing a queue list in *nix.
+         In order to support all delimiters (commas and semicolons).
+         Note that queues will never have ',' or ';' in their name, and this greatly simplifies providing a queue list in *nix.
     -->
-    <_ProcessedTargetQueues>$([System.String]::Copy('$(HelixTargetQueues)').Replace(',',';').Replace('+',';'))</_ProcessedTargetQueues>
+    <_ProcessedTargetQueues>$([System.String]::Copy('$(HelixTargetQueues)').Replace(',',';'))</_ProcessedTargetQueues>
   </PropertyGroup>
 
   <ItemGroup>

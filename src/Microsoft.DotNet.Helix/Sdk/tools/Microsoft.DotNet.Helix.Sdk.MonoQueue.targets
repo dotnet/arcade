@@ -74,7 +74,6 @@
   <ItemGroup>
     <HelixProperties Condition="'$(HelixConfiguration)' != ''" Include="configuration" Value="$(HelixConfiguration)" />
     <HelixProperties Condition="'$(HelixArchitecture)' != ''" Include="architecture" Value="$(HelixArchitecture)" />
-    <HelixProperties Include="operatingSystem" Value="$(HelixTargetQueue)" />
   </ItemGroup>
 
   <Target Name="Test"
@@ -82,10 +81,10 @@
     <PropertyGroup Condition="$(IsPosixShell)">
       <HelixPreCommands>set -x;$(HelixPreCommands)</HelixPreCommands>
     </PropertyGroup>
-    <SendHelixJob Source="$(HelixSource)"
+    <SendHelixJobs Source="$(HelixSource)"
                   Type="$(HelixType)"
                   Build="$(HelixBuild)"
-                  TargetQueue="$(HelixTargetQueue)"
+                  TargetQueues="$(HelixTargetQueue)"
                   IsPosixShell="$(IsPosixShell)"
                   Creator="$(Creator)"
                   BaseUri="$(HelixBaseUri)"
@@ -96,13 +95,14 @@
                   CorrelationPayloads="@(HelixCorrelationPayload)"
                   WorkItems="@(HelixWorkItem)"
                   HelixProperties="@(HelixProperties)">
-      <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
-    </SendHelixJob>
+      <Output TaskParameter="JobCorrelationIds" ItemName="HelixJobId"/>
+    </SendHelixJobs>
+    <Message Text="Sent Helix Job %(HelixJobId.Identity)" Importance="High" />
     <ItemGroup>
-      <SentJob Include="$(HelixJobId)">
+      <SentJob Include="@(HelixJobId)">
         <WorkItemCount>@(HelixWorkItem->Count())</WorkItemCount>
       </SentJob>
+      <HelixJobId Remove="@(HelixJobId)"/>
     </ItemGroup>
-    <Message Text="Sent Helix Job $(HelixJobId)" Importance="High" />
   </Target>
 </Project>

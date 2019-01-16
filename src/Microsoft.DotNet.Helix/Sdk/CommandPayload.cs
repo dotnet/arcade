@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Helix.Sdk
     {
         private static readonly Encoding s_utf8NoBom = new UTF8Encoding(false);
 
-        private readonly SendHelixJob _task;
+        private readonly SendHelixJobs _task;
 
         private readonly Lazy<DirectoryInfo> _directoryInfo = new Lazy<DirectoryInfo>(CreateDirectory);
 
@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             return dir;
         }
 
-        public CommandPayload(SendHelixJob task)
+        public CommandPayload(SendHelixJobs task)
         {
             _task = task;
         }
