@@ -8,7 +8,7 @@ using Task = Microsoft.Build.Utilities.Task;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
-    public abstract class HelixTask : Task
+    public abstract class HelixTask : BaseTask
     {
         /// <summary>
         /// The Helix Api Base Uri
