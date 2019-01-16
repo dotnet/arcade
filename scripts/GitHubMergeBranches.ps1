@@ -85,7 +85,7 @@ function Invoke-Block([scriptblock]$cmd) {
     }
 }
 
-function GetCommiterGitHubName($sha) {
+function GetCommitterGitHubName($sha) {
     $email = & git show -s --format='%ce' $sha
     $key = 'committer'
 
@@ -221,7 +221,7 @@ try {
         $lastCommitIndex = -1
 
         foreach ($commit in $commitsToMerge) {
-            $currentAuthor = GetCommiterGitHubName $commit
+            $currentAuthor = GetCommitterGitHubName $commit
             if ($firstAuthor -eq $null) {
                 $firstAuthor = $currentAuthor
             }
@@ -237,7 +237,7 @@ try {
 
     $authors = $commitsToMerge `
         | % { Write-Host -f Cyan "Merging:`t$(git log --format=$formatString -1 $_)"; $_ } `
-        | % { GetCommiterGitHubName $_ } `
+        | % { GetCommitterGitHubName $_ } `
         | ? { $_ -ne $null } `
         | select -Unique
 
@@ -294,6 +294,9 @@ try {
                     login
                   }
                 }
+                target {
+                  oid
+                }
               }
             }
           }
@@ -320,6 +323,11 @@ try {
         | select -First 1
 
     if ($matchingPr) {
+        if ($matchingPr.headRef.target.oid -eq (& git rev-parse HEAD)) {
+            Write-Warning "There are no new commits to be merged from $HeadBranch into $mergeBranchName yet."
+            exit 0
+        }
+
         $prUpdatedSuccess = $false
 
         try {
