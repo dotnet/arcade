@@ -12,9 +12,4 @@
     <GenerateRunScriptDependsOn>$(GenerateRunScriptDependsOn);SetupCoverageFilter</GenerateRunScriptDependsOn>
   </PropertyGroup>
 
-  <!-- Interlocked is used to record code hits in Coverlet. Measuring it itself would cause an infinite loop. -->
-  <ItemGroup>
-    <CoverageExclude Include="[System.Private.CoreLib]System.Threading.Interlocked" />
-  </ItemGroup>
-
 </Project>

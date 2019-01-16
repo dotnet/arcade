@@ -12,17 +12,17 @@
 
   <Target Name="SetupCoverageFilter">
 
-    <PropertyGroup Condition="'@(CoverageExcludeFile -> Count())' &gt; 0">
+    <PropertyGroup Condition="'@(CoverageExcludeFile)' != ''">
       <CoverageExcludeByFileFilter>--exclude-by-file @(CoverageExcludeFile -> '"%(Identity)"', ' --exclude-by-file ')</CoverageExcludeByFileFilter>
       <RunArguments>$(RunArguments) $(CoverageExcludeByFileFilter)</RunArguments>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'@(CoverageProbePath -> Count())' &gt; 0">
+    <PropertyGroup Condition="'@(CoverageProbePath)' != ''">
       <IncludeDirectoriesFilter>--include-directory @(CoverageProbePath -> '"$(RunScriptHostDir)%(Identity)"', ' --include-directory ')</IncludeDirectoriesFilter>
       <RunArguments>$(RunArguments) $(IncludeDirectoriesFilter)</RunArguments>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'@(CoverageExclude -> Count())' &gt; 0">
+    <PropertyGroup Condition="'@(CoverageExclude)' != ''">
       <CoverageExcludeFilter>--exclude @(CoverageExclude -> '"%(Identity)"', ' --exclude ')</CoverageExcludeFilter>
       <RunArguments>$(RunArguments) $(CoverageExcludeFilter)</RunArguments>
     </PropertyGroup>
