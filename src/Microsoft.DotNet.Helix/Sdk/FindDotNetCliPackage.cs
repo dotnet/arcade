@@ -8,7 +8,7 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
-    public class FindDotNetCliPackage : Build.Utilities.Task
+    public class FindDotNetCliPackage : BaseTask
     {
         private static readonly HttpClient _client = new HttpClient();
         private const string DotNetCliAzureFeed = "https://dotnetcli.azureedge.net/dotnet";
