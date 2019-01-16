@@ -19,6 +19,8 @@ A personal access token
 Make PR from a fork
 .PARAMETER AllowAutomatedCommits
 Create a PR even if the only commits are from aspnetci
+.PARAMETER OneAuthorPerPR
+Create a separate PR for each author. Wait for the previous PR to be merged before opening the next one.
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
@@ -48,7 +50,9 @@ param(
 
     [switch]$Fork,
 
-    [switch]$AllowAutomatedCommits
+    [switch]$AllowAutomatedCommits,
+
+    [switch]$OneAuthorPerPR
 )
 
 $ErrorActionPreference = 'stop'
@@ -205,11 +209,30 @@ try {
 
     Write-Host -f Magenta "${HeadBranch}:`t$(& git log --format=$formatString -1 HEAD)"
 
-    [string[]] $commitsToMerge = & git rev-list "$BaseBranch..$HeadBranch" # find all commits which will be merged
+    [string[]] $commitsToMerge = & git rev-list --reverse "$BaseBranch..$HeadBranch" # find all commits which will be merged
 
     if (-not $commitsToMerge) {
         Write-Warning "There were no commits to be merged from $HeadBranch into $BaseBranch"
         exit 0
+    }
+
+    if ($OneAuthorPerPR) {
+        $firstAuthor = $null
+        $lastCommitIndex = -1
+
+        foreach ($commit in $commitsToMerge) {
+            $currentAuthor = GetCommiterGitHubName $commit
+            if ($firstAuthor -eq $null) {
+                $firstAuthor = $currentAuthor
+            }
+            elseif ($currentAuthor -ne $firstAuthor) {
+                break
+            }
+            $lastCommitIndex++
+        }
+
+        $commitsToMerge = $commitsToMerge[0..$lastCommitIndex]
+        Invoke-Block { & git reset --quiet --hard $commitsToMerge[$lastCommitIndex] }
     }
 
     $authors = $commitsToMerge `
