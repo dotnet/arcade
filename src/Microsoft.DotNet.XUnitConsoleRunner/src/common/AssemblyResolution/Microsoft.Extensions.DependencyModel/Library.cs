@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -9,16 +9,6 @@ namespace Internal.Microsoft.Extensions.DependencyModel
 {
     internal class Library
     {
-        public Library(string type,
-            string name,
-            string version,
-            string hash,
-            IEnumerable<Dependency> dependencies,
-            bool serviceable)
-            : this(type, name, version, hash, dependencies, serviceable, path: null, hashPath: null)
-        {
-        }
-
         public Library(string type,
             string name,
             string version,

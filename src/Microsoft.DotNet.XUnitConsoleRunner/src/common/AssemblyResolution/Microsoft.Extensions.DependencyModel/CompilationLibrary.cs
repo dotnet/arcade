@@ -48,31 +48,6 @@ namespace Internal.Microsoft.Extensions.DependencyModel
             new PackageCompilationAssemblyResolver()
         });
 
-        public IEnumerable<string> ResolveReferencePaths()
-        {
-            var assemblies = new List<string>();
-
-            return ResolveReferencePaths(DefaultResolver, assemblies);
-        }
-
-        public IEnumerable<string> ResolveReferencePaths(params ICompilationAssemblyResolver[] customResolvers)
-        {
-            var assemblies = new List<string>();
-
-            if (customResolvers?.Length > 0)
-            {
-                foreach (var resolver in customResolvers)
-                {
-                    if (resolver.TryResolveAssemblyPaths(this, assemblies))
-                    {
-                        return assemblies;
-                    }
-                }
-            }
-
-            return ResolveReferencePaths(DefaultResolver, assemblies);
-        }
-
         private IEnumerable<string> ResolveReferencePaths(ICompilationAssemblyResolver resolver, List<string> assemblies)
         {
             if (!resolver.TryResolveAssemblyPaths(this, assemblies))

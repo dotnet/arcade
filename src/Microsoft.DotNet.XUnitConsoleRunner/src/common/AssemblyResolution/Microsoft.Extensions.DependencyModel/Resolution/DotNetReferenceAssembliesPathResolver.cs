@@ -20,11 +20,6 @@ namespace Internal.Microsoft.Extensions.DependencyModel.Resolution
             return GetDefaultDotNetReferenceAssembliesPath(fileSystem);
         }
 
-        public static string Resolve()
-        {
-            return Resolve(EnvironmentWrapper.Default, FileSystemWrapper.Default);
-        }
-
         private static string GetDefaultDotNetReferenceAssembliesPath(IFileSystem fileSystem)
         {
             var os = RuntimeEnvironment.OperatingSystemPlatform;

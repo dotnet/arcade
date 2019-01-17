@@ -1,7 +1,6 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace Internal.Microsoft.DotNet.PlatformAbstractions
@@ -32,20 +31,6 @@ namespace Internal.Microsoft.DotNet.PlatformAbstractions
         public void Add(string s)
         {
             var hashCode = (s != null) ? s.GetHashCode() : 0;
-            Add(hashCode);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Add(object o)
-        {
-            var hashCode = (o != null) ? o.GetHashCode() : 0;
-            Add(hashCode);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Add<TValue>(TValue value, IEqualityComparer<TValue> comparer)
-        {
-            var hashCode = value != null ? comparer.GetHashCode(value) : 0;
             Add(hashCode);
         }
 

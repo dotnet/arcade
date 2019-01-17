@@ -20,11 +20,6 @@ namespace Internal.Microsoft.Extensions.DependencyModel.Resolution
         {
         }
 
-        public AppBaseCompilationAssemblyResolver(string basePath)
-            : this(FileSystemWrapper.Default, basePath, DependencyContextPaths.Current)
-        {
-        }
-
         internal AppBaseCompilationAssemblyResolver(IFileSystem fileSystem)
             : this(fileSystem, ApplicationEnvironment.ApplicationBasePath, DependencyContextPaths.Current)
         {
