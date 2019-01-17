@@ -7,20 +7,24 @@
     <CoverageExecutablePath Condition="'$(CoverageExecutablePath)' == ''">$(GlobalToolsDir)coverlet</CoverageExecutablePath>
     <RunArguments>"$(TestAssembly)" --target "$(RunCommand)" --targetargs "$(RunArguments)" --format "$(CoverageFormat)" --output "$(CoverageOutputPath)" --threshold "$(CoverageThreshold)" --threshold-type "$(CoverageThresholdType)"</RunArguments>
     <RunArguments Condition="'$(CoverageSourceLink)' == 'true'">$(RunArguments) --use-source-link</RunArguments>
-    <RunArguments Condition="'$(CoverageExclude)' != ''">$(RunArguments) --exclude "$(CoverageExclude)"</RunArguments>
     <RunCommand>$(CoverageExecutablePath)</RunCommand>
   </PropertyGroup>
 
   <Target Name="SetupCoverageFilter">
 
-    <PropertyGroup>
-      <CoverageExcludeByFile>--exclude-by-file @(CoverageExcludeFile -> '"%(Identity)"', ' --exclude-by-file ')</CoverageExcludeByFile>
-      <RunArguments>$(RunArguments) $(CoverageExcludeByFile)</RunArguments>
+    <PropertyGroup Condition="'@(CoverageExcludeFile)' != ''">
+      <CoverageExcludeByFileFilter>--exclude-by-file @(CoverageExcludeFile -> '"%(Identity)"', ' --exclude-by-file ')</CoverageExcludeByFileFilter>
+      <RunArguments>$(RunArguments) $(CoverageExcludeByFileFilter)</RunArguments>
     </PropertyGroup>
 
-    <PropertyGroup>
+    <PropertyGroup Condition="'@(CoverageProbePath)' != ''">
       <IncludeDirectoriesFilter>--include-directory @(CoverageProbePath -> '"$(RunScriptHostDir)%(Identity)"', ' --include-directory ')</IncludeDirectoriesFilter>
       <RunArguments>$(RunArguments) $(IncludeDirectoriesFilter)</RunArguments>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'@(CoverageExclude)' != ''">
+      <CoverageExcludeFilter>--exclude @(CoverageExclude -> '"%(Identity)"', ' --exclude ')</CoverageExcludeFilter>
+      <RunArguments>$(RunArguments) $(CoverageExcludeFilter)</RunArguments>
     </PropertyGroup>
 
     <!-- 
@@ -50,6 +54,6 @@
 
   </Target>
 
-  <Import Project="$(MSBuildThisFileDirectory)CoverageReport.targets" />
+  <Import Condition="'$(GenerateCoverageReport)' == 'true'" Project="$(MSBuildThisFileDirectory)CoverageReport.targets" />
 
 </Project>
