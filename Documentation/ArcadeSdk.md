@@ -593,6 +593,12 @@ For example, consider a project that has `<TargetFrameworks>netcoreapp2.1;net472
 msbuild Project.UnitTests.csproj /p:TestTargetFrameworks=netcoreapp2.1
 ```
 
+To specify multiple target frameworks on command line quote the property value like so:
+
+```text
+msbuild Project.UnitTests.csproj /p:TestTargetFrameworks="netcoreapp2.1;net472"
+```
+
 ### `TestRuntime` (string)
 
 Runtime to use for running tests. Currently supported values are: `Core` (.NET Core), `Full` (.NET Framework) and `Mono` (Mono runtime).
