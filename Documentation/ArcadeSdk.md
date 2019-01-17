@@ -547,7 +547,7 @@ This step is required for repositories that build VS insertion components.
 
 ### `IsShipping` (bool)
 
-`true` if the asset (library, NuGet or VSIX) produced by the project is _shipping_, i.e. delivered to customers via an official channel. This channel can be NuGet.org, an official installer, etc.
+`true` if the asset (library, NuGet or VSIX) produced by the project is intended to be _shipping_, i.e. delivered to customers via an official channel. This channel can be NuGet.org, an official installer, etc. Setting this flag to true does not guarantee that the asset will actually ship in the next release of the product. It might be decided that although the artifact is ready for shipping it won't be shipped this release cycle.
 
 Set `IsShipping` property to `false` in
 
