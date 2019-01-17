@@ -1,7 +1,7 @@
 <Project DefaultTargets="Test">
   <!-- <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/> -->
   <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.props"/>
-  
+
   <PropertyGroup>
     <HelixSource>pr/dotnet/arcade/$(BUILD_SOURCEBRANCH)/</HelixSource>
     <HelixType>test/product/</HelixType>
@@ -32,18 +32,18 @@
     <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(_BuildConfig)/net472/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(HelixApiAcccessToken)' != '' ">
+  <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
     <HelixTargetQueue Include="Ubuntu.1604.Amd64"/>
     <HelixTargetQueue Include="Windows.10.Amd64"/>
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$(HelixApiAcccessToken)' == '' ">
+  <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
     <IsExternal>true</IsExternal>
     <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
     <Creator Condition=" '$(Creator)' == ''">anon</Creator>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(HelixApiAcccessToken)' == '' ">
+  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
     <HelixTargetQueue Include="Ubuntu.1604.Amd64.Open"/>
     <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
   </ItemGroup>

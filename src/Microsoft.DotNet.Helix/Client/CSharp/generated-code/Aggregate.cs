@@ -191,11 +191,17 @@ namespace Microsoft.DotNet.Helix.Client
             }
             if (groupBy != default)
             {
-                _query.Add("groupBy", Client.Serialize(groupBy));
+                foreach (var _item in groupBy)
+                {
+                    _query.Add("groupBy", Client.Serialize(_item));
+                }
             }
             if (otherProperties != default)
             {
-                _query.Add("otherProperties", Client.Serialize(otherProperties));
+                foreach (var _item in otherProperties)
+                {
+                    _query.Add("otherProperties", Client.Serialize(_item));
+                }
             }
             if (!string.IsNullOrEmpty(filterCreator))
             {
@@ -303,11 +309,17 @@ namespace Microsoft.DotNet.Helix.Client
             var _query = new QueryBuilder();
             if (source != default)
             {
-                _query.Add("source", Client.Serialize(source));
+                foreach (var _item in source)
+                {
+                    _query.Add("source", Client.Serialize(_item));
+                }
             }
             if (type != default)
             {
-                _query.Add("type", Client.Serialize(type));
+                foreach (var _item in type)
+                {
+                    _query.Add("type", Client.Serialize(_item));
+                }
             }
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
@@ -403,11 +415,17 @@ namespace Microsoft.DotNet.Helix.Client
             var _query = new QueryBuilder();
             if (sources != default)
             {
-                _query.Add("sources", Client.Serialize(sources));
+                foreach (var _item in sources)
+                {
+                    _query.Add("sources", Client.Serialize(_item));
+                }
             }
             if (types != default)
             {
-                _query.Add("types", Client.Serialize(types));
+                foreach (var _item in types)
+                {
+                    _query.Add("types", Client.Serialize(_item));
+                }
             }
             if (!string.IsNullOrEmpty(buildNumber))
             {
@@ -514,7 +532,10 @@ namespace Microsoft.DotNet.Helix.Client
             var _query = new QueryBuilder();
             if (groupBy != default)
             {
-                _query.Add("groupBy", Client.Serialize(groupBy));
+                foreach (var _item in groupBy)
+                {
+                    _query.Add("groupBy", Client.Serialize(_item));
+                }
             }
             if (maxResultSets != default)
             {
@@ -633,7 +654,10 @@ namespace Microsoft.DotNet.Helix.Client
             var _query = new QueryBuilder();
             if (groupBy != default)
             {
-                _query.Add("groupBy", Client.Serialize(groupBy));
+                foreach (var _item in groupBy)
+                {
+                    _query.Add("groupBy", Client.Serialize(_item));
+                }
             }
             if (!string.IsNullOrEmpty(filterCreator))
             {
@@ -805,7 +829,10 @@ namespace Microsoft.DotNet.Helix.Client
             }
             if (groupBy != default)
             {
-                _query.Add("groupBy", Client.Serialize(groupBy));
+                foreach (var _item in groupBy)
+                {
+                    _query.Add("groupBy", Client.Serialize(_item));
+                }
             }
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
@@ -1096,7 +1123,10 @@ namespace Microsoft.DotNet.Helix.Client
             var _query = new QueryBuilder();
             if (groupBy != default)
             {
-                _query.Add("groupBy", Client.Serialize(groupBy));
+                foreach (var _item in groupBy)
+                {
+                    _query.Add("groupBy", Client.Serialize(_item));
+                }
             }
             if (maxGroups != default)
             {

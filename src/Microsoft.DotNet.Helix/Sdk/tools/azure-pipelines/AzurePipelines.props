@@ -1,6 +1,7 @@
 <Project>
   <PropertyGroup>
     <EnableAzurePipelinesReporter Condition="'$(EnableAzurePipelinesReporter)' != 'true'">false</EnableAzurePipelinesReporter>
+    <FailOnTestFailure Condition="'$(FailOnTestFailure)' != 'false'">true</FailOnTestFailure>
 
     <AzurePipelinesAvaliable Condition="'$(SYSTEM_ACCESSTOKEN)' != ''">true</AzurePipelinesAvaliable>
     <AzurePipelinesAvaliable Condition="'$(AzurePipelinesAvaliable)' != 'true'">false</AzurePipelinesAvaliable>

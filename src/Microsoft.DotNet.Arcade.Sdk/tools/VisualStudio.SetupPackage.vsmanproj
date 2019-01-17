@@ -18,6 +18,9 @@
     <ResolveNuGetPackages>false</ResolveNuGetPackages>
     <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
     <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
+
+    <!-- We expect the framework reference assemblies to be installed with VS -->
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
   </PropertyGroup>
 
   <Import Project="$(SwixBuildPath)build\MicroBuild.Plugins.*.props" />

@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string TargetQueue { get; set; }
 
         /// <summary>
-        /// Required if the build is external
+        /// Required if sending anonymous, not allowed if authenticated
         /// The GitHub username of the job creator
         /// </summary>
         public string Creator { get; set; }
@@ -128,6 +128,18 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         protected override async Task ExecuteCore()
         {
+            if (string.IsNullOrEmpty(AccessToken) && string.IsNullOrEmpty(Creator))
+            {
+                Log.LogError("Creator is required when using anonymous access.");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(AccessToken) && !string.IsNullOrEmpty(Creator))
+            {
+                Log.LogError("Creator is forbidden when using authenticated access.");
+                return;
+            }
+
             using (_commandPayload = new CommandPayload(this))
             {
                 var currentHelixApi = HelixApi;
@@ -142,7 +154,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 if (!string.IsNullOrEmpty(Creator))
                 {
-                    def.WithCreator(Creator);
+                    def = def.WithCreator(Creator);
                     Log.LogMessage($"Setting creator to '{Creator}'");
                 }
 
