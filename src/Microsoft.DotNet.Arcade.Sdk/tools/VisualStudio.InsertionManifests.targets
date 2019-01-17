@@ -37,7 +37,11 @@
       <_Args Include="VisualStudioDropName=$(VisualStudioDropName)" />
     </ItemGroup>
 
-    <MSBuild Projects="VisualStudio.SetupPackage.vsmanproj" Properties="@(_Args)"/>
+    <!--
+      Invoke GenerateSetupManifest target directly (instead of Build) to skip logic in common targets that is not needed 
+      and adds unnecessary dependency on .NET Framework reference assemblies.
+    -->
+    <MSBuild Projects="VisualStudio.SetupPackage.vsmanproj" Properties="@(_Args)" Targets="GenerateSetupManifest"/>
   </Target>
 
 </Project>
