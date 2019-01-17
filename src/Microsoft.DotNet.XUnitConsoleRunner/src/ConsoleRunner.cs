@@ -28,6 +28,14 @@ namespace Xunit.ConsoleClient
 
         public int EntryPoint(string[] args)
         {
+#if WINDOWS_UWP
+            // Handle RemoteExecutor
+            if (args.Length > 0 && args[0] == "remote")
+            {
+                return RemoteExecutor.Execute(args.Skip(1).ToArray());
+            }
+#endif
+
             commandLine = CommandLine.Parse(args);
 
             try
@@ -169,9 +177,8 @@ namespace Xunit.ConsoleClient
         void PrintHeader()
         {
             var platform = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
-            var versionAttribute = typeof(ConsoleRunner).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
 
-            Console.WriteLine($"xUnit.net Console Runner v{versionAttribute.InformationalVersion} ({IntPtr.Size * 8}-bit {platform})");
+            Console.WriteLine($"Microsoft.DotNet.XUnitConsoleRunner v2.5.0 ({IntPtr.Size * 8}-bit {platform})");
         }
 
         void PrintUsage(IReadOnlyList<IRunnerReporter> reporters)
@@ -355,7 +362,9 @@ namespace Xunit.ConsoleClient
                 var shadowCopy = assembly.Configuration.ShadowCopyOrDefault;
                 var longRunningSeconds = assembly.Configuration.LongRunningTestSecondsOrDefault;
 
+#if !WINDOWS_UWP
                 using (AssemblyHelper.SubscribeResolveForAssembly(assembly.AssemblyFilename, internalDiagnosticsMessageSink))
+#endif
                 using (var controller = new XunitFrontController(appDomainSupport, assembly.AssemblyFilename, assembly.ConfigFilename, shadowCopy, diagnosticMessageSink: diagnosticMessageSink))
                 using (var discoverySink = new TestDiscoverySink(() => cancel))
                 {

@@ -1,5 +1,3 @@
-﻿#if NETCOREAPP
-
 using System;
 using System.IO;
 using System.Reflection;
@@ -103,5 +101,3 @@ namespace Xunit
             => new AssemblyHelper(typeInAssembly.GetTypeInfo().Assembly.Location, internalDiagnosticsMessageSink);
     }
 }
-
-#endif

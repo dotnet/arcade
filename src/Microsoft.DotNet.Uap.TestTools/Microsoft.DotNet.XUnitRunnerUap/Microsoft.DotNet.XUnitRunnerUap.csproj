@@ -125,12 +125,43 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CommandLine.cs" />
-    <Compile Include="DictionaryExtensions.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\CommandLine.cs">
+      <Link>CommandLine.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\ConsoleRunner.cs">
+      <Link>ConsoleRunner.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\ParallelismOption.cs">
+      <Link>ParallelismOption.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\Program.cs">
+      <Link>Program.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\RemoteExecutor.cs">
+      <Link>RemoteExecutor.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\Sinks\DiagnosticMessageSink.cs">
+      <Link>Sinks\DiagnosticMessageSink.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\Utility\Transform.cs">
+      <Link>Utility\Transform.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\Utility\TransformFactory.cs">
+      <Link>Utility\TransformFactory.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\Utility\ConsoleRunnerLogger.cs">
+      <Link>Utility\ConsoleRunnerLogger.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\common\ConsoleHelper.cs">
+      <Link>common\ConsoleHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\common\DictionaryExtensions.cs">
+      <Link>common\DictionaryExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\common\Json.cs">
+      <Link>common\Json.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RemoteExecutor.cs" />
-    <Compile Include="StandardUapVisitor.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -138,6 +169,18 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedContent Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\HTML.xslt">
+      <Link>HTML.xslt</Link>
+    </EmbeddedContent>
+    <EmbeddedContent Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\JUnitXml.xslt">
+      <Link>JUnitXml.xslt</Link>
+    </EmbeddedContent>
+    <EmbeddedContent Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\NUnitXml.xslt">
+      <Link>NUnitXml.xslt</Link>
+    </EmbeddedContent>
+    <EmbeddedContent Include="..\..\Microsoft.DotNet.XUnitConsoleRunner\src\xUnit1.xslt">
+      <Link>xUnit1.xslt</Link>
+    </EmbeddedContent>
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\Square310x310Logo.png" />
     <Content Include="Assets\Square44x44Logo.png" />
@@ -149,8 +192,13 @@
     <Content Include="Assets\Wide310x150Logo.png" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Net.Native.Compiler">
+      <Version>2.2.1</Version>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
-      <Version>6.2.0-Preview1-26502-02</Version>
+      <Version>6.2.0-preview1-26926-04</Version>
     </PackageReference>
     <PackageReference Include="xunit">
       <Version>2.4.1-pre.build.4059</Version>

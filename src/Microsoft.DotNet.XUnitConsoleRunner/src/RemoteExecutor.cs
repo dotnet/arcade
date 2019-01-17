@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#if WINDOWS_UWP
+
 using System;
 using System.IO;
 using System.Reflection;
@@ -10,7 +12,7 @@ using System.Threading.Tasks;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.XUnitRunnerUap
+namespace Xunit.ConsoleClient
 {
     /// <summary>
     /// Provides an entry point in a new process that will load a specified method and invoke it.
@@ -113,22 +115,6 @@ namespace Microsoft.DotNet.XUnitRunnerUap
             return exitCode;
         }
 
-        private static MethodInfo GetMethod(this Type type, string methodName)
-        {
-            Type t = type;
-            while (t != null)
-            {
-                TypeInfo ti = t.GetTypeInfo();
-                MethodInfo mi = ti.GetDeclaredMethod(methodName);
-                if (mi != null)
-                {
-                    return mi;
-                }
-                t = ti.BaseType;
-            }
-            return null;
-        }
-
         private static T[] Subarray<T>(this T[] arr, int offset, int count)
         {
             var newArr = new T[count];
@@ -137,3 +123,5 @@ namespace Microsoft.DotNet.XUnitRunnerUap
         }
     }
 }
+
+#endif

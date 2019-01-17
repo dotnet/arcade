@@ -1,5 +1,3 @@
-#if NETCOREAPP
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -295,5 +293,3 @@ namespace Xunit
         }
     }
 }
-
-#endif

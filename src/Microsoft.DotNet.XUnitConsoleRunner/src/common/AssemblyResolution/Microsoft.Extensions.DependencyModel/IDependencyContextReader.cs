@@ -1,5 +1,3 @@
-#if NETCOREAPP
-
 using System;
 using System.IO;
 
@@ -10,5 +8,3 @@ namespace Internal.Microsoft.Extensions.DependencyModel
         DependencyContext Read(Stream stream);
     }
 }
-
-#endif

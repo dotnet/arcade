@@ -6,10 +6,11 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputType>Exe</OutputType>
     <RootNamespace>Xunit.ConsoleClient</RootNamespace>
-    <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <IsPackable>true</IsPackable>
     <VersionPrefix>2.5.0</VersionPrefix>
     <LangVersion>latest</LangVersion>
+    <DefaultItemExcludes Condition="'$(DefineConstants)' == 'WINDOWS_UWP'">$(DefaultItemExcludes);common\AssemblyResolution\*.cs</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
