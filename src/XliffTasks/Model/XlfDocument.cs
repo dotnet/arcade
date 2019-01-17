@@ -22,6 +22,18 @@ namespace XliffTasks.Model
     internal sealed class XlfDocument : Document
     {
         private static XmlSchemaSet s_schemaSet;
+        
+        private static XNamespace XliffNS = "urn:oasis:names:tc:xliff:document:1.2";
+        private static XNamespace XsiNS = "http://www.w3.org/2001/XMLSchema-instance";
+        private static XName Xliff = XliffNS + "xliff";
+        private static XName File = XliffNS + "file";
+        private static XName Body = XliffNS + "body";
+        private static XName Group = XliffNS + "group";
+        private static XName TransUnit = XliffNS + "trans-unit";
+        private static XName Source = XliffNS + "source";
+        private static XName Target = XliffNS + "target";
+        private static XName Note = XliffNS + "note";
+
         private XDocument _document;
 
         /// <summary>
@@ -42,21 +54,18 @@ namespace XliffTasks.Model
         /// </summary>
         public void LoadNew(string targetLanguage)
         {
-            XNamespace ns = "urn:oasis:names:tc:xliff:document:1.2";
-            XNamespace xsi = "http://www.w3.org/2001/XMLSchema-instance";
-
             _document = new XDocument(
-                new XElement(ns + "xliff",
-                    new XAttribute("xmlns", ns.NamespaceName),
-                    new XAttribute(XNamespace.Xmlns + "xsi", xsi.NamespaceName),
+                new XElement(Xliff,
+                    new XAttribute("xmlns", XliffNS.NamespaceName),
+                    new XAttribute(XNamespace.Xmlns + "xsi", XsiNS.NamespaceName),
                     new XAttribute("version", "1.2"),
-                    new XAttribute(xsi + "schemaLocation", $"{ns.NamespaceName} xliff-core-1.2-transitional.xsd"),
-                    new XElement(ns + "file",
+                    new XAttribute(XsiNS + "schemaLocation", $"{XliffNS.NamespaceName} xliff-core-1.2-transitional.xsd"),
+                    new XElement(File,
                         new XAttribute("datatype", "xml"),
                         new XAttribute("source-language", "en"),
                         new XAttribute("target-language", targetLanguage),
                         new XAttribute("original", "_"), // placeholder will be replaced on first update
-                        new XElement(ns + "body"))));
+                        new XElement(Body))));
         }
 
         /// <summary>
@@ -86,9 +95,7 @@ namespace XliffTasks.Model
                 nodesById.Add(node.Id, node);
             }
 
-            XNamespace ns = _document.Root.Name.Namespace;
-
-            XElement fileElement = _document.Root.Element(ns + "file");
+            XElement fileElement = _document.Root.Element(File);
             XAttribute originalAttribute = fileElement.Attribute("original");
             if (originalAttribute.Value != sourceDocumentId)
             {
@@ -97,8 +104,8 @@ namespace XliffTasks.Model
                 changed = true;
             }
 
-            XElement bodyElement = fileElement.Element(ns + "body");
-            XElement groupElement = bodyElement.Element(ns + "group");
+            XElement bodyElement = fileElement.Element(Body);
+            XElement groupElement = bodyElement.Element(Group);
 
             if (groupElement != null && !groupElement.Elements().Any())
             {
@@ -107,11 +114,12 @@ namespace XliffTasks.Model
                 changed = true;
             }
 
-            foreach (XElement unitElement in bodyElement.Descendants(ns + "trans-unit").ToList())
+            foreach (XElement unitElement in bodyElement.Descendants(TransUnit).ToList())
             {
-                XElement sourceElement = unitElement.Element(ns + "source");
-                XElement targetElement = unitElement.Element(ns + "target");
-                XElement noteElement = unitElement.Element(ns + "note");
+                XElement sourceElement = unitElement.Element(Source);
+                
+                XElement targetElement = unitElement.Element(Target);
+                XElement noteElement = unitElement.Element(Note);
                 XAttribute idAttribute = unitElement.Attribute("id");
                 XAttribute stateAttribute = targetElement.Attribute("state");
 
@@ -194,14 +202,14 @@ namespace XliffTasks.Model
                 }
 
                 XElement newTransUnit = 
-                    new XElement(ns + "trans-unit",
+                    new XElement(TransUnit,
                         new XAttribute("id", sourceNode.Id),
-                        new XElement(ns + "source", sourceNode.Source),
-                        new XElement(ns + "target", new XAttribute("state", "new"), sourceNode.Source),
-                        new XElement(ns + "note", sourceNode.Note == "" ? null : sourceNode.Note));
+                        new XElement(Source, sourceNode.Source),
+                        new XElement(Target, new XAttribute("state", "new"), sourceNode.Source),
+                        new XElement(Note, sourceNode.Note == "" ? null : sourceNode.Note));
 
                 bool inserted = false;
-                foreach (var transUnit in bodyElement.Elements(ns + "trans-unit"))
+                foreach (var transUnit in bodyElement.Elements(TransUnit))
                 {
                     if (StringComparer.Ordinal.Compare(newTransUnit.Attribute("id").Value, transUnit.Attribute("id").Value) < 0)
                     {
@@ -232,10 +240,10 @@ namespace XliffTasks.Model
 
             XNamespace ns = _document.Root.Name.Namespace;
 
-            XElement fileElement = _document.Root.Element(ns + "file");
-            XElement bodyElement = fileElement.Element(ns + "body");
+            XElement fileElement = _document.Root.Element(File);
+            XElement bodyElement = fileElement.Element(Body);
 
-            IEnumerable<XElement> transUnits = bodyElement.Elements(ns + "trans-unit");
+            IEnumerable<XElement> transUnits = bodyElement.Elements(TransUnit);
 
             IComparer<string> comparer = StringComparer.Ordinal;
             if (!transUnits.IsSorted(tu => tu.Attribute("id").Value, comparer))
@@ -271,10 +279,10 @@ namespace XliffTasks.Model
             var dictionary = new Dictionary<string, string>();
             XNamespace ns = _document.Root.Name.Namespace;
 
-            foreach (var element in _document.Descendants(ns + "trans-unit"))
+            foreach (var element in _document.Descendants(TransUnit))
             {
                 string id = element.Attribute("id").Value;
-                string target = element.Element(ns + "target").Value;
+                string target = element.Element(Target).Value;
 
                 dictionary.Add(id, target);
             }
@@ -287,10 +295,10 @@ namespace XliffTasks.Model
             XNamespace ns = _document.Root.Name.Namespace;
 
             var untranslatedResourceIDs =
-                (_document.Descendants(ns + "trans-unit")
+                (_document.Descendants(TransUnit)
                  .Where(tu =>
                  {
-                     var target = tu.Element(ns + "target");
+                     var target = tu.Element(Target);
                      return target.Attribute("state").Value != "translated";
                  })
                  .Select(tu => tu.Attribute("id").Value));
