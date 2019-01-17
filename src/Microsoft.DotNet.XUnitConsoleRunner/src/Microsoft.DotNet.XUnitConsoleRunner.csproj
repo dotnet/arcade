@@ -9,7 +9,7 @@
     <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <VersionPrefix>2.5.0</VersionPrefix>
-    <LangVersion>7.1</LangVersion>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,10 +25,5 @@
     <PackageReference Include="xunit.abstractions" Version="$(XUnitAbstractionsVersion)" />
     <PackageReference Include="xunit.extensibility.core" Version="$(XUnitVersion)" />
   </ItemGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug_x86' OR '$(Configuration)' == 'Release_x86' ">
-    <AssemblyName>xunit.console.x86</AssemblyName>
-    <PlatformTarget>x86</PlatformTarget>
-  </PropertyGroup>
 
 </Project>
