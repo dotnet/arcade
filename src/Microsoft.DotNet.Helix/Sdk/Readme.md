@@ -24,15 +24,29 @@ Each of the following examples require dotnet-cli >= 2.1.300 and need the follow
 ```
 
 The examples can all be run with `dotnet msbuild` and will require an environment variable or MSBuildProperty `HelixAccessToken` set if:
-- A non .Open queue is selected for `HelixTargetQueues`
+- A queue with a value of IsInternalOnly=true (usually any not ending in '.Open') is selected for `HelixTargetQueues`
 - Any payloads are used, as the payloads are uploaded using Helix-Managed storage apis and these require authentication
+
+### Docker Support
+Helix machines now have (where available on the machine) the ability to run work items directly inside Docker containers.  This allows work items to use operating systems that only work for Docker scenarios, as well as custom configurations of already-supported operating systems.  
+#### Specifying a docker tag:
+Supported docker tags include anything publicly available on dockerhub.io, as well as azurecr.io and mcr container registries which have had the appropriate service principal users added or are public. In all cases, use the format:
+```
+{Helix Queue Id}@{DockerTag}
+```
+As an example, to run a typical Helix work item targeting a python-enabled Alpine 3.8 docker image on a Ubuntu 16.04 host, the queue Id used would be `Ubuntu.1604.Amd64@python:2.7.15-alpine3.8`.  (see below why the "python" repo is used for the example)
+Anywhere a container registry is left out, dockerhub.io is assumed; the above could just as easily be listed as `Ubuntu.1604.Amd64@dockerhub.io/python:2.7.15-alpine3.8`
+#### Limitations:
+- Currently Windows Docker machines will always be set in Windows containers mode, as it is non-trivial to reliably switch between these formats.  In general you should use OSX or Linux machines for your non-Windows Docker needs, and a matching RS* level of Windows for the Server used (i.e. to run Nano RS4, you need to run on Server RS4 currently)
+- While work items will execute as usual, many Helix work items assume the existence of python 2.7 on the machine and will fail to do certain parts (such as uploading logs and other artifacts) when run.  The ['python' repo on dockerhub](https://hub.docker.com/_/python) provides Python 2.7 forms of Alpine, Debian, and Windows Server Core images.  Others will need to be published either to dockerhub or elsewhere.
+- Not all Helix Queues will have Docker installed (or in some cases Docker may be broken there).  Contact the dnceng team if you feel a particular Helix queue should have Docker installed, but does not.
 
 ### Hello World
 This will print out 'Hai Wurld!' in the job console log.
 ```xml
 <Project Sdk="Microsoft.DotNet.Helix.Sdk" DefaultTargets="Test">
   <PropertyGroup>
-    <HelixSource>pr/testing</HelixSource>
+    <HelixSource>pr/testing/</HelixSource>
     <HelixType>test/stuff</HelixType>
     <HelixBuild>23456.01</HelixBuild>
     <HelixTargetQueues>Windows.10.Amd64.Open</HelixTargetQueues>
@@ -71,9 +85,9 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
 <Project Sdk="Microsoft.DotNet.Helix.Sdk" DefaultTargets="Test">
   <PropertyGroup>
     <!-- The 'source' value reported to helix  -->
-    <HelixSource>pr/testing</HelixSource>
+    <HelixSource>pr/testing/</HelixSource>
     <!-- The 'type' value reported to helix  -->
-    <HelixType>test/stuff</HelixType>
+    <HelixType>test/stuff/</HelixType>
     <!-- The 'build' value reported to helix  -->
     <HelixBuild>23456.01</HelixBuild>
 
@@ -84,21 +98,18 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
       The set of helix queues to send jobs to.
       This property is multiplexed over just like <TargetFrameworks> for C# projects.
       The project is built once per entry in this list with <HelixTargetQueue> set to the current list element value.
+      
     -->
-    <HelixTargetQueues>Windows.10.Amd64.Open;Ubuntu.1604.Open</HelixTargetQueues>
+    <HelixTargetQueues>Ubuntu.1804.Amd64.Open;Ubuntu.1604.Amd64.Open</HelixTargetQueues>
 
-
-    <!--
-      'true' to download dotnet cli and add it to the path for every workitem. Default 'false'
-    -->
+    <!-- 'true' to download dotnet cli and add it to the path for every workitem. Default 'false' -->
     <IncludeDotNetCli>true</IncludeDotNetCli>
     <!-- 'sdk' or 'runtime' -->
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
     <!-- 'latest' or a specific version of dotnet cli -->
     <DotNetCliVersion>2.1.403</DotNetCliVersion>
-    <!-- 'Current' or 'LTS', determines what channel that 'latest' version pulls from -->
+    <!-- 'Current' or 'LTS', determines what channel 'latest' version pulls from -->
     <DotNetCliChannel>Current</DotNetCliChannel>
-
 
     <!-- Enable reporting of test results to azure dev ops -->
     <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
@@ -115,12 +126,12 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
         test_results.xml
     -->
     <EnableXUnitReporter>false</EnableXUnitReporter>
-    <!-- Instruct the sdk to wait for test result injestion by MC and fail if there are any failed tests. -->
+    <!-- Instruct the sdk to wait for test result ingestion by MC, and fail if there are any failed work items or tests. -->
     <FailOnMissionControlTestFailure>false</FailOnMissionControlTestFailure>
 
     <!--
       Commands that are run before each workitem's command
-      semicolon separated; use ';;' to escape a single semicolon
+      semicolon-separated; use ';;' to escape a single semicolon
     -->
     <HelixPreCommands>$(HelixPreCommands);echo 'pizza'</HelixPreCommands>
 
@@ -133,7 +144,7 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
 
   <!--
     XUnit Runner
-      Enabling this will create one work item for each xunit test project specified
+      Enabling this will create one work item for each xunit test project specified.
       This is enabled by specifying one or more XUnitProject items
   -->
   <ItemGroup>
@@ -142,7 +153,7 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
   <PropertyGroup>
     <!-- TargetFramework to publish the xunit test projects for -->
     <XUnitPublishTargetFramework>netcoreapp2.1</XUnitPublishTargetFramework>
-    <!-- TargetFramework of the xunit.runner.dll to use to run the tests -->
+    <!-- TargetFramework of the xunit.runner.dll to use when running the tests -->
     <XUnitRuntimeTargetFramework>netcoreapp2.0</XUnitRuntimeTargetFramework>
     <!-- PackageVersion of xunit.runner.console to use -->
     <XUnitRunnerVersion>2.4.1</XUnitRunnerVersion>
@@ -168,7 +179,7 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
       <!-- Command that runs the work item -->
       <Command>echo 'sauce'</Command>
 
-      <!-- A directory that is zipped up and send as the work item payload -->
+      <!-- A directory that is zipped up and sent as the work item payload -->
       <PayloadDirectory>$(TestFolder)</PayloadDirectory>
 
       <!-- A TimeSpan that specifies the work item execution timeout -->
