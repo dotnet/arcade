@@ -37,7 +37,10 @@ artifacts
       $(Configuration)
   packages
     $(Configuration)
-      $(MSBuildProjectName).$(PackageVersion).nupkg
+      Shipping
+        $(MSBuildProjectName).$(PackageVersion).nupkg
+      NonShipping
+        $(MSBuildProjectName).$(PackageVersion).nupkg
   TestResults
     $(Configuration)
       $(MSBuildProjectName)_$(TargetFramework)_$(TestArchitecture).(xml|html|log|error.log)
