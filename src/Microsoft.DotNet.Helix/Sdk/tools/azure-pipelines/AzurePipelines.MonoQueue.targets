@@ -10,7 +10,7 @@
     </HelixPostCommands>
     <HelixPostCommands Condition="!$(IsPosixShell)">
       $(HelixPostCommands);
-      %HELIX_CORRELATION_PAYLOAD%\reporter\run.bat $(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI) $(SYSTEM_TEAMPROJECT) $(TestRunId) $(SYSTEM_ACCESSTOKEN)
+      call %HELIX_CORRELATION_PAYLOAD%\reporter\run.bat $(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI) $(SYSTEM_TEAMPROJECT) $(TestRunId) $(SYSTEM_ACCESSTOKEN)
     </HelixPostCommands>
   </PropertyGroup>
 </Project>
