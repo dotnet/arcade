@@ -41,6 +41,8 @@ artifacts
         $(MSBuildProjectName).$(PackageVersion).nupkg
       NonShipping
         $(MSBuildProjectName).$(PackageVersion).nupkg
+      Release
+      PreRelease
   TestResults
     $(Configuration)
       $(MSBuildProjectName)_$(TargetFramework)_$(TestArchitecture).(xml|html|log|error.log)
@@ -554,8 +556,12 @@ Set `IsShipping` property to `false` in
 - Test/build/automation utility projects (test projects are automatically marked as non-shipping by Arcade SDK targets).
 
 All libraries, packages and VSIXes are signed by default, regardless of whether they are _shipping_ or not.
+
 By default, Portable and Embedded PDBs produced by _shipping_ projects are converted to Windows PDBs and published to Microsoft symbol servers.
+
 By default, all _shipping_ libraries are localized.
+
+When `UsingToolNuGetRepack` is true _shipping_ packages are repackaged as release/pre-release packages to `artifacts\packages\$(Configuration)\Release` and `artifacts\packages\$(Configuration)\PreRelease` directories, respectively.
 
 ### `PublishWindowsPdb` (bool)
 
