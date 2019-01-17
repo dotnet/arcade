@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.19065.2</MicrosoftDotNetMaestroTasksVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RestoreSources>
+      https://api.nuget.org/v3/index.json;
+      https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
+    </RestoreSources>
+  </PropertyGroup>
+
+</Project>
