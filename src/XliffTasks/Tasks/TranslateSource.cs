@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Build.Framework;
+using System.Collections.Generic;
 using System.IO;
 using XliffTasks.Model;
 
@@ -21,7 +22,19 @@ namespace XliffTasks.Tasks
 
             TranslatableDocument sourceDocument = LoadSourceDocument(sourcePath, XlfFile.GetMetadata(MetadataKey.XlfSourceFormat));
             XlfDocument xlfDocument = LoadXlfDocument(XlfFile.ItemSpec);
-            sourceDocument.Translate(xlfDocument.GetTranslations());
+
+            bool validationFailed = false;
+            xlfDocument.Validate(validationError =>
+            {
+                validationFailed = true;
+                Log.LogErrorInFile(XlfFile.ItemSpec, validationError.LineNumber, validationError.Message);
+            });
+
+            IReadOnlyDictionary<string, string> translations = validationFailed
+                ? new Dictionary<string, string>()
+                : xlfDocument.GetTranslations();
+
+            sourceDocument.Translate(translations);
 
             Directory.CreateDirectory(Path.GetDirectoryName(translatedFullPath));
 

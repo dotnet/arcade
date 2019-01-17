@@ -5,7 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Schema;
 using XliffTasks.Tasks;
 
 namespace XliffTasks.Model
@@ -19,6 +21,7 @@ namespace XliffTasks.Model
     /// </summary>
     internal sealed class XlfDocument : Document
     {
+        private static XmlSchemaSet s_schemaSet;
         private XDocument _document;
 
         /// <summary>
@@ -293,6 +296,41 @@ namespace XliffTasks.Model
                  .Select(tu => tu.Attribute("id").Value));
 
             return new HashSet<string>(untranslatedResourceIDs, StringComparer.Ordinal);
+        }
+
+        /// <summary>
+        /// Runs the document through XSD schema validation and reports any errors.
+        /// </summary>
+        /// <param name="validationErrorHandler">Handler invoked for each validation error.</param>
+        public void Validate(Action<XmlSchemaException> validationErrorHandler)
+        {
+            if (!HasContent)
+            {
+                return;
+            }
+
+            XmlSchemaSet schemas = GetSchemaSet();
+
+            _document.Validate(schemas, (o, e) => validationErrorHandler(e.Exception));
+        }
+
+        private static XmlSchemaSet GetSchemaSet()
+        {
+            if (s_schemaSet == null)
+            {
+                Stream xmlSchemaResourceStream = typeof(XlfDocument).Assembly.GetManifestResourceStream("XliffTasks.Model.xml.xsd");
+                XmlReader xmlSchemaReader = XmlReader.Create(xmlSchemaResourceStream);
+                Stream xliffSchemaResourceStream = typeof(XlfDocument).Assembly.GetManifestResourceStream("XliffTasks.Model.xliff-core-1.2-transitional.xsd");
+                XmlReader xliffSchemaReader = XmlReader.Create(xliffSchemaResourceStream);
+
+                var schemas = new XmlSchemaSet();
+                schemas.Add(targetNamespace: null, xmlSchemaReader);
+                schemas.Add(targetNamespace: null, xliffSchemaReader);
+
+                s_schemaSet = schemas;
+            }
+
+            return s_schemaSet;
         }
     }
 }
