@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Schema;
 using XliffTasks.Model;
 using Xunit;
 
@@ -413,6 +414,59 @@ namespace XliffTasks.Tests
                 xliffAfterUpdate,
                 Update(xliff: xliffBeforeUpdate, resx: resx));
 
+        }
+
+        [Fact]
+        public void ValidationReportsNoErrorsOnDocumentWithNoContent()
+        {
+            var document = new XlfDocument();
+            var validationErrors = GetValidationErrors(document);
+
+            Assert.Empty(validationErrors);
+        }
+
+        [Fact]
+        public void ValidationReportsNoErrorsOnNewDocument()
+        {
+            var document = new XlfDocument();
+            document.LoadNew("cs");
+            var validationErrors = GetValidationErrors(document);
+
+            Assert.Empty(validationErrors);
+        }
+
+        [Fact]
+        public void ValidationReportsErrorsOnMissingSourceElement()
+        {
+            var xliffText =
+@"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
+  <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
+    <body>
+      <trans-unit id=""Alpha"">
+        <target state=""new"">Alpha {0}</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>";
+            var document = new XlfDocument();
+            document.Load(new StringReader(xliffText));
+
+            var validationErrors = GetValidationErrors(document);
+
+            Assert.Collection(validationErrors,
+                new Action<XmlSchemaException>[]
+                {
+                    e => Assert.Equal(expected: "The element 'trans-unit' in namespace 'urn:oasis:names:tc:xliff:document:1.2' has invalid child element 'target' in namespace 'urn:oasis:names:tc:xliff:document:1.2'. List of possible elements expected: 'source' in namespace 'urn:oasis:names:tc:xliff:document:1.2'.", actual: e.Message)
+                });
+        }
+
+        private static List<XmlSchemaException> GetValidationErrors(XlfDocument document)
+        {
+            var validationErrors = new List<XmlSchemaException>();
+            Action<XmlSchemaException> exceptionHandler = e => validationErrors.Add(e);
+            document.Validate(exceptionHandler);
+            return validationErrors;
         }
 
         private static string Sort(string xliff)

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the MIT license. See License.txt in the project root for full license information. -->
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -9,6 +9,7 @@
     <EnableDefaultItems>false</EnableDefaultItems>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <IsPackable>true</IsPackable>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,6 +35,11 @@
     <Reference Include="System.Xml.Linq" Pack="false" />
     <Reference Include="Microsoft.Build.Framework" Pack="false" />
     <Reference Include="Microsoft.Build.Utilities.v4.0" Pack="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Model\xliff-core-1.2-transitional.xsd" />
+    <EmbeddedResource Include="Model\xml.xsd" />
   </ItemGroup>
 
 </Project>
