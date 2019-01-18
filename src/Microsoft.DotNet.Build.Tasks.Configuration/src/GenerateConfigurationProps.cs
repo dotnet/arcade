@@ -246,7 +246,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                 whenConfigurationElement.AppendChild(setConfigurationPropertyGroup);
 
                 // set project configuration
-                setConfigurationPropertyGroup.AddProperty(ConfigurationProperty, compatibleConfiguration.GetDefaultConfigurationString());
+                setConfigurationPropertyGroup.AddProperty(ConfigurationProperty, compatibleConfiguration.ToFullString());
             }
 
             var configurationOtherwiseElement = configurationSpecificProps.CreateOtherwiseElement();
