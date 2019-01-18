@@ -18,11 +18,15 @@ namespace XliffTasks.Model
             if (targetElement == null)
             {
                 XElement sourceElement = transUnitElement.Element(Source);
-                targetElement = new XElement(Target);
+                targetElement = new XElement(Target, new XAttribute("state", "new"));
                 sourceElement.AddAfterSelf(targetElement);
             }
 
             targetElement.Value = value;
+            if (targetElement.Attribute("state") == null)
+            {
+                targetElement.Add(new XAttribute("state", "new"));
+            }
         }
 
         public static string GetTargetStateOrDefault(this XElement transUnitElement) =>
@@ -50,5 +54,31 @@ namespace XliffTasks.Model
                 stateAttribute.Value = value;
             }
         }
+
+        public static string GetSourceValue(this XElement transUnitElement) =>
+            transUnitElement.Element(Source).Value;
+
+        public static void SetSourceValue(this XElement transUnitElement, string value) =>
+            transUnitElement.Element(Source).Value = value;
+
+        public static string GetNoteValue(this XElement transUnitElement) =>
+            transUnitElement.Element(Note)?.Value;
+
+        public static void SetNoteValue(this XElement transUnitElement, string value)
+        {
+            XElement noteElement = transUnitElement.Element(Note);
+            if (noteElement == null)
+            {
+                XElement priorElement = transUnitElement.Element(Target) ?? transUnitElement.Element(Source);
+                noteElement = new XElement(Note);
+                priorElement.AddAfterSelf(noteElement);
+            }
+
+            noteElement.Value = value;
+            noteElement.SelfCloseIfPossible();
+        }
+
+        public static string GetId(this XElement transUnitElement) =>
+            transUnitElement.Attribute("id").Value;
     }
 }

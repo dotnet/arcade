@@ -107,16 +107,10 @@ namespace XliffTasks.Model
 
             foreach (XElement unitElement in bodyElement.Descendants(TransUnit).ToList())
             {
-                XElement sourceElement = unitElement.Element(Source);
-                XElement targetElement = unitElement.Element(Target);
-                XElement noteElement = unitElement.Element(Note);
-                XAttribute idAttribute = unitElement.Attribute("id");
-                XAttribute stateAttribute = targetElement.Attribute("state");
-
-                string id = idAttribute.Value;
-                string state = stateAttribute.Value;
-                string source = sourceElement.Value;
-                string note = noteElement.Value;
+                string id = unitElement.GetId();
+                string state = unitElement.GetTargetStateOrDefault();
+                string source = unitElement.GetSourceValue();
+                string note = unitElement.GetNoteValue();
 
                 // delete node in document that has been removed from source.
                 if (!nodesById.TryGetValue(id, out TranslatableNode sourceNode))
@@ -129,14 +123,13 @@ namespace XliffTasks.Model
                 // update trans-unit state if either the source text or associated note has change.
                 if (source != sourceNode.Source || (sourceNode.Note != null && note != sourceNode.Note))
                 {
-                    sourceElement.Value = sourceNode.Source;
+                    unitElement.SetSourceValue(sourceNode.Source);
 
                     // if sourceNode.Note is null, it indicates that the source format can't have notes, in which case
                     // they may be applied directly to the xlf by the user and we should not revert that on update
                     if (sourceNode.Note != null)
                     {
-                        noteElement.Value = sourceNode.Note;
-                        noteElement.SelfCloseIfPossible();
+                        unitElement.SetNoteValue(sourceNode.Note);
                     }
 
                     switch (state)
@@ -144,12 +137,12 @@ namespace XliffTasks.Model
                         case "new":
                             // when a new string gets modified before it has been translated,
                             // update untranslated target to match the new source
-                            targetElement.Value = sourceNode.Source;
+                            unitElement.SetTargetValue(sourceNode.Source);
                             break;
 
                         case "translated":
                             // flag strings that have been modified after translation for review/re-translation
-                            stateAttribute.Value = "needs-review-translation";
+                            unitElement.SetTargetState("needs-review-translation");
                             break;
                     }
 
@@ -166,13 +159,13 @@ namespace XliffTasks.Model
                 // again.
                 // Note we don't limit this check to when the source has changed in the original
                 // document because we also want to catch errors introduced during translation.
-                var sourceReplacementCount = sourceElement.Value.GetReplacementCount();
-                var targetReplacementCount = targetElement.Value.GetReplacementCount();
+                var sourceReplacementCount = unitElement.GetSourceValue().GetReplacementCount();
+                var targetReplacementCount = unitElement.GetTargetValueOrDefault().GetReplacementCount();
 
                 if (targetReplacementCount != sourceReplacementCount)
                 {
-                    targetElement.Value = sourceNode.Source;
-                    stateAttribute.Value = "new";
+                    unitElement.SetTargetValue(sourceNode.Source);
+                    unitElement.SetTargetState("new");
 
                     changed = true;
                 }
@@ -201,7 +194,7 @@ namespace XliffTasks.Model
                 bool inserted = false;
                 foreach (var transUnit in bodyElement.Elements(TransUnit))
                 {
-                    if (StringComparer.Ordinal.Compare(newTransUnit.Attribute("id").Value, transUnit.Attribute("id").Value) < 0)
+                    if (StringComparer.Ordinal.Compare(newTransUnit.GetId(), transUnit.GetId()) < 0)
                     {
                         transUnit.AddBeforeSelf(newTransUnit);
                         inserted = true;
@@ -236,7 +229,7 @@ namespace XliffTasks.Model
             IEnumerable<XElement> transUnits = bodyElement.Elements(TransUnit);
 
             IComparer<string> comparer = StringComparer.Ordinal;
-            if (!transUnits.IsSorted(tu => tu.Attribute("id").Value, comparer))
+            if (!transUnits.IsSorted(tu => tu.GetId(), comparer))
             {
                 changed = true;
                 SortedList<string, XElement> sortedTransUnits = new SortedList<string, XElement>(comparer);
@@ -244,7 +237,7 @@ namespace XliffTasks.Model
                 // Sort the translation units
                 foreach (var transUnit in transUnits)
                 {
-                    sortedTransUnits.Add(transUnit.Attribute("id").Value, transUnit);
+                    sortedTransUnits.Add(transUnit.GetId(), transUnit);
                 }
 
                 // Remove them from the body element
@@ -271,8 +264,8 @@ namespace XliffTasks.Model
 
             foreach (var element in _document.Descendants(TransUnit))
             {
-                string id = element.Attribute("id").Value;
-                string target = element.Element(Target).Value;
+                string id = element.GetId();
+                string target = element.GetTargetValueOrDefault();
 
                 dictionary.Add(id, target);
             }
@@ -288,10 +281,9 @@ namespace XliffTasks.Model
                 (_document.Descendants(TransUnit)
                  .Where(tu =>
                  {
-                     var target = tu.Element(Target);
-                     return target.Attribute("state").Value != "translated";
+                     return tu.GetTargetStateOrDefault() != "translated";
                  })
-                 .Select(tu => tu.Attribute("id").Value));
+                 .Select(tu => tu.GetId()));
 
             return new HashSet<string>(untranslatedResourceIDs, StringComparer.Ordinal);
         }

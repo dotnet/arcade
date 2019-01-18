@@ -72,7 +72,7 @@ namespace XliffTasks.Tests
     </body>
   </file>
 </xliff>";
-             AssertEx.EqualIgnoringLineEndings(xliff, Update(xliff: "", resx: resx));
+            AssertEx.EqualIgnoringLineEndings(xliff, Update(xliff: "", resx: resx));
 
             // loc team translates
             string xliffAfterFirstTranslation =
@@ -144,9 +144,154 @@ namespace XliffTasks.Tests
   </file>
 </xliff>";
 
-             AssertEx.EqualIgnoringLineEndings(
-                xliffAfterApplyingResxModification,
-                Update(xliff: xliffAfterFirstTranslation, resx: resxAfterFirstModification));
+            AssertEx.EqualIgnoringLineEndings(
+               xliffAfterApplyingResxModification,
+               Update(xliff: xliffAfterFirstTranslation, resx: resxAfterFirstModification));
+        }
+
+        [Fact]
+        public void UpdateBehavesCorrectlyWhenTargetIsMissing()
+        {
+            string initialXliff =
+@"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
+  <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
+    <body>
+      <trans-unit id=""Apple"">
+        <source>Apple</source>
+        <note />
+      </trans-unit>
+      <trans-unit id=""Banana"">
+        <source>Banana</source>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>";
+
+            string resxWithModifications =
+@"<root>
+  <data name=""Apple"">
+   <value>Better apples</value>
+  </data>
+  <data name=""Banana"">
+    <value>Banana</value>
+  </data>
+</root>";
+
+            string xliffAfterUpdate =
+@"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
+  <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
+    <body>
+      <trans-unit id=""Apple"">
+        <source>Better apples</source>
+        <target state=""new"">Better apples</target>
+        <note />
+      </trans-unit>
+      <trans-unit id=""Banana"">
+        <source>Banana</source>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>";
+
+            AssertEx.EqualIgnoringLineEndings(
+                expected: xliffAfterUpdate,
+                actual: Update(initialXliff, resxWithModifications));
+        }
+
+        [Fact]
+        public void UpdateBehavesCorrectlyWhenNoteIsMissing()
+        {
+            string initialXliff =
+@"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
+  <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
+    <body>
+      <trans-unit id=""Apple"">
+        <source>Apple</source>
+        <target state=""new"">Apple</target>
+      </trans-unit>
+      <trans-unit id=""Banana"">
+        <source>Banana</source>
+        <target state=""new"">Banana</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>";
+
+            string resxWithModifications =
+@"<root>
+  <data name=""Apple"">
+   <value>Apple</value>
+   <comment>Make sure they're green apples.</comment>
+  </data>
+  <data name=""Banana"">
+    <value>Banana</value>
+  </data>
+</root>";
+
+            string xliffAfterUpdate =
+@"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
+  <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
+    <body>
+      <trans-unit id=""Apple"">
+        <source>Apple</source>
+        <target state=""new"">Apple</target>
+        <note>Make sure they're green apples.</note>
+      </trans-unit>
+      <trans-unit id=""Banana"">
+        <source>Banana</source>
+        <target state=""new"">Banana</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>";
+
+            AssertEx.EqualIgnoringLineEndings(
+                expected: xliffAfterUpdate,
+                actual: Update(initialXliff, resxWithModifications));
+        }
+
+        [Fact]
+        public void UpdateBehavesCorrectlyWhenTargetStateIsMissing()
+        {
+            string initialXliff =
+@"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
+  <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
+    <body>
+      <trans-unit id=""Apple"">
+        <source>Apple</source>
+        <target>Apple</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>";
+
+            string resxWithModifications =
+@"<root>
+  <data name=""Apple"">
+   <value>Better apples</value>
+  </data>
+</root>";
+
+            string xliffAfterUpdate =
+@"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
+  <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
+    <body>
+      <trans-unit id=""Apple"">
+        <source>Better apples</source>
+        <target state=""new"">Better apples</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>";
+
+            AssertEx.EqualIgnoringLineEndings(
+                expected: xliffAfterUpdate,
+                actual: Update(initialXliff, resxWithModifications));
         }
 
         [Fact]
