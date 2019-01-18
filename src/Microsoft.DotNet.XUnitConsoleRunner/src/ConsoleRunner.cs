@@ -133,6 +133,11 @@ namespace Xunit.ConsoleClient
             var result = new List<IRunnerReporter>();
 
             var runnerPath = Path.GetDirectoryName(typeof(Program).GetTypeInfo().Assembly.Location);
+            // Fix path on UWP .NET Native
+            if (string.IsNullOrEmpty(runnerPath))
+            {
+                runnerPath = AppDomain.CurrentDomain.BaseDirectory;
+            }
 
             foreach (var dllFile in Directory.GetFiles(runnerPath, "*.dll").Select(f => Path.Combine(runnerPath, f)))
             {

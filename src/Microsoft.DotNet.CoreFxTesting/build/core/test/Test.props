@@ -7,7 +7,7 @@
     <TestRunnerConfigPath>$(TestAssetsDir)xunit.runner.json</TestRunnerConfigPath>
     <TestResultsName>testResults.xml</TestResultsName>
 
-    <GenerateRunScriptDependsOn>ValidateTargetOSTrait;$(GenerateRunScriptDependsOn);SetupILCTestProfile;</GenerateRunScriptDependsOn>
+    <GenerateRunScriptDependsOn>ValidateTargetOSTrait;$(GenerateRunScriptDependsOn);</GenerateRunScriptDependsOn>
   </PropertyGroup>
 
   <!-- Test runner config file. -->
