@@ -5,6 +5,9 @@
   <UsingTask TaskName="ExtractResWResourcesFromAssemblies" AssemblyFile="$(MSBuildTestAssemblyPath)" />
 
   <PropertyGroup>
+    <!-- We need to binplace the resources as resw files to create the runner's pri file. -->
+    <ResourcesFolderPath Condition="'$(ResourcesFolderPath)' == ''">$(RuntimePath)resw</ResourcesFolderPath>
+
     <_MakePriExecutable>$(TestAssetsDir)makepri.exe</_MakePriExecutable>
     <_MakePriConfigTemplate>$(TestAssetsDir)MakePriConfigFile.xml</_MakePriConfigTemplate>
 
@@ -37,9 +40,6 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <!-- We need to binplace the resources as resw files to create the runner's pri file. -->
-      <ResourcesFolderPath Condition="'$(ResourcesFolderPath)' == ''">$(RuntimePath)resw</ResourcesFolderPath>
-
       <ProjectHasResources Condition="'@(_AllResxFiles)' != ''">true</ProjectHasResources>
       <TestProjectNeedsModifiedPriFile Condition="'$(IsTestProject)' == 'true' AND '$(ProjectHasResources)' == 'true'">true</TestProjectNeedsModifiedPriFile>
       <TestResourcesFolderPath Condition="'$(TestProjectNeedsModifiedPriFile)' == 'true'">$(RuntimePath)$(AssemblyName).Resw</TestResourcesFolderPath>
