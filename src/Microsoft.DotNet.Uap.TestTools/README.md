@@ -12,7 +12,7 @@ Supported platforms:
  - ARM and ARM64 tools installed
  - Windows 10 >= v10.0.17134 (April 2018 Update)
 
- To build and bundle the runner and launcher for deployment invoke the `buildAndUpdate.bat` script as following: `.\buildAndUpdate.bat src Launcher bin`. This will create an output directory (third parameter) which can be copied into the existing nuget package `Microsoft.DotNet.Uap.TestTools` for updates.
+ To build and bundle the runner and launcher for deployment invoke the `buildAndUpdate.bat` script as following: `.\buildAndUpdate.bat Microsoft.DotNet.XUnitRunnerUap WindowsStoreAppLauncher ..\Microsoft.DotNet.XUnitConsoleRunner\src bin\microsoft.dotnet.uap.testtools`. This will create an output directory (third parameter) which can be copied into the existing nuget package `Microsoft.DotNet.Uap.TestTools` for updates.
 
 ## Microsoft.DotNet.XUnitRunnerUap
 

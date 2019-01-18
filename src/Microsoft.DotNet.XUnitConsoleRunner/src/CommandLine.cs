@@ -1,27 +1,16 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
-
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Xunit;
+using System.Linq;
 
-namespace Microsoft.DotNet.XUnitRunnerUap
+namespace Xunit.ConsoleClient
 {
-    internal class CommandLine
+    public class CommandLine
     {
-        public enum ParallelismOption
-        {
-            none,
-            collections,
-            assemblies,
-            all
-        }
+        readonly Stack<string> arguments = new Stack<string>();
+        readonly List<string> unknownOptions = new List<string>();
 
-        private readonly Stack<string> arguments = new Stack<string>();
-
-        private CommandLine(string[] args, Predicate<string> fileExists = null)
+        protected CommandLine(string[] args, Predicate<string> fileExists = null)
         {
             if (fileExists == null)
                 fileExists = File.Exists;
@@ -32,17 +21,27 @@ namespace Microsoft.DotNet.XUnitRunnerUap
             Project = Parse(fileExists);
         }
 
+        public AppDomainSupport? AppDomains { get; protected set; }
+
         public bool Debug { get; protected set; }
 
         public bool DiagnosticMessages { get; protected set; }
+
+        public bool InternalDiagnosticMessages { get; protected set; }
 
         public bool FailSkips { get; protected set; }
 
         public int? MaxParallelThreads { get; set; }
 
+        public bool NoAutoReporters { get; protected set; }
+
         public bool NoColor { get; protected set; }
 
         public bool NoLogo { get; protected set; }
+
+#if DEBUG
+        public bool Pause { get; protected set; }
+#endif
 
         public XunitProject Project { get; protected set; }
 
@@ -52,13 +51,28 @@ namespace Microsoft.DotNet.XUnitRunnerUap
 
         public bool Serialize { get; protected set; }
 
-        public bool Verbose { get; protected set; }
+        public bool StopOnFail { get; protected set; }
 
         public bool Wait { get; protected set; }
 
-        public static CommandLine Parse(params string[] args)
+        public IRunnerReporter ChooseReporter(IReadOnlyList<IRunnerReporter> reporters)
         {
-            return new CommandLine(args);
+            var result = default(IRunnerReporter);
+
+            foreach (var unknownOption in unknownOptions)
+            {
+                var reporter = reporters.FirstOrDefault(r => r.RunnerSwitch == unknownOption) ?? throw new ArgumentException($"unknown option: -{unknownOption}");
+
+                if (result != null)
+                    throw new ArgumentException("only one reporter is allowed");
+
+                result = reporter;
+            }
+
+            if (!NoAutoReporters)
+                result = reporters.FirstOrDefault(r => r.IsEnvironmentallyEnabled) ?? result;
+
+            return result ?? new DefaultRunnerReporterWithTypes();
         }
 
         protected virtual string GetFullPath(string fileName)
@@ -90,7 +104,10 @@ namespace Microsoft.DotNet.XUnitRunnerUap
         {
             return fileName.EndsWith(".config", StringComparison.OrdinalIgnoreCase)
                 || fileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
-        }        
+        }
+
+        public static CommandLine Parse(params string[] args)
+            => new CommandLine(args);
 
         protected XunitProject Parse(Predicate<string> fileExists)
         {
@@ -102,6 +119,10 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                     break;
 
                 var assemblyFile = arguments.Pop();
+                if (IsConfigFile(assemblyFile))
+                    throw new ArgumentException($"expecting assembly, got config file: {assemblyFile}");
+                if (!fileExists(assemblyFile))
+                    throw new ArgumentException($"file not found: {assemblyFile}");
 
                 string configFile = null;
                 if (arguments.Count > 0)
@@ -117,9 +138,6 @@ namespace Microsoft.DotNet.XUnitRunnerUap
 
                 assemblies.Add(Tuple.Create(assemblyFile, configFile));
             }
-
-            if (assemblies.Count == 0)
-                throw new ArgumentException("must specify at least one assembly");
 
             var project = GetProjectFile(assemblies);
 
@@ -143,11 +161,34 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                     GuardNoOptionValue(option);
                     FailSkips = true;
                 }
+                else if (optionName == "stoponfail")
+                {
+                    GuardNoOptionValue(option);
+                    StopOnFail = true;
+                }
                 else if (optionName == "nocolor")
                 {
                     GuardNoOptionValue(option);
                     NoColor = true;
+                    TransformFactory.NoErrorColoring = NoColor;
                 }
+                else if (optionName == "noappdomain")    // Here for historical reasons
+                {
+                    GuardNoOptionValue(option);
+                    AppDomains = AppDomainSupport.Denied;
+                }
+                else if (optionName == "noautoreporters")
+                {
+                    GuardNoOptionValue(option);
+                    NoAutoReporters = true;
+                }
+#if DEBUG
+                else if (optionName == "pause")
+                {
+                    GuardNoOptionValue(option);
+                    Pause = true;
+                }
+#endif
                 else if (optionName == "debug")
                 {
                     GuardNoOptionValue(option);
@@ -158,11 +199,6 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                     GuardNoOptionValue(option);
                     Serialize = true;
                 }
-                else if (optionName == "verbose")
-                {
-                    GuardNoOptionValue(option);
-                    Verbose = true;
-                }
                 else if (optionName == "wait")
                 {
                     GuardNoOptionValue(option);
@@ -172,6 +208,34 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                 {
                     GuardNoOptionValue(option);
                     DiagnosticMessages = true;
+                }
+                else if (optionName == "internaldiagnostics")
+                {
+                    GuardNoOptionValue(option);
+                    InternalDiagnosticMessages = true;
+                }
+                else if (optionName == "appdomains")
+                {
+                    if (option.Value == null)
+                        throw new ArgumentException("missing argument for -appdomains");
+
+                    switch (option.Value)
+                    {
+                        case "ifavailable":
+                            AppDomains = AppDomainSupport.IfAvailable;
+                            break;
+
+                        case "required":
+                            break;
+
+                        case "denied":
+                            AppDomains = AppDomainSupport.Denied;
+                            break;
+
+                        default:
+                            throw new ArgumentException("incorrect argument value for -appdomains (must be 'ifavailable', 'required', or 'denied')");
+
+                    }
                 }
                 else if (optionName == "maxthreads")
                 {
@@ -202,8 +266,7 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                     if (option.Value == null)
                         throw new ArgumentException("missing argument for -parallel");
 
-                    ParallelismOption parallelismOption;
-                    if (!Enum.TryParse<ParallelismOption>(option.Value, out parallelismOption))
+                    if (!Enum.TryParse(option.Value, out ParallelismOption parallelismOption))
                         throw new ArgumentException("incorrect argument value for -parallel");
 
                     switch (parallelismOption)
@@ -228,6 +291,12 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                             ParallelizeTestCollections = false;
                             break;
                     }
+                }
+                else if (optionName == "noshadow")
+                {
+                    GuardNoOptionValue(option);
+                    foreach (var assembly in project.Assemblies)
+                        assembly.Configuration.ShadowCopy = false;
                 }
                 else if (optionName == "trait")
                 {
@@ -297,12 +366,24 @@ namespace Microsoft.DotNet.XUnitRunnerUap
 
                     project.Filters.ExcludedNamespaces.Add(option.Value);
                 }
-                else if (optionName == "xml")
+                else
                 {
-                    if (option.Value == null)
-                        throw new ArgumentException($"missing filename for {option.Key}");
+                    // Might be a result output file...
+                    if (TransformFactory.AvailableTransforms.Any(t => t.CommandLine.Equals(optionName, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        if (option.Value == null)
+                            throw new ArgumentException($"missing filename for {option.Key}");
 
-                    project.Output.Add(optionName, option.Value);
+                        EnsurePathExists(option.Value);
+
+                        project.Output.Add(optionName, option.Value);
+                    }
+                    // ...or it might be a reporter (we won't know until later)
+                    else
+                    {
+                        GuardNoOptionValue(option);
+                        unknownOptions.Add(optionName);
+                    }
                 }
             }
 
@@ -318,6 +399,16 @@ namespace Microsoft.DotNet.XUnitRunnerUap
                 value = arguments.Pop();
 
             return new KeyValuePair<string, string>(option, value);
+        }
+
+        static void EnsurePathExists(string path)
+        {
+            var directory = Path.GetDirectoryName(path);
+
+            if (string.IsNullOrEmpty(directory))
+                return;
+
+            Directory.CreateDirectory(directory);
         }
     }
 }

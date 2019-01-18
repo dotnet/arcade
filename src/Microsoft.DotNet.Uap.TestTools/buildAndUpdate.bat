@@ -2,7 +2,8 @@ setlocal
     echo off
     set RunnerSourceFolder=%1
     set LauncherSourceFolder=%2
-    set DestinationFolder=%3
+    set XUnitConsoleRunnerFolder=%3
+    set DestinationFolder=%4
     
     call :LauncherMain x86
     call :RunnerMain x86
@@ -16,6 +17,8 @@ setlocal
     call :LauncherMain arm64
     call :RunnerMain arm64
 
+    call :XUnitConsoleRunner
+
     echo on
     goto :EOF
 
@@ -26,7 +29,15 @@ setlocal
     msbuild /t:rebuild "%LauncherSourceFolder%\WindowsStoreAppLauncher.vcxproj" /p:Platform=%_platform% /p:Configuration=Release
 
     REM Copy the launcher executable
-    xcopy /y "%LauncherSourceFolder%\bin\%_platform%\Release\WindowsStoreAppLauncher.exe" "%DestinationFolder%\%_platform%\Launcher\"
+    xcopy /y "%LauncherSourceFolder%\bin\%_platform%\Release\WindowsStoreAppLauncher.exe" "%DestinationFolder%\Tools\%_platform%\Launcher\"
+    GOTO :EOF
+
+:XUnitConsoleRunner
+    REM Rebuild the runner
+    msbuild /t:rebuild "%XUnitConsoleRunnerFolder%\Microsoft.DotNet.XUnitConsoleRunner.csproj" /p:DefineConstants="WINDOWS_UWP" /p:OutputPath="bin\WINDOWS_UWP"
+
+    REM Copy the runner executable
+    xcopy /y "%XUnitConsoleRunnerFolder%\bin\WINDOWS_UWP\*" "%DestinationFolder%\lib\netcoreapp2.0\"
     GOTO :EOF
 
 :RunnerMain
@@ -42,12 +53,13 @@ setlocal
     IF "%_platform%" == "arm64" (
         makeappx unpack /l /o /p "%RunnerSourceFolder%\bin\AppPackages\Microsoft.DotNet.XUnitRunnerUap_1.0.0.0_%_platform%_Debug_Test\Dependencies\%_platform%\Microsoft.VCLibs.%_platform%.14.00.appx" /d "%RunnerSourceFolder%\bin\unpack\Microsoft.VCLibs.%_platform%.Debug.14.00\%_platform%"
     ) ELSE (
-        makeappx unpack /l /o /p "%RunnerSourceFolder%\bin\AppPackages\Microsoft.DotNet.XUnitRunnerUap_1.0.0.0_%_platform%_Debug_Test\Dependencies\%_platform%\Microsoft.NET.CoreRuntime.2.1.appx" /d "%RunnerSourceFolder%\bin\unpack\Microsoft.NET.CoreRuntime.2.1\%_platform%"
+        makeappx unpack /l /o /p "%RunnerSourceFolder%\bin\AppPackages\Microsoft.DotNet.XUnitRunnerUap_1.0.0.0_%_platform%_Debug_Test\Dependencies\%_platform%\Microsoft.NET.CoreRuntime.2.2.appx" /d "%RunnerSourceFolder%\bin\unpack\Microsoft.NET.CoreRuntime.2.2\%_platform%"
+        makeappx unpack /l /o /p "%RunnerSourceFolder%\bin\AppPackages\Microsoft.DotNet.XUnitRunnerUap_1.0.0.0_%_platform%_Debug_Test\Dependencies\%_platform%\Microsoft.NET.CoreFramework.Debug.2.2.appx" /d "%RunnerSourceFolder%\bin\unpack\Microsoft.NET.CoreFramework.Debug.2.2\%_platform%"
         makeappx unpack /l /o /p "%RunnerSourceFolder%\bin\AppPackages\Microsoft.DotNet.XUnitRunnerUap_1.0.0.0_%_platform%_Debug_Test\Dependencies\%_platform%\Microsoft.VCLibs.%_platform%.Debug.14.00.appx" /d "%RunnerSourceFolder%\bin\unpack\Microsoft.VCLibs.%_platform%.Debug.14.00\%_platform%"
     )
 
     REM Copy the files we care about from the unpacked folder
-    call :RunnerCopy "%RunnerSourceFolder%\bin\unpack" "%DestinationFolder%\%_platform%\Runner"
+    call :RunnerCopy "%RunnerSourceFolder%\bin\unpack" "%DestinationFolder%\Tools\%_platform%\Runner"
     GOTO :EOF
 
 :RunnerCopy
@@ -71,27 +83,24 @@ setlocal
     IF "%_platform%" == "arm64" (
         xcopy /y %_mainSource%\clrcompression.dll %_dest%\
         xcopy /y %_mainSource%\Microsoft.DotNet.XUnitRunnerUap.dll %_dest%\
-        xcopy /y %_mainSource%\mrt100.dll %_dest%\
-        xcopy /y %_mainSource%\mrt100_app.dll %_dest%\
-        xcopy /y %_mainSource%\vcruntime140_app.dll %_dest%\
     ) ELSE (
         xcopy /y %_mainSource%\entrypoint\Microsoft.DotNet.XUnitRunnerUap.exe %_dest%\entrypoint\
         xcopy /y %_mainSource%\Properties\Default.rd.xml %_dest%\Properties\
         xcopy /y %_mainSource%\WinMetadata\Windows.winmd %_dest%\WinMetadata\
-        xcopy /y %_mainSource%\System.ServiceModel.dll %_dest%\
-        xcopy /y %_mainSource%\System.ServiceModel.Duplex.dll %_dest%\
-        xcopy /y %_mainSource%\System.ServiceModel.Http.dll %_dest%\
-        xcopy /y %_mainSource%\System.ServiceModel.NetTcp.dll %_dest%\
-        xcopy /y %_mainSource%\System.ServiceModel.Primitives.dll %_dest%\
-        xcopy /y %_mainSource%\System.ServiceModel.Security.dll %_dest%\
-        xcopy /y %_mainSource%\System.ServiceModel.Web.dll %_dest%\
-        xcopy /y %_mainSource%\System.ServiceProcess.dll %_dest%\
+        xcopy /y "%_source%\Microsoft.NET.CoreFramework.Debug.2.2\%_platform%\System.ServiceModel.dll" %_dest%\
+        xcopy /y "%_source%\Microsoft.NET.CoreFramework.Debug.2.2\%_platform%\System.ServiceModel.Duplex.dll" %_dest%\
+        xcopy /y "%_source%\Microsoft.NET.CoreFramework.Debug.2.2\%_platform%\System.ServiceModel.Http.dll" %_dest%\
+        xcopy /y "%_source%\Microsoft.NET.CoreFramework.Debug.2.2\%_platform%\System.ServiceModel.NetTcp.dll" %_dest%\
+        xcopy /y "%_source%\Microsoft.NET.CoreFramework.Debug.2.2\%_platform%\System.ServiceModel.Primitives.dll" %_dest%\
+        xcopy /y "%_source%\Microsoft.NET.CoreFramework.Debug.2.2\%_platform%\System.ServiceModel.Security.dll" %_dest%\
+        xcopy /y "%_source%\Microsoft.NET.CoreFramework.Debug.2.2\%_platform%\System.ServiceModel.Web.dll" %_dest%\
+        xcopy /y "%_source%\Microsoft.NET.CoreFramework.Debug.2.2\%_platform%\System.ServiceProcess.dll" %_dest%\
         xcopy /y %_mainSource%\xunit.abstractions.dll %_dest%\
         xcopy /y %_mainSource%\xunit.assert.dll %_dest%\
         xcopy /y %_mainSource%\xunit.core.dll %_dest%\
         xcopy /y %_mainSource%\xunit.execution.dotnet.dll %_dest%\
         xcopy /y %_mainSource%\xunit.runner.utility.uwp10.dll %_dest%\
-        xcopy /y "%_source%\Microsoft.NET.CoreRuntime.2.1\%_platform%\uwphost.dll" "%_dest%\"
+        xcopy /y "%_source%\Microsoft.NET.CoreRuntime.2.2\%_platform%\uwphost.dll" "%_dest%\"
     )
 
 GOTO:EOF
