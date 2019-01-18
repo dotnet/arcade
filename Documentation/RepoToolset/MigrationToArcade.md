@@ -2,7 +2,7 @@ To migrate your repo to the latest Arcade SDK it’s recommended to first switch
 If your repository contributes to .NET Core 3.0 stack build I’d also recommend first migrate to Arcade and then work on plugging the repo into the rest of .NET Core build infrastructure (Meastro, Helix, BAR, etc.)
 
 To get an idea what changes are needed to migrate to the latest Arcade SDK check out the following PRs and repos:
--	http://github.com/dotnet/roslyn-analyzers: [move to RepoToolset 63103-01](https://github.com/dotnet/roslyn-analyzers/commit/fb5890b88ff98cc346a060a18d86e7f0d0a1b270), move to [Arcade](https://github.com/dotnet/roslyn-analyzers/commit/b63e7bd97f9e9f73140a1858761f5373bf879259)
+-	http://github.com/dotnet/roslyn-analyzers: [move to RepoToolset 63103-01](https://github.com/dotnet/roslyn-analyzers/commit/b63e7bd97f9e9f73140a1858761f5373bf879259), move to [Arcade](https://github.com/dotnet/roslyn-analyzers/commit/fb5890b88ff98cc346a060a18d86e7f0d0a1b270)
 -	http://github.com/dotnet/roslyn-tools: [move to Arcade](https://github.com/dotnet/roslyn-tools/commit/e6bf1434af7dfa89f3574a1342dab47f875e7b43)
 -	http://github.com/dotnet/interactive-window  
 -	http://github.com/symreader 
