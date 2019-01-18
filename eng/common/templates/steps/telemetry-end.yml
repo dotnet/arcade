@@ -1,4 +1,8 @@
+parameters:
+  continueOnError: false
+
 steps:
+
 - bash: |
     if [ "$AGENT_JOBSTATUS" = "Succeeded" ] || [ "$AGENT_JOBSTATUS" = "PartiallySucceeded" ]; then
       errorCount=0
@@ -37,7 +41,9 @@ steps:
     # defined via VSTS variables in start-job.sh
     Helix_JobToken: $(Helix_JobToken)
     Helix_WorkItemId: $(Helix_WorkItemId)
+  continueOnError: ${{ parameters.continueOnError }}
   condition: and(always(), ne(variables['Agent.Os'], 'Windows_NT'))
+
 - powershell: |
     if (($env:Agent_JobStatus -eq 'Succeeded') -or ($env:Agent_JobStatus -eq 'PartiallySucceeded')) {
       $ErrorCount = 0
@@ -60,4 +66,5 @@ steps:
     # defined via VSTS variables in start-job.ps1
     Helix_JobToken: $(Helix_JobToken)
     Helix_WorkItemId: $(Helix_WorkItemId)
+  continueOnError: ${{ parameters.continueOnError }}
   condition: and(always(),eq(variables['Agent.Os'], 'Windows_NT'))

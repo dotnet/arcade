@@ -138,6 +138,7 @@ jobs:
         helixSource: $(_HelixSource)
         helixType: $(_HelixType)
         runAsPublic: ${{ parameters.runAsPublic }}
+        continueOnError: ${{ parameters.continueOnError }}
 
   - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
     - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -166,6 +167,8 @@ jobs:
 
   - ${{ if eq(parameters.enableTelemetry, 'true') }}:
     - template: /eng/common/templates/steps/telemetry-end.yml
+      parameters:
+        continueOnError: ${{ parameters.continueOnError }}
 
   - ${{ if eq(parameters.enablePublishBuildArtifacts, 'true') }}:
     - task: PublishBuildArtifacts@1

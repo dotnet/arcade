@@ -3,15 +3,19 @@ parameters:
   helixType: 'undefined_defaulted_in_telemetry.yml'
   buildConfig: ''
   runAsPublic: false
+  continueOnError: false
 
 steps:
+
 - ${{ if and(eq(parameters.runAsPublic, 'false'), not(eq(variables['System.TeamProject'], 'public'))) }}:
   - task: AzureKeyVault@1
     inputs:
       azureSubscription: 'HelixProd_KeyVault'
       KeyVaultName: HelixProdKV
       SecretsFilter: 'HelixApiAccessToken'
+    continueOnError: ${{ parameters.continueOnError }}
     condition: always()
+
 - bash: |
     # create a temporary file
     jobInfo=`mktemp`
@@ -75,7 +79,9 @@ steps:
     Attempt: 1
     OperatingSystem: $(Agent.Os)
     Configuration: ${{ parameters.buildConfig }}
+  continueOnError: ${{ parameters.continueOnError }}
   condition: and(always(), ne(variables['Agent.Os'], 'Windows_NT'))
+
 - bash: |
     res=`mktemp`
     curlResult=`
@@ -109,6 +115,7 @@ steps:
   env:
     BuildUri: $(System.TaskDefinitionsUri)$(System.TeamProject)/_build/index?buildId=$(Build.BuildId)&_a=summary
     Helix_JobToken: $(Helix_JobToken)
+  continueOnError: ${{ parameters.continueOnError }}
   condition: and(always(), ne(variables['Agent.Os'], 'Windows_NT'))
   
 - powershell: |
@@ -140,7 +147,9 @@ steps:
     Attempt: 1
     OperatingSystem: $(Agent.Os)
     Configuration: ${{ parameters.buildConfig }}
+  continueOnError: ${{ parameters.continueOnError }}
   condition: and(always(), eq(variables['Agent.Os'], 'Windows_NT'))
+
 - powershell: |
     $workItemId = Invoke-RestMethod -Uri "https://helix.dot.net/api/2018-03-14/telemetry/job/build?buildUri=$([Net.WebUtility]::UrlEncode($env:BuildUri))" -Method Post -ContentType "application/json" -Body "" `
       -Headers @{ 'X-Helix-Job-Token'=$env:Helix_JobToken }
@@ -151,4 +160,5 @@ steps:
   env:
     BuildUri: $(System.TaskDefinitionsUri)$(System.TeamProject)/_build/index?buildId=$(Build.BuildId)&_a=summary
     Helix_JobToken: $(Helix_JobToken)
+  continueOnError: ${{ parameters.continueOnError }}
   condition: and(always(), eq(variables['Agent.Os'], 'Windows_NT'))
