@@ -156,8 +156,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     strings.AppendLine(line);
                 }
 
-                string identifier = IsLetterChar(CharUnicodeInfo.GetUnicodeCategory(name[0])) ? name : "_" + name;
-
+                string memberName = GetValidMemberName(name);
                 string defaultValue = IncludeDefaultValues ? ", " + CreateStringLiteral(value, language) : string.Empty;
 
                 switch (language)
@@ -165,22 +164,22 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     case Lang.CSharp:
                         if (AsConstants)
                         {
-                            strings.AppendLine($"{memberIndent}internal const string {name} = nameof({name});");
+                            strings.AppendLine($"{memberIndent}internal const string {memberName} = nameof({name});");
                         }
                         else
                         {
-                            strings.AppendLine($"{memberIndent}internal static string {identifier} => GetResourceString(\"{name}\"{defaultValue});");
+                            strings.AppendLine($"{memberIndent}internal static string {memberName} => GetResourceString(\"{name}\"{defaultValue});");
                         }
                         break;
 
                     case Lang.VisualBasic:
                         if (AsConstants)
                         {
-                            strings.AppendLine($"{memberIndent}Friend Const {name} As String = \"{name}\"");
+                            strings.AppendLine($"{memberIndent}Friend Const {memberName} As String = \"{name}\"");
                         }
                         else
                         {
-                            strings.AppendLine($"{memberIndent}Friend Shared ReadOnly Property {identifier} As String");
+                            strings.AppendLine($"{memberIndent}Friend Shared ReadOnly Property {memberName} As String");
                             strings.AppendLine($"{memberIndent}  Get");
                             strings.AppendLine($"{memberIndent}    Return GetResourceString(\"{name}\"{defaultValue})");
                             strings.AppendLine($"{memberIndent}  End Get");
@@ -377,6 +376,19 @@ Imports System.Reflection
             stringLiteral.Append('\"');
 
             return stringLiteral.ToString();
+        }
+
+        private string GetValidMemberName(string name)
+        {
+            if (!IsLetterChar(CharUnicodeInfo.GetUnicodeCategory(name[0])))
+            {
+                name = $"_{name}";
+            }
+            if (name.Contains("."))
+            {
+                name = name.Replace(".", "_");
+            }
+            return name;
         }
 
         private static void SplitName(string fullName, out string namespaceName, out string className)
