@@ -109,13 +109,29 @@ namespace Xunit.ConsoleClient
         public static CommandLine Parse(params string[] args)
             => new CommandLine(args);
 
+        protected void ParseRspFile(string path)
+        {
+            if (!File.Exists(path))
+            {
+                throw new ArgumentException($"file not found: {path}");
+            }
+
+            foreach (string line in File.ReadLines(path))
+            {
+                foreach (var arg in line.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries).Reverse())
+                {
+                    arguments.Push(arg);
+                }
+            }
+        }
+
         protected XunitProject Parse(Predicate<string> fileExists)
         {
             var assemblies = new List<Tuple<string, string>>();
 
             while (arguments.Count > 0)
             {
-                if (arguments.Peek().StartsWith("-", StringComparison.Ordinal))
+                if (arguments.Peek().StartsWith("-", StringComparison.Ordinal) || arguments.Peek().StartsWith("@", StringComparison.Ordinal))
                     break;
 
                 var assemblyFile = arguments.Pop();
@@ -146,8 +162,14 @@ namespace Xunit.ConsoleClient
                 var option = PopOption(arguments);
                 var optionName = option.Key.ToLowerInvariant();
 
-                if (!optionName.StartsWith("-", StringComparison.Ordinal))
+                if (!optionName.StartsWith("-", StringComparison.Ordinal) && !optionName.StartsWith("@", StringComparison.Ordinal))
                     throw new ArgumentException($"unknown command line option: {option.Key}");
+
+                if (optionName.StartsWith("@", StringComparison.Ordinal))
+                {
+                    ParseRspFile(optionName.Substring(1));
+                    continue;
+                }
 
                 optionName = optionName.Substring(1);
 
@@ -395,8 +417,12 @@ namespace Xunit.ConsoleClient
             var option = arguments.Pop();
             string value = null;
 
-            if (arguments.Count > 0 && !arguments.Peek().StartsWith("-", StringComparison.Ordinal))
+            if (arguments.Count > 0 && 
+                !arguments.Peek().StartsWith("-", StringComparison.Ordinal) &&
+                !arguments.Peek().StartsWith("@", StringComparison.Ordinal))
+            {
                 value = arguments.Pop();
+            }
 
             return new KeyValuePair<string, string>(option, value);
         }
