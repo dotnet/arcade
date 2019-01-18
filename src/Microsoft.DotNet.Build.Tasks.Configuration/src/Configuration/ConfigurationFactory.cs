@@ -190,7 +190,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
 
                 var defaultValue = property.DefaultValue;
 
-                if (baseConfiguration != null && property.Independent)
+                if (baseConfiguration != null && property.Insignificant)
                 {
                     if (baseConfiguration.Values == null || 
                         baseConfiguration.Values.Length < propertyIndex || 
