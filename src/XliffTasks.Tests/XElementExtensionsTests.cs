@@ -4,22 +4,12 @@
 using System.Xml.Linq;
 using XliffTasks.Model;
 using Xunit;
+using static XliffTasks.Model.XlfNames;
 
 namespace XliffTasks.Tests
 {
     public class XElementExtensionsTests
     {
-        private static XNamespace XliffNS = "urn:oasis:names:tc:xliff:document:1.2";
-        private static XNamespace XsiNS = "http://www.w3.org/2001/XMLSchema-instance";
-        private static XName Xliff = XliffNS + "xliff";
-        private static XName File = XliffNS + "file";
-        private static XName Body = XliffNS + "body";
-        private static XName Group = XliffNS + "group";
-        private static XName TransUnit = XliffNS + "trans-unit";
-        private static XName Source = XliffNS + "source";
-        private static XName Target = XliffNS + "target";
-        private static XName Note = XliffNS + "note";
-
         [Fact]
         public void GetTargetValueOrDefault_ReturnsTargetWhenTargetIsPresent()
         {

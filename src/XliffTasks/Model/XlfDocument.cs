@@ -3,12 +3,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using XliffTasks.Tasks;
+using static XliffTasks.Model.XlfNames;
 
 namespace XliffTasks.Model
 {
@@ -23,16 +23,7 @@ namespace XliffTasks.Model
     {
         private static XmlSchemaSet s_schemaSet;
         
-        private static XNamespace XliffNS = "urn:oasis:names:tc:xliff:document:1.2";
         private static XNamespace XsiNS = "http://www.w3.org/2001/XMLSchema-instance";
-        private static XName Xliff = XliffNS + "xliff";
-        private static XName File = XliffNS + "file";
-        private static XName Body = XliffNS + "body";
-        private static XName Group = XliffNS + "group";
-        private static XName TransUnit = XliffNS + "trans-unit";
-        private static XName Source = XliffNS + "source";
-        private static XName Target = XliffNS + "target";
-        private static XName Note = XliffNS + "note";
 
         private XDocument _document;
 
@@ -44,7 +35,7 @@ namespace XliffTasks.Model
         /// <summary>
         /// Loads (or reloads) the document content from the given reader.
         /// </summary>
-        public override void Load(TextReader reader)
+        public override void Load(System.IO.TextReader reader)
         {
             _document = XDocument.Load(reader);
         }
@@ -71,7 +62,7 @@ namespace XliffTasks.Model
         /// <summary>
         /// Saves the document's content (with translations applied if <see cref="Translate" /> was called) to the given file path.
         /// </summary>
-        public override void Save(TextWriter writer)
+        public override void Save(System.IO.TextWriter writer)
         {
             EnsureContent();
             _document.SaveCustom(writer);
@@ -117,7 +108,6 @@ namespace XliffTasks.Model
             foreach (XElement unitElement in bodyElement.Descendants(TransUnit).ToList())
             {
                 XElement sourceElement = unitElement.Element(Source);
-                
                 XElement targetElement = unitElement.Element(Target);
                 XElement noteElement = unitElement.Element(Note);
                 XAttribute idAttribute = unitElement.Attribute("id");
@@ -326,9 +316,9 @@ namespace XliffTasks.Model
         {
             if (s_schemaSet == null)
             {
-                Stream xmlSchemaResourceStream = typeof(XlfDocument).Assembly.GetManifestResourceStream("XliffTasks.Model.xml.xsd");
+                System.IO.Stream xmlSchemaResourceStream = typeof(XlfDocument).Assembly.GetManifestResourceStream("XliffTasks.Model.xml.xsd");
                 XmlReader xmlSchemaReader = XmlReader.Create(xmlSchemaResourceStream);
-                Stream xliffSchemaResourceStream = typeof(XlfDocument).Assembly.GetManifestResourceStream("XliffTasks.Model.xliff-core-1.2-transitional.xsd");
+                System.IO.Stream xliffSchemaResourceStream = typeof(XlfDocument).Assembly.GetManifestResourceStream("XliffTasks.Model.xliff-core-1.2-transitional.xsd");
                 XmlReader xliffSchemaReader = XmlReader.Create(xliffSchemaResourceStream);
 
                 var schemas = new XmlSchemaSet();

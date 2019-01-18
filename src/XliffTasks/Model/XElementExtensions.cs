@@ -1,23 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System.Xml.Linq;
+using static XliffTasks.Model.XlfNames;
 
 namespace XliffTasks.Model
 {
     internal static class XElementExtensions
     {
-        private static XNamespace XliffNS = "urn:oasis:names:tc:xliff:document:1.2";
-        private static XNamespace XsiNS = "http://www.w3.org/2001/XMLSchema-instance";
-        private static XName Xliff = XliffNS + "xliff";
-        private static XName File = XliffNS + "file";
-        private static XName Body = XliffNS + "body";
-        private static XName Group = XliffNS + "group";
-        private static XName TransUnit = XliffNS + "trans-unit";
-        private static XName Source = XliffNS + "source";
-        private static XName Target = XliffNS + "target";
-        private static XName Note = XliffNS + "note";
-
         public static string GetTargetValueOrDefault(this XElement transUnitElement) => 
             transUnitElement.Element(Target)?.Value
             ?? transUnitElement.Element(Source).Value;
