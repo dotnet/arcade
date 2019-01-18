@@ -108,7 +108,7 @@ namespace XliffTasks.Model
             foreach (XElement unitElement in bodyElement.Descendants(TransUnit).ToList())
             {
                 string id = unitElement.GetId();
-                string state = unitElement.GetTargetStateOrDefault();
+                string state = unitElement.GetTargetState();
                 string source = unitElement.GetSourceValue();
                 string note = unitElement.GetNoteValue();
 
@@ -160,7 +160,7 @@ namespace XliffTasks.Model
                 // Note we don't limit this check to when the source has changed in the original
                 // document because we also want to catch errors introduced during translation.
                 var sourceReplacementCount = unitElement.GetSourceValue().GetReplacementCount();
-                var targetReplacementCount = unitElement.GetTargetValueOrDefault().GetReplacementCount();
+                var targetReplacementCount = unitElement.GetTargetValue().GetReplacementCount();
 
                 if (targetReplacementCount != sourceReplacementCount)
                 {
@@ -265,7 +265,7 @@ namespace XliffTasks.Model
             foreach (var element in _document.Descendants(TransUnit))
             {
                 string id = element.GetId();
-                string target = element.GetTargetValueOrDefault();
+                string target = element.GetTargetValue();
 
                 dictionary.Add(id, target);
             }
@@ -281,7 +281,7 @@ namespace XliffTasks.Model
                 (_document.Descendants(TransUnit)
                  .Where(tu =>
                  {
-                     return tu.GetTargetStateOrDefault() != "translated";
+                     return tu.GetTargetState() != "translated";
                  })
                  .Select(tu => tu.GetId()));
 

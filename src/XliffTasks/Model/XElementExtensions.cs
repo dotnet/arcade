@@ -8,7 +8,7 @@ namespace XliffTasks.Model
 {
     internal static class XElementExtensions
     {
-        public static string GetTargetValueOrDefault(this XElement transUnitElement) => 
+        public static string GetTargetValue(this XElement transUnitElement) => 
             transUnitElement.Element(Target)?.Value
             ?? transUnitElement.Element(Source).Value;
 
@@ -29,7 +29,7 @@ namespace XliffTasks.Model
             }
         }
 
-        public static string GetTargetStateOrDefault(this XElement transUnitElement) =>
+        public static string GetTargetState(this XElement transUnitElement) =>
             transUnitElement.Element(Target)?.Attribute("state")?.Value
             ?? "new";
 

@@ -18,7 +18,7 @@ namespace XliffTasks.Tests
                     new XElement(Source, "source text"),
                     new XElement(Target, "target text"));
 
-            string targetValue = transUnitElement.GetTargetValueOrDefault();
+            string targetValue = transUnitElement.GetTargetValue();
 
             Assert.Equal(expected: "target text", actual: targetValue);
         }
@@ -31,7 +31,7 @@ namespace XliffTasks.Tests
                     new XElement(Source, "source text"),
                     new XElement(Target, string.Empty));
 
-            string targetValue = transUnitElement.GetTargetValueOrDefault();
+            string targetValue = transUnitElement.GetTargetValue();
 
             Assert.Equal(expected: string.Empty, actual: targetValue);
         }
@@ -43,7 +43,7 @@ namespace XliffTasks.Tests
                 new XElement(TransUnit,
                     new XElement(Source, "source text"));
 
-            string targetValue = transUnitElement.GetTargetValueOrDefault();
+            string targetValue = transUnitElement.GetTargetValue();
 
             Assert.Equal(expected: "source text", actual: targetValue);
         }
@@ -84,7 +84,7 @@ namespace XliffTasks.Tests
                     new XElement(Target,
                         new XAttribute("state", "original state value")));
 
-            string stateValue = transUnitElement.GetTargetStateOrDefault();
+            string stateValue = transUnitElement.GetTargetState();
 
             Assert.Equal(expected: "original state value", actual: stateValue);
         }
@@ -96,7 +96,7 @@ namespace XliffTasks.Tests
                 new XElement(TransUnit,
                     new XElement(Target));
 
-            string stateValue = transUnitElement.GetTargetStateOrDefault();
+            string stateValue = transUnitElement.GetTargetState();
 
             Assert.Equal(expected: "new", actual: stateValue);
         }
@@ -106,7 +106,7 @@ namespace XliffTasks.Tests
         {
             XElement transUnitElement = new XElement(TransUnit);
 
-            string stateValue = transUnitElement.GetTargetStateOrDefault();
+            string stateValue = transUnitElement.GetTargetState();
 
             Assert.Equal(expected: "new", actual: stateValue);
         }
