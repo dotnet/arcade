@@ -9,6 +9,11 @@
   <Import Project="$(MSBuildThisFileDirectory)*/*.props"/>
 
   <PropertyGroup>
+    <!-- Normalize the Build value so the server normalization doesn't cause our URL generation to be bad. -->
+    <HelixBuild>$(HelixBuild.ToLower().Replace('-', '.'))</HelixBuild>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <HelixSdkTargets Condition="'$(HelixTargetQueue)' != ''">$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.Sdk.MonoQueue.targets</HelixSdkTargets>
     <HelixSdkTargets Condition="'$(HelixTargetQueue)' == ''">$(MSBuildThisFileDirectory)Microsoft.DotNet.Helix.Sdk.MultiQueue.targets</HelixSdkTargets>
   </PropertyGroup>
