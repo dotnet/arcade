@@ -6,7 +6,7 @@
     <HelixSource>pr/dotnet/arcade/$(BUILD_SOURCEBRANCH)/</HelixSource>
     <HelixType>test/product/</HelixType>
     <HelixBuild>$(BUILD_BUILDNUMBER)</HelixBuild>
-    <HelixBuild Condition="'$(HelixBuild)' == ''">93455.01</HelixBuild>
+    <HelixBuild Condition="'$(HelixBuild)' == ''">123459.01</HelixBuild>
 
     <IncludeDotNetCli>true</IncludeDotNetCli>
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
@@ -44,16 +44,17 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="Ubuntu.1604.Amd64.Open+RedHat.7.Amd64.Open"/>
-    <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
+    <HelixTargetQueue Include="Ubuntu.1604.Amd64.Open"/>
+    <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
+    <HelixTargetQueue Include="Windows.10.Amd64.ServerRS4.Open"/>
   </ItemGroup>
 
-  <PropertyGroup Condition="$(HelixTargetQueue.StartsWith('Ubuntu.1604.Amd64'))">
+  <PropertyGroup Condition="'$(HelixTargetQueue)' == 'Ubuntu.1604.Amd64'">
     <HelixPreCommands>$(HelixPreCommands);find $HELIX_CORRELATION_PAYLOAD -type f</HelixPreCommands>
     <HelixPreCommands>$(HelixPreCommands);find . -type f</HelixPreCommands>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(HelixTargetQueue)' == 'Windows.10.Amd64.Open'">
+  <PropertyGroup Condition="'$(HelixTargetQueue)' == 'Windows.10.Amd64'">
     <HelixPreCommands>$(HelixPreCommands);dir /s %HELIX_CORRELATION_PAYLOAD%</HelixPreCommands>
     <HelixPreCommands>$(HelixPreCommands);dir /s</HelixPreCommands>
   </PropertyGroup>

@@ -13,7 +13,7 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
-    public class SendHelixJobs : HelixTask
+    public class SendHelixJob : HelixTask
     {
         /// <summary>
         ///   The 'source' value reported to Helix
@@ -43,11 +43,10 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string Build { get; set; }
 
         /// <summary>
-        ///   The Helix queue(s) this job should run on ('+' separated)
-        ///   The exact same payloads and work items will be sent to each queue.
+        ///   The Helix queue this job should run on
         /// </summary>
         [Required]
-        public string TargetQueues { get; set; }
+        public string TargetQueue { get; set; }
 
         /// <summary>
         /// Required if sending anonymous, not allowed if authenticated
@@ -61,10 +60,10 @@ namespace Microsoft.DotNet.Helix.Sdk
         public bool IsPosixShell { get; set; }
 
         /// <summary>
-        ///   When the task finishes, the correlation ids of all the sent jobs.
+        ///   When the task finishes, the correlation id of the job that has been created
         /// </summary>
         [Output]
-        public string[] JobCorrelationIds { get; set; }
+        public string JobCorrelationId { get; set; }
 
         /// <summary>
         ///   A collection of commands that will run for each work item before any work item commands.
@@ -149,9 +148,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                     .WithSource(Source)
                     .WithType(Type)
                     .WithBuild(Build)
-                    .WithMultipleTargetQueues(TargetQueues.Split("+"))
+                    .WithTargetQueue(TargetQueue)
                     .WithMaxRetryCount(MaxRetryCount);
-                Log.LogMessage($"Initialized job definition with source '{Source}', type '{Type}', build number '{Build}', and target queue '{TargetQueues}'");
+                Log.LogMessage($"Initialized job definition with source '{Source}', type '{Type}', build number '{Build}', and target queue '{TargetQueue}'");
 
                 if (!string.IsNullOrEmpty(Creator))
                 {
@@ -200,8 +199,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 Log.LogMessage(MessageImportance.Normal, "Sending Job...");
 
-                List<ISentJob> jobs = await def.SendAsync(msg => Log.LogMessage(msg));
-                JobCorrelationIds = jobs.Select(j => j.CorrelationId).ToArray();
+                ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg));
+                JobCorrelationId = job.CorrelationId;
             }
         }
 

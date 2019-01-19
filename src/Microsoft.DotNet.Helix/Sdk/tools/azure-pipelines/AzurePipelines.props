@@ -23,7 +23,7 @@
     <_HelixMultiQueueTargets>$(_HelixMultiQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.MultiQueue.targets</_HelixMultiQueueTargets>
   </PropertyGroup>
 
-  <Target Name="ValidateAzurePipelinesConfiguration" Condition="$(EnableAzurePipelinesReporter) AND '$(HelixTargetQueue)' == ''" BeforeTargets="CoreTest">
+  <Target Name="ValidateAzurePipelinesConfiguration" Condition="$(EnableAzurePipelinesReporter) AND '$(HelixTargetQueue)' == ''" BeforeTargets="StartTestRuns;Test">
     <Error Condition="!$(AzurePipelinesAvaliable)" Text="Azure Pipelines SYSTEM_ACCESSTOKEN variable not found. Either the build is not running in Azure Pipelines, or the current step is not configured correctly. Please configure this step with the System.AccessToken variable, see: https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=vsts&amp;tabs=yaml%2Cbatch#systemaccesstoken"/>
   </Target>
 </Project>

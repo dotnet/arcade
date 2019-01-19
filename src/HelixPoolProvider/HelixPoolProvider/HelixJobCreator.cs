@@ -11,6 +11,7 @@ using Microsoft.Rest;
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.HelixPoolProvider
@@ -89,7 +90,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
                 agentSettingsPath = CreateAgentSettingsPayload();
 
                 // Now that we have a valid queue, construct the Helix job on that queue
-                var job = await _api.Job.Define()
+                var job = (await _api.Job.Define()
                     .WithSource($"agent/{_agentRequestItem.accountId}/")
                     .WithType(string.Empty)
                     .WithBuild("1.0")
@@ -103,7 +104,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
                     .WithFiles(credentialsPath, agentSettingsPath, StartupScriptPath)
                     .WithTimeout(TimeSpan.FromMinutes((double)_configuration.TimeoutInMinutes))
                     .AttachToJob()
-                    .SendAsync();
+                    .SendAsync()).Single();
 
                 _logger.LogInformation($"Successfully submitted new Helix job {job.CorrelationId} to queue {_queueInfo.QueueId} for agent id {_agentRequestItem.agentId}");
 

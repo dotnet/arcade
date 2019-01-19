@@ -40,10 +40,7 @@ namespace Microsoft.DotNet.Helix.Client
         public string Source { get; private set; }
         public string Type { get; private set; }
         public string Build { get; private set; }
-
-        private List<string> _targetQueueIds = new List<string>();
-        public IReadOnlyList<string> TargetQueueIds => _targetQueueIds.AsReadOnly();
-
+        public string TargetQueueId { get; private set; }
         public string Creator { get; private set; }
         public IList<IPayload> CorrelationPayloads { get; } = new List<IPayload>();
         public int? MaxRetryCount { get; private set; }
@@ -122,7 +119,7 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
-        public async Task<List<ISentJob>> SendAsync(Action<string> log = null)
+        public async Task<ISentJob> SendAsync(Action<string> log = null)
         {
             IBlobHelper storage;
             if (string.IsNullOrEmpty(StorageAccountConnectionString))
@@ -152,34 +149,29 @@ namespace Microsoft.DotNet.Helix.Client
                 jobListJson,
                 $"job-list-{Guid.NewGuid()}.json");
 
-            var sentJobs = new List<ISentJob>();
 
-            foreach (var targetQueueId in TargetQueueIds)
-            {
-                string jobStartIdentifier = Guid.NewGuid().ToString("N");
-                JobCreationResult newJob = await HelixApi.RetryAsync(
-                    () => JobApi.NewAsync(
-                        new JobCreationRequest(
-                            Source,
-                            Type,
-                            Build,
-                            _properties.ToImmutableDictionary()
-                                .Add("operatingSystem", targetQueueId),
-                            jobListUri.ToString(),
-                            targetQueueId,
-                            storageContainer.Uri,
-                            storageContainer.ReadSas,
-                            storageContainer.WriteSas)
-                        {
-                            Creator = Creator,
-                            MaxRetryCount = MaxRetryCount ?? 0,
-                            JobStartIdentifier = jobStartIdentifier,
-                        }),
-                    ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."));
-                sentJobs.Add(new SentJob(JobApi, newJob));
-            }
+            string jobStartIdentifier = Guid.NewGuid().ToString("N");
+            JobCreationResult newJob = await HelixApi.RetryAsync(
+                () => JobApi.NewAsync(
+                    new JobCreationRequest(
+                        Source,
+                        Type,
+                        Build,
+                        _properties.ToImmutableDictionary(),
+                        jobListUri.ToString(),
+                        TargetQueueId,
+                        storageContainer.Uri,
+                        storageContainer.ReadSas,
+                        storageContainer.WriteSas)
+                    {
+                        Creator = Creator,
+                        MaxRetryCount = MaxRetryCount ?? 0,
+                        JobStartIdentifier = jobStartIdentifier,
+                    }),
+                ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."));
 
-            return sentJobs;
+
+            return new SentJob(JobApi, newJob);
         }
 
         public IJobDefinitionWithTargetQueue WithBuild(string buildNumber)
@@ -196,12 +188,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         public IJobDefinition WithTargetQueue(string queueId)
         {
-            return WithMultipleTargetQueues(queueId);
-        }
-
-        public IJobDefinition WithMultipleTargetQueues(params string[] queueIds)
-        {
-            _targetQueueIds.AddRange(queueIds);
+            TargetQueueId = queueId;
             return this;
         }
 
