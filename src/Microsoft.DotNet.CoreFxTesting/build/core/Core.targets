@@ -8,7 +8,7 @@
     <TestAssembly Condition="'$(TestAssembly)' == ''">$(TargetFileName)</TestAssembly>
     <TestPath Condition="'$(TestPath)' == ''">$(OutDir)</TestPath>
     <RunWorkingDirectory>$(TestPath)</RunWorkingDirectory>
-    
+
     <!-- Publish the test data as part of the build to enable VS test runs. -->
     <PrepareForRunDependsOn>$(PrepareForRunDependsOn);PublishSupplementalTestData;</PrepareForRunDependsOn>
     <!-- Clean leftovers not tracked by FileWrites. -->
@@ -18,20 +18,17 @@
   <!-- RunScript -->
   <PropertyGroup>
     <RunScriptInputName Condition="'$(TargetOS)' == 'Windows_NT'">RunnerTemplate.Windows.txt</RunScriptInputName>
-    <RunScriptInputName Condition="'$(TargetOS)' != 'Windows_NT'">RunnerTemplate.Unix.txt</RunScriptInputName>     
+    <RunScriptInputName Condition="'$(TargetOS)' != 'Windows_NT'">RunnerTemplate.Unix.txt</RunScriptInputName>
     <RunScriptInputPath>$(TestAssetsDir)$(RunScriptInputName)</RunScriptInputPath>
 
     <RunScriptOutputName Condition="'$(TargetOS)' == 'Windows_NT'">RunTests.cmd</RunScriptOutputName>
-    <RunScriptOutputName Condition="'$(TargetOS)' != 'Windows_NT'">RunTests.sh</RunScriptOutputName>     
+    <RunScriptOutputName Condition="'$(TargetOS)' != 'Windows_NT'">RunTests.sh</RunScriptOutputName>
     <RunScriptOutputPath>$([MSBuild]::NormalizePath('$(TestPath)', '$(RunScriptOutputName)'))</RunScriptOutputPath>
 
     <RunScriptHostDir Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' == 'Windows_NT'">%RUNTIME_PATH%\</RunScriptHostDir>
     <RunScriptHostDir Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' != 'Windows_NT'">$RUNTIME_PATH/</RunScriptHostDir>
     <RunScriptHost Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' == 'Windows_NT'">$(RunScriptHostDir)dotnet.exe</RunScriptHost>
     <RunScriptHost Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' != 'Windows_NT'">$(RunScriptHostDir)dotnet</RunScriptHost>
-
-    <!-- In UAP we don't want the repro steps printed. -->
-    <RunScriptOutputEchoes Condition="'$(BuildingUAPVertical)' != 'true'">true</RunScriptOutputEchoes>
   </PropertyGroup>
 
   <Target Name="PublishSupplementalTestData"
@@ -62,7 +59,7 @@
 
   </Target>
 
-  <!-- 
+  <!--
     Archive test binaries along with supporting files.
 
     Inputs:
@@ -80,8 +77,8 @@
           SkipUnchangedFiles="true" />
 
     <MakeDir Directories="$(TestArchiveTestsDir)" />
-    <ZipDirectory SourceDirectory="$(TestPath)" 
-                  DestinationFile="$([MSBuild]::NormalizePath('$(TestArchiveTestsDir)', '$(TestProjectName).zip'))" 
+    <ZipDirectory SourceDirectory="$(TestPath)"
+                  DestinationFile="$([MSBuild]::NormalizePath('$(TestArchiveTestsDir)', '$(TestProjectName).zip'))"
                   Overwrite="true" />
 
   </Target>
@@ -100,12 +97,12 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(UseDotNetNativeToolchain)' == 'true' AND '$(ArchGroup)' == 'arm'">
-      <!-- 
+      <!--
         Currently (and probably forever) we can't build AOT on ARM,
         So if we're running on ARM, what we really want to do is encapsulate
         the test command into a script that can be run on another machine
       -->
-      <RunScriptCommand>echo $(RunScriptCommand)> .\RunContinuation.cmd</RunScriptCommand>  
+      <RunScriptCommand>echo $(RunScriptCommand)> .\RunContinuation.cmd</RunScriptCommand>
     </PropertyGroup>
 
     <ItemGroup>
@@ -127,8 +124,7 @@
     <GenerateRunScript
       RunCommands="@(RunScriptCommands)"
       TemplatePath="$(RunScriptInputPath)"
-      OutputPath ="$(RunScriptOutputPath)"
-      OutputEchoes="$(RunScriptOutputEchoes)" />
+      OutputPath ="$(RunScriptOutputPath)" />
 
     <Exec Condition="'$(TargetOS)' != 'Windows_NT'" Command="chmod +x $(RunScriptOutputPath)" />
 
@@ -173,19 +169,19 @@
     <PropertyGroup>
       <TestDisabled Condition="'%(UnsupportedPlatformsItems.Identity)' == '$(TargetOS)' OR '$(ConfigurationErrorMsg)' != ''">true</TestDisabled>
     </PropertyGroup>
-    
+
     <Message Text="ValidateTestPlatform found TargetOS of [$(TargetOS)]." Importance="Low" />
-    
+
     <Message Condition="'%(UnsupportedPlatformsItems.Identity)' == '$(TargetOS)'"
       Text="Skipping tests in $(AssemblyName) because it is not supported on $(TargetOS)" />
-    
+
     <Message Condition="'$(ConfigurationErrorMsg)' != ''"
       Text="Skipping tests in $(AssemblyName) because there is no configuration compatible with the current BuildConfiguration." />
 
   </Target>
 
-  <!-- 
-    SkipTests is a global property used in CI runs. Skips the test execution but 
+  <!--
+    SkipTests is a global property used in CI runs. Skips the test execution but
     still generates the test execution script and archives the test dir for Helix consumption.
   -->
   <Target Name="RunTests"
@@ -211,12 +207,12 @@
 
   </Target>
 
-  <!-- 
+  <!--
     Add a manual clean step for TestPath.
     Necessary as we are copying files into the TestPath as part of the Test Target after the build.
   -->
   <Target Name="CleanTestPath" Condition="Exists('$(TestPath)')">
-    
+
     <RemoveDir Directories="$(TestPath)"
                ContinueOnError="WarnAndContinue" />
 
@@ -228,7 +224,7 @@
   <Target Name="RebuildAndTest" DependsOnTargets="Rebuild;Test" />
 
   <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Core.uap.targets" />
-  
+
   <!--
     LaunchSettings.json support.
     Generates launchSettings.json files during compilation or on demand.

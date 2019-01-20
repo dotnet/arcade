@@ -21,8 +21,6 @@ namespace Microsoft.DotNet.Build.Tasks
         [Required]
         public string OutputPath { get; set; }
 
-        public bool OutputEchoes { get; set; }
-
         public override bool Execute()
         {
             if (RunCommands.Length == 0)
@@ -70,31 +68,28 @@ namespace Microsoft.DotNet.Build.Tasks
             }
             templateContent = templateContent.Replace("[[RunCommands]]", runCommandsBuilder.ToString());
 
-            string testRunEchoesText = "";
-            if (OutputEchoes)
+            var runCommandEchoesBuilder = new StringBuilder();
+            foreach (string runCommand in RunCommands)
             {
-                var runCommandEchoesBuilder = new StringBuilder();
-                foreach (string runCommand in RunCommands)
-                {
-                    // Escape backtick and question mark characters to avoid running commands instead of echo'ing them.
-                    string sanitizedRunCommand = runCommand.Replace("`", "\\`")
-                                                           .Replace("?", "\\")
-                                                           .Replace("\r","")
-                                                           .Replace("\n"," ");
+                // Escape backtick and question mark characters to avoid running commands instead of echo'ing them.
+                string sanitizedRunCommand = runCommand.Replace("`", "\\`")
+                                                        .Replace("?", "\\")
+                                                        .Replace("\r","")
+                                                        .Replace("\n"," ")
+                                                        .Replace("&", "^&")
+                                                        .Replace(">", "^>");
 
-                    if (isUnix)
-                    {
-                        // Remove parentheses and quotes from echo command before wrapping it in quotes to avoid errors on Linux.
-                        sanitizedRunCommand = "\"" + sanitizedRunCommand.Replace("\"", "")
-                                           .Replace("(", "")
-                                           .Replace(")", "") + "\"";
-                    }
-                    
-                    runCommandEchoesBuilder.Append($"echo {sanitizedRunCommand}{lineFeed}");
+                if (isUnix)
+                {
+                    // Remove parentheses and quotes from echo command before wrapping it in quotes to avoid errors on Linux.
+                    sanitizedRunCommand = "\"" + sanitizedRunCommand.Replace("\"", "")
+                                        .Replace("(", "")
+                                        .Replace(")", "") + "\"";
                 }
-                testRunEchoesText = runCommandEchoesBuilder.ToString();
+
+                runCommandEchoesBuilder.Append($"echo {sanitizedRunCommand}{lineFeed}");
             }
-            templateContent = templateContent.Replace("[[RunCommandsEcho]]", testRunEchoesText);
+            templateContent = templateContent.Replace("[[RunCommandsEcho]]", runCommandEchoesBuilder.ToString());
 
             if (isUnix)
             {
