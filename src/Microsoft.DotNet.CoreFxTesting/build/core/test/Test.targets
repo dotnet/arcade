@@ -2,10 +2,19 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
+  <PropertyGroup Condition="'$(BuildingUAPVertical)' == 'true'">
+    <!--
+      Inside an AppContainer we can't write into the WorkingDirectory. As the UAP Runner has
+      the capability to write to the user's documents folder, we use that instead.
+    -->
+    <UAPResultsPathCmd Condition="'$(UAPResultsPathCmd)' == ''">&quot;%USERPROFILE%\Documents\$(AssemblyName).xml&quot;</UAPResultsPathCmd>
+  </PropertyGroup>
+
   <!-- General xunit options -->
   <PropertyGroup>
     <RunArguments>$(TestAssembly)</RunArguments>
-    <RunArguments>$(RunArguments) -xml $(TestResultsName)</RunArguments>
+    <RunArguments Condition="'$(BuildingUAPVertical)' != 'true'">$(RunArguments) -xml $(TestResultsName)</RunArguments>
+    <RunArguments Condition="'$(BuildingUAPVertical)' == 'true'">$(RunArguments) -xml $(UAPResultsPathCmd)</RunArguments>
     <RunArguments>$(RunArguments) -nologo</RunArguments>
     <RunArguments>$(RunArguments) -notrait category=non$(_bc_TargetGroup)tests</RunArguments>
 
@@ -31,7 +40,7 @@
     <_withoutCategories Condition="'$(Outerloop)' != 'true'">$(_withoutCategories);Outerloop</_withoutCategories>
     <RunArguments>$(RunArguments)$(_withCategories.Replace(';', ' -trait category='))</RunArguments>
     <RunArguments>$(RunArguments)$(_withoutCategories.Replace(';', ' -notrait category='))</RunArguments>
-    
+
     <!-- User passed in options. -->
     <RunArguments Condition="'$(XUnitOptions)' != ''">$(RunArguments) $(XUnitOptions)</RunArguments>
   </PropertyGroup>
@@ -51,7 +60,7 @@
   <!-- Setup run commands. -->
   <Choose>
 
-    <When Condition="'$(BuildingNETCoreAppVertical)' == 'true'">  
+    <When Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
       <PropertyGroup>
         <TestRunnerName>xunit.console.dll</TestRunnerName>
         <TestRunnerNameWithoutExtension>$([System.IO.Path]::GetFileNameWithoutExtension('$(TestRunnerName)'))</TestRunnerNameWithoutExtension>
@@ -61,21 +70,18 @@
       </PropertyGroup>
     </When>
 
-    <When Condition="'$(BuildingNETFxVertical)' == 'true'">  
+    <When Condition="'$(BuildingNETFxVertical)' == 'true'">
       <PropertyGroup>
         <TestRunnerName>xunit.console.exe</TestRunnerName>
         <RunCommand>$(TestRunnerName)</RunCommand>
       </PropertyGroup>
     </When>
 
-    <When Condition="'$(BuildingUAPVertical)' == 'true'">  
+    <When Condition="'$(BuildingUAPVertical)' == 'true'">
       <PropertyGroup>
         <!-- Globally registered UWP console app. -->
         <TestRunnerName>XUnitRunnerUap</TestRunnerName>
         <RunCommand>$(TestRunnerName)</RunCommand>
-        
-        <!-- The location where the logs will be written by the test runner -->
-        <UAPResultsFolder Condition="'$(UAPResultsFolder)' == ''">%USERPROFILE%\Documents\TestResults\</UAPResultsFolder>
       </PropertyGroup>
 
       <ItemGroup>
@@ -91,7 +97,7 @@
         <!-- Install -->
         <RunScriptCommands Include="call &quot;$(LauncherPath)&quot; -install appxmanifest.xml $(TestAssembly)" />
         <RunScriptCommands Include="echo." />
-        
+
         <!-- Uninstall -->
         <PostRunScriptCommands Include="echo." />
         <!-- Save error level as the uninstall command overwrites the global one. -->
@@ -99,15 +105,15 @@
         <PostRunScriptCommands Include="call &quot;$(LauncherPath)&quot; -uninstall appxmanifest.xml $(TestAssembly)" />
 
         <!-- Copy the log files and the results files from the Documents folder to the test folder -->
-        <PostRunScriptCommands Include="move /Y &quot;$(UAPResultsFolder)$(TestAssembly).xml&quot; .\$(TestResultsName)" />
+        <PostRunScriptCommands Include="move /Y $(UAPResultsPathCmd) .\$(TestResultsName)" />
       </ItemGroup>
     </When>
 
-    <When Condition="'$(UseDotNetNativeToolchain)' == 'true'">  
+    <When Condition="'$(UseDotNetNativeToolchain)' == 'true'">
       <PropertyGroup>
         <TestRunnerName>xunit.console.exe</TestRunnerName>
         <RunCommand>$(TestRunnerName)</RunCommand>
-        
+
         <!-- We use the netcoreapp runner for ILC but change its extension to .exe to satisfy ILC. -->
         <OriginalTestRunnerName>xunit.console.dll</OriginalTestRunnerName>
 
