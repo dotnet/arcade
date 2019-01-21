@@ -79,7 +79,7 @@ namespace Microsoft.SignCheck.Verification
         /// <returns></returns>
         public bool IsExcluded(string path, string parent, string containerPath)
         {
-            return (Count > 0) && (IsFileExcluded(path) || IsFileExcluded(parent) || IsFileExcluded(containerPath));
+            return (Count > 0) && (IsParentExcluded(path) || IsFileExcluded(parent) || IsFileExcluded(containerPath));
         }
 
         /// <summary>
