@@ -258,5 +258,23 @@ namespace Microsoft.SignCheck.Verification
 
             return signatureVerificationResult;
         }
+
+        /// <summary>
+        /// Creates a SignatureVerificationResult for an excluded file type or file extension.
+        /// </summary>
+        /// <param name="path">The path to the excluded file.</param>
+        /// <param name="parent">The parent container of the excluded file</param>
+        /// <returns></returns>
+        public static SignatureVerificationResult ExcludedFileResult(string path, string parent)
+        {
+            var signatureVerificationResult = new SignatureVerificationResult(path, parent)
+            {
+                IsExcluded = true
+            };
+
+            signatureVerificationResult.AddDetail(DetailKeys.File, SignCheckResources.DetailExcluded);
+
+            return signatureVerificationResult;
+        }
     }
 }
