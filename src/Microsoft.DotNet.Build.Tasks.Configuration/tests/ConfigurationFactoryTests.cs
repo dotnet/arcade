@@ -130,9 +130,9 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration.Tests
         [InlineData("netcoreapp2.0", "netstandard")]
         [InlineData("netcoreapp-Windows_NT", "netstandard")]
         [InlineData("netcoreapp-Windows_NT", "netstandard-Windows_NT")]
-        [InlineData("netcoreapp-Windows_NT", "netstandard-x86")]
+        // [InlineData("netcoreapp-Windows_NT", "netstandard-x86")]
         [InlineData("netcoreapp-Windows_NT", "netstandard-Debug")]
-        [InlineData("netcoreapp-Windows_NT", "netstandard-x86-Debug")]
+        // [InlineData("netcoreapp-Windows_NT", "netstandard-x86-Debug")]
         [InlineData("netcoreapp", "netcoreapp2.2")]
         [InlineData("netcoreapp2.2", "netcoreapp2.1")]
         public void AreCompatible(string consuming, string referenced)
