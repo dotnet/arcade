@@ -111,11 +111,6 @@ namespace Xunit.ConsoleClient
 
         protected void ParseRspFile(string path)
         {
-            if (!File.Exists(path))
-            {
-                throw new ArgumentException($"file not found: {path}");
-            }
-
             foreach (string line in File.ReadLines(path))
             {
                 foreach (var arg in line.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries).Reverse())
