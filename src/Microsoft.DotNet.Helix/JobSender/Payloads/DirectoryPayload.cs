@@ -23,6 +23,8 @@ namespace Microsoft.DotNet.Helix.Client
 
         public DirectoryInfo DirectoryInfo { get; }
 
+        public string NormalizedDirectoryPath => Helpers.RemoveTrailingSlash(DirectoryInfo.FullName);
+
         public string ArchiveEntryPrefix { get; }
 
         public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log)
@@ -30,7 +32,10 @@ namespace Microsoft.DotNet.Helix.Client
             string dirHash;
             using (var hasher = SHA256.Create())
             {
-                dirHash = Convert.ToBase64String(hasher.ComputeHash(Encoding.UTF8.GetBytes(DirectoryInfo.FullName)));
+                dirHash = Convert.ToBase64String(hasher.ComputeHash(Encoding.UTF8.GetBytes(NormalizedDirectoryPath)));
+                dirHash = dirHash.TrimEnd('='); // base64 url encode it.
+                dirHash = dirHash.Replace('+', '-');
+                dirHash = dirHash.Replace('/', '_');
             }
             using (var mutex = new Mutex(false, $"Global\\{dirHash}"))
             {
@@ -61,7 +66,7 @@ namespace Microsoft.DotNet.Helix.Client
         private async Task<string> DoUploadAsync(IBlobContainer payloadContainer, Action<string> log)
         {
             await Task.Yield();
-            string basePath = Helpers.RemoveTrailingSlash(DirectoryInfo.FullName);
+            string basePath = NormalizedDirectoryPath;
 
             var alreadyUploadedFile = new FileInfo(basePath + ".payload");
             if (alreadyUploadedFile.Exists && IsUpToDate(alreadyUploadedFile))
