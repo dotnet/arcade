@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         public string[] Files { get; }
 
-        public async Task<string> UploadAsync(IBlobContainer payloadContainer)
+        public async Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log)
         {
             using (var stream = new MemoryStream())
             {

@@ -25,9 +25,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         public string ArchiveEntryPrefix { get; }
 
-#pragma warning disable 1998
-        public async Task<string> UploadAsync(IBlobContainer payloadContainer)
-#pragma warning restore 1998
+        public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log)
         {
             string dirHash;
             using (var hasher = SHA256.Create())
@@ -48,7 +46,7 @@ namespace Microsoft.DotNet.Helix.Client
                     }
 
                     hasMutex = true;
-                    return DoUploadAsync(payloadContainer).GetAwaiter().GetResult(); // Can't await because of mutex
+                    return Task.FromResult(DoUploadAsync(payloadContainer, log).GetAwaiter().GetResult()); // Can't await because of mutex
                 }
                 finally
                 {
@@ -60,23 +58,23 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
-        private async Task<string> DoUploadAsync(IBlobContainer payloadContainer)
+        private async Task<string> DoUploadAsync(IBlobContainer payloadContainer, Action<string> log)
         {
-            var alreadyUploadedFile = new FileInfo(Helpers.RemoveTrailingSlash(DirectoryInfo.FullName) + ".payload");
+            await Task.Yield();
+            string basePath = Helpers.RemoveTrailingSlash(DirectoryInfo.FullName);
+
+            var alreadyUploadedFile = new FileInfo(basePath + ".payload");
             if (alreadyUploadedFile.Exists && IsUpToDate(alreadyUploadedFile))
             {
-                Console.WriteLine($"Using previously uploaded payload for {DirectoryInfo.FullName}");
+                log?.Invoke($"Using previously uploaded payload for {basePath}");
                 return File.ReadAllText(alreadyUploadedFile.FullName);
             }
 
-            Console.WriteLine($"Uploading payload for {DirectoryInfo.FullName}");
+            log?.Invoke($"Uploading payload for {basePath}");
             using (var stream = new MemoryStream())
             {
                 using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, true))
                 {
-                    string basePath = DirectoryInfo.FullName;
-                    basePath = basePath.TrimEnd('/', '\\');
-
                     foreach (FileInfo file in DirectoryInfo.EnumerateFiles("*", SearchOption.AllDirectories))
                     {
                         string relativePath =
