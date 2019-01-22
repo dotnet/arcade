@@ -3,6 +3,7 @@
 <Project>
   <UsingTask TaskName="GenerateConfigurationProps" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
   <UsingTask TaskName="FindBestConfigurations" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
+  <UsingTask TaskName="NormalizeConfigurations" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
 
   <PropertyGroup>
     <_traversalBuildConfigurations>$(BuildConfiguration)</_traversalBuildConfigurations>
@@ -17,8 +18,20 @@
              Projects="@(Project)"
              Condition="'$(BuildAllConfigurations)' == 'true'">
       <Output TaskParameter="TargetOutputs"
-              ItemName="_projectBuildConfigurations" />
+              ItemName="_projectBuildConfigurationsExact" />
     </MSBuild>
+    
+    <ItemGroup>
+      <!-- we need to ignore placeholder build configurations that start with _ -->
+      <_projectBuildConfigurationsExact Remove="@(_projectBuildConfigurationsExact)" Condition="$([System.String]::Copy('%(Identity)').StartsWith('_'))" />      
+    </ItemGroup>
+
+    <NormalizeConfigurations Properties="@(Property)"
+                             PropertyValues="@(PropertyValue)"
+                             BuildConfiguration="$(BuildConfiguration)"
+                             Configurations="@(_projectBuildConfigurationsExact)">
+      <Output TaskParameter="NormalizedConfigurations" ItemName="_projectBuildConfigurations" />
+    </NormalizeConfigurations>
 
     <ItemGroup>
       <!-- assign configuration as a separate step to prevent batching during the transform which can reorder the list.
@@ -26,9 +39,6 @@
       <_projectBuildConfigurations>
         <AdditionalProperties>Configuration=%(Identity);%(_projectBuildConfigurations.AdditionalProperties)</AdditionalProperties>
       </_projectBuildConfigurations>
-
-      <!-- we need to ignore placeholder build configurations that start with _ -->
-      <_projectBuildConfigurations Remove="@(_projectBuildConfigurations)" Condition="$([System.String]::Copy('%(Identity)').StartsWith('_'))" />
 
       <!-- transform back to project -->
       <_projectWithConfiguration Include="@(_projectBuildConfigurations->'%(OriginalItemSpec)')" />
@@ -46,8 +56,20 @@
     <MSBuild Targets="GetPackageConfigurations"
              Projects="@(_NonPkgProjProjectReference)">
       <Output TaskParameter="TargetOutputs"
-              ItemName="_NonPkgProjProjectReferenceBuildConfigurations" />
+              ItemName="_NonPkgProjProjectReferenceBuildConfigurationsExact" />
     </MSBuild>
+    
+    <ItemGroup>
+      <!-- we need to ignore placeholder build configurations that start with _ -->
+      <_NonPkgProjProjectReferenceBuildConfigurationsExact Remove="@(_NonPkgProjProjectReferenceBuildConfigurationsExact)" Condition="$([System.String]::Copy('%(Identity)').StartsWith('_'))" />
+    </ItemGroup>
+
+    <NormalizeConfigurations Properties="@(Property)"
+                             PropertyValues="@(PropertyValue)"
+                             BuildConfiguration="$(BuildConfiguration)"
+                             Configurations="@(_NonPkgProjProjectReferenceBuildConfigurationsExact)">
+      <Output TaskParameter="NormalizedConfigurations" ItemName="_NonPkgProjProjectReferenceBuildConfigurations" />
+    </NormalizeConfigurations>
 
     <ItemGroup>
       <!-- assign configuration as a separate step to prevent batching during the transform which can reorder the list.
@@ -55,9 +77,6 @@
       <_NonPkgProjProjectReferenceBuildConfigurations>
         <AdditionalProperties>Configuration=%(Identity);%(_NonPkgProjProjectReferenceBuildConfigurations.AdditionalProperties)</AdditionalProperties>
       </_NonPkgProjProjectReferenceBuildConfigurations>
-
-      <!-- we need to ignore placeholder build configurations that start with _ -->
-      <_NonPkgProjProjectReferenceBuildConfigurations Remove="@(_NonPkgProjProjectReferenceBuildConfigurations)" Condition="$([System.String]::Copy('%(Identity)').StartsWith('_'))" />
 
       <!-- transform back to project -->
       <_NonPkgProjProjectReferenceWitnConfiguration Include="@(_NonPkgProjProjectReferenceBuildConfigurations->'%(OriginalItemSpec)')" />
@@ -158,7 +177,7 @@
     <!-- Find the best configuration for the current Project's Configuration -->
     <FindBestConfigurations Properties="@(Property)"
                             PropertyValues="@(PropertyValue)"
-                            SupportedConfigurations="$(_ProjectReferenceBuildConfigurations)"
+                            SupportedConfigurations="$(_projectReferenceBuildConfigurations)"
                             Configurations="$(Configuration)">
       <Output TaskParameter="BestConfigurations" PropertyName="_projectReferenceConfiguration" />
     </FindBestConfigurations>
@@ -174,11 +193,18 @@
 
   <Target Name="_getAllBuildConfigurations">
     <ItemGroup>
-      <_buildConfigurations Include="$(BuildConfigurations)" />
+      <_buildConfigurationsExact Include="$(BuildConfigurations)" />
       <!-- For BuildAllConfigurations we need to ignore any placeholder build configuration that starts with _ -->
-      <_buildConfigurations Remove="@(_buildConfigurations)" Condition="$([System.String]::Copy('%(Identity)').StartsWith('_'))" />
-      <_buildConfigurations Condition="'@(_buildConfigurations)' == ''" Include="$(_traversalBuildConfigurations)" />
+      <_buildConfigurationsExact Remove="@(_buildConfigurationsExact)" Condition="$([System.String]::Copy('%(Identity)').StartsWith('_'))" />
+      <_buildConfigurationsExact Condition="'@(_buildConfigurationsExact)' == ''" Include="$(_traversalBuildConfigurations)" />
     </ItemGroup>
+
+    <NormalizeConfigurations Properties="@(Property)"
+                             PropertyValues="@(PropertyValue)"
+                             BuildConfiguration="$(Configuration)"
+                             Configurations="@(_buildConfigurationsExact)">
+      <Output TaskParameter="NormalizedConfigurations" ItemName="_buildConfigurations" />
+    </NormalizeConfigurations>
   </Target>
 
   <Target Name="BuildAllConfigurations" DependsOnTargets="_getAllBuildConfigurations">

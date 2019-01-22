@@ -5,6 +5,7 @@
     <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
     <PackageType>MSBuildSdk</PackageType>
     <LangVersion>latest</LangVersion>
+    <DefaultItemExcludes Condition="'$(TargetFramework)' != 'net472'">**/*.Desktop.*</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +18,10 @@
     <ProjectReference Include="..\Client\CSharp\Microsoft.DotNet.Helix.Client.csproj" />
     <ProjectReference Include="..\JobSender\Microsoft.DotNet.Helix.JobSender.csproj" />
   </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'"> 
+    <Compile Include="..\..\Common\AssemblyResolver.cs" /> 
+  </ItemGroup> 
 
   <ItemGroup>
     <None Include="**\*.py;**\*.bat;**\*.sh" Pack="true">

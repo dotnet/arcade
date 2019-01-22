@@ -206,5 +206,14 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
             return GetConfigurationString(true, true, out unused);
         }
 
+        /// <summary>
+        /// Returns a string that doesn't omit default values
+        /// </summary>
+        /// <returns> a string that doesn't omit default values</returns>
+        public string ToFullString()
+        {
+            var unused = false;
+            return GetConfigurationString(false, true, out unused);
+        }
     }
 }

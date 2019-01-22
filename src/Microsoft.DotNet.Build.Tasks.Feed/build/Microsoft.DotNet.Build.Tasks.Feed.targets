@@ -36,6 +36,8 @@
     ManifestBuildId - Build ID listed in the manifest. Default: "no build id provided"
     ManifestBranch - Branch listed in the manifest. Default: none
     ManifestCommit - Commit listed in the manifest. Default: none
+    ManifestBuildData - Additional *key=value* attributes to append to the build manifest file (for dependency flow
+       this is commonly set to "Location=$(ExpectedFeedUrl)"
       Default: false
   -->
   

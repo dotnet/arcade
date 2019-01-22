@@ -37,7 +37,12 @@ artifacts
       $(Configuration)
   packages
     $(Configuration)
-      $(MSBuildProjectName).$(PackageVersion).nupkg
+      Shipping
+        $(MSBuildProjectName).$(PackageVersion).nupkg
+      NonShipping
+        $(MSBuildProjectName).$(PackageVersion).nupkg
+      Release
+      PreRelease
   TestResults
     $(Configuration)
       $(MSBuildProjectName)_$(TargetFramework)_$(TestArchitecture).(xml|html|log|error.log)
@@ -542,7 +547,7 @@ This step is required for repositories that build VS insertion components.
 
 ### `IsShipping` (bool)
 
-`true` if the asset (library, NuGet or VSIX) produced by the project is _shipping_, i.e. delivered to customers via an official channel. This channel can be NuGet.org, an official installer, etc.
+`true` if the asset (library, NuGet or VSIX) produced by the project is intended to be _shipping_, i.e. intended to be delivered to customers via an official channel. This channel can be NuGet.org, an official installer, etc. Setting this flag to true does not guarantee that the asset will actually ship in the next release of the product. It might be decided after the build is complete that although the artifact is ready for shipping it won't be shipped this release cycle.
 
 Set `IsShipping` property to `false` in
 
@@ -551,8 +556,12 @@ Set `IsShipping` property to `false` in
 - Test/build/automation utility projects (test projects are automatically marked as non-shipping by Arcade SDK targets).
 
 All libraries, packages and VSIXes are signed by default, regardless of whether they are _shipping_ or not.
+
 By default, Portable and Embedded PDBs produced by _shipping_ projects are converted to Windows PDBs and published to Microsoft symbol servers.
+
 By default, all _shipping_ libraries are localized.
+
+When `UsingToolNuGetRepack` is true _shipping_ packages are repackaged as release/pre-release packages to `artifacts\packages\$(Configuration)\Release` and `artifacts\packages\$(Configuration)\PreRelease` directories, respectively.
 
 ### `PublishWindowsPdb` (bool)
 
@@ -582,6 +591,12 @@ For example, consider a project that has `<TargetFrameworks>netcoreapp2.1;net472
 
 ```text
 msbuild Project.UnitTests.csproj /p:TestTargetFrameworks=netcoreapp2.1
+```
+
+To specify multiple target frameworks on command line quote the property value like so:
+
+```text
+msbuild Project.UnitTests.csproj /p:TestTargetFrameworks="netcoreapp2.1;net472"
 ```
 
 ### `TestRuntime` (string)
