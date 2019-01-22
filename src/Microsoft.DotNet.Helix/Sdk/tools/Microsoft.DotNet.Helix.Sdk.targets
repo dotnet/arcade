@@ -11,6 +11,8 @@
   <PropertyGroup>
     <!--
       Set by Microsoft.Common.targets, some targets must be removed while others are left as standard extension mechanisms.
+
+      We don't need to compile anything, but we want to still resolve project references to allow MSBuild extensions through PackageReferences.
     -->
     <CoreBuildDependsOn>
       BuildOnlySettings;
