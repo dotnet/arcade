@@ -118,17 +118,24 @@
 
   <UsingTask TaskName="FindBestConfigurations" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
   <Target Name="GetBinPlaceConfiguration" DependsOnTargets="GetBuildConfigurations">
+    <NormalizeConfigurations Properties="@(Property)"
+                             PropertyValues="@(PropertyValue)"
+                             BuildConfiguration="$(Configuration)"
+                             Configurations="@(BinPlaceConfiguration)">
+      <Output TaskParameter="NormalizedConfigurations" ItemName="_normalizedBinPlaceConfiguration" />
+    </NormalizeConfigurations>
+    
     <!-- find which, if any, build configuration of this project is best
          for each binplace configuration -->
     <FindBestConfigurations Properties="@(Property)"
                             PropertyValues="@(PropertyValue)"
                             SupportedConfigurations="$(_AllBuildConfigurations)"
-                            Configurations="@(BinPlaceConfiguration)">
+                            Configurations="@(_normalizedBinPlaceConfiguration)">
       <Output TaskParameter="BestConfigurations" ItemName="_bestBinlaceConfigurations" />
     </FindBestConfigurations>
 
     <ItemGroup>
-      <_currentBinPlaceConfigurations Include="@(_bestBinlaceConfigurations)" Condition="'%(Identity)' == '$(Configuration)' OR '%(Identity)-$(ConfigurationGroup)' == '$(Configuration)'" />
+      <_currentBinPlaceConfigurations Include="@(_bestBinlaceConfigurations)" Condition="'%(Identity)' == '$(Configuration)'" />
 
       <BinPlaceDir Condition="'$(BinPlaceTest)' == 'true'" Include="@(_currentBinPlaceConfigurations->'%(TestPath)')" />
       <BinPlaceDir Condition="'$(BinPlaceRuntime)' == 'true'" Include="@(_currentBinPlaceConfigurations->'%(RuntimePath)')" />
