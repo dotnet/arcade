@@ -11,7 +11,6 @@ using Microsoft.Rest;
 using Newtonsoft.Json;
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.HelixPoolProvider
