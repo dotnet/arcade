@@ -179,6 +179,15 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                 isPlaceHolderConfiguration = true;
             }
 
+            if (baseConfiguration != null)
+            {
+                if (baseConfiguration.Values == null ||
+                    baseConfiguration.Values.Length != PropertiesByOrder.Length)
+                {
+                    throw new ArgumentException($"Cannot use {nameof(baseConfiguration)} {baseConfiguration} since it doesn't define the same number of properties.");
+                }
+            }
+
             var values = configurationString.Split(PropertySeparator);
 
             var valueSet = new PropertyValue[PropertiesByOrder.Length];
@@ -188,19 +197,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                 var value = valueIndex < values.Length ? values[valueIndex] : null;
                 var property = PropertiesByOrder[propertyIndex];
 
-                var defaultValue = property.DefaultValue;
-
-                if (baseConfiguration != null && property.Insignificant)
-                {
-                    if (baseConfiguration.Values == null || 
-                        baseConfiguration.Values.Length < propertyIndex || 
-                        baseConfiguration.Values[propertyIndex].Property != property)
-                    {
-                        throw new ArgumentException($"Cannot use {nameof(baseConfiguration)} {baseConfiguration} since it doesn't define a matching property {property} at index {propertyIndex}.");
-                    }
-
-                    defaultValue = baseConfiguration.Values[propertyIndex];
-                }
+                var defaultValue = GetDefaultValue(property, baseConfiguration?.Values[propertyIndex]);
 
                 if (String.IsNullOrEmpty(value))
                 {
@@ -252,6 +249,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                         }
 
                         property = PropertiesByOrder[propertyIndex];
+                        defaultValue = GetDefaultValue(property, baseConfiguration?.Values[propertyIndex]);
                     }
                 }
 
@@ -264,6 +262,21 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
             {
                 IsPlaceHolderConfiguration = isPlaceHolderConfiguration
             };
+
+            PropertyValue GetDefaultValue(PropertyInfo property, PropertyValue baseValue)
+            {
+                if (baseValue != null && property.Insignificant)
+                {
+                    if (baseValue.Property != property)
+                    {
+                        throw new ArgumentException($"Cannot use {nameof(baseValue)} {baseValue} property {baseValue.Property} since it differs from property {property}.");
+                    }
+
+                    return baseValue;
+                }
+
+                return property.DefaultValue;
+            }
         }
     }
 }
