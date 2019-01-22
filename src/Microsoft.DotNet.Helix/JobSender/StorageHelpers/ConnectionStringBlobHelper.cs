@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -43,17 +43,29 @@ namespace Microsoft.DotNet.Helix.Client
             public override string WriteSas => _container.GetSharedAccessSignature(SasReadWrite);
 
 
-            private static readonly SharedAccessBlobPolicy SasReadOnly = new SharedAccessBlobPolicy
+            private SharedAccessBlobPolicy SasReadOnly
             {
-                SharedAccessExpiryTime = DateTime.UtcNow.AddDays(30),
-                Permissions = SharedAccessBlobPermissions.Read
-            };
+                get
+                {
+                    return new SharedAccessBlobPolicy
+                    {
+                        SharedAccessExpiryTime = DateTime.UtcNow.AddDays(30),
+                        Permissions = SharedAccessBlobPermissions.Read
+                    };
+                }
+            }
 
-            private static readonly SharedAccessBlobPolicy SasReadWrite = new SharedAccessBlobPolicy
+            private SharedAccessBlobPolicy SasReadWrite
             {
-                SharedAccessExpiryTime = DateTime.UtcNow.AddDays(30),
-                Permissions = SharedAccessBlobPermissions.Write | SharedAccessBlobPermissions.Read
-            };
+                get
+                {
+                    return new SharedAccessBlobPolicy
+                    {
+                        SharedAccessExpiryTime = DateTime.UtcNow.AddDays(30),
+                        Permissions = SharedAccessBlobPermissions.Write | SharedAccessBlobPermissions.Read
+                    };
+                }
+            }
 
             protected override (CloudBlockBlob blob, string sasToken) GetBlob(string blobName)
             {

@@ -148,7 +148,7 @@ namespace Microsoft.DotNet.Helix.Client
             Uri jobListUri = await storageContainer.UploadTextAsync(
                 jobListJson,
                 $"job-list-{Guid.NewGuid()}.json");
-
+            log?.Invoke($"Created job list at {jobListUri.ToString()}");
 
             string jobStartIdentifier = Guid.NewGuid().ToString("N");
             JobCreationResult newJob = await HelixApi.RetryAsync(
