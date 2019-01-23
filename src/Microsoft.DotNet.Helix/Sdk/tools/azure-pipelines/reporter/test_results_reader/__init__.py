@@ -40,8 +40,8 @@ def get_log_files(dir):
         if ext == ".log":
             print "Found log '{}'".format(path)
             uri = construct_log_uri(name)
-            print "Uri '{}'".format(path)
-            yield name, url
+            print "Uri '{}'".format(uri)
+            yield name, uri
 
 
 def construct_log_list(log_files):
