@@ -71,6 +71,18 @@ namespace Microsoft.SignCheck.Verification
         }
 
         /// <summary>
+        /// Return true if an exclusion matches the file path, parent file container or the path in the container
+        /// </summary>
+        /// <param name="path">The path of the file on disk.</param>
+        /// <param name="parent">The parent (container) of the file.</param>
+        /// <param name="containerPath">The path of the file in the container. May be null if the file is not embedded in a container.</param>
+        /// <returns></returns>
+        public bool IsExcluded(string path, string parent, string containerPath)
+        {
+            return (Count > 0) && (IsParentExcluded(parent) || IsFileExcluded(path) || IsFileExcluded(containerPath));
+        }
+
+        /// <summary>
         /// Returns true if any <see cref="Exclusion.FilePatterns"/> matches the value of <paramref name="path"/>.
         /// </summary>
         /// <param name="path">The value to match against any <see cref="Exclusion.FilePatterns"/>.</param>
