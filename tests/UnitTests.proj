@@ -35,7 +35,7 @@
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
     <HelixTargetQueue Include="Ubuntu.1604.Amd64"/>
     <HelixTargetQueue Include="RedHat.7.Amd64"/>
-    <HelixTargetQueue Include="Windows.10.Amd64.ServerRS4"/>
+    <HelixTargetQueue Include="Windows.10.Amd64"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
