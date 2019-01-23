@@ -26,9 +26,7 @@ def construct_log_uri(name):
     uri = get_env("HELIX_RESULTS_CONTAINER_URI")
     read_sas = get_env("HELIX_RESULTS_CONTAINER_RSAS")
 
-    if write_sas[0] == '?':  # SAS tokens should not start with ? but are generally passed in this way.
-        write_sas = write_sas[1:]
-    if read_sas[0] == '?':
+    if read_sas[0] == '?':  # SAS tokens should not start with ? but are generally passed in this way.
         read_sas = read_sas[1:]
 
     return uri + '/' + name + '?' + read_sas
