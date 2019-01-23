@@ -70,7 +70,7 @@
     <PropertyGroup>
       <ProducePdb>true</ProducePdb>
       <!-- Partial facade PDB generation only functions on Windows -->
-      <ProducePdb Condition="'$(DebugSymbols)' == 'false' OR '$(RunningOnUnix)' == 'true'">false</ProducePdb>
+      <ProducePdb Condition="'$(DebugSymbols)' == 'false' OR '$(OS)' != 'Windows_NT'">false</ProducePdb>
       <GenFacadesIgnoreMissingTypes Condition="'$(GenFacadesIgnoreMissingTypes)' == ''">false</GenFacadesIgnoreMissingTypes>
       <GenFacadesIgnoreBuildAndRevisionMismatch Condition="'$(GenFacadesIgnoreBuildAndRevisionMismatch)' == ''">false</GenFacadesIgnoreBuildAndRevisionMismatch>
     </PropertyGroup>

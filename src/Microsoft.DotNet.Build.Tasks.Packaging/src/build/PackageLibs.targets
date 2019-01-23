@@ -139,8 +139,8 @@
     <!-- Be explicit about path seperators for the target path for source files. When building packages on *nix, the use of the DOS seperator
          was causing us to include source files in our packages in a folder called src\src, instead of them being stripped. -->
     <PropertyGroup>
-      <SourceFileTargetPathPrefix Condition="'$(RunningOnUnix)' != 'true'">src\</SourceFileTargetPathPrefix>
-      <SourceFileTargetPathPrefix Condition="'$(RunningOnUnix)' == 'true'">src/</SourceFileTargetPathPrefix>
+      <SourceFileTargetPathPrefix Condition="'$(OS)' == 'Windows_NT'">src\</SourceFileTargetPathPrefix>
+      <SourceFileTargetPathPrefix Condition="'$(OS)' != 'Windows_NT'">src/</SourceFileTargetPathPrefix>
     </PropertyGroup>
 
     <!-- *** include assets *** -->
