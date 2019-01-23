@@ -100,16 +100,15 @@
 
         <!-- Install -->
         <RunScriptCommands Include="call &quot;$(LauncherPath)&quot; -install appxmanifest.xml $(TestAssembly)" />
-        <RunScriptCommands Include="echo." />
 
-        <!-- Uninstall -->
-        <PostRunScriptCommands Include="echo." />
         <!-- Save error level as the uninstall command overwrites the global one. -->
         <PostRunScriptCommands Include="set ERRORLEVEL=%ERRORLEVEL%" />
-        <PostRunScriptCommands Include="call &quot;$(LauncherPath)&quot; -uninstall appxmanifest.xml $(TestAssembly)" />
 
         <!-- Copy the log files and the results files from the Documents folder to the test folder -->
         <PostRunScriptCommands Include="move /Y $(UAPResultsPathCmd) .\$(TestResultsName)" />
+
+        <!-- Uninstall -->
+        <PostRunScriptCommands Include="call &quot;$(LauncherPath)&quot; -uninstall appxmanifest.xml $(TestAssembly)" />
       </ItemGroup>
     </When>
 
