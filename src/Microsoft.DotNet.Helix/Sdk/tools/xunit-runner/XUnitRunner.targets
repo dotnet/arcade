@@ -16,7 +16,19 @@
     </HelixCorrelationPayload>
   </ItemGroup>
 
-  <Target Name="EvaluateXUnitWorkItems" Condition="'@(XUnitProject)' != ''" BeforeTargets="CreateXUnitWorkItems"
+  <Target Name="RestoreXUnitProjects"
+          Condition="'@(XUnitProject)' != ''"
+          BeforeTargets="Restore"
+          Outputs="%(XUnitProject.Identity)">
+    <MSBuild Projects="%(XUnitProject.Identity)"
+             Targets="Restore"
+             Properties="CustomAfterMicrosoftCommonTargets=$(_XUnitPublishTargetsPath);%(XUnitProject.AdditionalProperties)">
+    </MSBuild>
+  </Target>
+
+  <Target Name="BuildXUnitProjects"
+          Condition="'@(XUnitProject)' != ''"
+          BeforeTargets="CoreBuild"
           Outputs="%(XUnitProject.Identity)">
     <PropertyGroup>
       <_CurrentXUnitProject>%(XUnitProject.Identity)</_CurrentXUnitProject>
@@ -26,8 +38,6 @@
       <_CurrentRuntimeTargetFramework Condition="'$(_CurrentRuntimeTargetFramework)' == ''">$(XUnitRuntimeTargetFramework)</_CurrentRuntimeTargetFramework>
       <_CurrentAdditionalProperties>%(XUnitProject.AdditionalProperties)</_CurrentAdditionalProperties>
     </PropertyGroup>
-    <MSBuild Projects="$(_CurrentXUnitProject)" Targets="Restore" Properties="CustomAfterMicrosoftCommonTargets=$(_XUnitPublishTargetsPath);$(_CurrentAdditionalProperties)">
-    </MSBuild>
     <MSBuild Projects="$(_CurrentXUnitProject)" Targets="PublishWithOutput" Properties="CustomAfterMicrosoftCommonTargets=$(_XUnitPublishTargetsPath);TargetFramework=$(_CurrentPublishTargetFramework);$(_CurrentAdditionalProperties)">
       <Output TaskParameter="TargetOutputs" PropertyName="_PublishOutputDir" />
     </MSBuild>
@@ -44,8 +54,11 @@
       </XUnitProject>
     </ItemGroup>
   </Target>
+
   
-  <Target Name="CreateXUnitWorkItems" Condition="'@(XUnitProject)' != ''" BeforeTargets="Test">    
+  <Target Name="CreateXUnitWorkItems"
+          Condition="'@(XUnitProject)' != ''"
+          BeforeTargets="CoreTest">    
     <CreateXUnitWorkItems XUnitProjects="@(XUnitProject)" IsPosixShell="$(IsPosixShell)" XUnitArguments="$(XUnitArguments)">
       <Output TaskParameter="XUnitWorkItems" ItemName="HelixWorkItem"/>
     </CreateXUnitWorkItems>

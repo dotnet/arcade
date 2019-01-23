@@ -1,44 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project>
+<Project InitialTargets="ValidateTargetQueues">
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <!--
-      Set by Microsoft.Common.targets, some targets must be removed while others are left as standard extension mechanisms.
-    -->
-    <CoreBuildDependsOn>
-      BuildOnlySettings;
-      PrepareForBuild;
-      PreBuildEvent;
-      ResolveReferences;
-      PostBuildEvent
-    </CoreBuildDependsOn>
-
-    <PrepareForBuildDependsOn></PrepareForBuildDependsOn>
-
-    <ResolveReferencesDependsOn>
-      BeforeResolveReferences;
-      AssignProjectConfiguration;
-      ResolveProjectReferences;
-      FindInvalidProjectReferences;
-      AfterResolveReferences
-    </ResolveReferencesDependsOn>
-
-    <TestDependsOn>
-      Build;
-      ValidateTargetQueues
-    </TestDependsOn>
-
-    <CleanDependsOn>
-      BeforeClean;
-      UnmanagedUnregistration;
-      CoreClean;
-      PrepareProjectReferences;
-      CleanPublishFolder;
-      AfterClean
-    </CleanDependsOn>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -55,7 +18,7 @@
   </ItemGroup>
 
   <Target Name="ValidateTargetQueues">
-    <Error Condition="'@(HelixTargetQueue)' == ''" Text="You must specify at least one target queue to send a job to helix. Use HelixTargetQueues property for multiple or HelixTargetQueue for a single queue." />
+    <Error Condition="'@(HelixTargetQueue)' == ''" Text="You must specify at least one target queue to send a job to helix. Use the HelixTargetQueues property or HelixTargetQueue items." />
   </Target>
 
   <Import Project="$(_HelixMultiQueueTargets)" Condition="'$(_HelixMultiQueueTargets)' != ''"/>
@@ -66,19 +29,31 @@
     <FailOnMissionControlTestFailure Condition="'$(FailOnMissionControlTestFailure)' != 'true'">false</FailOnMissionControlTestFailure>
   </PropertyGroup>
 
-  <Target Name="CoreTest"
-          DependsOnTargets="$(TestDependsOn)">
-    <MSBuild Projects="$(MSBuildProjectFile)" Targets="Test" Properties="HelixTargetQueue=%(HelixTargetQueue.Identity);%(HelixTargetQueue.AdditionalProperties)">
-      <Output TaskParameter="TargetOutputs" ItemName="SentJobs" />
+  <Target Name="RestoreProjects"
+          BeforeTargets="Restore">
+    <MSBuild Projects="$(MSBuildProjectFile)"
+             Targets="Restore"
+             Properties="HelixTargetQueue=%(HelixTargetQueue.Identity);%(HelixTargetQueue.AdditionalProperties)"
+             BuildInParallel="$(BuildInParallel)">
     </MSBuild>
   </Target>
 
-  <!-- Work around https://github.com/Microsoft/msbuild/issues/3345
-       (failures in AfterTargets of the entry target don't fail the build)
-       by ensuring that the entry-point target Test has simple dependencies
-       and hooking Wait to CoreTest instead of the entry-point. -->
-  <Target Name="Test"
-          DependsOnTargets="CoreTest" />
+  <Target Name="CoreBuild">
+    <MSBuild Projects="$(MSBuildProjectFile)"
+             Targets="Build"
+             Properties="HelixTargetQueue=%(HelixTargetQueue.Identity);%(HelixTargetQueue.AdditionalProperties)"
+             BuildInParallel="$(BuildInParallel)">
+    </MSBuild>
+  </Target>
+
+  <Target Name="CoreTest">
+    <MSBuild Projects="$(MSBuildProjectFile)"
+             Targets="Test"
+             Properties="HelixTargetQueue=%(HelixTargetQueue.Identity);%(HelixTargetQueue.AdditionalProperties)"
+             BuildInParallel="$(BuildInParallel)">
+      <Output TaskParameter="TargetOutputs" ItemName="SentJobs" />
+    </MSBuild>
+  </Target>
 
   <Target Name="Wait"
           AfterTargets="CoreTest"

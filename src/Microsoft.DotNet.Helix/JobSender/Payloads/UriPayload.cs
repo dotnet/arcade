@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Helix.Client
             _payloadUri = payloadUri;
         }
 
-        public Task<string> UploadAsync(IBlobContainer payloadContainer)
+        public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log)
         {
             return Task.FromResult(_payloadUri.AbsoluteUri);
         }

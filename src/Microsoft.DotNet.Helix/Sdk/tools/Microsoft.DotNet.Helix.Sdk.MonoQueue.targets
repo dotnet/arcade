@@ -5,42 +5,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!--
-      Set by Microsoft.Common.targets, some targets must be removed while others are left as standard extension mechanisms.
-    -->
-    <CoreBuildDependsOn>
-      BuildOnlySettings;
-      PrepareForBuild;
-      PreBuildEvent;
-      ResolveReferences;
-      PostBuildEvent
-    </CoreBuildDependsOn>
-
-    <PrepareForBuildDependsOn></PrepareForBuildDependsOn>
-
-    <ResolveReferencesDependsOn>
-      BeforeResolveReferences;
-      AssignProjectConfiguration;
-      ResolveProjectReferences;
-      FindInvalidProjectReferences;
-      AfterResolveReferences
-    </ResolveReferencesDependsOn>
-
-    <TestDependsOn>
-      Build
-    </TestDependsOn>
-
-    <CleanDependsOn>
-      BeforeClean;
-      UnmanagedUnregistration;
-      CoreClean;
-      PrepareProjectReferences;
-      CleanPublishFolder;
-      AfterClean
-    </CleanDependsOn>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <EnableXUnitReporter Condition=" '$(EnableXUnitReporter)' != 'true' ">false</EnableXUnitReporter>
   </PropertyGroup>
 
@@ -59,7 +23,7 @@
 
   <Import Project="$(_HelixMonoQueueTargets)" Condition="'$(_HelixMonoQueueTargets)' != ''"/>
   
-  <Target Name="AddXUnitReporter" Condition="$(EnableXUnitReporter)" BeforeTargets="Test">
+  <Target Name="AddXUnitReporter" Condition="$(EnableXUnitReporter)" BeforeTargets="CoreTest">
     <ItemGroup>
       <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)xunit-reporter"/>
     </ItemGroup>
@@ -77,8 +41,10 @@
     <HelixProperties Include="operatingSystem" Value="$(HelixTargetQueue)" />
   </ItemGroup>
 
-  <Target Name="Test"
-    DependsOnTargets="$(TestDependsOn)" Returns="@(SentJob)">
+  <Target Name="CoreBuild">
+  </Target>
+
+  <Target Name="CoreTest">
     <PropertyGroup Condition="$(IsPosixShell)">
       <HelixPreCommands>set -x;$(HelixPreCommands)</HelixPreCommands>
     </PropertyGroup>
@@ -104,5 +70,10 @@
       </SentJob>
     </ItemGroup>
     <Message Text="Sent Helix Job $(HelixJobId)" Importance="High" />
+  </Target>
+
+  <Target Name="Test"
+    DependsOnTargets="$(TestDependsOn)"
+    Returns="@(SentJob)">
   </Target>
 </Project>

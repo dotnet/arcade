@@ -80,6 +80,9 @@ jobs:
         displayName: Windows Build / Publish
 
       - powershell: eng\common\build.ps1
+          -configuration $(_BuildConfig) 
+          -prepareMachine
+          -ci
           -test
           -projects $(Build.SourcesDirectory)/tests/UnitTests.proj
           /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
@@ -121,6 +124,9 @@ jobs:
         displayName: Unix Build / Publish
 
       - script: eng/common/build.sh
+          --configuration $(_BuildConfig)
+          --prepareMachine
+          --ci
           --test
           --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
           /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog

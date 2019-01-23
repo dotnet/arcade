@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <Target Name="StartTestRuns"
-          BeforeTargets="CoreTest"
+          BeforeTargets="CoreBuild"
           Outputs="%(HelixTargetQueue.Identity)">
     <PropertyGroup>
       <_CurrentTargetQueue>%(HelixTargetQueue.Identity)</_CurrentTargetQueue>
