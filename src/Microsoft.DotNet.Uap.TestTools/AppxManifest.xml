@@ -7,7 +7,7 @@
 
     For more information on package manifest files, see http://go.microsoft.com/fwlink/?LinkID=241727
   -->
-  <Identity Name="5cd54353-3ed7-4a6e-a72f-db349f28867c" Publisher="CN=dotnet" Version="1.0.0.0" ProcessorArchitecture="x64" />
+  <Identity Name="5cd54353-3ed7-4a6e-a72f-db349f28867c" Publisher="CN=dotnet" Version="1.0.0.0" ProcessorArchitecture="$processorArchitecture$" />
   <mp:PhoneIdentity PhoneProductId="5cd54353-3ed7-4a6e-a72f-db349f28867c" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>Microsoft.DotNet.XUnitRunnerUap</DisplayName>
@@ -27,22 +27,6 @@
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
       <Extensions>
-        <uap:Extension Category="windows.fileTypeAssociation">
-          <uap:FileTypeAssociation Name="xml">
-            <uap:DisplayName>xml</uap:DisplayName>
-            <uap:SupportedFileTypes>
-              <uap:FileType>.xml</uap:FileType>
-            </uap:SupportedFileTypes>
-          </uap:FileTypeAssociation>
-        </uap:Extension>
-        <uap:Extension Category="windows.fileTypeAssociation">
-          <uap:FileTypeAssociation Name="logs">
-            <uap:DisplayName>Log file</uap:DisplayName>
-            <uap:SupportedFileTypes>
-              <uap:FileType>.txt</uap:FileType>
-            </uap:SupportedFileTypes>
-          </uap:FileTypeAssociation>
-        </uap:Extension>
         <uap5:Extension Category="windows.appExecutionAlias" Executable="Microsoft.DotNet.XUnitRunnerUap.exe" EntryPoint="Microsoft.DotNet.XUnitRunnerUap.Program">
           <uap5:AppExecutionAlias desktop4:Subsystem="console" iot2:Subsystem="console">
             <uap5:ExecutionAlias Alias="XUnitRunnerUap.exe" />

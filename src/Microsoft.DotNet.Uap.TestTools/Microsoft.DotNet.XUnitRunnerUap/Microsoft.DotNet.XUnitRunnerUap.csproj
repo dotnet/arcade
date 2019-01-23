@@ -5,7 +5,8 @@
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
     <Platform Condition="'$(Platform)' == '' OR '$(Platform)' == 'AnyCPU'">x64</Platform>
     <ProjectGuid>{552DECA2-68D7-4506-86DE-E808D1E60FB6}</ProjectGuid>
-    <OutputType>AppContainerExe</OutputType>
+    <OutputType>Exe</OutputType>
+    <WindowsAppContainer>true</WindowsAppContainer>
     <SubsystemVersion>6.02</SubsystemVersion>
     <AppxPackage>True</AppxPackage>
     <TargetFrameworkIdentifier>.NETCore</TargetFrameworkIdentifier>

@@ -4,10 +4,11 @@
 
   <PropertyGroup Condition="'$(BuildingUAPVertical)' == 'true'">
     <!--
-      Inside an AppContainer we can't write into the WorkingDirectory. As the UAP Runner has
-      the capability to write to the user's documents folder, we use that instead.
+      Inside an AppContainer we can't write into the WorkingDirectory. As System.IO is used
+      to write the results file we can't use the documents folder either. Therefore we write
+      into the app's local state directory which doesn't need a StorageFolder broker.
     -->
-    <UAPResultsPathCmd Condition="'$(UAPResultsPathCmd)' == ''">&quot;%USERPROFILE%\Documents\$(AssemblyName).xml&quot;</UAPResultsPathCmd>
+    <UAPResultsPathCmd Condition="'$(UAPResultsPathCmd)' == ''">&quot;%LOCALAPPDATA%\Packages\5cd54353-3ed7-4a6e-a72f-db349f28867c_*\LocalState\$(AssemblyName).xml&quot;</UAPResultsPathCmd>
   </PropertyGroup>
 
   <!-- General xunit options -->

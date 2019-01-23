@@ -78,6 +78,7 @@ setlocal
     xcopy /y %_mainSource%\Microsoft.DotNet.XUnitRunnerUap.exe %_dest%\
     xcopy /y %_mainSource%\resources.pri %_dest%\
     xcopy /y .\AppxManifest.xml %_dest%\
+    powershell -Command "(gc %_dest%\AppxManifest.xml) -replace '\$processorArchitecture\$', '%_platform%' | Out-File -encoding ASCII %_dest%\AppxManifest.xml"
     xcopy /y "%_source%\Microsoft.VCLibs.%_platform%.Debug.14.00\%_platform%\*.dll" "%_dest%\"    
 
     IF "%_platform%" == "arm64" (
@@ -87,6 +88,7 @@ setlocal
         xcopy /y %_mainSource%\entrypoint\Microsoft.DotNet.XUnitRunnerUap.exe %_dest%\entrypoint\
         xcopy /y %_mainSource%\Properties\Default.rd.xml %_dest%\Properties\
         xcopy /y %_mainSource%\WinMetadata\Windows.winmd %_dest%\WinMetadata\
+        xcopy /y "%_source%\Microsoft.NET.CoreFramework.Debug.2.2\%_platform%\System.Private.ServiceModel.dll" %_dest%\
         xcopy /y "%_source%\Microsoft.NET.CoreFramework.Debug.2.2\%_platform%\System.ServiceModel.dll" %_dest%\
         xcopy /y "%_source%\Microsoft.NET.CoreFramework.Debug.2.2\%_platform%\System.ServiceModel.Duplex.dll" %_dest%\
         xcopy /y "%_source%\Microsoft.NET.CoreFramework.Debug.2.2\%_platform%\System.ServiceModel.Http.dll" %_dest%\
