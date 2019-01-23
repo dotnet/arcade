@@ -53,6 +53,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             foreach (var artifact in artifacts)
             {
+                if (string.Equals(artifact.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 var isSymbolsPackage = artifact.ItemSpec.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase)
                     || artifact.ItemSpec.EndsWith(".snupkg", StringComparison.OrdinalIgnoreCase);
 
