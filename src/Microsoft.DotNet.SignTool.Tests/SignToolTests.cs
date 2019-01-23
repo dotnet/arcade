@@ -1151,5 +1151,11 @@ $@"
 
             Assert.False(task.Log.HasLoggedErrors);
         }
+
+        [Fact]
+        public void FailingTest()
+        {
+            Assert.False(true);
+        }
     }
 }
