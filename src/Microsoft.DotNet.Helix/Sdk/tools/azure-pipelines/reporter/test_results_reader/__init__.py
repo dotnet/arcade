@@ -1,5 +1,5 @@
 import os
-from defs import TestResult
+from defs import TestResult, TestResultAttachment
 from typing import Iterable
 from formats import all_formats
 from helpers import get_env

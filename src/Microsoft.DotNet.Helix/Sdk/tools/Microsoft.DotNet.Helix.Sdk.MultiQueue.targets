@@ -51,21 +51,27 @@
              Targets="Test"
              Properties="HelixTargetQueue=%(HelixTargetQueue.Identity);%(HelixTargetQueue.AdditionalProperties)"
              BuildInParallel="$(BuildInParallel)">
-      <Output TaskParameter="TargetOutputs" ItemName="SentJobs" />
+      <Output TaskParameter="TargetOutputs" ItemName="SentJob" />
     </MSBuild>
+
+    <WaitForHelixJobCompletion 
+      Condition="$(WaitForWorkItemCompletion)"
+      AccessToken="$(HelixAccessToken)"
+      BaseUri="$(HelixBaseUri)"
+      Jobs="@(SentJob)" />
   </Target>
 
-  <Target Name="Wait"
-          AfterTargets="CoreTest"
-          Condition="$(WaitForWorkItemCompletion)">
-    <Message Importance="High" Text="Waiting on job completion..." />
-    <HelixWait
-      Jobs="@(SentJobs)"
+  <Target Name="Test"
+    DependsOnTargets="$(TestDependsOn)"
+    Returns="@(SentJob)">
+  </Target>
+
+  <Target Name="CheckHelixJobStatus"
+          BeforeTargets="AfterTest">
+    <CheckHelixJobStatus
       AccessToken="$(HelixAccessToken)"
-      Source="$(HelixSource)"
-      Type="$(HelixType)"
-      Build="$(HelixBuild)"
-      Creator="$(Creator)"
+      BaseUri="$(HelixBaseUri)"
+      Jobs="@(SentJob)"
       FailOnWorkItemFailure="$(FailOnWorkItemFailure)"
       FailOnMissionControlTestFailure="$(FailOnMissionControlTestFailure)"
       />
