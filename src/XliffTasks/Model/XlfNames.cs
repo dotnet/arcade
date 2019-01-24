@@ -7,14 +7,14 @@ namespace XliffTasks.Model
 {
     internal static class XlfNames
     {
-        public static XNamespace XliffNS = "urn:oasis:names:tc:xliff:document:1.2";
-        public static XName Xliff = XliffNS + "xliff";
-        public static XName File = XliffNS + "file";
-        public static XName Body = XliffNS + "body";
-        public static XName Group = XliffNS + "group";
-        public static XName TransUnit = XliffNS + "trans-unit";
-        public static XName Source = XliffNS + "source";
-        public static XName Target = XliffNS + "target";
-        public static XName Note = XliffNS + "note";
+        public static readonly XNamespace XliffNS = "urn:oasis:names:tc:xliff:document:1.2";
+        public static readonly XName Xliff = XliffNS + "xliff";
+        public static readonly XName File = XliffNS + "file";
+        public static readonly XName Body = XliffNS + "body";
+        public static readonly XName Group = XliffNS + "group";
+        public static readonly XName TransUnit = XliffNS + "trans-unit";
+        public static readonly XName Source = XliffNS + "source";
+        public static readonly XName Target = XliffNS + "target";
+        public static readonly XName Note = XliffNS + "note";
     }
 }
