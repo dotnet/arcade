@@ -10,7 +10,7 @@
     <IsPackable>true</IsPackable>
     <VersionPrefix>2.5.0</VersionPrefix>
     <LangVersion>latest</LangVersion>
-    <DefaultItemExcludes Condition="'$(DefineConstants)' == 'WINDOWS_UWP'">$(DefaultItemExcludes);common\AssemblyResolution\*.cs</DefaultItemExcludes>
+    <DefaultItemExcludes Condition="'$(DefineConstants)' == 'WINDOWS_UWP'">common\AssemblyResolution\**;$(DefaultItemExcludes)</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
