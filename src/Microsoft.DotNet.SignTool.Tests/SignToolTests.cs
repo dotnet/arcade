@@ -194,7 +194,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
             var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput, new string[] { });
 
-            util.Go(true);
+            util.Go(doStrongNameCheck: true);
 
             Assert.Same(ByteSequenceComparer.Instance, signingInput.ZipDataMap.KeyComparer);
 
