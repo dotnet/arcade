@@ -90,7 +90,7 @@ try {
   Write-Host "Building with updated dependencies"
   # Clear this global variable so that we don't use the cached toolset that we restored in Step 1.
   Remove-Variable _ToolsetBuildProj -Scope Global
-  & .\common\cibuild.cmd -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource
+  & .\common\cibuild.cmd -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource /p:Sign=False
 }
 catch {
   Write-Host $_
