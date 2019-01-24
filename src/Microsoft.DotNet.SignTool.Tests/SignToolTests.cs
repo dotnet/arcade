@@ -194,7 +194,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
             var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput, new string[] { });
 
-            util.Go(false);
+            util.Go(doStrongNameCheck: true);
 
             Assert.Same(ByteSequenceComparer.Instance, signingInput.ZipDataMap.KeyComparer);
 
@@ -430,18 +430,20 @@ namespace Microsoft.DotNet.SignTool.Tests
         }
 
         [Fact]
-        public void CrossGenNative()
+        public void CrossGenerated()
         {
             // List of files to be considered for signing
             var itemsToSign = new[]
             {
-                GetResourcePath("CoreLibCrossARM.dll")
+                GetResourcePath("CoreLibCrossARM.dll"),
+                GetResourcePath("AspNetCoreCrossLib.dll")
             };
 
             // Default signing information
             var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+                { "7cec85d7bea7798e", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") },
+                { "adb9793829ddae60", new SignInfo("Microsoft400", "AspNetCore") }
             };
 
             // Overriding information
@@ -450,19 +452,24 @@ namespace Microsoft.DotNet.SignTool.Tests
                 { new ExplicitCertificateKey("EmptyPKT.dll"), "3PartySHA2" }
             };
 
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, SignInfo>(), new[]
             {
-                "File 'CoreLibCrossARM.dll' Certificate='Microsoft400'",
+                "File 'CoreLibCrossARM.dll' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'AspNetCoreCrossLib.dll' TargetFramework='.NETCoreApp,Version=v3.0' Certificate='Microsoft400' StrongName='AspNetCore'",
             });
 
-            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, SignInfo>(), new[]
             {
 $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "AspNetCoreCrossLib.dll")}"">
   <Authenticode>Microsoft400</Authenticode>
+  <StrongName>AspNetCore</StrongName>
 </FilesToSign>",
             });
         }
-
 
         [Fact]
         public void DefaultCertificateForAssemblyWithoutStrongName()
