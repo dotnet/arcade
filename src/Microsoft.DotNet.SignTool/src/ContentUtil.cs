@@ -69,12 +69,17 @@ namespace Microsoft.DotNet.SignTool
 
         public static bool IsManaged(string filePath)
         {
-            using (var stream = new FileStream(filePath, FileMode.Open))
-            using (var peReader = new PEReader(stream))
+            try
             {
-                var corEntry = peReader.PEHeaders.PEHeader.CorHeaderTableDirectory;
-
-                return corEntry.RelativeVirtualAddress == 0x2008 && corEntry.Size == 0x48;
+                using (var stream = new FileStream(filePath, FileMode.Open))
+                using (var peReader = new PEReader(stream))
+                {
+                    return peReader.PEHeaders.CorHeader != null;
+                }
+            }
+            catch (BadImageFormatException)
+            {
+                return false;
             }
         }
 
