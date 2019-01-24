@@ -23,4 +23,10 @@
       <Arguments />
     </XUnitProject>
   </ItemGroup>
+
+  <!-- Automated restore no longer happens for these XUnit projects, so if specified attempt explicit restore -->
+  <Target BeforeTargets="Build" Condition="'$(Restore)' == 'true'">
+    <MSBuild Projects="@(XUnitProject)" Targets="Restore" />  
+  </Target>
+  
 </Project>
