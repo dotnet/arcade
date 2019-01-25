@@ -25,6 +25,8 @@
     <PublishToSymbolServer>false</PublishToSymbolServer>
     <PublishToSymbolServer Condition="'$(UsingToolSymbolUploader)' == 'true' and '$(AzureFeedUrl)' == '' and '$(ContinuousIntegrationBuild)' == 'true'">true</PublishToSymbolServer>
     <AssetManifestFilePath>$(ArtifactsLogDir)AssetManifest\$(OS)-$(PlatformName).xml</AssetManifestFilePath>
+
+    <PipelineArtifactsAssetManifestFilePath>$(ArtifactsLogDir)PipelineArtifactsPublishingManifests\$(OS)-$(PlatformName)-$(AGENT_JOBNAME).xml</PipelineArtifactsAssetManifestFilePath>
   </PropertyGroup>
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets" Condition="$(PublishToAzure)"/>
@@ -75,27 +77,6 @@
       Work in progress drop-in replacement for PushToBlobFeed task below.
       This is part of the work on https://github.com/dotnet/arcade/issues/1179
     -->
-    
-    <!--
-      The publishing pipeline (implemented by PublishToPackageFeed.proj) will use the Tasks.Feed package
-      to publish packages. The version of Tasks.Feed used will come either from Version.props or from
-      DefaultVersions.props
-    -->
-
-    <Message
-      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(RepositoryEngineeringDir)common\PublishToPackageFeed.proj"
-      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
-      Importance="high" />
-    
-    <Message
-      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(MSBuildThisFileDirectory)DefaultVersions.props"
-      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true' and Exists('$(MSBuildThisFileDirectory)DefaultVersions.props')"
-      Importance="high" />
-    
-    <Message
-      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(RepositoryEngineeringDir)Versions.props"
-      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true' and Exists('$(RepositoryEngineeringDir)Versions.props')"
-      Importance="high" />
 
     <!--
       The new Maestro/BAR build model keeps separate Azure DevOps and GitHub build information.
@@ -120,9 +101,35 @@
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
       ManifestCommit="$(BUILD_SOURCEVERSION)"
       PublishFlatContainer="false"
-      AssetManifestPath="$(ArtifactsLogDir)PipelineArtifactsPublishingManifests\$(OS)-$(PlatformName)-$(AGENT_JOBNAME).xml"
+      AssetManifestPath="$(PipelineArtifactsAssetManifestFilePath)"
       Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"/>
 
+    <!--
+      The publishing pipeline (implemented by PublishToPackageFeed.proj) will use the Tasks.Feed package
+      to publish packages. The version of Tasks.Feed used will come either from Version.props or from
+      DefaultVersions.props
+    -->
+
+    <Message
+      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(RepositoryEngineeringDir)common\PublishToPackageFeed.proj"
+      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
+      Importance="high" />
+
+    <Message
+      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(MSBuildThisFileDirectory)DefaultVersions.props"
+      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true' and Exists('$(MSBuildThisFileDirectory)DefaultVersions.props')"
+      Importance="high" />
+
+    <Message
+      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(RepositoryEngineeringDir)Versions.props"
+      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true' and Exists('$(RepositoryEngineeringDir)Versions.props')"
+      Importance="high" />
+
+    <Message
+      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(PipelineArtifactsAssetManifestFilePath)"
+      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
+      Importance="high" />
+    
     <!--
     End:
       Work in progress drop-in replacement for PushToBlobFeed task below.
