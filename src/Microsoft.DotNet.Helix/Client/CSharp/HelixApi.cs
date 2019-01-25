@@ -50,6 +50,7 @@ namespace Microsoft.DotNet.Helix.Client
             return ex is TaskCanceledException ||
                    ex is OperationCanceledException ||
                    ex is HttpRequestException ||
+                   ex is RestApiException ||
                    ex is NullReferenceException // Null reference exceptions come from autorest for some reason and are retryable
                 ;
         }
