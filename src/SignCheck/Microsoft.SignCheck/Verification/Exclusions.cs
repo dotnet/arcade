@@ -82,17 +82,21 @@ namespace Microsoft.SignCheck.Verification
             // 1. The file/container path matches a file part of the exclusion and the parent matches the parent part of the exclusion.
             //    Example: bar.dll;*.zip --> Exclude any occurence of bar.dll that is in a zip file
             //             bar.dll;foo.zip --> Exclude bar.dll only if it is contained inside foo.zip
-            bool c1 = _exclusions.Any(e => (IsMatch(e.FilePatterns, path) || IsMatch(e.FilePatterns, containerPath)) && (IsMatch(e.ParentFiles, parent)));
+            if (_exclusions.Any(e => (IsMatch(e.FilePatterns, path) || IsMatch(e.FilePatterns, containerPath)) && (IsMatch(e.ParentFiles, parent))))
+            {
+                return true;
+            }
 
             // 2. The file/container path matches the file part of the exclusion and there is no parent exclusion. 
             //    Example: *.dll;; --> Exclude any file with a .dll extension
-            bool c2 = _exclusions.Any(e => (IsMatch(e.FilePatterns, path) || IsMatch(e.FilePatterns, containerPath)) && (e.ParentFiles.All(pf => String.IsNullOrEmpty(pf))));
+            if (_exclusions.Any(e => (IsMatch(e.FilePatterns, path) || IsMatch(e.FilePatterns, containerPath)) && (e.ParentFiles.All(pf => String.IsNullOrEmpty(pf)))))
+            {
+                return true;
+            }
 
             // 3. There is no file exclusion, but a parent exclusion matches.
             //    Example: ;foo.zip; --> Exclude any file in foo.zip. This is similar to using *;foo.zip;
-            bool c3 = _exclusions.Any(e => (e.FilePatterns.All(fp => String.IsNullOrEmpty(fp)) && IsMatch(e.ParentFiles, parent)));
-
-            return c1 || c2 || c3;
+            return _exclusions.Any(e => (e.FilePatterns.All(fp => String.IsNullOrEmpty(fp)) && IsMatch(e.ParentFiles, parent)));
         }
 
         /// <summary>
