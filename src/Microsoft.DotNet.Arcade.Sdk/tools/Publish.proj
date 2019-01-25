@@ -70,7 +70,6 @@
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
-
     <!--
     Begin:
       Work in progress drop-in replacement for PushToBlobFeed task below.
@@ -103,6 +102,7 @@
       The GitHub information will be extracted based on the Azure DevOps repository.
     -->
     <ItemGroup>
+      <NewManifestBuildData Include="InitialAssetsLocation=$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$(SYSTEM_TEAMPROJECT)/_apis/build/builds/$(BUILD_BUILDID)/artifacts" />
       <NewManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
       <NewManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
       <NewManifestBuildData Include="AzureDevOpsAccount=$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI.replace('https://dev.azure.com/', '').replace('/', ''))" />
