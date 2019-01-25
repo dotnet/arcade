@@ -318,6 +318,12 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             yield return workItemCommand;
 
+            string exitCodeVariableName = "_commandExitCode";
+
+            // Capture helix command exit code, in case work item command (i.e xunit call) exited with a failure,
+            // this way we can exit the process honoring that exit code, needed for retry.
+            yield return IsPosixShell ? $"{exitCodeVariableName}=$?" : $"set {exitCodeVariableName}=%ERRORLEVEL%";
+
             if (workItem.TryGetMetadata("PostCommands", out string workItemPostCommandsString))
             {
                 foreach (string command in SplitCommands(workItemPostCommandsString))
@@ -333,6 +339,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                     yield return command;
                 }
             }
+
+            // Exit with the captured exit code from workitem command.
+            yield return IsPosixShell ? $"exit ${exitCodeVariableName}" : $"EXIT /b %{exitCodeVariableName}%";
         }
 
         private IEnumerable<string> SplitCommands(string value)
