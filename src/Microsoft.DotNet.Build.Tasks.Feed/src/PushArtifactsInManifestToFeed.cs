@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Maestro.Client;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -66,12 +67,33 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         /// Full path to the folder containing blob assets.
         /// </summary>
+        [Required]
         public string BlobAssetsBasePath { get; set; }
 
         /// <summary>
         /// Full path to the folder containing package assets.
         /// </summary>
+        [Required]
         public string PackageAssetsBasePath { get; set; }
+
+        /// <summary>
+        /// ID of the build (in BAR/Maestro) that produced the artifacts being published.
+        /// This might change in the future as we'll probably fetch this ID from the manifest itself.
+        /// </summary>
+        [Required]
+        public int BARBuildId { get; set; }
+
+        /// <summary>
+        /// Access point to the Maestro API to be used for accessing BAR.
+        /// </summary>
+        [Required]
+        public string MaestroApiEndpoint { get; set; }
+
+        /// <summary>
+        /// Authentication token to be used when interacting with Maestro API.
+        /// </summary>
+        [Required]
+        public string BuildAssetRegistryToken { get; set; }
 
         public override bool Execute()
         {
@@ -109,6 +131,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
+                // Fetch Maestro record of the build. We're going to use it to get the BAR ID
+                // of the assets being published so we can add a new location for them.
+                IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
+                Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
+
                 var blobFeedAction = new BlobFeedAction(ExpectedFeedUrl, AccountKey, Log);
                 var pushOptions = new PushOptions
                 {
@@ -130,6 +157,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var packages = buildModel.Artifacts.Packages.Select(p => $"{PackageAssetsBasePath}{p.Id}.{p.Version}.nupkg");
 
                     await blobFeedAction.PushToFeedAsync(packages, pushOptions);
+
+                    foreach (var package in buildModel.Artifacts.Packages)
+                    {
+                        var assetRecord = buildInformation.Assets
+                            .Where(a => a.Name.Equals(package.Id) && a.Version.Equals(package.Version))
+                            .SingleOrDefault();
+
+                        await client.Assets.AddLocation(assetRecord.Id, ExpectedFeedUrl, "NugetFeed");
+                    }
                 }
 
                 if (buildModel.Artifacts.Blobs.Any())
@@ -155,6 +191,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         .ToArray();
 
                     await blobFeedAction.PublishToFlatContainerAsync(blobs, MaxClients, UploadTimeoutInMinutes, pushOptions);
+
+                    foreach (var package in buildModel.Artifacts.Blobs)
+                    {
+                        var assetRecord = buildInformation.Assets
+                            .Where(a => a.Name.Equals(package.Id))
+                            .SingleOrDefault();
+
+                        await client.Assets.AddLocation(assetRecord.Id, ExpectedFeedUrl, "NugetFeed");
+                    }
                 }
             }
             catch (Exception e)

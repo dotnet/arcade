@@ -60,6 +60,7 @@
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
     <MicrosoftDiaSymReaderConverterVersion>1.1.0-beta1-62810-01</MicrosoftDiaSymReaderConverterVersion>
     <MicrosoftDiaSymReaderNativeVersion>1.7.0</MicrosoftDiaSymReaderNativeVersion>
+    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.19075.1</MicrosoftDotNetMaestroClientVersion>
   </PropertyGroup>
   <PropertyGroup>
     <RestoreSources>
@@ -68,5 +69,9 @@
       https://dotnet.myget.org/F/symreader-converter/api/v3/index.json;
       https://dotnet.myget.org/F/symreader/api/v3/index.json
     </RestoreSources>
+  </PropertyGroup>
+  <!--Package names-->
+  <PropertyGroup>
+    <MicrosoftDotNetMaestroClientPackage>Microsoft.DotNet.Maestro.Client</MicrosoftDotNetMaestroClientPackage>
   </PropertyGroup>
 </Project>
