@@ -4,12 +4,15 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
 using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -202,6 +205,10 @@ namespace Microsoft.DotNet.Helix.Sdk
                 ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg));
                 JobCorrelationId = job.CorrelationId;
             }
+
+            string mcUri = await GetMissionControlResultUri();
+
+            Log.LogMessage(MessageImportance.High, $"Results will be available from {mcUri}");
         }
 
         private IJobDefinition AddProperty(IJobDefinition def, ITaskItem property)
@@ -417,6 +424,46 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             Log.LogError($"Correlation Payload '{path}' not found.");
             return def;
+        }
+
+        private async Task<string> GetMissionControlResultUri()
+        {
+            var creator = Creator;
+            if (string.IsNullOrEmpty(creator))
+            {
+                using (var client = new HttpClient
+                {
+                    DefaultRequestHeaders =
+                    {
+                        UserAgent = { Helpers.UserAgentHeaderValue },
+                    },
+                })
+                {
+                    try
+                    {
+                        string githubJson =
+                            await client.GetStringAsync($"https://api.github.com/user?access_token={AccessToken}");
+                        var data = JObject.Parse(githubJson);
+                        if (data["login"] == null)
+                        {
+                            throw new Exception("Github user has no login");
+                        }
+
+                        creator = data["login"].ToString();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogMessage(MessageImportance.High, "Failed to retrieve username from GitHub -- {0}", ex.ToString());
+                        return $"Mission Control (generation of MC link failed -- {ex.Message})";
+                    }
+                }
+            }
+
+            var build = UrlEncoder.Default.Encode(Build).Replace('%', '~');
+            var type = UrlEncoder.Default.Encode(Type).Replace('%', '~');
+            var source = UrlEncoder.Default.Encode(Source).Replace('%', '~');
+            var encodedCreator = UrlEncoder.Default.Encode(creator).Replace('%', '~');
+            return $"https://mc.dot.net/#/user/{encodedCreator}/{source}/{type}/{build}";
         }
     }
 }

@@ -26,7 +26,7 @@
   </Target>
 
   <Target Name="StopTestRuns"
-          AfterTargets="Wait"
+          AfterTargets="CoreTest"
           Condition="$(WaitForWorkItemCompletion)"
           Outputs="%(HelixTargetQueue.Identity)">
     <Message Text="Stopping Azure Pipelines Test Run %(HelixTargetQueue.TestRunName)" Importance="High"/>
