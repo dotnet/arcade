@@ -8,14 +8,17 @@ using System.Collections.Immutable;
 using System.IO;
 using System.IO.Packaging;
 using System.Linq;
+using Microsoft.Build.Framework;
 using TestUtilities;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.SignTool.Tests
 {
     public class SignToolTests : IDisposable
     {
         private readonly string _tmpDir;
+        private readonly ITestOutputHelper _output;
 
         // Default extension based signing information
         private static readonly Dictionary<string, SignInfo> s_fileExtensionSignInfo = new Dictionary<string, SignInfo>()
@@ -125,10 +128,11 @@ namespace Microsoft.DotNet.SignTool.Tests
             }
         }
 
-        public SignToolTests()
+        public SignToolTests(ITestOutputHelper output)
         {
             _tmpDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(_tmpDir);
+            _output = output;
         }
 
         private string GetResourcePath(string name, string relativePath = null)
@@ -250,13 +254,34 @@ namespace Microsoft.DotNet.SignTool.Tests
         {
             var task = new SignToolTask {
                 BuildEngine = new FakeBuildEngine(),
-                ItemsToSign = new string[0],
+                ItemsToSign = Array.Empty<string>(),
+                StrongNameSignInfo = Array.Empty<ITaskItem>(),
                 LogDir = "LogDir",
                 TempDir = "TempDir",
                 DryRun = false,
                 TestSign = true,
                 MSBuildPath = CreateTestResource("msbuild.fake"),
                 SNBinaryPath = CreateTestResource("fake.sn.exe")
+            };
+
+            Assert.True(task.Execute());
+        }
+
+        [Fact]
+        public void SignWhenSnExeIsNotRequired()
+        {
+            var task = new SignToolTask
+            {
+                BuildEngine = new FakeBuildEngine(_output),
+                ItemsToSign = Array.Empty<string>(),
+                StrongNameSignInfo = Array.Empty<ITaskItem>(),
+                LogDir = "LogDir",
+                TempDir = "TempDir",
+                DryRun = false,
+                TestSign = true,
+                MSBuildPath = CreateTestResource("msbuild.fake"),
+                DoStrongNameCheck = false,
+                SNBinaryPath = null,
             };
 
             Assert.True(task.Execute());
