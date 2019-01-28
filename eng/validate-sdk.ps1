@@ -89,7 +89,7 @@ try {
   
   Write-Host "Building with updated dependencies"
 
-  & .\common\cibuild.cmd -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource /p:Sign=False
+  & .\common\cibuild.cmd -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource /p:DotNetPublishBlobFeedUrl=https://dotnetfeed.blob.core.windows.net/dotnet-core-test/index.json
 }
 catch {
   Write-Host $_
