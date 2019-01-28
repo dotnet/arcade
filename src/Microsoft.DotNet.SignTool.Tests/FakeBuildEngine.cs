@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
-using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.SignTool.Tests
 {
@@ -27,6 +27,16 @@ namespace Microsoft.DotNet.SignTool.Tests
             new List<BuildWarningEventArgs>();
 
         public readonly List<ImmutableArray<XElement>> FilesToSign = new List<ImmutableArray<XElement>>();
+        private readonly ITestOutputHelper _output;
+
+        public FakeBuildEngine()
+        {
+        }
+
+        public FakeBuildEngine(ITestOutputHelper output)
+        {
+            _output = output;
+        }
 
         public bool BuildProjectFile(string projectFileName, string[] targetNames, IDictionary globalProperties, IDictionary targetOutputs)
         {
@@ -75,21 +85,41 @@ namespace Microsoft.DotNet.SignTool.Tests
 
         public void LogCustomEvent(CustomBuildEventArgs e)
         {
+            if (_output != null)
+            {
+                _output.WriteLine(e.Message ?? string.Empty);
+            }
+
             LogCustomEvents.Add(e);
         }
 
         public void LogErrorEvent(BuildErrorEventArgs e)
         {
+            if (_output != null)
+            {
+                _output.WriteLine($"error {e.Code}: {e.Message}");
+            }
+
             LogErrorEvents.Add(e);
         }
 
         public void LogMessageEvent(BuildMessageEventArgs e)
         {
+            if (_output != null)
+            {
+                _output.WriteLine(e.Message ?? string.Empty);
+            }
+
             LogMessageEvents.Add(e);
         }
 
         public void LogWarningEvent(BuildWarningEventArgs e)
         {
+            if (_output != null)
+            {
+                _output.WriteLine($"warning {e.Code}: {e.Message}");
+            }
+
             LogWarningEvents.Add(e);
         }
 

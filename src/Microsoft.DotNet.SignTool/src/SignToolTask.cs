@@ -182,7 +182,12 @@ namespace Microsoft.DotNet.SignTool
                     return;
                 }
 
-                if (!isValidSNPath && StrongNameSignInfo?.Where(ti => ti?.ItemSpec?.EndsWith(".snk") ?? false) != null)
+                var strongNameLocally = StrongNameSignInfo != null 
+                    && StrongNameSignInfo
+                        .Where(ti => !string.IsNullOrEmpty(ti.ItemSpec) && ti.ItemSpec.EndsWith(".snk", StringComparison.OrdinalIgnoreCase))
+                        .Any();
+
+                if (!isValidSNPath && strongNameLocally)
                 {
                     Log.LogError($"An incorrect full path to 'sn.exe' was specified: {SNBinaryPath}");
                     return;
