@@ -15,7 +15,6 @@
     <CleanDependsOn>$(CleanDependsOn);CleanTestPath;</CleanDependsOn>
   </PropertyGroup>
 
-  <!-- RunScript -->
   <PropertyGroup>
     <RunScriptInputName Condition="'$(TargetOS)' == 'Windows_NT'">RunnerTemplate.Windows.txt</RunScriptInputName>
     <RunScriptInputName Condition="'$(TargetOS)' != 'Windows_NT'">RunnerTemplate.Unix.txt</RunScriptInputName>
@@ -24,11 +23,15 @@
     <RunScriptOutputName Condition="'$(TargetOS)' == 'Windows_NT'">RunTests.cmd</RunScriptOutputName>
     <RunScriptOutputName Condition="'$(TargetOS)' != 'Windows_NT'">RunTests.sh</RunScriptOutputName>
     <RunScriptOutputPath>$([MSBuild]::NormalizePath('$(TestPath)', '$(RunScriptOutputName)'))</RunScriptOutputPath>
+  </PropertyGroup>
 
-    <RunScriptHostDir Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' == 'Windows_NT'">%RUNTIME_PATH%\</RunScriptHostDir>
-    <RunScriptHostDir Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' != 'Windows_NT'">$RUNTIME_PATH/</RunScriptHostDir>
-    <RunScriptHost Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' == 'Windows_NT'">$(RunScriptHostDir)dotnet.exe</RunScriptHost>
-    <RunScriptHost Condition="'$(BuildingNETCoreAppVertical)' == 'true' AND '$(TargetOS)' != 'Windows_NT'">$(RunScriptHostDir)dotnet</RunScriptHost>
+  <PropertyGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
+    <RunScriptHostDir Condition="'$(TargetOS)' == 'Windows_NT'">%RUNTIME_PATH%\</RunScriptHostDir>
+    <RunScriptHostDir Condition="'$(TargetOS)' != 'Windows_NT'">$RUNTIME_PATH/</RunScriptHostDir>
+    <RunScriptHost Condition="'$(TargetOS)' == 'Windows_NT'">$(RunScriptHostDir)dotnet.exe</RunScriptHost>
+    <RunScriptHost Condition="'$(TargetOS)' != 'Windows_NT'">$(RunScriptHostDir)dotnet</RunScriptHost>
+    
+    <GlobalToolsDir Condition="'$(ArchiveTests)' == 'true'">$(RunScriptHostDir)</GlobalToolsDir>
   </PropertyGroup>
 
   <Target Name="PublishSupplementalTestData"
@@ -59,12 +62,7 @@
 
   </Target>
 
-  <!--
-    Archive test binaries along with supporting files.
-
-    Inputs:
-      - TestArchiveTestsDir: Expected to bet set in Directory.Build.props.
-  -->
+  <!-- Archive test binaries along with supporting files. -->
   <Target Name="ArchiveTestBuild"
           DependsOnTargets="GenerateRunScript"
           Condition="'$(ArchiveTests)' == 'true'">
@@ -257,7 +255,7 @@
 
   <!--
     Code Coverage support.
-    Supported runners: OpenCover.
+    Supported runners: coverlet.
 
     Inputs:
       - Coverage: Expected to be passed in as a global property.
