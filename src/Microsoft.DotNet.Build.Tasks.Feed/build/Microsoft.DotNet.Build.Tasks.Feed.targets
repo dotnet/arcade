@@ -115,7 +115,6 @@
                     ManifestBranch="$(ManifestBranch)"
                     ManifestCommit="$(ManifestCommit)"
                     ManifestBuildData="$(ManifestBuildData)"
-                    SkipCreateManifest="$(SkipCreateManifest)"
                     ManifestRepoUri="$(ManifestRepoUri)"
                     AssetManifestPath="$(AssetManifestFilePath)" />
 
