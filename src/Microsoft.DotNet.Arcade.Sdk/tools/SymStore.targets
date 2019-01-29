@@ -33,7 +33,7 @@
       <_SymStoreAssemblyPath>$(_SymStoreOutputDir)$(TargetName)$(TargetExt)</_SymStoreAssemblyPath>
 
       <!-- By default publish Windows PDBs only for shipping components -->
-      <PublishWindowsPdb Condition="'$(PublishWindowsPdb)' == '' and '$(IsShipping)' == 'true' and Exists('$(TargetPath)') and ('$(DebugType)' == 'embedded' or Exists('$(_TargetPdbPath)'))">true</PublishWindowsPdb>
+      <PublishWindowsPdb Condition="'$(PublishWindowsPdb)' == '' and '$(IsShippingAssembly)' == 'true' and Exists('$(TargetPath)') and ('$(DebugType)' == 'embedded' or Exists('$(_TargetPdbPath)'))">true</PublishWindowsPdb>
     </PropertyGroup>
   </Target>
 
