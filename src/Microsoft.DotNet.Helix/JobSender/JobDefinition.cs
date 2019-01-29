@@ -155,7 +155,7 @@ namespace Microsoft.DotNet.Helix.Client
             foreach (WorkItemDefinition workItem in _workItems)
             {
                 JobListEntry entry = await workItem.SendAsync(storageContainer, TargetContainerName, log);
-                entry.CorrelationPayloadUris = correlationPayloadUris;
+                entry.CorrelationPayloadUrisWithDestinations = correlationPayloadUris;
                 jobList.Add(entry);
             }
 
