@@ -8,7 +8,7 @@ using Task = Microsoft.Build.Utilities.Task;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
-    public abstract class HelixTask : Task
+    public abstract class HelixTask : BaseTask
     {
         /// <summary>
         /// The Helix Api Base Uri
@@ -61,5 +61,10 @@ namespace Microsoft.DotNet.Helix.Sdk
         }
 
         protected abstract System.Threading.Tasks.Task ExecuteCore();
+
+        protected void LogExceptionRetry(Exception ex)
+        {
+            Log.LogMessage(MessageImportance.Low, $"Checking for job completion failed with: {ex}\nRetrying...");
+        }
     }
 }

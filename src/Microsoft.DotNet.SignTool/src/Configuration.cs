@@ -23,8 +23,6 @@ namespace Microsoft.DotNet.SignTool
 
         private readonly string[] _itemsToSign;
 
-        private enum SigningToolErrorCode { SIGN002 };
-
         /// <summary>
         /// This store content information for container files.
         /// Key is the content hash of the file.
@@ -77,6 +75,12 @@ namespace Microsoft.DotNet.SignTool
         /// sign already signed binaries.
         /// </summary>
         private readonly string[] _dualCertificates;
+
+        /// <summary>
+        /// Use the content hash in the path of the extracted file paths. 
+        /// The default is to use a unique content id based on the number of items extracted.
+        /// </summary>
+        private readonly bool _useHashInExtractionPath; 
         
         /// <summary>
         /// A list of files whose content needs to be overwritten by signed content from a different file.
@@ -86,7 +90,7 @@ namespace Microsoft.DotNet.SignTool
 
         public Configuration(string tempDir, string[] itemsToSign, Dictionary<string, SignInfo> strongNameInfo,
             Dictionary<ExplicitCertificateKey, string> fileSignInfo, Dictionary<string, SignInfo> extensionSignInfo,
-            string[] dualCertificates, TaskLoggingHelper log)
+            string[] dualCertificates, TaskLoggingHelper log, bool useHashInExtractionPath = false)
         {
             Debug.Assert(tempDir != null);
             Debug.Assert(itemsToSign != null && !itemsToSign.Any(i => i == null));
@@ -94,6 +98,7 @@ namespace Microsoft.DotNet.SignTool
             Debug.Assert(fileSignInfo != null);
 
             _pathToContainerUnpackingDirectory = Path.Combine(tempDir, "ContainerSigning");
+            _useHashInExtractionPath = useHashInExtractionPath;
             _log = log;
             _strongNameInfo = strongNameInfo;
             _fileSignInfo = fileSignInfo;
@@ -106,6 +111,39 @@ namespace Microsoft.DotNet.SignTool
             _dualCertificates = dualCertificates ?? new string[0];
             _whichPackagesTheFileIsIn = new Dictionary<SignedFileContentKey, HashSet<string>>();
             _errors = new Dictionary<SigningToolErrorCode, HashSet<SignedFileContentKey>>();
+        }
+
+        internal void ReadExistingContainerSigningCache()
+        {
+            _log.LogMessage("Loading existing files from cache");
+            foreach (var file in Directory.EnumerateFiles(_pathToContainerUnpackingDirectory, "*.*", SearchOption.AllDirectories))
+            {
+                string cacheRelative = file.Replace(_pathToContainerUnpackingDirectory + Path.DirectorySeparatorChar, "");
+                int indexOfHash = cacheRelative.IndexOf(Path.DirectorySeparatorChar);
+
+                if (indexOfHash <= 0)
+                {
+                    continue;
+                }
+
+                // When reading from an existing cache use the already computed hash from the directory
+                // structure instead of computing it from the file because things like signing 
+                // might have changed the hash but we want to still use the same hash of the unsigned
+                // file that originally built the cache. 
+                string stringHash = cacheRelative.Substring(0, indexOfHash);
+
+                try
+                {
+                    ImmutableArray<byte> contentHash = ContentUtil.StringToHash(stringHash);
+                }
+                catch {
+                    _log.LogMessage($"Failed to parse the content hash from path '{file}' so skipping it.");
+                    continue;
+                }
+
+                TrackFile(file, ContentUtil.StringToHash(stringHash), false);
+            }
+            _log.LogMessage("Done loading existing files from cache");
         }
 
         internal BatchSignInput GenerateListOfFiles()
@@ -157,6 +195,7 @@ namespace Microsoft.DotNet.SignTool
 
         private FileSignInfo TrackFile(string fullPath, ImmutableArray<byte> contentHash, bool isNested)
         {
+            _log.LogMessage($"Tracking file '{fullPath}' isNested={isNested}");
             var fileSignInfo = ExtractSignInfo(fullPath, contentHash);
 
             var key = new SignedFileContentKey(contentHash, Path.GetFileName(fullPath));
@@ -181,6 +220,7 @@ namespace Microsoft.DotNet.SignTool
                 }
             }
 
+            _log.LogMessage($"Caching file {key.FileName}");
             _filesByContentKey.Add(key, fileSignInfo);
 
             if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.IsZipContainer())
@@ -268,11 +308,11 @@ namespace Microsoft.DotNet.SignTool
                     {
                         if (isMicrosoftLibrary)
                         {
-                            LogWarning("SIGN001", $"Signing Microsoft library '{fullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{copyright}'.");
+                            LogWarning(SigningToolErrorCode.SIGN001, $"Signing Microsoft library '{fullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{copyright}'.");
                         }
                         else
                         {
-                            LogWarning("SIGN001", $"Signing 3rd party library '{fullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{copyright}'.");
+                            LogWarning(SigningToolErrorCode.SIGN001, $"Signing 3rd party library '{fullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{copyright}'.");
                         }
                     }
                 }
@@ -296,8 +336,8 @@ namespace Microsoft.DotNet.SignTool
             return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
         }
 
-        private void LogWarning(string code, string message)
-            => _log.LogWarning(subcategory: null, warningCode: code, helpKeyword: null, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message);
+        private void LogWarning(SigningToolErrorCode code, string message)
+            => _log.LogWarning(subcategory: null, warningCode: code.ToString(), helpKeyword: null, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message);
 
         private void LogError(SigningToolErrorCode code, SignedFileContentKey targetFile)
         {
@@ -319,20 +359,19 @@ namespace Microsoft.DotNet.SignTool
 
         private static void GetPEInfo(string fullPath, out bool isManaged, out string publicKeyToken, out string targetFramework, out string copyright)
         {
-            AssemblyName assemblyName = ContentUtil.GetAssemblyName(fullPath);
+            isManaged = ContentUtil.IsManaged(fullPath);
 
-            if (assemblyName == null)
+            if (!isManaged)
             {
-                isManaged = false;
                 publicKeyToken = string.Empty;
                 targetFramework = string.Empty;
                 copyright = string.Empty;
                 return;
             }
 
+            AssemblyName assemblyName = AssemblyName.GetAssemblyName(fullPath);
             var pktBytes = assemblyName.GetPublicKeyToken();
 
-            isManaged = true;
             publicKeyToken = (pktBytes == null || pktBytes.Length == 0) ? string.Empty : string.Join("", pktBytes.Select(b => b.ToString("x2")));
             GetTargetFrameworkAndCopyright(fullPath, out targetFramework, out copyright);
         }
@@ -462,8 +501,10 @@ namespace Microsoft.DotNet.SignTool
                         // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
                         var fileName = Path.GetFileName(relativePath);
                         if (!_filesByContentKey.TryGetValue(new SignedFileContentKey(contentHash, fileName), out var fileSignInfo))
-                        {
-                            string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, _filesByContentKey.Count().ToString(), relativePath);
+                        { 
+                            string extractPathRoot = _useHashInExtractionPath ? ContentUtil.HashToString(contentHash) : _filesByContentKey.Count().ToString();
+                            string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, extractPathRoot, relativePath);
+                            _log.LogMessage($"Extracting file '{fileName}' from '{zipFileSignInfo.FullPath}' to '{tempPath}'.");
 
                             Directory.CreateDirectory(Path.GetDirectoryName(tempPath));
 

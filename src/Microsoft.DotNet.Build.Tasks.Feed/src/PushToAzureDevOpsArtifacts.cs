@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string ManifestCommit { get; set; }
 
-        public string ManifestBuildData { get; set; }
+        public string[] ManifestBuildData { get; set; }
 
         public string AssetManifestPath { get; set; }
 
@@ -52,7 +52,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     else
                     {
-                        ITaskItem[] symbolItems = ItemsToPush
+                        var itemsToPushNoExcludes = ItemsToPush.
+                            Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase));
+                        ITaskItem[] symbolItems = itemsToPushNoExcludes
                             .Where(i => i.ItemSpec.Contains("symbols.nupkg"))
                             .Select(i =>
                             {
@@ -62,7 +64,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             })
                             .ToArray();
 
-                        ITaskItem[] packageItems = ItemsToPush
+                        ITaskItem[] packageItems = itemsToPushNoExcludes
                             .Where(i => !symbolItems.Contains(i))
                             .ToArray();
 

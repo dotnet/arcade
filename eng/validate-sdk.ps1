@@ -64,7 +64,7 @@ try {
   $packagesSource = Join-Path (Join-Path (Join-Path $validateSdkDir "packages") $configuration) "NonShipping"
   $nugetConfigPath = Join-Path $RepoRoot "NuGet.config"
   
-  . .\common\build.ps1 -restore -build -pack -configuration $configuration
+  & .\common\cibuild.cmd -configuration $configuration @Args
   
   # This is a temporary solution. When https://github.com/dotnet/arcade/issues/1293 is closed
   # we'll be able to pass a container name to build.ps1 which will put the outputs in the
@@ -89,7 +89,7 @@ try {
   
   Write-Host "Building with updated dependencies"
 
-  . .\common\build.ps1 -configuration $configuration @Args  /p:AdditionalRestoreSources=$packagesSource
+  & .\common\cibuild.cmd -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource /p:DotNetPublishBlobFeedUrl=https://dotnetfeed.blob.core.windows.net/dotnet-core-test/index.json
 }
 catch {
   Write-Host $_

@@ -9,15 +9,12 @@ using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Xml.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     public static class BuildManifestUtil
     {
-        private static readonly char[] ManifestDataPairSeparators = { ';' };
-
         public const string AssetsVirtualDir = "assets/";
 
         public static void CreateBuildManifest(TaskLoggingHelper log,
@@ -28,14 +25,81 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBuildId,
             string manifestBranch,
             string manifestCommit,
-            string manifestBuildData)
+            string[] manifestBuildData)
         {
-            log.LogMessage(MessageImportance.High, $"Creating build manifest file '{assetManifestPath}'...");
+            CreateModel(blobArtifacts, packageArtifacts, manifestBuildId, manifestBuildData, manifestRepoUri, manifestBranch, manifestCommit)
+                .WriteAsXml(assetManifestPath, log);
+        }
 
+        public static void WriteAsXml(this BuildModel buildModel, string filePath, TaskLoggingHelper log)
+        {
+            log.LogMessage(MessageImportance.High, $"Creating build manifest file '{filePath}'...");
+            string dirPath = Path.GetDirectoryName(filePath);
+
+            Directory.CreateDirectory(dirPath);
+
+            File.WriteAllText(filePath, buildModel.ToXml().ToString());
+        }
+               
+        public static BuildModel CreateModelFromItems(ITaskItem[] artifacts, string buildId, string[] BuildProperties, string repoUri, string repoBranch, string repoCommit)
+        {
+            if (artifacts == null)
+            {
+                throw new ArgumentNullException(nameof(artifacts));
+            }
+
+            var blobArtifacts = new List<BlobArtifactModel>();
+            var packageArtifacts = new List<PackageArtifactModel>();
+
+            foreach (var artifact in artifacts)
+            {
+                if (string.Equals(artifact.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var isSymbolsPackage = artifact.ItemSpec.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase)
+                    || artifact.ItemSpec.EndsWith(".snupkg", StringComparison.OrdinalIgnoreCase);
+
+                if (artifact.ItemSpec.EndsWith(".nupkg", StringComparison.OrdinalIgnoreCase) && !isSymbolsPackage)
+                {
+                    packageArtifacts.Add(BuildManifestUtil.CreatePackageArtifactModel(artifact));
+                }
+                else
+                {
+                    if (isSymbolsPackage)
+                    {
+                        string fileName = Path.GetFileName(artifact.ItemSpec);
+                        artifact.SetMetadata("RelativeBlobPath", $"{BuildManifestUtil.AssetsVirtualDir}symbols/{fileName}");
+                    }
+
+                    blobArtifacts.Add(BuildManifestUtil.CreateBlobArtifactModel(artifact));
+                }
+            }
+
+            var buildModel = BuildManifestUtil.CreateModel(
+                blobArtifacts,
+                packageArtifacts,
+                buildId,
+                BuildProperties,
+                repoUri,
+                repoBranch,
+                repoCommit);
+            return buildModel;
+        }
+
+        private static BuildModel CreateModel(IEnumerable<BlobArtifactModel> blobArtifacts,
+            IEnumerable<PackageArtifactModel> packageArtifacts,
+            string manifestBuildId,
+            string[] manifestBuildData,
+            string manifestRepoUri,
+            string manifestBranch,
+            string manifestCommit)
+        {
             BuildModel buildModel = new BuildModel(
                     new BuildIdentity
                     {
-                        Attributes = ParseManifestMetadataString(manifestBuildData),
+                        Attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData),
                         Name = manifestRepoUri,
                         BuildId = manifestBuildId,
                         Branch = manifestBranch,
@@ -44,12 +108,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);
             buildModel.Artifacts.Packages.AddRange(packageArtifacts);
-
-            string dirPath = Path.GetDirectoryName(assetManifestPath);
-
-            Directory.CreateDirectory(dirPath);
-
-            File.WriteAllText(assetManifestPath, buildModel.ToXml().ToString());
+            return buildModel;
         }
 
         public static BuildModel ManifestFileToModel(string assetManifestPath, TaskLoggingHelper log)
@@ -82,46 +141,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             string path = item.GetMetadata("RelativeBlobPath");
 
-            // Only include assets in the manifest if they're in "assets/".
-            if (path?.StartsWith(AssetsVirtualDir, StringComparison.Ordinal) == true)
+            return new BlobArtifactModel
             {
-                return new BlobArtifactModel
-                {
-                    Attributes = ParseCustomAttributes(item),
-                    Id = path.Substring(AssetsVirtualDir.Length)
-                };
-            }
-            return null;
+                Attributes = ParseCustomAttributes(item),
+                Id = path
+            };
         }
 
-        private static Dictionary<string, string> ParseCustomAttributes(ITaskItem item)
+        private static IDictionary<string, string> ParseCustomAttributes(ITaskItem item)
         {
-            return ParseManifestMetadataString(item.GetMetadata("ManifestArtifactData"));
-        }
-
-        private static Dictionary<string, string> ParseManifestMetadataString(string data)
-        {
-            if (string.IsNullOrEmpty(data))
-            {
-                return new Dictionary<string, string>();
-            }
-
-            return data.Split(ManifestDataPairSeparators, StringSplitOptions.RemoveEmptyEntries)
-                .Select(pair =>
-                {
-                    int keyValueSeparatorIndex = pair.IndexOf('=');
-                    if (keyValueSeparatorIndex > 0)
-                    {
-                        return new
-                        {
-                            Key = pair.Substring(0, keyValueSeparatorIndex).Trim(),
-                            Value = pair.Substring(keyValueSeparatorIndex + 1).Trim()
-                        };
-                    }
-                    return null;
-                })
-                .Where(pair => pair != null)
-                .ToDictionary(pair => pair.Key, pair => pair.Value);
+            return MSBuildListSplitter.GetNamedProperties(item.GetMetadata("ManifestArtifactData"));
         }
     }
 }

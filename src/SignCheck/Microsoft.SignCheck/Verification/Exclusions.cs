@@ -71,6 +71,35 @@ namespace Microsoft.SignCheck.Verification
         }
 
         /// <summary>
+        /// Return true if an exclusion matches the file path, parent file container or the path in the container
+        /// </summary>
+        /// <param name="path">The path of the file on disk.</param>
+        /// <param name="parent">The parent (container) of the file.</param>
+        /// <param name="containerPath">The path of the file in the container. May be null if the file is not embedded in a container.</param>
+        /// <returns></returns>
+        public bool IsExcluded(string path, string parent, string containerPath)
+        {
+            // 1. The file/container path matches a file part of the exclusion and the parent matches the parent part of the exclusion.
+            //    Example: bar.dll;*.zip --> Exclude any occurence of bar.dll that is in a zip file
+            //             bar.dll;foo.zip --> Exclude bar.dll only if it is contained inside foo.zip
+            if (_exclusions.Any(e => (IsMatch(e.FilePatterns, path) || IsMatch(e.FilePatterns, containerPath)) && (IsMatch(e.ParentFiles, parent))))
+            {
+                return true;
+            }
+
+            // 2. The file/container path matches the file part of the exclusion and there is no parent exclusion. 
+            //    Example: *.dll;; --> Exclude any file with a .dll extension
+            if (_exclusions.Any(e => (IsMatch(e.FilePatterns, path) || IsMatch(e.FilePatterns, containerPath)) && (e.ParentFiles.All(pf => String.IsNullOrEmpty(pf)))))
+            {
+                return true;
+            }
+
+            // 3. There is no file exclusion, but a parent exclusion matches.
+            //    Example: ;foo.zip; --> Exclude any file in foo.zip. This is similar to using *;foo.zip;
+            return _exclusions.Any(e => (e.FilePatterns.All(fp => String.IsNullOrEmpty(fp)) && IsMatch(e.ParentFiles, parent)));
+        }
+
+        /// <summary>
         /// Returns true if any <see cref="Exclusion.FilePatterns"/> matches the value of <paramref name="path"/>.
         /// </summary>
         /// <param name="path">The value to match against any <see cref="Exclusion.FilePatterns"/>.</param>

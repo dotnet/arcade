@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string ManifestCommit { get; set; }
 
-        public string ManifestBuildData { get; set; }
+        public string[] ManifestBuildData { get; set; }
 
         public string AssetManifestPath { get; set; }
 
@@ -168,6 +168,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IEnumerable<ITaskItem> items)
         {
             return artifacts.Concat(items
+                .Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase))
                 .Select(BuildManifestUtil.CreatePackageArtifactModel));
         }
 
@@ -176,6 +177,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IEnumerable<ITaskItem> items)
         {
             return artifacts.Concat(items
+                .Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase))
                 .Select(BuildManifestUtil.CreateBlobArtifactModel)
                 .Where(blob => blob != null));
         }

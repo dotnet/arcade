@@ -165,13 +165,23 @@ namespace Microsoft.SignCheck.Verification
         {
             Log.WriteMessage(LogVerbosity.Detailed, String.Format(SignCheckResources.ProcessingFile, Path.GetFileName(path), String.IsNullOrEmpty(parent) ? SignCheckResources.NA : parent));
 
-            string extension = Path.GetExtension(path);
-            FileVerifier fileVerifier = GetFileVerifier(path);
-
             SignatureVerificationResult svr;
-            svr = fileVerifier.VerifySignature(path, parent);
 
-            CheckAndUpdateExclusions(ref svr, path, parent, containerPath);
+            if (Exclusions.IsExcluded(path, parent, containerPath))
+            {
+                svr = SignatureVerificationResult.ExcludedFileResult(path, parent);
+            }
+            else
+            {
+                FileVerifier fileVerifier = GetFileVerifier(path);
+                svr = fileVerifier.VerifySignature(path, parent);
+            }
+
+            if (GenerateExclusion)
+            {
+                svr.ExclusionEntry = String.Join(";", String.Join("|", path, containerPath), parent, String.Empty);
+                Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagGenerateExclusion, svr.Filename, svr.ExclusionEntry);
+            }
 
             // Include the full path for top-level files
             if (String.IsNullOrEmpty(parent))
@@ -180,33 +190,7 @@ namespace Microsoft.SignCheck.Verification
             }
 
             return svr;
-        }
-
-        /// <summary>
-        /// Checks whether the specified file is excluded from verification and updates the SignatureVerificationResult.
-        /// If <see cref="GenerateExclusion"/> is true, an exclusion entry is also generated.
-        /// </summary>
-        /// <param name="result">The SignatureVerificationResult to update.</param>
-        /// <param name="path">The path of the file on disk.</param>
-        /// <param name="parent">The parent (container) of the file.</param>
-        /// <param name="containerPath">The path of the file in the container. May be null if the file is not embedded in a container.</param>
-        protected void CheckAndUpdateExclusions(ref SignatureVerificationResult result, string path, string parent, string containerPath)
-        {
-            if (Exclusions.Count > 0)
-            {
-                result.IsExcluded = Exclusions.IsParentExcluded(parent) || Exclusions.IsFileExcluded(path) || Exclusions.IsFileExcluded(containerPath);
-
-                if (result.IsExcluded)
-                {
-                    result.AddDetail(DetailKeys.File, SignCheckResources.DetailExcluded);
-                }
-            }
-            if (GenerateExclusion)
-            {
-                result.ExclusionEntry = String.Join(";", String.Join("|", path, containerPath), parent, String.Empty);
-                Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagGenerateExclusion, result.Filename, result.ExclusionEntry);
-            }
-        }
+        }       
 
         /// <summary>
         /// Create a directory using the specified path.

@@ -13,6 +13,8 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         [Required]
         public int TestRunId { get; set; }
 
+        public bool FailOnTestFailure { get; set; } = true;
+
         protected override async Task ExecuteCoreAsync(HttpClient client)
         {
             await RetryAsync(
@@ -36,32 +38,35 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     }
                 });
 
-            await RetryAsync(
-                async () =>
-                {
-                    using (var req = new HttpRequestMessage(
-                        HttpMethod.Get,
-                        $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}?api-version=5.0-preview.2"))
+            if (FailOnTestFailure)
+            {
+                await RetryAsync(
+                    async () =>
                     {
-                        using (var res = await client.SendAsync(req))
+                        using (var req = new HttpRequestMessage(
+                            HttpMethod.Get,
+                            $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}?api-version=5.0-preview.2"))
                         {
-                            var data = await ParseResponseAsync(req, res);
-                            if (data != null && data["runStatistics"] is JArray runStatistics)
+                            using (var res = await client.SendAsync(req))
                             {
-                                var failed = runStatistics.Children()
-                                    .FirstOrDefault(stat => stat["outcome"]?.ToString() == "Failed");
-                                if (failed != null)
+                                var data = await ParseResponseAsync(req, res);
+                                if (data != null && data["runStatistics"] is JArray runStatistics)
                                 {
-                                    Log.LogError($"Test run {TestRunId} has one or more failing tests.");
-                                }
-                                else
-                                {
-                                    Log.LogMessage(MessageImportance.Low, $"Test run {TestRunId} has not failed.");
+                                    var failed = runStatistics.Children()
+                                        .FirstOrDefault(stat => stat["outcome"]?.ToString() == "Failed");
+                                    if (failed != null)
+                                    {
+                                        Log.LogError($"Test run {TestRunId} has one or more failing tests.");
+                                    }
+                                    else
+                                    {
+                                        Log.LogMessage(MessageImportance.Low, $"Test run {TestRunId} has not failed.");
+                                    }
                                 }
                             }
                         }
-                    }
-                });
+                    });
+            }
         }
     }
 }

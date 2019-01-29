@@ -39,6 +39,30 @@ namespace Microsoft.DotNet.SignTool
         public bool DoStrongNameCheck { get; set; }
 
         /// <summary>
+        /// Allow the sign tool task to be called with an empty list of files to be signed.
+        /// </summary>
+        public bool AllowEmptySignList { get; set; }
+
+        /// <summary>
+        /// By default in non-DryRun cases we verify the vsix and nuget packages contain a signature file
+        /// This option disables that check in cases you want to sign the container at a later step. 
+        /// </summary>
+        public bool SkipZipContainerSignatureMarkerCheck { get; set; }
+
+        /// <summary>
+        /// For some cases you may need to run the sign tool more than once and if you do you want to
+        /// share the same cache directory which contains already signed binaries. In those cases
+        /// set this property to true to reuse that file cache.
+        /// </summary>
+        public bool ReadExistingContainerSigningCache { get; set; }
+
+        /// <summary>
+        /// Use the content hash in the path of the extracted file paths. 
+        /// The default is to use a unique content id based on the number of items extracted.
+        /// </summary>
+        public bool UseHashInExtractionPath { get; set; }
+
+        /// <summary>
         /// Working directory used for storing files created during signing.
         /// </summary>
         [Required]
@@ -135,9 +159,17 @@ namespace Microsoft.DotNet.SignTool
                 return;
             }
 
-            if (ItemsToSign.Count() == 0)
+            if (!AllowEmptySignList && ItemsToSign.Count() == 0)
             {
-                Log.LogWarning($"An empty list of files to sign was passed as parameter.");
+                Log.LogWarning(subcategory: null,
+                    warningCode: SigningToolErrorCode.SIGN003.ToString(),
+                    helpKeyword: null,
+                    file: null,
+                    lineNumber: 0,
+                    columnNumber: 0,
+                    endLineNumber: 0,
+                    endColumnNumber: 0,
+                    message: $"An empty list of files to sign was passed as parameter.");
             }
 
             if (!DryRun)
@@ -150,7 +182,12 @@ namespace Microsoft.DotNet.SignTool
                     return;
                 }
 
-                if (!isValidSNPath && StrongNameSignInfo?.Where(ti => ti?.ItemSpec?.EndsWith(".snk") ?? false) != null)
+                var strongNameLocally = StrongNameSignInfo != null 
+                    && StrongNameSignInfo
+                        .Where(ti => !string.IsNullOrEmpty(ti.ItemSpec) && ti.ItemSpec.EndsWith(".snk", StringComparison.OrdinalIgnoreCase))
+                        .Any();
+
+                if (!isValidSNPath && strongNameLocally)
                 {
                     Log.LogError($"An incorrect full path to 'sn.exe' was specified: {SNBinaryPath}");
                     return;
@@ -172,11 +209,20 @@ namespace Microsoft.DotNet.SignTool
 
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir, SNBinaryPath);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
-            var signingInput = new Configuration(TempDir, ItemsToSign, strongNameInfo, fileSignInfo, extensionSignInfo, dualCertificates, Log).GenerateListOfFiles();
+            var configuration = new Configuration(TempDir, ItemsToSign, strongNameInfo, fileSignInfo, extensionSignInfo, dualCertificates, Log, useHashInExtractionPath: UseHashInExtractionPath);
+
+            if (ReadExistingContainerSigningCache)
+            {
+                configuration.ReadExistingContainerSigningCache();
+            }
+
+            var signingInput = configuration.GenerateListOfFiles();
 
             if (Log.HasLoggedErrors) return;
 
             var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput, ItemsToSkipStrongNameCheck);
+
+            util.SkipZipContainerSignatureMarkerCheck = this.SkipZipContainerSignatureMarkerCheck;
 
             if (Log.HasLoggedErrors) return;
 

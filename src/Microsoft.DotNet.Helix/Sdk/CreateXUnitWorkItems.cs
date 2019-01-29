@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Helix.Sdk
     /// <summary>
     /// MSBuild custom task to create HelixWorkItems given xUnit project publish information
     /// </summary>
-    public class CreateXUnitWorkItems : Build.Utilities.Task
+    public class CreateXUnitWorkItems : BaseTask
     {
         /// <summary>
         /// An array of XUnit project workitems containing the following metadata:
@@ -101,11 +101,24 @@ namespace Microsoft.DotNet.Helix.Sdk
             string correlationPayload = IsPosixShell ? "$HELIX_CORRELATION_PAYLOAD" : "%HELIX_CORRELATION_PAYLOAD%";
             string xUnitRunner = $"{correlationPayload}/tools/{runtimeTargetFramework}/{runnerName}";
 
+            if (runtimeTargetFramework.Contains("core"))
+            {
+                var assemblyBaseName = assemblyName;
+                if (assemblyBaseName.EndsWith(".dll"))
+                {
+                    assemblyBaseName = assemblyBaseName.Substring(0, assemblyBaseName.Length - 4);
+                }
+
+                Log.LogMessage($"Adding runtimeconfig and depsfile parameters for assembly {assemblyBaseName}.");
+                driver +=
+                    $"--runtimeconfig {assemblyBaseName}.runtimeconfig.json --depsfile {assemblyBaseName}.deps.json ";
+            }
+
             string command = $"{driver}{xUnitRunner} {assemblyName}{(XUnitArguments != null ? " " + XUnitArguments : "")} -xml testResults.xml {arguments}";
 
             Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishDirectory}, Command: {command}");
 
-            return new Build.Utilities.TaskItem(assemblyName, new Dictionary<string, string>()
+            return new Microsoft.Build.Utilities.TaskItem(assemblyName, new Dictionary<string, string>()
             {
                 { "Identity", assemblyName },
                 { "PayloadDirectory", publishDirectory },

@@ -115,8 +115,25 @@ namespace Microsoft.SignCheck.Verification
         {
             foreach (string file in files)
             {
-                FileVerifier fileVerifier = GetFileVerifier(file);
-                Results.Add(fileVerifier.VerifySignature(file, parent: null));
+                // If the file is excluded add a default result
+                if (Exclusions.IsExcluded(file, parent: null, containerPath: null))
+                {
+                    var result = SignatureVerificationResult.ExcludedFileResult(file, parent: null);
+                    Results.Add(result);
+                }
+                else
+                {
+                    FileVerifier fileVerifier = GetFileVerifier(file);
+                    SignatureVerificationResult result = fileVerifier.VerifySignature(file, parent: null);
+
+                    if ((Options & SignatureVerificationOptions.GenerateExclusion) == SignatureVerificationOptions.GenerateExclusion)
+                    {
+                        result.ExclusionEntry = String.Join(";", String.Join("|", file, String.Empty), String.Empty, String.Empty);
+                        Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagGenerateExclusion, result.Filename, result.ExclusionEntry);
+                    }
+
+                    Results.Add(result);
+                }
             }
 
             return Results;

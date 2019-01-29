@@ -1,4 +1,4 @@
-﻿namespace Microsoft.DotNet.SwaggerGenerator.Modeler
+namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 {
     public class PropertyModel
     {
@@ -7,6 +7,10 @@
             Name = name;
             Required = required;
             ReadOnly = readOnly;
+            if (!Required && !type.IsNullable)
+            {
+                type = new TypeReference.NullableTypeReference(type);
+            }
             Type = type;
         }
 

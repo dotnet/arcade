@@ -1,20 +1,21 @@
 <Project DefaultTargets="Test">
   <!-- <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/> -->
   <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.props"/>
-  
+
   <PropertyGroup>
     <HelixSource>pr/dotnet/arcade/$(BUILD_SOURCEBRANCH)/</HelixSource>
     <HelixType>test/product/</HelixType>
     <HelixBuild>$(BUILD_BUILDNUMBER)</HelixBuild>
-    <HelixBuild Condition="'$(HelixBuild)' == ''">12345.01</HelixBuild>
+    <HelixBuild Condition="'$(HelixBuild)' == ''">123460.01</HelixBuild>
 
     <IncludeDotNetCli>true</IncludeDotNetCli>
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
 
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-
-    <XUnitProjects>true</XUnitProjects>
+    
+    <EnableXUnitReporter>true</EnableXUnitReporter>
+    <FailOnMissionControlTestFailure>true</FailOnMissionControlTestFailure>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,28 +31,30 @@
     <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(_BuildConfig)/net472/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(HelixApiAcccessToken)' != '' ">
+  <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
     <HelixTargetQueue Include="Ubuntu.1604.Amd64"/>
+    <HelixTargetQueue Include="RedHat.7.Amd64"/>
     <HelixTargetQueue Include="Windows.10.Amd64"/>
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$(HelixApiAcccessToken)' == '' ">
+  <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
     <IsExternal>true</IsExternal>
     <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
     <Creator Condition=" '$(Creator)' == ''">anon</Creator>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(HelixApiAcccessToken)' == '' ">
+  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
     <HelixTargetQueue Include="Ubuntu.1604.Amd64.Open"/>
-    <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
+    <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
+    <HelixTargetQueue Include="Windows.10.Amd64.ServerRS4.Open"/>
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(HelixTargetQueue)' == 'Ubuntu.1604.Amd64'">
+  <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
     <HelixPreCommands>$(HelixPreCommands);find $HELIX_CORRELATION_PAYLOAD -type f</HelixPreCommands>
     <HelixPreCommands>$(HelixPreCommands);find . -type f</HelixPreCommands>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(HelixTargetQueue)' == 'Windows.10.Amd64'">
+  <PropertyGroup Condition="$(HelixTargetQueue.StartsWith('Windows'))">
     <HelixPreCommands>$(HelixPreCommands);dir /s %HELIX_CORRELATION_PAYLOAD%</HelixPreCommands>
     <HelixPreCommands>$(HelixPreCommands);dir /s</HelixPreCommands>
   </PropertyGroup>

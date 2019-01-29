@@ -11,6 +11,12 @@
   <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
     <RunScriptCommands Include="set DEVPATH=%RUNTIME_PATH%" />
   </ItemGroup>
+
+  <!-- Set DOTNET_ROOT to route global tools shims to the correct host. -->
+  <ItemGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
+    <RunScriptCommands Condition="'$(TargetOS)' == 'Windows_NT'" Include="set DOTNET_ROOT=$(RunScriptHostDir)" />
+    <RunScriptCommands Condition="'$(TargetOS)' != 'Windows_NT'" Include="export DOTNET_ROOT=$(RunScriptHostDir)" />
+  </ItemGroup>
   
   <!-- Binplace dirs for supplemental test data. -->
   <ItemGroup>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -134,11 +135,11 @@ namespace Microsoft.DotNet.Helix.Client
             var jobList = new List<JobListEntry>();
 
             List<string> correlationPayloadUris =
-                (await Task.WhenAll(CorrelationPayloads.Select(p => p.UploadAsync(storageContainer)))).ToList();
+                (await Task.WhenAll(CorrelationPayloads.Select(p => p.UploadAsync(storageContainer, log)))).ToList();
 
             foreach (WorkItemDefinition workItem in _workItems)
             {
-                JobListEntry entry = await workItem.SendAsync(storageContainer, TargetContainerName);
+                JobListEntry entry = await workItem.SendAsync(storageContainer, TargetContainerName, log);
                 entry.CorrelationPayloadUris = correlationPayloadUris;
                 jobList.Add(entry);
             }
@@ -151,20 +152,22 @@ namespace Microsoft.DotNet.Helix.Client
 
             string jobStartIdentifier = Guid.NewGuid().ToString("N");
             JobCreationResult newJob = await HelixApi.RetryAsync(
-                () => JobApi.NewOperationAsync(
+                () => JobApi.NewAsync(
                     new JobCreationRequest(
                         Source,
                         Type,
                         Build,
-                        _properties,
+                        _properties.ToImmutableDictionary(),
                         jobListUri.ToString(),
                         TargetQueueId,
                         storageContainer.Uri,
                         storageContainer.ReadSas,
-                        storageContainer.WriteSas,
-                        Creator,
-                        maxRetryCount: MaxRetryCount,
-                        jobStartIdentifier: jobStartIdentifier)),
+                        storageContainer.WriteSas)
+                    {
+                        Creator = Creator,
+                        MaxRetryCount = MaxRetryCount ?? 0,
+                        JobStartIdentifier = jobStartIdentifier,
+                    }),
                 ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."));
 
 

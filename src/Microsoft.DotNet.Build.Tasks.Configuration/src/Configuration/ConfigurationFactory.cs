@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
         /// </summary>
         /// <param name="configurationString"></param>
         /// <returns></returns>
-        public Configuration ParseConfiguration(string configurationString, bool permitUnknownValues = false)
+        public Configuration ParseConfiguration(string configurationString, bool permitUnknownValues = false, Configuration baseConfiguration = null)
         {
             bool isPlaceHolderConfiguration = false;
 
@@ -177,6 +177,15 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
             {
                 configurationString = configurationString.Substring(1);
                 isPlaceHolderConfiguration = true;
+            }
+
+            if (baseConfiguration != null)
+            {
+                if (baseConfiguration.Values == null ||
+                    baseConfiguration.Values.Length != PropertiesByOrder.Length)
+                {
+                    throw new ArgumentException($"Cannot use {nameof(baseConfiguration)} {baseConfiguration} since it doesn't define the same number of properties.");
+                }
             }
 
             var values = configurationString.Split(PropertySeparator);
@@ -188,11 +197,13 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                 var value = valueIndex < values.Length ? values[valueIndex] : null;
                 var property = PropertiesByOrder[propertyIndex];
 
+                var defaultValue = GetDefaultValue(property, baseConfiguration?.Values[propertyIndex]);
+
                 if (String.IsNullOrEmpty(value))
                 {
-                    if (property.DefaultValue != null)
+                    if (defaultValue != null)
                     {
-                        valueSet[propertyIndex] = property.DefaultValue;
+                        valueSet[propertyIndex] = defaultValue;
                         continue;
                     }
                     else
@@ -222,14 +233,14 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                     // so long as we have properties with defaultValues, set them
                     while(propertyValue.Property != property)
                     {
-                        if (property.DefaultValue == null)
+                        if (defaultValue == null)
                         {
                             // we can't use this property at this index
                             throw new ArgumentException($"Property '{propertyValue.Property.Name}' value '{propertyValue.Value}' occurred at unexpected position in configuration '{configurationString}'");
                         }
 
                         // give this property its default value and advance to the next property
-                        valueSet[propertyIndex++] = property.DefaultValue;
+                        valueSet[propertyIndex++] = defaultValue;
 
                         if (propertyIndex > PropertiesByOrder.Length)
                         {
@@ -238,6 +249,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                         }
 
                         property = PropertiesByOrder[propertyIndex];
+                        defaultValue = GetDefaultValue(property, baseConfiguration?.Values[propertyIndex]);
                     }
                 }
 
@@ -250,6 +262,21 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
             {
                 IsPlaceHolderConfiguration = isPlaceHolderConfiguration
             };
+
+            PropertyValue GetDefaultValue(PropertyInfo property, PropertyValue baseValue)
+            {
+                if (baseValue != null && property.Insignificant)
+                {
+                    if (baseValue.Property != property)
+                    {
+                        throw new ArgumentException($"Cannot use {nameof(baseValue)} {baseValue} property {baseValue.Property} since it differs from property {property}.");
+                    }
+
+                    return baseValue;
+                }
+
+                return property.DefaultValue;
+            }
         }
     }
 }

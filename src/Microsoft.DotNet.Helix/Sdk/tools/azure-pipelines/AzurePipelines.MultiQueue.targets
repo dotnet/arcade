@@ -1,6 +1,11 @@
 <Project>
+  <PropertyGroup>
+    <!-- Azure Pipelines requires waiting for work item completion -->
+    <WaitForWorkItemCompletion>true</WaitForWorkItemCompletion>
+  </PropertyGroup>
+
   <Target Name="StartTestRuns"
-          BeforeTargets="CoreTest"
+          BeforeTargets="CoreBuild"
           Outputs="%(HelixTargetQueue.Identity)">
     <PropertyGroup>
       <_CurrentTargetQueue>%(HelixTargetQueue.Identity)</_CurrentTargetQueue>
@@ -21,11 +26,11 @@
   </Target>
 
   <Target Name="StopTestRuns"
-          AfterTargets="Wait"
+          AfterTargets="CoreTest"
           Condition="$(WaitForWorkItemCompletion)"
           Outputs="%(HelixTargetQueue.Identity)">
     <Message Text="Stopping Azure Pipelines Test Run %(HelixTargetQueue.TestRunName)" Importance="High"/>
-    <StopAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)">
+    <StopAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)" FailOnTestFailure="$(FailOnTestFailure)">
     </StopAzurePipelinesTestRun>
   </Target>
 </Project>

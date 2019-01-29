@@ -36,6 +36,8 @@
     ManifestBuildId - Build ID listed in the manifest. Default: "no build id provided"
     ManifestBranch - Branch listed in the manifest. Default: none
     ManifestCommit - Commit listed in the manifest. Default: none
+    ManifestBuildData - Additional *key=value* attributes to append to the build manifest file (for dependency flow
+       this is commonly set to "Location=$(ExpectedFeedUrl)"
       Default: false
   -->
   
@@ -45,6 +47,7 @@
   </PropertyGroup>
   <UsingTask TaskName="ConfigureInputFeeds" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
   <UsingTask TaskName="CopyBlobDirectory" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
+  <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
   <UsingTask TaskName="GetBlobFeedPackageList" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
   <UsingTask TaskName="ParseBlobUrl" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
   <UsingTask TaskName="PushToBlobFeed" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>

@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Helix.Client
             Content = content;
         }
 
-        public async Task<string> UploadAsync(IBlobContainer payloadContainer)
+        public async Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log)
         {
             using (var stream = new MemoryStream())
             {

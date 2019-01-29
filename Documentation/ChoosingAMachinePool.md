@@ -4,7 +4,7 @@
 All Azure Pipelines builds should use the following agent queues
  * Pull Request validation and Public CI
    * Windows - [dotnet-external-temp]
-   * Linux - (tbd)
+   * Linux - [dnceng-linux-external-temp]
    * Mac - [Hosted macOS](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml)
  * Official Signed Builds
    * Windows - [dotnet-internal-temp]
@@ -13,7 +13,7 @@ All Azure Pipelines builds should use the following agent queues
 
 Pools for an Azure DevOps Pipeline can be specified at the build and/or job level in the yaml file ([documentation](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=vsts&tabs=yaml)).
 
-Detailed information about the machines in an agent queue can be found in the [dotnet-helix-machines] repo. Additional dependencies not avaliable on the machines should be bootstrapped in using our [Bootstrapping System]. If bootstrapping doesn't work for a specific dependency contact [@dotnet/dnceng] for guidance.
+Detailed information about the machines in an agent queue can be found in the [dotnet-helix-machines] repo. Additional dependencies not available on the machines should be bootstrapped in using our [Bootstrapping System]. If bootstrapping doesn't work for a specific dependency contact [@dotnet/dnceng] for guidance.
 
 ## Test Execution
 All test execution should run through helix. An up to date list of helix queues can be obtained from the [Helix Queue Info Api] using the following steps.
@@ -29,6 +29,7 @@ All test execution should run through helix. An up to date list of helix queues 
 
 [dotnet-internal-temp]: https://dev.azure.com/dnceng/internal/_settings/agentqueues?queueId=67&_a=agents
 [dnceng-linux-internal-temp]: https://dev.azure.com/dnceng/internal/_settings/agentqueues?queueId=61&_a=agents
+[dnceng-linux-external-temp]: https://dev.azure.com/dnceng/public/_settings/agentqueues?queueId=65&_a=agents
 [dotnet-external-temp]: https://dev.azure.com/dnceng/internal/_settings/agentqueues?queueId=47&_a=agents
 
 [dotnet-helix-machines]: https://dev.azure.com/dnceng/internal/internal%20Team/_git/dotnet-helix-machines?path=%2FREADME.md&version=GBmaster

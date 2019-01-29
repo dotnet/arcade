@@ -106,14 +106,17 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
-        public async Task<JobListEntry> SendAsync(IBlobContainer payloadStorage, string containerName)
+        public async Task<JobListEntry> SendAsync(
+            IBlobContainer payloadStorage,
+            string containerName,
+            Action<string> log)
         {
             return new JobListEntry
             {
                 WorkItemId = WorkItemName,
                 Command = Command,
                 TimeoutInSeconds = (int) Timeout.TotalSeconds,
-                PayloadUri = await Payload.UploadAsync(payloadStorage),
+                PayloadUri = await Payload.UploadAsync(payloadStorage, log),
             };
         }
     }
