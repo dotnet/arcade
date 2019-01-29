@@ -63,6 +63,11 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        public Task<Tuple<string, string>> UploadAsync(IBlobContainer payloadContainer, string destination, Action<string> log)
+        {
+            return Task.FromResult(new Tuple<string, string>(UploadAsync(payloadContainer, log).GetAwaiter().GetResult(), destination));
+        }
+
         private async Task<string> DoUploadAsync(IBlobContainer payloadContainer, Action<string> log)
         {
             await Task.Yield();
