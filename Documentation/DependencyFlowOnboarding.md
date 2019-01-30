@@ -162,6 +162,28 @@ Merge Policies:
 
 These steps can be altered for additional subscriptions to other repositories.
 
+###### Supported values
+
+Merge Policies
+
+Merge policies are a set of rules that, if satisfied, mean that an"auto-update PR will be 
+automatically merged. A PR is only merged automatically if policies exist and all are satisfied.
+
+* AllChecksSuccessful. All PR checks must be successful, potentially ignoring a set of checks,
+specified in `ignoreChecks`. Checks might be ignored if they are unrelated to PR validation. 
+The check name corresponds to the string that shows up in GitHub/Azure DevOps.
+* RequireChecks. Require that a specific set of checks pass. Check names need to be defined in
+the `checks` property. The check name corresponds to the string that shows up in GitHub/Azure DevOps.
+* NoExtraCommits. If additional non-bot commits appear in the PR, the PR should not be merged.
+
+Update frequencies
+
+How often does a source repo flows dependencies into a target repo.
+
+* everyDay. The target repo only gets the dependencies updated once a day.
+* everyBuild. The target repo gets the dependencies updated after every source repo build.
+* none. No updates will happen in the target repo.
+
 ##### 3.5. Create a channel (optional, typically not needed)
 
 You only need to create a channel in  rare cases.  Most .NET Core 3 builds should be assigned to the ".NET Core 3 Dev" channel.  However, if you do need to create a new channel:
