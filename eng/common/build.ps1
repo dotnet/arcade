@@ -2,7 +2,7 @@
 Param(
   [string][Alias('c')]$configuration = "Debug",
   [string] $projects,
-  [string] $architecture = "<auto>",
+  [string] $architecture,
   [string][Alias('v')]$verbosity = "minimal",
   [string] $msbuildEngine = $null,
   [bool] $warnAsError = $true,
@@ -52,6 +52,7 @@ function Print-Usage() {
 
     Write-Host "Advanced settings:"
     Write-Host "  -projects <value>       Semi-colon delimited list of sln/proj's to build. Globbing is supported (*.sln)"
+    Write-Host "  -ci                     Set when running on CI server"
     Write-Host "  -prepareMachine         Prepare machine for CI run"
     Write-Host "  -msbuildEngine <value>  Msbuild engine to use to run build ('dotnet', 'vs', or unspecified)."
     Write-Host ""

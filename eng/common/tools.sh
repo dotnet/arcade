@@ -7,14 +7,13 @@ ci=${ci:-false}
 configuration=${configuration:-'Debug'}
 
 # .NET Core install architecture. Common values include 'x64', 'x86', 'arm', 'arm64'.
-architecture=${architecture:-'<auto>'}
+architecture=${architecture:-''}
 
 # Set to true to output binary log from msbuild. Note that emitting binary log slows down the build.
 # Binary log must be enabled on CI.
 binary_log=${binary_log:-$ci}
 
 # Turns on machine preparation/clean up code that changes the machine state (e.g. kills build processes).
-nodereuse=${nodereuse:-true}
 prepare_machine=${prepare_machine:-false}
 
 # True to restore toolsets and dependencies.
@@ -158,7 +157,12 @@ function InstallDotNetSdk {
   GetDotNetInstallScript "$root"
   local install_script=$_GetDotNetInstallScript
 
-  bash "$install_script" --version $version --install-dir "$root" --architecture "$arch" || {
+  local arch_parameter=""
+  if [[ "$arch" != "" ]]; then
+    arch_parameter="--architecture $arch"
+  fi
+
+  bash "$install_script" --version $version --install-dir "$root" "$arch_parameter" || {
     local exit_code=$?
     echo "Failed to install dotnet SDK (exit code '$exit_code')." >&2
     ExitWithExitCode $exit_code

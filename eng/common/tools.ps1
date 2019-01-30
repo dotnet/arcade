@@ -8,7 +8,7 @@
 [string]$configuration = if (Test-Path variable:configuration) { $configuration } else { "Debug" }
 
 # .NET Core install architecture. Common values include 'x64', 'x86', 'arm', 'arm64'.
-[string]$architecture = if (Test-Path variable:architecture) { $architecture} else { "<auto>" }
+[string]$architecture = if (Test-Path variable:architecture) { $architecture } else { $null }
 
 # Set to true to output binary log from msbuild. Note that emitting binary log slows down the build.
 # Binary log must be enabled on CI.
@@ -164,9 +164,14 @@ function GetDotNetInstallScript([string] $dotnetRoot) {
   return $installScript
 }
 
-function InstallDotNetSdk([string] $dotnetRoot, [string] $version, [string] $arch) {
+function InstallDotNetSdk([string] $dotnetRoot, [string] $version, [string] $arch = $null) {
   $installScript = GetDotNetInstallScript $dotnetRoot
-  & $installScript -Version $version -InstallDir $dotnetRoot -Architecture $arch
+  if ($arch -eq $null) {
+    & $installScript -Version $version -InstallDir $dotnetRoot
+  }
+  else {
+    & $installScript -Version $version -InstallDir $dotnetRoot -Architecture $arch
+  }
   if ($lastExitCode -ne 0) {
     Write-Host "Failed to install dotnet cli (exit code '$lastExitCode')." -ForegroundColor Red
     ExitWithExitCode $lastExitCode

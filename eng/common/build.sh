@@ -65,7 +65,7 @@ binary_log=false
 
 projects=''
 configuration='Debug'
-architecture='<auto>'
+architecture=''
 prepare_machine=false
 verbosity='minimal'
 properties=''
