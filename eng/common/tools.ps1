@@ -8,7 +8,7 @@
 [string]$configuration = if (Test-Path variable:configuration) { $configuration } else { "Debug" }
 
 # .NET Core install architecture. Common values include 'x64', 'x86', 'arm', 'arm64'.
-[string]$architecture = if (Test-Path variable:architecture) { $architecture } else { $null }
+[string]$architecture = if (Test-Path variable:architecture) { $architecture } else { "" }
 
 # Set to true to output binary log from msbuild. Note that emitting binary log slows down the build.
 # Binary log must be enabled on CI.
@@ -164,9 +164,9 @@ function GetDotNetInstallScript([string] $dotnetRoot) {
   return $installScript
 }
 
-function InstallDotNetSdk([string] $dotnetRoot, [string] $version, [string] $arch = $null) {
+function InstallDotNetSdk([string] $dotnetRoot, [string] $version, [string] $arch = "") {
   $installScript = GetDotNetInstallScript $dotnetRoot
-  if ($arch -eq $null) {
+  if ($arch -eq "") {
     & $installScript -Version $version -InstallDir $dotnetRoot
   }
   else {
