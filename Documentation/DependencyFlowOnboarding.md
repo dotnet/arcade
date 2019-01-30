@@ -166,7 +166,7 @@ These steps can be altered for additional subscriptions to other repositories.
 
 Merge Policies
 
-Merge policies are a set of rules that, if satisfied, mean that an"auto-update PR will be 
+Merge policies are a set of rules that, if satisfied, mean that an auto-update PR will be 
 automatically merged. A PR is only merged automatically if policies exist and all are satisfied.
 
 * AllChecksSuccessful. All PR checks must be successful, potentially ignoring a set of checks,
