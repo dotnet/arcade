@@ -4,6 +4,7 @@
   <UsingTask TaskName="GenerateConfigurationProps" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
   <UsingTask TaskName="FindBestConfigurations" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
   <UsingTask TaskName="NormalizeConfigurations" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
+  <UsingTask TaskName="UpdateVSConfigurations" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
 
   <PropertyGroup>
     <_traversalBuildConfigurations>$(BuildConfiguration)</_traversalBuildConfigurations>
@@ -234,6 +235,17 @@
     <Error Condition="'$(BuildConfigurationFolder)' == ''" Text="BuildConfigurationFolder property was not specified.  It is required for using the $(MSBuildThisFileName) package." />
     <!-- Generate the configurations for this repo -->
     <GenerateConfigurationProps Properties="@(Property)" PropertyValues="@(PropertyValue)" PropsFolder="$(BuildConfigurationFolder)" />
+  </Target>
+  
+  <!-- intentionally not sequenced, expected to be called directly-->
+  <Target Name="UpdateVSConfigurations">
+    <Message Importance="High" Text="Updating configurations for projects ..." />
+    <ItemGroup Condition="'@(ProjectsToUpdate)' == '' AND '@(SolutionsToUpdate)' == ''">
+      <!-- if not specified, then use the current project and try to find a solution. -->
+      <ProjectsToUpdate Include="$(MSBuildProjectFullPath)" />
+      <SolutionsToUpdate Exists="..\$(MSBuildProjectName).sln" Include="..\$(MSBuildProjectName).sln" />
+    </ItemGroup>
+    <UpdateVSConfigurations ProjectsToUpdate="@(ProjectsToUpdate)" SolutionsToUpdate="@(SolutionsToUpdate)" />
   </Target>
 
   <Import Project="BinPlace.targets" />
