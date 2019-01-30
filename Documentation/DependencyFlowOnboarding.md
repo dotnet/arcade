@@ -169,7 +169,7 @@ Merge Policies
 Merge policies are a set of rules that, if satisfied, mean that an auto-update PR will be 
 automatically merged. A PR is only merged automatically if policies exist and all are satisfied.
 
-* AllChecksSuccessful. All PR checks must be successful, potentially ignoring a set of checks,
+* AllChecksSuccessful. All PR checks must be successful, potentially ignoring a set of checks
 specified in `ignoreChecks`. Checks might be ignored if they are unrelated to PR validation. 
 The check name corresponds to the string that shows up in GitHub/Azure DevOps.
 * RequireChecks. Require that a specific set of checks pass. Check names need to be defined in
