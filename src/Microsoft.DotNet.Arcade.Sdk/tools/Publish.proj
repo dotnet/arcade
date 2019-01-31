@@ -78,6 +78,22 @@
       This is part of the work on https://github.com/dotnet/arcade/issues/1179
     -->
 
+    <!-- 
+      Sadly AzDO doesn't have a variable to tell the account name. Also
+      the format of CollectionURI is not precise across different agent 
+      configurations. Code below takes care of extracting the account 
+      name from the CollectionURI in different formats.
+    -->
+    <PropertyGroup>
+      <CollectionUri>$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)</CollectionUri>
+      
+			<!-- When we have dev.azure.com/<account>/ -->
+      <AzureDevOpsAccount Condition="$(CollectionUri.IndexOf('dev.azure.com')) >= 0">$(url.Split('/')[3])</AzureDevOpsAccount>
+		
+			<!-- When we have <account>.visualstudio.com -->
+      <AzureDevOpsAccount Condition="$(CollectionUri.IndexOf('visualstudio.com')) >= 0">$(url.Split('.')[0].Split('/')[2])</AzureDevOpsAccount>
+    </PropertyGroup>
+
     <!--
       The new Maestro/BAR build model keeps separate Azure DevOps and GitHub build information.
       The GitHub information will be extracted based on the Azure DevOps repository.
@@ -86,7 +102,7 @@
       <NewManifestBuildData Include="InitialAssetsLocation=$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$(SYSTEM_TEAMPROJECT)/_apis/build/builds/$(BUILD_BUILDID)/artifacts" />
       <NewManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
       <NewManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
-      <NewManifestBuildData Include="AzureDevOpsAccount=$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI.replace('https://dev.azure.com/', '').replace('/', ''))" />
+      <NewManifestBuildData Include="AzureDevOpsAccount=$(AzureDevOpsAccount)" />
       <NewManifestBuildData Include="AzureDevOpsProject=$(SYSTEM_TEAMPROJECT)" />
       <NewManifestBuildData Include="AzureDevOpsBuildNumber=$(BUILD_BUILDNUMBER)" />
       <NewManifestBuildData Include="AzureDevOpsRepository=$(BUILD_REPOSITORY_URI)" />
