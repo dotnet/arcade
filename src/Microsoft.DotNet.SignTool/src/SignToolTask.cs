@@ -369,7 +369,7 @@ namespace Microsoft.DotNet.SignTool
                     if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(certificateName, StringComparison.OrdinalIgnoreCase) &&
                         SignToolConstants.IgnoreFileCertificateSentinel.Equals(strongName, StringComparison.OrdinalIgnoreCase))
                     {
-                        Log.LogMessage($"CertificateName & ItemSpec metadata of {nameof(StrongNameSignInfo)} shouldn't be both '{SignToolConstants.IgnoreFileCertificateSentinel}'");
+                        Log.LogWarning($"CertificateName & ItemSpec metadata of {nameof(StrongNameSignInfo)} shouldn't be both '{SignToolConstants.IgnoreFileCertificateSentinel}'");
                         continue;
                     }
 
