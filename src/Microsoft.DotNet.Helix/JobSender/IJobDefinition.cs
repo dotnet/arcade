@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Helix.Client
         IJobDefinition WithCorrelationPayloadUris(IDictionary<Uri, string> payloadUrisWithDestinations);
         IJobDefinition WithCorrelationPayloadDirectory(string directory, string destination = "");
         IJobDefinition WithCorrelationPayloadDirectory(string directory, bool includeDirectoryName, string destination = "");
-        IJobDefinition WithCorrelationPayloadDirectory(string directory, string archiveEntryPrefix, string destination);
+        IJobDefinition WithCorrelationPayloadDirectory(string directory, string archiveEntryPrefix, string destination = "");
         IJobDefinition WithCorrelationPayloadArchive(string archive, string destination = "");
         IJobDefinition WithCorrelationPayloadFiles(params string[] files);
         IJobDefinition WithCorrelationPayloadFiles(IList<string> files, string destination);

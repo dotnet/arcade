@@ -64,9 +64,9 @@ namespace Microsoft.DotNet.Helix.Client
 
         public IJobDefinition WithCorrelationPayloadUris(IDictionary<Uri, string> payloadUrisWithDestinations)
         {
-            foreach (Uri uri in payloadUrisWithDestinations.Keys)
+            foreach (var (uri, destination) in payloadUrisWithDestinations)
             {
-                CorrelationPayloads.Add(new UriPayload(uri), payloadUrisWithDestinations[uri]);
+                CorrelationPayloads.Add(new UriPayload(uri), destination);
             }
             return this;
         }
@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Helix.Client
             return WithCorrelationPayloadDirectory(directory, archiveEntryPrefix, destination);
         }
 
-        public IJobDefinition WithCorrelationPayloadDirectory(string directory, string archiveEntryPrefix, string destination)
+        public IJobDefinition WithCorrelationPayloadDirectory(string directory, string archiveEntryPrefix, string destination = "")
         {
             CorrelationPayloads.Add(new DirectoryPayload(directory, archiveEntryPrefix), destination);
             return this;
