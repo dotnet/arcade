@@ -35,10 +35,5 @@ namespace Microsoft.DotNet.Helix.Client
                 return zipUri.AbsoluteUri;
             }
         }
-
-        public Task<Tuple<string, string>> UploadAsync(IBlobContainer payloadContainer, string destination, Action<string> log)
-        {
-            return Task.FromResult(new Tuple<string, string>(UploadAsync(payloadContainer, log).GetAwaiter().GetResult(), destination));
-        }
     }
 }

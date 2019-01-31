@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Helix.Client
             var jobList = new List<JobListEntry>();
 
             Dictionary<string, string> correlationPayloadUris =
-                (await Task.WhenAll(CorrelationPayloads.Select(p => p.Key.UploadAsync(storageContainer, p.Value, log)))).ToDictionary(x => x.Item1, x=> x.Item2);
+                (await Task.WhenAll(CorrelationPayloads.Select(async p => (uri: await p.Key.UploadAsync(storageContainer, log), destination: p.Value)))).ToDictionary(x => x.uri, x => x.destination);
 
             foreach (WorkItemDefinition workItem in _workItems)
             {
