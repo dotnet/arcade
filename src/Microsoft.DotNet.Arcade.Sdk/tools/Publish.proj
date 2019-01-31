@@ -200,8 +200,6 @@
   <Target Name="PublishSymbols"
           DependsOnTargets="BeforePublish"
           Condition="$(PublishToSymbolServer)">
-
-    <!-- Symbol publishing -->
     <PropertyGroup>
       <DotNetSymbolExpirationInDays Condition="'$(DotNetSymbolExpirationInDays)' == ''">3650</DotNetSymbolExpirationInDays>
       <DryRun>false</DryRun>
