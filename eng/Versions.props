@@ -24,6 +24,7 @@
     <MicrosoftDotNetVersionToolsVersion>2.2.0-preview1-02815-01</MicrosoftDotNetVersionToolsVersion>
     <MicrosoftIdentityModelClientsActiveDirectoryVersion>3.19.8</MicrosoftIdentityModelClientsActiveDirectoryVersion>
     <MicrosoftRestClientRuntimeVersion>2.3.13</MicrosoftRestClientRuntimeVersion>
+    <MicrosoftExtensionsDependencyModelVersion>2.1.0</MicrosoftExtensionsDependencyModelVersion>
     <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
     <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
     <MicrosoftNetTestSdkVersion>15.7.2</MicrosoftNetTestSdkVersion>
@@ -48,9 +49,9 @@
     <XUnitVersion>2.4.1-pre.build.4059</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <XUnitVSRunnerVersion>2.4.1-pre.build.4059</XUnitVSRunnerVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.19073.5</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.19080.6</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.0.0-beta.19060.8</MicrosoftDotNetMaestroTasksVersion>
-    <MicrosoftDotNetSignToolVersion>1.0.0-beta.19073.5</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetSignToolVersion>1.0.0-beta.19080.6</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>

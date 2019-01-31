@@ -58,6 +58,16 @@
 
   </Target>
 
+  <!-- 
+    Shared framework deps file generation.
+    Produces a test shared-framework deps file.
+    To use invoke target directly specifying NETCoreAppTestSharedFrameworkPath property.
+  -->
+  <UsingTask TaskName="GenerateTestSharedFrameworkDepsFile" AssemblyFile="$(MSBuildTestAssemblyPath)"/>
+  <Target Name="GenerateTestSharedFrameworkDepsFile" Condition="'$(GenerateTestSharedFrameworkDepsFile)' == 'true'">
+    <GenerateTestSharedFrameworkDepsFile SharedFrameworkDirectory="$(NETCoreAppTestSharedFrameworkPath)" />
+  </Target>
+
   <!-- UAP resource generation needed by both source and test projects. -->
   <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Resources.uap.targets" />
 
