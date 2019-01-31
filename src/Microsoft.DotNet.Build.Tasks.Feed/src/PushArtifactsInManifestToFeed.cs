@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         var assetRecord = buildInformation.Assets
                             .Where(a => a.Name.Equals(package.Id) && a.Version.Equals(package.Version))
-                            .SingleOrDefault();
+                            .Single();
 
                         if (assetRecord == null)
                         {
@@ -170,7 +170,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             continue;
                         }
 
-                        await client.Assets.AddLocation(assetRecord.Id, ExpectedFeedUrl, "NugetFeed");
+                        await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id.Value, ExpectedFeedUrl, "NugetFeed");
                     }
                 }
 
@@ -210,7 +210,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             continue;
                         }
 
-                        await client.Assets.AddLocation(assetRecord.Id, ExpectedFeedUrl, "NugetFeed");
+                        await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id.Value, ExpectedFeedUrl, "NugetFeed");
                     }
                 }
             }
