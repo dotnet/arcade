@@ -164,6 +164,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             .Where(a => a.Name.Equals(package.Id) && a.Version.Equals(package.Version))
                             .SingleOrDefault();
 
+                        if (assetRecord == null)
+                        {
+                            Log.LogWarning($"Asset with Id {package.Id}, Version {package.Version} isn't registered on the BAR Build with ID {BARBuildId}");
+                            continue;
+                        }
+
                         await client.Assets.AddLocation(assetRecord.Id, ExpectedFeedUrl, "NugetFeed");
                     }
                 }
@@ -197,6 +203,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         var assetRecord = buildInformation.Assets
                             .Where(a => a.Name.Equals(package.Id))
                             .SingleOrDefault();
+
+                        if (assetRecord == null)
+                        {
+                            Log.LogWarning($"Asset with Id {package.Id} isn't registered on the BAR Build with ID {BARBuildId}");
+                            continue;
+                        }
 
                         await client.Assets.AddLocation(assetRecord.Id, ExpectedFeedUrl, "NugetFeed");
                     }

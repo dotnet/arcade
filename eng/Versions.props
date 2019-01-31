@@ -70,8 +70,4 @@
       https://dotnet.myget.org/F/symreader/api/v3/index.json
     </RestoreSources>
   </PropertyGroup>
-  <!--Package names-->
-  <PropertyGroup>
-    <MicrosoftDotNetMaestroClientPackage>Microsoft.DotNet.Maestro.Client</MicrosoftDotNetMaestroClientPackage>
-  </PropertyGroup>
 </Project>
