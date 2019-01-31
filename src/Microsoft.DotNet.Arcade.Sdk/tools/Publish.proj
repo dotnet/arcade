@@ -30,7 +30,26 @@
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets" Condition="$(PublishToAzure)"/>
   <Import Project="$(NuGetPackageRoot)microsoft.symboluploader.build.task\$(MicrosoftSymbolUploaderBuildTaskVersion)\build\PublishSymbols.targets" Condition="$(PublishToSymbolServer)"/>
 
-  <Target Name="Publish" Condition="$(PublishToAzure) or $(PublishToSourceBuildStorage) or $(PublishToSymbolServer)">
+  <Target Name="Publish"
+          DependsOnTargets="BeforePublish;BeforePublishPackagesToBlobFeed;BeforePublishFilesToBlobFeed;PublishSymbols"
+          Condition="$(PublishToAzure) or $(PublishToSourceBuildStorage) or $(PublishToSymbolServer)">
+  </Target>
+
+  <!-- Target used to condition calling PublishPackagesToBlobFeed target from the Feed package -->
+  <Target Name="BeforePublishPackagesToBlobFeed"
+          DependsOnTargets="BeforePublish;PublishPackagesToBlobFeed"
+          Condition="'$(PublishToBlobFeedFlatContainer)' != 'true'">
+  </Target>
+
+  <!-- Target used to condition calling PublishFilesToBlobFeed target from the Feed package -->
+  <Target Name="BeforePublishFilesToBlobFeed"
+          DependsOnTargets="BeforePublish;PublishFilesToBlobFeed"
+          Condition="'$(PublishToBlobFeedFlatContainer)' == 'true'">
+  </Target>
+
+  <Target Name="BeforePublish"
+          BeforeTargets="Publish;PublishSymbols"
+          Condition="$(PublishToAzure) or $(PublishToSourceBuildStorage) or $(PublishToSymbolServer)">
     <PropertyGroup>
       <SymbolPackagesDir>$(ArtifactsTmpDir)SymbolPackages\</SymbolPackagesDir>
 
@@ -70,25 +89,50 @@
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
+    <!-- 
+      Translate properties to those used by the feed package
+      https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/build/Microsoft.DotNet.Build.Tasks.Feed.targets 
+    -->
+    <PropertyGroup>
+      <ExpectedFeedUrl>$(AzureFeedUrl)</ExpectedFeedUrl>
+      <AccountKey>$(AzureAccountKey)</AccountKey>
+      <ManifestRepoUri>$(BUILD_REPOSITORY_URI)</ManifestRepoUri>
+      <ManifestBranch>$(BUILD_SOURCEBRANCH)</ManifestBranch>
+      <ManifestBuildId>$(BUILD_BUILDNUMBER)</ManifestBuildId>
+      <ManifestCommit>$(BUILD_SOURCEVERSION)</ManifestCommit>
+    </PropertyGroup>
+    <ItemGroup>
+      <PackagesToPublish Remove="@(PackagesToPublish)" />
+      <PackagesToPublish Include="@(ItemsToPushToBlobFeed)" />
+    </ItemGroup>
+
     <!--
       This file will be used by the publishing release pipeline to parse the asset manifest
       and push the assets to target feeds.
     -->
     <WriteLinesToFile
-      File="$(MSBuildThisFileDirectory)MicrosoftDotNetBuildTasksFeedVersion.props"
+      File="$(ArtifactsObjDir)MicrosoftDotNetBuildTasksFeedVersion.props"
       Lines="&lt;Project>&lt;PropertyGroup>&lt;MicrosoftDotNetBuildTasksFeedVersion>$(MicrosoftDotNetBuildTasksFeedVersion)&lt;/MicrosoftDotNetBuildTasksFeedVersion>&lt;/PropertyGroup>&lt;/Project>"
       Overwrite="true"
-      Encoding="Unicode" />
+      Encoding="Unicode"
+      Condition="$(OfficialBuild)" />
 
     <Message
-      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(MSBuildThisFileDirectory)MicrosoftDotNetBuildTasksFeedVersion.props"
-      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
+      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(ArtifactsObjDir)MicrosoftDotNetBuildTasksFeedVersion.props"
+      Condition="$(OfficialBuild) and $(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
       Importance="high" />
 
     <Message
       Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(RepositoryEngineeringDir)common\PublishToPackageFeed.proj"
-      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
+      Condition="$(OfficialBuild) and $(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
       Importance="high" />
+  </Target>
+
+  <Target Name="AfterPublish"
+          AfterTargets="Publish">
+    <!-- Source Build local storage -->    
+    <Copy SourceFiles="@(PackagesToPublish)" DestinationFolder="$(DotNetOutputBlobFeedDir)packages" Condition="$(PublishToSourceBuildStorage)" />
+    <Copy SourceFiles="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" DestinationFolder="$(DotNetOutputBlobFeedDir)assets" Condition="$(PublishToSourceBuildStorage)" />
 
     <!--
       Work in progress drop-in replacement for PushToBlobFeed task below.
@@ -104,26 +148,13 @@
       PublishFlatContainer="false"
       AssetManifestPath="$(ArtifactsLogDir)PipelineArtifactsPublishingManifests\$(OS)-$(PlatformName)-$(AGENT_JOBNAME).xml"
       Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"/>
-    
-    <PushToBlobFeed 
-      ExpectedFeedUrl="$(AzureFeedUrl)"
-      AccountKey="$(AzureAccountKey)"
-      ItemsToPush="@(ItemsToPushToBlobFeed)"
-      ManifestBuildData="Location=$(AzureFeedUrl)"
-      ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
-      ManifestBranch="$(BUILD_SOURCEBRANCH)"
-      ManifestBuildId="$(BUILD_BUILDNUMBER)"
-      ManifestCommit="$(BUILD_SOURCEVERSION)" 
-      AssetManifestPath="$(AssetManifestFilePath)"
-      PublishFlatContainer="$(PublishToBlobFeedFlatContainer)"                    
-      Condition="$(PublishToAzure)"/>
+  </Target>
 
-    <!-- Source Build local storage -->    
-    <Copy SourceFiles="@(PackagesToPublish)" DestinationFolder="$(DotNetOutputBlobFeedDir)packages" Condition="$(PublishToSourceBuildStorage)" />
-    <Copy SourceFiles="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" DestinationFolder="$(DotNetOutputBlobFeedDir)assets" Condition="$(PublishToSourceBuildStorage)" />
+  <Target Name="PublishSymbols"
+          DependsOnTargets="BeforePublish"
+          Condition="$(PublishToSymbolServer)">
 
     <!-- Symbol publishing -->
-
     <PropertyGroup>
       <DotNetSymbolExpirationInDays Condition="'$(DotNetSymbolExpirationInDays)' == ''">3650</DotNetSymbolExpirationInDays>
       <DryRun>false</DryRun>
