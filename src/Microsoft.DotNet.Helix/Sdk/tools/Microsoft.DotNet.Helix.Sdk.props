@@ -18,4 +18,5 @@
   <UsingTask TaskName="CreateXUnitWorkItems" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
   <UsingTask TaskName="StartAzurePipelinesTestRun" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
   <UsingTask TaskName="StopAzurePipelinesTestRun" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
+  <UsingTask TaskName="CheckAzurePipelinesTestRun" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
 </Project>
