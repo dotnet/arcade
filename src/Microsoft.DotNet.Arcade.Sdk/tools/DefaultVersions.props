@@ -16,8 +16,8 @@
     <OfficialBuild Condition="'$(OfficialBuildId)' != ''">true</OfficialBuild>
   </PropertyGroup>
 
-  <Import Project="$(VersionsPropsPath)"/>
-  <Import Project="Version.props"/>
+  <Import Project="$(VersionsPropsPath)" Condition="Exists('$(VersionsPropsPath)')"/>
+  <Import Project="Version.props" Condition="Exists('Version.props')"/>
 
   <PropertyGroup>
     <!-- 

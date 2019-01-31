@@ -25,6 +25,8 @@
     <PublishToSymbolServer>false</PublishToSymbolServer>
     <PublishToSymbolServer Condition="'$(UsingToolSymbolUploader)' == 'true' and '$(AzureFeedUrl)' == '' and '$(ContinuousIntegrationBuild)' == 'true'">true</PublishToSymbolServer>
     <AssetManifestFilePath>$(ArtifactsLogDir)AssetManifest\$(OS)-$(PlatformName).xml</AssetManifestFilePath>
+
+    <PipelineArtifactsAssetManifestFilePath>$(ArtifactsLogDir)PipelineArtifactsPublishingManifests\$(OS)-$(PlatformName)-$(AGENT_JOBNAME).xml</PipelineArtifactsAssetManifestFilePath>
   </PropertyGroup>
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets" Condition="$(PublishToAzure)"/>
@@ -106,26 +108,86 @@
       <PackagesToPublish Include="@(ItemsToPushToBlobFeed)" />
     </ItemGroup>
 
-    <!--
-      This file will be used by the publishing release pipeline to parse the asset manifest
-      and push the assets to target feeds.
-    -->
-    <WriteLinesToFile
-      File="$(ArtifactsObjDir)MicrosoftDotNetBuildTasksFeedVersion.props"
-      Lines="&lt;Project>&lt;PropertyGroup>&lt;MicrosoftDotNetBuildTasksFeedVersion>$(MicrosoftDotNetBuildTasksFeedVersion)&lt;/MicrosoftDotNetBuildTasksFeedVersion>&lt;/PropertyGroup>&lt;/Project>"
-      Overwrite="true"
-      Encoding="Unicode"
-      Condition="$(OfficialBuild)" />
+    <!-- 
+    Begin: 
+      Work in progress drop-in replacement for PushToBlobFeed task below. 
+      This is part of the work on https://github.com/dotnet/arcade/issues/1179 
+    --> 
 
-    <Message
-      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(ArtifactsObjDir)MicrosoftDotNetBuildTasksFeedVersion.props"
-      Condition="$(OfficialBuild) and $(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
-      Importance="high" />
+    <!-- 
+      Sadly AzDO doesn't have a variable to tell the account name. Also
+      the format of CollectionURI is not precise across different agent 
+      configurations. Code below takes care of extracting the account 
+      name from the CollectionURI in different formats.
+    -->
+    <PropertyGroup>
+      <CollectionUri>$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)</CollectionUri>
+      
+			<!-- When we have dev.azure.com/<account>/ -->
+      <AzureDevOpsAccount Condition="$(CollectionUri.IndexOf('dev.azure.com')) >= 0">$(url.Split('/')[3])</AzureDevOpsAccount>
+		
+			<!-- When we have <account>.visualstudio.com -->
+      <AzureDevOpsAccount Condition="$(CollectionUri.IndexOf('visualstudio.com')) >= 0">$(url.Split('.')[0].Split('/')[2])</AzureDevOpsAccount>
+    </PropertyGroup>
+
+    <!--
+      The new Maestro/BAR build model keeps separate Azure DevOps and GitHub build information.
+      The GitHub information will be extracted based on the Azure DevOps repository.
+    -->
+    <ItemGroup>
+      <NewManifestBuildData Include="InitialAssetsLocation=$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$(SYSTEM_TEAMPROJECT)/_apis/build/builds/$(BUILD_BUILDID)/artifacts" />
+      <NewManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
+      <NewManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
+      <NewManifestBuildData Include="AzureDevOpsAccount=$(AzureDevOpsAccount)" />
+      <NewManifestBuildData Include="AzureDevOpsProject=$(SYSTEM_TEAMPROJECT)" />
+      <NewManifestBuildData Include="AzureDevOpsBuildNumber=$(BUILD_BUILDNUMBER)" />
+      <NewManifestBuildData Include="AzureDevOpsRepository=$(BUILD_REPOSITORY_URI)" />
+      <NewManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
+    </ItemGroup>
+
+    <PushToAzureDevOpsArtifacts 
+      ItemsToPush="@(ItemsToPushToBlobFeed)"
+      ManifestBuildData="@(NewManifestBuildData)"
+      ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
+      ManifestBranch="$(BUILD_SOURCEBRANCH)"
+      ManifestBuildId="$(BUILD_BUILDNUMBER)"
+      ManifestCommit="$(BUILD_SOURCEVERSION)"
+      PublishFlatContainer="false"
+      AssetManifestPath="$(PipelineArtifactsAssetManifestFilePath)"
+      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"/>
+
+    <!--
+      The publishing pipeline (implemented by PublishToPackageFeed.proj) will use the Tasks.Feed package
+      to publish packages. The version of Tasks.Feed used will come either from Version.props or from
+      DefaultVersions.props
+    -->
 
     <Message
       Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(RepositoryEngineeringDir)common\PublishToPackageFeed.proj"
-      Condition="$(OfficialBuild) and $(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
+      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
       Importance="high" />
+
+    <Message
+      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(MSBuildThisFileDirectory)DefaultVersions.props"
+      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true' and Exists('$(MSBuildThisFileDirectory)DefaultVersions.props')"
+      Importance="high" />
+
+    <Message
+      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(RepositoryEngineeringDir)Versions.props"
+      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true' and Exists('$(RepositoryEngineeringDir)Versions.props')"
+      Importance="high" />
+
+    <Message
+      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(PipelineArtifactsAssetManifestFilePath)"
+      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
+      Importance="high" />
+
+    <!-- 
+    End: 
+      Work in progress drop-in replacement for PushToBlobFeed task below. 
+      This is part of the work on https://github.com/dotnet/arcade/issues/1179 
+    --> 
+
   </Target>
 
   <Target Name="AfterPublish"
@@ -133,21 +195,6 @@
     <!-- Source Build local storage -->    
     <Copy SourceFiles="@(PackagesToPublish)" DestinationFolder="$(DotNetOutputBlobFeedDir)packages" Condition="$(PublishToSourceBuildStorage)" />
     <Copy SourceFiles="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" DestinationFolder="$(DotNetOutputBlobFeedDir)assets" Condition="$(PublishToSourceBuildStorage)" />
-
-    <!--
-      Work in progress drop-in replacement for PushToBlobFeed task below.
-      This is part of the work on https://github.com/dotnet/arcade/issues/1179
-    -->
-    <PushToAzureDevOpsArtifacts 
-      ItemsToPush="@(ItemsToPushToBlobFeed)"
-      ManifestBuildData="Location=$(AzureFeedUrl)"
-      ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
-      ManifestBranch="$(BUILD_SOURCEBRANCH)"
-      ManifestBuildId="$(BUILD_BUILDNUMBER)"
-      ManifestCommit="$(BUILD_SOURCEVERSION)"
-      PublishFlatContainer="false"
-      AssetManifestPath="$(ArtifactsLogDir)PipelineArtifactsPublishingManifests\$(OS)-$(PlatformName)-$(AGENT_JOBNAME).xml"
-      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"/>
   </Target>
 
   <Target Name="PublishSymbols"
