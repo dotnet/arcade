@@ -7,24 +7,38 @@ steps:
     fi
     warningCount=0
 
-    # create a temporary file for curl output
-    res=`mktemp`
-
-    curlResult=`
-      curl --verbose --output $res --write-out "%{http_code}"\
-      -H 'Content-Type: application/json' \
-      -H "X-Helix-Job-Token: $Helix_JobToken" \
-      -H 'Content-Length: 0' \
-      -X POST -G "https://helix.dot.net/api/2018-03-14/telemetry/job/build/$Helix_WorkItemId/finish" \
-      --data-urlencode "errorCount=$errorCount" \
-      --data-urlencode "warningCount=$warningCount"`
-    curlStatus=$?
-
-    if [ $curlStatus -eq 0 ]; then
-      if [ $curlResult -gt 299 ] || [ $curlResult -lt 200 ]; then
-        curlStatus=$curlResult
+    curlStatus=1
+    retryCount=0
+    # retry loop to harden against spotty telemetry connections
+    # we don't retry successes and 4xx client errors
+    until [[ $curlStatus -eq 0 || ( $curlStatus -ge 400 && $curlStatus -le 499 ) || $retryCount -gt 5 ]]
+    do
+      if [ $retryCount -gt 0 ]; then
+        echo "Failed to send telemetry to Helix; waiting 10 seconds before retrying..."
+        sleep 10
       fi
-    fi
+
+      # create a temporary file for curl output
+      res=`mktemp`
+
+      curlResult=`
+        curl --verbose --output $res --write-out "%{http_code}"\
+        -H 'Content-Type: application/json' \
+        -H "X-Helix-Job-Token: $Helix_JobToken" \
+        -H 'Content-Length: 0' \
+        -X POST -G "https://helix.dot.net/api/2018-03-14/telemetry/job/build/$Helix_WorkItemId/finish" \
+        --data-urlencode "errorCount=$errorCount" \
+        --data-urlencode "warningCount=$warningCount"`
+      curlStatus=$?
+
+      if [ $curlStatus -eq 0 ]; then
+        if [ $curlResult -gt 299 ] || [ $curlResult -lt 200 ]; then
+          curlStatus=$curlResult
+        fi
+      fi
+
+      let retryCount++
+    done
 
     if [ $curlStatus -ne 0 ]; then
       echo "Failed to Send Build Finish information"
@@ -46,13 +60,29 @@ steps:
     }
     $WarningCount = 0
 
-    try {
-      Invoke-RestMethod -Uri "https://helix.dot.net/api/2018-03-14/telemetry/job/build/$env:Helix_WorkItemId/finish?errorCount=$ErrorCount&warningCount=$WarningCount" -Method Post -ContentType "application/json" -Body "" `
-        -Headers @{ 'X-Helix-Job-Token'=$env:Helix_JobToken }
+    $retryCount = 0
+    while ($retryCount -lt 5) {
+      try {
+        Invoke-RestMethod -Uri "https://helix.dot.net/api/2018-03-14/telemetry/job/build/$env:Helix_WorkItemId/finish?errorCount=$ErrorCount&warningCount=$WarningCount" -Method Post -ContentType "application/json" -Body "" `
+          -Headers @{ 'X-Helix-Job-Token'=$env:Helix_JobToken }
+        break
+      }
+      catch {
+        $statusCode = $_.Exception.Response.StatusCode.value__
+        if ($statusCode -ge 400 -and $statusCode -le 499) {
+          Write-Host "##vso[task.logissue]error Failed to send telemetry to Helix (status code $statusCode); not retrying (4xx client error)"
+          Write-Host "##vso[task.logissue]error ", $_.Exception.GetType().FullName, $_.Exception.Message
+          exit 1
+        }
+        Write-Host "Failed to send telemetry to Helix (status code $statusCode); waiting 10 seconds before retrying..."
+        $retryCount++
+        sleep 10
+        continue
+      }
     }
-    catch {
-      Write-Error $_
-      Write-Error $_.Exception
+
+    if ($retryCount -ge 5) {
+      Write-Host "##vso[task.logissue]error Failed to send telemetry to Helix after $retryCount retries."
       exit 1
     }
   displayName: Send Windows Build End Telemetry
