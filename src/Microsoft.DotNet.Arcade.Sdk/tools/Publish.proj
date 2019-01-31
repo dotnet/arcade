@@ -107,6 +107,13 @@
       <PackagesToPublish Remove="@(PackagesToPublish)" />
       <PackagesToPublish Include="@(ItemsToPushToBlobFeed)" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="AfterPublish"
+          AfterTargets="Publish">
+    <!-- Source Build local storage -->    
+    <Copy SourceFiles="@(PackagesToPublish)" DestinationFolder="$(DotNetOutputBlobFeedDir)packages" Condition="$(PublishToSourceBuildStorage)" />
+    <Copy SourceFiles="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" DestinationFolder="$(DotNetOutputBlobFeedDir)assets" Condition="$(PublishToSourceBuildStorage)" />
 
     <!-- 
     Begin: 
@@ -187,14 +194,6 @@
       Work in progress drop-in replacement for PushToBlobFeed task below. 
       This is part of the work on https://github.com/dotnet/arcade/issues/1179 
     --> 
-
-  </Target>
-
-  <Target Name="AfterPublish"
-          AfterTargets="Publish">
-    <!-- Source Build local storage -->    
-    <Copy SourceFiles="@(PackagesToPublish)" DestinationFolder="$(DotNetOutputBlobFeedDir)packages" Condition="$(PublishToSourceBuildStorage)" />
-    <Copy SourceFiles="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" DestinationFolder="$(DotNetOutputBlobFeedDir)assets" Condition="$(PublishToSourceBuildStorage)" />
   </Target>
 
   <Target Name="PublishSymbols"
