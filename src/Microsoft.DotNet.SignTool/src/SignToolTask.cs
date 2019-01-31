@@ -366,7 +366,16 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    var signInfo = new SignInfo(certificateName, strongName);
+                    if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(certificateName, StringComparison.OrdinalIgnoreCase) &&
+                        SignToolConstants.IgnoreFileCertificateSentinel.Equals(strongName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Log.LogWarning($"CertificateName & ItemSpec metadata of {nameof(StrongNameSignInfo)} shouldn't be both '{SignToolConstants.IgnoreFileCertificateSentinel}'");
+                        continue;
+                    }
+
+                    var signInfo = SignToolConstants.IgnoreFileCertificateSentinel.Equals(strongName, StringComparison.OrdinalIgnoreCase)
+                        ? new SignInfo(certificateName)
+                        : new SignInfo(certificateName, strongName);
 
                     if (map.ContainsKey(publicKeyToken))
                     {
