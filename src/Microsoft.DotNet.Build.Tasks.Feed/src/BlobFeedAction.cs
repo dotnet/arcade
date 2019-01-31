@@ -282,11 +282,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 if (items.Any(s => Path.GetExtension(item) != ".nupkg"))
                 {
                     Log.LogError($"{item} is not a nupkg");
-                    return false; 
+                    return false;
                 }
             }
-            var groups = items.GroupBy(x => x);
-            var groupCount = groups.Where(group => group.Count() > 1);
             List<string> duplicates = items.GroupBy(x => x)
                     .Where(group => group.Count() > 1)
                     .Select(group => group.Key).ToList();
