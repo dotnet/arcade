@@ -94,7 +94,7 @@ The dependency description is comprised of two types of assets:
     <!-- Elements contains all product dependencies -->
     <ProductDependencies>
         <-- All product dependencies are contained in Version.Props -->
-        <Dependency Name="DependencyA" Version="1.2.3-45">
+        <Dependency Name="DependencyA" Version="1.2.3-45" Pinned="true">
             <Uri>https://github.com/dotnet/arepo</Uri>
             <Sha>23498123740982349182340981234</Sha>
         </Dependency>
@@ -102,7 +102,7 @@ The dependency description is comprised of two types of assets:
             <Uri>https://github.com/dotnet/arepo</Uri>
             <Sha>13242134123412341465</Sha>
         </Dependency>
-        <Dependency Name="DependencyC" Version="1.2.3-45">
+        <Dependency Name="DependencyC" Version="1.2.3-45" Pinned="false">
             <Uri>https://github.com/dotnet/arepo</Uri>
             <Sha>789789789789789789789789</Sha>
         </Dependency>
@@ -117,7 +117,7 @@ The dependency description is comprised of two types of assets:
             <Expression>VersionProps</Expression>
         </Dependency>
         <-- Well-known dependency.  Expressed in global.json -->
-        <Dependency Name="DotNetSdkVersion" Version="2.200.0">
+        <Dependency Name="DotNetSdkVersion" Version="2.200.0" Pinned="False">
             <Uri>https://github.com/dotnet/cli</Uri>
             <Sha>1234123412341234</Sha>
         </Dependency>
