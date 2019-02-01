@@ -506,26 +506,10 @@ darc and Maestro++ have a few mechanisms to enable such scenarios:
   <?xml version="1.0" encoding="utf-8"?>
   <Dependencies>
     <ProductDependencies>
-<<<<<<< HEAD
       <Dependency Name="Microsoft.NETCore.App" Version="3.0.0-preview-27401-3" Pinned="true">
         <Uri>https://github.com/dotnet/core-setup</Uri>
         <Sha>b50554ac9a96fedc8580fa6090b6e9e75a23193b</Sha>
       </Dependency>
-=======
-        <-- All product dependencies are contained in Versions.Props -->
-        <Dependency Name="DependencyA" Version="1.2.3-45" Pinned="true">
-            <Uri>https://github.com/dotnet/arepo</Uri>
-            <Sha>23498123740982349182340981234</Sha>
-        </Dependency>
-        <Dependency Name="DependencyB" Version="1.2.3-45">
-            <Uri>https://github.com/dotnet/arepo</Uri>
-            <Sha>13242134123412341465</Sha>
-        </Dependency>
-        <Dependency Name="DependencyC" Version="1.2.3-45" Pinned="false">
-            <Uri>https://github.com/dotnet/arepo</Uri>
-            <Sha>789789789789789789789789</Sha>
-        </Dependency>
->>>>>>> upstream/master
     </ProductDependencies>
   ```
   Resume flow by removing the attribute or setting its value to "false".
@@ -622,7 +606,6 @@ PS C:\enlistments\core-sdk> darc gather-drop --repo https://github.com/dotnet/co
 ...
 ```
 
-<<<<<<< HEAD
 If no build exists at that drop, darc will show an error. In this case, you
 might try other recents shas, or use the BAR swagger API
 (https://maestro-prod.westus2.cloudapp.azure.com/swagger) to look up a build
@@ -750,208 +733,6 @@ PS D:\enlistments\arcade> cat .\eng\Version.Details.xml
 
 Running add
 
-=======
-    <!-- Elements contains all toolset dependencies -->
-    <ToolsetDependencies>
-        <-- Non well-known dependency.  Expressed in Versions.props -->
-        <Dependency Name="DependencyB" Version="2.100.3-1234">
-            <Uri>https://github.com/dotnet/atoolsrepo</Uri>
-            <Sha>203409823586523490823498234</Sha>
-            <Expression>VersionsProps</Expression>
-        </Dependency>
-        <-- Well-known dependency.  Expressed in global.json -->
-        <Dependency Name="DotNetSdkVersion" Version="2.200.0" Pinned="False">
-            <Uri>https://github.com/dotnet/cli</Uri>
-            <Sha>1234123412341234</Sha>
-        </Dependency>
-        <-- Well-known dependency.  Expressed in global.json -->
-        <Dependency Name="Arcade.Sdk" Version="1.0.0">
-            <Uri>https://github.com/dotnet/arcade</Uri>
-            <Sha>132412342341234234</Sha>
-        </Dependency>
-    </ToolsetDependencies>
-</Dependencies>
-```
-
-Note: pinned dependencies won't be updated automatically but will still be part of the overall graph.
-
-####  eng\Versions.props
-```xml
-<Project>
-  <PropertyGroup>
-    <!-- DependencyA, DependencyB, DependencyC substrings correspond to
-         DependencyName elements in Version.Details.xml file -->
-    <DependencyAPackageVersion>4.5.0-preview2-26403-05</DependencyAPackageVersion>
-    <DependencyBPackageVersion>4.5.0-preview2-26403-05</DependencyBPackageVersion>
-    <DependencyCPackageVersion>4.5.0-preview2-26403-05</DependencyCPackageVersion>
-    ...
-  </PropertyGroup>
-</Project>
-```
-
-####  global.json
-```
-{
-  "sdk": {
-    "version": "2.200.0"
-  },
-  "msbuild-sdks": {
-    "Arcade.Sdk": "1.0.0"
-  }
-}
-```
-
-For more information on dependencies please check [DependencyDescriptionFormat](DependencyDescriptionFormat.md)
-
-## The DependencyItem object
-
-When dealing with version/dependency files, Darc will parse information in the version/dependency files to DependencyItem objects.
-
-The `DependencyItem` is composed by `Name`, `Version`, `RepoUri`, `Sha` and `Type`.
-
-## Dependency operations
-
-The commands/operations that Darc can perform against version/dependency files is:
-
-## get
-
-Query for a collection of DependencyItems, based on a set of query-parameters including SHAs, repositories, versions, binaries 
-and dependency names.
-
-### Usage
-
-`darc get <options> <query-parameters>`
-
-### options
-
-*  -d, --depend-on: returns the DependencyItems which depend on the `<query-parameters>`. Optional.
-*  -p, --produced: return the dependencies that were produced by the `<query-parameters>`. If not set, the returned collection 
-will include dependencies where the `<query-parameters>` were used. Optional
-*  -l, --latest: return the newest DependencyItems matching the `<query-parameters>`. Optional
-*  --remote: if set, Darc will query the reporting store instead of local files. Optional.
-
-### query-parameters
-
-*  "": returns all DependencyItems from the local repo's `Version.Details.xml`
-    *  Example: `darc get`
-	*  Output Sample: 
-```
-[
-	{
-		name: "DependencyA",
-		version: "1.2.3-45",
-		repo-uri: "https://github.com/dotnet/arepo",
-		sha: "13242134123412341465",
-		type: "product"
-	},
-	{
-		name: "DotNetSdkVersion",
-		version: "2.200.0",
-		repo-uri: "https://github.com/dotnet/cli",
-		sha: "1234123412341234",
-		type: "toolset"
-	},
-      ...
-]
-```
-*  `[-s,--sha] <sha> [[-r, --repo-uri] <repo-uri>]`: --repo-uri supports any git repository uri. If --repo-uri is not provided returns the 
-DependencyItems from the local repo's `Version.Details.xml` which match `<sha>`. If a --repo-uri is given and is different 
-from the local, get the DependencyItems that match the SHA+repo combination from the reporting store. 
-    *  Example: `darc get -s 23498123740982349182340981234`
-        * Output Sample: 
-```
-[
-	{
-		name: "DependencyA",
-		version: "1.2.3-45",
-		repo-uri: "https://github.com/dotnet/arepo",
-		sha: "23498123740982349182340981234",
-		type: "product"
-	}
-]
-```
-   *  Example: `darc get -s 23498123740982349182340981234 -r https://github.com/dotnet/coreclr`
-        * Output Sample: 
-```
-[
-	{
-		name: "DependencyA",
-		version: "1.2.3-45",
-		repo-uri: "https://github.com/dotnet/coreclr",
-		sha: "23498123740982349182340981234",
-		type: "product"
-	}
-]
-```
-*  `[-r, --repo-uri] <repo-uri>`: returns the DependencyItems matching the --repo-uri.
-    *  Example: `darc get --repo-uri https://github.com/dotnet/corefx`
-	*  Output Sample: 
-```
-[
-	{
-		name: "DependencyA",
-		version: "1.2.3-45",
-		repo-uri: "https://github.com/dotnet/corefx",
-		sha: "23498123740982349182340981234",
-		type: "product"
-	}
-]
-```
-*  `[-b, --branch] <branch>`: returns the DependencyItems matching the --branch. This is a `--remote` only command.
-    *  Example: `darc get --repo-uri https://github.com/dotnet/corefx -b master`
-	*  Output Sample: 
-```
-[
-	{
-		name: "DependencyA",
-		version: "1.2.3-45",
-		repo-uri: "https://github.com/dotnet/corefx",
-		sha: "23498123740982349182340981234",
-		type: "product"
-	}
-]
-```
-*  `[-v, --version] <item-version>`: returns the DependencyItems matching `<item-version>`.
-    *  Example: `darc get -v 1.2.3`
-	*  Output Sample: 
-```
-[
-	{
-		name: "DependencyA",
-		version: "1.2.3",
-		repo-uri: "https://github.com/dotnet/coreclr",
-		sha: "23498123740982349182340981234",
-		type: "product"
-	}
-]
-```
-*  `[-n, --name] <name>`: returns the DependencyItems matching a versioned item name. The use of wildcards is allowed
-    *  Example: `darc get --name Dependency?`
-	*  Output Sample: 
-```
-[
-	{
-		name: "DependencyA",
-		version: "1.2.3-45",
-		repo-uri: "https://dev.azure.com/devdiv/DevDiv/_git/DotNet-CoreFX-Trusted",
-		sha: "13242134123412341465",
-		type: "product"
-	},
-	{
-		name: "DependencyB",
-		version: "2.200.0",
-		repo-uri: "https://dev.azure.com/devdiv/DevDiv/_git/DotNet-CoreCLR-Trusted",
-		sha: "1234123412341234",
-		type: "toolset"
-	},
-	  ...
-]
-```
-*  `[-a, --asset] <asset-name>`: returns the DependencyItems which participated in building the binary/asset matching 
-`--asset`. This queries the reporting store.
-    *  Example: `darc get --asset Microsoft.DotNet.Build.Tasks.Feed.1.0.0-prerelease-02201-02.nupkg`
-	*  Output Sample: 
->>>>>>> upstream/master
 ```
 PS D:\enlistments\arcade> darc add --name "Microsoft.NETCore.App" --type "product" --version 1 --commit 2 --repo https://github.com/dotnet/core-setup
 ```
