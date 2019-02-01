@@ -266,8 +266,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string payloadDirectory = workItem.GetMetadata("PayloadDirectory");
             string payloadArchive = workItem.GetMetadata("PayloadArchive");
+            string payloadUri = workItem.GetMetadata("PayloadUri");
             IWorkItemDefinition wi;
-            if (!string.IsNullOrEmpty(payloadDirectory))
+            if (!string.IsNullOrEmpty(payloadUri))
+            {
+                wi = wiWithPayload.WithPayloadUri(new Uri(payloadUri));
+                Log.LogMessage(MessageImportance.Low, $"  Uri Payload: '{payloadUri}'");
+            }
+            else if (!string.IsNullOrEmpty(payloadDirectory))
             {
                 wi = wiWithPayload.WithDirectoryPayload(payloadDirectory);
                 Log.LogMessage(MessageImportance.Low, $"  Directory Payload: '{payloadDirectory}'");
