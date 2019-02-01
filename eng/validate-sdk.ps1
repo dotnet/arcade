@@ -67,7 +67,7 @@ try {
   
   & .\common\cibuild.cmd -configuration $configuration @Args
   CheckExitCode "Local build"
-  
+
   # This is a temporary solution. When https://github.com/dotnet/arcade/issues/1293 is closed
   # we'll be able to pass a container name to build.ps1 which will put the outputs in the
   # artifacts-<container-name> folder.
