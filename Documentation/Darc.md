@@ -7,7 +7,36 @@ use darc to achieve them, as well as a general reference guide to darc commands.
 ## Index
 - [Scenarios](#scenarios)
   - [Setting up your darc client](#setting-up-your-darc-client)
+  - [Adding dependencies to a repository](#adding-dependencies-to-a-repository)
+  - [Updating dependencies in your local repository](#updating-dependencies-in-your-local-repository)
+  - [Removing dependencies from a repository](#removing-dependencies-from-a-repository)
+  - [Changing a dependency's type](#changing-a-dependencys-type)
+  - ['Pinning' dependencies so they do not
+    update](#pinning-dependencies-so-they-do-not-update)
+  - [Adding dependency flow](#adding-dependency-flow)
+  - [Halting and restarting dependency flow](#halting-and-restarting-dependency-flow)
+  - [Viewing the dependency graph](#viewing-the-dependency-graph)
+  - [Gathering a build drop](#gathering-a-build-drop)
+  
 - [Command Reference](#command-reference)
+  - [Common Parameters](#common-parameters)
+  - [add-channel](#add-channel) - Creates a new channel.
+  - [add](#add) - Add a new dependency to Version.Details.xml.
+  - [add-default-channel](#add-default-channel) - Add a channel that a build of a branch+repository is automatically applied to.
+  - [add-subscription](#add-subscription) - Add a new subscription.
+  - [authenticate](#authenticate) - Stores the VSTS and GitHub tokens required for remote operations.
+  - [delete-channel](#delete-channel) - Deletes an existing channel.
+  - [delete-default-channel](#delete-default-channel) - Remove a default channel association.
+  - [delete-subscription](#delete-subscription) - Remove a subscription.
+  - [gather-drop](#gather-drop) - Gather a drop of the outputs for a build
+  - [get-channels](#get-channels) - Get a list of channels.
+  - [get-default-channels](#get-default-channels) - Gets a list of repo+branch combinations and their associated default channels for builds.
+  - [get-dependencies](#get-dependencies) - Get local dependencies.
+  - [get-dependency-graph](#get-dependency-graph) - Get local dependencies.
+  - [get-subscriptions](#get-subscriptions) - Get information about subscriptions.
+  - [trigger-subscriptions](#trigger-subscriptions) - Trigger a subscription or set of subscriptions matching criteria.
+  - [update-dependencies](#update-dependencies) - Update local dependencies from a channel.
+  - [verify](#verify) - Verify that the dependency information in the repository is correct.
 
 
 ## Scenarios
@@ -188,6 +217,47 @@ PS C:\enlistments\arcade> darc update-dependencies --channel ".NET Core 3 Dev" -
 Updating 'MIcrosoft.NETCore.App': '' => '3.0.0-preview-27401-3' (from build '20190201.3' of 'https://github.com/dotnet/core-setup')
   Dependency name normalized to 'Microsoft.NETCore.App'
 Local dependencies updated from channel '.NET Core 3 Dev'.
+
+PS C:\enlistments\arcade> git diff
+diff --git a/eng/Version.Details.xml b/eng/Version.Details.xml
+index edadff27..516e8e6e 100644
+--- a/eng/Version.Details.xml
++++ b/eng/Version.Details.xml
+@@ -1,6 +1,11 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <Dependencies>
+-  <ProductDependencies></ProductDependencies>
++  <ProductDependencies>
++    <Dependency Name="Microsoft.NETCore.App" Version="3.0.0-preview-27401-3">
++      <Uri>https://github.com/dotnet/core-setup</Uri>
++      <Sha>b50554ac9a96fedc8580fa6090b6e9e75a23193b</Sha>
++    </Dependency>
++  </ProductDependencies>
+   <ToolsetDependencies>
+     <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="1.0.0-beta.19080.6">
+       <Uri>https://github.com/dotnet/arcade</Uri>
+diff --git a/eng/Versions.props b/eng/Versions.props
+index a1d683c1..dbf3fe0e 100644
+--- a/eng/Versions.props
++++ b/eng/Versions.props
+@@ -60,6 +60,7 @@
+     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
+     <MicrosoftDiaSymReaderConverterVersion>1.1.0-beta1-62810-01</MicrosoftDiaSymReaderConverterVersion>
+     <MicrosoftDiaSymReaderNativeVersion>1.7.0</MicrosoftDiaSymReaderNativeVersion>
++    <MicrosoftNETCoreAppVersion>3.0.0-preview-27401-3</MicrosoftNETCoreAppVersion>
+   </PropertyGroup>
+   <PropertyGroup>
+     <RestoreSources>
+@@ -69,4 +70,8 @@
+       https://dotnet.myget.org/F/symreader/api/v3/index.json
+     </RestoreSources>
+   </PropertyGroup>
++  <!--Package names-->
++  <PropertyGroup>
++    <MicrosoftNETCoreAppPackage>Microsoft.NETCore.App</MicrosoftNETCoreAppPackage>
++  </PropertyGroup>
+ </Project>
+
 ```
 
 Alternately, let's say I'm working on updating to the latest arcade, which has a
@@ -198,22 +268,356 @@ update-dependencies against the tools channel ('.NET Tools - Latest') to pull in
 PS C:\enlistments\core-setup> darc update-dependencies --channel ".NET Tools - Latest"
 Updating 'Microsoft.DotNet.Arcade.Sdk': '1.0.0-beta.19080.6' => '1.0.0-beta.19081.3' (from build '20190131.3' of 'https://github.com/dotnet/arcade')
 Local dependencies updated from channel '.NET Tools - Latest'.
-```
 
+PS C:\enlistments\core-setup> git diff
+diff --git a/eng/Version.Details.xml b/eng/Version.Details.xml
+index 2b845202..1fb125a0 100644
+--- a/eng/Version.Details.xml
++++ b/eng/Version.Details.xml
+@@ -21,9 +21,9 @@
+     </Dependency>
+   </ProductDependencies>
+   <ToolsetDependencies>
+-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="1.0.0-beta.19080.6">
++    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="1.0.0-beta.19081.3">
+       <Uri>https://github.com/dotnet/arcade</Uri>
+-      <Sha>14d1133b6074b463784a7adbbf385df0462f4010</Sha>
++      <Sha>1e859f1c17fffbe9c4fb6bbfc0fc71cd0c56563b</Sha>
+     </Dependency>
+   </ToolsetDependencies>
+ </Dependencies>
+diff --git a/eng/common/darc-init.ps1 b/eng/common/darc-init.ps1
+index 96cad844..57db185d 100644
+--- a/eng/common/darc-init.ps1
++++ b/eng/common/darc-init.ps1
+@@ -19,7 +19,7 @@ function InstallDarcCli ($darcVersion) {
+   # Until we can anonymously query the BAR API for the latest arcade-services
+   # build applied to the PROD channel, this is hardcoded.
+   if (-not $darcVersion) {
+-    $darcVersion = '1.1.0-beta.19057.9'
++    $darcVersion = '1.1.0-beta.19081.1'
+   }
+
+   $arcadeServicesSource = 'https://dotnetfeed.blob.core.windows.net/dotnet-arcade/index.json'
+diff --git a/global.json b/global.json
+index 8e5dab10..ede83435 100644
+--- a/global.json
++++ b/global.json
+@@ -3,6 +3,6 @@
+     "dotnet": "2.1.300"
+   },
+   "msbuild-sdks": {
+-    "Microsoft.DotNet.Arcade.Sdk": "1.0.0-beta.19080.6"
++    "Microsoft.DotNet.Arcade.Sdk": "1.0.0-beta.19081.3"
+   }
+ }
+```
 
 ### Removing dependencies from a repository
 
+Removing a dependency from a repository involves simply removing the appropriate
+`Dependency` block from eng/Version.Details.xml and commiting. At that point, neither darc nor
+Maestro++ will know anything about it any longer.
+
+### Changing a dependency's type
+
+To change a dependency's type, move the `Dependency` element from the
+parent `ProductDependencies` element into `ToolsetDependencies` (or vice versa)
+and commit.  See [Toolset
+vs. Product Dependencies](#toolset-vs-product-dependencies)
+
 ### 'Pinning' dependencies so they do not update.
+
+By default on each operation (e.g. subscription updates or `darc
+update-dependencies`), darc and Maestro will update all applicable dependencies
+in eng/Version.Details.xml and associated files.  For instance, if a
+subscription from core-setup's '.NET Core 3 Dev' channel to core-sdk's master
+branch produces 3 outputs, Maestro will attempt to update any matching inputs in
+core-sdk's eng/Version.Details.xml file. In some cases, it may be necessary to
+pin dependencies so they do not move (e.g. if a breaking change requires
+extended work).
+
+This is possible by adding a Pinned="true" attribute to the dependency
+information.  If Pinned is not supplied, the default is "false".
+
+```
+PS C:\enlistments\arcade> cat .\eng\Version.Details.xml
+<?xml version="1.0" encoding="utf-8"?>
+<Dependencies>
+  <ProductDependencies>
+    <Dependency Name="Microsoft.NETCore.App" Version="3.0.0-preview-27401-3" Pinned="true">
+      <Uri>https://github.com/dotnet/core-setup</Uri>
+      <Sha>b50554ac9a96fedc8580fa6090b6e9e75a23193b</Sha>
+    </Dependency>
+  </ProductDependencies>
+  <ToolsetDependencies>
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="1.0.0-beta.19080.6">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>14d1133b6074b463784a7adbbf385df0462f4010</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="2.2.0-beta.19080.6">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>14d1133b6074b463784a7adbbf385df0462f4010</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.0.0-beta.19060.8"> 
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>67384d20d310611afc1c2b4dd3b953fda182def4</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.SignTool" Version="1.0.0-beta.19080.6">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>14d1133b6074b463784a7adbbf385df0462f4010</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="2.0.0-beta.19080.6">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>14d1133b6074b463784a7adbbf385df0462f4010</Sha>
+    </Dependency>
+  </ToolsetDependencies>
+</Dependencies>
+```
 
 ### Adding dependency flow
 
-### Branching for releases
+Dependency flow is the automatic movement of dependency information between
+repositories. This is done by Maestro++ keeping track of new builds in each
+repository and opening PRs in other repositories when those repositories' input
+dependencies in eng/Version.Details.xml match the outputs of the new builds.
+
+These updates are selective and based on 'subscriptions'. A subscription describes an update
+operation for a specific repository+branch combination, mapping outputs of a
+repository that have beeen applied to a channel (virtual branch) onto matching
+inputs of the target repository+branch.
+
+For example, a build of dotnet/corefx might be applied to the ".NET Core 3 Dev"
+channel. dotnet/core-setup maps new outputs of corefx on the ".NET Core 3 Dev"
+channel onto its master branch.
+
+A subscription has a few parts:
+- Mapping of source repo + source channel => target repo target branch
+- An update rate (e.g. every day, every build, not at all)
+- Whether a subscription is batchable or not. If batchable, all batchable
+  subscriptions targeting the same branch/repo combination will share a PR.
+  *Note: Batchable subscriptions are currently unsupported in darc*
+- A set of auto merge policies, if the subscription is not batchable.  If batchable,
+  merge policies are set on a repository level rather than a per-subscription
+  level, as they end up shared between several subscriptions. *Note: repository
+  merge policies are currently unsupported in darc*
+
+For additional information and samples, see [add-subscription](#add-subscription)
+
+#### When should a subscription be used to update my repository's inputs
+
+Whenever you want regular dependency flow between two repositories. For example,
+every day (when there is a new source build) or on every new build.
+
+#### What input channel should be used?
+
+There are generally two channels for day to day use:
+- '.NET Core 3 Dev' - Day to day builds of .NET Core 3 repositories are placed on
+  this channel.
+- '.NET Tools - Latest' - LKG Arcade builds are placed on this channel.
+
+So, if you're not adding a dependency on the https://github.com/dotnet/arcade
+repo, the source channel should be '.NET Core 3 Dev'. If you have other specific
+needs, contact @dnceng.
 
 ### Halting and restarting dependency flow
 
+Sometimes it's necessary to halt dependency flow into or out of a repository for
+a period of time. While there are lots of cases where this might be done, here
+are some typical examples:
+- **Shutting down changes for a release** - The 'last' build of a repository
+  like corefx has been produced, and now needs to propagate to the many places
+  in the repository graph it is referenced.
+- **A change in another repository has a breaking change** - Because Maestro++
+  can auto-merge PRs, a breaking change that isn't caught by CI might be
+  continually propagated as it is the 'latest' build.
+- **A specific, isolated dependency of a specific repository needs to be kept at
+  a specific version** - A few dependencies of a repository should be kept at a
+  specific version, while the rest are allowed to update.
+
+darc and Maestro++ have a few mechanisms to enable such scenarios:
+
+- **Disabling or deleting a default channel association** - By disabling a
+  default channel association for a repo, no new builds of that repo will be
+  automatical assigned to the targeted channel.  This effectively halts
+  dependency flow without altering all the subscriptions sourcing from that
+  repository.  Furthermore, if a selective fix needs to be flowed, the build
+  containing that fix can be selectively assigned to correct channel and the
+  existing subscriptions will flow as normal.
+
+  Today this can only be done by deleting the default channel, then adding it
+  back later when normal dependency flow should be resumed:
+
+  Pausing new flow from aspnet/Extensions:
+
+  ```
+  darc delete-default-channel --repo https://github.com/aspnet/Extensions --branch refs/heads/master --channel ".NET Core 3 Dev"
+  ```
+
+  Resuming flow from aspnet/Extensions:
+
+  ```
+  darc add-default-channel --repo https://github.com/aspnet/Extensions --branch refs/heads/master --channel ".NET Core 3 Dev"
+  ```
+- **Disabling or deleting a subscription** - By disabling or deleting a
+  subscription, flow between two specific points can be halted.  For instance,
+  if arcade has a breaking change that passed core-setup's CI, then it may be
+  necessary to remove flow temporarily while the issue is dealt with.  Today,
+  this is only possible via the command line tool by deleting the subscription,
+  then recreating it when normal flow should be resumed:
+
+  Pausing new flow from arcade to core-setup
+
+  ```
+  PS C:\enlistments\arcade> darc get-subscriptions --source-repo arcade --target-repo core-setup 
+  
+  https://github.com/dotnet/arcade (.NET Tools - Latest) ==> 'https://github.com/dotnet/core-setup' ('master')
+  - Id: 21e611eb-ab71-410e-ca98-08d61f236c94
+  - Update Frequency: everyDay
+  - Merge Policies:
+    AllChecksSuccessful
+      ignoreChecks =
+                     [
+                       "WIP",
+                       "license/cla"
+                     ]
+  - Last Build: N/A
+
+  PS C:\enlistments\arcade> darc delete-subscription --id 21e611eb-ab71-410e-ca98-08d61f236c94
+  Successfully deleted subscription with id '21e611eb-ab71-410e-ca98-08d61f236c94'
+  ```
+
+  Resuming flow:
+
+  ```
+  PS C:\enlistments\arcade> darc add-subscription --channel '.NET Tools - Latest' --target-repo https://github.com/dotnet/core-setup --target-branch master --update-frequency everyDay --all-checks-passed --source-repo https://github.com/dotnet/arcade --ignore-checks 'WIP,license/cli'
+
+  Successfully created new subscription with id '689a946e-2c12-4b0c-ccf6-08d688804ce4'.
+  ```
+- **Pinning specific dependencies** - Specific dependencies can be pinned when
+  they should not move.  This keeps the dependency from moving without altering
+  subscriptions or channels. This is useful when only a **subset** of a
+  specific repos dependencies should not move.
+
+  To do this, add a `Pinned="true"` attribute to the dependency that should not
+  move.
+  ```
+  PS C:\enlistments\arcade> cat .\eng\Version.Details.xml
+  <?xml version="1.0" encoding="utf-8"?>
+  <Dependencies>
+    <ProductDependencies>
+      <Dependency Name="Microsoft.NETCore.App" Version="3.0.0-preview-27401-3" Pinned="true">
+        <Uri>https://github.com/dotnet/core-setup</Uri>
+        <Sha>b50554ac9a96fedc8580fa6090b6e9e75a23193b</Sha>
+      </Dependency>
+    </ProductDependencies>
+  ```
+  Resume flow by removing the attribute or setting its value to "false".
+'
+### Viewing the dependency graph
+
+The dependency graph is the transitive set of dependencies defined by the data in Version.Details.xml.
+Each dependency listed contains information on the source of the dependency,
+specifically which repository and sha it was generated from. Visiting that repository
+at the specified sha will yield another set of dependencies. Transitively
+visiting these repository+sha combinations will build up a repository graph. The
+graph may have cycles, and the transitive walk is stopped at those nodes.  It
+may also be stopped at any toolset dependency unless those are specifically
+included with `--include-toolset`.
+
+For detailed information on generating the dependency graph, see
+[`get-dependency-graph`](#get-dependency-graph).
+
+#### How to interpret incoherencies
+
+Incoherencies in the graph are places where the same repo appears twice with
+different shas, or the same dependency appears twice at different versions (even
+if it was sourced from the same sha).  Incoherencies are caused by multiple
+paths to the root node that run through the same repository, combined with
+different flow rates between repositories, varying graph depth, build breaks, etc.
+
+Incoherencies aren't necessarily bad. During most of the development cycle, the
+graph is highly incoherent.  What matters is whether those incoherencies will
+produce semantic differences in behavior. This is something that can generally only be
+interpreted by developers/product owners by looking at the substantive
+differences.  The default position for day to day development is that
+incoherencies are not a big deal, but the default position for a shipping
+product is that non-toolset incoherencies should be removed.  This can be done
+by halting dependency flow after "final" builds are done of incoherent repos.
+See [Halting and restarting dependency
+flow](#halting-and-restarting-dependency-flow) for some options here.
+
+For a rough example, let's say that at the end of the shipping cycle core-setup
+flows its 'last' build to core-sdk and other repos.  The graph stabilizes.
+Then, at the last moment, they make a test only fix and check it in.  It flows
+to core-sdk quickly, but gets held up in the other repos that pull
+Microsoft.NETCore.App due to them not taking any new PRs.  This certainly counts
+as an incoherency, but becuase there is no semantic product difference between
+the two versions in the graph there may be no harm in shipping with that
+incoherency.
+
 ### Gathering a build drop
 
-### Viewing the dependency graph
+Gathering a drop of the product or subpiece part of the product is a typical
+activity done by developers, release automation, etc.  The darc tool can do this
+using the Build Asset Registry information alongside the dependency graph
+information.
+
+A build drop is a gathering of all the outputs of a specific build that were
+reported to the Build Asset Registry into a local location. Optionally, this
+build drop may also include any builds that were inputs to this build, based on
+the dependency information in Version.Details.xml. Builds produce various
+outputs that go to various locations. For example, they may produce nuget
+packges, zips, msis, etc. These may be available in the build artifacts, or may
+be located in various storage accounts.  Gather-drop mines the Build Asset
+Registry for these locations and downloads them all to the local directory.
+
+The drop is generally divided into two sections: shipping and non-shipping.
+Shipping dependencies are those that must be visible to customers.  Non-shipping
+dependencies are those that generally serve as inter-repo transport.  Some
+examples:
+- Packages shipping to nuget.org - Shipping
+- Coreclr transport packages - Nonshipping, since they get repackaged by
+  core-setup
+- Symbols - Shipping, since they go to symbol servers
+
+#### What can I gather a drop for?
+
+You can gather a either an isolated or full (includes dependencies) drop for any
+build in the repository graph. Since the major components of the .NET Core stack
+are rooted at 3 different repositories, gathering a drop of those repositories
+will generate a drop for those 3 components and any of their inputs if `--full`
+is supplied.
+- https://github.com/dotnet/core-sdk - SDK
+- https://github.com/aspnet/AspNetCore - ASP.NET Core
+- https://github.com/dotnet/core-setup - Runtime.
+
+#### How do I find the root build for a drop?
+
+`gather-drop` must be able to find a root build. This root build today is
+identified by either a repo+sha combo or a direct BAR build ID. For most
+repositories that build on every commit, providing the repo uri and latest sha
+will generate a drop:
+
+```
+PS C:\enlistments\core-sdk> git rev-parse HEAD
+465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+PS C:\enlistments\core-sdk> darc gather-drop --repo https://github.com/dotnet/core-sdk --commit 465a336c7a5ca3af2f6cf5172ddc0ebde620803b --output-dir C:\scratch\drop
+...
+```
+
+If no build exists at that drop, darc will show an error. In this case, you
+might try other recents shas, or use the BAR swagger API
+(https://maestro-prod.westus2.cloudapp.azure.com/swagger) to look up a build
+id. Remember to authenticate using a token from
+https://maestro-prod.westus2.cloudapp.azure.com/.  Better methods of obtaining
+the root build are coming soon.
+
+The root build can then be provided using --id
+
+```
+PS C:\enlistments\core-sdk> darc gather-drop --id 1234 --output-dir C:\scratch\drop
+```
 
 ## Command Reference
 
