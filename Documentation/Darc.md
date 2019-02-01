@@ -4,23 +4,206 @@ Darc is a tool for managing and querying the relationships between repositories
 in the .NET Core ecosystem. This document describes various scenarios and how to
 use darc to achieve them, as well as a general reference guide to darc commands.
 
-## Description
+## Index
+- [Scenarios](#scenarios)
+  - [Setting up your darc client](#setting-up-your-darc-client)
+- [Command Reference](#command-reference)
 
-*  Darc is meant to be the **only** way developers and other tools like Maestro++ interact and alter version/dependency files 
-as well as bootstrapping files and scripts in arcade participating repos.
-*  Darc's operations range from altering version/dependency files to creating PRs in specified repos.
 
 ## Scenarios
 
 ### Setting up your darc client
 
+The darc client is a .NET Core global tool.  It requires that a .NET Core SDK be
+installed globally on the machine. The client can be installed using the
+eng\common\darc-init.ps1 script located under any arcade enabled repository.
+The version number is currently baked into the install script, so ensuring you
+have the latest arcade is a good idea.
+
+Installing the darc client:
+```
+PS C:\enlistments\arcade> .\eng\common\darc-init.ps1
+
+Tool 'microsoft.dotnet.darc' (version '1.1.0-beta.19057.9') was successfully uninstalled.
+Installing Darc CLI version 1.1.0-beta.19081.1...
+You may need to restart your command window if this is the first dotnet tool you have installed.
+  Restoring packages for C:\Users\mmitche\AppData\Local\Temp\jlbo0wgo.ki2\restore.csproj...
+  Installing Microsoft.DotNet.Darc 1.1.0-beta.19081.1.
+  Restore completed in 13.12 sec for C:\Users\mmitche\AppData\Local\Temp\jlbo0wgo.ki2\restore.csproj.
+You can invoke the tool using the following command: darc
+Tool 'microsoft.dotnet.darc' (version '1.1.0-beta.19081.1') was successfully installed.
+```
+
+After your client is installed, you should be able to launch it by typing 'darc'
+on the command line.  If this is the first global tool you've installed, you may
+need to first restart your command window.
+
+```
+PS C:\enlistments\arcade> darc
+Microsoft.DotNet 1.1.0-beta.19081.1+270fa76db13d4c103a6dec2b03f1fd79730ff429
+c Microsoft Corporation. All rights reserved.
+ERROR(S):
+No verb selected.
+
+  add-channel                  Creates a new channel.
+
+  add                          Add a new dependency to Version.Details.xml.
+
+  add-default-channel          Add a channel that a build of a branch+repository is automatically applied to.
+
+  add-subscription             Add a new subscription.
+
+  authenticate                 Stores the VSTS and GitHub tokens required for remote operations.
+
+  delete-channel               Deletes an existing channel.
+
+  delete-default-channel       Remove a default channel association.
+
+...
+```
+
+When executing most operations, the client needs to make some remote queries.
+These remote queries require authentication in most circumstances. There are 3
+PATs that may be used:
+- A GitHub PAT for downloading files off github (e.g. eng/Version.Details.xml or
+  arcade script files. 
+- An Azure DevOps pat for downloading files off of Azure DevOps. (e.g.
+  eng/Version.Details.xml)
+- A Build Asset Registry (BAR) password for interacting with Maestro++/BAR (e.g.
+  obtaining build information needed for a drop).
+
+These tokens can either be passed on the command line using parameters (see [Common parameters](#common-parameters)), or
+cached locally on the machine using the [`darc authenticate`](#authenticate) command.
+
+After supplying your secrets, a simple `darc get-channels` operations should succeed.
+
+```
+PS C:\enlistments\arcade> darc get-channels
+.NET Tools - Latest
+.NET Core 3 Dev
+.NET Engineering Services - Int
+.NET Engineering Services - Prod
+.NET Tools - Validation
+```
+
 ### Adding dependencies to a repository
+
+Adding a new dependency to a repository means adding a dependency that is
+tracked by the Maestro++/darc system. This dependency's version can then be automatically updated,
+along with its sha and repository uri. It can contribute to the repository
+dependency graph, and the build producing it will be included in a drop.
+
+Dependencies are tracked in eng/Version.Details.xml, along with the following
+information about each one:
+- Name
+- Source sha
+- Source repository
+- Is the dependency version pinned (can be it automatically updated?)
+- Dependency type (toolset or product)
+
+The [`darc add`](#add) command adds a new dependency.  It takes a number of
+parameters, though only `--name` and `--type` are initially required.  It is
+highly recommended at least the `--repo` parameter be provided.  See [Toolset
+vs. Product Dependencies](#toolset-vs-product-dependencies) below for
+information on type. For example:
+
+```
+darc add --name 'Microsoft.NETCore.App' --type 'product' --repo https://github.com/dotnet/core-setup
+```
+
+This will add a new dependency called 'Microsoft.NETCore.App' to eng/Version.Details.xml under the
+product section. The version, repo, and sha information will be left blank.  A
+corresponding PropertyGroup entry in eng/Versions.props will be added, with the same
+version number. The property name is derived off of the dependency name, with
+the .'s and -'s removed and "PackageVersion" added onto the end. *Note: If
+eng/Versions.props's existing version property names end with the suffix
+'Version', darc will append that instead.*
+
+eng/Versions.props after add command.
+```
+<MicrosoftNETCoreAppPackageVersion></MicrosoftNETCoreAppPackageVersion>
+```
+
+After doing this, you can use the generated `MicrosoftNETCoreAppPackageVersion`
+property as inputs to a PackageReference element or wherever else may need a
+version number.
+
+After addding, it is recommended that you use darc to fill out the missing
+dependency information.  The information can also be filled in after commiting by Maestro++
+using dependency flow, but passing your CI without a filled-in version number
+may be difficult. See (Updating dependencies in your local repository).
+
+#### Toolset vs. Product Dependencies
+
+There are two types of dependencies: 'Product' and 'Toolset'. Choosing between
+them involves answering the question:
+
+"Does my repository repackage the input dependency's binaries, or information
+about those binaries in the outputs it creates for the product?"
+
+Some examples:
+
+##### Toolset
+- **Arcade SDK or other arcade packages** - These packages are not customer
+  facing and do not not ship as part of the product.
+- **dotnet/corefx's dependency on Microsoft.NETCore.App** - This is a circular
+  dependency for testing purposes.
+
+##### Product
+- **dotnet/core-setup's dependency on coreclr's runtime packages** - Even though
+  these packages are not 'shipped' to nuget.org, they repackaged by core-setup.
+- **dotnet/core-sdk's dependency on dotnet/core-setup** - The SDK repackages
+  information about Microsoft.NETCore.App.
+- **dotnet/winforms's dependency on corefx binaries** - Winforms repackages
+  information about the corefx api surface area, and thus those corefx binaries
+  should be 'shipped'.  While we wouldn't necessarily want to ship multiple
+  versions of the same binary in a release, we would ensure that the same corefx
+  version is coherent across the stack,
+
+### Updating dependencies in your local repository
+
+Sometimes it may be useful to update the dependency state of your local
+repository against the latest builds. This might be useful when:
+- Manually updating to create a new PR.
+- Filling out missing information (e.g. version and sha) in Version.Details.xml
+  prior to committing a new dependency.
+- Updating to the latest binaries on a different channel for testing.
+
+darc reads the Version.Details.xml file and notes the dependency name and
+repository uri of each dependency.  Then, given an input channel, it looks up
+the latest build of each dependency's repository that has been applied to the
+channel. It then updates the Version.Details.xml and other version files (e.g.
+Versions.props) based on the newest information.
+
+Continuing with the example from [Adding dependencies to a
+repository](#Adding-dependencies-to-a-repository), let's say I just added a
+dependency on Microsoft.NETCore.App out of core-setup. I want to fill in the
+missing information prior to check-in.  I know that the channel that .NET Core 3
+day to day development for core-setup targeting is '.NET Core 3 Dev', so by
+doing:
+
+```
+PS C:\enlistments\arcade> darc update-dependencies --channel ".NET Core 3 Dev" --name "Microsoft.Netcore.app"
+
+Updating 'MIcrosoft.NETCore.App': '' => '3.0.0-preview-27401-3' (from build '20190201.3' of 'https://github.com/dotnet/core-setup')
+  Dependency name normalized to 'Microsoft.NETCore.App'
+Local dependencies updated from channel '.NET Core 3 Dev'.
+```
+
+Alternately, let's say I'm working on updating to the latest arcade, which has a
+change I need to react to.  I check out a branch locally off of master, then run
+update-dependencies against the tools channel ('.NET Tools - Latest') to pull in the latest script files:
+
+```
+PS C:\enlistments\core-setup> darc update-dependencies --channel ".NET Tools - Latest"
+Updating 'Microsoft.DotNet.Arcade.Sdk': '1.0.0-beta.19080.6' => '1.0.0-beta.19081.3' (from build '20190131.3' of 'https://github.com/dotnet/arcade')
+Local dependencies updated from channel '.NET Tools - Latest'.
+```
+
 
 ### Removing dependencies from a repository
 
 ### 'Pinning' dependencies so they do not update.
-
-### Updating dependencies in your local repository
 
 ### Adding dependency flow
 
@@ -435,6 +618,278 @@ Successfully deleted subscription with id '4f300f68-8800-4b14-328e-08d68308fe30'
 
 ### **`gather-drop`**
 
+Gathers a build drop of a repository into a local directory.
+
+A build drop is a gathering of all the outputs of a specific build that were
+reported to the Build Asset Registry into a local location. Optionally, this
+build drop may also include any builds that were inputs to this build, based on
+the dependency information in Version.Details.xml. Builds produce various
+outputs that go to various locations. For example, they may produce nuget
+packges, zips, msis, etc. These may be available in the build artifacts, or may
+be located in various storage accounts.  Gather-drop mines the Build Asset
+Registry for these locations and downloads them all to the local directory.
+
+`gather-drop` operates in two modes: normal and full.  In normal mode, only the
+outputs for the desired build (the 'root' build) are downloaded.  In full mode,
+the tool will then look up the dependency version information for the sha that
+was built, then find the builds that created those inputs. The same is done
+until all potential nodes are visited. Traversal will break when a cycle is
+reached, when a node has no additional dependencies, or when the dependencies it
+has are only toolset and `--include-toolset` has not been supplied.
+
+The output directory structure is as follows:
+- Default:
+  All outputs will be downloaded under the root folder, in either a 'shipping'
+  or 'nonshipping' folder   (if `--nonshipping`
+  is passed and the build contains non-shipping binaries). Under these
+  folders will be two additional folders: 'assets' and 'packages'. Assets
+  contains all non-package outputs, while 'packages' contains all nuget packages.
+- If `--separated` is passed:
+  Each repository in the build structure will be placed in a separate directory,
+  with the ID of the build under that directory. Under each build will be a
+  'shipping' folder and potentially a 'nonshipping' folder (if `--nonshipping`
+  is passed and the build contains non-shipping binaries). Under these
+  folders will be two additional folders: 'assets' and 'packages'. Assets
+  contains all non-package outputs, while 'packages' contains all nuget
+  packages.
+  
+**Parameters**
+
+- `-i, --id` - BAR ID of build to download. For information on locating the
+  "root build", see [Gathering a build drop](#gathering-a-build-drop)
+- `-r, --repo` - If set, gather a build drop for a build of this repo. Requires
+  --commit. For information on locating the
+  "root build", see [Gathering a build drop](#gathering-a-build-drop)
+- `-c, --commit` - Branch, commit or tag to look up and gather a build drop for.
+  For information on locating the
+  "root build", see [Gathering a build drop](#gathering-a-build-drop)
+- `-o, --output-dir` - **(Required)** Output directory to place build drop.
+- `-f, --full` - Gather the full drop (build and all input builds).
+- `-s, --separated` - Separate out each source repo in the drop into separate directories.
+- `--continue-on-error` - Continue on error rather than halting.  Allows for
+  gathering drops in cases where some outputs might not be able to be
+  downloaded.
+- `--non-shipping`` - (Default: true) Include non-shipping assets.
+- `--overwrite` - Overwrite existing files at the destination.
+- `--dry-run` - Do not actually download files, but print what we would do.
+- `--include-toolset` - Include toolset dependencies.
+
+**Sample**:
+
+Isolated drop:
+
+```
+PS C:\enlistments\core-sdk> dotnet C:\enlistments\arcade-services\artifacts\bin\Microsoft.DotNet.Darc\Debug\netcoreapp2.1\Microso
+ft.DotNet.Darc.dll gather-drop --output-dir C:\scratch\core-sdk-drop --commit 465a336c7a5ca3af2f6cf5172ddc0ebde620803b --repo https://github.com/dotnet/core-sdk
+
+Determining what builds to download...
+Looking up builds of https://github.com/dotnet/core-sdk@465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+Root build - Build number 20190201.2 of https://github.com/dotnet/core-sdk @ 465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+
+Gathering drop for build 20190201.2 of https://github.com/dotnet/core-sdk
+  Downloading asset Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-osx-x64.pkg.sha
+  https://dotnetclichecksums.blob.core.windows.net/dotnet/Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-osx-x64.pkg.sha => C:\scratch\core-sdk-drop\shipping\assets\Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-osx-x64.pkg.sha...Done
+  Downloading asset Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-win-x64.zip.sha
+  https://dotnetclichecksums.blob.core.windows.net/dotnet/Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-win-x64.zip.sha => C:\scratch\core-sdk-drop\shipping\assets\Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-win-x64.zip.sha...Done
+  Downloading asset Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-win-x64.wixpdb.sha
+  https://dotnetclichecksums.blob.core.windows.net/dotnet/Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-win-x64.wixpdb.sha => C:\scratch\core-sdk-drop\shipping\assets\Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-win-x64.wixpdb.sha...Done
+  
+...
+```
+
+Full drop:
+```
+PS C:\enlistments\core-sdk> dotnet C:\enlistments\arcade-services\artifacts\bin\Microsoft.DotNet.Darc\Debug\netcoreapp2.1\Microso
+ft.DotNet.Darc.dll gather-drop --output-dir C:\scratch\core-sdk-drop --commit 465a336c7a5ca3af2f6cf5172ddc0ebde620803b --repo htt
+ps://github.com/dotnet/core-sdk --full
+Determining what builds to download...
+Looking up builds of https://github.com/dotnet/core-sdk@465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+Root build - Build number 20190201.2 of https://github.com/dotnet/core-sdk @ 465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+Getting dependencies of root build...
+Filtering toolset dependencies from the graph...
+Building graph of all dependencies under root build...
+There are 164 unique dependencies in the graph.
+Finding builds for all dependencies...
+Finding build for Microsoft.WindowsDesktop.App@3.0.0-preview-27331-15...
+Looking up Microsoft.WindowsDesktop.App@3.0.0-preview-27331-15 in Build Asset Registry...
+Looking up build 2123 in Build Asset Registry...
+Finding build for Microsoft.NETCore.App@3.0.0-preview-27331-3...
+Looking up Microsoft.NETCore.App@3.0.0-preview-27331-3 in Build Asset Registry...
+Looking up build 2156 in Build Asset Registry...
+Finding build for Microsoft.AspNetCore.App@3.0.0-preview-19080-0484...
+Looking up Microsoft.AspNetCore.App@3.0.0-preview-19080-0484 in Build Asset Registry...
+Looking up build 2083 in Build Asset Registry...
+Finding build for dotnet-ef@3.0.0-preview.19081.2...
+Looking up dotnet-ef@3.0.0-preview.19081.2 in Build Asset Registry...
+Looking up build 2114 in Build Asset Registry...
+Finding build for Microsoft.DotNet.Common.ItemTemplates@1.0.2-beta5.19066.2...
+Looking up Microsoft.DotNet.Common.ItemTemplates@1.0.2-beta5.19066.2 in Build Asset Registry...
+Looking up build 1542 in Build Asset Registry...
+Finding build for Microsoft.Dotnet.Toolset.Internal@3.0.100-preview.19080.2...
+Looking up Microsoft.Dotnet.Toolset.Internal@3.0.100-preview.19080.2 in Build Asset Registry...
+Looking up build 2038 in Build Asset Registry...
+Finding build for Microsoft.DotNet.Cli.Runtime@3.0.100-preview.19075.1...
+Looking up Microsoft.DotNet.Cli.Runtime@3.0.100-preview.19075.1 in Build Asset Registry...
+Looking up build 1946 in Build Asset Registry...
+Finding build for Microsoft.NET.Sdk@3.0.100-preview.19075.2...
+Looking up Microsoft.NET.Sdk@3.0.100-preview.19075.2 in Build Asset Registry...
+Looking up build 1931 in Build Asset Registry...
+Finding build for Microsoft.Build@16.0.0-preview.386...
+Looking up Microsoft.Build@16.0.0-preview.386 in Build Asset Registry...
+Looking up build 2010 in Build Asset Registry...
+Finding build for Microsoft.NETCore.Compilers@3.0.0-beta3-19067-14...
+Looking up Microsoft.NETCore.Compilers@3.0.0-beta3-19067-14 in Build Asset Registry...
+Looking up build 1598 in Build Asset Registry...
+Finding build for Microsoft.NET.Sdk.Razor@3.0.0-preview-19079-02...
+Looking up Microsoft.NET.Sdk.Razor@3.0.0-preview-19079-02 in Build Asset Registry...
+Looking up build 2015 in Build Asset Registry...
+Finding build for Microsoft.NET.Sdk.WindowsDesktop@3.0.0-preview-27329-5...
+Looking up Microsoft.NET.Sdk.WindowsDesktop@3.0.0-preview-27329-5 in Build Asset Registry...
+Looking up build 2021 in Build Asset Registry...
+Finding build for Microsoft.NET.Sdk.Web@3.0.100-preview.19064.1...
+Looking up Microsoft.NET.Sdk.Web@3.0.100-preview.19064.1 in Build Asset Registry...
+Looking up build 1414 in Build Asset Registry...
+Finding build for Microsoft.Private.Winforms@1.0.0-preview.19074.2...
+Looking up Microsoft.Private.Winforms@1.0.0-preview.19074.2 in Build Asset Registry...
+Looking up build 1892 in Build Asset Registry...
+Finding build for runtime.win-x64.Microsoft.DotNet.Wpf.Private@4.8.0-prerelease.19064.4...
+Looking up runtime.win-x64.Microsoft.DotNet.Wpf.Private@4.8.0-prerelease.19064.4 in Build Asset Registry...
+Looking up build 1434 in Build Asset Registry...
+Finding build for Microsoft.Private.CoreFx.NETCoreApp@4.6.0-preview.19073.11...
+Looking up Microsoft.Private.CoreFx.NETCoreApp@4.6.0-preview.19073.11 in Build Asset Registry...
+Looking up build 1847 in Build Asset Registry...
+Finding build for Microsoft.Private.PackageBaseline@4.6.0-preview.19073.11...
+Finding build for Microsoft.NETCore.Platforms@3.0.0-preview.19073.11...
+Finding build for Microsoft.Windows.Compatibility@2.1.0-preview.19073.11...
+Finding build for System.Windows.Extensions@4.6.0-preview.19073.11...
+Finding build for Microsoft.NETCore.Runtime.CoreCLR@3.0.0-preview-27322-72...
+Looking up Microsoft.NETCore.Runtime.CoreCLR@3.0.0-preview-27322-72 in Build Asset Registry...
+Looking up build 1761 in Build Asset Registry...
+Finding build for Microsoft.NETCore.DotNetHost@3.0.0-preview-27324-5...
+Looking up Microsoft.NETCore.DotNetHost@3.0.0-preview-27324-5 in Build Asset Registry...
+Looking up build 1869 in Build Asset Registry...
+Finding build for Microsoft.NETCore.DotNetHostPolicy@3.0.0-preview-27324-5...
+Finding build for Microsoft.NETCore.App@3.0.0-preview-27324-5...
+Finding build for Microsoft.Win32.Registry@4.6.0-preview.19073.11...
+Finding build for System.Configuration.ConfigurationManager@4.6.0-preview.19073.11...
+Finding build for System.Drawing.Common@4.6.0-preview.19073.11...
+Finding build for Microsoft.Win32.SystemEvents@4.6.0-preview.19073.11...
+Finding build for System.Security.Cryptography.Cng@4.6.0-preview.19073.11...
+Finding build for System.CodeDom@4.6.0-preview.19073.11...
+Finding build for System.Security.Permissions@4.6.0-preview.19073.11...
+Finding build for Microsoft.Extensions.CommandLineUtils.Sources@3.0.0-preview.19078.2...
+Looking up Microsoft.Extensions.CommandLineUtils.Sources@3.0.0-preview.19078.2 in Build Asset Registry...
+Looking up build 2006 in Build Asset Registry...
+Finding build for Microsoft.Extensions.HashCodeCombiner.Sources@3.0.0-preview.19078.2...
+Finding build for Microsoft.Extensions.NonCapturingTimer.Sources@3.0.0-preview.19078.2...
+Finding build for System.Diagnostics.DiagnosticSource@4.6.0-preview.19073.11...
+Finding build for System.Text.Encodings.Web@4.6.0-preview.19073.11...
+Finding build for Microsoft.Extensions.DependencyModel@3.0.0-preview-27324-5...
+Finding build for System.ComponentModel.Annotations@4.6.0-preview.19073.11...
+Finding build for System.Data.SqlClient@4.7.0-preview.19073.11...
+Finding build for System.Diagnostics.EventLog@4.6.0-preview.19073.11...
+Finding build for System.IO.Pipelines@4.6.0-preview.19073.11...
+Finding build for System.Reflection.Metadata@1.7.0-preview.19073.11...
+Finding build for System.Runtime.CompilerServices.Unsafe@4.6.0-preview.19073.11...
+Finding build for System.Security.Cryptography.Xml@4.6.0-preview.19073.11...
+Finding build for Microsoft.TemplateEngine.Cli@1.0.2-beta5.19066.2...
+Finding build for Microsoft.DotNet.Cli.CommandLine@1.0.0-preview.19074.1...
+Looking up Microsoft.DotNet.Cli.CommandLine@1.0.0-preview.19074.1 in Build Asset Registry...
+Looking up build 1887 in Build Asset Registry...
+Finding build for Microsoft.CSharp@4.6.0-preview.19080.5...
+Looking up Microsoft.CSharp@4.6.0-preview.19080.5 in Build Asset Registry...
+Looking up build 2090 in Build Asset Registry...
+Finding build for Microsoft.Extensions.Caching.Memory@3.0.0-preview.19079.8...
+Looking up Microsoft.Extensions.Caching.Memory@3.0.0-preview.19079.8 in Build Asset Registry...
+Looking up build 2044 in Build Asset Registry...
+Finding build for Microsoft.Extensions.Configuration.Abstractions@3.0.0-preview.19079.8...
+Finding build for Microsoft.Extensions.Configuration.EnvironmentVariables@3.0.0-preview.19079.8...
+Finding build for Microsoft.Extensions.Configuration.Json@3.0.0-preview.19079.8...
+Finding build for Microsoft.Extensions.Configuration@3.0.0-preview.19079.8...
+Finding build for Microsoft.Extensions.DependencyInjection@3.0.0-preview.19079.8...
+Finding build for Microsoft.Extensions.DependencyModel@3.0.0-preview-27330-4...
+Looking up Microsoft.Extensions.DependencyModel@3.0.0-preview-27330-4 in Build Asset Registry...
+Looking up build 2086 in Build Asset Registry...
+Finding build for Microsoft.Extensions.HostFactoryResolver.Sources@3.0.0-preview.19079.8...
+Finding build for Microsoft.Extensions.Logging@3.0.0-preview.19079.8...
+Finding build for System.Collections.Immutable@1.6.0-preview.19080.5...
+Finding build for System.ComponentModel.Annotations@4.6.0-preview.19080.5...
+Finding build for System.Data.SqlClient@4.7.0-preview.19080.5...
+Finding build for System.Diagnostics.DiagnosticSource@4.6.0-preview.19080.5...
+Finding build for Microsoft.AspNetCore.Razor.Language@3.0.0-preview-19074-06...
+Looking up Microsoft.AspNetCore.Razor.Language@3.0.0-preview-19074-06 in Build Asset Registry...
+Looking up build 1903 in Build Asset Registry...
+Finding build for Microsoft.AspNetCore.Mvc.Razor.Extensions@3.0.0-preview-19074-06...
+Finding build for Microsoft.CodeAnalysis.Razor@3.0.0-preview-19074-06...
+Finding build for Microsoft.NET.Sdk.Razor@3.0.0-preview-19074-06...
+Finding build for dotnet-ef@3.0.0-preview.19074.3...
+Looking up dotnet-ef@3.0.0-preview.19074.3 in Build Asset Registry...
+Looking up build 1880 in Build Asset Registry...
+Finding build for Microsoft.EntityFrameworkCore.InMemory@3.0.0-preview.19074.3...
+Finding build for Microsoft.EntityFrameworkCore.Relational@3.0.0-preview.19074.3...
+Finding build for Microsoft.EntityFrameworkCore.Sqlite@3.0.0-preview.19074.3...
+
+...
+
+Finding build for Microsoft.NETCore.Runtime.CoreCLR@3.0.0-preview-27331-71...
+Looking up Microsoft.NETCore.Runtime.CoreCLR@3.0.0-preview-27331-71 in Build Asset Registry...
+Looking up build 2103 in Build Asset Registry...
+Finding build for Microsoft.NETCore.DotNetHost@3.0.0-preview-27331-2...
+Looking up Microsoft.NETCore.DotNetHost@3.0.0-preview-27331-2 in Build Asset Registry...
+Looking up build 2116 in Build Asset Registry...
+Finding build for Microsoft.NETCore.DotNetHostPolicy@3.0.0-preview-27331-2...
+Finding build for Microsoft.NETCore.App@3.0.0-preview-27331-2...
+Finding build for Microsoft.Win32.Registry@4.6.0-preview.19079.11...
+Looking up Microsoft.Win32.Registry@4.6.0-preview.19079.11 in Build Asset Registry...
+Looking up build 2032 in Build Asset Registry...
+Finding build for System.Configuration.ConfigurationManager@4.6.0-preview.19079.11...
+Finding build for System.Drawing.Common@4.6.0-preview.19079.11...
+Finding build for Microsoft.Win32.SystemEvents@4.6.0-preview.19079.11...
+Finding build for System.Security.Cryptography.Cng@4.6.0-preview.19079.11...
+Finding build for System.CodeDom@4.6.0-preview.19079.11...
+Finding build for System.Security.Permissions@4.6.0-preview.19079.11...
+Finding build for System.Windows.Extensions@4.6.0-preview.19079.11...
+Full set of builds in graph:
+  Build - 20190201.2 of https://github.com/dotnet/core-sdk @ 465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+  Build - 20190131.15 of https://devdiv.visualstudio.com/DevDiv/_git/DotNet-Trusted @ adcdf504ddb283fa0160d4f3291cc372fbce496e
+  Build - 20190131.3 of https://github.com/dotnet/core-setup @ 75ccdb6828e3706930ad49f061230e9e0fd24d18
+  Build - 3.0.0-preview-19080-0484 of https://github.com/aspnet/AspNetCore @ 7d21ee1a5a5f4caf64900e601b011be264964bbb
+  Build - 20190131.2 of https://github.com/aspnet/EntityFrameworkCore @ 5fecaf002ee8fe67aa10be7efd0b2a080ec66a2a
+  Build - 20190116.2 of https://github.com/dotnet/templating @ ac8f12b90238542dfd2ea596178ae24ea20a0f55
+  Build - 20190130.2 of https://github.com/dotnet/toolset @ 536d6a237f4de7b248e75b63256b75c1798e1bd7
+  Build - 20190125.1 of https://github.com/dotnet/cli @ 511071e1e199c8ccd8fad072cc31327db0737577
+  Build - 20190125.2 of https://github.com/dotnet/sdk @ 010b0fb362878d3eb8dfff7f521fc0db6b7e3a50
+  Build - 20190129.3 of https://github.com/Microsoft/msbuild @ a1e757f759060f131c2145f8898ce6a1bcbdd454
+  Build - 20190117.14 of https://github.com/dotnet/roslyn @ 359844cc9c32a5b4c1ba72a6e73a32989bd5daeb
+  Build - 20190129.2 of https://github.com/aspnet/AspNetCore-Tooling @ 99938c9b7e62896060b7d6f8a225cceb28da2c8d
+  Build - 20190129.5 of https://devdiv.visualstudio.com/DevDiv/_git/DotNet-Trusted @ 0a15bac8cd4f0646642dcd40ddebd0513a2de5d3
+  Build - 20190114.1 of https://github.com/aspnet/websdk @ c92b1354da7d7290ec63984cf445a4d2cc9667e8
+  Build - 20190124.2 of https://github.com/dotnet/winforms @ 63c7e76b747e67819a00b153b2d9dea6d9045d7b
+  Build - 20190114.4 of https://github.com/dotnet/wpf @ dbd3bd96849f6bca8c0ca0275de36895bd77a835
+  Build - 20190123.11 of https://github.com/dotnet/corefx @ 351ca391579740ae8af8a5405cffa16d152ad6b2
+  Build - 20190122.72 of https://github.com/dotnet/coreclr @ b9e88989458e24fa9764e045917b141e3338eae7
+  Build - 20190124.5 of https://github.com/dotnet/core-setup @ 63a01b08e5d1d1a6b8544f598b3d3bda76e6e424
+  Build - 20190128.02 of https://github.com/aspnet/Extensions @ a58a80bdf5ad971167f73e501661131c3e34a901
+  Build - 20190124.1 of https://github.com/dotnet/cliCommandLineParser @ d8f545b1995fb62fd5c64f794491afbfcf6a84ca
+  Build - 20190130.5 of https://github.com/dotnet/corefx @ 9e074e4a3f3626fa953f36ab79e3cd3e6db1c9de
+  Build - 20190129.8 of https://github.com/aspnet/Extensions @ f41cfded3c12eec0efea89ece1dafe43afa9c6b8
+  Build - 20190130.4 of https://github.com/dotnet/core-setup @ 373df9c049aaa6daa967f0bea3bac44c065051f0
+  Build - 20190124.6 of https://github.com/aspnet/AspNetCore-Tooling @ bd7fc9ddf67dec0d582168bcd3d1d4681747f81a
+  Build - 20190124.3 of https://github.com/aspnet/EntityFrameworkCore @ 3d1e08eb08789a9dde3ac20851d3c82fdf9272e5
+  Build - 20190124.02 of https://github.com/aspnet/Extensions @ 0de62ae930da31048ba7e54c8cd0c6c0bcbd9095
+  Build - 20190130.4 of https://github.com/dotnet/winforms @ f3aaf4d671390a7b81f0bec15a2cd2b3c94b11cd
+  Build - 20190131.1 of https://github.com/dotnet/corefx @ 4e7ce8acfae39beab8c30053d3da95417b5a16dc
+  Build - 20190131.71 of https://github.com/dotnet/coreclr @ 10ba67ac50a2152464981db11f2a893b87f8deee
+  Build - 20190131.2 of https://github.com/dotnet/core-setup @ 75ccdb6828e3706930ad49f061230e9e0fd24d18
+  Build - 20190129.11 of https://github.com/dotnet/corefx @ 673fe7880790e79549266cea25a385af82917b6e
+
+Gathering drop for build 20190201.2 of https://github.com/dotnet/core-sdk
+...
+```
+
+**See also**:
+- [get-dependency-graph](#get-dependency-graph)
+
 ### **`get-channels`**
 
 Retrieves a list of channels. Channels are something like a virtual cross
@@ -464,6 +919,9 @@ PS D:\enlistments\arcade> darc get-channels
 .NET Engineering Services - Prod
 .NET Tools - Validation
 ```
+
+**See also**:
+- [add-channel](#get-dependency-graph)
 
 ### **`get-default-channels`**
 
@@ -511,9 +969,153 @@ https://github.com/Microsoft/visualfsharp @ refs/heads/dev16.1 -> .NET Core 3 De
 https://github.com/Microsoft/vstest @ refs/heads/master -> .NET Core 3 Dev
 ```
 
+**See also**:
+- [add-default-channel](#add-default-channel)
+- [delete-default-channel](#delete-default-channel)
+- [get-channels](#get-channels)
+
 ### **`get-dependencies`**
 
+Retrieves the dependencies listed in the local repo. This command reads the
+Version.Details.xml file from the local repository and prints out the relevant
+information.  By default, the command lists all dependencies.
+
+For information on toolset vs. product dependencies, see [Toolset vs. Product
+Dependencies](#toolset-vs-product-dependencies)
+
+**Parameters**
+
+- `n, --name` - Name of dependency to query for.
+
+**Sample**
+```
+PS C:\enlistments\arcade-services> darc get-dependencies
+
+Name:    Microsoft.DotNet.Arcade.Sdk
+Version: 1.0.0-beta.19081.3
+Repo:    https://github.com/dotnet/arcade
+Commit:  1e859f1c17fffbe9c4fb6bbfc0fc71cd0c56563b
+Type:    Toolset
+
+Name:    Microsoft.DotNet.SignTool
+Version: 1.0.0-beta.19081.3
+Repo:    https://github.com/dotnet/arcade
+Commit:  1e859f1c17fffbe9c4fb6bbfc0fc71cd0c56563b
+Type:    Toolset
+
+Name:    Microsoft.DotNet.Build.Tasks.Feed
+Version: 2.2.0-beta.19081.3
+Repo:    https://github.com/dotnet/arcade
+Commit:  1e859f1c17fffbe9c4fb6bbfc0fc71cd0c56563b
+Type:    Toolset
+
+Name:    Microsoft.DotNet.Maestro.Tasks
+Version: 1.0.0-beta.19060.8
+Repo:    https://github.com/dotnet/arcade
+Commit:  67384d20d310611afc1c2b4dd3b953fda182def4
+Type:    Toolset
+```
+
+**See Also**
+- [get-dependency-graph](#get-dependency-graph)
+
 ### **`get-dependency-graph`**
+
+Given a starting repository and sha, builds the full repository dependency
+graph.
+
+The dependency graph is defined by the dependencies in Version.Details.xml.
+Each dependency listed contains information on the source of the dependency,
+specifically which repository and sha it was generated from. Visiting that repository
+at the specified sha will yield another set of dependencies. Transitively
+visiting these repository+sha combinations will build up a repository graph. The
+graph may have cycles, and the transitive walk is stopped at those nodes.  It
+may also be stopped at any toolset dependency unless those are specifically
+included with `--include-toolset`.
+
+The graph output comes in 3 forms:
+- (Default) A full textual graph representation indicating all involved repositories,
+  their input dependencies, and the repositories that created those input
+  dependencies.
+- A 'flat' graph where only unique repository+sha combinations are shown. The
+  individual package dependencies are ignored.
+- A graph-viz text format that can be used to generate a visual presentation of
+  the graph.
+
+In flat and full modes, after printing the graph, a set of "incoherencies" and
+the paths to those incoherences are displayed.
+displayed. Incoherencies are cases where either:
+- The same repository exists in the graph at two different shas
+- The same input dependency exists in the graph at two different versions.
+  While generally this also leads to the same repository existing multiple times
+  in the graph at different shas, it's also possible for the same sha to be
+  built more than once, producing different package versions.
+
+  While by default, this command uses remote resources to generate the graph,
+  it's possible to generate if you have all potential input repositories
+  available in a folder with all the necessary shas downloaded.  In this mode,
+  starting from the root repository, darc will scan the folder for git repos
+  that contain the input shas to that repository. It will then build up the
+  dependency graph based on that information.
+
+  By default, if no parameters are passed, the head sha of the current
+  repository is used as the starting point.
+
+**Parameters**'
+- `-l, --local` - Get the graph using only local information.  Requires that repos-folder be passed.
+- `--repo` - If set, gather dependency information from the remote repository. Requires --version.
+- `-v, --version` - Branch, commit or tag to look up if looking up version information remotely.
+- `--asset-name` - Get the graph based on a single asset and not the whole Version.Details.xml contents.
+- `--repos-folder` - Full path to folder where all the repos are locally stored. e.g. C:\repos
+- `--remotes-map` - ';' separated key value pair defining the remote to local path mapping. e.g.
+  'https://github.com/dotnet/arcade,C:\repos\arcade;'https://github.com/dotnet/corefx,C:\repos\corefx.
+- `-f, --flat` - Returns a unique set of repository+sha combination.
+- `--include-toolset` - Include toolset dependencies.
+
+**Sample**
+
+Full mode:
+
+```
+PS C:\enlistments\core-setup> dotnet darc get-dependency-graph
+Getting root dependencies from local repository...
+Building repository dependency graph...
+Removing toolset dependencies...
+Repositories:
+  - Repo:    C:/enlistments/core-setup/.git
+    Commit:  b50554ac9a96fedc8580fa6090b6e9e75a23193b
+    Dependencies:
+    - Name:    Microsoft.Private.CoreFx.NETCoreApp
+      Version: 4.6.0-preview.19073.11
+    - Name:    Microsoft.NETCore.Platforms
+      Version: 3.0.0-preview.19073.11
+    - Name:    Microsoft.NETCore.Runtime.CoreCLR
+      Version: 3.0.0-preview-27322-72
+    Input Repositories:
+    - Repo:    https://github.com/dotnet/corefx
+      Commit:  351ca391579740ae8af8a5405cffa16d152ad6b2
+    - Repo:    https://github.com/dotnet/coreclr
+      Commit:  b9e88989458e24fa9764e045917b141e3338eae7
+```
+
+Flat mode:
+
+```
+PS C:\enlistments\core-setup> dotnet darc get-dependency-graph --flat
+Getting root dependencies from local repository...
+Building repository dependency graph...
+Removing toolset dependencies...
+Repositories:
+  - Repo:     C:/enlistments/core-setup/.git
+    Commit:   b50554ac9a96fedc8580fa6090b6e9e75a23193b
+  - Repo:     https://github.com/dotnet/corefx
+    Commit:   351ca391579740ae8af8a5405cffa16d152ad6b2
+  - Repo:     https://github.com/dotnet/coreclr
+    Commit:   b9e88989458e24fa9764e045917b141e3338eae7
+```
+
+**See Also**
+- [gather-drop](#gather-drop)
 
 ### **`get-subscriptions`**
 
@@ -620,4 +1222,66 @@ Triggering 1 subscriptions...done
 
 ### **`update-dependencies`**
 
+Updates the local repository's dependencies against a channel.
+
+This operation is similar to what a Maestro++ subscription does, only local.
+darc reads the Version.Details.xml file and notes the dependency name and
+repository uri of each dependency.  Then, given an input channel, it looks up
+the latest build of each dependency's repository that has been applied to the
+channel. It then updates the Version.Details.xml and other version files (e.g.
+Versions.props) based on the newest information.
+
+This command has two additional non-default modes:
+- Use a local package folder as input, avoiding a remote call to the
+build asset registry (--packages-folder)
+- Update a specific dependency to a new version (--name and --version)
+
+This command is especially useful after adding new dependencies to a repository.
+See [Updating dependencies in your local
+repository](#updating-dependencies-in-your-local-repository) for more
+information.
+
+**Parameters**
+
+- `-c, --channel` - Channel to pull dependencies from.
+- `-n, --name` - Optional name of dependency to update.  Otherwise all dependencies existing on 'channel' are updated.
+- `-v, --version` - The new version of dependency with the name specified by --name.
+- `--source-repo` - Only update dependencies whose source uri contains this string.
+- `--packages-folder` - An optional path to a folder which contains the NuGet packages whose versions will be used to update existing dependencies.
+- `--dry-run` - Show what will be updated, but make no changes.
+
+**Sample**
+```
+PS C:\enlistments\core-setup> darc update-dependencies --channel ".NET Core 3 Dev"
+
+Updating 'Microsoft.Private.CoreFx.NETCoreApp': '4.6.0-preview.19073.11' => '4.6.0-preview.19101.1' (from build '20190201.1' of 'https://github.com/dotnet/corefx')
+Updating 'Microsoft.NETCore.Platforms': '3.0.0-preview.19073.11' => '3.0.0-preview.19101.1' (from build '20190201.1' of 'https://github.com/dotnet/corefx')
+Updating 'Microsoft.NETCore.Runtime.CoreCLR': '3.0.0-preview-27322-72' => '3.0.0-preview-27401-71' (from build '20190201.71' of 'https://github.com/dotnet/coreclr')
+Local dependencies updated from channel '.NET Core 3 Dev'.
+```
+
+**See Also**:
+- [add](#add)
+- [get-dependencies](#get-dependencies)
+- [get-channels](#get-channels)
+
 ### **`verify`**
+
+Verifies the local repository state is valid.  This checks that:
+- The Version.Details.xml file is readable and in the expected format/
+- The Versions.props file is in an appropriate xml format.
+- The global.json file is in the expected format.
+- Dependencies in the Version.Details.xml files are utilized in the
+  Versions.props or global.json files.
+- Version numbers match between Version.Details.xml and corresponding
+  expression of those dependencies in Versions.props/global.json
+
+**Parameters**
+
+None.
+
+**Sample**
+```
+PS C:\enlistments\core-setup> darc verify
+Dependency verification succeeded.
+```
