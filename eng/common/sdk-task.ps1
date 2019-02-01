@@ -9,6 +9,10 @@ Param(
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$properties
 )
 
+$ci = $true
+$binaryLog = $true
+$warnAsError = $true
+
 . $PSScriptRoot\tools.ps1
 
 function Print-Usage() {
@@ -20,7 +24,6 @@ function Print-Usage() {
   Write-Host ""
 
   Write-Host "Advanced settings:"
-  Write-Host "  -ci                     Set when running on CI server"
   Write-Host "  -prepareMachine         Prepare machine for CI run"
   Write-Host "  -msbuildEngine <value>  Msbuild engine to use to run build ('dotnet', 'vs', or unspecified)."
   Write-Host ""
@@ -57,10 +60,6 @@ try {
     Write-Host "Unknown task: $task" -ForegroundColor Red
     ExitWithExitCode 1
   }
-
-  $ci = $true
-  $binaryLog = $true
-  $warnAsError = $true
 
   if ($restore) {
     Build "Restore"
