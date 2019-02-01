@@ -2,7 +2,7 @@
 <Dependencies>
   <ProductDependencies></ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="1.0.0-beta.19073.5" Pinned="true">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="1.0.0-beta.19073.5">
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>af8ab7d7ca13d5f129c31cfa7aeda19f6d168e6e</Sha>
     </Dependency>
@@ -10,7 +10,7 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>af8ab7d7ca13d5f129c31cfa7aeda19f6d168e6e</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.0.0-beta.19060.8" Pinned="False">
+    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.0.0-beta.19060.8">
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>67384d20d310611afc1c2b4dd3b953fda182def4</Sha>
     </Dependency>
