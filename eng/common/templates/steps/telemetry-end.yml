@@ -60,6 +60,7 @@ steps:
     }
     $WarningCount = 0
 
+    # Basic retry loop to harden against server flakiness
     $retryCount = 0
     while ($retryCount -lt 5) {
       try {

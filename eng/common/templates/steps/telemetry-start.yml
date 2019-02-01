@@ -155,6 +155,7 @@ steps:
     }
     Write-Host "Job Info: $jobInfoJson"
 
+    # Basic retry loop to harden against server flakiness
     $retryCount = 0
     while ($retryCount -lt 5) {
       try {
@@ -193,6 +194,7 @@ steps:
     Configuration: ${{ parameters.buildConfig }}
   condition: and(always(), eq(variables['Agent.Os'], 'Windows_NT'))
 - powershell: |
+    # Basic retry loop to harden against server flakiness
     $retryCount = 0
     while ($retryCount -lt 5) {
       try {
