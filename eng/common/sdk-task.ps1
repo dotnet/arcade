@@ -12,19 +12,19 @@ Param(
 . $PSScriptRoot\tools.ps1
 
 function Print-Usage() {
-    Write-Host "Common settings:"
-    Write-Host "  -task <value>           Name of Arcade task (name of a project in SdkTasks directory of the Arcade SDK package)"
-    Write-Host "  -restore                Restore dependencies"
-    Write-Host "  -verbosity <value>      Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic]"
-    Write-Host "  -help                   Print help and exit"
-    Write-Host ""
+  Write-Host "Common settings:"
+  Write-Host "  -task <value>           Name of Arcade task (name of a project in SdkTasks directory of the Arcade SDK package)"
+  Write-Host "  -restore                Restore dependencies"
+  Write-Host "  -verbosity <value>      Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic]"
+  Write-Host "  -help                   Print help and exit"
+  Write-Host ""
 
-    Write-Host "Advanced settings:"
-    Write-Host "  -ci                     Set when running on CI server"
-    Write-Host "  -prepareMachine         Prepare machine for CI run"
-    Write-Host "  -msbuildEngine <value>  Msbuild engine to use to run build ('dotnet', 'vs', or unspecified)."
-    Write-Host ""
-    Write-Host "Command line arguments not listed above are passed thru to msbuild."
+  Write-Host "Advanced settings:"
+  Write-Host "  -ci                     Set when running on CI server"
+  Write-Host "  -prepareMachine         Prepare machine for CI run"
+  Write-Host "  -msbuildEngine <value>  Msbuild engine to use to run build ('dotnet', 'vs', or unspecified)."
+  Write-Host ""
+  Write-Host "Command line arguments not listed above are passed thru to msbuild."
 }
 
 function Build([string]$target) {
