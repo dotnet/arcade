@@ -27,37 +27,26 @@
     <AssetManifestFilePath>$(ArtifactsLogDir)AssetManifest\$(OS)-$(PlatformName).xml</AssetManifestFilePath>
 
     <PipelineArtifactsAssetManifestFilePath>$(ArtifactsLogDir)PipelineArtifactsPublishingManifests\$(OS)-$(PlatformName)-$(AGENT_JOBNAME).xml</PipelineArtifactsAssetManifestFilePath>
+
+    <SymbolPackagesDir>$(ArtifactsTmpDir)SymbolPackages\</SymbolPackagesDir>
+
+    <PublishToBlobFeedFlatContainer Condition="'$(PublishToBlobFeedFlatContainer)' == ''">false</PublishToBlobFeedFlatContainer>
+
+    <PublishDependsOnTargets Condition="$(PublishToAzure) and '$(PublishToBlobFeedFlatContainer)' != 'true'">$(PublishDependsOnTargets);PublishPackagesToBlobFeed</PublishDependsOnTargets>
+    <PublishDependsOnTargets Condition="$(PublishToAzure) and '$(PublishToBlobFeedFlatContainer)' == 'true'">$(PublishDependsOnTargets);PublishFilesToBlobFeed</PublishDependsOnTargets>
+    <PublishDependsOnTargets Condition="$(PublishToSymbolServer)">$(PublishDependsOnTargets);PublishSymbols</PublishDependsOnTargets>
+    <PublishDependsOnTargets Condition="$(PublishToSourceBuildStorage)">$(PublishDependsOnTargets);PublishToSourceBuildStorage</PublishDependsOnTargets>
+    <PublishDependsOnTargets Condition="'$(PublishToAzureDevOpsArtifacts)' == 'true'">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
+    <PublishDependsOnTargets>BeforePublish;$(PublishDependsOnTargets)</PublishDependsOnTargets>
   </PropertyGroup>
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets" Condition="$(PublishToAzure)"/>
   <Import Project="$(NuGetPackageRoot)microsoft.symboluploader.build.task\$(MicrosoftSymbolUploaderBuildTaskVersion)\build\PublishSymbols.targets" Condition="$(PublishToSymbolServer)"/>
 
   <Target Name="Publish"
-          DependsOnTargets="BeforePublish;BeforePublishPackagesToBlobFeed;BeforePublishFilesToBlobFeed;PublishSymbols"
-          Condition="$(PublishToAzure) or $(PublishToSourceBuildStorage) or $(PublishToSymbolServer)">
-  </Target>
+          DependsOnTargets="$(PublishDependsOnTargets)" />
 
-  <!-- Target used to condition calling PublishPackagesToBlobFeed target from the Feed package -->
-  <Target Name="BeforePublishPackagesToBlobFeed"
-          DependsOnTargets="BeforePublish;PublishPackagesToBlobFeed"
-          Condition="'$(PublishToBlobFeedFlatContainer)' != 'true'">
-  </Target>
-
-  <!-- Target used to condition calling PublishFilesToBlobFeed target from the Feed package -->
-  <Target Name="BeforePublishFilesToBlobFeed"
-          DependsOnTargets="BeforePublish;PublishFilesToBlobFeed"
-          Condition="'$(PublishToBlobFeedFlatContainer)' == 'true'">
-  </Target>
-
-  <Target Name="BeforePublish"
-          BeforeTargets="Publish;PublishSymbols"
-          Condition="$(PublishToAzure) or $(PublishToSourceBuildStorage) or $(PublishToSymbolServer)">
-    <PropertyGroup>
-      <SymbolPackagesDir>$(ArtifactsTmpDir)SymbolPackages\</SymbolPackagesDir>
-
-      <PublishToBlobFeedFlatContainer Condition=" '$(PublishToBlobFeedFlatContainer)' == '' ">false</PublishToBlobFeedFlatContainer>
-    </PropertyGroup>
-
+  <Target Name="BeforePublish">
     <ItemGroup>
       <ExistingSymbolPackages Include="$(ArtifactsShippingPackagesDir)*.symbols.nupkg" IsShipping="true" />
       <ExistingSymbolPackages Include="$(ArtifactsNonShippingPackagesDir)*.symbols.nupkg" IsShipping="false" />
@@ -103,18 +92,20 @@
       <ManifestBuildId>$(BUILD_BUILDNUMBER)</ManifestBuildId>
       <ManifestCommit>$(BUILD_SOURCEVERSION)</ManifestCommit>
     </PropertyGroup>
+
     <ItemGroup>
       <PackagesToPublish Remove="@(PackagesToPublish)" />
       <PackagesToPublish Include="@(ItemsToPushToBlobFeed)" />
     </ItemGroup>
   </Target>
 
-  <Target Name="AfterPublish"
-          AfterTargets="Publish">
+  <Target Name="PublishToSourceBuildStorage">
     <!-- Source Build local storage -->    
-    <Copy SourceFiles="@(PackagesToPublish)" DestinationFolder="$(DotNetOutputBlobFeedDir)packages" Condition="$(PublishToSourceBuildStorage)" />
-    <Copy SourceFiles="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" DestinationFolder="$(DotNetOutputBlobFeedDir)assets" Condition="$(PublishToSourceBuildStorage)" />
+    <Copy SourceFiles="@(PackagesToPublish)" DestinationFolder="$(DotNetOutputBlobFeedDir)packages" />
+    <Copy SourceFiles="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" DestinationFolder="$(DotNetOutputBlobFeedDir)assets" />
+  </Target>
 
+  <Target Name="PublishToAzureDevOpsArtifacts">
     <!-- 
     Begin: 
       Work in progress drop-in replacement for PushToBlobFeed task below. 
@@ -196,9 +187,7 @@
     --> 
   </Target>
 
-  <Target Name="PublishSymbols"
-          DependsOnTargets="BeforePublish"
-          Condition="$(PublishToSymbolServer)">
+  <Target Name="PublishSymbols">
     <PropertyGroup>
       <DotNetSymbolExpirationInDays Condition="'$(DotNetSymbolExpirationInDays)' == ''">3650</DotNetSymbolExpirationInDays>
       <DryRun>false</DryRun>
