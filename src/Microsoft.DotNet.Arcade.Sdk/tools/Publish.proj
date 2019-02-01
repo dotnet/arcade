@@ -88,10 +88,10 @@
       <CollectionUri>$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)</CollectionUri>
       
 			<!-- When we have dev.azure.com/<account>/ -->
-      <AzureDevOpsAccount Condition="$(CollectionUri.IndexOf('dev.azure.com')) >= 0">$(url.Split('/')[3])</AzureDevOpsAccount>
+      <AzureDevOpsAccount Condition="$(CollectionUri.IndexOf('dev.azure.com')) >= 0">$(CollectionUri.Split('/')[3])</AzureDevOpsAccount>
 		
 			<!-- When we have <account>.visualstudio.com -->
-      <AzureDevOpsAccount Condition="$(CollectionUri.IndexOf('visualstudio.com')) >= 0">$(url.Split('.')[0].Split('/')[2])</AzureDevOpsAccount>
+      <AzureDevOpsAccount Condition="$(CollectionUri.IndexOf('visualstudio.com')) >= 0">$(CollectionUri.Split('.')[0].Split('/')[2])</AzureDevOpsAccount>
     </PropertyGroup>
 
     <!--
