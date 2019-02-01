@@ -8,10 +8,11 @@ $ErrorActionPreference = "Stop"
 . $PSScriptRoot\common\tools.ps1
 $LocalNugetConfigSourceName = "arcade-local"
 
-function CheckExitCode ($exitCode)
+function CheckExitCode ([string]$stage)
 {
-  if ($exitCode -ne 0) {
-    Write-Host "Arcade self-build failed"
+  $exitCode = $LASTEXITCODE
+  if ($exitCode  -ne 0) {
+    Write-Host "Something failed in stage: '$stage'. Check for errors above. Exiting now..."
     ExitWithExitCode $exitCode
   }
 }
@@ -65,32 +66,35 @@ try {
   $nugetConfigPath = Join-Path $RepoRoot "NuGet.config"
   
   & .\common\cibuild.cmd -configuration $configuration @Args
-  CheckExitCode $lastExitCode
+  CheckExitCode "Local build"
   
   # This is a temporary solution. When https://github.com/dotnet/arcade/issues/1293 is closed
   # we'll be able to pass a container name to build.ps1 which will put the outputs in the
   # artifacts-<container-name> folder.
   MoveArtifactsToValidateSdkFolder $ArtifactsDir $validateSdkFolderName $RepoRoot
-  
+  CheckExitCode "Move outputs to validatesdk folder"
+
   Write-Host "STEP 2: Build using the local packages"
   
   AddSourceToNugetConfig $nugetConfigPath $packagesSource
-   
+  CheckExitCode "Adding source to NuGet.config"
+
   Write-Host "Updating Dependencies using Darc..."
 
   . .\common\darc-init.ps1
-  
+  CheckExitCode "Running darc-init"
+
   $DarcExe = "$env:USERPROFILE\.dotnet\tools"
   $DarcExe = Resolve-Path $DarcExe
 
   & $DarcExe\darc.exe update-dependencies --packages-folder $packagesSource --password $barToken --github-pat $gitHubPat --channel ".NET Tools - Latest"
-  CheckExitCode $lastExitCode
+  CheckExitCode "Updating dependencies"
   StopDotnetIfRunning
   
   Write-Host "Building with updated dependencies"
 
   & .\common\cibuild.cmd -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource /p:DotNetPublishBlobFeedUrl=https://dotnetfeed.blob.core.windows.net/dotnet-core-test/index.json
-  CheckExitCode $lastExitCode
+  CheckExitCode "Official build"
 }
 catch {
   Write-Host $_
