@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         if (assetRecord == null)
                         {
-                            Log.LogWarning($"Asset with Id {package.Id}, Version {package.Version} isn't registered on the BAR Build with ID {BARBuildId}");
+                            Log.LogError($"Asset with Id {package.Id}, Version {package.Version} isn't registered on the BAR Build with ID {BARBuildId}");
                             continue;
                         }
 
@@ -206,7 +206,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         if (assetRecord == null)
                         {
-                            Log.LogWarning($"Asset with Id {package.Id} isn't registered on the BAR Build with ID {BARBuildId}");
+                            Log.LogError($"Asset with Id {package.Id} isn't registered on the BAR Build with ID {BARBuildId}");
                             continue;
                         }
 
