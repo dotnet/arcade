@@ -28,11 +28,12 @@ function Print-Usage() {
 }
 
 function Build([string]$target) {
-  $bl = if ($binaryLog) { "/bl:" + (Join-Path $LogDir "$task.$target.binlog") } else { "" }
+  $logSuffix = if ($target -eq "Execute") { "" } else { ".$target" }
+  $log = Join-Path $LogDir "$task$logSuffix.binlog"
   $outputPath = Join-Path $ToolsetDir $task
 
   MSBuild $taskProject `
-    $bl `
+    /bl:$log `
     /t:$target `
     /p:RepoRoot=$RepoRoot `
     /p:BaseIntermediateOutputPath=$outputPath `
