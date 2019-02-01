@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 . $PSScriptRoot\common\tools.ps1
 $LocalNugetConfigSourceName = "arcade-local"
 
-function Check-ExitCode ($exitCode)
+function CheckExitCode ($exitCode)
 {
   if ($exitCode -ne 0) {
     Write-Host "Arcade self-build failed"
@@ -37,9 +37,9 @@ function AddSourceToNugetConfig([string]$nugetConfigPath, [string]$source)
     $valueAttribute = $nugetConfig.CreateAttribute("value")
     $valueAttribute.Value = $source
     $newSource = $nugetConfig.CreateElement("add")
-    $newSource.Attributes.Append($keyAttribute)
-    $newSource.Attributes.Append($valueAttribute)
-    $packageSources.AppendChild($newSource)
+    $null = $newSource.Attributes.Append($keyAttribute)
+    $null = $newSource.Attributes.Append($valueAttribute)
+    $null = $packageSources.AppendChild($newSource)
     $nugetConfig.Save($nugetConfigPath)
 }
 
@@ -65,6 +65,7 @@ try {
   $nugetConfigPath = Join-Path $RepoRoot "NuGet.config"
   
   & .\common\cibuild.cmd -configuration $configuration @Args
+  CheckExitCode $lastExitCode
   
   # This is a temporary solution. When https://github.com/dotnet/arcade/issues/1293 is closed
   # we'll be able to pass a container name to build.ps1 which will put the outputs in the
@@ -83,13 +84,13 @@ try {
   $DarcExe = Resolve-Path $DarcExe
 
   & $DarcExe\darc.exe update-dependencies --packages-folder $packagesSource --password $barToken --github-pat $gitHubPat --channel ".NET Tools - Latest"
-  
-  Check-ExitCode $lastExitCode
+  CheckExitCode $lastExitCode
   StopDotnetIfRunning
   
   Write-Host "Building with updated dependencies"
 
   & .\common\cibuild.cmd -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource /p:DotNetPublishBlobFeedUrl=https://dotnetfeed.blob.core.windows.net/dotnet-core-test/index.json
+  CheckExitCode $lastExitCode
 }
 catch {
   Write-Host $_
