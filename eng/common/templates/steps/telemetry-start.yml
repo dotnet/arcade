@@ -3,6 +3,8 @@ parameters:
   helixType: 'undefined_defaulted_in_telemetry.yml'
   buildConfig: ''
   runAsPublic: false
+  maxRetries: 5
+  retryDelay: 10 # in seconds
 
 steps:
 - ${{ if and(eq(parameters.runAsPublic, 'false'), not(eq(variables['System.TeamProject'], 'public'))) }}:
@@ -42,11 +44,11 @@ steps:
     retryCount=0
     # retry loop to harden against spotty telemetry connections
     # we don't retry successes and 4xx client errors
-    until [[ $curlStatus -eq 0 || ( $curlStatus -ge 400 && $curlStatus -le 499 ) || $retryCount -gt 5 ]]
+    until [[ $curlStatus -eq 0 || ( $curlStatus -ge 400 && $curlStatus -le 499 ) || $retryCount -ge $maxRetries ]]
     do
       if [ $retryCount -gt 0 ]; then
-        echo "Failed to send telemetry to Helix; waiting 10 seconds before retrying..."
-        sleep 10
+        echo "Failed to send telemetry to Helix; waiting $RetryDelay seconds before retrying..."
+        sleep $RetryDelay
       fi
 
       curlResult=`
@@ -69,7 +71,7 @@ steps:
 
     # validate status of curl command
     if [ $curlStatus -ne 0 ]; then
-      echo "Failed To Send Job Start information"
+      echo "Failed To Send Job Start information after $retryCount retries"
       # We have to append the ## vso prefix or vso will pick up the command when it dumps the inline script into the shell
       vstsLogOutput="vso[task.logissue type=error;sourcepath=telemetry/start-job.sh;code=1;]Failed to Send Job Start information: $curlStatus"
       echo "##$vstsLogOutput"
@@ -89,17 +91,19 @@ steps:
     Attempt: 1
     OperatingSystem: $(Agent.Os)
     Configuration: ${{ parameters.buildConfig }}
+    MaxRetries: ${{ parameters.maxRetries }}
+    RetryDelay: ${{ parameters.retryDelay }}
   condition: and(always(), ne(variables['Agent.Os'], 'Windows_NT'))
 - bash: |
     curlStatus=1
     retryCount=0
     # retry loop to harden against spotty telemetry connections
     # we don't retry successes and 4xx client errors
-    until [[ $curlStatus -eq 0 || ( $curlStatus -ge 400 && $curlStatus -le 499 ) || $retryCount -gt 5 ]]
+    until [[ $curlStatus -eq 0 || ( $curlStatus -ge 400 && $curlStatus -le 499 ) || $retryCount -ge $MaxRetries ]]
     do
       if [ $retryCount -gt 0 ]; then
-        echo "Failed to send telemetry to Helix; waiting 10 seconds before retrying..."
-        sleep 10
+        echo "Failed to send telemetry to Helix; waiting $RetryDelay seconds before retrying..."
+        sleep $RetryDelay
       fi
 
       res=`mktemp`
@@ -124,7 +128,7 @@ steps:
 
     # validate status of curl command
     if [ $curlStatus -ne 0 ]; then
-      echo "Failed to Send Build Start information"
+      echo "Failed to Send Build Start information after $retryCount retries"
       vstsLogOutput="vso[task.logissue type=error;sourcepath=telemetry/build/start.sh;code=1;]Failed to Send Build Start information: $curlStatus"
       echo "##$vstsLogOutput"
       exit 1
@@ -136,6 +140,8 @@ steps:
   env:
     BuildUri: $(System.TaskDefinitionsUri)$(System.TeamProject)/_build/index?buildId=$(Build.BuildId)&_a=summary
     Helix_JobToken: $(Helix_JobToken)
+    MaxRetries: ${{ parameters.maxRetries }}
+    RetryDelay: ${{ parameters.retryDelay }}
   condition: and(always(), ne(variables['Agent.Os'], 'Windows_NT'))
 
 - powershell: |
@@ -157,7 +163,7 @@ steps:
 
     # Basic retry loop to harden against server flakiness
     $retryCount = 0
-    while ($retryCount -lt 5) {
+    while ($retryCount -lt $env:MaxRetries) {
       try {
         $jobToken = Invoke-RestMethod -Uri "https://helix.dot.net/api/2018-03-14/telemetry/job$($accessTokenParameter)" -Method Post -ContentType "application/json" -Body $jobInfoJson
         break
@@ -169,14 +175,14 @@ steps:
           Write-Host "##vso[task.logissue]error ", $_.Exception.GetType().FullName, $_.Exception.Message
           exit 1
         }
-        Write-Host "Failed to send telemetry to Helix (status code $statusCode); waiting 10 seconds before retrying..."
+        Write-Host "Failed to send telemetry to Helix (status code $statusCode); waiting $env:RetryDelay seconds before retrying..."
         $retryCount++
-        sleep 10
+        sleep $env:RetryDelay
         continue
       }
     }
 
-    if ($retryCount -ge 5) {
+    if ($retryCount -ge $env:MaxRetries) {
       Write-Host "##vso[task.logissue]error Failed to send telemetry to Helix after $retryCount retries."
       exit 1
     }
@@ -192,11 +198,13 @@ steps:
     Attempt: 1
     OperatingSystem: $(Agent.Os)
     Configuration: ${{ parameters.buildConfig }}
+    MaxRetries: ${{ parameters.maxRetries }}
+    RetryDelay: ${{ parameters.retryDelay }}
   condition: and(always(), eq(variables['Agent.Os'], 'Windows_NT'))
 - powershell: |
     # Basic retry loop to harden against server flakiness
     $retryCount = 0
-    while ($retryCount -lt 5) {
+    while ($retryCount -lt $env:MaxRetries) {
       try {
         $workItemId = Invoke-RestMethod -Uri "https://helix.dot.net/api/2018-03-14/telemetry/job/build?buildUri=$([Net.WebUtility]::UrlEncode($env:BuildUri))" -Method Post -ContentType "application/json" -Body "" `
           -Headers @{ 'X-Helix-Job-Token'=$env:Helix_JobToken }
@@ -209,14 +217,14 @@ steps:
           Write-Host "##vso[task.logissue]error ", $_.Exception.GetType().FullName, $_.Exception.Message
           exit 1
         }
-        Write-Host "Failed to send telemetry to Helix (status code $statusCode); waiting 10 seconds before retrying..."
+        Write-Host "Failed to send telemetry to Helix (status code $statusCode); waiting $env:RetryDelay seconds before retrying..."
         $retryCount++
-        sleep 10
+        sleep $env:RetryDelay
         continue
       }
     }
 
-    if ($retryCount -ge 5) {
+    if ($retryCount -ge $env:MaxRetries) {
       Write-Host "##vso[task.logissue]error Failed to send telemetry to Helix after $retryCount retries."
       exit 1
     }
@@ -227,4 +235,6 @@ steps:
   env:
     BuildUri: $(System.TaskDefinitionsUri)$(System.TeamProject)/_build/index?buildId=$(Build.BuildId)&_a=summary
     Helix_JobToken: $(Helix_JobToken)
+    MaxRetries: ${{ parameters.maxRetries }}
+    RetryDelay: ${{ parameters.retryDelay }}
   condition: and(always(), eq(variables['Agent.Os'], 'Windows_NT'))
