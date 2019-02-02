@@ -44,7 +44,7 @@ steps:
     retryCount=0
     # retry loop to harden against spotty telemetry connections
     # we don't retry successes and 4xx client errors
-    until [[ $curlStatus -eq 0 || ( $curlStatus -ge 400 && $curlStatus -le 499 ) || $retryCount -ge $maxRetries ]]
+    until [[ $curlStatus -eq 0 || ( $curlStatus -ge 400 && $curlStatus -le 499 ) || $retryCount -ge $MaxRetries ]]
     do
       if [ $retryCount -gt 0 ]; then
         echo "Failed to send telemetry to Helix; waiting $RetryDelay seconds before retrying..."
