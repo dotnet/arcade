@@ -1,5 +1,6 @@
 [CmdletBinding(PositionalBinding=$false)]
 Param(
+  [string] $configuration = "Debug",
   [string] $task,
   [string] $verbosity = "minimal",
   [string] $msbuildEngine = $null,
@@ -38,6 +39,7 @@ function Build([string]$target) {
   MSBuild $taskProject `
     /bl:$log `
     /t:$target `
+    /p:Configuration=$configuration `
     /p:RepoRoot=$RepoRoot `
     /p:BaseIntermediateOutputPath=$outputPath `
     @properties
