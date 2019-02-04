@@ -34,7 +34,7 @@ function Print-Usage() {
 function Build([string]$target) {
   $logSuffix = if ($target -eq "Execute") { "" } else { ".$target" }
   $log = Join-Path $LogDir "$task$logSuffix.binlog"
-  $outputPath = Join-Path $ToolsetDir $task
+  $outputPath = Join-Path $ToolsetDir "$task\\"
 
   MSBuild $taskProject `
     /bl:$log `
