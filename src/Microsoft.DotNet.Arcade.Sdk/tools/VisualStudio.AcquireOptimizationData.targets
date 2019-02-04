@@ -46,8 +46,8 @@
       Allows to test optimization data operations locally by running 
       cibuild.cmd after manually restoring internal tools project.
     -->
-    <Error Text='Internal tool not found: "$(_DropToolPath)". Run restore on "$(RepositoryEngineeringDir)common\internal\VisualStudioToolset.csproj".'
-           Condition="'$(OfficialBuild)' == 'true' and $(_DropToolExists)"/>
+    <Error Text='Internal tool not found: "$(_DropToolPath)". Run restore on "$(RepositoryEngineeringDir)common\internal\Tools.csproj".'
+           Condition="'$(OfficialBuild)' == 'true' and !$(_DropToolExists)"/>
   </Target>
 
   <Target Name="_DownloadVisualStudioOptimizationDataOpt" Condition="$(_DropToolExists)">
