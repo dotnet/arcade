@@ -23,7 +23,7 @@ use darc to achieve them, as well as a general reference guide to darc commands.
   - [add](#add) - Add a new dependency to Version.Details.xml.
   - [add-default-channel](#add-default-channel) - Add a channel that a build of a branch+repository is automatically applied to.
   - [add-subscription](#add-subscription) - Add a new subscription.
-  - [authenticate](#authenticate) - Stores the VSTS and GitHub tokens required for remote operations.
+  - [authenticate](#authenticate) - Stores the Azure DevOps and GitHub tokens required for remote operations.
   - [delete-channel](#delete-channel) - Deletes an existing channel.
   - [delete-default-channel](#delete-default-channel) - Remove a default channel association.
   - [delete-subscription](#delete-subscription) - Remove a subscription.
