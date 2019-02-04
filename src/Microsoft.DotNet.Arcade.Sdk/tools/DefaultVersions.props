@@ -71,7 +71,7 @@
     <MicrosoftSymbolUploaderBuildTaskVersion Condition="'$(MicrosoftSymbolUploaderBuildTaskVersion)' == ''">1.0.0-beta-63604-05</MicrosoftSymbolUploaderBuildTaskVersion>
     <VSWhereVersion Condition="'$(VSWhereVersion)' == ''">2.5.2</VSWhereVersion>
     <SNVersion Condition="'$(SNVersion)' == ''">1.0.0</SNVersion>
-    <MicrosoftDotNetBuildTasksVisualStudioVersion Condition="'$(MicrosoftDotNetBuildTasksVisualStudioVersion)' == ''">1.0.0-dev</MicrosoftDotNetBuildTasksVisualStudioVersion>
+    <MicrosoftDotNetBuildTasksVisualStudioVersion Condition="'$(MicrosoftDotNetBuildTasksVisualStudioVersion)' == ''">1.0.0-beta.19103.6</MicrosoftDotNetBuildTasksVisualStudioVersion>
   </PropertyGroup>
 
   <!-- RestoreSources overrides - defines DotNetRestoreSources variable if available -->
