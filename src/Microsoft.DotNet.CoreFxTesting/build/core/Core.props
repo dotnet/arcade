@@ -12,8 +12,13 @@
     <RunScriptCommands Include="set DEVPATH=%RUNTIME_PATH%" />
   </ItemGroup>
 
-  <!-- Set DOTNET_ROLL_FORWARD_ON_NO_CANDIDATE_FX to route global tools shims to the correct host. -->
+  <!--
+    Set DOTNET_ROOT and DOTNET_ROLL_FORWARD_ON_NO_CANDIDATE_FX to route global tools shims to the correct host and runtime.
+    On Helix we currently depend on a globally installed SDK.
+  -->
   <ItemGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
+    <RunScriptCommands Condition="'$(TargetOS)' == 'Windows_NT' AND '$(DotNetRoot)' != ''" Include="set DOTNET_ROOT=$(DotNetRoot)" />
+    <RunScriptCommands Condition="'$(TargetOS)' != 'Windows_NT' AND '$(DotNetRoot)' != ''" Include="export DOTNET_ROOT=$(DotNetRoot)" />
     <RunScriptCommands Condition="'$(TargetOS)' == 'Windows_NT'" Include="set DOTNET_ROLL_FORWARD_ON_NO_CANDIDATE_FX=$(TestRollForwardPolicy)" />
     <RunScriptCommands Condition="'$(TargetOS)' != 'Windows_NT'" Include="export DOTNET_ROLL_FORWARD_ON_NO_CANDIDATE_FX=$(TestRollForwardPolicy)" />
   </ItemGroup>
