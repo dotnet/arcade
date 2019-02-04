@@ -50,12 +50,26 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
             DateTime latest = default;
             foreach (JObject item in JArray.Parse(json))
             {
-                var dt = DateTime.Parse((string)item["CreatedDateUtc"]);
-                if (candidate == null || (bool)candidate["UploadComplete"] && !(bool)candidate["DeletePending"] && dt > latest)
+                if (!DateTime.TryParse((string)item["CreatedDateUtc"], out var timestamp))
+                {
+                    throw new ApplicationException($"Invalid timestamp: '{item["CreatedDateUtc"]}'");
+                }
+
+                if (string.IsNullOrEmpty((string)item["Name"]))
+                {
+                    throw new ApplicationException($"Drop has no name: {item}");
+                }
+
+                if (candidate == null || (bool)item["UploadComplete"] && !(bool)item["DeletePending"] && timestamp > latest)
                 {
                     candidate = item;
-                    latest = dt;
+                    latest = timestamp;
                 }
+            }
+
+            if (candidate == null)
+            {
+                throw new ApplicationException($"No drop name found");
             }
 
             return (string)candidate["Name"];
