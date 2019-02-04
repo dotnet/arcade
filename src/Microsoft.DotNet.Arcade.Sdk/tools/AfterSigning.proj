@@ -1,4 +1,4 @@
-﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
   <Import Project="BuildStep.props" />
 
@@ -18,12 +18,12 @@
     These need to be calculated using signed VSIXes.
     Hence we need to run this task after signing.
   -->
-  <Import Project="VisualStudio.InsertionManifests.targets" Condition="'$(UsingToolVSSDK)' == 'true'" />
+  <Import Project="VisualStudio.InsertionManifests.targets" Condition="'$(UsingToolVSSDK)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'" />
 
   <!-- 
     Generate IBC training inputs for VS insertion components.
   -->
-  <Import Project="VisualStudio.BuildIbcTrainingInputs.targets" Condition="'$(UsingToolVSSDK)' == 'true' and '$(UsingToolVisualStudioIbcTraining)' == 'true'" />
+  <Import Project="VisualStudio.BuildIbcTrainingInputs.targets" Condition="'$(UsingToolVSSDK)' == 'true' and '$(UsingToolVisualStudioIbcTraining)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'" />
 
   <!-- Repository extension point -->
   <Import Project="$(RepositoryEngineeringDir)AfterSigning.targets" Condition="Exists('$(RepositoryEngineeringDir)AfterSigning.targets')"/>
