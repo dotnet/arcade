@@ -94,9 +94,9 @@ When executing most operations, the client needs to make some remote queries.
 These remote queries require authentication in most circumstances. There are 3
 PATs that may be used:
 - A GitHub PAT for downloading files from GitHub (e.g. eng/Version.Details.xml or
-  arcade script files. 
+  arcade script files.  Required scopes: None
 - An Azure DevOps PAT for downloading files from Azure DevOps. (e.g.
-  eng/Version.Details.xml)
+  eng/Version.Details.xml)  Required scopes: Code-Read
 - A Build Asset Registry (BAR) password for interacting with Maestro++/BAR (e.g.
   obtaining build information needed for a drop).
 
@@ -1685,7 +1685,7 @@ Local dependencies updated from channel '.NET Core 3 Dev'.
 ### **`verify`**
 
 Verifies the local repository state is valid.  This checks that:
-- The Version.Details.xml file is readable and in the expected format/
+- The Version.Details.xml file is readable and in the expected format.
 - The Versions.props file is in an appropriate xml format.
 - The global.json file is in the expected format.
 - Dependencies in the Version.Details.xml files are utilized in the
