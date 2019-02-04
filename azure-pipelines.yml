@@ -46,7 +46,7 @@ jobs:
         - group: chcosta-test-feed
         - _PublishBlobFeedUrl: https://chcostamyget.blob.core.windows.net/chcostapackages2/index.json
         - _InternalBuildArgs: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
-            /p:DotNetPublishBlobFeedKey=$(chcosta-test-feed)
+            /p:DotNetPublishBlobFeedKey=$(chcosta-test-feed-access)
             /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
             /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
             /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
