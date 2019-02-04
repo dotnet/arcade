@@ -20,6 +20,11 @@
   -->
   <Import Project="VisualStudio.InsertionManifests.targets" Condition="'$(UsingToolVSSDK)' == 'true'" />
 
+  <!-- 
+    Generate IBC training inputs for VS insertion components.
+  -->
+  <Import Project="VisualStudio.BuildIbcTrainingInputs.targets" Condition="'$(UsingToolVSSDK)' == 'true' and '$(UsingToolVisualStudioIbcTraining)' == 'true'" />
+
   <!-- Repository extension point -->
   <Import Project="$(RepositoryEngineeringDir)AfterSigning.targets" Condition="Exists('$(RepositoryEngineeringDir)AfterSigning.targets')"/>
 

@@ -29,7 +29,7 @@
   <Target Name="PostCompileBinaryModification"
           AfterTargets="CoreCompile"
           DependsOnTargets="_InitializeAssemblyOptimizationWithTargetAssembly;ApplyOptimizations"
-          Condition="'$(IsWpfTempProject)' != 'true' and '$(ApplyPartialNgenOptimization)' == 'true' and '$(IbcOptimizationDataDir)' != ''"
+          Condition="'$(IsWpfTempProject)' != 'true' and '$(ApplyPartialNgenOptimization)' == 'true'"
           Inputs="$(MSBuildAllProjects);@(IntermediateAssembly)"
           Outputs="@(IntermediateAssembly);$(PostCompileBinaryModificationSentinelFile)">
 
@@ -130,7 +130,7 @@
   -->
   <Target Name="ApplyOptimizations"
           DependsOnTargets="_LocateIbcMerge;_CalculateIbcMergeInvocations"
-          Condition="'@(OptimizeAssembly)' != '' and '$(Configuration)' == 'Release' and '$(ContinuousIntegrationBuild)' == 'true' and '$(ApplyPartialNgenOptimization)' == 'true' and '$(IbcOptimizationDataDir)' != ''">
+          Condition="'@(OptimizeAssembly)' != '' and '$(Configuration)' == 'Release' and '$(ContinuousIntegrationBuild)' == 'true' and '$(ApplyPartialNgenOptimization)' == 'true'">
 
     <Message Text='IBCMerge tool will be run in an official build with arguments: %(_IbcMergeInvocation.IbcMergeArgs)'
              Condition="'$(_RunIbcMerge)' != 'true'" 

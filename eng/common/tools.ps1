@@ -376,6 +376,7 @@ function GetNuGetPackageCachePath() {
   return $env:NUGET_PACKAGES
 }
 
+# Returns a full path to an Arcade SDK task project file.
 function GetSdkTaskProject([string]$taskName) {
   return Join-Path (Split-Path (InitializeToolset) -Parent) "SdkTasks\$taskName.proj"
 }

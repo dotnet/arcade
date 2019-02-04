@@ -47,6 +47,12 @@
     <DeployExtension Condition="'$(DeployProjectOutput)' == 'true'">true</DeployExtension>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(IsVsixProject)' == 'true' and '$(VSSDKTargetPlatformRegRootSuffix)' != ''">
+    <StartAction>Program</StartAction>
+    <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
+    <StartArguments>/rootsuffix $(VSSDKTargetPlatformRegRootSuffix) /log</StartArguments>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(VisualStudioInsertionComponent)' != ''">
     <_ComponentIntermediateDir>$(VisualStudioSetupIntermediateOutputPath)$(VisualStudioInsertionComponent)\</_ComponentIntermediateDir>
 
