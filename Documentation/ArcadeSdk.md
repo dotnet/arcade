@@ -545,17 +545,25 @@ This step is required for repositories that build VS insertion components.
 
 `true` if `Version` needs to respect SemVer 1.0. Default is `false`, which means format following SemVer 2.0.
 
-### `IsShipping` (bool)
+### `IsShipping`, `IsShippingAssembly`, `IsShippingPackage`, `IsShippingVsix` (bool)
 
-`true` if the asset (library, NuGet or VSIX) produced by the project is intended to be _shipping_, i.e. intended to be delivered to customers via an official channel. This channel can be NuGet.org, an official installer, etc. Setting this flag to true does not guarantee that the asset will actually ship in the next release of the product. It might be decided after the build is complete that although the artifact is ready for shipping it won't be shipped this release cycle.
+`IsShipping-` properties are project properties that determine which (if any) assets produced by the project are _shipping_. An asset is considered _shipping_ if it is intended to be delivered to customers via an official channel. This channel can be NuGet.org, an official installer, etc. Setting this flag to `true` does not guarantee that the asset will actually ship in the next release of the product. It might be decided after the build is complete that although the artifact is ready for shipping it won't be shipped this release cycle.
 
-Set `IsShipping` property to `false` in
+By default all assets produced by a project are considered _shipping_. Set `IsShipping` to `false` if none of the assets produced by the project are _shipping_. Test projects (`IsTestProject` is `true`) set `IsShipping` to `false` automatically.
 
-- projects that produce NuGet packages that are meant to be published only on MyGet, internal blob feeds, etc. 
-- projects that produce VSIX packages that are only used only within the repository (e.g. to facilitate integration tests or VS F5) and not expected to be installed by customers,
-- Test/build/automation utility projects (test projects are automatically marked as non-shipping by Arcade SDK targets).
+Setting `IsShipping` property is sufficient for most projects. Projects that produce both _shipping_ and _non-shipping_ assets need a finer grained control. Set `IsShippingAssembly`, `IsShippingPackage` or `IsShippingVsix` to `false` if the assembly, package, or VSIX produced by the project is not _shipping_, respectively. 
 
-All libraries, packages and VSIXes are signed by default, regardless of whether they are _shipping_ or not.
+Build targets shall not directly use `IsShipping`. Instead they shall use `IsShippingAssembly`, `IsShippingPackage` and `IsShippingVsix` depending on the asset they are dealing with.
+
+Examples of usage:
+
+- Set `IsShipping` property to `false` in test/build/automation utility projects.
+
+- Set `IsShipping` property to `false` in projects that produce VSIX packages that are only used only within the repository (e.g. to facilitate integration tests or VS F5) and not expected to be installed by customers.
+
+- Set `IsShippingPackage` property to `false` in projects that package  _shipping_ asesmblies in packages that facilitate transport of assets from one repository to another one, which extracts the assemblies and _ships_ them in a  _shipping_ container.
+
+All assemblies, packages and VSIXes are signed by default, regardless of whether they are _shipping_ or not.
 
 By default, Portable and Embedded PDBs produced by _shipping_ projects are converted to Windows PDBs and published to Microsoft symbol servers.
 
