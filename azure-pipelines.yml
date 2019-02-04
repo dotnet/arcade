@@ -43,9 +43,10 @@ jobs:
         - group: DotNet-Blob-Feed
         - group: Publish-Build-Assets
         - group: DotNet-HelixApi-Access
-        - _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
+        - group: chcosta-test-feed
+        - _PublishBlobFeedUrl: https://chcostamyget.blob.core.windows.net/chcostapackages2/index.json
         - _InternalBuildArgs: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
-            /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
+            /p:DotNetPublishBlobFeedKey=$(chcosta-test-feed)
             /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
             /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
             /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
