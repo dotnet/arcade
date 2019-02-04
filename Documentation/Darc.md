@@ -11,8 +11,7 @@ use darc to achieve them, as well as a general reference guide to darc commands.
   - [Updating dependencies in your local repository](#updating-dependencies-in-your-local-repository)
   - [Removing dependencies from a repository](#removing-dependencies-from-a-repository)
   - [Changing a dependency's type](#changing-a-dependencys-type)
-  - ['Pinning' dependencies so they do not
-    update](#pinning-dependencies-so-they-do-not-update)
+  - ['Pinning' dependencies so they do not update](#pinning-dependencies-so-they-do-not-update)
   - [Adding dependency flow](#adding-dependency-flow)
   - [Halting and restarting dependency flow](#halting-and-restarting-dependency-flow)
   - [Viewing the dependency graph](#viewing-the-dependency-graph)
@@ -28,11 +27,11 @@ use darc to achieve them, as well as a general reference guide to darc commands.
   - [delete-channel](#delete-channel) - Deletes an existing channel.
   - [delete-default-channel](#delete-default-channel) - Remove a default channel association.
   - [delete-subscription](#delete-subscription) - Remove a subscription.
-  - [gather-drop](#gather-drop) - Gather a drop of the outputs for a build
+  - [gather-drop](#gather-drop) - Gather a drop of the outputs for a build.
   - [get-channels](#get-channels) - Get a list of channels.
   - [get-default-channels](#get-default-channels) - Gets a list of repo+branch combinations and their associated default channels for builds.
   - [get-dependencies](#get-dependencies) - Get local dependencies.
-  - [get-dependency-graph](#get-dependency-graph) - Get local dependencies.
+  - [get-dependency-graph](#get-dependency-graph) - Build repository dependency graph.
   - [get-subscriptions](#get-subscriptions) - Get information about subscriptions.
   - [trigger-subscriptions](#trigger-subscriptions) - Trigger a subscription or set of subscriptions matching criteria.
   - [update-dependencies](#update-dependencies) - Update local dependencies from a channel.
@@ -94,9 +93,9 @@ No verb selected.
 When executing most operations, the client needs to make some remote queries.
 These remote queries require authentication in most circumstances. There are 3
 PATs that may be used:
-- A GitHub PAT for downloading files off github (e.g. eng/Version.Details.xml or
+- A GitHub PAT for downloading files from GitHub (e.g. eng/Version.Details.xml or
   arcade script files. 
-- An Azure DevOps pat for downloading files off of Azure DevOps. (e.g.
+- An Azure DevOps PAT for downloading files from Azure DevOps. (e.g.
   eng/Version.Details.xml)
 - A Build Asset Registry (BAR) password for interacting with Maestro++/BAR (e.g.
   obtaining build information needed for a drop).
@@ -132,7 +131,8 @@ information about each one:
 
 The [`darc add`](#add) command adds a new dependency.  It takes a number of
 parameters, though only `--name` and `--type` are initially required.  It is
-highly recommended at least the `--repo` parameter be provided.  See [Toolset
+highly recommended at least the `--repo` parameter be provided so that the
+sha/version data can be filled in using [`darc update-dependencies`](#update-dependencies). See [Toolset
 vs. Product Dependencies](#toolset-vs-product-dependencies) below for
 information on type. For example:
 
@@ -160,7 +160,7 @@ version number.
 After addding, it is recommended that you use darc to fill out the missing
 dependency information.  The information can also be filled in after commiting by Maestro++
 using dependency flow, but passing your CI without a filled-in version number
-may be difficult. See (Updating dependencies in your local repository).
+may be difficult. See [Updating dependencies in your local repository](#updating-dependencies-in-your-local-repository)
 
 #### Toolset vs. Product Dependencies
 
@@ -168,7 +168,8 @@ There are two types of dependencies: 'Product' and 'Toolset'. Choosing between
 them involves answering the question:
 
 "Does my repository repackage the input dependency's binaries, or information
-about those binaries in the outputs it creates for the product?"
+about those binaries in the outputs it creates for the product?" If so, that
+dependency is 'Product', otherwise, it's 'Toolset'.
 
 Some examples:
 
@@ -179,15 +180,15 @@ Some examples:
   dependency for testing purposes.
 
 ##### Product
-- **dotnet/core-setup's dependency on coreclr's runtime packages** - Even though
-  these packages are not 'shipped' to nuget.org, they repackaged by core-setup.
+- **dotnet/core-setup's dependency on dotnet/coreclr's runtime packages** - Even though
+  these packages are not 'shipped' to nuget.org, they are repackaged by dotnet/core-setup.
 - **dotnet/core-sdk's dependency on dotnet/core-setup** - The SDK repackages
   information about Microsoft.NETCore.App.
-- **dotnet/winforms's dependency on corefx binaries** - Winforms repackages
-  information about the corefx api surface area, and thus those corefx binaries
+- **dotnet/winforms's dependency on dotnet/corefx's outputs** - Winforms repackages
+  information about the dotnet/corefx api surface area, and thus those dotnet/corefx binaries
   should be 'shipped'.  While we wouldn't necessarily want to ship multiple
-  versions of the same binary in a release, we would ensure that the same corefx
-  version is coherent across the stack,
+  versions of the same binary in a release, we would ensure that the same dotnet/corefx
+  version is coherent across the stack.
 
 ### Updating dependencies in your local repository
 
@@ -388,23 +389,25 @@ repository that have beeen applied to a channel (virtual branch) onto matching
 inputs of the target repository+branch.
 
 For example, a build of dotnet/corefx might be applied to the ".NET Core 3 Dev"
-channel. dotnet/core-setup maps new outputs of corefx on the ".NET Core 3 Dev"
+channel. dotnet/core-setup maps new outputs of dotnet/corefx on the ".NET Core 3 Dev"
 channel onto its master branch.
 
 A subscription has a few parts:
-- Mapping of source repo + source channel => target repo target branch
+- Mapping of source repo + source channel => target repo + target branch
 - An update rate (e.g. every day, every build, not at all)
 - Whether a subscription is batchable or not. If batchable, all batchable
-  subscriptions targeting the same branch/repo combination will share a PR.
-  *Note: Batchable subscriptions are currently unsupported in darc*
+  subscriptions targeting the same repo+branch combination will share a PR.
+  *Note: Batchable subscriptions is currently only supported by the REST API.
+  Please contact @dnceng to set up batchable subscriptions.*
 - A set of auto merge policies, if the subscription is not batchable.  If batchable,
   merge policies are set on a repository level rather than a per-subscription
   level, as they end up shared between several subscriptions. *Note: repository
-  merge policies are currently unsupported in darc*
+  merge policies are currently unsupported in darc. Please contact @dnceng to
+  set up repository merge policies.*
 
 For additional information and samples, see [add-subscription](#add-subscription)
 
-#### When should a subscription be used to update my repository's inputs
+#### When should a subscription be used to update my repository's inputs?
 
 Whenever you want regular dependency flow between two repositories. For example,
 every day (when there is a new source build) or on every new build.
@@ -414,7 +417,7 @@ every day (when there is a new source build) or on every new build.
 There are generally two channels for day to day use:
 - '.NET Core 3 Dev' - Day to day builds of .NET Core 3 repositories are placed on
   this channel.
-- '.NET Tools - Latest' - LKG Arcade builds are placed on this channel.
+- '.NET Tools - Latest' - Arcade releases are placed on this channel.
 
 So, if you're not adding a dependency on the https://github.com/dotnet/arcade
 repo, the source channel should be '.NET Core 3 Dev'. If you have other specific
@@ -490,7 +493,9 @@ darc and Maestro++ have a few mechanisms to enable such scenarios:
   Resuming flow:
 
   ```
-  PS C:\enlistments\arcade> darc add-subscription --channel '.NET Tools - Latest' --target-repo https://github.com/dotnet/core-setup --target-branch master --update-frequency everyDay --all-checks-passed --source-repo https://github.com/dotnet/arcade --ignore-checks 'WIP,license/cli'
+  PS C:\enlistments\arcade> darc add-subscription --channel '.NET Tools - Latest' --target-repo https://github.com/dotnet/core-setup
+                            --target-branch master --update-frequency everyDay --all-checks-passed
+                            --source-repo https://github.com/dotnet/arcade --ignore-checks 'WIP,license/cli'
 
   Successfully created new subscription with id '689a946e-2c12-4b0c-ccf6-08d688804ce4'.
   ```
@@ -567,8 +572,8 @@ A build drop is a gathering of all the outputs of a specific build that were
 reported to the Build Asset Registry into a local location. Optionally, this
 build drop may also include any builds that were inputs to this build, based on
 the dependency information in Version.Details.xml. Builds produce various
-outputs that go to various locations. For example, they may produce nuget
-packges, zips, msis, etc. These may be available in the build artifacts, or may
+outputs that go to various locations. For example, they may produce NuGet
+packges, zips, MSIs, etc. These may be available in the build artifacts, or may
 be located in various storage accounts.  Gather-drop mines the Build Asset
 Registry for these locations and downloads them all to the local directory.
 
@@ -583,7 +588,7 @@ examples:
 
 #### What can I gather a drop for?
 
-You can gather a either an isolated or full (includes dependencies) drop for any
+You can gather either an isolated or full (includes dependencies) drop for any
 build in the repository graph. Since the major components of the .NET Core stack
 are rooted at 3 different repositories, gathering a drop of those repositories
 will generate a drop for those 3 components and any of their inputs if `--full`
@@ -602,7 +607,8 @@ will generate a drop:
 ```
 PS C:\enlistments\core-sdk> git rev-parse HEAD
 465a336c7a5ca3af2f6cf5172ddc0ebde620803b
-PS C:\enlistments\core-sdk> darc gather-drop --repo https://github.com/dotnet/core-sdk --commit 465a336c7a5ca3af2f6cf5172ddc0ebde620803b --output-dir C:\scratch\drop
+PS C:\enlistments\core-sdk> darc gather-drop --repo https://github.com/dotnet/core-sdk
+                            --commit 465a336c7a5ca3af2f6cf5172ddc0ebde620803b --output-dir C:\scratch\drop
 ...
 ```
 
@@ -628,19 +634,18 @@ There are a few common parameters available on every command:
 - `-p, --password` - Build Asset Registry password.  You can obtain this
   password by going to https://maestro-prod.westus2.cloudapp.azure.com/, logging
   in using the link in the top right, then generating a token using the menu in
-  the top right.  This setting overrides whatever BAR password was provided when
-  doing `darc authenticate`.
-- `--github-pat` - Person access token used to authenticate GitHub. This is a GitHub PAT used
+  the top right.  This setting overrides whatever BAR password was provided through `darc authenticate`.
+- `--github-pat` - Personal access token used to authenticate GitHub. This is a GitHub PAT used
   to avoid rate limiting when accessing github to download arcade script files
   or version files. You only need a GitHub PAT with **no** authorization scopes
-  checked. This setting overrides whatever BAR password was provided when
-  doing `darc authenticate`.
+  checked. This setting overrides whatever GitHub PAT was provided through
+  `darc authenticate`.
 - `--azdev-pat` - Personal access token used to authenticate to Azure DevOps.
-  This token should have Code Read permissions. This setting overrides whatever BAR password was provided when
-  doing `darc authenticate`.
+  This token should have Code Read permissions. This setting overrides whatever
+  Azure DevOps PAT was provided through `darc authenticate`.
 - `--bar-uri` - URI of the build asset registry service to use.  Typically left
-  as its default (https://maestro-prod.westus2.cloudapp.azure.com) This setting overrides whatever BAR password was provided when
-  doing `darc authenticate`.
+  as its default (https://maestro-prod.westus2.cloudapp.azure.com) This setting
+  overrides the Build Asset Registry URI provided through `darc authenticate`.
 - `--verbose` - Turn on additional output.
 - `--debug` - Turn on debug output
 - `--help` - Display help
@@ -677,7 +682,8 @@ Successfully created new channel with name 'Foo'.
 ### **`add`**
 
 Add a new tracked dependency to the Version.Detail.xml file in your local repo.
-This new dependency can then be updated using
+This dependency is also added to eng/Versions.props as well as global.json (for certain
+dependencies, such as the Arcade SDK). This new dependency can then be updated using
 [update-dependencies](#update-dependencies). After merging the changes into
 the remote github or AzDO repository, the dependency can be updated by Maestro++
 if there is a corresponding subscription targeting that repo.
@@ -734,7 +740,8 @@ PS D:\enlistments\arcade> cat .\eng\Version.Details.xml
 Running add
 
 ```
-PS D:\enlistments\arcade> darc add --name "Microsoft.NETCore.App" --type "product" --version 1 --commit 2 --repo https://github.com/dotnet/core-setup
+PS D:\enlistments\arcade> darc add --name "Microsoft.NETCore.App" --type "product" --version 1
+                          --commit 2 --repo https://github.com/dotnet/core-setup
 ```
 
 *eng\Version.Details.xml* after add:
@@ -784,7 +791,7 @@ Adds a new default channel mapping.  A default channel maps each new build of a 
 branch of a repository onto a specific channel. While builds can be selectively
 and manually applied to channels, this is generally inconvenient for day to day development
 in most cases.  In general, until release shutdown, each build of a branch
-should always be applied to its "normal" channel.,
+should always be applied to its "normal" channel.
 
 ***Note that the branch specified should almost always be
 "refs/heads/{branchName}", unless you explicitly know otherwise***.
@@ -826,17 +833,17 @@ channel. dotnet/core-setup maps new outputs of corefx on the ".NET Core 3 Dev"
 channel onto its master branch.
 
 A subscription has a few parts:
-- Mapping of source repo + source channel => target repo target branch
+- Mapping of source repo + source channel => target repo + target branch
 - An update rate (e.g. every day, every build, not at all)
 - Whether a subscription is batchable or not. If batchable, all batchable
-  subscriptions targeting the same branch/repo combination will share a PR.
+  subscriptions targeting the same repo+branch combination will share a PR.
   *Note: Batchable subscriptions are currently unsupported in darc*
 - A set of auto merge policies, if the subscription is not batchable.  If batchable,
   merge policies are set on a repository level rather than a per-subscription
   level, as they end up shared between several subscriptions. *Note: repository
   merge policies are currently unsupported in darc*
   
-`add-subscription` has two modes of operation
+`add-subscription` has two modes of operation:
 - Interactive mode (default) - Interactive mode will take whatever input parameters were
   provided on the command line (if any) and pop an editor where the user can
   provide the subscription input prameters.
@@ -863,20 +870,24 @@ successful, the id of the new subscription is returned.
   outputs applied to the inputs (specified in eng/Version.Details.xml) on this
   branch of `--target-repo`.
 - `--update-frequency` - **(Required if -q is passed)** Frequency of updates. Valid values are: 'none',
-  'everyDay', or 'everyBuild'.  Every day is applied at 5am.  Subscriptions with
+  'everyDay', or 'everyBuild'.  everyDay is applied at 5am.  Subscriptions with
   'none' frequency can still be triggered using [trigger-subscriptions](#trigger-subscriptions)
 - `--all-checks-passed` - Merge policy. A PR is automatically merged by Maestro++ if there is at least one
   check and all are passed. Optionally provide a comma separated list of
   ignored check with --ignore-checks.
-- `--ignore-checks` - Merge policy. A For use with --all-checks-passed. A set of checks that are
+- `--ignore-checks` - Merge policy. For use with --all-checks-passed. A set of checks that are
   ignored. Typically, in github repos the "WIP" and "license/cla" checks are ignored.
 - `--no-extra-commits`- Merge policy. A PR is automatically merged if no non-bot commits exist in the PR.
-- `--require-checks` - Merge policy. A PR is automatically merged if the specified checks are passed. Provide a comma separate list of required checks.
+- `--require-checks` - Merge policy. A PR is automatically merged if the specified checks are passed.
+  Provide a comma separated list of required checks.
 - `-q, --quiet` - Non-interactive mode (requires all elements to be passed on the command line).
 
 **Sample**:
 ```
-PS D:\enlistments\arcade-services> darc add-subscription --channel ".NET Tools - Latest" --source-repo https://github.com/dotnet/arcade --target-repo https://dev.azure.com/dnceng/internal/_git/dotnet-optimization --target-branch master --update-frequency everyDay --all-checks-passed -q
+PS D:\enlistments\arcade-services> darc add-subscription --channel ".NET Tools - Latest" 
+                                   --source-repo https://github.com/dotnet/arcade
+                                   --target-repo https://dev.azure.com/dnceng/internal/_git/dotnet-optimization
+                                   --target-branch master --update-frequency everyDay --all-checks-passed -q
 
 Successfully created new subscription with id '4f300f68-8800-4b14-328e-08d68308fe30'.
 ```
@@ -958,7 +969,7 @@ build_asset_registry_base_uri=https://maestro-prod.westus2.cloudapp.azure.com/
 
 ### **`delete-channel`**
 
-Delete a channel. This channel must be in use by any subscriptions.
+Delete a channel. This channel must not be in use by any subscriptions.
 
 *This is not a typical operation and you should consult with the (`@dnceng`)
 engineering team before doing so.*
@@ -981,7 +992,7 @@ Successfully deleted channel 'Foo'.
 ### **`delete-default-channel`**
 
 Deletes a default channel mapping. Deleting will not affect any existing builds,
-but new builds of the specified repos will will not be applied to the target
+but new builds of the specified repos will not be applied to the target
 channel.
 
 You can obtain a list of current default channel mappings with
@@ -994,7 +1005,8 @@ You can obtain a list of current default channel mappings with
 
 **Sample**
 ```
-PS D:\enlistments\arcade> darc delete-default-channel --channel ".Net Core 3 Dev" --branch refs/heads/master --repo https://github.com/dotnet/arcade
+PS D:\enlistments\arcade> darc delete-default-channel --channel ".Net Core 3 Dev" --branch refs/heads/master
+                          --repo https://github.com/dotnet/arcade
 ```
 
 **See also**:
@@ -1028,8 +1040,8 @@ A build drop is a gathering of all the outputs of a specific build that were
 reported to the Build Asset Registry into a local location. Optionally, this
 build drop may also include any builds that were inputs to this build, based on
 the dependency information in Version.Details.xml. Builds produce various
-outputs that go to various locations. For example, they may produce nuget
-packges, zips, msis, etc. These may be available in the build artifacts, or may
+outputs that go to various locations. For example, they may produce NuGet
+packges, zips, MSIs, etc. These may be available in the build artifacts, or may
 be located in various storage accounts.  Gather-drop mines the Build Asset
 Registry for these locations and downloads them all to the local directory.
 
@@ -1044,17 +1056,17 @@ has are only toolset and `--include-toolset` has not been supplied.
 The output directory structure is as follows:
 - Default:
   All outputs will be downloaded under the root folder, in either a 'shipping'
-  or 'nonshipping' folder   (if `--nonshipping`
+  or 'nonshipping' folder  (if `--nonshipping`
   is passed and the build contains non-shipping binaries). Under these
   folders will be two additional folders: 'assets' and 'packages'. Assets
-  contains all non-package outputs, while 'packages' contains all nuget packages.
+  contains all non-package outputs, while 'packages' contains all NuGet packages.
 - If `--separated` is passed:
   Each repository in the build structure will be placed in a separate directory,
   with the ID of the build under that directory. Under each build will be a
   'shipping' folder and potentially a 'nonshipping' folder (if `--nonshipping`
   is passed and the build contains non-shipping binaries). Under these
   folders will be two additional folders: 'assets' and 'packages'. Assets
-  contains all non-package outputs, while 'packages' contains all nuget
+  contains all non-package outputs, while 'packages' contains all NuGet
   packages.
   
 **Parameters**
@@ -1073,7 +1085,7 @@ The output directory structure is as follows:
 - `--continue-on-error` - Continue on error rather than halting.  Allows for
   gathering drops in cases where some outputs might not be able to be
   downloaded.
-- `--non-shipping`` - (Default: true) Include non-shipping assets.
+- `--non-shipping` - (Default: true) Include non-shipping assets.
 - `--overwrite` - Overwrite existing files at the destination.
 - `--dry-run` - Do not actually download files, but print what we would do.
 - `--include-toolset` - Include toolset dependencies.
@@ -1083,8 +1095,9 @@ The output directory structure is as follows:
 Isolated drop:
 
 ```
-PS C:\enlistments\core-sdk> dotnet C:\enlistments\arcade-services\artifacts\bin\Microsoft.DotNet.Darc\Debug\netcoreapp2.1\Microso
-ft.DotNet.Darc.dll gather-drop --output-dir C:\scratch\core-sdk-drop --commit 465a336c7a5ca3af2f6cf5172ddc0ebde620803b --repo https://github.com/dotnet/core-sdk
+PS C:\enlistments\core-sdk> darc gather-drop --output-dir C:\scratch\core-sdk-drop\ 
+                            --commit 465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+                            --repo https://github.com/dotnet/core-sdk
 
 Determining what builds to download...
 Looking up builds of https://github.com/dotnet/core-sdk@465a336c7a5ca3af2f6cf5172ddc0ebde620803b
@@ -1103,9 +1116,10 @@ Gathering drop for build 20190201.2 of https://github.com/dotnet/core-sdk
 
 Full drop:
 ```
-PS C:\enlistments\core-sdk> dotnet C:\enlistments\arcade-services\artifacts\bin\Microsoft.DotNet.Darc\Debug\netcoreapp2.1\Microso
-ft.DotNet.Darc.dll gather-drop --output-dir C:\scratch\core-sdk-drop --commit 465a336c7a5ca3af2f6cf5172ddc0ebde620803b --repo htt
-ps://github.com/dotnet/core-sdk --full
+PS C:\enlistments\core-sdk> darc gather-drop --output-dir C:\scratch\core-sdk-drop
+                            --commit 465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+                            --repo https://github.com/dotnet/core-sdk --full
+
 Determining what builds to download...
 Looking up builds of https://github.com/dotnet/core-sdk@465a336c7a5ca3af2f6cf5172ddc0ebde620803b
 Root build - Build number 20190201.2 of https://github.com/dotnet/core-sdk @ 465a336c7a5ca3af2f6cf5172ddc0ebde620803b
@@ -1447,8 +1461,7 @@ The graph output comes in 3 forms:
   the graph.
 
 In flat and full modes, after printing the graph, a set of "incoherencies" and
-the paths to those incoherences are displayed.
-displayed. Incoherencies are cases where either:
+the paths to those incoherences are displayed. Incoherencies are cases where either:
 - The same repository exists in the graph at two different shas
 - The same input dependency exists in the graph at two different versions.
   While generally this also leads to the same repository existing multiple times
@@ -1481,7 +1494,7 @@ displayed. Incoherencies are cases where either:
 Full mode:
 
 ```
-PS C:\enlistments\core-setup> dotnet darc get-dependency-graph
+PS C:\enlistments\core-setup> darc get-dependency-graph
 Getting root dependencies from local repository...
 Building repository dependency graph...
 Removing toolset dependencies...
@@ -1505,7 +1518,7 @@ Repositories:
 Flat mode:
 
 ```
-PS C:\enlistments\core-setup> dotnet darc get-dependency-graph --flat
+PS C:\enlistments\core-setup> darc get-dependency-graph --flat
 Getting root dependencies from local repository...
 Building repository dependency graph...
 Removing toolset dependencies...
