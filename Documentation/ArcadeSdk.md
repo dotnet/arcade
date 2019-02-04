@@ -616,3 +616,7 @@ For example, the following runs .NET Framework tests using Mono runtime:
 ```text
 msbuild Project.UnitTests.csproj /p:TestTargetFrameworks=net472 /p:TestRuntime=Mono
 ```
+
+### `TestRunnerAdditionalArguments` (string)
+
+Additional command line arguments passed to the test runner (e.g. `xunit.console.exe`).
