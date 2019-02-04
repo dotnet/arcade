@@ -32,6 +32,9 @@
     <RunScriptHost Condition="'$(TargetOS)' != 'Windows_NT'">$(RunScriptHostDir)dotnet</RunScriptHost>
     
     <GlobalToolsDir Condition="'$(ArchiveTests)' == 'true'">$(RunScriptHostDir)</GlobalToolsDir>
+
+    <!-- Roll forward on [major], [minor] and [patch] by default. -->
+    <TestRollForwardPolicy Condition="'$(TestRollForwardPolicy)' == ''">2</TestRollForwardPolicy>
   </PropertyGroup>
 
   <Target Name="PublishSupplementalTestData"
