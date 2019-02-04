@@ -23,6 +23,9 @@
 
     <!-- Remove the arcade sdk tests project because it depends heavily on machine/repo state and doesn't work properly in helix yet -->
     <XUnitProject Remove="..\src\Microsoft.DotNet.Arcade.Sdk.Tests\Microsoft.DotNet.Arcade.Sdk.Tests.csproj"/>
+
+    <!-- Exclude tests that do not target .NET Core -->
+    <XUnitProject Remove="..\src\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests.csproj"/>
   </ItemGroup>
 
   <!-- Use the locally built version of Helix Tasks temporaraily -->

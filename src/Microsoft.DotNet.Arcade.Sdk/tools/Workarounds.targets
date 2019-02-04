@@ -48,8 +48,11 @@
     <TargetFrameworkMonikerAssemblyAttributesFileClean>true</TargetFrameworkMonikerAssemblyAttributesFileClean>
   </PropertyGroup>
 
-  <!-- Portable PDBs are not included by default -->
-  <PropertyGroup Condition="'$(DebugType)' == 'portable'">
+  <!-- 
+     Portable PDBs are not included in .nupkg by default. Include them unless the project produces symbol packages.
+     Remove this once we migrate to .snupkg. See https://github.com/dotnet/arcade/issues/1959.
+   -->
+  <PropertyGroup Condition="'$(DebugType)' == 'portable' and '$(IncludeSymbols)' != 'true'">
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
 

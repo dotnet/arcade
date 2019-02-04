@@ -79,10 +79,8 @@ namespace Microsoft.DotNet.SignTool
             return true;
         }
 
-        private bool AuthenticodeSign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> files)
+        private bool AuthenticodeSign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> filesToSign)
         {
-            var filesToSign = _args.TestSign ? files.Where(fis => !Path.GetExtension(fis.FileName).Equals(".py", StringComparison.OrdinalIgnoreCase)) : files;
-
             var signingDir = Path.Combine(_args.TempDir, "Signing");
             var nonOSXFilesToSign = filesToSign.Where(fsi => !SignToolConstants.SignableOSXExtensions.Contains(Path.GetExtension(fsi.FileName)));
             var osxFilesToSign = filesToSign.Where(fsi => SignToolConstants.SignableOSXExtensions.Contains(Path.GetExtension(fsi.FileName)));

@@ -63,6 +63,9 @@
     <VisualStudioSetupOutputPath>$(ArtifactsDir)VSSetup\$(Configuration)\</VisualStudioSetupOutputPath>
     <VisualStudioSetupInsertionPath>$(VisualStudioSetupOutputPath)Insertion\</VisualStudioSetupInsertionPath>
     <VisualStudioSetupIntermediateOutputPath>$(ArtifactsDir)VSSetup.obj\$(Configuration)\</VisualStudioSetupIntermediateOutputPath>
+
+    <!-- TODO: use short dir name to avoid long path issues -->
+    <IbcOptimizationDataDir>$(RepoRoot).o</IbcOptimizationDataDir>
   </PropertyGroup>
 
 </Project>
