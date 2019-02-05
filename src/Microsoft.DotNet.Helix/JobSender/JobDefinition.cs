@@ -137,11 +137,7 @@ namespace Microsoft.DotNet.Helix.Client
             List<string> correlationPayloadUris =
                 (await Task.WhenAll(CorrelationPayloads.Select(p => p.UploadAsync(storageContainer, log)))).ToList();
 
-            jobList = (await Task.WhenAll(_workItems.Select(w => w.SendAsync(storageContainer, TargetContainerName, log)))).ToList();
-            foreach (JobListEntry entry in jobList)
-            {
-                entry.CorrelationPayloadUris = correlationPayloadUris;
-            }
+            jobList = (await Task.WhenAll(_workItems.Select(async w => { var entry = await w.SendAsync(storageContainer, TargetContainerName, log); entry.CorrelationPayloadUris = correlationPayloadUris; return entry; }))).ToList();
 
             string jobListJson = JsonConvert.SerializeObject(jobList);
             Uri jobListUri = await storageContainer.UploadTextAsync(
