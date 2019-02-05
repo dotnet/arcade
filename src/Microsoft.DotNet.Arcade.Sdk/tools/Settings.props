@@ -15,7 +15,7 @@
   <Import Project="Workarounds.props"/>
   
   <Import Project="Compiler.props" Condition="'$(UsingToolMicrosoftNetCompilers)' == 'true'" />
-  <Import Project="VisualStudio.props" Condition="'$(UsingToolVSSDK)' == 'true'"/>
+  <Import Project="VisualStudio.props" Condition="'$(UsingToolVSSDK)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'"/>
 
   <!--
     Import NuGet props to WPF temp projects (workaround for https://github.com/dotnet/sourcelink/issues/91) 

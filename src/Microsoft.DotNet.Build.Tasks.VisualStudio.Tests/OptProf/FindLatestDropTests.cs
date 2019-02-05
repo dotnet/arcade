@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
@@ -35,6 +36,15 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
 ]
 "));
 
+        }
+
+        [Fact]
+        public void GetLatestDropName_Error()
+        {
+            Assert.Throws<ApplicationException>(() => FindLatestDrop.GetLatestDropName(@"[]"));
+            Assert.Throws<ApplicationException>(() => FindLatestDrop.GetLatestDropName(@"[ { } ]"));
+            Assert.Throws<ApplicationException>(() => FindLatestDrop.GetLatestDropName(@"[ { ""CreatedDateUtc"" : 1 } ]"));
+            Assert.Throws<ApplicationException>(() => FindLatestDrop.GetLatestDropName(@"[ { ""CreatedDateUtc"" : ""2018-11-28T14:54:59.5832452Z"" } ]"));
         }
     }
 }

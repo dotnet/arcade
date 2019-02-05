@@ -27,12 +27,12 @@
   <Target Name="_PrepareAcquiteVisualStudioOptimizationData">
     <Error Text="VisualStudioDropAccessToken property has to be specified when ApplyPartialNgenOptimization and OfficialBuild is true" Condition="'$(VisualStudioDropAccessToken)' == '' and '$(OfficialBuild)' == 'true'"/>
     <Error Text="RepositoryName property has to be specified when ApplyPartialNgenOptimization is true" Condition="'$(RepositoryName)' == ''"/>
-    <Error Text="RepositoryBranchName property has to be specified when ApplyPartialNgenOptimization is true" Condition="'$(RepositoryBranchName)' == ''"/>
+    <Error Text="VisualStudioIbcSourceBranchName property has to be specified when ApplyPartialNgenOptimization is true" Condition="'$(VisualStudioIbcSourceBranchName)' == ''"/>
 
     <PropertyGroup>
       <_DropToolPath>$(NuGetPackageRoot)drop.app\$(DropAppVersion)\lib\net45\drop.exe</_DropToolPath>
       <_DropServiceUrl>https://devdiv.artifacts.visualstudio.com</_DropServiceUrl>
-      <_DropNamePrefix>OptimizationData/$(RepositoryName)/$(RepositoryBranchName)</_DropNamePrefix>
+      <_DropNamePrefix>OptimizationData/$(RepositoryName)/$(VisualStudioIbcSourceBranchName)</_DropNamePrefix>
       <_PatAuthArg Condition="'$(VisualStudioDropAccessToken)' != ''">--patAuth "$(VisualStudioDropAccessToken)"</_PatAuthArg>
       <_DropsJsonPath>$(ArtifactsLogDir)OptimizationDataDrops.json</_DropsJsonPath>
       <_DropsLogPath>$(ArtifactsLogDir)OptimizationDataAcquisition.log</_DropsLogPath>
