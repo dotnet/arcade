@@ -3,6 +3,14 @@
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
+
+  <!-- 
+    Properties:
+      RepositoryName                   Current repository name (e.g. 'dotnet/roslyn').
+      VisualStudioIbcSourceBranchName  The name of the branch of the repository that was used to produce the IBC data to be acquired (e.g. 'master').
+      VisualStudioIbcDropId            The id of the drop. If specified, drop named 'OptimizationData/$(RepositoryName)/$(VisualStudioIbcSourceBranchName)/$(VisualStudioIbcDropId)' is used.
+                                       Otherwise, the most recent drop of name that matches 'OptimizationData/$(RepositoryName)/$(VisualStudioIbcSourceBranchName)/*' is used.
+  -->
   
   <PropertyGroup>
     <_VisualStudioBuildTasksAssembly>$(NuGetPackageRoot)microsoft.dotnet.build.tasks.visualstudio\$(MicrosoftDotNetBuildTasksVisualStudioVersion)\tools\net472\Microsoft.DotNet.Build.Tasks.VisualStudio.dll</_VisualStudioBuildTasksAssembly>
@@ -25,18 +33,8 @@
   </Target>
   
   <Target Name="_PrepareAcquiteVisualStudioOptimizationData">
-    <Error Text="VisualStudioDropAccessToken property has to be specified when ApplyPartialNgenOptimization and OfficialBuild is true" Condition="'$(VisualStudioDropAccessToken)' == '' and '$(OfficialBuild)' == 'true'"/>
-    <Error Text="RepositoryName property has to be specified when ApplyPartialNgenOptimization is true" Condition="'$(RepositoryName)' == ''"/>
-    <Error Text="RepositoryBranchName property has to be specified when ApplyPartialNgenOptimization is true" Condition="'$(RepositoryBranchName)' == ''"/>
-
     <PropertyGroup>
       <_DropToolPath>$(NuGetPackageRoot)drop.app\$(DropAppVersion)\lib\net45\drop.exe</_DropToolPath>
-      <_DropServiceUrl>https://devdiv.artifacts.visualstudio.com</_DropServiceUrl>
-      <_DropNamePrefix>OptimizationData/$(RepositoryName)/$(RepositoryBranchName)</_DropNamePrefix>
-      <_PatAuthArg Condition="'$(VisualStudioDropAccessToken)' != ''">--patAuth "$(VisualStudioDropAccessToken)"</_PatAuthArg>
-      <_DropsJsonPath>$(ArtifactsLogDir)OptimizationDataDrops.json</_DropsJsonPath>
-      <_DropsLogPath>$(ArtifactsLogDir)OptimizationDataAcquisition.log</_DropsLogPath>
-
       <_DropToolExists>false</_DropToolExists>
       <_DropToolExists Condition="Exists('$(_DropToolPath)')">true</_DropToolExists>
     </PropertyGroup>
@@ -46,24 +44,40 @@
       Allows to test optimization data operations locally by running 
       cibuild.cmd after manually restoring internal tools project.
     -->
-    <Error Text='Internal tool not found: "$(_DropToolPath)". Run restore on "$(RepositoryEngineeringDir)common\internal\VisualStudioToolset.csproj".'
-           Condition="'$(OfficialBuild)' == 'true' and $(_DropToolExists)"/>
+    <Error Text='Internal tool not found: "$(_DropToolPath)". Run restore on "$(RepositoryEngineeringDir)common\internal\Tools.csproj".'
+           Condition="'$(OfficialBuild)' == 'true' and !$(_DropToolExists)"/>
   </Target>
 
   <Target Name="_DownloadVisualStudioOptimizationDataOpt" Condition="$(_DropToolExists)">
-    <MakeDir Directories="$(IbcOptimizationDataDir)" />
+    <Error Text="IbcOptimizationDataDir must end with slash" Condition="!HasTrailingSlash('$(IbcOptimizationDataDir)')"/>
+    <Error Text="VisualStudioDropAccessToken property has to be specified when ApplyPartialNgenOptimization and OfficialBuild is true" Condition="'$(VisualStudioDropAccessToken)' == '' and '$(OfficialBuild)' == 'true'"/>
+    <Error Text="RepositoryName property has to be specified when ApplyPartialNgenOptimization is true" Condition="'$(RepositoryName)' == ''"/>
+    <Error Text="VisualStudioIbcSourceBranchName property has to be specified when ApplyPartialNgenOptimization is true" Condition="'$(VisualStudioIbcSourceBranchName)' == ''"/>
+
+    <PropertyGroup>
+      <_DropServiceUrl>https://devdiv.artifacts.visualstudio.com</_DropServiceUrl>
+      <_PatAuthArg Condition="'$(VisualStudioDropAccessToken)' != ''">--patAuth "$(VisualStudioDropAccessToken)"</_PatAuthArg>
+      <_DropsJsonPath>$(ArtifactsLogDir)OptimizationDataDrops.json</_DropsJsonPath>
+      <_DropsLogPath>$(ArtifactsLogDir)OptimizationDataAcquisition.log</_DropsLogPath>
+      <_DropNamePrefix>OptimizationData/$(RepositoryName)/$(VisualStudioIbcSourceBranchName)</_DropNamePrefix>
+      <_DropName>$(_DropNamePrefix)/$(VisualStudioIbcDropId)</_DropName>
+    </PropertyGroup>
 
     <Message Text="Acquiring optimization data" Importance="high"/>
-    <Exec Command='"$(_DropToolPath)" list --dropservice "$(_DropServiceUrl)" $(_PatAuthArg) --pathPrefixFilter "$(_DropNamePrefix)" --toJsonFile "$(_DropsJsonPath)" --traceto "$(_DropsLogPath)"' />
 
-    <FindLatestDrop DropListPath="$(_DropsJsonPath)">
-      <Output TaskParameter="DropName" PropertyName="_LatestDropName"/>
+    <Exec Command='"$(_DropToolPath)" list --dropservice "$(_DropServiceUrl)" $(_PatAuthArg) --pathPrefixFilter "$(_DropNamePrefix)" --toJsonFile "$(_DropsJsonPath)" --traceto "$(_DropsLogPath)"' 
+          Condition="'$(VisualStudioIbcDropId)' == ''"/>
+
+    <FindLatestDrop DropListPath="$(_DropsJsonPath)" Condition="'$(VisualStudioIbcDropId)' == ''">
+      <Output TaskParameter="DropName" PropertyName="_DropName"/>
     </FindLatestDrop>
 
-    <Error Text="No drop matching given name found: $(_DropServiceUrl)/$(_DropNamePrefix)/*" Condition="'$(_LatestDropName)' == ''"/>
+    <Error Text="No drop matching given name found: $(_DropServiceUrl)/$(_DropNamePrefix)/*" Condition="'$(_DropName)' == ''"/>
 
-    <Message Text="Downloading optimization data from service $(_DropServiceUrl) drop $(_LatestDropName)" Importance="high"/>
-    <Exec Command='"$(_DropToolPath)" get --dropservice "$(_DropServiceUrl)" $(_PatAuthArg) --name "$(_LatestDropName)" --dest "$(IbcOptimizationDataDir)" --traceto "$(_DropsLogPath)"' />
+    <MakeDir Directories="$(IbcOptimizationDataDir)" />
+
+    <Message Text="Downloading optimization data from service $(_DropServiceUrl), drop $(_DropName)" Importance="high"/>
+    <Exec Command='"$(_DropToolPath)" get --dropservice "$(_DropServiceUrl)" $(_PatAuthArg) --name "$(_DropName)" --dest "$(IbcOptimizationDataDir)\" --traceto "$(_DropsLogPath)"' />
   </Target>
 
 </Project>

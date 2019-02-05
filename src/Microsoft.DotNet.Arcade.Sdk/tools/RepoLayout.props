@@ -51,6 +51,7 @@
 
     <ArtifactsDir Condition="'$(ArtifactsDir)' == ''">$(RepoRoot)artifacts\</ArtifactsDir>
     <ArtifactsToolsetDir>$(ArtifactsDir)toolset\</ArtifactsToolsetDir>
+    <ArtifactsToolsDir>$(ArtifactsDir).tools\</ArtifactsToolsDir>
     <ArtifactsObjDir>$(ArtifactsDir)obj\</ArtifactsObjDir>
     <ArtifactsBinDir>$(ArtifactsDir)bin\</ArtifactsBinDir>
     <ArtifactsLogDir>$(ArtifactsDir)log\$(Configuration)\</ArtifactsLogDir>
@@ -63,9 +64,7 @@
     <VisualStudioSetupOutputPath>$(ArtifactsDir)VSSetup\$(Configuration)\</VisualStudioSetupOutputPath>
     <VisualStudioSetupInsertionPath>$(VisualStudioSetupOutputPath)Insertion\</VisualStudioSetupInsertionPath>
     <VisualStudioSetupIntermediateOutputPath>$(ArtifactsDir)VSSetup.obj\$(Configuration)\</VisualStudioSetupIntermediateOutputPath>
-
-    <!-- TODO: use short dir name to avoid long path issues -->
-    <IbcOptimizationDataDir>$(RepoRoot).o</IbcOptimizationDataDir>
+    <IbcOptimizationDataDir>$(ArtifactsToolsDir)IbcData\</IbcOptimizationDataDir>
   </PropertyGroup>
 
 </Project>

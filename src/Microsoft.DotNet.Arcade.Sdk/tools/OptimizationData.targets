@@ -49,7 +49,7 @@
 
   <Target Name="_LocateIbcMerge">
     <PropertyGroup>
-      <_IbcMergePath>$(NuGetPackageRoot)microsoft.dotnet.ibcmerge\$(MicrosoftDotNetIBCMergeVersion)\lib\net45\ibcmerge.exe</_IbcMergePath>
+      <_IbcMergePath>$(NuGetPackageRoot)microsoft.dotnet.ibcmerge\$(MicrosoftDotNetIBCMergeVersion)\tools\net472\ibcmerge.exe</_IbcMergePath>
 
       <_RunIbcMerge>false</_RunIbcMerge>
       <_RunIbcMerge Condition="'$(OfficialBuild)' == 'true' or Exists('$(_IbcMergePath)')">true</_RunIbcMerge>
@@ -58,17 +58,20 @@
 
   <Target Name="_CalculateIbcMergeInvocations">
 
-    <Error Text="ApplyPartialNgenOptimization is true but directory specified in IbcOptimizationDataDir does not exist: '$(IbcOptimizationDataDir)'" 
+    <Error Text="ApplyPartialNgenOptimization is true but directory specified in IbcOptimizationDataDir does not exist: '$(IbcOptimizationDataDir)'"
            Condition="!Exists('$(IbcOptimizationDataDir)')" />
+
+    <Error Text="IbcOptimizationDataDir must end with slash"
+           Condition="!HasTrailingSlash('$(IbcOptimizationDataDir)')"/>
 
     <ItemGroup>
       <!--
         Find all .ibc files generated for assemblies to optimize.
 
         The optimization data directory has the following structure:
-          $(IbcOptimizationDataDir)\path\{AssemblyFileName}\{AssemblyFileName}
-          $(IbcOptimizationDataDir)\path\{AssemblyFileName}\Scenario1.ibc
-          $(IbcOptimizationDataDir)\path\{AssemblyFileName}\Scenario2.ibc
+          $(IbcOptimizationDataDir)path\{AssemblyFileName}\{AssemblyFileName}
+          $(IbcOptimizationDataDir)path\{AssemblyFileName}\Scenario1.ibc
+          $(IbcOptimizationDataDir)path\{AssemblyFileName}\Scenario2.ibc
 
         One assembly might be copied to multiple subdirectories (e.g. in MSBuild and in IDE). 
         We assume that these copies are the same and merge all scenarios together.
@@ -76,7 +79,7 @@
         was a significant benefit in optimizing them separately.
         This would however require a more complicated setup authoring.
       -->
-      <_IbcFile Include="$(IbcOptimizationDataDir)\**\%(OptimizeAssembly.FileName)%(OptimizeAssembly.Extension)\*.ibc" OptimizeAssemblyPath="%(OptimizeAssembly.Identity)"/>
+      <_IbcFile Include="$(IbcOptimizationDataDir)**\%(OptimizeAssembly.FileName)%(OptimizeAssembly.Extension)\*.ibc" OptimizeAssemblyPath="%(OptimizeAssembly.Identity)"/>
 
       <_AssemblyWithoutRawIbcData Include="@(OptimizeAssembly)" Exclude="@(_IbcFile->'%(OptimizeAssemblyPath)')" />
 
