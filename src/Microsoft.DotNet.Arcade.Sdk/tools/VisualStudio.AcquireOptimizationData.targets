@@ -51,6 +51,8 @@
   </Target>
 
   <Target Name="_DownloadVisualStudioOptimizationDataOpt" Condition="$(_DropToolExists)">
+    <Error Text="IbcOptimizationDataDir must end with slash" Condition="!HasTrailingSlash('$(IbcOptimizationDataDir)')"/>
+
     <MakeDir Directories="$(IbcOptimizationDataDir)" />
 
     <Message Text="Acquiring optimization data" Importance="high"/>
@@ -63,7 +65,7 @@
     <Error Text="No drop matching given name found: $(_DropServiceUrl)/$(_DropNamePrefix)/*" Condition="'$(_LatestDropName)' == ''"/>
 
     <Message Text="Downloading optimization data from service $(_DropServiceUrl) drop $(_LatestDropName)" Importance="high"/>
-    <Exec Command='"$(_DropToolPath)" get --dropservice "$(_DropServiceUrl)" $(_PatAuthArg) --name "$(_LatestDropName)" --dest "$(IbcOptimizationDataDir)" --traceto "$(_DropsLogPath)"' />
+    <Exec Command='"$(_DropToolPath)" get --dropservice "$(_DropServiceUrl)" $(_PatAuthArg) --name "$(_LatestDropName)" --dest "$(IbcOptimizationDataDir)\" --traceto "$(_DropsLogPath)"' />
   </Target>
 
 </Project>
