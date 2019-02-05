@@ -14,7 +14,7 @@ Target completion date for these workstreams is 12/14/2018.
 | Repo                       | Owner            | Status   | Risk Assessment                                                                       | Plan | Notes |
 | ---------------------------| ---------------- | -------- |:--------------------------------------------------------------------------------------| ----- |----- |
 | Arcade                     | mawilkie         | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png) | | |
-| aspnet-AspNetCore          | namc             | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png) | | Not building using Arcade SDK, official builds are not building out of dnceng |
+| aspnet-AspNetCore          | namc             | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png) | | Not building using Arcade SDK |
 | aspnet-AspNetCore-Tooling  | namc             | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png) | | |
 | aspnet-EntityFrameworkCore | namc             | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png) | | |
 | aspnet-Extensions          | namc             | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png) | | Not building using Arcade SDK |
