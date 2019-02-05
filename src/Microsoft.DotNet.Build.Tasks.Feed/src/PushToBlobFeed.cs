@@ -135,11 +135,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     var packagePaths = packageItems.Select(i => i.ItemSpec);
 
-                    await blobFeedAction.PushToFeedAsync(packagePaths, pushOptions);
+                    if(!blobFeedAction.PushToFeedAsync(packagePaths, pushOptions).Result)
+                    {
+                        return !Log.HasLoggedErrors;
+                    }
+
                     await blobFeedAction.PublishToFlatContainerAsync(symbolItems, 
                         MaxClients, 
                         UploadTimeoutInMinutes, 
                         pushOptions);
+                    if (Log.HasLoggedErrors)
+                    {
+                        return !Log.HasLoggedErrors;
+                    }
 
                     packageArtifacts = ConcatPackageArtifacts(packageArtifacts, packageItems);
                     blobArtifacts = ConcatBlobArtifacts(blobArtifacts, symbolItems);

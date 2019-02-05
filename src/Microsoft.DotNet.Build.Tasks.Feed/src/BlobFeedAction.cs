@@ -290,7 +290,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     .Select(group => group.Key).ToList();
             if (duplicates.Count > 0)
             {
-                Log.LogError($"Duplicates found: {duplicates}");
+                Log.LogError($"Duplicates found: {string.Join(", ", duplicates)}");
                 return false;
             }
             Log.LogMessage(MessageImportance.Low, $"DONE checking for sanitized items for feed");
