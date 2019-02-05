@@ -36,8 +36,8 @@ Target completion date for these workstreams is 12/14/2018.
 | Toolset                    | licavalc         | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png) | [plan](https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md) | |
 | Visual FSharp              | brettfo          | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png) | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/VisualFSharp.md) | Not using Arcade SDK, official builds are being produced out of devdiv. |
 | WebSDK                     | vramak           | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png) | [plan](https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/TemplatingAndWebSdkPlan.md) | |
-| WinForms                   | mmcgaw           | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png) | | |
-| WPF                        | vatsan-madhavan  | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png) | | |
+| WinForms                   | mmcgaw           | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png) | | Also building out of dotnet-trusted |
+| WPF                        | vatsan-madhavan  | Complete | ![done](https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png) | | Also building out of dotnet-trusted |
 
 | Status   | Description |
 | -------- | ----------- |
