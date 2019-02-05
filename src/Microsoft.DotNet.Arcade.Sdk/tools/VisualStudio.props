@@ -17,10 +17,5 @@
   <PropertyGroup Condition="'$(IsVsixProject)' == 'true'">
     <BuildForLiveUnitTesting>false</BuildForLiveUnitTesting>
     <DeployExtension>false</DeployExtension>
-
-    <StartAction>Program</StartAction>
-    <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
-    <StartArguments>/rootsuffix $(VSSDKTargetPlatformRegRootSuffix) /log</StartArguments>
   </PropertyGroup>
-
 </Project>

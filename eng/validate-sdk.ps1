@@ -95,6 +95,7 @@ try {
 
   & .\common\cibuild.cmd -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource /p:DotNetPublishBlobFeedUrl=https://dotnetfeed.blob.core.windows.net/dotnet-core-test/index.json
   CheckExitCode "Official build"
+  Write-Host "Finished building Arcade SDK with validation enabled!"
 }
 catch {
   Write-Host $_
@@ -106,5 +107,4 @@ finally {
   Write-Host "Cleaning up workspace..."
   StopDotnetIfRunning
   Pop-Location
-  Write-Host "Finished building Arcade SDK with validation enabled!"
 }
