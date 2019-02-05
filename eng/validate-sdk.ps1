@@ -38,9 +38,9 @@ function AddSourceToNugetConfig([string]$nugetConfigPath, [string]$source)
     $valueAttribute = $nugetConfig.CreateAttribute("value")
     $valueAttribute.Value = $source
     $newSource = $nugetConfig.CreateElement("add")
-    $null = $newSource.Attributes.Append($keyAttribute)
-    $null = $newSource.Attributes.Append($valueAttribute)
-    $null = $packageSources.AppendChild($newSource)
+    $newSource.Attributes.Append($keyAttribute) | Out-Null
+    $newSource.Attributes.Append($valueAttribute) | Out-Null
+    $packageSources.AppendChild($newSource) | Out-Null
     $nugetConfig.Save($nugetConfigPath)
 }
 
