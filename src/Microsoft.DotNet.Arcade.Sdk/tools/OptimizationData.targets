@@ -49,7 +49,7 @@
 
   <Target Name="_LocateIbcMerge">
     <PropertyGroup>
-      <_IbcMergePath>$(NuGetPackageRoot)microsoft.dotnet.ibcmerge\$(MicrosoftDotNetIBCMergeVersion)\lib\net45\ibcmerge.exe</_IbcMergePath>
+      <_IbcMergePath>$(NuGetPackageRoot)microsoft.dotnet.ibcmerge\$(MicrosoftDotNetIBCMergeVersion)\tools\net472\ibcmerge.exe</_IbcMergePath>
 
       <_RunIbcMerge>false</_RunIbcMerge>
       <_RunIbcMerge Condition="'$(OfficialBuild)' == 'true' or Exists('$(_IbcMergePath)')">true</_RunIbcMerge>
