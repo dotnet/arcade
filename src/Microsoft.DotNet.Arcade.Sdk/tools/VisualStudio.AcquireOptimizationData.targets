@@ -49,7 +49,6 @@
   </Target>
 
   <Target Name="_DownloadVisualStudioOptimizationDataOpt" Condition="$(_DropToolExists)">
-    <Error Text="IbcOptimizationDataDir must end with slash" Condition="!HasTrailingSlash('$(IbcOptimizationDataDir)')"/>
     <Error Text="VisualStudioDropAccessToken property has to be specified when ApplyPartialNgenOptimization and OfficialBuild is true" Condition="'$(VisualStudioDropAccessToken)' == '' and '$(OfficialBuild)' == 'true'"/>
     <Error Text="RepositoryName property has to be specified when ApplyPartialNgenOptimization is true" Condition="'$(RepositoryName)' == ''"/>
     <Error Text="VisualStudioIbcSourceBranchName property has to be specified when ApplyPartialNgenOptimization is true" Condition="'$(VisualStudioIbcSourceBranchName)' == ''"/>
@@ -57,6 +56,7 @@
     <PropertyGroup>
       <_DropServiceUrl>https://devdiv.artifacts.visualstudio.com</_DropServiceUrl>
       <_PatAuthArg Condition="'$(VisualStudioDropAccessToken)' != ''">--patAuth "$(VisualStudioDropAccessToken)"</_PatAuthArg>
+      <_DestArg>$(IbcOptimizationDataDir.TrimEnd('\'))</_DestArg>
       <_DropsJsonPath>$(ArtifactsLogDir)OptimizationDataDrops.json</_DropsJsonPath>
       <_DropsLogPath>$(ArtifactsLogDir)OptimizationDataAcquisition.log</_DropsLogPath>
       <_DropNamePrefix>OptimizationData/$(RepositoryName)/$(VisualStudioIbcSourceBranchName)</_DropNamePrefix>
@@ -77,7 +77,7 @@
     <MakeDir Directories="$(IbcOptimizationDataDir)" />
 
     <Message Text="Downloading optimization data from service $(_DropServiceUrl), drop $(_DropName)" Importance="high"/>
-    <Exec Command='"$(_DropToolPath)" get --dropservice "$(_DropServiceUrl)" $(_PatAuthArg) --name "$(_DropName)" --dest "$(IbcOptimizationDataDir)\" --traceto "$(_DropsLogPath)"' />
+    <Exec Command='"$(_DropToolPath)" get --dropservice "$(_DropServiceUrl)" $(_PatAuthArg) --name "$(_DropName)" --dest "$(_DestArg)" --traceto "$(_DropsLogPath)"' />
   </Target>
 
 </Project>
