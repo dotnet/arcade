@@ -212,8 +212,10 @@ steps:
     
     while ($retryCount -lt $env:MaxRetries) {
       try {
+        Write-Output "Before Invoke-RestMethod"
         $workItemId = Invoke-RestMethod -Uri "https://helix.dot.net/api/2018-03-14/telemetry/job/build?buildUri=$([Net.WebUtility]::UrlEncode($env:BuildUri))" -Method Post -ContentType "application/json" -Body "" `
           -Headers @{ 'X-Helix-Job-Token'=$env:Helix_JobToken }
+        Write-Output "After Invoke-RestMethod"
         break
       }
       catch {
@@ -223,6 +225,7 @@ steps:
           Write-Host "##vso[task.logissue]error ", $_.Exception.GetType().FullName, $_.Exception.Message
           exit 1
         }
+        Write-Output "Output version: Failed to send telemetry to Helix (status code $statusCode); waiting $env:RetryDelay seconds before retrying..."
         Write-Host "Failed to send telemetry to Helix (status code $statusCode); waiting $env:RetryDelay seconds before retrying..."
         $retryCount++
         sleep $env:RetryDelay
