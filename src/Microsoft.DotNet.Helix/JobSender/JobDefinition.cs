@@ -46,6 +46,8 @@ namespace Microsoft.DotNet.Helix.Client
         public int? MaxRetryCount { get; private set; }
         public string StorageAccountConnectionString { get; private set; }
         public string TargetContainerName { get; set; } = DefaultContainerName;
+        public string ResultsStorageAccountConnectionString { get; private set; }
+        public string TargetResultsContainerName { get; set; } = DefaultContainerName;
         public static string DefaultContainerName => $"helix-job-{Guid.NewGuid()}";
 
         public IWorkItemDefinitionWithCommand DefineWorkItem(string workItemName)
@@ -119,6 +121,18 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
+        public IJobDefinition WithResultsContainerName(string resultsContainerName)
+        {
+            TargetResultsContainerName = resultsContainerName;
+            return this;
+        }
+
+        public IJobDefinition WithResultsStorageAccountConnectionString(string resultsAccountConnectionString)
+        {
+            ResultsStorageAccountConnectionString = resultsAccountConnectionString;
+            return this;
+        }
+
         public async Task<ISentJob> SendAsync(Action<string> log = null)
         {
             IBlobHelper storage;
@@ -133,6 +147,15 @@ namespace Microsoft.DotNet.Helix.Client
 
             IBlobContainer storageContainer = await storage.GetContainerAsync(TargetContainerName);
             var jobList = new List<JobListEntry>();
+
+            IBlobHelper resultsStorage = null;
+            IBlobContainer resultsStorageContainer = null;
+            if (!string.IsNullOrEmpty(ResultsStorageAccountConnectionString))
+            {
+                resultsStorage = new ConnectionStringBlobHelper(ResultsStorageAccountConnectionString);
+                storageContainer = await storage.GetContainerAsync(TargetContainerName);
+            }
+
 
             List<string> correlationPayloadUris =
                 (await Task.WhenAll(CorrelationPayloads.Select(p => p.UploadAsync(storageContainer, log)))).ToList();
@@ -160,9 +183,9 @@ namespace Microsoft.DotNet.Helix.Client
                         _properties.ToImmutableDictionary(),
                         jobListUri.ToString(),
                         TargetQueueId,
-                        string.IsNullOrEmpty(StorageAccountConnectionString) ? "" : storageContainer.Uri,
-                        string.IsNullOrEmpty(StorageAccountConnectionString) ? "" : storageContainer.ReadSas,
-                        string.IsNullOrEmpty(StorageAccountConnectionString) ? "" : storageContainer.WriteSas)
+                        resultsStorageContainer?.Uri ?? "",
+                        resultsStorageContainer?.ReadSas ?? "",
+                        resultsStorageContainer?.WriteSas ?? "")
                     {
                         Creator = Creator,
                         MaxRetryCount = MaxRetryCount ?? 0,
