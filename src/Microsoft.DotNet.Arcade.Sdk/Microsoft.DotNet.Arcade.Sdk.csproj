@@ -16,6 +16,7 @@
 
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
     <EnableGeneratedPackageContent>false</EnableGeneratedPackageContent>
+    <_SdkVersionFilePath>$(IntermediateOutputPath)SdkVersion.props</_SdkVersionFilePath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,11 +35,37 @@
     <None Include="tools/**/*.*" Pack="true">
       <PackagePath>tools/%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
     </None>
+    <None Include="$(_SdkVersionFilePath)" Pack="true">
+      <PackagePath>tools\SdkVersion.props</PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\Common\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
   </ItemGroup>
+  
+  <Target Name="_GenerateSdkVersionFile"
+          Inputs="$(MSBuildAllProjects)"
+          Outputs="$(_SdkVersionFilePath)"
+          BeforeTargets="GenerateNuSpec">
+
+    <PropertyGroup>
+      <_SdkVersionPropsContent>
+<![CDATA[<!-- Generated -->
+<Project>
+  <PropertyGroup>
+    <ArcadeSdkVersion>$(PackageVersion)</ArcadeSdkVersion>
+  </PropertyGroup>
+</Project>]]>
+  </_SdkVersionPropsContent>
+    </PropertyGroup>
+    
+    <WriteLinesToFile File="$(_SdkVersionFilePath)" Lines="$(_SdkVersionPropsContent)" Overwrite="true"/>
+
+    <ItemGroup>
+      <FileWrites Include="$(_SdkVersionFilePath)"/>
+    </ItemGroup>
+  </Target>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>
