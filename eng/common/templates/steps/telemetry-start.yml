@@ -202,8 +202,14 @@ steps:
     RetryDelay: ${{ parameters.retryDelay }}
   condition: and(always(), eq(variables['Agent.Os'], 'Windows_NT'))
 - powershell: |
+    Write-Output "at least I got to run!"
+    if (-not (Test-Path env:MaxRetries)) { $env:MaxRetries = 8 }
+    if (-not (Test-Path env:RetryDelay)) { $env:RetryDelay = 11 }
     # Basic retry loop to harden against server flakiness
     $retryCount = 0
+    
+    Write-Output "Retries = $env:MaxRetries and Delay = $env:RetryDelay"
+    
     while ($retryCount -lt $env:MaxRetries) {
       try {
         $workItemId = Invoke-RestMethod -Uri "https://helix.dot.net/api/2018-03-14/telemetry/job/build?buildUri=$([Net.WebUtility]::UrlEncode($env:BuildUri))" -Method Post -ContentType "application/json" -Body "" `
