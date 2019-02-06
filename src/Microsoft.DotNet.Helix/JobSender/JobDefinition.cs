@@ -160,9 +160,9 @@ namespace Microsoft.DotNet.Helix.Client
                         _properties.ToImmutableDictionary(),
                         jobListUri.ToString(),
                         TargetQueueId,
-                        storageContainer.Uri,
-                        storageContainer.ReadSas,
-                        storageContainer.WriteSas)
+                        string.IsNullOrEmpty(StorageAccountConnectionString) ? "" : storageContainer.Uri,
+                        string.IsNullOrEmpty(StorageAccountConnectionString) ? "" : storageContainer.ReadSas,
+                        string.IsNullOrEmpty(StorageAccountConnectionString) ? "" : storageContainer.WriteSas)
                     {
                         Creator = Creator,
                         MaxRetryCount = MaxRetryCount ?? 0,
