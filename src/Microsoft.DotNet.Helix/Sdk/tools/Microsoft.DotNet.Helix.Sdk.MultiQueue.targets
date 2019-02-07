@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project InitialTargets="ValidateTargetQueues">
   <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <!-- Split up HelixTargetQueues list
          In order to support all delimiters (commas, plus and semicolons).
          Note that queues will never have ',', '+' or ';' in their name, and this greatly simplifies providing a queue list in *nix.

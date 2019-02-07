@@ -8,10 +8,6 @@
     See https://github.com/dotnet/sdk/issues/94 that tracks productization of this code.
   -->
 
-  <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateResxSource" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
 
   <!-- Set the Generator metadata so that VS triggers design-time build whenever the .resx file is saved -->
