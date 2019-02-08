@@ -6,9 +6,11 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
+  <Import Project="..\SdkVersion.props"/>
+
   <PropertyGroup>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.19101.2</MicrosoftDotNetMaestroTasksVersion>
-    <MicrosoftDotNetBuildTasksVisualStudioVersion>1.0.0-beta.19103.6</MicrosoftDotNetBuildTasksVisualStudioVersion>
+    <MicrosoftDotNetBuildTasksVisualStudioVersion>$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksVisualStudioVersion>
   </PropertyGroup>
 
   <PropertyGroup>
