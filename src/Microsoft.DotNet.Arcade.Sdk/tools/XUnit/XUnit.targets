@@ -57,7 +57,7 @@
       <_XUnitConsoleExePath>$(NuGetPackageRoot)xunit.runner.console\$(XUnitVersion)\tools\net452\$(_XUnitConsoleExe)</_XUnitConsoleExePath>
 
       <_TestRunnerArgs>"$(_TestAssembly)" -noshadow -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)" $(_TestRunnerAdditionalArguments)</_TestRunnerArgs>
-      <_TestRunnerArgs Condition="'$(_TestRuntime)' == 'Mono'">"$(_XUnitConsoleExePath)" $(_TestRunnerArgs)</_TestRunnerArgs>
+      <_TestRunnerArgs Condition="'$(_TestRuntime)' == 'Mono'">$(MonoToolArgs) "$(_XUnitConsoleExePath)" $(_TestRunnerArgs)</_TestRunnerArgs>
 
       <_TestRunner Condition="'$(_TestRuntime)' == 'Mono'">$(MonoTool)</_TestRunner>
       <_TestRunner Condition="'$(_TestRuntime)' != 'Mono'">$(_XUnitConsoleExePath)</_TestRunner>

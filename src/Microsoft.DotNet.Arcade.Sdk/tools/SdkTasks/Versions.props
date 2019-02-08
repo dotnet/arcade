@@ -7,7 +7,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.19065.2</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.19101.2</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetBuildTasksVisualStudioVersion>1.0.0-beta.19103.6</MicrosoftDotNetBuildTasksVisualStudioVersion>
   </PropertyGroup>
 
   <PropertyGroup>

@@ -350,6 +350,44 @@ namespace Microsoft.DotNet.SignTool.Tests
         }
 
         [Fact]
+        public void OnlyAuthenticodeSignByPKT()
+        {
+            var fileToTest = "ProjectOne.dll";
+            var pktToTest = "581d91ccdfc4ea9c";
+            var certificateToTest = "3PartySHA2";
+
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath(fileToTest)
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            {
+                { pktToTest, new SignInfo(certificateToTest) }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, SignInfo>(), new[]
+            {
+                $"File '{fileToTest}' TargetFramework='.NETStandard,Version=v2.0' Certificate='{certificateToTest}'",
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, SignInfo>(), new[]
+            {
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, fileToTest)}"">
+  <Authenticode>{certificateToTest}</Authenticode>
+</FilesToSign>
+"
+            });
+        }
+
+
+        [Fact]
         public void OnlyContainerAndOverridingByPKT()
         {
             // List of files to be considered for signing

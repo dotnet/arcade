@@ -102,6 +102,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         ///     NOTE: only a single Payload parameter should be used; they are not to be used in combination
         ///     PayloadDirectory - A directory that will be zipped up and sent as the Work Item payload
         ///     PayloadArchive - An archive that will be sent up as the Work Item payload
+        ///     PayloadUri - An uri of the archive that will be sent up as the Work Item payload
         ///     Timeout - A <see cref="System.TimeSpan"/> string that specifies that Work Item execution timeout
         ///     PreCommands
         ///       A collection of commands that will run for this work item before the 'Command' Runs
@@ -268,8 +269,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string payloadDirectory = workItem.GetMetadata("PayloadDirectory");
             string payloadArchive = workItem.GetMetadata("PayloadArchive");
+            string payloadUri = workItem.GetMetadata("PayloadUri");
             IWorkItemDefinition wi;
-            if (!string.IsNullOrEmpty(payloadDirectory))
+            if (!string.IsNullOrEmpty(payloadUri))
+            {
+                wi = wiWithPayload.WithPayloadUri(new Uri(payloadUri));
+                Log.LogMessage(MessageImportance.Low, $"  Uri Payload: '{payloadUri}'");
+            }
+            else if (!string.IsNullOrEmpty(payloadDirectory))
             {
                 wi = wiWithPayload.WithDirectoryPayload(payloadDirectory);
                 Log.LogMessage(MessageImportance.Low, $"  Directory Payload: '{payloadDirectory}'");

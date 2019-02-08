@@ -69,6 +69,7 @@
   <Target Name="CheckHelixJobStatus"
           BeforeTargets="AfterTest">
     <CheckHelixJobStatus
+      Condition="$(WaitForWorkItemCompletion)"
       AccessToken="$(HelixAccessToken)"
       BaseUri="$(HelixBaseUri)"
       Jobs="@(SentJob)"

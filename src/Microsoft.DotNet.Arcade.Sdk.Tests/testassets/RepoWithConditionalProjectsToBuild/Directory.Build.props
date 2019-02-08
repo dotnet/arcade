@@ -4,5 +4,6 @@
   <PropertyGroup>
     <PackageProjectUrl>https://localhost/</PackageProjectUrl>
     <IsPackable>true</IsPackable>
+    <NoWarn>$(NoWarn);NU5125</NoWarn>
   </PropertyGroup>
 </Project>
