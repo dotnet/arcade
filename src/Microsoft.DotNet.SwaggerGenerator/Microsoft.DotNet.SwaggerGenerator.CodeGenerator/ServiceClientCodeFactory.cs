@@ -45,9 +45,7 @@ namespace Microsoft.DotNet.SwaggerGenerator
 
             if (_files.TryGetValue(filePath, out CodeFile file) && !append)
             {
-                string message = $"File '{filePath}' already exists.";
-                Logger.LogError(message);
-                throw new InvalidOperationException(message);
+                throw new InvalidOperationException($"File '{filePath}' was already generated.");
             }
 
             if (file == null)
