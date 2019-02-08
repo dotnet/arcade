@@ -42,6 +42,11 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         );
 
+        Task<CancelResponse> CancelAsync(
+            string job,
+            CancellationToken cancellationToken = default
+        );
+
         Task<WaitResponse> WaitAsync(
             string job,
             CancellationToken cancellationToken = default
@@ -142,19 +147,19 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                var _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    var ex = new RestApiException
-                    {
-                        Request = new HttpRequestMessageWrapper(_req, null),
-                        Response = new HttpResponseMessageWrapper(_res, _responseContent),
-                    };
+                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var ex = new RestApiException(
+                        new HttpRequestMessageWrapper(_req, null),
+                        new HttpResponseMessageWrapper(_res, _responseContent));
                     HandleFailedListRequest(ex);
                     HandleFailedRequest(ex);
                     Client.OnFailedRequest(ex);
                     throw ex;
                 }
+                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<IImmutableList<JobSummary>>
                 {
                     Request = _req,
@@ -236,19 +241,19 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                var _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    var ex = new RestApiException
-                    {
-                        Request = new HttpRequestMessageWrapper(_req, _requestContent),
-                        Response = new HttpResponseMessageWrapper(_res, _responseContent),
-                    };
+                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var ex = new RestApiException(
+                        new HttpRequestMessageWrapper(_req, _requestContent),
+                        new HttpResponseMessageWrapper(_res, _responseContent));
                     HandleFailedNewRequest(ex);
                     HandleFailedRequest(ex);
                     Client.OnFailedRequest(ex);
                     throw ex;
                 }
+                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<JobCreationResult>
                 {
                     Request = _req,
@@ -304,19 +309,19 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                var _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    var ex = new RestApiException
-                    {
-                        Request = new HttpRequestMessageWrapper(_req, null),
-                        Response = new HttpResponseMessageWrapper(_res, _responseContent),
-                    };
+                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var ex = new RestApiException(
+                        new HttpRequestMessageWrapper(_req, null),
+                        new HttpResponseMessageWrapper(_res, _responseContent));
                     HandleFailedJenkinsRequest(ex);
                     HandleFailedRequest(ex);
                     Client.OnFailedRequest(ex);
                     throw ex;
                 }
+                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<JenkinsResponse>
                 {
                     Request = _req,
@@ -381,19 +386,19 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                var _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    var ex = new RestApiException
-                    {
-                        Request = new HttpRequestMessageWrapper(_req, null),
-                        Response = new HttpResponseMessageWrapper(_res, _responseContent),
-                    };
+                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var ex = new RestApiException(
+                        new HttpRequestMessageWrapper(_req, null),
+                        new HttpResponseMessageWrapper(_res, _responseContent));
                     HandleFailedSummaryRequest(ex);
                     HandleFailedRequest(ex);
                     Client.OnFailedRequest(ex);
                     throw ex;
                 }
+                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<JobSummary>
                 {
                     Request = _req,
@@ -458,24 +463,101 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                var _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    var ex = new RestApiException
-                    {
-                        Request = new HttpRequestMessageWrapper(_req, null),
-                        Response = new HttpResponseMessageWrapper(_res, _responseContent),
-                    };
+                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var ex = new RestApiException(
+                        new HttpRequestMessageWrapper(_req, null),
+                        new HttpResponseMessageWrapper(_res, _responseContent));
                     HandleFailedDetailsRequest(ex);
                     HandleFailedRequest(ex);
                     Client.OnFailedRequest(ex);
                     throw ex;
                 }
+                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<JobDetails>
                 {
                     Request = _req,
                     Response = _res,
                     Body = Client.Deserialize<JobDetails>(_responseContent),
+                };
+            }
+            catch (Exception)
+            {
+                _req?.Dispose();
+                _res?.Dispose();
+                throw;
+            }
+        }
+
+        partial void HandleFailedCancelRequest(RestApiException ex);
+
+        public async Task<CancelResponse> CancelAsync(
+            string job,
+            CancellationToken cancellationToken = default
+        )
+        {
+            using (var _res = await CancelInternalAsync(
+                job,
+                cancellationToken
+            ).ConfigureAwait(false))
+            {
+                return _res.Body;
+            }
+        }
+
+        internal async Task<HttpOperationResponse<CancelResponse>> CancelInternalAsync(
+            string job,
+            CancellationToken cancellationToken = default
+        )
+        {
+            if (string.IsNullOrEmpty(job))
+            {
+                throw new ArgumentNullException(nameof(job));
+            }
+
+
+            var _path = "/api/2018-03-14/jobs/{job}/cancel";
+            _path = _path.Replace("{job}", Client.Serialize(job));
+
+            var _query = new QueryBuilder();
+
+            var _uriBuilder = new UriBuilder(Client.BaseUri);
+            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
+            _uriBuilder.Query = _query.ToString();
+            var _url = _uriBuilder.Uri;
+
+            HttpRequestMessage _req = null;
+            HttpResponseMessage _res = null;
+            try
+            {
+                _req = new HttpRequestMessage(HttpMethod.Post, _url);
+
+                if (Client.Credentials != null)
+                {
+                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
+                }
+
+                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
+                string _responseContent;
+                if (!_res.IsSuccessStatusCode)
+                {
+                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var ex = new RestApiException(
+                        new HttpRequestMessageWrapper(_req, null),
+                        new HttpResponseMessageWrapper(_res, _responseContent));
+                    HandleFailedCancelRequest(ex);
+                    HandleFailedRequest(ex);
+                    Client.OnFailedRequest(ex);
+                    throw ex;
+                }
+                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                return new HttpOperationResponse<CancelResponse>
+                {
+                    Request = _req,
+                    Response = _res,
+                    Body = Client.Deserialize<CancelResponse>(_responseContent),
                 };
             }
             catch (Exception)
@@ -535,19 +617,19 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                var _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    var ex = new RestApiException
-                    {
-                        Request = new HttpRequestMessageWrapper(_req, null),
-                        Response = new HttpResponseMessageWrapper(_res, _responseContent),
-                    };
+                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var ex = new RestApiException(
+                        new HttpRequestMessageWrapper(_req, null),
+                        new HttpResponseMessageWrapper(_res, _responseContent));
                     HandleFailedWaitRequest(ex);
                     HandleFailedRequest(ex);
                     Client.OnFailedRequest(ex);
                     throw ex;
                 }
+                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<WaitResponse>
                 {
                     Request = _req,
