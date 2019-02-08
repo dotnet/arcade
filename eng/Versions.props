@@ -32,8 +32,9 @@
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
     <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
-    <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
-    <NuGetVersion>4.4.0</NuGetVersion>
+    <NuGetVersioningVersion>5.0.0-rtm.5821</NuGetVersioningVersion>
+    <NuGetVersion>5.0.0-rtm.5821</NuGetVersion>
+    <NuGetCommandVersion>4.4.0</NuGetCommandVersion>
     <OctokitVersion>0.30.0</OctokitVersion>
     <DotNetSleetLibVersion>2.2.73</DotNetSleetLibVersion>
     <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>

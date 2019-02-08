@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -16,6 +16,8 @@
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)"/>
     <PackageReference Include="Microsoft.DotNet.Maestro.Client" Version="$(MicrosoftDotNetMaestroClientVersion)"/>
     <PackageReference Include="Microsoft.DotNet.VersionTools" Version="$(MicrosoftDotNetVersionToolsVersion)"/>
+    <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)"/>
+    <PackageReference Include="NuGet.Packaging.Core" Version="$(NuGetVersion)"/>
     <PackageReference Include="DotNet.SleetLib" Version="$(DotNetSleetLibVersion)"/>
   </ItemGroup>
 
