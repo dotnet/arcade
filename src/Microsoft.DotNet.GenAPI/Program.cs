@@ -21,8 +21,8 @@ namespace Microsoft.DotNet.GenAPI
         {
             var app = new CommandLineApplication
             {
-                Name = "ApiCompat",
-                FullName = "A command line tool to verify that two sets of APIs are compatible.",
+                Name = "GenAPI",
+                FullName = "A command line tool to generate code for the API surface of an assembly.",
                 ResponseFileHandling = ResponseFileHandling.ParseArgsAsSpaceSeparated
             };
             app.HelpOption("-?|-h|--help");
