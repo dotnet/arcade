@@ -30,8 +30,10 @@
     <RunScriptHostDir Condition="'$(TargetOS)' != 'Windows_NT'">$RUNTIME_PATH/</RunScriptHostDir>
     <RunScriptHost Condition="'$(TargetOS)' == 'Windows_NT'">$(RunScriptHostDir)dotnet.exe</RunScriptHost>
     <RunScriptHost Condition="'$(TargetOS)' != 'Windows_NT'">$(RunScriptHostDir)dotnet</RunScriptHost>
-    
-    <GlobalToolsDir Condition="'$(ArchiveTests)' == 'true'">$(RunScriptHostDir)</GlobalToolsDir>
+
+    <!-- Overwrite the global tools path for helix submissions. -->
+    <GlobalToolsDir Condition="'$(TargetOS)' == 'Windows_NT' AND '$(ArchiveTests)' == 'true'">$(RunScriptHostDir)tools\</GlobalToolsDir>
+    <GlobalToolsDir Condition="'$(TargetOS)' != 'Windows_NT' AND '$(ArchiveTests)' == 'true'">$(RunScriptHostDir)tools/</GlobalToolsDir>
 
     <!-- Roll forward on [major], [minor] and [patch] by default. -->
     <TestRollForwardPolicy Condition="'$(TestRollForwardPolicy)' == ''">2</TestRollForwardPolicy>
