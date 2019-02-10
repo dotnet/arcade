@@ -1,15 +1,27 @@
-﻿@ECHO OFF
-SETLOCAL enabledelayedexpansion
+﻿@echo off
+setlocal enabledelayedexpansion
 
-SET RUNTIME_PATH=%1
+set RUNTIME_PATH=%1
 set RUNTIME_PATH=%RUNTIME_PATH:/=\%
-IF %RUNTIME_PATH:~-1%==\ SET RUNTIME_PATH=%RUNTIME_PATH:~0,-1%
-IF DEFINED RUNTIME_PATH ( echo Using %RUNTIME_PATH% as the test runtime folder.) ELSE (
+if %RUNTIME_PATH:~-1%==\ set RUNTIME_PATH=%RUNTIME_PATH:~0,-1%
+if not defined RUNTIME_PATH (
 echo Please specify a test runtime folder using the RUNTIME_PATH parameter
 goto ShowUsage
 )
+
 set EXECUTION_DIR=%~dp0
-echo Executing in %EXECUTION_DIR% 
+
+:: Point to the locally installed SDK.
+set DOTNET_ROOT=%~2
+
+:: Global tools path
+set GLOBAL_TOOLS_DIR=%~3
+
+:: Don't use a globally installed SDK.
+set DOTNET_MULTILEVEL_LOOKUP=0
+
+:: Roll forward on [major], [minor] and [patch].
+set DOTNET_ROLL_FORWARD_ON_NO_CANDIDATE_FX=2
 
 :: ========================= BEGIN Test Execution ============================= 
 echo ----- start %TIME% ===============  To repro directly: ===================================================== 
@@ -18,7 +30,7 @@ echo pushd %EXECUTION_DIR%
 echo popd
 echo ===========================================================================================================
 pushd %EXECUTION_DIR%
-echo on
+@echo on
 [[RunCommands]]
 @echo off
 popd

@@ -23,20 +23,15 @@
     <RunScriptOutputName Condition="'$(TargetOS)' == 'Windows_NT'">RunTests.cmd</RunScriptOutputName>
     <RunScriptOutputName Condition="'$(TargetOS)' != 'Windows_NT'">RunTests.sh</RunScriptOutputName>
     <RunScriptOutputPath>$([MSBuild]::NormalizePath('$(TestPath)', '$(RunScriptOutputName)'))</RunScriptOutputPath>
-  </PropertyGroup>
 
-  <PropertyGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
     <RunScriptHostDir Condition="'$(TargetOS)' == 'Windows_NT'">%RUNTIME_PATH%\</RunScriptHostDir>
     <RunScriptHostDir Condition="'$(TargetOS)' != 'Windows_NT'">$RUNTIME_PATH/</RunScriptHostDir>
+
     <RunScriptHost Condition="'$(TargetOS)' == 'Windows_NT'">$(RunScriptHostDir)dotnet.exe</RunScriptHost>
     <RunScriptHost Condition="'$(TargetOS)' != 'Windows_NT'">$(RunScriptHostDir)dotnet</RunScriptHost>
 
-    <!-- Overwrite the global tools path for helix submissions. -->
-    <GlobalToolsDir Condition="'$(TargetOS)' == 'Windows_NT' AND '$(ArchiveTests)' == 'true'">$(RunScriptHostDir)tools\</GlobalToolsDir>
-    <GlobalToolsDir Condition="'$(TargetOS)' != 'Windows_NT' AND '$(ArchiveTests)' == 'true'">$(RunScriptHostDir)tools/</GlobalToolsDir>
-
-    <!-- Roll forward on [major], [minor] and [patch] by default. -->
-    <TestRollForwardPolicy Condition="'$(TestRollForwardPolicy)' == ''">2</TestRollForwardPolicy>
+    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' == 'Windows_NT'">%GLOBAL_TOOLS_DIR%</RunScriptGlobalToolsDir>
+    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' != 'Windows_NT'">$GLOBAL_TOOLS_DIR</RunScriptGlobalToolsDir>
   </PropertyGroup>
 
   <Target Name="PublishSupplementalTestData"
@@ -194,7 +189,7 @@
           Outputs="@(RunTestsOutputs)">
 
     <!-- Invoke the run script with the test host as the runtime path. -->
-    <Exec Command="$(RunScriptOutputPath) $(TestHostRootPath)"
+    <Exec Command="$(RunScriptOutputPath) $(TestHostRootPath) $(DotNetRoot) $(GlobalToolsDir)"
           ContinueOnError="true"
           IgnoreStandardErrorWarningFormat="true">
       <Output PropertyName="TestRunExitCode" TaskParameter="ExitCode" />
