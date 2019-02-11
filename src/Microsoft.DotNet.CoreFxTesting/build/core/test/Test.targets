@@ -4,10 +4,11 @@
 
   <PropertyGroup Condition="'$(BuildingUAPVertical)' == 'true'">
     <!--
-      Inside an AppContainer we can't write into the WorkingDirectory. As the UAP Runner has
-      the capability to write to the user's documents folder, we use that instead.
+      Inside an AppContainer we can't write into the WorkingDirectory. As System.IO is used
+      to write the results file we can't use the documents folder either. Therefore we write
+      into the app's local state directory which doesn't need a StorageFolder broker.
     -->
-    <UAPResultsPathCmd Condition="'$(UAPResultsPathCmd)' == ''">&quot;%USERPROFILE%\Documents\$(AssemblyName).xml&quot;</UAPResultsPathCmd>
+    <UAPResultsPathCmd Condition="'$(UAPResultsPathCmd)' == ''">&quot;%LOCALAPPDATA%\Packages\5cd54353-3ed7-4a6e-a72f-db349f28867c_v52bfwc2c21ha\LocalState\$(AssemblyName).xml&quot;</UAPResultsPathCmd>
   </PropertyGroup>
 
   <!-- General xunit options -->
@@ -43,6 +44,9 @@
 
     <!-- User passed in options. -->
     <RunArguments Condition="'$(XUnitOptions)' != ''">$(RunArguments) $(XUnitOptions)</RunArguments>
+
+    <!-- Escape arguments with user inputs. -->
+    <RunArguments>$([MSBuild]::Escape('$(RunArguments)'))</RunArguments>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -96,16 +100,15 @@
 
         <!-- Install -->
         <RunScriptCommands Include="call &quot;$(LauncherPath)&quot; -install appxmanifest.xml $(TestAssembly)" />
-        <RunScriptCommands Include="echo." />
 
-        <!-- Uninstall -->
-        <PostRunScriptCommands Include="echo." />
         <!-- Save error level as the uninstall command overwrites the global one. -->
         <PostRunScriptCommands Include="set ERRORLEVEL=%ERRORLEVEL%" />
-        <PostRunScriptCommands Include="call &quot;$(LauncherPath)&quot; -uninstall appxmanifest.xml $(TestAssembly)" />
 
         <!-- Copy the log files and the results files from the Documents folder to the test folder -->
         <PostRunScriptCommands Include="move /Y $(UAPResultsPathCmd) .\$(TestResultsName)" />
+
+        <!-- Uninstall -->
+        <PostRunScriptCommands Include="call &quot;$(LauncherPath)&quot; -uninstall appxmanifest.xml $(TestAssembly)" />
       </ItemGroup>
     </When>
 
@@ -118,13 +121,14 @@
         <OriginalTestRunnerName>xunit.console.dll</OriginalTestRunnerName>
 
         <_TestILCFolder>%RUNTIME_PATH%\TestILC</_TestILCFolder>
+        <_ILCFXInputFolder>%RUNTIME_PATH%\ILCInputFolder</_ILCFXInputFolder>
         <ILCBuildType Condition="'$(ILCBuildType)' == ''">ret</ILCBuildType>
         <_UseSharedAssemblies Condition="'$(EnableMultiFileILCTests)' == 'true'">-useSharedAssemblies</_UseSharedAssemblies>
         <_ILCWin32 Condition="'$(BuildingUAPAOTVertical)' != 'true'">-win32</_ILCWin32>
       </PropertyGroup>
 
       <ItemGroup>
-        <RunScriptCommands Include="for /R &quot;$(ILCFXInputFolder)&quot; %25%25I in (%2A) do @if not exist &quot;%25%25~nxI&quot; (mklink /H &quot;%25%25~nxI&quot; &quot;%25%25I&quot; 1>NUL)" />
+        <RunScriptCommands Include="for /R &quot;$(_ILCFXInputFolder)&quot; %25%25I in (%2A) do @if not exist &quot;%25%25~nxI&quot; (mklink /H &quot;%25%25~nxI&quot; &quot;%25%25I&quot; 1>NUL)" />
         <RunScriptCommands Include="copy /y $(_TestILCFolder)\default.rd.xml %EXECUTION_DIR%" />
         <RunScriptCommands Include="move /y $(OriginalTestRunnerName) $(TestRunnerName)" />
         <RunScriptCommands Include="if exist %EXECUTION_DIR%int rmdir /S /Q %EXECUTION_DIR%int" />

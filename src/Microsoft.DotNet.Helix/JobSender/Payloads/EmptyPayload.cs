@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -12,7 +13,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         public static IPayload Instance { get; } = new EmptyPayload();
 
-        public Task<string> UploadAsync(IBlobContainer payloadContainer)
+        public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log)
         {
             return _emptyStringTask;
         }

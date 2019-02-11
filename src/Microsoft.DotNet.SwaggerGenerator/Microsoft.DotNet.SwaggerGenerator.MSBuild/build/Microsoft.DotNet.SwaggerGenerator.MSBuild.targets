@@ -1,8 +1,4 @@
 <Project>
-  <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
   <UsingTask TaskName="GenerateSwaggerCode" AssemblyFile="$(MicrosoftDotNetSwaggerGeneratorMSBuildTasksAssembly)"/>
 
   <Target Name="GenerateCode">

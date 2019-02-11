@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <Target Name="StartTestRuns"
-          BeforeTargets="CoreTest"
+          BeforeTargets="CoreBuild"
           Outputs="%(HelixTargetQueue.Identity)">
     <PropertyGroup>
       <_CurrentTargetQueue>%(HelixTargetQueue.Identity)</_CurrentTargetQueue>
@@ -26,11 +26,16 @@
   </Target>
 
   <Target Name="StopTestRuns"
-          AfterTargets="Wait"
-          Condition="$(WaitForWorkItemCompletion)"
+          AfterTargets="CoreTest"
           Outputs="%(HelixTargetQueue.Identity)">
     <Message Text="Stopping Azure Pipelines Test Run %(HelixTargetQueue.TestRunName)" Importance="High"/>
-    <StopAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)" FailOnTestFailure="$(FailOnTestFailure)">
-    </StopAzurePipelinesTestRun>
+    <StopAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)"/>
+  </Target>
+
+  <Target Name="CheckTestRuns"
+          BeforeTargets="AfterTest"
+          Condition="$(FailOnTestFailure)"
+          Outputs="%(HelixTargetQueue.Identity)">
+    <CheckAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)"/>
   </Target>
 </Project>

@@ -8,10 +8,11 @@ $ErrorActionPreference = "Stop"
 . $PSScriptRoot\common\tools.ps1
 $LocalNugetConfigSourceName = "arcade-local"
 
-function Check-ExitCode ($exitCode)
+function CheckExitCode ([string]$stage)
 {
-  if ($exitCode -ne 0) {
-    Write-Host "Arcade self-build failed"
+  $exitCode = $LASTEXITCODE
+  if ($exitCode  -ne 0) {
+    Write-Host "Something failed in stage: '$stage'. Check for errors above. Exiting now..."
     ExitWithExitCode $exitCode
   }
 }
@@ -37,9 +38,9 @@ function AddSourceToNugetConfig([string]$nugetConfigPath, [string]$source)
     $valueAttribute = $nugetConfig.CreateAttribute("value")
     $valueAttribute.Value = $source
     $newSource = $nugetConfig.CreateElement("add")
-    $newSource.Attributes.Append($keyAttribute)
-    $newSource.Attributes.Append($valueAttribute)
-    $packageSources.AppendChild($newSource)
+    $newSource.Attributes.Append($keyAttribute) | Out-Null
+    $newSource.Attributes.Append($valueAttribute) | Out-Null
+    $packageSources.AppendChild($newSource) | Out-Null
     $nugetConfig.Save($nugetConfigPath)
 }
 
@@ -64,33 +65,37 @@ try {
   $packagesSource = Join-Path (Join-Path (Join-Path $validateSdkDir "packages") $configuration) "NonShipping"
   $nugetConfigPath = Join-Path $RepoRoot "NuGet.config"
   
-  . .\common\build.ps1 -ci -restore -build -pack -configuration $configuration
-  
+  & .\common\cibuild.cmd -configuration $configuration @Args
+  CheckExitCode "Local build"
+
   # This is a temporary solution. When https://github.com/dotnet/arcade/issues/1293 is closed
   # we'll be able to pass a container name to build.ps1 which will put the outputs in the
   # artifacts-<container-name> folder.
   MoveArtifactsToValidateSdkFolder $ArtifactsDir $validateSdkFolderName $RepoRoot
-  
+  CheckExitCode "Move outputs to validatesdk folder"
+
   Write-Host "STEP 2: Build using the local packages"
   
   AddSourceToNugetConfig $nugetConfigPath $packagesSource
-   
+  CheckExitCode "Adding source to NuGet.config"
+
   Write-Host "Updating Dependencies using Darc..."
 
   . .\common\darc-init.ps1
-  
+  CheckExitCode "Running darc-init"
+
   $DarcExe = "$env:USERPROFILE\.dotnet\tools"
   $DarcExe = Resolve-Path $DarcExe
 
   & $DarcExe\darc.exe update-dependencies --packages-folder $packagesSource --password $barToken --github-pat $gitHubPat --channel ".NET Tools - Latest"
-  
-  Check-ExitCode $lastExitCode
+  CheckExitCode "Updating dependencies"
   StopDotnetIfRunning
   
   Write-Host "Building with updated dependencies"
-  # Clear this global variable so that we don't use the cached toolset that we restored in Step 1.
-  Remove-Variable _ToolsetBuildProj -Scope Global
-  & .\common\build.ps1 -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource
+
+  & .\common\cibuild.cmd -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource /p:DotNetPublishBlobFeedUrl=https://dotnetfeed.blob.core.windows.net/dotnet-core-test/index.json
+  CheckExitCode "Official build"
+  Write-Host "Finished building Arcade SDK with validation enabled!"
 }
 catch {
   Write-Host $_
@@ -102,5 +107,4 @@ finally {
   Write-Host "Cleaning up workspace..."
   StopDotnetIfRunning
   Pop-Location
-  Write-Host "Finished building Arcade SDK with validation enabled!"
 }

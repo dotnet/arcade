@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                     }
 
                     Log.LogMessage(LogImportance.Low, $"Chose configuration {bestConfiguration}");
-                    var bestConfigurationItem = new TaskItem(bestConfiguration.ToString(), (IDictionary)bestConfiguration.GetProperties());
+                    var bestConfigurationItem = new TaskItem(bestConfiguration.ToFullString(), (IDictionary)bestConfiguration.GetProperties());
 
                     // preserve metadata on the configuration that selected this
                     configurationItem.CopyMetadataTo(bestConfigurationItem);

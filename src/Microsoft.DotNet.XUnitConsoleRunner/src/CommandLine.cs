@@ -109,13 +109,105 @@ namespace Xunit.ConsoleClient
         public static CommandLine Parse(params string[] args)
             => new CommandLine(args);
 
+        protected void ParseRspFile(string path)
+        {
+            // derived from https://github.com/natemcmaster/CommandLineUtils/blob/f498cc7383b27730fd24486510573ab61ccab9d6/src/CommandLineUtils/Internal/ResponseFileParser.cs
+            var rspLines = File.ReadAllLines(path);
+            var args = new List<string>(capacity: rspLines.Length);
+            var sb = new System.Text.StringBuilder();
+            foreach (var line in rspLines)
+            {
+                if (line.Length == 0) continue;
+                if (line[0] == '#') continue;
+
+                var breakOn = default(char?);
+
+                var shouldCreateNewArg = false;
+
+                for (var j = 0; j < line.Length; j++)
+                {
+                    var ch = line[j];
+                    if (ch == '\\')
+                    {
+                        j++;
+                        if (j >= line.Length)
+                        {
+                            // the backslash ended the document
+                            sb.Append('\\');
+                            break;
+                        }
+
+                        ch = line[j];
+
+                        if (ch != '"' && ch != '\'')
+                        {
+                            // not a recognized special character, so add the backlash
+                            sb.Append('\\');
+                        }
+
+                        sb.Append(ch);
+                        continue;
+                    }
+
+                    if (breakOn == ch)
+                    {
+                        shouldCreateNewArg = true;
+                        breakOn = null;
+                        continue;
+                    }
+
+                    if (breakOn.HasValue)
+                    {
+                        sb.Append(ch);
+                        continue;
+                    }
+
+                    if (char.IsWhiteSpace(ch))
+                    {
+                        if (sb.Length > 0 || shouldCreateNewArg)
+                        {
+                            shouldCreateNewArg = false;
+                            args.Add(sb.ToString());
+                            sb.Clear();
+                        }
+                    }
+                    else if (ch == '"')
+                    {
+                        // the loop will search for the next unescaped "
+                        breakOn = '"';
+                    }
+                    else if (ch == '\'')
+                    {
+                        // the loop will search for the next unescaped '
+                        breakOn = '\'';
+                    }
+                    else
+                    {
+                        sb.Append(ch);
+                    }
+                }
+
+                if (sb.Length > 0 || breakOn.HasValue || shouldCreateNewArg)
+                {
+                    // if we hit the end of the line, regardless of quoting, append everything as an arg
+                    args.Add(sb.ToString());
+                    sb.Clear();
+                }
+            }
+            
+            foreach (var arg in args.Reverse<string>())
+            {
+                arguments.Push(arg);
+            }
+        }
+
         protected XunitProject Parse(Predicate<string> fileExists)
         {
             var assemblies = new List<Tuple<string, string>>();
 
             while (arguments.Count > 0)
             {
-                if (arguments.Peek().StartsWith("-", StringComparison.Ordinal))
+                if (arguments.Peek().StartsWith("-", StringComparison.Ordinal) || arguments.Peek().StartsWith("@", StringComparison.Ordinal))
                     break;
 
                 var assemblyFile = arguments.Pop();
@@ -146,8 +238,14 @@ namespace Xunit.ConsoleClient
                 var option = PopOption(arguments);
                 var optionName = option.Key.ToLowerInvariant();
 
-                if (!optionName.StartsWith("-", StringComparison.Ordinal))
+                if (!optionName.StartsWith("-", StringComparison.Ordinal) && !optionName.StartsWith("@", StringComparison.Ordinal))
                     throw new ArgumentException($"unknown command line option: {option.Key}");
+
+                if (optionName.StartsWith("@", StringComparison.Ordinal))
+                {
+                    ParseRspFile(optionName.Substring(1));
+                    continue;
+                }
 
                 optionName = optionName.Substring(1);
 
@@ -374,7 +472,9 @@ namespace Xunit.ConsoleClient
                         if (option.Value == null)
                             throw new ArgumentException($"missing filename for {option.Key}");
 
+#if !WINDOWS_UWP
                         EnsurePathExists(option.Value);
+#endif
 
                         project.Output.Add(optionName, option.Value);
                     }
@@ -395,12 +495,17 @@ namespace Xunit.ConsoleClient
             var option = arguments.Pop();
             string value = null;
 
-            if (arguments.Count > 0 && !arguments.Peek().StartsWith("-", StringComparison.Ordinal))
+            if (arguments.Count > 0 && 
+                !arguments.Peek().StartsWith("-", StringComparison.Ordinal) &&
+                !arguments.Peek().StartsWith("@", StringComparison.Ordinal))
+            {
                 value = arguments.Pop();
+            }
 
             return new KeyValuePair<string, string>(option, value);
         }
 
+#if !WINDOWS_UWP
         static void EnsurePathExists(string path)
         {
             var directory = Path.GetDirectoryName(path);
@@ -410,5 +515,6 @@ namespace Xunit.ConsoleClient
 
             Directory.CreateDirectory(directory);
         }
+#endif
     }
 }

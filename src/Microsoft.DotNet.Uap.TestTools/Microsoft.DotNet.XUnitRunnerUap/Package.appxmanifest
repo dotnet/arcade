@@ -37,7 +37,7 @@
       EntryPoint="Microsoft.DotNet.XUnitRunnerUap.Program"
       desktop4:SupportsMultipleInstances="true" 
       desktop4:Subsystem="console" 
-      iot2:SupportsMultipleInstances="true" 
+      iot2:SupportsMultipleInstances="true"
       iot2:Subsystem="console">
 
       <uap:VisualElements
@@ -54,23 +54,6 @@
       </uap:VisualElements>
 
       <Extensions>
-        <uap:Extension Category="windows.fileTypeAssociation">
-          <uap:FileTypeAssociation Name="xml">
-            <uap:DisplayName>xml</uap:DisplayName>
-            <uap:SupportedFileTypes>
-              <uap:FileType>.xml</uap:FileType>
-            </uap:SupportedFileTypes>
-          </uap:FileTypeAssociation>
-        </uap:Extension>
-        <uap:Extension Category="windows.fileTypeAssociation">
-          <uap:FileTypeAssociation Name="logs">
-            <uap:DisplayName>Log file</uap:DisplayName>
-            <uap:SupportedFileTypes>
-              <uap:FileType>.txt</uap:FileType>
-            </uap:SupportedFileTypes>
-          </uap:FileTypeAssociation>
-        </uap:Extension>
-
         <uap5:Extension 
           Category="windows.appExecutionAlias" 
 	        Executable="Microsoft.DotNet.XUnitRunnerUap.exe" 

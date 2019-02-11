@@ -8,14 +8,17 @@ using System.Collections.Immutable;
 using System.IO;
 using System.IO.Packaging;
 using System.Linq;
+using Microsoft.Build.Framework;
 using TestUtilities;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.SignTool.Tests
 {
     public class SignToolTests : IDisposable
     {
         private readonly string _tmpDir;
+        private readonly ITestOutputHelper _output;
 
         // Default extension based signing information
         private static readonly Dictionary<string, SignInfo> s_fileExtensionSignInfo = new Dictionary<string, SignInfo>()
@@ -125,10 +128,11 @@ namespace Microsoft.DotNet.SignTool.Tests
             }
         }
 
-        public SignToolTests()
+        public SignToolTests(ITestOutputHelper output)
         {
             _tmpDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(_tmpDir);
+            _output = output;
         }
 
         private string GetResourcePath(string name, string relativePath = null)
@@ -194,7 +198,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
             var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput, new string[] { });
 
-            util.Go(false);
+            util.Go(doStrongNameCheck: true);
 
             Assert.Same(ByteSequenceComparer.Instance, signingInput.ZipDataMap.KeyComparer);
 
@@ -250,13 +254,34 @@ namespace Microsoft.DotNet.SignTool.Tests
         {
             var task = new SignToolTask {
                 BuildEngine = new FakeBuildEngine(),
-                ItemsToSign = new string[0],
+                ItemsToSign = Array.Empty<string>(),
+                StrongNameSignInfo = Array.Empty<ITaskItem>(),
                 LogDir = "LogDir",
                 TempDir = "TempDir",
                 DryRun = false,
                 TestSign = true,
                 MSBuildPath = CreateTestResource("msbuild.fake"),
                 SNBinaryPath = CreateTestResource("fake.sn.exe")
+            };
+
+            Assert.True(task.Execute());
+        }
+
+        [Fact]
+        public void SignWhenSnExeIsNotRequired()
+        {
+            var task = new SignToolTask
+            {
+                BuildEngine = new FakeBuildEngine(_output),
+                ItemsToSign = Array.Empty<string>(),
+                StrongNameSignInfo = Array.Empty<ITaskItem>(),
+                LogDir = "LogDir",
+                TempDir = "TempDir",
+                DryRun = false,
+                TestSign = true,
+                MSBuildPath = CreateTestResource("msbuild.fake"),
+                DoStrongNameCheck = false,
+                SNBinaryPath = null,
             };
 
             Assert.True(task.Execute());
@@ -323,6 +348,44 @@ namespace Microsoft.DotNet.SignTool.Tests
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'"
             });
         }
+
+        [Fact]
+        public void OnlyAuthenticodeSignByPKT()
+        {
+            var fileToTest = "ProjectOne.dll";
+            var pktToTest = "581d91ccdfc4ea9c";
+            var certificateToTest = "3PartySHA2";
+
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath(fileToTest)
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            {
+                { pktToTest, new SignInfo(certificateToTest) }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, SignInfo>(), new[]
+            {
+                $"File '{fileToTest}' TargetFramework='.NETStandard,Version=v2.0' Certificate='{certificateToTest}'",
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, SignInfo>(), new[]
+            {
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, fileToTest)}"">
+  <Authenticode>{certificateToTest}</Authenticode>
+</FilesToSign>
+"
+            });
+        }
+
 
         [Fact]
         public void OnlyContainerAndOverridingByPKT()
@@ -430,18 +493,20 @@ namespace Microsoft.DotNet.SignTool.Tests
         }
 
         [Fact]
-        public void CrossGenNative()
+        public void CrossGenerated()
         {
             // List of files to be considered for signing
             var itemsToSign = new[]
             {
-                GetResourcePath("CoreLibCrossARM.dll")
+                GetResourcePath("CoreLibCrossARM.dll"),
+                GetResourcePath("AspNetCoreCrossLib.dll")
             };
 
             // Default signing information
             var strongNameSignInfo = new Dictionary<string, SignInfo>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+                { "7cec85d7bea7798e", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") },
+                { "adb9793829ddae60", new SignInfo("Microsoft400", "AspNetCore") }
             };
 
             // Overriding information
@@ -450,19 +515,24 @@ namespace Microsoft.DotNet.SignTool.Tests
                 { new ExplicitCertificateKey("EmptyPKT.dll"), "3PartySHA2" }
             };
 
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, SignInfo>(), new[]
             {
-                "File 'CoreLibCrossARM.dll' Certificate='Microsoft400'",
+                "File 'CoreLibCrossARM.dll' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'AspNetCoreCrossLib.dll' TargetFramework='.NETCoreApp,Version=v3.0' Certificate='Microsoft400' StrongName='AspNetCore'",
             });
 
-            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, SignInfo>(), new[]
             {
 $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "AspNetCoreCrossLib.dll")}"">
   <Authenticode>Microsoft400</Authenticode>
+  <StrongName>AspNetCore</StrongName>
 </FilesToSign>",
             });
         }
-
 
         [Fact]
         public void DefaultCertificateForAssemblyWithoutStrongName()

@@ -182,7 +182,12 @@ namespace Microsoft.DotNet.SignTool
                     return;
                 }
 
-                if (!isValidSNPath && StrongNameSignInfo?.Where(ti => ti?.ItemSpec?.EndsWith(".snk") ?? false) != null)
+                var strongNameLocally = StrongNameSignInfo != null 
+                    && StrongNameSignInfo
+                        .Where(ti => !string.IsNullOrEmpty(ti.ItemSpec) && ti.ItemSpec.EndsWith(".snk", StringComparison.OrdinalIgnoreCase))
+                        .Any();
+
+                if (!isValidSNPath && strongNameLocally)
                 {
                     Log.LogError($"An incorrect full path to 'sn.exe' was specified: {SNBinaryPath}");
                     return;
@@ -361,7 +366,16 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    var signInfo = new SignInfo(certificateName, strongName);
+                    if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(certificateName, StringComparison.OrdinalIgnoreCase) &&
+                        SignToolConstants.IgnoreFileCertificateSentinel.Equals(strongName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Log.LogWarning($"CertificateName & ItemSpec metadata of {nameof(StrongNameSignInfo)} shouldn't be both '{SignToolConstants.IgnoreFileCertificateSentinel}'");
+                        continue;
+                    }
+
+                    var signInfo = SignToolConstants.IgnoreFileCertificateSentinel.Equals(strongName, StringComparison.OrdinalIgnoreCase)
+                        ? new SignInfo(certificateName)
+                        : new SignInfo(certificateName, strongName);
 
                     if (map.ContainsKey(publicKeyToken))
                     {

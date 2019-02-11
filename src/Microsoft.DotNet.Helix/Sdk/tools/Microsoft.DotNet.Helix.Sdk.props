@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
 
   <PropertyGroup Condition="'$(MicrosoftDotNetHelixSdkTasksAssembly)' == ''">
@@ -12,9 +8,11 @@
   </PropertyGroup>
 
   <UsingTask TaskName="SendHelixJob" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
+  <UsingTask TaskName="WaitForHelixJobCompletion" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
+  <UsingTask TaskName="CheckHelixJobStatus" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
   <UsingTask TaskName="FindDotNetCliPackage" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
-  <UsingTask TaskName="HelixWait" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
   <UsingTask TaskName="CreateXUnitWorkItems" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
   <UsingTask TaskName="StartAzurePipelinesTestRun" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
   <UsingTask TaskName="StopAzurePipelinesTestRun" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
+  <UsingTask TaskName="CheckAzurePipelinesTestRun" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
 </Project>

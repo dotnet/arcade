@@ -7,7 +7,6 @@
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
     <UsingToolNetFrameworkReferenceAssemblies>true</UsingToolNetFrameworkReferenceAssemblies>
-    <MicrosoftNetFrameworkReferenceAssembliesVersion>1.0.0-alpha-004</MicrosoftNetFrameworkReferenceAssembliesVersion>
     <!-- Libs -->
     <CommandLineParserVersion>2.2.1</CommandLineParserVersion>
     <CredentialManagementVersion>1.0.2</CredentialManagementVersion>
@@ -25,6 +24,7 @@
     <MicrosoftDotNetVersionToolsVersion>2.2.0-preview1-02815-01</MicrosoftDotNetVersionToolsVersion>
     <MicrosoftIdentityModelClientsActiveDirectoryVersion>3.19.8</MicrosoftIdentityModelClientsActiveDirectoryVersion>
     <MicrosoftRestClientRuntimeVersion>2.3.13</MicrosoftRestClientRuntimeVersion>
+    <MicrosoftExtensionsDependencyModelVersion>2.1.0</MicrosoftExtensionsDependencyModelVersion>
     <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
     <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
     <MicrosoftNetTestSdkVersion>15.7.2</MicrosoftNetTestSdkVersion>
@@ -35,7 +35,7 @@
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <NuGetVersion>4.4.0</NuGetVersion>
     <OctokitVersion>0.30.0</OctokitVersion>
-    <DotNetSleetLibVersion>2.2.73</DotNetSleetLibVersion>
+    <DotNetSleetLibVersion>2.2.94</DotNetSleetLibVersion>
     <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>
     <SystemCollectionsImmutableVersion>1.3.1</SystemCollectionsImmutableVersion>
     <SystemIOCompressionVersion>4.3.0</SystemIOCompressionVersion>
@@ -49,9 +49,8 @@
     <XUnitVersion>2.4.1-pre.build.4059</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <XUnitVSRunnerVersion>2.4.1-pre.build.4059</XUnitVSRunnerVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.19069.2</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetMaestroTasksVersion>1.0.0-beta.19060.8</MicrosoftDotNetMaestroTasksVersion>
-    <MicrosoftDotNetSignToolVersion>1.0.0-beta.19069.2</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.19107.1</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignToolVersion>1.0.0-beta.19107.1</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
@@ -60,6 +59,7 @@
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
     <MicrosoftDiaSymReaderConverterVersion>1.1.0-beta1-62810-01</MicrosoftDiaSymReaderConverterVersion>
     <MicrosoftDiaSymReaderNativeVersion>1.7.0</MicrosoftDiaSymReaderNativeVersion>
+    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.19104.1</MicrosoftDotNetMaestroClientVersion>
   </PropertyGroup>
   <PropertyGroup>
     <RestoreSources>

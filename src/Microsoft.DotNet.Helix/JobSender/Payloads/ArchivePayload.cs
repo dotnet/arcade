@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
-        public async Task<string> UploadAsync(IBlobContainer payloadContainer)
+        public async Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log)
         {
             using (var stream = File.OpenRead(Archive.FullName))
             {

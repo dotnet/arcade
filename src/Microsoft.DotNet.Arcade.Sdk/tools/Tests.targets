@@ -2,10 +2,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
-  <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
     <AutoGenerateBindingRedirects Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">true</AutoGenerateBindingRedirects>
 
@@ -42,9 +38,6 @@
       <_TestArchitecture>%(_TestArchitectureItems.Identity)</_TestArchitecture>
       <_ResultFileNameNoExt>$(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture)</_ResultFileNameNoExt>
     </PropertyGroup>
-
-    <Error Text="Architecture specified in TestArchitectures is not supported: '$(_TestArchitecture)'" File="XUnit"
-           Condition="'$(_TestArchitecture)' != 'x64' and ('$(_TestArchitecture)' != 'x86' or '$(TargetFrameworkIdentifier)' == '.NETCoreApp')"/>
 
     <ItemGroup>
       <TestToRun Include="$(TargetPath)">

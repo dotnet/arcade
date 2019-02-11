@@ -135,11 +135,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     var packagePaths = packageItems.Select(i => i.ItemSpec);
 
-                    await blobFeedAction.PushToFeedAsync(packagePaths, pushOptions);
+                    if(!blobFeedAction.PushToFeedAsync(packagePaths, pushOptions).Result)
+                    {
+                        return !Log.HasLoggedErrors;
+                    }
+
                     await blobFeedAction.PublishToFlatContainerAsync(symbolItems, 
                         MaxClients, 
                         UploadTimeoutInMinutes, 
                         pushOptions);
+                    if (Log.HasLoggedErrors)
+                    {
+                        return !Log.HasLoggedErrors;
+                    }
 
                     packageArtifacts = ConcatPackageArtifacts(packageArtifacts, packageItems);
                     blobArtifacts = ConcatBlobArtifacts(blobArtifacts, symbolItems);
@@ -168,6 +176,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IEnumerable<ITaskItem> items)
         {
             return artifacts.Concat(items
+                .Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase))
                 .Select(BuildManifestUtil.CreatePackageArtifactModel));
         }
 
@@ -176,6 +185,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IEnumerable<ITaskItem> items)
         {
             return artifacts.Concat(items
+                .Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase))
                 .Select(BuildManifestUtil.CreateBlobArtifactModel)
                 .Where(blob => blob != null));
         }

@@ -4,12 +4,15 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
 using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -99,6 +102,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         ///     NOTE: only a single Payload parameter should be used; they are not to be used in combination
         ///     PayloadDirectory - A directory that will be zipped up and sent as the Work Item payload
         ///     PayloadArchive - An archive that will be sent up as the Work Item payload
+        ///     PayloadUri - An uri of the archive that will be sent up as the Work Item payload
         ///     Timeout - A <see cref="System.TimeSpan"/> string that specifies that Work Item execution timeout
         ///     PreCommands
         ///       A collection of commands that will run for this work item before the 'Command' Runs
@@ -202,6 +206,10 @@ namespace Microsoft.DotNet.Helix.Sdk
                 ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg));
                 JobCorrelationId = job.CorrelationId;
             }
+
+            string mcUri = await GetMissionControlResultUri();
+
+            Log.LogMessage(MessageImportance.High, $"Results will be available from {mcUri}");
         }
 
         private IJobDefinition AddProperty(IJobDefinition def, ITaskItem property)
@@ -259,8 +267,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string payloadDirectory = workItem.GetMetadata("PayloadDirectory");
             string payloadArchive = workItem.GetMetadata("PayloadArchive");
+            string payloadUri = workItem.GetMetadata("PayloadUri");
             IWorkItemDefinition wi;
-            if (!string.IsNullOrEmpty(payloadDirectory))
+            if (!string.IsNullOrEmpty(payloadUri))
+            {
+                wi = wiWithPayload.WithPayloadUri(new Uri(payloadUri));
+                Log.LogMessage(MessageImportance.Low, $"  Uri Payload: '{payloadUri}'");
+            }
+            else if (!string.IsNullOrEmpty(payloadDirectory))
             {
                 wi = wiWithPayload.WithDirectoryPayload(payloadDirectory);
                 Log.LogMessage(MessageImportance.Low, $"  Directory Payload: '{payloadDirectory}'");
@@ -318,6 +332,12 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             yield return workItemCommand;
 
+            string exitCodeVariableName = "_commandExitCode";
+
+            // Capture helix command exit code, in case work item command (i.e xunit call) exited with a failure,
+            // this way we can exit the process honoring that exit code, needed for retry.
+            yield return IsPosixShell ? $"{exitCodeVariableName}=$?" : $"set {exitCodeVariableName}=%ERRORLEVEL%";
+
             if (workItem.TryGetMetadata("PostCommands", out string workItemPostCommandsString))
             {
                 foreach (string command in SplitCommands(workItemPostCommandsString))
@@ -333,6 +353,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                     yield return command;
                 }
             }
+
+            // Exit with the captured exit code from workitem command.
+            yield return IsPosixShell ? $"exit ${exitCodeVariableName}" : $"EXIT /b %{exitCodeVariableName}%";
         }
 
         private IEnumerable<string> SplitCommands(string value)
@@ -408,6 +431,46 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             Log.LogError($"Correlation Payload '{path}' not found.");
             return def;
+        }
+
+        private async Task<string> GetMissionControlResultUri()
+        {
+            var creator = Creator;
+            if (string.IsNullOrEmpty(creator))
+            {
+                using (var client = new HttpClient
+                {
+                    DefaultRequestHeaders =
+                    {
+                        UserAgent = { Helpers.UserAgentHeaderValue },
+                    },
+                })
+                {
+                    try
+                    {
+                        string githubJson =
+                            await client.GetStringAsync($"https://api.github.com/user?access_token={AccessToken}");
+                        var data = JObject.Parse(githubJson);
+                        if (data["login"] == null)
+                        {
+                            throw new Exception("Github user has no login");
+                        }
+
+                        creator = data["login"].ToString();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogMessage(MessageImportance.High, "Failed to retrieve username from GitHub -- {0}", ex.ToString());
+                        return $"Mission Control (generation of MC link failed -- {ex.Message})";
+                    }
+                }
+            }
+
+            var build = UrlEncoder.Default.Encode(Build).Replace('%', '~');
+            var type = UrlEncoder.Default.Encode(Type).Replace('%', '~');
+            var source = UrlEncoder.Default.Encode(Source).Replace('%', '~');
+            var encodedCreator = UrlEncoder.Default.Encode(creator).Replace('%', '~');
+            return $"https://mc.dot.net/#/user/{encodedCreator}/{source}/{type}/{build}";
         }
     }
 }

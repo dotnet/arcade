@@ -2,10 +2,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
-  <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
   <!-- Workaround for https://github.com/Microsoft/msbuild/issues/1310 -->
   <Target Name="ForceGenerationOfBindingRedirects"
           AfterTargets="ResolveAssemblyReferences"
@@ -48,8 +44,11 @@
     <TargetFrameworkMonikerAssemblyAttributesFileClean>true</TargetFrameworkMonikerAssemblyAttributesFileClean>
   </PropertyGroup>
 
-  <!-- Portable PDBs are not included by default -->
-  <PropertyGroup Condition="'$(DebugType)' == 'portable'">
+  <!-- 
+     Portable PDBs are not included in .nupkg by default. Include them unless the project produces symbol packages.
+     Remove this once we migrate to .snupkg. See https://github.com/dotnet/arcade/issues/1959.
+   -->
+  <PropertyGroup Condition="'$(DebugType)' == 'portable' and '$(IncludeSymbols)' != 'true'">
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
 

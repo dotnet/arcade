@@ -21,10 +21,6 @@
   -->
 
   <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <!-- 
       Initialize VsixVersion. The project may specify 3-part prefix if it's different from VersionPrefix.
     -->
@@ -45,6 +41,12 @@
     <TargetVsixContainer Condition="'$(TargetVsixContainer)' == ''">$(_TargetVsixContainerDir)$(TargetVsixContainerName)</TargetVsixContainer>
 
     <DeployExtension Condition="'$(DeployProjectOutput)' == 'true'">true</DeployExtension>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsVsixProject)' == 'true' and '$(VSSDKTargetPlatformRegRootSuffix)' != ''">
+    <StartAction>Program</StartAction>
+    <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
+    <StartArguments>/rootsuffix $(VSSDKTargetPlatformRegRootSuffix) /log</StartArguments>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(VisualStudioInsertionComponent)' != ''">
