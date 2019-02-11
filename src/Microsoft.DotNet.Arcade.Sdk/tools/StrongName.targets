@@ -15,10 +15,6 @@
       AssemblyOriginatorKeyFile
   -->
 
-  <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(SignAssembly)' != 'false'">
     <DelaySign>false</DelaySign>
     <PublicSign>true</PublicSign>

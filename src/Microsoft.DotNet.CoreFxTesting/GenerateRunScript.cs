@@ -62,9 +62,13 @@ namespace Microsoft.DotNet.Build.Tasks
             string lineFeed = isUnix ? "\n" : "\r\n";
 
             var runCommandsBuilder = new StringBuilder();
-            foreach (string runCommand in RunCommands)
+            for (int i = 0; i < RunCommands.Length; i++)
             {
-                runCommandsBuilder.Append($"{runCommand}{lineFeed}");
+                runCommandsBuilder.Append(RunCommands[i]);
+                if (i < RunCommands.Length - 1)
+                {
+                    runCommandsBuilder.Append(lineFeed);
+                }
             }
             templateContent = templateContent.Replace("[[RunCommands]]", runCommandsBuilder.ToString());
 
