@@ -4,6 +4,10 @@ trigger:
     include:
     - master
     
+pr:
+- master
+- templates
+    
 variables:
   # Cannot use key:value syntax in root defined variables
   - name: _TeamName
