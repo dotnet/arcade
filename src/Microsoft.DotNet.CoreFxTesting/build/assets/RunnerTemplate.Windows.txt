@@ -13,10 +13,14 @@ if %RUNTIME_PATH:~-1%==\ set RUNTIME_PATH=%RUNTIME_PATH:~0,-1%
 set EXECUTION_DIR=%~dp0
 
 :: Point to the locally installed SDK.
+if not "%~2" == "" (
 set DOTNET_ROOT=%~2
+)
 
 :: Global tools path
+if not "%~3" == "" (
 set GLOBAL_TOOLS_DIR=%~3
+)
 
 :: Don't use a globally installed SDK.
 set DOTNET_MULTILEVEL_LOOKUP=0

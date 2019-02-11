@@ -4,10 +4,14 @@ export RUNTIME_PATH=${1%/}
 export EXECUTION_DIR=$(dirname "$0")
 
 :: Point to the locally installed SDK.
-export DOTNET_ROOT=$2
+if [ ! -z "$2" ]; then
+  export DOTNET_ROOT=$2
+fi
 
 :: Global tools path
-export GLOBAL_TOOLS_DIR=$3
+if [ ! -z "$3" ]; then
+  export GLOBAL_TOOLS_DIR=$3
+fi
 
 :: Don't use a globally installed SDK.
 export DOTNET_MULTILEVEL_LOOKUP=0
