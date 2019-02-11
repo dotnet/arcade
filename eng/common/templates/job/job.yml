@@ -113,7 +113,8 @@ jobs:
 
   steps:
   - ${{ if eq(parameters.enableTelemetry, 'true') }}:
-    - task: dotnet-dnceng.dnceng-build-release-tasks.custom-build-send-start-telemetry-task.sendStartTelemetry@0
+    # Telemetry tasks are built from https://github.com/dotnet/arcade-extensions
+    - task: sendStartTelemetry@0
       displayName: 'Send Helix Start Telemetry'
       inputs:
         helixRepo: ${{ parameters.helixRepo }}
@@ -148,7 +149,8 @@ jobs:
           TeamName: $(_TeamName)
 
   - ${{ if eq(parameters.enableTelemetry, 'true') }}:
-    - task: dotnet-dnceng.dnceng-build-release-tasks.custom-build-send-end-telemetry-task.sendEndTelemetry@0
+    # Telemetry tasks are built from https://github.com/dotnet/arcade-extensions
+    - task: sendEndTelemetry@0
       displayName: 'Send Helix End Telemetry'
       continueOnError: ${{ parameters.continueOnError }}
       condition: always()
