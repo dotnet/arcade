@@ -28,7 +28,7 @@ This document is **not** intended to
 
 Here are the current templates we are providing in Azure DevOps are good candidates for moving to tasks.
 
-- [helix-publish](https://github.com/dotnet/arcade/blob/master/eng/common/templates/steps/helix-publish.yml) - used to send jobs to Helix.
+- [send-to-helix](https://github.com/dotnet/arcade/blob/master/eng/common/templates/steps/send-to-helix.yml) - used to send jobs to Helix.
 
 - [telemetry-start](https://github.com/dotnet/arcade/blob/master/eng/common/templates/steps/telemetry-start.yml) - send Helix telemetry start event
 
