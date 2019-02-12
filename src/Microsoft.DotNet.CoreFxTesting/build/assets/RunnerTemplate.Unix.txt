@@ -4,12 +4,12 @@ export RUNTIME_PATH=${1%/}
 export EXECUTION_DIR=$(dirname "$0")
 
 :: Point to the locally installed SDK.
-if [ ! -z "$2" ]; then
+if [[ $2 ]]; then
   export DOTNET_ROOT=$2
 fi
 
 :: Global tools path
-if [ ! -z "$3" ]; then
+if [[ $3 ]]; then
   export GLOBAL_TOOLS_DIR=$3
 fi
 
