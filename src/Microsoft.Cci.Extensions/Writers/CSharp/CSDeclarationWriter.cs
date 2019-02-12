@@ -272,14 +272,13 @@ namespace Microsoft.Cci.Writers.CSharp
                             _writer.WriteSpace();
                         }
 
+                        WriteTypeNameInner(parameter);
+
                         if (names?[i] != null)
                         {
-                            _writer.WriteIdentifier(names[i]);
-                            _writer.WriteSymbol(":");
                             _writer.WriteSpace();
+                            _writer.WriteIdentifier(names[i]);
                         }
-
-                        WriteTypeNameInner(parameter);
 
                         i++;
                     }
