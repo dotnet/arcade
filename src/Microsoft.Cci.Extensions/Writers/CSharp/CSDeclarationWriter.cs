@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
 using Microsoft.Cci.Extensions;
 using Microsoft.Cci.Extensions.CSharp;
 using Microsoft.Cci.Filters;
@@ -233,7 +232,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 return;
             }
 
-            NameFormattingOptions namingOptions = NameFormattingOptions.TypeParameters;
+            NameFormattingOptions namingOptions = NameFormattingOptions.TypeParameters | NameFormattingOptions.ContractNullable;
 
             if (useTypeKeywords)
                 namingOptions |= NameFormattingOptions.UseTypeKeywords;
@@ -258,10 +257,8 @@ namespace Microsoft.Cci.Writers.CSharp
             }
 
             var definition = type.GetDefinitionOrNull();
-            switch (definition)
+            if (definition is IGenericTypeInstance genericType && genericType.IsValueTuple())
             {
-                case IGenericTypeInstance genericType when genericType.IsValueTuple():
-                {
                     string[] names = attributes.GetValueTupleNames();
 
                     _writer.WriteSymbol("(");
@@ -288,19 +285,10 @@ namespace Microsoft.Cci.Writers.CSharp
                     }
 
                     _writer.WriteSymbol(")");
-                    break;
-                }
-                case IGenericTypeInstance genericType when genericType.IsNullable():
-                {
-                    WriteTypeNameInner(genericType.GenericArguments.Single());
-                    _writer.WriteSymbol("?");
-                    break;
-                }
-                default:
-                {
-                    WriteTypeNameInner(type);
-                    break;
-                }
+            }
+            else
+            {
+                WriteTypeNameInner(type);
             }
 
             if (!noSpace) WriteSpace();

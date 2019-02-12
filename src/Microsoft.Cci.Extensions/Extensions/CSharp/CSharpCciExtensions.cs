@@ -593,11 +593,6 @@ namespace Microsoft.Cci.Extensions.CSharp
             return genericType.GenericType.FullName().StartsWith("System.ValueTuple");
         }
 
-        public static bool IsNullable(this IGenericTypeInstance genericType)
-        {
-            return genericType.GenericType.FullName().StartsWith("System.Nullable");
-        }
-
         public static bool IsException(this ITypeDefinition type)
         {
             foreach (var baseTypeRef in type.GetBaseTypes())
