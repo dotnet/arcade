@@ -562,15 +562,25 @@ The Arcade SDK includes targets that enable IBC optimization data to be embedded
 
 To enable this functionality set `UsingToolIbcOptimization` to `true` in `/eng/Versions.props`.
 
-Typically, not all projects in a repository need IBC data embedded. Set `ApplyPartialNgenOptimization` is `true` in a project to indicate that the assemblies produced by the project should get IBC data embedded.
+Typically, not all projects in a repository need IBC data embedded. Set `ApplyPartialNgenOptimization` 
+to `true` in a project to indicate that the assemblies produced by the project should get IBC data embedded.
 
-Use `EnablePartialNgenOptimization` property to control when IBC data embedding is gonna be performed. Unless specified otherwise, `EnablePartialNgenOptimization` is set to `true` if `Configuration` is `Release` and `OfficialBuild` is `true`.
+Use `EnablePartialNgenOptimization` property to control when IBC data embedding is gonna be performed. 
+Unless specified otherwise, `EnablePartialNgenOptimization` is set to `true` if `Configuration` is `Release` 
+and `OfficialBuild` is `true`.
 
-The IBC data embedding is performed by an internal tool `ibcmerge.exe` provided by `Microsoft.Dotnet.IbcMerge` package from an internal Azure DevOps feed. The repository build definition thus must invoke Azure DevOps task that restores internal tools in order for IBC data embedding to work. See [Restoring internal tools](#restoring-internal-tools).
+The IBC data embedding is performed by an internal tool `ibcmerge.exe` provided by `Microsoft.Dotnet.IbcMerge` 
+package from an internal Azure DevOps feed. The repository build definition thus must invoke Azure DevOps task 
+that restores internal tools in order for IBC data embedding to work. See [Restoring internal tools](#restoring-internal-tools).
 
-Unless the repository is using an IBC data acquision mechanism built into the Arcade SDK (such as [Visual Studio IBC Data Acquisition](#visual-studio-ibc-data-acquisition)) the repository must set the value of `IbcOptimizationDataDir` property and its build must ensure that IBC data are present at location specified this property before the `Build` target is executed. It is recommended that such logic is implemented in `/eng/Tools.props` via a target chained after the `Restore` target.
+Unless the repository is using an IBC data acquision mechanism built into the Arcade SDK (such as
+[Visual Studio IBC Data Acquisition](#visual-studio-ibc-data-acquisition)) the repository must set the value of
+`IbcOptimizationDataDir` property and its build must ensure that IBC data are present at the location specified
+by this property before the `Build` target is executed. It is recommended that such logic is implemented in
+`/eng/Tools.props` via a target chained after the `Restore` target.
 
-`IbcOptimizationDataDir` specifies the directory that contains optimization data (must end with a directory separator). The optimization data directory is expected to have the following structure:
+`IbcOptimizationDataDir` specifies the directory that contains optimization data (must end with a directory separator). 
+The optimization data directory is expected to have the following structure:
 ```
 $(IbcOptimizationDataDir)path1\{AssemblyFileName1}\{AssemblyFileName1}
 $(IbcOptimizationDataDir)path1\{AssemblyFileName1}\Scenario1.ibc
@@ -580,36 +590,64 @@ $(IbcOptimizationDataDir)path2\{AssemblyFileName2}\Scenario1.ibc
 $(IbcOptimizationDataDir)path2\{AssemblyFileName2}\Scenario2.ibc
 ...
 ```
-The assemblies must be exaclty those that were used in the training run that produced the IBC data files. One assembly might be present in multiple copies in different subdirectories. These copies must be identical (an assembly is identified by name only). `ApplyOptimizations` target aggregates all IBC data files present next to the assembly and all of its  copies. Multiple flavors of an assembly with the same names (e.g. assemblies produced by a multi-targeted project) are currently not supported. If necessary in future , it is possible to update the target to group assemblies by MVID instead of file name.
+The assemblies must be exaclty those that were used in the training run that produced the IBC data files.
+One assembly might be present in multiple copies in different subdirectories. These copies must be identical
+(an assembly is identified by name only). `ApplyOptimizations` target aggregates all IBC data files present
+next to the assembly and all of its  copies. Multiple flavors of an assembly with the same names
+(e.g. assemblies produced by a multi-targeted project) are currently not supported. If necessary in future,
+it is possible to update the target to group assemblies by MVID instead of file name.
 
-During the build IBC data embedding is performed by `ApplyOptimizations` target, which invokes `ibcmerge.exe` tool. The target runs when `EnablePartialNgenOptimization` is `true` and the project sets `ApplyPartialNgenOptimization` to `true`. The target consumes item group `OptimizeAssembly`, whose items are full paths to the assemblies to have IBC data embedded. The assemblies are updated in-place. By default, `OptimizeAssembly` is initialized with the path of the intermediate assembly compiled by the project (this is the file the `CoreCompile` target builds to `obj` directory). The project may update `OptimizeAssembly` item group before `ApplyOptimizations` target is executed if it needs to embed IBC data to other assemblies.
+During the build IBC data embedding is performed by `ApplyOptimizations` target, which invokes `ibcmerge.exe` tool.
+The target runs when `EnablePartialNgenOptimization` is `true` and the project sets `ApplyPartialNgenOptimization`
+to `true`. The target consumes item group `OptimizeAssembly`, whose items are full paths to the assemblies to have
+IBC data embedded. The assemblies are updated in-place. By default, `OptimizeAssembly` is initialized with
+the path of the intermediate assembly compiled by the project (this is the file the `CoreCompile` target builds
+to `obj` directory). The project may update `OptimizeAssembly` item group before `ApplyOptimizations` target is
+executed if it needs to embed IBC data to other assemblies.
 
 ## Visual Studio IBC Training
 
-Visual Studio Engineering provides an Azure DevOps Release Pipeline that performs IBC training for assemblies shipped with Visual Studio. Arcade SDK enables repositories to retrieve and embed IBC data this system produces as well as generate inputs for the training. 
+Visual Studio Engineering provides an Azure DevOps Release Pipeline that performs IBC training for assemblies
+shipped with Visual Studio. Arcade SDK enables repositories to retrieve and embed IBC data this system produces
+as well as generate inputs for the training. 
 
 To enable this functionality set `UsingToolVisualStudioIbcTraining` to `true` in `/eng/Versions.props`. 
 
 ### Visual Studio IBC Data Acquisition
 
-Set `EnablePartialNgenOptimization` property globally or in `/eng/Tools.props` to control when IBC data should be acquired. 
+Set `EnablePartialNgenOptimization` property globally or in `/eng/Tools.props` to control when IBC data should be acquired.
 
-The IBC data acquisition is performed by an internal tool `drop.exe` provided by `Drop.App` package from an internal Azure DevOps feed. The repository build definition thus must invoke Azure DevOps task that restores internal tools in order for IBC data embedding to work. See [Restoring internal tools](#restoring-internal-tools).
+The IBC data acquisition is performed by an internal tool `drop.exe` provided by `Drop.App` package from an internal Azure
+DevOps feed. The repository build definition thus must invoke Azure DevOps task that restores internal tools in order for
+IBC data embedding to work. See [Restoring internal tools](#restoring-internal-tools).
 
-To retrieve the data the tool needs to authenticate to the VS drop storage. The access token necessary for the authentication is passed via `VisualStudioDropAccessToken` property. If the account the official build of the repository is running on has an access to the VS drop storage, the build definition can pass `/p:VisualStudioDropAccessToken=$(System.AccessToken)` to the `/eng/common/CIBuild.cmd` script.
+To retrieve the data the tool needs to authenticate to the VS drop storage. The access token necessary for the authentication
+is passed via `VisualStudioDropAccessToken` property. If the account the official build of the repository is running on has
+an access to the VS drop storage, the build definition can pass `/p:VisualStudioDropAccessToken=$(System.AccessToken)` to
+the `/eng/common/CIBuild.cmd` script.
 
-The IBC data drop produced by a training run is identitifed by the name of the repository, the branch and the build number the trained binaries came from, and a training run id. An example of IBC data identifier is `OptimizationData/dotnet/roslyn/master-vs-deps/20190210.1/935479/1`, where `dotnet/roslyn` is the repository name, `master-vs-deps` is the branch name, `20190210.1` is the build number and `935479/1` is training run id. The IBC data acquisition implementation in Arcade SDK requires `RepositoryName` and `VisualStudioIbcSourceBranchName` properties to be set globally or in `/eng/Tools.props` file. These properties specify the repository name and the branch name to use to find the IBC data to acquire. Set `VisualStudioIbcDropId` to the combination of build number and training run id (e.g. `20190210.1/935479/1`) to indicate the exact IBC data drop to acquire. If `VisualStudioIbcDropId` is not specified the most recent IBC data published from the specified repository and branch are acquired.
+The IBC data drop produced by a training run is identitifed by the name of the repository, the branch and the build number
+the trained binaries came from, and a training run id. An example of IBC data identifier is
+`OptimizationData/dotnet/roslyn/master-vs-deps/20190210.1/935479/1`, where `dotnet/roslyn` is the repository name,
+`master-vs-deps` is the branch name, `20190210.1` is the build number and `935479/1` is training run id.
+The IBC data acquisition implementation in Arcade SDK requires `RepositoryName` and `VisualStudioIbcSourceBranchName` 
+properties to be set globally or in `/eng/Tools.props` file. These properties specify the repository name and
+the branch name to use to find the IBC data to acquire. Set `VisualStudioIbcDropId` to the combination of build number
+and training run id (e.g. `20190210.1/935479/1`) to indicate the exact IBC data drop to acquire. If `VisualStudioIbcDropId`
+is not specified the most recent IBC data published from the specified repository and branch are acquired.
 
 The IBC data are downloaded to `IbcOptimizationDataDir`, which is initialized to `.tools/IbcData`.
 
 ### Visual Studio Training Inputs Generation
 
-The training process requires 
+The training process requires:
 1) List of scenarios (tests) to run and binaries to train in each scenario
-2) VS Bootstrapper that installs a specific build of Visual Studio and the VS insertion components built by the repository official build
+2) VS Bootstrapper that installs a specific build of Visual Studio and the VS insertion components built by the repository 
+official build
 3) Test settings (`Training.runsettings` file)
 
-The scenarios are expected to be listed in file `/eng/config/OptProf.json` in the repository. Arcade SDK reads this file and generates corresponding input files to the training process. 
+The scenarios are expected to be listed in file `/eng/config/OptProf.json` in the repository. Arcade SDK reads this file and 
+generates corresponding input files to the training process. 
 
 The VS Bootstrapper is built by an Azure DevOps task provided by MicroBuild.
 
