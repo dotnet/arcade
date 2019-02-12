@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using Microsoft.Cci.Extensions;
@@ -265,7 +264,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 {
                     string[] names = attributes.GetValueTupleNames();
 
-                    _writer.WriteSymbol("===(");
+                    _writer.WriteSymbol("(");
 
                     int i = 0;
                     foreach (var parameter in genericType.GenericArguments)

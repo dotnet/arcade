@@ -420,10 +420,5 @@ namespace Microsoft.Cci.Writers.CSharp
 
             return _alwaysIncludeBase || _filter.Include(attribute);
         }
-
-        private string[] GetTuplePropertyNames()
-        {
-            return null;
-        }
     }
 }
