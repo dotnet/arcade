@@ -3,20 +3,20 @@
 export RUNTIME_PATH=${1%/}
 export EXECUTION_DIR=$(dirname "$0")
 
-:: Point to the locally installed SDK.
+# Point to the locally installed SDK.
 if [[ $2 ]]; then
   export DOTNET_ROOT=$2
 fi
 
-:: Global tools path
+# Global tools path
 if [[ $3 ]]; then
   export GLOBAL_TOOLS_DIR=$3
 fi
 
-:: Don't use a globally installed SDK.
+# Don't use a globally installed SDK.
 export DOTNET_MULTILEVEL_LOOKUP=0
 
-:: Roll forward on [major], [minor] and [patch].
+# Roll forward on [major], [minor] and [patch].
 export DOTNET_ROLL_FORWARD_ON_NO_CANDIDATE_FX=2
 
 exitcode_list[0]="Exited Successfully"
