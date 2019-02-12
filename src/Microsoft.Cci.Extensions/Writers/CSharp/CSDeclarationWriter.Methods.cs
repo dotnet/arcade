@@ -31,7 +31,6 @@ namespace Microsoft.Cci.Writers.CSharp
 
                 return;
             }
-
             string name = method.GetMethodName();
 
             if (!method.ContainingTypeDefinition.IsInterface)
@@ -53,11 +52,12 @@ namespace Microsoft.Cci.Writers.CSharp
             WriteEmptyBody();
         }
 
-        private void WriteTypeName(ITypeReference type, ITypeReference containingType, bool isDynamic = false)
+
+        private void WriteTypeName(ITypeReference type, ITypeReference containingType, IEnumerable<ICustomAttribute> attributes = null)
         {
             var useKeywords = containingType.GetTypeName() != type.GetTypeName();
 
-            WriteTypeName(type, isDynamic: isDynamic, useTypeKeywords: useKeywords);
+            WriteTypeName(type, attributes: attributes, useTypeKeywords: useKeywords);
         }
 
         private void WriteMethodDefinitionSignature(IMethodDefinition method, string name)
@@ -77,7 +77,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 }
 
                 // We are ignoring custom modifiers right now, we might need to add them later.
-                WriteTypeName(method.Type, method.ContainingType, isDynamic: IsDynamic(method.ReturnValueAttributes));
+                WriteTypeName(method.Type, method.ContainingType, method.ReturnValueAttributes);
             }
 
             if (method.IsExplicitInterfaceMethod() && _forCompilationIncludeGlobalprefix)
@@ -158,7 +158,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 }
             }
 
-            WriteTypeName(parameter.Type, containingType, isDynamic: IsDynamic(parameter.Attributes));
+            WriteTypeName(parameter.Type, containingType, parameter.Attributes);
             WriteIdentifier(parameter.Name);
             if (parameter.IsOptional && parameter.HasDefaultValue)
             {
@@ -252,11 +252,11 @@ namespace Microsoft.Cci.Writers.CSharp
             if (method.ContainingTypeDefinition.IsValueType && method.IsConstructor)
                 return true;
 
-            // Compiler requires out parameters to be initialized 
+            // Compiler requires out parameters to be initialized
             if (method.Parameters.Any(p => p.IsOut))
                 return true;
 
-            // For non-void returning methods we need a body. 
+            // For non-void returning methods we need a body.
             if (!TypeHelper.TypesAreEquivalent(method.Type, method.ContainingTypeDefinition.PlatformType.SystemVoid))
                 return true;
 
@@ -330,7 +330,7 @@ namespace Microsoft.Cci.Writers.CSharp
         {
             WriteKeyword("default", true);
             WriteSymbol("(");
-            WriteTypeName(type, true);
+            WriteTypeName(type, noSpace: true);
             WriteSymbol(")");
         }
 
