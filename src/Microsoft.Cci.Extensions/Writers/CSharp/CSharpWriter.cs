@@ -151,7 +151,7 @@ namespace Microsoft.Cci.Writers
 
                 // Note: By "private", we mean not visible outside the assembly.
 
-                // For more details see issue https://github.com/dotnet/corefx/issues/6185 
+                // For more details see issue https://github.com/dotnet/corefx/issues/6185
                 // this blog is helpful as well http://blog.paranoidcoding.com/2016/02/15/are-private-members-api-surface.html
 
                 List<IFieldDefinition> newFields = new List<IFieldDefinition>();
@@ -159,6 +159,7 @@ namespace Microsoft.Cci.Writers
                 includedVisibleFields = includedVisibleFields.OrderBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
 
                 var excludedFields = fields.Except(includedVisibleFields).Where(f => !f.IsStatic);
+                var visibleNonStaticFields = includedVisibleFields.Where(f => !f.IsStatic);
 
                 if (excludedFields.Any())
                 {
@@ -172,20 +173,22 @@ namespace Microsoft.Cci.Writers
                     // For definiteassignment checks the compiler needs to know there is a private field
                     // that has not been initialized so if there are any we need to add a dummy private
                     // field to help the compiler do its job and error about uninitialized structs
+                    bool hasRefVisibleField = visibleNonStaticFields.Any(f => f.Type.IsOrContainsReferenceType());
                     bool hasRefPrivateField = excludedFields.Any(f => f.Type.IsOrContainsReferenceType());
 
                     // If at least one of the private fields contains a reference type then we need to
                     // set this field type to object or reference field to inform the compiler to block
                     // taking pointers to this struct because the GC will not track updating those references
-                    if (hasRefPrivateField)
+                    if (hasRefPrivateField && !hasRefVisibleField)
                     {
                         IFieldDefinition fieldType = DummyFieldWriterHelper(parentType, excludedFields, parentType.PlatformType.SystemObject);
                         newFields.Add(fieldType);
                     }
 
+                    bool hasValueTypeVisibleField = visibleNonStaticFields.Any(f => !f.Type.IsOrContainsReferenceType());
                     bool hasValueTypePrivateField = excludedFields.Any(f => !f.Type.IsOrContainsReferenceType());
 
-                    if (hasValueTypePrivateField)
+                    if (hasValueTypePrivateField && !hasValueTypeVisibleField)
                     {
                         IFieldDefinition fieldType = DummyFieldWriterHelper(parentType, excludedFields, parentType.PlatformType.SystemInt32, "_dummyPrimitive");
                         newFields.Add(fieldType);
