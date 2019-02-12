@@ -169,7 +169,7 @@ jobs:
 
   - ${{ if eq(parameters.enablePublishBuildArtifacts, 'true') }}:
     - task: PublishBuildArtifacts@1
-      displayName: Publish Logs to VSTS
+      displayName: Publish Logs
       inputs:
         PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
         PublishLocation: Container
