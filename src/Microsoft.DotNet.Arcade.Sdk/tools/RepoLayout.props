@@ -60,7 +60,6 @@
     <VisualStudioSetupOutputPath>$(ArtifactsDir)VSSetup\$(Configuration)\</VisualStudioSetupOutputPath>
     <VisualStudioSetupInsertionPath>$(VisualStudioSetupOutputPath)Insertion\</VisualStudioSetupInsertionPath>
     <VisualStudioSetupIntermediateOutputPath>$(ArtifactsDir)VSSetup.obj\$(Configuration)\</VisualStudioSetupIntermediateOutputPath>
-    <IbcOptimizationDataDir>$(ArtifactsToolsDir)IbcData\</IbcOptimizationDataDir>
   </PropertyGroup>
 
 </Project>
