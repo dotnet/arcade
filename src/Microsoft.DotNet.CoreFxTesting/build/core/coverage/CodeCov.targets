@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <PropertyGroup>
+    <CodeCovExecutablePath Condition="'$(CodeCovExecutablePath)' == ''">$(RunScriptGlobalToolsDir)codecov</CodeCovExecutablePath>
+
+    <CodeCovBranchName Condition="'$(CodeCovBranchName)' == ''">$(SYSTEM_PULLREQUEST_SOURCEBRANCH)</CodeCovBranchName>
+    <CodeCovBranchName Condition="'$(CodeCovBranchName)' == ''">$(BUILD_SOURCEBRANCHNAME)</CodeCovBranchName>
+
+    <CodeCovArgs>--file "$(CoverageOutputPath)"</CodeCovArgs>
+    <CodeCovArgs>$(CodeCovArgs) --name $(AssemblyName)</CodeCovArgs>
+    <CodeCovArgs>$(CodeCovArgs) --flag $(ConfigurationGroup)</CodeCovArgs>
+    <CodeCovArgs Condition="'$(BUILD_REPOSITORY_NAME)' != ''">$(CodeCovArgs) --slug $(BUILD_REPOSITORY_NAME)</CodeCovArgs>
+    <CodeCovArgs Condition="'$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != ''">$(CodeCovArgs) --pr $(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)</CodeCovArgs>
+    <CodeCovArgs Condition="'$(CodeCovBranchName)' != ''">$(CodeCovArgs) --branch $(CodeCovBranchName)</CodeCovArgs>
+    <CodeCovArgs Condition="'$(BUILD_SOURCEVERSION)' != ''">$(CodeCovArgs) --sha $(BUILD_SOURCEVERSION)</CodeCovArgs>
+    <CodeCovArgs Condition="'$(BUILD_BUILDNUMBER)' != ''">$(CodeCovArgs) --build $(BUILD_BUILDNUMBER)</CodeCovArgs>
+    <!-- Allow to override the token. -->
+    <CodeCovArgs Condition="'$(CodeCovToken)' != ''">$(CodeCovArgs) --token $(CodeCovToken)</CodeCovArgs>
+
+    <CodeCovCommandLine>"$(CodeCovExecutablePath)" $(CodeCovArgs)</CodeCovCommandLine>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PostRunScriptCommands Include="$(CodeCovCommandLine)" />
+  </ItemGroup>
+
+</Project>

@@ -24,7 +24,7 @@
   <ItemGroup>
     <Compile Include="..\Common\BuildTask.cs" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <None Include="build\assets\**" Pack="True" PackagePath="build\assets\" />
   </ItemGroup>
