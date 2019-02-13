@@ -1,16 +1,18 @@
-<Project>
+<Project InitialTargets="ValidateAzurePipelinesConfiguration">
   <PropertyGroup>
-    <EnableAzurePipelinesReporter Condition="'$(EnableAzurePipelinesReporter)' != 'true'">false</EnableAzurePipelinesReporter>
-    <FailOnTestFailure Condition="'$(FailOnTestFailure)' != 'false'">true</FailOnTestFailure>
-
     <AzurePipelinesAvaliable Condition="'$(SYSTEM_ACCESSTOKEN)' != ''">true</AzurePipelinesAvaliable>
     <AzurePipelinesAvaliable Condition="'$(AzurePipelinesAvaliable)' != 'true'">false</AzurePipelinesAvaliable>
   </PropertyGroup>
 
-  <!-- We don't currently support reporting tests from builds of forks -->
-  <PropertyGroup Condition=" '$(SYSTEM_PULLREQUEST_ISFORK)' == 'True'">
-    <AzurePipelinesAvaliable>false</AzurePipelinesAvaliable>
-    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
+  <!-- We default the azure pipelines reporter to ON if we are running inside Azure Pipelines -->
+  <PropertyGroup Condition="$(AzurePipelinesAvaliable)">
+    <EnableAzurePipelinesReporter Condition="'$(EnableAzurePipelinesReporter)' != 'false'">true</EnableAzurePipelinesReporter>
+    <FailOnTestFailure Condition="'$(FailOnTestFailure)' != 'false'">true</FailOnTestFailure>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="!$(AzurePipelinesAvaliable)">
+    <EnableAzurePipelinesReporter Condition="'$(EnableAzurePipelinesReporter)' != 'true'">false</EnableAzurePipelinesReporter>
+    <FailOnTestFailure Condition="'$(FailOnTestFailure)' != 'false'">true</FailOnTestFailure>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -23,7 +25,8 @@
     <_HelixMultiQueueTargets>$(_HelixMultiQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.MultiQueue.targets</_HelixMultiQueueTargets>
   </PropertyGroup>
 
-  <Target Name="ValidateAzurePipelinesConfiguration" Condition="$(EnableAzurePipelinesReporter) AND '$(HelixTargetQueue)' == ''" BeforeTargets="StartTestRuns;Test">
+  <Target Name="ValidateAzurePipelinesConfiguration"
+          Condition="$(EnableAzurePipelinesReporter) AND '$(HelixTargetQueue)' == ''">
     <Error Condition="!$(AzurePipelinesAvaliable)" Text="Azure Pipelines SYSTEM_ACCESSTOKEN variable not found. Either the build is not running in Azure Pipelines, or the current step is not configured correctly. Please configure this step with the System.AccessToken variable, see: https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=vsts&amp;tabs=yaml%2Cbatch#systemaccesstoken"/>
   </Target>
 </Project>
