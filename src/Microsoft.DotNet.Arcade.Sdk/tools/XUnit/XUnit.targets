@@ -32,8 +32,8 @@
 
     <PropertyGroup>
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
-      <_TestRuntime>%(TestToRun.TestRuntime)</_TestRuntime>
       <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
+      <_TestRuntime>%(TestToRun.TestRuntime)</_TestRuntime>
       <_TestRunnerTargetFramework>net452</_TestRunnerTargetFramework>
       <_TestRunnerTargetFramework Condition="%(TestToRun.TargetFramework) == 'net46' or %(TestToRun.TargetFramework) == 'net461' or %(TestToRun.TargetFramework) == 'net462' or %(TestToRun.TargetFramework) == 'net47' or %(TestToRun.TargetFramework) == 'net471' or %(TestToRun.TargetFramework) == 'net472'">%(TestToRun.TargetFramework)</_TestRunnerTargetFramework>
       <_TestRunnerTargetFramework Condition="'$(_TestRuntime)' == 'Core'">netcoreapp2.0</_TestRunnerTargetFramework>
@@ -49,7 +49,7 @@
       <_TestRunner>$(DotNetTool)</_TestRunner>
       <_TestRunnerArgs>exec --depsfile "$(_CoreDepsPath)" --runtimeconfig "$(_CoreRuntimeConfigPath)" "$(NuGetPackageRoot)xunit.runner.console/$(XUnitVersion)/tools/$(_TestRunnerTargetFramework)/xunit.console.dll" "$(_TestAssembly)" -noautoreporters -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)" $(_TestRunnerAdditionalArguments)</_TestRunnerArgs>
     </PropertyGroup>
-    
+
     <PropertyGroup Condition="'$(_TestRuntime)' != 'Core'">
       <_XUnitConsoleExe>xunit.console.exe</_XUnitConsoleExe>
       <_XUnitConsoleExe Condition="'%(TestToRun.Architecture)' == 'x86'">xunit.console.x86.exe</_XUnitConsoleExe>
