@@ -33,10 +33,11 @@
     <PropertyGroup>
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
       <_TestRuntime>%(TestToRun.TestRuntime)</_TestRuntime>
-      <_TestRunnerTargetFramework>%(TestToRun.TargetFramework)</_TestRunnerTargetFramework>
+      <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
+      <_TestRunnerTargetFramework>net452</_TestRunnerTargetFramework>
+      <_TestRunnerTargetFramework Condition="%(TestToRun.TargetFramework) == 'net46' or %(TestToRun.TargetFramework) == 'net461' or %(TestToRun.TargetFramework) == 'net462' or %(TestToRun.TargetFramework) == 'net47' or %(TestToRun.TargetFramework) == 'net471' or %(TestToRun.TargetFramework) == 'net472'">%(TestToRun.TargetFramework)</_TestRunnerTargetFramework>
       <_TestRunnerTargetFramework Condition="'$(_TestRuntime)' == 'Core'">netcoreapp2.0</_TestRunnerTargetFramework>
       <_TestRunnerTargetFramework Condition="%(TestToRun.TargetFramework) == 'netcoreapp1.1' or %(TestToRun.TargetFramework) == 'netcoreapp1.0'">netcoreapp1.0</_TestRunnerTargetFramework>
-      <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
       <_TestRunnerAdditionalArguments>%(TestToRun.TestRunnerAdditionalArguments)</_TestRunnerAdditionalArguments>
     </PropertyGroup>
 
