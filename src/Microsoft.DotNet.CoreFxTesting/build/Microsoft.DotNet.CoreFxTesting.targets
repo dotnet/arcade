@@ -2,6 +2,10 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
+  <UsingTask TaskName="GenerateTestSharedFrameworkDepsFile"
+             Condition="'$(GenerateTestSharedFrameworkDepsFile)' == 'true'"
+             AssemblyFile="$(CoreFxTestingAssemblyPath)"/>
+
   <PropertyGroup>
     <TargetOS Condition="'$(TargetOS)' == ''">$(DefaultOSGroup)</TargetOS>
   </PropertyGroup>
@@ -10,11 +14,10 @@
     <IncludeDefaultTestReferences Condition="'$(IncludeDefaultTestReferences)' == '' AND '$(IsTestProject)' == 'true'">true</IncludeDefaultTestReferences>
   </PropertyGroup>
 
-  <!-- 
+  <!--
     Runtime settings support.
     Copies the app.config / runtimeSettings.json file to the OutDir.
   -->
-
   <PropertyGroup>
     <TestRuntimeConfigName Condition="'$(BuildingNETCoreAppVertical)' == 'true'">netcoreapp.runtimeconfig.json</TestRuntimeConfigName>
     <TestRuntimeConfigName Condition="'$(BuildingNETFxVertical)' == 'true'">netfx.exe.config</TestRuntimeConfigName>
@@ -39,7 +42,6 @@
     Auto references support.
     Used by test projects and companions.
   -->
-
   <Target Name="AddDefaultTestReferences"
           Condition="'$(IncludeDefaultReferences)' == 'true' AND '$(IncludeDefaultTestReferences)' == 'true'"
           BeforeTargets="SetupDefaultReferences">
@@ -58,12 +60,11 @@
 
   </Target>
 
-  <!-- 
+  <!--
     Shared framework deps file generation.
     Produces a test shared-framework deps file.
     To use invoke target directly specifying NETCoreAppTestSharedFrameworkPath property.
   -->
-  <UsingTask TaskName="GenerateTestSharedFrameworkDepsFile" AssemblyFile="$(MSBuildTestAssemblyPath)"/>
   <Target Name="GenerateTestSharedFrameworkDepsFile" Condition="'$(GenerateTestSharedFrameworkDepsFile)' == 'true'">
     <GenerateTestSharedFrameworkDepsFile SharedFrameworkDirectory="$(NETCoreAppTestSharedFrameworkPath)" />
   </Target>

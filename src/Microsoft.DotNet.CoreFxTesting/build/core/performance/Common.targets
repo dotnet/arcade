@@ -8,7 +8,7 @@
 
     <PythonCommand Condition="'$(TargetOS)' != 'Windows_NT'">python3.5</PythonCommand>
     <PythonCommand Condition="'$(TargetOS)' == 'Windows_NT'">py.exe</PythonCommand>
-    
+
     <CliExitErrorCommand Condition="'$(TargetOS)' != 'Windows_NT'">exit 1</CliExitErrorCommand>
     <CliExitErrorCommand Condition="'$(TargetOS)' == 'Windows_NT'">EXIT /B 1</CliExitErrorCommand>
   </PropertyGroup>

@@ -27,7 +27,7 @@
       <RunArguments>$(RunArguments) $(CoverageExcludeFilter)</RunArguments>
     </PropertyGroup>
 
-    <!-- 
+    <!--
       We need to filter the data to only the assembly being tested. Otherwise we will gather tons of data about other assemblies.
       If the code being tested is part of the runtime itself, it requires special treatment.
     -->
