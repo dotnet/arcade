@@ -30,8 +30,8 @@
     <RunScriptHost Condition="'$(TargetOS)' == 'Windows_NT'">$(RunScriptHostDir)dotnet.exe</RunScriptHost>
     <RunScriptHost Condition="'$(TargetOS)' != 'Windows_NT'">$(RunScriptHostDir)dotnet</RunScriptHost>
 
-    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' == 'Windows_NT'">%GLOBAL_TOOLS_DIR%</RunScriptGlobalToolsDir>
-    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' != 'Windows_NT'">$GLOBAL_TOOLS_DIR</RunScriptGlobalToolsDir>
+    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' == 'Windows_NT'">%GLOBAL_TOOLS_DIR%\</RunScriptGlobalToolsDir>
+    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' != 'Windows_NT'">$GLOBAL_TOOLS_DIR/</RunScriptGlobalToolsDir>
   </PropertyGroup>
 
   <Target Name="PublishSupplementalTestData"
@@ -186,7 +186,7 @@
           Outputs="@(RunTestsOutputs)">
 
     <!-- Invoke the run script with the test host as the runtime path. -->
-    <Exec Command="$(RunScriptOutputPath) $(TestHostRootPath) $(DotNetRoot) $(GlobalToolsDir)"
+    <Exec Command="&quot;$(RunScriptOutputPath)&quot; &quot;$(TestHostRootPath.TrimEnd('\/'))&quot; &quot;$(DotNetRoot.TrimEnd('\/'))&quot; &quot;$(GlobalToolsDir.TrimEnd('\/'))&quot;"
           ContinueOnError="true"
           IgnoreStandardErrorWarningFormat="true">
       <Output PropertyName="TestRunExitCode" TaskParameter="ExitCode" />
