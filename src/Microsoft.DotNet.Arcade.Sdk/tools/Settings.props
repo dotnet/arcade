@@ -12,7 +12,9 @@
   <Import Project="Compiler.props" Condition="'$(UsingToolMicrosoftNetCompilers)' == 'true'" />
   <Import Project="VisualStudio.props" Condition="'$(UsingToolVSSDK)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'"/>
 
-  <IbcOptimizationDataDir Condition="'$(UsingToolVisualStudioIbcTraining)' == 'true'">$(ArtifactsToolsDir)IbcData\</IbcOptimizationDataDir>
+  <PropertyGroup>
+    <IbcOptimizationDataDir Condition="'$(UsingToolVisualStudioIbcTraining)' == 'true'">$(ArtifactsToolsDir)IbcData\</IbcOptimizationDataDir>
+  </PropertyGroup>
 
   <!--
     Import NuGet props to WPF temp projects (workaround for https://github.com/dotnet/sourcelink/issues/91) 
