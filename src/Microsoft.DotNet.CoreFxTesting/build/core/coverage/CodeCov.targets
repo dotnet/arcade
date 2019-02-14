@@ -3,27 +3,28 @@
 <Project>
 
   <PropertyGroup>
-    <CodeCovExecutablePath Condition="'$(CodeCovExecutablePath)' == ''">$(RunScriptGlobalToolsDir)codecov</CodeCovExecutablePath>
+    <CoverageUploadExecutablePath Condition="'$(CoverageUploadExecutablePath)' == '' AND '$(TargetOS)' == 'Windows_NT'">$(RunScriptGlobalToolsDir)codecov.exe</CoverageUploadExecutablePath>
+    <CoverageUploadExecutablePath Condition="'$(CoverageUploadExecutablePath)' == '' AND '$(TargetOS)' != 'Windows_NT'">$(RunScriptGlobalToolsDir)codecov</CoverageUploadExecutablePath>
 
-    <CodeCovBranchName Condition="'$(CodeCovBranchName)' == ''">$(SYSTEM_PULLREQUEST_SOURCEBRANCH)</CodeCovBranchName>
-    <CodeCovBranchName Condition="'$(CodeCovBranchName)' == ''">$(BUILD_SOURCEBRANCHNAME)</CodeCovBranchName>
+    <CoverageUploadBranchName Condition="'$(CoverageUploadBranchName)' == ''">$(SYSTEM_PULLREQUEST_SOURCEBRANCH)</CoverageUploadBranchName>
+    <CoverageUploadBranchName Condition="'$(CoverageUploadBranchName)' == ''">$(BUILD_SOURCEBRANCHNAME)</CoverageUploadBranchName>
 
-    <CodeCovArgs>--file "$(CoverageOutputPath)"</CodeCovArgs>
-    <CodeCovArgs>$(CodeCovArgs) --name $(AssemblyName)</CodeCovArgs>
-    <CodeCovArgs>$(CodeCovArgs) --flag $(ConfigurationGroup)</CodeCovArgs>
-    <CodeCovArgs Condition="'$(BUILD_REPOSITORY_NAME)' != ''">$(CodeCovArgs) --slug $(BUILD_REPOSITORY_NAME)</CodeCovArgs>
-    <CodeCovArgs Condition="'$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != ''">$(CodeCovArgs) --pr $(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)</CodeCovArgs>
-    <CodeCovArgs Condition="'$(CodeCovBranchName)' != ''">$(CodeCovArgs) --branch $(CodeCovBranchName)</CodeCovArgs>
-    <CodeCovArgs Condition="'$(BUILD_SOURCEVERSION)' != ''">$(CodeCovArgs) --sha $(BUILD_SOURCEVERSION)</CodeCovArgs>
-    <CodeCovArgs Condition="'$(BUILD_BUILDNUMBER)' != ''">$(CodeCovArgs) --build $(BUILD_BUILDNUMBER)</CodeCovArgs>
+    <CoverageUploadArgs>--file "$(CoverageOutputPath)"</CoverageUploadArgs>
+    <CoverageUploadArgs>$(CoverageUploadArgs) --name $(AssemblyName)</CoverageUploadArgs>
+    <CoverageUploadArgs>$(CoverageUploadArgs) --flag $(ConfigurationGroup)</CoverageUploadArgs>
+    <CoverageUploadArgs Condition="'$(BUILD_REPOSITORY_NAME)' != ''">$(CoverageUploadArgs) --slug $(BUILD_REPOSITORY_NAME)</CoverageUploadArgs>
+    <CoverageUploadArgs Condition="'$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != ''">$(CoverageUploadArgs) --pr $(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)</CoverageUploadArgs>
+    <CoverageUploadArgs Condition="'$(CoverageUploadBranchName)' != ''">$(CoverageUploadArgs) --branch $(CoverageUploadBranchName)</CoverageUploadArgs>
+    <CoverageUploadArgs Condition="'$(BUILD_SOURCEVERSION)' != ''">$(CoverageUploadArgs) --sha $(BUILD_SOURCEVERSION)</CoverageUploadArgs>
+    <CoverageUploadArgs Condition="'$(BUILD_BUILDNUMBER)' != ''">$(CoverageUploadArgs) --build $(BUILD_BUILDNUMBER)</CoverageUploadArgs>
     <!-- Allow to override the token. -->
-    <CodeCovArgs Condition="'$(CodeCovToken)' != ''">$(CodeCovArgs) --token $(CodeCovToken)</CodeCovArgs>
+    <CoverageUploadArgs Condition="'$(CoverageUploadToken)' != ''">$(CoverageUploadArgs) --token $(CoverageUploadToken)</CoverageUploadArgs>
 
-    <CodeCovCommandLine>"$(CodeCovExecutablePath)" $(CodeCovArgs)</CodeCovCommandLine>
+    <CoverageUploadCommandLine>"$(CoverageUploadExecutablePath)" $(CoverageUploadArgs)</CoverageUploadCommandLine>
   </PropertyGroup>
 
   <ItemGroup>
-    <PostRunScriptCommands Include="$(CodeCovCommandLine)" />
+    <PostRunScriptCommands Include="$(CoverageUploadCommandLine)" />
   </ItemGroup>
 
 </Project>

@@ -86,7 +86,7 @@
           DependsOnTargets="$(GenerateRunScriptDependsOn)">
 
     <PropertyGroup>
-      <RunScriptCommand Condition="'$(RunScriptCommand)' == ''">$(RunCommand) $(RunArguments)</RunScriptCommand>
+      <RunScriptCommand Condition="'$(RunScriptCommand)' == ''">"$(RunCommand)" $(RunArguments)</RunScriptCommand>
     </PropertyGroup>
 
     <!-- Set $(TestDebugger) to eg c:\debuggers\windbg.exe to run tests under a debugger. -->
