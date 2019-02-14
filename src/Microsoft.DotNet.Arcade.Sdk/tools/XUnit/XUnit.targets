@@ -34,11 +34,12 @@
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
       <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
       <_TestRuntime>%(TestToRun.TestRuntime)</_TestRuntime>
-      <_TestRunnerTargetFramework>net452</_TestRunnerTargetFramework>
-      <_TestRunnerTargetFramework Condition="%(TestToRun.TargetFramework) == 'net46' or %(TestToRun.TargetFramework) == 'net461' or %(TestToRun.TargetFramework) == 'net462' or %(TestToRun.TargetFramework) == 'net47' or %(TestToRun.TargetFramework) == 'net471' or %(TestToRun.TargetFramework) == 'net472'">%(TestToRun.TargetFramework)</_TestRunnerTargetFramework>
+      <_TestRunnerAdditionalArguments>%(TestToRun.TestRunnerAdditionalArguments)</_TestRunnerAdditionalArguments>
+
+      <!-- Always use net472 for desktop to enable displaying source location from Portable PDBs in stack traces -->
+      <_TestRunnerTargetFramework>net472</_TestRunnerTargetFramework>
       <_TestRunnerTargetFramework Condition="'$(_TestRuntime)' == 'Core'">netcoreapp2.0</_TestRunnerTargetFramework>
       <_TestRunnerTargetFramework Condition="%(TestToRun.TargetFramework) == 'netcoreapp1.1' or %(TestToRun.TargetFramework) == 'netcoreapp1.0'">netcoreapp1.0</_TestRunnerTargetFramework>
-      <_TestRunnerAdditionalArguments>%(TestToRun.TestRunnerAdditionalArguments)</_TestRunnerAdditionalArguments>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(_TestRuntime)' == 'Core'">
