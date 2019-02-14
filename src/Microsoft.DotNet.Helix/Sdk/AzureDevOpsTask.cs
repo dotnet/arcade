@@ -35,8 +35,6 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 
         protected string BuildId => GetEnvironmentVariable("BUILD_BUILDID");
 
-        protected bool IsFork => string.Equals(Environment.GetEnvironmentVariable("SYSTEM_PULLREQUEST_ISFORK"), "True", StringComparison.OrdinalIgnoreCase);
-
         protected abstract Task ExecuteCoreAsync(HttpClient client);
 
         public override bool Execute()
