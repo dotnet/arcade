@@ -57,6 +57,6 @@
   </Target>
 
   <Import Condition="'$(SkipCoverageReport)' != 'true'" Project="$(MSBuildThisFileDirectory)CoverageReport.targets" />
-  <Import Condition="'$(CoverageUpload)' == 'true'" Project="$(MSBuildThisFileDirectory)CodeCov.targets" />
+  <Import Condition="'$(CoverageUpload)' == 'true'" Project="$(MSBuildThisFileDirectory)CoverageUpload.targets" />
 
 </Project>
