@@ -19,8 +19,14 @@
     <CoverageUploadArgs Condition="'$(BUILD_BUILDNUMBER)' != ''">$(CoverageUploadArgs) --build $(BUILD_BUILDNUMBER)</CoverageUploadArgs>
     <!-- Allow to override the token. -->
     <CoverageUploadArgs Condition="'$(CoverageUploadToken)' != ''">$(CoverageUploadArgs) --token $(CoverageUploadToken)</CoverageUploadArgs>
-    <!-- Necessary to upload big chunks of data. -->
-    <CoverageUploadArgs>$(CoverageUploadArgs) --disable-s3 --verbose --required</CoverageUploadArgs>
+   <!-- Use verbose logging. -->
+   <CoverageUploadArgs Condition="'$(CoverageUploadVerbose)' == ''">$(CoverageUploadArgs) --verbose</CoverageUploadArgs>
+    <!-- 
+      disable-s3: use v2 api instead of v4 as v4 currently throws for big chunks of data.
+      required: if upload not successful return with a non-zero exit code.
+      disable-network: don't attempt to include repository files as we upload from helix outside of the repository.
+    -->
+    <CoverageUploadArgs>$(CoverageUploadArgs) --disable-s3 --required --disable-network</CoverageUploadArgs>
 
     <CoverageUploadCommandLine>"$(CoverageUploadExecutablePath)" $(CoverageUploadArgs)</CoverageUploadCommandLine>
   </PropertyGroup>
