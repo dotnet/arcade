@@ -202,42 +202,40 @@ namespace Microsoft.DotNet.Helix.Client
             ContractResolver = new AllPropertiesContractResolver(),
         };
 
-        public HttpRequestMessageWrapper Request { get; set; }
-
-        private string RequestString
+        private static string FormatMessage(HttpResponseMessageWrapper response)
         {
-            get => JsonConvert.SerializeObject(Request, SerializerSettings);
-            set => Request = JsonConvert.DeserializeObject<HttpRequestMessageWrapper>(value, SerializerSettings);
+            var result = $"The response contained an invalid status code {(int)response.StatusCode} {response.ReasonPhrase}";
+            if (!string.IsNullOrEmpty(response.Content))
+            {
+                result += "\n\nBody: ";
+                result += response.Content.Length < 300 ? response.Content : response.Content.Substring(0, 300);
+            }
+            return result;
         }
 
-        public HttpResponseMessageWrapper Response { get; set; }
+        public HttpRequestMessageWrapper Request { get; }
 
-        private string ResponseString
-        {
-            get => JsonConvert.SerializeObject(Response, SerializerSettings);
-            set => Response = JsonConvert.DeserializeObject<HttpResponseMessageWrapper>(value, SerializerSettings);
-        }
+        public HttpResponseMessageWrapper Response { get; }
 
-        public RestApiException()
-            :this("An Unexpected error occured when processing the request.")
-        {
-        }
-
-        public RestApiException(string message)
-            :this(message, null)
+        public RestApiException(HttpRequestMessageWrapper request, HttpResponseMessageWrapper response)
+           :this(FormatMessage(response), request, response)
         {
         }
 
-        public RestApiException(string message, Exception innerException)
-            :base(message, innerException)
+        public RestApiException(string message, HttpRequestMessageWrapper request, HttpResponseMessageWrapper response)
+           :base(message)
         {
+            Request = request;
+            Response = response;
         }
 
         protected RestApiException(SerializationInfo info, StreamingContext context)
             :base(info, context)
         {
-            RequestString = info.GetString("Request");
-            ResponseString = info.GetString("Response");
+            var requestString = info.GetString("Request");
+            var responseString = info.GetString("Response");
+            Request = JsonConvert.DeserializeObject<HttpRequestMessageWrapper>(requestString, SerializerSettings);
+            Response = JsonConvert.DeserializeObject<HttpResponseMessageWrapper>(responseString, SerializerSettings);
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
@@ -247,8 +245,11 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(info));
             }
 
-            info.AddValue("Request", RequestString);
-            info.AddValue("Response", ResponseString);
+            var requestString = JsonConvert.SerializeObject(Request, SerializerSettings);
+            var responseString = JsonConvert.SerializeObject(Response, SerializerSettings);
+
+            info.AddValue("Request", requestString);
+            info.AddValue("Response", responseString);
             base.GetObjectData(info, context);
         }
     }
@@ -256,22 +257,18 @@ namespace Microsoft.DotNet.Helix.Client
     [Serializable]
     public partial class RestApiException<T> : RestApiException
     {
-        public T Body { get; set; }
+        public T Body { get; }
 
-
-        public RestApiException()
-            :this("An Unexpected error occured when processing the request.")
+        public RestApiException(HttpRequestMessageWrapper request, HttpResponseMessageWrapper response, T body)
+           :base(request, response)
         {
+            Body = body;
         }
 
-        public RestApiException(string message)
-            :this(message, null)
+        public RestApiException(string message, HttpRequestMessageWrapper request, HttpResponseMessageWrapper response, T body)
+           :base(message, request, response)
         {
-        }
-
-        public RestApiException(string message, Exception innerException)
-            :base(message, innerException)
-        {
+            Body = body;
         }
 
         protected RestApiException(SerializationInfo info, StreamingContext context)
@@ -330,6 +327,5 @@ namespace Microsoft.DotNet.Helix.Client
           }
           return builder.ToString();
         }
-
     }
 }

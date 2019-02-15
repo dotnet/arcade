@@ -52,14 +52,18 @@ namespace Microsoft.DotNet.SwaggerGenerator.MSBuild
                 ClientName = ClientName
             };
 
+            Log.LogMessage(MessageImportance.Low, $"Reading swagger document {SwaggerDocumentUri}");
             SwaggerDocument document = await GetSwaggerDocument(SwaggerDocumentUri);
 
+            Log.LogMessage(MessageImportance.Low, $"Generating client code model");
             var generator = new ServiceClientModelFactory(options);
             ServiceClientModel model = generator.Create(document);
 
+            Log.LogMessage(MessageImportance.Low, $"Generating code files for language '{options.LanguageName}'");
             var codeFactory = new ServiceClientCodeFactory();
-            List<CodeFile> code = codeFactory.GenerateCode(model, options);
+            List<CodeFile> code = codeFactory.GenerateCode(model, options, new MSBuildLogger(Log));
 
+            Log.LogMessage(MessageImportance.High, $"Generating {SwaggerDocumentUri} -> {OutputDirectory}");
             var outputDirectory = new DirectoryInfo(OutputDirectory);
             outputDirectory.Create();
 
@@ -69,7 +73,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.MSBuild
                 string fullPath = Path.Combine(outputDirectory.FullName, path);
                 var file = new FileInfo(fullPath);
                 file.Directory.Create();
-                Log.LogMessage(MessageImportance.Normal, $"Generating file '{file.FullName}'");
+                Log.LogMessage(MessageImportance.Normal, $"Writing file '{file.FullName}'");
                 File.WriteAllText(file.FullName, contents);
                 generatedFiles.Add(new TaskItem(file.FullName));
             }
