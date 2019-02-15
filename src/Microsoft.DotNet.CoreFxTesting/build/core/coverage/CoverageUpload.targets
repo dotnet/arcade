@@ -12,7 +12,7 @@
     <CoverageUploadArgs>--file "$(CoverageOutputPath)"</CoverageUploadArgs>
     <CoverageUploadArgs>$(CoverageUploadArgs) --name $(AssemblyName)</CoverageUploadArgs>
     <CoverageUploadArgs>$(CoverageUploadArgs) --flag $(ConfigurationGroup)</CoverageUploadArgs>
-    <CoverageUploadArgs Condition="'$(BUILD_REPOSITORY_NAME)' != ''">$(CoverageUploadArgs) --slug $(BUILD_REPOSITORY_NAME)</CoverageUploadArgs>
+    <CoverageUploadArgs Condition="'$(BUILD_REPOSITORY_NAME)' != ''">$(CoverageUploadArgs) --slug dotnet/corefx</CoverageUploadArgs>
     <CoverageUploadArgs Condition="'$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != ''">$(CoverageUploadArgs) --pr $(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)</CoverageUploadArgs>
     <CoverageUploadArgs Condition="'$(CoverageUploadBranchName)' != ''">$(CoverageUploadArgs) --branch $(CoverageUploadBranchName)</CoverageUploadArgs>
     <CoverageUploadArgs Condition="'$(BUILD_SOURCEVERSION)' != ''">$(CoverageUploadArgs) --sha $(BUILD_SOURCEVERSION)</CoverageUploadArgs>
