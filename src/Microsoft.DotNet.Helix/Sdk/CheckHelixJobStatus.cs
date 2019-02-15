@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             try
             {
                 WorkItemDetails details = await HelixApi.RetryAsync(
-                    () => HelixApi.WorkItem.DetailsAsync(jobName, workItemName),
+                    () => HelixApi.WorkItem.DetailsAsync(workItemName, jobName),
                     LogExceptionRetry);
                 string message = $"Work item {workItemName} in job {jobName} has {details.State} with exit code {details.ExitCode}";
                 if (IsFailed(details))
