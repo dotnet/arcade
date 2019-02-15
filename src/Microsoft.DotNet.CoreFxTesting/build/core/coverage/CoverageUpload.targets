@@ -20,7 +20,7 @@
     <!-- Allow to override the token. -->
     <CoverageUploadArgs Condition="'$(CoverageUploadToken)' != ''">$(CoverageUploadArgs) --token $(CoverageUploadToken)</CoverageUploadArgs>
     <!-- Necessary to upload big chunks of data. -->
-    <CoverageUploadArgs>$(CoverageUploadArgs) --disable-s3</CoverageUploadArgs>
+    <CoverageUploadArgs>$(CoverageUploadArgs) --disable-s3 --verbose --required</CoverageUploadArgs>
 
     <CoverageUploadCommandLine>"$(CoverageUploadExecutablePath)" $(CoverageUploadArgs)</CoverageUploadCommandLine>
   </PropertyGroup>
