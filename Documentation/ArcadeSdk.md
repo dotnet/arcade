@@ -717,6 +717,17 @@ The following build definition steps are required for sucessful generation of al
     condition: succeeded()
 ```
 
+### Testing Locally
+
+To test IBC data embedding and IBC training inputs generation locally:
+
+1. Restore [internal tools](#restoring-internal-tools)
+
+2. Run build with the following arguments (choose values of `RepositoryName` and `VisualStudioIbcSourceBranchName` as appropriate):
+```
+build -configuration Release -restore -ci /p:EnablePartialNgenOptimization=true /p:RepositoryName=dotnet/roslyn /p:VisualStudioIbcSourceBranchName=dev16.0-vs-deps
+```
+
 ## Project Properties Defined by the SDK
 
 ### `SemanticVersioningV1` (bool)
