@@ -383,6 +383,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 case "System.Runtime.CompilerServices.DynamicAttribute": return true;
                 case "System.Runtime.CompilerServices.IsByRefLikeAttribute": return true;
                 case "System.Runtime.CompilerServices.IsReadOnlyAttribute": return true;
+                case "System.Runtime.CompilerServices.TupleElementNamesAttribute": return true;
                 case "System.ObsoleteAttribute":
                     {
                         var arg = c.Arguments.OfType<IMetadataConstant>().FirstOrDefault();
