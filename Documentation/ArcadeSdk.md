@@ -721,7 +721,13 @@ The following build definition steps are required for sucessful generation of al
 
 To test IBC data embedding and IBC training inputs generation locally:
 
-1. Restore [internal tools](#restoring-internal-tools)
+1. Restore [internal tools](#restoring-internal-tools):
+
+```
+nuget.exe restore eng\common\internal\Tools.csproj
+```
+
+NuGet.exe may ask for credentials.
 
 2. Run build with the following arguments (choose values of `RepositoryName` and `VisualStudioIbcSourceBranchName` as appropriate):
 ```
