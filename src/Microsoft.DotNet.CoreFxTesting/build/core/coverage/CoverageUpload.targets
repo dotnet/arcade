@@ -21,10 +21,12 @@
     <CoverageUploadArgs Condition="'$(CoverageUploadToken)' != ''">$(CoverageUploadArgs) --token $(CoverageUploadToken)</CoverageUploadArgs>
    <!-- Use verbose logging. -->
    <CoverageUploadArgs Condition="'$(CoverageUploadVerbose)' == ''">$(CoverageUploadArgs) --verbose</CoverageUploadArgs>
-    <!-- 
+   <!-- Path to the coverage service config file in the repository. -->
+   <CoverageUploadArgs Condition="'$(CoverageUploadConfig)' == ''">$(CoverageUploadArgs) --yaml eng/codecov.yml</CoverageUploadArgs>
+    <!--
       disable-s3: use v2 api instead of v4 as v4 currently throws for big chunks of data.
       required: if upload not successful return with a non-zero exit code.
-      disable-network: don't attempt to include repository files as we upload from helix outside of the repository.
+      disable-network: don't include repository files as we upload from helix outside of the repository.
     -->
     <CoverageUploadArgs>$(CoverageUploadArgs) --disable-s3 --required --disable-network</CoverageUploadArgs>
 

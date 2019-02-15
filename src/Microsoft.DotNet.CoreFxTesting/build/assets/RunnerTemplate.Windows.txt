@@ -1,7 +1,7 @@
 ﻿@echo off
 setlocal enabledelayedexpansion
 
-set RUNTIME_PATH=%1
+set RUNTIME_PATH=%~1
 if not defined RUNTIME_PATH (
 echo Please specify a test runtime folder using the RUNTIME_PATH parameter
 goto ShowUsage
