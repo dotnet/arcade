@@ -19,7 +19,8 @@
     <CoverageUploadArgs Condition="'$(BUILD_BUILDNUMBER)' != ''">$(CoverageUploadArgs) --build $(BUILD_BUILDNUMBER)</CoverageUploadArgs>
     <!-- Allow to override the token. -->
     <CoverageUploadArgs Condition="'$(CoverageUploadToken)' != ''">$(CoverageUploadArgs) --token $(CoverageUploadToken)</CoverageUploadArgs>
-    <CoverageUploadArgs>$(CoverageUploadArgs) --required --verbose</CoverageUploadArgs>
+    <!-- Necessary to upload big chunks of data. -->
+    <CoverageUploadArgs>$(CoverageUploadArgs) --disable-s3</CoverageUploadArgs>
 
     <CoverageUploadCommandLine>"$(CoverageUploadExecutablePath)" $(CoverageUploadArgs)</CoverageUploadCommandLine>
   </PropertyGroup>
