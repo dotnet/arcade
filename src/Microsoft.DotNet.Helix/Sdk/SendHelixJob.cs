@@ -146,6 +146,10 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return;
             }
 
+            Source = Source.ToLowerInvariant();
+            Type = Type.ToLowerInvariant();
+            Build = Build.ToLowerInvariant();
+
             using (_commandPayload = new CommandPayload(this))
             {
                 var currentHelixApi = HelixApi;

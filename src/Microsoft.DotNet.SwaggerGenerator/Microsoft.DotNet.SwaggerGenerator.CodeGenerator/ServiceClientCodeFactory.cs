@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Text;
 using HandlebarsDotNet;
 using Microsoft.DotNet.SwaggerGenerator.Languages;
 using Microsoft.DotNet.SwaggerGenerator.Modeler;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.SwaggerGenerator
 {
@@ -20,14 +19,17 @@ namespace Microsoft.DotNet.SwaggerGenerator
             ServiceClientModel clientModel,
             GeneratorOptions options,
             Templates templates,
-            Language language)
+            Language language,
+            ILogger logger)
         {
             _language = language;
             ClientModel = clientModel;
             Options = options;
             Templates = templates;
+            Logger = logger;
         }
 
+        public ILogger Logger { get; }
         public ServiceClientModel ClientModel { get; }
         public GeneratorOptions Options { get; }
         public Templates Templates { get; }
@@ -43,7 +45,7 @@ namespace Microsoft.DotNet.SwaggerGenerator
 
             if (_files.TryGetValue(filePath, out CodeFile file) && !append)
             {
-                throw new InvalidOperationException($"File '{filePath}' already exists.");
+                throw new InvalidOperationException($"File '{filePath}' was already generated.");
             }
 
             if (file == null)
@@ -60,7 +62,7 @@ namespace Microsoft.DotNet.SwaggerGenerator
 
     public class ServiceClientCodeFactory
     {
-        public List<CodeFile> GenerateCode(ServiceClientModel model, GeneratorOptions options)
+        public List<CodeFile> GenerateCode(ServiceClientModel model, GeneratorOptions options, ILogger logger)
         {
             Language language = Language.Get(options.LanguageName);
 
@@ -72,7 +74,7 @@ namespace Microsoft.DotNet.SwaggerGenerator
 
             RegisterTemplates(hb, templates);
 
-            var context = new GenerateCodeContext(model, options, templates, language);
+            var context = new GenerateCodeContext(model, options, templates, language, logger);
             language.GenerateCode(context);
 
             return context.Files.Values.ToList();

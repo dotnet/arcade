@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 {
@@ -13,16 +13,11 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 
         public void Dispose()
         {
-            _onDispose();
+            _onDispose?.Invoke();
         }
 
         public static IDisposable Create(Action onDispose)
         {
-            if (onDispose == null)
-            {
-                throw new ArgumentNullException(nameof(onDispose));
-            }
-
             return new Disposable(onDispose);
         }
     }

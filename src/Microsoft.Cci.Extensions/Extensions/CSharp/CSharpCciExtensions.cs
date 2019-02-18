@@ -126,7 +126,7 @@ namespace Microsoft.Cci.Extensions.CSharp
 
                 var resolvedType = typeToCheck.ResolvedType;
 
-                // If it is dummy we cannot really check so assume it does because that is will be the most conservative 
+                // If it is dummy we cannot really check so assume it does because that is will be the most conservative
                 if (resolvedType is Dummy)
                     return true;
 
@@ -588,6 +588,11 @@ namespace Microsoft.Cci.Extensions.CSharp
             return false;
         }
 
+        public static bool IsValueTuple(this IGenericTypeInstance genericType)
+        {
+            return genericType.GenericType.FullName().StartsWith("System.ValueTuple");
+        }
+
         public static bool IsException(this ITypeDefinition type)
         {
             foreach (var baseTypeRef in type.GetBaseTypes())
@@ -610,7 +615,12 @@ namespace Microsoft.Cci.Extensions.CSharp
 
         public static bool HasAttributeOfType(this IEnumerable<ICustomAttribute> attributes, string attributeName)
         {
-            return attributes.Any(a => a.Type.AreEquivalent(attributeName));
+            return GetAttributeOfType(attributes, attributeName) != null;
+        }
+
+        private static ICustomAttribute GetAttributeOfType(this IEnumerable<ICustomAttribute> attributes, string attributeName)
+        {
+            return attributes.FirstOrDefault(a => a.Type.AreEquivalent(attributeName));
         }
 
         public static bool HasIsByRefLikeAttribute(this IEnumerable<ICustomAttribute> attributes)
@@ -621,6 +631,28 @@ namespace Microsoft.Cci.Extensions.CSharp
         public static bool HasIsReadOnlyAttribute(this IEnumerable<ICustomAttribute> attributes)
         {
             return attributes.HasAttributeOfType("System.Runtime.CompilerServices.IsReadOnlyAttribute");
+        }
+
+        public static string[] GetValueTupleNames(this IEnumerable<ICustomAttribute> attributes)
+        {
+            string[] names = null;
+            var attribute = attributes.GetAttributeOfType("System.Runtime.CompilerServices.TupleElementNamesAttribute");
+            if (attribute != null && attribute.Arguments.Single() is IMetadataCreateArray createArray)
+            {
+                names = new string[createArray.Sizes.Single()];
+                var i = 0;
+                foreach (var argument in createArray.Initializers)
+                {
+                    if (argument is IMetadataConstant constant)
+                    {
+                        names[i] = (string)constant.Value;
+                    }
+
+                    i++;
+                }
+            }
+
+            return names;
         }
 
         private static IEnumerable<ITypeReference> GetBaseTypes(this ITypeReference typeRef)

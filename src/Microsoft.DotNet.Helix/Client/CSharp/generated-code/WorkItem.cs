@@ -13,6 +13,12 @@ namespace Microsoft.DotNet.Helix.Client
 {
     public partial interface IWorkItem
     {
+        Task<System.IO.Stream> ConsoleLogAsync(
+            string id,
+            string job,
+            CancellationToken cancellationToken = default
+        );
+
         Task<IImmutableList<WorkItemSummary>> ListAsync(
             string job,
             CancellationToken cancellationToken = default
@@ -36,6 +42,92 @@ namespace Microsoft.DotNet.Helix.Client
         public HelixApi Client { get; }
 
         partial void HandleFailedRequest(RestApiException ex);
+
+        partial void HandleFailedConsoleLogRequest(RestApiException ex);
+
+        public async Task<System.IO.Stream> ConsoleLogAsync(
+            string id,
+            string job,
+            CancellationToken cancellationToken = default
+        )
+        {
+            using (var _res = await ConsoleLogInternalAsync(
+                id,
+                job,
+                cancellationToken
+            ).ConfigureAwait(false))
+            {
+                return _res.Body;
+            }
+        }
+
+        internal async Task<HttpOperationResponse<System.IO.Stream>> ConsoleLogInternalAsync(
+            string id,
+            string job,
+            CancellationToken cancellationToken = default
+        )
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
+
+            if (string.IsNullOrEmpty(job))
+            {
+                throw new ArgumentNullException(nameof(job));
+            }
+
+
+            var _path = "/api/2018-03-14/jobs/{job}/workitems/{id}/console";
+            _path = _path.Replace("{job}", Client.Serialize(job));
+            _path = _path.Replace("{id}", Client.Serialize(id));
+
+            var _query = new QueryBuilder();
+
+            var _uriBuilder = new UriBuilder(Client.BaseUri);
+            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
+            _uriBuilder.Query = _query.ToString();
+            var _url = _uriBuilder.Uri;
+
+            HttpRequestMessage _req = null;
+            HttpResponseMessage _res = null;
+            try
+            {
+                _req = new HttpRequestMessage(HttpMethod.Get, _url);
+
+                if (Client.Credentials != null)
+                {
+                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
+                }
+
+                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
+                string _responseContent;
+                if (!_res.IsSuccessStatusCode)
+                {
+                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var ex = new RestApiException(
+                        new HttpRequestMessageWrapper(_req, null),
+                        new HttpResponseMessageWrapper(_res, _responseContent));
+                    HandleFailedConsoleLogRequest(ex);
+                    HandleFailedRequest(ex);
+                    Client.OnFailedRequest(ex);
+                    throw ex;
+                }
+                var _responseStream = await _res.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                return new HttpOperationResponse<System.IO.Stream>
+                {
+                    Request = _req,
+                    Response = _res,
+                    Body = _responseStream
+                };
+            }
+            catch (Exception)
+            {
+                _req?.Dispose();
+                _res?.Dispose();
+                throw;
+            }
+        }
 
         partial void HandleFailedListRequest(RestApiException ex);
 
@@ -86,19 +178,19 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                var _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    var ex = new RestApiException
-                    {
-                        Request = new HttpRequestMessageWrapper(_req, null),
-                        Response = new HttpResponseMessageWrapper(_res, _responseContent),
-                    };
+                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var ex = new RestApiException(
+                        new HttpRequestMessageWrapper(_req, null),
+                        new HttpResponseMessageWrapper(_res, _responseContent));
                     HandleFailedListRequest(ex);
                     HandleFailedRequest(ex);
                     Client.OnFailedRequest(ex);
                     throw ex;
                 }
+                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<IImmutableList<WorkItemSummary>>
                 {
                     Request = _req,
@@ -172,19 +264,19 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                var _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    var ex = new RestApiException
-                    {
-                        Request = new HttpRequestMessageWrapper(_req, null),
-                        Response = new HttpResponseMessageWrapper(_res, _responseContent),
-                    };
+                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var ex = new RestApiException(
+                        new HttpRequestMessageWrapper(_req, null),
+                        new HttpResponseMessageWrapper(_res, _responseContent));
                     HandleFailedDetailsRequest(ex);
                     HandleFailedRequest(ex);
                     Client.OnFailedRequest(ex);
                     throw ex;
                 }
+                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<WorkItemDetails>
                 {
                     Request = _req,

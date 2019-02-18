@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
@@ -31,6 +31,8 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
         public TypeReference ErrorType { get; }
 
         public bool ResponseIsVoid => ResponseType == TypeReference.Void;
+
+        public bool ResponseIsFile => ResponseType == TypeReference.File;
 
         public IEnumerable<ParameterModel> ConstantParameters =>
             Parameters.Where(p => p.Type is TypeReference.ConstantTypeReference).OrderBy(p => p.Name);

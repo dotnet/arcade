@@ -126,19 +126,6 @@ function RepoExists($owner, $name) {
     }
 }
 
-function RepoAllowsMergeCommits($owner, $name)
-{
-    try {
-        $resp = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/$owner/$name"
-        $resp | Write-Verbose
-
-        return $resp.allow_merge_commit;
-    }
-    catch {
-        return $true;
-    }
-}
-
 function GetOrCreateFork() {
     $resp = Invoke-RestMethod -Method Post -Headers $Headers `
         "https://api.github.com/repos/$RepoOwner/$RepoName/forks"
@@ -347,24 +334,49 @@ You may need to fix this problem by merging branches with this PR. Contact .NET 
             Authorization = "bearer $AuthToken"
         }
 
-        if (RepoAllowsMergeCommits $RepoOwner $RepoName)
-        {
-            $mergeInstructions = @"
-## Instructions for merging
+        $prBody = @"
+I detected changes in the $HeadBranch branch which have not been merged yet to $BaseBranch. I'm a robot and am configured to help you automatically keep $BaseBranch up to date, so I've opened this PR.
 
-This PR will not be auto-merged. When pull request checks pass, please complete this PR by creating a merge commit, *not* a squash or rebase commit.
+$committersList
+
+## Instructions for merging from UI
+
+This PR will not be auto-merged. When pull request checks pass, complete this PR by creating a merge commit, *not* a squash or rebase commit.
 
 <img alt="merge button instructions" src="https://i.imgur.com/GepcNJV.png" width="300" />
 
-You can also do this on command line:
+If this repo does not allow creating merge commits from the GitHub UI, use command line instructions.
+
+## Instructions for merging via command line
+
+Run these commands to merge this pull request from the command line.
+
+`````` sh
+git fetch
+git checkout ${HeadBranch}
+git pull --ff-only
+git checkout ${baseBranch}
+git pull --ff-only
+git merge --no-ff ${HeadBranch}
+
+# If there are merge conflicts, resolve them and then run `git merge --continue` to complete the merge
+# Pushing the changes to the PR branch will re-trigger PR validation.
+git push https://github.com/$prOwnerName/$prRepoName HEAD:${mergeBranchName}
+``````
+
+<details>
+<summary>or if you are using SSH</summary>
 
 ``````
-git branch -d ${mergeBranchName}
-git checkout -b ${mergeBranchName} $BaseBranch
-git pull https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
-git checkout $BaseBranch
-git merge --no-ff ${mergeBranchName}
-git push origin $BaseBranch
+git push git@github.com:$prOwnerName/$prRepoName HEAD:${mergeBranchName}
+``````
+
+</details>
+
+
+After PR checks are complete push the branch
+``````
+git push
 ``````
 
 ## Instructions for resolving conflicts
@@ -398,51 +410,8 @@ git push git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
 ``````
 
 </details>
-"@;
-        }
-        else
-        {
-            $mergeInstructions = @"
-## Instructions for merging
 
-This repo does not appear to allow merge commits from the GitHub UI, so you will need to update this PR with a merge commit before closing this PR.
-
-`````` sh
-git fetch
-git checkout ${HeadBranch}
-git pull --ff-only
-git checkout ${baseBranch}
-git pull --ff-only
-git merge --no-ff ${HeadBranch}
-# If there are merge conflicts, resolve them and then run `git merge --continue` to complete the merge
-git push https://github.com/$prOwnerName/$prRepoName HEAD:${mergeBranchName}
-``````
-
-<details>
-<summary>or if you are using SSH</summary>
-
-``````
-git push git@github.com:$prOwnerName/$prRepoName HEAD:${mergeBranchName}
-``````
-
-</details>
-
-
-After PR checks are complete push the branch
-``````
-git push
-``````
-"@;
-        }
-
-        $prBody = @"
-I detected changes in the $HeadBranch branch which have not been merged yet to $BaseBranch. I'm a robot and am configured to help you automatically keep $BaseBranch up to date, so I've opened this PR.
-
-$committersList
-
-$mergeInstructions
-
-Please contact .NET Core Engineering if you have questions or issues.
+Contact .NET Core Engineering if you have questions or issues.
 Also, if this PR was generated incorrectly, help us fix it. See https://github.com/dotnet/arcade/blob/master/scripts/GitHubMergeBranches.ps1.
 
 "@;

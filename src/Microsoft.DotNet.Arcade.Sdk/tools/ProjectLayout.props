@@ -5,10 +5,6 @@
      Properties describing the layout of the repo specific to the current project.
   -->
 
-  <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
   <Import Project="RepoLayout.props"/>
 
   <PropertyGroup>
