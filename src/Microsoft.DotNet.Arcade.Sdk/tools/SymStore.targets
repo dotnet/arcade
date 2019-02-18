@@ -2,10 +2,6 @@
 <Project>
 
   <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <_DeployToSymStoreTargetName Condition="'$(TargetFrameworks)' == ''">_InnerDeployToSymStore</_DeployToSymStoreTargetName>
     <_DeployToSymStoreTargetName Condition="'$(TargetFrameworks)' != ''">_OuterDeployToSymStore</_DeployToSymStoreTargetName>
   </PropertyGroup>

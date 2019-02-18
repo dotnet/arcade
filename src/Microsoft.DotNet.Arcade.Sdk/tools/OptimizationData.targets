@@ -2,13 +2,10 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
-  <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
   <!--
     Properties:
       IbcOptimizationDataDir             The directory containing IBC optimization data. Optimization data are not applied if unset.
+      EnablePartialNgenOptimization      Set to true to enable Partial NGEN optimization data embedding.
       ApplyPartialNgenOptimization       Set to true in a project to apply Partial NGEN optimization data to the built binary.
 
     Items:  
@@ -20,6 +17,7 @@
 
   <PropertyGroup>
     <PostCompileBinaryModificationSentinelFile>$(IntermediateOutputPath)$(TargetFileName).pcbm</PostCompileBinaryModificationSentinelFile>
+    <EnablePartialNgenOptimization Condition="'$(EnablePartialNgenOptimization)' == '' and '$(Configuration)' == 'Release' and '$(OfficialBuild)' == 'true'">true</EnablePartialNgenOptimization>
   </PropertyGroup>
 
   <!--
@@ -29,7 +27,7 @@
   <Target Name="PostCompileBinaryModification"
           AfterTargets="CoreCompile"
           DependsOnTargets="_InitializeAssemblyOptimizationWithTargetAssembly;ApplyOptimizations"
-          Condition="'$(IsWpfTempProject)' != 'true' and '$(ApplyPartialNgenOptimization)' == 'true'"
+          Condition="'$(IsWpfTempProject)' != 'true' and '$(EnablePartialNgenOptimization)' == 'true' and '$(ApplyPartialNgenOptimization)' == 'true'"
           Inputs="$(MSBuildAllProjects);@(IntermediateAssembly)"
           Outputs="@(IntermediateAssembly);$(PostCompileBinaryModificationSentinelFile)">
 
@@ -58,7 +56,7 @@
 
   <Target Name="_CalculateIbcMergeInvocations">
 
-    <Error Text="ApplyPartialNgenOptimization is true but directory specified in IbcOptimizationDataDir does not exist: '$(IbcOptimizationDataDir)'"
+    <Error Text="Directory specified in IbcOptimizationDataDir does not exist: '$(IbcOptimizationDataDir)'"
            Condition="!Exists('$(IbcOptimizationDataDir)')" />
 
     <Error Text="IbcOptimizationDataDir must end with slash"
@@ -133,7 +131,7 @@
   -->
   <Target Name="ApplyOptimizations"
           DependsOnTargets="_LocateIbcMerge;_CalculateIbcMergeInvocations"
-          Condition="'@(OptimizeAssembly)' != '' and '$(Configuration)' == 'Release' and '$(ContinuousIntegrationBuild)' == 'true' and '$(ApplyPartialNgenOptimization)' == 'true'">
+          Condition="'@(OptimizeAssembly)' != '' and '$(EnablePartialNgenOptimization)' == 'true' and '$(ApplyPartialNgenOptimization)' == 'true'">
 
     <Message Text='IBCMerge tool will be run in an official build with arguments: %(_IbcMergeInvocation.IbcMergeArgs)'
              Condition="'$(_RunIbcMerge)' != 'true'" 

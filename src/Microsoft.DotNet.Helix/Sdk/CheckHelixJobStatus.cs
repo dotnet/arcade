@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Helix.Client.Models;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -124,19 +125,29 @@ namespace Microsoft.DotNet.Helix.Sdk
             await Task.Yield();
             try
             {
-                var details = await HelixApi.RetryAsync(
-                    () => HelixApi.WorkItem.DetailsAsync(jobName, workItemName),
+                WorkItemDetails details = await HelixApi.RetryAsync(
+                    () => HelixApi.WorkItem.DetailsAsync(workItemName, jobName),
                     LogExceptionRetry);
-                if (details.State == "Failed")
+                string message = $"Work item {workItemName} in job {jobName} has {details.State} with exit code {details.ExitCode}";
+                if (IsFailed(details))
                 {
-                    Log.LogError(
-                        $"Work item {workItemName} on job {jobName} has failed with exit code {details.ExitCode}.");
+                    Log.LogError(message);
+                }
+                else
+                {
+                    Log.LogMessage(MessageImportance.Low, message);
                 }
             }
             catch (Exception ex)
             {
                 Log.LogError($"Unable to get work item status for '{workItemName}', assuming failure. Exception: {ex}");
             }
+        }
+
+        private bool IsFailed(WorkItemDetails details)
+        {
+            // The State property will not be populated with "Failed" if kusto hasn't finished ingesting data. Check the ExitCode also.
+            return details.State == "Failed" || details.ExitCode != 0;
         }
     }
 }

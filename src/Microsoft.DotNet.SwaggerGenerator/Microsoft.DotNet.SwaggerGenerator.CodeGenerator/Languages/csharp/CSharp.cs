@@ -98,6 +98,11 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                     return "Newtonsoft.Json.Linq.JToken";
                 }
 
+                if (reference == TypeReference.File)
+                {
+                    return "System.IO.Stream";
+                }
+
                 if (reference == TypeReference.Byte)
                 {
                     // TODO: implement this

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -27,8 +27,10 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
         private readonly GeneratorOptions _generatorOptions;
 
         private readonly AsyncLocal<Stack<string>> _propertyNameStack = new AsyncLocal<Stack<string>>();
-
         private readonly AsyncLocal<Stack<string>> _typeNameStack = new AsyncLocal<Stack<string>>();
+        private readonly AsyncLocal<Stack<string>> _parameterNameStack = new AsyncLocal<Stack<string>>();
+        private readonly AsyncLocal<Stack<string>> _methodNameStack = new AsyncLocal<Stack<string>>();
+
         private readonly List<TypeModel> Types = new List<TypeModel>();
 
         public ServiceClientModelFactory(GeneratorOptions options)
@@ -36,11 +38,16 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
             _generatorOptions = options;
             _typeNameStack.Value = new Stack<string>();
             _propertyNameStack.Value = new Stack<string>();
+            _parameterNameStack.Value = new Stack<string>();
+            _methodNameStack.Value = new Stack<string>();
         }
+        private string CurrentMethodName => _methodNameStack.Value.Count != 0 ? _methodNameStack.Value.Peek() : null;
 
-        private string CurrentTypeName => _typeNameStack.Value.Peek();
+        private string CurrentParameterName => _parameterNameStack.Value.Count != 0 ? _parameterNameStack.Value.Peek() : "Value";
 
-        private string CurrentPropertyName => _propertyNameStack.Value.Peek();
+        private string CurrentTypeName => _typeNameStack.Value.Count != 0 ? _typeNameStack.Value.Peek() : null;
+
+        private string CurrentPropertyName => _propertyNameStack.Value.Count != 0 ? _propertyNameStack.Value.Peek() : "Value";
 
         private static void ResolveReferences(SwaggerDocument document)
         {
@@ -145,6 +152,34 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
             }
         }
 
+        private IDisposable WithMethodName(string name)
+        {
+            _methodNameStack.Value.Push(name);
+            return Disposable.Create(
+                () =>
+                {
+                    if (_methodNameStack.Value.Pop() != name)
+                    {
+                        throw new InvalidOperationException(
+                            $"Method name '{name}' popped when it wasn't the top of the stack.");
+                    }
+                });
+        }
+
+        private IDisposable WithParameterName(string name)
+        {
+            _parameterNameStack.Value.Push(name);
+            return Disposable.Create(
+                () =>
+                {
+                    if (_parameterNameStack.Value.Pop() != name)
+                    {
+                        throw new InvalidOperationException(
+                            $"Parameter name '{name}' popped when it wasn't the top of the stack.");
+                    }
+                });
+        }
+
         private IDisposable WithTypeName(string name)
         {
             _typeNameStack.Value.Push(name);
@@ -207,9 +242,6 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 
         private MethodModel CreateMethodModel(string path, string method, Operation operation)
         {
-            IList<ParameterModel> parameters =
-                (IList<ParameterModel>) operation.Parameters?.Select(CreateParameterModel).ToList() ??
-                Array.Empty<ParameterModel>();
 
             string name = operation.OperationId;
             string firstTag = operation.Tags.FirstOrDefault();
@@ -219,16 +251,22 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
             }
 
             name = name.TrimStart('_');
+            using (WithMethodName(name))
+            {
+                IList<ParameterModel> parameters =
+                    (IList<ParameterModel>) operation.Parameters?.Select(CreateParameterModel).ToList() ??
+                    Array.Empty<ParameterModel>();
 
-            TypeReference errorType = operation.Responses.TryGetValue("default", out Response errorResponse)
-                ? ResolveType(errorResponse.Schema, name)
-                : null;
+                TypeReference errorType = operation.Responses.TryGetValue("default", out Response errorResponse)
+                    ? ResolveType(errorResponse.Schema, name)
+                    : null;
 
-            TypeReference responseType = operation.Responses.Where(r => r.Key.StartsWith("2"))
-                .Select(r => ResolveType(r.Value.Schema, name))
-                .FirstOrDefault();
+                TypeReference responseType = operation.Responses.Where(r => r.Key.StartsWith("2"))
+                    .Select(r => ResolveType(r.Value.Schema, name))
+                    .FirstOrDefault();
 
-            return new MethodModel(name, path, GetHttpMethod(method), responseType, errorType, parameters);
+                return new MethodModel(name, path, GetHttpMethod(method), responseType, errorType, parameters);
+            }
         }
 
         private HttpMethod GetHttpMethod(string method)
@@ -256,37 +294,40 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 
         private ParameterModel CreateParameterModel(IParameter parameter)
         {
-            TypeReference type = null;
-            if (parameter is BodyParameter bodyParameter)
+            using (WithParameterName(parameter.Name))
             {
-                type = ResolveType(bodyParameter.Schema);
-            }
+                TypeReference type = null;
+                if (parameter is BodyParameter bodyParameter)
+                {
+                    type = ResolveType(bodyParameter.Schema);
+                }
 
-            if (parameter is NonBodyParameter nonBodyParameter)
-            {
-                type = ResolveType(nonBodyParameter);
-            }
+                if (parameter is NonBodyParameter nonBodyParameter)
+                {
+                    type = ResolveType(nonBodyParameter);
+                }
 
-            ParameterLocation location;
-            switch (parameter.In)
-            {
-                case "query":
-                    location = ParameterLocation.Query;
-                    break;
-                case "path":
-                    location = ParameterLocation.Path;
-                    break;
-                case "header":
-                    location = ParameterLocation.Header;
-                    break;
-                case "body":
-                    location = ParameterLocation.Body;
-                    break;
-                default:
-                    throw new NotSupportedException(parameter.In);
-            }
+                ParameterLocation location;
+                switch (parameter.In)
+                {
+                    case "query":
+                        location = ParameterLocation.Query;
+                        break;
+                    case "path":
+                        location = ParameterLocation.Path;
+                        break;
+                    case "header":
+                        location = ParameterLocation.Header;
+                        break;
+                    case "body":
+                        location = ParameterLocation.Body;
+                        break;
+                    default:
+                        throw new NotSupportedException(parameter.In);
+                }
 
-            return new ParameterModel(parameter.Name, parameter.Required, location, type);
+                return new ParameterModel(parameter.Name, parameter.Required, location, type);
+            }
         }
 
         private TypeReference ResolveType(object schema)
@@ -351,8 +392,19 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
                             return TypeReference.Constant((string) enumeration[0]);
                         }
 
-                        string enumName =
-                            $"{Helpers.PascalCase(CurrentTypeName.AsSpan())}{Helpers.PascalCase(CurrentPropertyName.AsSpan())}";
+                        string enumName;
+                        if (CurrentTypeName != null)
+                        {
+                            enumName =
+                                $"{Helpers.PascalCase(CurrentTypeName.AsSpan())}{Helpers.PascalCase(CurrentPropertyName.AsSpan())}";
+                        }
+                        else
+                        {
+                            enumName =
+                                $"{Helpers.PascalCase(CurrentMethodName.AsSpan())}{Helpers.PascalCase(CurrentParameterName.AsSpan())}";
+
+                        }
+
 
                         return TypeReference.Object(ResolveEnumTypeModel(enumeration, enumName));
                     }
@@ -377,6 +429,8 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
                     }
 
                     return TypeReference.Object(ResolveTypeModel(s));
+                case "file":
+                    return TypeReference.File;
                 case null:
                     return TypeReference.Any;
                 case "null":

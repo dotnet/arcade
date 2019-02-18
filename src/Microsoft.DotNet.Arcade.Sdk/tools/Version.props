@@ -14,10 +14,6 @@
         - A builds target that produces MSI shall fail if DotNetUseShippingVersions == false, since MSIs require increasing file versions to function properly.
   -->
 
-  <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
   <!--
     The project can specify version either directly using the .NET SDK recognized property VersionPrefix,
     or using MajorVersion and MinorVersion properties.

@@ -1,9 +1,5 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
-  <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
   <!-- 
     Properties:
       RepositoryName                   Current repository name (e.g. 'dotnet/roslyn').
@@ -19,20 +15,20 @@
   <UsingTask AssemblyFile="$(_VisualStudioBuildTasksAssembly)" TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.FindLatestDrop"/>
 
   <PropertyGroup>
-    <ApplyPartialNgenOptimization Condition="'$(ApplyPartialNgenOptimization)' == '' and '$(Configuration)' == 'Release'">true</ApplyPartialNgenOptimization>
+    <EnablePartialNgenOptimization Condition="'$(EnablePartialNgenOptimization)' == '' and '$(Configuration)' == 'Release' and '$(OfficialBuild)' == 'true'">true</EnablePartialNgenOptimization>
   </PropertyGroup>
   
   <!--
-    Acquire optimization data from VS drop, unless suppressed by setting ApplyPartialNgenOptimization to false.
+    Acquire optimization data from VS drop, unless suppressed by setting EnablePartialNgenOptimization to false.
     Find the latest optimization data drop and downloads it to IbcOptimizationDataDir directory.
   -->
   <Target Name="_AcquireVisualStudioOptimizationData"
-          DependsOnTargets="_PrepareAcquiteVisualStudioOptimizationData;_DownloadVisualStudioOptimizationDataOpt"
+          DependsOnTargets="_PrepareAcquireVisualStudioOptimizationData;_DownloadVisualStudioOptimizationDataOpt"
           AfterTargets="Restore"
-          Condition="'$(ApplyPartialNgenOptimization)' == 'true'">
+          Condition="'$(EnablePartialNgenOptimization)' == 'true'">
   </Target>
   
-  <Target Name="_PrepareAcquiteVisualStudioOptimizationData">
+  <Target Name="_PrepareAcquireVisualStudioOptimizationData">
     <PropertyGroup>
       <_DropToolPath>$(NuGetPackageRoot)drop.app\$(DropAppVersion)\lib\net45\drop.exe</_DropToolPath>
       <_DropToolExists>false</_DropToolExists>
@@ -49,9 +45,9 @@
   </Target>
 
   <Target Name="_DownloadVisualStudioOptimizationDataOpt" Condition="$(_DropToolExists)">
-    <Error Text="VisualStudioDropAccessToken property has to be specified when ApplyPartialNgenOptimization and OfficialBuild is true" Condition="'$(VisualStudioDropAccessToken)' == '' and '$(OfficialBuild)' == 'true'"/>
-    <Error Text="RepositoryName property has to be specified when ApplyPartialNgenOptimization is true" Condition="'$(RepositoryName)' == ''"/>
-    <Error Text="VisualStudioIbcSourceBranchName property has to be specified when ApplyPartialNgenOptimization is true" Condition="'$(VisualStudioIbcSourceBranchName)' == ''"/>
+    <Error Text="VisualStudioDropAccessToken property has to be specified when EnablePartialNgenOptimization and OfficialBuild is true" Condition="'$(VisualStudioDropAccessToken)' == '' and '$(OfficialBuild)' == 'true'"/>
+    <Error Text="RepositoryName property has to be specified when EnablePartialNgenOptimization is true" Condition="'$(RepositoryName)' == ''"/>
+    <Error Text="VisualStudioIbcSourceBranchName property has to be specified when EnablePartialNgenOptimization is true" Condition="'$(VisualStudioIbcSourceBranchName)' == ''"/>
 
     <PropertyGroup>
       <_DropServiceUrl>https://devdiv.artifacts.visualstudio.com</_DropServiceUrl>

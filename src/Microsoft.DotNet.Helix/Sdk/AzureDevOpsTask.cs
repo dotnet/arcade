@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
@@ -42,7 +43,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             {
                 if (!InAzurePipeline)
                 {
-                    Log.LogWarning("Not running inside Azure Pipelines. Task will not be executed.");
+                    Log.LogError("This task must be run inside an Azure Pipelines Build");
                 }
                 else
                 {
@@ -89,7 +90,12 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 
         protected async Task LogFailedRequest(HttpRequestMessage req, HttpResponseMessage res)
         {
-            Log.LogError($"Request to {req.RequestUri} returned failed status {res.StatusCode} {res.ReasonPhrase}\n\n{(res.Content != null ? await res.Content.ReadAsStringAsync() : "")}");
+            Log.LogError($"Request to {req.RequestUri} returned failed status {(int)res.StatusCode} {res.ReasonPhrase}\n\n{(res.Content != null ? await res.Content.ReadAsStringAsync() : "")}");
+            if (res.StatusCode == HttpStatusCode.Found)
+            {
+                Log.LogError(
+                    "A call to an Azure DevOps api returned 302 Indicating a bad 'System.AccessToken' value.\n\nPlease Check the 'Make secrets available to builds of forks' in the pipeline pull request validation trigger settings.\nWe have evaluated the security considerations of this setting and have determined that it is fine to use for our public PR validation builds.");
+            }
         }
 
         protected async Task<JObject> ParseResponseAsync(HttpRequestMessage req, HttpResponseMessage res)

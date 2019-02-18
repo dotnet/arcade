@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
         public static readonly TypeReference Byte = new PrimitiveTypeReference("byte", false);
         public static readonly TypeReference Date = new PrimitiveTypeReference("date", false);
         public static readonly TypeReference DateTime = new PrimitiveTypeReference("date-time", false);
+        public static readonly TypeReference File = new PrimitiveTypeReference("file", true);
         public static readonly TypeReference Void = new PrimitiveTypeReference("void", false);
         public static readonly TypeReference Any = new PrimitiveTypeReference("any", true);
 

@@ -28,7 +28,6 @@ jobs:
           queue: Windows.10.Amd64.Open
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           name: dotnet-internal-temp
-
       variables:
       - _Script: eng\common\cibuild.cmd
       - _ValidateSdkArgs: ''

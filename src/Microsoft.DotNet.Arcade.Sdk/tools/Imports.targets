@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
-
-  <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
   <!--
     Import NuGet targets to WPF temp projects (workaround for https://github.com/dotnet/sourcelink/issues/91) 
   -->
@@ -59,7 +54,7 @@
 
   <Import Project="Performance.targets" Condition="'$(DisableArcadeTestFramework)' != 'true'" />
   <Import Project="Localization.targets" Condition="'$(UsingToolXliff)' == 'true'"/>
-  <Import Project="VisualStudio.targets" Condition="'$(UsingToolVSSDK)' == 'true' and ('$(IsVsixProject)' == 'true' or '$(IsSwixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true') and '$(DesignTimeBuild)' != 'true' and '$(BuildingForLiveUnitTesting)' != 'true' and '$(MSBuildRuntimeType)' != 'Core'"/>
+  <Import Project="VisualStudio.targets" Condition="'$(UsingToolVSSDK)' == 'true' and ('$(IsVsixProject)' == 'true' or '$(IsSwixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true') and '$(MSBuildRuntimeType)' != 'Core'"/>
   <Import Project="OptimizationData.targets" Condition="'$(UsingToolIbcOptimization)' == 'true'"/>
   <Import Project="SymStore.targets" Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OS)' == 'Windows_NT'"/>
 
