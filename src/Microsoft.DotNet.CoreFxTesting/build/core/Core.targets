@@ -10,8 +10,7 @@
     <RunWorkingDirectory>$(TestPath)</RunWorkingDirectory>
 
     <!-- Publish the test data as part of the build to enable VS test runs. -->
-    <PrepareForRunDependsOn>$(PrepareForRunDependsOn);PublishSupplementalTestData;</PrepareForRunDependsOn>
-    <PrepareForRunDependsOn Condition="'$(ArchiveTests)' == 'true'">$(PrepareForRunDependsOn);ArchiveTestBuild;</PrepareForRunDependsOn>
+    <PrepareForRunDependsOn>$(PrepareForRunDependsOn);PublishSupplementalTestData;ArchiveTestBuild;</PrepareForRunDependsOn>
     <!-- Clean leftovers not tracked by FileWrites. -->
     <CleanDependsOn>$(CleanDependsOn);CleanTestPath;</CleanDependsOn>
   </PropertyGroup>
@@ -65,6 +64,7 @@
 
   <!-- Archive test binaries along with supporting files. -->
   <Target Name="ArchiveTestBuild"
+          Condition="'$(ArchiveTests)' == 'true'"
           DependsOnTargets="GenerateRunScript">
 
     <Error Condition="'$(TestArchiveTestsDir)' == ''" Text="TestArchiveTestsDir property to archive the test folder must be set." />
@@ -172,7 +172,7 @@
 
     <Message Condition="'%(UnsupportedPlatformsItems.Identity)' == '$(TargetOS)'"
              Text="Skipping tests in $(AssemblyName) because it is not supported on $(TargetOS)" />
-    
+
     <Message Condition="'$(ConfigurationErrorMsg)' != ''"
              Text="Skipping tests in $(AssemblyName) because there is no configuration compatible with the current BuildConfiguration." />
 
@@ -240,7 +240,7 @@
 
   <!--
     Performance test support.
-    Supported runners: xunit-performance, BenchmarkDotNet.
+    Supported runners: xunit-performance.
   -->
   <Import Condition="'$(IsPerformanceTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'performance', 'Performance.targets'))" />
 

@@ -44,7 +44,7 @@
 
   <!--
     Performance test support.
-    Supported runners: xunit-performance, BenchmarkDotNet.
+    Supported runners: xunit-performance.
   -->
   <Import Condition="'$(IsPerformanceTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'performance', 'Performance.props'))" />
 
