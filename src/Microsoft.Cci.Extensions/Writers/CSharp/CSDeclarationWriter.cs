@@ -223,15 +223,16 @@ namespace Microsoft.Cci.Writers.CSharp
             _writer.Write(literal);
         }
 
-        private void WriteTypeName(ITypeReference type, bool noSpace = false, bool isDynamic = false, bool useTypeKeywords = true, bool omitGenericTypeList = false)
+        private void WriteTypeName(ITypeReference type, bool noSpace = false, IEnumerable<ICustomAttribute> attributes = null, bool useTypeKeywords = true,
+            bool omitGenericTypeList = false)
         {
-            if (isDynamic)
+            if (attributes != null && IsDynamic(attributes))
             {
                 WriteKeyword("dynamic", noSpace: noSpace);
                 return;
             }
 
-            NameFormattingOptions namingOptions = NameFormattingOptions.TypeParameters;
+            NameFormattingOptions namingOptions = NameFormattingOptions.TypeParameters | NameFormattingOptions.ContractNullable;
 
             if (useTypeKeywords)
                 namingOptions |= NameFormattingOptions.UseTypeKeywords;
@@ -245,12 +246,49 @@ namespace Microsoft.Cci.Writers.CSharp
             if (omitGenericTypeList)
                 namingOptions |= NameFormattingOptions.EmptyTypeParameterList;
 
-            string name = TypeHelper.GetTypeName(type, namingOptions);
+            void WriteTypeNameInner(ITypeReference typeReference)
+            {
+                string name = TypeHelper.GetTypeName(typeReference, namingOptions);
 
-            if (CSharpCciExtensions.IsKeyword(name))
-                _writer.WriteKeyword(name);
+                if (CSharpCciExtensions.IsKeyword(name))
+                    _writer.WriteKeyword(name);
+                else
+                    _writer.WriteTypeName(name);
+            }
+
+            var definition = type.GetDefinitionOrNull();
+            if (definition is IGenericTypeInstance genericType && genericType.IsValueTuple())
+            {
+                    string[] names = attributes.GetValueTupleNames();
+
+                    _writer.WriteSymbol("(");
+
+                    int i = 0;
+                    foreach (var parameter in genericType.GenericArguments)
+                    {
+                        if (i != 0)
+                        {
+                            _writer.WriteSymbol(",");
+                            _writer.WriteSpace();
+                        }
+
+                        WriteTypeNameInner(parameter);
+
+                        if (names?[i] != null)
+                        {
+                            _writer.WriteSpace();
+                            _writer.WriteIdentifier(names[i]);
+                        }
+
+                        i++;
+                    }
+
+                    _writer.WriteSymbol(")");
+            }
             else
-                _writer.WriteTypeName(name);
+            {
+                WriteTypeNameInner(type);
+            }
 
             if (!noSpace) WriteSpace();
         }

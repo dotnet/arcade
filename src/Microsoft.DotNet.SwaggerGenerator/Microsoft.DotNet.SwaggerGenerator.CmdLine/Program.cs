@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.DotNet.SwaggerGenerator.Modeler;
+using Microsoft.Extensions.Logging;
 using Mono.Options;
 using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Swagger;
@@ -75,13 +76,15 @@ namespace Microsoft.DotNet.SwaggerGenerator.CmdLine
                 MissingArgument(nameof(output));
             }
 
+            ILogger logger = new LoggerFactory().AddConsole().CreateLogger("dotnet-swaggergen");
+
             SwaggerDocument document = await GetSwaggerDocument(input);
 
             var generator = new ServiceClientModelFactory(generatorOptions);
             ServiceClientModel model = generator.Create(document);
 
             var codeFactory = new ServiceClientCodeFactory();
-            List<CodeFile> code = codeFactory.GenerateCode(model, generatorOptions);
+            List<CodeFile> code = codeFactory.GenerateCode(model, generatorOptions, logger);
 
             var outputDirectory = new DirectoryInfo(output);
             outputDirectory.Create();

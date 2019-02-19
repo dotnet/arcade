@@ -48,7 +48,12 @@ eng\common\darc-init.ps1 script located under any arcade enabled repository.
 The version number is currently baked into the install script, so ensuring you
 have the latest arcade is a good idea.
 
-Installing the darc client:
+#### Start by making sure you're part of the **arcade-contrib** team:
+- If not you'll get 'Forbidden' errors when trying to use darc
+- Go to https://github.com/orgs/dotnet/teams/arcade-contrib/members
+- Click on "Request to join"
+
+#### Install the darc client:
 ```
 PS C:\enlistments\arcade> .\eng\common\darc-init.ps1
 
@@ -89,6 +94,8 @@ No verb selected.
 
 ...
 ```
+
+#### Additional PATs for Azure DevOps and GitHub operations
 
 When executing most operations, the client needs to make some remote queries.
 These remote queries require authentication in most circumstances. There are 3

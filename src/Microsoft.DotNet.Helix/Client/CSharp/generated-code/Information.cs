@@ -84,19 +84,19 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                var _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    var ex = new RestApiException
-                    {
-                        Request = new HttpRequestMessageWrapper(_req, null),
-                        Response = new HttpResponseMessageWrapper(_res, _responseContent),
-                    };
+                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var ex = new RestApiException(
+                        new HttpRequestMessageWrapper(_req, null),
+                        new HttpResponseMessageWrapper(_res, _responseContent));
                     HandleFailedQueueInfoRequest(ex);
                     HandleFailedRequest(ex);
                     Client.OnFailedRequest(ex);
                     throw ex;
                 }
+                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<QueueInfo>
                 {
                     Request = _req,
@@ -152,19 +152,19 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                var _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    var ex = new RestApiException
-                    {
-                        Request = new HttpRequestMessageWrapper(_req, null),
-                        Response = new HttpResponseMessageWrapper(_res, _responseContent),
-                    };
+                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var ex = new RestApiException(
+                        new HttpRequestMessageWrapper(_req, null),
+                        new HttpResponseMessageWrapper(_res, _responseContent));
                     HandleFailedQueueInfoListRequest(ex);
                     HandleFailedRequest(ex);
                     Client.OnFailedRequest(ex);
                     throw ex;
                 }
+                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<IImmutableList<QueueInfo>>
                 {
                     Request = _req,

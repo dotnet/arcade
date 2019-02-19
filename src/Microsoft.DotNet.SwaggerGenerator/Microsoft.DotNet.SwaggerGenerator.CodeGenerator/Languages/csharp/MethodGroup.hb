@@ -150,26 +150,24 @@ namespace {{pascalCaseNs Namespace}}
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                var _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    {{#if ErrorType}}
-                    var ex = new RestApiException<{{typeRef ErrorType}}>
-                    {{else}}
-                    var ex = new RestApiException
-                    {{/if}}
-                    {
-                        Request = new HttpRequestMessageWrapper(_req, {{#if BodyParameter}}_requestContent{{else}}null{{/if}}),
-                        Response = new HttpResponseMessageWrapper(_res, _responseContent),
-                        {{#if ErrorType}}
-                        Body = Client.Deserialize<{{typeRef ErrorType}}>(_responseContent),
-                        {{/if}}
-                    };
+                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var ex = new RestApiException{{#if ErrorType}}<{{typeRef ErrorType}}>{{/if}}(
+                        new HttpRequestMessageWrapper(_req, {{#if BodyParameter}}_requestContent{{else}}null{{/if}}),
+                        new HttpResponseMessageWrapper(_res, _responseContent)
+                        {{~#if ErrorType}},
+                        Client.Deserialize<{{typeRef ErrorType}}>(_responseContent)
+                        {{/if~}}
+                    );
                     HandleFailed{{Name}}Request(ex);
                     HandleFailedRequest(ex);
                     Client.OnFailedRequest(ex);
                     throw ex;
                 }
+                {{#unless ResponseIsFile}}
+                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 {{#if ResponseIsVoid}}
                 return new HttpOperationResponse
                 {{else}}
@@ -182,6 +180,15 @@ namespace {{pascalCaseNs Namespace}}
                     Body = Client.Deserialize<{{typeRef ResponseType}}>(_responseContent),
                     {{/unless}}
                 };
+                {{else}}
+                var _responseStream = await _res.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                return new HttpOperationResponse<System.IO.Stream>
+                {
+                    Request = _req,
+                    Response = _res,
+                    Body = _responseStream
+                };
+                {{/unless}}
             }
             catch (Exception)
             {

@@ -2,7 +2,6 @@
 
 import re
 import os
-import urlparse
 import helix.azure_storage
 import helix.event
 import helix.settings
@@ -72,7 +71,7 @@ def main():
 
     log.info("Uploading results from {}".format(results_path))
 
-    with file(results_path) as result_file:
+    with open(results_path) as result_file:
         test_count = 0
         total_regex = re.compile(r'total="(\d+)"')
         for line in result_file:

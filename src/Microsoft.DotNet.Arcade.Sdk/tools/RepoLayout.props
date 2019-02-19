@@ -6,10 +6,6 @@
   -->
 
   <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
     <Platform Condition="'$(Platform)' == ''">AnyCPU</Platform>
     <PlatformName Condition="'$(PlatformName)' == ''">$(Platform)</PlatformName>
@@ -51,7 +47,6 @@
 
     <ArtifactsDir Condition="'$(ArtifactsDir)' == ''">$(RepoRoot)artifacts\</ArtifactsDir>
     <ArtifactsToolsetDir>$(ArtifactsDir)toolset\</ArtifactsToolsetDir>
-    <ArtifactsToolsDir>$(ArtifactsDir).tools\</ArtifactsToolsDir>
     <ArtifactsObjDir>$(ArtifactsDir)obj\</ArtifactsObjDir>
     <ArtifactsBinDir>$(ArtifactsDir)bin\</ArtifactsBinDir>
     <ArtifactsLogDir>$(ArtifactsDir)log\$(Configuration)\</ArtifactsLogDir>
@@ -64,7 +59,5 @@
     <VisualStudioSetupOutputPath>$(ArtifactsDir)VSSetup\$(Configuration)\</VisualStudioSetupOutputPath>
     <VisualStudioSetupInsertionPath>$(VisualStudioSetupOutputPath)Insertion\</VisualStudioSetupInsertionPath>
     <VisualStudioSetupIntermediateOutputPath>$(ArtifactsDir)VSSetup.obj\$(Configuration)\</VisualStudioSetupIntermediateOutputPath>
-    <IbcOptimizationDataDir>$(ArtifactsToolsDir)IbcData\</IbcOptimizationDataDir>
   </PropertyGroup>
-
 </Project>

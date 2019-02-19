@@ -30,34 +30,50 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
 
         public bool IsPlaceHolderConfiguration { get; set; }
 
+        [Flags]
+        private enum ConfigurationValueCategories
+        {
+            Signficant            = 0b000001,
+            SignificantDefault    = 0b000010,
+            Insignficant          = 0b000100,
+            InsignificantDefault  = 0b001000,
+            Independent           = 0b010000,
+            IndependentDefault    = 0b100000
+        }
+
         /// <summary>
         /// Constructs a configuration string from this configuration
         /// </summary>
         /// <param name="allowDefaults">true to omit default values from configuration string</param>
         /// <param name="encounteredDefault">true if a default value was omitted</param>
         /// <returns>configuration string</returns>
-        private string GetConfigurationString(bool allowDefaults, bool includeInsignificant, out bool encounteredDefault)
+        private string GetConfigurationString(ConfigurationValueCategories categories, out bool encounteredDefault)
         {
             encounteredDefault = false;
             var configurationBuilder = new StringBuilder();
             foreach (var value in Values)
             {
+                bool isDefault = value == value.Property.DefaultValue;
+
+                ConfigurationValueCategories currentCategory;
+
                 if (value.Property.Independent)
                 {
-                    // skip independent properties
-                    continue;
+                    currentCategory = isDefault ? ConfigurationValueCategories.IndependentDefault : ConfigurationValueCategories.Independent;
+                }
+                else if (value.Property.Insignificant)
+                {
+                    currentCategory = isDefault ? ConfigurationValueCategories.InsignificantDefault : ConfigurationValueCategories.Insignficant;
+                }
+                else
+                {
+                    currentCategory = isDefault ? ConfigurationValueCategories.SignificantDefault : ConfigurationValueCategories.Signficant;
+
                 }
 
-                if (allowDefaults && value == value.Property.DefaultValue)
+                if ((categories & currentCategory) != currentCategory)
                 {
-                    // skip default value
-                    encounteredDefault = true;
-                    continue;
-                }
-
-                if (!includeInsignificant && value.Property.Insignificant)
-                {
-                    // skip insignificant properties
+                    encounteredDefault |= isDefault;
                     continue;
                 }
 
@@ -92,38 +108,40 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
             return properties;
         }
 
-        private static bool[] s_boolValues = new[] { true, false /*, FileNotFound */ };
-        private IEnumerable<string> GetConfigurationStrings(bool includeInsignificant)
-        {
-            // only allow all defaults or no defaults.
-            foreach (var allowDefaults in s_boolValues)
-            {
-                var encounteredDefault = false;
-
-                yield return GetConfigurationString(allowDefaults, includeInsignificant, out encounteredDefault);
-                if (!encounteredDefault)
-                {
-                    // if we didn't encounter a default value don't bother with
-                    // another pass since it will produce the same string.
-                    break;
-                }
-            }
-        }
-
         public IEnumerable<string> GetConfigurationStrings()
         {
-            return GetConfigurationStrings(includeInsignificant: true);
+            bool encounteredDefault = false;
+
+            yield return GetConfigurationString(ConfigurationValueCategories.Signficant |
+                                                ConfigurationValueCategories.Insignficant,
+                                                out encounteredDefault);
+            if (encounteredDefault)
+            {
+                yield return GetConfigurationString(ConfigurationValueCategories.Signficant | ConfigurationValueCategories.SignificantDefault |
+                                                    ConfigurationValueCategories.Insignficant | ConfigurationValueCategories.InsignificantDefault,
+                                                    out encounteredDefault);
+            }
         }
 
         public IEnumerable<string> GetSignificantConfigurationStrings()
         {
-            return GetConfigurationStrings(includeInsignificant: false);
+            bool encounteredDefault = false;
+
+            yield return GetConfigurationString(ConfigurationValueCategories.Signficant,
+                                                out encounteredDefault);
+
+            if (encounteredDefault)
+            {
+                yield return GetConfigurationString(ConfigurationValueCategories.Signficant | ConfigurationValueCategories.SignificantDefault,
+                                                    out encounteredDefault);
+            }
         }
 
         public string GetDefaultConfigurationString()
         {
-            var unused = false;
-            return GetConfigurationString(allowDefaults: true, includeInsignificant: true, encounteredDefault: out unused);
+            return GetConfigurationString(ConfigurationValueCategories.Signficant | ConfigurationValueCategories.SignificantDefault |
+                                          ConfigurationValueCategories.Insignficant | ConfigurationValueCategories.InsignificantDefault,
+                                          out bool unused);
         }
 
         public override bool Equals(object obj)
@@ -202,18 +220,19 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
 
         public override string ToString()
         {
-            var unused = false;
-            return GetConfigurationString(true, true, out unused);
+            return GetConfigurationString(ConfigurationValueCategories.Signficant |
+                                          ConfigurationValueCategories.Insignficant,
+                                          out bool unused);
         }
 
         /// <summary>
-        /// Returns a string that doesn't omit default values
+        /// Returns a string that includes insignificant values
         /// </summary>
-        /// <returns> a string that doesn't omit default values</returns>
         public string ToFullString()
         {
-            var unused = false;
-            return GetConfigurationString(false, true, out unused);
+            return GetConfigurationString(ConfigurationValueCategories.Signficant |
+                                          ConfigurationValueCategories.Insignficant | ConfigurationValueCategories.InsignificantDefault,
+                                          out bool unused);
         }
     }
 }
