@@ -93,4 +93,11 @@
 
     <RestoreSources Condition="'$(DotNetRestoreSources)' != ''">$(DotNetRestoreSources);$(RestoreSources)</RestoreSources>
   </PropertyGroup>
+
+  <!-- 
+    Defaults for properties that need to be available to all CI build steps and are dependent on settings specified in eng/Versions.props.
+  -->
+  <PropertyGroup>
+    <IbcOptimizationDataDir Condition="'$(UsingToolVisualStudioIbcTraining)' == 'true'">$(ArtifactsDir)ibc\</IbcOptimizationDataDir>
+  </PropertyGroup>
 </Project>
