@@ -3,7 +3,7 @@
 <Project>
 
   <!--
-    Specification: https://github.com/dotnet/arcade/blob/master/Documentation/Versioning.md
+    Specification: https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Versioning.md
 
     Properties:
       SemanticVersioningV1  "true" if the Version needs to respect SemVer 1.0. Default is false, which means format following SemVer 2.0.
