@@ -64,7 +64,7 @@
 
   <!-- Archive test binaries along with supporting files. -->
   <Target Name="ArchiveTests"
-          Condition="'$(ArchiveTests)' == 'true' OR $(MSBuildProjectName.EndsWith('.$(ArchiveTests)'))"
+          Condition="'$(ArchiveTests.ToLower())' == 'all' OR $(MSBuildProjectName.EndsWith('.$(ArchiveTests)'))"
           AfterTargets="PrepareForRun"
           DependsOnTargets="GenerateRunScript">
 
