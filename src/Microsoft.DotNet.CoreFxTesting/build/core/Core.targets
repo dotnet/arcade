@@ -83,8 +83,6 @@
   </Target>
 
   <Target Name="GenerateRunScript"
-          Inputs="unused"
-          Outputs="$(RunScriptOutputPath)"
           DependsOnTargets="$(GenerateRunScriptDependsOn)">
 
     <PropertyGroup>
