@@ -69,7 +69,7 @@
     </PropertyGroup>
 
    <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-      <NativeVersionFile Condition="'$(NativeVersionFile)' == ''">$(ArtifactsObjDir)_version.h</NativeVersionFile>
+      <NativeVersionFile Condition="'$(NativeVersionFile)' == ''">$(IntermediateOutputPath)_version.h</NativeVersionFile>
       <_WindowsFileVersion>$(FileVersion.Replace('.', ','))</_WindowsFileVersion>
       <_Windows_VER_DEBUG>0</_Windows_VER_DEBUG>
       <_Windows_VER_DEBUG Condition="'$(Configuration)'=='Debug'">VS_FF_DEBUG</_Windows_VER_DEBUG>
