@@ -10,7 +10,7 @@
     <RunWorkingDirectory>$(TestPath)</RunWorkingDirectory>
 
     <!-- Publish the test data as part of the build to enable VS test runs. -->
-    <PrepareForRunDependsOn>$(PrepareForRunDependsOn);PublishSupplementalTestData;ArchiveTests;</PrepareForRunDependsOn>
+    <PrepareForRunDependsOn>$(PrepareForRunDependsOn);PublishSupplementalTestData;</PrepareForRunDependsOn>
     <!-- Clean leftovers not tracked by FileWrites. -->
     <CleanDependsOn>$(CleanDependsOn);CleanTestPath;</CleanDependsOn>
   </PropertyGroup>
@@ -65,6 +65,7 @@
   <!-- Archive test binaries along with supporting files. -->
   <Target Name="ArchiveTests"
           Condition="'$(ArchiveTests)' == 'true' OR $(MSBuildProjectName.EndsWith('.$(ArchiveTests)'))"
+          AfterTargets="PrepareForRun"
           DependsOnTargets="GenerateRunScript">
 
     <Error Condition="'$(TestArchiveTestsDir)' == ''" Text="TestArchiveTestsDir property to archive the test folder must be set." />
