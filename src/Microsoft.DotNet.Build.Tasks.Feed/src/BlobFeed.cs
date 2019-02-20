@@ -7,6 +7,7 @@ using Microsoft.DotNet.Build.CloudTestTasks;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,23 +47,75 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string url = $"{FeedContainerUrl}/{blobPath}?comp=metadata";
             using (HttpClient client = new HttpClient())
             {
-                client.DefaultRequestHeaders.Clear();
-                var request = AzureHelper.RequestMessage("GET", url, AccountName, AccountKey).Invoke();
-                using (HttpResponseMessage response = await client.SendAsync(request))
+                const int MaxAttempts = 15;
+                // add a bit of randomness to the retry delay.
+                var rng = new Random();
+                int retryCount = MaxAttempts;
+
+                // Used to make sure TaskCancelledException comes from timeouts.
+                CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+
+                while (true)
                 {
-                    if (response.IsSuccessStatusCode)
+                    try
                     {
-                        Log.LogMessage(
-                            MessageImportance.Low,
-                            $"Blob {blobPath} exists for {AccountName}: Status Code:{response.StatusCode} Status Desc: {await response.Content.ReadAsStringAsync()}");
+                        client.DefaultRequestHeaders.Clear();
+                        var request = AzureHelper.RequestMessage("GET", url, AccountName, AccountKey).Invoke();
+                        using (HttpResponseMessage response = await client.SendAsync(request, cancelTokenSource.Token))
+                        {
+                            if (response.IsSuccessStatusCode)
+                            {
+                                Log.LogMessage(
+                                    MessageImportance.Low,
+                                    $"Blob {blobPath} exists for {AccountName}: Status Code:{response.StatusCode} Status Desc: {await response.Content.ReadAsStringAsync()}");
+                            }
+                            else
+                            {
+                                Log.LogMessage(
+                                    MessageImportance.Low,
+                                    $"Blob {blobPath} does not exist for {AccountName}: Status Code:{response.StatusCode} Status Desc: {await response.Content.ReadAsStringAsync()}");
+                            }
+                            return response.IsSuccessStatusCode;
+                        }
                     }
-                    else
+                    catch (HttpRequestException toLog)
                     {
-                        Log.LogMessage(
-                            MessageImportance.Low,
-                            $"Blob {blobPath} does not exist for {AccountName}: Status Code:{response.StatusCode} Status Desc: {await response.Content.ReadAsStringAsync()}");
+                        if (retryCount <= 0)
+                        {
+                            Log.LogError($"Unable to check for existence of blob {blobPath} in {AccountName} after {MaxAttempts} retries.");
+                            throw;
+                        }
+                        else
+                        {
+                            Log.LogWarning("Exception thrown while trying to detect if blob already exists in feed:");
+                            Log.LogWarningFromException(toLog, true);
+                        }
                     }
-                    return response.IsSuccessStatusCode;
+                    catch (TaskCanceledException possibleTimeoutToLog)
+                    {
+                        // Detect timeout.
+                        if (possibleTimeoutToLog.CancellationToken != cancelTokenSource.Token)
+                        {
+                            if (retryCount <= 0)
+                            {
+                                Log.LogError($"Unable to check for existence of blob {blobPath} in {AccountName} after {MaxAttempts} retries.");
+                                throw;
+                            }
+                            else
+                            {
+                                Log.LogWarning("Exception thrown while trying to detect if blob already exists in feed:");
+                                Log.LogWarningFromException(possibleTimeoutToLog, true);
+                            }
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
+                    --retryCount;
+                    Log.LogWarning($"Failed to check for existence of blob {blobPath}. {retryCount} attempts remaining");
+                    int delay = (MaxAttempts - retryCount) * rng.Next(1, 7);
+                    await Task.Delay(delay * 1000);
                 }
             }
         }
