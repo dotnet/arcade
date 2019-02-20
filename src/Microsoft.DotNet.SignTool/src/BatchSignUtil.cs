@@ -338,7 +338,7 @@ namespace Microsoft.DotNet.SignTool
                     continue;
                 }
 
-                if (file.IsManaged() && !_signTool.VerifyStrongNameSign(file.FullPath))
+                if (file.IsManaged() && !file.IsCrossgened() && !_signTool.VerifyStrongNameSign(file.FullPath))
                 {
                     _log.LogError($"Assembly {file.FullPath} is not strong-name signed correctly.");
                 }

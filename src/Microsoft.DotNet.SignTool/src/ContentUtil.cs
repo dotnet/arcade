@@ -83,6 +83,17 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
+        public static bool IsCrossgened(string filePath)
+        {
+            const int CROSSGEN_FLAG = 4;
+
+            using (var stream = new FileStream(filePath, FileMode.Open))
+            using (var peReader = new PEReader(stream))
+            {
+                return ((int)peReader.PEHeaders.CorHeader.Flags & CROSSGEN_FLAG) == CROSSGEN_FLAG;
+            }
+        }
+
         public static bool IsAuthenticodeSigned(Stream assemblyStream)
         {
             using (var peReader = new PEReader(assemblyStream))
