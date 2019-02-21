@@ -6,8 +6,9 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NuGet;
 using NuGet.Frameworks;
-using NuGet.Packaging.Core;
 using NuGet.Packaging;
+using NuGet.Packaging.Core;
+using NuGet.Packaging.Licenses;
 using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
@@ -58,6 +59,16 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         public string IconUrl { get; set; }
 
         public string LicenseUrl { get; set; }
+
+        public string PackageLicenseExpression { get; set; }
+
+        public string RepositoryType { get; set; }
+
+        public string RepositoryUrl { get; set; }
+
+        public string RepositoryBranch { get; set; }
+
+        public string RepositoryCommit { get; set; }
 
         public string Copyright { get; set; }
 
@@ -161,19 +172,33 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             manifestMetadata.UpdateMember(x => x.Description, Description);
             manifestMetadata.DevelopmentDependency |= DevelopmentDependency;
             manifestMetadata.UpdateMember(x => x.FrameworkReferences, GetFrameworkAssemblies());
-            if (IconUrl != null)
+            if (!string.IsNullOrEmpty(IconUrl))
             {
                 manifestMetadata.SetIconUrl(IconUrl);
             }
             manifestMetadata.UpdateMember(x => x.Id, Id);
             manifestMetadata.UpdateMember(x => x.Language, Language);
-            if (LicenseUrl != null)
+
+            if (!string.IsNullOrEmpty(PackageLicenseExpression))
+            {
+                manifestMetadata.LicenseMetadata = new LicenseMetadata(
+                    LicenseType.Expression,
+                    license: "",
+                    NuGetLicenseExpression.Parse(PackageLicenseExpression),
+                    Array.Empty<string>(),
+                    LicenseMetadata.CurrentVersion);
+
+            }
+            else if (!string.IsNullOrEmpty(LicenseUrl))
             {
                 manifestMetadata.SetLicenseUrl(LicenseUrl);
             }
+
+            manifestMetadata.Repository = new RepositoryMetadata(RepositoryType ?? "", RepositoryUrl ?? "", RepositoryBranch ?? "", RepositoryCommit ?? "");
+
             manifestMetadata.UpdateMember(x => x.MinClientVersionString, MinClientVersion);
             manifestMetadata.UpdateMember(x => x.Owners, Owners?.Split(';'));
-            if (ProjectUrl != null)
+            if (!string.IsNullOrEmpty(ProjectUrl))
             {
                 manifestMetadata.SetProjectUrl(ProjectUrl);
             }
