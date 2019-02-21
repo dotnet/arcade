@@ -161,14 +161,14 @@ namespace Microsoft.DotNet.Helix.Client
                         Build,
                         _properties.ToImmutableDictionary(),
                         jobListUri.ToString(),
-                        TargetQueueId,
-                        storageContainer.Uri,
-                        storageContainer.ReadSas,
-                        storageContainer.WriteSas)
+                        TargetQueueId)
                     {
                         Creator = Creator,
                         MaxRetryCount = MaxRetryCount ?? 0,
                         JobStartIdentifier = jobStartIdentifier,
+                        ResultsUri = storageContainer.Uri,
+                        ResultsUriRSAS = storageContainer.ReadSas,
+                        ResultsUriWSAS = storageContainer.WriteSas,
                     }),
                 ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."));
 

@@ -59,6 +59,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.LinqPad
             inputTextBox.Name = "inputTextBox";
             inputTextBox.Size = new Size(400, 26);
             inputTextBox.TabIndex = 1;
+            inputTextBox.Text = Properties.Uri;
             // 
             // submitButton
             // 
