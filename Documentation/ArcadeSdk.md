@@ -462,6 +462,20 @@ folder "InstallDir:MSBuild\Microsoft\VisualStudio\Managed"
   file source="$(VisualStudioXamlRulesDir)Microsoft.Managed.DesignTime.targets"
 ```
 
+**NOTE:** By defining `VisualStudioInsertionComponent` in your project you are implicitly opting-in to having all of the assemblies included in that package marked for `NGEN`.  If this is not something you want for a given component you may add `<Ngen>false</Ngen>`.
+
+example:
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <VisualStudioInsertionComponent>MyVisualStudioInsertionComponent</VisualStudioInsertionComponent>
+    <Ngen>false</Ngen>
+  </PropertyGroup>
+</Project>
+```
+
+
 ## Common steps in Azure DevOps pipeline
 
 The steps below assume the following variables to be defined:
