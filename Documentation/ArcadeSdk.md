@@ -815,3 +815,13 @@ msbuild Project.UnitTests.csproj /p:TestTargetFrameworks=net472 /p:TestRuntime=M
 ### `TestRunnerAdditionalArguments` (string)
 
 Additional command line arguments passed to the test runner (e.g. `xunit.console.exe`).
+
+### 'TestRuntimeAdditionalArguments' (string)
+
+Additional command line arguments passed to the test runtime (i.e. `dotnet` or `mono`). Applicable only when `TestRuntime` is `Core` or `Mono`. 
+
+For example, to invoke Mono with debug flags `--debug` (to get stack traces with line number information), set `TestRuntimeAdditionalArguments` to `--debug`.
+To override the default Shared Framework version that is selected based on the test project TFM, set `TestRuntimeAdditionalArguments` to `--fx-version x.y.z`.
+
+
+

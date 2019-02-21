@@ -24,7 +24,6 @@
       $(TestDependsOn);
       GenerateRunScript;
       RunTests;
-      ArchiveTestBuild;
     </TestDependsOn>
   </PropertyGroup>
 
