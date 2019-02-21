@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<DataContextDriver>
+  <MainAssembly>Microsoft.DotNet.SwaggerGenerator.LinqPad.dll</MainAssembly>
+  <SupportUri>https://github.com/dotnet/arcade/tree/master/src/Microsoft.DotNet.SwaggerGenerator/Microsoft.DotNet.SwaggerGenerator.LinqPad/Readme.md</SupportUri>
+</DataContextDriver>

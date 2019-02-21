@@ -286,7 +286,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await FinishBuildWorkItemInternalAsync(
+            using (await FinishBuildWorkItemInternalAsync(
                 errorCount,
                 id,
                 warningCount,
@@ -499,7 +499,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await FinishXUnitWorkItemInternalAsync(
+            using (await FinishXUnitWorkItemInternalAsync(
                 exitCode,
                 id,
                 resultsXmlUri,
@@ -619,7 +619,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await WarningInternalAsync(
+            using (await WarningInternalAsync(
                 eid,
                 id,
                 xHelixJobToken,
@@ -734,7 +734,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await ErrorInternalAsync(
+            using (await ErrorInternalAsync(
                 eid,
                 id,
                 xHelixJobToken,
@@ -849,7 +849,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await LogInternalAsync(
+            using (await LogInternalAsync(
                 id,
                 logUri,
                 xHelixJobToken,

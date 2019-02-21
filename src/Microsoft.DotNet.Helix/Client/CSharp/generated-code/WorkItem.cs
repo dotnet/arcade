@@ -51,14 +51,12 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await ConsoleLogInternalAsync(
+            var _res = await ConsoleLogInternalAsync(
                 id,
                 job,
                 cancellationToken
-            ).ConfigureAwait(false))
-            {
-                return _res.Body;
-            }
+            ).ConfigureAwait(false);
+            return new ResponseStream(_res.Body, _res);
         }
 
         internal async Task<HttpOperationResponse<System.IO.Stream>> ConsoleLogInternalAsync(

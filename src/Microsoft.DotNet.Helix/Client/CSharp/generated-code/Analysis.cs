@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await SetReasonInternalAsync(
+            using (await SetReasonInternalAsync(
                 analysisName,
                 analysisType,
                 job,

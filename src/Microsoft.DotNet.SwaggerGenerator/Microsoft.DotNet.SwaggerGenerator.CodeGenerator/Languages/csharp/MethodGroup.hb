@@ -45,6 +45,26 @@ namespace {{pascalCaseNs Namespace}}
             CancellationToken cancellationToken = default
         )
         {
+            {{#if ResponseIsVoid}}
+            using (await {{Name}}InternalAsync(
+                {{#each FormalParameters}}
+                {{camelCase Name}},
+                {{/each}}
+                cancellationToken
+            ).ConfigureAwait(false))
+            {
+                return;
+            }
+            {{else}}
+            {{#if ResponseIsFile}}
+            var _res = await {{Name}}InternalAsync(
+                {{#each FormalParameters}}
+                {{camelCase Name}},
+                {{/each}}
+                cancellationToken
+            ).ConfigureAwait(false);
+            return new ResponseStream(_res.Body, _res);
+            {{else}}
             using (var _res = await {{Name}}InternalAsync(
                 {{#each FormalParameters}}
                 {{camelCase Name}},
@@ -52,12 +72,10 @@ namespace {{pascalCaseNs Namespace}}
                 cancellationToken
             ).ConfigureAwait(false))
             {
-                {{#if ResponseIsVoid}}
-                return;
-                {{else}}
                 return _res.Body;
-                {{/if}}
             }
+            {{/if}}
+            {{/if}}
         }
 
         internal async Task<HttpOperationResponse{{#unless ResponseIsVoid}}<{{typeRef ResponseType}}>{{/unless}}> {{Name}}InternalAsync(

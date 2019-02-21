@@ -1,0 +1,70 @@
+<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LINQPad" Version="5.26.1" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCSharpVersion)" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.1" />
+    <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="$(MicrosoftRestClientRuntimeVersion)" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
+    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="$(SystemTextEncodingsWebVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.SwaggerGenerator.CodeGenerator\Microsoft.DotNet.SwaggerGenerator.CodeGenerator.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="header.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+  <Target Name="GetPackOutputs" DependsOnTargets="Publish">
+    <ConvertToAbsolutePath Paths="$(PackageOutputPath)">
+      <Output TaskParameter="AbsolutePaths" PropertyName="PackageOutputAbsolutePath" />
+    </ConvertToAbsolutePath>
+    <ItemGroup>
+      <PackInput Include="$(PublishDir)\**\*" />
+      <PackOutput Include="$(PackageOutputAbsolutePath)\$(MSBuildProjectName).lpx" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="ExcludeUnneededRefsFromPublish" BeforeTargets="ComputeRefAssembliesToPublish">
+    <ItemGroup>
+      <_RefAssembliesToExclude Include="@(ReferencePath)" Condition="'%(Filename)%(Extension)' == 'LINQPad.exe'"/>
+      <_RefAssembliesToExclude Include="@(ReferencePath)" Condition="'%(Filename)%(Extension)' == 'lprun.exe'"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="FilterPublishOutput" AfterTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(FullPath)').Contains('runtimes\osx'))"/>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(FullPath)').Contains('runtimes\unix'))"/>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(FullPath)').EndsWith('.resources.dll'))"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CorePack" Inputs="@(PackInput)" Outputs="@(PackOutput)">
+    <ZipDirectory DestinationFile="@(PackOutput)" SourceDirectory="$(PublishDir)" Overwrite="true" />
+    <ItemGroup>
+      <FileWrites Include="@(PackOutput)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="Pack" DependsOnTargets="GetPackOutputs;CorePack" AfterTargets="Build">
+  </Target>
+</Project>
