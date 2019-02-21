@@ -8,6 +8,16 @@
   <Choose>
     <When Condition="'$(BuildingNETCoreAppVertical)' == 'true'">  
       <ItemGroup>
+        <!-- <ReferenceFromRuntime Include="Microsoft.DotNet.PlatformAbstractions" /> -->
+        <ReferenceFromRuntime Include="Microsoft.Extensions.DependencyModel" />
+        <ReferenceFromRuntime Include="Microsoft.TestPlatform.CommunicationUtilities" />
+        <ReferenceFromRuntime Include="Microsoft.TestPlatform.CoreUtilities" />
+        <ReferenceFromRuntime Include="Microsoft.TestPlatform.CrossPlatEngine" />
+        <ReferenceFromRuntime Include="Microsoft.TestPlatform.PlatformAbstractions" />
+        <ReferenceFromRuntime Include="Microsoft.VisualStudio.CodeCoverage.Shim" />
+        <ReferenceFromRuntime Include="Microsoft.VisualStudio.TestPlatform.Common" />
+        <ReferenceFromRuntime Include="Microsoft.VisualStudio.TestPlatform.ObjectModel" />
+        <ReferenceFromRuntime Include="testhost" />
         <ReferenceFromRuntime Include="xunit.runner.visualstudio.dotnetcore.testadapter" />
       </ItemGroup>
 
