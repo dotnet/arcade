@@ -5,6 +5,7 @@ For the most part, contributions to Arcade are straight forward and relatively '
 
 ## Principles
 * Should benefit multiple repos across .NET Core.
+* Every contributor is "heard" and taken seriously every time
 * Keep it simple. (don't over engineer or be "clever")
 * Focus on value over conviction.  (of course conviction should help drive the value discussion)
 * Opinions and beliefs must be substantiated with data and a strong business rationale.
