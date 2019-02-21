@@ -38,13 +38,13 @@
   </ItemGroup>
 
   <!-- Helix dependencies -->
-  <ItemGroup Condition="'$(ArchiveTests)' == 'true' AND '$(IncludePerformanceTestFrameworkReferences)' == 'true'">
+  <ItemGroup Condition="'$(IncludePerformanceTestFrameworkReferences)' == 'true'">
     <TestArchiveDependencies Include="$(RuntimePath)Microsoft.DotNet.XUnitExtensions.dll" />
     <TestArchiveDependencies Include="$(RuntimePath)xunit.assert.dll" />
     <TestArchiveDependencies Include="$(RuntimePath)xunit.core.dll" />
     <TestArchiveDependencies Include="$(RuntimePath)xunit.abstractions.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.performance.api" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.performance.core" />
+    <TestArchiveDependencies Include="$(RuntimePath)xunit.performance.api.dll" />
+    <TestArchiveDependencies Include="$(RuntimePath)xunit.performance.core.dll" />
   </ItemGroup>
 
 </Project>
