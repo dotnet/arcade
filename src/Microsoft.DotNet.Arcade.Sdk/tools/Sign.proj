@@ -80,6 +80,7 @@
         DryRun="$(_DryRun)"
         TestSign="$(_TestSign)"
         DoStrongNameCheck="$(DoStrongNameCheck)"
+        AllowEmptySignList="$(AllowEmptySignList)"
         CertificatesSignInfo="$(CertificatesSignInfo)"
         ItemsToSign="@(ItemsToSign)"
         StrongNameSignInfo="@(StrongNameSignInfo)"
