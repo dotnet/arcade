@@ -189,9 +189,9 @@ namespace Microsoft.DotNet.Helix.Client
                         Creator = Creator,
                         MaxRetryCount = MaxRetryCount ?? 0,
                         JobStartIdentifier = jobStartIdentifier,
-                        ResultsUri = resultsStorageContainer?.Uri ?? "",
-                        ResultsUriRSAS = resultsStorageContainer?.ReadSas ?? "",
-                        ResultsUriWSAS = resultsStorageContainer?.WriteSas ?? "",
+                        ResultsUri = resultsStorageContainer?.Uri,
+                        ResultsUriRSAS = resultsStorageContainer?.ReadSas,
+                        ResultsUriWSAS = resultsStorageContainer?.WriteSas,
                     }),
                 ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."));
 
