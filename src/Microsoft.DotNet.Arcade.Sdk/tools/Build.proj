@@ -48,7 +48,6 @@
     <_RepoRootOriginal>$(RepoRoot)</_RepoRootOriginal>
     <RepoRoot>$([System.IO.Path]::GetFullPath('$(RepoRoot)/'))</RepoRoot>
 
-    <_RemoveProps>Projects;Restore;QuietRestore;QuietRestoreBinaryLog;Build;Rebuild;Deploy;Test;IntegrationTest;PerformanceTest;Pack;Sign;Publish</_RemoveProps>
     <_OriginalProjectsValue>$(Projects)</_OriginalProjectsValue>
   </PropertyGroup>
 
@@ -112,7 +111,12 @@
       <_SolutionBuildTargets Include="Pack" Condition="'$(Pack)' == 'true'" />
       <_SolutionBuildTargets Include="IntegrationTest" Condition="'$(IntegrationTest)' == 'true'" />
       <_SolutionBuildTargets Include="PerformanceTest" Condition="'$(PerformanceTest)' == 'true'" />
+      <_SolutionBuildTargets Include="@(SolutionBuildTargets)" />
     </ItemGroup>
+
+    <PropertyGroup>
+      <_RemoveProps>Projects;Restore;QuietRestore;QuietRestoreBinaryLog;Deploy;Sign;Publish;@(_SolutionBuildTargets)</_RemoveProps>
+    </PropertyGroup>
 
     <ItemGroup>
       <_CommonProps Include="Configuration=$(Configuration)"/>
@@ -245,6 +249,7 @@
     <MSBuild Projects="AfterSolutionBuild.proj"
              Properties="@(_CommonProps)"
              Targets="@(_SolutionBuildTargets)"
+             SkipNonexistentTargets="true"
              Condition="'@(_SolutionBuildTargets)' != ''" />
 
     <!--
@@ -257,7 +262,8 @@
 
     <MSBuild Projects="AfterSigning.proj"
              Properties="@(_CommonProps)"
-             Targets="@(_SolutionBuildTargets)" 
+             Targets="@(_SolutionBuildTargets)"
+             SkipNonexistentTargets="true"
              Condition="'@(_SolutionBuildTargets)' != ''"/>
 
     <MSBuild Projects="Publish.proj"
