@@ -4,10 +4,10 @@ namespace Microsoft.DotNet.SignTool
 {
     internal class PEInfo
     {
-        internal bool isManaged { get; set; } = false;
-        internal bool isCrossgened { get; set; } = false;
-        internal string copyright { get; set; } = string.Empty;
-        internal string publicKeyToken { get; set; } = string.Empty;
-        internal string targetFramework { get; set; } = string.Empty;
+        internal bool IsManaged { get; set; } = false;
+        internal bool IsCrossgened { get; set; } = false;
+        internal string Copyright { get; set; } = string.Empty;
+        internal string PublicKeyToken { get; set; } = string.Empty;
+        internal string TargetFramework { get; set; } = string.Empty;
     }
 }
