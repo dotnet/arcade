@@ -48,7 +48,6 @@
     <_RepoRootOriginal>$(RepoRoot)</_RepoRootOriginal>
     <RepoRoot>$([System.IO.Path]::GetFullPath('$(RepoRoot)/'))</RepoRoot>
 
-    <_RemoveProps>Projects;Restore;QuietRestore;QuietRestoreBinaryLog;Build;Rebuild;Deploy;Test;IntegrationTest;PerformanceTest;Pack;Sign;Publish</_RemoveProps>
     <_OriginalProjectsValue>$(Projects)</_OriginalProjectsValue>
   </PropertyGroup>
 
@@ -104,15 +103,19 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <_SolutionBuildTargets Include="Rebuild" Condition="'$(Rebuild)' == 'true'" />
-      <_SolutionBuildTargets Include="Build" Condition="'$(Build)' == 'true' and '$(Rebuild)' != 'true'" />
+      <SolutionBuildTargets Include="Rebuild" Condition="'$(Rebuild)' == 'true'" />
+      <SolutionBuildTargets Include="Build" Condition="'$(Build)' == 'true' and '$(Rebuild)' != 'true'" />
       <!-- Deploy target is set up to chain after Build so that F5 in VS works. -->
-      <_SolutionBuildTargets Include="Test" Condition="'$(Test)' == 'true'" />
+      <SolutionBuildTargets Include="Test" Condition="'$(Test)' == 'true'" />
       <!-- Pack before running integration and performance tests so that these tests can test packages produced by the repo. -->
-      <_SolutionBuildTargets Include="Pack" Condition="'$(Pack)' == 'true'" />
-      <_SolutionBuildTargets Include="IntegrationTest" Condition="'$(IntegrationTest)' == 'true'" />
-      <_SolutionBuildTargets Include="PerformanceTest" Condition="'$(PerformanceTest)' == 'true'" />
+      <SolutionBuildTargets Include="Pack" Condition="'$(Pack)' == 'true'" />
+      <SolutionBuildTargets Include="IntegrationTest" Condition="'$(IntegrationTest)' == 'true'" />
+      <SolutionBuildTargets Include="PerformanceTest" Condition="'$(PerformanceTest)' == 'true'" />
     </ItemGroup>
+
+    <PropertyGroup>
+      <_RemoveProps>Projects;Restore;QuietRestore;QuietRestoreBinaryLog;Deploy;Sign;Publish;@(SolutionBuildTargets)</_RemoveProps>
+    </PropertyGroup>
 
     <ItemGroup>
       <_CommonProps Include="Configuration=$(Configuration)"/>
@@ -238,14 +241,15 @@
     <MSBuild Projects="@(ProjectToBuild)"
              Properties="@(_SolutionBuildProps);__BuildPhase=SolutionBuild"
              RemoveProperties="$(_RemoveProps)"
-             Targets="@(_SolutionBuildTargets)"
+             Targets="@(SolutionBuildTargets)"
              BuildInParallel="true"
-             Condition="'@(_SolutionBuildTargets)' != ''" />
+             Condition="'@(SolutionBuildTargets)' != ''" />
 
     <MSBuild Projects="AfterSolutionBuild.proj"
              Properties="@(_CommonProps)"
-             Targets="@(_SolutionBuildTargets)"
-             Condition="'@(_SolutionBuildTargets)' != ''" />
+             Targets="@(SolutionBuildTargets)"
+             SkipNonexistentTargets="true"
+             Condition="'@(SolutionBuildTargets)' != ''" />
 
     <!--
       Sign artifacts.
@@ -257,8 +261,9 @@
 
     <MSBuild Projects="AfterSigning.proj"
              Properties="@(_CommonProps)"
-             Targets="@(_SolutionBuildTargets)" 
-             Condition="'@(_SolutionBuildTargets)' != ''"/>
+             Targets="@(SolutionBuildTargets)"
+             SkipNonexistentTargets="true"
+             Condition="'@(SolutionBuildTargets)' != ''"/>
 
     <MSBuild Projects="Publish.proj"
              Properties="@(_PublishProps)"
