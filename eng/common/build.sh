@@ -191,7 +191,6 @@ function Build {
     /p:PerformanceTest=$performance_test \
     /p:Sign=$sign \
     /p:Publish=$publish \
-    /p:ContinuousIntegrationBuild=$ci \
     $properties
 
   ExitWithExitCode 0
