@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.Helix.Client
             if (!string.IsNullOrEmpty(ResultsStorageAccountConnectionString))
             {
                 resultsStorage = new ConnectionStringBlobHelper(ResultsStorageAccountConnectionString);
-                resultsStorageContainer = await storage.GetContainerAsync(TargetContainerName);
+                resultsStorageContainer = await resultsStorage.GetContainerAsync(TargetContainerName);
             }
 
 
