@@ -156,7 +156,6 @@ namespace Microsoft.DotNet.Helix.Client
                 resultsStorageContainer = await resultsStorage.GetContainerAsync(TargetContainerName);
             }
 
-
             List<string> correlationPayloadUris =
                 (await Task.WhenAll(CorrelationPayloads.Select(p => p.UploadAsync(storageContainer, log)))).ToList();
 
