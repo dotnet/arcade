@@ -10,7 +10,7 @@ set -e
 usage()
 {
   echo "Common settings:"
-  echo "  --configuration <value>    Build configuration: 'Debug' or 'Release' (short: --c)"
+  echo "  --configuration <value>    Build configuration: 'Debug' or 'Release' (short: -c)"
   echo "  --verbosity <value>        Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic] (short: -v)"
   echo "  --binaryLog                Create MSBuild binary log (short: -bl)"
   echo ""
