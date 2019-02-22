@@ -153,9 +153,8 @@ namespace Microsoft.DotNet.Helix.Client
             if (!string.IsNullOrEmpty(ResultsStorageAccountConnectionString))
             {
                 resultsStorage = new ConnectionStringBlobHelper(ResultsStorageAccountConnectionString);
-                storageContainer = await storage.GetContainerAsync(TargetContainerName);
+                resultsStorageContainer = await resultsStorage.GetContainerAsync(TargetContainerName);
             }
-
 
             List<string> correlationPayloadUris =
                 (await Task.WhenAll(CorrelationPayloads.Select(p => p.UploadAsync(storageContainer, log)))).ToList();
