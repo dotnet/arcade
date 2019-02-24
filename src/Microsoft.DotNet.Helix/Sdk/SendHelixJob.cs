@@ -69,6 +69,12 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string JobCorrelationId { get; set; }
 
         /// <summary>
+        ///   When the task finishes, the results container uri should be available in case we want to download files.
+        /// </summary>
+        [Output]
+        public string ResultsContainerUri { get; set; }
+
+        /// <summary>
         ///   A collection of commands that will run for each work item before any work item commands.
         ///   Use ';' to separate commands and escape a ';' with ';;'
         /// </summary>
@@ -209,6 +215,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg));
                 JobCorrelationId = job.CorrelationId;
+                ResultsContainerUri = job.ResultsContainerUri;
             }
 
             string mcUri = await GetMissionControlResultUri();

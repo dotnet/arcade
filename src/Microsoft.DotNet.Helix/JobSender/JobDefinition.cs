@@ -148,12 +148,15 @@ namespace Microsoft.DotNet.Helix.Client
             IBlobContainer storageContainer = await storage.GetContainerAsync(TargetContainerName);
             var jobList = new List<JobListEntry>();
 
-            IBlobHelper resultsStorage = null;
-            IBlobContainer resultsStorageContainer = null;
-            if (!string.IsNullOrEmpty(ResultsStorageAccountConnectionString))
+            IBlobContainer resultsStorageContainer;
+            if (string.IsNullOrEmpty(ResultsStorageAccountConnectionString))
             {
-                resultsStorage = new ConnectionStringBlobHelper(ResultsStorageAccountConnectionString);
-                resultsStorageContainer = await resultsStorage.GetContainerAsync(TargetContainerName);
+                resultsStorageContainer = await storage.GetContainerAsync(TargetResultsContainerName);
+            }
+            else
+            {
+                IBlobHelper resultsStorage = new ConnectionStringBlobHelper(ResultsStorageAccountConnectionString);
+                resultsStorageContainer = await resultsStorage.GetContainerAsync(TargetResultsContainerName);
             }
 
             List<string> correlationPayloadUris =
@@ -188,14 +191,14 @@ namespace Microsoft.DotNet.Helix.Client
                         Creator = Creator,
                         MaxRetryCount = MaxRetryCount ?? 0,
                         JobStartIdentifier = jobStartIdentifier,
-                        ResultsUri = resultsStorageContainer?.Uri,
-                        ResultsUriRSAS = resultsStorageContainer?.ReadSas,
-                        ResultsUriWSAS = resultsStorageContainer?.WriteSas,
+                        ResultsUri = resultsStorageContainer.Uri,
+                        ResultsUriRSAS = resultsStorageContainer.ReadSas,
+                        ResultsUriWSAS = resultsStorageContainer.WriteSas,
                     }),
                 ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."));
 
 
-            return new SentJob(JobApi, newJob);
+            return new SentJob(JobApi, newJob, resultsStorageContainer.Uri);
         }
 
         public IJobDefinitionWithTargetQueue WithBuild(string buildNumber)

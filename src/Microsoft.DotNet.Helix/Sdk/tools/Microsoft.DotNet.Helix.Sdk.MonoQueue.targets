@@ -59,10 +59,13 @@
                   WorkItems="@(HelixWorkItem)"
                   HelixProperties="@(HelixProperties)">
       <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
+      <Output TaskParameter="ResultsContainerUri" PropertyName="HelixResultsContainer"/>
     </SendHelixJob>
     <ItemGroup>
       <SentJob Include="$(HelixJobId)">
         <WorkItemCount>@(HelixWorkItem->Count())</WorkItemCount>
+        <HelixTargetQueue>$(HelixTargetQueue)</HelixTargetQueue>
+        <ResultsContainerUri>$(HelixResultsContainer)</ResultsContainerUri>
       </SentJob>
     </ItemGroup>
     <Message Text="Sent Helix Job $(HelixJobId)" Importance="High" />

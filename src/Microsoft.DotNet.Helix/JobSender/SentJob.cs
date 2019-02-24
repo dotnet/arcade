@@ -9,13 +9,15 @@ namespace Microsoft.DotNet.Helix.Client
 {
     internal class SentJob : ISentJob
     {
-        public SentJob(IJob jobApi, JobCreationResult newJob)
+        public SentJob(IJob jobApi, JobCreationResult newJob, string resultsContainerUri)
         {
             JobApi = jobApi;
             CorrelationId = newJob.Name;
+            ResultsContainerUri = resultsContainerUri;
         }
 
         public IJob JobApi { get; }
         public string CorrelationId { get; }
+        public string ResultsContainerUri { get; }
     }
 }

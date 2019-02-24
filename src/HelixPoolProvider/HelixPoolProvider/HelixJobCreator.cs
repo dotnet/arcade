@@ -98,6 +98,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
                     .WithContainerName(_configuration.ContainerName)
                     .WithCorrelationPayloadUris(AgentPayloadUri)
                     .WithStorageAccountConnectionString(_configuration.ConnectionString)
+                    .WithResultsStorageAccountConnectionString(_configuration.ConnectionString)
                     .DefineWorkItem(_agentRequestItem.agentId)
                     .WithCommand(ConstructCommand())
                     .WithFiles(credentialsPath, agentSettingsPath, StartupScriptPath)
