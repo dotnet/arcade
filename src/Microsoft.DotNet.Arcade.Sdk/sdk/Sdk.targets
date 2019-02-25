@@ -8,9 +8,6 @@
   <PropertyGroup>
     <_SuppressAllTargets>false</_SuppressAllTargets>
     <_SuppressAllTargets Condition="'$(DotNetBuildFromSource)' == 'true' and '$(ExcludeFromSourceBuild)' == 'true'">true</_SuppressAllTargets>
-
-    <!-- Set IsPackable to false during build from source for source build excluded projects to prevent Packing targets from being imported -->
-    <IsPackable Condition="'$(DotNetBuildFromSource)' == 'true' and '$(ExcludeFromSourceBuild)' == 'true'">false</IsPackable>
   </PropertyGroup>
 
   <!-- 
