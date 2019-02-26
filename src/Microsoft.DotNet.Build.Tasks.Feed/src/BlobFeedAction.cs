@@ -461,7 +461,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             // By default a folder is created inside %temp% to store the cache, to 
             // change this location pass a folder path to the LocalCache constructor.
-            return new LocalCache();
+            // Passing PerfTracker in so a summary is logged at the end of publishing.
+            return new LocalCache(new PerfTracker());
         }
     }
 }
