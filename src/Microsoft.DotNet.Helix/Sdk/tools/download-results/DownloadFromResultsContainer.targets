@@ -14,13 +14,15 @@
 
     <PropertyGroup>
       <HelixResultsDestinationDir Condition="'$(HelixResultsDestinationDir)' == '' AND '$(BUILD_SOURCESDIRECTORY)' != ''">$([MSBuild]::NormalizePath('$(BUILD_SOURCESDIRECTORY)', 'artifacts', helixresults'))</HelixResultsDestinationDir>
+
+      <_shouldDownloadResults>false</_shouldDownloadResults>
+      <_shouldDownloadResults Condition="'@(_workItemsWithDownloadMetadata)' != '' AND '$(HelixResultsDestinationDir)' != ''">true</_shouldDownloadResults>
     </PropertyGroup>
 
-    <Warning Text="DownloadFromResultsContainer will be skipped for job %(SentJob.Identity) becaue results container uri is empty" Condition="'%(SentJob.ResultsContainerUri)' == ''" />
-    <Warning Text="DownloadFromResultsContainer will be skipped because HelixResultsDestinationDir is empty" Condition="'$(HelixResultsDestinationDir)' == ''" />
+    <Warning Text="DownloadFromResultsContainer will be skipped for job %(SentJob.Identity) becaue results container uri is empty" Condition="'%(SentJob.ResultsContainerUri)' == '' AND $(_shouldDownloadResults)" />
 
     <DownloadFromResultsContainer
-        Condition="'@(_workItemsWithDownloadMetadata)' != '' AND '%(SentJob.ResultsContainerUri)' != '' AND '$(HelixResultsDestinationDir)' != ''"
+        Condition="$(_shouldDownloadResults) AND '%(SentJob.ResultsContainerUri)' != ''"
         WorkItems="@(_workItemsWithDownloadMetadata)"
         ResultsContainer="%(SentJob.ResultsContainerUri)"
         OutputDirectory="$(HelixResultsDestinationDir)"
