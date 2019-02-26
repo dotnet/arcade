@@ -8,6 +8,7 @@
     <TestAssembly Condition="'$(TestAssembly)' == ''">$(TargetFileName)</TestAssembly>
     <TestPath Condition="'$(TestPath)' == ''">$(OutDir)</TestPath>
     <RunWorkingDirectory>$(TestPath)</RunWorkingDirectory>
+    <ArchiveTest Condition="'$(ArchiveTests.ToLower())' == 'all' OR $(MSBuildProjectName.EndsWith('.$(ArchiveTests)'))"></ArchiveTest>
 
     <!-- Publish the test data as part of the build to enable VS test runs. -->
     <PrepareForRunDependsOn>$(PrepareForRunDependsOn);PublishSupplementalTestData;</PrepareForRunDependsOn>
@@ -64,7 +65,7 @@
 
   <!-- Archive test binaries along with supporting files. -->
   <Target Name="ArchiveTests"
-          Condition="'$(ArchiveTests.ToLower())' == 'all' OR $(MSBuildProjectName.EndsWith('.$(ArchiveTests)'))"
+          Condition="'$(ArchiveTest)' == 'true'"
           AfterTargets="PrepareForRun"
           DependsOnTargets="GenerateRunScript">
 

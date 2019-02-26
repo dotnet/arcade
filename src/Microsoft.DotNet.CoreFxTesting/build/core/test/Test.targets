@@ -17,6 +17,7 @@
     <RunArguments Condition="'$(BuildingUAPVertical)' != 'true'">$(RunArguments) -xml $(TestResultsName)</RunArguments>
     <RunArguments Condition="'$(BuildingUAPVertical)' == 'true'">$(RunArguments) -xml $(UAPResultsPathCmd)</RunArguments>
     <RunArguments>$(RunArguments) -nologo</RunArguments>
+    <RunArguments Condition="'$(ArchiveTest)' == 'true'">$(RunArguments) -nocolor</RunArguments>
     <RunArguments>$(RunArguments) -notrait category=non$(_bc_TargetGroup)tests</RunArguments>
 
     <TargetOSTrait Condition="'$(TargetOS)' == 'Windows_NT'">nonwindowstests</TargetOSTrait>
