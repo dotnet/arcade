@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, true))
                 {
-                    foreach (FileInfo file in DirectoryInfo.EnumerateFiles("*", SearchOption.AllDirectories))
+                    foreach (FileInfo file in DirectoryInfo.EnumerateFiles("*", SearchOption.AllDirectories).Where(IsNotHelixBinLog))
                     {
                         string relativePath =
                             file.FullName.Substring(basePath.Length + 1); // +1 prevents it from including the leading backslash
@@ -109,5 +109,9 @@ namespace Microsoft.DotNet.Helix.Client
                 .Max();
             return alreadyUploadedFile.LastWriteTimeUtc >= newestFileWriteTime;
         }
+
+        // the binary log file for sending jobs to helix is written to $SourcesDirectory\artifacts\log\$BuildConfig\SendToHelix.binlog
+        // if the user wants to send entire repo to Helix, on Windows it fails with file in use exception
+        private bool IsNotHelixBinLog(FileInfo file) => !file.Name.Equals("SendToHelix.binlog", StringComparison.InvariantCultureIgnoreCase);
     }
 }
