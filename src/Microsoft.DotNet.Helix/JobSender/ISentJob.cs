@@ -6,5 +6,6 @@ namespace Microsoft.DotNet.Helix.Client
     {
         string CorrelationId { get; }
         string ResultsContainerUri { get; }
+        string ResultsContainerReadSAS { get; }
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.Build.Framework;
 using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Auth;
 using Microsoft.WindowsAzure.Storage.Blob;
 using System;
 using System.IO;
@@ -17,13 +18,15 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string ResultsContainer { get; set; }
 
         [Required]
-        public string PathToDownload { get; set; }
+        public string OutputDirectory { get; set; }
 
         [Required]
         public string JobId { get; set; }
 
         [Required]
         public ITaskItem[] MetadataToWrite { get; set; }
+
+        public string ResultsContainerReadSAS { get; set; }
 
         private const string MetadataFile = "metadata.txt";
 
@@ -34,9 +37,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                 LogRequiredParameterError(nameof(ResultsContainer));
             }
 
-            if (string.IsNullOrEmpty(PathToDownload))
+            if (string.IsNullOrEmpty(OutputDirectory))
             {
-                LogRequiredParameterError(nameof(PathToDownload));
+                LogRequiredParameterError(nameof(OutputDirectory));
             }
 
             if (string.IsNullOrEmpty(JobId))
@@ -55,7 +58,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private async Task ExecuteCore()
         {
-            DirectoryInfo directory = Directory.CreateDirectory(Path.Combine(PathToDownload, JobId));
+            DirectoryInfo directory = Directory.CreateDirectory(Path.Combine(OutputDirectory, JobId));
             using (FileStream stream = File.Open(Path.Combine(directory.FullName, MetadataFile), FileMode.Create, FileAccess.Write))
             using (var writer = new StreamWriter(stream))
             {
@@ -72,7 +75,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private async Task DownloadFilesForWorkItem(ITaskItem workItem, string directoryPath)
         {
-            if (workItem.GetRequiredMetadata(Log, "DownloadFilesFromResults", out string files))
+            if (workItem.TryGetMetadata("DownloadFilesFromResults", out string files))
             {
                 string workItemName = workItem.GetMetadata("Identity");
                 string[] filesToDownload = files.Split(';');
@@ -84,7 +87,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                     {
                         string destinationFile = Path.Combine(destinationDir.FullName, file);
                         Log.LogMessage(MessageImportance.Normal, $"Downloading {file} => {destinationFile}...");
-                        CloudBlob blob = new CloudBlob(new Uri($"{ResultsContainer}{workItemName}/{file}"));
+
+                        var uri = new Uri($"{ResultsContainer}{workItemName}/{file}");
+                        CloudBlob blob = string.IsNullOrEmpty(ResultsContainerReadSAS) ? new CloudBlob(uri) : new CloudBlob(uri, new StorageCredentials(ResultsContainerReadSAS));
                         await blob.DownloadToFileAsync(destinationFile, FileMode.Create);
                     }
                     catch (StorageException e)
@@ -98,7 +103,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private void LogRequiredParameterError(string parameter)
         {
-            Log.LogError($"Required parameter {nameof(parameter)} string was null or empty");
+            Log.LogError($"Required parameter {parameter} string was null or empty");
         }
     }
 }
