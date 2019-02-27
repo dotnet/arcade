@@ -17,7 +17,6 @@ Param(
   [switch] $sign,
   [switch] $pack,
   [switch] $publish,
-  [switch] $clean,
   [switch][Alias('bl')]$binaryLog,
   [switch] $ci,
   [switch] $prepareMachine,
@@ -45,7 +44,6 @@ function Print-Usage() {
     Write-Host "  -pack                   Package build outputs into NuGet packages and Willow components"
     Write-Host "  -sign                   Sign build outputs"
     Write-Host "  -publish                Publish artifacts (e.g. symbols)"
-    Write-Host "  -clean                  Clean solution"
     Write-Host "  -deploy                 Deploy built VSIXes"
     Write-Host "  -deployDeps             Deploy dependencies (e.g. VSIXes for integration tests)"
     Write-Host ""
@@ -103,7 +101,6 @@ function Build {
     /p:PerformanceTest=$performanceTest `
     /p:Sign=$sign `
     /p:Publish=$publish `
-    /p:Clean=$clean `
     @properties
 }
 

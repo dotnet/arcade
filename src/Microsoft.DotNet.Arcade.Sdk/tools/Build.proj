@@ -32,7 +32,6 @@
     Pack                            "true" to build NuGet packages and VS insertion manifests
     Sign                            "true" to sign built binaries
     Publish                         "true" to publish artifacts (e.g. symbols)
-    Clean                           "true" to clean solution
 
     Workaround for https://github.com/NuGet/Home/issues/4695
     QuietRestore                    "true" to suppress Restore output.
@@ -104,7 +103,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <_SolutionBuildTargets Include="Clean" Condition="'$(Clean)' == 'true'" />
       <_SolutionBuildTargets Include="Rebuild" Condition="'$(Rebuild)' == 'true'" />
       <_SolutionBuildTargets Include="Build" Condition="'$(Build)' == 'true' and '$(Rebuild)' != 'true'" />
       <!-- Extensbility point to run addition build targets after build. -->

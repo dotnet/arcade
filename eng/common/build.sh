@@ -26,7 +26,6 @@ usage()
   echo "  --pack                     Package build outputs into NuGet packages and Willow components"
   echo "  --sign                     Sign build outputs"
   echo "  --publish                  Publish artifacts (e.g. symbols)"
-  echo "  --clean                    Clean solution"
   echo ""
 
   echo "Advanced settings:"
@@ -65,7 +64,6 @@ performance_test=false
 pack=false
 sign=false
 publish=false
-clean=false
 
 projects=''
 ci=false
@@ -197,7 +195,6 @@ function Build {
     /p:PerformanceTest=$performance_test \
     /p:Sign=$sign \
     /p:Publish=$publish \
-    /p:Clean=$clean \
     $properties
 
   ExitWithExitCode 0
