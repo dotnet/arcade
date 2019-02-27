@@ -73,7 +73,7 @@ node_reuse=true
 properties=''
 
 while [[ $# > 0 ]]; do
-  opt="$(echo "$1" | awk '{gsub("--", "-", $0); print tolower($0)}')"
+  opt="$(echo "${1/#--/-}" | awk '{print tolower($0)}')"
   case "$opt" in
     -help|-h)
       usage
