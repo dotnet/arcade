@@ -116,13 +116,30 @@ namespace Microsoft.Cci.Writers.CSharp
                 }
             }
 
-            // couldn't find a symbol for enum, just cast it
-            WriteSymbol("(");
-            WriteTypeName(enumType, noSpace: true);
-            WriteSymbol(")");
-            WriteMetadataConstant(constant);
+            if (constant.Value == null)
+            {
+                if (enumType.IsValueType)
+                {
+                    // Write default(T) for value types
+                    WriteDefaultOf(enumType);
+                }
+                else
+                {
+                    WriteKeyword("null", noSpace: true);
+                }
+            }
+            else
+            {
+                // couldn't find a symbol for enum, just cast it
+                WriteSymbol("(");
+                WriteTypeName(enumType, noSpace: true);
+                WriteSymbol(")");
+                WriteSymbol("("); // Wrap value in parens to avoid issues with negative values
+                Write(constant.Value.ToString());
+                WriteSymbol(")");
+            }
         }
-        
+
         private static ulong ToULongUnchecked(object value)
         {
             if (value == null)
