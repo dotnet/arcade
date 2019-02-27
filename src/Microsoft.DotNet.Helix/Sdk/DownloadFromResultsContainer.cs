@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
                     catch (StorageException e)
                     {
-                        Log.LogWarning($"Failed to download {file} from results container: {e.Message}");
+                        Log.LogWarning($"Failed to download {workItemName}/{file} blob from results container: {e.Message}");
                     }
                 }
             };
