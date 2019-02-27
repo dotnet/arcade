@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.Helix.Client
     {
         private readonly Dictionary<string, string> _properties;
         private readonly List<WorkItemDefinition> _workItems;
+        private bool _withDefaultResultsContainer;
 
         public JobDefinition(IJob jobApi)
         {
@@ -133,6 +134,12 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
+        public IJobDefinition WithDefaultResultsContainer()
+        {
+            _withDefaultResultsContainer = true;
+            return this;
+        }
+
         public async Task<ISentJob> SendAsync(Action<string> log = null)
         {
             IBlobHelper storage;
@@ -148,12 +155,16 @@ namespace Microsoft.DotNet.Helix.Client
             IBlobContainer storageContainer = await storage.GetContainerAsync(TargetContainerName);
             var jobList = new List<JobListEntry>();
 
-            IBlobHelper resultsStorage = null;
             IBlobContainer resultsStorageContainer = null;
             if (!string.IsNullOrEmpty(ResultsStorageAccountConnectionString))
             {
-                resultsStorage = new ConnectionStringBlobHelper(ResultsStorageAccountConnectionString);
-                resultsStorageContainer = await resultsStorage.GetContainerAsync(TargetContainerName);
+
+                IBlobHelper resultsStorage = new ConnectionStringBlobHelper(ResultsStorageAccountConnectionString);
+                resultsStorageContainer = await resultsStorage.GetContainerAsync(TargetResultsContainerName);
+            }
+            else if (_withDefaultResultsContainer)
+            {
+                resultsStorageContainer = await storage.GetContainerAsync(TargetResultsContainerName);
             }
 
             List<string> correlationPayloadUris =
@@ -195,7 +206,7 @@ namespace Microsoft.DotNet.Helix.Client
                 ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."));
 
 
-            return new SentJob(JobApi, newJob);
+            return new SentJob(JobApi, newJob, resultsStorageContainer?.Uri, string.IsNullOrEmpty(Creator) ? resultsStorageContainer?.ReadSas : string.Empty);
         }
 
         public IJobDefinitionWithTargetQueue WithBuild(string buildNumber)
