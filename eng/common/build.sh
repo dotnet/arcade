@@ -13,21 +13,26 @@ usage()
   echo "  --configuration <value>    Build configuration: 'Debug' or 'Release' (short: -c)"
   echo "  --verbosity <value>        Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic] (short: -v)"
   echo "  --binaryLog                Create MSBuild binary log (short: -bl)"
-  echo ""
-  echo "Actions:"
-  echo "  --restore                  Restore dependencies (short: -r)"
-  echo "  --build                    Build all projects (short: -b)"
-  echo "  --rebuild                  Rebuild all projects"
-  echo "  --test                     Run all unit tests (short: -t)"
-  echo "  --sign                     Sign build outputs"
-  echo "  --publish                  Publish artifacts (e.g. symbols)"
-  echo "  --pack                     Package build outputs into NuGet packages and Willow components"
   echo "  --help                     Print help and exit (short: -h)"
   echo ""
+
+  echo "Actions:"
+  echo "  --restore                  Restore dependencies (short: -r)"
+  echo "  --build                    Build solution (short: -b)"
+  echo "  --rebuild                  Rebuild solution"
+  echo "  --test                     Run all unit tests in the solution (short: -t)"
+  echo "  --integrationTest          Run all integration tests in the solution"
+  echo "  --performanceTest          Run all performance tests in the solution"
+  echo "  --pack                     Package build outputs into NuGet packages and Willow components"
+  echo "  --sign                     Sign build outputs"
+  echo "  --publish                  Publish artifacts (e.g. symbols)"
+  echo "  --clean                    Clean solution"
+  echo ""
+
   echo "Advanced settings:"
   echo "  --projects <value>       Project or solution file(s) to build"
   echo "  --ci                     Set when running on CI server"
-  echo "  --prepareMachine         Prepare machine for CI run, clean up processes after build"
+  echo "  --prepareMachine         Prepare machine for CI run"
   echo "  --nodeReuse <value>      Sets nodereuse msbuild parameter ('true' or 'false')"
   echo "  --warnAsError <value>    Sets warnaserror msbuild parameter ('true' or 'false')"
   echo ""
@@ -46,26 +51,26 @@ while [[ -h "$source" ]]; do
 done
 scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
+configuration='Debug'
+verbosity='minimal'
+binary_log=false
+
 restore=false
 build=false
 rebuild=false
 test=false
-pack=false
-publish=false
 integration_test=false
 performance_test=false
+pack=false
 sign=false
-public=false
-ci=false
-
-warn_as_error=true
-node_reuse=true
-binary_log=false
+publish=false
+clean=false
 
 projects=''
-configuration='Debug'
+ci=false
 prepare_machine=false
-verbosity='minimal'
+warn_as_error=true
+node_reuse=true
 properties=''
 
 while [[ $# > 0 ]]; do
@@ -191,6 +196,7 @@ function Build {
     /p:PerformanceTest=$performance_test \
     /p:Sign=$sign \
     /p:Publish=$publish \
+    /p:Clean=$clean \
     $properties
 
   ExitWithExitCode 0
