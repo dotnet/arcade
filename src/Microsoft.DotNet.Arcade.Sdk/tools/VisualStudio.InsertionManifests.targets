@@ -29,7 +29,6 @@
       <_Args Include="SetupOutputPath=$(VisualStudioSetupInsertionPath)"/>
       <_Args Include="ComponentIntermediateOutputPath=$(VisualStudioSetupIntermediateOutputPath)$(_ComponentName)\"/>
       <_Args Include="SwixBuildPath=$(NuGetPackageRoot)microbuild.plugins.swixbuild\$(MicroBuildPluginsSwixBuildVersion)\"/>
-      <_Args Include="ManifestBuildVersion=$(VsixVersion)" />
       <_Args Include="VisualStudioDropName=$(VisualStudioDropName)" />
     </ItemGroup>
 
@@ -37,7 +36,7 @@
       Invoke GenerateSetupManifest target directly (instead of Build) to skip logic in common targets that is not needed 
       and adds unnecessary dependency on .NET Framework reference assemblies.
     -->
-    <MSBuild Projects="VisualStudio.SetupPackage.vsmanproj" Properties="@(_Args)" Targets="GenerateSetupManifest"/>
+    <MSBuild Projects="VisualStudio.SetupPackage.vsmanproj" Properties="@(_Args)" Targets="_BuildManifest"/>
   </Target>
 
 </Project>
