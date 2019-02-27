@@ -31,7 +31,7 @@
   </PropertyGroup>
 
   <!-- Helix dependencies -->
-  <ItemGroup Condition="'$(ArchiveTests)' == 'true' AND '$(IncludePerformanceTestFrameworkReferences)' == 'true'">
+  <ItemGroup Condition="'$(IncludePerformanceTestFrameworkReferences)' == 'true'">
     <TestArchiveDependencies Include="$(RuntimePath)BenchmarkDotNet.dll" />
     <TestArchiveDependencies Include="$(RuntimePath)BenchmarkDotNet.Diagnostics.Windows.dll" />
   </ItemGroup>

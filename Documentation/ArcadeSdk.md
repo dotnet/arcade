@@ -462,6 +462,20 @@ folder "InstallDir:MSBuild\Microsoft\VisualStudio\Managed"
   file source="$(VisualStudioXamlRulesDir)Microsoft.Managed.DesignTime.targets"
 ```
 
+**NOTE:** By defining `VisualStudioInsertionComponent` in your project you are implicitly opting-in to having all of the assemblies included in that package marked for `NGEN`.  If this is not something you want for a given component you may add `<Ngen>false</Ngen>`.
+
+example:
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <VisualStudioInsertionComponent>MyVisualStudioInsertionComponent</VisualStudioInsertionComponent>
+    <Ngen>false</Ngen>
+  </PropertyGroup>
+</Project>
+```
+
+
 ## Common steps in Azure DevOps pipeline
 
 The steps below assume the following variables to be defined:
@@ -815,3 +829,13 @@ msbuild Project.UnitTests.csproj /p:TestTargetFrameworks=net472 /p:TestRuntime=M
 ### `TestRunnerAdditionalArguments` (string)
 
 Additional command line arguments passed to the test runner (e.g. `xunit.console.exe`).
+
+### 'TestRuntimeAdditionalArguments' (string)
+
+Additional command line arguments passed to the test runtime (i.e. `dotnet` or `mono`). Applicable only when `TestRuntime` is `Core` or `Mono`. 
+
+For example, to invoke Mono with debug flags `--debug` (to get stack traces with line number information), set `TestRuntimeAdditionalArguments` to `--debug`.
+To override the default Shared Framework version that is selected based on the test project TFM, set `TestRuntimeAdditionalArguments` to `--fx-version x.y.z`.
+
+
+

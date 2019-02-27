@@ -26,12 +26,12 @@
     </When>
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('arm32'))">
       <PropertyGroup>
-        <DotNetCliRuntime>linux-arm-32</DotNetCliRuntime>
+        <DotNetCliRuntime>linux-arm</DotNetCliRuntime>
       </PropertyGroup>
     </When>
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('arm64'))">
       <PropertyGroup>
-        <DotNetCliRuntime>linux-arm-64</DotNetCliRuntime>
+        <DotNetCliRuntime>linux-arm64</DotNetCliRuntime>
       </PropertyGroup>
     </When>
     <Otherwise>
