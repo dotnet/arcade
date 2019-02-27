@@ -37,6 +37,7 @@ usage()
   echo "  --warnAsError <value>    Sets warnaserror msbuild parameter ('true' or 'false')"
   echo ""
   echo "Command line arguments starting with '/p:' are passed through to MSBuild."
+  echo "Arguments can also be passed in with a single hyphen."
 }
 
 source="${BASH_SOURCE[0]}"
@@ -76,63 +77,63 @@ properties=''
 while [[ $# > 0 ]]; do
   opt="$(echo "$1" | awk '{print tolower($0)}')"
   case "$opt" in
-    --help|-h)
+    --help|-help|-h)
       usage
       exit 0
       ;;
-    --configuration|-c)
+    --configuration|-configuration|-c)
       configuration=$2
       shift
       ;;
-    --verbosity|-v)
+    --verbosity|-verbosity|-v)
       verbosity=$2
       shift
       ;;
-    --binarylog|-bl)
+    --binarylog|-binarylog|-bl)
       binary_log=true
       ;;
-    --restore|-r)
+    --restore|-restore|-r)
       restore=true
       ;;
-    --build|-b)
+    --build|-build|-b)
       build=true
       ;;
-    --rebuild)
+    --rebuild|-rebuild)
       rebuild=true
       ;;
-    --pack)
+    --pack|-pack)
       pack=true
       ;;
-    --test|-t)
+    --test|-test|-t)
       test=true
       ;;
-    --integrationtest)
+    --integrationtest|-integrationtest)
       integration_test=true
       ;;
-    --performancetest)
+    --performancetest|-performancetest)
       performance_test=true
       ;;
-    --sign)
+    --sign|-sign)
       sign=true
       ;;
-    --publish)
+    --publish|-publish)
       publish=true
       ;;
-    --preparemachine)
+    --preparemachine|-preparemachine)
       prepare_machine=true
       ;;
-    --projects)
+    --projects|-projects)
       projects=$2
       shift
       ;;
-    --ci)
+    --ci|-ci)
       ci=true
       ;;
-    --warnaserror)
+    --warnaserror|-warnaserror)
       warn_as_error=$2
       shift
       ;;
-    --nodereuse)
+    --nodereuse|-nodereuse)
       node_reuse=$2
       shift
       ;;
