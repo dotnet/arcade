@@ -2,20 +2,14 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
-  <Import Project="$(MSBuildThisFileDirectory)Common.targets" />
-  <Import Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'runner', 'xunit-performance.targets'))" />
-
   <PropertyGroup>
-    <MeasurementPyCommand>$(PythonCommand) "$(BenchviewDir)measurement.py" xunit "$(RunId)-$(AssemblyName).xml" --better desc --drop-first-value --append -o "$(RepoRoot)measurement.json" || $(CliExitErrorCommand)</MeasurementPyCommand>
+    <PerformanceType Condition="'$(PerformanceType)' == ''">Profile</PerformanceType>
+
+    <CliExitErrorCommand Condition="'$(TargetOS)' != 'Windows_NT'">exit 1</CliExitErrorCommand>
+    <CliExitErrorCommand Condition="'$(TargetOS)' == 'Windows_NT'">EXIT /B 1</CliExitErrorCommand>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(LogToBenchview)' == 'true'">
-    <PostRunScriptCommands Condition="'$(TargetOS)' == 'Windows_NT'" Include="if exist &quot;$(RunId)-$(AssemblyName).xml&quot; (" />
-    <PostRunScriptCommands Condition="'$(TargetOS)' != 'Windows_NT'" Include="if [ -f &quot;$(RunId)-$(AssemblyName).xml&quot; ]; then" />
-    <PostRunScriptCommands Include="$(MeasurementPyCommand)" />
-    <PostRunScriptCommands Condition="'$(TargetOS)' == 'Windows_NT'" Include=")" />
-    <PostRunScriptCommands Condition="'$(TargetOS)' != 'Windows_NT'" Include="fi" />
-  </ItemGroup>
+  <Import Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'runner', 'xunit-performance.targets'))" />
 
   <Target Name="ValidatePerfConfigurations">
 
@@ -23,9 +17,6 @@
            Text="Invalid Performance Type value specified: $(PerformanceType)" />
 
   </Target>
-
-  <!-- Use arcade's perf test target name. -->
-  <Target Name="PerformanceTest" DependsOnTargets="Test" />
 
   <Choose>
     <When Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
