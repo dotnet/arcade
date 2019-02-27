@@ -75,65 +75,65 @@ node_reuse=true
 properties=''
 
 while [[ $# > 0 ]]; do
-  opt="$(echo "$1" | awk '{print tolower($0)}')"
+  opt="$(echo "$1" | awk '{gsub("--", "-", $0); print tolower($0)}')"
   case "$opt" in
-    --help|-help|-h)
+    -help|-h)
       usage
       exit 0
       ;;
-    --configuration|-configuration|-c)
+    -configuration|-c)
       configuration=$2
       shift
       ;;
-    --verbosity|-verbosity|-v)
+    -verbosity|-v)
       verbosity=$2
       shift
       ;;
-    --binarylog|-binarylog|-bl)
+    -binarylog|-bl)
       binary_log=true
       ;;
-    --restore|-restore|-r)
+    -restore|-r)
       restore=true
       ;;
-    --build|-build|-b)
+    -build|-b)
       build=true
       ;;
-    --rebuild|-rebuild)
+    -rebuild)
       rebuild=true
       ;;
-    --pack|-pack)
+    -pack)
       pack=true
       ;;
-    --test|-test|-t)
+    -test|-t)
       test=true
       ;;
-    --integrationtest|-integrationtest)
+    -integrationtest)
       integration_test=true
       ;;
-    --performancetest|-performancetest)
+    -performancetest)
       performance_test=true
       ;;
-    --sign|-sign)
+    -sign)
       sign=true
       ;;
-    --publish|-publish)
+    -publish)
       publish=true
       ;;
-    --preparemachine|-preparemachine)
+    -preparemachine)
       prepare_machine=true
       ;;
-    --projects|-projects)
+    -projects)
       projects=$2
       shift
       ;;
-    --ci|-ci)
+    -ci)
       ci=true
       ;;
-    --warnaserror|-warnaserror)
+    -warnaserror)
       warn_as_error=$2
       shift
       ;;
-    --nodereuse|-nodereuse)
+    -nodereuse)
       node_reuse=$2
       shift
       ;;
