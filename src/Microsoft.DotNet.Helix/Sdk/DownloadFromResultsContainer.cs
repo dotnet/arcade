@@ -5,11 +5,12 @@ using Microsoft.WindowsAzure.Storage.Blob;
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
-    public class DownloadFromResultsContainer : BaseTask
+    public class DownloadFromResultsContainer : BaseTask, ICancelableTask
     {
         [Required]
         public ITaskItem[] WorkItems { get; set; }
@@ -29,6 +30,10 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string ResultsContainerReadSAS { get; set; }
 
         private const string MetadataFile = "metadata.txt";
+
+        private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
+
+        public void Cancel() => _cancellationSource.Cancel();
 
         public override bool Execute()
         {
@@ -69,12 +74,14 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             ResultsContainer = ResultsContainer.EndsWith("/") ? ResultsContainer : ResultsContainer + "/";
-            await Task.WhenAll(WorkItems.Select(wi => DownloadFilesForWorkItem(wi, directory.FullName)));
+            await Task.WhenAll(WorkItems.Select(wi => DownloadFilesForWorkItem(wi, directory.FullName, _cancellationSource.Token)));
             return;
         }
 
-        private async Task DownloadFilesForWorkItem(ITaskItem workItem, string directoryPath)
+        private async Task DownloadFilesForWorkItem(ITaskItem workItem, string directoryPath, CancellationToken ct)
         {
+            ct.ThrowIfCancellationRequested();
+
             if (workItem.TryGetMetadata("DownloadFilesFromResults", out string files))
             {
                 string workItemName = workItem.GetMetadata("Identity");
