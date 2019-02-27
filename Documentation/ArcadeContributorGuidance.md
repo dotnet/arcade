@@ -1,7 +1,7 @@
 # Contributor Guidance for Arcade
-Over and above the 'normal' OSS contributor guidelines (which are important), there are some principles and guidelines that are specific to Arcade as well.
+Over and above the [.NET Core contributor guidelines](https://github.com/dotnet/coreclr/blob/master/Documentation/project-docs/contributing.md) (which are important), there are some principles and guidelines that are specific to Arcade as well.
 
-For the most part, contributions to Arcade are straight forward and relatively 'smooth'.  However, from time to time, getting changes we want in can definitely be more challenging, and even frustrating.  This document attempts to clarify some of the expectations as well as provide some 'advice' for success when contributing to Arcade.
+For the most part, contributions to Arcade are straight forward and relatively smooth.  However, from time to time, getting changes we want in can definitely be more challenging, and even frustrating.  This document attempts to clarify some of the expectations as well as provide some 'advice' for success when contributing to Arcade.
 
 ## Principles
 * Should benefit multiple repos across .NET Core.
@@ -10,7 +10,7 @@ For the most part, contributions to Arcade are straight forward and relatively '
 * Focus on value over conviction.  (of course conviction should help drive the value discussion)
 * Opinions and beliefs must be substantiated with data and a strong business rationale.
 * All discussions (arguments) must be civil, respectful, productive, and above all - kind. The focus must always be on the topic, not individuals.
-* Work in 'partnership' (shoulder to shoulder) as apposed to 'us' vs. 'them'.
+* Work in 'partnership' (shoulder to shoulder) as opposed to 'us' vs. 'them'.
 
 ## Conflict Resolution / Arbitration
 What happens when there's just no discernable path forward?  Who is the final arbitrator?  What to do in those rare occasions where everyone is stuck...
@@ -22,7 +22,7 @@ The short answer is that the final arbitrator is the Arcade owner, which current
 * Have at least three (3) face-to-face conversations (or voice when remote) over a week or two at a minimum with the devs where there is the most disagreement.  It is amazing how much these higher bandwidth conversations help.  (Community contributors get a pass here...)
 * Be able to articulate all other points of view.  Know the rationale behind the differences.
 
-Time and again differences get worked out when these items occur.  To be sure, it's not easy and we're often tempted to think "it shouldn't be this hard".  While perhaps that's true - the reality is that sometimes it IS this hard, and there's really no easy path through.  The good news is that in Arcade, this is rare.
+Time and again differences get worked out when these items occur.  To be sure, it's not easy and we're often tempted to think "it shouldn't be this hard".  While perhaps that's true - the reality is that sometimes it IS this hard, and there's really no easy path through.  The good news is that in Arcade, this is relatively rare.
 
 ## Helpful Tactics/Advice when it's challenging
 * Where there are differences that are challenging, see the '[Defaults Guidance](DefaultsGuidance.md)' doc for help on framing and definitions.

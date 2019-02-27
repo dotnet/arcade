@@ -14,7 +14,7 @@ It is often challenging to reconcile differences between a given repo build and 
 
 ## Categories of Differences
 
-* Category 1 - Company, Divisional, or .NET Core requirements.
+* Category 1 - Company, Divisional, Visual Studio, or .NET Core requirements.
 * Category 2 - Differences which are truly exceptions to what is otherwise correct for .NET Core overall.
 * Category 3 - Differences which are excessively expensive or risky to change.
 * Category 4 - Differences which are the result of team/individual preferences and/or history.
@@ -24,29 +24,29 @@ It is often challenging to reconcile differences between a given repo build and 
 ### Category 1 - Company, Divisional, or .NET Core requirements  
 
 * Hard requirements (like SDL or certs) that .NET Core must confirm to.
-* These differences **should have no defaults** and should have the required parameters explicitely provided by the repo.  
+* These differences **should have no defaults** and should have the required parameters explicitely provided by the repo based on supported options presented by the Arcade SDK.  
 * This might also result in cases where the implementation choice Arcade took proves excessively expensive or unreasonable for a specific product team to adopt.  (see other category for more on this)
 * Obviously, any differences here need to be reconciled - but there's always room for the "how" discussion.
 
 ### Category 2 - Differences which are truly exceptions to what is otherwise correct for .NET Core overall
 
-* 'True' exceptions mean that there's a concrete business case driving the difference.  
-* These differences have 'defaults' (or preferences) that are set by Arcade which can be overridden **only** for this category of differences.
+* True exceptions mean that there's a concrete business case driving the difference.  
+* These differences have defaults (or preferences) that are set by Arcade which can be overridden **only** for this category of differences.
 * Preference or history don't fall into this category. 
 * These differences should always be the *exception*.  If multiple repos are experiencing the same differences, this likely points to a broader .NET Core (Arcade) change.
 
 ### Category 3 - Differences which are excessively expensive or risky to change.
 
 * Sometimes, the 'right' thing to do is simply too expensive or risky to change right away.
-* 'Expensive' here is defined as taking more than 2 man-weeks of dev time to reconcile.
-* 'Risky' here is defined as likely destabilizing .NET Core for more than 2 days.
+* *Expensive* here is defined as taking more than 2 man-weeks of dev time to reconcile.
+* *Risky* here is defined as likely destabilizing .NET Core for more than 2 days.
 * The mitigation for this category is to create a plan for moving to the 'right' place over time - and then executing on that plan.  As with most things, 'scope' is usually where the magic of goodness lives.
-* This 'mitigation plan' should take into account the cost of moving, and the end value over time as well.
+* This mitigation plan should take into account the cost of moving, and the end value over time as well.
 
 ### Category 4 - Differences which are the result of team/individual preferences and/or history
 
 * In a perfect world, this category would not exist.
 * It is **strongly** recommended that the Arcade behavior is adopted.  
-* In most cases, repo owners can 'override' the Arcade 'defaults'. It should be understood that this will often result in additional risk and cost over time.  Regardless, it should continue to be the repo  team's 'call' what what is done.
+* In most cases, repo owners can override the Arcade defaults. It should be understood that this will often result in additional risk and cost over time.  Regardless, it should continue to be the repo  team's 'call' what what is done.
 * Eliminating (or reducing at least) this category is part of the cost of getting the value of a shared infra.
 * It's hard to do....as it often involves team culture change.  The idea though is that the effort (and pain) is worth it.
