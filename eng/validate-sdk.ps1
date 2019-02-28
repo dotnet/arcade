@@ -54,29 +54,6 @@ function MoveArtifactsToValidateSdkFolder([string]$artifactsDir, [string]$valida
   
     Move-Item -Path (Join-Path $repoRoot $validateSdkFolderName) -Destination $artifactsDir -Force
 }
-function IntegrateBinLogs([string]$artifactsDir, [string]$validateSdkFolderName, [string]$repoRoot, [string]$configuration)
-{
-    $artifactsLogDir = Join-Path (Join-Path $artifactsDir "log") $configuration
-    $validateSdkLogDir = Join-Path (Join-Path(Join-Path $artifactsDir $validateSdkFolderName) "log") $configuration
-    
-    Write-Host "Moving binlog files from '$validateSdkLogDir' to '$artifactsLogDir'"
-    
-    # If there is no log folder in artifacts either there were no binlogs captured or something else failed previously
-    # so we just exit with exit code 0 to avoid failing the whole build.
-    if (!(Test-Path -Path $artifactsLogDir)) {
-        Write-Host "There is no log folder in '$artifactsDir'..."
-        ExitWithExitCode 0
-    }
-    
-    if ((Test-Path -Path $validateSdkLogDir)) {
-        Get-ChildItem $validateSdkLogDir |
-        Foreach-Object {
-            $newFileName = "Validation_$_"
-            Rename-Item -Path $_.FullName -NewName $newFileName -Force
-            Copy-Item -Path $_.FullName.replace($_, $newFileName) -Destination $artifactsLogDir -Force
-        }
-    }
-}
 
 try {
   Write-Host "STEP 1: Build and create local packages"
@@ -118,10 +95,17 @@ try {
 
   & .\common\cibuild.cmd -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource /p:DotNetPublishBlobFeedUrl=https://dotnetfeed.blob.core.windows.net/dotnet-core-test/index.json
   CheckExitCode "Official build"
-  Write-Host "Finished building Arcade SDK with validation enabled!"
   
-  IntegrateBinLogs $artifactsDir $validateSdkFolderName $RepoRoot $configuration
-  CheckExitCode "Binlog Integration"
+  # Rename and move binlogs produced in the first step of the build
+  $artifactsLogDir = Join-Path (Join-Path $ArtifactsDir "log") $configuration
+  $validateSdkLogDir = Join-Path (Join-Path(Join-Path $ArtifactsDir $validateSdkFolderName) "log") $configuration
+    
+  Get-ChildItem $validateSdkLogDir |
+    Foreach-Object {
+      Move-Item -Path $_.FullName -Destination (Join-Path $artifactsLogDir "Validation_$_") -Force
+    }
+    
+  Write-Host "Finished building Arcade SDK with validation enabled!"
 }
 catch {
   Write-Host $_
