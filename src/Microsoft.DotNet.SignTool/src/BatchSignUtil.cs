@@ -277,7 +277,11 @@ namespace Microsoft.DotNet.SignTool
                 {
                     if (!_signTool.VerifySignedPEFile(stream))
                     {
-                        _log.LogError($"Assembly {file.FullPath} is not signed properly");
+                        _log.LogError($"Assembly {file.FullPath} is NOT signed properly");
+                    }
+                    else
+                    {
+                        _log.LogMessage($"Assembly {file.FullPath} is signed properly");
                     }
                 }
             }
@@ -321,9 +325,16 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
 
-                if (!SkipZipContainerSignatureMarkerCheck && (file.IsNupkg() || file.IsVsix()) && !signedContainer)
+                if (!SkipZipContainerSignatureMarkerCheck)
                 {
-                    _log.LogError($"Container {file.FullPath} does not have signature marker.");
+                    if ((file.IsNupkg() || file.IsVsix()) && !signedContainer)
+                    {
+                        _log.LogError($"Container {file.FullPath} does not have signature marker.");
+                    }
+                    else
+                    {
+                        _log.LogMessage($"Container {file.FullPath} has a signature marker.");
+                    }
                 }
             }
         }
@@ -341,6 +352,10 @@ namespace Microsoft.DotNet.SignTool
                 if (file.IsManaged() && !file.IsCrossgened() && !_signTool.VerifyStrongNameSign(file.FullPath))
                 {
                     _log.LogError($"Assembly {file.FullPath} is not strong-name signed correctly.");
+                }
+                else
+                {
+                    _log.LogMessage($"Assembly {file.FullPath} strong-name signature is valid.");
                 }
             }
         }

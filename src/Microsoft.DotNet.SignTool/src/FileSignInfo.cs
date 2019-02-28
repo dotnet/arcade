@@ -20,6 +20,8 @@ namespace Microsoft.DotNet.SignTool
         // optional file information that allows to disambiguate among multiple files with the same name:
         internal readonly string TargetFramework;
 
+        internal readonly bool ForceRepack;
+
         internal static bool IsPEFile(string path)
             => Path.GetExtension(path) == ".exe" || Path.GetExtension(path) == ".dll";
 
@@ -64,7 +66,7 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool IsPowerShellScript() => IsPowerShellScript(FileName);
 
-        internal FileSignInfo(string fullPath, ImmutableArray<byte> contentHash, SignInfo signInfo, string targetFramework = null)
+        internal FileSignInfo(string fullPath, ImmutableArray<byte> contentHash, SignInfo signInfo, string targetFramework = null, bool forceRepack = false)
         {
             Debug.Assert(fullPath != null);
             Debug.Assert(!contentHash.IsDefault && contentHash.Length == 256 / 8);
@@ -75,6 +77,7 @@ namespace Microsoft.DotNet.SignTool
             FullPath = fullPath;
             SignInfo = signInfo;
             TargetFramework = targetFramework;
+            ForceRepack = forceRepack;
         }
 
         public override string ToString()
