@@ -16,17 +16,22 @@
   <Import Project="DefaultVersions.Generated.props" Condition="Exists('DefaultVersions.Generated.props')"/>
   <Import Project="$(VersionsPropsPath)" Condition="Exists('$(VersionsPropsPath)')"/>
   <Import Project="Version.props" Condition="Exists('Version.props')"/>
-
-  <PropertyGroup>
-    <!-- 
-      Configure NuGet Restore to only use NuGet.config file in the repository root.
-      This makes sure we do not depend on any NuGet.config files located outside of the repository.
+  
+  <!-- 
+    Configure NuGet Restore to only use NuGet.config file in the repository root.
+    This makes sure we do not depend on any NuGet.config files located outside of the repository.
       
-      Note: This setting only applies to command-line build, not design time builds done from Visual Studio.
-      Visual Studio restore might still use other NuGet.config files.
-    -->
+    Note: This setting only applies to command-line build, not design time builds done from Visual Studio.
+    Visual Studio restore might still use other NuGet.config files.
+  -->
+  <PropertyGroup>
     <RestoreConfigFile>$(RepoRoot)NuGet.config</RestoreConfigFile>
-
+  </PropertyGroup>
+  
+  <!--
+    Arcade SDK features.
+  -->
+  <PropertyGroup>
     <!-- Opt-out features -->
     <UsingToolXliff Condition="'$(UsingToolXliff)' == ''">true</UsingToolXliff>
     <UsingToolXUnit Condition="'$(UsingToolXUnit)' == ''">true</UsingToolXUnit>
@@ -45,8 +50,24 @@
       Repo can set this property to true if it needs to use a different version of the compiler than the one in the dotnet SDK.
     -->
     <UsingToolMicrosoftNetCompilers Condition="'$(UsingToolMicrosoftNetCompilers)' == ''">false</UsingToolMicrosoftNetCompilers>
+  </PropertyGroup>
+  
+  <!--
+    Disable features when building from source.
+  -->
+  <PropertyGroup Condition="'$(DotNetBuildFromSource)' == 'true'">
+    <UsingToolPdbConverter>false</UsingToolPdbConverter>
+    <UsingToolVSSDK>false</UsingToolVSSDK>
+    <UsingToolIbcOptimization>false</UsingToolIbcOptimization>
+    <UsingToolVisualStudioIbcTraining>false</UsingToolVisualStudioIbcTraining>
+    <UsingToolSymbolUploader>false</UsingToolSymbolUploader>
+    <UsingToolNuGetRepack>false</UsingToolNuGetRepack>
+  </PropertyGroup>
 
-    <!-- Default versions -->
+  <!-- 
+    Default versions
+  -->
+  <PropertyGroup>
     <DropAppVersion Condition="'$(DropAppVersion)' == ''">17.144.28413-buildid7983345</DropAppVersion>
     <MicroBuildPluginsSwixBuildVersion Condition="'$(MicroBuildPluginsSwixBuildVersion)' == ''">1.0.422</MicroBuildPluginsSwixBuildVersion>
     <MicroBuildCoreVersion Condition="'$(MicroBuildCoreVersion)' == ''">0.2.0</MicroBuildCoreVersion>
