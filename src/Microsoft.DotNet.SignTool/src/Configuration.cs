@@ -243,7 +243,7 @@ namespace Microsoft.DotNet.SignTool
             var matchedNameTokenFramework = false;
             var matchedNameToken = false;
             var matchedName = false;
-            PEInfo peInfo = new PEInfo();
+            PEInfo peInfo = null;
 
             if (FileSignInfo.IsPEFile(fullPath))
             {
@@ -306,7 +306,7 @@ namespace Microsoft.DotNet.SignTool
 
                 // TODO: implement this check for native PE files as well:
                 // extract copyright from native resource (.rsrc section) 
-                if (signInfo.ShouldSign && peInfo.IsManaged)
+                if (signInfo.ShouldSign && peInfo != null && peInfo.IsManaged)
                 {
                     bool isMicrosoftLibrary = IsMicrosoftLibrary(peInfo.Copyright);
                     bool isMicrosoftCertificate = !IsThirdPartyCertificate(signInfo.Certificate);
@@ -323,7 +323,7 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
 
-                return new FileSignInfo(fullPath, hash, signInfo, (peInfo.TargetFramework != "") ? peInfo.TargetFramework : null);
+                return new FileSignInfo(fullPath, hash, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null);
             }
 
             if (SignToolConstants.SignableExtensions.Contains(extension) || SignToolConstants.SignableOSXExtensions.Contains(extension))
@@ -365,24 +365,21 @@ namespace Microsoft.DotNet.SignTool
 
         private static PEInfo GetPEInfo(string fullPath)
         {
-            PEInfo peInfo = new PEInfo();
-            peInfo.IsManaged = ContentUtil.IsManaged(fullPath);
+            bool isManaged = ContentUtil.IsManaged(fullPath);
 
-            if (!peInfo.IsManaged)
+            if (!isManaged)
             {
-                return peInfo;
+                return new PEInfo(isManaged);
             }
 
-            peInfo.IsCrossgened = ContentUtil.IsCrossgened(fullPath);
+            bool isCrossgened = ContentUtil.IsCrossgened(fullPath);
 
             AssemblyName assemblyName = AssemblyName.GetAssemblyName(fullPath);
             var pktBytes = assemblyName.GetPublicKeyToken();
 
-            peInfo.PublicKeyToken = (pktBytes == null || pktBytes.Length == 0) ? string.Empty : string.Join("", pktBytes.Select(b => b.ToString("x2")));
+            string publicKeyToken = (pktBytes == null || pktBytes.Length == 0) ? string.Empty : string.Join("", pktBytes.Select(b => b.ToString("x2")));
             GetTargetFrameworkAndCopyright(fullPath, out string targetFramework, out string copyright);
-            peInfo.TargetFramework = targetFramework;
-            peInfo.Copyright = copyright;
-            return peInfo;
+            return new PEInfo(isManaged, isCrossgened, copyright, publicKeyToken, targetFramework);
         }
 
         private static void GetTargetFrameworkAndCopyright(string filePath, out string targetFramework, out string copyright)
