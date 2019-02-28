@@ -189,7 +189,7 @@ namespace Microsoft.DotNet.Helix.Client
                 _workItems.Select(async w =>
                 {
                     var entry = await w.SendAsync(storageContainer, TargetContainerName, log);
-                    entry.CorrelationPayloadUris = correlationPayloadUris;
+                    entry.CorrelationPayloadUrisWithDestinations = correlationPayloadUris;
                     return entry;
                 }
                 ))).ToList();
