@@ -31,7 +31,7 @@ usage()
   echo "Advanced settings:"
   echo "  --projects <value>       Project or solution file(s) to build"
   echo "  --ci                     Set when running on CI server"
-  echo "  --prepareMachine         Prepare machine for CI run"
+  echo "  --prepareMachine         Prepare machine for CI run, clean up processes after build"
   echo "  --nodeReuse <value>      Sets nodereuse msbuild parameter ('true' or 'false')"
   echo "  --warnAsError <value>    Sets warnaserror msbuild parameter ('true' or 'false')"
   echo ""
@@ -51,10 +51,6 @@ while [[ -h "$source" ]]; do
 done
 scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
-configuration='Debug'
-verbosity='minimal'
-binary_log=false
-
 restore=false
 build=false
 rebuild=false
@@ -62,14 +58,20 @@ test=false
 integration_test=false
 performance_test=false
 pack=false
-sign=false
 publish=false
-
-projects=''
+sign=false
+public=false
 ci=false
-prepare_machine=false
+
 warn_as_error=true
 node_reuse=true
+binary_log=false
+
+projects=''
+configuration='Debug'
+prepare_machine=false
+verbosity='minimal'
+
 properties=''
 
 while [[ $# > 0 ]]; do
