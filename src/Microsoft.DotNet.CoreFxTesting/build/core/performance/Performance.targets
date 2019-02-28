@@ -7,9 +7,6 @@
   <Import Condition="'$(IsBenchmarkDotNetProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'runner', 'BenchmarkDotNet.targets'))" />
 
   <PropertyGroup>
-    <!-- Disable test targets if global property performance is set to false. -->
-    <DisableTestTargets Condition="'$(Performance)' == 'false'">true</DisableTestTargets>
-
     <MeasurementPyCommand>$(PythonCommand) "$(BenchviewDir)measurement.py" xunit "$(RunId)-$(AssemblyName).xml" --better desc --drop-first-value --append -o "$(RepoRoot)measurement.json" || $(CliExitErrorCommand)</MeasurementPyCommand>
   </PropertyGroup>
 
@@ -22,9 +19,6 @@
   </ItemGroup>
 
   <Target Name="ValidatePerfConfigurations">
-
-    <Warning Condition="!$(ConfigurationGroup.ToLower().Contains('release'))"
-             Text="You are running performance tests in a configuration other than Release. Your results may be unreliable." />
 
     <Error Condition="'$(PerformanceType)' != 'Diagnostic' AND '$(PerformanceType)' != 'Profile'"
            Text="Invalid Performance Type value specified: $(PerformanceType)" />
@@ -47,5 +41,10 @@
       </PropertyGroup>
     </When>
   </Choose>
+
+  <!-- Main test targets -->
+  <Target Name="PerformanceTest" DependsOnTargets="$(TestDependsOn)" Condition="'$(IsPerformanceTestProject)' == 'true'" />
+  <Target Name="BuildAndPerformanceTest" DependsOnTargets="Build;PerformanceTest" Condition="'$(IsPerformanceTestProject)' == 'true'" />
+  <Target Name="RebuildAndPerformanceTest" DependsOnTargets="Rebuild;PerformanceTest" Condition="'$(IsPerformanceTestProject)' == 'true'" />
 
 </Project>

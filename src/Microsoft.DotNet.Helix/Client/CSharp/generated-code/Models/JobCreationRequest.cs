@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class JobCreationRequest
     {
-        public JobCreationRequest(string source, string type, string build, IImmutableDictionary<string, string> properties, string listUri, string queueId, string resultsUri, string resultsUriRSAS, string resultsUriWSAS)
+        public JobCreationRequest(string source, string type, string build, IImmutableDictionary<string, string> properties, string listUri, string queueId)
         {
             Source = source;
             Type = type;
@@ -14,9 +14,6 @@ namespace Microsoft.DotNet.Helix.Client.Models
             Properties = properties;
             ListUri = listUri;
             QueueId = queueId;
-            ResultsUri = resultsUri;
-            ResultsUriRSAS = resultsUriRSAS;
-            ResultsUriWSAS = resultsUriWSAS;
         }
 
         [JsonProperty("Source")]
@@ -72,10 +69,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
                     !(string.IsNullOrEmpty(Build)) &&
                     !(Properties == default) &&
                     !(string.IsNullOrEmpty(ListUri)) &&
-                    !(string.IsNullOrEmpty(QueueId)) &&
-                    !(string.IsNullOrEmpty(ResultsUri)) &&
-                    !(string.IsNullOrEmpty(ResultsUriRSAS)) &&
-                    !(string.IsNullOrEmpty(ResultsUriWSAS));
+                    !(string.IsNullOrEmpty(QueueId));
             }
         }
     }

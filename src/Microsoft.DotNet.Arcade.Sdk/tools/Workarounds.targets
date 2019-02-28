@@ -82,7 +82,7 @@
       <NuspecProperty Include="PackageProjectUrl=$(PackageProjectUrl)"/>
       <NuspecProperty Include="PackageIconUrl=$(PackageIconUrl)" Condition="'$(PackageIconUrl)' != ''" />
       <NuspecProperty Include="PackageReleaseNotes=$(PackageReleaseNotes)" Condition="'$(PackageReleaseNotes)' != ''" />
-      <NuspecProperty Include="PackageTags=$(PackageTags)" Condition="'$(PackageTags)' != ''" />
+      <NuspecProperty Include="PackageTags=$(PackageTags.Replace(';', ' '))" Condition="'$(PackageTags)' != ''" />
       <NuspecProperty Include="RepositoryUrl=$(RepositoryUrl)" Condition="'$(RepositoryUrl)' != ''" />
       <NuspecProperty Include="RepositoryType=$(RepositoryType)" Condition="'$(RepositoryType)' != ''" />
       <NuspecProperty Include="RepositoryCommit=$(RepositoryCommit)" Condition="'$(RepositoryCommit)' != ''" />

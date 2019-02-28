@@ -69,6 +69,18 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string JobCorrelationId { get; set; }
 
         /// <summary>
+        ///   When the task finishes, the results container uri should be available in case we want to download files.
+        /// </summary>
+        [Output]
+        public string ResultsContainerUri { get; set; }
+
+        /// <summary>
+        ///   If the job is internal, we need to give the DownloadFromResultsContainer task the Write SAS to download files.
+        /// </summary>
+        [Output]
+        public string ResultsContainerReadSAS { get; set; }
+
+        /// <summary>
         ///   A collection of commands that will run for each work item before any work item commands.
         ///   Use ';' to separate commands and escape a ';' with ';;'
         /// </summary>
@@ -129,6 +141,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// Max automatic retry of workitems which do not return 0
         /// </summary>
         public int MaxRetryCount { get; set; }
+
+        /// <summary>
+        /// Currently, if we're using the download results feature, we need to return the results container back to know where to download results from. Currently, the Helix API is the one that provides this container and we have no way to get it back. If this property is set to true, we will create the container before sending the job and tell the API to use this container.
+        /// </summary>
+        public bool UsingDownloadResultsFeature { get; set; }
 
         private CommandPayload _commandPayload;
 
@@ -201,6 +218,11 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
                 }
 
+                if (UsingDownloadResultsFeature)
+                {
+                    def = def.WithDefaultResultsContainer();
+                }
+
                 // don't send the job if we have errors
                 if (Log.HasLoggedErrors)
                 {
@@ -211,6 +233,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg));
                 JobCorrelationId = job.CorrelationId;
+                ResultsContainerUri = job.ResultsContainerUri;
+                ResultsContainerReadSAS = job.ResultsContainerReadSAS;
             }
 
             string mcUri = await GetMissionControlResultUri();

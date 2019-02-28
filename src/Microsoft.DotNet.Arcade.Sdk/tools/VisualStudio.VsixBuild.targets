@@ -113,7 +113,7 @@
     <Error Text="VisualStudioInsertionComponent property must only be set for projects with extension.vsixmanifest or SWR files." Condition="'$(_PackageStubFile)' == ''"/>
 
     <MakeDir Directories="$(_ComponentIntermediateDir)" />
-    <WriteLinesToFile File="$(_PackageStubFile)" Lines="$(TargetVsixContainerName)" Overwrite="true" />
+    <WriteLinesToFile File="$(_PackageStubFile)" Lines="$(TargetVsixContainerName)/$(VsixVersion)" Overwrite="true" />
 
     <ItemGroup>
       <FileWrites Include="$(_PackageStubFile)"/>

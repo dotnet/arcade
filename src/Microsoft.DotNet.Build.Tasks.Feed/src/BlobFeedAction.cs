@@ -257,21 +257,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public async Task<ISet<PackageIdentity>> GetPackageIdentitiesAsync()
         {
-            var context = new SleetContext
+            using (var fileCache = CreateFileCache())
             {
-                LocalSettings = GetSettings(),
-                Log = new SleetLogger(Log, NuGet.Common.LogLevel.Verbose),
-                Source = GetAzureFileSystem(),
-                Token = CancellationToken
-            };
-            context.SourceSettings = await FeedSettingsUtility.GetSettingsOrDefault(
-                context.Source,
-                context.Log,
-                context.Token);
+                var context = new SleetContext
+                {
+                    LocalSettings = GetSettings(),
+                    Log = new SleetLogger(Log, NuGet.Common.LogLevel.Verbose),
+                    Source = GetAzureFileSystem(fileCache),
+                    Token = CancellationToken
+                };
+                context.SourceSettings = await FeedSettingsUtility.GetSettingsOrDefault(
+                    context.Source,
+                    context.Log,
+                    context.Token);
 
-            var packageIndex = new PackageIndex(context);
+                var packageIndex = new PackageIndex(context);
 
-            return await packageIndex.GetPackagesAsync();
+                return await packageIndex.GetPackagesAsync();
+            }
         }
 
         private bool IsSanityChecked(IEnumerable<string> items)
@@ -344,10 +347,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return settings;
         }
 
-        private AzureFileSystem GetAzureFileSystem()
+        private AzureFileSystem GetAzureFileSystem(LocalCache fileCache)
         {
             CloudStorageAccount storageAccount = CloudStorageAccount.Parse(source.ConnectionString);
-            AzureFileSystem fileSystem = new AzureFileSystem(new LocalCache(), new Uri(source.Path), new Uri(source.Path), storageAccount, source.Name, source.FeedSubPath);
+            AzureFileSystem fileSystem = new AzureFileSystem(fileCache, new Uri(source.Path), new Uri(source.Path), storageAccount, source.Name, source.FeedSubPath);
             return fileSystem;
         }
 
@@ -356,86 +359,110 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             PushOptions options)
         {
             LocalSettings settings = GetSettings();
-            AzureFileSystem fileSystem = GetAzureFileSystem();
             SleetLogger log = new SleetLogger(Log, NuGet.Common.LogLevel.Verbose);
-
             var packagesToPush = items.ToList();
 
-            if (!options.AllowOverwrite && options.PassIfExistingItemIdentical)
+            // Create a separate LocalCache to use for read only operations on the feed.
+            // Files added to the cache before the lock could be modified by the process
+            // currently holding the lock. Sleet assumes that files in the cache 
+            // are valid and identical to the ones on the feed since operations are 
+            // normally performed inside the lock.
+            using (var preLockCache = CreateFileCache())
             {
-                var context = new SleetContext
+                AzureFileSystem preLockFileSystem = GetAzureFileSystem(preLockCache);
+
+                if (!options.AllowOverwrite && options.PassIfExistingItemIdentical)
                 {
-                    LocalSettings = settings,
-                    Log = log,
-                    Source = fileSystem,
-                    Token = CancellationToken
-                };
-                context.SourceSettings = await FeedSettingsUtility.GetSettingsOrDefault(
-                    context.Source,
-                    context.Log,
-                    context.Token);
-
-                var flatContainer = new FlatContainer(context);
-
-                var packageIndex = new PackageIndex(context);
-
-                // Check packages sequentially: Task.WhenAll caused IO exceptions in Sleet.
-                for (int i = packagesToPush.Count - 1; i >= 0; i--)
-                {
-                    string item = packagesToPush[i];
-
-                    bool? identical = await IsPackageIdenticalOnFeedAsync(
-                        item,
-                        packageIndex,
+                    var context = new SleetContext
+                    {
+                        LocalSettings = settings,
+                        Log = log,
+                        Source = preLockFileSystem,
+                        Token = CancellationToken
+                    };
+                    context.SourceSettings = await FeedSettingsUtility.GetSettingsOrDefault(
                         context.Source,
-                        flatContainer,
-                        log);
+                        context.Log,
+                        context.Token);
 
-                    if (identical == null)
+                    var flatContainer = new FlatContainer(context);
+
+                    var packageIndex = new PackageIndex(context);
+
+                    // Check packages sequentially: Task.WhenAll caused IO exceptions in Sleet.
+                    for (int i = packagesToPush.Count - 1; i >= 0; i--)
                     {
-                        continue;
+                        string item = packagesToPush[i];
+
+                        bool? identical = await IsPackageIdenticalOnFeedAsync(
+                            item,
+                            packageIndex,
+                            context.Source,
+                            flatContainer,
+                            log);
+
+                        if (identical == null)
+                        {
+                            continue;
+                        }
+
+                        packagesToPush.RemoveAt(i);
+
+                        if (identical == true)
+                        {
+                            Log.LogMessage(
+                                MessageImportance.Normal,
+                                "Package exists on the feed, and is verified to be identical. " +
+                                $"Skipping upload: '{item}'");
+                        }
+                        else
+                        {
+                            Log.LogError(
+                                "Package exists on the feed, but contents are different. " +
+                                $"Upload failed: '{item}'");
+                        }
                     }
 
-                    packagesToPush.RemoveAt(i);
-
-                    if (identical == true)
+                    if (!packagesToPush.Any())
                     {
-                        Log.LogMessage(
-                            MessageImportance.Normal,
-                            "Package exists on the feed, and is verified to be identical. " +
-                            $"Skipping upload: '{item}'");
+                        Log.LogMessage("After skipping idempotent uploads, no items need pushing.");
+                        return true;
                     }
-                    else
-                    {
-                        Log.LogError(
-                            "Package exists on the feed, but contents are different. " +
-                            $"Upload failed: '{item}'");
-                    }
-                }
-
-                if (!packagesToPush.Any())
-                {
-                    Log.LogMessage("After skipping idempotent uploads, no items need pushing.");
-                    return true;
                 }
             }
 
-            return await PushCommand.RunAsync(
-                settings,
-                fileSystem,
-                packagesToPush,
-                options.AllowOverwrite,
-                skipExisting: false,
-                log: log);
+            // Create a new cache to be used once a lock is obtained.
+            using (var fileCache = CreateFileCache())
+            {
+                var lockedFileSystem = GetAzureFileSystem(fileCache);
+
+                return await PushCommand.RunAsync(
+                    settings,
+                    lockedFileSystem,
+                    packagesToPush,
+                    options.AllowOverwrite,
+                    skipExisting: false,
+                    log: log);
+            }
         }
 
         private async Task<bool> InitAsync()
         {
+            using (var fileCache = CreateFileCache())
+            {
+                LocalSettings settings = GetSettings();
+                AzureFileSystem fileSystem = GetAzureFileSystem(fileCache);
+                bool result = await InitCommand.RunAsync(settings, fileSystem, enableCatalog: false, enableSymbols: false, log: new SleetLogger(Log, NuGet.Common.LogLevel.Verbose), token: CancellationToken);
+                return result;
+            }
+        }
 
-            LocalSettings settings = GetSettings();
-            AzureFileSystem fileSystem = GetAzureFileSystem();
-            bool result = await InitCommand.RunAsync(settings, fileSystem, enableCatalog: false, enableSymbols: false, log: new SleetLogger(Log, NuGet.Common.LogLevel.Verbose), token: CancellationToken);
-            return result;
+        private static LocalCache CreateFileCache()
+        {
+            // By default a folder is created inside %temp% to store the cache, to 
+            // change this location pass a folder path to the LocalCache constructor.
+            // Passing PerfTracker in so a summary is logged at the end of publishing.
+            return new LocalCache(new PerfTracker());
         }
     }
 }

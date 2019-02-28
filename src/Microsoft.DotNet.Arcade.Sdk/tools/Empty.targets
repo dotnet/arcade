@@ -8,6 +8,11 @@
     The targets defined here are not sufficient for the project to be open in Visual Studio without issues though.    
   -->
 
+  <PropertyGroup>
+    <!-- Skip importing NuGet Pack targets which are imported from the Microsoft.NET.Sdk targets -->
+    <ImportNuGetBuildTasksPackTargetsFromSdk>false</ImportNuGetBuildTasksPackTargetsFromSdk>
+  </PropertyGroup>
+
   <Target Name="_IsProjectRestoreSupported"/>
   <Target Name="Restore"/>
   <Target Name="Build"/>

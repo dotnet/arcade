@@ -20,7 +20,7 @@
   <Target Name="RestoreXUnitProjects"
           Condition="'@(XUnitProject)' != ''"
           BeforeTargets="Restore"
-          Outputs="%(XUnitProject.Identity)">
+          Outputs="%(XUnitProject.Identity)%(XUnitProject.TargetFramework)%(XUnitProject.RuntimeTargetFramework)%(XUnitProject.AdditionalProperties)">
     <MSBuild Projects="%(XUnitProject.Identity)"
              Targets="Restore"
              Properties="CustomAfterMicrosoftCommonTargets=$(_XUnitPublishTargetsPath);%(XUnitProject.AdditionalProperties)">
@@ -30,7 +30,7 @@
   <Target Name="BuildXUnitProjects"
           Condition="'@(XUnitProject)' != ''"
           BeforeTargets="CoreBuild"
-          Outputs="%(XUnitProject.Identity)">
+          Outputs="%(XUnitProject.Identity)%(XUnitProject.TargetFramework)%(XUnitProject.RuntimeTargetFramework)%(XUnitProject.AdditionalProperties)">
     <PropertyGroup>
       <_CurrentXUnitProject>%(XUnitProject.Identity)</_CurrentXUnitProject>
       <_CurrentPublishTargetFramework>%(XUnitProject.TargetFramework)</_CurrentPublishTargetFramework>

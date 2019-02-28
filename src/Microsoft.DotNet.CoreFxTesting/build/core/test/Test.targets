@@ -17,6 +17,7 @@
     <RunArguments Condition="'$(BuildingUAPVertical)' != 'true'">$(RunArguments) -xml $(TestResultsName)</RunArguments>
     <RunArguments Condition="'$(BuildingUAPVertical)' == 'true'">$(RunArguments) -xml $(UAPResultsPathCmd)</RunArguments>
     <RunArguments>$(RunArguments) -nologo</RunArguments>
+    <RunArguments Condition="'$(ArchiveTest)' == 'true'">$(RunArguments) -nocolor</RunArguments>
     <RunArguments>$(RunArguments) -notrait category=non$(_bc_TargetGroup)tests</RunArguments>
 
     <TargetOSTrait Condition="'$(TargetOS)' == 'Windows_NT'">nonwindowstests</TargetOSTrait>
@@ -38,7 +39,7 @@
     <_withoutCategories Condition="'$(WithoutCategories)' != ''">;$(WithoutCategories.Trim(';'))</_withoutCategories>
     <!-- Default non categories -->
     <_withoutCategories Condition="!$(_withCategories.Contains('failing'))">$(_withoutCategories);failing</_withoutCategories>
-    <_withoutCategories Condition="'$(Outerloop)' != 'true'">$(_withoutCategories);Outerloop</_withoutCategories>
+    <_withoutCategories Condition="'$(OuterLoop)' != 'true'">$(_withoutCategories);OuterLoop</_withoutCategories>
     <RunArguments>$(RunArguments)$(_withCategories.Replace(';', ' -trait category='))</RunArguments>
     <RunArguments>$(RunArguments)$(_withoutCategories.Replace(';', ' -notrait category='))</RunArguments>
 
@@ -149,5 +150,14 @@
     </When>
 
   </Choose>
+
+  <!-- Main test targets -->
+  <Target Name="Test" DependsOnTargets="$(TestDependsOn)" Condition="'$(IsUnitTestProject)' == 'true'" />
+  <Target Name="BuildAndTest" DependsOnTargets="Build;Test" Condition="'$(IsUnitTestProject)' == 'true'" />
+  <Target Name="RebuildAndTest" DependsOnTargets="Rebuild;Test" Condition="'$(IsUnitTestProject)' == 'true'" />
+
+  <Target Name="IntegrationTest" DependsOnTargets="$(TestDependsOn)" Condition="'$(IsIntegrationTestProject)' == 'true'" />
+  <Target Name="BuildAndIntegrationTest" DependsOnTargets="Build;IntegrationTest" Condition="'$(IsIntegrationTestProject)' == 'true'" />
+  <Target Name="RebuildAndIntegrationTest" DependsOnTargets="Rebuild;IntegrationTest" Condition="'$(IsIntegrationTestProject)' == 'true'" />
 
 </Project>

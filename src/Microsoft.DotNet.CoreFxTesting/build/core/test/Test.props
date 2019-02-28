@@ -33,7 +33,7 @@
   </ItemGroup>
 
   <!-- Helix dependencies -->
-  <ItemGroup Condition="'$(ArchiveTests)' == 'true' AND '$(IncludeTestFrameworkReferences)' == 'true'">
+  <ItemGroup Condition="'$(IncludeTestFrameworkReferences)' == 'true'">
     <TestArchiveDependencies Include="$(RuntimePath)Microsoft.DotNet.XUnitExtensions.dll" />
     <TestArchiveDependencies Include="$(RuntimePath)xunit.assert.dll" />
     <TestArchiveDependencies Include="$(RuntimePath)xunit.core.dll" />

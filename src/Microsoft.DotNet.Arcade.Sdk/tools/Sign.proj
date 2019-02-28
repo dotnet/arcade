@@ -30,7 +30,7 @@
       a public key token.
       The certificate can be overriden using the StrongNameSignInfo or the FileSignInfo item group.
     -->
-    <FileExtensionSignInfo Include=".jar" CertificateName="MicrosoftJAR" />
+    <FileExtensionSignInfo Include=".jar" CertificateName="MicrosoftJARSHA2" />
     <FileExtensionSignInfo Include=".js;.ps1;.psd1;.psm1;.psc1;.py" CertificateName="Microsoft400" />
     <FileExtensionSignInfo Include=".dll;.exe" CertificateName="Microsoft400" />
     <FileExtensionSignInfo Include=".nupkg" CertificateName="NuGet" />
@@ -80,6 +80,7 @@
         DryRun="$(_DryRun)"
         TestSign="$(_TestSign)"
         DoStrongNameCheck="$(DoStrongNameCheck)"
+        AllowEmptySignList="$(AllowEmptySignList)"
         CertificatesSignInfo="$(CertificatesSignInfo)"
         ItemsToSign="@(ItemsToSign)"
         StrongNameSignInfo="@(StrongNameSignInfo)"

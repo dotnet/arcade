@@ -28,7 +28,7 @@ The primary driving business requirement is the ability to build .NET Core 3.
 | dotnet/standard             | master        |  @danmosemsft   |
 | dotnet/symreader            | master        |  @tmat          |
 | dotnet/symreader-portable   | master        |  @tmat          |
-| Microsoft/msbuild           | master        |  @andygerlicher |
+| Microsoft/msbuild           | master        |  @livarcocc     |
 | Microsoft/visualfsharp      | master        |  @brettfo       |
 | winforms                    | master        |  @AdamYoblick   |
 | wpf                         | master        |                 |

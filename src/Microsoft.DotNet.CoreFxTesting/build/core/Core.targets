@@ -8,6 +8,7 @@
     <TestAssembly Condition="'$(TestAssembly)' == ''">$(TargetFileName)</TestAssembly>
     <TestPath Condition="'$(TestPath)' == ''">$(OutDir)</TestPath>
     <RunWorkingDirectory>$(TestPath)</RunWorkingDirectory>
+    <ArchiveTest Condition="'$(ArchiveTests.ToLower())' == 'all' OR $(MSBuildProjectName.EndsWith('.$(ArchiveTests)'))">true</ArchiveTest>
 
     <!-- Publish the test data as part of the build to enable VS test runs. -->
     <PrepareForRunDependsOn>$(PrepareForRunDependsOn);PublishSupplementalTestData;</PrepareForRunDependsOn>
@@ -63,9 +64,10 @@
   </Target>
 
   <!-- Archive test binaries along with supporting files. -->
-  <Target Name="ArchiveTestBuild"
-          DependsOnTargets="GenerateRunScript"
-          Condition="'$(ArchiveTests)' == 'true'">
+  <Target Name="ArchiveTests"
+          Condition="'$(ArchiveTest)' == 'true'"
+          AfterTargets="PrepareForRun"
+          DependsOnTargets="GenerateRunScript">
 
     <Error Condition="'$(TestArchiveTestsDir)' == ''" Text="TestArchiveTestsDir property to archive the test folder must be set." />
 
@@ -171,19 +173,15 @@
     <Message Text="ValidateTestPlatform found TargetOS of [$(TargetOS)]." Importance="Low" />
 
     <Message Condition="'%(UnsupportedPlatformsItems.Identity)' == '$(TargetOS)'"
-      Text="Skipping tests in $(AssemblyName) because it is not supported on $(TargetOS)" />
+             Text="Skipping tests in $(AssemblyName) because it is not supported on $(TargetOS)" />
 
     <Message Condition="'$(ConfigurationErrorMsg)' != ''"
-      Text="Skipping tests in $(AssemblyName) because there is no configuration compatible with the current BuildConfiguration." />
+             Text="Skipping tests in $(AssemblyName) because there is no configuration compatible with the current BuildConfiguration." />
 
   </Target>
 
-  <!--
-    SkipTests is a global property used in CI runs. Skips the test execution but
-    still generates the test execution script and archives the test dir for Helix consumption.
-  -->
   <Target Name="RunTests"
-          Condition="'$(SkipTests)' != 'true' OR '$(TestDisabled)' == 'true'"
+          Condition="'$(TestDisabled)' != 'true'"
           DependsOnTargets="$(RunTestsDependsOn)"
           Inputs="@(RunTestsInputs)"
           Outputs="@(RunTestsOutputs)">
@@ -215,11 +213,6 @@
                ContinueOnError="WarnAndContinue" />
 
   </Target>
-
-  <!-- Main test targets -->
-  <Target Name="Test" DependsOnTargets="$(TestDependsOn)" Condition="'$(DisableTestTargets)' != 'true'" />
-  <Target Name="BuildAndTest" DependsOnTargets="Build;Test" />
-  <Target Name="RebuildAndTest" DependsOnTargets="Rebuild;Test" />
 
   <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Core.uap.targets" />
 

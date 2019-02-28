@@ -41,4 +41,39 @@
   </ItemGroup>
 
   <Import Project="$(SwixBuildPath)build\MicroBuild.Plugins.*.targets" />
+
+  <Target Name="_BuildManifest" DependsOnTargets="_SetManifestBuildVersion;GenerateSetupManifest" />
+  
+  <!--
+    Each stub file contains VSIX version of the respective VSIX file.
+    We require that all VSIXes included in a single VS insertion component have the same version.
+    This version will be set to ManifestBuildVersion.
+  -->
+  <Target Name="_SetManifestBuildVersion">
+
+    <ReadLinesFromFile File="%(_PackageStubFiles.Identity)">
+      <Output TaskParameter="Lines" ItemName="_StubLine"/>
+    </ReadLinesFromFile>
+
+    <ItemGroup>
+      <_StubLineSplit Include="@(_StubLine)" 
+                      Name="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[0])" 
+                      Version="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[1])" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_VsixVersion Include="%(_StubLineSplit.Version)" Name="%(_StubLineSplit.Name)" />
+    </ItemGroup>
+
+    <RemoveDuplicates Inputs="@(_VsixVersion)">
+      <Output TaskParameter="Filtered" ItemName="_VsixVersionNoDuplicates"/>
+    </RemoveDuplicates>
+
+    <Error Text="Visual Studio component '$(ComponentName)' contains multiple VSIX files with different versions: @(_VsixVersionNoDuplicates->'%(Name) (version %(Identity))', ', ')"
+           Condition="@(_VsixVersionNoDuplicates->Count()) != 1"/>
+
+    <PropertyGroup>
+      <ManifestBuildVersion>@(_VsixVersionNoDuplicates)</ManifestBuildVersion>
+    </PropertyGroup>
+  </Target>
 </Project>

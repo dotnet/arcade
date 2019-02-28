@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.Helix.Client
     {
         private readonly Dictionary<string, string> _properties;
         private readonly List<WorkItemDefinition> _workItems;
+        private bool _withDefaultResultsContainer;
 
         public JobDefinition(IJob jobApi)
         {
@@ -46,6 +47,8 @@ namespace Microsoft.DotNet.Helix.Client
         public int? MaxRetryCount { get; private set; }
         public string StorageAccountConnectionString { get; private set; }
         public string TargetContainerName { get; set; } = DefaultContainerName;
+        public string ResultsStorageAccountConnectionString { get; private set; }
+        public string TargetResultsContainerName { get; set; } = DefaultContainerName;
         public static string DefaultContainerName => $"helix-job-{Guid.NewGuid()}";
 
         public IWorkItemDefinitionWithCommand DefineWorkItem(string workItemName)
@@ -134,6 +137,24 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
+        public IJobDefinition WithResultsContainerName(string resultsContainerName)
+        {
+            TargetResultsContainerName = resultsContainerName;
+            return this;
+        }
+
+        public IJobDefinition WithResultsStorageAccountConnectionString(string resultsAccountConnectionString)
+        {
+            ResultsStorageAccountConnectionString = resultsAccountConnectionString;
+            return this;
+        }
+
+        public IJobDefinition WithDefaultResultsContainer()
+        {
+            _withDefaultResultsContainer = true;
+            return this;
+        }
+
         public async Task<ISentJob> SendAsync(Action<string> log = null)
         {
             IBlobHelper storage;
@@ -148,6 +169,18 @@ namespace Microsoft.DotNet.Helix.Client
 
             IBlobContainer storageContainer = await storage.GetContainerAsync(TargetContainerName);
             var jobList = new List<JobListEntry>();
+
+            IBlobContainer resultsStorageContainer = null;
+            if (!string.IsNullOrEmpty(ResultsStorageAccountConnectionString))
+            {
+
+                IBlobHelper resultsStorage = new ConnectionStringBlobHelper(ResultsStorageAccountConnectionString);
+                resultsStorageContainer = await resultsStorage.GetContainerAsync(TargetResultsContainerName);
+            }
+            else if (_withDefaultResultsContainer)
+            {
+                resultsStorageContainer = await storage.GetContainerAsync(TargetResultsContainerName);
+            }
 
             Dictionary<string, string> correlationPayloadUris =
                 (await Task.WhenAll(CorrelationPayloads.Select(async p => (uri: await p.Key.UploadAsync(storageContainer, log), destination: p.Value)))).ToDictionary(x => x.uri, x => x.destination);
@@ -176,19 +209,19 @@ namespace Microsoft.DotNet.Helix.Client
                         Build,
                         _properties.ToImmutableDictionary(),
                         jobListUri.ToString(),
-                        TargetQueueId,
-                        storageContainer.Uri,
-                        storageContainer.ReadSas,
-                        storageContainer.WriteSas)
+                        TargetQueueId)
                     {
                         Creator = Creator,
                         MaxRetryCount = MaxRetryCount ?? 0,
                         JobStartIdentifier = jobStartIdentifier,
+                        ResultsUri = resultsStorageContainer?.Uri,
+                        ResultsUriRSAS = resultsStorageContainer?.ReadSas,
+                        ResultsUriWSAS = resultsStorageContainer?.WriteSas,
                     }),
                 ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."));
 
 
-            return new SentJob(JobApi, newJob);
+            return new SentJob(JobApi, newJob, resultsStorageContainer?.Uri, string.IsNullOrEmpty(Creator) ? resultsStorageContainer?.ReadSas : string.Empty);
         }
 
         public IJobDefinitionWithTargetQueue WithBuild(string buildNumber)

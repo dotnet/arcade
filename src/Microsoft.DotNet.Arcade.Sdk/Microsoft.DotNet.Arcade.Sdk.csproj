@@ -55,6 +55,7 @@
 <Project>
   <PropertyGroup>
     <ArcadeSdkVersion>$(PackageVersion)</ArcadeSdkVersion>
+    <MicrosoftNetCompilersToolsetVersion>$(MicrosoftNetCompilersToolsetVersion)</MicrosoftNetCompilersToolsetVersion>
   </PropertyGroup>
 </Project>]]>
   </_SdkVersionPropsContent>
