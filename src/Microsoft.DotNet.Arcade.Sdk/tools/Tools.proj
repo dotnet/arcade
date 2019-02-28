@@ -38,7 +38,8 @@
       https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
     </RestoreSources>
   </PropertyGroup>
-  <ItemGroup>
+
+  <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
     <!-- Copy of 'sn.exe' in form of NuGet package. -->
     <PackageReference Include="sn" Version="$(SNVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)"  IsImplicitlyDefined="true" />
