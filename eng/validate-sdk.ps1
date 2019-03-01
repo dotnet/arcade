@@ -95,6 +95,12 @@ try {
 
   & .\common\cibuild.cmd -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource /p:DotNetPublishBlobFeedUrl=https://dotnetfeed.blob.core.windows.net/dotnet-core-test/index.json
   CheckExitCode "Official build"
+  
+  # Rename and move binlogs produced in the first step of the build
+  $artifactsLogDir = Join-Path (Join-Path $ArtifactsDir "log") $configuration
+  $validateSdkLogDir = Join-Path (Join-Path(Join-Path $ArtifactsDir $validateSdkFolderName) "log") $configuration
+  Move-Item -Path $validateSdkLogDir -Destination (Join-Path $artifactsLogDir "Validation") -Force
+  
   Write-Host "Finished building Arcade SDK with validation enabled!"
 }
 catch {
