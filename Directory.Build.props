@@ -13,12 +13,12 @@
     -->
     <IsShipping>false</IsShipping>
 
-    <!-- 
+    <!--
       'NetFxTfm' is the standard desktop Target Framework Moniker which this repo's packages are targeting
-      ie.  Place 'NetFxTfm' in the 'TargetFramework' property of a csproj like <TargetFrameworks>$(NetFxTfm);netcoreapp2.0</TargetFrameworks> 
+      ie.  Place 'NetFxTfm' in the 'TargetFramework' property of a csproj like <TargetFrameworks>$(NetFxTfm);netcoreapp2.0</TargetFrameworks>
     -->
     <NetFxTfm>net461</NetFxTfm>
-    
+
     <!-- TODO: https://github.com/dotnet/arcade/issues/1373 -->
     <NoWarn>$(NoWarn);NU5125</NoWarn>
   </PropertyGroup>

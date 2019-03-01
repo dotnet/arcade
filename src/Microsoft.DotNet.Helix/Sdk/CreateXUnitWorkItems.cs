@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string driver = runtimeTargetFramework.Contains("core") ? $"{PathToDotnet} exec " : "";
             string runnerName = runtimeTargetFramework.Contains("core") ? "xunit.console.dll" : "xunit.console.exe";
             string correlationPayload = IsPosixShell ? "$HELIX_CORRELATION_PAYLOAD" : "%HELIX_CORRELATION_PAYLOAD%";
-            string xUnitRunner = $"{correlationPayload}/tools/{runtimeTargetFramework}/{runnerName}";
+            string xUnitRunner = $"{correlationPayload}/xunit-runner/tools/{runtimeTargetFramework}/{runnerName}";
 
             if (runtimeTargetFramework.Contains("core"))
             {

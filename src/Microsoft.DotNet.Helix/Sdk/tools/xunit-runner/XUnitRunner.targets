@@ -13,6 +13,7 @@
   <ItemGroup Condition="'@(XUnitProject)' != ''">
     <HelixCorrelationPayload Include="xunit-runner">
       <Uri>https://api.nuget.org/v3-flatcontainer/xunit.runner.console/$(XUnitRunnerVersion)/xunit.runner.console.$(XUnitRunnerVersion).nupkg</Uri>
+      <Destination>xunit-runner</Destination>
     </HelixCorrelationPayload>
   </ItemGroup>
 

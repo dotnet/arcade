@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Helix.Client
         public string Build { get; private set; }
         public string TargetQueueId { get; private set; }
         public string Creator { get; private set; }
-        public IList<IPayload> CorrelationPayloads { get; } = new List<IPayload>();
+        public IDictionary<IPayload, string> CorrelationPayloads { get; } = new Dictionary<IPayload, string>();
         public int? MaxRetryCount { get; private set; }
         public string StorageAccountConnectionString { get; private set; }
         public string TargetContainerName { get; set; } = DefaultContainerName;
@@ -60,41 +60,56 @@ namespace Microsoft.DotNet.Helix.Client
         {
             foreach (Uri uri in payloadUris)
             {
-                CorrelationPayloads.Add(new UriPayload(uri));
+                CorrelationPayloads.Add(new UriPayload(uri), "");
             }
             return this;
         }
 
-        public IJobDefinition WithCorrelationPayloadDirectory(string directory)
+        public IJobDefinition WithCorrelationPayloadUris(IDictionary<Uri, string> payloadUrisWithDestinations)
         {
-            return WithCorrelationPayloadDirectory(directory, false);
+            foreach (var (uri, destination) in payloadUrisWithDestinations)
+            {
+                CorrelationPayloads.Add(new UriPayload(uri), destination);
+            }
+            return this;
         }
 
-        public IJobDefinition WithCorrelationPayloadDirectory(string directory, bool includeDirectoryName)
+        public IJobDefinition WithCorrelationPayloadDirectory(string directory, string destination = "")
+        {
+            return WithCorrelationPayloadDirectory(directory, false, destination);
+        }
+
+        public IJobDefinition WithCorrelationPayloadDirectory(string directory, bool includeDirectoryName, string destination = "")
         {
             string archiveEntryPrefix = null;
             if (includeDirectoryName)
             {
                 archiveEntryPrefix = new DirectoryInfo(directory).Name;
             }
-            return WithCorrelationPayloadDirectory(directory, archiveEntryPrefix);
+            return WithCorrelationPayloadDirectory(directory, archiveEntryPrefix, destination);
         }
 
-        public IJobDefinition WithCorrelationPayloadDirectory(string directory, string archiveEntryPrefix)
+        public IJobDefinition WithCorrelationPayloadDirectory(string directory, string archiveEntryPrefix, string destination)
         {
-            CorrelationPayloads.Add(new DirectoryPayload(directory, archiveEntryPrefix));
+            CorrelationPayloads.Add(new DirectoryPayload(directory, archiveEntryPrefix), destination);
             return this;
         }
 
         public IJobDefinition WithCorrelationPayloadFiles(params string[] files)
         {
-            CorrelationPayloads.Add(new AdhocPayload(files));
+            CorrelationPayloads.Add(new AdhocPayload(files), "");
             return this;
         }
 
-        public IJobDefinition WithCorrelationPayloadArchive(string archive)
+        public IJobDefinition WithCorrelationPayloadFiles(IList<string> files, string destination)
         {
-            CorrelationPayloads.Add(new ArchivePayload(archive));
+            CorrelationPayloads.Add(new AdhocPayload(files.ToArray()), destination);
+            return this;
+        }
+
+        public IJobDefinition WithCorrelationPayloadArchive(string archive, string destination = "")
+        {
+            CorrelationPayloads.Add(new ArchivePayload(archive), destination);
             return this;
         }
 
@@ -167,14 +182,14 @@ namespace Microsoft.DotNet.Helix.Client
                 resultsStorageContainer = await storage.GetContainerAsync(TargetResultsContainerName);
             }
 
-            List<string> correlationPayloadUris =
-                (await Task.WhenAll(CorrelationPayloads.Select(p => p.UploadAsync(storageContainer, log)))).ToList();
+            Dictionary<string, string> correlationPayloadUris =
+                (await Task.WhenAll(CorrelationPayloads.Select(async p => (uri: await p.Key.UploadAsync(storageContainer, log), destination: p.Value)))).ToDictionary(x => x.uri, x => x.destination);
 
             jobList = (await Task.WhenAll(
                 _workItems.Select(async w =>
                 {
                     var entry = await w.SendAsync(storageContainer, TargetContainerName, log);
-                    entry.CorrelationPayloadUris = correlationPayloadUris;
+                    entry.CorrelationPayloadUrisWithDestinations = correlationPayloadUris;
                     return entry;
                 }
                 ))).ToList();
