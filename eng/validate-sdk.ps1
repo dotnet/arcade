@@ -99,12 +99,8 @@ try {
   # Rename and move binlogs produced in the first step of the build
   $artifactsLogDir = Join-Path (Join-Path $ArtifactsDir "log") $configuration
   $validateSdkLogDir = Join-Path (Join-Path(Join-Path $ArtifactsDir $validateSdkFolderName) "log") $configuration
-    
-  Get-ChildItem $validateSdkLogDir |
-    Foreach-Object {
-      Move-Item -Path $_.FullName -Destination (Join-Path $artifactsLogDir "Validation_$_") -Force
-    }
-    
+  Move-Item -Path $validateSdkLogDir -Destination (Join-Path $artifactsLogDir "Validation") -Force
+
   Write-Host "Finished building Arcade SDK with validation enabled!"
 }
 catch {
