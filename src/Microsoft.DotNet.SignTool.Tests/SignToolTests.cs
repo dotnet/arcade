@@ -517,19 +517,17 @@ $@"
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, SignInfo>(), new[]
             {
-                "File 'CoreLibCrossARM.dll' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
-                "File 'AspNetCoreCrossLib.dll' TargetFramework='.NETCoreApp,Version=v3.0' Certificate='Microsoft400' StrongName='AspNetCore'",
+                "File 'CoreLibCrossARM.dll' Certificate='ArcadeCertTest'",
+                "File 'AspNetCoreCrossLib.dll' TargetFramework='.NETCoreApp,Version=v3.0' Certificate='Microsoft400'",
             });
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, SignInfo>(), new[]
             {
 $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
   <Authenticode>ArcadeCertTest</Authenticode>
-  <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
 <FilesToSign Include=""{Path.Combine(_tmpDir, "AspNetCoreCrossLib.dll")}"">
   <Authenticode>Microsoft400</Authenticode>
-  <StrongName>AspNetCore</StrongName>
 </FilesToSign>",
             });
         }
