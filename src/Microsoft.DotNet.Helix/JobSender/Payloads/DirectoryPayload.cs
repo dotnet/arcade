@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        private const int CacheExpiryHours = 5;
         public DirectoryInfo DirectoryInfo { get; }
 
         public string NormalizedDirectoryPath => Helpers.RemoveTrailingSlash(DirectoryInfo.FullName);
@@ -104,6 +105,11 @@ namespace Microsoft.DotNet.Helix.Client
 
         private bool IsUpToDate(FileInfo alreadyUploadedFile)
         {
+            if (alreadyUploadedFile.LastWriteTimeUtc.AddHours(CacheExpiryHours) < DateTime.UtcNow)
+            {
+                return false;
+            }
+
             var newestFileWriteTime = DirectoryInfo.EnumerateFiles("*", SearchOption.AllDirectories)
                 .Select(file => file.LastWriteTimeUtc)
                 .Max();
