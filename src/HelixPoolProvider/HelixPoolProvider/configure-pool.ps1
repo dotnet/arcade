@@ -38,7 +38,7 @@ if (-not $skipCreateCloud) {
 if (-not $skipCreatePool) {
 	try {
 		echo "Creating agent pool for cloud"
-		$result = Invoke-WebRequest -Headers $allHeaders -Method POST "$accountUrl/_apis/DistributedTask/pools?api-version=5.0-preview" -Body "{`"name`":`"$byocProviderName-Pool`",`"agentCloudId`":$agentCloudId}"
+		$result = Invoke-WebRequest -Headers $allHeaders -Method POST "$accountUrl/_apis/DistributedTask/pools?api-version=5.0-preview" -Body "{`"name`":`"$byocProviderName-Pool`",`"agentCloudId`":$agentCloudId,`"targetSize`":500}"
 		if ($result.StatusCode -ne 200) {
 			echo $result.Content
 			throw "Failed to create pool for agent cloud"
