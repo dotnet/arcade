@@ -59,6 +59,8 @@ Generate a manifest
 
 > `powershell -ExecutionPolicy Bypass -Command "eng\common\sdk-task.ps1 -restore -task GenerateBuildManifest /p:PackagesToPublishPattern=e:\gh\chcosta\arcade\artifacts\packages\Debug\NonShipping\*.nupkg /p:AssetManifestFilePath=e:\gh\chcosta\feed2\manifest.xml"`
 
+Alternatively, rather than defining an explicit `PackagesToPublishPattern`, you can provide more control by adding a file named `eng\SdkTasks.props` to your repo which defines your repo assets (w/ metadata) for the manifest generation.
+
 ## Publish the manifest to BAR
 
 ### Publishing a single manifest
