@@ -96,7 +96,8 @@ jobs:
         container: LinuxContainer
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-            name: dnceng-linux-external-temp
+            name: NetCorePublic-Int-Pool
+            queue: BuildPool.Ubuntu.1604.Amd64.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
             name: dnceng-linux-internal-temp
         variables:
