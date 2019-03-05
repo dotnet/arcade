@@ -20,6 +20,7 @@ File layout
 \publish
   -global.json
   -NuGet.config
+  -eng\GenerateBuildManifest.props
   -eng\common\sdk-task.ps1
   -eng\common\tools.ps1
 ```
@@ -55,11 +56,37 @@ NuGet.config
 </configuration>
 ```
 
+GenerateBuildManifest.props
+
+```XML
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ItemGroup>
+    <SymbolPackages Include="$(ArtifactsShippingPackagesDir)*.symbols.nupkg" IsShipping="true" />
+    <SymbolPackages Include="$(ArtifactsNonShippingPackagesDir)*.symbols.nupkg" IsShipping="false" />
+
+    <PackagesToPublish Include="$(ArtifactsShippingPackagesDir)*.nupkg" IsShipping="true" />
+    <PackagesToPublish Include="$(ArtifactsNonShippingPackagesDir)*.nupkg" IsShipping="false" />
+    <PackagesToPublish Remove="@(ExistingSymbolPackages)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ItemsToPush Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)">
+      <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
+    </ItemsToPush>
+  </ItemGroup>
+</Project>
+```
+
 Generate a manifest
+
+If all of your packages are "shipping" packages, you can just specify the `PackagesToPublishPattern` on the command-line and you do not need to include the "GenerateBuildManifest.props" file mentioned above...
 
 > `powershell -ExecutionPolicy Bypass -Command "eng\common\sdk-task.ps1 -restore -task GenerateBuildManifest /p:PackagesToPublishPattern=e:\gh\chcosta\arcade\artifacts\packages\Debug\NonShipping\*.nupkg /p:AssetManifestFilePath=e:\gh\chcosta\feed2\manifest.xml"`
 
-Alternatively, rather than defining an explicit `PackagesToPublishPattern`, you can provide more control by adding a file named `eng\SdkTasks.props` to your repo which defines your repo assets (w/ metadata) for the manifest generation.
+For more control over your assets, you can exclude the `PackagesToPublishPattern` option from the command-line but include "GenerateBuildManifest.props" in your repo.  This will allow you to specify packages that are shipping vs non-shipping (shipping is the default).  More details about shipping are included [here](https://github.com/dotnet/arcade/blob/b0c930c2b44acd03671552f52b925183db0fc8ea/Documentation/Darc.md#gathering-a-build-drop).
+
+> `powershell -ExecutionPolicy Bypass -Command "eng\common\sdk-task.ps1 -restore -task GenerateBuildManifest /p:AssetManifestFilePath=e:\gh\chcosta\feed2\manifest.xml"`
 
 ## Publish the manifest to BAR
 

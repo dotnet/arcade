@@ -12,10 +12,6 @@
     <TargetFramework>net472</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.build.tasks.feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" />
-  </ItemGroup>
-
   <PropertyGroup>
     <AssetManifestFilePath Condition="'$(AssetManifestFilePath)' == ''">$(ArtifactsLogDir)AssetManifest\$(OS)-$(PlatformName).xml</AssetManifestFilePath>
   </PropertyGroup>
@@ -25,13 +21,10 @@
     <ItemsToPush Include="$(PackagesToPublishPattern)" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <_MicrosoftDotBuildTasksFeedBaseDir>$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\tools\</_MicrosoftDotBuildTasksFeedBaseDir>
-    <_MicrosoftDotBuildTasksFeedDir>$(_MicrosoftDotBuildTasksFeedBaseDir)net461</_MicrosoftDotBuildTasksFeedDir>
-    <_MicrosoftDotBuildTasksFeedDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(_MicrosoftDotBuildTasksFeedBaseDir)netcoreapp2.1</_MicrosoftDotBuildTasksFeedDir>
-  </PropertyGroup>
-
-  <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(_MicrosoftDotBuildTasksFeedDir)\Microsoft.DotNet.Build.Tasks.Feed.dll" />
+  <ItemGroup>
+    <PackageReference Include="microsoft.dotnet.build.tasks.feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" GeneratePathProperty="true"/>
+  </ItemGroup>
+  <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(PkgMicrosoft_DotNet_Build_Tasks_Feed)\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Feed.dll" />
 
   <Target Name="Execute">
     <GenerateBuildManifest Artifacts="@(ItemsToPush)"
