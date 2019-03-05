@@ -12,7 +12,7 @@ Assuming tht you're not using the Feed package for publishing, your repo, there 
 
 ### Manifest Generation Example
 
-Here is one example (using MSBuild 15.0) of generating a manifest by using the Arcade SDK (it is not necessary that your repo itself build using the Arcade SDK).
+Here is one example (using MSBuild 15.0 and the .NET Core SDK 2.2.104) of generating a manifest by using the Arcade SDK (it is not necessary that your repo itself build using the Arcade SDK).
 
 File layout
 
@@ -31,6 +31,9 @@ global.json
 
 ```JSON
 {
+  "tools": {
+    "dotnet": "2.2.104"
+  },
   "msbuild-sdks": {
     "Microsoft.DotNet.Build.Tasks.Feed": "2.2.0-beta.19151.1"
   }
