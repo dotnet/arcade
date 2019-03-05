@@ -6,6 +6,7 @@
     <IncludeTestFrameworkReferences>true</IncludeTestFrameworkReferences>
     <TestRunnerConfigPath>$(TestAssetsDir)xunit.runner.json</TestRunnerConfigPath>
     <TestResultsName>testResults.xml</TestResultsName>
+    <RemoteExecutorName>Microsoft.DotNet.RemoteExecutor</RemoteExecutorName>
 
     <GenerateRunScriptDependsOn>ValidateTargetOSTrait;$(GenerateRunScriptDependsOn);</GenerateRunScriptDependsOn>
   </PropertyGroup>
@@ -13,6 +14,7 @@
   <!-- Test runner config file. -->
   <ItemGroup>
     <SupplementalTestData Condition="'$(SkipTestRunnerConfigCopying)' != 'true'" Include="$(TestRunnerConfigPath)" />
+    <SupplementalTestData Condition="'$(UseRemoteExecutor)' == 'true'" Include="$(RuntimePath)$(RemoteExecutorName).exe" />
   </ItemGroup>
 
   <!-- Supplemental test data. -->
@@ -20,6 +22,7 @@
     <SupplementalTestData Include="$(RuntimePath)$(TestRunnerName)" />
     <SupplementalTestData Include="$(RuntimePath)xunit.console.deps.json" />
     <SupplementalTestData Include="$(TestRuntimeConfigPath)" DestinationName="$(TestRunnerNameWithoutExtension).runtimeconfig.json" />
+    <SupplementalTestData Condition="'$(UseRemoteExecutor)' == 'true'" Include="$(TestRuntimeConfigPath)" DestinationName="$(RemoteExecutorName).runtimeconfig.json" />
     <SupplementalTestData Include="$(RuntimePath)xunit.execution.dotnet.dll" />
     <SupplementalTestData Include="$(RuntimePath)xunit.runner.reporters.netcoreapp10.dll" />
     <SupplementalTestData Include="$(RuntimePath)xunit.runner.utility.netcoreapp10.dll" />
