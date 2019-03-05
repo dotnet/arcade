@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
             using (var file = File.Create(OutputFileName))
             {
-                manifest.Save(file, false);
+                manifest.Save(file);
             }
         }
 
