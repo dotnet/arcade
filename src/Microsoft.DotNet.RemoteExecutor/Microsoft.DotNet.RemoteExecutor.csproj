@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- To be consistent between netfx and others we override the SDK behavior which defaults to .dll -->
+    <TargetExt>.exe</TargetExt>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+</Project>
