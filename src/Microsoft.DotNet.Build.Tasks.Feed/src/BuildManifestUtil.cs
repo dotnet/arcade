@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestCommit,
             string[] manifestBuildData)
         {
-            CreateModel(blobArtifacts, packageArtifacts, manifestBuildId, manifestBuildData, manifestRepoUri, manifestBranch, manifestCommit)
+            CreateModel(blobArtifacts, packageArtifacts, manifestBuildId, manifestBuildData, manifestRepoUri, manifestBranch, manifestCommit, log)
                 .WriteAsXml(assetManifestPath, log);
         }
 
@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             File.WriteAllText(filePath, buildModel.ToXml().ToString());
         }
                
-        public static BuildModel CreateModelFromItems(ITaskItem[] artifacts, string buildId, string[] BuildProperties, string repoUri, string repoBranch, string repoCommit)
+        public static BuildModel CreateModelFromItems(ITaskItem[] artifacts, string buildId, string[] BuildProperties, string repoUri, string repoBranch, string repoCommit, TaskLoggingHelper log)
         {
             if (artifacts == null)
             {
@@ -84,7 +84,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 BuildProperties,
                 repoUri,
                 repoBranch,
-                repoCommit);
+                repoCommit,
+                log);
             return buildModel;
         }
 
@@ -94,12 +95,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string[] manifestBuildData,
             string manifestRepoUri,
             string manifestBranch,
-            string manifestCommit)
+            string manifestCommit,
+            TaskLoggingHelper log)
         {
+            var attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData);
+            if(!ManifestBuildDataHasLocationProperty(attributes))
+            {
+                log.LogError($"Missing 'location' property from ManifestBuildData");
+            }
             BuildModel buildModel = new BuildModel(
                     new BuildIdentity
                     {
-                        Attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData),
+                        Attributes = attributes,
                         Name = manifestRepoUri,
                         BuildId = manifestBuildId,
                         Branch = manifestBranch,
@@ -109,6 +116,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);
             buildModel.Artifacts.Packages.AddRange(packageArtifacts);
             return buildModel;
+        }
+
+        internal static bool ManifestBuildDataHasLocationProperty(string [] manifestBuildData)
+        {
+            return ManifestBuildDataHasLocationProperty(MSBuildListSplitter.GetNamedProperties(manifestBuildData));
+        }
+
+        internal static bool ManifestBuildDataHasLocationProperty(IDictionary<string, string> attributes)
+        {
+            return attributes.ContainsKey("Location");
         }
 
         public static BuildModel ManifestFileToModel(string assetManifestPath, TaskLoggingHelper log)

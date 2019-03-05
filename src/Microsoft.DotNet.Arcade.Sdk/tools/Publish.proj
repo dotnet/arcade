@@ -89,6 +89,7 @@
       <AccountKey>$(AzureAccountKey)</AccountKey>
       <ManifestRepoUri>$(BUILD_REPOSITORY_URI)</ManifestRepoUri>
       <ManifestBranch>$(BUILD_SOURCEBRANCH)</ManifestBranch>
+      <ManifestBuildData>Location=$(AzureFeedUrl)</ManifestBuildData>
       <ManifestBuildId>$(BUILD_BUILDNUMBER)</ManifestBuildId>
       <ManifestCommit>$(BUILD_SOURCEVERSION)</ManifestCommit>
     </PropertyGroup>

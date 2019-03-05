@@ -17,6 +17,7 @@ launchSettings.json
 # Build results
 
 artifacts/
+artifacts_stage_1/
 [Dd]ebug/
 [Rr]elease/
 x64/
