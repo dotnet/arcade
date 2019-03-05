@@ -10,17 +10,14 @@
     <TargetFramework>net472</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.Maestro.Tasks" Version="$(MicrosoftDotNetMaestroTasksVersion)" />
-  </ItemGroup>
-
   <PropertyGroup>
-    <_MicrosoftDotNetMaestroTasksBaseDir>$(NuGetPackageRoot)microsoft.dotnet.maestro.tasks\$(MicrosoftDotNetMaestroTasksVersion)\tools\</_MicrosoftDotNetMaestroTasksBaseDir>
-    <_MicrosoftDotNetMaestroTasksDir>$(_MicrosoftDotNetMaestroTasksBaseDir)net461</_MicrosoftDotNetMaestroTasksDir>
-    <_MicrosoftDotNetMaestroTasksDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(_MicrosoftDotNetMaestroTasksBaseDir)netcoreapp2.1</_MicrosoftDotNetMaestroTasksDir>
+    <_SdkTaskPackageName>microsoft.dotnet.maestro.tasks<_SdkTaskPackageName>
+    <_SdkTaskPackageVersion>$(MicrosoftDotNetMaestroTasksVersion)</_SdkTaskPackageVersion>
+    <_SdkTaskDesktopTargetFrameworkMoniker>net461<_SdkTaskDesktopTargetFrameworkMoniker>
   </PropertyGroup>
-  
-  <UsingTask TaskName="PushMetadataToBuildAssetRegistry" AssemblyFile="$(_MicrosoftDotNetMaestroTasksDir)\Microsoft.DotNet.Maestro.Tasks.dll"/>
+
+  <Import Project="SdkTasks.props" />
+  <UsingTask TaskName="PushMetadataToBuildAssetRegistry" AssemblyFile="$(_SdkTaskAssemblyFile)"/>
 
   <Target Name="Execute">
     <Error Text="The ManifestsPath property must be set on the command line." Condition="'$(ManifestsPath)' == ''" />

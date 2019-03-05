@@ -1,0 +1,18 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <PropertyGroup>
+    <_SdkTaskDesktopTargetFrameworkMoniker Condition="'$(_SdkTaskDesktopTargetFrameworkMoniker)' == ''">$(TargetFramework)</_SdkTaskDesktopTargetFrameworkMoniker>
+    <_SdkTaskCoreTargetFrameworkMoniker Condition="'$(_SdkTaskCoreTargetFrameworkMoniker)' == ''">netcoreapp2.1</_SdkTaskCoreTargetFrameworkMoniker>
+
+    <_SdkTaskPackageBaseDir>$(NuGetPackageRoot)$(_SdkTaskPackageName)\$(_SdkTaskPackageVersion)\tools\</_SdkTaskPackageBaseDir>
+    <_SdkTaskPackageDir>$(_SdkTaskPackageBaseDir)$(_SdkTaskDesktopTargetFrameworkMoniker)\</_SdkTaskPackageDir>
+    <_SdkTaskPackageDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(_SdkTaskPackageBaseDir)$(_SdkTaskCoreTargetFrameworkMoniker)\</_SdkTaskPackageDir>
+    <_SdkTaskAssemblyFile>$(_SdkTaskPackageDir)$(_SdkTaskPackageName).dll</_SdkTaskAssemblyFile>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(ExcludeSdkTaskPackageReference)' != 'true'">
+    <PackageReference Include="$(_SdkTaskPackageName)" Version="$(_SdkTaskPackageVersion)" />
+  </ItemGroup>
+
+</Project>
