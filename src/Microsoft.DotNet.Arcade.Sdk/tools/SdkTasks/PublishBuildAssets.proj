@@ -19,7 +19,7 @@
     <_MicrosoftDotNetMaestroTasksDir>$(_MicrosoftDotNetMaestroTasksBaseDir)net461</_MicrosoftDotNetMaestroTasksDir>
     <_MicrosoftDotNetMaestroTasksDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(_MicrosoftDotNetMaestroTasksBaseDir)netcoreapp2.1</_MicrosoftDotNetMaestroTasksDir>
   </PropertyGroup>
-
+  
   <UsingTask TaskName="PushMetadataToBuildAssetRegistry" AssemblyFile="$(_MicrosoftDotNetMaestroTasksDir)\Microsoft.DotNet.Maestro.Tasks.dll"/>
 
   <Target Name="Execute">
