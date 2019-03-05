@@ -6,17 +6,17 @@
       PackagesToPublishPattern   Property to declare a file glob for selecting the files to be pushed. (eg. $(OutputPath)*.zip)
   -->
   <!-- Allow repos to define sdk task properties -->
-  <Import Project="$(RepositoryEngineeringDir)SdkTasks.props" Condition="Exists('$(RepositoryEngineeringDir)SdkTasks.props')" />
+  <Import Project="$(RepositoryEngineeringDir)GenerateBuildManifest.props" Condition="Exists('$(RepositoryEngineeringDir)GenerateBuildManifest.props')" />
 
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <_SdkTaskPackageName>microsoft.dotnet.build.tasks.feed</_SdkTaskPackageName>
-    <_SdkTaskPackageVersion>$(MicrosoftDotNetBuildTasksFeedVersion)</_SdkTaskPackageVersion>
-    <_SdkTaskDesktopTargetFrameworkMoniker>net461</_SdkTaskDesktopTargetFrameworkMoniker>
+  <ItemGroup>
+    <PackageReference Include="microsoft.dotnet.build.tasks.feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" />
+  </ItemGroup>
 
+  <PropertyGroup>
     <AssetManifestFilePath Condition="'$(AssetManifestFilePath)' == ''">$(ArtifactsLogDir)AssetManifest\$(OS)-$(PlatformName).xml</AssetManifestFilePath>
   </PropertyGroup>
   
@@ -25,8 +25,13 @@
     <ItemsToPush Include="$(PackagesToPublishPattern)" />
   </ItemGroup>
 
-  <Import Project="SdkTasks.props" />
-  <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(_SdkTaskAssemblyFile)" />
+  <PropertyGroup>
+    <_MicrosoftDotBuildTasksFeedBaseDir>$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\tools\</_MicrosoftDotBuildTasksFeedBaseDir>
+    <_MicrosoftDotBuildTasksFeedDir>$(_MicrosoftDotBuildTasksFeedBaseDir)net461</_MicrosoftDotBuildTasksFeedDir>
+    <_MicrosoftDotBuildTasksFeedDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(_MicrosoftDotBuildTasksFeedBaseDir)netcoreapp2.1</_MicrosoftDotBuildTasksFeedDir>
+  </PropertyGroup>
+
+  <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(_MicrosoftDotBuildTasksFeedDir)\Microsoft.DotNet.Build.Tasks.Feed.dll" />
 
   <Target Name="Execute">
     <GenerateBuildManifest Artifacts="@(ItemsToPush)"

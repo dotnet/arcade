@@ -20,14 +20,10 @@
   <Import Project="Directory.Build.targets" />
 
   <PropertyGroup>
-    <ExcludeSdkTaskPackageReference>true</ExcludeSdkTaskPackageReference>
-    <_SdkTaskPackageName>microsoft.dotnet.build.tasks.visualstudio<_SdkTaskPackageName>
-    <_SdkTaskPackageVersion>$(MicrosoftDotNetBuildTasksVisualStudioVersion)</_SdkTaskPackageVersion>
-    <_SdkTaskDesktopTargetFrameworkMoniker>net472<_SdkTaskDesktopTargetFrameworkMoniker>
+    <_VisualStudioBuildTasksAssembly>$(NuGetPackageRoot)microsoft.dotnet.build.tasks.visualstudio\$(MicrosoftDotNetBuildTasksVisualStudioVersion)\tools\net472\Microsoft.DotNet.Build.Tasks.VisualStudio.dll</_VisualStudioBuildTasksAssembly>
   </PropertyGroup>
 
-  <Import Project="SdkTasks.props" />
-  <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.GetRunSettingsSessionConfiguration" AssemblyFile="$(_SdkTasksAssemblyFile)"/>
+  <UsingTask AssemblyFile="$(_VisualStudioBuildTasksAssembly)" TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.GetRunSettingsSessionConfiguration"/>
 
   <PropertyGroup>
     <_OutputFilePath>$(VisualStudioSetupInsertionPath)OptProf\Training.runsettings</_OutputFilePath>
