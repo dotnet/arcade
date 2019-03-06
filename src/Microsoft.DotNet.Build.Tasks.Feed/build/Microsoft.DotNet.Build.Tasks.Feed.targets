@@ -42,7 +42,7 @@
   -->
   
   <PropertyGroup>
-    <_MicrosoftDotNetBuildTasksFeedTaskDir>$(MSBuildThisFileDirectory)../tools/$(NetFxTfm)/</_MicrosoftDotNetBuildTasksFeedTaskDir>
+    <_MicrosoftDotNetBuildTasksFeedTaskDir>$(MSBuildThisFileDirectory)../tools/net472/</_MicrosoftDotNetBuildTasksFeedTaskDir>
     <_MicrosoftDotNetBuildTasksFeedTaskDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../tools/netcoreapp2.1/</_MicrosoftDotNetBuildTasksFeedTaskDir>
   </PropertyGroup>
   <UsingTask TaskName="ConfigureInputFeeds" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
