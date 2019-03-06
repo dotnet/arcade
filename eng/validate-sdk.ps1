@@ -108,24 +108,23 @@ try {
   & .\common\cibuild.cmd -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource /p:DotNetPublishBlobFeedUrl=https://dotnetfeed.blob.core.windows.net/dotnet-core-test/index.json
   CheckExitCode "Official build"
 
-  # Rename and move binlogs produced in the build
-  $ArtifactsManifestDir = Join-Path $artifactsLogDir "AssetManifest"
-
-  $stage1SourceLogDir = Join-Path (Join-Path $stage1SdkDir "log") $configuration
-  $stage1TargetLogDir = Join-Path $ArtifactsLogDir "stage1"
-  $stage1SourceAssetManifestDir = Join-Path $stage1SourceLogDir "AssetManifest"
-
   StopDotnetIfRunning
-  
+
+  # Preserve build artifacts from stage 1 and stage 2
   # move logs to stage 2
   $exitCode = MoveFolderToSubFolder $ArtifactsLogDir "stage2"
   CheckExitCode "Move stage2 logs" $exitCode
 
   # copy logs from stage 1
+  $stage1SourceLogDir = Join-Path (Join-Path $stage1SdkDir "log") $configuration
+  $stage1TargetLogDir = Join-Path $ArtifactsLogDir "stage1"
+  $stage1SourceAssetManifestDir = Join-Path $stage1SourceLogDir "AssetManifest"
   Create-Directory $stage1TargetLogDir
   Copy-Item -Path "$stage1SourceLogDir\*" -Destination $stage1TargetLogDir -Recurse -Force -Verbose
   CheckExitCode "Copy logs from stage 1" $?
+
   # copy manifest from stage 1
+  $ArtifactsManifestDir = Join-Path $artifactsLogDir "AssetManifest"
   Create-Directory $ArtifactsManifestDir
   Copy-Item -Path "$stage1SourceAssetManifestDir\*" -Destination $ArtifactsManifestDir -Recurse -Force -Verbose
   CheckExitCode "Copy asset manifests from stage 1" $?
