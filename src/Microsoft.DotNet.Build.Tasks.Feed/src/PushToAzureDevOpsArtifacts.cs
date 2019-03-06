@@ -77,10 +77,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             var packagesTempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
                             Directory.CreateDirectory(packagesTempPath);
 
+                            Log.LogMessage($"Publishing artifacts from the temp directory ${packagesTempPath}");
+
                             foreach (var packagePath in packageItems)
                             {
                                 var destFile = $"{packagesTempPath}/{Path.GetFileName(packagePath.ItemSpec)}";
                                 File.Copy(packagePath.ItemSpec, destFile);
+
+                                Log.LogMessage($"Copying package file from {packagePath.ItemSpec} to {destFile}");
 
                                 Log.LogMessage(MessageImportance.High,
                                     $"##vso[artifact.upload containerfolder=PackageArtifacts;artifactname=PackageArtifacts]{destFile}");
@@ -95,11 +99,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             // removed in the future.
                             var symbolsTempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
                             Directory.CreateDirectory(symbolsTempPath);
-                            
+
+                            Log.LogMessage($"Publishing artifacts from the temp directory ${symbolsTempPath}");
+
                             foreach (var symbolPath in symbolItems)
                             {
                                 var destFile = $"{symbolsTempPath}/{Path.GetFileName(symbolPath.ItemSpec)}";
                                 File.Copy(symbolPath.ItemSpec, destFile);
+
+                                Log.LogMessage($"Copying symbol file from {symbolPath.ItemSpec} to {destFile}");
 
                                 Log.LogMessage(MessageImportance.High, 
                                     $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{destFile}");
