@@ -78,12 +78,6 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <_PublishToBlobStorage>false</_PublishToBlobStorage>
-    <_PublishToBlobStorage Condition="'$(DotNetPublishToBlobFeed)' == 'true'">true</_PublishToBlobStorage>
-
-    <_PublishUsingPipelines>false</_PublishUsingPipelines>
-    <_PublishUsingPipelines Condition="'$(DotNetPublishUsingPipelines)' == 'true'">true</_PublishUsingPipelines>
-
     <_DotNetOutputBlobFeedDir>$(DotNetOutputBlobFeedDir)</_DotNetOutputBlobFeedDir>
     <_DotNetOutputBlobFeedDir Condition="'$(_DotNetOutputBlobFeedDir)' != '' and !HasTrailingSlash('$(_DotNetOutputBlobFeedDir)')">$(_DotNetOutputBlobFeedDir)\</_DotNetOutputBlobFeedDir>
   </PropertyGroup>
@@ -145,14 +139,14 @@
       <_RestoreToolsProps Include="@(_CommonProps)"/>
       <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
-      <_RestoreToolsProps Include="PublishingToBlobStorage=$(_PublishToBlobStorage)"/>
+      <_RestoreToolsProps Include="PublishingToBlobStorage=$(DotNetPublishToBlobFeed)"/>
     </ItemGroup>
 
     <ItemGroup>
       <_PublishProps Include="@(_CommonProps)"/>
-      <_PublishProps Include="PublishToAzureDevOpsArtifacts=$(_PublishUsingPipelines)" />
-      <_PublishProps Include="AzureFeedUrl=$(DotNetPublishBlobFeedUrl)" Condition="$(_PublishToBlobStorage)" />
-      <_PublishProps Include="AzureAccountKey=$(DotNetPublishBlobFeedKey)" Condition="$(_PublishToBlobStorage)" />
+      <_PublishProps Include="PublishToAzureDevOpsArtifacts=$(DotNetPublishUsingPipelines)" />
+      <_PublishProps Include="AzureFeedUrl=$(DotNetPublishBlobFeedUrl)" Condition="'$(DotNetPublishToBlobFeed)' == 'true'" />
+      <_PublishProps Include="AzureAccountKey=$(DotNetPublishBlobFeedKey)" Condition="'$(DotNetPublishToBlobFeed)' == 'true'" />
       <_PublishProps Include="DotNetOutputBlobFeedDir=$(_DotNetOutputBlobFeedDir)" Condition="'$(_DotNetOutputBlobFeedDir)' != ''" />
     </ItemGroup>
 
