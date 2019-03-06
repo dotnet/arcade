@@ -68,16 +68,42 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             .Where(i => !symbolItems.Contains(i))
                             .ToArray();
 
-                        foreach (var packagePath in packageItems)
+                        if (packageItems.Length > 0)
                         {
-                            Log.LogMessage(MessageImportance.High, 
-                                $"##vso[artifact.upload containerfolder=PackageArtifacts;artifactname=PackageArtifacts]{packagePath.ItemSpec}");
+                            // To prevent conflicts with other parts of the build system that might move the artifacts
+                            // folder while the artifacts are still being published, we copy the artifacts to a temporary
+                            // location only for the sake of uploading them. This is a temporary solution and will be
+                            // removed in the future.
+                            var packagesTempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                            Directory.CreateDirectory(packagesTempPath);
+
+                            foreach (var packagePath in packageItems)
+                            {
+                                var destFile = $"{packagesTempPath}/{Path.GetFileName(packagePath.ItemSpec)}";
+                                File.Copy(packagePath.ItemSpec, destFile);
+
+                                Log.LogMessage(MessageImportance.High,
+                                    $"##vso[artifact.upload containerfolder=PackageArtifacts;artifactname=PackageArtifacts]{destFile}");
+                            }
                         }
 
-                        foreach (var symbolPath in symbolItems)
+                        if (symbolItems.Length > 0)
                         {
-                            Log.LogMessage(MessageImportance.High, 
-                                $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{symbolPath.ItemSpec}");
+                            // To prevent conflicts with other parts of the build system that might move the artifacts
+                            // folder while the artifacts are still being published, we copy the artifacts to a temporary
+                            // location only for the sake of uploading them. This is a temporary solution and will be
+                            // removed in the future.
+                            var symbolsTempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                            Directory.CreateDirectory(symbolsTempPath);
+                            
+                            foreach (var symbolPath in symbolItems)
+                            {
+                                var destFile = $"{symbolsTempPath}/{Path.GetFileName(symbolPath.ItemSpec)}";
+                                File.Copy(symbolPath.ItemSpec, destFile);
+
+                                Log.LogMessage(MessageImportance.High, 
+                                    $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{destFile}");
+                            }
                         }
 
                         packageArtifacts = packageItems.Select(BuildManifestUtil.CreatePackageArtifactModel);
