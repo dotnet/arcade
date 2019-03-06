@@ -6,7 +6,7 @@ workspace_path=$1
 sudo mkdir $workspace_path
 
 # Make it writeable
-sudo chmod -R 755 $workspace_path
+sudo chmod -R 777 $workspace_path
 
 # copy .agent and .credentials files to workspace path
 cp -f -r $HELIX_CORRELATION_PAYLOAD/* $workspace_path
