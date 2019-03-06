@@ -1221,7 +1221,7 @@ $@"
         }
 
         [Fact]
-        public void CrossGenneratedLibraryWithoutPKT()
+        public void CrossGeneratedLibraryWithoutPKT()
         {
             var itemsToSign = new[]
             {
