@@ -5,7 +5,7 @@
     <BuildConfigurationFolder Condition="'$(BuildConfigurationFolder)' == ''">$(ToolSetCommonDirectory)configuration\</BuildConfigurationFolder>
     <BuildConfigurationImportFile>$(BuildConfigurationFolder)configuration.props</BuildConfigurationImportFile>
     <DotNetBuildTasksConfigurationDir Condition="'$(DotNetBuildTasksConfigurationDir)' == '' AND '$(MSBuildRuntimeType)' == 'core'">..\tools\netcoreapp2.1\</DotNetBuildTasksConfigurationDir>
-    <DotNetBuildTasksConfigurationDir Condition="'$(DotNetBuildTasksConfigurationDir)' == '' AND '$(MSBuildRuntimeType)' != 'core'">..\tools\net461\</DotNetBuildTasksConfigurationDir>
+    <DotNetBuildTasksConfigurationDir Condition="'$(DotNetBuildTasksConfigurationDir)' == '' AND '$(MSBuildRuntimeType)' != 'core'">..\tools\$(NetFxTfm)\</DotNetBuildTasksConfigurationDir>
     <DotNetBuildTasksConfigurationDll Condition="'$(DotNetBuildTasksConfigurationDll)' == ''">$(DotNetBuildTasksConfigurationDir)Microsoft.DotNet.Build.Tasks.Configuration.dll</DotNetBuildTasksConfigurationDll>
   </PropertyGroup>
 
