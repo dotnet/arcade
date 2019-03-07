@@ -77,7 +77,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         // removed in the future.
                         if (!Directory.Exists(AssetsTemporaryDirectory))
                         {
-                            Log.LogWarning($"Assets temporary directory {AssetsTemporaryDirectory} doesn't exist. Creating it.");
+                            Log.LogMessage(MessageImportance.High, 
+                                $"Assets temporary directory {AssetsTemporaryDirectory} doesn't exist. Creating it.");
                             Directory.CreateDirectory(AssetsTemporaryDirectory);
                         }
 
