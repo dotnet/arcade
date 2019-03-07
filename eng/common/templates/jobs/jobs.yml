@@ -13,6 +13,12 @@ parameters:
 
   # Optional: Enable publishing to the build asset registry
   enablePublishBuildAssets: false
+  
+  # Optional: Enable generating the graph files at the end of the build
+  enableGraphFilesGeneration: false
+  
+  # Optional: Include toolset dependencies in the generated graph files
+  includeToolsetInGraph: false
 
   # Optional: Include PublishTestResults task
   enablePublishTestResults: false
@@ -73,6 +79,7 @@ jobs:
   - template: ../job/generate-graph-files.yml
     parameters:
       continueOnError: ${{ parameters.continueOnError }}
+      includeToolsetInGraph: ${{ parameters.includeToolsetInGraph }}
       dependsOn:
       - ${{ if ne(parameters.publishBuildAssetsDependsOn, '') }}:
         - ${{ each job in parameters.publishBuildAssetsDependsOn }}:
