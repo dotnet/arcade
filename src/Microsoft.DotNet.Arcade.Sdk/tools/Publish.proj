@@ -151,7 +151,8 @@
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
       ManifestCommit="$(BUILD_SOURCEVERSION)"
       PublishFlatContainer="false"
-      AssetManifestPath="$(PipelineArtifactsAssetManifestFilePath)" />
+      AssetManifestPath="$(PipelineArtifactsAssetManifestFilePath)"
+      AssetsTemporaryDirectory="$(ArtifactsDir)\$([System.Guid]::NewGuid())" />
 
     <!--
       The publishing pipeline (implemented by PublishToPackageFeed.proj) will use the Tasks.Feed package
