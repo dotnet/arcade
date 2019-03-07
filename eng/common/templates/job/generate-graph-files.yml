@@ -48,7 +48,7 @@ jobs:
   steps:
   - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - task: PowerShell@2
-      displayName: Generate GraphViz Graph
+      displayName: Generate Graph Files
       inputs:
         filePath: eng\common\generate-graph-files.ps1 
         arguments: $(_GraphArguments)
