@@ -26,17 +26,15 @@
     <PublishToSymbolServer Condition="'$(UsingToolSymbolUploader)' == 'true' and '$(AzureFeedUrl)' == '' and '$(ContinuousIntegrationBuild)' == 'true'">true</PublishToSymbolServer>
     <AssetManifestFilePath>$(ArtifactsLogDir)AssetManifest\$(OS)-$(PlatformName).xml</AssetManifestFilePath>
 
-    <PipelineArtifactsAssetManifestFilePath>$(ArtifactsLogDir)PipelineArtifactsPublishingManifests\$(OS)-$(PlatformName)-$(AGENT_JOBNAME).xml</PipelineArtifactsAssetManifestFilePath>
-
     <SymbolPackagesDir>$(ArtifactsTmpDir)SymbolPackages\</SymbolPackagesDir>
 
     <PublishToBlobFeedFlatContainer Condition="'$(PublishToBlobFeedFlatContainer)' == ''">false</PublishToBlobFeedFlatContainer>
 
-    <PublishDependsOnTargets Condition="$(PublishToAzure) and '$(PublishToBlobFeedFlatContainer)' != 'true'">$(PublishDependsOnTargets);PublishPackagesToBlobFeed</PublishDependsOnTargets>
-    <PublishDependsOnTargets Condition="$(PublishToAzure) and '$(PublishToBlobFeedFlatContainer)' == 'true'">$(PublishDependsOnTargets);PublishFilesToBlobFeed</PublishDependsOnTargets>
+    <PublishDependsOnTargets Condition="$(PublishToAzure) and '$(PublishToAzureDevOpsArtifacts)' != 'true' and '$(PublishToBlobFeedFlatContainer)' != 'true'">$(PublishDependsOnTargets);PublishPackagesToBlobFeed</PublishDependsOnTargets>
+    <PublishDependsOnTargets Condition="$(PublishToAzure) and '$(PublishToAzureDevOpsArtifacts)' != 'true' and '$(PublishToBlobFeedFlatContainer)' == 'true'">$(PublishDependsOnTargets);PublishFilesToBlobFeed</PublishDependsOnTargets>
     <PublishDependsOnTargets Condition="$(PublishToSymbolServer)">$(PublishDependsOnTargets);PublishSymbols</PublishDependsOnTargets>
     <PublishDependsOnTargets Condition="$(PublishToSourceBuildStorage)">$(PublishDependsOnTargets);PublishToSourceBuildStorage</PublishDependsOnTargets>
-    <PublishDependsOnTargets Condition="'$(PublishToAzureDevOpsArtifacts)' == 'true'">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
+    <PublishDependsOnTargets Condition="$(PublishToAzure) and '$(PublishToAzureDevOpsArtifacts)' == 'true'">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
     <PublishDependsOnTargets>BeforePublish;$(PublishDependsOnTargets)</PublishDependsOnTargets>
   </PropertyGroup>
 
@@ -152,8 +150,8 @@
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
       ManifestCommit="$(BUILD_SOURCEVERSION)"
       PublishFlatContainer="false"
-      AssetManifestPath="$(PipelineArtifactsAssetManifestFilePath)"
-      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"/>
+      AssetManifestPath="$(AssetManifestFilePath)"
+      AssetsTemporaryDirectory="$(ArtifactsDir)\..\AssetsTmpDir\$([System.Guid]::NewGuid())" />
 
     <!--
       The publishing pipeline (implemented by PublishToPackageFeed.proj) will use the Tasks.Feed package
@@ -163,22 +161,20 @@
 
     <Message
       Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(RepositoryEngineeringDir)common\PublishToPackageFeed.proj"
-      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
       Importance="high" />
 
     <Message
       Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(MSBuildThisFileDirectory)DefaultVersions.props"
-      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true' and Exists('$(MSBuildThisFileDirectory)DefaultVersions.props')"
+      Condition="Exists('$(MSBuildThisFileDirectory)DefaultVersions.props')"
       Importance="high" />
 
     <Message
       Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(RepositoryEngineeringDir)Versions.props"
-      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true' and Exists('$(RepositoryEngineeringDir)Versions.props')"
+      Condition="Exists('$(RepositoryEngineeringDir)Versions.props')"
       Importance="high" />
 
     <Message
-      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(PipelineArtifactsAssetManifestFilePath)"
-      Condition="$(PublishToAzure) and '$(PushToAzureDevOps)' == 'true'"
+      Text="##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]$(AssetManifestFilePath)"
       Importance="high" />
 
     <!-- 
