@@ -182,11 +182,11 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             if (!string.IsNullOrEmpty(PackageLicenseExpression))
             {
                 manifestMetadata.LicenseMetadata = new LicenseMetadata(
-                    LicenseType.Expression,
-                    license: "",
-                    NuGetLicenseExpression.Parse(PackageLicenseExpression),
-                    Array.Empty<string>(),
-                    LicenseMetadata.CurrentVersion);
+                    type: LicenseType.Expression,
+                    license: PackageLicenseExpression,
+                    expression: NuGetLicenseExpression.Parse(PackageLicenseExpression),
+                    warningsAndErrors: null,
+                    LicenseMetadata.EmptyVersion);
 
             }
             else if (!string.IsNullOrEmpty(LicenseUrl))
