@@ -86,8 +86,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(packagePath.ItemSpec)}";
                             File.Copy(packagePath.ItemSpec, destFile);
 
-                            Log.LogMessage(MessageImportance.High, $"Copying package file from {packagePath.ItemSpec} to {destFile}");
-
                             Log.LogMessage(MessageImportance.High,
                                 $"##vso[artifact.upload containerfolder=PackageArtifacts;artifactname=PackageArtifacts]{destFile}");
                         }
@@ -96,8 +94,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         {
                             var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(symbolPath.ItemSpec)}";
                             File.Copy(symbolPath.ItemSpec, destFile);
-
-                            Log.LogMessage(MessageImportance.High, $"Copying symbol file from {symbolPath.ItemSpec} to {destFile}");
 
                             Log.LogMessage(MessageImportance.High,
                                 $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{destFile}");
