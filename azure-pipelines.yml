@@ -3,7 +3,7 @@ variables:
   - name: _TeamName
     value: DotNetCore
   - name: _PublishUsingPipelines
-    value: true
+    value: false
 
 resources:
   containers:
