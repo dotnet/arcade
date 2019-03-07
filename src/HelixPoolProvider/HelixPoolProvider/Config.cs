@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.HelixPoolProvider
 {
@@ -32,6 +33,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
         public string ApiAuthorizationPat => GetSecret(_configuration[$"{nameof(ApiAuthorizationPat)}-Key"]);
         public bool ApiAuthorizationPatIsConfigured => TryGetSecret(_configuration[$"{nameof(ApiAuthorizationPat)}-Key"], out string secretValue);
         public AllowableHelixQueues AllowedTargetQueues => Enum.Parse<AllowableHelixQueues>(_configuration[nameof(AllowedTargetQueues)]);
+        public string[] AllowedTargetQueueNames => _configuration.GetSection(nameof(AllowedTargetQueueNames)).Get<string[]>();
         public string HelixCreator => _configuration[nameof(HelixCreator)];
         public int TimeoutInMinutes => Int32.Parse(_configuration[nameof(TimeoutInMinutes)]);
         public string HelixEndpoint => _configuration[nameof(HelixEndpoint)];

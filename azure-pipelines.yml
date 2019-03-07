@@ -25,9 +25,10 @@ jobs:
         # Will eventually change this to two BYOC pools.
         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
           name: NetCorePublic-Int-Pool
-          queue: Windows.10.Amd64.Open
+          queue: BuildPool.Windows.10.Amd64.VS2017.Open
         ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-          name: dotnet-internal-temp
+          name: NetCoreInternal-Int-Pool
+          queue: BuildPool.Windows.10.Amd64.VS2017
       variables:
       - _Script: eng\common\cibuild.cmd
       - _ValidateSdkArgs: ''
@@ -96,9 +97,11 @@ jobs:
         container: LinuxContainer
         pool:
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-            name: dnceng-linux-external-temp
+            name:  NetCorePublic-Int-Pool
+            queue: BuildPool.Ubuntu.1604.Amd64.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-            name: dnceng-linux-internal-temp
+            name:  NetCoreInternal-Int-Pool
+            queue: BuildPool.Ubuntu.1604.Amd64
         variables:
         - HelixApiAccessToken: ''
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
