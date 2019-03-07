@@ -68,4 +68,21 @@ jobs:
         vmImage: vs2017-win2016
       runAsPublic: ${{ parameters.runAsPublic }}
       enablePublishBuildArtifacts: ${{ parameters.enablePublishBuildArtifacts }}
+      
+- ${{ if and(eq(parameters.enableGraphFilesGeneration, true), eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - template: ../job/generate-graph-files.yml
+    parameters:
+      continueOnError: ${{ parameters.continueOnError }}
+      dependsOn:
+      - ${{ if ne(parameters.publishBuildAssetsDependsOn, '') }}:
+        - ${{ each job in parameters.publishBuildAssetsDependsOn }}:
+          - ${{ job.job }}
+      - ${{ if eq(parameters.publishBuildAssetsDependsOn, '') }}:
+        - ${{ each job in parameters.jobs }}:
+          - ${{ job.job }}
+        - Asset_Registry_Publish
+      pool:
+        vmImage: vs2017-win2016
+      runAsPublic: ${{ parameters.runAsPublic }}
+      enablePublishBuildArtifacts: ${{ parameters.enablePublishBuildArtifacts }}
 

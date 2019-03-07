@@ -1,0 +1,48 @@
+parameters:
+  configuration: 'Debug'
+
+  # Optional: condition for the job to run
+  condition: ''
+
+  # Optional: dependencies of the job
+  dependsOn: ''
+
+  # Optional: A defined YAML pool - https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&tabs=schema#pool
+  pool: {}
+
+  # Optional: should run as a public build even in the internal project
+  #           if 'true', the build won't run any of the internal only steps, even if it is running in non-public projects.
+  runAsPublic: false
+
+jobs:
+- job: Asset_Registry_Publish
+
+  dependsOn: ${{ parameters.dependsOn }}
+
+  displayName: Generate Graph Files
+
+  pool: ${{ parameters.pool }}
+
+  variables:
+  - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
+    # DotNet-AllOrgs-Darc-Pats provides: dn-bot-devdiv-dnceng-rw-code-pat
+    - group: Publish-Build-Assets
+    - group: DotNet-AllOrgs-Darc-Pats
+
+  steps:
+  - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    - task: PowerShell@2
+      displayName: Generate GraphViz graph
+      inputs:
+        filePath: eng\common\generate-graph-files.ps1
+        arguments: -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -azdoPat $(dn-bot-devdiv-dnceng-rw-code-pat) -barToken $(MaestroAccessToken) -outputFolder '$(Build.StagingDirectory)/GraphFiles/'
+      continueOnError: true
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Graph to Artifacts
+      inputs:
+        PathtoPublish: '$(Build.StagingDirectory)/GraphFiles'
+        PublishLocation: Container
+        ArtifactName: GraphFiles
+      continueOnError: true
+      condition: always()      

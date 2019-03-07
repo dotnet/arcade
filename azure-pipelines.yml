@@ -16,6 +16,7 @@ jobs:
     enablePublishTestResults: true
     enablePublishBuildAssets: true
     enableTelemetry: true
+    enableGraphFilesGeneration: true
     helixRepo: dotnet/arcade
     jobs:
     - job: Windows_NT
