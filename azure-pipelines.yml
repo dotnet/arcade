@@ -16,7 +16,7 @@ jobs:
     enableMicrobuild: true
     enablePublishBuildArtifacts: true
     enablePublishTestResults: true
-    enablePublishBuildAssets: ne(variables['_PublishUsingPipelines'], 'true')
+    enablePublishBuildAssets: true
     enableTelemetry: true
     helixRepo: dotnet/arcade
     jobs:
