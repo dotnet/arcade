@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;$(NetFxTfm)</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
     <CopyLocalLockFileAssemblies Condition="'$(TargetFramework)' == 'netcoreapp2.1'">true</CopyLocalLockFileAssemblies>
     <PackageType>MSBuildSdk</PackageType>
     <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -43,7 +43,7 @@
 - VerifyClosure
 - VerifyTypes</PackageDescription>
 
-    <DefaultItemExcludes Condition="'$(TargetFramework)' != '$(NetFxTfm)'">**/*.Desktop.*</DefaultItemExcludes>
+    <DefaultItemExcludes Condition="'$(TargetFramework)' != 'net472'">**/*.Desktop.*</DefaultItemExcludes>
     <BeforePack>$(BeforePack);AddRuntimeJson</BeforePack>
   </PropertyGroup>
 
@@ -67,7 +67,7 @@
     <PackageReference Include="Microsoft.NETCore.Platforms" Version="$(MicrosoftNETCorePlatformsVersion)" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == '$(NetFxTfm)'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <Compile Include="..\..\Common\AssemblyResolver.cs" />
     <Compile Include="..\..\Common\BuildTask.Desktop.cs" />
   </ItemGroup>

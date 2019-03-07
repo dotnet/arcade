@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;$(NetFxTfm)</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
     <LangVersion>Latest</LangVersion>
     <SignAssembly>false</SignAssembly>
     <NoWarn>xUnit2013</NoWarn>
