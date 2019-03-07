@@ -34,6 +34,8 @@ namespace Microsoft.DotNet.XUnitExtensions
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet46Test);
             if (frameworks.HasFlag(TargetFrameworkMonikers.Net461))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet461Test);
+            if (frameworks.HasFlag(TargetFrameworkMonikers.Net472))
+                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet472Test);
             if (frameworks.HasFlag(TargetFrameworkMonikers.Net462))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet462Test);
             if (frameworks.HasFlag(TargetFrameworkMonikers.Net463))

@@ -13,7 +13,7 @@ using System.Threading;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-#if NET461
+#if NET472
     [LoadInSeparateAppDomain]
     public sealed class Unsign : AppDomainIsolatedTask
     {
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         public override bool Execute()
         {
-#if NET461
+#if NET472
             AssemblyResolution.Log = Log;
 #endif
             try
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
             finally
             {
-#if NET461
+#if NET472
                 AssemblyResolution.Log = null;
 #endif
             }

@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(MSBuildThisFileDirectory)/../Microsoft.SignCheck/ResxWorkaround.props" />
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <OutputType>EXE</OutputType>
     <Platforms>x86</Platforms>
     <IsTool>True</IsTool>

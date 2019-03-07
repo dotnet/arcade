@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.XUnitExtensions
         internal static string NonNet461Test = "nonnet461tests";
         internal static string NonNet462Test = "nonnet462tests";
         internal static string NonNet463Test = "nonnet463tests";
+        internal static string NonNet472Test = "nonnet472tests";
         internal static string NonNetcore50Test = "nonnetcore50tests";
         internal static string NonNetcore50aotTest = "nonnetcore50aottests";
         internal static string NonNetcoreapp1_0Test = "nonnetcoreapp1.0tests";

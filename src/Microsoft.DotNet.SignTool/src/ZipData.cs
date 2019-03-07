@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         public void Repack()
         {
-#if NET461
+#if NET472
             if (FileSignInfo.IsVsix())
             {
                 RepackPackage();
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-#if NET461
+#if NET472
         /// <summary>
         /// Repack a zip container with a package structure.
         /// </summary>
