@@ -27,6 +27,7 @@ jobs:
   pool: ${{ parameters.pool }}
 
   variables:
+  - _InternalBuildArgs: ''
   - _GraphArguments: -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) 
         -azdoPat $(dn-bot-devdiv-dnceng-rw-code-pat) 
         -barToken $(MaestroAccessToken) 
