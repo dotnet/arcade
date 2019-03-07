@@ -15,7 +15,7 @@ parameters:
   runAsPublic: false
 
 jobs:
-- job: Asset_Registry_Publish
+- job: Generate_Graph_Files
 
   dependsOn: ${{ parameters.dependsOn }}
 
