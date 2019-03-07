@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
             Assert.Equal(
 @"{
   ""Technology"": ""IBC"",
-  ""RelativeInstallationPath"": ""Common7\\IDE\\CommonExtensions\\Microsoft\\ManagedLanguages\\VBCSharp\\LanguageServices\\xyzMicrosoft.CodeAnalysis.CSharp.dll"",
+  ""RelativeInstallationPath"": ""Common7\\IDE\\CommonExtensions\\Microsoft\\ManagedLanguages\\VBCSharp\\LanguageServices\\x\\y\\z\\Microsoft.CodeAnalysis.CSharp.dll"",
   ""InstrumentationArguments"": ""/ExeConfig:\""%VisualStudio.InstallationUnderTest.Path%\\Common7\\IDE\\vsn.exe\""""
 }
 ", json);

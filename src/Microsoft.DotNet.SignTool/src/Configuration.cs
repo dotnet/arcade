@@ -373,11 +373,8 @@ namespace Microsoft.DotNet.SignTool
             }
 
             bool isCrossgened = ContentUtil.IsCrossgened(fullPath);
+            string publicKeyToken = ContentUtil.GetPublicKeyToken(fullPath);
 
-            AssemblyName assemblyName = AssemblyName.GetAssemblyName(fullPath);
-            var pktBytes = assemblyName.GetPublicKeyToken();
-
-            string publicKeyToken = (pktBytes == null || pktBytes.Length == 0) ? string.Empty : string.Join("", pktBytes.Select(b => b.ToString("x2")));
             GetTargetFrameworkAndCopyright(fullPath, out string targetFramework, out string copyright);
             return new PEInfo(isManaged, isCrossgened, copyright, publicKeyToken, targetFramework);
         }

@@ -235,15 +235,25 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
             {
                 return true;
             }
-
-            if (!queueInfo.IsInternalOnly.HasValue)
+            else if (_configuration.AllowedTargetQueues == AllowableHelixQueues.Specific)
             {
-                _logger.LogWarning($"Warning, unknown whether {queueInfo.QueueId} is internal only or not");
-                return false;
+                return _configuration.AllowedTargetQueueNames.Any(queueName => queueName.Equals(queueInfo.QueueId, StringComparison.OrdinalIgnoreCase));
             }
-
-            return (_configuration.AllowedTargetQueues == AllowableHelixQueues.NoInternal && !queueInfo.IsInternalOnly.Value) ||
-                (_configuration.AllowedTargetQueues == AllowableHelixQueues.OnlyInternal && queueInfo.IsInternalOnly.Value);
+            else if (_configuration.AllowedTargetQueues == AllowableHelixQueues.NoInternal ||
+                     _configuration.AllowedTargetQueues == AllowableHelixQueues.OnlyInternal)
+            {
+                if (!queueInfo.IsInternalOnly.HasValue)
+                {
+                    _logger.LogWarning($"Warning, unknown whether {queueInfo.QueueId} is internal only or not");
+                    return false;
+                }
+                return (_configuration.AllowedTargetQueues == AllowableHelixQueues.NoInternal && !queueInfo.IsInternalOnly.Value) ||
+                       (_configuration.AllowedTargetQueues == AllowableHelixQueues.OnlyInternal && queueInfo.IsInternalOnly.Value);
+            }
+            else
+            {
+                throw new NotImplementedException($"Unexpected allowed target queue setting '{_configuration.AllowedTargetQueues}'");
+            }
         }
 
         /// <summary>
@@ -411,6 +421,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
                 {
                     containerName = _configuration.ContainerName,
                     allowedTargetQueues = Enum.GetName(typeof(AllowableHelixQueues), _configuration.AllowedTargetQueues),
+                    allowedTargetQueueNames = _configuration.AllowedTargetQueues == AllowableHelixQueues.Specific ? _configuration.AllowedTargetQueueNames : null,
                     helixEndpoint = _configuration.HelixEndpoint,
                     timeoutInMinutes = _configuration.TimeoutInMinutes,
                     availableConnectionString = _configuration.ConnectionStringIsConfigured,

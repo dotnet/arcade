@@ -44,17 +44,14 @@ namespace Microsoft.DotNet.CodeAnalysis.Analyzers
             IMethodSymbol memberSymbol = context.SemanticModel.GetSymbolInfo(memberAccessExpr).Symbol as IMethodSymbol;
             if (memberSymbol == null) return;
 
-            if (memberSymbol.Name.Equals("Format") && memberSymbol.ContainingType.Equals(SRSymbol))
+            if (memberSymbol.Name.Equals("Format") &&
+                memberSymbol.ContainingType.Equals(SRSymbol) &&
+                memberSymbol.Parameters.Length == 1)
             {
-                bool isValidCall = false;
-                if (memberSymbol.Parameters.Length > 1
-                    && memberSymbol.Parameters[0].Type.SpecialType == SpecialType.System_String)
-                {
-                    isValidCall = true;
-                }
-
-                if (!isValidCall)
-                    context.ReportDiagnostic(Diagnostic.Create(InvalidSRFormatCall, invokeExpr.GetLocation(), invokeExpr.GetText()));
+                // There's no valid reason to call SR.Format(singleArg).  This generally happens accidentally
+                // if someone is porting code and ends up with `SR.Format(SR.Something)`, in which case it should
+                // just be simplified to `SR.Something`.
+                context.ReportDiagnostic(Diagnostic.Create(InvalidSRFormatCall, invokeExpr.GetLocation(), invokeExpr.GetText()));
             }
         }
     }

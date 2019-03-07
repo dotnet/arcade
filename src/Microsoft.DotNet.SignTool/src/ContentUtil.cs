@@ -104,5 +104,22 @@ namespace Microsoft.DotNet.SignTool
                 return entry.Size > 0;
             }
         }
+
+        public static string GetPublicKeyToken(string fullPath)
+        {
+            try
+            {
+                AssemblyName assemblyName = AssemblyName.GetAssemblyName(fullPath);
+                byte[] pktBytes = assemblyName.GetPublicKeyToken();
+
+                return (pktBytes == null || pktBytes.Length == 0) ? 
+                    string.Empty : 
+                    string.Join("", pktBytes.Select(b => b.ToString("x2")));
+            }
+            catch (BadImageFormatException)
+            {
+                return string.Empty;
+            }
+        }
     }
 }

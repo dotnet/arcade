@@ -1226,6 +1226,7 @@
                     ProjectUrl="$(ProjectUrl)"
                     IconUrl="$(IconUrl)"
                     LicenseUrl="$(LicenseUrl)"
+                    PackageLicenseExpression="$(PackageLicenseExpression)"
                     Copyright="$(Copyright)"
                     RequireLicenseAcceptance="$(RequireLicenseAcceptance)"
                     Tags="$(Tags)"
@@ -1235,7 +1236,11 @@
                     FrameworkReferences="@(FrameworkReference)"
                     Files="@(_packageFile)"
                     Serviceable="$(Serviceable)"
-                    PackageTypes="$(PackageType)"/>
+                    PackageTypes="$(PackageType)"
+                    RepositoryUrl="$(RepositoryUrl)"
+                    RepositoryType="$(RepositoryType)"
+                    RepositoryBranch="$(RepositoryBranch)"
+                    RepositoryCommit="$(RepositoryCommit)"/>
   </Target>
 
   <Target Name="CreatePackage"

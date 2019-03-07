@@ -1219,5 +1219,18 @@ $@"
 
             Assert.False(task.Log.HasLoggedErrors);
         }
+
+        [Fact]
+        public void CrossGeneratedLibraryWithoutPKT()
+        {
+            var itemsToSign = new[]
+            {
+                GetResourcePath("SPCNoPKT.dll")
+            };
+
+            ValidateFileSignInfos(itemsToSign, new Dictionary<string, SignInfo>(), new Dictionary<ExplicitCertificateKey, string>(), s_fileExtensionSignInfo, new string[0]);
+
+            ValidateGeneratedProject(itemsToSign, new Dictionary<string, SignInfo>(), new Dictionary<ExplicitCertificateKey, string>(), s_fileExtensionSignInfo, new string[0]);
+        }
     }
 }

@@ -33,8 +33,8 @@
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
     <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
-    <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
-    <NuGetVersion>4.4.0</NuGetVersion>
+    <NuGetVersioningVersion>4.9.3</NuGetVersioningVersion>
+    <NuGetVersion>4.9.3</NuGetVersion>
     <OctokitVersion>0.30.0</OctokitVersion>
     <DotNetSleetLibVersion>2.2.127</DotNetSleetLibVersion>
     <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>
@@ -50,8 +50,8 @@
     <XUnitVersion>2.4.1-pre.build.4059</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <XUnitVSRunnerVersion>2.4.1-pre.build.4059</XUnitVSRunnerVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.19156.14</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSignToolVersion>1.0.0-beta.19154.14</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.19155.29</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignToolVersion>1.0.0-beta.19155.29</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>

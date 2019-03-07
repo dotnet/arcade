@@ -8,6 +8,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
     {
         Any,
         OnlyInternal,
-        NoInternal
+        NoInternal,
+        Specific
     }
 }
