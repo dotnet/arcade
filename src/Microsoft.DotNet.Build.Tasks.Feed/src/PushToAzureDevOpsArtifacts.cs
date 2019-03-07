@@ -81,32 +81,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             Directory.CreateDirectory(AssetsTemporaryDirectory);
                         }
 
-                        if (packageItems.Length > 0)
+                        foreach (var packagePath in packageItems)
                         {
-                            foreach (var packagePath in packageItems)
-                            {
-                                var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(packagePath.ItemSpec)}";
-                                File.Copy(packagePath.ItemSpec, destFile);
+                            var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(packagePath.ItemSpec)}";
+                            File.Copy(packagePath.ItemSpec, destFile);
 
-                                Log.LogMessage(MessageImportance.High, $"Copying package file from {packagePath.ItemSpec} to {destFile}");
+                            Log.LogMessage(MessageImportance.High, $"Copying package file from {packagePath.ItemSpec} to {destFile}");
 
-                                Log.LogMessage(MessageImportance.High,
-                                    $"##vso[artifact.upload containerfolder=PackageArtifacts;artifactname=PackageArtifacts]{destFile}");
-                            }
+                            Log.LogMessage(MessageImportance.High,
+                                $"##vso[artifact.upload containerfolder=PackageArtifacts;artifactname=PackageArtifacts]{destFile}");
                         }
 
-                        if (symbolItems.Length > 0)
+                        foreach (var symbolPath in symbolItems)
                         {
-                            foreach (var symbolPath in symbolItems)
-                            {
-                                var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(symbolPath.ItemSpec)}";
-                                File.Copy(symbolPath.ItemSpec, destFile);
+                            var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(symbolPath.ItemSpec)}";
+                            File.Copy(symbolPath.ItemSpec, destFile);
 
-                                Log.LogMessage(MessageImportance.High, $"Copying symbol file from {symbolPath.ItemSpec} to {destFile}");
+                            Log.LogMessage(MessageImportance.High, $"Copying symbol file from {symbolPath.ItemSpec} to {destFile}");
 
-                                Log.LogMessage(MessageImportance.High,
-                                    $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{destFile}");
-                            }
+                            Log.LogMessage(MessageImportance.High,
+                                $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{destFile}");
                         }
 
                         packageArtifacts = packageItems.Select(BuildManifestUtil.CreatePackageArtifactModel);
