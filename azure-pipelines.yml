@@ -2,6 +2,8 @@ variables:
   # Cannot use key:value syntax in root defined variables
   - name: _TeamName
     value: DotNetCore
+  - name: _PublishUsingPipelines
+    value: true
 
 resources:
   containers:
@@ -14,7 +16,7 @@ jobs:
     enableMicrobuild: true
     enablePublishBuildArtifacts: true
     enablePublishTestResults: true
-    enablePublishBuildAssets: true
+    enablePublishBuildAssets: ne(variables['_PublishUsingPipelines'], 'true')
     enableTelemetry: true
     helixRepo: dotnet/arcade
     jobs:
@@ -48,7 +50,7 @@ jobs:
             /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
             /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
             /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
-            /p:DotNetPublishUsingPipelines=true
+            /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
             /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
 
       strategy:

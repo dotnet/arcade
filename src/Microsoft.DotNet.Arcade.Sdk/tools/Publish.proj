@@ -26,8 +26,6 @@
     <PublishToSymbolServer Condition="'$(UsingToolSymbolUploader)' == 'true' and '$(AzureFeedUrl)' == '' and '$(ContinuousIntegrationBuild)' == 'true'">true</PublishToSymbolServer>
     <AssetManifestFilePath>$(ArtifactsLogDir)AssetManifest\$(OS)-$(PlatformName).xml</AssetManifestFilePath>
 
-    <PipelineArtifactsAssetManifestFilePath>$(ArtifactsLogDir)PipelineArtifactsPublishingManifests\$(OS)-$(PlatformName)-$(AGENT_JOBNAME).xml</PipelineArtifactsAssetManifestFilePath>
-
     <SymbolPackagesDir>$(ArtifactsTmpDir)SymbolPackages\</SymbolPackagesDir>
 
     <PublishToBlobFeedFlatContainer Condition="'$(PublishToBlobFeedFlatContainer)' == ''">false</PublishToBlobFeedFlatContainer>
@@ -151,7 +149,7 @@
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
       ManifestCommit="$(BUILD_SOURCEVERSION)"
       PublishFlatContainer="false"
-      AssetManifestPath="$(PipelineArtifactsAssetManifestFilePath)"
+      AssetManifestPath="$(AssetManifestFilePath)"
       AssetsTemporaryDirectory="$(ArtifactsDir)\..\AssetsTmpDir\$([System.Guid]::NewGuid())" />
 
     <!--
@@ -175,7 +173,7 @@
       Importance="high" />
 
     <Message
-      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(PipelineArtifactsAssetManifestFilePath)"
+      Text="##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]$(AssetManifestFilePath)"
       Importance="high" />
 
     <!-- 
