@@ -36,12 +36,12 @@ jobs:
         -azdoPat $(dn-bot-devdiv-dnceng-rw-code-pat) 
         -barToken $(MaestroAccessToken) 
         -outputFolder '$(Build.StagingDirectory)/GraphFiles/'
-     - ${{ if ne(parameters.includeToolsetInGraph, 'false') }}:
-       _GraphArguments: -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) 
-           -azdoPat $(dn-bot-devdiv-dnceng-rw-code-pat) 
-           -barToken $(MaestroAccessToken) 
-           -outputFolder '$(Build.StagingDirectory)/GraphFiles/'
-           -includeToolset
+    - ${{ if ne(parameters.includeToolsetInGraph, 'false') }}:
+      _GraphArguments: -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) 
+          -azdoPat $(dn-bot-devdiv-dnceng-rw-code-pat) 
+          -barToken $(MaestroAccessToken) 
+          -outputFolder '$(Build.StagingDirectory)/GraphFiles/'
+          -includeToolset
 
   steps:
   - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
