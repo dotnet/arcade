@@ -47,7 +47,7 @@ jobs:
             /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
             /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
             /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
-            /p:DotNetPublishUsingPipelines=false
+            /p:DotNetPublishUsingPipelines=true
             /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
 
       strategy:
