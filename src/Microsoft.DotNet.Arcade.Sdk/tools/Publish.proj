@@ -144,6 +144,12 @@
       <NewManifestBuildData Include="AzureDevOpsBuildNumber=$(BUILD_BUILDNUMBER)" />
       <NewManifestBuildData Include="AzureDevOpsRepository=$(BUILD_REPOSITORY_URI)" />
       <NewManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
+
+      <!-- 
+        Adding this just to not fail the validation when creating the manifest. 
+        TODO: Should be removed once PublishingUsingPipelines is the default.
+      -->
+      <NewManifestBuildData Include="Location=$(AzureFeedUrl)" />
     </ItemGroup>
 
     <!-- 
