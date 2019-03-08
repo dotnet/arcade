@@ -5,6 +5,10 @@
   <!--
     Properties:
       IbcOptimizationDataDir             The directory containing IBC optimization data. Optimization data are not applied if unset.
+      EnableNgenOptimization             Set to true to enable NGEN optimization (partial or full).
+      ApplyNgenOptimization              Set to 'partial' or 'full' in a project to embed partial/full NGEN optimization data to the built binary.
+
+    Obsolete (https://github.com/dotnet/arcade/issues/2092):
       EnablePartialNgenOptimization      Set to true to enable Partial NGEN optimization data embedding.
       ApplyPartialNgenOptimization       Set to true in a project to apply Partial NGEN optimization data to the built binary.
 
@@ -17,7 +21,12 @@
 
   <PropertyGroup>
     <PostCompileBinaryModificationSentinelFile>$(IntermediateOutputPath)$(TargetFileName).pcbm</PostCompileBinaryModificationSentinelFile>
+
+    <!-- TODO: remove (https://github.com/dotnet/arcade/issues/2092) -->
     <EnablePartialNgenOptimization Condition="'$(EnablePartialNgenOptimization)' == '' and '$(Configuration)' == 'Release' and '$(OfficialBuild)' == 'true'">true</EnablePartialNgenOptimization>
+
+    <EnableNgenOptimization Condition="'$(EnableNgenOptimization)' == ''">$(EnablePartialNgenOptimization)</EnableNgenOptimization>
+    <ApplyNgenOptimization Condition="'$(ApplyPartialNgenOptimization)' == ''true'">partial</ApplyNgenOptimization>
   </PropertyGroup>
 
   <!--
@@ -27,7 +36,7 @@
   <Target Name="PostCompileBinaryModification"
           AfterTargets="CoreCompile"
           DependsOnTargets="_InitializeAssemblyOptimizationWithTargetAssembly;ApplyOptimizations"
-          Condition="'$(IsWpfTempProject)' != 'true' and '$(EnablePartialNgenOptimization)' == 'true' and '$(ApplyPartialNgenOptimization)' == 'true'"
+          Condition="'$(IsWpfTempProject)' != 'true' and '$(EnableNgenOptimization)' == 'true' and '$(ApplyNgenOptimization)' != ''"
           Inputs="$(MSBuildAllProjects);@(IntermediateAssembly)"
           Outputs="@(IntermediateAssembly);$(PostCompileBinaryModificationSentinelFile)">
 
@@ -55,6 +64,9 @@
   </Target>
 
   <Target Name="_CalculateIbcMergeInvocations">
+
+    <Error Text="Unexpected value specified for NgenOptimization: '$(ApplyNgenOptimization)'"
+           Condition="'$(ApplyNgenOptimization)' != 'partial' and '$(ApplyNgenOptimization)' != 'full'"/>
 
     <Error Text="Directory specified in IbcOptimizationDataDir does not exist: '$(IbcOptimizationDataDir)'"
            Condition="!Exists('$(IbcOptimizationDataDir)')" />
@@ -100,6 +112,11 @@
       <Output TaskParameter="GroupedItems" ItemName="_AssemblyWithRawIbcData" />
     </Microsoft.DotNet.Arcade.Sdk.GroupItemsBy>
 
+    <PropertyGroup>
+      <_PartialNgenArg/>
+      <_PartialNgenArg Condition="'$(ApplyNgenOptimization)' == 'partial'">-partialNGEN</_PartialNgenArg>
+    </PropertyGroup>
+
     <ItemGroup>
       <_IbcMergeInvocation Include="%(_AssemblyWithRawIbcData.AssemblyFileName) [MergeRawToPrevious]">
         <CopyFilesSource>%(_AssemblyWithRawIbcData.PreviousAssemblyPath)</CopyFilesSource>
@@ -108,7 +125,7 @@
         <!--
           -delete to delete data previously embedded in the binary. 
         -->
-        <IbcMergeArgs>-q -f -partialNGEN -minify -delete -mo "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)" "$([MSBuild]::ValueOrDefault('%(_AssemblyWithRawIbcData.IbcFiles)', '').Replace(';', '" "'))"</IbcMergeArgs>
+        <IbcMergeArgs>-q -f $(_PartialNgenArg) -minify -delete -mo "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)" "$([MSBuild]::ValueOrDefault('%(_AssemblyWithRawIbcData.IbcFiles)', '').Replace(';', '" "'))"</IbcMergeArgs>
       </_IbcMergeInvocation>
 
       <_IbcMergeInvocation Include="%(_AssemblyWithRawIbcData.AssemblyFileName) [MergePreviousToCurrent]">
@@ -116,7 +133,7 @@
           -delete to delete data previously embedded in the binary. This is a no-op for binaries produced by this build, but is needed for dependencies such as System.Reflection.Metadata.
           -incremental to map data stored in the optimized binary, which comes from a previous build, to the new build of the binary.
         -->
-        <IbcMergeArgs>-q -f -partialNGEN -minify -delete -mo "%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)" -incremental "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)"</IbcMergeArgs>
+        <IbcMergeArgs>-q -f $(_PartialNgenArg) -minify -delete -mo "%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)" -incremental "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)"</IbcMergeArgs>
 
         <UnsignFile>%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)</UnsignFile>
       </_IbcMergeInvocation>
@@ -131,7 +148,7 @@
   -->
   <Target Name="ApplyOptimizations"
           DependsOnTargets="_LocateIbcMerge;_CalculateIbcMergeInvocations"
-          Condition="'@(OptimizeAssembly)' != '' and '$(EnablePartialNgenOptimization)' == 'true' and '$(ApplyPartialNgenOptimization)' == 'true'">
+          Condition="'@(OptimizeAssembly)' != '' and '$(EnableNgenOptimization)' == 'true' and '$(ApplyNgenOptimization)' != ''">
 
     <Message Text='IBCMerge tool will be run in an official build with arguments: %(_IbcMergeInvocation.IbcMergeArgs)'
              Condition="'$(_RunIbcMerge)' != 'true'" 
