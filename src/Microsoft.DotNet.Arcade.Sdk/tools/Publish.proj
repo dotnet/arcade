@@ -184,11 +184,6 @@
       Condition="Exists('$(MSBuildThisFileDirectory)DefaultVersions.props')"
       Importance="high" />
 
-    <Message
-      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(RepositoryEngineeringDir)Versions.props"
-      Condition="Exists('$(RepositoryEngineeringDir)Versions.props')"
-      Importance="high" />
-
     <Copy 
       SourceFiles="$(AssetManifestFilePath)" 
       DestinationFolder="$(TempWorkingDirectory)\$(AssetManifestFileName)" />
