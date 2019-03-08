@@ -26,7 +26,7 @@
     <EnablePartialNgenOptimization Condition="'$(EnablePartialNgenOptimization)' == '' and '$(Configuration)' == 'Release' and '$(OfficialBuild)' == 'true'">true</EnablePartialNgenOptimization>
 
     <EnableNgenOptimization Condition="'$(EnableNgenOptimization)' == ''">$(EnablePartialNgenOptimization)</EnableNgenOptimization>
-    <ApplyNgenOptimization Condition="'$(ApplyPartialNgenOptimization)' == ''true'">partial</ApplyNgenOptimization>
+    <ApplyNgenOptimization Condition="'$(ApplyPartialNgenOptimization)' == 'true'">partial</ApplyNgenOptimization>
   </PropertyGroup>
 
   <!--
