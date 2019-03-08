@@ -37,4 +37,16 @@
     </ItemGroup>
   </Target>
 
+  <!--
+    Validates repository-wide requirements.
+    MSBuild only evaluates the target project once per each set of values of global properties and caches the results.
+  -->
+  <Target Name="_RepositoryValidation" BeforeTargets="Build" Condition="'$(ContinuousIntegrationBuild)' == 'true'">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)RepositoryValidation.proj"
+             Targets="Validate"
+             RemoveProperties="TargetFramework;Platform"
+             Properties="RepoRoot=$(RepoRoot);PackageLicenseExpression=$(PackageLicenseExpression);PackageLicenseExpressionInternal=$(PackageLicenseExpressionInternal);SuppressLicenseValidation=$(SuppressLicenseValidation)"
+             UseResultsCache="true" />
+  </Target>
+
 </Project>
