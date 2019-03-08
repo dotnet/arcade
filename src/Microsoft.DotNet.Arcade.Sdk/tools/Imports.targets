@@ -5,45 +5,8 @@
     Import NuGet targets to WPF temp projects (workaround for https://github.com/dotnet/sourcelink/issues/91) 
   -->
   <Import Project="$(_WpfTempProjectNuGetFilePathNoExt).targets" Condition="'$(_WpfTempProjectNuGetFilePathNoExt)' != '' and Exists('$(_WpfTempProjectNuGetFilePathNoExt).targets')"/>
-
-  <PropertyGroup>
-    <DeployProjectOutput Condition="'$(DeployProjectOutput)' == ''">$(__DeployProjectOutput)</DeployProjectOutput>
-    
-    <!-- Run Deploy step by default when the solution is build directly via msbuild (from command line or VS). -->
-    <DeployProjectOutput Condition="'$(DeployProjectOutput)' == ''">true</DeployProjectOutput>
-  </PropertyGroup>
-
-  <!-- Default empty deploy target. -->
-  <Target Name="Deploy" AfterTargets="Build" Condition="'$(DeployProjectOutput)' == 'true'" />
-
-  <PropertyGroup>
-    <!--
-      Unless specified otherwise project is assumed to produce artifacts (assembly, package, vsix, etc.) that ship.
-      Test projects automatically set IsShipping to false.
-
-      Some projects may produce packages that contain shipping assemblies but the packages themselves do not ship.
-      Thes projects shall specify IsShippingPackage=false and leave IsShipping unset (will default to true).
-
-      Targets that need to determine whether an artifact is shipping shall use the artifact specific IsShippingXxx property,
-      if available for the kind of artifact they operate on.
-    -->
-    <IsShipping Condition="'$(IsShipping)' == ''">true</IsShipping>
-
-    <IsShippingAssembly Condition="'$(IsShippingAssembly)' == ''">$(IsShipping)</IsShippingAssembly>
-    <IsShippingPackage Condition="'$(IsShippingPackage)' == ''">$(IsShipping)</IsShippingPackage>
-    <IsShippingVsix Condition="'$(IsShippingVsix)' == ''">$(IsShipping)</IsShippingVsix>
-
-    <!--
-      Set PackageOutputPath based on the IsShippingPackage flag set by projects.
-      This distinction allows publishing tools to determine which assets to publish to official channels.
-    -->
-    <PackageOutputPath Condition="'$(IsShippingPackage)' == 'true'">$(ArtifactsShippingPackagesDir)</PackageOutputPath>
-    <PackageOutputPath Condition="'$(IsShippingPackage)' != 'true'">$(ArtifactsNonShippingPackagesDir)</PackageOutputPath>
-
-    <IsSwixProject>false</IsSwixProject>
-    <IsSwixProject Condition="'$(VisualStudioInsertionComponent)' != '' and '$(IsVsixProject)' != 'true'">true</IsSwixProject>
-  </PropertyGroup>
-
+  
+  <Import Project="ProjectDefaults.targets"/>
   <Import Project="StrongName.targets"/>
   <Import Project="GenerateInternalsVisibleTo.targets" />
   <Import Project="GenerateResxSource.targets" />

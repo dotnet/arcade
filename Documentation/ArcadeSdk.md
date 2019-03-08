@@ -359,6 +359,12 @@ It is a common practice to specify properties applicable to all (most) projects 
 
   <!-- Public keys used by InternalsVisibleTo project items -->
   <MoqPublicKey>00240000048000009400...</MoqPublicKey> 
+
+  <!-- 
+    Specify license used for packages produced by the repository.
+    Use PackageLicenseExpressionInternal for closed-source licenses.
+   -->
+  <PackageLicenseExpression>MIT</PackageLicenseExpression>
 </PropertyGroup>
 ```
 
@@ -371,6 +377,20 @@ It is a common practice to specify properties applicable to all (most) projects 
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 </Project>
 ```
+
+### /License.txt
+
+The root of the repository shall include a license file named `license.txt`, `license.md` or `license` (any casing is allowed).
+It is expected that all packages built from the repository have the same license, which is the license declared in the repository root license file.
+
+If the repository uses open source license it shall specify the license name globally using `PackageLicenseExpression` property, e.g. in [Directory.Build.props](https://github.com/dotnet/arcade/blob/master/Documentation/ArcadeSdk.md#directorybuildprops).
+If the repository uses a closed source license it shall specify the license name using `PackageLicenseExpressionInternal` property. In this case the closed source license file is automatically added to any package build by the repository.
+
+If `PackageLicenseExpression(Internal)` property is set Arcade SDK validates that the content of the license file in the repository root matches the content of 
+the [well-known license file](https://github.com/dotnet/arcade/tree/master/src/Microsoft.DotNet.Arcade.Sdk/tools/Licenses) that corresponds to the value of the license expression.
+This validation can be suppressed by setting `SuppressLicenseValidation` to `true` if necessary (not recommended).
+
+See [NuGet documentation](https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#packing-a-license-expression-or-a-license-file) for details.
 
 ### Source Projects
 
