@@ -79,14 +79,8 @@ jobs:
   - template: ../job/generate-graph-files.yml
     parameters:
       continueOnError: ${{ parameters.continueOnError }}
-      includeToolsetInGraph: ${{ parameters.graphFileGeneration.includeToolset }}
+      includeToolset: ${{ parameters.graphFileGeneration.includeToolset }}
       dependsOn:
-      - ${{ if ne(parameters.publishBuildAssetsDependsOn, '') }}:
-        - ${{ each job in parameters.publishBuildAssetsDependsOn }}:
-          - ${{ job.job }}
-      - ${{ if eq(parameters.publishBuildAssetsDependsOn, '') }}:
-        - ${{ each job in parameters.jobs }}:
-          - ${{ job.job }}
         - Asset_Registry_Publish
       pool:
         vmImage: vs2017-win2016

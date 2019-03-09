@@ -15,7 +15,7 @@ parameters:
   runAsPublic: false
 
   # Optional: Include toolset dependencies in the generated graph files
-  includeToolsetInGraph: false
+  includeToolset: false
   
 jobs:
 - job: Generate_Graph_Files
@@ -37,13 +37,9 @@ jobs:
         -azdoPat $(dn-bot-devdiv-dnceng-rw-code-pat) 
         -barToken $(MaestroAccessToken) 
         -outputFolder '$(Build.StagingDirectory)/GraphFiles/'
-    - ${{ if ne(parameters.includeToolsetInGraph, 'false') }}:
+    - ${{ if ne(parameters.includeToolset, 'false') }}:
       - name: _GraphArguments
-        value: -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) 
-          -azdoPat $(dn-bot-devdiv-dnceng-rw-code-pat) 
-          -barToken $(MaestroAccessToken) 
-          -outputFolder '$(Build.StagingDirectory)/GraphFiles/'
-          -includeToolset
+        value: ${{ variables._GraphArguments }} -includeToolset
 
   steps:
   - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
