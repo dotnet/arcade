@@ -5,10 +5,6 @@ parameters:
   # Optional: A defined YAML pool - https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&tabs=schema#pool
   pool: {}
 
-  # Optional: should run as a public build even in the internal project
-  #           if 'true', the build won't run any of the internal only steps, even if it is running in non-public projects.
-  runAsPublic: false
-
   # Optional: Include toolset dependencies in the generated graph files
   includeToolset: false
   
@@ -22,7 +18,6 @@ jobs:
   pool: ${{ parameters.pool }}
 
   variables:
-  - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
     # DotNet-AllOrgs-Darc-Pats provides: dn-bot-devdiv-dnceng-rw-code-pat
     - group: Publish-Build-Assets
@@ -37,7 +32,6 @@ jobs:
         value: ${{ variables._GraphArguments }} -includeToolset
 
   steps:
-  - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - task: PowerShell@2
       displayName: Generate Graph Files
       inputs:
