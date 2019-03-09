@@ -281,7 +281,7 @@ namespace Microsoft.DotNet.SignTool
                     }
                     else
                     {
-                        _log.LogMessage($"Assembly {file.FullPath} is signed properly");
+                        _log.LogMessage(MessageImportance.Low, $"Assembly {file.FullPath} is signed properly");
                     }
                 }
             }
@@ -333,7 +333,7 @@ namespace Microsoft.DotNet.SignTool
                     }
                     else
                     {
-                        _log.LogMessage($"Container {file.FullPath} has a signature marker.");
+                        _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} has a signature marker.");
                     }
                 }
             }
@@ -355,7 +355,7 @@ namespace Microsoft.DotNet.SignTool
                 }
                 else
                 {
-                    _log.LogMessage($"Assembly {file.FullPath} strong-name signature is valid.");
+                    _log.LogMessage(MessageImportance.Low, $"Assembly {file.FullPath} strong-name signature is valid.");
                 }
             }
         }

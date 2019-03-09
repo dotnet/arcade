@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.Versioning;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
@@ -142,7 +143,7 @@ namespace Microsoft.DotNet.SignTool
                     continue;
                 }
 
-                // if the content has of the file doesn't match the hash in file path then the file has changed
+                // if the content of the file doesn't match the hash in file path than the file has changed
                 // which indicates that it was signed so we need to ensure we repack the binary with the signed version
                 string actualFileHash = ContentUtil.HashToString(ContentUtil.GetContentHash(file));
                 bool forceRepack = stringHash != actualFileHash;
@@ -226,7 +227,7 @@ namespace Microsoft.DotNet.SignTool
                 }
             }
 
-            _log.LogMessage($"Caching file {key.FileName} {key.StringHash}");
+            _log.LogMessage(MessageImportance.Low, $"Caching file {key.FileName} {key.StringHash}");
             _filesByContentKey.Add(key, fileSignInfo);
 
             if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.ForceRepack || fileSignInfo.IsZipContainer())
@@ -292,7 +293,7 @@ namespace Microsoft.DotNet.SignTool
             // If has overriding info, is it for ignoring the file?
             if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(explicitCertificateName, StringComparison.OrdinalIgnoreCase))
             {
-                _log.LogMessage($"File configurated to not be signed: {fileName}{fileSpec}");
+                _log.LogMessage($"File configured to not be signed: {fileName}{fileSpec}");
                 return new FileSignInfo(fullPath, hash, SignInfo.Ignore, forceRepack:forceRepack);
             }
 
