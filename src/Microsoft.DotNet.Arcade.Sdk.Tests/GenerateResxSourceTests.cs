@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+<<<<<<< HEAD
 using System;
 using System.IO;
 using Microsoft.DotNet.Arcade.Sdk.Tests.Utilities;
@@ -58,6 +59,19 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             var actualFileContents = File.ReadAllText(actualFile);
             _output.WriteLine(actualFileContents);
             Assert.Equal(File.ReadAllText(expectedFile), actualFileContents, ignoreLineEndingDifferences: true);
+        }
+
+        [Theory]
+        [InlineData("a", "a")]
+        [InlineData("A", "A")]
+        [InlineData("_A", "_A")]
+        [InlineData(".A", "_A")]
+        [InlineData("4A", "_4A")]
+        [InlineData("4(.-)A", "_4____A")]
+        [InlineData("A\u0660\u2040\u0601\u0300\u0903", "A\u0660\u2040\u0601\u0300\u0903")]
+        public void GetIdentifierFromResourceName(string name, string expectedIdentifier)
+        {
+            Assert.Equal(expectedIdentifier, GenerateResxSource.GetIdentifierFromResourceName(name));
         }
     }
 }
