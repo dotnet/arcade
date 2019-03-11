@@ -84,6 +84,3 @@ jobs:
         - Asset_Registry_Publish
       pool:
         vmImage: vs2017-win2016
-      runAsPublic: ${{ parameters.runAsPublic }}
-
-

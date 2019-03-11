@@ -8,7 +8,7 @@ parameters:
   continueOnError: false
 
   # Optional: dependencies of the job
-  dependsOn: ''
+  dependsOn: []
 
   # Optional: Include PublishBuildArtifacts task
   enablePublishBuildArtifacts: false
