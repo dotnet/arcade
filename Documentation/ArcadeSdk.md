@@ -807,13 +807,13 @@ By default, the test runner will run tests for all frameworks a test project tar
 For example, consider a project that has `<TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>`. To only run .NET Core tests run 
 
 ```text
-msbuild Project.UnitTests.csproj /p:TestTargetFrameworks=netcoreapp2.1
+msbuild Project.UnitTests.csproj /t:Test /p:TestTargetFrameworks=netcoreapp2.1
 ```
 
 To specify multiple target frameworks on command line quote the property value like so:
 
 ```text
-msbuild Project.UnitTests.csproj /p:TestTargetFrameworks="netcoreapp2.1;net472"
+msbuild Project.UnitTests.csproj /t:Test /p:TestTargetFrameworks="netcoreapp2.1;net472"
 ```
 
 ### `TestRuntime` (string)
@@ -823,14 +823,14 @@ Runtime to use for running tests. Currently supported values are: `Core` (.NET C
 For example, the following runs .NET Framework tests using Mono runtime:
 
 ```text
-msbuild Project.UnitTests.csproj /p:TestTargetFrameworks=net472 /p:TestRuntime=Mono
+msbuild Project.UnitTests.csproj /t:Test /p:TestTargetFrameworks=net472 /p:TestRuntime=Mono
 ```
 
 ### `TestRunnerAdditionalArguments` (string)
 
 Additional command line arguments passed to the test runner (e.g. `xunit.console.exe`).
 
-### 'TestRuntimeAdditionalArguments' (string)
+### `TestRuntimeAdditionalArguments` (string)
 
 Additional command line arguments passed to the test runtime (i.e. `dotnet` or `mono`). Applicable only when `TestRuntime` is `Core` or `Mono`. 
 
