@@ -363,7 +363,7 @@ dotnet/roslyn
 Let's say a user wants to do work in core-setup and aspnet/universe on previously created branches for feature/foo.  Basically that means that they probably want to have the output of those branches appear in the SDK.  Remember the Product Construction v2 rules:
 - Since all changes involve commits, that means that there must be a new branch of core-sdk that can take the output aspnet/universe and core-setup branches.
 - No more than one channel per input repo may flow input a repo+branch combo (e.g. cannot have dotnet/core-setup's .NET Core 3.0 and dotnet/core-setup's .NET Core 3.1 assets flow to dotnet/core-sdk master as there will be collisions)
-- A single channel may not recieve input from two different branches in the same repo.
+- A single channel may not receive input from two different branches in the same repo.
 
 This means that we need:
 - A new Dev channel that builds from the new branches are assigned to
