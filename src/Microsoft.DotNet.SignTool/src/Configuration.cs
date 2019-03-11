@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.Versioning;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
@@ -131,17 +132,23 @@ namespace Microsoft.DotNet.SignTool
                 // might have changed the hash but we want to still use the same hash of the unsigned
                 // file that originally built the cache. 
                 string stringHash = cacheRelative.Substring(0, indexOfHash);
-
+                ImmutableArray<byte> contentHash;
                 try
                 {
-                    ImmutableArray<byte> contentHash = ContentUtil.StringToHash(stringHash);
+                    contentHash = ContentUtil.StringToHash(stringHash);
                 }
-                catch {
+                catch
+                {
                     _log.LogMessage($"Failed to parse the content hash from path '{file}' so skipping it.");
                     continue;
                 }
 
-                TrackFile(file, ContentUtil.StringToHash(stringHash), false);
+                // if the content of the file doesn't match the hash in file path than the file has changed
+                // which indicates that it was signed so we need to ensure we repack the binary with the signed version
+                string actualFileHash = ContentUtil.HashToString(ContentUtil.GetContentHash(file));
+                bool forceRepack = stringHash != actualFileHash;
+
+                TrackFile(file, contentHash, false, forceRepack);
             }
             _log.LogMessage("Done loading existing files from cache");
         }
@@ -193,10 +200,10 @@ namespace Microsoft.DotNet.SignTool
             return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(ByteSequenceComparer.Instance), _filesToCopy.ToImmutableArray());
         }
 
-        private FileSignInfo TrackFile(string fullPath, ImmutableArray<byte> contentHash, bool isNested)
+        private FileSignInfo TrackFile(string fullPath, ImmutableArray<byte> contentHash, bool isNested, bool forceRepack = false)
         {
             _log.LogMessage($"Tracking file '{fullPath}' isNested={isNested}");
-            var fileSignInfo = ExtractSignInfo(fullPath, contentHash);
+            var fileSignInfo = ExtractSignInfo(fullPath, contentHash, forceRepack);
 
             var key = new SignedFileContentKey(contentHash, Path.GetFileName(fullPath));
 
@@ -220,10 +227,10 @@ namespace Microsoft.DotNet.SignTool
                 }
             }
 
-            _log.LogMessage($"Caching file {key.FileName}");
+            _log.LogMessage(MessageImportance.Low, $"Caching file {key.FileName} {key.StringHash}");
             _filesByContentKey.Add(key, fileSignInfo);
 
-            if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.IsZipContainer())
+            if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.ForceRepack || fileSignInfo.IsZipContainer())
             {
                 _filesToSign.Add(fileSignInfo);
             }
@@ -231,7 +238,7 @@ namespace Microsoft.DotNet.SignTool
             return fileSignInfo;
         }
 
-        private FileSignInfo ExtractSignInfo(string fullPath, ImmutableArray<byte> hash)
+        private FileSignInfo ExtractSignInfo(string fullPath, ImmutableArray<byte> hash, bool forceRepack = false)
         {
             // Try to determine default certificate name by the extension of the file
             var hasSignInfo = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out var signInfo);
@@ -286,8 +293,8 @@ namespace Microsoft.DotNet.SignTool
             // If has overriding info, is it for ignoring the file?
             if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(explicitCertificateName, StringComparison.OrdinalIgnoreCase))
             {
-                _log.LogMessage($"File configurated to not be signed: {fileName}{fileSpec}");
-                return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
+                _log.LogMessage($"File configured to not be signed: {fileName}{fileSpec}");
+                return new FileSignInfo(fullPath, hash, SignInfo.Ignore, forceRepack:forceRepack);
             }
 
             // Do we have an explicit certificate after all?
@@ -301,7 +308,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 if (isAlreadySigned && !_dualCertificates.Contains(signInfo.Certificate))
                 {
-                    return new FileSignInfo(fullPath, hash, SignInfo.AlreadySigned);
+                    return new FileSignInfo(fullPath, hash, SignInfo.AlreadySigned, forceRepack:forceRepack);
                 }
 
                 // TODO: implement this check for native PE files as well:
@@ -323,7 +330,7 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
 
-                return new FileSignInfo(fullPath, hash, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null);
+                return new FileSignInfo(fullPath, hash, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, forceRepack:forceRepack);
             }
 
             if (SignToolConstants.SignableExtensions.Contains(extension) || SignToolConstants.SignableOSXExtensions.Contains(extension))
@@ -339,7 +346,7 @@ namespace Microsoft.DotNet.SignTool
                 _log.LogMessage($"Ignoring non-signable file: {fullPath}");
             }
 
-            return new FileSignInfo(fullPath, hash, SignInfo.Ignore);
+            return new FileSignInfo(fullPath, hash, SignInfo.Ignore, forceRepack: forceRepack);
         }
 
         private void LogWarning(SigningToolErrorCode code, string message)
@@ -519,7 +526,7 @@ namespace Microsoft.DotNet.SignTool
                             fileSignInfo = TrackFile(tempPath, contentHash, isNested: true);
                         }
 
-                        if (fileSignInfo.SignInfo.ShouldSign)
+                        if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.ForceRepack)
                         {
                             nestedParts.Add(new ZipPart(relativePath, fileSignInfo));
                         }
