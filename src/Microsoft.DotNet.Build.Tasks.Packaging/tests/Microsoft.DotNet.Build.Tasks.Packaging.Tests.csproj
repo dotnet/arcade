@@ -16,16 +16,16 @@
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)"/>
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)"/>
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
-    <PackageReference Include="NuGet.Commands" Version="$(NuGetVersion)" />
-    <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
-    <PackageReference Include="NuGet.ProjectModel" Version="$(NuGetVersion)" />
+    <PackageReference Include="NuGet.Commands" Version="$(NuGetCommandsVersion)" />
+    <PackageReference Include="NuGet.Packaging" Version="$(NuGetPackagingVersion)" />
+    <PackageReference Include="NuGet.ProjectModel" Version="$(NuGetProjectModelVersion)" />
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
   </ItemGroup>
   
   <!-- test packages - these packages aren't needed for compilation but are copied
                        to the output and used for testing. -->
   <ItemGroup>
-    <TestPackage Include="System.Collections.Immutable" Version="1.3.1" />
+    <TestPackage Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <TestPackage Include="Microsoft.Win32.Registry" Version="4.3.0" />
     <TestPackage Include="System.Runtime" Version="4.3.0" />
     <TestPackage Include="runtime.any.System.Runtime" Version="4.3.0" />

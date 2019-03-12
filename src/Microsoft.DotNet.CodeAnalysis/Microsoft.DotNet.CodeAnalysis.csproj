@@ -1,11 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- For analyzers we need to target netstandard1.3 to be able to build using full msbuild or dotnet msbuild.
-    We will be able to target netstandard2.0 once we only run in net472 and netstandard.dll 2.0.0 is inbox in
-    desktop. We can't multitarget analyzer packages as the nuget conventions don't include a TFM in the path.
-    This follows what roslyn is doing with their analyzers. -->
-    <TargetFrameworks>netstandard1.3</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)CodeAnalysis.ruleset</CodeAnalysisRuleSet>
