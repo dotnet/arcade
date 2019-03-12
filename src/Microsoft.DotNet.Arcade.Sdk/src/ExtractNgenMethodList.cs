@@ -23,13 +23,17 @@ namespace Microsoft.DotNet.Arcade.Sdk
     public sealed class ExtractNgenMethodList : Task
     {
         /// <summary>
-        /// Resources (resx) file.
+        /// This is the XML file produced by passing -dxml to ibcmerge. It will be transformed into the set of
+        /// methods marked for NGEN in the assembly
         /// </summary>
         [Required]
         public string IbcXmlFilePath { get; set; }
 
+        /// <summary>
+        /// This is the directory the NGEN list should be output to
+        /// </summary>
         [Required]
-        public string OutputPath { get; set; }
+        public string OutputDirectory { get; set; }
 
         public override bool Execute()
         {
@@ -50,7 +54,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
 
             items.Sort();
-            var outputFilePath = Path.ChangeExtension(IbcXmlFilePath, ".ngen.txt");
+            var outputFileName = Path.ChangeExtension(Path.GetFileName(IbcXmlFilePath), ".ngen.txt");
+            var outputFilePath = Path.Combine(OutputDirectory, outputFileName);
             using (var outputFileStream = new StreamWriter(outputFilePath, append: false))
             {
                 foreach (var item in items)

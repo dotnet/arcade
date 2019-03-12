@@ -28,6 +28,8 @@
 
     <EnableNgenOptimization Condition="'$(EnableNgenOptimization)' == ''">$(EnablePartialNgenOptimization)</EnableNgenOptimization>
     <ApplyNgenOptimization Condition="'$(ApplyPartialNgenOptimization)' == 'true'">partial</ApplyNgenOptimization>
+    <ArtifactsIbcDirXml>$(ArtifactsIbcDir)\xml</ArtifactsIbcDirXml>
+    <ArtifactsIbcDirNgen>$(ArtifactsIbcDir)\ngen</ArtifactsIbcDirNgen>
   </PropertyGroup>
 
   <!--
@@ -103,7 +105,9 @@
                               IbcFiles="%(_IbcFile.Identity)"
                               PreviousAssemblyPath="%(_IbcFile.PreviousAssemblyDir)\%(_IbcFile.AssemblyFileName)"
                               PreviousAssemblyCopyPath="$(ArtifactsTmpDir)OptimizedAssemblies\$([System.Guid]::NewGuid())"
-                              OptimizeAssemblyPath="%(_IbcFile.OptimizeAssemblyPath)" />
+                              OptimizeAssemblyPath="%(_IbcFile.OptimizeAssemblyPath)"
+                              XmlOutputPath="$(ArtifactsIbcDirXml)\%(_IbcFile.AssemblyFileName).ibc.xml"
+                              />
     </ItemGroup>
 
     <Error Text="No optimization data found for assemblies: @(_AssemblyWithoutRawIbcData, ', ')"
@@ -134,8 +138,8 @@
           -delete to delete data previously embedded in the binary. This is a no-op for binaries produced by this build, but is needed for dependencies such as System.Reflection.Metadata.
           -incremental to map data stored in the optimized binary, which comes from a previous build, to the new build of the binary.
         -->
-        <IbcXmlDocFilePath>$(ArtifactsIbcDir)\%(_AssemblyWithRawIbcData.AssemblyFileName).ibc.xml</IbcXmlDocFilePath>
-        <IbcMergeArgs>-q -f $(_PartialNgenArg) -minify -delete -mo "%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)" -incremental "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)" -dxml "$(ArtifactsIbcDir)\%(_AssemblyWithRawIbcData.AssemblyFileName).ibc.xml"</IbcMergeArgs>
+        <IbcXmlDocFilePath>%(_AssemblyWithRawIbcData.XmlOutputPath)</IbcXmlDocFilePath>
+        <IbcMergeArgs>-q -f $(_PartialNgenArg) -minify -delete -mo "%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)" -incremental "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)" -dxml "%(_AssemblyWithRawIbcData.XmlOutputPath)"</IbcMergeArgs>
 
         <UnsignFile>%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)</UnsignFile>
       </_IbcMergeInvocation>
@@ -156,7 +160,9 @@
              Condition="'$(_RunIbcMerge)' != 'true'" 
              Importance="normal"/>
 
-    <MakeDir Directories="$(ArtifactsIbcDir)" />
+    <MakeDir Directories="$(ArtifactsIbcDirXml)" />
+    <MakeDir Directories="$(ArtifactsIbcDirNgen)" />
+
     <Copy SourceFiles="%(_IbcMergeInvocation.CopyFilesSource)" 
           DestinationFiles="%(_IbcMergeInvocation.CopyFilesDestination)" 
           Condition="'%(_IbcMergeInvocation.CopyFilesSource)' != ''" />
@@ -169,7 +175,7 @@
 
     <!-- Remove Authenticode signing record if present. -->
     <Microsoft.DotNet.Arcade.Sdk.Unsign FilePath="%(_IbcMergeInvocation.UnsignFile)" Condition="'%(_IbcMergeInvocation.UnsignFile)' != ''" />
-    <Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList IbcXmlFilePath="%(_IbcMergeInvocation.IbcXmlDocFilePath)" OutputPath="'$(ArtifactsIbcDir)'" Condition="'%(_IbcMergeInvocation.IbcXmlDocFilePath)' != ''"/>
+    <Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList IbcXmlFilePath="%(_IbcMergeInvocation.IbcXmlDocFilePath)" OutputDirectory="$(ArtifactsIbcDirNgen)" Condition="'%(_IbcMergeInvocation.IbcXmlDocFilePath)' != ''"/>
   </Target>
 
 </Project>
