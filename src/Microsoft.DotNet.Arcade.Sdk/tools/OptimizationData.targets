@@ -6,6 +6,7 @@
     Properties:
       IbcOptimizationDataDir             The directory containing IBC optimization data. Optimization data are not applied if unset.
       EnableNgenOptimization             Set to true to enable NGEN optimization (partial or full).
+      EnableNgenOptimizationLogDetails   Set to true to enable NGEN method logging output
       ApplyNgenOptimization              Set to 'partial' or 'full' in a project to embed partial/full NGEN optimization data to the built binary.
 
     Obsolete (https://github.com/dotnet/arcade/issues/2092):
@@ -130,7 +131,6 @@
           -delete to delete data previously embedded in the binary. 
         -->
         <IbcMergeArgs>-q -f $(_PartialNgenArg) -minify -delete -mo "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)" "$([MSBuild]::ValueOrDefault('%(_AssemblyWithRawIbcData.IbcFiles)', '').Replace(';', '" "'))"</IbcMergeArgs>
-        <XmlOutputPath>%(_AssemblyWithRawIbcData.XmlOutputPath)</XmlOutputPath>
       </_IbcMergeInvocation>
 
       <_IbcMergeInvocation Include="%(_AssemblyWithRawIbcData.AssemblyFileName) [MergePreviousToCurrent]">
@@ -144,7 +144,7 @@
       </_IbcMergeInvocation>
 
       <_IbcMergeInvocation Condition="'$(EnableNgenOptimizationLogDetails)' == 'true'">
-        <IbcMergeArgs>%(_IbcMergeInvocation.IbcMergeArgs) -dxml "%(_IbcMergeInvocation.XmlOutputPath)"</IbcMergeArgs>
+        <IbcMergeArgs Condition="'%(_IbcMergeInvocation.XmlOutputPath)' != ''">%(_IbcMergeInvocation.IbcMergeArgs) -dxml "%(_IbcMergeInvocation.XmlOutputPath)"</IbcMergeArgs>
       </_IbcMergeInvocation>
     </ItemGroup>
   </Target>
