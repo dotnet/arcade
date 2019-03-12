@@ -18,6 +18,7 @@
 
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.Unsign" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GroupItemsBy" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
 
   <PropertyGroup>
     <PostCompileBinaryModificationSentinelFile>$(IntermediateOutputPath)$(TargetFileName).pcbm</PostCompileBinaryModificationSentinelFile>
@@ -133,6 +134,7 @@
           -delete to delete data previously embedded in the binary. This is a no-op for binaries produced by this build, but is needed for dependencies such as System.Reflection.Metadata.
           -incremental to map data stored in the optimized binary, which comes from a previous build, to the new build of the binary.
         -->
+        <IbcXmlDocFilePath>$(ArtifactsIbcDir)\%(_AssemblyWithRawIbcData.AssemblyFileName).ibc.xml</IbcXmlDocFilePath>
         <IbcMergeArgs>-q -f $(_PartialNgenArg) -minify -delete -mo "%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)" -incremental "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)" -dxml "$(ArtifactsIbcDir)\%(_AssemblyWithRawIbcData.AssemblyFileName).ibc.xml"</IbcMergeArgs>
 
         <UnsignFile>%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)</UnsignFile>
@@ -167,6 +169,7 @@
 
     <!-- Remove Authenticode signing record if present. -->
     <Microsoft.DotNet.Arcade.Sdk.Unsign FilePath="%(_IbcMergeInvocation.UnsignFile)" Condition="'%(_IbcMergeInvocation.UnsignFile)' != ''" />
+    <Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList IbcXmlFilePath="%(_IbcMergeInvocation.IbcXmlDocFilePath)" OutputPath="'$(ArtifactsIbcDir)'" Condition="'%(_IbcMergeInvocation.IbcXmlDocFilePath)' != ''"/>
   </Target>
 
 </Project>
