@@ -28,8 +28,7 @@
 
     <EnableNgenOptimization Condition="'$(EnableNgenOptimization)' == ''">$(EnablePartialNgenOptimization)</EnableNgenOptimization>
     <ApplyNgenOptimization Condition="'$(ApplyPartialNgenOptimization)' == 'true'">partial</ApplyNgenOptimization>
-    <ArtifactsIbcDirXml>$(ArtifactsIbcDir)\xml</ArtifactsIbcDirXml>
-    <ArtifactsIbcDirNgen>$(ArtifactsIbcDir)\ngen</ArtifactsIbcDirNgen>
+    <_IbcMergeXmlOutputDir>$(ArtifactsTmpDir)ibcxml</_IbcMergeXmlOutputDir>
   </PropertyGroup>
 
   <!--
@@ -106,8 +105,7 @@
                               PreviousAssemblyPath="%(_IbcFile.PreviousAssemblyDir)\%(_IbcFile.AssemblyFileName)"
                               PreviousAssemblyCopyPath="$(ArtifactsTmpDir)OptimizedAssemblies\$([System.Guid]::NewGuid())"
                               OptimizeAssemblyPath="%(_IbcFile.OptimizeAssemblyPath)"
-                              XmlOutputPath="$(ArtifactsIbcDirXml)\%(_IbcFile.AssemblyFileName).ibc.xml"
-                              />
+                              XmlOutputPath="$(_IbcMergeXmlOutputDir)\%(_IbcFile.AssemblyFileName).ibc.xml" />
     </ItemGroup>
 
     <Error Text="No optimization data found for assemblies: @(_AssemblyWithoutRawIbcData, ', ')"
@@ -160,8 +158,8 @@
              Condition="'$(_RunIbcMerge)' != 'true'" 
              Importance="normal"/>
 
-    <MakeDir Directories="$(ArtifactsIbcDirXml)" />
-    <MakeDir Directories="$(ArtifactsIbcDirNgen)" />
+    <MakeDir Directories="$(_IbcMergeXmlOutputDir)" />
+    <MakeDir Directories="$(ArtifactsLogNgenDir)" />
 
     <Copy SourceFiles="%(_IbcMergeInvocation.CopyFilesSource)" 
           DestinationFiles="%(_IbcMergeInvocation.CopyFilesDestination)" 
@@ -175,7 +173,7 @@
 
     <!-- Remove Authenticode signing record if present. -->
     <Microsoft.DotNet.Arcade.Sdk.Unsign FilePath="%(_IbcMergeInvocation.UnsignFile)" Condition="'%(_IbcMergeInvocation.UnsignFile)' != ''" />
-    <Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList IbcXmlFilePath="%(_IbcMergeInvocation.IbcXmlDocFilePath)" OutputDirectory="$(ArtifactsIbcDirNgen)" Condition="'%(_IbcMergeInvocation.IbcXmlDocFilePath)' != ''"/>
+    <Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList IbcXmlFilePath="%(_IbcMergeInvocation.IbcXmlDocFilePath)" OutputDirectory="$(ArtifactsLogNgenDir)" Condition="'%(_IbcMergeInvocation.IbcXmlDocFilePath)' != ''"/>
   </Target>
 
 </Project>
