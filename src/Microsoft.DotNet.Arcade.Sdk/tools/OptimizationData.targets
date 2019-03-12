@@ -27,7 +27,6 @@
 
     <EnableNgenOptimization Condition="'$(EnableNgenOptimization)' == ''">$(EnablePartialNgenOptimization)</EnableNgenOptimization>
     <ApplyNgenOptimization Condition="'$(ApplyPartialNgenOptimization)' == 'true'">partial</ApplyNgenOptimization>
-    <EnableNgenOptimizationLogging Condition="'$(EnableNgenOptimizationLogging)' == ''">true</EnableNgenOptimizationLogging>
   </PropertyGroup>
 
   <!--
@@ -134,8 +133,7 @@
           -delete to delete data previously embedded in the binary. This is a no-op for binaries produced by this build, but is needed for dependencies such as System.Reflection.Metadata.
           -incremental to map data stored in the optimized binary, which comes from a previous build, to the new build of the binary.
         -->
-        <IbcMergeArgs>-q -f $(_PartialNgenArg) -minify -delete -mo "%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)" -incremental "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)"</IbcMergeArgs>
-        <IbcMergeArgs Condition="'$(EnableNgenOptimizationLogging)' == 'true'">$(IbcMergeArgs) "$(ArtifactsIbcDir)\%(_AssemblyWithRawIbcData.AssemblyFileName).ibc.xml"</IbcMergeArgs>
+        <IbcMergeArgs>-q -f $(_PartialNgenArg) -minify -delete -mo "%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)" -incremental "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)" -dxml "$(ArtifactsIbcDir)\%(_AssemblyWithRawIbcData.AssemblyFileName).ibc.xml"</IbcMergeArgs>
 
         <UnsignFile>%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)</UnsignFile>
       </_IbcMergeInvocation>
@@ -156,7 +154,7 @@
              Condition="'$(_RunIbcMerge)' != 'true'" 
              Importance="normal"/>
 
-    <MakDir Directories="$(ArtifactsIbcDir)" />
+    <MakeDir Directories="$(ArtifactsIbcDir)" />
     <Copy SourceFiles="%(_IbcMergeInvocation.CopyFilesSource)" 
           DestinationFiles="%(_IbcMergeInvocation.CopyFilesDestination)" 
           Condition="'%(_IbcMergeInvocation.CopyFilesSource)' != ''" />
