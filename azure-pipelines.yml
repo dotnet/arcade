@@ -5,8 +5,13 @@ trigger:
     - master
     
 pr:
-- master
-- templates
+  branches:
+    include:
+    - master
+    - templates
+  paths:
+    exclude:
+    - Documentation/*
     
 variables:
   # Cannot use key:value syntax in root defined variables
