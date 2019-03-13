@@ -8,7 +8,7 @@ Dependency flow is the method by which .NET Core repos consume other product rep
 
 The [Microsoft.DotNet.Build.Tasks.Feed](https://github.com/dotnet/arcade/tree/master/src/Microsoft.DotNet.Build.Tasks.Feed) package (available from the dotnet-core feed - `https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json`) contains an MSBuild task which will [generate a manifest](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/GenerateBuildManifest.cs) for you.
 
-The preferred path, is that teams use the Feed package to publish packages to blob storage, this model will additionally just create a manifest for you (assuming you specify the additional [manifest values](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/build/Microsoft.DotNet.Build.Tasks.Feed.targets#L32)).  If you do not want to use the Feed package for package publishing, then you can still use the Feed package to generate a manifest.
+The preferred path, is that teams use the Feed package to publish packages to blob storage, this model will additionally just create a manifest for you (assuming you specify the additional [manifest values](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/build/Microsoft.DotNet.Build.Tasks.Feed.targets#L32)).  If you do not want to use the Feed package for package publishing, then you can still use the Feed package to generate a manifest by following the instructions in the remainder of this document.
 
 ## Generate a manifest
 
