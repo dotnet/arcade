@@ -46,7 +46,11 @@ namespace Microsoft.DotNet.Helix.Sdk
             if (FailOnWorkItemFailure)
             {
                 // determines whether any of the work items failed (fireballed)
-                await Task.WhenAll(workItems.Select(wi => CheckForWorkItemFailureAsync(wi.Name, jobName)));
+                // Doing these all in parallel overloads the Helix server
+                foreach (var wi in workItems)
+                {
+                    await CheckForWorkItemFailureAsync(wi.Name, jobName);
+                }
             }
 
             if (FailOnMissionControlTestFailure)
