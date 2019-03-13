@@ -1,5 +1,9 @@
 # Dependency Flow Onboarding for Repos Not on Arcade
 
+## Overview
+
+Dependency flow is the method by which .NET Core repos consume other product repo's assets.  In order to participate in dependency flow, a repo must produce a [manifest](#generate-a-manifest) of what assets / packages that repo produces and then publish that manifest to the Build Asset Registry (B.A.R.).  This document is intended to provide guidance for repos which are not using the Arcade Sdk but still need to participate in dependency flow. The end goal is that the repo is able to produce a manifest and publish that to B.A.R.
+
 ## Feed package
 
 The [Microsoft.DotNet.Build.Tasks.Feed](https://github.com/dotnet/arcade/tree/master/src/Microsoft.DotNet.Build.Tasks.Feed) package (available from the dotnet-core feed - `https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json`) contains an MSBuild task which will [generate a manifest](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/GenerateBuildManifest.cs) for you.
