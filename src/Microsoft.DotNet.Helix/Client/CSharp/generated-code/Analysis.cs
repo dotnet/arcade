@@ -16,13 +16,13 @@ namespace Microsoft.DotNet.Helix.Client
         Task SetReasonAsync(
             string analysisName,
             string analysisType,
+            FailureReason body,
             string job,
-            FailureReason reason,
             string workitem,
             CancellationToken cancellationToken = default
         );
 
-        Task<GetDetailsResponse> GetDetailsAsync(
+        Task<Newtonsoft.Json.Linq.JToken> GetDetailsAsync(
             string analysisName,
             string analysisType,
             string job,
@@ -48,17 +48,17 @@ namespace Microsoft.DotNet.Helix.Client
         public async Task SetReasonAsync(
             string analysisName,
             string analysisType,
+            FailureReason body,
             string job,
-            FailureReason reason,
             string workitem,
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await SetReasonInternalAsync(
+            using (await SetReasonInternalAsync(
                 analysisName,
                 analysisType,
+                body,
                 job,
-                reason,
                 workitem,
                 cancellationToken
             ).ConfigureAwait(false))
@@ -70,8 +70,8 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task<HttpOperationResponse> SetReasonInternalAsync(
             string analysisName,
             string analysisType,
+            FailureReason body,
             string job,
-            FailureReason reason,
             string workitem,
             CancellationToken cancellationToken = default
         )
@@ -86,14 +86,14 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(analysisType));
             }
 
+            if (body == default)
+            {
+                throw new ArgumentNullException(nameof(body));
+            }
+
             if (string.IsNullOrEmpty(job))
             {
                 throw new ArgumentNullException(nameof(job));
-            }
-
-            if (reason == default)
-            {
-                throw new ArgumentNullException(nameof(reason));
             }
 
             if (string.IsNullOrEmpty(workitem))
@@ -128,9 +128,9 @@ namespace Microsoft.DotNet.Helix.Client
                 _req = new HttpRequestMessage(HttpMethod.Put, _url);
 
                 string _requestContent = null;
-                if (reason != default)
+                if (body != default)
                 {
-                    _requestContent = Client.Serialize(reason);
+                    _requestContent = Client.Serialize(body);
                     _req.Content = new StringContent(_requestContent, Encoding.UTF8)
                     {
                         Headers =
@@ -175,7 +175,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedGetDetailsRequest(RestApiException ex);
 
-        public async Task<GetDetailsResponse> GetDetailsAsync(
+        public async Task<Newtonsoft.Json.Linq.JToken> GetDetailsAsync(
             string analysisName,
             string analysisType,
             string job,
@@ -195,7 +195,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
-        internal async Task<HttpOperationResponse<GetDetailsResponse>> GetDetailsInternalAsync(
+        internal async Task<HttpOperationResponse<Newtonsoft.Json.Linq.JToken>> GetDetailsInternalAsync(
             string analysisName,
             string analysisType,
             string job,
@@ -268,11 +268,11 @@ namespace Microsoft.DotNet.Helix.Client
                     throw ex;
                 }
                 _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<GetDetailsResponse>
+                return new HttpOperationResponse<Newtonsoft.Json.Linq.JToken>
                 {
                     Request = _req,
                     Response = _res,
-                    Body = Client.Deserialize<GetDetailsResponse>(_responseContent),
+                    Body = Client.Deserialize<Newtonsoft.Json.Linq.JToken>(_responseContent),
                 };
             }
             catch (Exception)

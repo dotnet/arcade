@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
+using Microsoft.OpenApi.Models;
 
 namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 {
@@ -43,9 +44,6 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
         public IEnumerable<ParameterModel> FormalParameters =>
             NonConstantParameters.OrderBy(p => p.Required ? 0 : 1).ThenBy(p => p.Name);
 
-        public IEnumerable<ParameterModel> VerifyableParameters =>
-            NonConstantParameters.Where(p => p.Verifyable).OrderBy(p => p.Name);
-
         public IEnumerable<ParameterModel> PathParameters =>
             Parameters.Where(p => p.Location == ParameterLocation.Path);
 
@@ -55,6 +53,6 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
         public IEnumerable<ParameterModel> HeaderParameters =>
             Parameters.Where(p => p.Location == ParameterLocation.Header);
 
-        public ParameterModel BodyParameter => Parameters.SingleOrDefault(p => p.Location == ParameterLocation.Body);
+        public ParameterModel BodyParameter => Parameters.SingleOrDefault(p => p.Location == null);
     }
 }

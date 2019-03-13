@@ -19,10 +19,10 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         );
 
-        Task<ChangeStateResponse> ChangeStateAsync(
+        Task<Newtonsoft.Json.Linq.JToken> ChangeStateAsync(
+            MachineStateChangeRequest body,
             string machineName,
             string queueId,
-            MachineStateChangeRequest requestInfo,
             CancellationToken cancellationToken = default
         );
 
@@ -127,17 +127,17 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedChangeStateRequest(RestApiException ex);
 
-        public async Task<ChangeStateResponse> ChangeStateAsync(
+        public async Task<Newtonsoft.Json.Linq.JToken> ChangeStateAsync(
+            MachineStateChangeRequest body,
             string machineName,
             string queueId,
-            MachineStateChangeRequest requestInfo,
             CancellationToken cancellationToken = default
         )
         {
             using (var _res = await ChangeStateInternalAsync(
+                body,
                 machineName,
                 queueId,
-                requestInfo,
                 cancellationToken
             ).ConfigureAwait(false))
             {
@@ -145,13 +145,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
-        internal async Task<HttpOperationResponse<ChangeStateResponse>> ChangeStateInternalAsync(
+        internal async Task<HttpOperationResponse<Newtonsoft.Json.Linq.JToken>> ChangeStateInternalAsync(
+            MachineStateChangeRequest body,
             string machineName,
             string queueId,
-            MachineStateChangeRequest requestInfo,
             CancellationToken cancellationToken = default
         )
         {
+            if (body == default)
+            {
+                throw new ArgumentNullException(nameof(body));
+            }
+
             if (string.IsNullOrEmpty(machineName))
             {
                 throw new ArgumentNullException(nameof(machineName));
@@ -160,11 +165,6 @@ namespace Microsoft.DotNet.Helix.Client
             if (string.IsNullOrEmpty(queueId))
             {
                 throw new ArgumentNullException(nameof(queueId));
-            }
-
-            if (requestInfo == default)
-            {
-                throw new ArgumentNullException(nameof(requestInfo));
             }
 
 
@@ -186,9 +186,9 @@ namespace Microsoft.DotNet.Helix.Client
                 _req = new HttpRequestMessage(HttpMethod.Put, _url);
 
                 string _requestContent = null;
-                if (requestInfo != default)
+                if (body != default)
                 {
-                    _requestContent = Client.Serialize(requestInfo);
+                    _requestContent = Client.Serialize(body);
                     _req.Content = new StringContent(_requestContent, Encoding.UTF8)
                     {
                         Headers =
@@ -217,11 +217,11 @@ namespace Microsoft.DotNet.Helix.Client
                     throw ex;
                 }
                 _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<ChangeStateResponse>
+                return new HttpOperationResponse<Newtonsoft.Json.Linq.JToken>
                 {
                     Request = _req,
                     Response = _res,
-                    Body = Client.Deserialize<ChangeStateResponse>(_responseContent),
+                    Body = Client.Deserialize<Newtonsoft.Json.Linq.JToken>(_responseContent),
                 };
             }
             catch (Exception)

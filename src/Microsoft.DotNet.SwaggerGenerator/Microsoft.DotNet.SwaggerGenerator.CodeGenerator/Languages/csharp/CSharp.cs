@@ -1,13 +1,15 @@
+using HandlebarsDotNet;
+using Microsoft.DotNet.SwaggerGenerator.Modeler;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using HandlebarsDotNet;
-using Microsoft.DotNet.SwaggerGenerator.Modeler;
+using TypeReference = Microsoft.DotNet.SwaggerGenerator.Modeler.TypeReference;
 
 namespace Microsoft.DotNet.SwaggerGenerator.Languages
 {
-    partial class Language
+    public partial class Language
     {
         private class CSharp : Language
         {
@@ -26,11 +28,6 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 if (reference is TypeReference.ConstantTypeReference)
                 {
                     return "string";
-                }
-
-                if (reference is TypeReference.NullableTypeReference nullableType)
-                {
-                    return $"{ResolveReference(nullableType.BaseType, args)}?";
                 }
 
                 if (reference is TypeReference.TypeModelReference typeModelRef)
@@ -86,6 +83,11 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 if (reference == TypeReference.DateTime)
                 {
                     return "DateTimeOffset";
+                }
+
+                if (reference == TypeReference.Uuid)
+                {
+                    return "Guid";
                 }
 
                 if (reference == TypeReference.Void)
@@ -180,6 +182,39 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 {
                     context.WriteTemplate(group.Name, context.Templates["MethodGroup"], group);
                 }
+            }
+
+            [HelperMethod]
+            public bool IsVerifyable(object type)
+            {
+                if (type is TypeReference.TypeModelReference modelRef)
+                {
+                    type = modelRef.Model;
+                }
+                if (type is ClassTypeModel classType)
+                {
+                    return classType.Properties.Any(p => p.Required && IsNullable(p.Type));
+                }
+
+                return false;
+            }
+
+            [HelperMethod]
+            public bool IsNullable(TypeReference type)
+            {
+                if (
+                    type is TypeReference.ArrayTypeReference ||
+                    type is TypeReference.DictionaryTypeReference ||
+                    type is TypeReference.TypeModelReference ||
+                    type == TypeReference.Any ||
+                    type == TypeReference.File ||
+                    type == TypeReference.String)
+                {
+                    return true;
+                }
+
+
+                return false;
             }
         }
     }

@@ -14,17 +14,17 @@ namespace Microsoft.DotNet.Helix.Client
     public partial interface IStorage
     {
         Task<IImmutableList<ContainerInformation>> ListAsync(
-            bool getSasTokens = default,
+            bool? getSasTokens = default,
             CancellationToken cancellationToken = default
         );
 
         Task<ContainerInformation> NewAsync(
-            ContainerCreationRequest newContainer,
+            ContainerCreationRequest body,
             CancellationToken cancellationToken = default
         );
 
         Task<ContainerInformation> ExtendExpirationAsync(
-            ContainerExtensionRequest extensionRequest,
+            ContainerExtensionRequest body,
             CancellationToken cancellationToken = default
         );
 
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Helix.Client
         partial void HandleFailedListRequest(RestApiException ex);
 
         public async Task<IImmutableList<ContainerInformation>> ListAsync(
-            bool getSasTokens = default,
+            bool? getSasTokens = default,
             CancellationToken cancellationToken = default
         )
         {
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
         internal async Task<HttpOperationResponse<IImmutableList<ContainerInformation>>> ListInternalAsync(
-            bool getSasTokens = default,
+            bool? getSasTokens = default,
             CancellationToken cancellationToken = default
         )
         {
@@ -119,12 +119,12 @@ namespace Microsoft.DotNet.Helix.Client
         partial void HandleFailedNewRequest(RestApiException ex);
 
         public async Task<ContainerInformation> NewAsync(
-            ContainerCreationRequest newContainer,
+            ContainerCreationRequest body,
             CancellationToken cancellationToken = default
         )
         {
             using (var _res = await NewInternalAsync(
-                newContainer,
+                body,
                 cancellationToken
             ).ConfigureAwait(false))
             {
@@ -133,13 +133,13 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
         internal async Task<HttpOperationResponse<ContainerInformation>> NewInternalAsync(
-            ContainerCreationRequest newContainer,
+            ContainerCreationRequest body,
             CancellationToken cancellationToken = default
         )
         {
-            if (newContainer == default)
+            if (body == default)
             {
-                throw new ArgumentNullException(nameof(newContainer));
+                throw new ArgumentNullException(nameof(body));
             }
 
 
@@ -159,9 +159,9 @@ namespace Microsoft.DotNet.Helix.Client
                 _req = new HttpRequestMessage(HttpMethod.Post, _url);
 
                 string _requestContent = null;
-                if (newContainer != default)
+                if (body != default)
                 {
-                    _requestContent = Client.Serialize(newContainer);
+                    _requestContent = Client.Serialize(body);
                     _req.Content = new StringContent(_requestContent, Encoding.UTF8)
                     {
                         Headers =
@@ -208,12 +208,12 @@ namespace Microsoft.DotNet.Helix.Client
         partial void HandleFailedExtendExpirationRequest(RestApiException ex);
 
         public async Task<ContainerInformation> ExtendExpirationAsync(
-            ContainerExtensionRequest extensionRequest,
+            ContainerExtensionRequest body,
             CancellationToken cancellationToken = default
         )
         {
             using (var _res = await ExtendExpirationInternalAsync(
-                extensionRequest,
+                body,
                 cancellationToken
             ).ConfigureAwait(false))
             {
@@ -222,13 +222,13 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
         internal async Task<HttpOperationResponse<ContainerInformation>> ExtendExpirationInternalAsync(
-            ContainerExtensionRequest extensionRequest,
+            ContainerExtensionRequest body,
             CancellationToken cancellationToken = default
         )
         {
-            if (extensionRequest == default)
+            if (body == default)
             {
-                throw new ArgumentNullException(nameof(extensionRequest));
+                throw new ArgumentNullException(nameof(body));
             }
 
 
@@ -248,9 +248,9 @@ namespace Microsoft.DotNet.Helix.Client
                 _req = new HttpRequestMessage(HttpMethod.Post, _url);
 
                 string _requestContent = null;
-                if (extensionRequest != default)
+                if (body != default)
                 {
-                    _requestContent = Client.Serialize(extensionRequest);
+                    _requestContent = Client.Serialize(body);
                     _req.Content = new StringContent(_requestContent, Encoding.UTF8)
                     {
                         Headers =

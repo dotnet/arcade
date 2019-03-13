@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.SwaggerGenerator.Modeler;
-using Newtonsoft.Json;
-using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Readers;
 using Task = Microsoft.Build.Utilities.Task;
 
 namespace Microsoft.DotNet.SwaggerGenerator.MSBuild
@@ -53,7 +54,15 @@ namespace Microsoft.DotNet.SwaggerGenerator.MSBuild
             };
 
             Log.LogMessage(MessageImportance.Low, $"Reading swagger document {SwaggerDocumentUri}");
-            SwaggerDocument document = await GetSwaggerDocument(SwaggerDocumentUri);
+            var (diagnostic, document) = await GetSwaggerDocument(SwaggerDocumentUri);
+            if (diagnostic.Errors.Any())
+            {
+                foreach (var error in diagnostic.Errors)
+                {
+                    Log.LogWarning(null, null, null, error.Pointer, 0, 0, 0, 0, error.Message);
+                }
+            }
+
 
             Log.LogMessage(MessageImportance.Low, $"Generating client code model");
             var generator = new ServiceClientModelFactory(options);
@@ -81,15 +90,15 @@ namespace Microsoft.DotNet.SwaggerGenerator.MSBuild
             GeneratedFiles = generatedFiles.ToArray();
         }
 
-        private static async Task<SwaggerDocument> GetSwaggerDocument(string input)
+        private static async Task<(OpenApiDiagnostic, OpenApiDocument)> GetSwaggerDocument(string input)
         {
             using (var client = new HttpClient())
             {
                 using (Stream docStream = await client.GetStreamAsync(input))
-                using (var reader = new StreamReader(docStream))
-                using (var jsonReader = new JsonTextReader(reader))
                 {
-                    return SwaggerSerializer.Deserialize(jsonReader);
+                    var doc = ServiceClientModelFactory.ReadDocument(docStream, out OpenApiDiagnostic diagnostic);
+
+                    return (diagnostic, doc);
                 }
             }
         }

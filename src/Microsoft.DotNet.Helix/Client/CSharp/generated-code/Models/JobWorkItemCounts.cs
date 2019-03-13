@@ -35,12 +35,11 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                return
-                    !(Unscheduled == default) &&
-                    !(Waiting == default) &&
-                    !(Running == default) &&
-                    !(Finished == default) &&
-                    !(string.IsNullOrEmpty(ListUrl));
+                if (string.IsNullOrEmpty(ListUrl))
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

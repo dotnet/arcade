@@ -31,11 +31,23 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                return
-                    !(string.IsNullOrEmpty(DetailsUrl)) &&
-                    !(string.IsNullOrEmpty(Job)) &&
-                    !(string.IsNullOrEmpty(Name)) &&
-                    !(string.IsNullOrEmpty(State));
+                if (string.IsNullOrEmpty(DetailsUrl))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Job))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Name))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(State))
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public AnalysisReport Analysis { get; set; }
 
         [JsonProperty("OtherEvents")]
-        public IImmutableList<WorkItemDetailsOtherEvents> OtherEvents { get; set; }
+        public IImmutableList<Newtonsoft.Json.Linq.JToken> OtherEvents { get; set; }
 
         [JsonProperty("Job")]
         public string Job { get; set; }
@@ -59,12 +59,27 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                return
-                    !(string.IsNullOrEmpty(Id)) &&
-                    !(string.IsNullOrEmpty(MachineName)) &&
-                    !(string.IsNullOrEmpty(Job)) &&
-                    !(string.IsNullOrEmpty(Name)) &&
-                    !(string.IsNullOrEmpty(State));
+                if (string.IsNullOrEmpty(Id))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(MachineName))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Job))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Name))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(State))
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

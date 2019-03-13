@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string Name { get; set; }
 
         [JsonProperty("Guid")]
-        public string Guid { get; set; }
+        public Guid? Guid { get; set; }
 
         [JsonProperty("QueueTime")]
         public DateTimeOffset? QueueTime { get; set; }

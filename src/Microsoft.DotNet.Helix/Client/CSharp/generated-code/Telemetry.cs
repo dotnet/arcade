@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Helix.Client
     public partial interface ITelemetry
     {
         Task<string> StartJobAsync(
-            JobInfo info,
+            JobInfo body,
             CancellationToken cancellationToken = default
         );
 
@@ -91,12 +91,12 @@ namespace Microsoft.DotNet.Helix.Client
         partial void HandleFailedStartJobRequest(RestApiException ex);
 
         public async Task<string> StartJobAsync(
-            JobInfo info,
+            JobInfo body,
             CancellationToken cancellationToken = default
         )
         {
             using (var _res = await StartJobInternalAsync(
-                info,
+                body,
                 cancellationToken
             ).ConfigureAwait(false))
             {
@@ -105,18 +105,18 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
         internal async Task<HttpOperationResponse<string>> StartJobInternalAsync(
-            JobInfo info,
+            JobInfo body,
             CancellationToken cancellationToken = default
         )
         {
-            if (info == default)
+            if (body == default)
             {
-                throw new ArgumentNullException(nameof(info));
+                throw new ArgumentNullException(nameof(body));
             }
 
-            if (!info.IsValid)
+            if (!body.IsValid)
             {
-                throw new ArgumentException("The parameter is not valid", nameof(info));
+                throw new ArgumentException("The parameter is not valid", nameof(body));
             }
 
 
@@ -136,9 +136,9 @@ namespace Microsoft.DotNet.Helix.Client
                 _req = new HttpRequestMessage(HttpMethod.Post, _url);
 
                 string _requestContent = null;
-                if (info != default)
+                if (body != default)
                 {
-                    _requestContent = Client.Serialize(info);
+                    _requestContent = Client.Serialize(body);
                     _req.Content = new StringContent(_requestContent, Encoding.UTF8)
                     {
                         Headers =
@@ -286,7 +286,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await FinishBuildWorkItemInternalAsync(
+            using (await FinishBuildWorkItemInternalAsync(
                 errorCount,
                 id,
                 warningCount,
@@ -499,7 +499,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await FinishXUnitWorkItemInternalAsync(
+            using (await FinishXUnitWorkItemInternalAsync(
                 exitCode,
                 id,
                 resultsXmlUri,
@@ -619,7 +619,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await WarningInternalAsync(
+            using (await WarningInternalAsync(
                 eid,
                 id,
                 xHelixJobToken,
@@ -734,7 +734,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await ErrorInternalAsync(
+            using (await ErrorInternalAsync(
                 eid,
                 id,
                 xHelixJobToken,
@@ -849,7 +849,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await LogInternalAsync(
+            using (await LogInternalAsync(
                 id,
                 logUri,
                 xHelixJobToken,

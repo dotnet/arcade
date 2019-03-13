@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Helix.Client
     public partial interface IJob
     {
         Task<IImmutableList<JobSummary>> ListAsync(
-            int count = default,
+            int? count = default,
             string filterBuild = default,
             string filterCreator = default,
             string filterName = default,
@@ -24,11 +24,11 @@ namespace Microsoft.DotNet.Helix.Client
         );
 
         Task<JobCreationResult> NewAsync(
-            JobCreationRequest newJob,
+            JobCreationRequest body,
             CancellationToken cancellationToken = default
         );
 
-        Task<JenkinsResponse> JenkinsAsync(
+        Task<Newtonsoft.Json.Linq.JToken> JenkinsAsync(
             CancellationToken cancellationToken = default
         );
 
@@ -42,12 +42,12 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         );
 
-        Task<CancelResponse> CancelAsync(
+        Task<Newtonsoft.Json.Linq.JToken> CancelAsync(
             string job,
             CancellationToken cancellationToken = default
         );
 
-        Task<WaitResponse> WaitAsync(
+        Task<Newtonsoft.Json.Linq.JToken> WaitAsync(
             string job,
             CancellationToken cancellationToken = default
         );
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Helix.Client
         partial void HandleFailedListRequest(RestApiException ex);
 
         public async Task<IImmutableList<JobSummary>> ListAsync(
-            int count = default,
+            int? count = default,
             string filterBuild = default,
             string filterCreator = default,
             string filterName = default,
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
         internal async Task<HttpOperationResponse<IImmutableList<JobSummary>>> ListInternalAsync(
-            int count = default,
+            int? count = default,
             string filterBuild = default,
             string filterCreator = default,
             string filterName = default,
@@ -178,12 +178,12 @@ namespace Microsoft.DotNet.Helix.Client
         partial void HandleFailedNewRequest(RestApiException ex);
 
         public async Task<JobCreationResult> NewAsync(
-            JobCreationRequest newJob,
+            JobCreationRequest body,
             CancellationToken cancellationToken = default
         )
         {
             using (var _res = await NewInternalAsync(
-                newJob,
+                body,
                 cancellationToken
             ).ConfigureAwait(false))
             {
@@ -192,18 +192,18 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
         internal async Task<HttpOperationResponse<JobCreationResult>> NewInternalAsync(
-            JobCreationRequest newJob,
+            JobCreationRequest body,
             CancellationToken cancellationToken = default
         )
         {
-            if (newJob == default)
+            if (body == default)
             {
-                throw new ArgumentNullException(nameof(newJob));
+                throw new ArgumentNullException(nameof(body));
             }
 
-            if (!newJob.IsValid)
+            if (!body.IsValid)
             {
-                throw new ArgumentException("The parameter is not valid", nameof(newJob));
+                throw new ArgumentException("The parameter is not valid", nameof(body));
             }
 
 
@@ -223,9 +223,9 @@ namespace Microsoft.DotNet.Helix.Client
                 _req = new HttpRequestMessage(HttpMethod.Post, _url);
 
                 string _requestContent = null;
-                if (newJob != default)
+                if (body != default)
                 {
-                    _requestContent = Client.Serialize(newJob);
+                    _requestContent = Client.Serialize(body);
                     _req.Content = new StringContent(_requestContent, Encoding.UTF8)
                     {
                         Headers =
@@ -271,7 +271,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedJenkinsRequest(RestApiException ex);
 
-        public async Task<JenkinsResponse> JenkinsAsync(
+        public async Task<Newtonsoft.Json.Linq.JToken> JenkinsAsync(
             CancellationToken cancellationToken = default
         )
         {
@@ -283,7 +283,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
-        internal async Task<HttpOperationResponse<JenkinsResponse>> JenkinsInternalAsync(
+        internal async Task<HttpOperationResponse<Newtonsoft.Json.Linq.JToken>> JenkinsInternalAsync(
             CancellationToken cancellationToken = default
         )
         {
@@ -322,11 +322,11 @@ namespace Microsoft.DotNet.Helix.Client
                     throw ex;
                 }
                 _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<JenkinsResponse>
+                return new HttpOperationResponse<Newtonsoft.Json.Linq.JToken>
                 {
                     Request = _req,
                     Response = _res,
-                    Body = Client.Deserialize<JenkinsResponse>(_responseContent),
+                    Body = Client.Deserialize<Newtonsoft.Json.Linq.JToken>(_responseContent),
                 };
             }
             catch (Exception)
@@ -493,7 +493,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedCancelRequest(RestApiException ex);
 
-        public async Task<CancelResponse> CancelAsync(
+        public async Task<Newtonsoft.Json.Linq.JToken> CancelAsync(
             string job,
             CancellationToken cancellationToken = default
         )
@@ -507,7 +507,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
-        internal async Task<HttpOperationResponse<CancelResponse>> CancelInternalAsync(
+        internal async Task<HttpOperationResponse<Newtonsoft.Json.Linq.JToken>> CancelInternalAsync(
             string job,
             CancellationToken cancellationToken = default
         )
@@ -553,11 +553,11 @@ namespace Microsoft.DotNet.Helix.Client
                     throw ex;
                 }
                 _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<CancelResponse>
+                return new HttpOperationResponse<Newtonsoft.Json.Linq.JToken>
                 {
                     Request = _req,
                     Response = _res,
-                    Body = Client.Deserialize<CancelResponse>(_responseContent),
+                    Body = Client.Deserialize<Newtonsoft.Json.Linq.JToken>(_responseContent),
                 };
             }
             catch (Exception)
@@ -570,7 +570,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedWaitRequest(RestApiException ex);
 
-        public async Task<WaitResponse> WaitAsync(
+        public async Task<Newtonsoft.Json.Linq.JToken> WaitAsync(
             string job,
             CancellationToken cancellationToken = default
         )
@@ -584,7 +584,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
-        internal async Task<HttpOperationResponse<WaitResponse>> WaitInternalAsync(
+        internal async Task<HttpOperationResponse<Newtonsoft.Json.Linq.JToken>> WaitInternalAsync(
             string job,
             CancellationToken cancellationToken = default
         )
@@ -630,11 +630,11 @@ namespace Microsoft.DotNet.Helix.Client
                     throw ex;
                 }
                 _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<WaitResponse>
+                return new HttpOperationResponse<Newtonsoft.Json.Linq.JToken>
                 {
                     Request = _req,
                     Response = _res,
-                    Body = Client.Deserialize<WaitResponse>(_responseContent),
+                    Body = Client.Deserialize<Newtonsoft.Json.Linq.JToken>(_responseContent),
                 };
             }
             catch (Exception)

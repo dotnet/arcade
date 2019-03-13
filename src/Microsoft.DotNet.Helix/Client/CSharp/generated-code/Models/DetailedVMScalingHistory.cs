@@ -37,11 +37,15 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                return
-                    !(string.IsNullOrEmpty(ScaleSetName)) &&
-                    !(string.IsNullOrEmpty(VMState)) &&
-                    !(VMCount == default) &&
-                    !(Timestamp == default);
+                if (string.IsNullOrEmpty(ScaleSetName))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(VMState))
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

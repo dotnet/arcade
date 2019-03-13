@@ -7,10 +7,6 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
             Name = name;
             Required = required;
             ReadOnly = readOnly;
-            if (!Required && !type.IsNullable)
-            {
-                type = new TypeReference.NullableTypeReference(type);
-            }
             Type = type;
         }
 
