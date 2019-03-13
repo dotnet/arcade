@@ -6,6 +6,7 @@
     Properties:
       IbcOptimizationDataDir             The directory containing IBC optimization data. Optimization data are not applied if unset.
       EnableNgenOptimization             Set to true to enable NGEN optimization (partial or full).
+      EnableNgenOptimizationLogDetails   Set to true to enable NGEN method logging output
       ApplyNgenOptimization              Set to 'partial' or 'full' in a project to embed partial/full NGEN optimization data to the built binary.
 
     Obsolete (https://github.com/dotnet/arcade/issues/2092):
@@ -18,6 +19,7 @@
 
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.Unsign" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GroupItemsBy" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
 
   <PropertyGroup>
     <PostCompileBinaryModificationSentinelFile>$(IntermediateOutputPath)$(TargetFileName).pcbm</PostCompileBinaryModificationSentinelFile>
@@ -26,7 +28,9 @@
     <EnablePartialNgenOptimization Condition="'$(EnablePartialNgenOptimization)' == '' and '$(Configuration)' == 'Release' and '$(OfficialBuild)' == 'true'">true</EnablePartialNgenOptimization>
 
     <EnableNgenOptimization Condition="'$(EnableNgenOptimization)' == ''">$(EnablePartialNgenOptimization)</EnableNgenOptimization>
+    <EnableNgenOptimizationLogDetails Condition="'$(EnableNgenOptimizationLogDetails)' == ''">$(UsingToolVisualStudioIbcTraining)</EnableNgenOptimizationLogDetails>
     <ApplyNgenOptimization Condition="'$(ApplyPartialNgenOptimization)' == 'true'">partial</ApplyNgenOptimization>
+    <_IbcMergeXmlOutputDir>$(ArtifactsTmpDir)ibcxml</_IbcMergeXmlOutputDir>
   </PropertyGroup>
 
   <!--
@@ -102,7 +106,8 @@
                               IbcFiles="%(_IbcFile.Identity)"
                               PreviousAssemblyPath="%(_IbcFile.PreviousAssemblyDir)\%(_IbcFile.AssemblyFileName)"
                               PreviousAssemblyCopyPath="$(ArtifactsTmpDir)OptimizedAssemblies\$([System.Guid]::NewGuid())"
-                              OptimizeAssemblyPath="%(_IbcFile.OptimizeAssemblyPath)" />
+                              OptimizeAssemblyPath="%(_IbcFile.OptimizeAssemblyPath)"
+                              XmlOutputPath="$(_IbcMergeXmlOutputDir)\%(_IbcFile.AssemblyFileName).ibc.xml" />
     </ItemGroup>
 
     <Error Text="No optimization data found for assemblies: @(_AssemblyWithoutRawIbcData, ', ')"
@@ -134,8 +139,12 @@
           -incremental to map data stored in the optimized binary, which comes from a previous build, to the new build of the binary.
         -->
         <IbcMergeArgs>-q -f $(_PartialNgenArg) -minify -delete -mo "%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)" -incremental "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)"</IbcMergeArgs>
-
         <UnsignFile>%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)</UnsignFile>
+        <XmlOutputPath>%(_AssemblyWithRawIbcData.XmlOutputPath)</XmlOutputPath>
+      </_IbcMergeInvocation>
+
+      <_IbcMergeInvocation Condition="'$(EnableNgenOptimizationLogDetails)' == 'true'">
+        <IbcMergeArgs Condition="'%(_IbcMergeInvocation.XmlOutputPath)' != ''">%(_IbcMergeInvocation.IbcMergeArgs) -dxml "%(_IbcMergeInvocation.XmlOutputPath)"</IbcMergeArgs>
       </_IbcMergeInvocation>
     </ItemGroup>
   </Target>
@@ -154,6 +163,8 @@
              Condition="'$(_RunIbcMerge)' != 'true'" 
              Importance="normal"/>
 
+    <MakeDir Directories="$(_IbcMergeXmlOutputDir)" />
+
     <Copy SourceFiles="%(_IbcMergeInvocation.CopyFilesSource)" 
           DestinationFiles="%(_IbcMergeInvocation.CopyFilesDestination)" 
           Condition="'%(_IbcMergeInvocation.CopyFilesSource)' != ''" />
@@ -166,6 +177,7 @@
 
     <!-- Remove Authenticode signing record if present. -->
     <Microsoft.DotNet.Arcade.Sdk.Unsign FilePath="%(_IbcMergeInvocation.UnsignFile)" Condition="'%(_IbcMergeInvocation.UnsignFile)' != ''" />
+    <Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList IbcXmlFilePath="%(_IbcMergeInvocation.XmlOutputPath)" OutputDirectory="$(ArtifactsLogNgenDir)" Condition="'%(_IbcMergeInvocation.XmlOutputPath)' != ''"/>
   </Target>
 
 </Project>

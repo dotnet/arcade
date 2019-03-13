@@ -50,6 +50,7 @@
     <ArtifactsObjDir>$(ArtifactsDir)obj\</ArtifactsObjDir>
     <ArtifactsBinDir>$(ArtifactsDir)bin\</ArtifactsBinDir>
     <ArtifactsLogDir>$(ArtifactsDir)log\$(Configuration)\</ArtifactsLogDir>
+    <ArtifactsLogNgenDir>$(ArtifactsLogDir)ngen\</ArtifactsLogNgenDir>
     <ArtifactsTmpDir>$(ArtifactsDir)tmp\$(Configuration)\</ArtifactsTmpDir>
     <ArtifactsTestResultsDir>$(ArtifactsDir)TestResults\$(Configuration)\</ArtifactsTestResultsDir>
     <ArtifactsSymStoreDirectory>$(ArtifactsDir)SymStore\$(Configuration)\</ArtifactsSymStoreDirectory>
