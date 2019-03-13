@@ -116,6 +116,8 @@ This will likely come up very quickly and deserves consideration.  The current p
 * **Windows**
   * Packages should be uploaded to the `windows/<tool-name>` folder structure in the container.
   * Naming convention for packages is as follows `<tool-name>-<version>-<win32 | win64>-<x86 | x64>.zip`
+  * If a zip file will be unpacked on Windows, create it only using a tool that follows the zip format's specifications and allows for reliable extraction using .NET's `System.IO.Compression` APIs or `powershell`
+    * Creating the zip file in `powershell` using `Compress-Archive` would be one recommended approach.
   * Once the package has been uploaded, you should be able to add a reference to it in your global.json file.
 
 * **Linux**
