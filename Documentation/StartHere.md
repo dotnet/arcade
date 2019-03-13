@@ -56,7 +56,7 @@ some highlights
 - [Arcade overview](Overview.md)
 - [How dependency flow works in .NET Core
   3](BranchesChannelsAndSubscriptions.md)
-- [Roadmap](CorePackages/PackagesRoadmap.md)
+- [Guidance for defaults](DefaultsGuidance.md)
 - [Versioning rules](CorePackages/Versioning.md)
 - [Dependencies Flow Plan](DependenciesFlowPlan.md): Flowing dependencies with Darc, Maestro and BAR.
 - [How to Create and Arcade Package](HowToCreatePackages.md)
