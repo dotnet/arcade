@@ -112,8 +112,6 @@ jobs:
 
     - ${{ if ne(variables.isInternal, 'true') }}:
       - job: Linux
-        variables:
-        - HelixApiAccessToken: ''
         container: LinuxContainer
         pool:
           name:  NetCorePublic-Int-Pool
@@ -148,4 +146,3 @@ jobs:
           displayName: Run Helix Tests
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-            HelixAccessToken: $(HelixApiAccessToken)
