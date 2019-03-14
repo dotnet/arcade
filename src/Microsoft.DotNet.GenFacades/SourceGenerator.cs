@@ -4,49 +4,47 @@
 
 using Microsoft.Cci;
 using Microsoft.Cci.Extensions;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Microsoft.DotNet.GenPartialFacades
+namespace Microsoft.DotNet.GenFacades
 {
-    internal class FacadeGenerator
+    internal class SourceGenerator
     {
         private readonly IReadOnlyDictionary<string, string> _seedTypePreferences;
-        private readonly IReadOnlyDictionary<string, string> _assemblyTypePreferences;
-        private readonly IReadOnlyDictionary<string, IEnumerable<string>> _docIdTable;
+        private readonly IEnumerable<string> _docIds;
         private readonly IReadOnlyDictionary<string, IReadOnlyList<INamedTypeDefinition>> _typeTable;
+        private readonly string _outputSourcePath;
 
-        public FacadeGenerator(
-            IReadOnlyDictionary<string, IEnumerable<string>> docIdTable,
+        public SourceGenerator(
+            IEnumerable<string> docIdTable,
             IReadOnlyDictionary<string, IReadOnlyList<INamedTypeDefinition>> typeTable,
             IReadOnlyDictionary<string, string> seedTypePreferences,
-           IReadOnlyDictionary<string, string> assemblyTypePreferences
+            string outputSourcePath
             )
         {
-            _docIdTable = docIdTable;
+            _docIds = docIdTable;
             _typeTable = typeTable;
             _seedTypePreferences = seedTypePreferences;
-            _assemblyTypePreferences = assemblyTypePreferences;
+            _outputSourcePath = outputSourcePath;
         }
 
-        public bool GenerateFacade(
+        public bool GenerateSource(
             IEnumerable<string> compileFiles,
             IEnumerable<string> constants,
             bool ignoreMissingTypes,
             string contractAssemblyName)
         {
-            IEnumerable<string> docIds = _docIdTable[contractAssemblyName];
-
-            List<string> existingDocIds = TypeParser.GetAllTypes(compileFiles, constants);
-            IEnumerable<string> docIdsToForward = docIds.Where(id => !existingDocIds.Contains(id));
-
+            List<string> externAliases = new List<string>();
             Dictionary<string, INamedTypeReference> forwardedTypes = new Dictionary<string, INamedTypeReference>();
             StringBuilder sb = new StringBuilder();
             bool error = false;
+
+            List<string> existingDocIds = TypeParser.GetAllTypes(compileFiles, constants);
+            IEnumerable<string> docIdsToForward = _docIds.Where(id => !existingDocIds.Contains(id.Substring(2)));
 
             foreach (string docId in docIdsToForward)
             {
@@ -61,43 +59,39 @@ namespace Microsoft.DotNet.GenPartialFacades
                     continue;
                 }
 
-                INamedTypeDefinition seedType = GetSeedType(docId, seedTypes);
-                if (seedType == null)
-                {
-                    TraceDuplicateSeedTypeError(docId, seedTypes);
-                    error = true;
-                    continue;
-                }
-
                 string alias = "";
                 if (seedTypes.Count > 1)
-                {                    
-                    alias = _assemblyTypePreferences[seedType.GetAssembly().Name.Value];
+                {
+                    if (_seedTypePreferences.Keys.Contains(docId))
+                    {
+                        alias = _seedTypePreferences[docId];
+                        if (!externAliases.Contains(alias))
+                            externAliases.Add(alias);
+                    }
+                    else
+                    {
+                        TraceDuplicateSeedTypeError(docId, seedTypes);
+                        error = true;
+                        continue;
+                    }
                 }
                 
-                TypeParser.AddTypeForwardToStringBuilder(sb, docId, alias);
+                sb.Append(TypeParser.AddTypeForwardToStringBuilder(docId, alias));
             }
 
-            File.WriteAllText(@"C:\git\abc.forwards.cs", sb.ToString());
+            File.WriteAllText(_outputSourcePath, AppendAliases(externAliases) + sb.ToString());
             return error;
         }
 
-        private INamedTypeDefinition GetSeedType(string docId, IReadOnlyList<INamedTypeDefinition> seedTypes)
+        private string AppendAliases(IEnumerable<string> externAliases)
         {
-            Debug.Assert(seedTypes.Count != 0); // we should already have checked for non-existent types.
-
-            if (seedTypes.Count == 1)
+            string aliases = string.Empty;
+            foreach (string alias in externAliases)
             {
-                return seedTypes[0];
+                aliases += "extern alias " + alias + ";\n";
             }
 
-            string preferredSeedAssembly;
-            if (_seedTypePreferences.TryGetValue(docId, out preferredSeedAssembly))
-            {
-                return seedTypes.SingleOrDefault(t => String.Equals(t.GetAssembly().Name.Value, preferredSeedAssembly, StringComparison.OrdinalIgnoreCase));
-            }
-
-            return null;
+            return aliases;
         }
 
         private static void TraceDuplicateSeedTypeError(string docId, IReadOnlyList<INamedTypeDefinition> seedTypes)
@@ -107,11 +101,10 @@ namespace Microsoft.DotNet.GenPartialFacades
 
             foreach (INamedTypeDefinition type in seedTypes)
             {
-                sb.AppendFormat("  /preferSeedType:{0}={1}", docId.Substring("T:".Length), type.GetAssembly().Name.Value);
+                sb.AppendFormat("/preferSeedType:{0}={1}", docId.Substring("T:".Length), type.GetAssembly().Name.Value);
             }
 
             Trace.TraceError(sb.ToString());
         }
     }
-
 }

@@ -10,20 +10,19 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace Microsoft.DotNet.GenPartialFacades
+namespace Microsoft.DotNet.GenFacades
 {
     public class GenPartialFacadesGenerator
     {
         public static bool Execute(
-            string seeds,
-            string contracts,
-            string compileFiles,
-            string contractAssemblyName,
-            string constants,
+            string[] seeds,
+            string referenceAssembly,
+            string[] compileFiles,
+            string assemblyName,
+            string defineConstants,
+            string outputSourcePath,
             bool ignoreMissingTypes = false,
-            string inclusionContracts = null,
             string[] seedTypePreferencesUnsplit = null,
-            string [] typeAssemblyConversions = null,
             ErrorTreatment seedLoadErrorTreatment = ErrorTreatment.Default,
             ErrorTreatment contractLoadErrorTreatment = ErrorTreatment.Default)
         {
@@ -33,7 +32,6 @@ namespace Microsoft.DotNet.GenPartialFacades
             try
             {
                 Dictionary<string, string> seedTypePreferences = ParseSeedTypePreferences(seedTypePreferencesUnsplit);
-                Dictionary<string, string> assemblyTypePreferences = ParseAssemblyTypeAliases(typeAssemblyConversions);
 
                 using (var contractHost = new HostEnvironment(nameTable, internFactory))
                 using (var seedHost = new HostEnvironment(nameTable, internFactory))
@@ -41,22 +39,20 @@ namespace Microsoft.DotNet.GenPartialFacades
                     contractHost.LoadErrorTreatment = contractLoadErrorTreatment;
                     seedHost.LoadErrorTreatment = seedLoadErrorTreatment;
 
-                    var contractAssemblies = LoadAssemblies(contractHost, contracts);
-                    IReadOnlyDictionary<string, IEnumerable<string>> docIdTable = GenerateDocIdTable(contractAssemblies, inclusionContracts);
+                    IAssembly contractAssembly = contractHost.LoadAssembly(referenceAssembly);
+                    IEnumerable<string> docIdTable = EnumerateDocIdsToForward(contractAssembly);
 
                     IAssembly[] seedAssemblies = LoadAssemblies(seedHost, seeds).ToArray();
                     var typeTable = GenerateTypeTable(seedAssemblies);
 
-                    var facadeGenerator = new FacadeGenerator(docIdTable, typeTable, seedTypePreferences, assemblyTypePreferences);
-                    return facadeGenerator.GenerateFacade(compileFiles.Split(";"), constants.Split(";"), ignoreMissingTypes, contractAssemblyName);
+                    var sourceGenerator = new SourceGenerator(docIdTable, typeTable, seedTypePreferences, outputSourcePath);
+                    return sourceGenerator.GenerateSource(compileFiles, defineConstants?.Split(';'), ignoreMissingTypes, assemblyName);
                 }
             }
             catch (FacadeGenerationException ex)
             {
                 Trace.TraceError(ex.Message);
-#if !COREFX
                 Debug.Assert(Environment.ExitCode != 0);
-#endif
                 return false;
             }
         }
@@ -72,7 +68,7 @@ namespace Microsoft.DotNet.GenPartialFacades
                     int i = preference.IndexOf('=');
                     if (i < 0)
                     {
-                        throw new FacadeGenerationException("Invalid seed type preference. Correct usage is /preferSeedType:FullTypeName=AssemblyName;");
+                        throw new FacadeGenerationException("Invalid seed type preference. Correct usage is /preferSeedType:FullTypeName=AliasName;");
                     }
 
                     string key = preference.Substring(0, i);
@@ -96,25 +92,11 @@ namespace Microsoft.DotNet.GenPartialFacades
             return dictionary;
         }
 
-        // This needs to be modified.
-        private static Dictionary<string, string> ParseAssemblyTypeAliases(string[] alias)
-        {
-            var dictionary = new Dictionary<string, string>(StringComparer.Ordinal);
-
-            if (alias != null)
-            {
-                dictionary.Add("System.Private.Interop", "Alias_System_Private_Interop");
-            }
-
-            return dictionary;
-        }
-
-        private static IEnumerable<IAssembly> LoadAssemblies(HostEnvironment host, string assemblyPaths)
+        private static IEnumerable<IAssembly> LoadAssemblies(HostEnvironment host, string[] assemblyPaths)
         {
             host.UnifyToLibPath = true;
-            string[] splitPaths = HostEnvironment.SplitPaths(assemblyPaths);
 
-            foreach (string path in splitPaths)
+            foreach (string path in assemblyPaths)
             {
                 if (Directory.Exists(path))
                 {
@@ -126,55 +108,7 @@ namespace Microsoft.DotNet.GenPartialFacades
                 }
             }
 
-            return host.LoadAssemblies(splitPaths);
-        }
-
-        private static IReadOnlyDictionary<string, IEnumerable<string>> GenerateDocIdTable(IEnumerable<IAssembly> contractAssemblies, string inclusionContracts)
-        {
-            Dictionary<string, HashSet<string>> mutableDocIdTable = new Dictionary<string, HashSet<string>>();
-            foreach (IAssembly contractAssembly in contractAssemblies)
-            {
-                string simpleName = contractAssembly.AssemblyIdentity.Name.Value;
-                if (mutableDocIdTable.ContainsKey(simpleName))
-                    throw new FacadeGenerationException(string.Format("Multiple contracts named \"{0}\" specified on -contracts.", simpleName));
-                mutableDocIdTable[simpleName] = new HashSet<string>(EnumerateDocIdsToForward(contractAssembly));
-            }
-
-            if (inclusionContracts != null)
-            {
-                foreach (string inclusionContractPath in HostEnvironment.SplitPaths(inclusionContracts))
-                {
-                    // Assembly identity conflicts are permitted and normal in the inclusion contract list so load each one in a throwaway host to avoid problems.
-                    using (HostEnvironment inclusionHost = new HostEnvironment(new NameTable(), new InternFactory()))
-                    {
-                        IAssembly inclusionAssembly = inclusionHost.LoadAssemblyFrom(inclusionContractPath);
-                        if (inclusionAssembly == null || inclusionAssembly is Dummy)
-                            throw new FacadeGenerationException(string.Format("Could not load assembly \"{0}\".", inclusionContractPath));
-                        string simpleName = inclusionAssembly.Name.Value;
-                        HashSet<string> hashset;
-                        if (!mutableDocIdTable.TryGetValue(simpleName, out hashset))
-                        {
-                            Trace.TraceWarning("An assembly named \"{0}\" was specified in the -include list but no contract was specified named \"{0}\". Ignoring.", simpleName);
-                        }
-                        else
-                        {
-                            foreach (string docId in EnumerateDocIdsToForward(inclusionAssembly))
-                            {
-                                hashset.Add(docId);
-                            }
-                        }
-                    }
-                }
-            }
-
-            Dictionary<string, IEnumerable<string>> docIdTable = new Dictionary<string, IEnumerable<string>>();
-            foreach (KeyValuePair<string, HashSet<string>> kv in mutableDocIdTable)
-            {
-                string key = kv.Key;
-                IEnumerable<string> sortedDocIds = kv.Value.OrderBy(s => s, StringComparer.OrdinalIgnoreCase);
-                docIdTable.Add(key, sortedDocIds);
-            }
-            return docIdTable;
+            return host.LoadAssemblies(assemblyPaths);
         }
 
         private static IEnumerable<string> EnumerateDocIdsToForward(IAssembly contractAssembly)

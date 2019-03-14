@@ -8,9 +8,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
-namespace Microsoft.DotNet.GenPartialFacades
+namespace Microsoft.DotNet.GenFacades
 {
     internal class TypeParser
     {
@@ -22,7 +21,7 @@ namespace Microsoft.DotNet.GenPartialFacades
             foreach (var tree in syntaxTreeCollection)
             {
                 AddTypesFromTypeForwards(tree, types);
-                AddTypesFromClassesAndEnums(tree, types);
+                AddBaseTypes(tree, types);
                 AddTypesFromDelegates(tree, types);
             }
             return types;
@@ -39,15 +38,16 @@ namespace Microsoft.DotNet.GenPartialFacades
                     string attributeString = item.ToFullString();
                     if (attributeString.Contains("TypeForwardedTo"))
                     {
-                        string typeName = item.ArgumentList.Arguments[0].ToFullString();
-                        types.Add(typeName.Substring(7, typeName.Length - 8));
+                        var typeNameExpression = (TypeOfExpressionSyntax)item.ArgumentList.Arguments[0].Expression;
+                        string typeName = typeNameExpression.Type.ToFullString();
+                        types.Add(typeName);
                     }
 
                 }
             }
         }
 
-        private static void AddTypesFromClassesAndEnums(SyntaxTree tree, List<string> types)
+        private static void AddBaseTypes(SyntaxTree tree, List<string> types)
         {
             CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
             var allPublicTypes = root.DescendantNodes().OfType<BaseTypeDeclarationSyntax>()
@@ -168,11 +168,11 @@ namespace Microsoft.DotNet.GenPartialFacades
             return false;
         }
 
-        public static void AddTypeForwardToStringBuilder(StringBuilder sb, string typeName, string alias = "")
+        public static string AddTypeForwardToStringBuilder(string typeName, string alias = "")
         {
             if (!string.IsNullOrEmpty(alias))
                 alias += "::";
-            sb.Append("[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(" + alias + typeName.Substring(2) + "))]\n");
+            return "[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(" + alias + typeName.Substring(2) + "))]\n";
         }
     }
 }
