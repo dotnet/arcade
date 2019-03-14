@@ -2,7 +2,7 @@ parameters:
   variables: []
 
 variables:
-- name: context_internal
+- name: isInternal
   value: ${{ and(ne(variables.runAsPublic, 'true'), ne(variables['System.TeamProject'], 'public'), notIn(variables['Build.Reason'], 'PullRequest')) }}
 
 - ${{ each variable in parameters.variables }}:

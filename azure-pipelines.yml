@@ -44,7 +44,7 @@ jobs:
       - _InternalBuildArgs: ''
       - HelixApiAccessToken: ''
       # Only enable publishing in non-public, non PR scenarios.
-      - ${{ if eq(variables.context_internal, 'true') }}:
+      - ${{ if eq(variables.isInternal, 'true') }}:
         # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
         # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
         # DotNet-HelixApi-Access provides: HelixApiAccessToken
@@ -63,10 +63,10 @@ jobs:
       pool:
         # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
         # Will eventually change this to two BYOC pools.
-        ${{ if ne(variables.context_internal, 'true') }}:
+        ${{ if ne(variables.isInternal, 'true') }}:
           name: NetCorePublic-Int-Pool
           queue: BuildPool.Windows.10.Amd64.VS2017.Open
-        ${{ if eq(variables.context_internal, 'true') }}:
+        ${{ if eq(variables.isInternal, 'true') }}:
           name: NetCoreInternal-Int-Pool
           queue: BuildPool.Windows.10.Amd64.VS2017
 
@@ -75,15 +75,15 @@ jobs:
           Build_Release:
             _BuildConfig: Release
             # PRs or external builds are not signed.
-            ${{ if ne(variables.context_internal, 'true') }}:
+            ${{ if ne(variables.isInternal, 'true') }}:
               _SignType: test
               _DotNetPublishToBlobFeed : false
-            ${{ if eq(variables.context_internal, 'true') }}:
+            ${{ if eq(variables.isInternal, 'true') }}:
               _SignType: real
               _DotNetPublishToBlobFeed : true
               _Script: eng\validate-sdk.cmd
               _ValidateSdkArgs: -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -barToken $(MaestroAccessToken)
-          ${{ if ne(variables.context_internal, 'true') }}:
+          ${{ if ne(variables.isInternal, 'true') }}:
             Build_Debug:
               _BuildConfig: Debug
               _SignType: test
@@ -111,7 +111,7 @@ jobs:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
           HelixAccessToken: $(HelixApiAccessToken)
 
-    - ${{ if ne(variables.context_internal, 'true') }}:
+    - ${{ if ne(variables.isInternal, 'true') }}:
       - job: Linux
         variables:
         - HelixApiAccessToken: ''

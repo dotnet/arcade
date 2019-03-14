@@ -92,7 +92,7 @@ jobs:
       variables: ${{ parameters.variables }}
 
   # DotNet-HelixApi-Access provides 'HelixApiAccessToken' for internal builds
-  - ${{ if and(eq(parameters.enableTelemetry, 'true'), eq(variables.context_internal, 'true')) }}:
+  - ${{ if and(eq(parameters.enableTelemetry, 'true'), eq(variables.isInternal, 'true')) }}:
     - group: DotNet-HelixApi-Access
 
   ${{ if ne(parameters.workspace, '') }}:
@@ -110,7 +110,7 @@ jobs:
       continueOnError: ${{ parameters.continueOnError }}
       condition: always()
 
-  - ${{ if and(eq(parameters.enableMicrobuild, 'true'), eq(variables.context_internal, 'true')) }}:
+  - ${{ if and(eq(parameters.enableMicrobuild, 'true'), eq(variables.isInternal, 'true')) }}:
     - task: MicroBuildSigningPlugin@2
       displayName: Install MicroBuild plugin
       inputs:
@@ -125,7 +125,7 @@ jobs:
   - ${{ each step in parameters.steps }}:
     - ${{ step }}
 
-  - ${{ if and(eq(parameters.enableMicrobuild, 'true'), eq(variables.context_internal, 'true')) }}:
+  - ${{ if and(eq(parameters.enableMicrobuild, 'true'), eq(variables.isInternal, 'true')) }}:
     - task: MicroBuildCleanup@1
       displayName: Execute Microbuild cleanup tasks  
       condition: and(always(), in(variables['_SignType'], 'real', 'test'), eq(variables['Agent.Os'], 'Windows_NT'))
@@ -160,7 +160,7 @@ jobs:
       continueOnError: true
       condition: always()
     
-  - ${{ if and(eq(parameters.enablePublishBuildAssets, true), ne(variables._PublishUsingPipelines, 'true'), eq(variables.context_internal, 'true')) }}:
+  - ${{ if and(eq(parameters.enablePublishBuildAssets, true), ne(variables._PublishUsingPipelines, 'true'), eq(variables.isInternal, 'true')) }}:
     - task: CopyFiles@2
       displayName: Gather Asset Manifests
       inputs:
