@@ -76,9 +76,14 @@ steps:
 
 The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `send-to-helix` template in `eng/common/templates/steps/send-to-helix.yml` from your `azure-pipelines.yml` file.
 
-Simply specify the xUnit project(s) you wish to run (semicolon delimited) with the `XUnitProjects` parameter. Then, specify the `XUnitPublishTargetFramework` (the framework you want to publish your xUnit projects as, e.g. `netcoreapp2.1`), `XUnitRuntimeTargetFramework` (the framework version of xUnit you want to use from the xUnit nuget package, e.g. `netcoreapp2.0`) and the `XUnitRunnerVersion` (the version of the xUnit nuget package you want to use, e.g. `2.4.1`). Finally, set `IncludeDotNetCli` to true and specify which `DotNetCliPackageType` (`sdk` or `runtime`) and `DotNetCliVersion` you wish to use. (For a full list of .NET CLI versions/package types, see these links: [3.0](https://dotnet.microsoft.com/download/dotnet-core/3.0), [2.1](https://dotnet.microsoft.com/download/dotnet-core/2.1), [2.2](https://dotnet.microsoft.com/download/dotnet-core/2.2).)
+Simply specify the xUnit project(s) you wish to run (semicolon delimited) with the `XUnitProjects` parameter. Then, specify:
+* the `XUnitPublishTargetFramework` &ndash; this is the framework your **test projects are targeting**, e.g. `netcoreapp2.1`.
+* the `XUnitRuntimeTargetFramework` &ndash; this is the framework version of xUnit you want to use from the xUnit NuGet package, e.g. `netcoreapp2.0`. Notably, the xUnit console runner only supports up to netcoreapp2.0 as of 14 March 2018, so this is the target that should be specified for running against any higher version test projects.
+* the `XUnitRunnerVersion` (the version of the xUnit nuget package you want to use, e.g. `2.4.1`).
 
-The list of available Helix queues can be found [here](https://helix.dot.net/api/2018-03-14/info/queues).
+Finally, set `IncludeDotNetCli` to true and specify which `DotNetCliPackageType` (`sdk` or `runtime`) and `DotNetCliVersion` you wish to use. (For a full list of .NET CLI versions/package types, see these links: [3.0](https://dotnet.microsoft.com/download/dotnet-core/3.0), [2.1](https://dotnet.microsoft.com/download/dotnet-core/2.1), [2.2](https://dotnet.microsoft.com/download/dotnet-core/2.2).)
+
+The list of available Helix queues can be found on the [Helix homepage](https://helix.dot.net/).
 
 ```yaml
   - template: /eng/common/templates/steps/send-to-helix.yml
@@ -86,7 +91,7 @@ The list of available Helix queues can be found [here](https://helix.dot.net/api
       HelixSource: pr/your/helix/source # sources must start with pr/, official/, prodcon/, or agent/
       HelixType: type/tests
       # HelixBuild: $(Build.BuildNumber) -- This property is set by default
-      HelixTargetQueues: Windows.10.Amd64.Open;Windows.81.Amd64.Open;Windows.7.Amd64.Open # specify appropriate queues here; see https://helix.dot.net/api/2018-03-14/info/queues for a list of queues
+      HelixTargetQueues: Windows.10.Amd64.Open;Windows.81.Amd64.Open;Windows.7.Amd64.Open # specify appropriate queues here; see https://helix.dot.net/ for a list of queues
       HelixAccessToken: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token) # this token is only for external (public) builds
       # HelixPreCommands: '' -- any commands that you would like to run prior to running your job
       # HelixPostCommands: '' -- any commands that you would like to run after running your job
