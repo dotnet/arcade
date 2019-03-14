@@ -38,6 +38,16 @@ jobs:
     helixRepo: dotnet/arcade
     jobs:
     - job: Windows_NT
+      timeoutInMinutes: 90
+      pool:
+        # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
+        # Will eventually change this to two BYOC pools.
+        ${{ if ne(variables.isInternal, 'true') }}:
+          name: NetCorePublic-Int-Pool
+          queue: BuildPool.Windows.10.Amd64.VS2017.Open
+        ${{ if eq(variables.isInternal, 'true') }}:
+          name: NetCoreInternal-Int-Pool
+          queue: BuildPool.Windows.10.Amd64.VS2017
       variables:
       - _Script: eng\common\cibuild.cmd
       - _ValidateSdkArgs: ''
@@ -58,17 +68,6 @@ jobs:
             /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
             /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
             /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-
-      timeoutInMinutes: 90
-      pool:
-        # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
-        # Will eventually change this to two BYOC pools.
-        ${{ if ne(variables.isInternal, 'true') }}:
-          name: NetCorePublic-Int-Pool
-          queue: BuildPool.Windows.10.Amd64.VS2017.Open
-        ${{ if eq(variables.isInternal, 'true') }}:
-          name: NetCoreInternal-Int-Pool
-          queue: BuildPool.Windows.10.Amd64.VS2017
 
       strategy:
         matrix:
