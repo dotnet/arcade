@@ -36,10 +36,6 @@ parameters:
   # Optional: Override automatically derived dependsOn value for "publish build assets" job
   publishBuildAssetsDependsOn: ''
 
-  # Optional: should run as a public build even in the internal project
-  #           if 'true', the build won't run any of the internal only steps, even if it is running in non-public projects.
-  runAsPublic: false
-
 # Internal resources (telemetry, microbuild) can only be accessed from non-public projects,
 # and some (Microbuild) should only be applied to non-PR cases for internal builds.
 
@@ -59,7 +55,7 @@ jobs:
 
       name: ${{ job.job }}
 
-- ${{ if and(eq(parameters.enablePublishBuildAssets, true), eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+- ${{ if and(eq(parameters.enablePublishBuildAssets, true), ne(parameters.runAsPublic, 'true'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
   - template: ../job/publish-build-assets.yml
     parameters:
       continueOnError: ${{ parameters.continueOnError }}
@@ -72,10 +68,9 @@ jobs:
           - ${{ job.job }}
       pool:
         vmImage: vs2017-win2016
-      runAsPublic: ${{ parameters.runAsPublic }}
       enablePublishBuildArtifacts: ${{ parameters.enablePublishBuildArtifacts }}
       
-- ${{ if and(eq(parameters.graphFileGeneration.enabled, true), eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+- ${{ if and(eq(parameters.graphFileGeneration.enabled, true), ne(parameters.runAsPublic, 'true'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
   - template: ../job/generate-graph-files.yml
     parameters:
       continueOnError: ${{ parameters.continueOnError }}
