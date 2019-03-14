@@ -364,7 +364,7 @@ namespace Microsoft.DotNet.SignTool
         }
 
         private static bool IsMicrosoftLibrary(string copyright)
-            => copyright.Contains("Microsoft");
+            => copyright.Contains("Microsoft") || copyright.Contains(".NET Foundation");
 
         private static bool IsThirdPartyCertificate(string name)
             => name.Equals("3PartyDual", StringComparison.OrdinalIgnoreCase) ||
