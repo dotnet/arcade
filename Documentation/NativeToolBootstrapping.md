@@ -68,6 +68,8 @@ It is possible that a native toolset will require more than one shim.
 
 Native toolset assets will be placed in an Azure blob storage container.  The default location is https://netcorenativeassets.blob.core.windows.net/resource-packages
 
+You can browse the installers available using this url - https://netcorenativeassets.blob.core.windows.net/resource-packages/?restype=container&comp=list
+
 ## Blob storage layout
 
 ```Text
@@ -104,6 +106,10 @@ The `external` folder is a folder structure that contains all installers and res
 ```
 
 ## Questions
+
+**How do I know what installers are already available in the container?**
+
+https://netcorenativeassets.blob.core.windows.net/resource-packages/?restype=container&comp=list
 
 **How will we handle installers if there are distro specific requirements?**
 
