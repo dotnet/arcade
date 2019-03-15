@@ -131,7 +131,7 @@
     -->
     <ItemGroup>
       <NewManifestBuildData Include="InitialAssetsLocation=$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$(SYSTEM_TEAMPROJECT)/_apis/build/builds/$(BUILD_BUILDID)/artifacts" />
-      <NewManifestBuildData Include="PackagesType=$(PackagesType)" />
+      <NewManifestBuildData Include="ArtifactsCategory=$(ArtifactsCategory)" />
       <NewManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
       <NewManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
       <NewManifestBuildData Include="AzureDevOpsAccount=$(AzureDevOpsAccount)" />

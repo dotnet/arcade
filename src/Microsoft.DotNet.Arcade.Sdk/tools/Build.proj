@@ -14,7 +14,7 @@
     DotNetBuildOffline              Building without access to NuGet servers.
     DotNetOutputBlobFeedDir         Directory to publish Source Build assets to (packages, symbol pacakges, installers, etc.).
     DotNetPublishUsingPipelines     Publish assets using Azure DevOps release pipelines.
-    DotNetPackagesType              Type of assets being produced by the build.
+    DotNetArtifactsCategory         Type of assets being produced by the build.
     DotNetPublishToBlobFeed         Publish assets to blob feed using DotNetPublishBlobFeedUrl and DotNetPublishBlobFeedKey.
     DotNetPublishBlobFeedUrl        Target feed URL, or empty if not publishing to Azure blob feed.
     DotNetPublishBlobFeedKey        Azure blob feed account key.
@@ -146,7 +146,7 @@
     <ItemGroup>
       <_PublishProps Include="@(_CommonProps)"/>
       <_PublishProps Include="PublishToAzureDevOpsArtifacts=$(DotNetPublishUsingPipelines)" />
-      <_PublishProps Include="PackagesType=$(DotNetPackagesType)" />
+      <_PublishProps Include="ArtifactsCategory=$(DotNetArtifactsCategory)" />
       <_PublishProps Include="AzureFeedUrl=$(DotNetPublishBlobFeedUrl)" Condition="'$(DotNetPublishToBlobFeed)' == 'true'" />
       <_PublishProps Include="AzureAccountKey=$(DotNetPublishBlobFeedKey)" Condition="'$(DotNetPublishToBlobFeed)' == 'true'" />
       <_PublishProps Include="DotNetOutputBlobFeedDir=$(_DotNetOutputBlobFeedDir)" Condition="'$(_DotNetOutputBlobFeedDir)' != ''" />
