@@ -9,33 +9,12 @@
       SemanticVersioningV1        "true" if the Version needs to respect SemVer 1.0. Default is false, which means format following SemVer 2.0.
   -->
 
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.CalculateFileVersion" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+  
   <Target Name="_InitializeAssemblyVersion" BeforeTargets="GetAssemblyVersion">
-    <Error Text="Invalid format of OfficialBuildId: '$(OfficialBuildId)'"
-           Condition="$(VersionSuffixDateStamp) != '' and ($(VersionSuffixDateStamp.Length) != 5 or $(VersionSuffixBuildOfTheDayPadded.Length) != 2)"/>
-
-    <PropertyGroup Condition="'$(VersionSuffixDateStamp)' != ''">
-      <!--
-        File version has 4 parts and need to increase every official build. This is especially important when building MSIs.
-
-        MAJOR.MINOR.FILEPATCH.FILEREVISION
-
-        MAJOR and MINOR: Specified in the first two parts of VersionPrefix property.
-        FILEPATCH: Set to PATCH * 100 + yy. PATCH is specified in the third part of VersionPrefix property.
-        FILEREVISION: Set to (50 * mm + dd) * 100 + r. This algorithm makes it easy to parse the month and date from FILEREVISION while staying in the range of a short which is what a version element uses.
-      -->
-
-      <_FileMajor>$(VersionPrefix.Split($([System.Convert]::ToString(".").ToCharArray())).GetValue($([System.Convert]::ToInt32(0))))</_FileMajor>
-      <_FileMinor>$(VersionPrefix.Split($([System.Convert]::ToString(".").ToCharArray())).GetValue($([System.Convert]::ToInt32(1))))</_FileMinor>
-
-      <!-- patch * 100 + yy -->
-      <_FilePatch>$(VersionPrefix.Split($([System.Convert]::ToString(".").ToCharArray())).GetValue($([System.Convert]::ToInt32(2))))</_FilePatch>
-      <_FilePatch>$([MSBuild]::Add($([MSBuild]::Multiply($([System.Convert]::ToInt32($(_FilePatch))),$([System.Convert]::ToInt32(100)))), $([System.Convert]::ToInt32($(_BuildNumberYY)))))</_FilePatch>
-
-      <!-- mm * 5000 + dd * 100 + r -->
-      <_FileRevision>$([MSBuild]::Add($([MSBuild]::Add($([MSBuild]::Multiply($([System.Convert]::ToInt32($(_BuildNumberMM))), $([System.Convert]::ToInt32(5000)))), $([MSBuild]::Multiply($([System.Convert]::ToInt32($(_BuildNumberDD))), $([System.Convert]::ToInt32(100)))))), $([System.Convert]::ToInt32($(_BuildNumberR)))))</_FileRevision>
-
-      <FileVersion>$(_FileMajor).$(_FileMinor).$(_FilePatch).$(_FileRevision)</FileVersion>
-    </PropertyGroup>
+    <Microsoft.DotNet.Arcade.Sdk.CalculateFileVersion VersionPrefix="$(VersionPrefix)" OfficialBuildId="$(OfficialBuildId)" Condition="'$(VersionSuffixDateStamp)' != ''">
+      <Output TaskParameter="FileVersion" PropertyName="FileVersion"/>
+    </Microsoft.DotNet.Arcade.Sdk.CalculateFileVersion>
 
     <PropertyGroup Condition="'$(VersionSuffixDateStamp)' == ''">
       <!--

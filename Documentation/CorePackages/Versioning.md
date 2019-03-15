@@ -59,6 +59,15 @@ Date agnostic versioning is more hassle than it's worth, though having the SHA i
 
   There is often concern around build determinism when date-varying versioning is used. It is important to note that date-varying versioning does not affect the ability to have deterministic builds in either the local dev or official build lab scenarios.  The date is either a provided parameter or obtained from git information, meaning that setting it to a specific value at a specific commit can enable the production of the same outputs over and over again.  Date varying versioning only says that **by default** this input varies from build to build.
 
+## Version parts specified by repository
+
+The repository specifies a 3-part version prefix in `VersionPrefix` build property (`MAJOR.MINOR.PATCH`), or 2 parts using `MajorVersion` and `MinorVersion` properties (the patch number defaults to 0 in such case). 
+
+The versioning scheme defined below imposes the following limits on these version parts:
+- `MAJOR` version is in range [0-65535]
+- `MINOR` version is in range [0-654]
+- `PATCH` version is in range [0-9999]
+
 ## Package Version Fields
 
 - **MAJOR** - Major version
@@ -158,13 +167,15 @@ The format of package versions produced by the build is determined based on the 
 File version has 4 parts and need to increase every official build. This is especially important when building MSIs. 
 
 ```
-MAJOR.MINOR.FILEPATCH.FILEREVISION
+FILEMAJOR.FILEMINOR.FILEPATCH.FILEREVISION
 ```
 
-- **MAJOR** and **MINOR**: 
-  Specified in the first two parts of `VersionPrefix` property.
+- **FILEMAJOR**: 
+  Set to `MAJOR`.
+- **FILEMINOR**:
+  Set to `MINOR` * 100 + `PATCH` / 100.
 - **FILEPATCH**:
-  Set to PATCH * 100 + `yy`. PATCH is specified in the third part of `VersionPrefix` property.
+  Set to (PATCH % 100) * 100 + `yy`.
 - **FILEREVISION**:
   Set to (50 * `mm` + `dd`) * 100 + `r`. This algorithm makes it easy to parse the month and date from FILEREVISION while staying in the range of a short which is what a version element uses.
 
