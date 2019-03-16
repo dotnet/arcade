@@ -12,7 +12,7 @@
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.CalculateFileVersion" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
   
   <Target Name="_InitializeAssemblyVersion" BeforeTargets="GetAssemblyVersion">
-    <Microsoft.DotNet.Arcade.Sdk.CalculateFileVersion VersionPrefix="$(VersionPrefix)" OfficialBuildId="$(OfficialBuildId)" Condition="'$(VersionSuffixDateStamp)' != ''">
+    <Microsoft.DotNet.Arcade.Sdk.CalculateFileVersion VersionPrefix="$(VersionPrefix)" OfficialBuildId="$(_BuildNumber)" Condition="'$(VersionSuffixDateStamp)' != ''">
       <Output TaskParameter="FileVersion" PropertyName="FileVersion"/>
     </Microsoft.DotNet.Arcade.Sdk.CalculateFileVersion>
 
