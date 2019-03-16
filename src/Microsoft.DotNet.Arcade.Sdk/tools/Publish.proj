@@ -108,6 +108,12 @@
 
   <Target Name="PublishToAzureDevOpsArtifacts">
     <!-- 
+    Begin: 
+      Work in progress drop-in replacement for PushToBlobFeed task below. 
+      This is part of the work on https://github.com/dotnet/arcade/issues/1179 
+    --> 
+
+    <!-- 
       Sadly AzDO doesn't have a variable to tell the account name. Also
       the format of CollectionURI is not precise across different agent 
       configurations. Code below takes care of extracting the account 
@@ -131,7 +137,6 @@
     -->
     <ItemGroup>
       <NewManifestBuildData Include="InitialAssetsLocation=$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$(SYSTEM_TEAMPROJECT)/_apis/build/builds/$(BUILD_BUILDID)/artifacts" />
-      <NewManifestBuildData Include="ArtifactsCategory=$(ArtifactsCategory)" />
       <NewManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
       <NewManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
       <NewManifestBuildData Include="AzureDevOpsAccount=$(AzureDevOpsAccount)" />
@@ -164,14 +169,16 @@
       AssetManifestPath="$(AssetManifestFilePath)"
       AssetsTemporaryDirectory="$(TempWorkingDirectory)" />
 
+    <!--
+      The publishing pipeline (implemented by PublishToPackageFeed.proj) will use the Tasks.Feed package
+      to publish packages. The version of Tasks.Feed used will come either from Version.props or from
+      DefaultVersions.props
+    -->
+
     <Message
       Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(RepositoryEngineeringDir)common\PublishToPackageFeed.proj"
       Importance="high" />
 
-    <!--
-      The publishing pipeline (implemented by PublishToPackageFeed.proj) will use the Tasks.Feed package
-      to publish packages. The version of Tasks.Feed used will come from DefaultVersions.props
-    -->
     <Message
       Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(MSBuildThisFileDirectory)DefaultVersions.props"
       Condition="Exists('$(MSBuildThisFileDirectory)DefaultVersions.props')"
@@ -184,6 +191,12 @@
     <Message
       Text="##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]$(TempWorkingDirectory)\$(AssetManifestFileName)"
       Importance="high" />
+
+    <!-- 
+    End: 
+      Work in progress drop-in replacement for PushToBlobFeed task below. 
+      This is part of the work on https://github.com/dotnet/arcade/issues/1179 
+    --> 
   </Target>
 
   <Target Name="PublishSymbols">
