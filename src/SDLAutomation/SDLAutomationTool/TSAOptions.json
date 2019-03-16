@@ -1,0 +1,19 @@
+{
+    "codebaseName": "Arcade",
+    "ppe": false,
+    "notificationAliases": [
+        "subal@microsoft.com"
+    ],
+    "codebaseAdmins": [
+        "REDMOND\\subal"
+    ],
+    "instanceUrl": "https://devdiv.visualstudio.com/",
+    "projectName": "DEVDIV",
+    "areaPath": "DevDiv\\NET\\NET Core ",
+    "iterationPath": "DevDiv ",
+    "tools": [
+        "CredScan"
+    ],
+    "repositoryName": "Arcade",
+    "branchName": "master"
+}
