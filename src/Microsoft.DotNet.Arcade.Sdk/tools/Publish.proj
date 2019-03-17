@@ -189,7 +189,11 @@
       https://github.com/dotnet/arcade/issues/2266
     -->
     <Message
-      Text="##vso[task.setvariable variable=ArtifactsCategory]$(ArtifactsCategory)"
+      Text="##vso[task.setvariable variable=ArtifactsCategory;issecret=true]$(ArtifactsCategory)"
+      Importance="high" />
+
+    <Message
+      Text="##vso[task.setvariable variable=VariableName;issecret=true]var-value"
       Importance="high" />
     
   </Target>

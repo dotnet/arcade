@@ -15,6 +15,8 @@
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets" />
 
   <Target Name="PublishToFeed">
+    <Message Text="$(_DotNetArtifactsCategory)" Importance="high" />
+    
     <Error Condition="'$(ArtifactsCategory)' == ''" Text="ArtifactsCategory: The artifacts' category produced by the build wasn't provided." />
     <Error Condition="'$(AccountKeyToStaticFeed)' == ''" Text="AccountKeyToStaticFeed: Account key for target feed wasn't provided." />
     <Error Condition="'$(ManifestsBasePath)' == ''" Text="Full path to asset manifests directory wasn't provided." />
