@@ -31,7 +31,7 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 | CLICommandLineParser       | licavalc         | -           | - ||
 | CLI-Migrate                | licavalc         | -           | - ||
 | **CoreClr**                | russellk         | In progress | ci1, ci2, ci3 | Under discussion |
-| **CoreFx**                 | danmose          | In progress | [ci2-perf](https://ci2.dot.net/job/dotnet_corefx/job/perf/) | Under discussion |
+| **CoreFx**                 | danmose          | In progress | [ci2](https://ci2.dot.net/job/dotnet_corefx/job/perf/)(perf) | Under discussion |
 | Core-SDK                   | licavalc         | -           | - ||
 | Core-Setup                 | dleeapho         | -           | - ||
 | **dotnet-docker**          | msimons          | In progress | [ci1](https://ci.dot.net/job/dotnet_dotnet-docker/) | [Tracking issue](https://github.com/dotnet/dotnet-docker/issues/744) |
