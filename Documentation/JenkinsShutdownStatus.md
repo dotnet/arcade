@@ -41,14 +41,14 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 | MSBuild                    | licavalc         | -           | - | chcosta - [cleaning up](https://github.com/dotnet/dotnet-ci/pull/1093) leftover Jenkins jobs |
 | Roslyn                     | jaredpar         | -           | - ||
 | **SDK**                    | licavalc         | In progress | [ci2](https://ci2.dot.net/job/dotnet_sdk/) | Planned, moving perf job to Azure DevOps |
-| Standard                   | danmose          | -           | - | chcosta - [cleaning up](https://github.com/dotnet/dotnet-ci/pull/1095) leftover Jenkins jobs |
-| SymReader                  | tmat             | -           | - | chcosta - [cleaning up](https://github.com/dotnet/dotnet-ci/pull/1094) leftover Jenkins jobs |
-| SymReader-Portable         | tmat             | -           | - | chcosta - [cleaning up](https://github.com/dotnet/dotnet-ci/pull/1094) leftover Jenkins jobs |
+| Standard                   | danmose          | -           | - ||
+| SymReader                  | tmat             | -           | - ||
+| SymReader-Portable         | tmat             | -           | - ||
 | **Templating**             | vramak           | In progress | [ci1](https://ci.dot.net/job/dotnet_templating/job/master/) ||
 | **TestFx**                 | sarabjot         | In progress | [ci1](https://ci.dot.net/job/Microsoft_testfx/job/master/) | Planned |
 | Test-Templates             | sasin            | -           | - ||
 | Toolset                    | licavalc         | -           | - ||
-| VSTest                     | sarabjot         | -           | - | chcosta - [cleaning up](https://github.com/dotnet/dotnet-ci/pull/1096) leftover Jenkins jobs |
+| VSTest                     | sarabjot         | -           | - ||
 | VisualFSharp               | brettfo          | -           | - ||
 | **WebSDK**                 | vramak           | In progress | [ci1](https://ci.dot.net/job/aspnet_websdk/job/master/) ||
 | WinForms                   | mmcgaw           | -           | - ||
