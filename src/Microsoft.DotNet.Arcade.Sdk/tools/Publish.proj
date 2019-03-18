@@ -188,12 +188,14 @@
       This won't be necessary once we solve this issue:
       https://github.com/dotnet/arcade/issues/2266
     -->
-    <Message
-      Text="##vso[task.setvariable variable=ArtifactsCategory;issecret=true]$(ArtifactsCategory)"
-      Importance="high" />
+    <WriteLinesToFile
+      File="$(MSBuildThisFileDirectory)ArtifactsCategory.props"
+      Lines="&lt;Project>&lt;PropertyGroup>&lt;ArtifactsCategory>$(ArtifactsCategory)&lt;/ArtifactsCategory>&lt;/PropertyGroup>&lt;/Project>"
+      Overwrite="true"
+      Encoding="Unicode" />
 
     <Message
-      Text="##vso[task.setvariable variable=VariableName;issecret=true]var-value"
+      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(MSBuildThisFileDirectory)ArtifactsCategory.props"
       Importance="high" />
     
   </Target>
