@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 if (!TimeSpan.TryParse(XUnitWorkItemTimeout, out timeout))
                 {
-                    Log.LogWarning($"Invalid value {XUnitWorkItemTimeout} provided for XUnitWOrkItemTimeout; falling back to default value of 300");
+                    Log.LogWarning($"Invalid value {XUnitWorkItemTimeout} provided for XUnitWorkItemTimeout; falling back to default value of 300");
                 }
             }
 
