@@ -33,6 +33,9 @@
 
     <RunScriptGlobalToolsDir Condition="'$(TargetOS)' == 'Windows_NT'">%GLOBAL_TOOLS_DIR%</RunScriptGlobalToolsDir>
     <RunScriptGlobalToolsDir Condition="'$(TargetOS)' != 'Windows_NT'">$GLOBAL_TOOLS_DIR</RunScriptGlobalToolsDir>
+    
+    <RunScriptAdditionalXUnitArguments Condition="'$(TargetOS)' == 'Windows_NT'">%ADDITIONAL_XUNIT_ARGUMENTS%</RunScriptAdditionalXUnitArguments>
+    <RunScriptAdditionalXUnitArguments Condition="'$(TargetOS)' != 'Windows_NT'">$ADDITIONAL_XUNIT_ARGUMENTS</RunScriptAdditionalXUnitArguments>
   </PropertyGroup>
 
   <Target Name="PublishSupplementalTestData"

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 
 export RUNTIME_PATH=${1%/}
 export EXECUTION_DIR=$(dirname "$0")
@@ -11,6 +11,11 @@ fi
 # Global tools path
 if [[ $3 ]]; then
   export GLOBAL_TOOLS_DIR=$3
+fi
+
+# Additional xunit arguments
+if [[ $4 ]]; then
+  export ADDITIONAL_XUNIT_ARGUMENTS=$4
 fi
 
 # Don't use a globally installed SDK.

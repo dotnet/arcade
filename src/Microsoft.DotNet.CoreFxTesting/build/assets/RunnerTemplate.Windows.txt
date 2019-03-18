@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 setlocal enabledelayedexpansion
 
 set RUNTIME_PATH=%1
@@ -20,6 +20,11 @@ set DOTNET_ROOT=%~2
 :: Global tools path
 if not "%~3" == "" (
 set GLOBAL_TOOLS_DIR=%~3
+)
+
+:: Additional xunit arguments
+if not "%~4" == "" (
+set ADDITIONAL_XUNIT_ARGUMENTS=%~4
 )
 
 :: Don't use a globally installed SDK.

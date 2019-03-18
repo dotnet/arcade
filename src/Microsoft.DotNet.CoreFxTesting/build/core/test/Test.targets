@@ -43,6 +43,9 @@
     <_withoutCategories Condition="'$(OuterLoop)' != 'true'">$(_withoutCategories);OuterLoop</_withoutCategories>
     <RunArguments>$(RunArguments)$(_withCategories.Replace(';', ' -trait category='))</RunArguments>
     <RunArguments>$(RunArguments)$(_withoutCategories.Replace(';', ' -notrait category='))</RunArguments>
+    
+    <!-- Additional xunit arguments. -->
+    <RunArguments Condition="'$(RunScriptAdditionalXUnitArguments)' != ''">$(RunArguments) $(RunScriptAdditionalXUnitArguments)</RunArguments>
 
     <!-- User passed in options. -->
     <RunArguments Condition="'$(XUnitOptions)' != ''">$(RunArguments) $(XUnitOptions)</RunArguments>
