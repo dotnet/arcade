@@ -31,7 +31,7 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 | CLICommandLineParser       | licavalc         | -           | - ||
 | CLI-Migrate                | licavalc         | -           | - ||
 | **CoreClr**                | russellk         | In progress | ci1, ci2, ci3 | Under discussion |
-| **CoreFx**                 | danmose          | In progress | [ci2](https://ci2.dot.net/job/dotnet_corefx/job/perf/)(perf) | Under discussion |
+| **CoreFx**                 | danmose          | In progress | [ci2](https://ci2.dot.net/job/dotnet_corefx/job/perf/)(perf) | Under discussion to delete perf job |
 | Core-SDK                   | licavalc         | -           | - ||
 | Core-Setup                 | dleeapho         | -           | - ||
 | **dotnet-docker**          | msimons          | In progress | [ci1](https://ci.dot.net/job/dotnet_dotnet-docker/) | [Tracking issue](https://github.com/dotnet/dotnet-docker/issues/744) |
@@ -44,13 +44,13 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 | Standard                   | danmose          | -           | - ||
 | SymReader                  | tmat             | -           | - ||
 | SymReader-Portable         | tmat             | -           | - ||
-| **Templating**             | vramak           | In progress | [ci1](https://ci.dot.net/job/dotnet_templating/job/master/) ||
+| **Templating**             | vramak           | In progress | [ci1](https://ci.dot.net/job/dotnet_templating/job/master/) | Under discussion |
 | **TestFx**                 | sarabjot         | In progress | [ci1](https://ci.dot.net/job/Microsoft_testfx/job/master/) | Planned |
 | Test-Templates             | sasin            | -           | - ||
 | Toolset                    | licavalc         | -           | - ||
 | VSTest                     | sarabjot         | -           | - ||
 | VisualFSharp               | brettfo          | -           | - ||
-| **WebSDK**                 | vramak           | In progress | [ci1](https://ci.dot.net/job/aspnet_websdk/job/master/) ||
+| **WebSDK**                 | vramak           | In progress | [ci1](https://ci.dot.net/job/aspnet_websdk/job/master/) | Under discussion |
 | WinForms                   | mmcgaw           | -           | - ||
 | WPF                        | vatsan-madhavan  | -           | - ||
 
