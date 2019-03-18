@@ -46,7 +46,7 @@
     </PropertyGroup>
 
     <Error 
-      Condition="'@(TargetStaticFeed)' == ''" 
+      Condition="'$(TargetStaticFeed)' == ''" 
       Text="'$(ArtifactsCategory)' wasn't recognized as a valid artifact category. Valid categories are: '.Net Core' and '.Net Core Validation'" />
 
     <!-- Iterate publishing assets from each manifest file. -->
