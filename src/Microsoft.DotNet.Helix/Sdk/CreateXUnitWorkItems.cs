@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// Optional timeout for all created workitems
         /// Defaults to 300s
         /// </summary>
-        public string WorkItemTimeoutInSeconds { get; set; }
+        public string XUnitWorkItemTimeout { get; set; }
 
         public string XUnitArguments { get; set; }
 
@@ -124,12 +124,12 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishDirectory}, Command: {command}");
 
-            double timeout = 300;
-            if (!string.IsNullOrEmpty(WorkItemTimeoutInSeconds))
+            TimeSpan timeout = TimeSpan.FromMinutes(5);
+            if (!string.IsNullOrEmpty(XUnitWorkItemTimeout))
             {
-                if (!double.TryParse(WorkItemTimeoutInSeconds, out timeout))
+                if (!TimeSpan.TryParse(XUnitWorkItemTimeout, out timeout))
                 {
-                    Log.LogWarning($"Invalid value {WorkItemTimeoutInSeconds} provided for WorkItemTimeoutInSeconds; falling back to default value of 300");
+                    Log.LogWarning($"Invalid value {XUnitWorkItemTimeout} provided for XUnitWOrkItemTimeout; falling back to default value of 300");
                 }
             }
 
@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 { "Identity", assemblyName },
                 { "PayloadDirectory", publishDirectory },
                 { "Command", command },
-                { "Timeout", TimeSpan.FromSeconds(timeout).ToString() },
+                { "Timeout", timeout.ToString() },
             });
         }
     }
