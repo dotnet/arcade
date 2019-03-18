@@ -21,8 +21,6 @@
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets" />
 
   <Target Name="PublishToFeed">
-    <Message Text="$(_DotNetArtifactsCategory)" Importance="high" />
-    
     <Error Condition="'$(ArtifactsCategory)' == ''" Text="ArtifactsCategory: The artifacts' category produced by the build wasn't provided." />
     <Error Condition="'$(AccountKeyToStaticFeed)' == ''" Text="AccountKeyToStaticFeed: Account key for target feed wasn't provided." />
     <Error Condition="'$(ManifestsBasePath)' == ''" Text="Full path to asset manifests directory wasn't provided." />
@@ -47,7 +45,7 @@
 
     <Error 
       Condition="'$(TargetStaticFeed)' == ''" 
-      Text="'$(ArtifactsCategory)' wasn't recognized as a valid artifact category. Valid categories are: '.Net Core' and '.Net Core Validation'" />
+      Text="'$(ArtifactsCategory)' wasn't recognized as a valid artifact category. Valid categories are: '.NetCore' and '.NetCoreValidation'" />
 
     <!-- Iterate publishing assets from each manifest file. -->
     <PushArtifactsInManifestToFeed
