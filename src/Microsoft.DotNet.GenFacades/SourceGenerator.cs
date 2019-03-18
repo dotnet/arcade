@@ -35,13 +35,12 @@ namespace Microsoft.DotNet.GenFacades
         public bool GenerateSource(
             IEnumerable<string> compileFiles,
             IEnumerable<string> constants,
-            bool ignoreMissingTypes,
-            string contractAssemblyName)
+            bool ignoreMissingTypes)
         {
             List<string> externAliases = new List<string>();
             Dictionary<string, INamedTypeReference> forwardedTypes = new Dictionary<string, INamedTypeReference>();
             StringBuilder sb = new StringBuilder();
-            bool error = false;
+            bool result = true;
 
             List<string> existingDocIds = TypeParser.GetAllTypes(compileFiles, constants);
             IEnumerable<string> docIdsToForward = _docIds.Where(id => !existingDocIds.Contains(id.Substring(2)));
@@ -53,7 +52,7 @@ namespace Microsoft.DotNet.GenFacades
                 {
                     if (!ignoreMissingTypes)
                     {
-                        error = true;
+                        result = false;
                         Trace.TraceError("Did not find type '{0}' in any of the seed assemblies.", docId);
                     }
                     continue;
@@ -71,7 +70,7 @@ namespace Microsoft.DotNet.GenFacades
                     else
                     {
                         TraceDuplicateSeedTypeError(docId, seedTypes);
-                        error = true;
+                        result = false;
                         continue;
                     }
                 }
@@ -80,7 +79,7 @@ namespace Microsoft.DotNet.GenFacades
             }
 
             File.WriteAllText(_outputSourcePath, AppendAliases(externAliases) + sb.ToString());
-            return error;
+            return result;
         }
 
         private string AppendAliases(IEnumerable<string> externAliases)

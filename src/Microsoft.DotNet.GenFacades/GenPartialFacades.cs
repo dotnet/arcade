@@ -18,7 +18,6 @@ namespace Microsoft.DotNet.GenFacades
             string[] seeds,
             string referenceAssembly,
             string[] compileFiles,
-            string assemblyName,
             string defineConstants,
             string outputSourcePath,
             bool ignoreMissingTypes = false,
@@ -38,7 +37,7 @@ namespace Microsoft.DotNet.GenFacades
                 {
                     contractHost.LoadErrorTreatment = contractLoadErrorTreatment;
                     seedHost.LoadErrorTreatment = seedLoadErrorTreatment;
-
+                    
                     IAssembly contractAssembly = contractHost.LoadAssembly(referenceAssembly);
                     IEnumerable<string> docIdTable = EnumerateDocIdsToForward(contractAssembly);
 
@@ -46,7 +45,7 @@ namespace Microsoft.DotNet.GenFacades
                     var typeTable = GenerateTypeTable(seedAssemblies);
 
                     var sourceGenerator = new SourceGenerator(docIdTable, typeTable, seedTypePreferences, outputSourcePath);
-                    return sourceGenerator.GenerateSource(compileFiles, defineConstants?.Split(';'), ignoreMissingTypes, assemblyName);
+                    return sourceGenerator.GenerateSource(compileFiles, ParseDefineConstants(defineConstants), ignoreMissingTypes);
                 }
             }
             catch (FacadeGenerationException ex)
@@ -55,6 +54,11 @@ namespace Microsoft.DotNet.GenFacades
                 Debug.Assert(Environment.ExitCode != 0);
                 return false;
             }
+        }
+
+        private static IEnumerable<string> ParseDefineConstants(string defineConstants)
+        {
+            return defineConstants?.Split(';', ',').Where(t => !string.IsNullOrEmpty(t)).ToArray();
         }
 
         private static Dictionary<string, string> ParseSeedTypePreferences(string[] preferences)

@@ -113,4 +113,6 @@
       <FileWrites Include="$(GenFacadesInputSymbols)" />
     </ItemGroup>
   </Target>
+
+  <Import Project="Microsoft.DotNet.GenPartialFacades.targets" />
 </Project>

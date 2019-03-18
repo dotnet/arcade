@@ -1,113 +1,40 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
-  <PropertyGroup>
-    <GenFacadesContracts>C:\git\corefx\artifacts\bin\ref/uap//System.Runtime.WindowsRuntime.dll</GenFacadesContracts>
-    <CommonPath>C:\git\corefx\src\Common\src</CommonPath>
-    <AssemblyName>System.Runtime.WindowsRuntime</AssemblyName>
-    <ProjectCommonPath>C:\git\corefx\src\System.Runtime.WindowsRuntime\src\</ProjectCommonPath>
-    <CompileConstants>DEBUG</CompileConstants>
+<Project>
+  <PropertyGroup Condition="'$(GenrateTypeForwardsSourceCode)' == 'true' AND '$(IsReferenceAssembly)' != 'true'">
+    <!-- Tell ResolveMatchingContract to run and resolve contract to project reference -->
+    <ResolveMatchingContract>true</ResolveMatchingContract>
+    <FillPartialFacadeDependsOn>
+      $(FillPartialFacadeDependsOn);ResolveMatchingContract
+    </FillPartialFacadeDependsOn>
   </PropertyGroup>
   
-  <UsingTask TaskName="GenPartialFacadesTask" AssemblyFile="C:\git\arcade\artifacts\bin\Microsoft.DotNet.GenFacades\Debug\net472\Microsoft.DotNet.GenFacades.dll" />
+  <PropertyGroup>
+    <CompileDependsOn Condition="'$(GenrateTypeForwardsSourceCode)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+      FillPartialFacadeUsingTask2;$(CompileDependsOn)
+    </CompileDependsOn>
+  </PropertyGroup>
 
-  <ItemGroup>
-    <GenFacadesSeeds Include="C:\Users\anagniho\.nuget\packages\microsoft.targetingpack.private.netnative\1.1.0-beta-27421-00\lib\uap10.0\System.Private.CoreLib.dll"/>
-    <GenFacadesSeeds Include="C:\Users\anagniho\.nuget\packages\microsoft.targetingpack.private.netnative\1.1.0-beta-27421-00\lib\uap10.0\System.Private.Interop.dll">
-      <Aliases>Alias_System_Private_Interop</Aliases>
-    </GenFacadesSeeds>
-    <GenFacadesSeeds Include="C:\Users\anagniho\.nuget\packages\microsoft.targetingpack.private.netnative\1.1.0-beta-27421-00\lib\uap10.0\System.Private.Interop.dll" />
-    <GenFacadesSeeds Include="C:\git\corefx\artifacts\bin\ref/uap/mscorlib.dll"/>
-    <GenFacadesSeeds Include="C:\git\corefx\artifacts\bin\ref/uap/netstandard.dll"/>
-    <GenFacadesSeeds Include="C:\git\corefx\artifacts\bin\ref/uap/Windows.winmd"/>
-    <GenFacadesSeeds Include="C:\git\corefx\artifacts\bin\System.Runtime\uapaot-Windows_NT-Debug\System.Runtime.dll"/>
-    <GenFacadesSeeds Include="C:\git\corefx\artifacts\bin\System.Runtime.Extensions\uapaot-Windows_NT-Debug\System.Runtime.Extensions.dll"/>
-  </ItemGroup>
+  <UsingTask TaskName="GenPartialFacadesTask" AssemblyFile="$(_MicrosoftDotNetGenFacadesTaskDir)Microsoft.DotNet.GenFacades.dll" />
 
-  <ItemGroup>
-    <SeedTypePreference Include="Windows.Foundation.Point">
-      <Aliases>Alias_System_Private_Interop</Aliases>
-    </SeedTypePreference>
-    <SeedTypePreference Include="Windows.Foundation.Rect">
-      <Aliases>Alias_System_Private_Interop</Aliases>
-    </SeedTypePreference>
-    <SeedTypePreference Include="Windows.Foundation.Size">
-      <Aliases>Alias_System_Private_Interop</Aliases>
-    </SeedTypePreference>
-  </ItemGroup>
+  <Target Name="FillPartialFacadeUsingTask2" DependsOnTargets="$(FillPartialFacadeDependsOn)">  
+    
+    <PropertyGroup Condition="'$(IsReferenceAssembly)' != 'true'">
+      <ReferenceAssembly>%(ResolvedMatchingContract.Identity)</ReferenceAssembly>
+      <OutputSourcePath>$(IntermediateOutputPath)\$(AssemblyTitle).Forwards.cs</OutputSourcePath>
+      <GenFacadesIgnoreMissingTypes Condition="'$(GenFacadesIgnoreMissingTypes)' == ''">false</GenFacadesIgnoreMissingTypes>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="$(ProjectCommonPath)\System\InternalHelpers.CoreRT.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\IO\StreamOperationAsyncResult.CoreRT.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Threading\Tasks\AsyncInfoToTaskBridge.CoreRT.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\WindowsRuntimeSystemExtensions.CoreRT.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="$(CommonPath)\CoreLib\System\WinRTFolderPaths.cs">
-      <Link>Common\System\WinRTFolderPaths.cs</Link>
-    </Compile>
-    <Compile Include="$(CommonPath)\CoreLib\Interop\Windows\Kernel32\Interop.ResolveLocaleName.cs">
-      <Link>Common\Interop\Windows\kernel32\Interop.ResolveLocaleName.cs</Link>
-    </Compile>
-    <Compile Include="$(CommonPath)\CoreLib\Interop\Windows\Kernel32\Interop.FormatMessage.cs">
-      <Link>Common\Interop\Windows\kernel32\Interop.FormatMessage.cs</Link>
-    </Compile>
-    <Compile Include="$(CommonPath)\Interop\Windows\Mincore\Interop.RoGetBufferMarshaler.cs">
-      <Link>Common\Interop\Windows\Mincore\Interop.RoGetBufferMarshaler.cs</Link>
-    </Compile>
-    <Compile Include="$(CommonPath)\Interop\Windows\Interop.Libraries.cs">
-      <Link>Common\Interop\Windows\Interop.Libraries.cs</Link>
-    </Compile>
-    <Compile Include="$(CommonPath)\Interop\Windows\Interop.Errors.cs">
-      <Link>Common\Interop\Windows\Interop.Errors.cs</Link>
-    </Compile>
-    <Compile Include="$(CommonPath)\CoreLib\System\IO\Win32Marshal.cs">
-      <Link>Common\CoreLib\System\IO\Win32Marshal.cs</Link>
-    </Compile>
-    <Compile Include="$(ProjectCommonPath)\System\IO\HANDLE_ACCESS_OPTIONS.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\IO\HANDLE_CREATION_OPTIONS.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\IO\HANDLE_OPTIONS.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\IO\HANDLE_SHARING_OPTION.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\IO\IStorageFolderHandleAccess.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\IO\IStorageItemHandleAccess.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\IO\NetFxToWinRtStreamAdapter.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\IO\StreamOperationAsyncResult.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\IO\StreamOperationsImplementation.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\IO\WindowsRuntimeStorageExtensions.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\IO\WindowsRuntimeStreamExtensions.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\IO\WinRtIOHelper.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\IO\WinRtToNetFxStreamAdapter.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Resources\WindowsRuntimeResourceManager.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Runtime\InteropServices\HResults.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Runtime\InteropServices\IAgileObject.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Runtime\InteropServices\IMarshal.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Runtime\InteropServices\WindowsRuntime\AsyncInfo.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Runtime\InteropServices\WindowsRuntime\IBufferByteAccess.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Runtime\InteropServices\WindowsRuntime\WindowsRuntimeBuffer.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Runtime\InteropServices\WindowsRuntime\WindowsRuntimeBufferExtensions.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Threading\Tasks\AsyncInfoIdGenerator.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Threading\Tasks\ExceptionDispatchHelper.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Threading\Tasks\TaskToAsyncActionAdapter.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Threading\Tasks\TaskToAsyncActionWithProgressAdapter.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Threading\Tasks\TaskToAsyncInfoAdapter.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Threading\Tasks\TaskToAsyncOperationAdapter.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Threading\Tasks\TaskToAsyncOperationWithProgressAdapter.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\VoidTypeParameter.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Windows\TokenizerHelper.cs" />
-    <Compile Include="$(ProjectCommonPath)\System\Windows\UI\Color.cs" />
-  </ItemGroup>
-
-  <Target Name="FillPartialFacadeUsingTask2">  
     <GenPartialFacadesTask
-      ReferencePaths="@(GenFacadesSeeds)"
-      ReferenceAssembly="$(GenFacadesContracts)"
+      ReferencePaths="@(ReferencePath)"
+      ReferenceAssembly="$(ReferenceAssembly)"
       CompileFiles="@(Compile)"
-      DefineConstants="$(CompileConstants)"
+      DefineConstants="$(DefineConstants)"
       IgnoreMissingTypes="$(GenFacadesIgnoreMissingTypes)"
-      OutputSourcePath="C:\git\System.Runtime.WindowsRuntime.Forwards.cs"
-      AssemblyName="$(AssemblyName)"
+      OutputSourcePath="$(OutputSourcePath)"
       SeedTypePreferences="@(SeedTypePreference)"
     />
 
+    <ItemGroup>
+      <Compile Condition="Exists($(OutputSourcePath))" Include="$(OutputSourcePath)"/>
+    </ItemGroup>
   </Target>
 </Project>

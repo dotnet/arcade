@@ -24,11 +24,6 @@ namespace Microsoft.DotNet.GenFacades
 
         public bool IgnoreMissingTypes { get; set; }
 
-        public string InclusionContracts { get; set; }
-
-        [Required]
-        public string AssemblyName { get; set; }
-
         public ITaskItem[] SeedTypePreferences { get; set; }
 
         [Required]
@@ -49,22 +44,21 @@ namespace Microsoft.DotNet.GenFacades
                     Trace.WriteLine("seedTypePreferences: " + string.Join(" || ", seedTypePreferencesUnsplit));
                 }
 
-                bool error = GenPartialFacadesGenerator.Execute(
+                bool result = GenPartialFacadesGenerator.Execute(
                     ReferencePaths.Select(item => item.ItemSpec).ToArray(),
                     ReferenceAssembly,
                     CompileFiles.Select(item => item.ItemSpec).ToArray(),
-                    AssemblyName,
                     DefineConstants,
                     OutputSourcePath,
                     IgnoreMissingTypes,
                     seedTypePreferencesUnsplit);
 
-                if (error)
+                if (!result)
                 {
                     Log.LogError("Errors were encountered when generating facade(s).");
                 }
 
-                return error;
+                return result;
             }
             catch (Exception e)
             {
