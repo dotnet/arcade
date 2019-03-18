@@ -38,7 +38,7 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 | **dotnet-framework-docker**| msimons          | In progress | [ci1](https://ci.dot.net/job/Microsoft_dotnet-framework-docker/) | [Tracking issue](https://github.com/Microsoft/dotnet-framework-docker/issues/225) |
 | **docker-tools**           | msimons          | In progress | [ci1](https://ci.dot.net/job/dotnet_docker-tools/) | [Tracking issue](https://github.com/dotnet/docker-tools/issues/147) |
 |**dotnet-buildtools-prereqs-docker** | msimons | In progress | [ci1](https://ci.dot.net/job/dotnet_dotnet-buildtools-prereqs-docker/) | [Tracking issue](https://github.com/dotnet/dotnet-buildtools-prereqs-docker/issues/84) |
-| MSBuild                    | licavalc         | -           | - | chcosta - [cleaning up](https://github.com/dotnet/dotnet-ci/pull/1093) leftover Jenkins jobs |
+| MSBuild                    | licavalc         | -           | - ||
 | Roslyn                     | jaredpar         | -           | - ||
 | **SDK**                    | licavalc         | In progress | [ci2](https://ci2.dot.net/job/dotnet_sdk/) | Planned, moving perf job to Azure DevOps |
 | Standard                   | danmose          | -           | - ||
