@@ -131,7 +131,6 @@
     -->
     <ItemGroup>
       <NewManifestBuildData Include="InitialAssetsLocation=$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$(SYSTEM_TEAMPROJECT)/_apis/build/builds/$(BUILD_BUILDID)/artifacts" />
-      <NewManifestBuildData Include="ArtifactsCategory=$(ArtifactsCategory)" />
       <NewManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
       <NewManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
       <NewManifestBuildData Include="AzureDevOpsAccount=$(AzureDevOpsAccount)" />
@@ -184,6 +183,21 @@
     <Message
       Text="##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]$(TempWorkingDirectory)\$(AssetManifestFileName)"
       Importance="high" />
+
+    <!--
+      This won't be necessary once we solve this issue:
+      https://github.com/dotnet/arcade/issues/2266
+    -->
+    <WriteLinesToFile
+      File="$(MSBuildThisFileDirectory)ArtifactsCategory.props"
+      Lines="&lt;Project>&lt;PropertyGroup>&lt;ArtifactsCategory>$(ArtifactsCategory)&lt;/ArtifactsCategory>&lt;/PropertyGroup>&lt;/Project>"
+      Overwrite="true"
+      Encoding="Unicode" />
+
+    <Message
+      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(MSBuildThisFileDirectory)ArtifactsCategory.props"
+      Importance="high" />
+    
   </Target>
 
   <Target Name="PublishSymbols">
