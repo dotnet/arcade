@@ -37,6 +37,12 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public bool IsPosixShell { get; set; }
 
+        /// <summary>
+        /// Optional timeout for all created workitems
+        /// Defaults to 300s
+        /// </summary>
+        public string WorkItemTimeoutInSeconds { get; set; }
+
         public string XUnitArguments { get; set; }
 
         /// <summary>
@@ -118,11 +124,21 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishDirectory}, Command: {command}");
 
+            double timeout = 300;
+            if (!string.IsNullOrEmpty(WorkItemTimeoutInSeconds))
+            {
+                if (!double.TryParse(WorkItemTimeoutInSeconds, out timeout))
+                {
+                    Log.LogWarning($"Invalid value {WorkItemTimeoutInSeconds} provided for WorkItemTimeoutInSeconds; falling back to default value of 300");
+                }
+            }
+
             return new Microsoft.Build.Utilities.TaskItem(assemblyName, new Dictionary<string, string>()
             {
                 { "Identity", assemblyName },
                 { "PayloadDirectory", publishDirectory },
-                { "Command", command }
+                { "Command", command },
+                { "Timeout", TimeSpan.FromSeconds(timeout).ToString() },
             });
         }
     }

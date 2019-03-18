@@ -60,7 +60,7 @@
   <Target Name="CreateXUnitWorkItems"
           Condition="'@(XUnitProject)' != ''"
           BeforeTargets="CoreTest">    
-    <CreateXUnitWorkItems XUnitProjects="@(XUnitProject)" IsPosixShell="$(IsPosixShell)" XUnitArguments="$(XUnitArguments)">
+    <CreateXUnitWorkItems XUnitProjects="@(XUnitProject)" IsPosixShell="$(IsPosixShell)" XUnitArguments="$(XUnitArguments)" WorkItemTimeoutInSeconds="$(WorkItemTimeoutInSeconds)">
       <Output TaskParameter="XUnitWorkItems" ItemName="HelixWorkItem"/>
     </CreateXUnitWorkItems>
   </Target>
