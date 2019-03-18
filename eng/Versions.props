@@ -34,7 +34,7 @@
     <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
-    <NuGetVersion>4.9.3</NuGetVersion>
+    <NuGetVersion>4.9.0-rtm.5658</NuGetVersion>
     <OctokitVersion>0.30.0</OctokitVersion>
     <DotNetSleetLibVersion>2.2.127</DotNetSleetLibVersion>
     <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>
