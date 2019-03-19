@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.271
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28717.21
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Feed", "src\Microsoft.DotNet.Build.Tasks.Feed\Microsoft.DotNet.Build.Tasks.Feed.csproj", "{941D335B-AA65-4089-9502-F306B108D182}"
 EndProject
@@ -90,6 +90,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.VersionTools.Tests", "src\Microsoft.DotNet.VersionTools\tests\Microsoft.DotNet.VersionTools.Tests.csproj", "{4626A7D1-7AC0-4E21-9FED-083EF2A8194C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.VersionTools.Tasks", "src\Microsoft.DotNet.VersionTools\tasks\Microsoft.DotNet.VersionTools.Tasks.csproj", "{0A6A6D3D-DE7A-4BC2-9799-9C77E4CE87FB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SDLAutomationTool", "src\SDLAutomation\SDLAutomationTool\SDLAutomationTool.csproj", "{E7580DA4-0EFC-4625-98E8-A2EC15CE6FA2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -549,6 +551,18 @@ Global
 		{0A6A6D3D-DE7A-4BC2-9799-9C77E4CE87FB}.Release|x64.Build.0 = Release|Any CPU
 		{0A6A6D3D-DE7A-4BC2-9799-9C77E4CE87FB}.Release|x86.ActiveCfg = Release|Any CPU
 		{0A6A6D3D-DE7A-4BC2-9799-9C77E4CE87FB}.Release|x86.Build.0 = Release|Any CPU
+		{E7580DA4-0EFC-4625-98E8-A2EC15CE6FA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7580DA4-0EFC-4625-98E8-A2EC15CE6FA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7580DA4-0EFC-4625-98E8-A2EC15CE6FA2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E7580DA4-0EFC-4625-98E8-A2EC15CE6FA2}.Debug|x64.Build.0 = Debug|Any CPU
+		{E7580DA4-0EFC-4625-98E8-A2EC15CE6FA2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E7580DA4-0EFC-4625-98E8-A2EC15CE6FA2}.Debug|x86.Build.0 = Debug|Any CPU
+		{E7580DA4-0EFC-4625-98E8-A2EC15CE6FA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7580DA4-0EFC-4625-98E8-A2EC15CE6FA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7580DA4-0EFC-4625-98E8-A2EC15CE6FA2}.Release|x64.ActiveCfg = Release|Any CPU
+		{E7580DA4-0EFC-4625-98E8-A2EC15CE6FA2}.Release|x64.Build.0 = Release|Any CPU
+		{E7580DA4-0EFC-4625-98E8-A2EC15CE6FA2}.Release|x86.ActiveCfg = Release|Any CPU
+		{E7580DA4-0EFC-4625-98E8-A2EC15CE6FA2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
