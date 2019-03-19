@@ -30,8 +30,8 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 | CLI                        | licavalc         | -           | -      | - ||
 | CLICommandLineParser       | licavalc         | -           | -      | - ||
 | CLI-Migrate                | licavalc         | -           | -      | - ||
-| **CoreClr**                | russellk         | In progress | Medium | ci1, ci2, ci3 | Under discussion: the highest risk is getting the CoreFx jobs for CoreClr working in Azure DevOps.  There are a lot of other jobs that need to be ported, but they are relatively straightforward or can be manually run on demand if Azure DevOps does not have full support for what is needed (CoreClr really wants queue time parameters to be supported via comment triggers and that work is scheduled for Q2)|
-| **CoreFx**                 | danmose          | In progress | Low    | [ci2](https://ci2.dot.net/job/dotnet_corefx/job/perf/)(perf) | Under discussion to delete perf job |
+| **CoreClr**                | russellk         | In progress | Medium | ci1, ci2, ci3 | Under discussion: the highest risk is getting the CoreFx jobs for CoreClr working in Azure DevOps. There are a lot of other jobs that need to be ported but they are low risk. (CoreClr really wants queue time parameters to be supported via comment triggers and that work is scheduled for Q2) |
+| **CoreFx**                 | danmose          | In progress | Low    | [ci2](https://ci2.dot.net/job/dotnet_corefx/job/perf/) (perf) | Under discussion to delete perf job |
 | Core-SDK                   | licavalc         | -           | -      | - ||
 | Core-Setup                 | dleeapho         | -           | -      | - ||
 | **dotnet-docker**          | msimons          | In progress | Low    | [ci1](https://ci.dot.net/job/dotnet_dotnet-docker/) | [Tracking issue](https://github.com/dotnet/dotnet-docker/issues/744), no known blocking issues at this time |
