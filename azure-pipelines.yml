@@ -34,6 +34,7 @@ jobs:
     enablePublishBuildArtifacts: true
     enablePublishTestResults: true
     enablePublishBuildAssets: true
+    enablePublishUsingPipelines: $(_PublishUsingPipelines)
     enableTelemetry: true
     graphFileGeneration:
       enabled: true
