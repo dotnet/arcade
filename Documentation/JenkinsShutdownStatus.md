@@ -20,39 +20,39 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 
 ## Status Overview
 
-| Repo                       | Owner            | Status      | Curent Jenkins jobs | Notes |
-| ---------------------------| ---------------- | ----------- | ------------------- | ----- |
-| Arcade                     | mawilkie         | -           | - ||
-| aspnet-AspNetCore          | namc             | -           | - ||
-| aspnet-AspNetCore-Tooling  | namc             | -           | - ||
-| aspnet-EntityFrameworkCore | namc             | -           | - ||
-| aspnet-Extensions          | namc             | -           | - ||
-| CLI                        | licavalc         | -           | - ||
-| CLICommandLineParser       | licavalc         | -           | - ||
-| CLI-Migrate                | licavalc         | -           | - ||
-| **CoreClr**                | russellk         | In progress | ci1, ci2, ci3 | Under discussion |
-| **CoreFx**                 | danmose          | In progress | [ci2](https://ci2.dot.net/job/dotnet_corefx/job/perf/)(perf) | Under discussion to delete perf job |
-| Core-SDK                   | licavalc         | -           | - ||
-| Core-Setup                 | dleeapho         | -           | - ||
-| **dotnet-docker**          | msimons          | In progress | [ci1](https://ci.dot.net/job/dotnet_dotnet-docker/) | [Tracking issue](https://github.com/dotnet/dotnet-docker/issues/744) |
-| **dotnet-framework-docker**| msimons          | In progress | [ci1](https://ci.dot.net/job/Microsoft_dotnet-framework-docker/) | [Tracking issue](https://github.com/Microsoft/dotnet-framework-docker/issues/225) |
-| **docker-tools**           | msimons          | In progress | [ci1](https://ci.dot.net/job/dotnet_docker-tools/) | [Tracking issue](https://github.com/dotnet/docker-tools/issues/147) |
-|**dotnet-buildtools-prereqs-docker** | msimons | In progress | [ci1](https://ci.dot.net/job/dotnet_dotnet-buildtools-prereqs-docker/) | [Tracking issue](https://github.com/dotnet/dotnet-buildtools-prereqs-docker/issues/84) |
-| MSBuild                    | licavalc         | -           | - ||
-| Roslyn                     | jaredpar         | -           | - ||
-| **SDK**                    | licavalc         | In progress | [ci2](https://ci2.dot.net/job/dotnet_sdk/) | Planned, moving perf job to Azure DevOps |
-| Standard                   | danmose          | -           | - ||
-| SymReader                  | tmat             | -           | - ||
-| SymReader-Portable         | tmat             | -           | - ||
-| Templating                 | vramak           | -           | - ||
-| **TestFx**                 | sarabjot         | In progress | [ci1](https://ci.dot.net/job/Microsoft_testfx/job/master/) | Planned |
-| Test-Templates             | sasin            | -           | - ||
-| Toolset                    | licavalc         | -           | - ||
-| VSTest                     | sarabjot         | -           | - ||
-| VisualFSharp               | brettfo          | -           | - ||
-| WebSDK                     | vramak           | -           | - ||
-| WinForms                   | mmcgaw           | -           | - ||
-| WPF                        | vatsan-madhavan  | -           | - ||
+| Repo                       | Owner            | Status      | Risk   | Curent Jenkins jobs | Notes |
+| ---------------------------| ---------------- |:-----------:|:------:| ------------------- | ----- |
+| Arcade                     | mawilkie         | -           | -      | - ||
+| aspnet-AspNetCore          | namc             | -           | -      | - ||
+| aspnet-AspNetCore-Tooling  | namc             | -           | -      | - ||
+| aspnet-EntityFrameworkCore | namc             | -           | -      | - ||
+| aspnet-Extensions          | namc             | -           | -      | - ||
+| CLI                        | licavalc         | -           | -      | - ||
+| CLICommandLineParser       | licavalc         | -           | -      | - ||
+| CLI-Migrate                | licavalc         | -           | -      | - ||
+| **CoreClr**                | russellk         | In progress | Medium | ci1, ci2, ci3 | Under discussion: the highest risk is getting the CoreFx jobs for CoreClr working in Azure DevOps.  There are a lot of other jobs that need to be ported, but they are relatively straightforward or can be manually run on demand if Azure DevOps does not have full support for what is needed (CoreClr really wants queue time parameters to be supported via comment triggers and that work is scheduled for Q2)|
+| **CoreFx**                 | danmose          | In progress | Low    | [ci2](https://ci2.dot.net/job/dotnet_corefx/job/perf/)(perf) | Under discussion to delete perf job |
+| Core-SDK                   | licavalc         | -           | -      | - ||
+| Core-Setup                 | dleeapho         | -           | -      | - ||
+| **dotnet-docker**          | msimons          | In progress | Low    | [ci1](https://ci.dot.net/job/dotnet_dotnet-docker/) | [Tracking issue](https://github.com/dotnet/dotnet-docker/issues/744), no known blocking issues at this time |
+| **dotnet-framework-docker**| msimons          | In progress | Low    | [ci1](https://ci.dot.net/job/Microsoft_dotnet-framework-docker/) | [Tracking issue](https://github.com/Microsoft/dotnet-framework-docker/issues/225), no known blocking issues at this time |
+| **docker-tools**           | msimons          | In progress | Low    | [ci1](https://ci.dot.net/job/dotnet_docker-tools/) | [Tracking issue](https://github.com/dotnet/docker-tools/issues/147), no known blocking issues at this time |
+|**dotnet-buildtools-prereqs-docker** | msimons | In progress | Low    | [ci1](https://ci.dot.net/job/dotnet_dotnet-buildtools-prereqs-docker/) | [Tracking issue](https://github.com/dotnet/dotnet-buildtools-prereqs-docker/issues/84), no known blocking issues at this time |
+| MSBuild                    | licavalc         | -           | -      | - ||
+| Roslyn                     | jaredpar         | -           | -      | - ||
+| **SDK**                    | licavalc         | In progress | Low    | [ci2](https://ci2.dot.net/job/dotnet_sdk/) | Planned, moving perf job to Azure DevOps |
+| Standard                   | danmose          | -           | -      | - ||
+| SymReader                  | tmat             | -           | -      | - ||
+| SymReader-Portable         | tmat             | -           | -      | - ||
+| Templating                 | vramak           | -           | -      | - ||
+| **TestFx**                 | sarabjot         | In progress | Low    | [ci1](https://ci.dot.net/job/Microsoft_testfx/job/master/) | Planned |
+| Test-Templates             | sasin            | -           | -      | - ||
+| Toolset                    | licavalc         | -           | -      | - ||
+| VSTest                     | sarabjot         | -           | -      | - ||
+| VisualFSharp               | brettfo          | -           | -      | - ||
+| WebSDK                     | vramak           | -           | -      | - ||
+| WinForms                   | mmcgaw           | -           | -      | - ||
+| WPF                        | vatsan-madhavan  | -           | -      | - ||
 
 `-` means an item is complete or not needed
 
