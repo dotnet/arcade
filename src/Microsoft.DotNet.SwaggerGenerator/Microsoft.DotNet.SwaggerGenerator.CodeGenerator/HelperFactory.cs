@@ -262,6 +262,9 @@ namespace Microsoft.DotNet.SwaggerGenerator
             }
         }
 
+        private static readonly Type UndefinedBindingResultType =
+            typeof(Handlebars).Assembly.GetType("HandlebarsDotNet.Compiler.UndefinedBindingResult");
+
         private static Expression CoerceObjectExpression(Type output, Expression input)
         {
             if (output == typeof(bool))
@@ -272,6 +275,15 @@ namespace Microsoft.DotNet.SwaggerGenerator
             if (output.IsPrimitive)
             {
                 return Expression.Convert(Expression.Call(ConvertChangeType, input, Expression.Constant(output)), output);
+            }
+
+            if (!output.IsValueType ||
+                (output.IsConstructedGenericType && output.GetGenericTypeDefinition() == typeof(Nullable<>)))
+            {
+                input = Expression.Condition(
+                    Expression.TypeIs(input, UndefinedBindingResultType),
+                    Expression.Constant(null, typeof(object)),
+                    input);
             }
 
             return Expression.Convert(input, output);

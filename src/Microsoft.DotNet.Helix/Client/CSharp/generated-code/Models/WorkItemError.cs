@@ -26,9 +26,15 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                return
-                    !(string.IsNullOrEmpty(Id)) &&
-                    !(string.IsNullOrEmpty(Message));
+                if (string.IsNullOrEmpty(Id))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Message))
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

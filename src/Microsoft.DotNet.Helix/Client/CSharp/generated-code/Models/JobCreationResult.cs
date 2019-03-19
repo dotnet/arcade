@@ -22,15 +22,30 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("WaitUrl")]
         public string WaitUrl { get; set; }
 
+        [JsonProperty("ResultsUri")]
+        public string ResultsUri { get; set; }
+
+        [JsonProperty("ResultsUriRSAS")]
+        public string ResultsUriRSAS { get; set; }
+
         [JsonIgnore]
         public bool IsValid
         {
             get
             {
-                return
-                    !(string.IsNullOrEmpty(Name)) &&
-                    !(string.IsNullOrEmpty(SummaryUrl)) &&
-                    !(string.IsNullOrEmpty(WaitUrl));
+                if (string.IsNullOrEmpty(Name))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(SummaryUrl))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(WaitUrl))
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

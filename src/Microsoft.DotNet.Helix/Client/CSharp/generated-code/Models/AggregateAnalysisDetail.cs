@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class AggregateAnalysisDetail
     {
-        public AggregateAnalysisDetail(AggregateAnalysisDetailAnalysis analysis, string job, string workItem, IImmutableDictionary<string, string> key)
+        public AggregateAnalysisDetail(Newtonsoft.Json.Linq.JToken analysis, string job, string workItem, IImmutableDictionary<string, string> key)
         {
             Analysis = analysis;
             Job = job;
@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         }
 
         [JsonProperty("Analysis")]
-        public AggregateAnalysisDetailAnalysis Analysis { get; set; }
+        public Newtonsoft.Json.Linq.JToken Analysis { get; set; }
 
         [JsonProperty("Job")]
         public string Job { get; set; }
@@ -31,11 +31,23 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                return
-                    !(Analysis == default) &&
-                    !(string.IsNullOrEmpty(Job)) &&
-                    !(string.IsNullOrEmpty(WorkItem)) &&
-                    !(Key == default);
+                if (Analysis == default)
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Job))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(WorkItem))
+                {
+                    return false;
+                }
+                if (Key == default)
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

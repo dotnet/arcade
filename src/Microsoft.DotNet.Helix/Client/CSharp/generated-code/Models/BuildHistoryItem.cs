@@ -27,10 +27,11 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                return
-                    !(string.IsNullOrEmpty(BuildNumber)) &&
-                    !(Timestamp == default) &&
-                    !(Passed == default);
+                if (string.IsNullOrEmpty(BuildNumber))
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

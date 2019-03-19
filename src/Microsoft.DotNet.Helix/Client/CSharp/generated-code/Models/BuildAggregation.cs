@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class BuildAggregation
     {
-        public BuildAggregation(string buildNumber, IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken> sources)
+        public BuildAggregation(string buildNumber, IImmutableDictionary<string, BuildAggregationSource> sources)
         {
             BuildNumber = buildNumber;
             Sources = sources;
@@ -16,15 +16,18 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string BuildNumber { get; set; }
 
         [JsonProperty("Sources")]
-        public IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken> Sources { get; }
+        public IImmutableDictionary<string, BuildAggregationSource> Sources { get; }
 
         [JsonIgnore]
         public bool IsValid
         {
             get
             {
-                return
-                    !(string.IsNullOrEmpty(BuildNumber));
+                if (string.IsNullOrEmpty(BuildNumber))
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

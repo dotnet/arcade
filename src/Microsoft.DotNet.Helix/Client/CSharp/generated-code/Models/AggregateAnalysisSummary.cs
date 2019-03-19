@@ -27,10 +27,19 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                return
-                    !(string.IsNullOrEmpty(Type)) &&
-                    !(string.IsNullOrEmpty(Name)) &&
-                    !(Status == default);
+                if (string.IsNullOrEmpty(Type))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Name))
+                {
+                    return false;
+                }
+                if (Status == default)
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

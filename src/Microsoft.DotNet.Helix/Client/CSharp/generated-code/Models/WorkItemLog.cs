@@ -23,9 +23,15 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                return
-                    !(string.IsNullOrEmpty(Module)) &&
-                    !(string.IsNullOrEmpty(Uri));
+                if (string.IsNullOrEmpty(Module))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Uri))
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

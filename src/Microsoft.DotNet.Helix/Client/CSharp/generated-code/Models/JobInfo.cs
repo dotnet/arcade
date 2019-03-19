@@ -40,11 +40,23 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                return
-                    !(string.IsNullOrEmpty(QueueId)) &&
-                    !(string.IsNullOrEmpty(Source)) &&
-                    !(string.IsNullOrEmpty(Type)) &&
-                    !(string.IsNullOrEmpty(Build));
+                if (string.IsNullOrEmpty(QueueId))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Source))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Type))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Build))
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

@@ -23,9 +23,15 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                return
-                    !(Analysis == default) &&
-                    !(WorkItemStatus == default);
+                if (Analysis == default)
+                {
+                    return false;
+                }
+                if (WorkItemStatus == default)
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }
