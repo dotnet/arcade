@@ -14,7 +14,7 @@ parameters:
   # Optional: Enable publishing to the build asset registry
   enablePublishBuildAssets: false
 
-  # Optional: Enable publishing to the build asset registry
+  # Optional: Enable publishing using release pipelines
   enablePublishUsingPipelines: false
   
   graphFileGeneration:
