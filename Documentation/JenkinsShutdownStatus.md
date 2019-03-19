@@ -44,13 +44,13 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 | Standard                   | danmose          | -           | - ||
 | SymReader                  | tmat             | -           | - ||
 | SymReader-Portable         | tmat             | -           | - ||
-| **Templating**             | vramak           | In progress | [ci1](https://ci.dot.net/job/dotnet_templating/job/master/) | Under discussion |
+| Templating                 | vramak           | -           | - ||
 | **TestFx**                 | sarabjot         | In progress | [ci1](https://ci.dot.net/job/Microsoft_testfx/job/master/) | Planned |
 | Test-Templates             | sasin            | -           | - ||
 | Toolset                    | licavalc         | -           | - ||
 | VSTest                     | sarabjot         | -           | - ||
 | VisualFSharp               | brettfo          | -           | - ||
-| **WebSDK**                 | vramak           | In progress | [ci1](https://ci.dot.net/job/aspnet_websdk/job/master/) | Under discussion |
+| WebSDK                     | vramak           | -           | - ||
 | WinForms                   | mmcgaw           | -           | - ||
 | WPF                        | vatsan-madhavan  | -           | - ||
 
