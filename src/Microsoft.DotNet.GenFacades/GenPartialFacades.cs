@@ -127,11 +127,6 @@ namespace Microsoft.DotNet.GenFacades
             List<string> result = typeForwardsToForward.Concat(typesToForward)
                                         .Select(type => TypeHelper.GetTypeName(type, NameFormattingOptions.DocumentationId)).ToList();
 
-            foreach (var type in typesToForward)
-            {
-                AddNestedTypeDocIds(result, type);
-            }
-
             return result;
         }
 

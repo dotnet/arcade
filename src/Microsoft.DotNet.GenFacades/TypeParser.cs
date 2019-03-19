@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Microsoft.DotNet.GenFacades
 {
@@ -42,7 +43,6 @@ namespace Microsoft.DotNet.GenFacades
                         string typeName = typeNameExpression.Type.ToFullString();
                         types.Add(typeName);
                     }
-
                 }
             }
         }
@@ -148,12 +148,18 @@ namespace Microsoft.DotNet.GenFacades
 
         private static bool HasPublicModifier(BaseTypeDeclarationSyntax token)
         {
-            return HasPublicModifier(token.Modifiers);
+            if (token.Parent == null || token.Parent.GetType() == typeof(NamespaceDeclarationSyntax))
+                return HasPublicModifier(token.Modifiers);
+
+            return HasPublicModifier(token.Modifiers) && HasPublicModifier((BaseTypeDeclarationSyntax)(token.Parent));
         }
 
         private static bool HasPublicModifier(DelegateDeclarationSyntax token)
         {
-            return HasPublicModifier(token.Modifiers);
+            if (token.Parent == null || token.Parent.GetType() == typeof(NamespaceDeclarationSyntax))
+                return HasPublicModifier(token.Modifiers);
+
+            return HasPublicModifier(token.Modifiers) && HasPublicModifier((BaseTypeDeclarationSyntax)(token.Parent));
         }
 
         private static bool HasPublicModifier(SyntaxTokenList modifiers)
@@ -172,7 +178,35 @@ namespace Microsoft.DotNet.GenFacades
         {
             if (!string.IsNullOrEmpty(alias))
                 alias += "::";
-            return "[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(" + alias + typeName.Substring(2) + "))]\n";
+
+            return "[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(" + alias + TransformGenericTypes(typeName.Substring(2)) + "))]\n";
+        }
+
+        private static string TransformGenericTypes(string typeName)
+        {
+            if (!typeName.Contains('`'))
+                return typeName;
+
+            StringBuilder sb = new StringBuilder();
+            string[] stringParts = typeName.Split('`');
+            sb.Append(stringParts[0]);
+
+            for (int i = 0; i < stringParts.Length - 1; i++)
+            {
+                if (i != 0)
+                {
+                    sb.Append(stringParts[i].Substring(1));
+                }
+
+                int numberOfGenericParameters = int.Parse(stringParts[i + 1][0].ToString());
+
+                sb.Append("<");
+                sb.Append(',', numberOfGenericParameters - 1);
+                sb.Append('>');
+            }
+
+            sb.Append(stringParts[stringParts.Length - 1].Substring(1));
+            return sb.ToString();
         }
     }
 }
