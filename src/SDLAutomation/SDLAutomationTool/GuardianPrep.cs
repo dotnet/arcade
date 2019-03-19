@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
+using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
+using NuGet.Packaging;
 
 namespace SDLAutomationTool
 {
@@ -110,14 +112,36 @@ namespace SDLAutomationTool
             try
             {
                 const string name = "PATH";
-                string pathvar = System.Environment.GetEnvironmentVariable(name);
-                var value = pathvar + ";" + packagePath + @"\versions\Microsoft.Guardian.Cli.0.0.38\tools\\;" + nugetPath + ";";
+                string pathvar = System.Environment.GetEnvironmentVariable(name);                
+                var value = $"{pathvar};{packagePath}\\versions\\{GetGuardianPackageVersion()}\\tools\\;{nugetPath};";
                 Environment.SetEnvironmentVariable(name, value);
             }
             catch (System.Security.SecurityException se)
             {
                 _log.LogError(se.Message, null);
             }
+        }
+
+        /// <summary>
+        /// Reads the packages.config to find the id and version of the Guardian Package
+        /// </summary>
+        /// <returns>id and package of Guardian Package as a string</returns>
+        public string GetGuardianPackageVersion()
+        {
+            var document = XDocument.Load(@".\packages.config");
+            var reader = new PackagesConfigReader(document);
+            foreach (PackageReference package in reader.GetPackages())
+            {
+                if (package.PackageIdentity.ToString().Contains("Microsoft.Guardian"))
+                {
+                    return package.PackageIdentity.ToString();
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            return null;
         }
     }
 }

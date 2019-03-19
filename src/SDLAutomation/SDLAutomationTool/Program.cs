@@ -21,8 +21,8 @@ namespace SDLAutomationTool
 
         private static int Main(string[] args)
         {
-            string logLevel = null;
-            string baseline = null;
+            string logLevel = "standard";
+            string baseline = "baseline";
             bool updateBaseline = false;
             string workingDirectory = null;
             string guardianInstallPath = null;
