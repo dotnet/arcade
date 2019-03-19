@@ -15,7 +15,7 @@ fi
 
 # Additional xunit arguments
 if [[ $4 ]]; then
-  export ADDITIONAL_XUNIT_ARGUMENTS=$4
+  export ADDITIONAL_RUN_ARGUMENTS=$4
 fi
 
 # Don't use a globally installed SDK.

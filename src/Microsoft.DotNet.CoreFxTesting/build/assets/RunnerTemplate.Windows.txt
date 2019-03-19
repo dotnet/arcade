@@ -24,7 +24,7 @@ set GLOBAL_TOOLS_DIR=%~3
 
 :: Additional xunit arguments
 if not "%~4" == "" (
-set ADDITIONAL_XUNIT_ARGUMENTS=%~4
+set ADDITIONAL_RUN_ARGUMENTS=%~4
 )
 
 :: Don't use a globally installed SDK.
