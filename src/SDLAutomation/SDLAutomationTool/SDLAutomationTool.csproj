@@ -12,14 +12,6 @@
     <PackageReference Include="NuGet.Packaging" Version="4.9.4" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <RestoreSources>
-      https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
-      https://api.nuget.org/v3/index.json;
-      https://securitytools.pkgs.visualstudio.com/_packaging/Guardian/nuget/v3/index.json;
-    </RestoreSources>
-  </PropertyGroup>
-
   <ItemGroup>
     <None Update="packages.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
