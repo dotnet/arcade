@@ -30,9 +30,15 @@ jobs:
   pool: ${{ parameters.pool }}
 
   variables:
-  - ${{ if ne(variables._PublishUsingPipelines, 'true') }}:
+  - ${{ if ne(variables['_PublishUsingPipelines'], 'true') }}:
     - name: _PublishUsingPipelines
-      value: false
+      value: 2
+  - ${{ if ne(variables['_PublishUsingPipelines'], true) }}:
+    - name: _PublishUsingPipelines
+      value: 3
+  - ${{ if ne(variables._PublishUsingPipelines, true) }}:
+    - name: _PublishUsingPipelines
+      value: 4
   - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - name: _BuildConfig
       value: ${{ parameters.configuration }}
