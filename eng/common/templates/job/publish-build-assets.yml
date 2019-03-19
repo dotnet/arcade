@@ -20,7 +20,7 @@ parameters:
   #           if 'true', the build won't run any of the internal only steps, even if it is running in non-public projects.
   runAsPublic: false
 
-  # Optional: whether this build was intended to publish artifacts using pipelines
+  # Optional: whether the build's artifacts will be published using release pipelines or direct feed publishing
   publishUsingPipelines: false
 
 jobs:
