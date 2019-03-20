@@ -61,7 +61,6 @@ Additionally, here are other Jenkins jobs which are not specifically part of the
 
 | Job name                      | Jenkins link                                                                | Owner        | Removal plan |
 | ----------------------------- | --------------------------------------------------------------------------- | ------------ | ------------ |
-| adiaaida_coreclr              | [ci3](https://ci3.dot.net/job/adiaaida_coreclr/)                            | adiaaida     ||
 | aspnet_aspnet-docker          | [ci3](https://ci3.dot.net/job/aspnet_aspnet-docker/)                        |              ||
 | aspnet_IISIntegration         | [ci3](https://ci3.dot.net/job/aspnet_IISIntegration/job/master/)            |              ||
 | aspnet_KestrelHttpServer      | [ci3](https://ci3.dot.net/job/aspnet_KestrelHttpServer/job/master/)         |              ||
@@ -88,7 +87,4 @@ Additionally, here are other Jenkins jobs which are not specifically part of the
 | Microsoft_ConcordExtensibilitySamples | [ci1](https://ci.dot.net/job/Microsoft_ConcordExtensibilitySamples/)|              ||
 | Microsoft_MIEngine            | [ci1](https://ci.dot.net/job/Microsoft_MIEngine/)                           |              ||
 | Microsoft_PartsUnlimited      | [ci1](https://ci.dot.net/job/Microsoft_PartsUnlimited/)                     |              ||
-| mmitche_coreclr               | [ci3](https://ci3.dot.net/job/mmitche_coreclr/)                             | mmitche      ||
 | mono_linker                   | [ci1](https://ci.dot.net/job/mono_linker/)                                  |              ||
-| nategraf_coreclr              | [ci2](https://ci2.dot.net/job/nategraf_coreclr/)                            | nategraf     ||
-| sbomer_coreclr                | [ci3](https://ci3.dot.net/job/sbomer_coreclr/)                              | sbomer       ||
