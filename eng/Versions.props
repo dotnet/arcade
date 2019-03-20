@@ -61,6 +61,7 @@
     <MicrosoftDiaSymReaderConverterVersion>1.1.0-beta1-62810-01</MicrosoftDiaSymReaderConverterVersion>
     <MicrosoftDiaSymReaderNativeVersion>1.7.0</MicrosoftDiaSymReaderNativeVersion>
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.19104.1</MicrosoftDotNetMaestroClientVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>1.0.0-beta.19169.10</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
   </PropertyGroup>
   <PropertyGroup>
     <RestoreSources>
