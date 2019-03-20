@@ -32,43 +32,35 @@ namespace Microsoft.DotNet.GenFacades
         public override bool Execute()
         {
             TraceLogger logger = new TraceLogger(Log);
-
+            bool result = true;
             try
             {
                 Trace.Listeners.Add(logger);
 
-                string[] seedTypePreferencesUnsplit = null;
-                if (SeedTypePreferences != null)
-                {
-                    seedTypePreferencesUnsplit = SeedTypePreferences.Select(iti => $"{iti.ItemSpec}={iti.GetMetadata("Aliases")}").ToArray();
-                    Trace.WriteLine("seedTypePreferences: " + string.Join(" || ", seedTypePreferencesUnsplit));
-                }
-
-                bool result = GenPartialFacadesGenerator.Execute(
+                result = GenPartialFacadesGenerator.Execute(
                     ReferencePaths.Select(item => item.ItemSpec).ToArray(),
                     ReferenceAssembly,
                     CompileFiles.Select(item => item.ItemSpec).ToArray(),
                     DefineConstants,
                     OutputSourcePath,
                     IgnoreMissingTypes,
-                    seedTypePreferencesUnsplit);
+                    SeedTypePreferences);
 
                 if (!result)
                 {
                     Log.LogError("Errors were encountered when generating facade(s).");
                 }
-
-                return result;
             }
             catch (Exception e)
             {
                 Log.LogErrorFromException(e, showStackTrace: false);
-                return false;
             }
             finally
             {
                 Trace.Listeners.Remove(logger);
             }
+
+            return result && !Log.HasLoggedErrors;
         }
     }
 }

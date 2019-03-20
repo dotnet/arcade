@@ -15,19 +15,19 @@ namespace Microsoft.DotNet.GenFacades
     internal class SourceGenerator
     {
         private readonly IReadOnlyDictionary<string, string> _seedTypePreferences;
-        private readonly IEnumerable<string> _docIds;
-        private readonly IReadOnlyDictionary<string, IReadOnlyList<INamedTypeDefinition>> _typeTable;
+        private readonly IEnumerable<string> _referenceTypes;
+        private readonly IReadOnlyDictionary<string, IReadOnlyList<INamedTypeDefinition>> _seedTypes;
         private readonly string _outputSourcePath;
 
         public SourceGenerator(
-            IEnumerable<string> docIdTable,
-            IReadOnlyDictionary<string, IReadOnlyList<INamedTypeDefinition>> typeTable,
+            IEnumerable<string> referenceTypes,
+            IReadOnlyDictionary<string, IReadOnlyList<INamedTypeDefinition>> seedTypes,
             IReadOnlyDictionary<string, string> seedTypePreferences,
             string outputSourcePath
             )
         {
-            _docIds = docIdTable;
-            _typeTable = typeTable;
+            _referenceTypes = referenceTypes;
+            _seedTypes = seedTypes;
             _seedTypePreferences = seedTypePreferences;
             _outputSourcePath = outputSourcePath;
         }
@@ -42,18 +42,18 @@ namespace Microsoft.DotNet.GenFacades
             StringBuilder sb = new StringBuilder();
             bool result = true;
 
-            List<string> existingDocIds = TypeParser.GetAllTypes(compileFiles, constants);
-            IEnumerable<string> docIdsToForward = _docIds.Where(id => !existingDocIds.Contains(id.Substring(2)));
+            HashSet<string> existingTypes = TypeParser.GetAllPublicTypes(compileFiles, constants);
+            IEnumerable<string> typesToForward = _referenceTypes.Where(id => !existingTypes.Contains(id));
 
-            foreach (string docId in docIdsToForward)
+            foreach (string type in typesToForward)
             {
                 IReadOnlyList<INamedTypeDefinition> seedTypes;
-                if (!_typeTable.TryGetValue(docId, out seedTypes))
+                if (!_seedTypes.TryGetValue(type, out seedTypes))
                 {
                     if (!ignoreMissingTypes)
                     {
                         result = false;
-                        Trace.TraceError("Did not find type '{0}' in any of the seed assemblies.", docId);
+                        Trace.TraceError("Did not find type '{0}' in any of the seed assemblies.", type);
                     }
                     continue;
                 }
@@ -61,21 +61,21 @@ namespace Microsoft.DotNet.GenFacades
                 string alias = "";
                 if (seedTypes.Count > 1)
                 {
-                    if (_seedTypePreferences.Keys.Contains(docId))
+                    if (_seedTypePreferences.Keys.Contains(type))
                     {
-                        alias = _seedTypePreferences[docId];
+                        alias = _seedTypePreferences[type];
                         if (!externAliases.Contains(alias))
                             externAliases.Add(alias);
                     }
                     else
                     {
-                        TraceDuplicateSeedTypeError(docId, seedTypes);
+                        TraceDuplicateSeedTypeError(type, seedTypes);
                         result = false;
                         continue;
                     }
                 }
                 
-                sb.Append(TypeParser.AddTypeForwardToStringBuilder(docId, alias));
+                sb.AppendLine(TypeParser.AddTypeForwardToStringBuilder(type, alias));
             }
 
             File.WriteAllText(_outputSourcePath, AppendAliases(externAliases) + sb.ToString());
@@ -84,25 +84,19 @@ namespace Microsoft.DotNet.GenFacades
 
         private string AppendAliases(IEnumerable<string> externAliases)
         {
-            string aliases = string.Empty;
+            StringBuilder sb = new StringBuilder();
             foreach (string alias in externAliases)
             {
-                aliases += "extern alias " + alias + ";\n";
+                sb.AppendLine(string.Format("extern alias {0};", alias));
             }
 
-            return aliases;
+            return sb.ToString();
         }
 
         private static void TraceDuplicateSeedTypeError(string docId, IReadOnlyList<INamedTypeDefinition> seedTypes)
         {
             var sb = new StringBuilder();
-            sb.AppendFormat("The type '{0}' is defined in multiple seed assemblies. If this is intentional, specify one of the following arguments to choose the preferred seed type:", docId);
-
-            foreach (INamedTypeDefinition type in seedTypes)
-            {
-                sb.AppendFormat("/preferSeedType:{0}={1}", docId.Substring("T:".Length), type.GetAssembly().Name.Value);
-            }
-
+            sb.AppendFormat("The type '{0}' is defined in multiple seed assemblies. If this is intentional, specify the alias for this type and project reference", docId);
             Trace.TraceError(sb.ToString());
         }
     }

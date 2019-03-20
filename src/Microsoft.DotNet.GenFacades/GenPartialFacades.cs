@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Build.Framework;
 using Microsoft.Cci;
 using Microsoft.Cci.Extensions;
 using System;
@@ -21,7 +22,7 @@ namespace Microsoft.DotNet.GenFacades
             string defineConstants,
             string outputSourcePath,
             bool ignoreMissingTypes = false,
-            string[] seedTypePreferencesUnsplit = null,
+            ITaskItem[] seedTypePreferencesUnsplit = null,
             ErrorTreatment seedLoadErrorTreatment = ErrorTreatment.Default,
             ErrorTreatment contractLoadErrorTreatment = ErrorTreatment.Default)
         {
@@ -39,12 +40,11 @@ namespace Microsoft.DotNet.GenFacades
                     seedHost.LoadErrorTreatment = seedLoadErrorTreatment;
                     
                     IAssembly contractAssembly = contractHost.LoadAssembly(referenceAssembly);
-                    IEnumerable<string> docIdTable = EnumerateDocIdsToForward(contractAssembly);
-
+                    IEnumerable<string> referenceTypes = EnumerateDocIdsToForward(contractAssembly);
                     IAssembly[] seedAssemblies = LoadAssemblies(seedHost, seeds).ToArray();
-                    var typeTable = GenerateTypeTable(seedAssemblies);
+                    var seedTypes = GenerateTypeTable(seedAssemblies);
 
-                    var sourceGenerator = new SourceGenerator(docIdTable, typeTable, seedTypePreferences, outputSourcePath);
+                    var sourceGenerator = new SourceGenerator(referenceTypes, seedTypes, seedTypePreferences, outputSourcePath);
                     return sourceGenerator.GenerateSource(compileFiles, ParseDefineConstants(defineConstants), ignoreMissingTypes);
                 }
             }
@@ -61,32 +61,21 @@ namespace Microsoft.DotNet.GenFacades
             return defineConstants?.Split(';', ',').Where(t => !string.IsNullOrEmpty(t)).ToArray();
         }
 
-        private static Dictionary<string, string> ParseSeedTypePreferences(string[] preferences)
+        private static Dictionary<string, string> ParseSeedTypePreferences(ITaskItem[] preferences)
         {
             var dictionary = new Dictionary<string, string>(StringComparer.Ordinal);
 
             if (preferences != null)
             {
-                foreach (string preference in preferences)
+                foreach (var item in preferences)
                 {
-                    int i = preference.IndexOf('=');
-                    if (i < 0)
-                    {
-                        throw new FacadeGenerationException("Invalid seed type preference. Correct usage is /preferSeedType:FullTypeName=AliasName;");
-                    }
-
-                    string key = preference.Substring(0, i);
-                    string value = preference.Substring(i + 1);
-
-                    if (!key.StartsWith("T:", StringComparison.Ordinal))
-                    {
-                        key = "T:" + key;
-                    }
-
+                    string key = item.ItemSpec;
+                    string value = item.GetMetadata("Aliases");
                     string existingValue;
+
                     if (dictionary.TryGetValue(key, out existingValue))
                     {
-                        Trace.TraceWarning("Overriding /preferSeedType:{0}={1} with /preferSeedType:{2}={3}.", key, existingValue, key, value);
+                        Trace.TraceWarning("Overriding SeedType{0} for type {1} with {2}", existingValue, key, value);
                     }
 
                     dictionary[key] = value;
@@ -125,7 +114,7 @@ namespace Microsoft.DotNet.GenFacades
             var typesToForward = contractAssembly.GetAllTypes().Where(t => TypeHelper.IsVisibleOutsideAssembly(t))
                                                                .OfType<INamespaceTypeDefinition>();
             List<string> result = typeForwardsToForward.Concat(typesToForward)
-                                        .Select(type => TypeHelper.GetTypeName(type, NameFormattingOptions.DocumentationId)).ToList();
+                                        .Select(type => TypeHelper.GetTypeName(type, NameFormattingOptions.UseGenericTypeNameSuffix)).ToList();
 
             return result;
         }
@@ -135,7 +124,7 @@ namespace Microsoft.DotNet.GenFacades
             foreach (var nestedType in type.NestedTypes)
             {
                 if (TypeHelper.IsVisibleOutsideAssembly(nestedType))
-                    docIds.Add(TypeHelper.GetTypeName(nestedType, NameFormattingOptions.DocumentationId));
+                    docIds.Add(TypeHelper.GetTypeName(nestedType));
                 AddNestedTypeDocIds(docIds, nestedType);
             }
         }
@@ -160,7 +149,7 @@ namespace Microsoft.DotNet.GenFacades
             if (type != null)
             {
                 IReadOnlyList<INamedTypeDefinition> seedTypes;
-                string docId = TypeHelper.GetTypeName(type, NameFormattingOptions.DocumentationId);
+                string docId = TypeHelper.GetTypeName(type, NameFormattingOptions.UseGenericTypeNameSuffix);
                 if (!typeTable.TryGetValue(docId, out seedTypes))
                 {
                     seedTypes = new List<INamedTypeDefinition>(1);

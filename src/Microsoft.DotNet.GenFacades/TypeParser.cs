@@ -14,9 +14,9 @@ namespace Microsoft.DotNet.GenFacades
 {
     internal class TypeParser
     {
-        public static List<string> GetAllTypes(IEnumerable<string> files, IEnumerable<string> constants)
+        public static HashSet<string> GetAllPublicTypes(IEnumerable<string> files, IEnumerable<string> constants)
         {
-            List<string> types = new List<string>();
+            HashSet<string> types = new HashSet<string>();
             var syntaxTreeCollection = GetSourceTrees(files, constants);
 
             foreach (var tree in syntaxTreeCollection)
@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.GenFacades
             return types;
         }
 
-        private static void AddTypesFromTypeForwards(SyntaxTree tree, List<string> types)
+        private static void AddTypesFromTypeForwards(SyntaxTree tree, HashSet<string> types)
         {
             CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
 
@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.GenFacades
             }
         }
 
-        private static void AddBaseTypes(SyntaxTree tree, List<string> types)
+        private static void AddBaseTypes(SyntaxTree tree, HashSet<string> types)
         {
             CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
             var allPublicTypes = root.DescendantNodes().OfType<BaseTypeDeclarationSyntax>()
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.GenFacades
             }
         }
 
-        private static void AddTypesFromDelegates(SyntaxTree tree, List<string> types)
+        private static void AddTypesFromDelegates(SyntaxTree tree, HashSet<string> types)
         {
             CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
             var allPublicTypes = root.DescendantNodes().OfType<DelegateDeclarationSyntax>()
@@ -97,6 +97,7 @@ namespace Microsoft.DotNet.GenFacades
             return GetFullyQualifiedName((BaseTypeDeclarationSyntax)node.Parent, string.IsNullOrEmpty(nested) ? typeName : typeName + "." + nested);
         }
 
+        // BaseType here refers to classes, structs, interfaces and enums.
         private static string GetBaseTypeName(BaseTypeDeclarationSyntax type)
         {
             string typeName = type.Identifier.ValueText;
@@ -179,7 +180,7 @@ namespace Microsoft.DotNet.GenFacades
             if (!string.IsNullOrEmpty(alias))
                 alias += "::";
 
-            return "[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(" + alias + TransformGenericTypes(typeName.Substring(2)) + "))]\n";
+            return string.Format("[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof({0}{1}))]", alias, TransformGenericTypes(typeName));
         }
 
         private static string TransformGenericTypes(string typeName)
