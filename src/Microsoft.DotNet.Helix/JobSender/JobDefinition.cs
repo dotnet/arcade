@@ -42,6 +42,8 @@ namespace Microsoft.DotNet.Helix.Client
         public string Type { get; private set; }
         public string Build { get; private set; }
         public string TargetQueueId { get; private set; }
+        public string Repository { get; private set; }
+        public string Branch { get; private set; }
         public string Creator { get; private set; }
         public IDictionary<IPayload, string> CorrelationPayloads { get; } = new Dictionary<IPayload, string>();
         public int? MaxRetryCount { get; private set; }
@@ -185,6 +187,21 @@ namespace Microsoft.DotNet.Helix.Client
             Dictionary<string, string> correlationPayloadUris =
                 (await Task.WhenAll(CorrelationPayloads.Select(async p => (uri: await p.Key.UploadAsync(storageContainer, log), destination: p.Value)))).ToDictionary(x => x.uri, x => x.destination);
 
+
+            if (GetEnvironmentVariable("BUILD_REASON") == "PullRequest")
+            {
+                Branch = GetEnvironmentVariable("SYSTEM_PULLREQUEST_SOURCEBRANCH");
+            }
+            else
+            {
+                Branch = GetEnvironmentVariable("BUILD_SOURCEBRANCH");
+                if (!string.IsEmptyOrNull(Branch))
+                {
+                    Branch = Branch.Replace("refs/heads/", "");
+                }
+            }
+
+            Repository = GetEnvironmentVariable("BUILD_REPOSITORY_NAME");
             jobList = (await Task.WhenAll(
                 _workItems.Select(async w =>
                 {
@@ -214,6 +231,8 @@ namespace Microsoft.DotNet.Helix.Client
                         TargetQueueId)
                     {
                         Creator = Creator,
+                        Repository = Repository,
+                        Branch = Branch,
                         MaxRetryCount = MaxRetryCount ?? 0,
                         JobStartIdentifier = jobStartIdentifier,
                         ResultsUri = resultsStorageContainer?.Uri,

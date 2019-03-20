@@ -52,6 +52,22 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string TargetQueue { get; set; }
 
         /// <summary>
+        ///   The 'repository' value reported to Helix
+        /// </summary>
+        /// <remarks>
+        ///   This value is used to filter and sort job results
+        /// </remarks>
+        public string Repository { get; set; }
+
+        /// <summary>
+        ///   The 'branch' value reported to Helix
+        /// </summary>
+        /// <remarks>
+        ///   This value is used to filter and sort job results
+        /// </remarks>
+        public string Branch { get; set; }
+
+        /// <summary>
         /// Required if sending anonymous, not allowed if authenticated
         /// The GitHub username of the job creator
         /// </summary>
