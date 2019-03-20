@@ -21,7 +21,6 @@
     <MicrosoftBuildUtilitiesCoreVersion>15.7.179</MicrosoftBuildUtilitiesCoreVersion>
     <MicrosoftCodeAnalysisCSharpVersion>2.9.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftDotNetPlatformAbstractionsVersion>2.1.0</MicrosoftDotNetPlatformAbstractionsVersion>
-    <MicrosoftDotNetVersionToolsVersion>2.2.0-preview1-02815-01</MicrosoftDotNetVersionToolsVersion>
     <MicrosoftIdentityModelClientsActiveDirectoryVersion>3.19.8</MicrosoftIdentityModelClientsActiveDirectoryVersion>
     <MicrosoftRestClientRuntimeVersion>2.3.13</MicrosoftRestClientRuntimeVersion>
     <MicrosoftExtensionsDependencyModelVersion>2.1.0</MicrosoftExtensionsDependencyModelVersion>
