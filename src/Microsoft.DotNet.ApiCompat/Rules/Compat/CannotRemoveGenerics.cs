@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -40,7 +40,7 @@ namespace Microsoft.Cci.Differs.Rules
             IGenericParameter[] implParams = implGenericParams.ToArray();
             IGenericParameter[] contractParams = contractGenericParams.ToArray();
 
-            // We shoudn't hit this because the types/members shouldn't be matched up if they have different generic argument lists
+            // We shouldn't hit this because the types/members shouldn't be matched up if they have different generic argument lists
             if (implParams.Length != contractParams.Length)
                 return DifferenceType.Changed;
 
@@ -87,7 +87,7 @@ namespace Microsoft.Cci.Differs.Rules
 
             foreach (var constraint in parameter.Constraints)
             {
-                // Skip valuetype becaue we should get it above.
+                // Skip valuetype because we should get it above.
                 if (TypeHelper.TypesAreEquivalent(constraint, constraint.PlatformType.SystemValueType) && parameter.MustBeValueType)
                     continue;
 
