@@ -102,7 +102,7 @@
       <_CommonMetadataElements>
         <id>$(PackageId)</id>
         <description>$(PackageDescription)</description>
-        <version>$(Version)</version>
+        <version>$(PackageVersion)</version>
         <authors>$(Authors)</authors>
         <requireLicenseAcceptance>$(PackageRequireLicenseAcceptance)</requireLicenseAcceptance>
         $(_TagsElement)
