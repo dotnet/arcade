@@ -49,7 +49,6 @@
     <Owners>microsoft,dotnetframework</Owners>
     <Description>TODO</Description>
     <IconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</IconUrl>
-    <Copyright Condition="'$(Copyright)' == ''">.NET Foundation and Contributors</Copyright>
     <Tags></Tags>
     <RequireLicenseAcceptance Condition="'$(RequireLicenseAcceptance)' == ''">false</RequireLicenseAcceptance>
     <Serviceable Condition="'$(Serviceable)' == ''">true</Serviceable>
