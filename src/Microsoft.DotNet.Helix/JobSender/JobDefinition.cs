@@ -188,13 +188,13 @@ namespace Microsoft.DotNet.Helix.Client
                 (await Task.WhenAll(CorrelationPayloads.Select(async p => (uri: await p.Key.UploadAsync(storageContainer, log), destination: p.Value)))).ToDictionary(x => x.uri, x => x.destination);
 
 
-            Branch = GetEnvironmentVariable("BUILD_SOURCEBRANCH");
-            if (!string.IsEmptyOrNull(Branch))
+            Branch = Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH");
+            if (!string.IsNullOrEmpty(Branch))
             {
                 Branch = Branch.Replace("refs/heads/", "");
             }
 
-            Repository = GetEnvironmentVariable("BUILD_REPOSITORY_NAME");
+            Repository = Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME");
             jobList = (await Task.WhenAll(
                 _workItems.Select(async w =>
                 {
