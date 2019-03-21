@@ -56,7 +56,10 @@ namespace Microsoft.DotNet.Arcade.Sdk
             items.Sort();
 
             Directory.CreateDirectory(OutputDirectory);
-            var outputFileName = Path.ChangeExtension(Path.GetFileName(IbcXmlFilePath), ".ngen.txt");
+            var outputFileName = Path.ChangeExtension(
+                $"{Path.GetFileName(IbcXmlFilePath)}-{Guid.NewGuid()}",
+                ".ngen.txt");
+
             var outputFilePath = Path.Combine(OutputDirectory, outputFileName);
             using (var outputFileStream = new StreamWriter(outputFilePath, append: false))
             {
