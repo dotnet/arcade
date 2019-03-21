@@ -177,7 +177,7 @@
 
     <!-- Remove Authenticode signing record if present. -->
     <Microsoft.DotNet.Arcade.Sdk.Unsign FilePath="%(_IbcMergeInvocation.UnsignFile)" Condition="'%(_IbcMergeInvocation.UnsignFile)' != ''" />
-    <Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList IbcXmlFilePath="%(_IbcMergeInvocation.XmlOutputPath)" OutputDirectory="$(ArtifactsLogNgenDir)" Condition="'%(_IbcMergeInvocation.XmlOutputPath)' != ''"/>
+    <Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList IbcXmlFilePath="%(_IbcMergeInvocation.XmlOutputPath)" OutputDirectory="$(ArtifactsLogNgenDir)" Condition="'$(EnableNgenOptimizationLogDetails)' == 'true' and '%(_IbcMergeInvocation.XmlOutputPath)' != ''"/>
   </Target>
 
 </Project>
