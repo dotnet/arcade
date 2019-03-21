@@ -16,12 +16,13 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     public class GenerateNuSpec : Task
     {
-        private const string NuSpecXmlNamespace = @"http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd";
+        private static readonly XNamespace NuSpecXmlNamespace = @"http://schemas.microsoft.com/packaging/2013/01/nuspec.xsd";
 
         public string InputFileName { get; set; }
 
@@ -115,14 +116,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             }
 
             var directory = Path.GetDirectoryName(OutputFileName);
-            if (!Directory.Exists(directory))
+            if (!String.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
 
             using (var file = File.Create(OutputFileName))
             {
-                manifest.Save(file);
+                Save(manifest, file);
             }
         }
 
@@ -135,12 +136,36 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             var newSource = "";
             using (var stream = new MemoryStream())
             {
-                newManifest.Save(stream);
+                Save(newManifest, stream);
                 stream.Seek(0, SeekOrigin.Begin);
                 newSource = Encoding.UTF8.GetString(stream.ToArray());
             }
 
             return oldSource != newSource;
+        }
+
+        private void Save(Manifest manifest, Stream stream)
+        {
+            if (!string.IsNullOrEmpty(PackageLicenseExpression) && string.IsNullOrEmpty(LicenseUrl))
+            {
+                // nuget issue: https://github.com/NuGet/Home/issues/7894
+                // remove licenseUrl that NuGet added from the expression.  It will still add the licenseUrl when packing, which won't break validation.
+                using (var memStream = new MemoryStream())
+                {
+                    manifest.Save(memStream);
+                    memStream.Seek(0, SeekOrigin.Begin);
+
+                    var nuspec = XDocument.Load(memStream);
+
+                    var licenseUrlElement = nuspec.Descendants(NuSpecXmlNamespace + "licenseUrl").Single();
+                    licenseUrlElement?.Remove();
+                    nuspec.Save(stream);
+                }
+            }
+            else
+            {
+                manifest.Save(stream);
+            }
         }
 
         private Manifest CreateManifest()
