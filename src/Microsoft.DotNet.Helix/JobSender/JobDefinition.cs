@@ -188,17 +188,10 @@ namespace Microsoft.DotNet.Helix.Client
                 (await Task.WhenAll(CorrelationPayloads.Select(async p => (uri: await p.Key.UploadAsync(storageContainer, log), destination: p.Value)))).ToDictionary(x => x.uri, x => x.destination);
 
 
-            if (GetEnvironmentVariable("BUILD_REASON") == "PullRequest")
+            Branch = GetEnvironmentVariable("BUILD_SOURCEBRANCH");
+            if (!string.IsEmptyOrNull(Branch))
             {
-                Branch = GetEnvironmentVariable("SYSTEM_PULLREQUEST_SOURCEBRANCH");
-            }
-            else
-            {
-                Branch = GetEnvironmentVariable("BUILD_SOURCEBRANCH");
-                if (!string.IsEmptyOrNull(Branch))
-                {
-                    Branch = Branch.Replace("refs/heads/", "");
-                }
+                Branch = Branch.Replace("refs/heads/", "");
             }
 
             Repository = GetEnvironmentVariable("BUILD_REPOSITORY_NAME");
