@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.GenFacades
             List<string> externAliases = new List<string>();
             Dictionary<string, INamedTypeReference> forwardedTypes = new Dictionary<string, INamedTypeReference>();
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("#pragma warning disable CS0618, CS0619, CS0673");
+            sb.AppendLine("#pragma warning disable CS0618");
             bool result = true;
 
             HashSet<string> existingTypes = compileFiles != null ? TypeParser.GetAllPublicTypes(compileFiles, constants) : null;
@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.GenFacades
                 
                 sb.AppendLine(TypeParser.AddTypeForwardToStringBuilder(type, alias));
             }
-            sb.AppendLine("#pragma warning restore CS0618, CS0619, CS0673");
+            sb.AppendLine("#pragma warning restore CS0618");
             File.WriteAllText(_outputSourcePath, AppendAliases(externAliases) + sb.ToString());
             return result;
         }

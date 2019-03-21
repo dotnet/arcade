@@ -177,6 +177,9 @@ namespace Microsoft.DotNet.GenFacades
 
         public static string AddTypeForwardToStringBuilder(string typeName, string alias = "")
         {
+            if (typeName == "System.Void")
+                typeName = "void";
+
             if (!string.IsNullOrEmpty(alias))
                 alias += "::";
 
