@@ -38,9 +38,9 @@ namespace Microsoft.DotNet.GenFacades
                 Trace.Listeners.Add(logger);
 
                 result = GenPartialFacadesGenerator.Execute(
-                    ReferencePaths.Select(item => item.ItemSpec).ToArray(),
+                    ReferencePaths?.Select(item => item.ItemSpec).ToArray(),
                     ReferenceAssembly,
-                    CompileFiles.Select(item => item.ItemSpec).ToArray(),
+                    CompileFiles?.Select(item => item.ItemSpec).ToArray(),
                     DefineConstants,
                     OutputSourcePath,
                     IgnoreMissingTypes,

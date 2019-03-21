@@ -17,10 +17,13 @@
 
   <Target Name="FillPartialFacadeUsingTask2" DependsOnTargets="$(FillPartialFacadeDependsOn)">  
     
-    <PropertyGroup Condition="'$(IsReferenceAssembly)' != 'true'">
-      <ReferenceAssembly>%(ResolvedMatchingContract.Identity)</ReferenceAssembly>
+    <PropertyGroup>
       <OutputSourcePath>$(IntermediateOutputPath)\$(AssemblyTitle).Forwards.cs</OutputSourcePath>
       <GenFacadesIgnoreMissingTypes Condition="'$(GenFacadesIgnoreMissingTypes)' == ''">false</GenFacadesIgnoreMissingTypes>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="'$(IsReferenceAssembly)' != 'true'">
+      <ReferenceAssembly>%(ResolvedMatchingContract.Identity)</ReferenceAssembly>
     </PropertyGroup>
 
     <GenPartialFacadesTask
