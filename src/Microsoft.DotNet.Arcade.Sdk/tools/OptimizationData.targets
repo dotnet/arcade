@@ -140,10 +140,10 @@
         -->
         <IbcMergeArgs>-q -f $(_PartialNgenArg) -minify -delete -mo "%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)" -incremental "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)"</IbcMergeArgs>
         <UnsignFile>%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)</UnsignFile>
-        <XmlOutputPath>%(_AssemblyWithRawIbcData.XmlOutputPath)</XmlOutputPath>
+        <XmlOutputPath Condition="'$(EnableNgenOptimizationLogDetails)' == 'true'">%(_AssemblyWithRawIbcData.XmlOutputPath)</XmlOutputPath>
       </_IbcMergeInvocation>
 
-      <_IbcMergeInvocation Condition="'$(EnableNgenOptimizationLogDetails)' == 'true'">
+      <_IbcMergeInvocation>
         <IbcMergeArgs Condition="'%(_IbcMergeInvocation.XmlOutputPath)' != ''">%(_IbcMergeInvocation.IbcMergeArgs) -dxml "%(_IbcMergeInvocation.XmlOutputPath)"</IbcMergeArgs>
       </_IbcMergeInvocation>
     </ItemGroup>
