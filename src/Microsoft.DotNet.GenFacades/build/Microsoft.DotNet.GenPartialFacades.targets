@@ -1,5 +1,5 @@
 <Project>
-  <PropertyGroup Condition="'$(GenrateTypeForwardsSourceCode)' == 'true' AND '$(IsReferenceAssembly)' != 'true'">
+  <PropertyGroup Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' != 'true'">
     <!-- Tell ResolveMatchingContract to run and resolve contract to project reference -->
     <ResolveMatchingContract>true</ResolveMatchingContract>
     <FillPartialFacadeDependsOn>
@@ -7,8 +7,8 @@
     </FillPartialFacadeDependsOn>
   </PropertyGroup>
   
-  <PropertyGroup>
-    <CompileDependsOn Condition="'$(GenrateTypeForwardsSourceCode)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+  <PropertyGroup Condition="'$(IsPartialFacadeAssembly)' != 'true'"> 
+    <CompileDependsOn Condition="'$(IsPartialFacadeAssembly)' == 'true' and '$(DesignTimeBuild)' != 'true'">
       FillPartialFacadeUsingTask2;$(CompileDependsOn)
     </CompileDependsOn>
   </PropertyGroup>
@@ -16,16 +16,12 @@
   <UsingTask TaskName="GenPartialFacadesTask" AssemblyFile="$(_MicrosoftDotNetGenFacadesTaskDir)Microsoft.DotNet.GenFacades.dll" />
 
   <Target Name="FillPartialFacadeUsingTask2" DependsOnTargets="$(FillPartialFacadeDependsOn)">  
-    
-    <PropertyGroup>
+
+    <PropertyGroup Condition="'$(IsReferenceAssembly)' != 'true'">
+      <ReferenceAssembly>%(ResolvedMatchingContract.Identity)</ReferenceAssembly>
       <OutputSourcePath>$(IntermediateOutputPath)\$(AssemblyTitle).Forwards.cs</OutputSourcePath>
       <GenFacadesIgnoreMissingTypes Condition="'$(GenFacadesIgnoreMissingTypes)' == ''">false</GenFacadesIgnoreMissingTypes>
     </PropertyGroup>
-    
-    <PropertyGroup Condition="'$(IsReferenceAssembly)' != 'true'">
-      <ReferenceAssembly>%(ResolvedMatchingContract.Identity)</ReferenceAssembly>
-    </PropertyGroup>
-
     <GenPartialFacadesTask
       ReferencePaths="@(ReferencePath)"
       ReferenceAssembly="$(ReferenceAssembly)"
