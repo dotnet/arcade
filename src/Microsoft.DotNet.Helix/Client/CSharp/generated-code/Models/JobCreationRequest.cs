@@ -46,6 +46,12 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Creator")]
         public string Creator { get; set; }
 
+        [JsonProperty("Branch")]
+        public string Branch { get; set; }
+
+        [JsonProperty("Repository")]
+        public string Repository { get; set; }
+
         [JsonProperty("PullRequestId")]
         public string PullRequestId { get; set; }
 
