@@ -761,7 +761,7 @@ To test IBC data embedding and IBC training inputs generation locally:
 nuget.exe restore eng\common\internal\Tools.csproj
 ```
 
-NuGet.exe may ask for credentials.
+NuGet.exe may ask for credentials. Note: You need a [special version](https://docs.microsoft.com/en-us/azure/devops/artifacts/nuget/nuget-exe?view=azure-devops#download-the-credential-provider-directly) of NuGet to be able to successfully authenticate.
 
 2. Run build with the following arguments (choose values of `RepositoryName` and `VisualStudioIbcSourceBranchName` as appropriate):
 ```
