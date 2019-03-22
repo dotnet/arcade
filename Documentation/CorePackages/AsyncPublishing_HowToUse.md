@@ -2,7 +2,7 @@
 
 ##### What is Asynchronous Publishing?
 
-The plan for Asynchronous Publishing was [described in this text](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/AsyncPublishing.md). The current document describes the overall implementation and how to use it. 
+The plan for Asynchronous Publishing is [described in this text](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/AsyncPublishing.md). The current document describes the overall implementation and how to use it. 
 
 Asynchronous Publishing is *a new mechanism for publishing build artifacts (including symbols) to different forms of feeds*. The big difference between the old publishing mechanism and the new mechanism is that in the latter publishing is decoupled from the build. In other words, with the new mechanism, pushing artifacts to a feed is not a part of the build itself anymore, instead, it happens as a consequence of building and assigning an intent to the build (a Maestro++ Channel).
 
