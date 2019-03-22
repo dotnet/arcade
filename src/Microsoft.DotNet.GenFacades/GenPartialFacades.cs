@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.GenFacades
             string defineConstants,
             string outputSourcePath,
             bool ignoreMissingTypes = false,
+            ITaskItem[] ignoreMissingTypesList = null,
             ITaskItem[] seedTypePreferencesUnsplit = null,
             ErrorTreatment seedLoadErrorTreatment = ErrorTreatment.Default,
             ErrorTreatment contractLoadErrorTreatment = ErrorTreatment.Default)
@@ -44,7 +45,7 @@ namespace Microsoft.DotNet.GenFacades
                     IAssembly[] seedAssemblies = LoadAssemblies(seedHost, seeds).ToArray();
                     var seedTypes = GenerateTypeTable(seedAssemblies);
 
-                    var sourceGenerator = new SourceGenerator(referenceTypes, seedTypes, seedTypePreferences, outputSourcePath);
+                    var sourceGenerator = new SourceGenerator(referenceTypes, seedTypes, seedTypePreferences, outputSourcePath, ignoreMissingTypesList);
                     return sourceGenerator.GenerateSource(compileFiles, ParseDefineConstants(defineConstants), ignoreMissingTypes);
                 }
             }

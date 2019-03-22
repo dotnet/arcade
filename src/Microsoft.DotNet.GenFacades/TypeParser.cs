@@ -174,43 +174,5 @@ namespace Microsoft.DotNet.GenFacades
             }
             return false;
         }
-
-        public static string AddTypeForwardToStringBuilder(string typeName, string alias = "")
-        {
-            if (typeName == "System.Void")
-                typeName = "void";
-
-            if (!string.IsNullOrEmpty(alias))
-                alias += "::";
-
-            return string.Format("[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof({0}{1}))]", alias, TransformGenericTypes(typeName));
-        }
-
-        private static string TransformGenericTypes(string typeName)
-        {
-            if (!typeName.Contains('`'))
-                return typeName;
-
-            StringBuilder sb = new StringBuilder();
-            string[] stringParts = typeName.Split('`');
-            sb.Append(stringParts[0]);
-
-            for (int i = 0; i < stringParts.Length - 1; i++)
-            {
-                if (i != 0)
-                {
-                    sb.Append(stringParts[i].Substring(1));
-                }
-
-                int numberOfGenericParameters = int.Parse(stringParts[i + 1][0].ToString());
-
-                sb.Append("<");
-                sb.Append(',', numberOfGenericParameters - 1);
-                sb.Append('>');
-            }
-
-            sb.Append(stringParts[stringParts.Length - 1].Substring(1));
-            return sb.ToString();
-        }
     }
 }

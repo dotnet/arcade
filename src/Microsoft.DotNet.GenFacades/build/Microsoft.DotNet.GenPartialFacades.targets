@@ -15,7 +15,10 @@
 
   <UsingTask TaskName="GenPartialFacadesTask" AssemblyFile="$(_MicrosoftDotNetGenFacadesTaskDir)Microsoft.DotNet.GenFacades.dll" />
 
-  <Target Name="FillPartialFacadeUsingTask2" DependsOnTargets="$(FillPartialFacadeDependsOn)">  
+  <Target Name="FillPartialFacadeUsingTask2"
+          Inputs="@(ResolvedMatchingContract);@(ReferencePath);@(Compile)"
+          Outputs="$(OutputSourcePath)"
+          DependsOnTargets="$(FillPartialFacadeDependsOn)">  
 
     <PropertyGroup>
       <ReferenceAssembly>%(ResolvedMatchingContract.Identity)</ReferenceAssembly>
@@ -29,10 +32,15 @@
       CompileFiles="@(Compile)"
       DefineConstants="$(DefineConstants)"
       IgnoreMissingTypes="$(GenFacadesIgnoreMissingTypes)"
+      IgnoreMissingTypesList="@(IgnoreMissingTypesList)"
       OutputSourcePath="$(OutputSourcePath)"
       SeedTypePreferences="@(SeedTypePreference)"
     />
 
+    <ItemGroup>
+      <FileWrites Include="$(OutputSourcePath)"/>
+    </ItemGroup>
+    
     <ItemGroup>
       <Compile Condition="Exists($(OutputSourcePath))" Include="$(OutputSourcePath)"/>
     </ItemGroup>

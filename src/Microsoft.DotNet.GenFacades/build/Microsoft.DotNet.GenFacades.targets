@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <PropertyGroup Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' == 'true'">
+  <PropertyGroup>
+    <IsRuntimeOrReferenceAssembly Condition="'$(IsRuntimeAssembly)' == 'true' OR '$(IsReferenceAssembly)' == 'true'">true</IsRuntimeOrReferenceAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsRuntimeOrReferenceAssembly)' == 'true'">
     <!-- reference facades will always have overlapping types so suppress compiler warnings -->
     <NoWarn>$(NoWarn);0436</NoWarn>
   </PropertyGroup>
 
   <!-- Inputs and outputs of FillPartialFacade -->
-  <PropertyGroup Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' == 'true'">
+  <PropertyGroup Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsRuntimeOrReferenceAssembly)' == 'true'">
     <PartialFacadeAssemblyPath>$(IntermediateOutputPath)$(TargetName)$(TargetExt)</PartialFacadeAssemblyPath>
     <PartialFacadeSymbols>$(IntermediateOutputPath)$(TargetName).pdb</PartialFacadeSymbols>
     <GenFacadesInputPath>$(IntermediateOutputPath)PreGenFacades/</GenFacadesInputPath>
@@ -28,7 +32,7 @@
           to only be invoked upon a successful compilation; they can conceptualized as an extension
           of the assembly compilation process.
   -->
-  <PropertyGroup Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' == 'true'">
+  <PropertyGroup Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsRuntimeOrReferenceAssembly)' == 'true'">
     <TargetsTriggeredByCompilation Condition="'$(IsPartialFacadeAssembly)' == 'true' and '$(DesignTimeBuild)' != 'true'">
       $(TargetsTriggeredByCompilation);FillPartialFacadeUsingTask
     </TargetsTriggeredByCompilation>
@@ -106,5 +110,5 @@
     </ItemGroup>
   </Target>
 
-  <Import Condition="'$(IsReferenceAssembly)' != 'true'" Project="Microsoft.DotNet.GenPartialFacades.targets" />
+  <Import Condition="'$(IsRuntimeOrReferenceAssembly)' != 'true'" Project="Microsoft.DotNet.GenPartialFacades.targets" />
 </Project>

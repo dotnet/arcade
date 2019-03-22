@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Build.Framework;
 using Microsoft.Cci;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,18 +18,21 @@ namespace Microsoft.DotNet.GenFacades
         private readonly IEnumerable<string> _referenceTypes;
         private readonly IReadOnlyDictionary<string, IReadOnlyList<INamedTypeDefinition>> _seedTypes;
         private readonly string _outputSourcePath;
+        private readonly string[] _ignoreMissingTypesList;
 
         public SourceGenerator(
             IEnumerable<string> referenceTypes,
             IReadOnlyDictionary<string, IReadOnlyList<INamedTypeDefinition>> seedTypes,
             IReadOnlyDictionary<string, string> seedTypePreferences,
-            string outputSourcePath
+            string outputSourcePath,
+            ITaskItem[] ignoreMissingTypesList
             )
         {
             _referenceTypes = referenceTypes;
             _seedTypes = seedTypes;
             _seedTypePreferences = seedTypePreferences;
             _outputSourcePath = outputSourcePath;
+            _ignoreMissingTypesList = ignoreMissingTypesList?.Select(t => t.ItemSpec.ToString()).ToArray() ;
         }
 
         public bool GenerateSource(
@@ -59,7 +63,7 @@ namespace Microsoft.DotNet.GenFacades
                 IReadOnlyList<INamedTypeDefinition> seedTypes;
                 if (!_seedTypes.TryGetValue(type, out seedTypes))
                 {
-                    if (!ignoreMissingTypes)
+                    if (!ignoreMissingTypes && (_ignoreMissingTypesList == null || !_ignoreMissingTypesList.Contains(type)))
                     {
                         result = false;
                         Trace.TraceError("Did not find type '{0}' in any of the seed assemblies.", type);
@@ -84,7 +88,7 @@ namespace Microsoft.DotNet.GenFacades
                     }
                 }
                 
-                sb.AppendLine(TypeParser.AddTypeForwardToStringBuilder(type, alias));
+                sb.AppendLine(GetTypeForwardsToString(type, alias));
             }
             sb.AppendLine("#pragma warning restore CS0618");
             File.WriteAllText(_outputSourcePath, AppendAliases(externAliases) + sb.ToString());
@@ -99,6 +103,44 @@ namespace Microsoft.DotNet.GenFacades
                 sb.AppendLine(string.Format("extern alias {0};", alias));
             }
 
+            return sb.ToString();
+        }
+
+        private static string GetTypeForwardsToString(string typeName, string alias = "")
+        {
+            if (typeName == "System.Void")
+                typeName = "void";
+
+            if (!string.IsNullOrEmpty(alias))
+                alias += "::";
+
+            return string.Format("[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof({0}{1}))]", alias, TransformGenericTypes(typeName));
+        }
+
+        private static string TransformGenericTypes(string typeName)
+        {
+            if (!typeName.Contains('`'))
+                return typeName;
+
+            StringBuilder sb = new StringBuilder();
+            string[] stringParts = typeName.Split('`');
+            sb.Append(stringParts[0]);
+
+            for (int i = 0; i < stringParts.Length - 1; i++)
+            {
+                if (i != 0)
+                {
+                    sb.Append(stringParts[i].Substring(1));
+                }
+
+                int numberOfGenericParameters = int.Parse(stringParts[i + 1][0].ToString());
+
+                sb.Append("<");
+                sb.Append(',', numberOfGenericParameters - 1);
+                sb.Append('>');
+            }
+
+            sb.Append(stringParts[stringParts.Length - 1].Substring(1));
             return sb.ToString();
         }
 

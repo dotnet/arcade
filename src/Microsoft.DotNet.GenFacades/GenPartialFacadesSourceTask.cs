@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.GenFacades
 {
-    public class GenPartialFacadesTask : Task
+    public class GenPartialFacadesSourceTask : Task
     {
         [Required]
         public ITaskItem[] ReferencePaths { get; set; }
@@ -23,6 +23,8 @@ namespace Microsoft.DotNet.GenFacades
         public string DefineConstants { get; set; }
 
         public bool IgnoreMissingTypes { get; set; }
+
+        public ITaskItem[] IgnoreMissingTypesList { get; set; }
 
         public ITaskItem[] SeedTypePreferences { get; set; }
 
@@ -44,6 +46,7 @@ namespace Microsoft.DotNet.GenFacades
                     DefineConstants,
                     OutputSourcePath,
                     IgnoreMissingTypes,
+                    IgnoreMissingTypesList,
                     SeedTypePreferences);
 
                 if (!result)
