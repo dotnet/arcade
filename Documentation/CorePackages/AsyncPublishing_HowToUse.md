@@ -14,7 +14,7 @@ In this new mechanism publishing will happen during execution of the release pip
 
 ##### Which problem does it solve? Why should I care about this?
 
-Essentially the pipeline provide an extension point where many different processes can be applied to artifacts before & during publishing. The current implementation provide the following benefits:
+The pipelines provide an extension point where many different processes can be applied to artifacts before & during publishing. The current implementation provides the following benefits:
 
 - **Work around the [feed lock problem](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/AsyncPublishing.md):** since publishing isn't part of the build anymore, they won't timeout due to long wait times for the feed lock.
 - **Reduce build times:** since publishing was moved out of the build process build times can considerably decrease.
