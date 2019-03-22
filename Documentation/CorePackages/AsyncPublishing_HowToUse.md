@@ -28,7 +28,7 @@ In the coming weeks / months we'll work to bring the following processes into th
 
 ##### How do I use it?
 
-The mechanism currently is opt-in, you just need to set two build variables to start using it. Assuming the repository is up to date with Arcade build templates and use the latest Arcade SDK, you just need to:
+The mechanism currently is opt-in, you just need to set two build variables to start using it. Assuming the repository is up to date with Arcade build templates and uses the latest Arcade SDK, you just need to:
 
 Set the `enablePublishUsingPipelines` parameter of `/eng/common/templates/jobs/job.yml` to true:
 
