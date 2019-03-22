@@ -37,3 +37,10 @@ define the following under template parameters:
 
 The above enables graph generation where the graphs will include toolset dependencies. If toolset dependencies are not needed
 just remove `includeToolset: true`
+
+## Samples
+
+* [Arcade](https://github.com/dotnet/arcade/blob/master/azure-pipelines.yml#L39) - Graph generation is deferred to 
+`/eng/common/templates/jobs/jobs.yml`
+* [Core-SDK](https://github.com/dotnet/core-sdk/blob/master/.vsts-ci.yml#L280) - Graph generation is defined in the main
+build definition
