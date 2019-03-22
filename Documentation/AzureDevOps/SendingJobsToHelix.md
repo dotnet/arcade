@@ -109,7 +109,7 @@ The list of available Helix queues can be found on the [Helix homepage](https://
       EnableXUnitReporter: true # required for reporting out xUnit test results to Mission Control
       # WaitForWorkItemCompletion: true -- defaults to true
       Creator: arcade # specify an appropriate Creator here -- required for IsExternal true
-      # DisplayNamePrefix: 'Send job to Helix' -- the prefix of the task's display name on AzDO; the end will be " (Unix)" or " (Windows)"; defaults to 'Send job to Helix'
+      # DisplayNamePrefix: 'Send job to Helix' -- the Helix task's display name in AzDO. Defaults to 'Send job to Helix'
       # condition: succeeded() - defaults to succeeded()
 ```
 
