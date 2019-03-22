@@ -71,7 +71,7 @@ The place where artifacts will be published depend on which channel(s) the build
 
 Maestro++ should automatically create a new release for each pipeline associated for each channel of the build.  The build's artifacts will have been published once a release associated with the build have finished executing.
 
-The release should be created within a few seconds/minutes after the build have finished. If it takes much more than that, something probably went wrong. We are currently working on a notification mechanism to alert the user when publishing failed for some reason.
+The release should be created within a few seconds/minutes after the build finishes. If it takes much more than that, something probably went wrong. We are currently working on a notification mechanism to alert the user when publishing failed for some reason.
 
 Currently we have only one release pipeline serving all channels: [Public Dev Release pipeline](https://dnceng.visualstudio.com/internal/_release?definitionId=36).
 
