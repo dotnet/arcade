@@ -1,4 +1,4 @@
-# If you plan to update or add a parameter here, please update the documentation for sending to Helix in Documentation/AzureDevOps/SendingJobsToHelix.md
+# Please remember to update the documentation if you make changes to these parameters!
 parameters:
   HelixSource: 'pr/default'              # required -- sources must start with pr/, official/, prodcon/, or agent/
   HelixType: 'tests/default/'            # required -- Helix telemetry which identifies what type of data this is; should include "test" for clarity and must end in '/'
