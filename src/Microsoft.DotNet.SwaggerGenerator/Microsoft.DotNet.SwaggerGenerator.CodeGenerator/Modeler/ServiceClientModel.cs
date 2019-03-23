@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
             MethodGroups = methodGroups.ToImmutableList();
         }
 
-        public ImmutableList<TypeModel> Types { get; }
+        public IImmutableList<TypeModel> Types { get; }
 
         public IImmutableList<MethodGroupModel> MethodGroups { get; }
 
