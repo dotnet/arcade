@@ -1,5 +1,5 @@
 <Project>
-  <PropertyGroup Condition="'$(IsPartialFacadeAssembly)' == 'true'">
+  <PropertyGroup>
     <!-- Tell ResolveMatchingContract to run and resolve contract to project reference -->
     <ResolveMatchingContract>true</ResolveMatchingContract>
     <FillPartialFacadeDependsOn>
@@ -7,26 +7,26 @@
     </FillPartialFacadeDependsOn>
   </PropertyGroup>
   
-  <PropertyGroup> 
-    <CompileDependsOn Condition="'$(IsPartialFacadeAssembly)' == 'true' and '$(DesignTimeBuild)' != 'true'">
-      FillPartialFacadeUsingTask2;$(CompileDependsOn)
+  <PropertyGroup>
+    <OutputSourcePath>$(IntermediateOutputPath)\$(AssemblyTitle).Forwards.cs</OutputSourcePath>
+    <CompileDependsOn Condition="'$(DesignTimeBuild)' != 'true'">
+      GeneratePartialFacadeSource;$(CompileDependsOn)
     </CompileDependsOn>
   </PropertyGroup>
 
-  <UsingTask TaskName="GenPartialFacadesTask" AssemblyFile="$(_MicrosoftDotNetGenFacadesTaskDir)Microsoft.DotNet.GenFacades.dll" />
+  <UsingTask TaskName="GenPartialFacadeSourceTask" AssemblyFile="$(_MicrosoftDotNetGenFacadesTaskDir)Microsoft.DotNet.GenFacades.dll" />
 
-  <Target Name="FillPartialFacadeUsingTask2"
+  <Target Name="GeneratePartialFacadeSource"
           Inputs="@(ResolvedMatchingContract);@(ReferencePath);@(Compile)"
           Outputs="$(OutputSourcePath)"
           DependsOnTargets="$(FillPartialFacadeDependsOn)">  
 
     <PropertyGroup>
-      <ReferenceAssembly>%(ResolvedMatchingContract.Identity)</ReferenceAssembly>
       <OutputSourcePath>$(IntermediateOutputPath)\$(AssemblyTitle).Forwards.cs</OutputSourcePath>
-      <GenFacadesIgnoreMissingTypes Condition="'$(GenFacadesIgnoreMissingTypes)' == ''">false</GenFacadesIgnoreMissingTypes>
+      <ReferenceAssembly>%(ResolvedMatchingContract.Identity)</ReferenceAssembly>
     </PropertyGroup>
     
-    <GenPartialFacadesTask
+    <GenPartialFacadeSourceTask
       ReferencePaths="@(ReferencePath)"
       ReferenceAssembly="$(ReferenceAssembly)"
       CompileFiles="@(Compile)"
@@ -40,7 +40,7 @@
     <ItemGroup>
       <FileWrites Include="$(OutputSourcePath)"/>
     </ItemGroup>
-    
+  
     <ItemGroup>
       <Compile Condition="Exists($(OutputSourcePath))" Include="$(OutputSourcePath)"/>
     </ItemGroup>

@@ -5,12 +5,11 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
-using System.Diagnostics;
 using System.Linq;
 
 namespace Microsoft.DotNet.GenFacades
 {
-    public class GenPartialFacadesSourceTask : Task
+    public class GenPartialFacadeSourceTask : Task
     {
         [Required]
         public ITaskItem[] ReferencePaths { get; set; }
@@ -24,7 +23,7 @@ namespace Microsoft.DotNet.GenFacades
 
         public bool IgnoreMissingTypes { get; set; }
 
-        public ITaskItem[] IgnoreMissingTypesList { get; set; }
+        public string[] IgnoreMissingTypesList { get; set; }
 
         public ITaskItem[] SeedTypePreferences { get; set; }
 
@@ -33,18 +32,16 @@ namespace Microsoft.DotNet.GenFacades
         
         public override bool Execute()
         {
-            TraceLogger logger = new TraceLogger(Log);
             bool result = true;
             try
             {
-                Trace.Listeners.Add(logger);
-
-                result = GenPartialFacadesGenerator.Execute(
+                result = GenPartialFacadeSourceGenerator.Execute(
                     ReferencePaths?.Select(item => item.ItemSpec).ToArray(),
                     ReferenceAssembly,
                     CompileFiles?.Select(item => item.ItemSpec).ToArray(),
                     DefineConstants,
                     OutputSourcePath,
+                    Log,
                     IgnoreMissingTypes,
                     IgnoreMissingTypesList,
                     SeedTypePreferences);
@@ -57,10 +54,6 @@ namespace Microsoft.DotNet.GenFacades
             catch (Exception e)
             {
                 Log.LogErrorFromException(e, showStackTrace: false);
-            }
-            finally
-            {
-                Trace.Listeners.Remove(logger);
             }
 
             return result && !Log.HasLoggedErrors;
