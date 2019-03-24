@@ -29,8 +29,8 @@
     <RunScriptHost Condition="'$(TargetOS)' == 'Windows_NT'">$(RunScriptHostDir)dotnet.exe</RunScriptHost>
     <RunScriptHost Condition="'$(TargetOS)' != 'Windows_NT'">$(RunScriptHostDir)dotnet</RunScriptHost>
 
-    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' == 'Windows_NT'">%GLOBAL_TOOLS_DIR%</RunScriptGlobalToolsDir>
-    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' != 'Windows_NT'">$GLOBAL_TOOLS_DIR</RunScriptGlobalToolsDir>
+    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' == 'Windows_NT'">%GLOBAL_TOOLS_DIR%\</RunScriptGlobalToolsDir>
+    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' != 'Windows_NT'">$GLOBAL_TOOLS_DIR/</RunScriptGlobalToolsDir>
   </PropertyGroup>
 
   <Target Name="PublishSupplementalTestData"
@@ -86,7 +86,7 @@
           DependsOnTargets="$(GenerateRunScriptDependsOn)">
 
     <PropertyGroup>
-      <RunScriptCommand Condition="'$(RunScriptCommand)' == ''">$(RunCommand) $(RunArguments)</RunScriptCommand>
+      <RunScriptCommand Condition="'$(RunScriptCommand)' == ''">"$(RunCommand)" $(RunArguments)</RunScriptCommand>
     </PropertyGroup>
 
     <!-- Set $(TestDebugger) to eg c:\debuggers\windbg.exe to run tests under a debugger. -->
@@ -189,7 +189,7 @@
            Text="Test assembly not found. Make sure to build the test project first." />
 
     <!-- Invoke the run script with the test host as the runtime path. -->
-    <Exec Command="$(RunScriptOutputPath) $(TestHostRootPath) $(DotNetRoot) $(GlobalToolsDir)"
+    <Exec Command="&quot;$(RunScriptOutputPath)&quot; &quot;$(TestHostRootPath.TrimEnd('\/'))&quot; &quot;$(DotNetRoot.TrimEnd('\/'))&quot; &quot;$(GlobalToolsDir.TrimEnd('\/'))&quot;"
           ContinueOnError="true"
           IgnoreStandardErrorWarningFormat="true">
       <Output PropertyName="TestRunExitCode" TaskParameter="ExitCode" />

@@ -10,7 +10,7 @@
     <IncludeDefaultTestReferences Condition="'$(IncludeDefaultTestReferences)' == '' AND '$(IsTestProject)' == 'true'">true</IncludeDefaultTestReferences>
   </PropertyGroup>
 
-  <!-- 
+  <!--
     Runtime settings support.
     Copies the app.config / runtimeSettings.json file to the OutDir.
   -->
@@ -58,7 +58,7 @@
 
   </Target>
 
-  <!-- 
+  <!--
     Shared framework deps file generation.
     Produces a test shared-framework deps file.
     To use invoke target directly specifying NETCoreAppTestSharedFrameworkPath property.

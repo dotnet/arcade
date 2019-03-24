@@ -11,7 +11,7 @@
   <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
     <RunScriptCommands Include="set DEVPATH=%RUNTIME_PATH%" />
   </ItemGroup>
-  
+
   <!-- Binplace dirs for supplemental test data. -->
   <ItemGroup>
     <SupplementalTestDataDir Include="$(TestPath)" />
