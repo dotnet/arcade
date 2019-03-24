@@ -163,7 +163,7 @@
   <Target Name="ValidateTestPlatform">
 
     <ItemGroup>
-      <UnsupportedPlatformsItems Include="$(UnsupportedPlatforms)"/>
+      <UnsupportedPlatformsItems Include="$(UnsupportedPlatforms)" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -204,7 +204,7 @@
   </Target>
 
   <!--
-    Add a manual clean step for TestPath.
+    Manual clean step for TestPath.
     Necessary as we are copying files into the TestPath as part of the Test Target after the build.
   -->
   <Target Name="CleanTestPath" Condition="Exists('$(TestPath)')">
@@ -239,12 +239,6 @@
     Supported runners: xunit.
   -->
   <Import Condition="'$(IsUnitTestProject)' == 'true' OR '$(IsIntegrationTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.targets'))" />
-
-  <!--
-    Performance test support.
-    Supported runners: xunit-performance.
-  -->
-  <Import Condition="'$(IsPerformanceTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'performance', 'Performance.targets'))" />
 
   <!--
     Code Coverage support.

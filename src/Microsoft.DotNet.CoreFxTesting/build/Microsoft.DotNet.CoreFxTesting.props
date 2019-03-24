@@ -14,7 +14,6 @@
 
   <!-- Enable references to the test framework for test support libraries. -->
   <Import Condition="'$(IsTestSupportProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestCoreDir)', 'test', 'References.props'))" />
-  <Import Condition="'$(IsTestSupportProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestCoreDir)', 'performance', 'References.props'))" />
 
   <!-- Import the core testing infrastructure only for test projects. -->
   <Import Condition="'$(IsTestProject)' == 'true' AND '$(IsTestSupportProject)' != 'true'" Project="$(TestCoreDir)Core.props" />

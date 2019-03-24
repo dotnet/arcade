@@ -71,9 +71,6 @@
   <!-- UAP resource generation needed by both source and test projects. -->
   <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Resources.uap.targets" />
 
-  <!-- Performance test data upload to Benchview. -->
-  <Import Condition="'$(EnableBenchviewTarget)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestCoreDir)', 'performance', 'Benchview.targets'))" />
-
   <!-- Full coverage report. -->
   <Import Condition="'$(EnableFullCoverageReportTarget)' == 'true' AND '$(SkipCoverageReport)' != 'true' AND '$(Coverage)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestCoreDir)', 'coverage', 'CoverageReport.targets'))" />
 
