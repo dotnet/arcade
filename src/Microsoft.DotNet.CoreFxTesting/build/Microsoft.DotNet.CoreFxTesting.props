@@ -3,8 +3,8 @@
 <Project>
 
   <PropertyGroup>
-    <MSBuildTestAssemblyPath Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)\..\tools\netcoreapp2.1\Microsoft.DotNet.CoreFxTesting.dll</MSBuildTestAssemblyPath>
-    <MSBuildTestAssemblyPath Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.CoreFxTesting.dll</MSBuildTestAssemblyPath>
+    <CoreFxTestingAssemblyPath Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)\..\tools\netcoreapp2.1\Microsoft.DotNet.CoreFxTesting.dll</CoreFxTestingAssemblyPath>
+    <CoreFxTestingAssemblyPath Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.CoreFxTesting.dll</CoreFxTestingAssemblyPath>
 
     <TestCoreDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'core'))</TestCoreDir>
     <TestAssetsDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'assets'))</TestAssetsDir>

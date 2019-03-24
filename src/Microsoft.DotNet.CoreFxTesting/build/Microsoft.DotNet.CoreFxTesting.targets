@@ -63,7 +63,7 @@
     Produces a test shared-framework deps file.
     To use invoke target directly specifying NETCoreAppTestSharedFrameworkPath property.
   -->
-  <UsingTask TaskName="GenerateTestSharedFrameworkDepsFile" AssemblyFile="$(MSBuildTestAssemblyPath)"/>
+  <UsingTask TaskName="GenerateTestSharedFrameworkDepsFile" AssemblyFile="$(CoreFxTestingAssemblyPath)"/>
   <Target Name="GenerateTestSharedFrameworkDepsFile" Condition="'$(GenerateTestSharedFrameworkDepsFile)' == 'true'">
     <GenerateTestSharedFrameworkDepsFile SharedFrameworkDirectory="$(NETCoreAppTestSharedFrameworkPath)" />
   </Target>

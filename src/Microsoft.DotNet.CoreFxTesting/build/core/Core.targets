@@ -2,8 +2,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
-  <UsingTask TaskName="GenerateRunScript" AssemblyFile="$(MSBuildTestAssemblyPath)"/>
-
   <PropertyGroup>
     <TestAssembly Condition="'$(TestAssembly)' == ''">$(TargetFileName)</TestAssembly>
     <TestPath Condition="'$(TestPath)' == ''">$(OutDir)</TestPath>
@@ -83,6 +81,7 @@
 
   </Target>
 
+  <UsingTask TaskName="GenerateRunScript" AssemblyFile="$(CoreFxTestingAssemblyPath)"/>
   <Target Name="GenerateRunScript"
           DependsOnTargets="$(GenerateRunScriptDependsOn)">
 
