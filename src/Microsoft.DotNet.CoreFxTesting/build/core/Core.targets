@@ -186,6 +186,9 @@
           Inputs="@(RunTestsInputs)"
           Outputs="@(RunTestsOutputs)">
 
+    <Error Condition="!Exists('$(TestAssembly)')"
+           Text="Test assembly not found. Make sure to build the test project first." />
+
     <!-- Invoke the run script with the test host as the runtime path. -->
     <Exec Command="$(RunScriptOutputPath) $(TestHostRootPath) $(DotNetRoot) $(GlobalToolsDir)"
           ContinueOnError="true"
