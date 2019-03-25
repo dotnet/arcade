@@ -4,170 +4,59 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.Cci;
-using Microsoft.Cci.Extensions;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 
 namespace Microsoft.DotNet.GenFacades
 {
-    public class GenPartialFacadeSourceGenerator
+    public class GenPartialFacadeSource : Task
     {
-        public static bool Execute(
-            string[] seeds,
-            string referenceAssembly,
-            string[] compileFiles,
-            string defineConstants,
-            string outputSourcePath,
-            TaskLoggingHelper logger,
-            bool ignoreMissingTypes = false,
-            string[] ignoreMissingTypesList = null,
-            ITaskItem[] seedTypePreferencesUnsplit = null)
-        {
-            var nameTable = new NameTable();
-            var internFactory = new InternFactory();
+        [Required]
+        public ITaskItem[] ReferencePaths { get; set; }
 
+        [Required]
+        public string ReferenceAssembly { get; set; }
+
+        public ITaskItem[] CompileFiles { get; set; }
+
+        public string DefineConstants { get; set; }
+
+        public bool IgnoreMissingTypes { get; set; }
+
+        public string[] IgnoreMissingTypesList { get; set; }
+
+        public ITaskItem[] SeedTypePreferences { get; set; }
+
+        [Required]
+        public string OutputSourcePath { get; set; }
+        
+        public override bool Execute()
+        {
+            bool result = true;
             try
             {
-                Dictionary<string, string> seedTypePreferences = ParseSeedTypePreferences(seedTypePreferencesUnsplit, logger);
+                result = GenPartialFacadeSourceGenerator.Execute(
+                    ReferencePaths?.Select(item => item.ItemSpec).ToArray(),
+                    ReferenceAssembly,
+                    CompileFiles?.Select(item => item.ItemSpec).ToArray(),
+                    DefineConstants,
+                    OutputSourcePath,
+                    Log,
+                    IgnoreMissingTypes,
+                    IgnoreMissingTypesList,
+                    SeedTypePreferences);
 
-                using (var contractHost = new HostEnvironment(nameTable, internFactory))
-                using (var seedHost = new HostEnvironment(nameTable, internFactory))
+                if (!result)
                 {
-                    IAssembly contractAssembly = contractHost.LoadAssembly(referenceAssembly);
-                    IEnumerable<string> referenceTypes = GetPublicVisibleTypes(contractAssembly);
-
-                    IAssembly[] seedAssemblies = LoadAssemblies(seedHost, seeds).ToArray();
-                    var seedTypes = GenerateTypeTable(seedAssemblies);
-
-                    var sourceGenerator = new SourceGenerator(referenceTypes, seedTypes, seedTypePreferences, outputSourcePath, ignoreMissingTypesList, logger);
-                    return sourceGenerator.GenerateSource(compileFiles, ParseDefineConstants(defineConstants), ignoreMissingTypes);
+                    Log.LogError("Errors were encountered when generating facade(s).");
                 }
             }
-            catch (FacadeGenerationException ex)
+            catch (Exception e)
             {
-                logger.LogError(ex.Message);
-                Debug.Assert(Environment.ExitCode != 0);
-                return false;
-            }
-        }
-
-        private static IEnumerable<string> ParseDefineConstants(string defineConstants)
-        {
-            return defineConstants?.Split(';', ',').Where(t => !string.IsNullOrEmpty(t)).ToArray();
-        }
-
-        private static Dictionary<string, string> ParseSeedTypePreferences(ITaskItem[] preferences, TaskLoggingHelper logger)
-        {
-            var dictionary = new Dictionary<string, string>(StringComparer.Ordinal);
-
-            if (preferences != null)
-            {
-                foreach (var item in preferences)
-                {
-                    string key = item.ItemSpec;
-                    string value = item.GetMetadata("Aliases");
-
-                    if (value != null)
-                    {
-                        string existingValue;
-
-                        if (dictionary.TryGetValue(key, out existingValue))
-                        {
-                            logger.LogWarning($"Overriding SeedType{existingValue} for type {key} with {value}");
-                        }
-
-                        dictionary[key] = value;
-                    }
-                    else
-                    {
-                        logger.LogWarning($"No Alias has been provided for type {key}");
-                    }
-                }
+                Log.LogErrorFromException(e, showStackTrace: false);
             }
 
-            return dictionary;
-        }
-
-        private static IEnumerable<IAssembly> LoadAssemblies(HostEnvironment host, string[] assemblyPaths)
-        {
-            host.UnifyToLibPath = true;
-
-            foreach (string path in assemblyPaths)
-            {
-                if (Directory.Exists(path))
-                {
-                    host.AddLibPath(Path.GetFullPath(path));
-                }
-                else if (File.Exists(path))
-                {
-                    host.AddLibPath(Path.GetDirectoryName(Path.GetFullPath(path)));
-                }
-            }
-
-            return host.LoadAssemblies(assemblyPaths);
-        }
-
-        private static IEnumerable<string> GetPublicVisibleTypes(IAssembly contractAssembly)
-        {
-            var typeForwardsToForward = contractAssembly.ExportedTypes.Select(alias => alias.AliasedType)
-                                                                      .OfType<INamespaceTypeReference>();
-
-            var typesToForward = contractAssembly.GetAllTypes().Where(t => TypeHelper.IsVisibleOutsideAssembly(t))
-                                                               .OfType<INamespaceTypeDefinition>();
-
-            return typeForwardsToForward.Concat(typesToForward)
-                                        .Select(type => TypeHelper.GetTypeName(type, NameFormattingOptions.UseGenericTypeNameSuffix)).ToList();
-        }
-
-        private static void AddNestedTypesFromSeeds(List<string> types, INamedTypeDefinition type)
-        {
-            foreach (var nestedType in type.NestedTypes)
-            {
-                if (TypeHelper.IsVisibleOutsideAssembly(nestedType))
-                    types.Add(TypeHelper.GetTypeName(nestedType));
-                AddNestedTypesFromSeeds(types, nestedType);
-            }
-        }
-
-        private static IReadOnlyDictionary<string, IReadOnlyList<INamedTypeDefinition>> GenerateTypeTable(IEnumerable<IAssembly> seedAssemblies)
-        {
-            var typeTable = new Dictionary<string, IReadOnlyList<INamedTypeDefinition>>();
-            foreach (var assembly in seedAssemblies)
-            {
-                foreach (var type in assembly.GetAllTypes().OfType<INamedTypeDefinition>())
-                {
-                    if (!TypeHelper.IsVisibleOutsideAssembly(type))
-                        continue;
-                    AddTypeAndNestedTypesToTable(typeTable, type);
-                }
-            }
-            return typeTable;
-        }
-
-        private static void AddTypeAndNestedTypesToTable(Dictionary<string, IReadOnlyList<INamedTypeDefinition>> typeTable, INamedTypeDefinition type)
-        {
-            if (type != null)
-            {
-                IReadOnlyList<INamedTypeDefinition> seedTypes;
-                string typeName = TypeHelper.GetTypeName(type, NameFormattingOptions.UseGenericTypeNameSuffix);
-                if (!typeTable.TryGetValue(typeName, out seedTypes))
-                {
-                    seedTypes = new List<INamedTypeDefinition>(1);
-                    typeTable.Add(typeName, seedTypes);
-                }
-                if (!seedTypes.Contains(type))
-                    ((List<INamedTypeDefinition>)seedTypes).Add(type);
-
-                foreach (INestedTypeDefinition nestedType in type.NestedTypes)
-                {
-                    if (TypeHelper.IsVisibleOutsideAssembly(nestedType))
-                        AddTypeAndNestedTypesToTable(typeTable, nestedType);
-                }
-            }
+            return result && !Log.HasLoggedErrors;
         }
     }
 }

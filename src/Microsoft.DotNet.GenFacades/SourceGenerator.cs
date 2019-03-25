@@ -89,11 +89,11 @@ namespace Microsoft.DotNet.GenFacades
             }
 
             sb.AppendLine("#pragma warning restore CS0618");
-            File.WriteAllText(_outputSourcePath, AppendAliases(externAliases) + sb.ToString());
+            File.WriteAllText(_outputSourcePath, BuildAliasDeclarations(externAliases) + sb.ToString());
             return result;
         }
 
-        private string AppendAliases(IEnumerable<string> externAliases)
+        private string BuildAliasDeclarations(IEnumerable<string> externAliases)
         {
             StringBuilder sb = new StringBuilder();
             foreach (string alias in externAliases)
@@ -118,15 +118,15 @@ namespace Microsoft.DotNet.GenFacades
         // typename`3 gets transformed into typename<,,>
         private static string TransformGenericTypes(string typeName)
         {
-            if (!typeName.Contains('`'))
-                return typeName;
-
             int splitIndex = typeName.LastIndexOf('`');
+
+            if (splitIndex == -1)
+                return typeName;
 
             StringBuilder sb = new StringBuilder();
             sb.Append(typeName.Substring(0, splitIndex));
             sb.Append('<');
-            sb.Append(',', int.Parse(typeName[splitIndex + 1].ToString()) - 1);
+            sb.Append(',', int.Parse(typeName.Substring(splitIndex + 1)) - 1);
             sb.Append('>');
             return sb.ToString();
         }

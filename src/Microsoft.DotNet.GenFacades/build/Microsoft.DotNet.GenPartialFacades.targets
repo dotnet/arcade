@@ -14,7 +14,7 @@
     </CompileDependsOn>
   </PropertyGroup>
 
-  <UsingTask TaskName="GenPartialFacadeSourceTask" AssemblyFile="$(_MicrosoftDotNetGenFacadesTaskDir)Microsoft.DotNet.GenFacades.dll" />
+  <UsingTask TaskName="GenPartialFacadeSource" AssemblyFile="$(_MicrosoftDotNetGenFacadesTaskDir)Microsoft.DotNet.GenFacades.dll" />
 
   <Target Name="GeneratePartialFacadeSource"
           Inputs="@(ResolvedMatchingContract);@(ReferencePath);@(Compile)"
@@ -26,7 +26,7 @@
       <ReferenceAssembly>%(ResolvedMatchingContract.Identity)</ReferenceAssembly>
     </PropertyGroup>
     
-    <GenPartialFacadeSourceTask
+    <GenPartialFacadeSource
       ReferencePaths="@(ReferencePath)"
       ReferenceAssembly="$(ReferenceAssembly)"
       CompileFiles="@(Compile)"
