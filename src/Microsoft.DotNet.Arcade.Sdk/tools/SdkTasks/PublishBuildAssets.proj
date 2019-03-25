@@ -30,6 +30,7 @@
     <PushMetadataToBuildAssetRegistry ManifestsPath="$(ManifestsPath)"
                                       BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
                                       MaestroApiEndpoint="$(MaestroApiEndpoint)"
-                                      PublishUsingPipelines="$(PublishUsingPipelines)"/>
+                                      PublishUsingPipelines="$(PublishUsingPipelines)"
+                                      RepoRoot="$(RepoRoot)"/>
   </Target>
 </Project>
