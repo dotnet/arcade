@@ -3,8 +3,9 @@
 <Project>
 
   <PropertyGroup>
-    <TestAssembly Condition="'$(TestAssembly)' == ''">$(TargetFileName)</TestAssembly>
     <TestPath Condition="'$(TestPath)' == ''">$(OutDir)</TestPath>
+    <TestAssembly Condition="'$(TestAssembly)' == ''">$(TargetFileName)</TestAssembly>
+    <TestAssemblyFullPath>$([MSBuild]::NormalizePath('$(TestPath)', '$(TestAssembly)'))</TestAssemblyFullPath>
     <RunWorkingDirectory>$(TestPath)</RunWorkingDirectory>
     <ArchiveTest Condition="'$(ArchiveTests.ToLower())' == 'all' OR $(MSBuildProjectName.EndsWith('.$(ArchiveTests)'))">true</ArchiveTest>
 
@@ -185,8 +186,8 @@
           Inputs="@(RunTestsInputs)"
           Outputs="@(RunTestsOutputs)">
 
-    <Error Condition="!Exists('$(TestAssembly)')"
-           Text="Test assembly not found. Make sure to build the test project first." />
+    <Error Condition="!Exists('$(TestAssemblyFullPath)')"
+           Text="Test assembly couldn't be found. Make sure to build the test project first." />
 
     <!-- Invoke the run script with the test host as the runtime path. -->
     <Exec Command="&quot;$(RunScriptOutputPath)&quot; &quot;$(TestHostRootPath.TrimEnd('\/'))&quot; &quot;$(DotNetRoot.TrimEnd('\/'))&quot; &quot;$(GlobalToolsDir.TrimEnd('\/'))&quot;"
