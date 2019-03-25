@@ -32,7 +32,8 @@
       CompileFiles="@(Compile)"
       DefineConstants="$(DefineConstants)"
       IgnoreMissingTypes="$(GenFacadesIgnoreMissingTypes)"
-      IgnoreMissingTypesList="@(IgnoreMissingTypesList)"
+      IgnoreMissingTypesList="@(GenFacadesIgnoreMissingType)"
+      GenFacadesOmitType="@(GenFacadesOmitType)"
       OutputSourcePath="$(OutputSourcePath)"
       SeedTypePreferences="@(SeedTypePreference)"
     />

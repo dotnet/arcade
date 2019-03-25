@@ -25,6 +25,8 @@ namespace Microsoft.DotNet.GenFacades
 
         public string[] IgnoreMissingTypesList { get; set; }
 
+        public string[] GenFacadesOmitType { get; set; }
+
         public ITaskItem[] SeedTypePreferences { get; set; }
 
         [Required]
@@ -44,6 +46,7 @@ namespace Microsoft.DotNet.GenFacades
                     Log,
                     IgnoreMissingTypes,
                     IgnoreMissingTypesList,
+                    GenFacadesOmitType,
                     SeedTypePreferences);
 
                 if (!result)

@@ -106,9 +106,6 @@ namespace Microsoft.DotNet.GenFacades
 
         private static string GetTypeForwardsToString(string typeName, string alias = "")
         {
-            if (typeName == "System.Void")
-                typeName = "void";
-
             if (!string.IsNullOrEmpty(alias))
                 alias += "::";
 

@@ -24,6 +24,7 @@ namespace Microsoft.DotNet.GenFacades
             TaskLoggingHelper logger,
             bool ignoreMissingTypes = false,
             string[] ignoreMissingTypesList = null,
+            string[] GenFacadesOmitType = null,
             ITaskItem[] seedTypePreferencesList = null)
         {
             var nameTable = new NameTable();
@@ -36,6 +37,9 @@ namespace Microsoft.DotNet.GenFacades
             {
                 IAssembly contractAssembly = contractHost.LoadAssembly(referenceAssembly);
                 IEnumerable<string> referenceTypes = GetPublicVisibleTypes(contractAssembly);
+
+                if (GenFacadesOmitType != null)
+                    referenceTypes = referenceTypes.Where(type => !GenFacadesOmitType.Contains(type));
 
                 IAssembly[] seedAssemblies = LoadAssemblies(seedHost, seeds).ToArray();
                 var seedTypes = GenerateTypeTable(seedAssemblies);
