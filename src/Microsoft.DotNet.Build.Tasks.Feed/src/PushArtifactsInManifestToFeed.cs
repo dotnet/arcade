@@ -33,32 +33,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AccountKey { get; set; }
 
         /// <summary>
-        /// When set to true packages with the same name will be overriden on 
-        /// the target feed.
-        /// </summary>
-        public bool Overwrite { get; set; }
-
-        /// <summary>
-        /// Enables idempotency when Overwrite is false.
-        /// 
-        /// false: (default) Attempting to upload an item that already exists fails.
-        /// 
-        /// true: When an item already exists, download the existing blob to check if it's
-        /// byte-for-byte identical to the one being uploaded. If so, pass. If not, fail.
-        /// </summary>
-        public bool PassIfExistingItemIdentical { get; set; }
-
-        /// <summary>
-        /// Maximum number of concurrent pushes of assets to the flat container.
-        /// </summary>
-        public int MaxClients { get; set; } = 8;
-
-        /// <summary>
-        /// Maximum allowed timeout per upload request to the flat container.
-        /// </summary>
-        public int UploadTimeoutInMinutes { get; set; } = 5;
-
-        /// <summary>
         /// Full path to the assets to publish manifest.
         /// </summary>
         [Required]
@@ -95,6 +69,37 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public string BuildAssetRegistryToken { get; set; }
 
+        /// <summary>
+        /// When set to true packages with the same name will be overriden on 
+        /// the target feed.
+        /// </summary>
+        public bool Overwrite { get; set; }
+
+        /// <summary>
+        /// Enables idempotency when Overwrite is false.
+        /// 
+        /// false: (default) Attempting to upload an item that already exists fails.
+        /// 
+        /// true: When an item already exists, download the existing blob to check if it's
+        /// byte-for-byte identical to the one being uploaded. If so, pass. If not, fail.
+        /// </summary>
+        public bool PassIfExistingItemIdentical { get; set; }
+
+        /// <summary>
+        /// Maximum number of concurrent pushes of assets to the flat container.
+        /// </summary>
+        public int MaxClients { get; set; } = 8;
+
+        /// <summary>
+        /// Maximum allowed timeout per upload request to the flat container.
+        /// </summary>
+        public int UploadTimeoutInMinutes { get; set; } = 5;
+
+        /// <summary>
+        /// The URL for the release which is executing this task.
+        /// </summary>
+        public string CurrentReleasePipelineUrl { get; set; }
+
         public override bool Execute()
         {
             return ExecuteAsync().GetAwaiter().GetResult();
@@ -102,6 +107,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public async Task<bool> ExecuteAsync()
         {
+            string commit = null;
+
             try
             {
                 Log.LogMessage(MessageImportance.High, "Performing push feeds.");
@@ -124,6 +131,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
 
                 var buildModel = BuildManifestUtil.ManifestFileToModel(AssetManifestPath, Log);
+                commit = buildModel.Identity.Commit;
 
                 // Parsing the manifest may fail for several reasons
                 if (Log.HasLoggedErrors)
@@ -219,7 +227,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Log.LogErrorFromException(e, true);
             }
 
+            if (Log.HasLoggedErrors)
+            {
+                CreateGitHubIssue(commit);
+            }
+
             return !Log.HasLoggedErrors;
+        }
+
+        public void CreateGitHubIssue(string commit)
+        {
+
         }
     }
 }
