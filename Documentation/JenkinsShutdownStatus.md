@@ -36,7 +36,7 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 | Core-Setup                 | dleeapho         | -           | -      | - ||
 | **dotnet-docker**          | msimons          | In progress | Low    | [ci1](https://ci.dot.net/job/dotnet_dotnet-docker/) | [Tracking issue](https://github.com/dotnet/dotnet-docker/issues/744), no known blocking issues at this time |
 | **dotnet-framework-docker**| msimons          | In progress | Low    | [ci1](https://ci.dot.net/job/Microsoft_dotnet-framework-docker/) | [Tracking issue](https://github.com/Microsoft/dotnet-framework-docker/issues/225), no known blocking issues at this time |
-| **docker-tools**           | msimons          | In progress | Low    | [ci1](https://ci.dot.net/job/dotnet_docker-tools/) | [Tracking issue](https://github.com/dotnet/docker-tools/issues/147), no known blocking issues at this time |
+| docker-tools               | msimons          | -           |        | - ||
 |**dotnet-buildtools-prereqs-docker** | msimons | In progress | Low    | [ci1](https://ci.dot.net/job/dotnet_dotnet-buildtools-prereqs-docker/) | [Tracking issue](https://github.com/dotnet/dotnet-buildtools-prereqs-docker/issues/84), no known blocking issues at this time |
 | MSBuild                    | licavalc         | -           | -      | - ||
 | Roslyn                     | jaredpar         | -           | -      | - ||
