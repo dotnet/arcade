@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string RepoForFilingPublishingIssues { get; set; } = "https://github.com/dotnet/arcade";
 
         /// <summary>
-        /// Who to tag in the created issue for them to investigate the failure.
+        /// Github aliases to tag in the created issue.
         /// </summary>
         public string FyiHandles { get; set; } = "@JohnTortugo @jcagme";
 
