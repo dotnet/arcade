@@ -7,13 +7,7 @@ using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
 using System.Reflection.Metadata;
-using System.Reflection.PortableExecutable;
-using System.Runtime.Versioning;
-using System.Threading;
-using System.Xml;
 using System.Xml.Linq;
 
 namespace Microsoft.DotNet.Arcade.Sdk
@@ -69,17 +63,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             items.Sort();
 
             Directory.CreateDirectory(OutputDirectory);
-            string outputFileName;
-            if (GetAssemblyMvid(AssemblyFilePath, out Guid mvid))
-            {
-                outputFileName = $"{Path.GetFileNameWithoutExtension(AssemblyFilePath)}-{AssemblyTargetFramework}-{mvid}.ngen.txt";
-            }
-            else
-            {
-                Log.LogWarning($"Unable to read MVID and TargetFramework from {AssemblyFilePath}");
-                outputFileName = $"{Guid.NewGuid()}.ngen.txt";
-            }
-
+            var outputFileName = $"{Path.GetFileNameWithoutExtension(AssemblyFilePath)}-{AssemblyTargetFramework}.ngen.txt";
             var outputFilePath = Path.Combine(OutputDirectory, outputFileName);
             using (var outputFileStream = new StreamWriter(outputFilePath, append: false))
             {
@@ -91,24 +75,5 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             return true;
         } 
-
-        private static bool GetAssemblyMvid(string assemblyFilePath, out Guid mvid)
-        {
-            mvid = default;
-
-            using (var stream = File.Open(assemblyFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var pereader = new PEReader(stream))
-            {
-                if (pereader.HasMetadata)
-                {
-                    var metadataReader = pereader.GetMetadataReader();
-                    var mvidHandle = metadataReader.GetModuleDefinition().Mvid;
-                    mvid = metadataReader.GetGuid(mvidHandle);
-                    return true;
-                }
-            }
-
-            return false;
-        }
     }
 }
