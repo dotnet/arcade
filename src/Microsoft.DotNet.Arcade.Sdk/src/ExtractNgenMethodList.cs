@@ -9,7 +9,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using System.Runtime.Versioning;
 using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
@@ -28,6 +30,17 @@ namespace Microsoft.DotNet.Arcade.Sdk
         /// </summary>
         [Required]
         public string IbcXmlFilePath { get; set; }
+
+        /// <summary>
+        /// This is the name of the assembly for when IBC is being run. 
+        /// </summary>
+        [Required]
+        public string AssemblyFilePath { get; set; }
+
+        /// <summary>
+        /// The current target framework for the assembly being compiled.
+        /// </summary>
+        public string AssemblyTargetFramework { get; set; }
 
         /// <summary>
         /// This is the directory the NGEN list should be output to
@@ -56,7 +69,17 @@ namespace Microsoft.DotNet.Arcade.Sdk
             items.Sort();
 
             Directory.CreateDirectory(OutputDirectory);
-            var outputFileName = Path.ChangeExtension(Path.GetFileName(IbcXmlFilePath), ".ngen.txt");
+            string outputFileName;
+            if (GetAssemblyMvid(AssemblyFilePath, out Guid mvid))
+            {
+                outputFileName = $"{Path.GetFileNameWithoutExtension(AssemblyFilePath)}-{AssemblyTargetFramework}-{mvid}.ngen.txt";
+            }
+            else
+            {
+                Log.LogWarning($"Unable to read MVID and TargetFramework from {AssemblyFilePath}");
+                outputFileName = $"{Guid.NewGuid()}.ngen.txt";
+            }
+
             var outputFilePath = Path.Combine(OutputDirectory, outputFileName);
             using (var outputFileStream = new StreamWriter(outputFilePath, append: false))
             {
@@ -68,5 +91,24 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             return true;
         } 
+
+        private static bool GetAssemblyMvid(string assemblyFilePath, out Guid mvid)
+        {
+            mvid = default;
+
+            using (var stream = File.Open(assemblyFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var pereader = new PEReader(stream))
+            {
+                if (pereader.HasMetadata)
+                {
+                    var metadataReader = pereader.GetMetadataReader();
+                    var mvidHandle = metadataReader.GetModuleDefinition().Mvid;
+                    mvid = metadataReader.GetGuid(mvidHandle);
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

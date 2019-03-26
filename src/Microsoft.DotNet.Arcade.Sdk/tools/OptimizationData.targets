@@ -107,7 +107,7 @@
                               PreviousAssemblyPath="%(_IbcFile.PreviousAssemblyDir)\%(_IbcFile.AssemblyFileName)"
                               PreviousAssemblyCopyPath="$(ArtifactsTmpDir)OptimizedAssemblies\$([System.Guid]::NewGuid())"
                               OptimizeAssemblyPath="%(_IbcFile.OptimizeAssemblyPath)"
-                              XmlOutputPath="$(_IbcMergeXmlOutputDir)\%(_IbcFile.AssemblyFileName).ibc.xml" />
+                              XmlOutputPath="$(_IbcMergeXmlOutputDir)\%(_IbcFile.AssemblyFileName).$([System.Guid]::NewGuid()).temp.ibc.xml" />
     </ItemGroup>
 
     <Error Text="No optimization data found for assemblies: @(_AssemblyWithoutRawIbcData, ', ')"
@@ -177,7 +177,12 @@
 
     <!-- Remove Authenticode signing record if present. -->
     <Microsoft.DotNet.Arcade.Sdk.Unsign FilePath="%(_IbcMergeInvocation.UnsignFile)" Condition="'%(_IbcMergeInvocation.UnsignFile)' != ''" />
-    <Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList IbcXmlFilePath="%(_IbcMergeInvocation.XmlOutputPath)" OutputDirectory="$(ArtifactsLogNgenDir)" Condition="'%(_IbcMergeInvocation.XmlOutputPath)' != ''"/>
+    <Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList
+      IbcXmlFilePath="%(_IbcMergeInvocation.XmlOutputPath)" 
+      AssemblyFilePath="%(_IbcMergeInvocation.UnsignFile)"
+      AssemblyTargetFramework="$(TargetFramework)"
+      OutputDirectory="$(ArtifactsLogNgenDir)" 
+      Condition="'%(_IbcMergeInvocation.XmlOutputPath)' != ''"/>
   </Target>
 
 </Project>
