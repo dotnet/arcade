@@ -3,7 +3,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
-
+    <SignAssembly>false</SignAssembly>
     <VersionPrefix>2.2.0</VersionPrefix>
 
     <Description>This package provides support for publishing assets to a NuGet protocol based feed.</Description>
@@ -16,6 +16,7 @@
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
     <PackageReference Include="Microsoft.DotNet.Maestro.Client" Version="$(MicrosoftDotNetMaestroClientVersion)" />
     <PackageReference Include="DotNet.SleetLib" Version="$(DotNetSleetLibVersion)" />
+    <PackageReference Include="Octokit" Version="$(OctokitVersion)" />
   </ItemGroup>
 
   <ItemGroup>
