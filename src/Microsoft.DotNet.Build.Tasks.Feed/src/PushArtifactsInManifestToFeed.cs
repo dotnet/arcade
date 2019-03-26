@@ -268,7 +268,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         /// Creates a new GitHub issue.
         /// </summary>
-        /// <param name="repoUrl">GitHub source repo IRL.</param>
+        /// <param name="repoUrl">GitHub source repo URL.</param>
         /// <param name="commit">Commit SHA in the source repo.</param>
         /// <param name="buildId">AzDO build id.</param>
         private async Task CreateGitHubIssue(string repoUrl, string commit, string buildId)
