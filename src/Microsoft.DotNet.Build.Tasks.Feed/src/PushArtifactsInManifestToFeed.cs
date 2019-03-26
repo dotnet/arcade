@@ -290,6 +290,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     try
                     {
                         GitHubCommit commitInfo = await client.Repository.Commit.Get(owner, repoName, commit);
+
+                        while (commitInfo.Author.Type == "Bot")
+                        {
+                            if (!commitInfo.Parents.Any()) break;
+                            commit = commitInfo.Parents.First().Sha;
+                            commitInfo = await client.Repository.Commit.Get(owner, repoName, commit);
+                        }
+
                         userHandle = $"@{commitInfo.Author.Login}";
                     }
                     catch (Exception exc)
