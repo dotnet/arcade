@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,11 +26,11 @@ namespace Xunit
         readonly Lazy<string> fallbackRuntimeIdentifier;
         readonly IFileSystem fileSystem;
         readonly IMessageSink internalDiagnosticsMessageSink;
-        readonly Dictionary<string, Assembly> managedAssemblyCache;
+        readonly ConcurrentDictionary<string, Assembly> managedAssemblyCache;
         readonly Dictionary<string, Tuple<RuntimeLibrary, RuntimeAssetGroup>> managedAssemblyMap;
         readonly Platform operatingSystemPlatform;
         readonly string[] unmanagedDllFormats;
-        readonly Dictionary<string, string> unmanagedAssemblyCache;
+        readonly ConcurrentDictionary<string, string> unmanagedAssemblyCache;
         readonly Dictionary<string, Tuple<RuntimeLibrary, RuntimeAssetGroup>> unmanagedAssemblyMap;
 
         public DependencyContextAssemblyCache(string assemblyFolder,
@@ -57,7 +58,7 @@ namespace Xunit
             if (internalDiagnosticsMessageSink != null)
                 internalDiagnosticsMessageSink.OnMessage(new _DiagnosticMessage($"[DependencyContextAssemblyCache..ctor] Compatible runtimes: [{string.Join(",", compatibleRuntimes.Select(x => $"'{x}'"))}]"));
 
-            managedAssemblyCache = new Dictionary<string, Assembly>(StringComparer.OrdinalIgnoreCase);
+            managedAssemblyCache = new ConcurrentDictionary<string, Assembly>(StringComparer.OrdinalIgnoreCase);
             managedAssemblyMap =
                 dependencyContext.RuntimeLibraries
                                  .Where(lib => lib.RuntimeAssemblyGroups?.Count > 0)
@@ -72,7 +73,7 @@ namespace Xunit
                 internalDiagnosticsMessageSink.OnMessage(new _DiagnosticMessage($"[DependencyContextAssemblyCache..ctor] Managed assembly map: [{string.Join(",", managedAssemblyMap.Keys.Select(k => $"'{k}'").OrderBy(k => k, StringComparer.OrdinalIgnoreCase))}]"));
 
             unmanagedDllFormats = GetUnmanagedDllFormats().ToArray();
-            unmanagedAssemblyCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            unmanagedAssemblyCache = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             unmanagedAssemblyMap =
                 dependencyContext.RuntimeLibraries
                                  .Select(lib => compatibleRuntimes.Select(runtime => Tuple.Create(lib, lib.NativeLibraryGroups.FirstOrDefault(libGroup => string.Equals(libGroup.Runtime, runtime))))
