@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Git.IssueManager;
 using Microsoft.DotNet.Maestro.Client;
 using Octokit;
 using System;
@@ -108,18 +109,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string CurrentReleaseDescription { get; set; }
 
         /// <summary>
-        /// The URL of the build which triggered the release which triggered this task.
+        /// The URL of the build linked to the running release definition.
         /// </summary>
-        public string TriggeredByBuild { get; set; }
+        public string TriggeredByBuildUrl { get; set; }
 
         /// <summary>
-        /// Token to be used by the file creator.
+        /// Token to be used by the Octokit client.
         /// </summary>
         public string GitHubPersonalAccessToken { get; set; }
 
         /// <summary>
+        /// Token to be used to fetch commit information from Azure DevOps.
+        /// </summary>
+        public string AzureDevOpsPersonalAccessToken { get; set; }
+
+        /// <summary>
         /// The repo where we will file the issues when something fails while publishing.
-        /// arcade repo will be used by default.
+        /// Arcade repo will be used by default.
         /// </summary>
         public string RepoForFilingPublishingIssues { get; set; } = "https://github.com/dotnet/arcade";
 
@@ -273,53 +279,37 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="buildId">AzDO build id.</param>
         private async Task CreateGitHubIssue(string repoUrl, string commit, string buildId)
         {
-            try
-            {
-                string userHandle = "Last commit author could not be determined...";
-                string owner = null;
-                string repoName = null;
-                
-                var client = new GitHubClient(new ProductHeaderValue("assets-publisher"));
-                var tokenAuth = new Credentials(GitHubPersonalAccessToken);
-                client.Credentials = tokenAuth;
-
-                if (!string.IsNullOrEmpty(repoUrl) && !string.IsNullOrEmpty(commit))
-                {
-                    (owner, repoName) = ParseRepoUri(repoUrl);
-
-                    try
-                    {
-                        GitHubCommit commitInfo = await client.Repository.Commit.Get(owner, repoName, commit);
-
-                        while (commitInfo.Author.Type == "Bot")
-                        {
-                            if (!commitInfo.Parents.Any()) break;
-                            commit = commitInfo.Parents.First().Sha;
-                            commitInfo = await client.Repository.Commit.Get(owner, repoName, commit);
-                        }
-
-                        userHandle = $"@{commitInfo.Author.Login}";
-                    }
-                    catch (Exception exc)
-                    {
-                        Log.LogError($"Something failed while trying to get the author of commit '{commit}'. Exception: {exc}");
-                    }
-                }
-
-                var issueToBeCreated = new NewIssue($"Release '{CurrentReleaseDescription}' failed")
-                {
-                    Body = $"Something failed while trying to publish artifacts for build [{buildId}]({TriggeredByBuild})." +
+            string userHandle = "Last commit author could not be determined...";
+            string issueTitle = $"Release '{CurrentReleaseDescription}' failed";
+            string issueDescription = $"Something failed while trying to publish artifacts for build [{buildId}]({TriggeredByBuildUrl})." +
                     $"{Environment.NewLine} {Environment.NewLine}" +
                     $"Please click [here]({CurrentReleasePipelineUrl}) to check the error logs." +
                     $"{Environment.NewLine} {Environment.NewLine}" +
                     $"Last commit by: {userHandle}" +
                     $" {Environment.NewLine} {Environment.NewLine}" +
-                    $"/fyi: {FyiHandles}"
-                };
+                    $"/fyi: {FyiHandles}";
 
-                (owner, repoName) = ParseRepoUri(RepoForFilingPublishingIssues);
+            try
+            {
+                IssueManager issueManager = new IssueManager(
+                    GitHubPersonalAccessToken, 
+                    AzureDevOpsPersonalAccessToken);
 
-                await client.Issue.Create(owner, repoName, issueToBeCreated);
+                try
+                {
+                    userHandle = await issueManager.GetCommitAuthorAsync(repoUrl, commit);
+                }
+                catch (Exception exc)
+                {
+                    Log.LogError($"Something failed while trying to get the author of commit '{commit}'. Exception: {exc}");
+                }
+
+                int issueId = await issueManager.CreateNewIssueAsync(
+                    repoUrl,
+                    issueTitle,
+                    issueDescription);
+
+                Log.LogMessage(MessageImportance.High, $"GitHub issue {issueId} to track the messages above.");
             }
             catch (Exception exc)
             {
