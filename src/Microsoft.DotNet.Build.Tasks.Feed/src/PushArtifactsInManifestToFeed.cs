@@ -5,7 +5,6 @@
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Git.IssueManager;
 using Microsoft.DotNet.Maestro.Client;
-using Octokit;
 using System;
 using System.Collections.Generic;
 using System.IO;
