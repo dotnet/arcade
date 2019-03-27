@@ -14,7 +14,7 @@
   <ItemGroup>
     <SupplementalTestData Condition="'$(SkipTestRunnerConfigCopying)' != 'true'" Include="$(TestRunnerConfigPath)" />
   </ItemGroup>
-  
+
   <!-- Supplemental test data. -->
   <ItemGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
     <SupplementalTestData Include="$(RuntimePath)$(TestRunnerName)" />
@@ -39,7 +39,7 @@
     <TestArchiveDependencies Include="$(RuntimePath)xunit.core.dll" />
     <TestArchiveDependencies Include="$(RuntimePath)xunit.abstractions.dll" />
   </ItemGroup>
-  
+
   <Import Project="$(MSBuildThisFileDirectory)References.props" />
 
 </Project>

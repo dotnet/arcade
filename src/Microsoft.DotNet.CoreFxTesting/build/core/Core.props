@@ -11,7 +11,7 @@
   <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
     <RunScriptCommands Include="set DEVPATH=%RUNTIME_PATH%" />
   </ItemGroup>
-  
+
   <!-- Binplace dirs for supplemental test data. -->
   <ItemGroup>
     <SupplementalTestDataDir Include="$(TestPath)" />
@@ -43,12 +43,6 @@
   <Import Condition="'$(IsUnitTestProject)' == 'true' OR '$(IsIntegrationTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.props'))" />
 
   <!--
-    Performance test support.
-    Supported runners: xunit-performance.
-  -->
-  <Import Condition="'$(IsPerformanceTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'performance', 'Performance.props'))" />
-
-  <!--
     Code Coverage support.
     Supported runners: OpenCover.
 
@@ -56,7 +50,7 @@
       - Coverage: Intended to be passed in as a global property.
   -->
   <PropertyGroup>
-    <_CoverageSupported Condition="'$(Coverage)' == 'true' AND '$(CoverageSupported)' != 'false' AND '$(IsPerformanceTestProject)' != 'true'">true</_CoverageSupported>
+    <_CoverageSupported Condition="'$(Coverage)' == 'true' AND '$(CoverageSupported)' != 'false'">true</_CoverageSupported>
   </PropertyGroup>
   <Import Condition="'$(_CoverageSupported)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'coverage', 'Coverage.props'))" />
 
