@@ -518,10 +518,10 @@ Create-Directory $TempDir
 Create-Directory $LogDir
 
 if ($ci) {
-  $env:OUTPUTDIRECTORY = $ArtifactsDir
-  $env:TOOLSETDIRECTORY = $ToolsetDir
-  $env:TOOLSDIRECTORY = $ToolsDir
-  $env:LOGGINGDIRECTORY = $LogDir
+  Write-Host "##vso[task.setvariable variable=Artifacts] $ArtifactsDir"
+  Write-Host "##vso[task.setvariable variable=Artifacts.Toolset] $ToolsetDir"
+  Write-Host "##vso[task.setvariable variable=Artifacts.Log] $LogDir"
+
   $env:TEMP = $TempDir
   $env:TMP = $TempDir
 }
