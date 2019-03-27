@@ -6,7 +6,7 @@
   <Import Project="..\DefaultVersions.Generated.props" Condition="Exists('..\DefaultVersions.Generated.props')"/>
 
   <PropertyGroup>
-    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.19175.6</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.19177.1</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftDotNetBuildTasksVisualStudioVersion>$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksVisualStudioVersion>
     <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.19170.8</MicrosoftDotNetBuildTasksFeedVersion>
   </PropertyGroup>
