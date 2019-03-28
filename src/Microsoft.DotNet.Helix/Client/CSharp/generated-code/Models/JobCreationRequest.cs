@@ -46,6 +46,9 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Creator")]
         public string Creator { get; set; }
 
+        [JsonProperty("ResultContainerPrefix")]
+        public string ResultContainerPrefix { get; set; }
+
         [JsonProperty("PullRequestId")]
         public string PullRequestId { get; set; }
 
