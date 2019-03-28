@@ -91,7 +91,22 @@
         MSBuildPath="$(_DesktopMSBuildPath)"
         SNBinaryPath="$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe"
         MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"/>
+    
+    <!--
+      Signing.props can be used to include configurations used by signing validation during publishing.
+    -->
+    <Message
+      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)Signing.props"
+      Condition="Exists('$(RepositoryEngineeringDir)Signing.props')"
+      Importance="high" />
 
+    <!--
+      SigningValidation.proj includes the logic to call SignCheck and will be used during release to validate signed packages.
+    -->
+    <Message
+      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common\SigningValidation.proj"
+      Importance="high" />
+    
   </Target>
 
 </Project>
