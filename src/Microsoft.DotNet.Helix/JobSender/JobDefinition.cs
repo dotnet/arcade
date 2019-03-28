@@ -223,12 +223,12 @@ namespace Microsoft.DotNet.Helix.Client
                         TargetQueueId)
                     {
                         Creator = Creator,
-                        ResultContainerPrefix = ResultContainerPrefix,
                         MaxRetryCount = MaxRetryCount ?? 0,
                         JobStartIdentifier = jobStartIdentifier,
                         ResultsUri = resultsStorageContainer?.Uri,
                         ResultsUriRSAS = resultsStorageContainer?.ReadSas,
                         ResultsUriWSAS = resultsStorageContainer?.WriteSas,
+                        ResultContainerPrefix = ResultContainerPrefix,
                     }),
                 ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."));
 
