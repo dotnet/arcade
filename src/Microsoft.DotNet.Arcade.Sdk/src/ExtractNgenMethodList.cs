@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using System.Xml.Linq;
 
 namespace Microsoft.DotNet.Arcade.Sdk
@@ -63,7 +64,16 @@ namespace Microsoft.DotNet.Arcade.Sdk
             items.Sort();
 
             Directory.CreateDirectory(OutputDirectory);
-            var outputFileName = $"{Path.GetFileNameWithoutExtension(AssemblyFilePath)}-{AssemblyTargetFramework}.ngen.txt";
+
+            // When AssemblyTargetFramework is set then this is an assembly that is being built by the current
+            // bulid. Appending the target framework means we will avoid name clashes. When it's not set then
+            // this is a binary that is included in the build but not actually built here. Possible, remotely, 
+            // that there will be multiple versions with the same target framework. Hence use the MVID as the 
+            // suffix here to avoid clashes.
+            var outputFileNameSuffix = string.IsNullOrEmpty(AssemblyTargetFramework)
+                ? GetAssemblyMvid().ToString()
+                : AssemblyTargetFramework;
+            var outputFileName = $"{Path.GetFileNameWithoutExtension(AssemblyFilePath)}-{outputFileNameSuffix}.ngen.txt";
             var outputFilePath = Path.Combine(OutputDirectory, outputFileName);
             using (var outputFileStream = new StreamWriter(outputFilePath, append: false))
             {
@@ -75,5 +85,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             return true;
         } 
+
+        private Guid GetAssemblyMvid()
+        {
+            using (var stream = File.Open(AssemblyFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var peReader = new PEReader(stream);
+                var metadataReader = peReader.GetMetadataReader();
+                return metadataReader.GetGuid(metadataReader.GetModuleDefinition().Mvid);
+            }
+        }
     }
 }
