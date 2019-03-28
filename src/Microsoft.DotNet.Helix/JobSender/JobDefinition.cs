@@ -214,7 +214,7 @@ namespace Microsoft.DotNet.Helix.Client
                     .Replace("heads/","")
                     .Replace("pulls/","")
                     .Replace("/","-");
-                ResultContainerPrefix = $"{repoName}-{branchName}";
+                ResultContainerPrefix = $"{repoName}-{branchName}-";
             }
 
             string jobStartIdentifier = Guid.NewGuid().ToString("N");
