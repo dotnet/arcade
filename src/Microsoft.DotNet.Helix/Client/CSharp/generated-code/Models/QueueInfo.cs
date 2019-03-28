@@ -10,8 +10,20 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
         }
 
+        [JsonProperty("Artifacts")]
+        public IImmutableList<Artifact> Artifacts { get; set; }
+
         [JsonProperty("Description")]
         public string Description { get; set; }
+
+        [JsonProperty("GalleryImage")]
+        public ImageInfo GalleryImage { get; set; }
+
+        [JsonProperty("Purpose")]
+        public string Purpose { get; set; }
+
+        [JsonProperty("Architecture")]
+        public string Architecture { get; set; }
 
         [JsonProperty("IsAvailable")]
         public bool? IsAvailable { get; set; }
@@ -25,11 +37,23 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("OperatingSystemGroup")]
         public string OperatingSystemGroup { get; set; }
 
+        [JsonProperty("PreInstalledImage")]
+        public CustomImagePreInstalled PreInstalledImage { get; set; }
+
+        [JsonProperty("PreparedImage")]
+        public CustomImagePrepared PreparedImage { get; set; }
+
         [JsonProperty("QueueId")]
         public string QueueId { get; set; }
 
         [JsonProperty("QueueDepth")]
         public long? QueueDepth { get; set; }
+
+        [JsonProperty("ScaleMin")]
+        public int? ScaleMin { get; set; }
+
+        [JsonProperty("ScaleMax")]
+        public int? ScaleMax { get; set; }
 
         [JsonProperty("UserList")]
         public string UserList { get; set; }

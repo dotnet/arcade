@@ -46,9 +46,6 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Creator")]
         public string Creator { get; set; }
 
-        [JsonProperty("ResultContainerPrefix")]
-        public string ResultContainerPrefix { get; set; }
-
         [JsonProperty("PullRequestId")]
         public string PullRequestId { get; set; }
 
@@ -60,6 +57,9 @@ namespace Microsoft.DotNet.Helix.Client.Models
 
         [JsonProperty("JobStartIdentifier")]
         public string JobStartIdentifier { get; set; }
+
+        [JsonProperty("ResultContainerPrefix")]
+        public string ResultContainerPrefix { get; set; }
 
         [JsonIgnore]
         public bool IsValid
