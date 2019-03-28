@@ -64,8 +64,8 @@
       CurrentReleasePipelineUrl="$(CurrentReleasePipelineUrl)"
       CurrentReleaseDescription="$(CurrentReleaseDescription)"
       TriggeredByBuildUrl="$(TriggeredByBuildUrl)
-      GitHubPersonalAccessToken=$(GitHubPersonalAccessToken)"
-      AzureDevOpsPersonalAccessToken=$(AzureDevOpsPersonalAccessToken)"/>
+      GitHubPersonalAccessToken="$(GitHubPersonalAccessToken)"
+      AzureDevOpsPersonalAccessToken="$(AzureDevOpsPersonalAccessToken)"/>
   </Target>
 
   <ItemGroup>
