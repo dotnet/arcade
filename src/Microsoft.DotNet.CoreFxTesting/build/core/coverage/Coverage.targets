@@ -4,7 +4,8 @@
 
   <!-- Wrap RunCommand and RunArguments inside code coverage invocation. -->
   <PropertyGroup>
-    <CoverageExecutablePath Condition="'$(CoverageExecutablePath)' == ''">$(RunScriptGlobalToolsDir)coverlet</CoverageExecutablePath>
+    <CoverageExecutablePath Condition="'$(CoverageExecutablePath)' == '' AND '$(TargetOS)' == 'Windows_NT'">$(RunScriptGlobalToolsDir)coverlet.exe</CoverageExecutablePath>
+    <CoverageExecutablePath Condition="'$(CoverageExecutablePath)' == '' AND '$(TargetOS)' != 'Windows_NT'">$(RunScriptGlobalToolsDir)coverlet</CoverageExecutablePath>
     <RunArguments>"$(TestAssembly)" --target "$(RunCommand)" --targetargs "$(RunArguments)" --format "$(CoverageFormat)" --output "$(CoverageOutputPath)" --threshold "$(CoverageThreshold)" --threshold-type "$(CoverageThresholdType)"</RunArguments>
     <RunArguments Condition="'$(CoverageSourceLink)' == 'true'">$(RunArguments) --use-source-link</RunArguments>
     <RunCommand>$(CoverageExecutablePath)</RunCommand>
@@ -27,7 +28,7 @@
       <RunArguments>$(RunArguments) $(CoverageExcludeFilter)</RunArguments>
     </PropertyGroup>
 
-    <!-- 
+    <!--
       We need to filter the data to only the assembly being tested. Otherwise we will gather tons of data about other assemblies.
       If the code being tested is part of the runtime itself, it requires special treatment.
     -->

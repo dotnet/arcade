@@ -106,7 +106,7 @@
         <!-- Save error level as the uninstall command overwrites the global one. -->
         <PostRunScriptCommands Include="set ERRORLEVEL=%ERRORLEVEL%" />
 
-        <!-- Copy the log files and the results files from the Documents folder to the test folder -->
+        <!-- Copy the test results file to the execution directory -->
         <PostRunScriptCommands Include="move /Y $(UAPResultsPathCmd) .\$(TestResultsName)" />
 
         <!-- Uninstall -->
@@ -122,31 +122,42 @@
         <!-- We use the netcoreapp runner for ILC but change its extension to .exe to satisfy ILC. -->
         <OriginalTestRunnerName>xunit.console.dll</OriginalTestRunnerName>
 
-        <_TestILCFolder>%RUNTIME_PATH%\TestILC</_TestILCFolder>
-        <_ILCFXInputFolder>%RUNTIME_PATH%\ILCInputFolder</_ILCFXInputFolder>
+        <RunScriptILCFolder>%RUNTIME_PATH%\TestILC</RunScriptILCFolder>
+        <RunScriptILCInputFolder>%RUNTIME_PATH%\ILCInputFolder</RunScriptILCInputFolder>
         <ILCBuildType Condition="'$(ILCBuildType)' == ''">ret</ILCBuildType>
         <_UseSharedAssemblies Condition="'$(EnableMultiFileILCTests)' == 'true'">-useSharedAssemblies</_UseSharedAssemblies>
         <_ILCWin32 Condition="'$(BuildingUAPAOTVertical)' != 'true'">-win32</_ILCWin32>
+        <ILCTestDir>native</ILCTestDir>
       </PropertyGroup>
 
       <ItemGroup>
-        <RunScriptCommands Include="for /R &quot;$(_ILCFXInputFolder)&quot; %25%25I in (%2A) do @if not exist &quot;%25%25~nxI&quot; (mklink /H &quot;%25%25~nxI&quot; &quot;%25%25I&quot; 1>NUL)" />
-        <RunScriptCommands Include="copy /y $(_TestILCFolder)\default.rd.xml %EXECUTION_DIR%" />
+        <!-- Copy the runtime binaries over. -->
+        <RunScriptCommands Include="for /R &quot;$(RunScriptILCInputFolder)&quot; %25%25I in (%2A) do @if not exist &quot;%25%25~nxI&quot; (mklink /H &quot;%25%25~nxI&quot; &quot;%25%25I&quot; 1>NUL)" />
+
+        <!-- Copy the default ILC rd.xml over. -->
+        <RunScriptCommands Include="copy /y $(RunScriptILCFolder)\default.rd.xml" />
+
+        <!-- Rename the test runner's extension from dll to exe to satisfy ILC. -->
         <RunScriptCommands Include="move /y $(OriginalTestRunnerName) $(TestRunnerName)" />
-        <RunScriptCommands Include="if exist %EXECUTION_DIR%int rmdir /S /Q %EXECUTION_DIR%int" />
-        <RunScriptCommands Include="if exist %EXECUTION_DIR%native rmdir /S /Q %EXECUTION_DIR%native" />
 
-        <RunScriptCommands Include="call $(_TestILCFolder)\ilc.exe -ExeName $(TestRunnerName) -in %EXECUTION_DIR% -out %EXECUTION_DIR%int\$(TestRunnerName)\ -usedefaultpinvoke -buildtype $(ILCBuildType) -v diag $(_UseSharedAssemblies) $(_ILCWin32)" />
+        <!-- Clean out dir and call ILC. -->
+        <RunScriptCommands Include="if exist $(ILCTestDir) rmdir /s /q $(ILCTestDir)" />
+        <RunScriptCommands Include="call $(RunScriptILCFolder)\ilc.exe -ExeName $(TestRunnerName) -in . -out $(ILCTestDir) -usedefaultpinvoke -buildtype $(ILCBuildType) -v diag $(_UseSharedAssemblies) $(_ILCWin32)" />
+
+        <!-- Save error level as the subsequent commands overwrite it and exit if an error happened. -->
         <RunScriptCommands Include="set ILCERRORLEVEL=%ERRORLEVEL%" />
-        <RunScriptCommands Include="if NOT [%ILCERRORLEVEL%] == [0] exit /b %ILCERRORLEVEL%" />
-        <RunScriptCommands Include="robocopy /S /NP %EXECUTION_DIR%int\$(TestRunnerName)\ %EXECUTION_DIR%native\" />
+        <RunScriptCommands Include="if not [%ILCERRORLEVEL%] == [0] exit /b %ILCERRORLEVEL%" />
 
-        <RunScriptCommands Include="copy /y $(_TestILCFolder)\CRT\vcruntime140_app.dll %EXECUTION_DIR%native" />
-        <RunScriptCommands Include="echo > %EXECUTION_DIR%\native\$(TestAssembly)"/>
-        <RunScriptCommands Include="cd native"/>
+        <!-- Copy vcruntime dependency to the ILC output dir. -->
+        <RunScriptCommands Include="copy /y $(RunScriptILCFolder)\CRT\vcruntime140_app.dll $(ILCTestDir)" />
+
+        <!-- Clean the test assembly so that it doesn't get loaded again. -->
+        <RunScriptCommands Include="echo > $(ILCTestDir)\$(TestAssembly)" />
+
+        <RunScriptCommands Include="cd $(ILCTestDir)"/>
 
         <!-- These will cause failures if execution is skipped, such as on ARM -->
-        <PostRunScriptCommands Condition="'$(ArchGroup)' != 'arm'" Include="copy /y $(TestResultsName) %EXECUTION_DIR%\" />
+        <PostRunScriptCommands Condition="'$(ArchGroup)' != 'arm'" Include="copy /y $(TestResultsName) %EXECUTION_DIR%" />
       </ItemGroup>
     </When>
 
@@ -156,9 +167,5 @@
   <Target Name="Test" DependsOnTargets="$(TestDependsOn)" Condition="'$(IsUnitTestProject)' == 'true'" />
   <Target Name="BuildAndTest" DependsOnTargets="Build;Test" Condition="'$(IsUnitTestProject)' == 'true'" />
   <Target Name="RebuildAndTest" DependsOnTargets="Rebuild;Test" Condition="'$(IsUnitTestProject)' == 'true'" />
-
-  <Target Name="IntegrationTest" DependsOnTargets="$(TestDependsOn)" Condition="'$(IsIntegrationTestProject)' == 'true'" />
-  <Target Name="BuildAndIntegrationTest" DependsOnTargets="Build;IntegrationTest" Condition="'$(IsIntegrationTestProject)' == 'true'" />
-  <Target Name="RebuildAndIntegrationTest" DependsOnTargets="Rebuild;IntegrationTest" Condition="'$(IsIntegrationTestProject)' == 'true'" />
 
 </Project>

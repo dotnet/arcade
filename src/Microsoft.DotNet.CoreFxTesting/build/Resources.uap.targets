@@ -2,8 +2,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
-  <UsingTask TaskName="ExtractResWResourcesFromAssemblies" AssemblyFile="$(MSBuildTestAssemblyPath)" />
-
   <PropertyGroup>
     <!-- We need to binplace the resources as resw files to create the runner's pri file. -->
     <ResourcesFolderPath Condition="'$(ResourcesFolderPath)' == ''">$(RuntimePath)resw</ResourcesFolderPath>
@@ -86,6 +84,7 @@
 
   </Target>
 
+  <UsingTask TaskName="ExtractResWResourcesFromAssemblies" AssemblyFile="$(CoreFxTestingAssemblyPath)" />
   <Target Name="CreateReswFilesForExternalDependencies"
           Condition="'$(ShouldSkipExternalResources)' != 'true'"
           Inputs="@(_AllRuntimeDllFiles)"

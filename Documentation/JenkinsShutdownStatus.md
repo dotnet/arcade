@@ -36,7 +36,7 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 | Core-Setup                 | dleeapho         | -           | -      | - ||
 | **dotnet-docker**          | msimons          | In progress | Low    | [ci1](https://ci.dot.net/job/dotnet_dotnet-docker/) | [Tracking issue](https://github.com/dotnet/dotnet-docker/issues/744), no known blocking issues at this time |
 | **dotnet-framework-docker**| msimons          | In progress | Low    | [ci1](https://ci.dot.net/job/Microsoft_dotnet-framework-docker/) | [Tracking issue](https://github.com/Microsoft/dotnet-framework-docker/issues/225), no known blocking issues at this time |
-| **docker-tools**           | msimons          | In progress | Low    | [ci1](https://ci.dot.net/job/dotnet_docker-tools/) | [Tracking issue](https://github.com/dotnet/docker-tools/issues/147), no known blocking issues at this time |
+| docker-tools               | msimons          | -           |        | - ||
 |**dotnet-buildtools-prereqs-docker** | msimons | In progress | Low    | [ci1](https://ci.dot.net/job/dotnet_dotnet-buildtools-prereqs-docker/) | [Tracking issue](https://github.com/dotnet/dotnet-buildtools-prereqs-docker/issues/84), no known blocking issues at this time |
 | MSBuild                    | licavalc         | -           | -      | - ||
 | Roslyn                     | jaredpar         | -           | -      | - ||
@@ -56,35 +56,37 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 
 `-` means an item is complete or not needed
 
+## Additional Jenkins jobs
+
 Additionally, here are other Jenkins jobs which are not specifically part of the core product repos, but are likely candidates for deletion or moving to Azure DevOps.  It would be great if we could get owners attached to these jenkins jobs and a plan for them being disabled from Jenkins.
 
 
 | Job name                      | Jenkins link                                                                | Owner        | Removal plan |
 | ----------------------------- | --------------------------------------------------------------------------- | ------------ | ------------ |
-| aspnet_aspnet-docker          | [ci3](https://ci3.dot.net/job/aspnet_aspnet-docker/)                        |              ||
-| aspnet_IISIntegration         | [ci3](https://ci3.dot.net/job/aspnet_IISIntegration/job/master/)            |              ||
-| aspnet_KestrelHttpServer      | [ci3](https://ci3.dot.net/job/aspnet_KestrelHttpServer/job/master/)         |              ||
-| dotnet_CITest                 | [ci2](https://ci2.dot.net/job/dotnet_citest/)                               |              ||
-| dotnet_CodeFormatter          | [ci2](https://ci2.dot.net/job/dotnet_codeformatter/)                        |              ||
-| dotnet_Core                   | [ci2](https://ci2.dot.net/job/dotnet_core/)                                 |              ||
-| dotnet_CoreFxLab              | [ci1](https://ci.dot.net/job/dotnet_corefxlab/job/master/)                  |              ||
-| dotnet_CoreRt                 | [ci1](https://ci.dot.net/job/dotnet_corert/job/master/)                     |              ||
-| dotnet_Diagnostics            | [ci1](https://ci.dot.net/job/dotnet_diagnostics/)                           |              ||
-| dotnet_Interactive-Window     | [ci1](https://ci.dot.net/job/dotnet_ProjFileTools/)                         |              ||
-| dotnet_Metadata-Tools         | [ci2](https://ci2.dot.net/job/dotnet_metadata-tools/)                       |              ||
-| dotnet_Orleans                | [ci1](https://ci.dot.net/job/dotnet_orleans/)                               |              ||
-| dotnet_Perf-Infra             | [ci2](https://ci2.dot.net/job/dotnet_perf-infra/)                           |              ||
-| dotnet_Performance            | [ci2](https://ci2.dot.net/job/dotnet_performance/)                          |              ||
-| dotnet_Platform-Compat        | [ci2](https://ci2.dot.net/job/dotnet_platform-compat/)                      |              ||
-| dotnet_ProjFileTools          | [ci1](https://ci.dot.net/job/dotnet_ProjFileTools/)                         |              ||
-| dotnet_Roslyn-Analyzers       | [ci1](https://ci.dot.net/job/dotnet_roslyn-analyzers/job/master/)           |              ||
-| dotnet_Roslyn-Tools           | [ci1](https://ci.dot.net/job/dotnet_roslyn-tools/)                          |              ||
+| aspnet_aspnet-docker          | [ci1](https://ci.dot.net/job/aspnet_aspnet-docker/)                         | dougbu       | Needed until at least June |
+| aspnet_IISIntegration         | [ci1](https://ci.dot.net/job/aspnet_IISIntegration/job/master/)             | dougbu       | Removed |
+| aspnet_KestrelHttpServer      | [ci1](https://ci.dot.net/job/aspnet_KestrelHttpServer/job/master/)          | dougbu       | Removed |
+| dotnet_CITest                 | [ci2](https://ci2.dot.net/job/dotnet_citest/)                               | mmitche      ||
+| dotnet_CodeFormatter          | [ci2](https://ci2.dot.net/job/dotnet_codeformatter/)                        | mmitche      ||
+| dotnet_Core                   | [ci2](https://ci2.dot.net/job/dotnet_core/)                                 | mmitche      ||
+| dotnet_CoreFxLab              | [ci1](https://ci.dot.net/job/dotnet_corefxlab/job/master/)                  | ahka         ||
+| dotnet_CoreRt                 | [ci1](https://ci.dot.net/job/dotnet_corert/job/master/)                     | sergeyk      ||
+| dotnet_Diagnostics            | [ci1](https://ci.dot.net/job/dotnet_diagnostics/)                           | mikem        | Removed |
+| dotnet_Interactive-Window     | [ci1](https://ci.dot.net/job/dotnet_Interactive-Window/)                    | tmat         | Already moved to Azure DevOps and can be removed? |
+| dotnet_Metadata-Tools         | [ci2](https://ci2.dot.net/job/dotnet_metadata-tools/)                       | tmat         | Already moved to Azure DevOps and can be removed? |
+| dotnet_Orleans                | [ci1](https://ci.dot.net/job/dotnet_orleans/)                               | mmitche      ||
+| dotnet_Perf-Infra             | [ci2](https://ci2.dot.net/job/dotnet_perf-infra/)                           | anscoggi     ||
+| dotnet_Performance            | [ci2](https://ci2.dot.net/job/dotnet_performance/)                          | michelm      ||
+| dotnet_Platform-Compat        | [ci2](https://ci2.dot.net/job/dotnet_platform-compat/)                      | jmarolf      ||
+| dotnet_ProjFileTools          | [ci1](https://ci.dot.net/job/dotnet_ProjFileTools/)                         | mmitche      ||
+| dotnet_Roslyn-Analyzers       | [ci1](https://ci.dot.net/job/dotnet_roslyn-analyzers/job/master/)           | tmat         ||
+| dotnet_Roslyn-Tools           | [ci1](https://ci.dot.net/job/dotnet_roslyn-tools/)                          | tmat         ||
 | dotnet_SymReader-Converter    | [ci2](https://ci2.dot.net/job/dotnet_symreader-converter/)                  | tmat         ||
-| dotnet_Versions               | [ci1](https://ci.dot.net/job/dotnet_versions/)                              |              ||
-| dotnet_WCF                    | [ci1](https://ci.dot.net/job/dotnet_wcf/job/master/)                        |              ||
-| dotnet_Xliff-Tasks            | [ci1](https://ci.dot.net/job/dotnet_xliff-tasks/)                           |              ||
+| dotnet_Versions               | [ci1](https://ci.dot.net/job/dotnet_versions/)                              | mmitche      ||
+| dotnet_WCF                    | [ci1](https://ci.dot.net/job/dotnet_wcf/job/master/)                        | stebon       ||
+| dotnet_Xliff-Tasks            | [ci1](https://ci.dot.net/job/dotnet_xliff-tasks/)                           | licavalc     ||
 | drewscoggins_corefx           | [ci2](https://ci2.dot.net/job/drewscoggins_corefx/)                         | drewscoggins ||
-| Microsoft_ConcordExtensibilitySamples | [ci1](https://ci.dot.net/job/Microsoft_ConcordExtensibilitySamples/)|              ||
-| Microsoft_MIEngine            | [ci1](https://ci.dot.net/job/Microsoft_MIEngine/)                           |              ||
-| Microsoft_PartsUnlimited      | [ci1](https://ci.dot.net/job/Microsoft_PartsUnlimited/)                     |              ||
-| mono_linker                   | [ci1](https://ci.dot.net/job/mono_linker/)                                  |              ||
+| Microsoft_ConcordExtensibilitySamples | [ci1](https://ci.dot.net/job/Microsoft_ConcordExtensibilitySamples/)| greggm       ||
+| Microsoft_MIEngine            | [ci1](https://ci.dot.net/job/Microsoft_MIEngine/)                           | waan         ||
+| Microsoft_PartsUnlimited      | [ci1](https://ci.dot.net/job/Microsoft_PartsUnlimited/)                     | davete       | Removed |
+| mono_linker                   | [ci1](https://ci.dot.net/job/mono_linker/)                                  | svbomer      ||

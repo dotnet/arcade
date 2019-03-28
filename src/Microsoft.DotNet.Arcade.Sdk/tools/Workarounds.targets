@@ -86,7 +86,7 @@
 
       <_TagsElement/>
       <_TagsElement Condition="'$(PackageTags)' != ''">
-        <tags>$(PackageTags)</tags>
+        <tags>$(PackageTags.Replace(';', ' '))</tags>
       </_TagsElement>
 
       <_IconUrlElement/>

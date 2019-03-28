@@ -2,11 +2,10 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
-  <UsingTask TaskName="GenerateRunScript" AssemblyFile="$(MSBuildTestAssemblyPath)"/>
-
   <PropertyGroup>
-    <TestAssembly Condition="'$(TestAssembly)' == ''">$(TargetFileName)</TestAssembly>
     <TestPath Condition="'$(TestPath)' == ''">$(OutDir)</TestPath>
+    <TestAssembly Condition="'$(TestAssembly)' == ''">$(TargetFileName)</TestAssembly>
+    <TestAssemblyFullPath>$([MSBuild]::NormalizePath('$(TestPath)', '$(TestAssembly)'))</TestAssemblyFullPath>
     <RunWorkingDirectory>$(TestPath)</RunWorkingDirectory>
     <ArchiveTest Condition="'$(ArchiveTests.ToLower())' == 'all' OR $(MSBuildProjectName.EndsWith('.$(ArchiveTests)'))">true</ArchiveTest>
 
@@ -31,8 +30,8 @@
     <RunScriptHost Condition="'$(TargetOS)' == 'Windows_NT'">$(RunScriptHostDir)dotnet.exe</RunScriptHost>
     <RunScriptHost Condition="'$(TargetOS)' != 'Windows_NT'">$(RunScriptHostDir)dotnet</RunScriptHost>
 
-    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' == 'Windows_NT'">%GLOBAL_TOOLS_DIR%</RunScriptGlobalToolsDir>
-    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' != 'Windows_NT'">$GLOBAL_TOOLS_DIR</RunScriptGlobalToolsDir>
+    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' == 'Windows_NT'">%GLOBAL_TOOLS_DIR%\</RunScriptGlobalToolsDir>
+    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' != 'Windows_NT'">$GLOBAL_TOOLS_DIR/</RunScriptGlobalToolsDir>
   </PropertyGroup>
 
   <Target Name="PublishSupplementalTestData"
@@ -83,11 +82,12 @@
 
   </Target>
 
+  <UsingTask TaskName="GenerateRunScript" AssemblyFile="$(CoreFxTestingAssemblyPath)"/>
   <Target Name="GenerateRunScript"
           DependsOnTargets="$(GenerateRunScriptDependsOn)">
 
     <PropertyGroup>
-      <RunScriptCommand Condition="'$(RunScriptCommand)' == ''">$(RunCommand) $(RunArguments)</RunScriptCommand>
+      <RunScriptCommand Condition="'$(RunScriptCommand)' == ''">"$(RunCommand)" $(RunArguments)</RunScriptCommand>
     </PropertyGroup>
 
     <!-- Set $(TestDebugger) to eg c:\debuggers\windbg.exe to run tests under a debugger. -->
@@ -163,7 +163,7 @@
   <Target Name="ValidateTestPlatform">
 
     <ItemGroup>
-      <UnsupportedPlatformsItems Include="$(UnsupportedPlatforms)"/>
+      <UnsupportedPlatformsItems Include="$(UnsupportedPlatforms)" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -186,8 +186,11 @@
           Inputs="@(RunTestsInputs)"
           Outputs="@(RunTestsOutputs)">
 
+    <Error Condition="!Exists('$(TestAssemblyFullPath)')"
+           Text="Test assembly couldn't be found. Make sure to build the test project first." />
+
     <!-- Invoke the run script with the test host as the runtime path. -->
-    <Exec Command="$(RunScriptOutputPath) $(TestHostRootPath) $(DotNetRoot) $(GlobalToolsDir)"
+    <Exec Command="&quot;$(RunScriptOutputPath)&quot; &quot;$(TestHostRootPath.TrimEnd('\/'))&quot; &quot;$(DotNetRoot.TrimEnd('\/'))&quot; &quot;$(GlobalToolsDir.TrimEnd('\/'))&quot;"
           ContinueOnError="true"
           IgnoreStandardErrorWarningFormat="true">
       <Output PropertyName="TestRunExitCode" TaskParameter="ExitCode" />
@@ -204,7 +207,7 @@
   </Target>
 
   <!--
-    Add a manual clean step for TestPath.
+    Manual clean step for TestPath.
     Necessary as we are copying files into the TestPath as part of the Test Target after the build.
   -->
   <Target Name="CleanTestPath" Condition="Exists('$(TestPath)')">
@@ -239,12 +242,6 @@
     Supported runners: xunit.
   -->
   <Import Condition="'$(IsUnitTestProject)' == 'true' OR '$(IsIntegrationTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.targets'))" />
-
-  <!--
-    Performance test support.
-    Supported runners: xunit-performance.
-  -->
-  <Import Condition="'$(IsPerformanceTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'performance', 'Performance.targets'))" />
 
   <!--
     Code Coverage support.
