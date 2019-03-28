@@ -60,12 +60,7 @@
       UploadTimeoutInMinutes="$(MaxUploadTimeoutInMinutes)"
       AssetManifestPath="%(ManifestFiles.Identity)"
       BlobAssetsBasePath="$(BlobBasePath)"
-      PackageAssetsBasePath="$(PackageBasePath)" 
-      CurrentReleasePipelineUrl="$(CurrentReleasePipelineUrl)"
-      CurrentReleaseDescription="$(CurrentReleaseDescription)"
-      TriggeredByBuildUrl="$(TriggeredByBuildUrl)"
-      GitHubPersonalAccessToken="$(GitHubPersonalAccessToken)"
-      AzureDevOpsPersonalAccessToken="$(AzureDevOpsPersonalAccessToken)"/>
+      PackageAssetsBasePath="$(PackageBasePath)"/>
   </Target>
 
   <ItemGroup>
