@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Git.IssueManager.Clients
 {
-    public class GitHubClient
+    static class GitHubClient
     {
         public static async Task<string> GetCommitAuthorAsync(
             string repositoryUrl,

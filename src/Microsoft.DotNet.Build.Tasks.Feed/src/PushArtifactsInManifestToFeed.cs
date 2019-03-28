@@ -102,8 +102,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public async Task<bool> ExecuteAsync()
         {
-            string commit = null, repoUrl = null, buildId = null;
-
             try
             {
                 Log.LogMessage(MessageImportance.High, "Performing push feeds.");
@@ -126,9 +124,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
 
                 var buildModel = BuildManifestUtil.ManifestFileToModel(AssetManifestPath, Log);
-                commit = buildModel.Identity.Commit;
-                repoUrl = buildModel.Identity.Name;
-                buildId = buildModel.Identity.BuildId;
 
                 // Parsing the manifest may fail for several reasons
                 if (Log.HasLoggedErrors)

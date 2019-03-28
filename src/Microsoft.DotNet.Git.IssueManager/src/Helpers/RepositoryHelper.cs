@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Git.IssueManager.Helpers
 {
-    public class RepositoryHelper
+    static class RepositoryHelper
     {
         public static async Task<string> GetCommitAuthorAsync(
             string repositoryUrl,

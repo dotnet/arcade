@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Git.IssueManager.Clients
 {
-    public class AzureDevOpsClient
+    static class AzureDevOpsClient
     {
         private static readonly Regex RepositoryUriPattern = new Regex(
             @"^https://dev\.azure\.com\/(?<account>[a-zA-Z0-9]+)/(?<project>[a-zA-Z0-9-]+)/_git/(?<repo>[a-zA-Z0-9-\\.]+)");
