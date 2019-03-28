@@ -6,16 +6,25 @@ from helpers import get_env
 
 
 def __no_results_result():
+    exitCode = get_env("_commandExitCode")
     work_item_name = get_env("HELIX_WORKITEM_FRIENDLYNAME")
+    
+    if exitCode != "0":
+        result = 'Fail'
+        failure_message = 'The work item failed to produce any test results.'
+    else:
+        result = 'Pass'
+        failure_message = None
+
     yield TestResult(
         name=u'{}.WorkItemExecution'.format(work_item_name),
         kind=u'unknown',
         type_name=u'{}'.format(work_item_name),
         method=u'WorkItemExecution',
         duration=1,
-        result=u'Fail',
+        result=u'{}'.format(result),
         exception_type=None,
-        failure_message=u'The work item failed to produce any test results.',
+        failure_message=u'{}'.format(failure_message),
         stack_trace=None,
         skip_reason=None,
         attachments=None,

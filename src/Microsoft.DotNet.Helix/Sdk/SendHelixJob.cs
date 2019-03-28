@@ -366,7 +366,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             // Capture helix command exit code, in case work item command (i.e xunit call) exited with a failure,
             // this way we can exit the process honoring that exit code, needed for retry.
-            yield return IsPosixShell ? $"{exitCodeVariableName}=$?" : $"set {exitCodeVariableName}=%ERRORLEVEL%";
+            yield return IsPosixShell ? $"export {exitCodeVariableName}=$?" : $"set {exitCodeVariableName}=%ERRORLEVEL%";
 
             if (workItem.TryGetMetadata("PostCommands", out string workItemPostCommandsString))
             {
