@@ -71,7 +71,7 @@ Additionally, here are other Jenkins jobs which are not specifically part of the
 | dotnet_Core                   | [ci2](https://ci2.dot.net/job/dotnet_core/)                                 |              ||
 | dotnet_CoreFxLab              | [ci1](https://ci.dot.net/job/dotnet_corefxlab/job/master/)                  |              ||
 | dotnet_CoreRt                 | [ci1](https://ci.dot.net/job/dotnet_corert/job/master/)                     |              ||
-| dotnet_Diagnostics            | [ci1](https://ci.dot.net/job/dotnet_diagnostics/)                           |              ||
+| dotnet_Diagnostics            | [ci1](https://ci.dot.net/job/dotnet_diagnostics/)                           | mikem        | Removed |
 | dotnet_Interactive-Window     | [ci1](https://ci.dot.net/job/dotnet_ProjFileTools/)                         |              ||
 | dotnet_Metadata-Tools         | [ci2](https://ci2.dot.net/job/dotnet_metadata-tools/)                       |              ||
 | dotnet_Orleans                | [ci1](https://ci.dot.net/job/dotnet_orleans/)                               |              ||
