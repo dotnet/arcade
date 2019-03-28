@@ -63,9 +63,9 @@ Additionally, here are other Jenkins jobs which are not specifically part of the
 
 | Job name                      | Jenkins link                                                                | Owner        | Removal plan |
 | ----------------------------- | --------------------------------------------------------------------------- | ------------ | ------------ |
-| aspnet_aspnet-docker          | [ci3](https://ci.dot.net/job/aspnet_aspnet-docker/)                         | dougbu       ||
-| aspnet_IISIntegration         | [ci3](https://ci.dot.net/job/aspnet_IISIntegration/job/master/)             | dougbu       ||
-| aspnet_KestrelHttpServer      | [ci3](https://ci.dot.net/job/aspnet_KestrelHttpServer/job/master/)          | dougbu       ||
+| aspnet_aspnet-docker          | [ci1](https://ci.dot.net/job/aspnet_aspnet-docker/)                         | dougbu       | Needed until at least June |
+| aspnet_IISIntegration         | [ci1](https://ci.dot.net/job/aspnet_IISIntegration/job/master/)             | dougbu       | Removed |
+| aspnet_KestrelHttpServer      | [ci1](https://ci.dot.net/job/aspnet_KestrelHttpServer/job/master/)          | dougbu       | Removed |
 | dotnet_CITest                 | [ci2](https://ci2.dot.net/job/dotnet_citest/)                               | mmitche      ||
 | dotnet_CodeFormatter          | [ci2](https://ci2.dot.net/job/dotnet_codeformatter/)                        | mmitche      ||
 | dotnet_Core                   | [ci2](https://ci2.dot.net/job/dotnet_core/)                                 | mmitche      ||
