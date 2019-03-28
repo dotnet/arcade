@@ -9,6 +9,8 @@
     - PackageBasePath   : Directory containing all files that need to be validated.
     - SignCheckVersion  : Version of SignCheck package to be used.
     - SignValidationExclusionList   : ItemGroup containing exclusion list to be forwarded to SignCheck.
+    - EnableJarSigningCheck    : Whether .jar files should be validated.
+    - EnableStrongNameCheck    : Whether strong name check should be performed.
 -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
