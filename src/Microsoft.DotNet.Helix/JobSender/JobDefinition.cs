@@ -212,7 +212,7 @@ namespace Microsoft.DotNet.Helix.Client
                 string branchName = Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH")
                     .Replace("refs/","")
                     .Replace("heads/","")
-                    .Replace("pulls/","")
+                    .Replace("/merge","")
                     .Replace("/","-");
                 ResultContainerPrefix = $"{repoName}-{branchName}-";
             }
