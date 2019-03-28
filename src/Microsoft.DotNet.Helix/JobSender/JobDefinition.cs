@@ -208,7 +208,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 // Remove all slashes from repository name and branch name. Also remove refs/heads/ and /merge from branch name.
                 // ResultContainerPrefix will be <Repository Name><BranchName>
-                ResultContainerPrefix = $"{Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME").Replace("/", "")}{Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH").Replace("refs/heads/","").Replace("/merge","")}";
+                ResultContainerPrefix = $"{Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME").Replace("/", "-")}{Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH").Replace("refs/heads/","").Replace("/","-")}";
             }
 
             string jobStartIdentifier = Guid.NewGuid().ToString("N");
