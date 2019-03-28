@@ -765,7 +765,7 @@ NuGet.exe may ask for credentials. Note: You need a [credential provider](https:
 
 2. Run build with the following arguments (choose values of `RepositoryName` and `VisualStudioIbcSourceBranchName` as appropriate):
 ```
-build -configuration Release -restore -ci /p:EnablePartialNgenOptimization=true /p:RepositoryName=dotnet/roslyn /p:VisualStudioIbcSourceBranchName=dev16.0-vs-deps
+build -configuration Release -restore -ci /p:EnableNgenOptimization=true /p:RepositoryName=dotnet/roslyn /p:VisualStudioIbcSourceBranchName=dev16.0-vs-deps
 ```
 
 ## Project Properties Defined by the SDK
