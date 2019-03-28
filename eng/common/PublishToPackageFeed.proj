@@ -63,7 +63,7 @@
       PackageAssetsBasePath="$(PackageBasePath)" 
       CurrentReleasePipelineUrl="$(CurrentReleasePipelineUrl)"
       CurrentReleaseDescription="$(CurrentReleaseDescription)"
-      TriggeredByBuildUrl="$(TriggeredByBuildUrl)
+      TriggeredByBuildUrl="$(TriggeredByBuildUrl)"
       GitHubPersonalAccessToken="$(GitHubPersonalAccessToken)"
       AzureDevOpsPersonalAccessToken="$(AzureDevOpsPersonalAccessToken)"/>
   </Target>
