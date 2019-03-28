@@ -8,7 +8,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Microsoft.DotNet.GenFacades
 {
@@ -70,9 +69,9 @@ namespace Microsoft.DotNet.GenFacades
             foreach (var item in allPublicTypes)
             {
                 string fullyQualifiedName;
-                if (item.Parent is NamespaceDeclarationSyntax)
+                if (item.Parent is NamespaceDeclarationSyntax parent)
                 {
-                    fullyQualifiedName = ((NamespaceDeclarationSyntax)item.Parent).Name.ToFullString().Trim() + "." + GetDelegateTypeName(item);
+                    fullyQualifiedName = parent.Name.ToFullString().Trim() + "." + GetDelegateTypeName(item);
                 }
                 else
                 {
@@ -87,10 +86,9 @@ namespace Microsoft.DotNet.GenFacades
         private static string GetFullyQualifiedName(BaseTypeDeclarationSyntax node, string nested = "")
         {
             string typeName = GetBaseTypeName(node);
-            if (node.Parent is NamespaceDeclarationSyntax)
+            if (node.Parent is NamespaceDeclarationSyntax parent)
             {
-                string namespaceName = GetNamespaceName((NamespaceDeclarationSyntax)node.Parent);
-                string withoutNested = namespaceName + "." + typeName;
+                string withoutNested = GetNamespaceName(parent) + "." + typeName;
                 return string.IsNullOrEmpty(nested) ? withoutNested : withoutNested + "." + nested;
             }
 
@@ -102,9 +100,8 @@ namespace Microsoft.DotNet.GenFacades
         {
             string typeName = type.Identifier.ValueText;
 
-            if (type is TypeDeclarationSyntax)
+            if (type is TypeDeclarationSyntax actualType)
             {
-                var actualType = (TypeDeclarationSyntax)type;
                 return GetTypeNameWithTypeParameter(actualType.TypeParameterList, typeName);
             }
             return typeName;
@@ -140,8 +137,7 @@ namespace Microsoft.DotNet.GenFacades
                 {
                     throw new FileNotFoundException($"File {sourceFile} was not found.");
                 }
-                string rawText = File.ReadAllText(sourceFile);
-                SyntaxTree tree = CSharpSyntaxTree.ParseText(rawText, options);
+                SyntaxTree tree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFile), options);
                 result.Add(tree);
             }
             return result;
@@ -149,7 +145,7 @@ namespace Microsoft.DotNet.GenFacades
 
         private static bool HasPublicModifier(BaseTypeDeclarationSyntax token)
         {
-            if (token.Parent == null || token.Parent.GetType() == typeof(NamespaceDeclarationSyntax))
+            if (token.Parent == null || token.Parent is NamespaceDeclarationSyntax)
                 return HasPublicModifier(token.Modifiers);
 
             return HasPublicModifier(token.Modifiers) && HasPublicModifier((BaseTypeDeclarationSyntax)(token.Parent));
@@ -157,7 +153,7 @@ namespace Microsoft.DotNet.GenFacades
 
         private static bool HasPublicModifier(DelegateDeclarationSyntax token)
         {
-            if (token.Parent == null || token.Parent.GetType() == typeof(NamespaceDeclarationSyntax))
+            if (token.Parent == null || token.Parent is NamespaceDeclarationSyntax)
                 return HasPublicModifier(token.Modifiers);
 
             return HasPublicModifier(token.Modifiers) && HasPublicModifier((BaseTypeDeclarationSyntax)(token.Parent));

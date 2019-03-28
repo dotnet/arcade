@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.GenFacades
 
         public string[] IgnoreMissingTypesList { get; set; }
 
-        public string[] GenFacadesOmitType { get; set; }
+        public string[] OmitTypes { get; set; }
 
         public ITaskItem[] SeedTypePreferences { get; set; }
 
@@ -46,13 +46,8 @@ namespace Microsoft.DotNet.GenFacades
                     Log,
                     IgnoreMissingTypes,
                     IgnoreMissingTypesList,
-                    GenFacadesOmitType,
+                    OmitTypes,
                     SeedTypePreferences);
-
-                if (!result)
-                {
-                    Log.LogError("Errors were encountered when generating facade(s).");
-                }
             }
             catch (Exception e)
             {

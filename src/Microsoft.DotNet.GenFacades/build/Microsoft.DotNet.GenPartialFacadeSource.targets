@@ -2,9 +2,9 @@
   <PropertyGroup>
     <!-- Tell ResolveMatchingContract to run and resolve contract to project reference -->
     <ResolveMatchingContract>true</ResolveMatchingContract>
-    <FillPartialFacadeDependsOn>
-      $(FillPartialFacadeDependsOn);ResolveMatchingContract
-    </FillPartialFacadeDependsOn>
+    <GeneratePartialFacadeSourceDependsOn>
+      $(GeneratePartialFacadeSourceDependsOn);ResolveMatchingContract
+    </GeneratePartialFacadeSourceDependsOn>
   </PropertyGroup>
   
   <PropertyGroup>
@@ -17,9 +17,9 @@
   <UsingTask TaskName="GenPartialFacadeSource" AssemblyFile="$(_MicrosoftDotNetGenFacadesTaskDir)Microsoft.DotNet.GenFacades.dll" />
 
   <Target Name="GeneratePartialFacadeSource"
-          Inputs="@(ResolvedMatchingContract);@(ReferencePath);@(Compile)"
+          Inputs="$(MSBuildAllProjects);@(ResolvedMatchingContract);@(ReferencePath);@(Compile)"
           Outputs="$(OutputSourcePath)"
-          DependsOnTargets="$(FillPartialFacadeDependsOn)">  
+          DependsOnTargets="$(GeneratePartialFacadeSourceDependsOn)">  
 
     <PropertyGroup>
       <OutputSourcePath>$(IntermediateOutputPath)\$(AssemblyTitle).Forwards.cs</OutputSourcePath>
@@ -33,7 +33,7 @@
       DefineConstants="$(DefineConstants)"
       IgnoreMissingTypes="$(GenFacadesIgnoreMissingTypes)"
       IgnoreMissingTypesList="@(GenFacadesIgnoreMissingType)"
-      GenFacadesOmitType="@(GenFacadesOmitType)"
+      OmitTypes="@(GenFacadesOmitType)"
       OutputSourcePath="$(OutputSourcePath)"
       SeedTypePreferences="@(SeedTypePreference)"
     />

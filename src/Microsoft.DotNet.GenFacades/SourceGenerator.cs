@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.GenFacades
             HashSet<string> existingTypes = compileFiles != null ? TypeParser.GetAllPublicTypes(compileFiles, constants) : null;
             IEnumerable<string> typesToForward = compileFiles == null ? _referenceTypes : _referenceTypes.Where(id => !existingTypes.Contains(id));
 
-            foreach (string type in typesToForward)
+            foreach (string type in typesToForward.OrderBy(s => s))
             {
                 IReadOnlyList<INamedTypeDefinition> seedTypes;
                 if (!_seedTypes.TryGetValue(type, out seedTypes))
@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.GenFacades
         private string BuildAliasDeclarations(IEnumerable<string> externAliases)
         {
             StringBuilder sb = new StringBuilder();
-            foreach (string alias in externAliases)
+            foreach (string alias in externAliases.OrderBy(s => s))
             {
                 sb.AppendLine(string.Format("extern alias {0};", alias));
             }

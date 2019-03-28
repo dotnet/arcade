@@ -6,6 +6,6 @@
     <_MicrosoftDotNetGenFacadesTaskDir Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)../tools/net472/</_MicrosoftDotNetGenFacadesTaskDir>
   </PropertyGroup>
 
-  <Import Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' != 'true'" Project="Microsoft.DotNet.GenPartialFacades.targets" />
-  <Import Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' == 'true'" Project="Microsoft.DotNet.GenFacadesRewriter.targets" />
+  <Import Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' != 'true'" Project="Microsoft.DotNet.GenPartialFacadeSource.targets" />
+  <Import Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' == 'true'" Project="Microsoft.DotNet.GenFacadesILRewriter.targets" />
 </Project>
