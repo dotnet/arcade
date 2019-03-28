@@ -67,7 +67,7 @@ Additionally, here are other Jenkins jobs which are not specifically part of the
 | aspnet_IISIntegration         | [ci3](https://ci.dot.net/job/aspnet_IISIntegration/job/master/)             | dougbu       ||
 | aspnet_KestrelHttpServer      | [ci3](https://ci.dot.net/job/aspnet_KestrelHttpServer/job/master/)          | dougbu       ||
 | dotnet_CITest                 | [ci2](https://ci2.dot.net/job/dotnet_citest/)                               | mmitche      ||
-| dotnet_CodeFormatter          | [ci2](https://ci2.dot.net/job/dotnet_codeformatter/)                        | ericstj      ||
+| dotnet_CodeFormatter          | [ci2](https://ci2.dot.net/job/dotnet_codeformatter/)                        | mmitche      ||
 | dotnet_Core                   | [ci2](https://ci2.dot.net/job/dotnet_core/)                                 | mmitche      ||
 | dotnet_CoreFxLab              | [ci1](https://ci.dot.net/job/dotnet_corefxlab/job/master/)                  | ahka         ||
 | dotnet_CoreRt                 | [ci1](https://ci.dot.net/job/dotnet_corert/job/master/)                     | sergeyk      ||
@@ -87,6 +87,6 @@ Additionally, here are other Jenkins jobs which are not specifically part of the
 | dotnet_Xliff-Tasks            | [ci1](https://ci.dot.net/job/dotnet_xliff-tasks/)                           | licavalc     ||
 | drewscoggins_corefx           | [ci2](https://ci2.dot.net/job/drewscoggins_corefx/)                         | drewscoggins ||
 | Microsoft_ConcordExtensibilitySamples | [ci1](https://ci.dot.net/job/Microsoft_ConcordExtensibilitySamples/)| greggm       ||
-| Microsoft_MIEngine            | [ci1](https://ci.dot.net/job/Microsoft_MIEngine/)                           | piel         ||
+| Microsoft_MIEngine            | [ci1](https://ci.dot.net/job/Microsoft_MIEngine/)                           | waan         ||
 | Microsoft_PartsUnlimited      | [ci1](https://ci.dot.net/job/Microsoft_PartsUnlimited/)                     | enewman      ||
 | mono_linker                   | [ci1](https://ci.dot.net/job/mono_linker/)                                  | svbomer      ||
