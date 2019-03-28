@@ -16,7 +16,7 @@
   </PropertyGroup>
 
   <!--
-    From here we import $(SignValidationExclusionList)
+    From 'Signing.props' we import $(SignValidationExclusionList)
   -->
   <Import Project="$(MSBuildThisFileDirectory)Signing.props" Condition="Exists('$(MSBuildThisFileDirectory)Signing.props')" />
 
@@ -36,7 +36,7 @@
         https://github.com/dotnet/arcade/tree/master/src/SignCheck
       -->
       <SignCheckArgs Include="--recursive" />
-      <SignCheckArgs Include="--verbosity Detailed" />
+      <SignCheckArgs Include="--file-status AllFiles" />
       <SignCheckArgs Include="--log-file $(SignCheckLog)" />
       <SignCheckArgs Include="--error-log-file $(SignCheckErrorLog)" />
       <SignCheckArgs Include="--input-files $(SignCheckInputDir)" />
