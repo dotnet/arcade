@@ -43,6 +43,7 @@ namespace Microsoft.DotNet.Helix.Client
         public string Build { get; private set; }
         public string TargetQueueId { get; private set; }
         public string Creator { get; private set; }
+        public string ResultContainerPrefix { get; private set; }
         public IDictionary<IPayload, string> CorrelationPayloads { get; } = new Dictionary<IPayload, string>();
         public int? MaxRetryCount { get; private set; }
         public string StorageAccountConnectionString { get; private set; }
@@ -202,6 +203,14 @@ namespace Microsoft.DotNet.Helix.Client
             string jobListUriForLogging = jobListUri.ToString().Replace(jobListUri.Query, "");
             log?.Invoke($"Created job list at {jobListUriForLogging}");
 
+            // Only specify the ResultContainerPrefix if both repository name and source branch are available.
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME")) && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH")))
+            {
+                // Remove all slashes from repository name and branch name. Also remove refs/heads/ and /merge from branch name.
+                // ResultContainerPrefix will be <Repository Name><BranchName>
+                ResultContainerPrefix = $"{Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME").Replace("/", "")}{Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH").Replace("refs/heads/","").Replace("/merge","")}";
+            }
+
             string jobStartIdentifier = Guid.NewGuid().ToString("N");
             JobCreationResult newJob = await HelixApi.RetryAsync(
                 () => JobApi.NewAsync(
@@ -214,6 +223,7 @@ namespace Microsoft.DotNet.Helix.Client
                         TargetQueueId)
                     {
                         Creator = Creator,
+                        ResultContainerPrefix = ResultContainerPrefix,
                         MaxRetryCount = MaxRetryCount ?? 0,
                         JobStartIdentifier = jobStartIdentifier,
                         ResultsUri = resultsStorageContainer?.Uri,
