@@ -3,13 +3,11 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Git.IssueManager;
 using Microsoft.DotNet.Maestro.Client;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MSBuild = Microsoft.Build.Utilities;
 
@@ -96,42 +94,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Maximum allowed timeout per upload request to the flat container.
         /// </summary>
         public int UploadTimeoutInMinutes { get; set; } = 5;
-
-        /// <summary>
-        /// The URL for the release which triggered this task.
-        /// </summary>
-        public string CurrentReleasePipelineUrl { get; set; }
-
-        /// <summary>
-        /// Title of the release which triggered this task.
-        /// </summary>
-        public string CurrentReleaseDescription { get; set; }
-
-        /// <summary>
-        /// The URL of the build linked to the running release definition.
-        /// </summary>
-        public string TriggeredByBuildUrl { get; set; }
-
-        /// <summary>
-        /// Token to be used by the Octokit client.
-        /// </summary>
-        public string GitHubPersonalAccessToken { get; set; }
-
-        /// <summary>
-        /// Token to be used to fetch commit information from Azure DevOps.
-        /// </summary>
-        public string AzureDevOpsPersonalAccessToken { get; set; }
-
-        /// <summary>
-        /// The repo where we will file the issues when something fails while publishing.
-        /// Arcade repo will be used by default.
-        /// </summary>
-        public string RepoForFilingPublishingIssues { get; set; } = "https://github.com/dotnet/arcade";
-
-        /// <summary>
-        /// Who to tag in the created issue for them to investigate the failure.
-        /// </summary>
-        public string FyiHandles { get; set; } = "@JohnTortugo @jcagme";
 
         public override bool Execute()
         {
@@ -262,78 +224,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Log.LogErrorFromException(e, true);
             }
 
-            if (Log.HasLoggedErrors)
-            {
-                await CreateGitHubIssue(repoUrl, commit, buildId);
-            }
-
             return !Log.HasLoggedErrors;
-        }
-
-        /// <summary>
-        /// Creates a new GitHub issue.
-        /// </summary>
-        /// <param name="repoUrl">GitHub source repo IRL.</param>
-        /// <param name="commit">Commit SHA in the source repo.</param>
-        /// <param name="buildId">AzDO build id.</param>
-        private async Task CreateGitHubIssue(string repoUrl, string commit, string buildId)
-        {
-            string userHandle = "Last commit author could not be determined...";
-            string issueTitle = $"Release '{CurrentReleaseDescription}' failed";
-            string issueDescription = $"Something failed while trying to publish artifacts for build [{buildId}]({TriggeredByBuildUrl})." +
-                    $"{Environment.NewLine} {Environment.NewLine}" +
-                    $"Please click [here]({CurrentReleasePipelineUrl}) to check the error logs." +
-                    $"{Environment.NewLine} {Environment.NewLine}" +
-                    $"Last commit by: {userHandle}" +
-                    $" {Environment.NewLine} {Environment.NewLine}" +
-                    $"/fyi: {FyiHandles}";
-
-            try
-            {
-                IssueManager issueManager = new IssueManager(
-                    GitHubPersonalAccessToken, 
-                    AzureDevOpsPersonalAccessToken);
-
-                try
-                {
-                    userHandle = await issueManager.GetCommitAuthorAsync(repoUrl, commit);
-                }
-                catch (Exception exc)
-                {
-                    Log.LogError($"Something failed while trying to get the author of commit '{commit}'. Exception: {exc}");
-                }
-
-                int issueId = await issueManager.CreateNewIssueAsync(
-                    repoUrl,
-                    issueTitle,
-                    issueDescription);
-
-                Log.LogMessage(MessageImportance.High, $"GitHub issue {issueId} to track the messages above.");
-            }
-            catch (Exception exc)
-            {
-                Log.LogErrorFromException(exc);
-            }
-        }
-
-        /// <summary>
-        /// Parse out the owner and repo from a repository url
-        /// </summary>
-        /// <param name="repoUrl">GitHub repository URL</param>
-        /// <returns>Tuple of owner and repo</returns>
-        private static (string owner, string repo) ParseRepoUri(string repoUrl)
-        {
-            Regex repositoryUriPattern = new Regex(@"^/(?<owner>[^/]+)/(?<repo>[^/]+)/?$");
-            Uri uri = new Uri(repoUrl);
-
-            Match match = repositoryUriPattern.Match(uri.AbsolutePath);
-
-            if (!match.Success)
-            {
-                return default;
-            }
-
-            return (match.Groups["owner"].Value, match.Groups["repo"].Value);
         }
     }
 }
