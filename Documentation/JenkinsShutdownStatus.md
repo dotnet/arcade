@@ -88,5 +88,5 @@ Additionally, here are other Jenkins jobs which are not specifically part of the
 | drewscoggins_corefx           | [ci2](https://ci2.dot.net/job/drewscoggins_corefx/)                         | drewscoggins ||
 | Microsoft_ConcordExtensibilitySamples | [ci1](https://ci.dot.net/job/Microsoft_ConcordExtensibilitySamples/)| greggm       ||
 | Microsoft_MIEngine            | [ci1](https://ci.dot.net/job/Microsoft_MIEngine/)                           | waan         ||
-| Microsoft_PartsUnlimited      | [ci1](https://ci.dot.net/job/Microsoft_PartsUnlimited/)                     | enewman      ||
+| Microsoft_PartsUnlimited      | [ci1](https://ci.dot.net/job/Microsoft_PartsUnlimited/)                     | davete       | Removed |
 | mono_linker                   | [ci1](https://ci.dot.net/job/mono_linker/)                                  | svbomer      ||
