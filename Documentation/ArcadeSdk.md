@@ -596,11 +596,11 @@ The Arcade SDK includes targets that enable IBC optimization data to be embedded
 
 To enable this functionality set `UsingToolIbcOptimization` to `true` in `/eng/Versions.props`.
 
-Typically, not all projects in a repository need IBC data embedded. Set `ApplyPartialNgenOptimization` 
-to `true` in a project to indicate that the assemblies produced by the project should get IBC data embedded.
+Typically, not all projects in a repository need IBC data embedded. Set `ApplyNgenOptimization` 
+to `partial` or `full` in a project to indicate that the assemblies produced by the project should get IBC data embedded.
 
-Use `EnablePartialNgenOptimization` property to control when IBC data embedding is gonna be performed. 
-Unless specified otherwise, `EnablePartialNgenOptimization` is set to `true` if `Configuration` is `Release` 
+Use `EnableNgenOptimization` property to control when IBC data embedding is gonna be performed. 
+Unless specified otherwise, `EnableNgenOptimization` is set to `true` if `Configuration` is `Release` 
 and `OfficialBuild` is `true`.
 
 The IBC data embedding is performed by an internal tool `ibcmerge.exe` provided by `Microsoft.Dotnet.IbcMerge` 
@@ -632,8 +632,8 @@ next to the assembly and all of its  copies. Multiple flavors of an assembly wit
 it is possible to update the target to group assemblies by MVID instead of file name.
 
 During the build IBC data embedding is performed by `ApplyOptimizations` target, which invokes `ibcmerge.exe` tool.
-The target runs when `EnablePartialNgenOptimization` is `true` and the project sets `ApplyPartialNgenOptimization`
-to `true`. The target consumes item group `OptimizeAssembly`, whose items are full paths to the assemblies to have
+The target runs when `EnableNgenOptimization` is `true` and the project sets `ApplyNgenOptimization`
+to `partial` or `full`. The target consumes item group `OptimizeAssembly`, whose items are full paths to the assemblies to have
 IBC data embedded. The assemblies are updated in-place. By default, `OptimizeAssembly` is initialized with
 the path of the intermediate assembly compiled by the project (this is the file the `CoreCompile` target builds
 to `obj` directory). The project may update `OptimizeAssembly` item group before `ApplyOptimizations` target is
@@ -649,7 +649,7 @@ To enable this functionality set `UsingToolVisualStudioIbcTraining` to `true` in
 
 ### Visual Studio IBC Data Acquisition
 
-Set `EnablePartialNgenOptimization` property globally or in `/eng/Tools.props` to control when IBC data should be acquired.
+Set `EnableNgenOptimization` property globally or in `/eng/Tools.props` to control when IBC data should be acquired.
 
 The IBC data acquisition is performed by an internal tool `drop.exe` provided by `Drop.App` package from an internal Azure
 DevOps feed. The repository build definition thus must invoke Azure DevOps task that restores internal tools in order for
@@ -765,7 +765,7 @@ NuGet.exe may ask for credentials. Note: You need a [credential provider](https:
 
 2. Run build with the following arguments (choose values of `RepositoryName` and `VisualStudioIbcSourceBranchName` as appropriate):
 ```
-build -configuration Release -restore -ci /p:EnablePartialNgenOptimization=true /p:RepositoryName=dotnet/roslyn /p:VisualStudioIbcSourceBranchName=dev16.0-vs-deps
+build -configuration Release -restore -ci /p:EnableNgenOptimization=true /p:RepositoryName=dotnet/roslyn /p:VisualStudioIbcSourceBranchName=dev16.0-vs-deps
 ```
 
 ## Project Properties Defined by the SDK
@@ -805,9 +805,9 @@ When `UsingToolNuGetRepack` is true _shipping_ packages are repackaged as releas
 `true` (default) if the PDBs produced by the project should be converted to Windows PDB and published to Microsoft symbol servers.
 Set to `false` to override the default (uncommon).
 
-### `ApplyPartialNgenOptimization` (bool)
+### `ApplyNgenOptimization` (`partial`, `full` or empty)
 
-Set to `true` in a shipping project to require IBC optimization data to be available for the project and embed them into the binary during official build. 
+Set to `partial` or `full` in a shipping project to require IBC optimization data to be available for the project and embed them into the binary during official build. The value of `partial` indicates partial NGEN, whereas `full` means full NGEN optimization.
 
 ### `SkipTests` (bool)
 
