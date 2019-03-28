@@ -3,7 +3,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
-
+    <SignAssembly>true</SignAssembly>
     <VersionPrefix>2.2.0</VersionPrefix>
 
     <Description>This package provides support for publishing assets to a NuGet protocol based feed.</Description>

@@ -36,7 +36,7 @@
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <NuGetVersion>4.9.0-rtm.5658</NuGetVersion>
-    <OctokitVersion>0.30.0</OctokitVersion>
+    <OctokitVersion>0.32.0</OctokitVersion>
     <DotNetSleetLibVersion>2.2.127</DotNetSleetLibVersion>
     <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>
     <SystemCollectionsImmutableVersion>1.3.1</SystemCollectionsImmutableVersion>
