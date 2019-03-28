@@ -10,6 +10,7 @@
     <!-- Libs -->
     <CommandLineParserVersion>2.2.1</CommandLineParserVersion>
     <CredentialManagementVersion>1.0.2</CredentialManagementVersion>
+    <MicrosoftCciVersion>4.0.0-rc3-24214-00</MicrosoftCciVersion>
     <HandlebarsNetVersion>1.9.5</HandlebarsNetVersion>
     <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
     <log4netVersion>2.0.8</log4netVersion>
@@ -19,6 +20,7 @@
     <MicrosoftBuildFrameworkVersion>15.7.179</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildTasksCoreVersion>15.7.179</MicrosoftBuildTasksCoreVersion>
     <MicrosoftBuildUtilitiesCoreVersion>15.7.179</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftCodeAnalysisAnalyzersVersion>2.6.3</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisCSharpVersion>2.9.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftDotNetPlatformAbstractionsVersion>2.1.0</MicrosoftDotNetPlatformAbstractionsVersion>
     <MicrosoftIdentityModelClientsActiveDirectoryVersion>3.19.8</MicrosoftIdentityModelClientsActiveDirectoryVersion>
