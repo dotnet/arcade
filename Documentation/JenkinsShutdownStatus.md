@@ -84,7 +84,7 @@ Additionally, here are other Jenkins jobs which are not specifically part of the
 | dotnet_SymReader-Converter    | [ci2](https://ci2.dot.net/job/dotnet_symreader-converter/)                  | tmat         ||
 | dotnet_Versions               | [ci1](https://ci.dot.net/job/dotnet_versions/)                              | mmitche      ||
 | dotnet_WCF                    | [ci1](https://ci.dot.net/job/dotnet_wcf/job/master/)                        | stebon       ||
-| dotnet_Xliff-Tasks            | [ci1](https://ci.dot.net/job/dotnet_xliff-tasks/)                           | licavalc     ||
+| dotnet_Xliff-Tasks            | [ci1](https://ci.dot.net/job/dotnet_xliff-tasks/)                           | tomescht     ||
 | drewscoggins_corefx           | [ci2](https://ci2.dot.net/job/drewscoggins_corefx/)                         | drewscoggins ||
 | Microsoft_ConcordExtensibilitySamples | [ci1](https://ci.dot.net/job/Microsoft_ConcordExtensibilitySamples/)| greggm       ||
 | Microsoft_MIEngine            | [ci1](https://ci.dot.net/job/Microsoft_MIEngine/)                           | waan         ||
