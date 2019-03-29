@@ -210,14 +210,16 @@ namespace Microsoft.DotNet.Helix.Client
                 // Replace / with -. Remove all characters not allowed in container names. Make it lowercase.
                 // ResultContainerPrefix will be <Repository Name>-<BranchName>
                 Regex illegalCharacters = new Regex("[^a-z0-9-]");
+                Regex multipleDashes = new Regex("--+");
 
                 string repoName = Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME")
                     .Replace("/", "-").ToLower();
-                repoName = illegalCharacters.Replace(repoName, "");
+                repoName = multipleDashes.Replace(illegalCharacters.Replace(repoName, ""), "-");
+
 
                 string branchName = Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH")
                     .Replace("/","-").ToLower();
-                branchName = illegalCharacters.Replace(branchName, "");
+                branchName = multipleDashes.Replace(illegalCharacters.Replace(branchName, ""), "-");
 
                 ResultContainerPrefix = $"{repoName}-{branchName}-";
             }
