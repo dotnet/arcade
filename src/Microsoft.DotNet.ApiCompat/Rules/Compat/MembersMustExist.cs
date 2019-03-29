@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -46,7 +46,7 @@ namespace Microsoft.Cci.Differs.Rules
                 IMethodDefinition contractMethod = contractMember as IMethodDefinition;
                 if (contractMethod != null)
                 {
-                    // If the contract is a Explicit Interface method, we don't need to check if the method is in implementation since that will be catched by different rule.
+                    // If the contract is a Explicit Interface method, we don't need to check if the method is in implementation since that will be caught by different rule.
                     if (contractMethod.IsExplicitInterfaceMethod())
                         return DifferenceType.Unknown;
 
