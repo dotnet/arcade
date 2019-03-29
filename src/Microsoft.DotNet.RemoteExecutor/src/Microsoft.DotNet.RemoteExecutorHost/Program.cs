@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.RemoteExecutor
+namespace Microsoft.DotNet.RemoteExecutorHost
 {
     /// <summary>
     /// Provides an entry point in a new process that will load a specified method and invoke it.
@@ -33,8 +33,8 @@ namespace Microsoft.DotNet.RemoteExecutor
             string typeName = args[1];
             string methodName = args[2];
             string exceptionFile = args[3];
-            string[] additionalArgs = args.Length > 4 ? 
-                args.Subarray(4, args.Length - 4) : 
+            string[] additionalArgs = args.Length > 4 ?
+                args.Subarray(4, args.Length - 4) :
                 Array.Empty<string>();
 
             // Load the specified assembly, type, and method, then invoke the method.
@@ -111,22 +111,6 @@ namespace Microsoft.DotNet.RemoteExecutor
                 }
             }
             return exitCode;
-        }
-
-        private static MethodInfo GetMethod(this Type type, string methodName)
-        {
-            Type t = type;
-            while (t != null)
-            {
-                TypeInfo ti = t.GetTypeInfo();
-                MethodInfo mi = ti.GetDeclaredMethod(methodName);
-                if (mi != null)
-                {
-                    return mi;
-                }
-                t = ti.BaseType;
-            }
-            return null;
         }
 
         private static T[] Subarray<T>(this T[] arr, int offset, int count)

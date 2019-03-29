@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.1;net472;netstandard2.0</TargetFrameworks>
+    <Description>This package provides support for running tests out-of-process.</Description>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <IsPackable>true</IsPackable>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PackBuildOutputs</TargetsForTfmSpecificContentInPackage>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="PasteArguments.cs" />
+    <Compile Include="RemoteExecutionException.cs" />
+    <Compile Include="RemoteExecutor.cs" />
+    <Compile Include="RemoteExecutor.netcoreapp.cs" Condition="$(TargetFramework.StartsWith('netcoreapp'))" />
+    <Compile Include="RemoteExecutor.netfx.cs" Condition="$(TargetFramework.StartsWith('net4'))" />
+    <Compile Include="RemoteExecutor.uap.cs" Condition="$(TargetFramework.StartsWith('netstandard'))" />
+    <Compile Include="RemoteInvokeHandle.cs" />
+    <Compile Include="RemoteInvokeOptions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.assert" Version="$(XUnitVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="Microsoft.DotNet.RemoteExecutorHost\Microsoft.DotNet.RemoteExecutorHost.csproj" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(RepoRoot)LICENSE.txt" PackagePath="LICENSE.txt" Pack="true"/>
+    <None Include="$(RepoRoot)THIRD-PARTY-NOTICES.txt" PackagePath="THIRD-PARTY-NOTICES.txt" Pack="true"/>
+  </ItemGroup>
+
+  <!-- Move netstandard2.0 build asset to uap. -->
+  <Target Name="PackBuildOutputs" DependsOnTargets="ResolveProjectReferences;SatelliteDllsProjectOutputGroup;DebugSymbolsProjectOutputGroup;SatelliteDllsProjectOutputGroupDependencies;ResolveAssemblyReferences">
+    <PropertyGroup>
+      <ExplicitPackagePath Condition="!$(TargetFramework.StartsWith('netstandard'))">lib\$(TargetFramework)\</ExplicitPackagePath>
+      <ExplicitPackagePath Condition="$(TargetFramework.StartsWith('netstandard'))">lib\uap10.0.17134\</ExplicitPackagePath>
+    </PropertyGroup>
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(TargetPath)" PackagePath="$(ExplicitPackagePath)" />
+      <TfmSpecificPackageFile Include="$(DepsFilePath)" PackagePath="$(ExplicitPackagePath)" />
+      <TfmSpecificPackageFile Include="%(_ResolvedProjectReferencePaths.Identity)" PackagePath="$(ExplicitPackagePath)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

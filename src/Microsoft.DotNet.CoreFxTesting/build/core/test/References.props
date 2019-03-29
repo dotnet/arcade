@@ -3,6 +3,7 @@
 <Project>
 
   <ItemGroup Condition="'$(IncludeTestFrameworkReferences)' == 'true'">
+    <ReferenceFromRuntime Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="Microsoft.DotNet.RemoteExecutor" />
     <ReferenceFromRuntime Include="Microsoft.DotNet.XUnitExtensions" />
     <ReferenceFromRuntime Include="xunit.abstractions" />
     <ReferenceFromRuntime Include="xunit.assert" />
