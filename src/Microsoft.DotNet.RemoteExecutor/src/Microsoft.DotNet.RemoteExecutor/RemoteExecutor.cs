@@ -19,13 +19,34 @@ namespace Microsoft.DotNet.RemoteExecutor
         // The exit code returned when the test process exits successfully.
         public const int SuccessExitCode = 42;
 
+        public static string HostRunnerName;
+        public static readonly string HostRunner;
+        private static readonly string s_extraParameter;
+
         static RemoteExecutor()
         {
-            if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Native", StringComparison.OrdinalIgnoreCase))
+            if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
+            {
+                HostRunnerName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
+                HostRunner = Process.GetCurrentProcess().MainModule.FileName;
+                s_extraParameter = Path.GetFullPath("Microsoft.DotNet.RemoteExecutorHost.dll");
+            }
+            else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
+            {
+                HostRunnerName = "Microsoft.DotNet.RemoteExecutorHost.dll";
+                HostRunner = Path.GetFullPath(HostRunnerName);
+            }
+            else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Native", StringComparison.OrdinalIgnoreCase))
             {
                 HostRunnerName = "xunit.console.exe";
                 HostRunner = Process.GetCurrentProcess().MainModule.FileName;
-                ExtraParameter = "remote";
+                s_extraParameter = "remote";
+            }
+            else if (PlatformDetection.IsInAppContainer)
+            {
+                HostRunnerName = "Microsoft.DotNet.XUnitRunnerUap.exe";
+                HostRunner = "Microsoft.DotNet.XUnitRunnerUap.exe";
+                s_extraParameter = "remote";
             }
         }
 
@@ -251,7 +272,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             // If we need the host (if it exists), use it, otherwise target the console app directly.
             string metadataArgs = PasteArguments.Paste(new string[] { a.FullName, t.FullName, method.Name, options.ExceptionFile }, pasteFirstArgumentUsingArgV0Rules: false);
             string passedArgs = pasteArguments ? PasteArguments.Paste(args, pasteFirstArgumentUsingArgV0Rules: false) : string.Join(" ", args);
-            string testConsoleAppArgs = ExtraParameter + " " + metadataArgs + " " + passedArgs;
+            string testConsoleAppArgs = s_extraParameter + " " + metadataArgs + " " + passedArgs;
 
             if (options.RunAsSudo)
             {
