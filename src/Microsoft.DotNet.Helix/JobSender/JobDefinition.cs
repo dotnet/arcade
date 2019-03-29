@@ -210,11 +210,8 @@ namespace Microsoft.DotNet.Helix.Client
                 // ResultContainerPrefix will be <Repository Name>-<BranchName>
                 string repoName = Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME").Replace("/", "-");
                 string branchName = Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH")
-                    .Replace("refs/","")
-                    .Replace("heads/","")
-                    .Replace("/merge","")
                     .Replace("/","-");
-                ResultContainerPrefix = $"{repoName}-{branchName}-";
+                ResultContainerPrefix = $"{repoName}.{branchName}-";
             }
 
             string jobStartIdentifier = Guid.NewGuid().ToString("N");
