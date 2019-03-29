@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="Microsoft.DotNet.RemoteExecutorHost\Microsoft.DotNet.RemoteExecutorHost.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\Microsoft.DotNet.RemoteExecutorHost\Microsoft.DotNet.RemoteExecutorHost.csproj" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
