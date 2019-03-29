@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.Rest;
@@ -206,14 +207,18 @@ namespace Microsoft.DotNet.Helix.Client
             // Only specify the ResultContainerPrefix if both repository name and source branch are available.
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME")) && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH")))
             {
-                // Remove all slashes from repository name and branch name. Also remove refs/, heads/, and pulls/ from branch name.
+                // Replace / with -. Remove all characters not allowed in container names. Make it lowercase.
                 // ResultContainerPrefix will be <Repository Name>-<BranchName>
+                Regex illegalCharacters = new Regex("[^a-z0-9-]");
+
                 string repoName = Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME")
-                    .Replace("/", "-")
-                    .Replace(".","");
+                    .Replace("/", "-").ToLower();
+                repoName = illegalCharacters.Replace(repoName, "");
+
                 string branchName = Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH")
-                    .Replace("/","-")
-                    .Replace(".","");
+                    .Replace("/","-").ToLower();
+                branchName = illegalCharacters.Replace(branchName, "");
+
                 ResultContainerPrefix = $"{repoName}-{branchName}-";
             }
 
