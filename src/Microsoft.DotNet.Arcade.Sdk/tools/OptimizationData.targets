@@ -54,7 +54,7 @@
 
   <Target Name="_InitializeAssemblyOptimizationWithTargetAssembly">
     <ItemGroup>
-      <OptimizeAssembly Include="@(IntermediateAssembly)" />
+      <OptimizeAssembly Include="@(IntermediateAssembly)" TargetFramework="$(TargetFramework)" />
     </ItemGroup>
   </Target>
 
@@ -93,7 +93,9 @@
         was a significant benefit in optimizing them separately.
         This would however require a more complicated setup authoring.
       -->
-      <_IbcFile Include="$(IbcOptimizationDataDir)**\%(OptimizeAssembly.FileName)%(OptimizeAssembly.Extension)\*.ibc" OptimizeAssemblyPath="%(OptimizeAssembly.Identity)"/>
+      <_IbcFile Include="$(IbcOptimizationDataDir)**\%(OptimizeAssembly.FileName)%(OptimizeAssembly.Extension)\*.ibc" 
+                OptimizeAssemblyPath="%(OptimizeAssembly.Identity)"
+                TargetFramework="%(OptimizeAssembly.TargetFramework)" />
 
       <_AssemblyWithoutRawIbcData Include="@(OptimizeAssembly)" Exclude="@(_IbcFile->'%(OptimizeAssemblyPath)')" />
 
@@ -107,7 +109,8 @@
                               PreviousAssemblyPath="%(_IbcFile.PreviousAssemblyDir)\%(_IbcFile.AssemblyFileName)"
                               PreviousAssemblyCopyPath="$(ArtifactsTmpDir)OptimizedAssemblies\$([System.Guid]::NewGuid())"
                               OptimizeAssemblyPath="%(_IbcFile.OptimizeAssemblyPath)"
-                              XmlOutputPath="$(_IbcMergeXmlOutputDir)\%(_IbcFile.AssemblyFileName).ibc.xml" />
+                              TargetFramework="%(_IbcFile.TargetFramework)"
+                              XmlOutputPath="$(_IbcMergeXmlOutputDir)\%(_IbcFile.AssemblyFileName).$([System.Guid]::NewGuid()).temp.ibc.xml" />
     </ItemGroup>
 
     <Error Text="No optimization data found for assemblies: @(_AssemblyWithoutRawIbcData, ', ')"
@@ -141,6 +144,7 @@
         <IbcMergeArgs>-q -f $(_PartialNgenArg) -minify -delete -mo "%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)" -incremental "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)"</IbcMergeArgs>
         <UnsignFile>%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)</UnsignFile>
         <XmlOutputPath Condition="'$(EnableNgenOptimizationLogDetails)' == 'true'">%(_AssemblyWithRawIbcData.XmlOutputPath)</XmlOutputPath>
+        <TargetFramework>%(_AssemblyWithRawIbcData.TargetFramework)</TargetFramework>
       </_IbcMergeInvocation>
 
       <_IbcMergeInvocation>
@@ -177,7 +181,12 @@
 
     <!-- Remove Authenticode signing record if present. -->
     <Microsoft.DotNet.Arcade.Sdk.Unsign FilePath="%(_IbcMergeInvocation.UnsignFile)" Condition="'%(_IbcMergeInvocation.UnsignFile)' != ''" />
-    <Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList IbcXmlFilePath="%(_IbcMergeInvocation.XmlOutputPath)" OutputDirectory="$(ArtifactsLogNgenDir)" Condition="'%(_IbcMergeInvocation.XmlOutputPath)' != ''"/>
+    <Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList
+      IbcXmlFilePath="%(_IbcMergeInvocation.XmlOutputPath)" 
+      AssemblyFilePath="%(_IbcMergeInvocation.UnsignFile)"
+      AssemblyTargetFramework="%(_IbcMergeInvocation.TargetFramework)"
+      OutputDirectory="$(ArtifactsLogNgenDir)" 
+      Condition="'%(_IbcMergeInvocation.XmlOutputPath)' != ''"/>
   </Target>
 
 </Project>
