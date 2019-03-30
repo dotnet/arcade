@@ -41,10 +41,10 @@ namespace Microsoft.DotNet.RemoteExecutor
             {
                 HostRunner = Path;
             }
-            else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Native", StringComparison.OrdinalIgnoreCase) || PlatformDetection.IsInAppContainer)
+            // Host is required to have a remote execution feature integrated. Currently applies to uap and *aot.
+            else
             {
-                // Host is required to have a remote executor feature integrated.
-                HostRunner = processFileName;
+                HostRunner = HostRunnerName;
                 s_extraParameter = "remote";
             }
         }
