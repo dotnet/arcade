@@ -18,10 +18,8 @@ namespace Microsoft.DotNet.RemoteExecutor
         public const int FailWaitTimeoutMilliseconds = 60 * 1000;
         // The exit code returned when the test process exits successfully.
         public const int SuccessExitCode = 42;
-        // The name of the remote executor.
-        private const string Name = "Microsoft.DotNet.RemoteExecutorHost.dll";
         // The path of the remote executor.
-        public static readonly string Path = System.IO.Path.GetFullPath(Name);
+        public static readonly string Path = System.IO.Path.GetFullPath("Microsoft.DotNet.RemoteExecutorHost.dll");
         // The name of the host
         public static string HostRunnerName;
         // The path of the host
@@ -31,27 +29,22 @@ namespace Microsoft.DotNet.RemoteExecutor
 
         static RemoteExecutor()
         {
+            string processFileName = Process.GetCurrentProcess().MainModule.FileName;
+            HostRunnerName = System.IO.Path.GetFileName(processFileName);
+
             if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
             {
-                HostRunnerName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
-                HostRunner = Process.GetCurrentProcess().MainModule.FileName;
+                HostRunner = processFileName;
                 s_extraParameter = Path;
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
-                HostRunnerName = Name;
                 HostRunner = Path;
             }
-            else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Native", StringComparison.OrdinalIgnoreCase))
+            else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Native", StringComparison.OrdinalIgnoreCase) || PlatformDetection.IsInAppContainer)
             {
-                HostRunnerName = "xunit.console.exe";
-                HostRunner = Process.GetCurrentProcess().MainModule.FileName;
-                s_extraParameter = "remote";
-            }
-            else if (PlatformDetection.IsInAppContainer)
-            {
-                HostRunnerName = "Microsoft.DotNet.XUnitRunnerUap.exe";
-                HostRunner = "Microsoft.DotNet.XUnitRunnerUap.exe";
+                // Host is required to have a remote executor feature integrated.
+                HostRunner = processFileName;
                 s_extraParameter = "remote";
             }
         }
