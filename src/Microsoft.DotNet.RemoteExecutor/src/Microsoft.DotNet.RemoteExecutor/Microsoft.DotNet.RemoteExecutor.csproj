@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -23,7 +23,8 @@
 
   <Target Name="PackBuildOutputs" DependsOnTargets="ResolveProjectReferences;SatelliteDllsProjectOutputGroup;DebugSymbolsProjectOutputGroup;SatelliteDllsProjectOutputGroupDependencies;ResolveAssemblyReferences">
     <ItemGroup>
-      <TfmSpecificPackageFile Include="%(_ResolvedProjectReferencePaths.Identity)" PackagePath="lib\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="$(OutputPath)Microsoft.DotNet.RemoteExecutorHost.dll" PackagePath="lib\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="$(OutputPath)Microsoft.DotNet.RemoteExecutorHost.runtimeconfig.json" PackagePath="lib\$(TargetFramework)\" />
     </ItemGroup>
   </Target>
 
