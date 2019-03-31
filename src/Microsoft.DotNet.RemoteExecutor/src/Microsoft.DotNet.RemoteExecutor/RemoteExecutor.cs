@@ -32,7 +32,13 @@ namespace Microsoft.DotNet.RemoteExecutor
             string processFileName = Process.GetCurrentProcess().MainModule.FileName;
             HostRunnerName = System.IO.Path.GetFileName(processFileName);
 
-            if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
+            if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Native", StringComparison.OrdinalIgnoreCase) || PlatformDetection.IsInAppContainer)
+            {
+                // Host is required to have a remote execution feature integrated. Currently applies to uap and *aot.
+                HostRunner = HostRunnerName;
+                s_extraParameter = "remote";
+            }
+            else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
             {
                 HostRunner = processFileName;
                 s_extraParameter = Path;
@@ -41,11 +47,9 @@ namespace Microsoft.DotNet.RemoteExecutor
             {
                 HostRunner = Path;
             }
-            // Host is required to have a remote execution feature integrated. Currently applies to uap and *aot.
             else
             {
-                HostRunner = HostRunnerName;
-                s_extraParameter = "remote";
+                throw new PlatformNotSupportedException();
             }
         }
 
