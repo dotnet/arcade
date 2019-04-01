@@ -79,9 +79,9 @@ Additionally, here are other Jenkins jobs which are not specifically part of the
 | dotnet_Performance            | [ci2](https://ci2.dot.net/job/dotnet_performance/)                          | michelm      ||
 | dotnet_Platform-Compat        | [ci2](https://ci2.dot.net/job/dotnet_platform-compat/)                      | jmarolf      ||
 | dotnet_ProjFileTools          | [ci1](https://ci.dot.net/job/dotnet_ProjFileTools/)                         | mmitche      ||
-| dotnet_Roslyn-Analyzers       | [ci1](https://ci.dot.net/job/dotnet_roslyn-analyzers/job/master/)           | tmat         ||
+| dotnet_Roslyn-Analyzers       | [ci1](https://ci.dot.net/job/dotnet_roslyn-analyzers/job/master/)           | tmat         | Planned |
 | dotnet_Roslyn-Tools           | [ci1](https://ci.dot.net/job/dotnet_roslyn-tools/)                          | tmat         ||
-| dotnet_SymReader-Converter    | [ci2](https://ci2.dot.net/job/dotnet_symreader-converter/)                  | tmat         ||
+| dotnet_SymReader-Converter    | [ci2](https://ci2.dot.net/job/dotnet_symreader-converter/)                  | tmat         | Planned |
 | dotnet_Versions               | [ci1](https://ci.dot.net/job/dotnet_versions/)                              | mmitche      ||
 | dotnet_WCF                    | [ci1](https://ci.dot.net/job/dotnet_wcf/job/master/)                        | stebon       ||
 | dotnet_Xliff-Tasks            | [ci1](https://ci.dot.net/job/dotnet_xliff-tasks/)                           | tomescht     ||
