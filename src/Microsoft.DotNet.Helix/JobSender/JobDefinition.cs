@@ -207,8 +207,9 @@ namespace Microsoft.DotNet.Helix.Client
             // Only specify the ResultContainerPrefix if both repository name and source branch are available.
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME")) && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH")))
             {
-                // Replace / with -. Remove all characters not allowed in container names. Make it lowercase.
-                // ResultContainerPrefix will be <Repository Name>-<BranchName>
+                // Container names can only be alphanumeric (plus dashes) lowercase names, with no consecutive dashes.
+                // Replace / with -, make all branch and repository names lowercase, remove any characters not
+                // allowed in container names, and replace any string of dashes with a single dash.
                 Regex illegalCharacters = new Regex("[^a-z0-9-]");
                 Regex multipleDashes = new Regex("--+");
 
@@ -221,6 +222,7 @@ namespace Microsoft.DotNet.Helix.Client
                     .Replace("/","-").ToLower();
                 branchName = multipleDashes.Replace(illegalCharacters.Replace(branchName, ""), "-");
 
+                // ResultContainerPrefix will be <Repository Name>-<BranchName>
                 ResultContainerPrefix = $"{repoName}-{branchName}-";
             }
 
