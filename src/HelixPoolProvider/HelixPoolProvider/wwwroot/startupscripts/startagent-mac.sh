@@ -12,9 +12,8 @@ cp -f $HELIX_WORKITEM_PAYLOAD/.credentials $workspace_path
 
 $workspace_path/run.sh
 
-# Expect an exit code of 2, which is what is given when the agent connection is revoked
 lastexitcode=$?
-if [[ $lastexitcode -ne 2 ]]; then
+if [[ $lastexitcode -ne 0 ]]; then
 	echo "Unexpected error returned from agent: $lastexitcode"
 	exit $lastexitcode
 else
