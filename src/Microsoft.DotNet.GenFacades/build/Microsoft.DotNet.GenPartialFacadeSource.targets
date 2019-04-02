@@ -7,11 +7,6 @@
       $(GeneratePartialFacadeSourceDependsOn);ResolveMatchingContract
     </GeneratePartialFacadeSourceDependsOn>
 
-    <GeneratePartialFacadeSourceDependsOn Condition="'$(GeneratePlatformNotSupportedAssembly)' == 'true' or '$(GeneratePlatformNotSupportedAssemblyMessage)' != ''">
-      $(GeneratePartialFacadeSourceDependsOn);GenerateNotSupportedSource
-    </GeneratePartialFacadeSourceDependsOn>
-  </PropertyGroup>
-
   <PropertyGroup>
     <OutputSourcePath>$(IntermediateOutputPath)\$(AssemblyTitle).Forwards.cs</OutputSourcePath>
     <CoreCompileDependsOn Condition="'$(DesignTimeBuild)' != 'true'">
