@@ -284,21 +284,25 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
                             return TypeReference.Constant(enumeration[0]);
                         }
 
-                        string enumName;
+                        string enumName = schema.Reference?.Id;
                         if (extensions.TryGetValue("x-ms-enum", out IOpenApiExtension ext) && ext is EnumOpenApiExtension enumExtension)
                         {
                             enumName = enumExtension.Name;
                         }
-                        else if (CurrentTypeName != null)
-                        {
-                            enumName =
-                                $"{Helpers.PascalCase(CurrentTypeName.AsSpan())}{Helpers.PascalCase(CurrentPropertyName.AsSpan())}";
-                        }
-                        else
-                        {
-                            enumName =
-                                $"{Helpers.PascalCase(CurrentMethodName.AsSpan())}{Helpers.PascalCase(CurrentParameterName.AsSpan())}";
 
+                        if (enumName == null)
+                        {
+                            if (CurrentTypeName != null)
+                            {
+                                enumName =
+                                    $"{Helpers.PascalCase(CurrentTypeName.AsSpan())}{Helpers.PascalCase(CurrentPropertyName.AsSpan())}";
+                            }
+                            else
+                            {
+                                enumName =
+                                    $"{Helpers.PascalCase(CurrentMethodName.AsSpan())}{Helpers.PascalCase(CurrentParameterName.AsSpan())}";
+
+                            }
                         }
 
 
