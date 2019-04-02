@@ -18,6 +18,8 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
 
+  <Import Project="$(NuGetPackageRoot)microsoft.symboluploader.build.task\$(SymbolUploaderVersion)\build\PublishSymbols.targets" />
+    
   <Target Name="PublishSymbols">
     <ItemGroup>
       <FilesToPublishToSymbolServer Include="$(PDBArtifactsDirectory)\*.pdb"/>
@@ -26,6 +28,8 @@
 
     <PropertyGroup>
       <DotNetSymbolExpirationInDays Condition="'$(DotNetSymbolExpirationInDays)' == ''">3650</DotNetSymbolExpirationInDays>
+      
+      <PublishToSymbolServer>true</PublishToSymbolServer>
       <PublishToSymbolServer Condition="'@(FilesToPublishToSymbolServer)' == '' and '@(PackagesToPublishToSymbolServer)' == ''">false</PublishToSymbolServer>
     </PropertyGroup>
 
