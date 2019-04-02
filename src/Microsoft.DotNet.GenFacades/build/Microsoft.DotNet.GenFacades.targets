@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
     <_MicrosoftDotNetGenFacadesTaskDir Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)../tools/netcoreapp2.1/</_MicrosoftDotNetGenFacadesTaskDir>
     <_MicrosoftDotNetGenFacadesTaskDir Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)../tools/net472/</_MicrosoftDotNetGenFacadesTaskDir>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <GenFacadesTargetAssemblyPath Condition="'$(GenFacadesTargetAssemblyPath)' == ''">$(_MicrosoftDotNetGenFacadesTaskDir)Microsoft.DotNet.GenFacades.dll</GenFacadesTargetAssemblyPath>
+  </PropertyGroup>
+
+  <UsingTask TaskName="GenFacadesTask" AssemblyFile="$(GenFacadesTargetAssemblyPath)" />
 
   <Import Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' != 'true'" Project="Microsoft.DotNet.GenPartialFacadeSource.targets" />
   <Import Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' == 'true'" Project="Microsoft.DotNet.GenFacadesILRewriter.targets" />

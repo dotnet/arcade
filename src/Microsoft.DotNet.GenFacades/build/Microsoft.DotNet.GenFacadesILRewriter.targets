@@ -1,3 +1,4 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
   <PropertyGroup>
     <!-- reference facades will always have overlapping types so suppress compiler warnings -->
@@ -14,8 +15,6 @@
     <GenFacadesOutputPath>$(IntermediateOutputPath)</GenFacadesOutputPath>
     <GenFacadesResponseFile>$(GenFacadesInputPath)genfacades.rsp</GenFacadesResponseFile>
   </PropertyGroup>
-
-  <UsingTask TaskName="GenFacadesTask" AssemblyFile="$(_MicrosoftDotNetGenFacadesTaskDir)Microsoft.DotNet.GenFacades.dll" />
 
   <!-- Hook both partial-facade-related targets into TargetsTriggeredByCompilation. This will cause them
           to only be invoked upon a successful compilation; they can conceptualized as an extension
@@ -43,7 +42,7 @@
       <GenFacadesSeeds Include="@(ReferencePath)" />
     </ItemGroup>
 
-    <Error Text="No single matching contract found." Condition="'$(IsReferenceAssembly)' != 'true' AND '@(ResolvedMatchingContract->Count())' != '1'" />
+    <Error Text="No single matching contract found." Condition="'$(IsReferenceAssembly)' != 'true' and '@(ResolvedMatchingContract->Count())' != '1'" />
 
     <MakeDir Directories="$(GenFacadesInputPath)" />
 
@@ -55,7 +54,7 @@
     <PropertyGroup>
       <ProducePdb>true</ProducePdb>
       <!-- Partial facade PDB generation only functions on Windows -->
-      <ProducePdb Condition="'$(DebugSymbols)' == 'false' OR '$(OS)' != 'Windows_NT'">false</ProducePdb>
+      <ProducePdb Condition="'$(DebugSymbols)' == 'false' or '$(OS)' != 'Windows_NT'">false</ProducePdb>
       <GenFacadesIgnoreMissingTypes Condition="'$(GenFacadesIgnoreMissingTypes)' == ''">false</GenFacadesIgnoreMissingTypes>
       <GenFacadesIgnoreBuildAndRevisionMismatch Condition="'$(GenFacadesIgnoreBuildAndRevisionMismatch)' == ''">false</GenFacadesIgnoreBuildAndRevisionMismatch>
     </PropertyGroup>
