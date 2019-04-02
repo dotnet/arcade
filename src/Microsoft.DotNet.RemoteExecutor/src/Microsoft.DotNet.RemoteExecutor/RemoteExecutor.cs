@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.RemoteExecutor
         // The exit code returned when the test process exits successfully.
         public const int SuccessExitCode = 42;
         // The path of the remote executor.
-        public static readonly string Path = System.IO.Path.GetFullPath("Microsoft.DotNet.RemoteExecutorHost.dll");
+        public static readonly string Path;
         // The name of the host
         public static string HostRunnerName;
         // The path of the host
@@ -35,16 +35,19 @@ namespace Microsoft.DotNet.RemoteExecutor
             if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Native", StringComparison.OrdinalIgnoreCase) || PlatformDetection.IsInAppContainer)
             {
                 // Host is required to have a remote execution feature integrated. Currently applies to uap and *aot.
+                Path = processFileName;
                 HostRunner = HostRunnerName;
                 s_extraParameter = "remote";
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
             {
+                Path = System.IO.Path.GetFullPath("Microsoft.DotNet.RemoteExecutorHost.dll");
                 HostRunner = processFileName;
                 s_extraParameter = Path;
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
+                Path = System.IO.Path.GetFullPath("Microsoft.DotNet.RemoteExecutorHost.exe");
                 HostRunner = Path;
             }
             else

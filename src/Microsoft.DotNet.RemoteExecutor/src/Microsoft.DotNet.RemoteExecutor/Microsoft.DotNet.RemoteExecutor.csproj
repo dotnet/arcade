@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netcoreapp2.0;net472;netstandard2.0</TargetFrameworks>
     <Description>This package provides support for running tests out-of-process.</Description>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <IsPackable>true</IsPackable>
@@ -23,8 +23,9 @@
 
   <Target Name="PackBuildOutputs" DependsOnTargets="ResolveProjectReferences;SatelliteDllsProjectOutputGroup;DebugSymbolsProjectOutputGroup;SatelliteDllsProjectOutputGroupDependencies;ResolveAssemblyReferences">
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(OutputPath)Microsoft.DotNet.RemoteExecutorHost.dll" PackagePath="lib\$(TargetFramework)\" />
-      <TfmSpecificPackageFile Include="$(OutputPath)Microsoft.DotNet.RemoteExecutorHost.runtimeconfig.json" PackagePath="lib\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="%(_ResolvedProjectReferencePaths.Identity)" PackagePath="lib\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="@(ReferenceCopyLocalPaths)" Exclude="@(_ResolvedProjectReferencePaths)" PackagePath="lib\$(TargetFramework)\%(ReferenceCopyLocalPaths.DestinationSubPath)" />
+      <TfmSpecificPackageFile Condition="'$(TargetFramework)' == 'netcoreapp2.0'" Include="$(OutputPath)%(_ResolvedProjectReferencePaths.Filename).runtimeconfig.json" PackagePath="lib\$(TargetFramework)\" />
     </ItemGroup>
   </Target>
 
