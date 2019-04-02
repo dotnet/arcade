@@ -64,4 +64,8 @@
                     PdbConversionTreatAsWarning=""
                     Condition="$(PublishToSymbolServer)"/>
   </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(SymbolUploaderVersion)" />
+  </ItemGroup>
 </Project>
