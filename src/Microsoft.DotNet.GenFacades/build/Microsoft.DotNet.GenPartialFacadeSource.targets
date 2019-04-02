@@ -6,27 +6,31 @@
     <GeneratePartialFacadeSourceDependsOn>
       $(GeneratePartialFacadeSourceDependsOn);ResolveMatchingContract
     </GeneratePartialFacadeSourceDependsOn>
+
+    <GeneratePartialFacadeSourceDependsOn Condition="'$(GeneratePlatformNotSupportedAssembly)' == 'true' or '$(GeneratePlatformNotSupportedAssemblyMessage)' != ''">
+      $(GeneratePartialFacadeSourceDependsOn);GenerateNotSupportedSource
+    </GeneratePartialFacadeSourceDependsOn>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <OutputSourcePath>$(IntermediateOutputPath)\$(AssemblyTitle).Forwards.cs</OutputSourcePath>
-    <CompileDependsOn Condition="'$(DesignTimeBuild)' != 'true'">
-      GeneratePartialFacadeSource;$(CompileDependsOn)
-    </CompileDependsOn>
+    <CoreCompileDependsOn Condition="'$(DesignTimeBuild)' != 'true'">
+      $(CoreCompileDependsOn);GeneratePartialFacadeSource
+    </CoreCompileDependsOn>
   </PropertyGroup>
 
   <UsingTask TaskName="GenPartialFacadeSource" AssemblyFile="$(GenFacadesTargetAssemblyPath)" />
-  
+
   <Target Name="GeneratePartialFacadeSource"
           Inputs="$(MSBuildAllProjects);@(ResolvedMatchingContract);@(ReferencePath);@(Compile)"
           Outputs="$(OutputSourcePath)"
-          DependsOnTargets="$(GeneratePartialFacadeSourceDependsOn)">  
+          DependsOnTargets="$(GeneratePartialFacadeSourceDependsOn)">
 
     <PropertyGroup>
       <OutputSourcePath>$(IntermediateOutputPath)\$(AssemblyTitle).Forwards.cs</OutputSourcePath>
       <ReferenceAssembly>%(ResolvedMatchingContract.Identity)</ReferenceAssembly>
     </PropertyGroup>
-    
+
     <GenPartialFacadeSource
       ReferencePaths="@(ReferencePath)"
       ReferenceAssembly="$(ReferenceAssembly)"
@@ -42,7 +46,7 @@
     <ItemGroup>
       <FileWrites Include="$(OutputSourcePath)"/>
     </ItemGroup>
-  
+
     <ItemGroup>
       <Compile Condition="Exists('$(OutputSourcePath)')" Include="$(OutputSourcePath)"/>
     </ItemGroup>
