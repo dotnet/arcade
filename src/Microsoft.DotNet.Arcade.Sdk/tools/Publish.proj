@@ -164,7 +164,7 @@
       AssetsTemporaryDirectory="$(TempWorkingDirectory)" />
 
     <Message
-      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(RepositoryEngineeringDir)common\PublishToPackageFeed.proj"
+      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common\PublishToPackageFeed.proj"
       Importance="high" />
 
     <!--
@@ -172,7 +172,7 @@
       to publish packages. The version of Tasks.Feed used will come from DefaultVersions.props
     -->
     <Message
-      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(MSBuildThisFileDirectory)DefaultVersions.props"
+      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(MSBuildThisFileDirectory)DefaultVersions.props"
       Condition="Exists('$(MSBuildThisFileDirectory)DefaultVersions.props')"
       Importance="high" />
 
@@ -195,9 +195,25 @@
       Encoding="Unicode" />
 
     <Message
-      Text="##vso[artifact.upload containerfolder=PipelineArtifactsPublishingManifests;artifactname=PipelineArtifactsPublishingManifests]$(MSBuildThisFileDirectory)ArtifactsCategory.props"
+      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(MSBuildThisFileDirectory)ArtifactsCategory.props"
       Importance="high" />
-    
+
+
+    <!-- 
+        Publish Windows PDBs produced by SymStore.targets (by default, only shipping PDBs are placed there).
+        SymbolUploader doesn't support embedded PDBs yet, so let SymStore.targets do the conversion for now.
+        https://github.com/dotnet/core-eng/issues/3645
+      -->
+    <FilesToPublishToSymbolServer Include="$(ArtifactsSymStoreDirectory)**\*.pdb"/>
+
+    <Message
+      Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]%(FilesToPublishToSymbolServer.Identity)"
+      Importance="high" />
+
+    <Message
+      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common\PublishToSymbolServers.proj"
+      Importance="high" />
+
   </Target>
 
   <Target Name="PublishSymbols">
