@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
                 {
                     logging.AddConsole();
                     logging.AddDebug();
+                    logging.AddFixedApplicationInsights(LogLevel.Information);
                 })
                 .UseStartup<Startup>()
                 .Build();

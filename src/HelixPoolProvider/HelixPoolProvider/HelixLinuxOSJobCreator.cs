@@ -15,8 +15,8 @@ namespace Microsoft.DotNet.HelixPoolProvider
     {
         public HelixLinuxOSJobCreator(AgentAcquireItem agentRequestItem, QueueInfo queueInfo, IHelixApi api,
             ILoggerFactory loggerFactory, IHostingEnvironment hostingEnvironment,
-            Config configuration)
-            : base(agentRequestItem, queueInfo, api, loggerFactory, hostingEnvironment, configuration) { }
+            Config configuration, string orchestrationId, string jobName)
+            : base(agentRequestItem, queueInfo, api, loggerFactory, hostingEnvironment, configuration, orchestrationId, jobName) { }
 
         private string AgentPayloadFileName => $"vsts-agent-linux-x64-{_agentRequestItem.agentConfiguration.agentVersion}.tar.gz";
 

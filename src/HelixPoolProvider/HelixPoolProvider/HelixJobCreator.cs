@@ -26,10 +26,12 @@ namespace Microsoft.DotNet.HelixPoolProvider
         protected ILogger _logger;
         protected Config _configuration;
         protected IHostingEnvironment _hostingEnvironment;
+        protected string _orchestrationId;
+        protected string _jobName;
 
         protected HelixJobCreator(AgentAcquireItem agentRequestItem, QueueInfo queueInfo, IHelixApi api,
             ILoggerFactory loggerFactory, IHostingEnvironment hostingEnvironment,
-            Config configuration)
+            Config configuration, string orchestrationId, string jobName)
         {
             _agentRequestItem = agentRequestItem;
             _queueInfo = queueInfo;
@@ -37,6 +39,8 @@ namespace Microsoft.DotNet.HelixPoolProvider
             _logger = loggerFactory.CreateLogger<HelixJobCreator>();
             _configuration = configuration;
             _hostingEnvironment = hostingEnvironment;
+            _orchestrationId = orchestrationId;
+            _jobName = jobName;
         }
 
         public abstract string ConstructCommand();
@@ -90,7 +94,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
 
                 // Now that we have a valid queue, construct the Helix job on that queue
                 var job = await _api.Job.Define()
-                    .WithSource($"agent/{_agentRequestItem.accountId}/")
+                    .WithSource($"agent/{_agentRequestItem.accountId}/{_orchestrationId}/{_jobName}/")
                     .WithType($"byoc/{_configuration.HelixCreator}/")
                     .WithBuild("1.0")
                     .WithTargetQueue(_queueInfo.QueueId)
@@ -105,7 +109,8 @@ namespace Microsoft.DotNet.HelixPoolProvider
                     .AttachToJob()
                     .SendAsync();
 
-                _logger.LogInformation($"Successfully submitted new Helix job {job.CorrelationId} to queue {_queueInfo.QueueId} for agent id {_agentRequestItem.agentId}");
+                _logger.LogInformation("Successfully submitted new Helix job {helixJob} (work item {workItemName}) to queue {queueId}",
+                    job.CorrelationId, _agentRequestItem.agentId, _queueInfo.QueueId);
 
                 // TODO Add extra info into the agent info item blob
                 return new AgentInfoItem()
@@ -119,7 +124,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
             }
             catch (HttpOperationException e)
             {
-                _logger.LogError(e, $"Failed to submit new Helix job to queue {_queueInfo.QueueId} for agent id {_agentRequestItem.agentId}: {e.Response.Content}");
+                _logger.LogError(e, "Failed to submit new Helix job to queue {_queueInfo.QueueId} for agent id {_agentRequestItem.agentId}: {e.Response.Content}");
 
                 return new AgentInfoItem() { accepted = false };
             }
