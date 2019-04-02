@@ -204,7 +204,9 @@
         SymbolUploader doesn't support embedded PDBs yet, so let SymStore.targets do the conversion for now.
         https://github.com/dotnet/core-eng/issues/3645
       -->
-    <FilesToPublishToSymbolServer Include="$(ArtifactsSymStoreDirectory)**\*.pdb"/>
+    <ItemGroup>
+      <FilesToPublishToSymbolServer Include="$(ArtifactsSymStoreDirectory)**\*.pdb"/>
+    </ItemGroup>
 
     <Message
       Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]%(FilesToPublishToSymbolServer.Identity)"
