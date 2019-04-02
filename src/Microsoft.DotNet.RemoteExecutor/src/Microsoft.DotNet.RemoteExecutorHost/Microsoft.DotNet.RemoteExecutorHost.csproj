@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      We generate a netstandard executable image which will be invoked by Microsoft.DotNet.RemoteExecutor.
+      The SDK defaults to TargetExt dll, nevertheless CreateProcess invokes that assembly directly
+      on .NET Framework, or with the dotnet host on .NET Core.
+    -->
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="Microsoft.DotNet.RemoteExecutorHost.runtimeconfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
