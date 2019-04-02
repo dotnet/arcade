@@ -43,7 +43,6 @@
   <ItemGroup Condition="'$(IncludeTestFrameworkReferences)' == 'true'">
     <TestArchiveDependencies Include="$(RuntimePath)Microsoft.DotNet.XUnitExtensions.dll" />
     <TestArchiveDependencies Include="$(RuntimePath)xunit.assert.dll" />
-    <TestArchiveDependencies Condition="'$(BuildingNETCoreAppVertical)' == 'true'" Include="$(RuntimePath)xunit.console.deps.json" />
     <TestArchiveDependencies Include="$(RuntimePath)xunit.core.dll" />
     <TestArchiveDependencies Include="$(RuntimePath)xunit.abstractions.dll" />
     <TestArchiveDependencies Include="$(RuntimePath)CoreFx.Private.TestUtilities.dll" />
