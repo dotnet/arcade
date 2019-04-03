@@ -35,7 +35,10 @@ class JUnitFormat(ResultFormat):
                 attachments = []
 
 
-                failure_element = element.find("failure") or element.find("error")
+                failure_element = element.find("failure")
+                if failure_element is None:
+                    failure_element = element.find("error")
+
                 if failure_element is not None:
                     result = "Fail"
                     exception_type = failure_element.get("type")
