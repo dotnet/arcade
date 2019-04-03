@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     }
                 });
 
-            var failedResults = (JArray) data["results"];
+            var failedResults = (JArray) data["value"];
             var expectedFailures = ExpectedTestFailures.Select(i => i.GetMetadata("Identity")).ToHashSet();
             foreach (var failedResult in failedResults)
             {
