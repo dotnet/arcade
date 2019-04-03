@@ -25,6 +25,10 @@
       <PayloadDirectory>$(MSBuildThisFileDirectory)Junit</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>
+  <ItemGroup>
+    <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese"/>
+    <AzurePipelinesExpectedTestFailure Include="PizzaTests.pepperoni"/>
+  </ItemGroup>
 
   <ItemGroup>
     <XUnitProject Include="..\src\**\*.Tests.csproj"/>

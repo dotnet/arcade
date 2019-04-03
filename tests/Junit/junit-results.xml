@@ -4,7 +4,7 @@
       <testcase classname="PizzaTests" name="cheese" time="0.006">
          <failure message="test failure">Assertion failed</failure>
       </testcase>
-      <testcase classname="PizzaTests" name="cheese" time="0.006">
+      <testcase classname="PizzaTests" name="cheese2" time="0.006">
          <error message="test failure">Assertion failed</error>
       </testcase>
       <testcase classname="PizzaTests" name="pepperoni" time="0">
