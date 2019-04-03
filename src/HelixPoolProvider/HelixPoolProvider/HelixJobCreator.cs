@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.HelixPoolProvider
             }
             catch (HttpOperationException e)
             {
-                _logger.LogError(e, "Failed to submit new Helix job to queue {_queueInfo.QueueId} for agent id {_agentRequestItem.agentId}: {e.Response.Content}");
+                _logger.LogError(e, $"Failed to submit new Helix job to queue {_queueInfo.QueueId} for agent id {_agentRequestItem.agentId}: {e.Response.Content}");
 
                 return new AgentInfoItem() { accepted = false };
             }
