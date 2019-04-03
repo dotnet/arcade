@@ -52,19 +52,3 @@ if (-not $skipCreatePool) {
 } else {
 	$poolProviderId = $existingAgentPoolId
 }
-
-if (-not $skipCreateAgents) {
-	for ($i=0; $i -lt 100; $i++) {
-		try {
-			echo "Creating agent $byocProviderName-Agent${i} for pool"
-			$result = Invoke-WebRequest -Headers $allHeaders -Method POST "$accountUrl/_apis/DistributedTask/pools/$poolProviderId/agents?api-version=5.0-preview" -Body "{`"name`":`"$byocProviderName-Agent${i}`",`"version`":`"2.138.6`",`"provisioningState`":`"Deallocated`"}"
-			if ($result.StatusCode -ne 200) {
-				echo $result.Content
-				throw "Failed to create agent"
-			}
-		}
-		catch {
-			throw "Failed to create agent: $_"
-		}
-	}
-}

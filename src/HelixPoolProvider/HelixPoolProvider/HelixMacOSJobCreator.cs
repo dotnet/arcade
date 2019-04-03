@@ -15,8 +15,8 @@ namespace Microsoft.DotNet.HelixPoolProvider
     {
         public HelixMacOSJobCreator(AgentAcquireItem agentRequestItem, QueueInfo queueInfo, IHelixApi api,
             ILoggerFactory loggerFactory, IHostingEnvironment hostingEnvironment,
-            Config configuration)
-            : base(agentRequestItem, queueInfo, api, loggerFactory, hostingEnvironment, configuration) { }
+            Config configuration, string orchestrationId, string jobName)
+            : base(agentRequestItem, queueInfo, api, loggerFactory, hostingEnvironment, configuration, orchestrationId, jobName) { }
 
         public override Uri AgentPayloadUri => new Uri($"https://vstsagentpackage.azureedge.net/agent/{_agentRequestItem.agentConfiguration.agentVersion}/{AgentPayloadFileName}");
 

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -10,10 +11,10 @@ using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.DotNet.HelixPoolProvider.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.HelixPoolProvider.Controllers
@@ -58,6 +59,31 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
         }
         #endregion
 
+        private (string orchestrationId, string jobName) ExtractRequestSourceInfo()
+        {
+            // Attempt to get the orcheration/job info.
+            string orchestrationId = "unknown";
+            string jobName = "unknown";
+            if (Request.Headers.TryGetValue("X-VSS-OrchestrationId", out StringValues headerValue))
+            {
+                string id = headerValue.FirstOrDefault();
+                if (!string.IsNullOrEmpty(id))
+                {
+                    int firstDot = id.IndexOf(".");
+                    if (firstDot != -1)
+                    {
+                        orchestrationId = id.Substring(0, firstDot);
+                        if (firstDot != id.Length - 1)
+                        {
+                            jobName = id.Substring(firstDot + 1);
+                        }
+                    }
+                }
+            }
+
+            return (orchestrationId, jobName);
+        }
+
         /// <summary>
         /// Acquire an agent from the pool provider.
         /// </summary>
@@ -69,36 +95,44 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
         [Authorize(Policy = "ValidAzDORequestSource")]
         public async Task<IActionResult> AcquireAgent([FromBody] AgentAcquireItem agentRequestItem)
         {
-            // To acquire a new agent, we'll need to do the following:
-            // 1. Determine what queue VSTS is asking for.
-            // 2. Determine whether such a queue exists in Helix (and whether we can use it)
-            // 3. If the queue exists, submit work to it.
+            (string orchestrationId, string jobName) = ExtractRequestSourceInfo();
 
-            string queueId;
-            try
+            using (_logger.BeginScope("Starting acquire operation for " +
+                "Agent Id={agentId} Pool={agentPool} OrchestrationId={orchestrationId} JobName={jobName}",
+                agentRequestItem.agentId, agentRequestItem.agentPool, orchestrationId, jobName))
             {
-                queueId = ExtractQueueId(agentRequestItem.agentSpecification);
+                // To acquire a new agent, we'll need to do the following:
+                // 1. Determine what queue VSTS is asking for.
+                // 2. Determine whether such a queue exists in Helix (and whether we can use it)
+                // 3. If the queue exists, submit work to it.
 
-                if (queueId == null)
+                string queueId;
+                try
+                {
+                    queueId = ExtractQueueId(agentRequestItem.agentSpecification);
+
+                    if (queueId == null)
+                    {
+                        return Json(new AgentInfoItem() { accepted = false });
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError($"Unable to extract queue id from request: {e.ToString()}");
+                    return BadRequest();
+                }
+
+                var agentSettings = agentRequestItem.agentConfiguration.agentSettings;
+
+                _logger.LogInformation("Acquiring agent for queue {queueId}", queueId);
+
+                var jobCreator = await GetHelixJobCreator(agentRequestItem, queueId, orchestrationId, jobName);
+                if (jobCreator == null)
                 {
                     return Json(new AgentInfoItem() { accepted = false });
                 }
+                return Json(await jobCreator.CreateJob());
             }
-            catch (Exception e)
-            {
-                _logger.LogError($"Unable to extract queue id from request: {e.ToString()}");
-                return BadRequest();
-            }
-            var agentSettings = agentRequestItem.agentConfiguration.agentSettings;
-
-            _logger.LogInformation($"Starting acquire operation. Queue={queueId} Agent Id={agentRequestItem.agentId} Pool={agentRequestItem.agentPool}");
-
-            var jobCreator = await GetHelixJobCreator(agentRequestItem, queueId);
-            if (jobCreator == null)
-            {
-                return Json(new AgentInfoItem() { accepted = false });
-            }
-            return Json(await jobCreator.CreateJob());
         }
 
         /// <summary>
@@ -107,7 +141,7 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
         /// <param name="agentRequestItem">Acquire agent request info</param>
         /// <param name="queueId">Queue id</param>
         /// <returns>New helix job creator, null if queue info could not be obtained or the queue is not able to be used.</returns>
-        private async Task<HelixJobCreator> GetHelixJobCreator(AgentAcquireItem agentRequestItem, string queueId)
+        private async Task<HelixJobCreator> GetHelixJobCreator(AgentAcquireItem agentRequestItem, string queueId, string orchestrationId, string jobName)
         {
             // Check the queue.
             QueueInfo queueInfo = await GetQueueInfo(queueId);
@@ -131,11 +165,14 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
             switch (queueInfo.OperatingSystemGroup.ToLowerInvariant())
             {
                 case "windows":
-                    return new HelixWindowsOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value), _loggerFactory, _hostingEnvironment, _configuration);
+                    return new HelixWindowsOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value),
+                        _loggerFactory, _hostingEnvironment, _configuration, orchestrationId, jobName);
                 case "linux":
-                    return new HelixLinuxOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value), _loggerFactory, _hostingEnvironment, _configuration);
+                    return new HelixLinuxOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value),
+                        _loggerFactory, _hostingEnvironment, _configuration, orchestrationId, jobName);
                 case "osx":
-                    return new HelixMacOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value), _loggerFactory, _hostingEnvironment, _configuration);
+                    return new HelixMacOSJobCreator(agentRequestItem, queueInfo, GetHelixApi(!queueInfo.IsInternalOnly.Value),
+                        _loggerFactory, _hostingEnvironment, _configuration, orchestrationId, jobName);
                 default:
                     throw new NotImplementedException($"Operating system group {queueInfo.OperatingSystemGroup} unexpected");
             }
@@ -267,9 +304,18 @@ namespace Microsoft.DotNet.HelixPoolProvider.Controllers
         [Authorize(Policy = "ValidAzDORequestSource")]
         public IActionResult ReleaseAgent([FromBody] AgentReleaseItem agentReleaseItem)
         {
-            // Nothing to do here AFAIK.  VSTS will have shut down the agent connection, causing the agent process to exit.
-            // This means that the corresponding Helix work item will be done and can continue to process work.
-            return Accepted();
+            (string orchestrationId, string jobName) = ExtractRequestSourceInfo();
+
+            using (_logger.BeginScope("Starting release operation for " +
+                "Agent Id={agentId} Pool={agentPool} OrchestrationId={orchestrationId} JobName={jobName}",
+                agentReleaseItem.agentId, agentReleaseItem.agentPool, orchestrationId, jobName))
+            {
+                _logger.LogInformation("Releasing agent corresponding to helix job {helixJob}, work item {workItem}",
+                    agentReleaseItem.agentData?.correlationId, agentReleaseItem.agentData?.workItemId);
+                // Nothing to do here AFAIK.  VSTS will have shut down the agent connection, causing the agent process to exit.
+                // This means that the corresponding Helix work item will be done and can continue to process work.
+                return Accepted();
+            }
         }
 
         /// <summary>
