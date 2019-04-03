@@ -59,7 +59,7 @@ class JUnitFormat(ResultFormat):
                 skipped_element = element.find("skipped")
                 if skipped_element is not None:
                     result = "Skip"
-                    skip_reason = skipped_element.text
+                    skip_reason = skipped_element.text or u""
 
 
                 res = TestResult(name, u'junit', type_name, method, duration, result, exception_type, failure_message, stack_trace,
