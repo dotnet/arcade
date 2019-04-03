@@ -60,7 +60,7 @@
 
   <Target Name="_LocateIbcMerge">
     <PropertyGroup>
-      <_IbcMergePath>$(NuGetPackageRoot)microsoft.dotnet.ibcmerge\$(MicrosoftDotNetIBCMergeVersion)\tools\net472\ibcmerge.exe</_IbcMergePath>
+      <_IbcMergePath>$(NuGetPackageRoot)microsoft.dotnet.ibcmerge\$(MicrosoftDotNetIBCMergeVersion)\tools\netcoreapp2.0\ibcmerge.dll</_IbcMergePath>
 
       <_RunIbcMerge>false</_RunIbcMerge>
       <_RunIbcMerge Condition="'$(OfficialBuild)' == 'true' or Exists('$(_IbcMergePath)')">true</_RunIbcMerge>
@@ -173,7 +173,7 @@
           DestinationFiles="%(_IbcMergeInvocation.CopyFilesDestination)" 
           Condition="'%(_IbcMergeInvocation.CopyFilesSource)' != ''" />
 
-    <Exec Command='"$(_IbcMergePath)" %(_IbcMergeInvocation.IbcMergeArgs)' ConsoleToMSBuild="true" Condition="'$(_RunIbcMerge)' == 'true'">
+    <Exec Command='"$(DotNetTool)" exec "$(_IbcMergePath)" %(_IbcMergeInvocation.IbcMergeArgs)' ConsoleToMSBuild="true" Condition="'$(_RunIbcMerge)' == 'true'">
       <Output TaskParameter="ConsoleOutput" PropertyName="_IbcMergeOutput" />
     </Exec>
 
