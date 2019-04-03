@@ -6,6 +6,7 @@
     <GeneratePartialFacadeSourceDependsOn>
       $(GeneratePartialFacadeSourceDependsOn);ResolveMatchingContract
     </GeneratePartialFacadeSourceDependsOn>
+  </PropertyGroup>
 
   <PropertyGroup>
     <OutputSourcePath>$(IntermediateOutputPath)\$(AssemblyTitle).Forwards.cs</OutputSourcePath>
