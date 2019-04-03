@@ -28,7 +28,6 @@
 
     <PropertyGroup>
       <DotNetSymbolExpirationInDays Condition="'$(DotNetSymbolExpirationInDays)' == ''">3650</DotNetSymbolExpirationInDays>
-      
       <PublishToSymbolServer>true</PublishToSymbolServer>
       <PublishToSymbolServer Condition="'@(FilesToPublishToSymbolServer)' == '' and '@(PackagesToPublishToSymbolServer)' == ''">false</PublishToSymbolServer>
     </PropertyGroup>
