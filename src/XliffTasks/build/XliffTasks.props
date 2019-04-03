@@ -4,8 +4,6 @@
 <Project>
 
   <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-
     <!-- 
       Set this to to true to update .xlf files with corresponding .resx/.vcst/.xaml on every build.
 
