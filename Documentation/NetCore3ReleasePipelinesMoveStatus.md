@@ -2,15 +2,8 @@
 
 ## What is needed?
 
-*  Repositories don't sign nor publish symbols and packages in the builds but as an async 
-release definition triggered by Maestro.
-Specifics on how this works can be found [here](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/AsyncPublishing_HowToUse.md).
-
-## Benefits
-
-*  Build is just a build and won't be blocked by the above mentioned operations
-*  Intention is determined by the channel, so when Maestro triggers a release it passes 
-extra information as where the bits need to be push to
+*  Repositories do signing and symbol validation as well as publishing of symbols and packages in an 
+async release pipeline independent from the build. Specifics on how this works can be found [here](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/AsyncPublishing_HowToUse.md).
 
 ## Batches
 
@@ -53,13 +46,13 @@ on what changes are needed check ["How do I use it?"](https://github.com/dotnet/
 | CLI-Migrate                | licavalc         | Not-Moved |   3   |                    |
 | CLICommandLineParser       | licavalc         | Not-Moved |   3   |                    |
 
-*If a given batch is completed before its planned ETA, we'll move on to the next right away. At the same time, 
+*If a given batch is completed before its planned ETA, we'll move on to the next right away. Also, 
 if the move takes more than what was estimated we'll move the rest of the batches forward
 
 ## Special repositories
 
 Repositories which don't use Arcade SDK, are still building on devdiv or execute other actions different 
-from signing and publishing packages and symbols.
+from signing and publishing packages and symbols i.e. push assets to two different feeds in the same task.
 
 For these, we'd need to do extra work since the current implementation won't work for them. Issues 
 currently tracking this work are:
