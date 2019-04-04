@@ -52,7 +52,6 @@ on what changes are needed check ["How do I use it?"](https://github.com/dotnet/
 | CLI                        | licavalc         | Not-Moved |   3   |                    |
 | CLI-Migrate                | licavalc         | Not-Moved |   3   |                    |
 | CLICommandLineParser       | licavalc         | Not-Moved |   3   |                    |
-| SDK                        | licavalc         | Not-Moved |   3   |                    |
 
 *If a given batch is completed before its planned ETA, we'll move on to the next right away. At the same time, 
 if the move takes more than what was estimated we'll move the rest of the batches forward
