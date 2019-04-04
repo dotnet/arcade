@@ -1,18 +1,80 @@
 ﻿#!/usr/bin/env bash
 
-# HERE
-
-export RUNTIME_PATH=$1
 export EXECUTION_DIR=$(dirname "$0")
 
-# Point to the locally installed SDK.
-if [[ $2 ]]; then
-  export DOTNET_ROOT=$2
+usage()
+{
+  echo "Usage"
+}
+
+argparser_runtime_path_specified=0
+argparser_dotnet_root_specified=0
+argparser_global_tool_dir_specified=0
+
+while [[ $# > 0 ]]; do
+  opt="$(echo "${1/#--/-}" | awk '{print tolower($0)}')"
+  shift
+  case "$opt" in
+
+    -runtime-path|-r)
+      if [[ "$argparser_runtime_path_specified" == '1' ]] ; then
+        usage
+        exit 1
+      fi
+      argparser_runtime_path_specified=1
+      if [[ $# == 0 ]]; then
+        usage
+        exit 1
+      fi
+      argparser_runtime_path=$1
+      ;;
+
+    -dotnet-root|-d)
+      if [[ "$argparser_dotnet_root_specified" == '1' ]] ; then
+        usage
+        exit 1
+      fi
+      argparser_dotnet_root_specified=1
+      if [[ $# == 0 ]]; then
+        usage
+        exit 1
+      fi
+      argparser_dotnet_root=$1
+      ;;
+
+    -global-tools-dir|-g)
+      if [[ "$argparser_global_tool_dir_specified" == '1' ]] ; then
+        usage
+        exit 1
+      fi
+      argparser_global_tool_dir_specified=1
+      if [[ $# == 0 ]]; then
+        usage
+        exit 1
+      fi
+      argparser_global_tool_dir=$1
+      ;;
+
+    *)
+      usage
+      exit 1
+      ;;
+  esac
+
+  shift
+done
+
+if [[ "$argparser_runtime_path_specified" == '0' ]] ; then
+  usage
+  exit 1
 fi
 
-# Global tools path
-if [[ $3 ]]; then
-  export GLOBAL_TOOLS_DIR=$3
+export RUNTIME_PATH=argparser_runtime_path
+if [[ "$argparser_dotnet_root_specified" == '1' ]] ; then
+  export DOTNET_ROOT=argparser_dotnet_root
+fi
+if [[ "$argparser_global_tool_dir_specified" == '1' ]] ; then
+  export GLOBAL_TOOLS_DIR=argparser_global_tool_dir
 fi
 
 # Don't use a globally installed SDK.
