@@ -27,7 +27,7 @@
   </ItemGroup>
   <ItemGroup>
     <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese"/>
-    <AzurePipelinesExpectedTestFailure Include="PizzaTests.pepperoni"/>
+    <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese2"/>
   </ItemGroup>
 
   <ItemGroup>
