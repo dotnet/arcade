@@ -33,9 +33,9 @@ class UploadWorker(Thread):
 
     def run(self):
         self.__print("starting...")
-        while True:
-            item = self.queue.get()
+        while True:            
             try:
+                item = self.queue.get()
                 self.__process(item)
             except:
                 self.__print("got error: {}".format(traceback.format_exc()))
