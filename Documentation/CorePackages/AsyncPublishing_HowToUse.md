@@ -79,8 +79,8 @@ To publish these artifacts you'll need to start the release manually. Just go to
 
   1) Go to *Publish to Build Asset Registry*:
 
-  ![Publish-to-BAR](images\Publish-to-BAR.png)
+  ![Publish-to-BAR](images/Publish-to-BAR.png)
 
   2) Then go to *Publish Build Assets* step of the build:
 
-  ![BarBuildID](images\BarBuildID.png)
+  ![BarBuildID](images/BarBuildID.png)
