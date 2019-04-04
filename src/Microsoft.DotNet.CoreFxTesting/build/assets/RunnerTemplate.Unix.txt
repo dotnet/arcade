@@ -1,5 +1,7 @@
 ﻿#!/usr/bin/env bash
 
+# HERE
+
 export RUNTIME_PATH=$1
 export EXECUTION_DIR=$(dirname "$0")
 
