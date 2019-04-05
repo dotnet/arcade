@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+    <Results>
+        <UnitTestResult testName="TestMethod2" duration="00:00:00.0001620" outcome="Passed">
+            <Output>
+                <StdOut>hello</StdOut>
+            </Output>
+        </UnitTestResult>
+        <UnitTestResult testName="TestMethod3" outcome="NotExecuted">
+            <Output></Output>
+        </UnitTestResult>
+        <UnitTestResult testName="TestMethod1" duration="00:00:00.0358100" outcome="Failed">
+            <Output>
+                <StdOut>hello</StdOut>
+                <ErrorInfo>
+                    <Message>Assert.Fail failed. </Message>
+                    <StackTrace>   at tests.UnitTest1.TestMethod1() in UnitTest1.cs:line 13</StackTrace>
+                </ErrorInfo>
+            </Output>
+        </UnitTestResult>
+    </Results>
+    <TestDefinitions>
+        <UnitTest name="TestMethod2">
+            <TestMethod className="tests.UnitTest1" name="TestMethod2" />
+        </UnitTest>
+        <UnitTest name="TestMethod1">
+            <TestMethod className="tests.UnitTest1" name="TestMethod1" />
+        </UnitTest>
+        <UnitTest name="TestMethod3">
+            <TestMethod className="tests.UnitTest1" name="TestMethod3" />
+        </UnitTest>
+    </TestDefinitions>
+</TestRun>
+
