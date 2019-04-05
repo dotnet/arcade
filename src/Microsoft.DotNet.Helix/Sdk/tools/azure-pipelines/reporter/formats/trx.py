@@ -28,18 +28,19 @@ class TRXFormat(ResultFormat):
 
     def read_results(self, path):
         test_classes = {}
+        ns = {'vstest' : 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
 
         # class names are stored separately from the results. Gather testName->className information
         # and store it away first, since it is smaller than storing the results
         for (_, element) in xml.etree.ElementTree.iterparse(path, events=['end']):
-            if element.tag == "{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}UnitTest":
-                testMethod_element = element.find("{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}TestMethod")
+            if element.tag.endswith("UnitTest"):
+                testMethod_element = element.find("vstest:TestMethod", ns)
                 if testMethod_element is not None:
                     test_classes[testMethod_element.get("name")] = testMethod_element.get("className")
                 element.clear()
 
         for (_, element) in xml.etree.ElementTree.iterparse(path, events=['end']):
-            if element.tag == "{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}UnitTestResult":
+            if element.tag.endswith("UnitTestResult"):
                 test_name = element.get("testName")
 
                 # Find the class name from the dictionary we created earlier, and then remove that element from the dictionary
@@ -66,23 +67,23 @@ class TRXFormat(ResultFormat):
                     skip_reason = u""
                 elif outcome == "Failed":
                     result = "Fail"
-                    output_element = element.find("{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}Output")
+                    output_element = element.find("vstest:Output", ns)
                     if output_element is not None:
-                        error_element = output_element.find("{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}ErrorInfo")
+                        error_element = output_element.find("vstest:ErrorInfo", ns)
                         if error_element is not None:
-                            message_element = error_element.find("{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}Message")
+                            message_element = error_element.find("vstest:Message", ns)
                             failure_message = message_element.text
-                            stacktrace_element = error_element.find("{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}StackTrace")
+                            stacktrace_element = error_element.find("vstest:StackTrace", ns)
                             stack_trace = stacktrace_element.text
 
-                        stdout_element = output_element.find("{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}StdOut")
+                        stdout_element = output_element.find("vstest:StdOut", ns)
                         if stdout_element is not None:
                             attachments.append(TestResultAttachement(
                                 name: u"Console_Output.log",
                                 text=stdout_element.text,
                             ))
 
-                        stderr_element = output_element.find("{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}StdErr")
+                        stderr_element = output_element.find("vstest:StdErr", ns)
                         if stderr_element is not None:
                             attachments.append(TestResultAttachement(
                                 name: u"Error_Output.log",
