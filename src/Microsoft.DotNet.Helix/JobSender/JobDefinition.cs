@@ -213,17 +213,12 @@ namespace Microsoft.DotNet.Helix.Client
                 Regex illegalCharacters = new Regex("[^a-z0-9-]");
                 Regex multipleDashes = new Regex("--+");
 
-                string repoName = Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME")
-                    .Replace("/", "-").ToLower();
-                repoName = multipleDashes.Replace(illegalCharacters.Replace(repoName, ""), "-");
-
-
-                string branchName = Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH")
-                    .Replace("/","-").ToLower();
-                branchName = multipleDashes.Replace(illegalCharacters.Replace(branchName, ""), "-");
+                string repoName = Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME");
+                string branchName = Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH");
 
                 // ResultContainerPrefix will be <Repository Name>-<BranchName>
-                ResultContainerPrefix = $"{repoName}-{branchName}-";
+                ResultContainerPrefix = $"{repoName}-{branchName}-".Replace("/", "-").ToLower();
+                ResultContainerPrefix  = multipleDashes.Replace(illegalCharacters.Replace(ResultContainerPrefix, ""), "-");
             }
 
             string jobStartIdentifier = Guid.NewGuid().ToString("N");
