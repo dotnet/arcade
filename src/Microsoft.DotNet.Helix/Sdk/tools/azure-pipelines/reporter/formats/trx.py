@@ -64,11 +64,7 @@ class TRXFormat(ResultFormat):
                 if outcome == "NotExecuted":
                     result = "Skip"
                     skip_reason = u""
-
-                elif outcome is "Failed":
-                    result = "Fail"
-
-                    elif outcome == "Failed":
+                elif outcome == "Failed":
                     result = "Fail"
                     output_element = element.find("{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}Output")
                     if output_element is not None:
