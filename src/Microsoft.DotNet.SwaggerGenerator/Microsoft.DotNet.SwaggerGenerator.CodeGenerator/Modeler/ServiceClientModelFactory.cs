@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
                     ExtensionParsers =
                     {
                         ["x-ms-enum"] = EnumOpenApiExtension.Parse,
+                        ["x-ms-paginated"] = PaginatedOpenApiExtension.Parse,
                     },
                 });
 
@@ -182,7 +183,16 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
                     responseType = TypeReference.Void;
                 }
 
-                return new MethodModel(name, path, GetHttpMethod(type), responseType, errorType, parameters);
+                PaginatedOpenApiExtension paginated = null;
+
+                if (responseType is TypeReference.ArrayTypeReference &&
+                    type == OperationType.Get &&
+                    operation.Extensions.ContainsKey("x-ms-paginated"))
+                {
+                    paginated = operation.Extensions["x-ms-paginated"] as PaginatedOpenApiExtension;
+                }
+
+                return new MethodModel(name, path, GetHttpMethod(type), responseType, errorType, parameters, paginated);
             }
         }
 
