@@ -16,6 +16,8 @@ class TRXFormat(ResultFormat):
 
     @property
     def acceptable_file_names(self):
+        # Repos generating trx files produce multiple trx files, which are named based on the class names
+        # Find all trx files that might exist
         trx_files = glob.glob('*.trx')
         for trx_file in trx_files:
             yield trx
