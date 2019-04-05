@@ -14,9 +14,9 @@ class JUnitFormat(ResultFormat):
         return 'junit'
 
     @property
-    def acceptable_file_names(self):
-        yield 'junit-results.xml'
-        yield 'junitresults.xml'
+    def acceptable_file_suffixes(self):
+        yield ('junit-results.xml',
+               'junitresults.xml')
 
     def read_results(self, path):
         for (_, element) in xml.etree.ElementTree.iterparse(path, events=['end']):
