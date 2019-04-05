@@ -88,7 +88,7 @@ def read_results(dir):
     for root, dirs, files in os.walk(dir):
         for file_name in files:
             for f in all_formats:
-                if file_name.endswith(f.acceptable_file_suffixes):
+                if file_name.endswith(tuple(f.acceptable_file_suffixes)):
                     file_path = os.path.join(root, file_name)
                     print 'Found results file {} with format {}'.format(file_path, f.name)
                     return (add_logs(tr, log_list) for tr in f.read_results(file_path))

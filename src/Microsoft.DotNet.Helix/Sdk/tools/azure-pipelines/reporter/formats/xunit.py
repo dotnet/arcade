@@ -15,9 +15,9 @@ class XUnitFormat(ResultFormat):
 
     @property
     def acceptable_file_suffixes(self):
-        yield ('testResults.xml',
-               'test-results.xml',
-               'test_results.xml')
+        yield 'testResults.xml'
+        yield 'test-results.xml'
+        yield 'test_results.xml'
 
     def read_results(self, path):
         for (_, element) in xml.etree.ElementTree.iterparse(path, events=['end']):
