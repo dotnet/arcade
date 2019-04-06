@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.GenFacades
 
                 foreach (var type in assembly.GetAllTypes().OfType<INamedTypeDefinition>())
                 {         
-                    if ( internalsVisibleTo ? TypeHelper.IsVisibleToFriendAssemblies(type) : TypeHelper.IsVisibleOutsideAssembly(type))
+                    if (internalsVisibleTo ? TypeHelper.IsVisibleToFriendAssemblies(type) : TypeHelper.IsVisibleOutsideAssembly(type))
                         AddTypeAndNestedTypesToTable(typeTable, type);
                 }
             }
