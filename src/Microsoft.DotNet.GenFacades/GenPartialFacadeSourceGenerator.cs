@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.GenFacades
                     referenceTypes = referenceTypes.Where(type => !OmitTypes.Contains(type));
 
                 IAssembly[] seedAssemblies = LoadAssemblies(seedHost, seeds).ToArray();
-                var seedTypes = GenerateTypeTable(seedAssemblies);
+                var seedTypes = GenerateTypeTable(seedAssemblies, contractAssembly);
 
                 var sourceGenerator = new SourceGenerator(referenceTypes, seedTypes, seedTypePreferences, outputSourcePath, ignoreMissingTypesList, logger);
                 return sourceGenerator.GenerateSource(compileFiles, ParseDefineConstants(defineConstants), ignoreMissingTypes);
@@ -132,9 +132,7 @@ namespace Microsoft.DotNet.GenFacades
             var typeTable = new Dictionary<string, IReadOnlyList<INamedTypeDefinition>>();
             foreach (var assembly in seedAssemblies)
             {                
-                bool internalsVisibleTo = refAssembly != null
-                    ? UnitHelper.AssemblyOneAllowsAssemblyTwoToAccessItsInternals(assembly, refAssembly)
-                    : false;
+                bool internalsVisibleTo = refAssembly != null && UnitHelper.AssemblyOneAllowsAssemblyTwoToAccessItsInternals(assembly, refAssembly);
 
                 foreach (var type in assembly.GetAllTypes().OfType<INamedTypeDefinition>())
                 {         
