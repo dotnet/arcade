@@ -72,17 +72,17 @@ namespace Microsoft.DotNet.GenFacades
                 string alias = "";
                 if (seedTypes.Count > 1)
                 {
+                    _logger.LogError("The type '{0}' is defined in multiple seed assemblies. The multiple assemblies are {1}. If this is intentional, specify the alias for this type and project reference", type, string.Join(",", seedTypes.Select(t => t.Name.Value)));
+                    result = false;
+                    continue;
+                }
+                else
+                {
                     if (_seedTypePreferences.Keys.Contains(type))
                     {
                         alias = _seedTypePreferences[type];
                         if (!externAliases.Contains(alias))
                             externAliases.Add(alias);
-                    }
-                    else
-                    {
-                        _logger.LogError("The type '{0}' is defined in multiple seed assemblies. If this is intentional, specify the alias for this type and project reference", type);
-                        result = false;
-                        continue;
                     }
                 }
                 
@@ -90,7 +90,9 @@ namespace Microsoft.DotNet.GenFacades
             }
 
             sb.AppendLine("#pragma warning restore CS0618");
-            File.WriteAllText(_outputSourcePath, BuildAliasDeclarations(externAliases) + sb.ToString());
+            if (result)
+                File.WriteAllText(_outputSourcePath, BuildAliasDeclarations(externAliases) + sb.ToString());
+
             return result;
         }
 
