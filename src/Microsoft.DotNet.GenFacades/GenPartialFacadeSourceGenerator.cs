@@ -127,16 +127,19 @@ namespace Microsoft.DotNet.GenFacades
             }
         }
 
-        private static IReadOnlyDictionary<string, IReadOnlyList<INamedTypeDefinition>> GenerateTypeTable(IEnumerable<IAssembly> seedAssemblies)
+        private static IReadOnlyDictionary<string, IReadOnlyList<INamedTypeDefinition>> GenerateTypeTable(IEnumerable<IAssembly> seedAssemblies, IAssembly refAssembly = null)
         {
             var typeTable = new Dictionary<string, IReadOnlyList<INamedTypeDefinition>>();
             foreach (var assembly in seedAssemblies)
-            {
+            {                
+                bool internalsVisibleTo = refAssembly != null
+                    ? UnitHelper.AssemblyOneAllowsAssemblyTwoToAccessItsInternals(assembly, refAssembly)
+                    : false;
+
                 foreach (var type in assembly.GetAllTypes().OfType<INamedTypeDefinition>())
-                {
-                    if (!TypeHelper.IsVisibleOutsideAssembly(type))
-                        continue;
-                    AddTypeAndNestedTypesToTable(typeTable, type);
+                {         
+                    if ( internalsVisibleTo ? TypeHelper.IsVisibleToFriendAssemblies(type) : TypeHelper.IsVisibleOutsideAssembly(type))
+                        AddTypeAndNestedTypesToTable(typeTable, type);
                 }
             }
             return typeTable;

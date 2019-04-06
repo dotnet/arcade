@@ -5,6 +5,7 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
+using System.IO;
 using System.Linq;
 
 namespace Microsoft.DotNet.GenFacades
@@ -52,6 +53,7 @@ namespace Microsoft.DotNet.GenFacades
             catch (Exception e)
             {
                 Log.LogErrorFromException(e, showStackTrace: false);
+                File.Delete(OutputSourcePath);
             }
 
             return result && !Log.HasLoggedErrors;

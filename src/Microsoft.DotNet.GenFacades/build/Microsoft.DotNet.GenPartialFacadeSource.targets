@@ -40,7 +40,7 @@
     />
 
     <ItemGroup>
-      <FileWrites Include="$(OutputSourcePath)"/>
+      <FileWrites Condition="Exists('$(OutputSourcePath)')" Include="$(OutputSourcePath)"/>
     </ItemGroup>
 
     <ItemGroup>
