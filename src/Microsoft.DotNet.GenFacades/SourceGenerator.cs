@@ -6,8 +6,10 @@ using Microsoft.Build.Utilities;
 using Microsoft.Cci;
 using System.Collections.Generic;
 using System.IO;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using Microsoft.Cci.Extensions;
 
 namespace Microsoft.DotNet.GenFacades
 {
@@ -70,22 +72,20 @@ namespace Microsoft.DotNet.GenFacades
                 }
 
                 string alias = "";
-                if (seedTypes.Count > 1)
+
+                if (_seedTypePreferences.Keys.Contains(type))
                 {
-                    _logger.LogError("The type '{0}' is defined in multiple seed assemblies. The multiple assemblies are {1}. If this is intentional, specify the alias for this type and project reference", type, string.Join(",", seedTypes.Select(t => t.Name.Value)));
+                    alias = _seedTypePreferences[type];
+                    if (!externAliases.Contains(alias))
+                        externAliases.Add(alias);
+                }
+                else if (seedTypes.Count > 1)
+                {
+                    _logger.LogError("The type '{0}' is defined in multiple seed assemblies. The multiple assemblies are {1}. If this is intentional, specify the alias for this type and project reference", type, string.Join(", ", seedTypes.Select(t => t.GetAssembly().Name.Value)));
                     result = false;
                     continue;
                 }
-                else
-                {
-                    if (_seedTypePreferences.Keys.Contains(type))
-                    {
-                        alias = _seedTypePreferences[type];
-                        if (!externAliases.Contains(alias))
-                            externAliases.Add(alias);
-                    }
-                }
-                
+
                 sb.AppendLine(GetTypeForwardsToString(type, alias));
             }
 
