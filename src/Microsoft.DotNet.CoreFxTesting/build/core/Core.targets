@@ -7,7 +7,7 @@
     <TestAssembly Condition="'$(TestAssembly)' == ''">$(TargetFileName)</TestAssembly>
     <TestAssemblyFullPath>$([MSBuild]::NormalizePath('$(TestPath)', '$(TestAssembly)'))</TestAssemblyFullPath>
     <RunWorkingDirectory>$(TestPath)</RunWorkingDirectory>
-    <ArchiveTest Condition="'($(ArchiveTests.ToLower())' == 'all' OR $(MSBuildProjectName.EndsWith('.$(ArchiveTests)'))) AND '$(DisabledOnCi)' != 'true'">true</ArchiveTest>
+    <ArchiveTest Condition="'$(ArchiveTest)' == '' AND ('$(ArchiveTests.ToLower())' == 'all' OR $(MSBuildProjectName.EndsWith('.$(ArchiveTests)')))">true</ArchiveTest>
 
     <!-- Publish the test data as part of the build to enable VS test runs. -->
     <PrepareForRunDependsOn>$(PrepareForRunDependsOn);PublishSupplementalTestData;</PrepareForRunDependsOn>
