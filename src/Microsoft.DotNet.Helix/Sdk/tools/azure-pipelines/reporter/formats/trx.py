@@ -20,12 +20,6 @@ class TRXFormat(ResultFormat):
         # Find all trx files that might exist
         yield ".trx"
 
-
-    def parse_duration(duration):
-        # durations in trx format are hour:minute:second.millisecond
-        hour, minute, second = duration.split(':')
-        return float(hour)*60*60 + float(minute)*60 + float(second)
-
     def read_results(self, path):
         test_classes = {}
         ns = {'vstest' : 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
@@ -60,7 +54,8 @@ class TRXFormat(ResultFormat):
                 attachments = []
 
                 if element.get("duration") is not None:
-                    duration = parse_duration(element.get("duration"))
+                    hour, minute, second = element.get("duration").split(':')
+                    duration = float(hour)*60*60 + float(minute)*60 + float(second)
 
                 if outcome == "NotExecuted":
                     result = "Skip"
