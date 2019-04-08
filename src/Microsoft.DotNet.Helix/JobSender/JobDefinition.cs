@@ -211,7 +211,7 @@ namespace Microsoft.DotNet.Helix.Client
                 // Replace / with -, make all branch and repository names lowercase, remove any characters not
                 // allowed in container names, and replace any string of dashes with a single dash.
                 Regex illegalCharacters = new Regex("[^a-z0-9-]");
-                Regex multipleDashes = new Regex("--+");
+                Regex multipleDashes = new Regex("-{2,}");
 
                 string repoName = Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME");
                 string branchName = Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH");
