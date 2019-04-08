@@ -34,7 +34,7 @@ on what changes are needed check ["How do I use it?"](https://github.com/dotnet/
 | SymReader-Portable         | tmat             | Not-Moved |   1   |                    |
 | CoreFx                     | danmose          | Not-Moved |   1   |                    |
 | Templating                 | vramak           | Not-Moved |   1   |                    |
-| Test-Templates             | sasin            | Not-Moved |   1   |                    |
+| Test-Templates             | singhsarab       | Not-Moved |   1   |                    |
 | Toolset                    | licavalc         | Not-Moved |   1   |                    |
 | CoreClr                    | russellk         | Not-Moved |   2   |                    |
 | WebSDK                     | vramak           | Not-Moved |   2   |                    |
