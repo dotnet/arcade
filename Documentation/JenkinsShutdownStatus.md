@@ -33,6 +33,12 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 
 ## Jenkins - Release
 
+[.NET Core release support dates](https://github.com/dotnet/core/blob/master/microsoft-support.md#net-core-releases)
+- EOL for 1.x is June 27, 2019
+
+- EOL for 2.1.x is at least three years from LTS declaration (August 21, 2018)
+
+
 | Job name                      | Owner        | Jenkins jobs | Notes |
 | ----------------------------- | ------------ | ------------ | ----- |
 | aspnet-EntityFrameworkCore    | dougbu       | [2.1](https://ci.dot.net/job/aspnet_EntityFrameworkCore/job/release_2.1/), [2.2](https://ci.dot.net/job/aspnet_EntityFrameworkCore/job/release_2.2/) | Brice Lamson to confirm if these are needed |
@@ -46,6 +52,8 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 | dotnet_WCF                    | stebon       | [2.1](https://ci.dot.net/job/dotnet_wcf/job/release_2.1.0/), [2.0.0](https://ci.dot.net/job/dotnet_wcf/job/release_2.0.0/), [1.0.0](https://ci.dot.net/job/dotnet_wcf/job/release_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_wcf/job/release_1.1.0/) ||
 
 ## Jenkins - VS
+
+[Product lifecycle](https://docs.microsoft.com/en-us/visualstudio/releases/2019/servicing)
 
 | Job name                      | Owner        | Jenkins jobs | Notes |
 | ----------------------------- | ------------ | ------------ | ----- |
