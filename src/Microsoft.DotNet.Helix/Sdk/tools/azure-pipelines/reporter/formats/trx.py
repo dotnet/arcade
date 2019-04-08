@@ -67,9 +67,11 @@ class TRXFormat(ResultFormat):
                         error_element = output_element.find("vstest:ErrorInfo", ns)
                         if error_element is not None:
                             message_element = error_element.find("vstest:Message", ns)
-                            failure_message = message_element.text
-                            stacktrace_element = error_element.find("vstest:StackTrace", ns)
-                            stack_trace = stacktrace_element.text
+                            if message_element is not None:
+                                failure_message = message_element.text
+                                stacktrace_element = error_element.find("vstest:StackTrace", ns)
+                                if stacktrace_element is not None:
+                                    stack_trace = stacktrace_element.text
 
                         stdout_element = output_element.find("vstest:StdOut", ns)
                         if stdout_element is not None:
