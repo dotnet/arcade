@@ -73,14 +73,14 @@ class TRXFormat(ResultFormat):
 
                         stdout_element = output_element.find("vstest:StdOut", ns)
                         if stdout_element is not None:
-                            attachments.append(TestResultAttachement(
+                            attachments.append(TestResultAttachment(
                                 name=u"Console_Output.log",
                                 text=stdout_element.text,
                             ))
 
                         stderr_element = output_element.find("vstest:StdErr", ns)
                         if stderr_element is not None:
-                            attachments.append(TestResultAttachement(
+                            attachments.append(TestResultAttachment(
                                 name=u"Error_Output.log",
                                 text=stderr_element.text,
                             ))
