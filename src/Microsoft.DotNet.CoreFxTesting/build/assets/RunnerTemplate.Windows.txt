@@ -1,25 +1,124 @@
 ﻿@echo off
 setlocal enabledelayedexpansion
 
-REM Here!
+set "argparser_runtime_path_specified="
 
-set RUNTIME_PATH=%~1
-if not defined RUNTIME_PATH (
-echo Please specify a test runtime folder using the RUNTIME_PATH parameter
-goto ShowUsage
+set "argparser_dotnet_root_specified="
+
+set "argparser_global_tool_dir_specified="
+
+:argparser
+:argparser_start
+  if "%~1" == "" goto argparser_end
+  set "argparser_currentarg=%~1"
+  shift
+  set "argparser_currentarg_prefix=%argparser_currentarg:~0,2%"
+  IF "%argparser_currentarg_prefix%" == "--" (
+    set "argparser_currentarg=%argparser_currentarg:~1%"
+  )
+
+  IF /i "%argparser_currentarg%"=="-r" (
+    if defined argparser_runtime_path_specified (
+        call :usage
+        exit /b -1
+    )
+    if "%~1" == "" (
+        call :usage
+        exit /b -1
+    )
+    set "argparser_runtime_path_specified=1"
+    set "argparser_runtime_path=%~1"
+    goto :argparser_break
+  )
+  IF /i "%argparser_currentarg%"=="-runtime-path" (
+    if defined argparser_runtime_path_specified (
+        call :usage
+        exit /b -1
+    )
+    if "%~1" == "" (
+        call :usage
+        exit /b -1
+    )
+    set "argparser_runtime_path_specified=1"
+    set "argparser_runtime_path=%~1"
+    goto :argparser_break
+  )
+
+  IF /i "%argparser_currentarg%"=="-d" (
+    if defined argparser_dotnet_root_specified (
+        call :usage
+        exit /b -1
+    )
+    if "%~1" == "" (
+        call :usage
+        exit /b -1
+    )
+    set "argparser_dotnet_root_specified=1"
+    set "argparser_dotnet_root=%~1"
+    goto :argparser_break
+  )
+  IF /i "%argparser_currentarg%"=="-dotnet-root" (
+    if defined argparser_dotnet_root_specified (
+        call :usage
+        exit /b -1
+    )
+    if "%~1" == "" (
+        call :usage
+        exit /b -1
+    )
+    set "argparser_dotnet_root_specified=1"
+    set "argparser_dotnet_root=%~1"
+    goto :argparser_break
+  )
+
+  IF /i "%argparser_currentarg%"=="-g" (
+    if defined argparser_global_tool_dir_specified (
+        call :usage
+        exit /b -1
+    )
+    if "%~1" == "" (
+        call :usage
+        exit /b -1
+    )
+    set "argparser_global_tool_dir_specified=1"
+    set "argparser_global_tool_dir=%~1"
+    goto :argparser_break
+  )
+  IF /i "%argparser_currentarg%"=="-global-tools-dir" (
+    if defined argparser_global_tool_dir_specified (
+        call :usage
+        exit /b -1
+    )
+    if "%~1" == "" (
+        call :usage
+        exit /b -1
+    )
+    set "argparser_global_tool_dir_specified=1"
+    set "argparser_global_tool_dir=%~1"
+    goto :argparser_break
+  )
+
+  call :usage
+  exit /b -1
+  :argparser_break
+  shift
+goto argparser_start
+:argparser_end
+
+if not defined argparser_runtime_path_specified (
+    echo Please specify a test runtime folder using the RUNTIME_PATH parameter
+    exit /b -1
+)
+
+if defined argparser_dotnet_root_specified (
+    set "DOTNET_ROOT=%argparser_dotnet_root%"
+)
+
+if defined argparser_global_tool_dir_specified (
+    set "GLOBAL_TOOLS_DIR=%argparser_global_tool_dir%"
 )
 
 set EXECUTION_DIR=%~dp0
-
-:: Point to the locally installed SDK.
-if not "%~2" == "" (
-set DOTNET_ROOT=%~2
-)
-
-:: Global tools path
-if not "%~3" == "" (
-set GLOBAL_TOOLS_DIR=%~3
-)
 
 :: Don't use a globally installed SDK.
 set DOTNET_MULTILEVEL_LOOKUP=0
@@ -42,7 +141,7 @@ echo ----- end %TIME% ----- exit code %ERRORLEVEL% -----------------------------
 EXIT /B %ERRORLEVEL%
 :: ========================= END Test Execution =================================
 
-:ShowUsage
+:usage
 echo.
 echo Usage:
 echo.
