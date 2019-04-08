@@ -18,79 +18,91 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 3. Hit Delete Folder on left
 4. Confirm.
 
-## Status Overview
+## Jenkins - .NET Core 3.0
 
 | Repo                       | Owner            | Status      | Risk   | Curent Jenkins jobs | Notes |
 | ---------------------------| ---------------- |:-----------:|:------:| ------------------- | ----- |
-| Arcade                     | mawilkie         | -           | -      | - ||
-| aspnet-AspNetCore          | namc             | -           | -      | - ||
-| aspnet-AspNetCore-Tooling  | namc             | -           | -      | - ||
-| aspnet-EntityFrameworkCore | namc             | -           | -      | - ||
-| aspnet-Extensions          | namc             | -           | -      | - ||
-| CLI                        | licavalc         | -           | -      | - ||
-| CLICommandLineParser       | licavalc         | -           | -      | - ||
-| CLI-Migrate                | licavalc         | -           | -      | - ||
 | **CoreClr**                | russellk         | In progress | Medium | ci1, ci2, ci3 | Under discussion: the highest risk is getting the CoreFx jobs for CoreClr working in Azure DevOps. There are a lot of other jobs that need to be ported but they are low risk. (CoreClr really wants queue time parameters to be supported via comment triggers and that work is scheduled for Q2) |
-| CoreFx                     | danmose          | -           |        | - ||
-| Core-SDK                   | licavalc         | -           | -      | - ||
-| Core-Setup                 | dleeapho         | -           | -      | - ||
 | **dotnet-docker**          | msimons          | In progress | Low    | [ci1](https://ci.dot.net/job/dotnet_dotnet-docker/) | [Tracking issue](https://github.com/dotnet/dotnet-docker/issues/744), no progress expected until after 4/9 (patch Tuesday) |
 | **dotnet-framework-docker**| msimons          | In progress | Low    | [ci1](https://ci.dot.net/job/Microsoft_dotnet-framework-docker/) | [Tracking issue](https://github.com/Microsoft/dotnet-framework-docker/issues/225), no progress expected until after 4/9 (patch Tuesday) |
-| docker-tools               | msimons          | -           |        | - ||
 |**dotnet-buildtools-prereqs-docker** | msimons | In progress | Low    | [ci1](https://ci.dot.net/job/dotnet_dotnet-buildtools-prereqs-docker/) | [Tracking issue](https://github.com/dotnet/dotnet-buildtools-prereqs-docker/issues/84), no progress expected until after 4/9 (patch Tuesday) |
-| MSBuild                    | licavalc         | -           | -      | - ||
-| Roslyn                     | jaredpar         | -           | -      | - ||
 | **SDK**                    | licavalc         | In progress | Low    | [ci2](https://ci2.dot.net/job/dotnet_sdk/) | Planned, moving perf job to Azure DevOps |
-| Standard                   | danmose          | -           | -      | - ||
-| SymReader                  | tmat             | -           | -      | - ||
-| SymReader-Portable         | tmat             | -           | -      | - ||
-| Templating                 | vramak           | -           | -      | - ||
 | **TestFx**                 | sarabjot         | In progress | Low    | [ci1](https://ci.dot.net/job/Microsoft_testfx/job/master/) | Planned |
-| Test-Templates             | sasin            | -           | -      | - ||
-| Toolset                    | licavalc         | -           | -      | - ||
-| VSTest                     | sarabjot         | -           | -      | - ||
-| VisualFSharp               | brettfo          | -           | -      | - ||
-| WebSDK                     | vramak           | -           | -      | - ||
-| WinForms                   | mmcgaw           | -           | -      | - ||
-| WPF                        | vatsan-madhavan  | -           | -      | - ||
 
 `-` means an item is complete or not needed
 
-## Additional Jenkins jobs
+## Jenkins - Release
 
-Additionally, here are other Jenkins jobs which are not specifically part of the core product repos, but are likely candidates for deletion or moving to Azure DevOps.  It would be great if we could get owners attached to these jenkins jobs and a plan for them being disabled from Jenkins.
+| Job name                      | Owner        | Jenkins jobs | Notes |
+| ----------------------------- | ------------ | ------------ | ----- |
+| aspnet-EntityFrameworkCore    | dougbu       | [2.1](https://ci.dot.net/job/aspnet_EntityFrameworkCore/job/release_2.1/), [2.2](https://ci.dot.net/job/aspnet_EntityFrameworkCore/job/release_2.2/) | Brice Lamson to confirm if these are needed |
+| dotnet-CLI                    | licavalc     | [2.1.5xx](https://ci.dot.net/job/dotnet_cli/job/release_2.1.5xx/), [2.1.6xx](https://ci.dot.net/job/dotnet_cli/job/release_2.1.6xx/), [2.1.7xx](https://ci.dot.net/job/dotnet_cli/job/release_2.1.7xx/), [2.2.1xx](https://ci.dot.net/job/dotnet_cli/job/release_2.2.1xx/), [2.2.2xx](https://ci.dot.net/job/dotnet_cli/job/release_2.2.2xx/), [2.2.3xx](https://ci.dot.net/job/dotnet_cli/job/release_2.2.3xx/), [1.0.0](https://ci.dot.net/job/dotnet_cli/job/rel_1.0.0/), [1.0.1](https://ci.dot.net/job/dotnet_cli/job/rel_1.0.1/), [1.1.0](https://ci.dot.net/job/dotnet_cli/job/rel_1.1.0/) ||
+| dotnet-CoreClr                | russellk     | [2.1](https://ci.dot.net/job/dotnet_coreclr/job/release_2.1/), [2.2](https://ci.dot.net/job/dotnet_coreclr/job/release_2.2/), [1.0.0](https://ci.dot.net/job/dotnet_coreclr/job/release_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_coreclr/job/release_1.1.0/) ||
+| dotnet-CoreFx                 | danmose      | [2.1](https://ci.dot.net/job/dotnet_corefx/job/release_2.1/), [2.2](https://ci.dot.net/job/dotnet_corefx/job/release_2.2/), [1.0.0](https://ci.dot.net/job/dotnet_corefx/job/release_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_corefx/job/release_1.1.0/) ||
+| dotnet-Core-Setup             | dleeapho     | [2.1](https://ci.dot.net/job/dotnet_core-setup/job/release_2.1/), [2.2](https://ci.dot.net/job/dotnet_core-setup/job/release_2.2/), [1.0.0](https://ci.dot.net/job/dotnet_core-setup/job/release_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_core-setup/job/release_1.1.0/) ||
+| dotnet_SDK                    | licavalc     | [2.1.5xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.1.5xx/), [2.1.6xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.1.6xx/), [2.1.7xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.1.7xx/), [2.2.1xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.2.1xx/), [2.2.2xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.2.2xx/), [2.2.3xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.2.3xx/), [1.0.0](https://ci.dot.net/job/dotnet_sdk/job/rel_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_sdk/job/rel_1.1.0/) ||
+| dotnet_Standard               | danmose      | [2.0.0](https://ci.dot.net/job/dotnet_standard/job/release_2.0.0/) ||
+| dotnet_Templating             | vramak       | [2.1](https://ci.dot.net/job/dotnet_templating/job/release_2.1/) ||
+| dotnet_WCF                    | stebon       | [2.1](https://ci.dot.net/job/dotnet_wcf/job/release_2.1.0/), [2.0.0](https://ci.dot.net/job/dotnet_wcf/job/release_2.0.0/), [1.0.0](https://ci.dot.net/job/dotnet_wcf/job/release_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_wcf/job/release_1.1.0/) ||
 
+## Jenkins - VS
 
-| Job name                      | Jenkins link                                                                | Owner        | Removal plan | External? |
-| ----------------------------- | --------------------------------------------------------------------------- | ------------ | ------------ | ----- |
-| aspnet_aspnet-docker          | [ci1](https://ci.dot.net/job/aspnet_aspnet-docker/)                         | dougbu       | Needed until at least June ||
-| aspnet_IISIntegration         | [ci1](https://ci.dot.net/job/aspnet_IISIntegration/job/master/)             | dougbu       | Completed ||
-| aspnet_KestrelHttpServer      | [ci1](https://ci.dot.net/job/aspnet_KestrelHttpServer/job/master/)          | dougbu       | Completed ||
-| dotnet_CITest                 | [ci2](https://ci2.dot.net/job/dotnet_citest/)                               | mmitche      |||
-| dotnet_CodeFormatter          | [ci2](https://ci2.dot.net/job/dotnet_codeformatter/)                        | mmitche      |||
-| dotnet_Core                   | [ci2](https://ci2.dot.net/job/dotnet_core/)                                 | mmitche      |||
-| dotnet_CoreFxLab              | [ci1](https://ci.dot.net/job/dotnet_corefxlab/job/master/)                  | ahka         |||
-| dotnet_CoreRt                 | [ci1](https://ci.dot.net/job/dotnet_corert/job/master/)                     | sergeyk      |||
-| dotnet_Diagnostics            | [ci1](https://ci.dot.net/job/dotnet_diagnostics/)                           | mikem        | Completed ||
-| dotnet_Interactive-Window     | [ci1](https://ci.dot.net/job/dotnet_Interactive-Window/)                    | tmat         | Already moved to Azure DevOps and can be removed? ||
-| dotnet_Metadata-Tools         | [ci2](https://ci2.dot.net/job/dotnet_metadata-tools/)                       | tmat         | Already moved to Azure DevOps and can be removed? ||
-| dotnet_Orleans                | [ci1](https://ci.dot.net/job/dotnet_orleans/)                               | sbykov       |||
-| dotnet_Perf-Infra             | [ci2](https://ci2.dot.net/job/dotnet_perf-infra/)                           | anscoggi     |||
-| dotnet_Performance            | [ci2](https://ci2.dot.net/job/dotnet_performance/)                          | michelm      |||
-| dotnet_Platform-Compat        | [ci2](https://ci2.dot.net/job/dotnet_platform-compat/)                      | jmarolf      |||
-| dotnet_ProjFileTools          | [ci1](https://ci.dot.net/job/dotnet_ProjFileTools/)                         | mmitche      |||
-| dotnet_Roslyn-Analyzers       | [ci1](https://ci.dot.net/job/dotnet_roslyn-analyzers/job/master/)           | tmat         | Planned ||
-| dotnet_Roslyn-Tools           | [ci1](https://ci.dot.net/job/dotnet_roslyn-tools/)                          | tmat         |||
-| dotnet_SymReader-Converter    | [ci2](https://ci2.dot.net/job/dotnet_symreader-converter/)                  | tmat         | Planned ||
-| dotnet_Versions               | [ci1](https://ci.dot.net/job/dotnet_versions/)                              | mmitche      |||
-| dotnet_WCF                    | [ci1](https://ci.dot.net/job/dotnet_wcf/job/master/)                        | stebon       |||
-| dotnet_Xliff-Tasks            | [ci1](https://ci.dot.net/job/dotnet_xliff-tasks/)                           | tomescht     |||
-| drewscoggins_corefx           | [ci2](https://ci2.dot.net/job/drewscoggins_corefx/)                         | drewscoggins |||
-| Microsoft_ChakraCore          | [ci1](https://ci.dot.net/job/Microsoft_ChakraCore/)                         | louisl       || Yes |
-| Microsoft_ConcordExtensibilitySamples | [ci1](https://ci.dot.net/job/Microsoft_ConcordExtensibilitySamples/)| greggm       || Yes |
-| Microsoft_MIEngine            | [ci1](https://ci.dot.net/job/Microsoft_MIEngine/)                           | waan         || Yes |
-| Microsoft_PartsUnlimited      | [ci1](https://ci.dot.net/job/Microsoft_PartsUnlimited/)                     | davete       | Completed | Yes |
-| Microsoft_Vipr                | [ci1](https://ci.dot.net/job/Microsoft_Vipr/)                               | mmainer      || Yes |
-| Microsoft_XUnitPerformance    | [ci1](https://ci.dot.net/job/Microsoft_XUnitPerformance/)                   | jorive       ||| 
-| mono_linker                   | [ci1](https://ci.dot.net/job/mono_linker/)                                  | svbomer      |||
-| pxt*                          | ci-internal | peli de halleux || Yes |
+| Job name                      | Owner        | Jenkins jobs | Notes |
+| ----------------------------- | ------------ | ------------ | ----- |
+| Microsoft_MSBuild             | licavalc     | [vs15.5](https://ci2.dot.net/job/Microsoft_msbuild/job/vs15.5/), [vs15.6](https://ci2.dot.net/job/Microsoft_msbuild/job/vs15.6/), [vs15.7](https://ci2.dot.net/job/Microsoft_msbuild/job/vs15.7/), [vs15.7-preview4](https://ci2.dot.net/job/Microsoft_msbuild/job/vs15.7-preview4/), [vs15.7_sourcebuild](https://ci2.dot.net/job/Microsoft_msbuild/job/vs15.7_sourcebuild/), [vs15.8](https://ci2.dot.net/job/Microsoft_msbuild/job/vs15.8/), [vs15.9](https://ci2.dot.net/job/Microsoft_msbuild/job/vs15.9/), [vs15.9stg](https://ci2.dot.net/job/Microsoft_msbuild/job/vs15.9stg/) ||
+| Microsoft_VisualFSharp        | brettfo      | [vs15.5](https://ci2.dot.net/job/Microsoft_visualfsharp/job/dev15.5/), [vs15.7](https://ci2.dot.net/job/Microsoft_visualfsharp/job/dev15.7/), [vs15.8](https://ci2.dot.net/job/Microsoft_visualfsharp/job/dev15.8/) ||
+
+## Jenkins - UWP
+
+| Job name                      | Owner        | Jenkins jobs | Notes |
+| ----------------------------- | ------------ | ------------ | ----- |
+| dotnet-CoreClr                | russellk     | [uwp6.2](https://ci.dot.net/job/dotnet_coreclr/job/release_uwp6.2/) ||
+| dotnet-CoreFx                 | danmose      | [uwp6.2](https://ci.dot.net/job/dotnet_corefx/job/release_uwp6.2/) ||
+| dotnet-Core-Setup             | dleeapho     | [uwp6.0](https://ci.dot.net/job/dotnet_core-setup/job/release_uwp6.0/) ||
+| dotnet_WCF                    | stebon       | [uwp6.0](https://ci.dot.net/job/dotnet_wcf/job/release_uwp6.0/), [uwp6.1](https://ci.dot.net/job/dotnet_wcf/job/release_uwp6.1/), [uwp6.2](https://ci.dot.net/job/dotnet_wcf/job/release_uwp6.2/) ||
+
+## Jenkins - Perf
+
+| Job name                      | Owner        | Jenkins jobs | Notes |
+| ----------------------------- | ------------ | ------------ | ----- |
+| dotnet-CoreClr                | russellk     | [perf](https://ci2.dot.net/job/dotnet_coreclr/job/perf/) ||
+| dotnet-CoreFx                 | danmose      | [perf](https://ci2.dot.net/job/dotnet_corefx/job/perf/) ||
+| dotnet_Performance            | michelm      | [perf](https://ci2.dot.net/job/dotnet_performance/job/perf/) ||
+| dotnet_SDK                    | licavalc     | [perf](https://ci2.dot.net/job/dotnet_sdk/job/perf/) ||
+| drewscoggins_corefx           | drewscoggins | [perf](https://ci2.dot.net/job/drewscoggins_corefx/job/perf/) |||
+
+## Jenkins - Other
+
+| Job name                      | Owner        | Jenkins jobs | Notes |
+| ----------------------------- | ------------ | ------------ | ----- |
+| aspnet_aspnet-docker          | dougbu       | [dev](https://ci.dot.net/job/aspnet_aspnet-docker/job/dev/), [master](https://ci.dot.net/job/aspnet_aspnet-docker/job/master/) | Needed until at least June |
+| dotnet_CITest                 | mmitche      | [stability](https://ci2.dot.net/job/dotnet_citest/job/stability/) ||
+| dotnet_Core                   | mmitche      | [master](https://ci2.dot.net/job/dotnet_core/job/master/) ||
+| dotnet-CoreClr                | russellk     | [pipelines](https://ci.dot.net/job/dotnet_coreclr/job/pipelines/) ||
+| dotnet-CoreFx                 | danmose      | [pipelines](https://ci.dot.net/job/dotnet_corefx/job/pipelines/)||
+| dotnet_CoreRt                 | sergeyk      | [master](https://ci.dot.net/job/dotnet_corert/job/master/) ||
+| dotnet-Core-Setup             | dleeapho     | [pipelines](https://ci.dot.net/job/dotnet_core-setup/job/pipelines/) ||
+| dotnet_Interactive-Window     | tmat         | [master](https://ci.dot.net/job/dotnet_interactive-window/job/master/) | Already moved to Azure DevOps and can be removed? |
+| dotnet_Metadata-Tools         | tmat         | [master](https://ci2.dot.net/job/dotnet_metadata-tools/job/master/) | Already moved to Azure DevOps and can be removed? |
+| dotnet_Orleans                | sbykov       | [master](https://ci.dot.net/job/dotnet_orleans/job/master/) ||
+| dotnet_Perf-Infra             | anscoggi     | [stability](https://ci2.dot.net/job/dotnet_perf-infra/job/stability/), [startup](https://ci2.dot.net/job/dotnet_perf-infra/job/startup/) ||
+| dotnet_Roslyn-Analyzers       | tmat         | [master](https://ci.dot.net/job/dotnet_roslyn-analyzers/job/master/), [2.6.x](https://ci.dot.net/job/dotnet_roslyn-analyzers/job/2.6.x/), [2.9.x](https://ci.dot.net/job/dotnet_roslyn-analyzers/job/2.9.x/)| Planned |
+| dotnet_Roslyn-Tools           | tmat         | [master](https://ci.dot.net/job/dotnet_roslyn-tools/job/master/) ||
+| dotnet_SDK                    | licavalc     | [experimental-classic-projects](https://ci.dot.net/job/dotnet_sdk/job/experimental-classic-projects/) ||
+| dotnet_SymReader              | tmat         | [1.3.0](https://ci.dot.net/job/dotnet_symreader/job/release_1.3.0/) ||
+| dotnet_SymReader-Converter    | tmat         | [master](https://ci2.dot.net/job/dotnet_symreader-converter/job/master/) | Planned |
+| dotnet_SymReader-Portable     | tmat         | [1.5.0](https://ci.dot.net/job/dotnet_symreader-portable/job/release_1.5.0/) ||
+| dotnet_Templating             | vramak       | [stabilize](https://ci.dot.net/job/dotnet_templating/job/stabilize/) ||
+| dotnet_Versions               | mmitche      | [master](https://ci.dot.net/job/dotnet_versions/job/master/) ||
+| dotnet_WCF                    | stebon       | [master](https://ci.dot.net/job/dotnet_wcf/job/master/) ||
+| dotnet_Xliff-Tasks            | tomescht     | [master](https://ci.dot.net/job/dotnet_xliff-tasks/job/master/) ||
+| Microsoft_ChakraCore          | louisl       | external ||
+| Microsoft_ConcordExtensibilitySamples | greggm | external ||
+| Microsoft_MIEngine            | waan         | external ||
+| Microsoft_PartsUnlimited      | davete       | external ||
+| Microsoft_TestFx              | sarabjot     | [1.2.1](https://ci.dot.net/job/Microsoft_testfx/job/1.2.1/) ||
+| Microsoft_Vipr                | mmainer      | external ||
+| Microsoft_XUnitPerformance    | jorive       | [master](https://ci.dot.net/job/Microsoft_xunit-performance/job/master/), [citest](https://ci.dot.net/job/Microsoft_xunit-performance/job/citest/) ||
+| mono_linker                   | svbomer      | [master](https://ci.dot.net/job/mono_linker/job/master/) ||
+| pxt*                          | peli de halleux | external ||
+
