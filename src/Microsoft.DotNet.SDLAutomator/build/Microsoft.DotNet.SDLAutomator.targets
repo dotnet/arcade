@@ -1,0 +1,17 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project ToolsVersion="12.0" DefaultTargets="Execute" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_MicrosoftDotNetSDLAutomatorTaskDir>$(MSBuildThisFileDirectory)../tools/net472/</_MicrosoftDotNetSDLAutomatorTaskDir>
+    <_MicrosoftDotNetSDLAutomatorTaskDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../tools/netcoreapp2.1/</_MicrosoftDotNetSDLAutomatorTaskDir>
+  </PropertyGroup>
+
+  <UsingTask TaskName="InstallGuardian" AssemblyFile="$(_MicrosoftDotNetSDLAutomatorTaskDir)Microsoft.DotNet.SDLAutomator.dll"/>
+
+  <Target Name="Execute">
+    <Error Text="The PackageDirectory property wasn't supplied."
+          Condition="'$(PackageDirectory)' == ''" />
+
+    <InstallGuardian PackageDirectory="$(PackageDirectory)" 
+                     GuardianPackageVersion="0.0.38"/>
+  </Target>
+</Project>

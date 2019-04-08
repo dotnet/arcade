@@ -92,7 +92,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.VersionToo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Git.IssueManager", "src\Microsoft.DotNet.Git.IssueManager\src\Microsoft.DotNet.Git.IssueManager.csproj", "{20F768D8-D724-4889-85AE-2D46188E731F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.SDLAutomator", "Microsoft.DotNet.SDLAutomator\Microsoft.DotNet.SDLAutomator.csproj", "{E383696B-E6BA-413F-8013-3CCBDD44484A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.SDLAutomator", "src\Microsoft.DotNet.SDLAutomator\Microsoft.DotNet.SDLAutomator.csproj", "{E383696B-E6BA-413F-8013-3CCBDD44484A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
