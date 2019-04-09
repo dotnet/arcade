@@ -3,10 +3,10 @@ setlocal enabledelayedexpansion
 
 set EXECUTION_DIR=%~dp0
 
-set "argparser_runtime_path_specified="
-set "argparser_dotnet_root_specified="
-set "argparser_global_tool_dir_specified="
-set "argparser_xunit_rsp_specified="
+set /a "argparser_runtime_path_specification_count=0"
+set /a "argparser_dotnet_root_specification_count=0"
+set /a "argparser_global_tool_dir_specification_count=0"
+set /a "argparser_xunit_rsp_specification_count=0"
 :argparser
 :argparser_start
   if "%~1" == "" goto argparser_end
@@ -16,128 +16,65 @@ set "argparser_xunit_rsp_specified="
   if "%argparser_currentarg_prefix%" == "--" (
     set "argparser_currentarg=%argparser_currentarg:~1%"
   )
-  if /i "%argparser_currentarg%"=="-r" (
-    if defined argparser_runtime_path_specified (
-        call :usage
-        exit /b -1
-    )
-    if "%~1" == "" (
-        call :usage
-        exit /b -1
-    )
-    set "argparser_runtime_path_specified=1"
+  if /i "%argparser_currentarg%"=="-r" ( set /a "argparser_runtime_path_specification_count=!argparser_runtime_path_specification_count!+1" )
+  if /i "%argparser_currentarg%"=="-runtime-path" ( set /a "argparser_runtime_path_specification_count=!argparser_runtime_path_specification_count!+1" )
+  if "%argparser_runtime_path_specification_count%" GEQ "2" ( goto usage )
+  if "%argparser_runtime_path_specification_count%" == "1" (
+    if "%~1" == "" ( goto usage )
     set "argparser_runtime_path=%~1"
-    goto :argparser_break
+    goto argparser_break
   )
-  IF /i "%argparser_currentarg%"=="-runtime-path" (
-    if defined argparser_runtime_path_specified (
-        call :usage
-        exit /b -1
-    )
-    if "%~1" == "" (
-        call :usage
-        exit /b -1
-    )
-    set "argparser_runtime_path_specified=1"
-    set "argparser_runtime_path=%~1"
-    goto :argparser_break
-  )
-  if /i "%argparser_currentarg%"=="-d" (
-    if defined argparser_dotnet_root_specified (
-        call :usage
-        exit /b -1
-    )
-    if "%~1" == "" (
-        call :usage
-        exit /b -1
-    )
-    set "argparser_dotnet_root_specified=1"
+  if /i "%argparser_currentarg%"=="-d" ( set /a "argparser_dotnet_root_specification_count=!argparser_dotnet_root_specification_count!+1" )
+  if /i "%argparser_currentarg%"=="-dotnet-root" ( set /a "argparser_dotnet_root_specification_count=!argparser_dotnet_root_specification_count!+1" )
+  if "%argparser_dotnet_root_specification_count%" GEQ "2" ( goto usage )
+  if "%argparser_dotnet_root_specification_count%" == "1" (
+    if "%~1" == "" ( goto usage )
     set "argparser_dotnet_root=%~1"
-    goto :argparser_break
+    goto argparser_break
   )
-  IF /i "%argparser_currentarg%"=="-dotnet-root" (
-    if defined argparser_dotnet_root_specified (
-        call :usage
-        exit /b -1
-    )
-    if "%~1" == "" (
-        call :usage
-        exit /b -1
-    )
-    set "argparser_dotnet_root_specified=1"
-    set "argparser_dotnet_root=%~1"
-    goto :argparser_break
-  )
-  if /i "%argparser_currentarg%"=="-g" (
-    if defined argparser_global_tool_dir_specified (
-        call :usage
-        exit /b -1
-    )
-    if "%~1" == "" (
-        call :usage
-        exit /b -1
-    )
-    set "argparser_global_tool_dir_specified=1"
+  if /i "%argparser_currentarg%"=="-g" ( set /a "argparser_global_tool_dir_specification_count=!argparser_global_tool_dir_specification_count!+1" )
+  if /i "%argparser_currentarg%"=="-global-tools-dir" ( set /a "argparser_global_tool_dir_specification_count=!argparser_global_tool_dir_specification_count!+1" )
+  if "%argparser_global_tool_dir_specification_count%" GEQ "2" ( goto usage )
+  if "%argparser_global_tool_dir_specification_count%" == "1" (
+    if "%~1" == "" ( goto usage )
     set "argparser_global_tool_dir=%~1"
-    goto :argparser_break
+    goto argparser_break
   )
-  IF /i "%argparser_currentarg%"=="-global-tools-dir" (
-    if defined argparser_global_tool_dir_specified (
-        call :usage
-        exit /b -1
-    )
-    if "%~1" == "" (
-        call :usage
-        exit /b -1
-    )
-    set "argparser_global_tool_dir_specified=1"
-    set "argparser_global_tool_dir=%~1"
-    goto :argparser_break
-  )
-  if /i "%argparser_currentarg%"=="-x" (
-    if defined argparser_xunit_rsp_specified (
-        call :usage
-        exit /b -1
-    )
-    if "%~1" == "" (
-        call :usage
-        exit /b -1
-    )
-    set "argparser_xunit_rsp_specified=1"
+  if /i "%argparser_currentarg%"=="-x" ( set /a "argparser_xunit_rsp_specification_count=!argparser_xunit_rsp_specification_count!+1" )
+  if /i "%argparser_currentarg%"=="-xunit-rsp" ( set /a "argparser_xunit_rsp_specification_count=!argparser_xunit_rsp_specification_count!+1" )
+  if "%argparser_xunit_rsp_specification_count%" GEQ "2" ( goto usage )
+  if "%argparser_xunit_rsp_specification_count%" == "1" (
+    if "%~1" == "" ( goto usage )
     set "argparser_xunit_rsp=%~1"
-    goto :argparser_break
+    goto argparser_break
   )
-  IF /i "%argparser_currentarg%"=="-xunit-rsp" (
-    if defined argparser_xunit_rsp_specified (
-        call :usage
-        exit /b -1
-    )
-    if "%~1" == "" (
-        call :usage
-        exit /b -1
-    )
-    set "argparser_xunit_rsp_specified=1"
-    set "argparser_xunit_rsp=%~1"
-    goto :argparser_break
-  )
-  call :usage
-  exit /b -1
+  goto usage
   :argparser_break
   shift
 goto argparser_start
 :argparser_end
-if not defined argparser_runtime_path_specified (
-    call :usage
-    exit /b -1
+if "%argparser_runtime_path_specification_count%" == "0"  ( goto usage )
+if "%argparser_runtime_path_specification_count%" == "1"  (
+    echo The argparser_runtime_path is '%argparser_runtime_path%'
 )
+if "%argparser_dotnet_root_specification_count%" == "1"  (
+    echo The argparser_dotnet_root is '%argparser_dotnet_root%'
+)
+if "%argparser_global_tool_dir_specification_count%" == "1"  (
+    echo The argparser_global_tool_dir is '%argparser_global_tool_dir%'
+)
+if "%argparser_xunit_rsp_specification_count%" == "1"  (
+    echo The argparser_xunit_rsp is '%argparser_xunit_rsp%'
+)
+
 set "RUNTIME_PATH=%argparser_runtime_path%"
-if defined argparser_dotnet_root_specified (
+if "%argparser_dotnet_root_specification_count%" == "1"  (
     set "DOTNET_ROOT=%argparser_dotnet_root%"
 )
-if defined argparser_global_tool_dir_specified (
+if "%argparser_global_tool_dir_specification_count%" == "1"  (
     set "GLOBAL_TOOLS_DIR=%argparser_global_tool_dir%"
 )
-if defined argparser_xunit_rsp_specified (
+if "%argparser_xunit_rsp_specification_count%" == "1"  (
     set "XUNIT_RSP=%argparser_xunit_rsp%"
 )
 

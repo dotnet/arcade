@@ -55,3 +55,15 @@ Now we can test if the generated script look the way I want it to be.
 
 # How to change script callers
 Thanks to @ViktorHofer and @hoyosjs, we have a pretty good idea where the callers are, and we will simply make breaking change to the script interface, expecting when the change is consumed, the appropriate callers are patched.
+
+# Workflow for updating the argument parser
+Here is how I implemented the argument parser, updating it follows a similar workflow, feel free to update it if you find a need to enhance it, especially so for the batch/bash ninjas.
+
+1. Write your experiment in parse.sh/parse.cmd, they are just scripts that we can edit and run, test.sh/test.cmd are there to validate if the change is correct or not.
+2. Once the change is ready, update Program.cs so that the script generator is ready to generate the scripts.
+3. Generate the script using the configuration flag first, the generated script is a complete script of its own and can also be unit tested using the same test bed, 
+4. Last but not least, the generated script can be incorporated into the template, there are some manual tweaks here and there but mostly it will just work.
+
+# Misc useful info
+1. Some yml files are templates, they can be roughly guess read to reverse engineer what the build command should be.
+2. The white block nested under a task in the structured MSBuild viewer are log statements split out by the task. Blue blocks are property values.

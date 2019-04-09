@@ -4,6 +4,7 @@ namespace ScriptGenerator
     using System.Text;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using System.Collections.Generic;
 
     internal static class Program
     {
@@ -23,7 +24,15 @@ namespace ScriptGenerator
             }
         }
 
-        private static void Main(string[] args)
+
+        private static bool IsDistinct<T>(this IEnumerable<T> list)
+        {
+            int d = list.Distinct().Count();
+            int l = list.Count(); ;
+            return d == l;
+        }
+
+        private static int Main(string[] args)
         {
             Argument[] arguments = new Argument[]
             {
@@ -32,14 +41,35 @@ namespace ScriptGenerator
                 new Argument("global-tools-dir", "g", "argparser_global_tool_dir", false),
                 new Argument("xunit-rsp", "x", "argparser_xunit_rsp", false),
             };
-            /*            
-            Argument[] arguments = new Argument[]
+
+            /*
+            arguments = new Argument[]
             {
                 new Argument("configuration", "c", "configuration", true),
             };
             */
+
+            if (!arguments.Select(t => t.LongName).IsDistinct())
+            {
+                Console.Error.WriteLine("LongName has to be distinct");
+                return -1;
+            }
+
+            if (!arguments.Select(t => t.ShortName).IsDistinct())
+            {
+                Console.Error.WriteLine("ShortName has to be distinct");
+                return -1;
+            }
+
+            if (!arguments.Select(t => t.OutputEnvironmentVariableName).IsDistinct())
+            {
+                Console.Error.WriteLine("OutputEnvironmentVariableName has to be distinct");
+                return -1;
+            }
+
             // Console.WriteLine(GenerateBashScript(arguments));
             Console.WriteLine(GenerateBatchScript(arguments));
+            return 0;
         }
 
         private static string GenerateBashScript(Argument[] arguments)
@@ -56,7 +86,7 @@ namespace ScriptGenerator
                 sb.Append(ReplacePlaceHolder(BashIdentifyArgumentCasePerArgument, arg));
             }
             sb.Append(BashEndParsingLoop);
-            foreach (var arg in arguments.Where(a=>a.Required))
+            foreach (var arg in arguments.Where(a => a.Required))
             {
                 sb.Append(ReplacePlaceHolder(BashValidateRequiredArgumentPerArgument, arg));
             }
@@ -99,7 +129,7 @@ namespace ScriptGenerator
         {
             return templateString.Replace("LONGNAMEPLACEHOLDER", arg.LongName).Replace("SHORTNAMEPLACEHOLDER", arg.ShortName).Replace("OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER", arg.OutputEnvironmentVariableName);
         }
-        
+
         #region Bash 
         private const string BashHeader = @"
 #!/usr/bin/env bash
@@ -161,10 +191,9 @@ fi
         private const string BatchHeader = @"
 @echo off
 setlocal EnableDelayedExpansion
-
 ";
         private const string BatchInitializeFlagPerArgument = @"
-set ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified=""
+set /a ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count=0""
 ";
         private const string BatchBeginParsingLoop = @"
 :argparser
@@ -178,49 +207,27 @@ set ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified=""
   )
 ";
         private const string BatchIdentifyArgumentCasePerArgument = @"
-  if /i ""%argparser_currentarg%""==""-SHORTNAMEPLACEHOLDER"" (
-    if defined OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified (
-        call :usage
-        exit /b 0
-    )
-    if ""%~1"" == """" (
-        call :usage
-        exit /b 0
-    )
-    set ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified=1""
+  if /i ""%argparser_currentarg%""==""-SHORTNAMEPLACEHOLDER"" ( set /a ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count=!OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count!+1"" )
+  if /i ""%argparser_currentarg%""==""-LONGNAMEPLACEHOLDER"" ( set /a ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count=!OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count!+1"" )
+  if ""%OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count%"" GEQ ""2"" ( goto usage )
+  if ""%OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count%"" == ""1"" (
+    if ""%~1"" == """" ( goto usage )
     set ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER=%~1""
-    goto :argparser_break
-  )
-  IF /i ""%argparser_currentarg%""==""-LONGNAMEPLACEHOLDER"" (
-    if defined OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified (
-        call :usage
-        exit /b 0
-    )
-    if ""%~1"" == """" (
-        call :usage
-        exit /b 0
-    )
-    set ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified=1""
-    set ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER=%~1""
-    goto :argparser_break
+    goto argparser_break
   )
 ";
         private const string BatchEndParsingLoop = @"
-  call :usage
-  exit /b 0
+  goto usage
   :argparser_break
   shift
 goto argparser_start
 :argparser_end
 ";
         private const string BatchValidateRequiredArgumentPerArgument = @"
-if not defined OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified (
-    call :usage
-    exit /b 0
-)
+if ""%OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count%"" == ""0""  ( goto usage )
 ";
         private const string BatchDisplayParsedArgumentValuePerArgument = @"
-if defined OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified (
+if ""%OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count%"" == ""1""  (
     echo The OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER is '%OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER%'
 )
 ";
@@ -229,7 +236,7 @@ exit /b 0
 
 :usage
 echo Usage
-exit /b 0
+exit /b 1
 ";
         #endregion
     }
