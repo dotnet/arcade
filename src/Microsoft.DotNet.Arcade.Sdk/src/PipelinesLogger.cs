@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.src
     /// <summary>
     /// Logger for converting MSBuild error messages to the Azure Pipelines Tasks format
     /// 
-    /// https://github.com/Microsoft/azure-pipelines-tasks/blob/master/docs/authoring/commands.md
+    /// https://github.com/Microsoft/azure-pipelines-tasks/blob/601dd2f0a3e671b19b55bcf139f554a09f3414da/docs/authoring/commands.md
     /// </summary>
     public sealed class PipelinesLogger : ILogger
     {
