@@ -204,23 +204,23 @@ jobs:
       - task: NuGetToolInstaller@0
         displayName: Restore nuget.exe and add to PATH
         inputs:
-            versionSpec: 4.4.1
+          versionSpec: 4.4.1
       - task: NuGetCommand@2
-         displayName: Restore internal tools
-         inputs:
-             command: restore
-             feedsToUse: config
-             restoreSolution: 'eng\common\internal\Tools.csproj'
-             nugetConfigPath: 'NuGet.config'
-             restoreDirectory: '$(Build.SourcesDirectory)\.packages'
-             env:
-                VSS_NUGET_EXTERNAL_FEED_ENDPOINTS: '{"endpointCredentials": [{"endpoint":"https://securitytools.pkgs.visualstudio.com/_packaging/Guardian/nuget/v3/index.json", "username":"dn-bot","password":"$(dn-bot-devdiv-nuget-feed-read)"}]}'
-                TargetGroup: $(_framework)
+        displayName: Restore internal tools
+        inputs:
+          command: restore
+          feedsToUse: config
+          restoreSolution: 'eng\common\internal\Tools.csproj'
+          nugetConfigPath: 'NuGet.config'
+          restoreDirectory: '$(Build.SourcesDirectory)\.packages'
+          env:
+            VSS_NUGET_EXTERNAL_FEED_ENDPOINTS: '{"endpointCredentials": [{"endpoint":"https://securitytools.pkgs.visualstudio.com/_packaging/Guardian/nuget/v3/index.json", "username":"dn-bot","password":"$(dn-bot-devdiv-nuget-feed-read)"}]}'
+            TargetGroup: $(_framework)
       - task: PowerShell@2
-         displayName: Restore SDL Package
-         inputs:
-              filePath: eng\common\sdk-task.ps1
-              arguments: -task SDLAutomation -restore -msbuildEngine dotnet
-                  /p:PackageDirectory='$(Build.SourcesDirectory)/.packages'
-              condition: ${{ parameters.condition }}
-              continueOnError: ${{ parameters.continueOnError }}
+        displayName: Restore SDL Package
+        inputs:
+          filePath: eng\common\sdk-task.ps1
+          arguments: -task SDLAutomation -restore -msbuildEngine dotnet
+            /p:PackageDirectory='$(Build.SourcesDirectory)/.packages'
+          condition: ${{ parameters.condition }}
+          continueOnError: ${{ parameters.continueOnError }}
