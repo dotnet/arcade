@@ -138,6 +138,10 @@ namespace Microsoft.DotNet.Arcade.Sdk
             {
                 _builder.AddProperty("result", result.Value.ToString());
             }
+
+            _builder.Finish();
+
+            Console.WriteLine(_builder.GetMessage());
         }
 
         private void LogBuildEvent(
