@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Initialize variables if they aren't already defined.
 
 # CI mode - set to true on CI server for PR validation build or official build.
@@ -39,6 +41,78 @@ if [[ "$ci" == true ]]; then
 else
   use_global_nuget_cache=${use_global_nuget_cache:-true}
 fi
+
+function EmitError {
+  if [[ "$ci" != true ]]; then
+    echo "$@" >&2
+    return
+  fi
+
+  message_type="error"
+  sourcepath=''
+  linenumber=''
+  columnnumber=''
+  error_code=''
+
+  while [[ $# -gt 0 ]]; do
+    opt="$(echo "${1/#--/-}" | awk '{print tolower($0)}')"
+    case "$opt" in
+      -type|-t)
+        message_type=$2
+        shift
+        ;;
+      -sourcepath|-s)
+        sourcepath=$2
+        shift
+        ;;
+      -linenumber|-l)
+        linenumber=$2
+        shift
+        ;;
+      -columnnumber|-col)
+        columnnumber=$2
+        shift
+        ;;
+      -code|-c)
+        error_code=$2
+        shift
+        ;;
+      *)
+        break
+        ;;
+    esac
+
+    shift
+  done
+
+  message='##vso[task.logissue'
+
+  message="$message type=$message_type"
+
+  if [ -n "$sourcepath" ]; then
+    message="$message;sourcepath=$sourcepath"
+  else
+    message="$message;sourcepath=${BASH_SOURCE[1]}"
+  fi
+
+  if [ -n "$linenumber" ]; then
+    message="$message;linenumber=$linenumber"
+  else
+    message="$message;linenumber=${BASH_LINENO[0]}"
+  fi
+
+  if [ -n "$columnnumber" ]; then
+    message="$message;columnnumber=$columnnumber"
+  fi
+
+  if [ -n "$error_code" ]; then
+    message="$message;code=$error_code"
+  fi
+
+  message="$message]$*"
+
+  echo "$message"
+}
 
 # Resolve any symlinks in the given path.
 function ResolvePath {
