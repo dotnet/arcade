@@ -14,7 +14,7 @@ class ResultFormat:
         pass
 
     @abstractproperty
-    def acceptable_file_names(self):
+    def acceptable_file_suffixes(self):
         # type: () -> Iterable[str]
         pass
 

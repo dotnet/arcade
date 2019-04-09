@@ -14,7 +14,7 @@ class JUnitFormat(ResultFormat):
         return 'junit'
 
     @property
-    def acceptable_file_names(self):
+    def acceptable_file_suffixes(self):
         yield 'junit-results.xml'
         yield 'junitresults.xml'
 

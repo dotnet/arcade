@@ -31,6 +31,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <HelixWorkItem Include="TrxTest">
+      <Command>echo 'done!'</Command>
+      <PayloadDirectory>$(MSBuildThisFileDirectory)Trx</PayloadDirectory>
+    </HelixWorkItem>
+  </ItemGroup>
+  <ItemGroup>
+    <AzurePipelinesExpectedTestFailure Include="tests.UnitTest1.TestMethod1"/>
+  </ItemGroup>
+
+  <ItemGroup>
     <XUnitProject Include="..\src\**\*.Tests.csproj"/>
 
     <!-- Remove the arcade sdk tests project because it depends heavily on machine/repo state and doesn't work properly in helix yet -->
