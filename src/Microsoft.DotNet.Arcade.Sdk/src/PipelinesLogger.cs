@@ -204,7 +204,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 in projectInfo,
                 State.Initialized,
                 startTime: projectInfo.StartTime,
-                endTime: DateTimeOffset.UtcNow,
+                endTime: null,
                 progress: "0");
 
             string getName()
