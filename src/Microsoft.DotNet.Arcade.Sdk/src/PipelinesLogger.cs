@@ -199,6 +199,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 : null;
             var projectInfo = new ProjectInfo(getName(), parentId);
             _projectInfoMap[projectInfo.Id] = projectInfo;
+            _buildEventContextMap[e.BuildEventContext] = projectInfo.Id;
             LogBuildEvent(
                 in projectInfo,
                 State.Initialized,
