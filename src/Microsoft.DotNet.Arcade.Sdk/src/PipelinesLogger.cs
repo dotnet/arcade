@@ -237,7 +237,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     projectFile = "Unknown";
                 }
 
-                return !string.IsNullOrEmpty(e.TargetNames) ? $"{projectFile} ({e.TargetNames})" : projectFile;
+                string targetFrameworkQualifier = string.Empty;
+                if (e.GlobalProperties.TryGetValue("TargetFramework", out string targetFramework))
+                {
+                    targetFrameworkQualifier = $" - {targetFramework}";
+                }
+
+                string targetNamesQualifier = string.IsNullOrEmpty(e.TargetNames) ? string.Empty : $" ({e.TargetNames})";
+
+                return projectFile + targetFrameworkQualifier + targetNamesQualifier;
             }
         }
 
