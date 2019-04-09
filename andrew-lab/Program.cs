@@ -25,20 +25,21 @@ namespace ScriptGenerator
 
         private static void Main(string[] args)
         {
-            /*
             Argument[] arguments = new Argument[]
             {
                 new Argument("runtime-path", "r", "argparser_runtime_path", true),
                 new Argument("dotnet-root", "d", "argparser_dotnet_root", false),
                 new Argument("global-tools-dir", "g", "argparser_global_tool_dir", false),
+                new Argument("xunit-rsp", "x", "argparser_xunit_rsp", false),
             };
-            */
+            /*            
             Argument[] arguments = new Argument[]
             {
                 new Argument("configuration", "c", "configuration", true),
             };
-            Console.WriteLine(GenerateBashScript(arguments));
-            // Console.WriteLine(GenerateBatchScript(arguments));
+            */
+            // Console.WriteLine(GenerateBashScript(arguments));
+            Console.WriteLine(GenerateBatchScript(arguments));
         }
 
         private static string GenerateBashScript(Argument[] arguments)

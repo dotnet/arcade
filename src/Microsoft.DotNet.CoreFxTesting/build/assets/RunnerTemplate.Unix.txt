@@ -6,10 +6,10 @@ usage()
 {
   echo "Usage"
 }
-
 argparser_runtime_path_specified=0
 argparser_dotnet_root_specified=0
 argparser_global_tool_dir_specified=0
+argparser_xunit_rsp_specified=0
 while [[ $# > 0 ]]; do
   opt="$(echo "${1/#--/-}" | awk '{print tolower($0)}')"
   shift
@@ -50,6 +50,18 @@ while [[ $# > 0 ]]; do
       fi
       argparser_global_tool_dir=$1
       ;;
+    -xunit-rsp|-x)
+      if [[ "$argparser_xunit_rsp_specified" == '1' ]] ; then
+        usage
+        exit 1
+      fi
+      argparser_xunit_rsp_specified=1
+      if [[ $# == 0 ]]; then
+        usage
+        exit 1
+      fi
+      argparser_xunit_rsp=$1
+      ;;
     *)
       usage
       exit 1
@@ -67,6 +79,9 @@ if [[ "$argparser_dotnet_root_specified" == '1' ]] ; then
 fi
 if [[ "$argparser_global_tool_dir_specified" == '1' ]] ; then
   export GLOBAL_TOOLS_DIR=argparser_global_tool_dir
+fi
+if [[ "$argparser_xunit_rsp_specified" == '1' ]] ; then
+  export XUNIT_RSP=argparser_xunit_rsp
 fi
 
 # Don't use a globally installed SDK.
