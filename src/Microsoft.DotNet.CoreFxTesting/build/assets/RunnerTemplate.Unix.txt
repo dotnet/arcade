@@ -10,12 +10,10 @@ usage()
 argparser_runtime_path_specified=0
 argparser_dotnet_root_specified=0
 argparser_global_tool_dir_specified=0
-
 while [[ $# > 0 ]]; do
   opt="$(echo "${1/#--/-}" | awk '{print tolower($0)}')"
   shift
   case "$opt" in
-
     -runtime-path|-r)
       if [[ "$argparser_runtime_path_specified" == '1' ]] ; then
         usage
@@ -28,7 +26,6 @@ while [[ $# > 0 ]]; do
       fi
       argparser_runtime_path=$1
       ;;
-
     -dotnet-root|-d)
       if [[ "$argparser_dotnet_root_specified" == '1' ]] ; then
         usage
@@ -41,7 +38,6 @@ while [[ $# > 0 ]]; do
       fi
       argparser_dotnet_root=$1
       ;;
-
     -global-tools-dir|-g)
       if [[ "$argparser_global_tool_dir_specified" == '1' ]] ; then
         usage
@@ -54,21 +50,17 @@ while [[ $# > 0 ]]; do
       fi
       argparser_global_tool_dir=$1
       ;;
-
     *)
       usage
       exit 1
       ;;
   esac
-
   shift
 done
-
 if [[ "$argparser_runtime_path_specified" == '0' ]] ; then
   usage
   exit 1
 fi
-
 export RUNTIME_PATH=argparser_runtime_path
 if [[ "$argparser_dotnet_root_specified" == '1' ]] ; then
   export DOTNET_ROOT=argparser_dotnet_root
