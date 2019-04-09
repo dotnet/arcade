@@ -5,7 +5,7 @@
     <Description>This package provides support for running tests out-of-process.</Description>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <IsPackable>true</IsPackable>
-    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PackBuildOutputs</TargetsForTfmSpecificContentInPackage>
+    <TargetsForTfmSpecificContentInPackage Condition="'$(TargetFramework)' != 'netstandard2.0'">$(TargetsForTfmSpecificContentInPackage);PackBuildOutputs</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.RemoteExecutorHost\Microsoft.DotNet.RemoteExecutorHost.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\Microsoft.DotNet.RemoteExecutorHost\Microsoft.DotNet.RemoteExecutorHost.csproj"
+                      Condition="'$(TargetFramework)' != 'netstandard2.0'"
+                      PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
