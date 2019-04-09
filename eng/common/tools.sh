@@ -139,7 +139,7 @@ function ReadGlobalVersion {
   local pattern="\"$key\" *: *\"(.*)\""
 
   if [[ ! $line =~ $pattern ]]; then
-    echo "Error: Cannot find \"$key\" in $global_json_file" >&2
+    EmitError "Error: Cannot find \"$key\" in $global_json_file"
     ExitWithExitCode 1
   fi
 
@@ -199,7 +199,7 @@ function InitializeDotNetCli {
       if [[ "$install" == true ]]; then
         InstallDotNetSdk "$dotnet_root" "$dotnet_sdk_version"
       else
-        echo "Unable to find dotnet with SDK version '$dotnet_sdk_version'" >&2
+        EmitError "Unable to find dotnet with SDK version '$dotnet_sdk_version'"
         ExitWithExitCode 1
       fi
     fi
@@ -234,7 +234,7 @@ function InstallDotNetSdk {
 
   bash "$install_script" --version $version --install-dir "$root" $arch_arg || {
     local exit_code=$?
-    echo "Failed to install dotnet SDK (exit code '$exit_code')." >&2
+    EmitError "Failed to install dotnet SDK (exit code '$exit_code')."
     ExitWithExitCode $exit_code
   }
 }
@@ -308,7 +308,7 @@ function InitializeToolset {
   fi
 
   if [[ "$restore" != true ]]; then
-    echo "Toolset version $toolsetVersion has not been restored." >&2
+    EmitError "Toolset version $toolsetVersion has not been restored."
     ExitWithExitCode 2
   fi
 
@@ -325,7 +325,7 @@ function InitializeToolset {
   local toolset_build_proj=`cat "$toolset_location_file"`
 
   if [[ ! -a "$toolset_build_proj" ]]; then
-    echo "Invalid toolset path: $toolset_build_proj" >&2
+    EmitError "Invalid toolset path: $toolset_build_proj"
     ExitWithExitCode 3
   fi
 
@@ -350,12 +350,12 @@ function StopProcesses {
 function MSBuild {
   if [[ "$ci" == true ]]; then
     if [[ "$binary_log" != true ]]; then
-      echo "Binary log must be enabled in CI build." >&2
+      EmitError "Binary log must be enabled in CI build."
       ExitWithExitCode 1
     fi
 
     if [[ "$node_reuse" == true ]]; then
-      echo "Node reuse must be disabled in CI build." >&2
+      EmitError "Node reuse must be disabled in CI build."
       ExitWithExitCode 1
     fi
   fi
@@ -369,7 +369,7 @@ function MSBuild {
 
   "$_InitializeBuildTool" "$_InitializeBuildToolCommand" /m /nologo /clp:Summary /v:$verbosity /nr:$node_reuse $warnaserror_switch /p:TreatWarningsAsErrors=$warn_as_error /p:ContinuousIntegrationBuild=$ci "$@" || {
     local exit_code=$?
-    echo "Build failed (exit code '$exit_code')." >&2
+    EmitError "Build failed (exit code '$exit_code')."
     ExitWithExitCode $exit_code
   }
 }
