@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Arcade.Sdk.src
+namespace Microsoft.DotNet.Arcade.Sdk
 {
     /// <summary>
     /// Logger for converting MSBuild error messages to the Azure Pipelines Tasks format
@@ -42,6 +42,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.src
                 "GetCopyToOutputDirectoryItems",
                 "GetNativeManifest",
                 "GetTargetPath",
+                "GetTargetFrameworks",
             };
             _ignoredTargets = new HashSet<string>(ignoredTargets, StringComparer.OrdinalIgnoreCase);
 
