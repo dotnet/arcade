@@ -106,7 +106,7 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 | dotnet_Xliff-Tasks            | tomescht     | [master](https://ci.dot.net/job/dotnet_xliff-tasks/job/master/) ||
 | Microsoft_ChakraCore          | louisl       | external ||
 | Microsoft_ConcordExtensibilitySamples | greggm | external ||
-| Microsoft_MIEngine            | waan         | external ||
+| Microsoft_MIEngine            | waan         | external | Done |
 | Microsoft_PartsUnlimited      | davete       | external ||
 | Microsoft_TestFx              | sarabjot     | [1.2.1](https://ci.dot.net/job/Microsoft_testfx/job/1.2.1/) ||
 | Microsoft_Vipr                | mmainer      | external ||
