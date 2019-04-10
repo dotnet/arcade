@@ -217,6 +217,10 @@
       Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common\PublishToSymbolServers.proj"
       Importance="high" />
 
+    <Message
+      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common\CheckSymbols.ps1"
+      Importance="high" />
+
   </Target>
 
   <Target Name="PublishSymbols">
