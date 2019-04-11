@@ -1,14 +1,14 @@
-echo "Testing parse.sh"                         > ./actual.sh.txt
-./parse.sh                                     >> ./actual.sh.txt
-./parse.sh -c                                  >> ./actual.sh.txt
-./parse.sh --c                                 >> ./actual.sh.txt
-./parse.sh -configuration                      >> ./actual.sh.txt
-./parse.sh --configuration                     >> ./actual.sh.txt
-./parse.sh -c x                                >> ./actual.sh.txt
-./parse.sh --c x                               >> ./actual.sh.txt
-./parse.sh -configuration x                    >> ./actual.sh.txt
-./parse.sh --configuration x                   >> ./actual.sh.txt
-./parse.sh -c x --c x                          >> ./actual.sh.txt
-./parse.sh --c x -c x                          >> ./actual.sh.txt
-./parse.sh -configuration x -configuration x   >> ./actual.sh.txt
-./parse.sh --configuration x --configuration x >> ./actual.sh.txt
+echo "Testing parse.sh"                    >  ./actual.sh.txt
+./parse.sh                                 >> ./actual.sh.txt
+./parse.sh -a                              >> ./actual.sh.txt
+./parse.sh --a                             >> ./actual.sh.txt
+./parse.sh -parameter-a                    >> ./actual.sh.txt
+./parse.sh --parameter-a                   >> ./actual.sh.txt
+./parse.sh -a x                            >> ./actual.sh.txt
+./parse.sh --a x                           >> ./actual.sh.txt
+./parse.sh -parameter-a x                  >> ./actual.sh.txt
+./parse.sh --parameter-a x                 >> ./actual.sh.txt
+./parse.sh -a x --a x                      >> ./actual.sh.txt
+./parse.sh --a x -a x                      >> ./actual.sh.txt
+./parse.sh -parameter-a x -parameter-a x   >> ./actual.sh.txt
+./parse.sh --parameter-a x --parameter-a x >> ./actual.sh.txt

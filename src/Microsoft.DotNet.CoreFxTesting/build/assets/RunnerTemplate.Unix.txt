@@ -4,8 +4,20 @@ export EXECUTION_DIR=$(dirname "$0")
 
 usage()
 {
-  echo "Usage"
+  echo ""
+  echo "Usage:"
+  echo ""
+  echo "This script now uses only named arguments as follows:"
+  echo ""
+  echo "runtest.sh {-r|--runtime-path} <runtime-dir> [{-d|--dotnet-root} <dotnet-root>] [{-g|global-tools-dir} <global-tools-dir>] [{-x|--xunit-rsp} <xunit-rsp>]"
+  echo ""
+  echo "Parameters:"
+  echo "runtime-path:	(Mandatory) Root dir containing the full test-runtime and host necessary for test execution."
+  echo "dotnet-root:	(Optional) Root dir containing the dotnet host for hosting shims and tools."
+  echo "global-tools-dir:	(Optional) Root dir containing global tools needed."
+  echo "xunit-rsp:		(Optional) File path containing additional arguments for the XUnit runner."
 }
+
 argparser_runtime_path_specified=0
 argparser_dotnet_root_specified=0
 argparser_global_tool_dir_specified=0
@@ -73,15 +85,15 @@ if [[ "$argparser_runtime_path_specified" == '0' ]] ; then
   usage
   exit 1
 fi
-export RUNTIME_PATH=argparser_runtime_path
+export RUNTIME_PATH=$argparser_runtime_path
 if [[ "$argparser_dotnet_root_specified" == '1' ]] ; then
-  export DOTNET_ROOT=argparser_dotnet_root
+  export DOTNET_ROOT=$argparser_dotnet_root
 fi
 if [[ "$argparser_global_tool_dir_specified" == '1' ]] ; then
-  export GLOBAL_TOOLS_DIR=argparser_global_tool_dir
+  export GLOBAL_TOOLS_DIR=$argparser_global_tool_dir
 fi
 if [[ "$argparser_xunit_rsp_specified" == '1' ]] ; then
-  export XUNIT_RSP=argparser_xunit_rsp
+  export XUNIT_RSP=$argparser_xunit_rsp
 fi
 
 # Don't use a globally installed SDK.

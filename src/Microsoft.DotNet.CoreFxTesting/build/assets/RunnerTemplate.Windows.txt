@@ -98,8 +98,13 @@ EXIT /B %ERRORLEVEL%
 echo.
 echo Usage:
 echo.
-echo %0 {runtime path}
+echo This script now uses only named arguments as follows:
+echo.
+echo RunTests.cmd {-r^|--runtime-path} ^<runtime-dir^> [{-d^|--dotnet-root} ^<dotnet-root^>] [{-g^|--global-tools-dir} ^<global-tools-dir^>] [{-x^|--xunit-rsp} ^<xunit-rsp^>]
 echo.
 echo Parameters:
-echo runtime path :        (Mandatory) Root path containing the full test runtime necessary for test execution.
+echo runtime-path:	(Mandatory) Root dir containing the full test-runtime and host necessary for test execution.
+echo dotnet-root:	(Optional) Root dir containing the dotnet host for hosting shims and tools.
+echo global-tools-dir:	(Optional) Root dir containing global tools needed.
+echo xunit-rsp:		(Optional) File path containing additional arguments for the XUnit runner.
 EXIT /B -1

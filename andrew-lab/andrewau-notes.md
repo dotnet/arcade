@@ -24,7 +24,7 @@ Checkout my test.cmd for a prototype required named argument parser.
 The script templates are updated.
 
 # How to test?
-With help from @hoyosjs, we figured this is the procedure for testing the template generator:
+With help from @hoyosjs, we figured this is the procedure for testing the template generator in the CoreFX settings.
 
 This command will exercise the template generator:
 ```
@@ -53,6 +53,11 @@ OutputPath = C:\Dev\corefx\artifacts\bin\tests\System.Console.Manual.Tests\netco
 
 Now we can test if the generated script look the way I want it to be.
 
+While it is not testing for real, a super fast way to test the template is:
+1. Make a copy of the txt and rename it into a script
+2. Eliminate the `[[RunCommand]]` and `[[RunCommandEcho]]`
+3. Viola - now we can simply run the generated script, it will not have the right xunit command in it - but it shorten the inner loop for testing the generator by order of magntitude!
+
 # How to change script callers
 Thanks to @ViktorHofer and @hoyosjs, we have a pretty good idea where the callers are, and we will simply make breaking change to the script interface, expecting when the change is consumed, the appropriate callers are patched.
 
@@ -63,6 +68,7 @@ Here is how I implemented the argument parser, updating it follows a similar wor
 2. Once the change is ready, update Program.cs so that the script generator is ready to generate the scripts.
 3. Generate the script using the configuration flag first, the generated script is a complete script of its own and can also be unit tested using the same test bed, 
 4. Last but not least, the generated script can be incorporated into the template, there are some manual tweaks here and there but mostly it will just work.
+5. Use the short inner loop to make sure the templates are fine.
 
 # Misc useful info
 1. Some yml files are templates, they can be roughly guess read to reverse engineer what the build command should be.

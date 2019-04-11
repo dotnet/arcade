@@ -1,25 +1,37 @@
-
 #!/usr/bin/env bash
 usage()
 {
   echo "Usage"
 }
-configuration_specified=0
+variable_a_specified=0
+variable_b_specified=0
 while [[ $# > 0 ]]; do
   opt="$(echo "${1/#--/-}" | awk '{print tolower($0)}')"
   shift
   case "$opt" in
-    -configuration|-c)
-      if [[ "$configuration_specified" == '1' ]] ; then
+    -parameter-a|-a)
+      if [[ "$variable_a_specified" == '1' ]] ; then
         usage
         exit 1
       fi
-      configuration_specified=1
+      variable_a_specified=1
       if [[ $# == 0 ]]; then
         usage
         exit 1
       fi
-      configuration=$1
+      variable_a=$1
+      ;;
+    -parameter-b|-b)
+      if [[ "$variable_b_specified" == '1' ]] ; then
+        usage
+        exit 1
+      fi
+      variable_b_specified=1
+      if [[ $# == 0 ]]; then
+        usage
+        exit 1
+      fi
+      variable_b=$1
       ;;
     *)
       usage
@@ -28,11 +40,13 @@ while [[ $# > 0 ]]; do
   esac
   shift
 done
-if [[ "$configuration_specified" == '0' ]] ; then
+if [[ "$variable_a_specified" == '0' ]] ; then
   usage
   exit 1
 fi
-if [[ "$configuration_specified" == '1' ]] ; then
-  echo "The configuration is '$configuration'"
+if [[ "$variable_a_specified" == '1' ]] ; then
+  echo "The variable_a is '$variable_a'"
 fi
-
+if [[ "$variable_b_specified" == '1' ]] ; then
+  echo "The variable_b is '$variable_b'"
+fi
