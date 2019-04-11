@@ -16,6 +16,7 @@ usage()
   echo "dotnet-root:	(Optional) Root dir containing the dotnet host for hosting shims and tools."
   echo "global-tools-dir:	(Optional) Root dir containing global tools needed."
   echo "xunit-rsp:		(Optional) File path containing additional arguments for the XUnit runner."
+  exit 1
 }
 
 argparser_runtime_path_specified=0
@@ -29,54 +30,45 @@ while [[ $# > 0 ]]; do
     -runtime-path|-r)
       if [[ "$argparser_runtime_path_specified" == '1' ]] ; then
         usage
-        exit 1
       fi
       argparser_runtime_path_specified=1
       if [[ $# == 0 ]]; then
         usage
-        exit 1
       fi
       argparser_runtime_path=$1
       ;;
     -dotnet-root|-d)
       if [[ "$argparser_dotnet_root_specified" == '1' ]] ; then
         usage
-        exit 1
       fi
       argparser_dotnet_root_specified=1
       if [[ $# == 0 ]]; then
         usage
-        exit 1
       fi
       argparser_dotnet_root=$1
       ;;
     -global-tools-dir|-g)
       if [[ "$argparser_global_tool_dir_specified" == '1' ]] ; then
         usage
-        exit 1
       fi
       argparser_global_tool_dir_specified=1
       if [[ $# == 0 ]]; then
         usage
-        exit 1
       fi
       argparser_global_tool_dir=$1
       ;;
     -xunit-rsp|-x)
       if [[ "$argparser_xunit_rsp_specified" == '1' ]] ; then
         usage
-        exit 1
       fi
       argparser_xunit_rsp_specified=1
       if [[ $# == 0 ]]; then
         usage
-        exit 1
       fi
       argparser_xunit_rsp=$1
       ;;
     *)
       usage
-      exit 1
       ;;
   esac
   shift
