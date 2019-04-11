@@ -42,12 +42,11 @@ namespace ScriptGenerator
                 new Argument("xunit-rsp", "x", "argparser_xunit_rsp", false),
             };
 
-            /*
             arguments = new Argument[]
             {
-                new Argument("configuration", "c", "configuration", true),
+                new Argument("parameter-a", "a", "variable_a", true),
+                new Argument("parameter-b", "b", "variable_b", false),
             };
-            */
 
             if (!arguments.Select(t => t.LongName).IsDistinct())
             {
@@ -193,7 +192,7 @@ fi
 setlocal EnableDelayedExpansion
 ";
         private const string BatchInitializeFlagPerArgument = @"
-set /a ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count=0""
+set ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified=""
 ";
         private const string BatchBeginParsingLoop = @"
 :argparser
@@ -207,11 +206,13 @@ set /a ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count=0""
   )
 ";
         private const string BatchIdentifyArgumentCasePerArgument = @"
-  if /i ""%argparser_currentarg%""==""-SHORTNAMEPLACEHOLDER"" ( set /a ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count=!OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count!+1"" )
-  if /i ""%argparser_currentarg%""==""-LONGNAMEPLACEHOLDER"" ( set /a ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count=!OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count!+1"" )
-  if ""%OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count%"" GEQ ""2"" ( goto usage )
-  if ""%OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count%"" == ""1"" (
+  set ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified_inloop=""
+  if /i ""%argparser_currentarg%""==""-SHORTNAMEPLACEHOLDER"" ( set ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified_inloop=1"" )
+  if /i ""%argparser_currentarg%""==""-LONGNAMEPLACEHOLDER"" ( set ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified_inloop=1"" )
+  if defined OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified_inloop (
+    if defined OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified ( goto usage )
     if ""%~1"" == """" ( goto usage )
+    set ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified=1""
     set ""OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER=%~1""
     goto argparser_break
   )
@@ -224,10 +225,10 @@ goto argparser_start
 :argparser_end
 ";
         private const string BatchValidateRequiredArgumentPerArgument = @"
-if ""%OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count%"" == ""0""  ( goto usage )
+if not defined OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified ( goto usage )
 ";
         private const string BatchDisplayParsedArgumentValuePerArgument = @"
-if ""%OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specification_count%"" == ""1""  (
+if defined OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER_specified (
     echo The OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER is '%OUTPUTENVIRONMENTVARIABLENAMEPLACEHOLDER%'
 )
 ";
