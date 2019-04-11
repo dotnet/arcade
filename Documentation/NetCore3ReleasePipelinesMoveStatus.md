@@ -29,19 +29,19 @@ on what changes are needed check ["How do I use it?"](https://github.com/dotnet/
 | Arcade                     | mawilkie         |  Moved    |       |                    |
 | Arcade-Validation          | mawilkie         |  Moved    |       |                    |
 | Arcade-Services            | mawilkie         |  Moved    |       |                    |
-| Standard                   | danmose          | Not-Moved |   1   |                    |
-| SymReader                  | tmat             | Not-Moved |   1   |                    |
-| SymReader-Portable         | tmat             | Not-Moved |   1   |                    |
-| CoreFx                     | danmose          | Not-Moved |   1   |                    |
-| Templating                 | vramak           | Not-Moved |   1   |                    |
-| Test-Templates             | singhsarab       | Not-Moved |   1   |                    |
-| Toolset                    | licavalc         | Not-Moved |   1   |                    |
+| Standard                   | danmose          |  Moved    |   1   |                    |
+| SymReader                  | tmat             |  Moved    |   1   |                    |
+| SymReader-Portable         | tmat             |  Moved    |   1   |                    |
+| CoreFx                     | danmose          | Not-Moved |   1   | Direct access to Task.Feed tasks                   |
+| Templating                 | vramak           |  Moved    |   1   |                    |
+| Test-Templates             | singhsarab       |  Moved    |   1   |                    |
+| Toolset                    | licavalc         | Not-Moved |   1   | Upload zip files                   |
 | CoreClr                    | russellk         | Not-Moved |   2   |                    |
-| WebSDK                     | vramak           | Not-Moved |   2   |                    |
-| WinForms                   | mmcgaw           | Not-Moved |   2   |                    |
-| WPF                        | vatsan-madhavan  | Not-Moved |   2   |                    |
-| aspnet-EntityFrameworkCore | namc             | Not-Moved |   2   |                    |
-| aspnet-Extensions          | namc             | Not-Moved |   2   |                    |
+| WebSDK                     | vramak           |  Moved    |   2   |                    |
+| WinForms                   | mmcgaw           | Not-Moved |   2   | Have a PR for it.                   |
+| WPF                        | vatsan-madhavan  | Not-Moved |   2   | Have a PR for it.                   |
+| aspnet-EntityFrameworkCore | namc             |  Moved    |   2   |                    |
+| aspnet-Extensions          | namc             |  Moved    |   2   |                    |
 | aspnet-AspNetCore-Tooling  | namc             | Not-Moved |   2   |                    |
 | CLI                        | licavalc         | Not-Moved |   3   |                    |
 | CLI-Migrate                | licavalc         | Not-Moved |   3   |                    |
