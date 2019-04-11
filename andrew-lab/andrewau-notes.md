@@ -54,9 +54,10 @@ OutputPath = C:\Dev\corefx\artifacts\bin\tests\System.Console.Manual.Tests\netco
 Now we can test if the generated script look the way I want it to be.
 
 While it is not testing for real, a super fast way to test the template is:
-1. Make a copy of the txt and rename it into a script
-2. Eliminate the `[[RunCommand]]` and `[[RunCommandEcho]]`
-3. Viola - now we can simply run the generated script, it will not have the right xunit command in it - but it shorten the inner loop for testing the generator by order of magntitude!
+1. Make a copy of the txt and rename it into a script.
+2. Eliminate the `[[RunCommand]]` and `[[RunCommandEcho]]`.
+3. On cross-plat, make sure the file is free of UTF8 BOM by running `dos2unix *.sh`. One can install `dos2unix` using `brew install dos2unix`.
+4. Viola - now we can simply run the generated script, it will not have the right xunit command in it - but it shorten the inner loop for testing the generator by order of magntitude!
 
 # How to change script callers
 Thanks to @ViktorHofer and @hoyosjs, we have a pretty good idea where the callers are, and we will simply make breaking change to the script interface, expecting when the change is consumed, the appropriate callers are patched.
