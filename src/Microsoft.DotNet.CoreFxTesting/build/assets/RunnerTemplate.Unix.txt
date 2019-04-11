@@ -2,7 +2,7 @@
 
 export EXECUTION_DIR=$(dirname "$0")
 
-usage()
+exit_with_usage()
 {
   echo ""
   echo "Usage:"
@@ -29,52 +29,52 @@ while [[ $# > 0 ]]; do
   case "$opt" in
     -runtime-path|-r)
       if [[ "$argparser_runtime_path_specified" == '1' ]] ; then
-        usage
+        exit_with_usage
       fi
       argparser_runtime_path_specified=1
       if [[ $# == 0 ]]; then
-        usage
+        exit_with_usage
       fi
       argparser_runtime_path=$1
       ;;
     -dotnet-root|-d)
       if [[ "$argparser_dotnet_root_specified" == '1' ]] ; then
-        usage
+        exit_with_usage
       fi
       argparser_dotnet_root_specified=1
       if [[ $# == 0 ]]; then
-        usage
+        exit_with_usage
       fi
       argparser_dotnet_root=$1
       ;;
     -global-tools-dir|-g)
       if [[ "$argparser_global_tool_dir_specified" == '1' ]] ; then
-        usage
+        exit_with_usage
       fi
       argparser_global_tool_dir_specified=1
       if [[ $# == 0 ]]; then
-        usage
+        exit_with_usage
       fi
       argparser_global_tool_dir=$1
       ;;
     -xunit-rsp|-x)
       if [[ "$argparser_xunit_rsp_specified" == '1' ]] ; then
-        usage
+        exit_with_usage
       fi
       argparser_xunit_rsp_specified=1
       if [[ $# == 0 ]]; then
-        usage
+        exit_with_usage
       fi
       argparser_xunit_rsp=$1
       ;;
     *)
-      usage
+      exit_with_usage
       ;;
   esac
   shift
 done
 if [[ "$argparser_runtime_path_specified" == '0' ]] ; then
-  usage
+  exit_with_usage
   exit 1
 fi
 export RUNTIME_PATH=$argparser_runtime_path
