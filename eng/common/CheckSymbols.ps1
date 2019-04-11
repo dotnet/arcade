@@ -6,7 +6,7 @@ param(
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-function DownloadSymbols {
+function FirstMatchingSymbolDescriptionOrDefault {
   param( 
     [string] $FullPath,                  # Full path to the module that has to be checked
     [string] $TargetServerParam          # Parameter to pass to `Symbol Tool` indicating the server to lookup for symbols
@@ -36,28 +36,22 @@ function DownloadSymbols {
   
   .\dotnet-symbol.exe --symbols --modules $TargetServerParam $FullPath -o $SymbolsPath -d | Out-Null
   
-  if (Test-Path $PdbPath)
-  {
+  if (Test-Path $PdbPath) {
     return "PDB"
   }
-  elseif (Test-Path $NGenPdb)
-  {
+  elseif (Test-Path $NGenPdb) {
     return "NGen PDB"
   }
-  elseif (Test-Path $SODbg)
-  {
+  elseif (Test-Path $SODbg) {
     return "DBG for SO"
   }  
-  elseif (Test-Path $DylibDwarf)
-  {
-    return "Dward for Dylib"
+  elseif (Test-Path $DylibDwarf) {
+    return "Dwarf for Dylib"
   }  
-  elseif (Test-Path $SymbolPath)
-  {
+  elseif (Test-Path $SymbolPath) {
     return "Module"
   }
-  else
-  {
+  else {
     return $null
   }
 }
@@ -68,8 +62,7 @@ function CountMissingSymbols {
   )
 
   # Ensure input file exist
-  if (!(Test-Path $PackagePath))
-  {
+  if (!(Test-Path $PackagePath)) {
     throw "Input file does not exist: $PackagePath"
   }
   
@@ -90,11 +83,11 @@ function CountMissingSymbols {
 
   Get-ChildItem -Recurse $ExtractPath |
     Where-Object {$RelevantExtensions -contains $_.Extension} |
-    ForEach-Object { 
+    ForEach-Object {
       Write-Host -NoNewLine "`t Checking file" $_.FullName "... "
 
-      $SymbolsOnMSDL = DownloadSymbols $_.FullName "--microsoft-symbol-server"
-      $SymbolsOnSymWeb = DownloadSymbols $_.FullName "--internal-server"
+      $SymbolsOnMSDL = FirstMatchingSymbolDescriptionOrDefault $_.FullName "--microsoft-symbol-server"
+      $SymbolsOnSymWeb = FirstMatchingSymbolDescriptionOrDefault $_.FullName "--internal-server"
   
       if ($SymbolsOnMSDL -ne $null -and $SymbolsOnSymWeb -ne $null) {
         Write-Host "Symbols found on MSDL (" $SymbolsOnMSDL ") and SymWeb (" $SymbolsOnSymWeb ")"
@@ -106,8 +99,7 @@ function CountMissingSymbols {
           Write-Host "No symbols found on MSDL or SymWeb!"
         }
         else {
-          if ($SymbolsOnMSDL -eq $null)
-          {
+          if ($SymbolsOnMSDL -eq $null) {
             Write-Host "No symbols found on MSDL!"
           }
           else {
@@ -123,8 +115,7 @@ function CountMissingSymbols {
 }
 
 function CheckSymbolsAvailable {
-  if (Test-Path $ExtractPath)
-  {
+  if (Test-Path $ExtractPath) {
     Remove-Item -recurse $ExtractPath
   }
 
@@ -134,8 +125,7 @@ function CheckSymbolsAvailable {
       Write-Host "Validating $FileName "
       $Status = CountMissingSymbols "$InputPath\$FileName"
   
-      if ($Status -ne 0)
-      {
+      if ($Status -ne 0) {
         Write-Error "Missing symbols for $Status modules in the package $FileName"
       }
     }
