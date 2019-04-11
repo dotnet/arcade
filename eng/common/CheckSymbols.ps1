@@ -6,7 +6,63 @@ param(
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-function ConfirmSymbolsAvailable {
+function DownloadSymbols {
+  param( 
+    [string] $FullPath,                  # Full path to the module that has to be checked
+    [string] $TargetServerParam          # Parameter to pass to `Symbol Tool` indicating the server to lookup for symbols
+  )
+
+  $FileName = [System.IO.Path]::GetFileName($FullPath)
+  $Extension = [System.IO.Path]::GetExtension($FullPath)
+
+  # Those below are potential symbol files that the `dotnet symbol` might
+  # return. Which one will be returned depend on the type of file we are
+  # checking and which type of file was uploaded.
+
+  # The file itself is returned
+  $SymbolPath = $SymbolsPath + "\" + $FileName
+
+  # PDB file for the module
+  $PdbPath = $SymbolPath.Replace($Extension, ".pdb")
+
+  # PDB file for R2R module (created by crossgen)
+  $NGenPdb = $SymbolPath.Replace($Extension, ".ni.pdb")
+
+  # DBG file for a .so library
+  $SODbg = $SymbolPath.Replace($Extension, ".so.dbg")
+
+  # DWARF file for a .dylib
+  $DylibDwarf = $SymbolPath.Replace($Extension, ".dylib.dwarf")
+  
+  .\dotnet-symbol.exe --symbols --modules $TargetServerParam $FullPath -o $SymbolsPath -d | Out-Null
+  
+  if (Test-Path $PdbPath)
+  {
+    return "PDB"
+  }
+  elseif (Test-Path $NGenPdb)
+  {
+    return "NGen PDB"
+  }
+  elseif (Test-Path $SODbg)
+  {
+    return "DBG for SO"
+  }  
+  elseif (Test-Path $DylibDwarf)
+  {
+    return "Dward for Dylib"
+  }  
+  elseif (Test-Path $SymbolPath)
+  {
+    return "Module"
+  }
+  else
+  {
+    return $null
+  }
+}
+
+function CountMissingSymbols {
   param( 
     [string] $PackagePath          # Path to a NuGet package
   )
@@ -35,61 +91,30 @@ function ConfirmSymbolsAvailable {
   Get-ChildItem -Recurse $ExtractPath |
     Where-Object {$RelevantExtensions -contains $_.Extension} |
     ForEach-Object { 
-      $FullPath = $_.FullName
-      $FileName = [System.IO.Path]::GetFileName($FullPath)
-      $Extension = $_.Extension
+      Write-Host -NoNewLine "`t Checking file" $_.FullName "... "
 
-      # Those below are potential symbol files that the `dotnet symbol` might
-      # return. Which one will be returned depend on the type of file we are
-      # checking and which type of file was uploaded.
-
-      # The file itself is returned
-      $SymbolPath = $SymbolsPath + "\" + $FileName
-
-      # PDB file for the module
-      $PdbPath = $SymbolPath.Replace($Extension, ".pdb")
-
-      # PDB file for R2R module (created by crossgen)
-      $NGenPdb = $SymbolPath.Replace($Extension, ".ni.pdb")
-
-      # DBG file for a .so library
-      $SODbg = $SymbolPath.Replace($Extension, ".so.dbg")
-
-      # DWARF file for a .dylib
-      $DylibDwarf = $SymbolPath.Replace($Extension, ".dylib.dwarf")
-
-      Write-Host -NoNewLine "`t Checking file $FullPath ... "
+      $SymbolsOnMSDL = DownloadSymbols $_.FullName "--microsoft-symbol-server"
+      $SymbolsOnSymWeb = DownloadSymbols $_.FullName "--internal-server"
   
-      .\dotnet-symbol.exe --symbols --modules --microsoft-symbol-server --internal-server $FullPath -o $SymbolsPath -d *>$null
-  
-      if (Test-Path $PdbPath)
-      {
-        $SymbolType = "PDB"
+      if ($SymbolsOnMSDL -ne $null -and $SymbolsOnSymWeb -ne $null) {
+        Write-Host "Symbols found on MSDL (" $SymbolsOnMSDL ") and SymWeb (" $SymbolsOnSymWeb ")"
       }
-      elseif (Test-Path $NGenPdb)
-      {
-        $SymbolType = "NGen PDB"
-      }
-      elseif (Test-Path $SODbg)
-      {
-        $SymbolType = "DBG for SO"
-      }  
-      elseif (Test-Path $DylibDwarf)
-      {
-        $SymbolType = "Dward for Dylib"
-      }  
-      elseif (Test-Path $SymbolPath)
-      {
-        $SymbolType = "Module"
-      }
-      else
-      {
+      else {
         $MissingSymbols++
-        Write-Host "No symbols found!"
-        return
+
+        if ($SymbolsOnMSDL -eq $null -and $SymbolsOnSymWeb -eq $null) {
+          Write-Host "No symbols found on MSDL or SymWeb!"
+        }
+        else {
+          if ($SymbolsOnMSDL -eq $null)
+          {
+            Write-Host "No symbols found on MSDL!"
+          }
+          else {
+            Write-Host "No symbols found on SymWeb!"
+          }
+        }
       }
-  
-      Write-Host "Symbols [$SymbolType] found."
     }
   
   Pop-Location
@@ -97,7 +122,7 @@ function ConfirmSymbolsAvailable {
   return $MissingSymbols
 }
 
-function CheckSymbols {
+function CheckSymbolsAvailable {
   if (Test-Path $ExtractPath)
   {
     Remove-Item -recurse $ExtractPath
@@ -107,7 +132,7 @@ function CheckSymbols {
     ForEach-Object {
       $FileName = $_.Name
       Write-Host "Validating $FileName "
-      $Status = ConfirmSymbolsAvailable "$InputPath\$FileName"
+      $Status = CountMissingSymbols "$InputPath\$FileName"
   
       if ($Status -ne 0)
       {
@@ -116,4 +141,4 @@ function CheckSymbols {
     }
 }
 
-CheckSymbols
+CheckSymbolsAvailable
