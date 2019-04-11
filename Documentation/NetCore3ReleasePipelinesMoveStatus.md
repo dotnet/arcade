@@ -42,7 +42,7 @@ on what changes are needed check ["How do I use it?"](https://github.com/dotnet/
 | WPF                        | vatsan-madhavan  | Not-Moved |   2   | Have a PR for it.                   |
 | aspnet-EntityFrameworkCore | namc             |  Moved    |   2   |                    |
 | aspnet-Extensions          | namc             |  Moved    |   2   |                    |
-| aspnet-AspNetCore-Tooling  | namc             | Not-Moved |   2   |                    |
+| aspnet-AspNetCore-Tooling  | namc             |  Moved    |   2   |                    |
 | CLI                        | licavalc         | Not-Moved |   3   |                    |
 | CLI-Migrate                | licavalc         | Not-Moved |   3   |                    |
 | CLICommandLineParser       | licavalc         | Not-Moved |   3   |                    |
