@@ -47,6 +47,10 @@
     <!-- User passed in options. -->
     <RunArguments Condition="'$(XUnitOptions)' != ''">$(RunArguments) $(XUnitOptions)</RunArguments>
 
+    <!--RunTests.cmd/RunTests.sh caller can pass a rsp file to xunit -->
+    <RunArguments Condition="'$(TargetOS)' == 'Windows_NT'">$(RunArguments) %XUNIT_RSP%</RunArguments>
+    <RunArguments Condition="'$(TargetOS)' != 'Windows_NT'">$(RunArguments) $XUNIT_RSP</RunArguments>
+
     <!-- Escape arguments with user inputs. -->
     <RunArguments>$([MSBuild]::Escape('$(RunArguments)'))</RunArguments>
   </PropertyGroup>
