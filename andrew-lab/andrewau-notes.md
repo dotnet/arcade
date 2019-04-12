@@ -59,6 +59,12 @@ While it is not testing for real, a super fast way to test the template is:
 3. On cross-plat, make sure the file is free of UTF8 BOM by running `dos2unix *.sh`. One can install `dos2unix` using `brew install dos2unix`.
 4. Viola - now we can simply run the generated script, it will not have the right xunit command in it - but it shorten the inner loop for testing the generator by order of magntitude!
 
+I never tried it, but @hoyosjs is using this as a faster inner loop testing with CoreFX
+
+```
+./build.cmd -configuration Debug -ci -buildtests -arch x64 -framework netcoreapp /p:ArchiveTests=Tests /p:OuterLoop=true /p:RuntimeOS=win10 -bl
+```
+
 # How to change script callers
 Thanks to @ViktorHofer and @hoyosjs, we have a pretty good idea where the callers are, and we will simply make breaking change to the script interface, expecting when the change is consumed, the appropriate callers are patched.
 
