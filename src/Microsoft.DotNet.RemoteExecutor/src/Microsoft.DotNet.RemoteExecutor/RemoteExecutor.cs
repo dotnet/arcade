@@ -41,13 +41,13 @@ namespace Microsoft.DotNet.RemoteExecutor
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
             {
-                Path = System.IO.Path.GetFullPath("Microsoft.DotNet.RemoteExecutorHost.dll");
+                Path = System.IO.Path.Combine(AppContext.BaseDirectory, "Microsoft.DotNet.RemoteExecutorHost.dll");
                 HostRunner = processFileName;
                 s_extraParameter = Path;
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
-                Path = System.IO.Path.GetFullPath("Microsoft.DotNet.RemoteExecutorHost.exe");
+                Path = System.IO.Path.Combine(AppContext.BaseDirectory, "Microsoft.DotNet.RemoteExecutorHost.exe");
                 HostRunner = Path;
             }
             else
