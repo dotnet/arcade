@@ -11,7 +11,7 @@
     <Error Text="The PackageDirectory property wasn't supplied."
           Condition="'$(PackagesDirectory)' == ''" />
 
-    <InstallSDL PackagesDirectory="$(PackagesDirectory)" 
+    <InstallSDL PackagesDirectory="$(PackagesDirectory)"
                      SdlToolName="$(SdlToolName)"
                      SdlPackageVersion="0.0.38"/>
     <InitSDL Repository="$(Repository)"
