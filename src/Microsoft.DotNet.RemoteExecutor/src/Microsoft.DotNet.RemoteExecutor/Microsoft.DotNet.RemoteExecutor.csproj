@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.0;net472;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;net472;netstandard2.0</TargetFrameworks>
     <Description>This package provides support for running tests out-of-process.</Description>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <IsPackable>true</IsPackable>
@@ -26,7 +26,7 @@
     <ItemGroup>
       <TfmSpecificPackageFile Include="%(_ResolvedProjectReferencePaths.Identity)" PackagePath="tools\$(TargetFramework)\" />
       <TfmSpecificPackageFile Include="@(ReferenceCopyLocalPaths)" Exclude="@(_ResolvedProjectReferencePaths)" PackagePath="tools\$(TargetFramework)\%(ReferenceCopyLocalPaths.DestinationSubPath)" />
-      <TfmSpecificPackageFile Condition="'$(TargetFramework)' == 'netcoreapp2.0'" Include="$(OutputPath)%(_ResolvedProjectReferencePaths.Filename).runtimeconfig.json" PackagePath="tools\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Condition="'$(TargetFramework)' == 'netcoreapp2.1'" Include="$(OutputPath)%(_ResolvedProjectReferencePaths.Filename).runtimeconfig.json" PackagePath="tools\$(TargetFramework)\" />
     </ItemGroup>
   </Target>
 
