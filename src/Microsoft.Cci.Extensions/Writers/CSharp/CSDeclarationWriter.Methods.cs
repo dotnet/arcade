@@ -68,6 +68,11 @@ namespace Microsoft.Cci.Writers.CSharp
             {
                 WriteAttributes(method.ReturnValueAttributes, true);
 
+                if (method.Attributes.HasIsReadOnlyAttribute())
+                {
+                    WriteKeyword("readonly");
+                }
+
                 if (method.ReturnValueIsByRef)
                 {
                     WriteKeyword("ref");
