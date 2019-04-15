@@ -2,8 +2,7 @@
 
 usage()
 {
-  echo "Usage:"
-  echo "RunTests.sh {-r|--runtime-path} <runtime-path> [{-d|--dotnet-root} <dotnet-root>] [{-g|--global-tools-dir} <global-tools-dir>] [{--rsp-file} <rsp-file>]"
+  echo "Usage: RunTests.sh {-r|--runtime-path} <runtime-path> [{-d|--dotnet-root} <dotnet-root>] [{-g|--global-tools-dir} <global-tools-dir>] [{--rsp-file} <rsp-file>]"
   echo ""
   echo "Parameters:"
   echo "--runtime-path           (Mandatory) Testhost containing the test runtime used during test execution (short: -r)"
