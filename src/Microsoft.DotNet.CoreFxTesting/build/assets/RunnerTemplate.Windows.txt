@@ -44,7 +44,7 @@ set EXECUTION_DIR=%~dp0
 
   if /i "%argparser_currentarg%"=="--rsp-file" (
     if "%~1" == "" ( goto argparser_invalid )
-    set "RSP_FILE=%~1"
+    set "RSP_FILE=@%~1"
     goto argparser_break
   )
 

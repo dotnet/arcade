@@ -39,7 +39,7 @@ while [[ $# > 0 ]]; do
       shift 2
       ;;
     --rsp-file)
-      RSP_FILE=$2
+      RSP_FILE=\@$2
       shift 2
       ;;
     *)
