@@ -80,9 +80,17 @@ namespace Microsoft.Cci.Traversers
 
         public virtual void Visit(IEnumerable<ITypeDefinitionMember> members)
         {
+            // We don't want to apply a different sort order if one already exists
+            // and instead want to apply it in addition to the current sort order.
+            //
+            // This can happen for enums, as an example, where we want to prefer numeric
+            // order rather than the default alphabetical order.
+
             bool isAlreadyOrdered = members is IOrderedEnumerable<ITypeDefinitionMember>;
             members = members.Where(_filter.Include);
-            members = isAlreadyOrdered ? members : members.OrderBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
+            members = isAlreadyOrdered
+                    ? ((IOrderedEnumerable<ITypeDefinitionMember>)members).ThenBy(GetMemberKey, StringComparer.OrdinalIgnoreCase)
+                    : members.OrderBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
 
             foreach (var member in members)
                 Visit(member);
@@ -92,7 +100,9 @@ namespace Microsoft.Cci.Traversers
         {
             if (parentType.IsEnum)
             {
-                fields = fields.OrderBy((fieldDefintiion) => fieldDefintiion.Constant.Value);
+                // Enums are generally sorted in numeric order, rather than alphabetically
+                // We will try to do the same here to make it more consistent with the impl
+                fields = fields.OrderBy((fieldDefinition) => fieldDefinition.Constant.Value);
             }
             this.Visit((IEnumerable<ITypeDefinitionMember>)fields);
         }
