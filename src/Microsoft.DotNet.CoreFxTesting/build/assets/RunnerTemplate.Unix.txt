@@ -3,14 +3,13 @@
 usage()
 {
   echo "Usage:"
-  echo ""
   echo "RunTests.sh {-r|--runtime-path} <runtime-path> [{-d|--dotnet-root} <dotnet-root>] [{-g|--global-tools-dir} <global-tools-dir>] [{--rsp-file} <rsp-file>]"
   echo ""
   echo "Parameters:"
-  echo "--runtime-path:	         (Mandatory) Testhost containing the test runtime used during test execution (short: -r)"
-  echo "--dotnet-root:	         SDK directory for hosting shims and tools (short: -d)"
+  echo "--runtime-path:          (Mandatory) Testhost containing the test runtime used during test execution (short: -r)"
+  echo "--dotnet-root:           SDK directory for hosting shims and tools (short: -d)"
   echo "--global-tools-dir:      Global tools directory (short: -g)"
-  echo "--rsp-file:		           RSP file to pass in additional arguments"
+  echo "--rsp-file:              RSP file to pass in additional arguments"
 }
 
 EXECUTION_DIR=$(dirname "$0")

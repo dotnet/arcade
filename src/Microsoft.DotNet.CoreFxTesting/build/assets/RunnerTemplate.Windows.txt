@@ -1,6 +1,8 @@
 ﻿@echo off
 setlocal enabledelayedexpansion
 
+set EXECUTION_DIR=%~dp0
+
 :argparser_start
   if "%~1" == "" goto argparser_end
   set "argparser_currentarg=%~1"
@@ -24,7 +26,7 @@ setlocal enabledelayedexpansion
 
   set "argparser_dotnet_root_specified_inloop="
   if /i "%argparser_currentarg%"=="-d" ( set "argparser_dotnet_root_specified_inloop=1" )
-  if /i "%argparser_currentarg%"=="-dotnet-root" ( set "argparser_dotnet_root_specified_inloop=1" )
+  if /i "%argparser_currentarg%"=="--dotnet-root" ( set "argparser_dotnet_root_specified_inloop=1" )
   if defined argparser_dotnet_root_specified_inloop (
     if "%~1" == "" ( goto argparser_invalid )
     set "DOTNET_ROOT=%~1"
@@ -48,7 +50,7 @@ setlocal enabledelayedexpansion
 
 :argparser_invalid
   echo Invalid argument or value: %argparser_currentarg%
-  call usage
+  call :usage
   exit /b -1
 
 :argparser_break
@@ -59,11 +61,9 @@ setlocal enabledelayedexpansion
 
 if not defined RUNTIME_PATH (
   echo error: -r|--runtime-path argument is required.
-  call usage
+  call :usage
   exit /b -1
 )
-
-set EXECUTION_DIR=%~dp0
 
 :: Don't use a globally installed SDK.
 set DOTNET_MULTILEVEL_LOOKUP=0
@@ -92,7 +92,7 @@ echo.
 echo RunTests.cmd {-r^|--runtime-path} ^<runtime-path^> [{-d^|--dotnet-root} ^<dotnet-root^>] [{-g^|--global-tools-dir} ^<global-tools-dir^>] [{--rsp-file} ^<rsp-file^>]
 echo.
 echo Parameters:
-echo --runtime-path:	        (Mandatory) Testhost containing the test runtime used during test execution (short: -r)"
-echo --dotnet-root:	          SDK directory for hosting shims and tools (short: -d)
+echo --runtime-path:          (Mandatory) Testhost containing the test runtime used during test execution (short: -r)"
+echo --dotnet-root:           SDK directory for hosting shims and tools (short: -d)
 echo --global-tools-dir:      Global tools directory (short: -g)
-echo --rsp-file:		          RSP file to pass in additional arguments
+echo --rsp-file:              RSP file to pass in additional arguments
