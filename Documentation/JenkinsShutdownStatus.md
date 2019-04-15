@@ -58,7 +58,7 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 | Job name                      | Owner        | Jenkins jobs | Notes |
 | ----------------------------- | ------------ | ------------ | ----- |
 | Microsoft_MSBuild             | licavalc     | [vs15.9](https://ci2.dot.net/job/Microsoft_msbuild/job/vs15.9/) ||
-| Microsoft_VisualFSharp        | brettfo      | [vs15.5](https://ci2.dot.net/job/Microsoft_visualfsharp/job/dev15.5/), [vs15.7](https://ci2.dot.net/job/Microsoft_visualfsharp/job/dev15.7/), [vs15.8](https://ci2.dot.net/job/Microsoft_visualfsharp/job/dev15.8/) ||
+| Microsoft_VisualFSharp        | brettfo      | [vs15.5](https://ci2.dot.net/job/Microsoft_visualfsharp/job/dev15.5/), [vs15.7](https://ci2.dot.net/job/Microsoft_visualfsharp/job/dev15.7/), [vs15.8](https://ci2.dot.net/job/Microsoft_visualfsharp/job/dev15.8/) | Complete - these have been removed |
 
 ## Jenkins - UWP
 
