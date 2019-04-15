@@ -46,9 +46,6 @@
 
     <!-- User passed in options. -->
     <RunArguments Condition="'$(XUnitOptions)' != ''">$(RunArguments) $(XUnitOptions)</RunArguments>
-
-    <!-- Escape arguments with user inputs. -->
-    <RunArguments>$([MSBuild]::Escape('$(RunArguments)'))</RunArguments>
   </PropertyGroup>
 
   <PropertyGroup>

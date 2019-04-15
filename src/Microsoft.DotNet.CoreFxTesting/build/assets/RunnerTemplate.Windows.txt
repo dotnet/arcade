@@ -1,22 +1,68 @@
 ﻿@echo off
 setlocal enabledelayedexpansion
 
-set RUNTIME_PATH=%~1
-if not defined RUNTIME_PATH (
-echo Please specify a test runtime folder using the RUNTIME_PATH parameter
-goto ShowUsage
-)
-
 set EXECUTION_DIR=%~dp0
 
-:: Point to the locally installed SDK.
-if not "%~2" == "" (
-set DOTNET_ROOT=%~2
-)
+:argparser_start
+  if "%~1" == "" goto argparser_end
+  set "argparser_currentarg=%~1"
+  shift
 
-:: Global tools path
-if not "%~3" == "" (
-set GLOBAL_TOOLS_DIR=%~3
+  set "argparser_help_specified_inloop="
+  if /i "%argparser_currentarg%"=="-h" ( set "argparser_help_specified_inloop=1" )
+  if /i "%argparser_currentarg%"=="--help" ( set "argparser_help_specified_inloop=1" )
+  if defined argparser_help_specified_inloop (
+    goto usage
+  )
+
+  set "argparser_runtime_path_specified_inloop="
+  if /i "%argparser_currentarg%"=="-r" ( set "argparser_runtime_path_specified_inloop=1" )
+  if /i "%argparser_currentarg%"=="--runtime-path" ( set "argparser_runtime_path_specified_inloop=1" )
+  if defined argparser_runtime_path_specified_inloop (
+    if "%~1" == "" ( goto argparser_invalid )
+    set "RUNTIME_PATH=%~1"
+    goto argparser_break
+  )
+
+  set "argparser_dotnet_root_specified_inloop="
+  if /i "%argparser_currentarg%"=="-d" ( set "argparser_dotnet_root_specified_inloop=1" )
+  if /i "%argparser_currentarg%"=="--dotnet-root" ( set "argparser_dotnet_root_specified_inloop=1" )
+  if defined argparser_dotnet_root_specified_inloop (
+    if "%~1" == "" ( goto argparser_invalid )
+    set "DOTNET_ROOT=%~1"
+    goto argparser_break
+  )
+
+  set "argparser_global_tool_dir_specified_inloop="
+  if /i "%argparser_currentarg%"=="-g" ( set "argparser_global_tool_dir_specified_inloop=1" )
+  if /i "%argparser_currentarg%"=="--global-tools-dir" ( set "argparser_global_tool_dir_specified_inloop=1" )
+  if defined argparser_global_tool_dir_specified_inloop (
+    if "%~1" == "" ( goto argparser_invalid )
+    set "GLOBAL_TOOLS_DIR=%~1"
+    goto argparser_break
+  )
+
+  if /i "%argparser_currentarg%"=="--rsp-file" (
+    if "%~1" == "" ( goto argparser_invalid )
+    set "RSP_FILE=@%~1"
+    goto argparser_break
+  )
+
+:argparser_invalid
+  echo Invalid argument or value: %argparser_currentarg%
+  call :usage
+  exit /b -1
+
+:argparser_break
+  shift
+  goto argparser_start
+
+:argparser_end
+
+if not defined RUNTIME_PATH (
+  echo error: -r|--runtime-path argument is required.
+  call :usage
+  exit /b -1
 )
 
 :: Don't use a globally installed SDK.
@@ -37,15 +83,15 @@ pushd %EXECUTION_DIR%
 @echo off
 popd
 echo ----- end %TIME% ----- exit code %ERRORLEVEL% ----------------------------------------------------------
-EXIT /B %ERRORLEVEL%
+exit /b %ERRORLEVEL%
 :: ========================= END Test Execution =================================
 
-:ShowUsage
-echo.
-echo Usage:
-echo.
-echo %0 {runtime path}
+:usage
+echo Usage: RunTests.cmd {-r^|--runtime-path} ^<runtime-path^> [{-d^|--dotnet-root} ^<dotnet-root^>] [{-g^|--global-tools-dir} ^<global-tools-dir^>] [{--rsp-file} ^<rsp-file^>]
 echo.
 echo Parameters:
-echo runtime path :        (Mandatory) Root path containing the full test runtime necessary for test execution.
-EXIT /B -1
+echo --runtime-path           (Mandatory) Testhost containing the test runtime used during test execution (short: -r)"
+echo --dotnet-root            SDK directory for hosting shims and tools (short: -d)
+echo --global-tools-dir       Global tools directory (short: -g)
+echo --rsp-file               RSP file to pass in additional arguments
+echo --help                   Print help and exit (short: -h)
