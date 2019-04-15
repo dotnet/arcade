@@ -2,7 +2,9 @@
 <Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Execute">
   <!--
     Required variables:
-      PackagesDirectory                 Path to packages in the source directory.
+      SourcesDirectory                 source directory.
+	  DncengPat						   PAT to connect to the internal repo.
+	  
   -->
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
@@ -14,17 +16,17 @@
 
   <PropertyGroup>
     <_MicrosoftDotNetSDLAutomatorTaskBaseDir>$(NuGetPackageRoot)microsoft.dotnet.sdlautomator\$(MicrosoftDotNetSDLAutomatorVersion)\tools\</_MicrosoftDotNetSDLAutomatorTaskBaseDir>
-    <_MicrosoftDotNetSDLAutomatorTaskDir>$(_MicrosoftDotNetSDLAutomatorTaskBaseDir)net472/</_MicrosoftDotNetSDLAutomatorTaskDir>
     <_MicrosoftDotNetSDLAutomatorTaskDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(_MicrosoftDotNetSDLAutomatorTaskBaseDir)netcoreapp2.1/</_MicrosoftDotNetSDLAutomatorTaskDir>
   </PropertyGroup>
 
-  <UsingTask TaskName="InstallGuardian" AssemblyFile="$(_MicrosoftDotNetSDLAutomatorTaskDir)Microsoft.DotNet.SDLAutomator.dll"/>
+<UsingTask TaskName="InitSDL" AssemblyFile="$(_MicrosoftDotNetSDLAutomatorTaskDir)Microsoft.DotNet.SDLAutomator.dll"/>
 
   <Target Name="Execute">
     <Error Text="The PackageDirectory property wasn't supplied."
-          Condition="'$(PackageDirectory)' == ''" />
+          Condition="'$(SourcesDirectory)' == ''" />
 
-    <InstallGuardian PackageDirectory="$(PackageDirectory)"
-                     GuardianPackageVersion="0.0.38"/>
+    <InitSDL Repository="$(Repository)"
+                  SourcesDirectory="$(SourcesDirectory)"
+                  DncengPat="$(DncengPat)" />
   </Target>
 </Project>

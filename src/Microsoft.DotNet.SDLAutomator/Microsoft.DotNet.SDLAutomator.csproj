@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -8,7 +8,6 @@
 
     <Description>This package provides support for SDL tools installation and execution.</Description>
     <DevelopmentDependency>true</DevelopmentDependency>
-    <PackageType>MSBuildSdk</PackageType>
   </PropertyGroup>
 
   <ItemGroup>

@@ -4,16 +4,12 @@
     <_MicrosoftDotNetSDLAutomatorTaskDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../tools/netcoreapp2.1/</_MicrosoftDotNetSDLAutomatorTaskDir>
   </PropertyGroup>
 
-  <UsingTask TaskName="InstallSDL" AssemblyFile="$(_MicrosoftDotNetSDLAutomatorTaskDir)Microsoft.DotNet.SDLAutomator.dll"/>
   <UsingTask TaskName="InitSDL" AssemblyFile="$(_MicrosoftDotNetSDLAutomatorTaskDir)Microsoft.DotNet.SDLAutomator.dll"/>
 
   <Target Name="Execute">
     <Error Text="The PackageDirectory property wasn't supplied."
           Condition="'$(PackagesDirectory)' == ''" />
 
-    <InstallSDL PackagesDirectory="$(PackagesDirectory)"
-                     SdlToolName="$(SdlToolName)"
-                     SdlPackageVersion="0.0.38"/>
     <InitSDL Repository="$(Repository)"
                   SourcesDirectory="$(SourcesDirectory)"
                   DncengPat="$(DncengPat)" />
