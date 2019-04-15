@@ -80,8 +80,9 @@ namespace Microsoft.Cci.Traversers
 
         public virtual void Visit(IEnumerable<ITypeDefinitionMember> members)
         {
+            bool isAlreadyOrdered = members is IOrderedEnumerable<ITypeDefinitionMember>;
             members = members.Where(_filter.Include);
-            members = members.OrderBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
+            members = isAlreadyOrdered ? members : members.OrderBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
 
             foreach (var member in members)
                 Visit(member);
@@ -89,6 +90,10 @@ namespace Microsoft.Cci.Traversers
 
         public virtual void Visit(ITypeDefinition parentType, IEnumerable<IFieldDefinition> fields)
         {
+            if (parentType.IsEnum)
+            {
+                fields = fields.OrderBy((fieldDefintiion) => fieldDefintiion.Constant.Value);
+            }
             this.Visit((IEnumerable<ITypeDefinitionMember>)fields);
         }
 
