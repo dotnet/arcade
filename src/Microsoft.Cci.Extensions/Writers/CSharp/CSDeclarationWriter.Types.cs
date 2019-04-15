@@ -146,6 +146,11 @@ namespace Microsoft.Cci.Writers.CSharp
 
         private void WriteTypeModifiers(ITypeDefinition type)
         {
+            if (type.GetHiddenBaseType(_filter) != Dummy.Type)
+            {
+                WriteKeyword("new");
+            }
+
             if (type.IsDelegate)
                 throw new NotSupportedException("This method doesn't support delegates!");
             else if (type.IsEnum)
