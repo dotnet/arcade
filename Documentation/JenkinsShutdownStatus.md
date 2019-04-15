@@ -2,9 +2,7 @@
 
 ## Overview
 
-Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins support of .NET Core 3.0 branches is May 3rd, 2019.**  It is expected that all .NET Core 3.0 repos / branches will be using Azure DevOps for CI by May 3rd and that Jenkins is no longer used for CI.
-
-This document is tracking the status of .NET Core 3.0 repos using Jenkins for CI and provides guidance for how to disable Jenkins for a repo / branch.
+This document is tracking the status of repos using Jenkins for CI and provides guidance for how to disable Jenkins for a repo / branch.
 
 ## Steps for disabling Jenkins
 
@@ -19,6 +17,8 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 4. Confirm.
 
 ## Jenkins - .NET Core 3.0
+
+Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins support of .NET Core 3.0 branches is May 3rd, 2019.**  It is expected that all .NET Core 3.0 repos / branches will be using Azure DevOps for CI by May 3rd and that Jenkins is no longer used for CI.
 
 | Repo                       | Owner            | Status      | Risk   | Curent Jenkins jobs | Notes |
 | ---------------------------| ---------------- |:-----------:|:------:| ------------------- | ----- |
