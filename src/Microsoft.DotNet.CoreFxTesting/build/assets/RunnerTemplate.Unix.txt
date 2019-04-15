@@ -19,7 +19,6 @@ RSP_FILE=''
 
 while [[ $# > 0 ]]; do
   opt="$(echo "${1}" | awk '{print tolower($0)}')"
-  shift
   case "$opt" in
     --help|-h)
       usage
@@ -27,19 +26,19 @@ while [[ $# > 0 ]]; do
       ;;
     --runtime-path|-r)
       RUNTIME_PATH=$2
-      shift 2
+      shift
       ;;
     --dotnet-root|-d)
       export DOTNET_ROOT=$2
-      shift 2
+      shift
       ;;
-    --global-tools-path|-g)
+    --global-tools-dir|-g)
       GLOBAL_TOOLS_DIR=$2
-      shift 2
+      shift
       ;;
     --rsp-file)
       RSP_FILE=\@$2
-      shift 2
+      shift
       ;;
     *)
       echo "Invalid argument: $1"
