@@ -104,13 +104,13 @@ The Jenkins generator job and associated jobs *should* delete themselves. Howeve
 | dotnet_Versions               | mmitche      | [master](https://ci.dot.net/job/dotnet_versions/job/master/) ||
 | dotnet_WCF                    | stebon       | [master](https://ci.dot.net/job/dotnet_wcf/job/master/) ||
 | dotnet_Xliff-Tasks            | tomescht     | [master](https://ci.dot.net/job/dotnet_xliff-tasks/job/master/) ||
-| Microsoft_ChakraCore          | louisl       | external ||
-| Microsoft_ConcordExtensibilitySamples | greggm | external ||
-| Microsoft_MIEngine            | waan         | external ||
-| Microsoft_PartsUnlimited      | davete       | external ||
+| Microsoft_ChakraCore          | louisl       | external | jrprather is managing migration |
+| Microsoft_ConcordExtensibilitySamples | greggm | external | jrprather is managing migration |
+| Microsoft_MIEngine            | waan         | external | jrprather is managing migration |
+| Microsoft_PartsUnlimited      | davete       | external | jrprather is managing migration |
 | Microsoft_TestFx              | sarabjot     | [1.2.1](https://ci.dot.net/job/Microsoft_testfx/job/1.2.1/) ||
-| Microsoft_Vipr                | mmainer      | external ||
+| Microsoft_Vipr                | mmainer      | external | jrprather is managing migration |
 | Microsoft_XUnitPerformance    | jorive       | [master](https://ci.dot.net/job/Microsoft_xunit-performance/job/master/), [citest](https://ci.dot.net/job/Microsoft_xunit-performance/job/citest/) ||
 | mono_linker                   | svbomer      | [master](https://ci.dot.net/job/mono_linker/job/master/) ||
-| pxt*                          | peli de halleux | external ||
+| pxt*                          | peli de halleux | external | jrprather is managing migration |
 
