@@ -87,6 +87,13 @@
           DependsOnTargets="$(GenerateRunScriptDependsOn)">
 
     <PropertyGroup>
+      <!-- RSP file support. -->
+      <RunArguments Condition="'$(TargetOS)' == 'Windows_NT'">$(RunArguments) %RSP_FILE%</RunArguments>
+      <RunArguments Condition="'$(TargetOS)' != 'Windows_NT'">$(RunArguments) $RSP_FILE</RunArguments>
+
+      <!-- Escape arguments with user inputs. -->
+      <RunArguments>$([MSBuild]::Escape('$(RunArguments)'))</RunArguments>
+
       <RunScriptCommand Condition="'$(RunScriptCommand)' == ''">"$(RunCommand)" $(RunArguments)</RunScriptCommand>
     </PropertyGroup>
 

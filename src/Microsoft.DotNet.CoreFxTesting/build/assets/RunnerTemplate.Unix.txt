@@ -1,91 +1,61 @@
 ﻿#!/usr/bin/env bash
 
-export EXECUTION_DIR=$(dirname "$0")
-
-exit_with_usage()
+usage()
 {
-  echo ""
   echo "Usage:"
   echo ""
-  echo "This script now uses only named arguments as follows:"
-  echo ""
-  echo "runtest.sh {-r|--runtime-path} <runtime-dir> [{-d|--dotnet-root} <dotnet-root>] [{-g|global-tools-dir} <global-tools-dir>] [{-x|--xunit-rsp} <xunit-rsp>]"
+  echo "RunTests.sh {-r|--runtime-path} <runtime-path> [{-d|--dotnet-root} <dotnet-root>] [{-g|--global-tools-dir} <global-tools-dir>] [{--rsp-file} <rsp-file>]"
   echo ""
   echo "Parameters:"
-  echo "runtime-path:	(Mandatory) Root dir containing the full test-runtime and host necessary for test execution."
-  echo "dotnet-root:	(Optional) Root dir containing the dotnet host for hosting shims and tools."
-  echo "global-tools-dir:	(Optional) Root dir containing global tools needed."
-  echo "xunit-rsp:		(Optional) File path containing additional arguments for the XUnit runner."
-  exit 1
+  echo "--runtime-path:	         (Mandatory) Testhost containing the test runtime used during test execution (short: -r)"
+  echo "--dotnet-root:	         SDK directory for hosting shims and tools (short: -d)"
+  echo "--global-tools-dir:      Global tools directory (short: -g)"
+  echo "--rsp-file:		           RSP file to pass in additional arguments"
 }
 
-argparser_runtime_path_specified=0
-argparser_dotnet_root_specified=0
-argparser_global_tool_dir_specified=0
-argparser_xunit_rsp_specified=0
+EXECUTION_DIR=$(dirname "$0")
+RUNTIME_PATH=''
+GLOBAL_TOOLS_DIR=''
+RSP_FILE=''
+
 while [[ $# > 0 ]]; do
-  opt="$(echo "${1/#--/-}" | awk '{print tolower($0)}')"
+  opt="$(echo "${1}" | awk '{print tolower($0)}')"
   shift
   case "$opt" in
-    -runtime-path|-r)
-      if [[ "$argparser_runtime_path_specified" == '1' ]] ; then
-        exit_with_usage
-      fi
-      argparser_runtime_path_specified=1
-      if [[ $# == 0 ]]; then
-        exit_with_usage
-      fi
-      argparser_runtime_path=$1
+    --help|-h)
+      usage
+      exit 0
       ;;
-    -dotnet-root|-d)
-      if [[ "$argparser_dotnet_root_specified" == '1' ]] ; then
-        exit_with_usage
-      fi
-      argparser_dotnet_root_specified=1
-      if [[ $# == 0 ]]; then
-        exit_with_usage
-      fi
-      argparser_dotnet_root=$1
+    --runtime-path|-r)
+      RUNTIME_PATH=$2
+      shift 2
       ;;
-    -global-tools-dir|-g)
-      if [[ "$argparser_global_tool_dir_specified" == '1' ]] ; then
-        exit_with_usage
-      fi
-      argparser_global_tool_dir_specified=1
-      if [[ $# == 0 ]]; then
-        exit_with_usage
-      fi
-      argparser_global_tool_dir=$1
+    --dotnet-root|-d)
+      export DOTNET_ROOT=$2
+      shift 2
       ;;
-    -xunit-rsp|-x)
-      if [[ "$argparser_xunit_rsp_specified" == '1' ]] ; then
-        exit_with_usage
-      fi
-      argparser_xunit_rsp_specified=1
-      if [[ $# == 0 ]]; then
-        exit_with_usage
-      fi
-      argparser_xunit_rsp=$1
+    --global-tools-path|-g)
+      GLOBAL_TOOLS_DIR=$2
+      shift 2
+      ;;
+    --rsp-file)
+      RSP_FILE=$2
+      shift 2
       ;;
     *)
-      exit_with_usage
+      echo "Invalid argument: $1"
+      usage
+      exit -1
       ;;
   esac
+
   shift
 done
-if [[ "$argparser_runtime_path_specified" == '0' ]] ; then
-  exit_with_usage
-  exit 1
-fi
-export RUNTIME_PATH=$argparser_runtime_path
-if [[ "$argparser_dotnet_root_specified" == '1' ]] ; then
-  export DOTNET_ROOT=$argparser_dotnet_root
-fi
-if [[ "$argparser_global_tool_dir_specified" == '1' ]] ; then
-  export GLOBAL_TOOLS_DIR=$argparser_global_tool_dir
-fi
-if [[ "$argparser_xunit_rsp_specified" == '1' ]] ; then
-  export XUNIT_RSP=$argparser_xunit_rsp
+
+if [ "$RUNTIME_PATH" == "" ]; then
+  echo "error: -r|--runtime-path argument is required."
+  usage
+  exit -1
 fi
 
 # Don't use a globally installed SDK.
@@ -171,12 +141,6 @@ function copy_core_file_to_temp_location {
   echo "Copying core file $core_file_name to $new_location in case you need it."
   cp $core_file_name $new_location
 }
-
-if [ "$RUNTIME_PATH" == "" ]
-then
-echo error: RUNTIME_PATH is not defined.  Usage: $0 RUNTIME_PATH
-exit -1
-fi
 
 # ========================= BEGIN Core File Setup ============================
 if [ "$(uname -s)" == "Darwin" ]; then
