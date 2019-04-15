@@ -6,20 +6,23 @@ using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SDLAutomator
 {
-    public class InstallGuardian : MSBuild.Task
+    public class InstallSDL : MSBuild.Task
     {
         [Required]
         public string PackagesDirectory { get; set; }
 
         [Required]
-        public string GuardianPackageVersion { get; set; }
+        public string SdlToolName { get; set; }
+
+        [Required]
+        public string SdlPackageVersion { get; set; }
 
         public override bool Execute()
         {
-            Log.LogMessage(MessageImportance.Low, "Inside InstallGuardian");
+            Log.LogMessage(MessageImportance.Low, "Inside InstallSDL");
             try
             {
-                AddGuardianToPath();
+                AddSdlToolsToPath();
             }
             catch (Exception e)
             {
@@ -28,13 +31,13 @@ namespace Microsoft.DotNet.SDLAutomator
             return !Log.HasLoggedErrors;
         }
 
-        public void AddGuardianToPath()
+        public void AddSdlToolsToPath()
         {
             try
             {
                 const string name = "PATH";
                 string pathvar = System.Environment.GetEnvironmentVariable(name);
-                var value = $"{pathvar};{PackagesDirectory}\\microsoft.guardian.cli\\{GuardianPackageVersion}\\tools\\;";
+                var value = $"{pathvar};{PackagesDirectory}\\{SdlToolName}\\{SdlPackageVersion}\\tools\\;";
                 Environment.SetEnvironmentVariable(name, value);
             }
             catch (System.Security.SecurityException se)
