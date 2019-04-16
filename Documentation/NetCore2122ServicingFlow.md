@@ -35,95 +35,103 @@ The pipebuild descriptions for the builds are held in https://dev.azure.com/devd
 
 1. Update branding in required repos to reflect the servicing event. How this is done is repository dependent, but generally post-release, the pre-release label is updated in each of the servicing branches to 'servicing' (or something like that) and the patch version element is incremented. The `PB_VersionStamp` default should be changed on the build definition.
 2. Check in fixes to required repositories.
-3. Modify ProdCon definition to reflect the minimal set of repos that must be built, the input branches, etc. and commit to master.  Specifically this means anything with changes or downstream of those changes. Typically, the description does not change and contains all the core repositories (coreclr, corefx, core-setup aspnet, extensions, cli). Ocassionally, sdk will have a servicing fix and require an entry in the description file.  When adding or removing builds from prodcon, ensure that dependency and input/output merges are updated.
+3. Update ProdCon pipebuild descriptions
+    1. Change to reflect the minimal set of repos that must be built. Typically, the description does not change and contains all the core repositories (coreclr, corefx, core-setup aspnet, extensions, cli). Ocassionally, sdk will have a servicing fix and require an entry in the description file.  When adding or removing builds from prodcon, ensure that dependency and input/output merges are updated.
+    2. Verify/Update input branches
+    3. For build of CLI, update the **MicrosoftNETCoreAppLatestVersion1_0** (2.1 + 2.2),
+       **MicrosoftNETCoreAppLatestVersion1_1** (2.1 + 2.2), **MicrosoftNETCoreAppLatestVersion2_0** (2.1 only),
+       **MicrosoftNETCoreAppLatestVersion2_1** (2.2),
+       **MicrosoftAspNetCoreAppLatestVersion2_1** (2.2) and
+       **MicrosoftAspNetCoreAllLatestVersion2_1** (2.2) parameters to reflect the
+      versions of those products that will be produced in the current servicing cycle.
 
-Each repository in the graph is described in the following way in the description file.
+    Each repository in the graph is described in the following way in the description file.
 
-    // Create inputs pipeline merges outputs from input builds
-    // (CoreClr-Build) to PB_OutputFeed.
-    {
-      "Name": "CoreFx-CreateInputs",
-      "DependsOn": [ "CoreClr-Build" ],
-      "Parameters": {
-        "TreatWarningsAsErrors": "false"
-      },
-      "BuildParameters": {},
-      "Definitions": [
+        // Create inputs pipeline merges outputs from input builds
+        // (CoreClr-Build) to PB_OutputFeed.
         {
-          "Name": "DotNet-Orchestration-Merge-Feeds",
+          "Name": "CoreFx-CreateInputs",
+          "DependsOn": [ "CoreClr-Build" ],
           "Parameters": {
-            "PB_InputFeeds": "$(PB_FeedBaseUrl)/$(ProductBuildId)/coreclr/index.json",
-            "PB_OutputFeed": "$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/index.json",
-            "PB_OutputPropsLocation": "orchestration-metadata/PackageVersions.props"
+            "TreatWarningsAsErrors": "false"
           },
-          "ReportingParameters": {
-            "Type": "build/productconstruction/",
-            "Source": "prodcon/packageversions/CoreFx"
-          }
+          "BuildParameters": {},
+          "Definitions": [
+            {
+              "Name": "DotNet-Orchestration-Merge-Feeds",
+              "Parameters": {
+                "PB_InputFeeds": "$(PB_FeedBaseUrl)/$(ProductBuildId)/coreclr/index.json",
+                "PB_OutputFeed": "$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/index.json",
+                "PB_OutputPropsLocation": "orchestration-metadata/PackageVersions.props"
+              },
+              "ReportingParameters": {
+                "Type": "build/productconstruction/",
+                "Source": "prodcon/packageversions/CoreFx"
+              }
+            },
+            {
+              "Name": "DotNet-Orchestration-Merge-Blobs",
+              "Parameters": {
+                "PB_InputUrls": "$(PB_FeedBaseUrl)/$(ProductBuildId)/coreclr/assets/symbols",
+                "PB_OutputUrl": "$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/assets/symbols"
+              },
+              "ReportingParameters": {
+                "Type": "build/productconstruction/",
+                "Source": "prodcon/packageversions/CoreFx"
+              }
+            }
+          ]
         },
+        // Delete existing repo specific outputs
         {
-          "Name": "DotNet-Orchestration-Merge-Blobs",
+          "Name": "CoreFx",
+          "DependsOn": [
+            "CoreFx-CreateInputs"
+          ],
           "Parameters": {
-            "PB_InputUrls": "$(PB_FeedBaseUrl)/$(ProductBuildId)/coreclr/assets/symbols",
-            "PB_OutputUrl": "$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/assets/symbols"
+            "TreatWarningsAsErrors": "false"
           },
-          "ReportingParameters": {
-            "Type": "build/productconstruction/",
-            "Source": "prodcon/packageversions/CoreFx"
-          }
-        }
-      ]
-    },
-    // Delete existing repo specific outputs
-    {
-      "Name": "CoreFx",
-      "DependsOn": [
-        "CoreFx-CreateInputs"
-      ],
-      "Parameters": {
-        "TreatWarningsAsErrors": "false"
-      },
-      "BuildParameters": {},
-      "Definitions": [
+          "BuildParameters": {},
+          "Definitions": [
+            {
+              "Name": "DotNet-Orchestration-Create-Outputs",
+              "Parameters": {
+                "PB_OutputUrl": "$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx/"
+              },
+              "ReportingParameters": {
+                "Type": "build/orchestration/",
+                "Source": "prodcon/createoutputs/CoreFx"
+              }
+            }
+          ]
+        },
+        // Call actual corefx build
         {
-          "Name": "DotNet-Orchestration-Create-Outputs",
+          "Name": "CoreFx-Build",
+          "DependsOn": [
+            "CoreFx"
+          ],
           "Parameters": {
-            "PB_OutputUrl": "$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx/"
+            "TreatWarningsAsErrors": "false"
           },
-          "ReportingParameters": {
-            "Type": "build/orchestration/",
-            "Source": "prodcon/createoutputs/CoreFx"
-          }
-        }
-      ]
-    },
-    // Call actual corefx build
-    {
-      "Name": "CoreFx-Build",
-      "DependsOn": [
-        "CoreFx"
-      ],
-      "Parameters": {
-        "TreatWarningsAsErrors": "false"
-      },
-      "BuildParameters": {},
-      "Definitions": [
-        {
-          "Name": "DotNet-CoreFx-PipeBuild-Master",
-          "Parameters": {
-            // Branch name
-            "Branch": "release/2.2",
-            "PB_PublishBlobFeedUrl": "$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx/index.json",
-            "PB_PackageVersionPropsUrl": "$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/orchestration-metadata/PackageVersions.props",
-            "PB_RestoreSource": "$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/index.json",
-            "PB_AssetRootUrl": "$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/assets/"
-          },
-          "ReportingParameters": {
-            "Type": "build/orchestration/"
-          }
-        }
-      ]
-    },
+          "BuildParameters": {},
+          "Definitions": [
+            {
+              "Name": "DotNet-CoreFx-PipeBuild-Master",
+              "Parameters": {
+                // Branch name
+                "Branch": "release/2.2",
+                "PB_PublishBlobFeedUrl": "$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx/index.json",
+                "PB_PackageVersionPropsUrl": "$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/orchestration-metadata/PackageVersions.props",
+                "PB_RestoreSource": "$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/index.json",
+                "PB_AssetRootUrl": "$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/assets/"
+              },
+              "ReportingParameters": {
+                "Type": "build/orchestration/"
+              }
+            }
+          ]
+        },
 
 4. Perform **initial** validation builds with pre-release branding (e.g. date varying)
     - **If public** - Launch public servicing build definition with the default parameters and monitor progress. Monitoring can be done via the Azure DevOps console output.  Use links to launched builds to drill down into launched builds.
