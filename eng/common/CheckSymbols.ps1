@@ -10,12 +10,12 @@ function FirstMatchingSymbolDescriptionOrDefault {
   param( 
     [string] $FullPath,                  # Full path to the module that has to be checked
     [string] $TargetServerParam,         # Parameter to pass to `Symbol Tool` indicating the server to lookup for symbols
-	[string] $SymbolsPath
+    [string] $SymbolsPath
   )
 
   $FileName = [System.IO.Path]::GetFileName($FullPath)
   $Extension = [System.IO.Path]::GetExtension($FullPath)
- 
+
   # Those below are potential symbol files that the `dotnet symbol` might
   # return. Which one will be returned depend on the type of file we are
   # checking and which type of file was uploaded.
@@ -86,10 +86,10 @@ function CountMissingSymbols {
   Get-ChildItem -Recurse $ExtractPath |
     Where-Object {$RelevantExtensions -contains $_.Extension} |
     ForEach-Object {
-	  if ($_.FullName -Match "\\ref\\") {
-	    Write-Host "`t Ignoring reference assembly file " $_.FullName
-	  	return
-	  }
+      if ($_.FullName -Match "\\ref\\") {
+        Write-Host "`t Ignoring reference assembly file " $_.FullName
+        return
+      }
 
       $SymbolsOnMSDL = FirstMatchingSymbolDescriptionOrDefault $_.FullName "--microsoft-symbol-server" $SymbolsPath
       $SymbolsOnSymWeb = FirstMatchingSymbolDescriptionOrDefault $_.FullName "--internal-server" $SymbolsPath
@@ -133,16 +133,16 @@ function CheckSymbolsAvailable {
       # These packages from Arcade-Services include some native libraries that
       # our current symbol uploader can't handle. Below is a workaround until
       # we get issue: https://github.com/dotnet/arcade/issues/2457 sorted.
-	  if ($FileName -Match "Microsoft\.DotNet\.Darc\.") {
-	    Write-Host "Ignoring Arcade-services file: $FileName"
-		Write-Host
-		return
-	  }
-	  elseif ($FileName -Match "Microsoft\.DotNet\.Maestro\.Tasks\.") {
-	    Write-Host "Ignoring Arcade-services file: $FileName"
-		Write-Host
-		return
-	  }
+      if ($FileName -Match "Microsoft\.DotNet\.Darc\.") {
+        Write-Host "Ignoring Arcade-services file: $FileName"
+        Write-Host
+        return
+      }
+      elseif ($FileName -Match "Microsoft\.DotNet\.Maestro\.Tasks\.") {
+        Write-Host "Ignoring Arcade-services file: $FileName"
+        Write-Host
+        return
+      }
 	  
       Write-Host "Validating $FileName "
       $Status = CountMissingSymbols "$InputPath\$FileName"
@@ -151,7 +151,7 @@ function CheckSymbolsAvailable {
         Write-Error "Missing symbols for $Status modules in the package $FileName"
       }
 
-	  Write-Host
+      Write-Host
     }
 }
 
