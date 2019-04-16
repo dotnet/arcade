@@ -123,7 +123,7 @@ function CountMissingSymbols {
 
 function CheckSymbolsAvailable {
   if (Test-Path $ExtractPath) {
-	Remove-Item $ExtractPath -Force  -Recurse -ErrorAction SilentlyContinue
+    Remove-Item $ExtractPath -Force  -Recurse -ErrorAction SilentlyContinue
   }
 
   Get-ChildItem "$InputPath\*.nupkg" |
