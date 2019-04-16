@@ -222,5 +222,7 @@ jobs:
           filePath: eng\common\sdk-task.ps1
           arguments: -task SDLAutomation -restore -msbuildEngine dotnet
             /p:SourcesDirectory='$(Build.SourcesDirectory)'
+            /p:Repository='$(Build.Repository.Name)'
+            /p:DncengPat='$(DncengPat)'
           condition: ${{ parameters.condition }}
           continueOnError: ${{ parameters.continueOnError }}
