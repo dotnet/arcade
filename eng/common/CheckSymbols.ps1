@@ -75,8 +75,8 @@ function CountMissingSymbols {
 
   $PackageId = [System.IO.Path]::GetFileNameWithoutExtension($PackagePath)
   $PackageGuid = New-Guid
-  $ExtractPath = $ExtractPath + $PackageGuid
-  $SymbolsPath = $ExtractPath + "\Symbols"
+  $ExtractPath = Join-Path -Path $ExtractPath -ChildPath $PackageGuid
+  $SymbolsPath = Join-Path -Path $ExtractPath -ChildPath "Symbols"
   
   [System.IO.Compression.ZipFile]::ExtractToDirectory($PackagePath, $ExtractPath)
 
@@ -87,7 +87,7 @@ function CountMissingSymbols {
     Where-Object {$RelevantExtensions -contains $_.Extension} |
     ForEach-Object {
       if ($_.FullName -Match "\\ref\\") {
-        Write-Host "`t Ignoring reference assembly file " $_.FullName
+        Write-Host "`t Ignoring reference assembly file" $_.FullName
         return
       }
 
