@@ -8,6 +8,8 @@
 
     <TestCoreDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'core'))</TestCoreDir>
     <TestAssetsDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'assets'))</TestAssetsDir>
+
+    <UseGlobalTools Condition="'$(UseGlobalTools)' == '' AND '$(Coverage)' == 'true'">true</UseGlobalTools>
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)TestProject.props" />

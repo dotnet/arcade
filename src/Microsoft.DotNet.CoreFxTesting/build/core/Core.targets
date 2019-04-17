@@ -196,8 +196,14 @@
     <Error Condition="!Exists('$(TestAssemblyFullPath)')"
            Text="Test assembly couldn't be found. Make sure to build the test project first." />
 
+    <PropertyGroup>
+      <RunTestsCommand>"$(RunScriptOutputPath)" --runtime-path "$(TestHostRootPath.TrimEnd('\/'))" --dotnet-root "$(DotNetRoot.TrimEnd('\/'))"</RunTestsCommand>
+      <RunTestsCommand Condition="'$(UseGlobalTools)' == 'true'">$(RunTestsCommand) --global-tools-dir "$(GlobalToolsDir.TrimEnd('\/'))"</RunTestsCommand>
+      <RunTestsCommand Condition="'$(TestRspFile)' != ''">$(RunTestsCommand) --rsp-file "$(TestRspFile)"</RunTestsCommand>
+    </PropertyGroup>
+
     <!-- Invoke the run script with the test host as the runtime path. -->
-    <Exec Command="&quot;$(RunScriptOutputPath)&quot; --runtime-path &quot;$(TestHostRootPath.TrimEnd('\/'))&quot; --dotnet-root &quot;$(DotNetRoot.TrimEnd('\/'))&quot; --global-tools-dir &quot;$(GlobalToolsDir.TrimEnd('\/'))&quot;"
+    <Exec Command="$(RunTestsCommand)"
           ContinueOnError="true"
           IgnoreStandardErrorWarningFormat="true">
       <Output PropertyName="TestRunExitCode" TaskParameter="ExitCode" />
