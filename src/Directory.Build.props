@@ -5,6 +5,7 @@
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
   <PropertyGroup>
+    <Copyright>$(CopyrightMicrosoft)</Copyright>
     <StrongNameKeyId>MicrosoftAspNetCore</StrongNameKeyId>
     <NetStandardImplicitPackageVersion>1.6.0</NetStandardImplicitPackageVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
