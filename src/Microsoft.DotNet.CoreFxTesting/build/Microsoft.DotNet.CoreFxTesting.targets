@@ -4,9 +4,6 @@
 
   <PropertyGroup>
     <TargetOS Condition="'$(TargetOS)' == ''">$(DefaultOSGroup)</TargetOS>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <IncludeDefaultTestReferences Condition="'$(IncludeDefaultTestReferences)' == '' AND '$(IsTestProject)' == 'true'">true</IncludeDefaultTestReferences>
   </PropertyGroup>
 
