@@ -35,17 +35,17 @@ on what changes are needed check ["How do I use it?"](https://github.com/dotnet/
 | CoreFx                     | danmose          | Not-Moved |   1   | Direct access to Task.Feed tasks                   |
 | Templating                 | vramak           |  Moved    |   1   |                    |
 | Test-Templates             | singhsarab       |  Moved    |   1   |                    |
-| Toolset                    | licavalc         | Not-Moved |   1   | Upload zip files                   |
-| CoreClr                    | russellk         | Not-Moved |   2   |                    |
+| Toolset                    | licavalc         | Not-Moved |   1   | Direct access to Task.Feed tasks   |
+| CoreClr                    | russellk         | Not-Moved |   2   | Direct access to Task.Feed tasks                   |
 | WebSDK                     | vramak           |  Moved    |   2   |                    |
-| WinForms                   | mmcgaw           | Not-Moved |   2   | Have a PR for it.                   |
-| WPF                        | vatsan-madhavan  | Not-Moved |   2   | Have a PR for it.                   |
+| WinForms                   | mmcgaw           |  Moved    |   2   |    |
+| WPF                        | vatsan-madhavan  |  Moved    |   2   |   |
 | aspnet-EntityFrameworkCore | namc             |  Moved    |   2   |                    |
 | aspnet-Extensions          | namc             |  Moved    |   2   |                    |
 | aspnet-AspNetCore-Tooling  | namc             |  Moved    |   2   |                    |
-| CLI                        | licavalc         | Not-Moved |   3   |                    |
-| CLI-Migrate                | licavalc         | Not-Moved |   3   |                    |
-| CLICommandLineParser       | licavalc         | Not-Moved |   3   |                    |
+| CLI                        | licavalc         |  Moved    |   3   |                    |
+| CLI-Migrate                | licavalc         |  Moved    |   3   |                    |
+| CLICommandLineParser       | licavalc         |  Moved    |   3   |                    |
 
 *If a given batch is completed before its planned ETA, we'll move on to the next right away. Also, 
 if the move takes more than what was estimated we'll move the rest of the batches forward
