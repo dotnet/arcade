@@ -10,7 +10,7 @@ $script:SourceLinkInfoCache = @{}
 
 function UrlStatusCode {
   param(
-    [string] $Url		# URL to be checked
+    [string] $Url		                                     # URL to be checked
   )
 
   if ($SourceLinkInfoCache.ContainsKey($Url)) {
@@ -31,7 +31,7 @@ function UrlStatusCode {
 
 function ExtractAndTestSourceLinkLinks {
   param( 
-    [string] $FullPath					# Full path to the module that has to be checked
+    [string] $FullPath                                       # Full path to the module that has to be checked
   )
 
   $FailedLinks = 0
@@ -45,14 +45,14 @@ function ExtractAndTestSourceLinkLinks {
 		Write-Host -NoNewLine "| `t | `t | Checking link ($Link) ... "
 
 		$Status = UrlStatusCode $Link
+        $StatusMessage = "Passed."
 
 		if ($Status -ne "200") {
-		  Write-Host "Inaccessible. Return status was $Status"
+          $StatusMessage = "Inaccessible."
 		  $FailedLinks++
 		}
-		else {
-		  Write-Host "Passed. Return status was $Status"
-		}
+
+        Write-Host "$StatusMessage. Return status was $Status"
 	  }
   }
   else {
@@ -64,7 +64,7 @@ function ExtractAndTestSourceLinkLinks {
 
 function CheckSourceLinkLinks {
   param( 
-    [string] $PackagePath		# Path to a Symbols.NuGet package
+    [string] $PackagePath		                             # Path to a Symbols.NuGet package
   )
 
   # Ensure input file exist
@@ -106,7 +106,7 @@ function CheckSourceLinkLinks {
   Pop-Location
 
   if ($PassedFiles -eq 0 -and $FailedFiles -eq 0) {
-	Write-Host "| `t No file to check in this package. "
+	Write-Host "| `t No files to check in this package."
   }
 
   return $FailedFiles
@@ -126,7 +126,7 @@ function CheckSourceLinkInformation {
       $Status = CheckSourceLinkLinks $_.FullName
   
       if ($Status -ne 0) {
-        Write-Error "| Result: Some links in $FileName were inacessible."
+        Write-Error "| Result: Some links in $FileName were inaccessible."
 		$HasErrors = 1
       }
 	  else {
