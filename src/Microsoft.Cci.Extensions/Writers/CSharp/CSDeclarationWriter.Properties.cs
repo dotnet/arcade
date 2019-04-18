@@ -74,7 +74,7 @@ namespace Microsoft.Cci.Writers.CSharp
                                                        (getterHasIsReadOnlyAttribute && (setter is null)) ||
                                                        (setterHasIsReadOnlyAttribute && (getter is null));
 
-            if (allAccessorsHaveIsReadOnlyAttribute)
+            if (allAccessorsHaveIsReadOnlyAttribute && (LangVersion >= LangVersion8_0))
             {
                 WriteKeyword("readonly");
             }
@@ -139,7 +139,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
             if (accessor.Visibility != property.Visibility)
                 WriteVisibility(accessor.Visibility);
-            if (isReadOnly)
+            if (isReadOnly && (LangVersion >= LangVersion8_0))
             {
                 WriteKeyword("readonly");
             }

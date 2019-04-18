@@ -12,6 +12,7 @@ using Microsoft.Cci.Filters;
 using Microsoft.Cci.Writers;
 using Microsoft.Cci.Writers.Syntax;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Cci.Writers.CSharp;
 
 namespace Microsoft.DotNet.GenAPI
 {
@@ -48,6 +49,7 @@ namespace Microsoft.DotNet.GenAPI
             CommandOption hightlightInterfaceMembers = app.Option("--hightlight-interface-members", "[CSDecl] Highlight interface implementation members.", CommandOptionType.NoValue);
             CommandOption alwaysIncludeBase = app.Option("--always-include-base", "[CSDecl] Include base types, interfaces, and attributes, even when those types are filtered.", CommandOptionType.NoValue);
             CommandOption excludeMembers = app.Option("--exclude-members", "Exclude members when return value or parameter types are excluded.", CommandOptionType.NoValue);
+            CommandOption langVersion = app.Option("--lang-version", "Language Version to target", CommandOptionType.SingleValue);
 
             app.OnExecute(() =>
             {
@@ -127,9 +129,37 @@ namespace Microsoft.DotNet.GenAPI
                             writer.PlatformNotSupportedExceptionMessage = exceptionMessage.Value();
                             writer.IncludeGlobalPrefixForCompilation = globalPrefix.HasValue();
                             writer.AlwaysIncludeBase = alwaysIncludeBase.HasValue();
+                            writer.LangVersion = GetLangVersion();
                             return writer;
                         }
                 }
+            }
+
+            Version GetLangVersion()
+            {
+                if (langVersion.HasValue())
+                {
+                    var langVersionValue = langVersion.Value();
+
+                    if (langVersionValue.Equals("default", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return CSDeclarationWriter.LangVersionDefault;
+                    }
+                    else if (langVersionValue.Equals("latest", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return CSDeclarationWriter.LangVersionLatest;
+                    }
+                    else if (langVersionValue.Equals("preview", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return CSDeclarationWriter.LangVersionPreview;
+                    }
+                    else if (Version.TryParse(langVersionValue, out var parsedVersion))
+                    {
+                        return parsedVersion;
+                    }
+                }
+
+                return CSDeclarationWriter.LangVersionDefault;
             }
 
             return app.Execute(args);

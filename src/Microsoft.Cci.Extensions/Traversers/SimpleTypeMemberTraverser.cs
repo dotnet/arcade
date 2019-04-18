@@ -86,11 +86,15 @@ namespace Microsoft.Cci.Traversers
             // This can happen for enums, as an example, where we want to prefer numeric
             // order rather than the default alphabetical order.
 
-            bool isAlreadyOrdered = members is IOrderedEnumerable<ITypeDefinitionMember>;
+            if (members is IOrderedEnumerable<ITypeDefinitionMember> orderedMembers)
+            {
+                members = orderedMembers.ThenBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
+            }
+            else
+            {
+                members = members.OrderBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
+            }
             members = members.Where(_filter.Include);
-            members = isAlreadyOrdered
-                    ? ((IOrderedEnumerable<ITypeDefinitionMember>)members).ThenBy(GetMemberKey, StringComparer.OrdinalIgnoreCase)
-                    : members.OrderBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
 
             foreach (var member in members)
                 Visit(member);
