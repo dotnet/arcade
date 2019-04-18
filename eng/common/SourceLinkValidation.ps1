@@ -6,17 +6,27 @@ param(
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
+$script:SourceLinkInfoCache = @{}
+
 function UrlStatusCode {
   param(
     [string] $Url		# URL to be checked
   )
 
+  if ($SourceLinkInfoCache.ContainsKey($Url)) {
+	return $SourceLinkInfoCache[$Url]
+  }
+  
   try {
-    (Invoke-WebRequest -Uri $Url -UseBasicParsing -DisableKeepAlive -Method HEAD).StatusCode
+    $Status = (Invoke-WebRequest -Uri $Url -UseBasicParsing -Method HEAD -TimeoutSec 10).StatusCode
   }
   catch [Net.WebException] {
-    [int]$_.Exception.Response.StatusCode
+    $Status = [int]$_.Exception.Response.StatusCode
   }
+  
+  $SourceLinkInfoCache.Add($Url, $Status)
+  
+  return $Status
 }
 
 function ExtractAndTestSourceLinkLinks {
@@ -27,17 +37,17 @@ function ExtractAndTestSourceLinkLinks {
   $FailedLinks = 0
   $SourceLinkInfos = .\sourcelink.exe print-urls $FullPath
 
-  if ($LASTEXITCODE -eq 0) {
+  if ($LASTEXITCODE -eq 0 -and -not ([string]::IsNullOrEmpty($SourceLinkInfos))) {
 	((Select-String '(http[s]?)(:\/\/)([^\s,]+)' -Input $SourceLinkInfos -AllMatches).Matches.Value) |
 	  ForEach-Object {
 	    $Link = $_
 
-		Write-Host -NoNewLine "| `t | `t | Checking link $Link ... "
+		Write-Host -NoNewLine "| `t | `t | Checking link ($Link) ... "
 
 		$Status = UrlStatusCode $Link
 
 		if ($Status -ne "200") {
-		  Write-Host "Inacessible. Return status was $Status"
+		  Write-Host "Inaccessible. Return status was $Status"
 		  $FailedLinks++
 		}
 		else {
@@ -66,7 +76,7 @@ function CheckSourceLinkLinks {
   # For now we'll only care about Portable & Embedded PDBs
   $RelevantExtensions = @(".dll", ".exe", ".pdb")
 
-  # How many links were inacessible
+  # How many links were inaccessible
   $FailedFiles = 0
   $PassedFiles = 0
 
@@ -81,15 +91,8 @@ function CheckSourceLinkLinks {
   Get-ChildItem -Recurse $ExtractPath |
     Where-Object {$RelevantExtensions -contains $_.Extension} |
     ForEach-Object {
-      $Copyright = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($_.FullName).LegalCopyright
-
-      # Skip files that aren't Microsoft or .Net Foundation
-      if (!($Copyright -Match "Microsoft" -or $Copyright -Match ".NET Foundation")) {
-        return
-      }
-
-      Write-Host "| `t Checking file" $_.FullName " [from $Copyright] "
-
+      Write-Host "| `t Checking file" $_.FullName
+	  
 	  $Status = ExtractAndTestSourceLinkLinks $_.FullName
 
 	  if ($Status -ne 0) {
