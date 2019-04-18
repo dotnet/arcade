@@ -32,7 +32,7 @@
     <!--
       Set PackageOutputPath based on the IsShippingPackage flag set by projects.
       This distinction allows publishing tools to determine which assets to publish to official channels.
-      
+
       Visual Studio Build (aka CoreXT) packages are non-shipping packages that are used to insert binaries into an internal 
       Visual Studio repository that builds the product from components. These packages are not standard NuGet packages.
     -->

@@ -800,6 +800,10 @@ By default, all _shipping_ libraries are localized.
 
 When `UsingToolNuGetRepack` is true _shipping_ packages are repackaged as release/pre-release packages to `artifacts\packages\$(Configuration)\Release` and `artifacts\packages\$(Configuration)\PreRelease` directories, respectively.
 
+### `IsVisualStudioBuildPackage` (bool)
+
+Set to `true` in projects that build Visual Studio Build (CoreXT) packages. These packages are non-shipping, but their content is shipping. They are inserted into and referenced from the internal DevDiv `VS` repository.
+
 ### `PublishWindowsPdb` (bool)
 
 `true` (default) if the PDBs produced by the project should be converted to Windows PDB and published to Microsoft symbol servers.
