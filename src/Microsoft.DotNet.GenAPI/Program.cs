@@ -48,6 +48,7 @@ namespace Microsoft.DotNet.GenAPI
             CommandOption hightlightInterfaceMembers = app.Option("--hightlight-interface-members", "[CSDecl] Highlight interface implementation members.", CommandOptionType.NoValue);
             CommandOption alwaysIncludeBase = app.Option("--always-include-base", "[CSDecl] Include base types, interfaces, and attributes, even when those types are filtered.", CommandOptionType.NoValue);
             CommandOption excludeMembers = app.Option("--exclude-members", "Exclude members when return value or parameter types are excluded.", CommandOptionType.NoValue);
+            CommandOption langVersion = app.Option("--langVersion", "Language Version to target", CommandOptionType.SingleValue);
 
             app.OnExecute(() =>
             {
@@ -127,6 +128,7 @@ namespace Microsoft.DotNet.GenAPI
                             writer.PlatformNotSupportedExceptionMessage = exceptionMessage.Value();
                             writer.IncludeGlobalPrefixForCompilation = globalPrefix.HasValue();
                             writer.AlwaysIncludeBase = alwaysIncludeBase.HasValue();
+                            writer.LangVersion = langVersion.HasValue() ? Version.Parse(langVersion.Value()) : new Version(0, 0);
                             return writer;
                         }
                 }

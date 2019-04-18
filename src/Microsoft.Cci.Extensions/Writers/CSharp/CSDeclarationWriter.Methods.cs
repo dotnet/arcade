@@ -68,7 +68,7 @@ namespace Microsoft.Cci.Writers.CSharp
             {
                 WriteAttributes(method.ReturnValueAttributes, true);
 
-                if (method.Attributes.HasIsReadOnlyAttribute())
+                if (method.Attributes.HasIsReadOnlyAttribute() && (LangVersion >= LangVersion8_0))
                 {
                     WriteKeyword("readonly");
                 }

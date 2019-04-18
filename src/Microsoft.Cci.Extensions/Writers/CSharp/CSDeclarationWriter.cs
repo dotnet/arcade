@@ -14,6 +14,8 @@ namespace Microsoft.Cci.Writers.CSharp
 {
     public partial class CSDeclarationWriter : ICciDeclarationWriter
     {
+        public static readonly Version LangVersion8_0 = new Version(8, 0);
+
         private readonly ISyntaxWriter _writer;
         private readonly ICciFilter _filter;
         private bool _forCompilation;
@@ -77,6 +79,8 @@ namespace Microsoft.Cci.Writers.CSharp
         public ISyntaxWriter SyntaxtWriter { get { return _writer; } }
 
         public ICciFilter Filter { get { return _filter; } }
+
+        public Version LangVersion { get; set; }
 
         public void WriteDeclaration(IDefinition definition)
         {
