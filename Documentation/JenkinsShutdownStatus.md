@@ -43,8 +43,8 @@ Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins su
 | ----------------------------- | ------------ | ------------ | ----- |
 | aspnet-EntityFrameworkCore    | dougbu       | [2.1](https://ci.dot.net/job/aspnet_EntityFrameworkCore/job/release_2.1/), [2.2](https://ci.dot.net/job/aspnet_EntityFrameworkCore/job/release_2.2/) | Brice Lamson to confirm if these are needed |
 | dotnet-CLI                    | licavalc     | [2.1.5xx](https://ci.dot.net/job/dotnet_cli/job/release_2.1.5xx/), [2.1.6xx](https://ci.dot.net/job/dotnet_cli/job/release_2.1.6xx/), [2.1.7xx](https://ci.dot.net/job/dotnet_cli/job/release_2.1.7xx/), [2.2.1xx](https://ci.dot.net/job/dotnet_cli/job/release_2.2.1xx/), [2.2.2xx](https://ci.dot.net/job/dotnet_cli/job/release_2.2.2xx/), [2.2.3xx](https://ci.dot.net/job/dotnet_cli/job/release_2.2.3xx/), [1.0.0](https://ci.dot.net/job/dotnet_cli/job/rel_1.0.0/), [1.0.1](https://ci.dot.net/job/dotnet_cli/job/rel_1.0.1/), [1.1.0](https://ci.dot.net/job/dotnet_cli/job/rel_1.1.0/) ||
-| dotnet-CoreClr                | russellk     | [2.1](https://ci.dot.net/job/dotnet_coreclr/job/release_2.1/), [2.2](https://ci.dot.net/job/dotnet_coreclr/job/release_2.2/), [1.0.0](https://ci.dot.net/job/dotnet_coreclr/job/release_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_coreclr/job/release_1.1.0/) ||
-| dotnet-CoreFx                 | danmose      | [2.1](https://ci.dot.net/job/dotnet_corefx/job/release_2.1/), [2.2](https://ci.dot.net/job/dotnet_corefx/job/release_2.2/), [1.0.0](https://ci.dot.net/job/dotnet_corefx/job/release_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_corefx/job/release_1.1.0/) ||
+| dotnet-CoreClr                | russellk     | [2.1](https://ci.dot.net/job/dotnet_coreclr/job/release_2.1/), [2.2](https://ci.dot.net/job/dotnet_coreclr/job/release_2.2/), [1.0.0](https://ci.dot.net/job/dotnet_coreclr/job/release_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_coreclr/job/release_1.1.0/) [2.1/2.2 perf](https://ci2.dot.net/job/dotnet_coreclr/job/perf/) ||
+| dotnet-CoreFx                 | danmose      | [2.1](https://ci.dot.net/job/dotnet_corefx/job/release_2.1/), [2.2](https://ci.dot.net/job/dotnet_corefx/job/release_2.2/), [1.0.0](https://ci.dot.net/job/dotnet_corefx/job/release_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_corefx/job/release_1.1.0/) [2.1/2.2 perf](https://ci2.dot.net/job/dotnet_corefx/job/perf/)||
 | dotnet-Core-Setup             | dleeapho     | [2.1](https://ci.dot.net/job/dotnet_core-setup/job/release_2.1/), [2.2](https://ci.dot.net/job/dotnet_core-setup/job/release_2.2/), [1.0.0](https://ci.dot.net/job/dotnet_core-setup/job/release_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_core-setup/job/release_1.1.0/) ||
 | dotnet_SDK                    | licavalc     | [2.1.5xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.1.5xx/), [2.1.6xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.1.6xx/), [2.1.7xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.1.7xx/), [2.2.1xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.2.1xx/), [2.2.2xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.2.2xx/), [2.2.3xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.2.3xx/), [1.0.0](https://ci.dot.net/job/dotnet_sdk/job/rel_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_sdk/job/rel_1.1.0/) ||
 | dotnet_Standard               | danmose      | [2.0.0](https://ci.dot.net/job/dotnet_standard/job/release_2.0.0/) ||
@@ -58,7 +58,7 @@ Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins su
 | Job name                      | Owner        | Jenkins jobs | Notes |
 | ----------------------------- | ------------ | ------------ | ----- |
 | Microsoft_MSBuild             | licavalc     | [vs15.9](https://ci2.dot.net/job/Microsoft_msbuild/job/vs15.9/) ||
-| Microsoft_VisualFSharp        | brettfo      | [vs15.5](https://ci2.dot.net/job/Microsoft_visualfsharp/job/dev15.5/), [vs15.7](https://ci2.dot.net/job/Microsoft_visualfsharp/job/dev15.7/), [vs15.8](https://ci2.dot.net/job/Microsoft_visualfsharp/job/dev15.8/) | Complete - these have been removed |
+| Microsoft_VisualFSharp        | brettfo      || Complete - these have been removed |
 
 ## Jenkins - UWP
 
@@ -68,15 +68,6 @@ Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins su
 | dotnet-CoreFx                 | danmose      | [uwp6.2](https://ci.dot.net/job/dotnet_corefx/job/release_uwp6.2/) ||
 | dotnet-Core-Setup             | dleeapho     | [uwp6.0](https://ci.dot.net/job/dotnet_core-setup/job/release_uwp6.0/) ||
 | dotnet_WCF                    | stebon       | [uwp6.0](https://ci.dot.net/job/dotnet_wcf/job/release_uwp6.0/), [uwp6.1](https://ci.dot.net/job/dotnet_wcf/job/release_uwp6.1/), [uwp6.2](https://ci.dot.net/job/dotnet_wcf/job/release_uwp6.2/) ||
-
-## Jenkins - Perf
-
-| Job name                      | Owner        | Jenkins jobs | Notes |
-| ----------------------------- | ------------ | ------------ | ----- |
-| dotnet-CoreClr                | russellk     | [perf](https://ci2.dot.net/job/dotnet_coreclr/job/perf/) ||
-| dotnet-CoreFx                 | danmose      | [perf](https://ci2.dot.net/job/dotnet_corefx/job/perf/) ||
-| dotnet_Performance            | michelm      | Removed ||
-| dotnet_SDK                    | licavalc     | [perf](https://ci2.dot.net/job/dotnet_sdk/job/perf/) ||
 
 ## Jenkins - Other
 
