@@ -75,7 +75,7 @@ Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins su
 | ----------------------------- | ------------ | ------------ | ----- |
 | dotnet-CoreClr                | russellk     | [perf](https://ci2.dot.net/job/dotnet_coreclr/job/perf/) ||
 | dotnet-CoreFx                 | danmose      | [perf](https://ci2.dot.net/job/dotnet_corefx/job/perf/) ||
-| dotnet_Performance            | michelm      | [perf](https://ci2.dot.net/job/dotnet_performance/job/perf/) ||
+| dotnet_Performance            | michelm      | Removed ||
 | dotnet_SDK                    | licavalc     | [perf](https://ci2.dot.net/job/dotnet_sdk/job/perf/) ||
 
 ## Jenkins - Other
