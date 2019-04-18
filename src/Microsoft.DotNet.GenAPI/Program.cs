@@ -12,6 +12,7 @@ using Microsoft.Cci.Filters;
 using Microsoft.Cci.Writers;
 using Microsoft.Cci.Writers.Syntax;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Cci.Writers.CSharp;
 
 namespace Microsoft.DotNet.GenAPI
 {
@@ -128,10 +129,37 @@ namespace Microsoft.DotNet.GenAPI
                             writer.PlatformNotSupportedExceptionMessage = exceptionMessage.Value();
                             writer.IncludeGlobalPrefixForCompilation = globalPrefix.HasValue();
                             writer.AlwaysIncludeBase = alwaysIncludeBase.HasValue();
-                            writer.LangVersion = langVersion.HasValue() ? Version.Parse(langVersion.Value()) : new Version(0, 0);
+                            writer.LangVersion = GetLangVersion();
                             return writer;
                         }
                 }
+            }
+
+            Version GetLangVersion()
+            {
+                if (langVersion.HasValue())
+                {
+                    var langVersionValue = langVersion.Value();
+
+                    if (langVersionValue.Equals("default", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return CSDeclarationWriter.LangVersionDefault;
+                    }
+                    else if (langVersionValue.Equals("latest", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return CSDeclarationWriter.LangVersionLatest;
+                    }
+                    else if (langVersionValue.Equals("preview", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return CSDeclarationWriter.LangVersionPreview;
+                    }
+                    else if (Version.TryParse(langVersionValue, out var parsedVersion))
+                    {
+                        return parsedVersion;
+                    }
+                }
+
+                return CSDeclarationWriter.LangVersionDefault;
             }
 
             return app.Execute(args);
