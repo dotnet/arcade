@@ -25,15 +25,20 @@
     <IsShipping Condition="'$(IsShipping)' == ''">true</IsShipping>
 
     <IsShippingAssembly Condition="'$(IsShippingAssembly)' == ''">$(IsShipping)</IsShippingAssembly>
+    <IsShippingPackage Condition="'$(IsVisualStudioBuildPackage)' == 'true'">false</IsShippingPackage>
     <IsShippingPackage Condition="'$(IsShippingPackage)' == ''">$(IsShipping)</IsShippingPackage>
     <IsShippingVsix Condition="'$(IsShippingVsix)' == ''">$(IsShipping)</IsShippingVsix>
 
     <!--
       Set PackageOutputPath based on the IsShippingPackage flag set by projects.
       This distinction allows publishing tools to determine which assets to publish to official channels.
+
+      Visual Studio Build (aka CoreXT) packages are non-shipping packages that are used to insert binaries into an internal 
+      Visual Studio repository that builds the product from components. These packages are not standard NuGet packages.
     -->
     <PackageOutputPath Condition="'$(IsShippingPackage)' == 'true'">$(ArtifactsShippingPackagesDir)</PackageOutputPath>
     <PackageOutputPath Condition="'$(IsShippingPackage)' != 'true'">$(ArtifactsNonShippingPackagesDir)</PackageOutputPath>
+    <PackageOutputPath Condition="'$(IsVisualStudioBuildPackage)' == 'true'">$(VisualStudioBuildPackagesDir)</PackageOutputPath>
 
     <IsSwixProject>false</IsSwixProject>
     <IsSwixProject Condition="'$(VisualStudioInsertionComponent)' != '' and '$(IsVsixProject)' != 'true'">true</IsSwixProject>

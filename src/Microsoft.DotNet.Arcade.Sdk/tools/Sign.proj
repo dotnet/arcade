@@ -16,6 +16,7 @@
     <!-- List of container files that will be opened and checked for files that need to be signed. -->
     <ItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
     <ItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
+    <ItemsToSign Include="$(VisualStudioBuildPackagesDir)**\*.nupkg" />
 
     <!-- Default certificate/strong-name to be used for all files with PKT=="31bf3856ad364e35". -->
     <StrongNameSignInfo Include="MsSharedLib72" PublicKeyToken="31bf3856ad364e35" CertificateName="Microsoft400" />
