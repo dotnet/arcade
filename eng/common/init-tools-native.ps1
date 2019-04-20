@@ -41,8 +41,12 @@ Param (
   [switch] $Force = $False,
   [int] $DownloadRetries = 5,
   [int] $RetryWaitTimeInSeconds = 30,
-  [string] $GlobalJsonFile = "$PSScriptRoot\..\..\global.json"
+  [string] $GlobalJsonFile
 )
+
+if (!$GlobalJsonFile) {
+  $GlobalJsonFile = Join-Path (get-item $PSScriptRoot).parent.parent.FullName "global.json"
+}
 
 Set-StrictMode -version 2.0
 $ErrorActionPreference="Stop"
