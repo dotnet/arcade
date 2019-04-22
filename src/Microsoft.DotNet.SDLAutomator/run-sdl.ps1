@@ -3,12 +3,13 @@ Param(
   [string] $SourcesDirectory,
   [string] $DncengPat,
   [string[]] $ToolsList,
-  [bool] $UpdateBaseline,
+  [bool] $UpdateBaseline=$False,
   [string] $GdnLoggerLevel="Standard"
 )
 
 foreach ($tool in $ToolsList) {
-  guardian run --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GdnLoggerLevel
+  Write-Host "guardian run --working-directory $SourcesDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GdnLoggerLevel"
+  guardian run --working-directory $SourcesDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GdnLoggerLevel
 }
 
 if ($UpdateBaseline) {

@@ -12,11 +12,13 @@ $zipFile = "$SourcesDirectory/gdn.zip"
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 Try
 {
+  Write-Host "Downloading gdn folder from internal config repostiory..."
   Invoke-WebRequest -Headers @{ "Accept"="application/zip"; "Authorization"="Basic $encodedPat" } -Uri $uri -OutFile $zipFile
   [System.IO.Compression.ZipFile]::ExtractToDirectory($zipFile, $sourcesDirectory)
 } Catch [System.Net.WebException] {
   # if the folder does not exist, we'll do a gdn init and create a PR for it
   Write-Host "Initializing Guardian..."
   guardian init --logger-level $GdnLoggerLevel
+  guardian baseline --name mainbaseline
   Invoke-Expression "push-gdn.ps1 -Repository $Repository -SourcesDirectory $SourcesDirectory -GdnFolder $SourcesDirectory/.gdn -DncengPat $DncengPat -PushReason `"Initialize gdn folder`""
 }
