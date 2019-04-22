@@ -13,5 +13,5 @@ foreach ($tool in $ToolsList) {
 }
 
 if ($UpdateBaseline) {
-  Invoke-Expression "push-gdn.ps1 -Repository $Repository -SourcesDirectory $SourcesDirectory -GdnFolder $SourcesDirectory/.gdn -DncengPat $DncengPat -PushReason `"Update baseline`""
+  Invoke-Expression "$PSScriptRoot\push-gdn.ps1 -Repository $Repository -SourcesDirectory $SourcesDirectory -GdnFolder $SourcesDirectory/.gdn -DncengPat $DncengPat -PushReason `"Update baseline`""
 }
