@@ -3,7 +3,7 @@ Param(
   [string] $SourcesDirectory,
   [string] $GdnFolder,
   [string] $DncengPat,
-  [string] $PushReason,
+  [string] $PushReason
 )
 
 $sdlDir = "$SourcesDirectory/../sdl-tool-cfg"

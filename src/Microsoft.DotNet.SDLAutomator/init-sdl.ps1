@@ -2,7 +2,7 @@ Param(
   [string] $Repository,
   [string] $SourcesDirectory,
   [string] $DncengPat,
-  [string] $GdnLoggerLevel="Standard",
+  [string] $GdnLoggerLevel="Standard"
 )
 
 $encodedPat = [Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$DncengPat"))

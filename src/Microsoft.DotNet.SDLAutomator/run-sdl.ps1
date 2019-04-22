@@ -4,7 +4,7 @@ Param(
   [string] $DncengPat,
   [string[]] $ToolsList,
   [bool] $UpdateBaseline,
-  [string] $GdnLoggerLevel="Standard",
+  [string] $GdnLoggerLevel="Standard"
 )
 
 foreach ($tool in $ToolsList) {
