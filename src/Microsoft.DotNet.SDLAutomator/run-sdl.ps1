@@ -4,10 +4,11 @@ Param(
   [string] $DncengPat,
   [string[]] $ToolsList,
   [bool] $UpdateBaseline,
+  [string] $GdnLoggerLevel="Standard",
 )
 
 foreach ($tool in $ToolsList) {
-  guardian run --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline
+  guardian run --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GdnLoggerLevel
 }
 
 if ($UpdateBaseline) {

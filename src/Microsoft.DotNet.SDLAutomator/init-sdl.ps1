@@ -2,6 +2,7 @@ Param(
   [string] $Repository,
   [string] $SourcesDirectory,
   [string] $DncengPat,
+  [string] $GdnLoggerLevel="Standard",
 )
 
 $encodedPat = [Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$DncengPat"))
@@ -14,6 +15,6 @@ Try
 } Catch [System.Net.WebException] {
   # if the folder does not exist, we'll do a gdn init and create a PR for it
   Write-Host "Initializing Guardian..."
-  guardian init
+  guardian init --logger-level $GdnLoggerLevel
   Invoke-Expression "push-gdn.ps1 -Repository $Repository -SourcesDirectory $SourcesDirectory -GdnFolder $SourcesDirectory/.gdn -DncengPat $DncengPat -PushReason `"Initialize gdn folder`""
 }
