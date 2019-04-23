@@ -191,6 +191,7 @@ function Build {
     $bl \
     /p:Configuration=$configuration \
     /p:RepoRoot="$repo_root" \
+    /p:ToolsDir="$tools_dir" \
     /p:Restore=$restore \
     /p:Build=$build \
     /p:Rebuild=$rebuild \

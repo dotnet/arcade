@@ -90,6 +90,7 @@ function Build {
     $bl `
     /p:Configuration=$configuration `
     /p:RepoRoot=$RepoRoot `
+    /p:ToolsDir=$ToolsDir `
     /p:Restore=$restore `
     /p:DeployDeps=$deployDeps `
     /p:Build=$build `
