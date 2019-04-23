@@ -5,7 +5,7 @@
     <Description>This package provides support for running tests out-of-process.</Description>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <IsPackable>true</IsPackable>
-    <TargetsForTfmSpecificContentInPackage Condition="'$(TargetFramework)' != 'netstandard2.0'">$(TargetsForTfmSpecificContentInPackage);PackBuildOutputs</TargetsForTfmSpecificContentInPackage>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PackBuildOutputs</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +13,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.RemoteExecutorHost\Microsoft.DotNet.RemoteExecutorHost.csproj" Condition="'$(TargetFramework)' != 'netstandard2.0'" PrivateAssets="All" />
+    <ProjectReference Include="..\Microsoft.DotNet.RemoteExecutorHost\Microsoft.DotNet.RemoteExecutorHost.csproj"
+                      Condition="'$(TargetFramework)' != 'netstandard2.0'"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="Content"
+                      CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,10 +27,16 @@
   </ItemGroup>
 
   <Target Name="PackBuildOutputs" DependsOnTargets="ResolveProjectReferences;SatelliteDllsProjectOutputGroup;DebugSymbolsProjectOutputGroup;SatelliteDllsProjectOutputGroupDependencies;ResolveAssemblyReferences">
-    <ItemGroup>
-      <TfmSpecificPackageFile Include="%(_ResolvedProjectReferencePaths.Identity)" PackagePath="tools\$(TargetFramework)\" />
-      <TfmSpecificPackageFile Include="@(ReferenceCopyLocalPaths)" Exclude="@(_ResolvedProjectReferencePaths)" PackagePath="tools\$(TargetFramework)\%(ReferenceCopyLocalPaths.DestinationSubPath)" />
-      <TfmSpecificPackageFile Condition="'$(TargetFramework)' == 'netcoreapp2.1'" Include="$(OutputPath)%(_ResolvedProjectReferencePaths.Filename).runtimeconfig.json" PackagePath="tools\$(TargetFramework)\" />
+    <ItemGroup Condition="'$(TargetFramework)' != 'net472'">
+      <TfmSpecificPackageFile Include="$(OutputPath)$(TargetName).deps.json" PackagePath="lib\$(TargetFramework)\" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
+      <TfmSpecificPackageFile Include="$(OutputPath)%(ProjectReference.Filename).dll" PackagePath="tools\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="$(OutputPath)..\..\..\%(ProjectReference.Filename)\$(Configuration)\$(TargetFramework)\%(ProjectReference.Filename).runtimeconfig.json" PackagePath="tools\$(TargetFramework)\" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+      <TfmSpecificPackageFile Include="$(OutputPath)%(ProjectReference.Filename).exe" PackagePath="tools\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="$(OutputPath)..\..\..\%(ProjectReference.Filename)\$(Configuration)\$(TargetFramework)\%(ProjectReference.Filename).exe.config" PackagePath="tools\$(TargetFramework)\" />
     </ItemGroup>
   </Target>
 

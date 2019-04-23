@@ -3,6 +3,6 @@
 <Project>
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)\..\tools\net472\*" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildThisFileDirectory)\..\tools\netcoreapp2.0\*" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)\..\tools\netcoreapp2.1\*" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
