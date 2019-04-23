@@ -184,9 +184,7 @@ namespace Microsoft.DotNet.GitSync
                     foreach (var change in newChanges.changes[sourceRepository.Name])
                     {
                         var commit = repo.Lookup<Commit>(change);
-                        if (!IsMirrorCommit(commit.Message, targetRepo.Configuration.MirrorSignatureUser)
-                            && commit.Parents.Count() == 1
-                            )
+                        if (!IsMirrorCommit(commit.Message, targetRepo.Configuration.MirrorSignatureUser))
                         {
                             s_logger.Info($"Applying {change}");
                             var patch = FormatPatch(sourceRepository, change);
@@ -213,6 +211,7 @@ namespace Microsoft.DotNet.GitSync
         }
 
         private static bool IsMirrorCommit(string message, string author) => message.Contains($"Signed-off-by: {author} <{author}@microsoft.com>");
+
         private static string FormatPatch(RepositoryInfo sourceRepository, string sha)
         {
             var result = Runner.RunCommand("git",
