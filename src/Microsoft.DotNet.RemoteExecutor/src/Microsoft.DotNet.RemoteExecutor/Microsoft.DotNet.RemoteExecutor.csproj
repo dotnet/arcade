@@ -27,16 +27,21 @@
   </ItemGroup>
 
   <Target Name="PackBuildOutputs" DependsOnTargets="ResolveProjectReferences;SatelliteDllsProjectOutputGroup;DebugSymbolsProjectOutputGroup;SatelliteDllsProjectOutputGroupDependencies;ResolveAssemblyReferences">
+    <MSBuild 
+        Projects="@(ProjectReference)" 
+        Targets="GetTargetPath">
+        <Output TaskParameter="TargetOutputs" ItemName="ProjectReferenceTargetPath" />
+    </MSBuild>
     <ItemGroup Condition="'$(TargetFramework)' != 'net472'">
       <TfmSpecificPackageFile Include="$(OutputPath)$(TargetName).deps.json" PackagePath="lib\$(TargetFramework)\" />
     </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
       <TfmSpecificPackageFile Include="$(OutputPath)%(ProjectReference.Filename).dll" PackagePath="tools\$(TargetFramework)\" />
-      <TfmSpecificPackageFile Include="$(OutputPath)..\..\..\%(ProjectReference.Filename)\$(Configuration)\$(TargetFramework)\%(ProjectReference.Filename).runtimeconfig.json" PackagePath="tools\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="$([System.IO.Path]::GetDirectoryName('%(ProjectReferenceTargetPath.Identity)'))\%(ProjectReferenceTargetPath.Filename).runtimeconfig.json" PackagePath="tools\$(TargetFramework)\" />
     </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
       <TfmSpecificPackageFile Include="$(OutputPath)%(ProjectReference.Filename).exe" PackagePath="tools\$(TargetFramework)\" />
-      <TfmSpecificPackageFile Include="$(OutputPath)..\..\..\%(ProjectReference.Filename)\$(Configuration)\$(TargetFramework)\%(ProjectReference.Filename).exe.config" PackagePath="tools\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="$([System.IO.Path]::GetDirectoryName('%(ProjectReferenceTargetPath.Identity)'))\%(ProjectReferenceTargetPath.Filename)%(ProjectReferenceTargetPath.Extension).config" PackagePath="tools\$(TargetFramework)\" />
     </ItemGroup>
   </Target>
 
