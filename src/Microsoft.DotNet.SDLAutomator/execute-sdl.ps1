@@ -1,18 +1,18 @@
 Param(
-  [string] $GuardianCliLocation,
-  [string] $Repository,
-  [string] $SourceDirectory,
-  [string] $ArtifactsDirectory,
-  [string] $DncEngAccessToken,
-  [string[]] $SourceToolsList, # tools which run on source code
-  [string[]] $ArtifactToolsList, # tools which run on built artifacts
-  [bool] $UpdateBaseline=$False,
-  [bool] $TsaOnboard=$False,
-  [string] $TsaCodebaseName,
-  [string] $TsaNotificationEmail,
-  [string] $TsaCodebaseAdmin,
-  [string] $TsaBugAreaPath,
-  [string] $GuardianLoggerLevel="Standard"
+  [string] $GuardianCliLocation,            # Required: the path to the guardian CLI executable
+  [string] $Repository,                     # Required: the name of the repository (e.g. dotnet/arcade)
+  [string] $SourceDirectory,                # Required: the directory where source files are located
+  [string] $ArtifactsDirectory,             # Required: the directory where build artifacts are located
+  [string] $DncEngAccessToken,              # Required: access token for dnceng; should be provided via KeyVault
+  [string[]] $SourceToolsList,              # Required: list of SDL tools to run on source code
+  [string[]] $ArtifactToolsList,            # Required: list of SDL tools to run on built artifacts
+  [bool] $UpdateBaseline=$False,            # Optional: if true, will update the baseline in the repository; should only be run after fixing any issues which need to be fixed
+  [bool] $TsaOnboard=$False,                # Optional: if true, will onboard the repository to TSA; should only be run once
+  [string] $TsaCodebaseName,                # Optional: only needed if TsaOnboard is true; the name of the codebase registered with TSA
+  [string] $TsaNotificationEmail,           # Optional: only needed if TsaOnboard is true; the email(s) which will receive notifications of TSA bug filings (e.g. alias@microsoft.com)
+  [string] $TsaCodebaseAdmin,               # Optional: only needed if TsaOnboard is true; the aliases which are admins of the TSA codebase (e.g. DOMAIN\alias)
+  [string] $TsaBugAreaPath,                 # Optional: only needed if TsaOnboard is true; the area path where TSA will file bugs in AzDO
+  [string] $GuardianLoggerLevel="Standard"  # Optional: the logger level for the Guardian CLI; options are Trace, Verbose, Standard, Warning, and Error
 )
 
 $ErrorActionPreference = "Stop"
