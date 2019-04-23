@@ -224,7 +224,9 @@ The file is present in the repo and defines versions of all dependencies used in
     <VersionPrefix>1.0.0</VersionPrefix>
     <!-- Package pre-release suffix not including build number -->
     <PreReleaseVersionLabel>rc2</PreReleaseVersionLabel>
-  
+    <!-- Optional: base short date used for calculating version numbers of release-only packages (e.g. global tools) -->
+    <VersionBaseShortDate>19000</VersionBaseShortDate>
+
     <!-- Opt-in repo features -->
     <UsingToolVSSDK>true</UsingToolVSSDK>
     <UsingToolIbcOptimization>true</UsingToolIbcOptimization>

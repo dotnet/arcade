@@ -21,7 +21,9 @@ MAJOR, MINOR, and PATCH versions are rigid in their requirements.  Please refer 
 In the context of the .NET Core product, a build version number is date agnostic if successive builds of the same commit produce the same build version numbers. Historically, .NET Core has had repositories that implement date agnostic versioning through build numbers that increment based on commit depth, as well as repositories that base their build number off of the date and number of builds prior on the day (date based versioning).
 
 Both types of versioning have advantages and disadvantages:
+
 ### Date Agnostic Versioning
+
 **PROS:**
 - Assets with identical version metadata can be reproduced without outside input (e.g. providing a build id)
 - Parallel, independent legs of the same build do not require parent orchestration and will generate coherent versioning.  Separate parts of the build can potentially be respun as required.
@@ -40,6 +42,7 @@ Both types of versioning have advantages and disadvantages:
 - Generating the same package version in multiple builds with different outputs bits means that package caches must be cleared.
 
 ### Date-Varying Versioning
+
 **PROS:**
 - Respins are easier.  No overwriting except for release versions at the end of the product cycle.  Release versions at the end of the cycle typically avoid external overwrite-averse systems.
 - Non-standard builds (e.g. different input parameters) do not collide with standard builds at the same SHA when dealing with external systems.
@@ -59,143 +62,122 @@ Date agnostic versioning is more hassle than it's worth, though having the SHA i
 
   There is often concern around build determinism when date-varying versioning is used. It is important to note that date-varying versioning does not affect the ability to have deterministic builds in either the local dev or official build lab scenarios.  The date is either a provided parameter or obtained from git information, meaning that setting it to a specific value at a specific commit can enable the production of the same outputs over and over again.  Date varying versioning only says that **by default** this input varies from build to build.
 
+## Build kind
+
+_Build kind_ is determined based on global build properties `ContinuousIntegrationBuild`, `OfficialBuildId` and `DotNetFinalVersionKind`.
+
+| `ContinuousIntegrationBuild` | `OfficialBuildId` | `DotNetFinalVersionKind` | Build kind                      |
+|------------------------------|-------------------|--------------------------|---------------------------------|
+| _false_                      | ""                | ""                       | Local developer build           |
+| _true_                       | ""                | ""                       | PR validation build             |
+| _true_                       | `yyyymmdd.r`      | ""                       | Daily official build            |
+| _true_                       | `yyyymmdd.r`      | "prerelease"             | Final pre-release offical build |
+| _true_                       | `yyyymmdd.r`      | "release"                | Release official build          |
+
 ## Version parts specified by repository
 
-The repository specifies a 3-part version prefix in `VersionPrefix` build property (`MAJOR.MINOR.PATCH`), or 2 parts using `MajorVersion` and `MinorVersion` properties (the patch number defaults to 0 in such case). 
+The repository specifies a 3-part version prefix in `VersionPrefix` build property (**MAJOR**.**MINOR**.**PATCH**), 
+or 2 parts using `MajorVersion` and `MinorVersion` properties (the patch number defaults to 0 in such case). 
+If neither of these properties are specified the default is 1.0.0.
 
 The versioning scheme defined below imposes the following limits on these version parts:
-- `MAJOR` version is in range [0-65535]
-- `MINOR` version is in range [0-654]
-- `PATCH` version is in range [0-9999]
+- **MAJOR** version is in range [0-65535]
+- **MINOR** version is in range [0-654]
+- **PATCH** version is in range [0-9999]
 
-## Package Version Fields
+## Package Version
 
-- **MAJOR** - Major version
-- **MINOR** - Minor version
-- **PATCH** - Patch version
-- **PRERELEASE** - Prerelease label
-- **REVISION** - Number of official builds during the current day
-- **SHORTDATE** - 5 digit date
+_Package Version_ comprises of a three-part version number (**PACKAGE_MAJOR**, **PACKAGE_MINOR**, **PACKAGE_PATCH**) and optional pre-release labels.
 
-**Note that version fields should not be zero-padded**
+The pre-release label is determined based on the following table:
 
-## Package Version Kinds
+| Build kind                      | Pre-release labels                                   | Package Version example   |
+|---------------------------------|------------------------------------------------------|---------------------------|
+| Local developer build default   | "dev"                                                | "1.2.3-dev"               |
+| PR validation build             | "ci"                                                 | "1.2.3-ci"                |
+| Daily official build            | `PreReleaseVersionLabel`.**SHORT_DATE**.**REVISION** | "1.2.3-preview1.12345.1"  |
+| Final pre-release offical build | `PreReleaseVersionLabel`."final"                     | "1.2.3-beta.final"        |
+| Release official build          | ""                                                   | "1.2.3"                   |   
 
-Package versions come in the following kinds, depending on the point in the product cycle:
+In official builds the values of **SHORT_DATE** and **REVISION** are derived from build parameter `OfficialBuildId` with format `20yymmdd.r` like so:
+- **REVISION** is set to `r` component of `OfficialBuildId` build property.
+- **SHORT_DATE** is set to `yy` * 1000 + 50 * `mm` + `dd`. In year 2018 the value is in range [18051, 18631].
 
-- **Local developer build default** 
-  
-  ```
-  MAJOR.MINOR.PATCH-dev
-  ```
-  Example:
-  ```
-    1.0.0-dev+abcdef
-  ```
+In PR validation and local developer builds **SHORT_DATE** and **REVISION** are not included in the package version,
+unless `DotNetUseShippingVersion` is `true`, in which case the values of `yy`, `mm` and `dd` are derived from the current date
+and `r` = 1.
 
-- **PR validation build** 
-  
-  ```
-  MAJOR.MINOR.PATCH-ci
-  ```
-  Example:
-  ```
-    1.0.0-ci+abcdef
-  ```
-  
-- **Daily official build** 
+If a package is designated to be a _release-only_ package (`PreReleaseVersionLabel` is empty) its package version does not include 
+any pre-release labels regardless of what kind of build is the package produced by. Every build of such package must produce 
+a unique **PATCH_NUMBER**.
 
-  ```
-  MAJOR.MINOR.PATCH-PRERELEASE.SHORTDATE.REVISION
-  ```
-  Example:
-  ```
-    1.0.0-preview1.25405.1+abcdef
-  ```
-  
-- **Final pre-release build** 
-  
-   Versions should include **MAJOR**, **MINOR**, **PATCH**, and **PRERELEASE** tag but no **SHORTDATE**, **REVISION**.  **PRERELEASE** should be suffixed with `'.final'`.  This avoids a common issue in NuGet package resolution where `2.1.0-rc1` < `2.1.0-rc1.12345`. The intention is that the final build is resolved over the date-versioned build.
-   
-  ```
-  MAJOR.MINOR.PATCH-PRERELEASE.final
-  ```
-  Example:
-  ```
-    1.0.0-preview1.final
-  ```
+**PATCH_NUMBER** is defined as (**SHORT_DATE** - `VersionBaseShortDate`) * 100 + `r`, where `VersionBaseShortDate` is `19000` unless 
+set in `eng/Version.props`. 
+Repository shall only change the value of `VersionBaseShortDate` at the same time as it increments **MAJOR** or **MINOR** version.
 
-- **Release build** 
+The three-part package version is based on the value of `VersionPrefix` property:
 
-  Versions should include **MAJOR**, **MINOR**, **PATCH**.
-  
-  ```
-  MAJOR.MINOR.PATCH
-  ```
-  Example:
-  ```
-    1.0.0
-  ```
+| Package version part | Value            | Condition                                |
+|----------------------|------------------|------------------------------------------|
+| **PACKAGE_MAJOR**    | **MAJOR**        |                                          |
+| **PACKAGE_MINOR**    | **MINOR**        |                                          |
+| **PACKAGE_PATCH**    | **PATCH**        | `PreReleaseVersionLabel` is non-empty    |
+|                      | **PATCH_NUMBER** | otherwise                                |
 
-The format of package versions produced by the build is determined based on the value of variable `DotNetFinalVersionKind`:
+## Assembly Version
 
-| DotNetFinalVersionKind   | examples                    |
-|--------------------------|-----------------------------|
-| ""                       | "1.2.3-dev", "1.2.3-ci", "1.2.3-beta.12345.1" |
-| "prerelease"             | "1.2.3-beta.final"   |
-| "release"                | "1.2.3"                     |
+_Assembly Version_ is a four-part version number (**ASSEMBLY_MAJOR**, **ASSEMBLY_MINOR**, **ASSEMBLY_PATCH**, **ASSEMBLY_REVISION**).
 
-## Package Version Generation
+**PATCH_NUMBER_HI** is defined as **PATCH_NUMBER** / 50000.
 
-- **MAJOR**, **MINOR**, **PATCH**:
-  Specified in source using `VersionPrefix` .NET Core SDK property, defaults to `1.0.0`.
+**PATCH_NUMBER_LO** is defined as **PATCH_NUMBER** % 50000.
 
-- **PRERELEASE**: 
-  Property `PreReleaseVersionLabel` specifies the label for an official build.
-  Label `dev` is used for developer build and `ci` for PR validation build.
-  
-- **REVISION**, **SHORTDATE**: 
-  - In official builds the values are derived from build parameter `OfficialBuildId` with format `20yymmdd.r` like so:
-    - REVISION is set to `r` component of `OfficialBuildId`
-    - SHORTDATE is set to `yy` * 1000 + 50 * `mm` + `dd`. In year 2018 the value is in range [18051, 18631].
-  - In CI and local dev builds REVISION and SHORTDATE are not included in the package version,
-    unless `DotNetUseShippingVersion` is `true`, in which case the values of `yy`, `mm` and `dd` are derived from the current date
-    and `r` = 1.
+| Assembly version part | Value                                             | Condition                                |
+|-----------------------|---------------------------------------------------|------------------------------------------|
+| **ASSEMBLY_MAJOR**    | **MAJOR**                                         |                                          |
+| **ASSEMBLY_MINOR**    | **MINOR**                                         |                                          |
+| **ASSEMBLY_PATCH**    | **PATCH**                                         | `AutoGenerateAssemblyVersion` is _false_ |
+|                       | **PATCH_NUMBER_HI**                               | otherwise                                |
+| **ASSEMBLY_REVISION** | 0                                                 | `AutoGenerateAssemblyVersion` is _false_ |
+|                       | **PATCH_NUMBER_LO**                               | otherwise                                |
 
-## File Version Generation
+## File Version
 
-File version has 4 parts and need to increase every official build. This is especially important when building MSIs. 
+_File Version_ is a four-part version number (**FILE_MAJOR**.**FILE_MINOR**.**FILE_PATCH**.**FILE_REVISION**) and 
+must increase every official build. This is especially important when building MSIs. 
 
-```
-FILEMAJOR.FILEMINOR.FILEPATCH.FILEREVISION
-```
+If build property `AutoGenerateAssemblyVersion` is _true_ then _File Version_ is the same as _Assembly Version_, otherwise:
 
-- **FILEMAJOR**: 
-  Set to `MAJOR`.
-- **FILEMINOR**:
-  Set to `MINOR` * 100 + `PATCH` / 100.
-- **FILEPATCH**:
-  Set to (PATCH % 100) * 100 + `yy`.
-- **FILEREVISION**:
-  Set to (50 * `mm` + `dd`) * 100 + `r`. This algorithm makes it easy to parse the month and date from FILEREVISION while staying in the range of a short which is what a version element uses.
+| File version part     | Value                                             |
+|-----------------------|---------------------------------------------------|
+| **FILE_MAJOR**        | **MAJOR**                                         |
+| **FILE_MINOR**        | **MINOR** * 100 + **PATCH** / 100                 |
+| **FILE_PATCH**        | (**PATCH** % 100) * 100 + `yy`                    |
+| **FILE_REVISION**     | (50 * `mm` + `dd`) * 100 + `r`                    |
 
-The values of `yy`, `mm`, `dd`, and `r` are derived from `OfficialBuildId` or the current date (same as when calculating Package Version).
+## Recommanded Settings
+
+It is recommended for **global tools** projects to build assemblies with auto-generated assembly version and pack as _release-only_ packages, 
+i.e. set `AutoGenerateAssemblyVersion` to _true_ and clear `PreReleaseVersionLabel`.
+
+It is recommended for **msbuild task** projects to build assemblies with auto-generated assembly version,
+i.e. set `AutoGenerateAssemblyVersion` to _true_.
+
+Library projects that target .NET Standard or .NET Framework shall keep `AutoGenerateAssemblyVersion` set to _false_ to avoid the need for updating binding redirects of the consuming .NET Framework apps every time a new build is consumed.
 
 ## SemVer1 Fallback
 
-In cases where SemVer2 cannot be used (e.g. old versions of NuGet), we can fall back to [SemVer1](https://semver.org/spec/v1.0.0.html).  In SemVer1, there is no built in build metadata, and the pre-release field may only contain [0-9A-Za-z-].  To comply, cases where + or . are used in SemVer2's prerelease field are replaced with -.
+In cases where SemVer2 cannot be used (e.g. old versions of NuGet), we can fall back to [SemVer1](https://semver.org/spec/v1.0.0.html). 
+In SemVer1, there is no built in build metadata, and the pre-release field may only contain `[0-9A-Za-z-]`. To comply, cases where `+` or `.` 
+are used in SemVer2's prerelease field are replaced with `-`.
 
-The repository opts into SemVer1 fallback by setting `SemanticVersioningV1` property to `true`.
+The repository opts into SemVer1 fallback by setting `SemanticVersioningV1` property to _true_.
 
 Examples of SemVer1 package versions:
 
-| DotNetFinalVersionKind   | examples                     |
-|--------------------------|-----------------------------|
-| ""                       | "1.2.3-dev", "1.2.3-ci", "1.2.3-beta-12345-01"|
-| "prerelease"             | "1.2.3-beta-final"   |
-| "release"                | "1.2.3"                     |
+"1.2.3-dev", "1.2.3-ci", "1.2.3-beta-12345-01", "1.2.3-beta-final", "1.2.3".
 
-Note that the REVISION number is zero-padded to two characters.
+Note that the number in `-01` suffix is zero-padded to two characters.
 
 ## Assembly Informational Version Generation
 
