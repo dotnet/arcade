@@ -26,8 +26,8 @@ Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins su
 | **dotnet-docker**          | msimons          | Complete    ||||
 | **dotnet-framework-docker**| msimons          | In progress | Low    | [ci1](https://ci.dot.net/job/Microsoft_dotnet-framework-docker/) | [Tracking issue](https://github.com/Microsoft/dotnet-framework-docker/issues/225), no progress expected until after 4/9 (patch Tuesday) |
 |**dotnet-buildtools-prereqs-docker** | msimons | Complete    ||||
-| **SDK**                    | licavalc         | In progress | Low    | [ci2](https://ci2.dot.net/job/dotnet_sdk/) | Planned, moving perf job to Azure DevOps |
-| **TestFx**                 | sarabjot         | In progress | Low    | [ci1](https://ci.dot.net/job/Microsoft_testfx/job/master/) | Planned |
+| **SDK**                    | licavalc         | Complete    ||||
+| **TestFx**                 | sarabjot         | Complete    ||||
 
 `-` means an item is complete or not needed
 
