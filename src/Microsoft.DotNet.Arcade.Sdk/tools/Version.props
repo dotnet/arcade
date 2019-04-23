@@ -44,16 +44,16 @@
           REVISION (VersionSuffixBuildOfTheDay) is set to r component of OfficialBuildId.
           SHORTDATE (VersionSuffixDateStamp) is set to yy * 1000 + mm * 50 + dd.
         -->
-        <_BuildNumberYY>$(_BuildNumber.Substring($([System.Convert]::ToInt32(2)), $([System.Convert]::ToInt32(2))))</_BuildNumberYY>
-        <_BuildNumberMM>$(_BuildNumber.Substring($([System.Convert]::ToInt32(4)), $([System.Convert]::ToInt32(2))))</_BuildNumberMM>
-        <_BuildNumberDD>$(_BuildNumber.Substring($([System.Convert]::ToInt32(6)), $([System.Convert]::ToInt32(2))))</_BuildNumberDD>
-        <_BuildNumberR>$(_BuildNumber.Substring($([System.Convert]::ToInt32(9))))</_BuildNumberR>
+        <_BuildNumberYY>$(_BuildNumber.Substring(2, 2))</_BuildNumberYY>
+        <_BuildNumberMM>$(_BuildNumber.Substring(4, 2))</_BuildNumberMM>
+        <_BuildNumberDD>$(_BuildNumber.Substring(6, 2))</_BuildNumberDD>
+        <_BuildNumberR>$(_BuildNumber.Substring(9))</_BuildNumberR>
 
         <!-- yy * 1000 + mm * 50 + dd -->
-        <VersionSuffixDateStamp>$([MSBuild]::Add($([MSBuild]::Add($([MSBuild]::Multiply($([System.Convert]::ToInt32($(_BuildNumberYY))), $([System.Convert]::ToInt32(1000)))), $([MSBuild]::Multiply($([System.Convert]::ToInt32($(_BuildNumberMM))), $([System.Convert]::ToInt32(50)))))), $([System.Convert]::ToInt32($(_BuildNumberDD)))))</VersionSuffixDateStamp>
+        <VersionSuffixDateStamp>$([MSBuild]::Add($([MSBuild]::Add($([MSBuild]::Multiply($(_BuildNumberYY), 1000)), $([MSBuild]::Multiply($(_BuildNumberMM), 50)))), $(_BuildNumberDD)))</VersionSuffixDateStamp>
 
-        <VersionSuffixBuildOfTheDay>$([System.Convert]::ToInt32($(_BuildNumberR)))</VersionSuffixBuildOfTheDay>
-        <VersionSuffixBuildOfTheDayPadded>$(VersionSuffixBuildOfTheDay.PadLeft($([System.Convert]::ToInt32(2)), $([System.Convert]::ToChar(`0`))))</VersionSuffixBuildOfTheDayPadded>
+        <VersionSuffixBuildOfTheDay>$(_BuildNumberR)</VersionSuffixBuildOfTheDay>
+        <VersionSuffixBuildOfTheDayPadded>$(VersionSuffixBuildOfTheDay.PadLeft(2, $([System.Convert]::ToChar(`0`))))</VersionSuffixBuildOfTheDayPadded>
 
         <_BuildNumberSuffix Condition="'$(SemanticVersioningV1)' != 'true'">.$(VersionSuffixDateStamp).$(VersionSuffixBuildOfTheDay)</_BuildNumberSuffix>
         <_BuildNumberSuffix Condition="'$(SemanticVersioningV1)' == 'true'">-$(VersionSuffixDateStamp)-$(VersionSuffixBuildOfTheDayPadded)</_BuildNumberSuffix>
@@ -82,7 +82,7 @@
 
     <!--
       If DotNetFinalVersionKind is specified, overrides the package version produced by the build like so:
-        ""           1.2.3-beta.12345.67+sha
+        ""           1.2.3-beta.12345.67
         "prerelease" 1.2.3-beta+sha
         "release"    1.2.3
     -->
@@ -93,9 +93,11 @@
 
     <!--
       Some projects want to remain producing prerelease packages even if we are doing a final stable build because
-      they don't ship or aren't ready to ship stable. Those projects can set BlockStable property to true.
+      they don't ship or aren't ready to ship stable. Those projects can set SuppressFinalPackageVersion property to true.
+      
+      TODO: BlockStable is obsolete. Remove once repos update. https://github.com/dotnet/arcade/issues/1213
     -->
-    <VersionSuffix Condition="'$(BlockStable)' == 'true'">$(_PreReleaseLabel)$(_BuildNumberSuffix)</VersionSuffix>
+    <VersionSuffix Condition="'$(BlockStable)' == 'true' or '$(SuppressFinalPackageVersion)' == 'true'">$(_PreReleaseLabel)$(_BuildNumberSuffix)</VersionSuffix>
 
     <!--
       Disable NuGet Pack warning that the version is SemVer 2.0.
