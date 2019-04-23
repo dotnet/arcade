@@ -6,12 +6,12 @@ Param(
   [string] $ToolList,
   [string] $DncEngAccessToken,
   [string] $UpdateBaseline,
-  [string] $GdnLoggerLevel="Standard"
+  [string] $GuardianLoggerLevel="Standard"
 )
 
 foreach ($tool in $ToolList) {
-  Write-Host "$GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GdnLoggerLevel"
-  Invoke-Expression "$GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GdnLoggerLevel"
+  Write-Host "$GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel"
+  Invoke-Expression "$GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel"
   if ($LASTEXITCODE -ne 0) {
     Write-Error "Guardian run $tool failed with exit code $LASTEXITCODE."
   }

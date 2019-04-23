@@ -12,18 +12,18 @@ Param(
   [string] $TsaNotificationEmail,
   [string] $TsaCodebaseAdmin,
   [string] $TsaBugAreaPath,
-  [string] $GdnLoggerLevel="Standard"
+  [string] $GuardianLoggerLevel="Standard"
 )
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
 
-$gdnFolder = Invoke-Expression "$(Join-Path $PSScriptRoot "init-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -Repository $Repository -WorkingDirectory $ArtifactsDirectory -DncEngAccessToken $DncEngAccessToken -GdnLoggerLevel $GdnLoggerLevel"
+$gdnFolder = Invoke-Expression "$(Join-Path $PSScriptRoot "init-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -Repository $Repository -WorkingDirectory $ArtifactsDirectory -DncEngAccessToken $DncEngAccessToken -GuardianLoggerLevel $GuardianLoggerLevel"
 
 if ($TsaOnboard) {
   if ($TsaCodebaseName -and $TsaNotificationEmail -and $TsaCodebaseAdmin -and $TsaBugAreaPath) {
-    Write-Host "$GuardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"https://dev.azure.com/dnceng/`" --project-name `"internal`" --area-path `"$TsaBugAreaPath`" --working-directory $WorkingDirectory -logger-level $GdnLoggerLevel"
-    Invoke-Expression "$GuardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"https://dev.azure.com/dnceng/`" --project-name `"internal`" --area-path `"$TsaBugAreaPath`" --working-directory $WorkingDirectory -logger-level $GdnLoggerLevel"
+    Write-Host "$GuardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"https://dev.azure.com/dnceng/`" --project-name `"internal`" --area-path `"$TsaBugAreaPath`" --working-directory $WorkingDirectory -logger-level $GuardianLoggerLevel"
+    Invoke-Expression "$GuardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"https://dev.azure.com/dnceng/`" --project-name `"internal`" --area-path `"$TsaBugAreaPath`" --working-directory $WorkingDirectory -logger-level $GuardianLoggerLevel"
     if ($LASTEXITCODE -ne 0) {
       Write-Error "Guardian tsa-onboard failed with exit code $LASTEXITCODE."
     }
@@ -32,7 +32,7 @@ if ($TsaOnboard) {
   }
 }
 
-Invoke-Expression "$(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -Repository $Repository -WorkingDirectory $ArtifactsDirectory -GdnFolder $gdnFolder -ToolList $ArtifactsToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GdnLoggerLevel $GdnLoggerLevel"
+Invoke-Expression "$(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -Repository $Repository -WorkingDirectory $ArtifactsDirectory -GdnFolder $gdnFolder -ToolList $ArtifactsToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel"
 Copy-Item -Recurse -Force $gdnFolder $SourceDirectory
 $gdnFolder = Join-Path $SourceDirectory ".gdn"
-Invoke-Expression "$(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -Repository $Repository -WorkingDirectory $SourceDirectory -GdnFolder $gdnFolder -ToolList $SourceToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GdnLoggerLevel $GdnLoggerLevel"
+Invoke-Expression "$(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -Repository $Repository -WorkingDirectory $SourceDirectory -GdnFolder $gdnFolder -ToolList $SourceToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel"

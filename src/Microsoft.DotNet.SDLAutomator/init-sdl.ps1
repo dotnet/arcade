@@ -3,7 +3,7 @@ Param(
   [string] $Repository,
   [string] $WorkingDirectory,
   [string] $DncEngAccessToken,
-  [string] $GdnLoggerLevel="Standard"
+  [string] $GuardianLoggerLevel="Standard"
 )
 
 $encodedPat = [Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$DncEngAccessToken"))
@@ -19,8 +19,8 @@ Try
 } Catch [System.Net.WebException] {
   # if the folder does not exist, we'll do a guardian init and push it to the remote repository
   Write-Host "Initializing Guardian..."
-  Write-Host "$GuardianCliLocation init --working-directory $WorkingDirectory --logger-level $GdnLoggerLevel"
-  Invoke-Expression "$GuardianCliLocation init --working-directory $WorkingDirectory --logger-level $GdnLoggerLevel"
+  Write-Host "$GuardianCliLocation init --working-directory $WorkingDirectory --logger-level $GuardianLoggerLevel"
+  Invoke-Expression "$GuardianCliLocation init --working-directory $WorkingDirectory --logger-level $GuardianLoggerLevel"
   if ($LASTEXITCODE -ne 0) {
     Write-Error "Guardian init failed with exit code $LASTEXITCODE."
   }
