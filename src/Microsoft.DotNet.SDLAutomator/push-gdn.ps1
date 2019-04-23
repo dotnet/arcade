@@ -1,6 +1,6 @@
 Param(
   [string] $Repository,
-  [string] $SourcesDirectory,
+  [string] $WorkingDirectory,
   [string] $GdnFolder,
   [string] $DncEngAccessToken,
   [string] $PushReason
@@ -9,17 +9,18 @@ Param(
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
 
-$sdlDir = "$SourcesDirectory/../sdl-tool-cfg"
+$sdlDir = Join-Path $env:TEMP "sdl"
 if (Test-Path $sdlDir) {
   Remove-Item -Force -Recurse $sdlDir
 }
 
-Write-Host "git clone https://dnceng:[DncEngAccessToken]@dev.azure.com/dnceng/internal/_git/sdl-tool-cfg $sdlDir"
+Write-Host "git clone https://dnceng:`$DncEngAccessToken@dev.azure.com/dnceng/internal/_git/sdl-tool-cfg $sdlDir"
 git clone https://dnceng:$DncEngAccessToken@dev.azure.com/dnceng/internal/_git/sdl-tool-cfg $sdlDir
 if ($LASTEXITCODE -ne 0) {
   Write-Error "Git clone failed with exit code $LASTEXITCODE."
 }
-Copy-Item -Recurse -Force $GdnFolder $sdlDir/$Repository
+$sdlRepositoryFolder = Join-Path $sdlDir $Repository
+Copy-Item -Recurse -Force $GdnFolder $sdlRepositoryFolder
 Set-Location $sdlDir
 Write-Host "git add ."
 git add .
@@ -36,3 +37,5 @@ git push
 if ($LASTEXITCODE -ne 0) {
   Write-Error "Git push failed with exit code $LASTEXITCODE."
 }
+
+Set-Location $WorkingDirectory
