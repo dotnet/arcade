@@ -45,6 +45,7 @@ namespace Microsoft.DotNet.Helix.Client
         public string TargetQueueId { get; private set; }
         public string Creator { get; private set; }
         public string ResultContainerPrefix { get; private set; }
+        public Uri ListUri { get; private set; }
         public IDictionary<IPayload, string> CorrelationPayloads { get; } = new Dictionary<IPayload, string>();
         public int? MaxRetryCount { get; private set; }
         public string StorageAccountConnectionString { get; private set; }
@@ -154,6 +155,12 @@ namespace Microsoft.DotNet.Helix.Client
         public IJobDefinition WithDefaultResultsContainer()
         {
             _withDefaultResultsContainer = true;
+
+        }
+
+        public IJobDefinition WithListUri(string listUri)
+        {
+            ListUri = new Uri(listUri);
             return this;
         }
 
@@ -196,10 +203,18 @@ namespace Microsoft.DotNet.Helix.Client
                 }
                 ))).ToList();
 
-            string jobListJson = JsonConvert.SerializeObject(jobList);
-            Uri jobListUri = await storageContainer.UploadTextAsync(
-                jobListJson,
-                $"job-list-{Guid.NewGuid()}.json");
+            Uri jobListUri;
+            if(ListUri == null)
+            {
+                string jobListJson = JsonConvert.SerializeObject(jobList);
+                jobListUri = await storageContainer.UploadTextAsync(
+                    jobListJson,
+                    $"job-list-{Guid.NewGuid()}.json");
+            }
+            else
+            {
+                jobListUri = ListUri;
+            }
             // Don't log the sas, remove the query string.
             string jobListUriForLogging = jobListUri.ToString().Replace(jobListUri.Query, "");
             log?.Invoke($"Created job list at {jobListUriForLogging}");
