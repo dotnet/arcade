@@ -26,7 +26,7 @@
     <None Include="$(RepoRoot)THIRD-PARTY-NOTICES.txt" PackagePath="THIRD-PARTY-NOTICES.txt" Pack="true" />
   </ItemGroup>
 
-  <Target Name="PackBuildOutputs" DependsOnTargets="ResolveProjectReferences;SatelliteDllsProjectOutputGroup;DebugSymbolsProjectOutputGroup;SatelliteDllsProjectOutputGroupDependencies;ResolveAssemblyReferences">
+  <Target Name="PackBuildOutputs" DependsOnTargets="ResolveProjectReferences;ResolveAssemblyReferences;CopyFilesToOutputDirectory">
     <MSBuild 
         Projects="@(ProjectReference)" 
         Targets="GetTargetPath">
