@@ -86,9 +86,14 @@ namespace Microsoft.Cci.Traversers
             // This can happen for enums, as an example, where we want to prefer numeric
             // order rather than the default alphabetical order.
 
-            if (members is IOrderedEnumerable<ITypeDefinitionMember> orderedMembers)
+            if (members is IOrderedEnumerable<ITypeDefinitionMember> orderedTypeDefinitionMembers)
             {
-                members = orderedMembers.ThenBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
+                members = orderedTypeDefinitionMembers.ThenBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
+            }
+            else if (members is IOrderedEnumerable<IFieldDefinition> orderedFieldDefinitionMembers)
+            {
+                // This is required due to IOrderedEnumerable being covariant on .NET Core, but not on .NET Framework
+                members = orderedFieldDefinitionMembers.ThenBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
             }
             else
             {
