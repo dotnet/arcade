@@ -51,7 +51,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 if (!field.IsCompileTimeConstant && field.GetHiddenBaseField(_filter) != Dummy.Field)
                     WriteKeyword("new");
 
-                WriteTypeName(field.Type);
+                WriteTypeName(field.Type, field.Attributes);
 
                 string name = field.Name.Value;
                 if (name.Contains("<") || name.Contains(">"))

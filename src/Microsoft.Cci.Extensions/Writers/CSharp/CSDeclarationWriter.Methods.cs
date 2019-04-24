@@ -26,12 +26,11 @@ namespace Microsoft.Cci.Writers.CSharp
             if (method.IsDestructor())
             {
                 // If platformNotSupportedExceptionMessage is != null we're generating a dummy assembly which means we don't need a destructor at all.
-                if(_platformNotSupportedExceptionMessage == null)
+                if (_platformNotSupportedExceptionMessage == null)
                     WriteDestructor(method);
 
                 return;
             }
-            string name = method.GetMethodName();
 
             if (!method.ContainingTypeDefinition.IsInterface)
             {
@@ -39,7 +38,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 WriteMethodModifiers(method);
             }
             WriteInterfaceMethodModifiers(method);
-            WriteMethodDefinitionSignature(method, name);
+            WriteMethodDefinitionSignature(method);
             WriteMethodBody(method);
         }
 
@@ -60,7 +59,69 @@ namespace Microsoft.Cci.Writers.CSharp
             WriteTypeName(type, attributes: attributes, useTypeKeywords: useKeywords);
         }
 
-        private void WriteMethodDefinitionSignature(IMethodDefinition method, string name)
+        private string GetNormalizedMethodName(IName name)
+        {
+            switch (name.Value)
+            {
+                case "op_Decrement": return "operator --";
+                case "op_Increment": return "operator ++";
+                case "op_UnaryNegation": return "operator -";
+                case "op_UnaryPlus": return "operator +";
+                case "op_LogicalNot": return "operator !";
+                case "op_OnesComplement": return "operator ~";
+                case "op_True": return "operator true";
+                case "op_False": return "operator false";
+                case "op_Addition": return "operator +";
+                case "op_Subtraction": return "operator -";
+                case "op_Multiply": return "operator *";
+                case "op_Division": return "operator /";
+                case "op_Modulus": return "operator %";
+                case "op_ExclusiveOr": return "operator ^";
+                case "op_BitwiseAnd": return "operator &";
+                case "op_BitwiseOr": return "operator |";
+                case "op_LeftShift": return "operator <<";
+                case "op_RightShift": return "operator >>";
+                case "op_Equality": return "operator ==";
+                case "op_GreaterThan": return "operator >";
+                case "op_LessThan": return "operator <";
+                case "op_Inequality": return "operator !=";
+                case "op_GreaterThanOrEqual": return "operator >=";
+                case "op_LessThanOrEqual": return "operator <=";
+                case "op_Explicit": return "explicit operator";
+                case "op_Implicit": return "implicit operator";
+                default: return name.Value; // return just the name
+            }
+        }
+
+        private void WriteMethodName(IMethodDefinition method)
+        {
+            if (method.IsConstructor)
+            {
+                INamedEntity named = method.ContainingTypeDefinition.UnWrap() as INamedEntity;
+                if (named != null)
+                {
+                    WriteIdentifier(named.Name.Value);
+                    return;
+                }
+            }
+
+            if (method.IsExplicitInterfaceMethod())
+            {
+                IMethodImplementation methodImplementation = method.GetMethodImplementation();
+                object nullableAttributeArgument = methodImplementation.GetExplicitInterfaceMethodNullableAttributeArgument();
+                if (nullableAttributeArgument != null)
+                {
+                    WriteTypeName(methodImplementation.ImplementedMethod.ContainingType, noSpace: true, nullableAttributeArgument: nullableAttributeArgument);
+                    WriteSymbol(".");
+                    WriteIdentifier(methodImplementation.ImplementedMethod.Name);
+                    return;
+                }
+            }
+
+            WriteIdentifier(GetNormalizedMethodName(method.Name));
+        }
+
+        private void WriteMethodDefinitionSignature(IMethodDefinition method)
         {
             bool isOperator = method.IsConversionOperator();
 
@@ -88,7 +149,7 @@ namespace Microsoft.Cci.Writers.CSharp
             if (method.IsExplicitInterfaceMethod() && _forCompilationIncludeGlobalprefix)
                 Write("global::");
 
-            WriteIdentifier(name);
+            WriteMethodName(method);
 
             if (isOperator)
             {
@@ -241,7 +302,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 else if (_platformNotSupportedExceptionMessage.Length > 0)
                     Write($"\"{_platformNotSupportedExceptionMessage}\"");
 
-                 Write(");");
+                Write(");");
             }
             else if (NeedsMethodBodyForCompilation(method))
             {

@@ -2,16 +2,20 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using Microsoft.Cci;
 using Microsoft.Cci.Filters;
 using Microsoft.Cci.Writers.CSharp;
 using Microsoft.Cci.Writers.Syntax;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
+using System.Reflection.PortableExecutable;
+using System.Text.RegularExpressions;
+using SRMetadataReader = System.Reflection.Metadata.MetadataReader;
 
 namespace Microsoft.Cci.Extensions.CSharp
 {
@@ -551,45 +555,22 @@ namespace Microsoft.Cci.Extensions.CSharp
             return s_isKeywordRegex.IsMatch(s);
         }
 
-        public static string GetMethodName(this IMethodDefinition method)
+        public static IMethodImplementation GetMethodImplementation(this IMethodDefinition method)
         {
-            if (method.IsConstructor)
+            return ((ITypeDefinition)method.ContainingType).ExplicitImplementationOverrides.Where(mi => mi.ImplementingMethod.Equals(method)).FirstOrDefault();
+        }
+
+        public static object GetExplicitInterfaceMethodNullableAttributeArgument(this IMethodImplementation methodImplementation)
+        {
+            if (methodImplementation != null)
             {
-                INamedEntity named = method.ContainingTypeDefinition.UnWrap() as INamedEntity;
-                if (named != null)
-                    return named.Name.Value;
+                uint typeToken = ((IMetadataObjectWithToken)methodImplementation.ContainingType).TokenValue;
+                string location = methodImplementation.ContainingType.Locations.FirstOrDefault()?.Document?.Location;
+                if (location != null)
+                    return methodImplementation.ImplementedMethod.ContainingType.GetInterfaceImplementationAttributeConstructorArgument(typeToken, "System.Runtime.CompilerServices.NullableAttribute", location, NullableConstructorArgumentParser);
             }
 
-            switch (method.Name.Value)
-            {
-                case "op_Decrement": return "operator --";
-                case "op_Increment": return "operator ++";
-                case "op_UnaryNegation": return "operator -";
-                case "op_UnaryPlus": return "operator +";
-                case "op_LogicalNot": return "operator !";
-                case "op_OnesComplement": return "operator ~";
-                case "op_True": return "operator true";
-                case "op_False": return "operator false";
-                case "op_Addition": return "operator +";
-                case "op_Subtraction": return "operator -";
-                case "op_Multiply": return "operator *";
-                case "op_Division": return "operator /";
-                case "op_Modulus": return "operator %";
-                case "op_ExclusiveOr": return "operator ^";
-                case "op_BitwiseAnd": return "operator &";
-                case "op_BitwiseOr": return "operator |";
-                case "op_LeftShift": return "operator <<";
-                case "op_RightShift": return "operator >>";
-                case "op_Equality": return "operator ==";
-                case "op_GreaterThan": return "operator >";
-                case "op_LessThan": return "operator <";
-                case "op_Inequality": return "operator !=";
-                case "op_GreaterThanOrEqual": return "operator >=";
-                case "op_LessThanOrEqual": return "operator <=";
-                case "op_Explicit": return "explicit operator";
-                case "op_Implicit": return "implicit operator";
-                default: return method.Name.Value; // return just the name
-            }
+            return null;
         }
 
         public static string GetNameWithoutExplicitType(this ITypeDefinitionMember member)
@@ -631,9 +612,14 @@ namespace Microsoft.Cci.Extensions.CSharp
             return false;
         }
 
-        public static bool IsValueTuple(this IGenericTypeInstance genericType)
+        public static bool IsValueTuple(this IGenericTypeInstanceReference genericType)
         {
             return genericType.GenericType.FullName().StartsWith("System.ValueTuple");
+        }
+
+        public static bool IsNullableValueType(this IGenericTypeInstanceReference genericType)
+        {
+            return genericType.GenericType.FullName().StartsWith("System.Nullable");
         }
 
         public static bool IsException(this ITypeDefinition type)
@@ -659,6 +645,12 @@ namespace Microsoft.Cci.Extensions.CSharp
         public static bool HasAttributeOfType(this IEnumerable<ICustomAttribute> attributes, string attributeName)
         {
             return GetAttributeOfType(attributes, attributeName) != null;
+        }
+
+        public static bool TryGetAttributeOfType(this IEnumerable<ICustomAttribute> attributes, string attributeName, out ICustomAttribute customAttribute)
+        {
+            customAttribute = attributes?.GetAttributeOfType(attributeName);
+            return customAttribute != null;
         }
 
         private static ICustomAttribute GetAttributeOfType(this IEnumerable<ICustomAttribute> attributes, string attributeName)
@@ -698,6 +690,98 @@ namespace Microsoft.Cci.Extensions.CSharp
             return names;
         }
 
+        public static object GetInterfaceImplementationAttributeConstructorArgument(this ITypeReference interfaceImplementation, uint typeDefinitionToken, string attributeType, string assemblyPath, Func<CustomAttributeValue<string>, object> argumentResolver)
+        {
+            using (FileStream stream = File.OpenRead(assemblyPath))
+            using (PEReader peFile = new PEReader(stream))
+            {
+                SRMetadataReader metadataReader = peFile.GetMetadataReader();
+                int rowId = GetRowId(typeDefinitionToken);
+                TypeDefinition typeDefinition = metadataReader.GetTypeDefinition(MetadataTokens.TypeDefinitionHandle(rowId));
+
+                uint interfaceImplementationToken = ((IMetadataObjectWithToken)interfaceImplementation).TokenValue;
+                IEnumerable<InterfaceImplementation> foundInterfaces = typeDefinition.GetInterfaceImplementations().Select(metadataReader.GetInterfaceImplementation).Where(impl => metadataReader.GetToken(impl.Interface) == (int)interfaceImplementationToken);
+                if (foundInterfaces.Any())
+                {
+                    InterfaceImplementation iImpl = foundInterfaces.First();
+                    return GetCustomAttributeArgument(metadataReader, iImpl.GetCustomAttributes(), attributeType, argumentResolver);
+                }
+            }
+
+            return null;
+        }
+
+        public static object GetGenericParameterConstraintConstructorArgument(this IGenericParameter parameter, int constraintIndex, string attributeType, string assemblyPath, Func<CustomAttributeValue<string>, object> argumentResolver)
+        {
+            using (FileStream stream = File.OpenRead(assemblyPath))
+            using (PEReader peFile = new PEReader(stream))
+            {
+                SRMetadataReader metadataReader = peFile.GetMetadataReader();
+                uint token = ((IMetadataObjectWithToken)parameter).TokenValue;
+                int rowId = GetRowId(token);
+                GenericParameter genericParameter = metadataReader.GetGenericParameter(MetadataTokens.GenericParameterHandle(rowId));
+                GenericParameterConstraint constraint = metadataReader.GetGenericParameterConstraint(genericParameter.GetConstraints()[constraintIndex]);
+                return GetCustomAttributeArgument(metadataReader, constraint.GetCustomAttributes(), attributeType, argumentResolver);
+            }
+
+        }
+
+        private static object GetCustomAttributeArgument(SRMetadataReader metadataReader, CustomAttributeHandleCollection customAttributeHandles, string attributeType, Func<CustomAttributeValue<string>, object> argumentResolver)
+        {
+            foreach (CustomAttributeHandle customAttributeHandle in customAttributeHandles)
+            {
+                CustomAttribute customAttribute = metadataReader.GetCustomAttribute(customAttributeHandle);
+
+                if (TryGetAttributeName(metadataReader, customAttribute, out StringHandle typeNamespaceHandle, out StringHandle typeNameHandle))
+                {
+                    string attributeTypeName = $"{metadataReader.GetString(typeNamespaceHandle)}.{metadataReader.GetString(typeNameHandle)}";
+                    if (attributeType == attributeTypeName)
+                    {
+                        CustomAttributeValue<string> value = customAttribute.DecodeValue(new CustomAttributeTypeProvider());
+                        return argumentResolver(value);
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static int GetRowId(uint token)
+        {
+            const uint metadataRowIdMask = (1 << 24) - 1;
+            return (int)(token & metadataRowIdMask);
+        }
+
+        private static bool TryGetAttributeName(SRMetadataReader reader, CustomAttribute attr, out StringHandle typeNamespaceHandle, out StringHandle typeNameHandle)
+        {
+            EntityHandle ctorHandle = attr.Constructor;
+            switch (ctorHandle.Kind)
+            {
+                case HandleKind.MemberReference:
+                    EntityHandle container = reader.GetMemberReference((MemberReferenceHandle)ctorHandle).Parent;
+                    if (container.Kind == HandleKind.TypeReference)
+                    {
+                        TypeReference tr = reader.GetTypeReference((TypeReferenceHandle)container);
+                        typeNamespaceHandle = tr.Namespace;
+                        typeNameHandle = tr.Name;
+                        return true;
+                    }
+                    break;
+
+                case HandleKind.MethodDefinition:
+                    MethodDefinition md = reader.GetMethodDefinition((MethodDefinitionHandle)ctorHandle);
+                    TypeDefinition td = reader.GetTypeDefinition(md.GetDeclaringType());
+                    typeNamespaceHandle = td.Namespace;
+                    typeNameHandle = td.Name;
+                    return true;
+            }
+
+            // Unusual case, potentially invalid IL
+            typeNamespaceHandle = default;
+            typeNameHandle = default;
+            return false;
+        }
+
         private static IEnumerable<ITypeReference> GetBaseTypes(this ITypeReference typeRef)
         {
             ITypeDefinition type = typeRef.GetDefinitionOrNull();
@@ -713,5 +797,34 @@ namespace Microsoft.Cci.Extensions.CSharp
                     yield return nestedBaseTypeRef;
             }
         }
+
+        // Delegate to parse nullable attribute argument retrieved using System.Reflection.Metadata
+        internal static readonly Func<CustomAttributeValue<string>, object> NullableConstructorArgumentParser = value =>
+        {
+            if (value.FixedArguments.IsEmpty)
+            {
+                throw new ArgumentException("NullableAttribute constructor should have only 1 fixed argument");
+            }
+
+            CustomAttributeTypedArgument<string> argument = value.FixedArguments[0];
+            if (argument.Type == "uint8[]")
+            {
+                ImmutableArray<CustomAttributeTypedArgument<string>> argumentValue = (ImmutableArray<CustomAttributeTypedArgument<string>>)argument.Value;
+                byte[] array = new byte[argumentValue.Length];
+                for (int i = 0; i < argumentValue.Length; i++)
+                {
+                    array[i] = (byte)argumentValue[i].Value;
+                }
+
+                return array;
+            }
+
+            if (argument.Type == "uint8")
+            {
+                return argument.Value;
+            }
+
+            throw new ArgumentException("NullableAttribute should habe a byte or byte[] as a parameters");
+        };
     }
 }

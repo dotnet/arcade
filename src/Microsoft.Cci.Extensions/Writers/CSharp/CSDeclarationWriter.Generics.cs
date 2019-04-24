@@ -2,10 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Cci.Extensions.CSharp;
+using Microsoft.Cci.Writers.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Cci.Writers.Syntax;
 
 namespace Microsoft.Cci.Writers.CSharp
 {
@@ -40,9 +41,9 @@ namespace Microsoft.Cci.Writers.CSharp
 
             foreach (IGenericParameter param in genericParams)
             {
-                var constraints = GetConstraints(param);
+                var constraints = GetConstraints(param).ToList();
 
-                if (!constraints.Any())
+                if (constraints.Count <= 0)
                     continue;
 
                 WriteSpace();
@@ -61,16 +62,34 @@ namespace Microsoft.Cci.Writers.CSharp
             else
             {
                 if (parameter.MustBeReferenceType)
-                    yield return () => WriteKeyword("class", noSpace: true);
+                    yield return () =>
+                    {
+                        WriteKeyword("class", noSpace: true);
+
+                        if (parameter.Attributes.TryGetAttributeOfType("System.Runtime.CompilerServices.NullableAttribute", out ICustomAttribute nullableAttribute))
+                        {
+                            WriteNullableSymbol(GetAttributeArgumentValue<byte>(nullableAttribute), isNullableValueType: false, arrayIndex: 0);
+                        }
+                    };
             }
 
+            var assemblyLocation = parameter.Locations.FirstOrDefault()?.Document?.Location;
+
+            int constraintIndex = 0;
             foreach (var constraint in parameter.Constraints)
             {
-                // Skip valuetype because we should get it below.
-                if (TypeHelper.TypesAreEquivalent(constraint, constraint.PlatformType.SystemValueType) && parameter.MustBeValueType)
-                    continue;
+                // Skip valuetype because we should get it above.
+                if (!TypeHelper.TypesAreEquivalent(constraint, constraint.PlatformType.SystemValueType) && !parameter.MustBeValueType)
+                {
+                    object nullableAttributeValue = null;
+                    if (assemblyLocation != null)
+                    {
+                        nullableAttributeValue = parameter.GetGenericParameterConstraintConstructorArgument(constraintIndex, "System.Runtime.CompilerServices.NullableAttribute", assemblyLocation, CSharpCciExtensions.NullableConstructorArgumentParser);
+                    }
 
-                yield return () => WriteTypeName(constraint, noSpace: true);
+                    constraintIndex++;
+                    yield return () => WriteTypeName(constraint, noSpace: true, nullableAttributeArgument: nullableAttributeValue);
+                }
             }
 
             // new constraint cannot be put on structs and needs to be the last constraint

@@ -67,7 +67,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
                 if (invoke.IsMethodUnsafe()) WriteKeyword("unsafe");
                 WriteKeyword("delegate");
-                WriteTypeName(invoke.Type);
+                WriteTypeName(invoke.Type, invoke.ReturnValueAttributes);
                 WriteIdentifier(namedType.Name);
                 if (type.IsGeneric) WriteGenericParameters(type.GenericParameters);
                 WriteParameters(invoke.Parameters, invoke.ContainingType);
@@ -93,22 +93,44 @@ namespace Microsoft.Cci.Writers.CSharp
         // to reflect this.
         private void WriteBaseTypes(ITypeDefinition type)
         {
-            List<ITypeReference> baseTypes = new List<ITypeReference>();
-
             ITypeReference baseType = GetBaseType(type);
-
-            if (baseType != null)
-                baseTypes.Add(baseType);
-
-            baseTypes.AddRange(type.Interfaces.Where(IncludeBaseType).OrderBy((t) => GetTypeName(t), StringComparer.OrdinalIgnoreCase));
-
-            if (baseTypes.Count == 0)
+            IEnumerable<ITypeReference> interfaces = type.Interfaces.Where(IncludeBaseType).OrderBy(t => GetTypeName(t), StringComparer.OrdinalIgnoreCase);
+            
+            if (baseType == null && !interfaces.Any())
                 return;
 
             WriteSpace();
             WriteSymbol(":", true);
 
-            WriteList(baseTypes, (t) => WriteTypeName(t, noSpace: true));
+            if (baseType != null)
+            {
+                WriteTypeName(baseType, type.Attributes, noSpace: true);
+                if (interfaces.Any())
+                {
+                    WriteSymbol(",", addSpace: true);
+                }
+            }
+
+            WriteList(GetInterfaceWriterActions(type, interfaces), i => i());
+        }
+
+        private IEnumerable<Action> GetInterfaceWriterActions(ITypeReference type, IEnumerable<ITypeReference> interfaces)
+        {
+            if (interfaces.Any())
+            {
+                string location = type.Locations.FirstOrDefault()?.Document?.Location;
+                uint typeToken = ((IMetadataObjectWithToken)type).TokenValue;
+                foreach (var interfaceImplementation in interfaces)
+                {
+                    object nullableAttributeValue = null;
+                    if (location != null)
+                    {
+                        nullableAttributeValue = interfaceImplementation.GetInterfaceImplementationAttributeConstructorArgument(typeToken, "System.Runtime.CompilerServices.NullableAttribute", location, CSharpCciExtensions.NullableConstructorArgumentParser);
+                    }
+
+                    yield return () => WriteTypeName(interfaceImplementation, noSpace: true, nullableAttributeArgument: nullableAttributeValue);
+                }
+            }
         }
 
         private string GetTypeName(ITypeReference type)
