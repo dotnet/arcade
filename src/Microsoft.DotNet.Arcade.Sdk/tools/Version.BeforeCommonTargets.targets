@@ -10,7 +10,7 @@
     The project may set VersionPrefix, MajorVersion, MinorVersion, or AutoGenerateAssemblyVersion properties, which are consumed below.
     Microsoft.NET.DefaultAssemblyInfo.targets consumes VersionPrefix property, which may be set below.
   -->
-      
+
   <PropertyGroup>
     <!--
       Building MSIs from dev build requires file versions to be increasing.
@@ -42,12 +42,13 @@
   <!--
     Calculate VersionPrefix.
   -->
-  
+
   <!--
     The project can specify version either directly using the .NET SDK recognized property VersionPrefix, or using MajorVersion and MinorVersion properties.
+    Note that .NET Core SDK sets VersionPrefix to 1.0.0 if not set by the project. Override it here if the project sets MajorVersion and MinorVersion.
   -->
   <PropertyGroup>
-    <VersionPrefix Condition="'$(VersionPrefix)' == '' and '$(MajorVersion)' != '' and '$(MinorVersion)' != ''">$(MajorVersion).$(MinorVersion).0</VersionPrefix>
+    <VersionPrefix Condition="'$(MajorVersion)' != '' and '$(MinorVersion)' != ''">$(MajorVersion).$(MinorVersion).0</VersionPrefix>
   </PropertyGroup>
 
   <!--
