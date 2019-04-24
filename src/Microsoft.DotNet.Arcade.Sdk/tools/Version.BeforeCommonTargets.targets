@@ -11,7 +11,11 @@
     Microsoft.NET.DefaultAssemblyInfo.targets consumes VersionPrefix property, which may be set below.
   -->
 
-  <PropertyGroup>
+  <!-- 
+    Version numbers calculated here are date-based. In official builds this is given by OfficialBuildId parameter, 
+    but other builds do not have such input and would therefore be non-deterministic.
+  -->
+  <PropertyGroup Condition="'$(OfficialBuild)' == 'true' or '$(DotNetUseShippingVersions)' == 'true'">
     <!--
       Building MSIs from dev build requires file versions to be increasing.
       Use the current date in non-official builds. Note that this reduces the deterministic properties of the build
@@ -53,9 +57,9 @@
 
   <!--
     If a package is designated to be a release-only package (PreReleaseVersionLabel is empty) its package version does 
-    not include any pre-release labels regardless of what kind of build is the package produced by.
+    not include any pre-release labels in official build.
   -->
-  <PropertyGroup Condition="'$(PreReleaseVersionLabel)' == ''">
+  <PropertyGroup Condition="'$(PreReleaseVersionLabel)' == '' and '$(_PatchNumber)' != ''">
     <_VersionPrefixMajor>$(VersionPrefix.Split('.')[0])</_VersionPrefixMajor>
     <_VersionPrefixMinor>$(VersionPrefix.Split('.')[1])</_VersionPrefixMinor>
     <VersionPrefix>$(_VersionPrefixMajor).$(_VersionPrefixMinor).$(_PatchNumber)</VersionPrefix>
@@ -65,16 +69,13 @@
   <!--
     Calculate VersionSuffix.
   -->
-  <PropertyGroup Condition="'$(PreReleaseVersionLabel)' != ''">
+  <PropertyGroup Condition="'$(PreReleaseVersionLabel)' != '' or '$(VersionSuffixDateStamp)' == ''">
     <_PreReleaseLabel>$(PreReleaseVersionLabel)</_PreReleaseLabel>
     <_PreReleaseLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">ci</_PreReleaseLabel>
     <_PreReleaseLabel Condition="'$(ContinuousIntegrationBuild)' != 'true'">dev</_PreReleaseLabel>
 
-    <_AppendBuildNumberLabels>false</_AppendBuildNumberLabels>
-    <_AppendBuildNumberLabels Condition="'$(OfficialBuild)' == 'true' or '$(DotNetUseShippingVersions)' == 'true'">true</_AppendBuildNumberLabels>
-    
-    <_BuildNumberLabels Condition="$(_AppendBuildNumberLabels) and '$(SemanticVersioningV1)' != 'true'">.$(VersionSuffixDateStamp).$(VersionSuffixBuildOfTheDay)</_BuildNumberLabels>
-    <_BuildNumberLabels Condition="$(_AppendBuildNumberLabels) and '$(SemanticVersioningV1)' == 'true'">-$(VersionSuffixDateStamp)-$(VersionSuffixBuildOfTheDayPadded)</_BuildNumberLabels>
+    <_BuildNumberLabels Condition="'$(VersionSuffixDateStamp)' != '' and '$(SemanticVersioningV1)' != 'true'">.$(VersionSuffixDateStamp).$(VersionSuffixBuildOfTheDay)</_BuildNumberLabels>
+    <_BuildNumberLabels Condition="'$(VersionSuffixDateStamp)' != '' and '$(SemanticVersioningV1)' == 'true'">-$(VersionSuffixDateStamp)-$(VersionSuffixBuildOfTheDayPadded)</_BuildNumberLabels>
     
     <!--
       If DotNetFinalVersionKind is specified, overrides the package version produced by the build like so:
@@ -102,7 +103,7 @@
     <NoWarn Condition="'$(SemanticVersioningV1)' != 'true'">$(NoWarn);NU5105</NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(OfficialBuild)' != 'true'">
+  <PropertyGroup Condition="'$(VersionSuffixDateStamp)' == ''">
     <!--
       Don't include a commit SHA to AssemblyInformationalVersion.
       It would reduce the possibility of sharing otherwise unchanged build artifacts across deterministic builds.

@@ -104,12 +104,12 @@ In official builds the values of **SHORT_DATE** and **REVISION** are derived fro
 - **SHORT_DATE** is set to `yy` * 1000 + 50 * `mm` + `dd`. In year 2018 the value is in range [18051, 18631].
 
 In PR validation and local developer builds **SHORT_DATE** and **REVISION** are not included in the package version,
-unless `DotNetUseShippingVersion` is `true`, in which case the values of `yy`, `mm` and `dd` are derived from the current date
-and `r` = 1.
+unless `DotNetUseShippingVersion` is _true_, in which case the values of `yy`, `mm` and `dd` are derived from the current date
+and `r` = 1. Note that non-official builds with `DotNetUseShippingVersion` set to _true_ are non-deterministic.
 
 If a package is designated to be a _release-only_ package (`PreReleaseVersionLabel` is empty) its package version does not include 
-any pre-release labels regardless of what kind of build is the package produced by. Every build of such package must produce 
-a unique **PATCH_NUMBER**.
+any pre-release labels when produced by an official build. Every official build of such package must produce a unique **PATCH_NUMBER**.
+This versioning policy is not applied to developer and PR validation builds as it relies on the availability of a unique `OfficialBuildId`.
 
 **PATCH_NUMBER** is defined as (**SHORT_DATE** - `VersionBaseShortDate`) * 100 + `r`, where `VersionBaseShortDate` is `19000` unless 
 set in `eng/Version.props`. 
