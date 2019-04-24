@@ -32,7 +32,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         public int PatchNumber { get; set; }
 
-        [Required]
         public bool AutoGenerateAssemblyVersion { get; set; }
 
         [Output]
