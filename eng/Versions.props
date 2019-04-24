@@ -34,6 +34,7 @@
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
     <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
+    <NewtonsoftJsonSchemaVersion>2.0.4</NewtonsoftJsonSchemaVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <NuGetVersion>4.9.0-rtm.5658</NuGetVersion>
     <OctokitVersion>0.32.0</OctokitVersion>
