@@ -119,16 +119,36 @@ $ValidatePackage = {
 }
 
 function ValidateSourceLinkLinks {
-  if (Test-Path $ExtractPath) {
-    Remove-Item $ExtractPath -Force -Recurse -ErrorAction SilentlyContinue
+  if (!($GHRepoName -Match "^[^\s\/]+/[^\s\/]+$")) {
+    Write-Host "GHRepoName should be in the format <org>/<repo>"
+    $global:LASTEXITCODE = 1
+    return
   }
 
-  # Retrieve the list of files in the repo at that particular commit point and store them in the RepoFiles hash
+  if (!($GHCommit -Match "^[0-9a-fA-F]{40}$")) {
+    Write-Host "GHCommit should be a 40 chars hexadecimal string"
+    $global:LASTEXITCODE = 1
+    return
+  }
+
   $RepoTreeURL = -Join("https://api.github.com/repos/", $GHRepoName, "/git/trees/", $GHCommit, "?recursive=1")
-  $Data = Invoke-WebRequest $RepoTreeURL | ConvertFrom-Json | Select -ExpandProperty tree
+
+  try {
+    # Retrieve the list of files in the repo at that particular commit point and store them in the RepoFiles hash
+    $Data = Invoke-WebRequest $RepoTreeURL | ConvertFrom-Json | Select -ExpandProperty tree
   
-  foreach ($data in $Data) {
-    $RepoFiles[$data.path] = 1
+    foreach ($data in $Data) {
+      $RepoFiles[$data.path] = 1
+    }  
+  }
+  Catch {
+    Write-Host "Problems downloading the list of files from the repo. Url used: $RepoTreeURL"
+    $global:LASTEXITCODE = 1
+    return
+  }
+  
+  if (Test-Path $ExtractPath) {
+    Remove-Item $ExtractPath -Force -Recurse -ErrorAction SilentlyContinue
   }
 
   # Process each NuGet package in parallel
