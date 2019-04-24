@@ -57,12 +57,13 @@
 
   <!--
     If a package is designated to be a release-only package (PreReleaseVersionLabel is empty) its package version does 
-    not include any pre-release labels in official build.
+    not include any pre-release labels in official build. The 3rd component of the version prefix is overwritten either 
+    by PATCH_NUMBER or '0' in non-official builds.
   -->
-  <PropertyGroup Condition="'$(PreReleaseVersionLabel)' == '' and '$(_PatchNumber)' != ''">
+  <PropertyGroup Condition="'$(PreReleaseVersionLabel)' == ''">
     <_VersionPrefixMajor>$(VersionPrefix.Split('.')[0])</_VersionPrefixMajor>
     <_VersionPrefixMinor>$(VersionPrefix.Split('.')[1])</_VersionPrefixMinor>
-    <VersionPrefix>$(_VersionPrefixMajor).$(_VersionPrefixMinor).$(_PatchNumber)</VersionPrefix>
+    <VersionPrefix>$(_VersionPrefixMajor).$(_VersionPrefixMinor).$([MSBuild]::ValueOrDefault($(_PatchNumber), '0'))</VersionPrefix>
     <VersionSuffix/>
   </PropertyGroup>
 
