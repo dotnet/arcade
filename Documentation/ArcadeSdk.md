@@ -354,18 +354,19 @@ Optionally, a list of Visual Studio [workload component ids](https://docs.micros
 It is a common practice to specify properties applicable to all (most) projects in the repository in `Directory.Build.props`, e.g. public keys for `InternalsVisibleTo` project items.
 
 ```xml
-<PropertyGroup>  
+<Project>
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />    
+  <PropertyGroup> 
+    <!-- Public keys used by InternalsVisibleTo project items -->
+    <MoqPublicKey>00240000048000009400...</MoqPublicKey> 
 
-  <!-- Public keys used by InternalsVisibleTo project items -->
-  <MoqPublicKey>00240000048000009400...</MoqPublicKey> 
-
-  <!-- 
-    Specify license used for packages produced by the repository.
-    Use PackageLicenseExpressionInternal for closed-source licenses.
-   -->
-  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-</PropertyGroup>
+    <!-- 
+      Specify license used for packages produced by the repository.
+      Use PackageLicenseExpressionInternal for closed-source licenses.
+    -->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+</Project>
 ```
 
 ### /Directory.Build.targets
