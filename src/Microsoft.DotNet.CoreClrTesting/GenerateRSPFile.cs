@@ -139,7 +139,8 @@ namespace Microsoft.DotNet.CoreFxTesting
                 {
                     nameToTestAssemblyDef.Add(assembly.Name, assembly);
                 }
-                // TODO: is this needed anywhere?
+                // TODO: Currently there is no way to specify excluding an entire test assembly, to work around
+                // exclude every namespace/class from the assembly instead.
                 //else
                 //{
                 //    disabledTests.Add(assembly.Name);
