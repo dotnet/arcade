@@ -9,14 +9,26 @@
       SemanticVersioningV1        "true" if the Version needs to respect SemVer 1.0. Default is false, which means format following SemVer 2.0.
   -->
 
-  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.CalculateFileVersion" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.CalculateAssemblyAndFileVersions" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
   
   <Target Name="_InitializeAssemblyVersion" BeforeTargets="GetAssemblyVersion">
-    <Microsoft.DotNet.Arcade.Sdk.CalculateFileVersion VersionPrefix="$(VersionPrefix)" OfficialBuildId="$(_BuildNumber)" Condition="'$(VersionSuffixDateStamp)' != ''">
-      <Output TaskParameter="FileVersion" PropertyName="FileVersion"/>
-    </Microsoft.DotNet.Arcade.Sdk.CalculateFileVersion>
+    <PropertyGroup>
+      <_CalculateVersions>false</_CalculateVersions>
+      <_CalculateVersions Condition="'$(OfficialBuild)' == 'true' or '$(DotNetUseShippingVersions)' == 'true' or '$(AutoGenerateAssemblyVersion)' == 'true'">true</_CalculateVersions>
+    </PropertyGroup>
 
-    <PropertyGroup Condition="'$(VersionSuffixDateStamp)' == ''">
+    <Microsoft.DotNet.Arcade.Sdk.CalculateAssemblyAndFileVersions
+      VersionPrefix="$(VersionPrefix)"
+      BuildNumber="$(_BuildNumber)"
+      PatchNumber="$(_PatchNumber)"
+      AutoGenerateAssemblyVersion="$(AutoGenerateAssemblyVersion)"
+      Condition="$(_CalculateVersions)">
+
+      <Output TaskParameter="AssemblyVersion" PropertyName="AssemblyVersion"/>
+      <Output TaskParameter="FileVersion" PropertyName="FileVersion"/>
+    </Microsoft.DotNet.Arcade.Sdk.CalculateAssemblyAndFileVersions>
+
+    <PropertyGroup Condition="!$(_CalculateVersions)">
       <!--
         Set FileVersion to a distinct version that's greater than any shipping version.
         This makes it possible to install binaries produced by a dev build over product binaries,

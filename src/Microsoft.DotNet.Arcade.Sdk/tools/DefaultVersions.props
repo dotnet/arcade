@@ -15,8 +15,7 @@
   <!-- TODO: remove conditions on the following imports (see https://github.com/dotnet/arcade/issues/1982) -->
   <Import Project="DefaultVersions.Generated.props" Condition="Exists('DefaultVersions.Generated.props')"/>
   <Import Project="$(VersionsPropsPath)" Condition="Exists('$(VersionsPropsPath)')"/>
-  <Import Project="Version.props" Condition="Exists('Version.props')"/>
-  
+
   <!-- 
     Configure NuGet Restore to only use NuGet.config file in the repository root.
     This makes sure we do not depend on any NuGet.config files located outside of the repository.
