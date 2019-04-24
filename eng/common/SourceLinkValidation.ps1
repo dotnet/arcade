@@ -1,70 +1,19 @@
 param(
   [Parameter(Mandatory=$true)][string] $InputPath,           # Full path to directory where Symbols.NuGet packages to be checked are stored
   [Parameter(Mandatory=$true)][string] $ExtractPath,         # Full path to directory where the packages will be extracted during validation
-  [Parameter(Mandatory=$true)][string] $SourceLinkToolPath   # Full path to directory where dotnet SourceLink CLI was installed
+  [Parameter(Mandatory=$true)][string] $SourceLinkToolPath,  # Full path to directory where dotnet SourceLink CLI was installed
+  [Parameter(Mandatory=$true)][string] $GHRepoName,          # GitHub name of the repo including the Org. E.g., dotnet/arcade
+  [Parameter(Mandatory=$true)][string] $GHCommit             # GitHub commit SHA used to build the packages
 )
 
-Add-Type -AssemblyName System.IO.Compression.FileSystem
+# Cache/HashMap (File -> Exist flag) used to consult whether a file exist 
+# in the repository at a specific commit point. This is populated by inserting
+# all files present in the repo at a specific commit point.
+$global:RepoFiles = @{}
 
-$script:SourceLinkInfoCache = @{}
-
-function UrlStatusCode {
-  param(
-    [string] $Url		                                     # URL to be checked
-  )
-
-  if ($SourceLinkInfoCache.ContainsKey($Url)) {
-	return $SourceLinkInfoCache[$Url]
-  }
-  
-  try {
-    $Status = (Invoke-WebRequest -Uri $Url -UseBasicParsing -Method HEAD -TimeoutSec 10).StatusCode
-  }
-  catch [Net.WebException] {
-    $Status = [int]$_.Exception.Response.StatusCode
-  }
-  
-  $SourceLinkInfoCache.Add($Url, $Status)
-  
-  return $Status
-}
-
-function ExtractAndTestSourceLinkLinks {
+$ValidatePackage = {
   param( 
-    [string] $FullPath                                       # Full path to the module that has to be checked
-  )
-
-  $FailedLinks = 0
-  $SourceLinkInfos = .\sourcelink.exe print-urls $FullPath
-
-  if ($LASTEXITCODE -eq 0 -and -not ([string]::IsNullOrEmpty($SourceLinkInfos))) {
-	((Select-String '(http[s]?)(:\/\/)([^\s,]+)' -Input $SourceLinkInfos -AllMatches).Matches.Value) |
-	  ForEach-Object {
-	    $Link = $_
-
-		Write-Host -NoNewLine "| `t | `t | Checking link ($Link) ... "
-
-		$Status = UrlStatusCode $Link
-        $StatusMessage = "Passed."
-
-		if ($Status -ne "200") {
-          $StatusMessage = "Inaccessible."
-		  $FailedLinks++
-		}
-
-        Write-Host "$StatusMessage. Return status was $Status"
-	  }
-  }
-  else {
-  	Write-Host "| `t | `t No SourceLink information found."
-  }
-
-  return $FailedLinks
-}
-
-function CheckSourceLinkLinks {
-  param( 
-    [string] $PackagePath		                             # Path to a Symbols.NuGet package
+    [string] $PackagePath		                             # Full path to a Symbols.NuGet package
   )
 
   # Ensure input file exist
@@ -75,68 +24,123 @@ function CheckSourceLinkLinks {
   # Extensions for which we'll look for SourceLink information
   # For now we'll only care about Portable & Embedded PDBs
   $RelevantExtensions = @(".dll", ".exe", ".pdb")
-
-  # How many links were inaccessible
-  $FailedFiles = 0
-  $PassedFiles = 0
+ 
+  Write-Host -NoNewLine "Validating $PackagePath ... "
 
   $PackageId = [System.IO.Path]::GetFileNameWithoutExtension($PackagePath)
-  $ExtractPath = Join-Path -Path $ExtractPath -ChildPath $PackageId
+  $ExtractPath = Join-Path -Path $using:ExtractPath -ChildPath $PackageId
+  $FailedFiles = 0
 
+  Add-Type -AssemblyName System.IO.Compression.FileSystem
   [System.IO.Compression.ZipFile]::ExtractToDirectory($PackagePath, $ExtractPath)
 
-  # Makes easier to reference `sourcelink cli`
-  Push-Location $SourceLinkToolPath
-
   Get-ChildItem -Recurse $ExtractPath |
-    Where-Object {$RelevantExtensions -contains $_.Extension} |
+    Where-Object { $RelevantExtensions -contains $_.Extension } |
     ForEach-Object {
-      Write-Host "| `t Checking file" $_.FullName
-	  
-	  $Status = ExtractAndTestSourceLinkLinks $_.FullName
+      # We ignore resource DLLs
+      if ($_.FullName.EndsWith(".resources.dll")) {
+        return
+      }
+      
+      $ValidateFile = {
+        param( 
+          [string] $FullPath,                                # Full path to the module that has to be checked
+          [string][ref] $FailedFiles
+        )
 
-	  if ($Status -ne 0) {
-	    $FailedFiles++
-	  }
-	  else {
-	    $PassedFiles++
-	  }
+        # Makes easier to reference `sourcelink cli`
+        Push-Location $using:SourceLinkToolPath
+
+        $SourceLinkInfos = .\sourcelink.exe print-urls $FullPath | Out-String
+
+        if ($LastExitError -eq 0 -and -not ([string]::IsNullOrEmpty($SourceLinkInfos))) {
+          $NumFailedLinks = 0
+
+          # We only care about Http addresses
+          $Matches = (Select-String '(http[s]?)(:\/\/)([^\s,]+)' -Input $SourceLinkInfos -AllMatches).Matches
+
+          if ($Matches.Count -ne 0) {
+	        $Matches.Value |
+	          ForEach-Object {
+	            $Link = $_
+                $CommitUrl = -Join("https://raw.githubusercontent.com/", $using:GHRepoName, "/", $using:GHCommit, "/")
+                $FilePath = $Link.Replace($CommitUrl, "")
+                $Status = 200
+                $Cache = $using:RepoFiles
+
+                if ( !($Cache.ContainsKey($FilePath)) ) {
+                  try {
+	                $Uri = $address -as [System.URI]
+	                
+                    # Only GitHub links are valid
+                    if ($Uri.AbsoluteURI -ne $null -and $Uri.Host -match "github") {
+                      $Status = (Invoke-WebRequest -Uri $Link -UseBasicParsing -Method HEAD -TimeoutSec 5).StatusCode
+                    }
+                    else {
+                      $Status = 0
+                    }
+                  }
+                  Catch {
+                    $Status = 0                
+                  }
+                }
+
+		        if ($Status -ne 200) {
+                  if ($NumFailedLinks -eq 0) {
+                    if ($FailedFiles.Value -eq 0) {
+                      Write-Host
+                    }
+
+                    Write-Host "`tFile $FullPath has broken links:"
+                  }
+
+                  Write-Host "`t`tFailed to retrieve $Link"
+
+                  $NumFailedLinks++
+		        }
+	          }          
+          }
+
+          if ($NumFailedLinks -ne 0) {
+            $FailedFiles.value++
+	        $global:LastExitError = 1
+          }
+        }
+
+        Pop-Location
+      }
+      
+      &$ValidateFile $_.FullName $using:SourceLinkToolPath ([ref]$FailedFiles)
     }
-  
-  Pop-Location
 
-  if ($PassedFiles -eq 0 -and $FailedFiles -eq 0) {
-	Write-Host "| `t No files to check in this package."
+  if ($FailedFiles -eq 0) {
+    Write-Host "Passed."
   }
-
-  return $FailedFiles
 }
 
-function CheckSourceLinkInformation {
+function ValidateSourceLinkLinks {
   if (Test-Path $ExtractPath) {
     Remove-Item $ExtractPath -Force -Recurse -ErrorAction SilentlyContinue
   }
 
-  $HasErrors = 0
+  # Retrieve the list of files in the repo at that particular commit point and store them in the RepoFiles hash
+  $RepoTreeURL = -Join("https://api.github.com/repos/", $GHRepoName, "/git/trees/", $GHCommit, "?recursive=1")
+  $Data = Invoke-WebRequest $RepoTreeURL | ConvertFrom-Json | Select -ExpandProperty tree
+  
+  foreach ($data in $Data) {
+    $RepoFiles[$data.path] = 1
+  }
 
+  # Process each NuGet package in parallel
+  $Jobs = @()
   Get-ChildItem "$InputPath\*.symbols.nupkg" |
     ForEach-Object {
-      $FileName = $_.Name
-      Write-Host "Validating $InputPath\$FileName "
-      $Status = CheckSourceLinkLinks $_.FullName
-  
-      if ($Status -ne 0) {
-        Write-Error "| Result: Some links in $FileName were inaccessible."
-		$HasErrors = 1
-      }
-	  else {
-	    Write-Host "| Result: Passed."
-	  }
-
-	  Write-Host
+      $Jobs += Start-Job -ScriptBlock $ValidatePackage -ArgumentList $_.FullName
     }
 
-	$global:LASTEXITCODE = $HasErrors
+  foreach ($Job in $Jobs) {
+    Wait-Job -Id $Job.Id | Receive-Job
+  }
 }
 
-CheckSourceLinkInformation
+Measure-Command { ValidateSourceLinkLinks }
