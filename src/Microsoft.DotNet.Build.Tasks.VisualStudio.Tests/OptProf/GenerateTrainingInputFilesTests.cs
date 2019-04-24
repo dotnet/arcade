@@ -68,6 +68,13 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
       ""fileName"": ""/SQLitePCLRaw.batteries_green.dll"",
     },
     {
+      ""fileName"": ""/ko/Microsoft.CodeAnalysis.CSharp.resources.dll"",
+      ""ngen"": true,
+      ""ngenArchitecture"": ""All"",
+      ""ngenApplication"": """",
+      ""ngenPriority"": 3
+    },
+    {
       ""fileName"": ""/x/y/z/Microsoft.CodeAnalysis.CSharp.dll"",
       ""ngen"": true,
       ""ngenArchitecture"": ""All"",
