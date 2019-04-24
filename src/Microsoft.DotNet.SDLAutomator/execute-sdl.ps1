@@ -41,10 +41,14 @@ $gdnFolder = Join-Path $SourceDirectory ".gdn"
 Invoke-Expression "$(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -Repository $Repository -WorkingDirectory $SourceDirectory -GdnFolder $gdnFolder -ToolList $SourceToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel"
 
 if ($TsaPublish) {
-  $TsaRepositoryName = $Repository.Replace("/", "-")
-  Write-Host "$GuardianCliLocation tsa-publish --all-tools --repository-name $TsaRepositoryName --branch-name $BranchName --build-number $BuildNumber --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel"
-  Invoke-Expression "$GuardianCliLocation tsa-publish --all-tools --repository-name $TsaRepositoryName --branch-name $BranchName --build-number $BuildNumber --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel"
-  if ($LASTEXITCODE -ne 0) {
-    Write-Error "Guardian tsa-publish failed with exit code $LASTEXITCODE."
+  if ($BranchName -and $BuildNumber) {
+    $TsaRepositoryName = $Repository.Replace("/", "-")
+    Write-Host "$GuardianCliLocation tsa-publish --all-tools --repository-name $TsaRepositoryName --branch-name $BranchName --build-number $BuildNumber --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel"
+    Invoke-Expression "$GuardianCliLocation tsa-publish --all-tools --repository-name $TsaRepositoryName --branch-name $BranchName --build-number $BuildNumber --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel"
+    if ($LASTEXITCODE -ne 0) {
+      Write-Error "Guardian tsa-publish failed with exit code $LASTEXITCODE."
+    }
+  } else {
+    Write-Error "Could not publish to TSA -- not all required values ($$BranchName, $$BuildNumber) were specified."
   }
 }
