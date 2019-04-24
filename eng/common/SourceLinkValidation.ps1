@@ -45,7 +45,7 @@ $ValidatePackage = {
       $ValidateFile = {
         param( 
           [string] $FullPath,                                # Full path to the module that has to be checked
-          [string][ref] $FailedFiles
+          [ref] $FailedFiles
         )
 
         # Makes easier to reference `sourcelink cli`
@@ -53,7 +53,7 @@ $ValidatePackage = {
 
         $SourceLinkInfos = .\sourcelink.exe print-urls $FullPath | Out-String
 
-        if ($LastExitError -eq 0 -and -not ([string]::IsNullOrEmpty($SourceLinkInfos))) {
+        if ($LASTEXITCODE -eq 0 -and -not ([string]::IsNullOrEmpty($SourceLinkInfos))) {
           $NumFailedLinks = 0
 
           # We only care about Http addresses
@@ -70,7 +70,7 @@ $ValidatePackage = {
 
                 if ( !($Cache.ContainsKey($FilePath)) ) {
                   try {
-	                $Uri = $address -as [System.URI]
+	                $Uri = $Link -as [System.URI]
 	                
                     # Only GitHub links are valid
                     if ($Uri.AbsoluteURI -ne $null -and $Uri.Host -match "github") {
@@ -103,14 +103,14 @@ $ValidatePackage = {
 
           if ($NumFailedLinks -ne 0) {
             $FailedFiles.value++
-	        $global:LastExitError = 1
+	        $global:LASTEXITCODE = 1
           }
         }
 
         Pop-Location
       }
       
-      &$ValidateFile $_.FullName $using:SourceLinkToolPath ([ref]$FailedFiles)
+      &$ValidateFile $_.FullName ([ref]$FailedFiles)
     }
 
   if ($FailedFiles -eq 0) {
