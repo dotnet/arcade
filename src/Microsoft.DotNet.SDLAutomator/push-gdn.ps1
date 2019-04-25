@@ -8,6 +8,7 @@ Param(
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
 
+# We create the temp directory where we'll store the sdl-config repository
 $sdlDir = Join-Path $env:TEMP "sdl"
 if (Test-Path $sdlDir) {
   Remove-Item -Force -Recurse $sdlDir
@@ -18,14 +19,17 @@ git clone https://dnceng:$DncEngAccessToken@dev.azure.com/dnceng/internal/_git/s
 if ($LASTEXITCODE -ne 0) {
   Write-Error "Git clone failed with exit code $LASTEXITCODE."
 }
+# We copy the .gdn folder from our local run into the git repository so it can be committed
 $sdlRepositoryFolder = Join-Path (Join-Path $sdlDir $Repository) ".gdn"
 if (Get-Command Robocopy) {
   Robocopy /S $GdnFolder $sdlRepositoryFolder
 } else {
   rsync -r $GdnFolder $sdlRepositoryFolder
 }
+# cd to the sdl-config directory so we can run git there
 $currentDirectory = (Get-Location).Path
 Set-Location $sdlDir
+# git add . --> git commit --> git push
 Write-Host "git add ."
 git add .
 if ($LASTEXITCODE -ne 0) {
@@ -42,4 +46,5 @@ if ($LASTEXITCODE -ne 0) {
   Write-Error "Git push failed with exit code $LASTEXITCODE."
 }
 
+# Return to the original directory
 Set-Location $currentDirectory

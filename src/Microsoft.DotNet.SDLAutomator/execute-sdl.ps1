@@ -4,9 +4,9 @@ Param(
   [string] $SourceDirectory,                        # Required: the directory where source files are located
   [string] $ArtifactsDirectory,                     # Required: the directory where build artifacts are located
   [string] $DncEngAccessToken,                      # Required: access token for dnceng; should be provided via KeyVault
-  [string[]] $SourceToolsList,                      # Required: list of SDL tools to run on source code
-  [string[]] $ArtifactToolsList,                    # Required: list of SDL tools to run on built artifacts
-  [bool] $TsaPublish=$False,                        # Required: true will publish results to TSA; only set to true after onboarding to TSA
+  [string[]] $SourceToolsList,                      # Optional: list of SDL tools to run on source code
+  [string[]] $ArtifactToolsList,                    # Optional: list of SDL tools to run on built artifacts
+  [bool] $TsaPublish=$False,                        # Optional: true will publish results to TSA; only set to true after onboarding to TSA
   [string] $BranchName=$env:BUILD_SOURCEBRANCHNAME, # Optional: required for TSA publish; defaults to $(Build.SourceBranchName)
   [string] $BuildNumber=$env:BUILD_BUILDNUMBER,     # Optional: required for TSA publish; defaults to $(Build.BuildNumber)
   [bool] $UpdateBaseline=$False,                    # Optional: if true, will update the baseline in the repository; should only be run after fixing any issues which need to be fixed

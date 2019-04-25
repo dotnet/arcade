@@ -9,6 +9,10 @@ Param(
   [string] $GuardianLoggerLevel="Standard"
 )
 
+$ErrorActionPreference = "Stop"
+Set-StrictMode -Version 2.0
+
+# We store config files in the r directory of .gdn
 Write-Host $ToolsList
 $gdnConfigPath = Join-Path $GdnFolder "r"
 $gdnConfig = ""
@@ -16,6 +20,7 @@ $gdnConfig = ""
 foreach ($tool in $ToolsList) {
   $gdnConfigFile = Join-Path $gdnConfigPath "$tool-configure.gdnconfig"
   Write-Host $tool
+  # We have to manually configure tools that run on source to look at the source directory only
   if ($tool -eq "credscan") {
     Write-Host "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --args `"TargetDirectory : $TargetDirectory`" --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive"
     Invoke-Expression "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --args `"TargetDirectory : $TargetDirectory`" --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive"
