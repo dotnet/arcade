@@ -2,21 +2,31 @@ Param(
   [string] $GuardianCliLocation,
   [string] $Repository,
   [string] $WorkingDirectory,
+  [string] $TargetDirectory,
   [string] $GdnFolder,
-  [string] $ToolList,
-  [string] $DncEngAccessToken,
+  [string[]] $ToolsList,
   [string] $UpdateBaseline,
   [string] $GuardianLoggerLevel="Standard"
 )
 
-foreach ($tool in $ToolList) {
-  Write-Host "$GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel"
-  Invoke-Expression "$GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel"
-  if ($LASTEXITCODE -ne 0) {
-    Write-Error "Guardian run $tool failed with exit code $LASTEXITCODE."
-  }
-}
+Write-Host $ToolsList
+$gdnConfigPath = Join-Path $GdnFolder "r"
+$gdnConfig = ""
 
-if ($UpdateBaseline) {
-  Invoke-Expression "$(Join-Path $PSScriptRoot "push-gdn.ps1") -Repository $Repository -WorkingDirectory $WorkingDirectory -GdnFolder $GdnFolder -DncEngAccessToken $DncEngAccessToken -PushReason `"Update baseline`""
+foreach ($tool in $ToolsList) {
+  $gdnConfigFile = Join-Path $gdnConfigPath "$tool-configure.gdnconfig"
+  Write-Host $tool
+  if ($tool -eq "credscan") {
+    Write-Host "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --args `"TargetDirectory : $TargetDirectory`" --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive"
+    Invoke-Expression "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --args `"TargetDirectory : $TargetDirectory`" --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive"
+    $gdnConfig = "--config $gdnConfigFile"
+  }
+  if ($tool -eq "policheck") {
+    Write-Host "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --args `"Target : $TargetDirectory`" --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive"
+    Invoke-Expression "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --args `"Target : $TargetDirectory`" --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive"
+    $gdnConfig = "--config $gdnConfigFile"
+  }
+
+  Write-Host "$GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel $gdnConfig"
+  Invoke-Expression "$GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel $gdnConfig"
 }

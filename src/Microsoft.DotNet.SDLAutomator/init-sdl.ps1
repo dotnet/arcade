@@ -11,10 +11,14 @@ $uri = "https://dev.azure.com/dnceng/internal/_apis/git/repositories/sdl-tool-cf
 $zipFile = "$WorkingDirectory/gdn.zip"
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+$gdnFolder = (Join-Path $WorkingDirectory ".gdn")
 Try
 {
   Write-Host "Downloading gdn folder from internal config repostiory..."
   Invoke-WebRequest -Headers @{ "Accept"="application/zip"; "Authorization"="Basic $encodedPat" } -Uri $uri -OutFile $zipFile
+  if (Test-Path $gdnFolder) {
+    Remove-Item -Force -Recurse $gdnFolder
+  }
   [System.IO.Compression.ZipFile]::ExtractToDirectory($zipFile, $WorkingDirectory)
 } Catch [System.Net.WebException] {
   # if the folder does not exist, we'll do a guardian init and push it to the remote repository
@@ -29,7 +33,5 @@ Try
   if ($LASTEXITCODE -ne 0) {
     Write-Error "Guardian baseline failed with exit code $LASTEXITCODE."
   }
-  Invoke-Expression "$(Join-Path $PSScriptRoot "push-gdn.ps1") -Repository $Repository -GdnFolder $WorkingDirectory/.gdn -DncEngAccessToken $DncEngAccessToken -PushReason `"Initialize gdn folder`""
+  & $(Join-Path $PSScriptRoot "push-gdn.ps1") -Repository $Repository -GdnFolder $gdnFolder -DncEngAccessToken $DncEngAccessToken -PushReason "Initialize gdn folder"
 }
-
-return Join-Path $WorkingDirectory ".gdn"

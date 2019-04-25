@@ -21,7 +21,8 @@ Param(
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
 
-$gdnFolder = Invoke-Expression "$(Join-Path $PSScriptRoot "init-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -Repository $Repository -WorkingDirectory $ArtifactsDirectory -DncEngAccessToken $DncEngAccessToken -GuardianLoggerLevel $GuardianLoggerLevel"
+& $(Join-Path $PSScriptRoot "init-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -Repository $Repository -WorkingDirectory $ArtifactsDirectory -DncEngAccessToken $DncEngAccessToken -GuardianLoggerLevel $GuardianLoggerLevel
+$gdnFolder = Join-Path $ArtifactsDirectory ".gdn"
 
 if ($TsaOnboard) {
   if ($TsaCodebaseName -and $TsaNotificationEmail -and $TsaCodebaseAdmin -and $TsaBugAreaPath) {
@@ -35,10 +36,16 @@ if ($TsaOnboard) {
   }
 }
 
-Invoke-Expression "$(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -Repository $Repository -WorkingDirectory $ArtifactsDirectory -GdnFolder $gdnFolder -ToolList $ArtifactToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel"
-Copy-Item -Recurse -Force $gdnFolder $SourceDirectory
-$gdnFolder = Join-Path $SourceDirectory ".gdn"
-Invoke-Expression "$(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -Repository $Repository -WorkingDirectory $SourceDirectory -GdnFolder $gdnFolder -ToolList $SourceToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel"
+if ($ArtifactToolsList -and $ArtifactToolsList.Count -gt 0) {
+  & $(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -Repository $Repository -WorkingDirectory $ArtifactsDirectory -TargetDirectory $ArtifactsDirectory -GdnFolder $gdnFolder -ToolsList $ArtifactToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel
+}
+if ($SourceToolsList -and $SourceToolsList.Count -gt 0) {
+  & $(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -Repository $Repository -WorkingDirectory $ArtifactsDirectory -TargetDirectory $SourceDirectory -GdnFolder $gdnFolder -ToolsList $SourceToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel
+}
+
+if ($UpdateBaseline) {
+  & (Join-Path $PSScriptRoot "push-gdn.ps1") -Repository $Repository -GdnFolder $GdnFolder -DncEngAccessToken $DncEngAccessToken -PushReason "Update baseline"
+}
 
 if ($TsaPublish) {
   if ($BranchName -and $BuildNumber) {

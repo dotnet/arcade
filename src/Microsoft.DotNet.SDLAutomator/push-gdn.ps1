@@ -1,6 +1,5 @@
 Param(
   [string] $Repository,
-  [string] $WorkingDirectory,
   [string] $GdnFolder,
   [string] $DncEngAccessToken,
   [string] $PushReason
@@ -19,8 +18,13 @@ git clone https://dnceng:$DncEngAccessToken@dev.azure.com/dnceng/internal/_git/s
 if ($LASTEXITCODE -ne 0) {
   Write-Error "Git clone failed with exit code $LASTEXITCODE."
 }
-$sdlRepositoryFolder = Join-Path $sdlDir $Repository
-Copy-Item -Recurse -Force $GdnFolder $sdlRepositoryFolder
+$sdlRepositoryFolder = Join-Path (Join-Path $sdlDir $Repository) ".gdn"
+if (Get-Command Robocopy) {
+  Robocopy /S $GdnFolder $sdlRepositoryFolder
+} else {
+  rsync -r $GdnFolder $sdlRepositoryFolder
+}
+$currentDirectory = (Get-Location).Path
 Set-Location $sdlDir
 Write-Host "git add ."
 git add .
@@ -38,4 +42,4 @@ if ($LASTEXITCODE -ne 0) {
   Write-Error "Git push failed with exit code $LASTEXITCODE."
 }
 
-Set-Location $WorkingDirectory
+Set-Location $currentDirectory
