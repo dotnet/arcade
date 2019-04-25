@@ -1,40 +1,38 @@
 # Staged release process
 
-With the data we have in BAR we know about what each repo's builds, what does it depend on, SHAs, 
-how far a given commit is from HEAD, etc. Also, with channels we can define the intention of the builds.
+## Goal
 
-From the above mentioned, we could create a release flow where builds are promoted to different channels/stages 
-and in each have different sets of operations and validations.
+Today, the release process is all baked into a single release definition, including validation checks, manual steps, etc. 
+Also, it requires some pre-work by the PM to download the bits, order them and making sure they are available for the overall
+process. With the data in BAR and commands supported by `darc` we can automate some of things.
 
-Tasks different from building and signing will be executed as part of Azure DevOps Release Definitions that will be
-triggered by Maestro++ after a set of builds are assigned to a channel. This might change in the future as we migrate
-release definition tasks to Azure DevOps stages.
+Also, we would like to introduce the concept of "promotion". In order for a build to be shipped it would need to go
+through several **rings**. Each ring has different types of validations. A build is only promoted if it passes all the 
+validation checks.
 
-## Release Stages
+## Release Rings
 
-### Dev (.NET Core 3 Dev channel)
+### Dev Ring (.NET Core 3 Dev channel)
 
 1. Standard builds after merges into master branch
 2. Sign produced packages by the build
-3. Signing validation*
-4. Symbol publishing to symweb and MSDL*
-5. Symbol availability validation*
-6. Publish packages, installers, packages, etc. to dotnet feeds and MyGet*
+3. Signing validation
+4. Symbol publishing to symweb and MSDL
+5. Symbol availability validation
+6. Publish packages, installers, packages, etc. to dotnet feeds and MyGet
 7. **(Future)** source build
 
 **Promotion:** Tactics decision and coordinated activities driven by the repos to snap release branches from master and 
 begin the release stabilization process. 
 
-*Currently only available on asyn release pipelines
-
-### Release (.NET Core 3 Release channel)
+### Release Ring (.NET Core 3 Release channel)
 
 1. Standard builds after merges into release/* branch
 2. Sign produced packages by the build
-3. Signing validation *
-4. Symbol publishing to symweb and MSDL*
-5. Symbol availability validation *
-6. Publish packages, installers, packages, etc. to dotnet feeds and MyGet*
+3. Signing validation
+4. Symbol publishing to symweb and MSDL
+5. Symbol availability validation
+6. Publish packages, installers, packages, etc. to dotnet feeds and MyGet
 7. Gather drop and send to CTI for validation
 8. Take PRs to fix found issues, rinse and repeat
 
@@ -44,9 +42,7 @@ begin the release stabilization process.
 3. Tactics approve this version
 4. Move all related builds to the Release Validation channel
 
-*Not yet in an async release definition but will mimic what we have in the previous stage.
-
-### Final Validation (Release Validation channel)
+### Final Validation Ring (Release Validation channel)
 
 1. No build required
 2. Redhat source build
@@ -60,7 +56,7 @@ post-build script. Zips are validated by the ASP team against an App Services te
 2. Tactics approve this version
 3. Move all related builds to the Publish Release channel
 
-### Final Release/Publish (Publish Release channel)
+### Final Release/Publish Ring (Publish Release channel)
  
 1. No build required
 2. Publish and validate NuGet symbols
