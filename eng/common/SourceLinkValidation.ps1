@@ -13,7 +13,7 @@ $global:RepoFiles = @{}
 
 $ValidatePackage = {
   param( 
-    [string] $PackagePath		                             # Full path to a Symbols.NuGet package
+    [string] $PackagePath                                 # Full path to a Symbols.NuGet package
   )
 
   # Ensure input file exist
@@ -60,9 +60,9 @@ $ValidatePackage = {
           $Matches = (Select-String '(http[s]?)(:\/\/)([^\s,]+)' -Input $SourceLinkInfos -AllMatches).Matches
 
           if ($Matches.Count -ne 0) {
-	        $Matches.Value |
-	          ForEach-Object {
-	            $Link = $_
+            $Matches.Value |
+              ForEach-Object {
+                $Link = $_
                 $CommitUrl = -Join("https://raw.githubusercontent.com/", $using:GHRepoName, "/", $using:GHCommit, "/")
                 $FilePath = $Link.Replace($CommitUrl, "")
                 $Status = 200
@@ -70,8 +70,8 @@ $ValidatePackage = {
 
                 if ( !($Cache.ContainsKey($FilePath)) ) {
                   try {
-	                $Uri = $Link -as [System.URI]
-	                
+                    $Uri = $Link -as [System.URI]
+                  
                     # Only GitHub links are valid
                     if ($Uri.AbsoluteURI -ne $null -and $Uri.Host -match "github") {
                       $Status = (Invoke-WebRequest -Uri $Link -UseBasicParsing -Method HEAD -TimeoutSec 5).StatusCode
@@ -80,12 +80,12 @@ $ValidatePackage = {
                       $Status = 0
                     }
                   }
-                  Catch {
-                    $Status = 0                
+                  catch {
+                    $Status = 0
                   }
                 }
 
-		        if ($Status -ne 200) {
+                if ($Status -ne 200) {
                   if ($NumFailedLinks -eq 0) {
                     if ($FailedFiles.Value -eq 0) {
                       Write-Host
@@ -97,13 +97,13 @@ $ValidatePackage = {
                   Write-Host "`t`tFailed to retrieve $Link"
 
                   $NumFailedLinks++
-		        }
-	          }          
+                }
+              }
           }
 
           if ($NumFailedLinks -ne 0) {
             $FailedFiles.value++
-	        $global:LASTEXITCODE = 1
+            $global:LASTEXITCODE = 1
           }
         }
 
@@ -132,16 +132,21 @@ function ValidateSourceLinkLinks {
   }
 
   $RepoTreeURL = -Join("https://api.github.com/repos/", $GHRepoName, "/git/trees/", $GHCommit, "?recursive=1")
+  $CodeExtensions = @(".cs", ".vb", ".fs", ".fsi", ".fsx", ".fsscript")
 
   try {
     # Retrieve the list of files in the repo at that particular commit point and store them in the RepoFiles hash
-    $Data = Invoke-WebRequest $RepoTreeURL | ConvertFrom-Json | Select -ExpandProperty tree
+    $Data = Invoke-WebRequest $RepoTreeURL | ConvertFrom-Json | Select-Object -ExpandProperty tree
   
-    foreach ($data in $Data) {
-      $RepoFiles[$data.path] = 1
-    }  
+    foreach ($file in $Data) {
+      $Extension = [System.IO.Path]::GetExtension($file.path)
+
+      if ($CodeExtensions.Contains($Extension)) {
+        $RepoFiles[$file.path] = 1
+      }
+    }
   }
-  Catch {
+  catch {
     Write-Host "Problems downloading the list of files from the repo. Url used: $RepoTreeURL"
     $global:LASTEXITCODE = 1
     return
