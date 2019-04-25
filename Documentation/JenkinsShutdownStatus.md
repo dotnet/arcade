@@ -24,7 +24,7 @@ Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins su
 | ---------------------------| ---------------- |:-----------:|:------:| ------------------- | ----- |
 | **CoreClr**                | russellk         | In progress | Medium | [ci1](https://ci.dot.net/job/dotnet_coreclr/) | Majority of jobs have been ported.  CoreFX-on-CoreCLR jobs are coming in hot. There are several other jobs that need to be ported, but aren't critical to daily activity and can be ported later. (NOTE: CoreClr really needs queue time parameters to be supported via comment triggers and that work is scheduled for Q2.  Also, ARM32 hardware is insufficient, and AzDO lacks the flexibility to reduce load on these queues like we did in Jenkins.) |
 | **dotnet-docker**          | msimons          | Complete    ||||
-| **dotnet-framework-docker**| msimons          | In progress | Low    | [ci1](https://ci.dot.net/job/Microsoft_dotnet-framework-docker/) | [Tracking issue](https://github.com/Microsoft/dotnet-framework-docker/issues/225), no progress expected until after 4/9 (patch Tuesday) |
+| **dotnet-framework-docker**| msimons          | Complete    ||||
 |**dotnet-buildtools-prereqs-docker** | msimons | Complete    ||||
 | **SDK**                    | licavalc         | Complete    ||||
 | **TestFx**                 | sarabjot         | Complete    ||||
