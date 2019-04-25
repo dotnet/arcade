@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Microsoft.DotNet.Arcade.Sdk.Tests"/>
+    <InternalsVisibleTo Include="Microsoft.DotNet.Arcade.Sdk.Tests" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,10 +47,7 @@
     <Compile Include="..\Common\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
   </ItemGroup>
   
-  <Target Name="_GenerateSdkVersionFile"
-          Inputs="$(MSBuildAllProjects)"
-          Outputs="$(_GeneratedVersionFilePath)"
-          BeforeTargets="GenerateNuSpec">
+  <Target Name="_GenerateSdkVersionFile" Inputs="$(MSBuildAllProjects)" Outputs="$(_GeneratedVersionFilePath)" BeforeTargets="GenerateNuSpec">
 
     <PropertyGroup>
       <_SdkVersionPropsContent>
@@ -64,10 +61,10 @@
   </_SdkVersionPropsContent>
     </PropertyGroup>
     
-    <WriteLinesToFile File="$(_GeneratedVersionFilePath)" Lines="$(_SdkVersionPropsContent)" Overwrite="true"/>
+    <WriteLinesToFile File="$(_GeneratedVersionFilePath)" Lines="$(_SdkVersionPropsContent)" Overwrite="true" />
 
     <ItemGroup>
-      <FileWrites Include="$(_GeneratedVersionFilePath)"/>
+      <FileWrites Include="$(_GeneratedVersionFilePath)" />
     </ItemGroup>
   </Target>
 

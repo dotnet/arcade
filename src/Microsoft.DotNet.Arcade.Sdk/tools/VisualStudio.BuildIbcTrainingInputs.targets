@@ -1,15 +1,30 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
+
+  <!--
+    Properties:
+      RepositoryName                   Current repository name (e.g. 'dotnet/roslyn').
+      VisualStudioDropName             Product drop name, e.g. 'Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)'
+  -->
   
   <PropertyGroup>
     <_VisualStudioBuildTasksAssembly>$(NuGetPackageRoot)microsoft.dotnet.build.tasks.visualstudio\$(MicrosoftDotNetBuildTasksVisualStudioVersion)\tools\net472\Microsoft.DotNet.Build.Tasks.VisualStudio.dll</_VisualStudioBuildTasksAssembly>
   </PropertyGroup>
 
-  <UsingTask AssemblyFile="$(_VisualStudioBuildTasksAssembly)" TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.GenerateTrainingInputFiles"/>
+  <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.GenerateTrainingInputFiles" AssemblyFile="$(_VisualStudioBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.GenerateTrainingPropsFile" AssemblyFile="$(_VisualStudioBuildTasksAssembly)" />
 
   <Target Name="_BuildTrainingInputs" AfterTargets="Build">
-    <GenerateTrainingInputFiles ConfigurationFile="$(RepositoryEngineeringDir)config\OptProf.json" 
+    <Error Condition="'$(VisualStudioDropName)' == '' and '$(OfficialBuild)' == 'true'"
+           Text="Property VisualStudioDropName must be specified in official build that produces Visual Studio insertion components." />
+    <Error Text="RepositoryName property has to be specified when EnableNgenOptimization is true" Condition="'$(RepositoryName)' == ''"/>
+
+    <GenerateTrainingInputFiles ConfigurationFile="$(RepositoryEngineeringDir)config\OptProf.json"
                                 InsertionDirectory="$(VisualStudioSetupInsertionPath)"
                                 OutputDirectory="$(ArtifactsDir)OptProf\$(Configuration)\Data" />
+
+    <GenerateTrainingPropsFile ProductDropName="$(VisualStudioDropName)"
+                               RepositoryName="$(RepositoryName)"
+                               OutputDirectory="$(VisualStudioSetupInsertionPath)OptProf"/>
   </Target>
 </Project>
