@@ -25,7 +25,7 @@ $ValidatePackage = {
   # For now we'll only care about Portable & Embedded PDBs
   $RelevantExtensions = @(".dll", ".exe", ".pdb")
  
-  Write-Host -NoNewLine "Validating $PackagePath ... "
+  Write-Host -NoNewLine "Validating" ([System.IO.Path]::GetFileName($PackagePath)) "... "
 
   $PackageId = [System.IO.Path]::GetFileNameWithoutExtension($PackagePath)
   $ExtractPath = Join-Path -Path $using:ExtractPath -ChildPath $PackageId
@@ -33,26 +33,29 @@ $ValidatePackage = {
 
   Add-Type -AssemblyName System.IO.Compression.FileSystem
 
+  [System.IO.Directory]::CreateDirectory($ExtractPath);
+
   $zip = [System.IO.Compression.ZipFile]::OpenRead($PackagePath)
 
   $zip.Entries | 
     Where-Object {$RelevantExtensions -contains [System.IO.Path]::GetExtension($_.Name)} |
       ForEach-Object {
         $FileName = $_.FullName
-        $TargetFile = "$ExtractPath\$FileName"
-        $TargetFolder = [System.IO.Directory]::GetParent($TargetFile)
+        $Extension = [System.IO.Path]::GetExtension($_.Name)
+        $FakeName = -Join((New-Guid), $Extension)
+        $TargetFile = Join-Path -Path $ExtractPath -ChildPath $FakeName 
 
         # We ignore resource DLLs
         if ($FileName.EndsWith(".resources.dll")) {
           return
         }
 
-        [System.IO.Directory]::CreateDirectory($TargetFolder);
         [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, $TargetFile, $true)
 
         $ValidateFile = {
           param( 
             [string] $FullPath,                                # Full path to the module that has to be checked
+            [string] $RealPath,
             [ref] $FailedFiles
           )
 
@@ -99,7 +102,7 @@ $ValidatePackage = {
                         Write-Host
                       }
 
-                      Write-Host "`tFile $FullPath has broken links:"
+                      Write-Host "`tFile $RealPath has broken links:"
                     }
 
                     Write-Host "`t`tFailed to retrieve $Link"
@@ -118,7 +121,7 @@ $ValidatePackage = {
           Pop-Location
         }
       
-        &$ValidateFile $TargetFile ([ref]$FailedFiles)
+        &$ValidateFile $TargetFile $FileName ([ref]$FailedFiles)
       }
 
   $zip.Dispose()
