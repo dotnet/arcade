@@ -315,11 +315,11 @@ namespace Microsoft.DotNet.SignTool
                 // extract copyright from native resource (.rsrc section) 
                 if (signInfo.ShouldSign && peInfo != null && peInfo.IsManaged)
                 {
-                    bool? isMicrosoftLibrary = IsMicrosoftLibrary(peInfo.Copyright);
+                    bool isMicrosoftLibrary = IsMicrosoftLibrary(peInfo.Copyright);
                     bool isMicrosoftCertificate = !IsThirdPartyCertificate(signInfo.Certificate);
-                    if (isMicrosoftLibrary.HasValue && isMicrosoftLibrary != isMicrosoftCertificate)
+                    if (isMicrosoftLibrary != isMicrosoftCertificate)
                     {
-                        if (isMicrosoftLibrary.Value)
+                        if (isMicrosoftLibrary)
                         {
                             LogWarning(SigningToolErrorCode.SIGN001, $"Signing Microsoft library '{fullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{peInfo.Copyright}'.");
                         }
@@ -365,11 +365,10 @@ namespace Microsoft.DotNet.SignTool
 
         /// <summary>
         /// Determines whether a library is a Microsoft library based on copyright.
-        /// Some .NET Foundation libraries are built by Microsoft, others are not.
-        /// We can't tell based on just copyright.
+        /// Copyright used for binary assets (assemblies and packages) built by Microsoft must be Microsoft copyright.
         /// </summary>
-        private static bool? IsMicrosoftLibrary(string copyright)
-            => copyright.Contains("Microsoft") ? true : copyright.Contains(".NET Foundation") ? null : (bool?)false;
+        private static bool IsMicrosoftLibrary(string copyright)
+            => copyright.Contains("Microsoft");
 
         private static bool IsThirdPartyCertificate(string name)
             => name.Equals("3PartyDual", StringComparison.OrdinalIgnoreCase) ||
