@@ -442,7 +442,7 @@ Set `IsSourcePackage` to `true` to indicate that the project produces a source p
 If the project does not have an explicitly provided `.nuspec` file (`NuspecFile` property is empty) setting `IsSourcePackage` to `true` will trigger a target that 
 puts sources contained in the project directory to the `contentFiles` directory of the source package produced by the project.
 
-In addition to source files a `build/$(PackageId).targets` file will be auto-generated that links the sources contained in the package to the source server via a Source Link target.
+In addition a `build/$(PackageId).targets` file will be auto-generated that links the sources contained in the package to the source server via a Source Link target.
 If your package already has a `build/$(PackageId).targets` file set `SourcePackageSourceLinkTargetsFileName` property to a different file name (e.g. `SourceLink.targets`)
 and import the file from `build/$(PackageId).targets`. 
 
