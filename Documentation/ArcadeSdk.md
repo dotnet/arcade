@@ -212,7 +212,6 @@ optimizations by setting 'RestoreUsingNuGetTargets' to false.
 
 CoreFx does not use the default build projects in its repo - [example](https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/Build.props).
 
-
 ### /eng/Versions.props: A single file listing component versions and used tools
 
 The file is present in the repo and defines versions of all dependencies used in the repository, the NuGet feeds they should be restored from and the version of the components produced by the repo build.
@@ -291,7 +290,7 @@ Targets executed in a step right after the solution is built.
 
 Targets executed in a step right after artifacts has been signed.
 
-### /global.json, /NuGet.config
+### /global.json
 
 `/global.json` file is present and specifies the version of the dotnet and `Microsoft.DotNet.Arcade.Sdk` SDKs.
 
@@ -345,6 +344,62 @@ The version of `RoslynTools.MSBuild` package can be specified in `global.json` f
 ```
 
 If it is not specified the build script attempts to find `RoslynTools.MSBuild` version `{VSMajor}.{VSMinor}.0-alpha` where `VSMajor.VSMinor` is the value of `tools.vs.version`.
+
+#### Example: Restoring multiple .NET Core Runtimes for running tests
+
+in /global.json, specify a `runtimes` section and list the [shared runtime versions](https://dotnet.microsoft.com/download/dotnet-core) you want installed.
+
+Schema:
+
+```text
+{
+  "tools": {
+    "dotnet": "<version>",                                           // define CLI SDK version
+    "runtimes": {                                                    // optional runtimes section
+      "<runtime>": [ "<version>", ..., "<version>" ],
+      ...,
+      "<runtime>/<architecture>": [ "<version>", ..., "<version>" ]
+    }
+  }
+}
+```
+
+`<runtime>` - One of the supported "runtime" values for the [dotnet-install](https://github.com/dotnet/cli/blob/dddac220ba5b6994e297752bebd9acffa3e72342/scripts/obtain/dotnet-install.ps1#L43) script.
+
+`<architecture>` - Optionally include `/<architecture>` when defining the runtime to specify an explicit architecture where "architecture" is on e of the supported values for the [dotnet-install](https://github.com/dotnet/cli/blob/dddac220ba5b6994e297752bebd9acffa3e72342/scripts/obtain/dotnet-install.ps1#L32) script.  Defaults to "auto" if not specified.
+
+```json
+{
+  "tools": {
+    "dotnet": "3.0.100-preview3-010431",
+    "runtimes": {
+      "dotnet/x64": [ "2.1.7" ],
+      "aspnetcore/x64": [ "3.0.0-build-20190219.1" ]
+    }
+  }
+}
+```
+
+You may also, use any of the properties defined in `eng/Versions.props` to define a version.
+
+Example
+
+```json
+{
+  "tools": {
+    "dotnet": "3.0.100-preview3-010431",
+    "runtimes": {
+      "dotnet/x64": [ "2.1.7", "$(MicrosoftNetCoreAppVersion)" ]
+    }
+  }
+}
+```
+
+Note: defining `runtimes` in your global.json will signal to Arcade to install a local version of the SDK for the runtimes to use rather than depending on a matching global SDK.
+
+Note: CLI initialization does not run if `artifacts/toolset/[toolsetversion].txt` exists.  If you've modified the shared frameworks ("runtimes") section of global.json , you may need to delete that file to force re-initialization and downloading runtimes.
+
+### /NuGet.config
 
 `/NuGet.config` file is present and specifies the MyGet feed to retrieve Arcade SDK from like so:
 

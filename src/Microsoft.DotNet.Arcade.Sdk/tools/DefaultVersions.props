@@ -16,7 +16,7 @@
   <Import Project="DefaultVersions.Generated.props" Condition="Exists('DefaultVersions.Generated.props')"/>
   <Import Project="$(VersionsPropsPath)" Condition="Exists('$(VersionsPropsPath)')"/>
   <Import Project="Version.props" Condition="Exists('Version.props')"/>
-  
+
   <!-- 
     Configure NuGet Restore to only use NuGet.config file in the repository root.
     This makes sure we do not depend on any NuGet.config files located outside of the repository.
@@ -84,6 +84,7 @@
     <MicrosoftNetFrameworkReferenceAssembliesVersion Condition="'$(MicrosoftNetFrameworkReferenceAssembliesVersion)' == ''">1.0.0-alpha-5</MicrosoftNetFrameworkReferenceAssembliesVersion>
     <MicrosoftVSSDKBuildToolsVersion Condition="'$(MicrosoftVSSDKBuildToolsVersion)' == ''">15.1.192</MicrosoftVSSDKBuildToolsVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion Condition="'$(MicrosoftDiaSymReaderPdb2PdbVersion)' == ''">1.1.0-beta1-62506-02</MicrosoftDiaSymReaderPdb2PdbVersion>
+    <MicrosoftBclJsonSourcesVersion Condition="'$(MicrosoftBclJsonSourcesVersion)' == ''">4.6.0-preview4.19202.2</MicrosoftBclJsonSourcesVersion>
     <RoslynToolsModifyVsixManifestVersion Condition="'$(RoslynToolsModifyVsixManifestVersion)' == ''">1.0.0-beta2-63222-01</RoslynToolsModifyVsixManifestVersion>
     <RoslynToolsNuGetRepackVersion Condition="'$(RoslynToolsNuGetRepackVersion)' == ''">1.0.0-beta3.18526.1</RoslynToolsNuGetRepackVersion>
     <MicrosoftDotNetSignToolVersion Condition="'$(MicrosoftDotNetSignToolVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetSignToolVersion>
