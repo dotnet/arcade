@@ -18,13 +18,12 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
         private const string ProductDropNamePrefix = "Products/";
 
         /// <summary>
-        /// GitHub repository name (e.g. 'dotnet/roslyn').
+        /// GitHub repository name (e.g. 'dotnet/roslyn'). If unspecified a dummy value is used.
         /// </summary>
-        [Required]
         public string RepositoryName { get; set; }
 
         /// <summary>
-        /// Product drop name, e.g. 'Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)'
+        /// Product drop name, e.g. 'Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)'. If unspecified a dummy value is used.
         /// </summary>
         public string ProductDropName { get; set; }
 
@@ -49,7 +48,8 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
             }
 
             var dropName = ProductDropName?.Substring(ProductDropNamePrefix.Length) ?? "dummy";
-            var outputFilePath = Path.Combine(OutputDirectory, RepositoryName.Replace('/', '.') + ".props");
+            var outputFileNameNoExt = string.IsNullOrEmpty(RepositoryName) ? "ProfilingInputs" : RepositoryName.Replace('/', '.');
+            var outputFilePath = Path.Combine(OutputDirectory, outputFileNameNoExt + ".props");
 
             Directory.CreateDirectory(OutputDirectory);
             File.WriteAllText(outputFilePath,
