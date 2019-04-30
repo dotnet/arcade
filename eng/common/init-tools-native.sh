@@ -117,8 +117,6 @@ else
       installer_command+=" --clean"
     fi
 
-    # echo "Installing $tool version $tool_version"
-    # echo "Executing '$installer_command'"
     $installer_command
 
     if [[ $? != 0 ]]; then

@@ -217,7 +217,7 @@ function InitializeNativeTools() {
   then
     local nativeArgs=""
     if [[ "$ci" == true ]]; then
-      nativeArgs="-InstallDirectory $tools_dir/native"
+      nativeArgs="-InstallDirectory $tools_dir"
     fi
     "$_script_dir/init-tools-native.sh" $nativeArgs
   fi

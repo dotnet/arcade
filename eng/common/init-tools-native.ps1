@@ -45,7 +45,7 @@ Param (
 )
 
 if (!$GlobalJsonFile) {
-  $GlobalJsonFile = Join-Path (get-item $PSScriptRoot).parent.parent.FullName "global.json"
+  $GlobalJsonFile = Join-Path (Get-Item $PSScriptRoot).Parent.Parent.FullName "global.json"
 }
 
 Set-StrictMode -version 2.0
