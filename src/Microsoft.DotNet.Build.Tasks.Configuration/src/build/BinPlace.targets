@@ -29,7 +29,7 @@
       <_BinPlaceItems Include="@($(_BinPlaceItemName))" />
       <BinPlaceItemsWithFullTargetPath Include="@(_BinPlaceItems)">
         <TargetPath Condition="'%(_BinPlaceItems.TargetPath)' != ''">%(_BinPlaceItems.TargetPath)</TargetPath>
-        <TargetPath Condition="'%(_BinPlaceItems.TargetPath)' == ''">%(Filename)%(Extension)</TargetPath>
+        <TargetPath Condition="'%(_BinPlaceItems.TargetPath)' == ''">%(_BinPlaceItems.DestinationSubDirectory)%(Filename)%(Extension)</TargetPath>
       </BinPlaceItemsWithFullTargetPath>
     </ItemGroup>
 
