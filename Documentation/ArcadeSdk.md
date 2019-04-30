@@ -433,6 +433,22 @@ Projects shall use `Microsoft.NET.Sdk` SDK like so:
 
 It might be useful to create other top-level directories containing projects that are not standard C#/VB/F# projects. For example, projects that aggregate outputs of multiple projects into a single NuGet package or Willow component. These projects should also be included in the main solution so that the build driver includes them in build process, but their `Directory.Build.*` may be different from source projects. Hence the different root directory.
 
+## Building source packages
+
+Arcade SDK provides targets for building source packages.
+
+Set `IsSourcePackage` to `true` to indicate that the project produces a source package (along with `IsPackable`, `PackageDescription` and other package properties).
+
+If the project does not have an explicitly provided `.nuspec` file (`NuspecFile` property is empty) setting `IsSourcePackage` to `true` will trigger a target that 
+puts sources contained in the project directory to the `contentFiles` directory of the source package produced by the project.
+
+In addition a `build/$(PackageId).targets` file will be auto-generated that links the sources contained in the package to the source server via a Source Link target.
+If your package already has a `build/$(PackageId).targets` file set `SourcePackageSourceLinkTargetsFileName` property to a different file name (e.g. `SourceLink.targets`)
+and import the file from `build/$(PackageId).targets`. 
+
+If the project is packaged using a custom `.nuspec` file then the source and targets files must be listed in the `.nuspec` file. The path to the generated Source Link 
+targets file will be available within the `.nuspec` file via variable `$SourceLinkTargetsFilePath$`.
+
 ## Building VSIX packages (optional)
 
 Building Visual Studio components is an opt-in feature of the Arcade SDK. Property `UsingToolVSSDK` needs to be set to `true` in the `Versions.props` file.

@@ -38,6 +38,49 @@
   </Target>
 
   <!--
+    Generates and adds {PackageId}.SourceLink.targets file to the build directory of the source package.
+  -->
+
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateSourcePackageSourceLinkTargetsFile" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+
+  <PropertyGroup Condition="'$(IsPackable)' == 'true' and '$(IsSourcePackage)' == 'true'">
+    <BeforePack>$(BeforePack);_AddSourcePackageSourceLinkFile</BeforePack>
+  </PropertyGroup>
+
+  <Target Name="_AddSourcePackageSourceLinkFile" DependsOnTargets="_GenerateSourcePackageSourceLinkFile">
+    <ItemGroup>
+      <!-- Add a packable item if the project builds the package with auto-generated .nuspec file -->
+      <None Include="$(_SourcePackageSourceLinkTargetsFilePath)" PackagePath="build" Pack="true" Condition="'$(NuspecFile)' == ''"/>
+
+      <!-- Include path in the nuspec properties if the project builds package using custom .nuspec -->
+      <NuspecProperty Include="SourceLinkTargetsFilePath=$(_SourcePackageSourceLinkTargetsFilePath)" Condition="'$(NuspecFile)' != ''"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CalculateGenerateSourcePackageSourceLinkFileOutputs">
+    <PropertyGroup>
+      <_SourcePackageSourceLinkTargetsFileName>$([MSBuild]::ValueOrDefault($(SourcePackageSourceLinkTargetsFileName), '$(PackageId).targets'))</_SourcePackageSourceLinkTargetsFileName>
+      <_SourcePackageSourceLinkTargetsFilePath>$(IntermediateOutputPath)$(_SourcePackageSourceLinkTargetsFileName)</_SourcePackageSourceLinkTargetsFilePath>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_GenerateSourcePackageSourceLinkFile"
+          DependsOnTargets="InitializeSourceControlInformation;$(SourceLinkUrlInitializerTargets);_CalculateGenerateSourcePackageSourceLinkFileOutputs"
+          Inputs="$(MSBuildAllProjects)"
+          Outputs="$(_SourcePackageSourceLinkTargetsFilePath)">
+
+    <Microsoft.DotNet.Arcade.Sdk.GenerateSourcePackageSourceLinkTargetsFile
+        ProjectDirectory="$(MSBuildProjectDirectory)"
+        PackageId="$(PackageId)"
+        SourceRoots="@(SourceRoot)"
+        OutputPath="$(_SourcePackageSourceLinkTargetsFilePath)"/>
+
+    <ItemGroup>
+      <FileWrites Include="$(_SourcePackageSourceLinkTargetsFilePath)"/>
+    </ItemGroup>
+  </Target>
+
+  <!--
     Validates repository-wide requirements.
     MSBuild only evaluates the target project once per each set of values of global properties and caches the results.
   -->
