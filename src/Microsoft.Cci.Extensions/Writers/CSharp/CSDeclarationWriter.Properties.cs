@@ -63,6 +63,22 @@ namespace Microsoft.Cci.Writers.CSharp
             if (property.GetHiddenBaseProperty(_filter) != Dummy.Property)
                 WriteKeyword("new");
 
+            bool getterHasIsReadOnlyAttribute = (getter?.Attributes.HasIsReadOnlyAttribute()).GetValueOrDefault();
+            bool setterHasIsReadOnlyAttribute = (setter?.Attributes.HasIsReadOnlyAttribute()).GetValueOrDefault();
+
+            // The readonly modifier is applied on the property itself if:
+            //  * It has both a getter and a setter and both have IsReadOnlyAttribute
+            //  * It only has a getter or a setter and it has IsReadOnlyAttribute
+            // Otherwise, the attribute is applied directly on the getter/setter it exists for
+            bool allAccessorsHaveIsReadOnlyAttribute = (getterHasIsReadOnlyAttribute && setterHasIsReadOnlyAttribute) ||
+                                                       (getterHasIsReadOnlyAttribute && (setter is null)) ||
+                                                       (setterHasIsReadOnlyAttribute && (getter is null));
+
+            if (allAccessorsHaveIsReadOnlyAttribute && (LangVersion >= LangVersion8_0))
+            {
+                WriteKeyword("readonly");
+            }
+
             if (property.ReturnValueIsByRef)
             {
                 WriteKeyword("ref");
@@ -99,18 +115,20 @@ namespace Microsoft.Cci.Writers.CSharp
             //get
             if (getter != null)
             {
-                WriteAccessorDefinition(property, getter, "get");
+                bool isReadOnly = getterHasIsReadOnlyAttribute && !allAccessorsHaveIsReadOnlyAttribute;
+                WriteAccessorDefinition(property, getter, "get", isReadOnly);
             }
             //set
             if (setter != null)
             {
-                WriteAccessorDefinition(property, setter, "set");
+                bool isReadOnly = setterHasIsReadOnlyAttribute && !allAccessorsHaveIsReadOnlyAttribute;
+                WriteAccessorDefinition(property, setter, "set", isReadOnly);
             }
             WriteSpace();
             WriteSymbol("}");
         }
 
-        private void WriteAccessorDefinition(IPropertyDefinition property, IMethodDefinition accessor, string accessorType)
+        private void WriteAccessorDefinition(IPropertyDefinition property, IMethodDefinition accessor, string accessorType, bool isReadOnly)
         {
             WriteSpace();
             WriteAttributes(accessor.Attributes, writeInline: true);
@@ -121,6 +139,10 @@ namespace Microsoft.Cci.Writers.CSharp
 
             if (accessor.Visibility != property.Visibility)
                 WriteVisibility(accessor.Visibility);
+            if (isReadOnly && (LangVersion >= LangVersion8_0))
+            {
+                WriteKeyword("readonly");
+            }
             WriteKeyword(accessorType, noSpace: true);
             WriteMethodBody(accessor);
         }

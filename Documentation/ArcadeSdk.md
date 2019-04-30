@@ -329,6 +329,23 @@ Optionally, a list of Visual Studio [workload component ids](https://docs.micros
 }
 ```
 
+If the build runs on a Windows machine that does not have the required Visual Studio version installed the `build.ps1` script attempts to use xcopy-deployable MSBuild package [`RoslynTools.MSBuild`](https://dotnet.myget.org/feed/roslyn-tools/package/nuget/RoslynTools.MSBuild). This package will allow the build to run on desktop msbuild but it may not provide all tools that the repository needs to build all projects and/or run all tests.
+
+The version of `RoslynTools.MSBuild` package can be specified in `global.json` file under `tools` like so:
+
+```json
+{
+  "tools": {
+    "vs": {
+      "version": "16.0"
+    },
+    "xcopy-msbuild": "16.0.0-rc1-alpha"
+  }
+}
+```
+
+If it is not specified the build script attempts to find `RoslynTools.MSBuild` version `{VSMajor}.{VSMinor}.0-alpha` where `VSMajor.VSMinor` is the value of `tools.vs.version`.
+
 `/NuGet.config` file is present and specifies the MyGet feed to retrieve Arcade SDK from like so:
 
 ```xml
@@ -354,18 +371,19 @@ Optionally, a list of Visual Studio [workload component ids](https://docs.micros
 It is a common practice to specify properties applicable to all (most) projects in the repository in `Directory.Build.props`, e.g. public keys for `InternalsVisibleTo` project items.
 
 ```xml
-<PropertyGroup>  
+<Project>
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />    
+  <PropertyGroup> 
+    <!-- Public keys used by InternalsVisibleTo project items -->
+    <MoqPublicKey>00240000048000009400...</MoqPublicKey> 
 
-  <!-- Public keys used by InternalsVisibleTo project items -->
-  <MoqPublicKey>00240000048000009400...</MoqPublicKey> 
-
-  <!-- 
-    Specify license used for packages produced by the repository.
-    Use PackageLicenseExpressionInternal for closed-source licenses.
-   -->
-  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-</PropertyGroup>
+    <!-- 
+      Specify license used for packages produced by the repository.
+      Use PackageLicenseExpressionInternal for closed-source licenses.
+    -->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+</Project>
 ```
 
 ### /Directory.Build.targets
@@ -799,6 +817,10 @@ By default, Portable and Embedded PDBs produced by _shipping_ projects are conve
 By default, all _shipping_ libraries are localized.
 
 When `UsingToolNuGetRepack` is true _shipping_ packages are repackaged as release/pre-release packages to `artifacts\packages\$(Configuration)\Release` and `artifacts\packages\$(Configuration)\PreRelease` directories, respectively.
+
+### `IsVisualStudioBuildPackage` (bool)
+
+Set to `true` in projects that build Visual Studio Build (CoreXT) packages. These packages are non-shipping, but their content is shipping. They are inserted into and referenced from the internal DevDiv `VS` repository.
 
 ### `PublishWindowsPdb` (bool)
 

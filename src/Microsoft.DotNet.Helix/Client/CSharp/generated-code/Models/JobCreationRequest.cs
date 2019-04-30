@@ -58,6 +58,9 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("JobStartIdentifier")]
         public string JobStartIdentifier { get; set; }
 
+        [JsonProperty("ResultContainerPrefix")]
+        public string ResultContainerPrefix { get; set; }
+
         [JsonIgnore]
         public bool IsValid
         {

@@ -113,10 +113,6 @@ The list of available Helix queues can be found on the [Helix homepage](https://
       # condition: succeeded() - defaults to succeeded()
 ```
 
-### `send-to-helix` vs `helix-publish`
-
-`helix-publish.yml` is deprecated and replaced by `send-to-helix.yml`. Contact DncEng with any migration issues.
-
 ## The More Complex Case
 
 For anything more complex than the above example, you'll want to create your own MSBuild proj file to specify the work items and correlation payloads you want to send up to Helix. Full documentation on how to do this can be found [in the SDK's readme](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Helix/Sdk/Readme.md).

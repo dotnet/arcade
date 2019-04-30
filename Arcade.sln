@@ -1,4 +1,5 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.271
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -60,10 +61,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C53DD924
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.CodeAnalysis", "src\Microsoft.DotNet.CodeAnalysis\Microsoft.DotNet.CodeAnalysis.csproj", "{AA00BFF4-D182-475F-85B9-BF4924F4D794}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HelixPoolProvider", "HelixPoolProvider", "{86AEE6AF-16D7-47FD-8D3E-6B87B249208D}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.HelixPoolProvider", "src\HelixPoolProvider\HelixPoolProvider\Microsoft.DotNet.HelixPoolProvider.csproj", "{5ED29E38-A65D-4123-BFED-799ADA885F08}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.CoreFxTesting", "src\Microsoft.DotNet.CoreFxTesting\Microsoft.DotNet.CoreFxTesting.csproj", "{73389197-EBB2-4FB7-B599-9573971A7197}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Configuration", "src\Microsoft.DotNet.Build.Tasks.Configuration\src\Microsoft.DotNet.Build.Tasks.Configuration.csproj", "{357E3759-EAF2-4F9C-918E-64F801DE3B57}"
@@ -90,7 +87,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.VersionToo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.VersionTools.Tasks", "src\Microsoft.DotNet.VersionTools\tasks\Microsoft.DotNet.VersionTools.Tasks.csproj", "{0A6A6D3D-DE7A-4BC2-9799-9C77E4CE87FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Git.IssueManager", "src\Microsoft.DotNet.Git.IssueManager\src\Microsoft.DotNet.Git.IssueManager.csproj", "{20F768D8-D724-4889-85AE-2D46188E731F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Git.IssueManager", "src\Microsoft.DotNet.Git.IssueManager\src\Microsoft.DotNet.Git.IssueManager.csproj", "{20F768D8-D724-4889-85AE-2D46188E731F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.RemoteExecutor", "src\Microsoft.DotNet.RemoteExecutor\src\Microsoft.DotNet.RemoteExecutor\Microsoft.DotNet.RemoteExecutor.csproj", "{BE895584-B06D-44C1-B551-22B684ADABAE}"
 EndProject
@@ -404,14 +401,6 @@ Global
 		{AA00BFF4-D182-475F-85B9-BF4924F4D794}.Release|x64.Build.0 = Release|Any CPU
 		{AA00BFF4-D182-475F-85B9-BF4924F4D794}.Release|x86.ActiveCfg = Release|Any CPU
 		{AA00BFF4-D182-475F-85B9-BF4924F4D794}.Release|x86.Build.0 = Release|Any CPU
-		{5ED29E38-A65D-4123-BFED-799ADA885F08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5ED29E38-A65D-4123-BFED-799ADA885F08}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5ED29E38-A65D-4123-BFED-799ADA885F08}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{5ED29E38-A65D-4123-BFED-799ADA885F08}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{5ED29E38-A65D-4123-BFED-799ADA885F08}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5ED29E38-A65D-4123-BFED-799ADA885F08}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5ED29E38-A65D-4123-BFED-799ADA885F08}.Release|x64.ActiveCfg = Release|Any CPU
-		{5ED29E38-A65D-4123-BFED-799ADA885F08}.Release|x86.ActiveCfg = Release|Any CPU
 		{73389197-EBB2-4FB7-B599-9573971A7197}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{73389197-EBB2-4FB7-B599-9573971A7197}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73389197-EBB2-4FB7-B599-9573971A7197}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -618,7 +607,6 @@ Global
 		{AF298985-511F-476A-8F62-79908BE8DF01} = {A704E5B2-86A4-4D4F-902D-C10EA18C12DF}
 		{39B69A56-43E9-480D-9A60-8E0917795FE8} = {A704E5B2-86A4-4D4F-902D-C10EA18C12DF}
 		{F23ED302-7451-4D40-85C3-FACFCF884661} = {C53DD924-C212-49EA-9BC4-1827421361EF}
-		{5ED29E38-A65D-4123-BFED-799ADA885F08} = {86AEE6AF-16D7-47FD-8D3E-6B87B249208D}
 		{BA4250FD-9258-4469-A16D-48A0CAF5A2F8} = {C53DD924-C212-49EA-9BC4-1827421361EF}
 		{DC0D0EE5-1C0C-4D3E-BA0B-D6A59717DA94} = {6BE49638-F842-4329-BE8A-30C0F30CCAA5}
 		{3CCA947D-B466-4481-BC78-43CE98A8A3A7} = {80888CDA-37DC-4061-AF5F-7237BF16A320}
