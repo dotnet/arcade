@@ -28,18 +28,19 @@ class TRXFormat(ResultFormat):
         # and store it away first, since it is smaller than storing the results
         for (_, element) in xml.etree.ElementTree.iterparse(path, events=['end']):
             if element.tag.endswith("UnitTest"):
+                test_id = element.get("id")
                 testMethod_element = element.find("vstest:TestMethod", ns)
                 if testMethod_element is not None:
-                    test_classes[testMethod_element.get("name")] = testMethod_element.get("className")
+                    test_classes[test_id] = testMethod_element.get("className")
                 element.clear()
 
         for (_, element) in xml.etree.ElementTree.iterparse(path, events=['end']):
             if element.tag.endswith("UnitTestResult"):
                 test_name = element.get("testName")
+                test_id = element.get("testId")
 
-                # Find the class name from the dictionary we created earlier, and then remove that element from the dictionary
-                classname = test_classes[test_name]
-                del test_classes[test_name]
+                # Find the class name from the dictionary we created earlier
+                classname = test_classes[test_id]
 
                 name = classname + '.' + test_name
                 type_name = classname
