@@ -22,13 +22,13 @@
     </Results>
     <TestDefinitions>
         <UnitTest name="TestMethod2" id="2">
-            <TestMethod className="tests.UnitTest1" name="TestMethod2" />
+            <TestMethod className="tests.UnitTest1" name="tests.UnitTest1.TestMethod2" />
         </UnitTest>
         <UnitTest name="TestMethod1" id="1">
-            <TestMethod className="tests.UnitTest1" name="TestMethod1" />
+            <TestMethod className="tests.UnitTest1" name="tests.UnitTest1.TestMethod1" />
         </UnitTest>
         <UnitTest name="TestMethod3" id="3">
-            <TestMethod className="tests.UnitTest1" name="TestMethod3" />
+            <TestMethod className="tests.UnitTest1" name="tests.UnitTest1.TestMethod3" />
         </UnitTest>
         <UnitTest name="Microsoft.AspNetCore.Mvc.ApplicationModels.AttributeRouteModelTests.ReplaceTokens_InvalidFormat" storage="/users/vsts/agent/2.150.2/work/1/s/src/mvc/mvc.core/test/bin/release/netcoreapp3.0/microsoft.aspnetcore.mvc.core.test.dll" id="40a24c87-d3b2-8fcd-e92a-fa24495b937e">
             <Execution id="2bcc79ff-2747-4692-a0be-318649c7c282" />

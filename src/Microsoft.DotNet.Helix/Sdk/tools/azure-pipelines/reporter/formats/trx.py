@@ -22,6 +22,7 @@ class TRXFormat(ResultFormat):
 
     def read_results(self, path):
         test_classes = {}
+        test_methods = {}
         ns = {'vstest' : 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
 
         # class names are stored separately from the results. Gather testName->className information
@@ -32,6 +33,7 @@ class TRXFormat(ResultFormat):
                 testMethod_element = element.find("vstest:TestMethod", ns)
                 if testMethod_element is not None:
                     test_classes[test_id] = testMethod_element.get("className")
+                    test_methods[test_id] = testMethod_element.get("name")
                 element.clear()
 
         for (_, element) in xml.etree.ElementTree.iterparse(path, events=['end']):
@@ -41,10 +43,10 @@ class TRXFormat(ResultFormat):
 
                 # Find the class name from the dictionary we created earlier
                 classname = test_classes[test_id]
+                method = test_methods[test_id]
 
                 name = classname + '.' + test_name
                 type_name = classname
-                method = test_name
                 duration = 0.0
                 result = "Pass"
                 outcome = element.get("outcome")
