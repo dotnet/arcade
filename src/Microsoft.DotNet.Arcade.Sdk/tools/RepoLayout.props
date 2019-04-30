@@ -42,6 +42,7 @@
 
   <PropertyGroup>
     <RepositoryEngineeringDir>$(RepoRoot)eng\</RepositoryEngineeringDir>
+    <RepositoryToolsDir>$(RepoRoot).tools\</RepositoryToolsDir>
 
     <VersionsPropsPath>$(RepositoryEngineeringDir)Versions.props</VersionsPropsPath>
 
