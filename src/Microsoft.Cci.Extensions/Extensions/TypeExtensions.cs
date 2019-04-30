@@ -724,38 +724,5 @@ namespace Microsoft.Cci.Extensions
             }
             return false;
         }
-
-        public static bool IsAbstract(this ITypeDefinitionMember member)
-        {
-            IMethodReference backingMethod;
-            if (member is IMethodDefinition method)
-            {
-                return method.IsAbstract;
-            }
-            else if (member is IPropertyDefinition property)
-            {
-                backingMethod = property.Getter;
-                if (backingMethod != null)
-                {
-                    return backingMethod.ResolvedMethod.IsAbstract;
-                }
-
-                backingMethod = property.Setter;
-                if (backingMethod != null)
-                {
-                    return backingMethod.ResolvedMethod.IsAbstract;
-                }
-            }
-            else if (member is IEventDefinition containedEvent)
-            {
-                backingMethod = containedEvent.Accessors.First();
-                if (backingMethod != null)
-                {
-                    return backingMethod.ResolvedMethod.IsAbstract;
-                }
-            }
-
-            return false;
-        }
     }
 }

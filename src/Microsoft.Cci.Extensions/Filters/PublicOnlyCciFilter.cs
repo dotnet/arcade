@@ -4,6 +4,7 @@
 
 using System.Linq;
 using Microsoft.Cci.Extensions;
+using Microsoft.Cci.Extensions.CSharp;
 
 namespace Microsoft.Cci.Filters
 {
