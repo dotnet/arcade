@@ -6,8 +6,8 @@
   -->
   <PropertyGroup>
     <VsixVersionPrefix Condition="'$(VsixVersionPrefix)' == ''">$(VersionPrefix)</VsixVersionPrefix>
+    <VsixVersion>42.42.42.4242424</VsixVersion>
     <VsixVersion Condition="'$(VersionSuffixDateStamp)' != ''">$(VsixVersionPrefix).$(VersionSuffixDateStamp)$(VersionSuffixBuildOfTheDayPadded)</VsixVersion>
-    <VsixVersion Condition="'$(VersionSuffixDateStamp)' == ''">42.42.42.4242424</VsixVersion>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(IsVsixProject)' == 'true' and '$(VSSDKTargetPlatformRegRootSuffix)' != ''">
@@ -29,10 +29,7 @@
   </ItemGroup>
 
   <!-- Returns the current build version. Used in .vsixmanifests to substitute our build version into them -->
-  <Target Name="GetVsixVersion" Returns="$(VsixVersion)">
-    <Error Text="Invalid format of OfficialBuildId: '$(OfficialBuildId)'"
-           Condition="$(VersionSuffixDateStamp) != '' and ($(VersionSuffixDateStamp.Length) != 5 or $(VersionSuffixBuildOfTheDayPadded.Length) != 2)"/>
-  </Target>
+  <Target Name="GetVsixVersion" Returns="$(VsixVersion)" />
 
   <!--
     Do not import targets that build VSIXes at design time or when running in LUT.
