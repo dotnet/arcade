@@ -37,5 +37,33 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
 
             Directory.Delete(dir, recursive: true);
         }
+
+        [Fact]
+        public void EmptyArgs()
+        {
+            var temp = Path.GetTempPath();
+            var dir = Path.Combine(temp, Guid.NewGuid().ToString());
+
+            var task = new GenerateTrainingPropsFile()
+            {
+                ProductDropName = null,
+                RepositoryName = null,
+                OutputDirectory = dir,
+            };
+
+            bool result = task.Execute();
+
+            var actual = File.ReadAllText(Path.Combine(dir, "ProfilingInputs.props"));
+            Assert.Equal(@"<?xml version=""1.0""?>
+<Project>
+  <ItemGroup>
+    <TestStore Include=""vstsdrop:ProfilingInputs/dummy"" />
+  </ItemGroup>
+</Project>", actual);
+
+            Assert.True(result);
+
+            Directory.Delete(dir, recursive: true);
+        }
     }
 }

@@ -41,13 +41,14 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
 
         private void ExecuteImpl()
         {
-            if (ProductDropName != "" && !ProductDropName.StartsWith(ProductDropNamePrefix, StringComparison.Ordinal))
+            bool hasDropName = !string.IsNullOrEmpty(ProductDropName);
+            if (hasDropName && !ProductDropName.StartsWith(ProductDropNamePrefix, StringComparison.Ordinal))
             {
                 Log.LogError($"Invalid value of vsDropName argument: must start with '{ProductDropNamePrefix}'.");
                 return;
             }
 
-            var dropName = ProductDropName?.Substring(ProductDropNamePrefix.Length) ?? "dummy";
+            var dropName = hasDropName ? ProductDropName.Substring(ProductDropNamePrefix.Length) : "dummy";
             var outputFileNameNoExt = string.IsNullOrEmpty(RepositoryName) ? "ProfilingInputs" : RepositoryName.Replace('/', '.');
             var outputFilePath = Path.Combine(OutputDirectory, outputFileNameNoExt + ".props");
 
