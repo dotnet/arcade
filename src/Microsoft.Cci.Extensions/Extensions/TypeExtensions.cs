@@ -710,5 +710,52 @@ namespace Microsoft.Cci.Extensions
                     return ApiKind.Method;
             }
         }
+
+        public static bool IsConstructorVisible(this ITypeDefinition type)
+        {
+            foreach (var item in type.GetAllMembers())
+            {
+                if (item is IMethodDefinition method &&
+                    method.IsConstructor &&
+                    method.IsVisibleOutsideAssembly())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static bool IsAbstract(this ITypeDefinitionMember member)
+        {
+            IMethodReference backingMethod;
+            if (member is IMethodDefinition method)
+            {
+                return method.IsAbstract;
+            }
+            else if (member is IPropertyDefinition property)
+            {
+                backingMethod = property.Getter;
+                if (backingMethod != null)
+                {
+                    return backingMethod.ResolvedMethod.IsAbstract;
+                }
+
+                backingMethod = property.Setter;
+                if (backingMethod != null)
+                {
+                    return backingMethod.ResolvedMethod.IsAbstract;
+                }
+            }
+            else if (member is IEventDefinition containedEvent)
+            {
+                backingMethod = containedEvent.Accessors.First();
+                if (backingMethod != null)
+                {
+                    return backingMethod.ResolvedMethod.IsAbstract;
+                }
+            }
+
+            return false;
+        }
     }
 }
