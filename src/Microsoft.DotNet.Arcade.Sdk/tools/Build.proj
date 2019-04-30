@@ -175,8 +175,8 @@
       <_RestoreUsingNuGetTargets Condition="'$(_RestoreUsingNuGetTargets)' == '' and '$(_BuildSolutions)' == 'false'">true</_RestoreUsingNuGetTargets>
 
       <!-- IsRunningFromVisualStudio may be true even when running msbuild.exe from command line. This generally means that MSBUild is Visual Studio installation and therefore we need to find NuGet.targets in a different location.  -->
-      <_NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'=='' and '$([MSBuild]::IsRunningFromVisualStudio())'=='true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
-      <_NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'==''">$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
+      <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
+      <_NuGetRestoreTargets Condition="'$(_NuGetRestoreTargets)' == ''">$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
     </PropertyGroup>
 
     <MSBuild Projects="@(ProjectToBuild)"
