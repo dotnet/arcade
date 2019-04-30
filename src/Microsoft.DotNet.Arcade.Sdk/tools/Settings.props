@@ -3,9 +3,9 @@
 <Project>
   <PropertyGroup>
     <_ArcadeOverriddenCustomBeforeMicrosoftCommonTargets>$(CustomBeforeMicrosoftCommonTargets)</_ArcadeOverriddenCustomBeforeMicrosoftCommonTargets>
-    <_ArcadeOverriddenCustomAfterMicrosoftCommonCrossTargetingTargets>$(CustomBeforeMicrosoftCommonTargets)</_ArcadeOverriddenCustomAfterMicrosoftCommonCrossTargetingTargets>
+    <_ArcadeOverriddenCustomBeforeMicrosoftCommonCrossTargetingTargets>$(CustomBeforeMicrosoftCommonCrossTargetingTargets)</_ArcadeOverriddenCustomBeforeMicrosoftCommonCrossTargetingTargets>
     <CustomBeforeMicrosoftCommonTargets>$(MSBuildThisFileDirectory)BeforeCommonTargets.targets</CustomBeforeMicrosoftCommonTargets>
-    <CustomAfterMicrosoftCommonCrossTargetingTargets>$(MSBuildThisFileDirectory)BeforeCommonTargets.CrossTargeting.targets</CustomAfterMicrosoftCommonCrossTargetingTargets>
+    <CustomBeforeMicrosoftCommonCrossTargetingTargets>$(MSBuildThisFileDirectory)BeforeCommonTargets.CrossTargeting.targets</CustomBeforeMicrosoftCommonCrossTargetingTargets>
   </PropertyGroup>
 
   <Import Project="BuildTasks.props" />
