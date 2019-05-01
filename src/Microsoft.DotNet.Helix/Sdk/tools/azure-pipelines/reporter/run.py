@@ -1,7 +1,7 @@
 import os
 import sys
 import traceback
-from Queue import Queue
+from queue import Queue
 from threading import Thread
 
 from test_results_reader import read_results
