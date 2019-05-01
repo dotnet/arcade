@@ -16,7 +16,7 @@ def __no_results_result():
         result = 'Pass'
         failure_message = None
 
-    yield TestResult(
+    return TestResult(
         name=u'{}.WorkItemExecution'.format(work_item_name),
         kind=u'unknown',
         type_name=u'{}'.format(work_item_name),
@@ -79,11 +79,12 @@ def add_logs(tr, log_list):
 def read_results(dir):
     # type: (str) -> Iterable[TestResult]
 
+    log_files = list(get_log_files(os.path.join(get_env("HELIX_WORKITEM_ROOT"), "..")))
+    log_list = construct_log_list(log_files)
+
     print "Searching '{}' for test results files".format(dir)
 
-    log_files = list(get_log_files(os.path.join(get_env("HELIX_WORKITEM_ROOT"), "..")))
-
-    log_list = construct_log_list(log_files)
+    found = False
 
     for root, dirs, files in os.walk(dir):
         for file_name in files:
@@ -91,7 +92,11 @@ def read_results(dir):
                 if file_name.endswith(tuple(f.acceptable_file_suffixes)):
                     file_path = os.path.join(root, file_name)
                     print 'Found results file {} with format {}'.format(file_path, f.name)
-                    return (add_logs(tr, log_list) for tr in f.read_results(file_path))
+                    found = True
+                    file_results = (add_logs(tr, log_list) for tr in f.read_results(file_path))
+                    for result in file_results:
+                        yield result
 
-    print 'No results file found in any of the following formats: {}'.format(', '.join((f.name for f in all_formats)))
-    return __no_results_result()
+    if not found:
+        print 'No results file found in any of the following formats: {}'.format(', '.join((f.name for f in all_formats)))
+        yield add_logs(__no_results_result(), log_list)
