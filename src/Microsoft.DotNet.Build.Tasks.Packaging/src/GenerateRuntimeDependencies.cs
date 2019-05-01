@@ -142,7 +142,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 Directory.CreateDirectory(destRuntimeFileDir);
             }
 
-            SaveRuntimeGraph(destRuntimeFilePath, runtimeGraph);
+            JsonRuntimeFormat.WriteRuntimeGraph(destRuntimeFilePath, runtimeGraph);
 
             return true;
         }
@@ -187,84 +187,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             }
 
             return dependencyVersion;
-        }
-
-        public static void SaveRuntimeGraph(string filePath, RuntimeGraph runtimeGraph)
-        {
-            var jsonObjectWriter = new JsonObjectWriter();
-            var runtimeJsonWriter = new RuntimeJsonWriter(jsonObjectWriter);
-
-            JsonRuntimeFormat.WriteRuntimeGraph(runtimeJsonWriter, runtimeGraph);
-
-            using (var file = File.CreateText(filePath))
-            using (var jsonWriter = new JsonTextWriter(file))
-            {
-                jsonWriter.StringEscapeHandling = StringEscapeHandling.EscapeNonAscii;
-                jsonWriter.Formatting = Formatting.Indented;
-                jsonObjectWriter.WriteTo(jsonWriter);
-            }
-
-
-        }
-
-        /// <summary>
-        /// works around a bug in NuGet that writes an empty import array,
-        /// also another bug that writes open ranges rather than single versions.
-        /// </summary>
-        private class RuntimeJsonWriter : IObjectWriter
-        {
-            private IObjectWriter innerWriter;
-
-            public RuntimeJsonWriter(IObjectWriter writer)
-            {
-                innerWriter = writer;
-            }
-
-            public void WriteNameArray(string name, IEnumerable<string> values)
-            {
-                // if we are writing an empty import array, skip it.
-                if (name == "#import" && !values.Any())
-                {
-                    return;
-                }
-
-                innerWriter.WriteNameArray(name, values);
-            }
-
-            public void WriteNameValue(string name, bool value)
-            {
-                innerWriter.WriteNameValue(name, value);
-            }
-
-            public void WriteNameValue(string name, string value)
-            {
-                // if we are writing a version range with no upper bound, only write the lower bound
-                if (value.Length > 4 &&
-                    value[0] == '[' &&
-                    value.EndsWith(", )"))
-                {
-                    innerWriter.WriteNameValue(name, value.Substring(1, value.Length - 4));
-                }
-                else
-                {
-                    innerWriter.WriteNameValue(name, value);
-                }
-            }
-
-            public void WriteNameValue(string name, int value)
-            {
-                innerWriter.WriteNameValue(name, value);
-            }
-
-            public void WriteObjectEnd()
-            {
-                innerWriter.WriteObjectEnd();
-            }
-
-            public void WriteObjectStart(string name)
-            {
-                innerWriter.WriteObjectStart(name);
-            }
         }
     }
 }
