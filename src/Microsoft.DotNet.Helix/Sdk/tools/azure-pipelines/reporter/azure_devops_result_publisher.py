@@ -99,7 +99,7 @@ class AzureDevOpsTestResultPublisher:
                     error_message=r.skip_reason.encode('utf-8'),
                 )
 
-            print "Unexpected result value {} for {}".format(r.result, r.name)
+            print("Unexpected result value {} for {}".format(r.result, r.name))
 
         return (convert_result(r) for r in results if r is not None)
 
