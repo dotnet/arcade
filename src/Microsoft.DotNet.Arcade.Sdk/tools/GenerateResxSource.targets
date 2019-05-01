@@ -10,10 +10,16 @@
 
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateResxSource" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
 
+  <ItemDefinitionGroup>
+    <EmbeddedResource>
+      <GenerateSource Condition="'$(GenerateResxSource)' == 'true'">true</GenerateSource>
+    </EmbeddedResource>
+  </ItemDefinitionGroup>
+  
   <!-- Set the Generator metadata so that VS triggers design-time build whenever the .resx file is saved -->
   <ItemGroup>
     <EmbeddedResource Update="@(EmbeddedResource)">
-      <Generator Condition="'%(GenerateSource)' == 'true'">MSBuild:_GenerateResxSource</Generator>
+      <Generator Condition="'%(GenerateSource)' == 'true' AND '%(Extension)' == 'resx'">MSBuild:_GenerateResxSource</Generator>
     </EmbeddedResource>
   </ItemGroup>
 
@@ -50,6 +56,7 @@
       AsConstants="%(EmbeddedResourceSG.GenerateResourcesCodeAsConstants)"
       OmitGetResourceString="$(GenerateResxSourceOmitGetResourceString)"
       IncludeDefaultValues="$(GenerateResxSourceIncludeDefaultValues)"
+      EmitFormatMethods="$(GenerateResxSourceEmitFormatMethods)"
       OutputPath="%(EmbeddedResourceSG.SourceOutputPath)" />
   </Target>
 
@@ -61,7 +68,7 @@
     </PropertyGroup>
     <Error Text="GenerateResxSource doesn't support language: '$(Language)'" Condition="'$(_EmbeddedResourceSourceExtension)' == ''"/>
     <ItemGroup>
-      <EmbeddedResourceSG Include="@(EmbeddedResource)" Condition="'%(EmbeddedResource.GenerateSource)' == 'true' and '%(EmbeddedResource.XlfLanguage)' == ''" />
+      <EmbeddedResourceSG Include="@(EmbeddedResource)" Condition="'%(EmbeddedResource.GenerateSource)' == 'true' and '%(EmbeddedResource.Extension)' == '.resx' and '%(EmbeddedResource.XlfLanguage)' == ''" />
       <EmbeddedResourceSG Condition="'$(Language)' != 'F#'">
         <SourceOutputPath Condition="'%(EmbeddedResourceSG.SourceOutputPath)' == '' AND '%(EmbeddedResourceSG.ClassName)' != ''">$(IntermediateOutputPath)%(EmbeddedResourceSG.ClassName).$(_EmbeddedResourceSourceExtension)</SourceOutputPath>
         <SourceOutputPath Condition="'%(EmbeddedResourceSG.SourceOutputPath)' == '' AND '%(EmbeddedResourceSG.ClassName)' == ''">$(IntermediateOutputPath)%(EmbeddedResourceSG.ManifestResourceName).$(_EmbeddedResourceSourceExtension)</SourceOutputPath>
