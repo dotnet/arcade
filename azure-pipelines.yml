@@ -117,6 +117,20 @@ jobs:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
           HelixAccessToken: $(HelixApiAccessToken)
 
+      - powershell: eng\common\build.ps1
+          -configuration $(_BuildConfig) 
+          -prepareMachine
+          -ci
+          -test
+          -projects $(Build.SourcesDirectory)/tests/UnitTests.proj
+          /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
+          /p:HelixBaseUri=https://helix.int-dot.net/
+        displayName: Run Helix Tests (Int)
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          HelixAccessToken: $(HelixApiAccessToken)
+        enabled: false
+
     - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
       - job: Linux
         container: LinuxContainer

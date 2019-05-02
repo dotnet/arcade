@@ -1,6 +1,6 @@
 import glob
 import xml.etree.ElementTree
-from result_format import ResultFormat
+from .result_format import ResultFormat
 from defs import TestResult, TestResultAttachment
 
 
