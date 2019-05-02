@@ -129,6 +129,7 @@ jobs:
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
           HelixAccessToken: $(HelixApiAccessToken)
+        enabled: false
 
     - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
       - job: Linux
