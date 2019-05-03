@@ -897,5 +897,35 @@ Additional command line arguments passed to the test runtime (i.e. `dotnet` or `
 For example, to invoke Mono with debug flags `--debug` (to get stack traces with line number information), set `TestRuntimeAdditionalArguments` to `--debug`.
 To override the default Shared Framework version that is selected based on the test project TFM, set `TestRuntimeAdditionalArguments` to `--fx-version x.y.z`.
 
+### `GenerateResxSource` (bool)
 
+When set to true, Arcade will generate a class source for all embedded .resx files.
 
+If source should only be generated for some .resx files, this can be turned on for individual files like this:
+
+```xml
+<ItemGroup>
+   <EmbeddedResource Update="MyResources.resx" GenerateSource="true" />
+</ItemGroup>
+```
+
+The contents of the generated source can be fine-tuned with these additional settings.
+
+#### `GenerateResxSourceEmitFormatMethods` (bool)
+
+When a string in the resx file has argument placeholders, generate a `.FormatXYZ(...)` method with parameters for each placeholder in the string.
+
+Example: if the resx file contains a string "This has {0} and {1} placeholders", this method will be generated:
+```c#
+class Resources
+{
+  // ...
+  public static string FormatMyString(object p0, object p1) { /* ..uses string.Format()... */ }
+}
+```
+
+#### `GenerateResxSourceIncludeDefaultValues` (bool)
+If set to true calls to GetResourceString receive a default resource string value.
+
+#### `GenerateResxSourceOmitGetResourceString` (bool)
+If set to true the GetResourceString method is not included in the generated class and must be specified in a separate source file.
