@@ -108,25 +108,31 @@ while :; do
         no-lldb)
             unset __LLDB_Package
             ;;
-        xenial)
+        trusty) # Ubuntu 14.04
+            if [ "$__LinuxCodeName" != "jessie" ]; then
+                __LinuxCodeName=trusty
+            fi
+            ;;
+        xenial) # Ubunry 16.04
             if [ "$__LinuxCodeName" != "jessie" ]; then
                 __LinuxCodeName=xenial
             fi
             ;;
-        zesty)
+        zesty) # Ununtu 17.04
             if [ "$__LinuxCodeName" != "jessie" ]; then
                 __LinuxCodeName=zesty
             fi
             ;;
-        bionic)
+        bionic) # Ubuntu 18.04
             if [ "$__LinuxCodeName" != "jessie" ]; then
                 __LinuxCodeName=bionic
             fi
             ;;
-        jessie)
+        jessie) # Debian 8
             __LinuxCodeName=jessie
             __UbuntuRepo="http://ftp.debian.org/debian/"
             ;;
+        # TBD Stretch -> Debian 9, Buster -> Debian 10
         tizen)
             if [ "$__BuildArch" != "armel" ]; then
                 echo "Tizen is available only for armel."
