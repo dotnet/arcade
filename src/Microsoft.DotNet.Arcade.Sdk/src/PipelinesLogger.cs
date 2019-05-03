@@ -280,47 +280,53 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 targets = "--";
             }
 
-            var obj = new JObject(
-                new JProperty("name", "Microsoft.ApplicationInsights.Event"),
-                new JProperty("time", DateTime.UtcNow.ToString("O")),
-                new JProperty("iKey", "82db48c2-1490-471b-a273-d7ac4585c8e8"),
-                new JProperty("flags", 0x200000),
-                new JProperty("tags",
-                    new JObject(
-                        new JProperty("ai.cloud.roleInstance", agentName)
-                    )
-                ),
-                new JProperty(
+            var eventTelemetryEnvelope = new JObject
+            {
+                {"name", "Microsoft.ApplicationInsights.Event"},
+                {"time", DateTime.UtcNow.ToString("O")},
+                {"iKey", "82db48c2-1490-471b-a273-d7ac4585c8e8"},
+                {"flags", 0x200000},
+                {
+                    "tags",
+                    new JObject
+                    {
+                        {"ai.cloud.roleInstance", agentName}
+                    }
+                },
+                {
                     "data",
-                    new JObject(
-                        new JProperty("baseType", "EventData"),
-                        new JProperty(
+                    new JObject
+                    {
+                        {"baseType", "EventData"},
+                        {
                             "baseData",
-                            new JObject(
-                                new JProperty("ver", 2),
-                                new JProperty("name", "buildResults"),
-                                new JProperty(
+                            new JObject
+                            {
+                                {"ver", 2},
+                                {"name", "buildResults"},
+                                {
                                     "properties",
-                                    new JObject(
-                                        new JProperty("branch", sourceBranch),
-                                        new JProperty("buildId", buildId),
-                                        new JProperty("buildName", buildName),
-                                        new JProperty("project", e.ProjectFile ?? "Unknown"),
-                                        new JProperty("repository", repositoryUri),
-                                        new JProperty("succeeded", e.Succeeded.ToString()),
-                                        new JProperty("targets", targets)
-                                    )
-                                ),
-                                new JProperty("measurements", new JObject())
-                            )
-                        )
-                    )
-                )
-            );
+                                    new JObject
+                                    {
+                                        {"branch", sourceBranch},
+                                        {"buildId", buildId},
+                                        {"buildName", buildName},
+                                        {"project", e.ProjectFile ?? "Unknown"},
+                                        {"repository", repositoryUri},
+                                        {"succeeded", e.Succeeded.ToString()},
+                                        {"targets", targets},
+                                    }
+                                },
+                                {"measurements", new JObject()},
+                            }
+                        }
+                    }
+                }
+            };
 
             HttpResponseMessage response = _http.PostAsync(
                 "https://dc.services.visualstudio.com/v2/track",
-                new StringContent(obj.ToString(Formatting.None), Encoding.UTF8, "application/json")
+                new StringContent(eventTelemetryEnvelope.ToString(Formatting.None), Encoding.UTF8, "application/json")
             ).GetAwaiter().GetResult();
 
             // This analytics call isn't critical enough to do anything about, we'll get enough of them in aggregate to serve our purposes
