@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                         if (runtimeItems.Count > 0)
                         {
                             System.Linq.ILookup<string, ProjectProperty> properties = null;
-                            // Only load Versions.props if there's a need to look for a version identifier (ie, there's a version listed that's not a parsable version).
+                            // Only load Versions.props if there's a need to look for a version identifier (ie, there's a value listed that's not a parsable version).
                             if (runtimeItems.SelectMany(r => r.Value).Select(r => r.Key).FirstOrDefault(f => !SemanticVersion.TryParse(f, out SemanticVersion version)) != null)
                             {
                                 if (!File.Exists(VersionsPropsPath))
@@ -123,9 +123,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         /*
          * Parses a json token of this format
-         * {
-         *   (runtime): [(version)(/architecture), ... , (version)(/architecture)
-         * }
+         * { (runtime): [(version), ..., (version)] }
+         * or this format
+         * { (runtime/architecture): [(version), ..., (version)] }
          */
         private IEnumerable<KeyValuePair<string, string>> GetItemsFromJsonElementArray(JsonProperty token, out string runtime)
         {
