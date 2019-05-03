@@ -449,7 +449,7 @@ Imports System.Reflection
             strings.AppendLine($"{indent}internal static string Format{resourceString.Name}({resourceString.GetMethodParameters(language)})");
             if (resourceString.UsingNamedArgs)
             {
-                strings.AppendLine($@"{indent}   => string.Format(Culture, GetResourceString(""{resourceString.Name}"", new [] {{ {resourceString.GetArgumentNames()} }}, {resourceString.GetArguments()});");
+                strings.AppendLine($@"{indent}   => string.Format(Culture, GetResourceString(""{resourceString.Name}"", new [] {{ {resourceString.GetArgumentNames()} }}), {resourceString.GetArguments()});");
             }
             else
             {

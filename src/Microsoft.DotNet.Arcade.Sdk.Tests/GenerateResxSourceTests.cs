@@ -19,8 +19,12 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             _output = output;
         }
 
-        [Fact]
-        public void GeneratesCSharpForResxWithFormatMethods()
+        [Theory]
+        [InlineData(true, false, false, "TestStrings.EmitFormatMethods.cs.txt")]
+        [InlineData(false, false, false, "TestStrings.Default.cs.txt")]
+        [InlineData(false, true, true, "TestStrings.AsConstants.cs.txt")]
+        [InlineData(false, false, true, "TestStrings.OmitGetResourceString.cs.txt")]
+        public void GeneratesCSharp(bool emitFormatMethods, bool asConstants, bool omitGetResourceString, string expectedFileName)
         {
             var resx = Path.Combine(AppContext.BaseDirectory, "testassets", "Resources", "TestStrings.resx");
             var actualFile = Path.Combine(AppContext.BaseDirectory, Path.GetRandomFileName());
@@ -32,12 +36,14 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                 ResourceFile = resx,
                 ResourceName = "Microsoft.DotNet.TestStrings",
                 ResourceClassName = "Microsoft.DotNet.TestStrings",
-                EmitFormatMethods = true,
+                EmitFormatMethods = emitFormatMethods,
+                AsConstants = asConstants,
+                OmitGetResourceString = omitGetResourceString,
                 Language = "C#",
                 OutputPath = actualFile,
             };
 
-            var expectedFile = Path.Combine(AppContext.BaseDirectory, "testassets", "Resources", "TestStrings.EmitFormatMethods.cs.txt");
+            var expectedFile = Path.Combine(AppContext.BaseDirectory, "testassets", "Resources", expectedFileName);
 
             if (File.Exists(actualFile))
             {

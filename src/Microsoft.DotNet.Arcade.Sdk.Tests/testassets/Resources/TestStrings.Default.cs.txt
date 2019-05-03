@@ -12,32 +12,10 @@ namespace Microsoft.DotNet
 
         [global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         internal static string GetResourceString(string resourceKey, string defaultValue = null) =>  ResourceManager.GetString(resourceKey, Culture);
-
-        private static string GetResourceString(string resourceKey, string[] formatterNames)
-        {
-           var value = GetResourceString(resourceKey);
-           if (formatterNames != null)
-           {
-               for (var i = 0; i < formatterNames.Length; i++)
-               {
-                   value = value.Replace("{" + formatterNames[i] + "}", "{" + i + "}");
-               }
-           }
-           return value;
-        }
-
         /// <summary>The format '{noun}' has {adjective} parameters.</summary>
         internal static string StringWithNamedArgs => GetResourceString("StringWithNamedArgs");
-        /// <summary>The format '{noun}' has {adjective} parameters.</summary>
-        internal static string FormatStringWithNamedArgs(object noun, object adjective)
-           => string.Format(Culture, GetResourceString("StringWithNamedArgs", new [] { "noun", "adjective" }), noun, adjective);
-
         /// <summary>The format string '{0}' has numbered {1} parameter {2}.</summary>
         internal static string StringWithNumberedArgs => GetResourceString("StringWithNumberedArgs");
-        /// <summary>The format string '{0}' has numbered {1} parameter {2}.</summary>
-        internal static string FormatStringWithNumberedArgs(object p0, object p1, object p2)
-           => string.Format(Culture, GetResourceString("StringWithNumberedArgs"), p0, p1, p2);
-
         /// <summary>No arguments for this one.</summary>
         internal static string StringWithoutArgs => GetResourceString("StringWithoutArgs");
 
