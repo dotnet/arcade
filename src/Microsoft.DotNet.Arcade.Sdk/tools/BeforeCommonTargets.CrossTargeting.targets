@@ -3,9 +3,5 @@
 <Project>
   <Import Project="$(_ArcadeOverriddenCustomBeforeMicrosoftCommonCrossTargetingTargets)" Condition="Exists('$(_ArcadeOverriddenCustomBeforeMicrosoftCommonCrossTargetingTargets)')"/>
 
-  <PropertyGroup>
-    <_ArcadeBeforeCommonTargetsImported>true</_ArcadeBeforeCommonTargetsImported>
-  </PropertyGroup>
-
   <Import Project="Version.BeforeCommonTargets.targets"/>
 </Project>
