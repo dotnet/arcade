@@ -10,6 +10,8 @@ using System.Security.Cryptography;
 using Microsoft.Build.Framework;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
@@ -50,8 +52,10 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         /// <summary>
         /// Specifies the maximum number of clients to concurrently upload blobs to azure
         /// </summary>
+        [Obsolete]
         public int MaxClients { get; set; } = 8;
 
+        [Obsolete]
         public int UploadTimeoutInMinutes { get; set; } = 5;
 
         public void Cancel()
@@ -87,34 +91,44 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                 CloudBlobClient cloudBlobClient = storageAccount.CreateCloudBlobClient();
                 CloudBlobContainer cloudBlobContainer = cloudBlobClient.GetContainerReference(ContainerName);
 
+                List<Task> uploadTasks = new List<Task>();
+
                 foreach (var item in Items)
                 {
-                    string relativeBlobPath = item.GetMetadata("RelativeBlobPath");
-                    if (string.IsNullOrEmpty(relativeBlobPath))
-                        throw new Exception(string.Format("Metadata 'RelativeBlobPath' is missing for item '{0}'.", item.ItemSpec));
-
-                    if (!File.Exists(item.ItemSpec))
-                        throw new Exception(string.Format("The file '{0}' does not exist.", item.ItemSpec));
-
-                    var blobReference = cloudBlobContainer.GetBlockBlobReference(relativeBlobPath);
-
-                    if (!Overwrite && await blobReference.ExistsAsync())
+                    uploadTasks.Add(Task.Run(async () =>
                     {
-                        if (PassIfExistingItemIdentical)
-                        {
-                            var localMD5 = CalculateMD5(item.ItemSpec);
+                        string relativeBlobPath = item.GetMetadata("RelativeBlobPath");
 
-                            if (blobReference.Properties.ContentMD5.Equals(localMD5, StringComparison.OrdinalIgnoreCase))
-                            {
-                                continue;
-                            }
+                        if (string.IsNullOrEmpty(relativeBlobPath))
+                        {
+                            throw new Exception(string.Format("Metadata 'RelativeBlobPath' is missing for item '{0}'.", item.ItemSpec));
                         }
 
-                        throw new Exception(string.Format("The blob '{0}' already exists.", relativeBlobPath));
-                    }
+                        if (!File.Exists(item.ItemSpec))
+                        {
+                            throw new Exception(string.Format("The file '{0}' does not exist.", item.ItemSpec));
+                        }
 
-                    await blobReference.UploadFromFileAsync(item.ItemSpec);
+                        CloudBlockBlob blobReference = cloudBlobContainer.GetBlockBlobReference(relativeBlobPath);
+
+                        if (!Overwrite && await blobReference.ExistsAsync())
+                        {
+                            if (PassIfExistingItemIdentical)
+                            {
+                                if (IsFileIdenticalToBlob(item.ItemSpec, blobReference))
+                                {
+                                    return;
+                                }
+                            }
+
+                            throw new Exception(string.Format("The blob '{0}' already exists.", relativeBlobPath));
+                        }
+
+                        await blobReference.UploadFromFileAsync(item.ItemSpec);
+                    }));
                 }
+
+                await Task.WhenAll(uploadTasks);
 
                 Log.LogMessage("Upload to Azure is complete, a total of {0} items were uploaded.", Items.Length);
             }
@@ -122,10 +136,38 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             {
                 Log.LogErrorFromException(e, true);
             }
+
             return !Log.HasLoggedErrors;
         }
 
-        static string CalculateMD5(string filename)
+        /// <summary>
+        /// Return a bool indicating whether a local file content is same as 
+        /// the content of the pointed blob. If the blob has the ContentMD5
+        /// property set the comparison is performed uniquely using that.
+        /// Otherwise a byte-per-byte comparison with the content of the file
+        /// is performed.
+        /// </summary>
+        private static bool IsFileIdenticalToBlob(string localFileFullPath, CloudBlockBlob blobReference)
+        {
+            if (!string.IsNullOrEmpty(blobReference.Properties.ContentMD5))
+            {
+                var localMD5 = CalculateMD5(localFileFullPath);
+                var blobMD5 = blobReference.Properties.ContentMD5;
+
+                return blobMD5.Equals(localMD5, StringComparison.OrdinalIgnoreCase);
+            }
+            else
+            {
+                byte[] existingBytes = new byte[blobReference.Properties.Length];
+                byte[] localBytes = File.ReadAllBytes(localFileFullPath);
+
+                blobReference.DownloadToByteArray(existingBytes, 0);
+
+                return localBytes.SequenceEqual(existingBytes);
+            }
+        }
+
+        private static string CalculateMD5(string filename)
         {
             using (var md5 = MD5.Create())
             {
