@@ -90,6 +90,8 @@ jobs:
     timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
 
   variables:
+  - ${{ if eq(parameters.enableTelemetry, 'true') }}:
+    - DOTNET_CLI_TELEMETRY_PROFILE: '$(Build.Repository.Uri)'
   - ${{ each variable in parameters.variables }}:
     # handle name-value variable syntax
     # example:
