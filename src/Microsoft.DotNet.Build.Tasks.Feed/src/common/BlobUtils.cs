@@ -11,7 +11,8 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 {
     static class BlobUtils
     {
-        public static CloudBlockBlob GetBlockBlob(string AccountName,
+        public static CloudBlockBlob GetBlockBlob(
+            string AccountName,
             string AccountKey,
             string ContainerName,
             string destinationBlob)
@@ -49,7 +50,8 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             await cloudBlockBlob.UploadFromFileAsync(filePath);
         }
 
-        public static bool IsFileIdenticalToBlob(string AccountName,
+        public static bool IsFileIdenticalToBlob(
+            string AccountName,
             string AccountKey,
             string ContainerName,
             string destinationBlob,
@@ -87,6 +89,17 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
                 return localBytes.SequenceEqual(existingBytes);
             }
+        }
+
+        public static async Task<bool> CheckIfBlobExistsAsync(
+            string AccountName,
+            string AccountKey,
+            string ContainerName,
+            string destinationBlob)
+        {
+            var blob = GetBlockBlob(AccountName, AccountKey, ContainerName, destinationBlob);
+
+            return await blob.ExistsAsync();
         }
     }
 }

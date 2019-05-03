@@ -196,7 +196,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         })
                         .ToArray();
 
-                    await blobFeedAction.PublishToFlatContainerAsync(blobs, MaxClients, UploadTimeoutInMinutes, pushOptions);
+                    await blobFeedAction.PublishToFlatContainerAsync(blobs, MaxClients, pushOptions);
 
                     foreach (var package in buildModel.Artifacts.Blobs)
                     {
