@@ -1,6 +1,6 @@
 import glob
 import xml.etree.ElementTree
-from result_format import ResultFormat
+from .result_format import ResultFormat
 from defs import TestResult, TestResultAttachment
 
 
@@ -22,28 +22,31 @@ class TRXFormat(ResultFormat):
 
     def read_results(self, path):
         test_classes = {}
+        test_methods = {}
         ns = {'vstest' : 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
 
         # class names are stored separately from the results. Gather testName->className information
         # and store it away first, since it is smaller than storing the results
         for (_, element) in xml.etree.ElementTree.iterparse(path, events=['end']):
             if element.tag.endswith("UnitTest"):
+                test_id = element.get("id")
                 testMethod_element = element.find("vstest:TestMethod", ns)
                 if testMethod_element is not None:
-                    test_classes[testMethod_element.get("name")] = testMethod_element.get("className")
+                    test_classes[test_id] = testMethod_element.get("className")
+                    test_methods[test_id] = testMethod_element.get("name")
                 element.clear()
 
         for (_, element) in xml.etree.ElementTree.iterparse(path, events=['end']):
             if element.tag.endswith("UnitTestResult"):
                 test_name = element.get("testName")
+                test_id = element.get("testId")
 
-                # Find the class name from the dictionary we created earlier, and then remove that element from the dictionary
-                classname = test_classes[test_name]
-                del test_classes[test_name]
+                # Find the class name from the dictionary we created earlier
+                classname = test_classes[test_id]
+                method = test_methods[test_id]
 
                 name = classname + '.' + test_name
                 type_name = classname
-                method = test_name
                 duration = 0.0
                 result = "Pass"
                 outcome = element.get("outcome")

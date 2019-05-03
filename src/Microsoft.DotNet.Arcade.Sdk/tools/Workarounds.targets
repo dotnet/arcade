@@ -150,4 +150,26 @@
   <PropertyGroup Condition="'$(NuspecPackageId)' != ''">
     <PackageId>*$(MSBuildProjectName)*</PackageId>
   </PropertyGroup>
+
+  <!--
+    Source packaging helpers.
+  -->
+
+  <PropertyGroup Condition="'$(IsPackable)' == 'true' and '$(IsSourcePackage)' == 'true'">
+    <TargetsForTfmSpecificContentInPackage Condition="'$(NuspecFile)' == ''">$(TargetsForTfmSpecificContentInPackage);_AddSourceFilesToSourcePackage</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <Target Name="_AddSourceFilesToSourcePackage">
+    <PropertyGroup>
+      <!-- TODO: language to dir name mapping (https://github.com/Microsoft/msbuild/issues/2101) -->
+      <_LanguageDirName>$(DefaultLanguageSourceExtension.TrimStart('.'))</_LanguageDirName>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_File Remove="@(_File)"/>
+      <_File Include="$(MSBuildProjectDirectory)\**\*$(DefaultLanguageSourceExtension)" TargetDir="contentFiles/$(_LanguageDirName)/$(TargetFramework)" BuildAction="Compile" />
+
+      <TfmSpecificPackageFile Include="@(_File)" PackagePath="%(_File.TargetDir)/%(_File.RecursiveDir)%(_File.FileName)%(_File.Extension)"/>
+    </ItemGroup>
+  </Target>
 </Project>

@@ -223,7 +223,9 @@ The file is present in the repo and defines versions of all dependencies used in
     <VersionPrefix>1.0.0</VersionPrefix>
     <!-- Package pre-release suffix not including build number -->
     <PreReleaseVersionLabel>rc2</PreReleaseVersionLabel>
-  
+    <!-- Optional: base short date used for calculating version numbers of release-only packages (e.g. global tools) -->
+    <VersionBaseShortDate>19000</VersionBaseShortDate>
+
     <!-- Opt-in repo features -->
     <UsingToolVSSDK>true</UsingToolVSSDK>
     <UsingToolIbcOptimization>true</UsingToolIbcOptimization>
@@ -485,6 +487,22 @@ Projects shall use `Microsoft.NET.Sdk` SDK like so:
 ## Other Projects
 
 It might be useful to create other top-level directories containing projects that are not standard C#/VB/F# projects. For example, projects that aggregate outputs of multiple projects into a single NuGet package or Willow component. These projects should also be included in the main solution so that the build driver includes them in build process, but their `Directory.Build.*` may be different from source projects. Hence the different root directory.
+
+## Building source packages
+
+Arcade SDK provides targets for building source packages.
+
+Set `IsSourcePackage` to `true` to indicate that the project produces a source package (along with `IsPackable`, `PackageDescription` and other package properties).
+
+If the project does not have an explicitly provided `.nuspec` file (`NuspecFile` property is empty) setting `IsSourcePackage` to `true` will trigger a target that 
+puts sources contained in the project directory to the `contentFiles` directory of the source package produced by the project.
+
+In addition a `build/$(PackageId).targets` file will be auto-generated that links the sources contained in the package to the source server via a Source Link target.
+If your package already has a `build/$(PackageId).targets` file set `SourcePackageSourceLinkTargetsFileName` property to a different file name (e.g. `SourceLink.targets`)
+and import the file from `build/$(PackageId).targets`. 
+
+If the project is packaged using a custom `.nuspec` file then the source and targets files must be listed in the `.nuspec` file. The path to the generated Source Link 
+targets file will be available within the `.nuspec` file via variable `$SourceLinkTargetsFilePath$`.
 
 ## Building VSIX packages (optional)
 
@@ -933,5 +951,35 @@ Additional command line arguments passed to the test runtime (i.e. `dotnet` or `
 For example, to invoke Mono with debug flags `--debug` (to get stack traces with line number information), set `TestRuntimeAdditionalArguments` to `--debug`.
 To override the default Shared Framework version that is selected based on the test project TFM, set `TestRuntimeAdditionalArguments` to `--fx-version x.y.z`.
 
+### `GenerateResxSource` (bool)
 
+When set to true, Arcade will generate a class source for all embedded .resx files.
 
+If source should only be generated for some .resx files, this can be turned on for individual files like this:
+
+```xml
+<ItemGroup>
+   <EmbeddedResource Update="MyResources.resx" GenerateSource="true" />
+</ItemGroup>
+```
+
+The contents of the generated source can be fine-tuned with these additional settings.
+
+#### `GenerateResxSourceEmitFormatMethods` (bool)
+
+When a string in the resx file has argument placeholders, generate a `.FormatXYZ(...)` method with parameters for each placeholder in the string.
+
+Example: if the resx file contains a string "This has {0} and {1} placeholders", this method will be generated:
+```c#
+class Resources
+{
+  // ...
+  public static string FormatMyString(object p0, object p1) { /* ..uses string.Format()... */ }
+}
+```
+
+#### `GenerateResxSourceIncludeDefaultValues` (bool)
+If set to true calls to GetResourceString receive a default resource string value.
+
+#### `GenerateResxSourceOmitGetResourceString` (bool)
+If set to true the GetResourceString method is not included in the generated class and must be specified in a separate source file.

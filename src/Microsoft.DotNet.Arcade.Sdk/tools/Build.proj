@@ -172,11 +172,11 @@
     -->
 
     <PropertyGroup>
-      <_RestoreUsingNuGetTargets Condition="'$(_RestoreUsingNuGetTargets)' == '' and '$(_BuildSolutions)' == 'false'">true</_RestoreUsingNuGetTargets>
+      <RestoreUsingNuGetTargets Condition="'$(RestoreUsingNuGetTargets)' == '' and '$(_BuildSolutions)' == 'false'">true</RestoreUsingNuGetTargets>
 
       <!-- IsRunningFromVisualStudio may be true even when running msbuild.exe from command line. This generally means that MSBUild is Visual Studio installation and therefore we need to find NuGet.targets in a different location.  -->
-      <_NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'=='' and '$([MSBuild]::IsRunningFromVisualStudio())'=='true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
-      <_NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'==''">$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
+      <_NuGetRestoreTargets>$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
+      <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
     </PropertyGroup>
 
     <MSBuild Projects="@(ProjectToBuild)"
@@ -184,13 +184,13 @@
              RemoveProperties="$(_RemoveProps)"
              Targets="Restore"
              BuildInParallel="true"
-             Condition="'$(_RestoreUsingNuGetTargets)' != 'true' and '$(Restore)' == 'true'"/>
+             Condition="'$(RestoreUsingNuGetTargets)' != 'true' and '$(Restore)' == 'true'"/>
 
     <MSBuild Projects="$(_NuGetRestoreTargets)"
              Properties="@(_SolutionBuildProps);RestoreGraphProjectInput=$(ProjectToBuildList);__BuildPhase=SolutionRestore"
              RemoveProperties="$(_RemoveProps)"
              Targets="Restore"
-             Condition="'$(_RestoreUsingNuGetTargets)' == 'true' and '$(Restore)' == 'true'"/>
+             Condition="'$(RestoreUsingNuGetTargets)' == 'true' and '$(Restore)' == 'true'"/>
 
     <!--
       Build solution.

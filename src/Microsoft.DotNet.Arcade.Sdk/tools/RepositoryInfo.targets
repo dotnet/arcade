@@ -1,12 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
+  <PropertyGroup>
+    <_ProcessArchitecture>$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)</_ProcessArchitecture>
+
+    <!-- Disable SourceLink when building on ARM (libgit2 does not support it currently) or during source build (SourceLink is not buildable from source currently) -->
+    <EnableSourceControlManagerQueries Condition="'$(DotNetBuildFromSource)' == 'true'">false</EnableSourceControlManagerQueries>
+    <EnableSourceControlManagerQueries Condition="$(_ProcessArchitecture.StartsWith('arm'))">false</EnableSourceControlManagerQueries>
+
+    <!-- By default disable Source Link when we can't query source control. The commit sha and repo url can still be supplied manually. -->
+    <EnableSourceLink Condition="'$(EnableSourceControlManagerQueries)' != 'true' and '$(EnableSourceLink)' == ''">false</EnableSourceLink>
+    <SourceLink Condition="'$(EnableSourceLink)' != 'true'"/>
+  </PropertyGroup>
+
   <!--
     Include both GitHub and Azure DevOps (formerly VSTS) packages to enable SourceLink in repositories that mirror to Azure DevOps (formerly VSTS).
   -->
   <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.SourceLink.Vsts.Git" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
+  </ItemGroup>
+
+  <!--
+    Set the SourceRoot to repo root to facilitate deterministic source paths when SCM queries are disabled.
+  -->
+  <ItemGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true'">
+    <SourceRoot Include="$(RepoRoot)" />
   </ItemGroup>
 
   <Target Name="_TranslateAzureDevOpsUrlToGitHubUrl"
@@ -34,6 +53,49 @@
       <SourceRoot Update="@(SourceRoot)">
         <ScmRepositoryUrl>$([System.Text.RegularExpressions.Regex]::Replace(%(SourceRoot.ScmRepositoryUrl), $(_Pattern), $(_Replacement)))</ScmRepositoryUrl>
       </SourceRoot>
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Generates and adds {PackageId}.SourceLink.targets file to the build directory of the source package.
+  -->
+
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateSourcePackageSourceLinkTargetsFile" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+
+  <PropertyGroup Condition="'$(IsPackable)' == 'true' and '$(IsSourcePackage)' == 'true'">
+    <BeforePack>$(BeforePack);_AddSourcePackageSourceLinkFile</BeforePack>
+  </PropertyGroup>
+
+  <Target Name="_AddSourcePackageSourceLinkFile" DependsOnTargets="_GenerateSourcePackageSourceLinkFile">
+    <ItemGroup>
+      <!-- Add a packable item if the project builds the package with auto-generated .nuspec file -->
+      <None Include="$(_SourcePackageSourceLinkTargetsFilePath)" PackagePath="build" Pack="true" Condition="'$(NuspecFile)' == ''"/>
+
+      <!-- Include path in the nuspec properties if the project builds package using custom .nuspec -->
+      <NuspecProperty Include="SourceLinkTargetsFilePath=$(_SourcePackageSourceLinkTargetsFilePath)" Condition="'$(NuspecFile)' != ''"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CalculateGenerateSourcePackageSourceLinkFileOutputs">
+    <PropertyGroup>
+      <_SourcePackageSourceLinkTargetsFileName>$([MSBuild]::ValueOrDefault($(SourcePackageSourceLinkTargetsFileName), '$(PackageId).targets'))</_SourcePackageSourceLinkTargetsFileName>
+      <_SourcePackageSourceLinkTargetsFilePath>$(IntermediateOutputPath)$(_SourcePackageSourceLinkTargetsFileName)</_SourcePackageSourceLinkTargetsFilePath>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_GenerateSourcePackageSourceLinkFile"
+          DependsOnTargets="InitializeSourceControlInformation;$(SourceLinkUrlInitializerTargets);_CalculateGenerateSourcePackageSourceLinkFileOutputs"
+          Inputs="$(MSBuildAllProjects)"
+          Outputs="$(_SourcePackageSourceLinkTargetsFilePath)">
+
+    <Microsoft.DotNet.Arcade.Sdk.GenerateSourcePackageSourceLinkTargetsFile
+        ProjectDirectory="$(MSBuildProjectDirectory)"
+        PackageId="$(PackageId)"
+        SourceRoots="@(SourceRoot)"
+        OutputPath="$(_SourcePackageSourceLinkTargetsFilePath)"/>
+
+    <ItemGroup>
+      <FileWrites Include="$(_SourcePackageSourceLinkTargetsFilePath)"/>
     </ItemGroup>
   </Target>
 

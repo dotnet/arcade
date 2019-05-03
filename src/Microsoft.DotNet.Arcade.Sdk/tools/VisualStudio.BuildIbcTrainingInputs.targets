@@ -15,9 +15,8 @@
   <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.GenerateTrainingPropsFile" AssemblyFile="$(_VisualStudioBuildTasksAssembly)" />
 
   <Target Name="_BuildTrainingInputs" AfterTargets="Build">
-    <Error Condition="'$(VisualStudioDropName)' == '' and '$(OfficialBuild)' == 'true'"
-           Text="Property VisualStudioDropName must be specified in official build that produces Visual Studio insertion components." />
-    <Error Text="RepositoryName property has to be specified when EnableNgenOptimization is true" Condition="'$(RepositoryName)' == ''"/>
+    <Error Condition="('$(VisualStudioDropName)' == '' or '$(RepositoryName)' == '') and '$(OfficialBuild)' == 'true'"
+           Text="Properties VisualStudioDropName and RepositoryName must be specified in official build that produces Visual Studio insertion components." />
 
     <GenerateTrainingInputFiles ConfigurationFile="$(RepositoryEngineeringDir)config\OptProf.json"
                                 InsertionDirectory="$(VisualStudioSetupInsertionPath)"
