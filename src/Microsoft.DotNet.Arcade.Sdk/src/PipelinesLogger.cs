@@ -4,8 +4,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
@@ -19,7 +23,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
         private readonly MessageBuilder _builder = new MessageBuilder();
         private readonly Dictionary<BuildEventContext, Guid> _buildEventContextMap = new Dictionary<BuildEventContext, Guid>(BuildEventContextComparer.Instance);
         private readonly Dictionary<Guid, ProjectInfo> _projectInfoMap = new Dictionary<Guid, ProjectInfo>();
+        private readonly Dictionary<Guid, string> _targetsMap = new Dictionary<Guid, string>();
         private readonly HashSet<Guid> _detailedLoggedSet = new HashSet<Guid>();
+        private readonly HttpClient _http = new HttpClient();
         private HashSet<string> _ignoredTargets;
         private string _solutionDirectory;
 
@@ -172,6 +178,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         private void OnProjectFinished(object sender, ProjectFinishedEventArgs e)
         {
+            ReportToAnalytics(e);
+
             if (!_buildEventContextMap.TryGetValue(e.BuildEventContext, out Guid projectId) ||
                 !_projectInfoMap.TryGetValue(projectId, out ProjectInfo projectInfo))
             {
@@ -249,14 +257,75 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
         }
 
-        private string GetTargets(List<string> targetNames)
+        private void ReportToAnalytics(ProjectFinishedEventArgs e)
         {
-            if (targetNames == null || targetNames.Count == 0)
+            string agentName = Environment.GetEnvironmentVariable("AGENT_NAME");
+            string buildId = Environment.GetEnvironmentVariable("BUILD_BUILDID");
+            string buildName = Environment.GetEnvironmentVariable("BUILD_BUILDNUMBER");
+            string repositoryUri = Environment.GetEnvironmentVariable("BUILD_REPOSITORY_URI");
+            string sourceBranch = Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH");
+
+            if (string.IsNullOrEmpty(agentName) ||
+                string.IsNullOrEmpty(buildId) ||
+                string.IsNullOrEmpty(buildName) ||
+                string.IsNullOrEmpty(repositoryUri) ||
+                string.IsNullOrEmpty(sourceBranch))
             {
-                return null;
+                return;
             }
 
-            return string.Join(", ", targetNames);
+            if (!_buildEventContextMap.TryGetValue(e.BuildEventContext, out var id) ||
+                !_targetsMap.TryGetValue(id, out var targets))
+            {
+                targets = "--";
+            }
+
+            var obj = new JObject(
+                new JProperty("name", "Microsoft.ApplicationInsights.Event"),
+                new JProperty("time", DateTime.UtcNow.ToString("O")),
+                new JProperty("iKey", "82db48c2-1490-471b-a273-d7ac4585c8e8"),
+                new JProperty("flags", 0x200000),
+                new JProperty("tags",
+                    new JObject(
+                        new JProperty("ai.cloud.roleInstance", agentName)
+                    )
+                ),
+                new JProperty(
+                    "data",
+                    new JObject(
+                        new JProperty("baseType", "EventData"),
+                        new JProperty(
+                            "baseData",
+                            new JObject(
+                                new JProperty("ver", 2),
+                                new JProperty("name", "buildResults"),
+                                new JProperty(
+                                    "properties",
+                                    new JObject(
+                                        new JProperty("branch", sourceBranch),
+                                        new JProperty("buildId", buildId),
+                                        new JProperty("buildName", buildName),
+                                        new JProperty("project", e.ProjectFile ?? "Unknown"),
+                                        new JProperty("repository", repositoryUri),
+                                        new JProperty("succeeded", e.Succeeded.ToString()),
+                                        new JProperty("targets", targets)
+                                    )
+                                ),
+                                new JProperty("measurements", new JObject())
+                            )
+                        )
+                    )
+                )
+            );
+
+            HttpResponseMessage response = _http.PostAsync(
+                "https://dc.services.visualstudio.com/v2/track",
+                new StringContent(obj.ToString(Formatting.None), Encoding.UTF8, "application/json")
+            ).GetAwaiter().GetResult();
+
+            // This analytics call isn't critical enough to do anything about, we'll get enough of them in aggregate to serve our purposes
+            // so don't check the response code, just dispose it
+            response.Dispose();
         }
 
         internal sealed class LoggerParameters
