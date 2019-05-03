@@ -347,7 +347,7 @@ If it is not specified the build script attempts to find `RoslynTools.MSBuild` v
 
 #### Example: Restoring multiple .NET Core Runtimes for running tests
 
-in /global.json, specify a `runtimes` section and list the [shared runtime versions](https://dotnet.microsoft.com/download/dotnet-core) you want installed.
+In /global.json, specify a `runtimes` section and list the [shared runtime versions](https://dotnet.microsoft.com/download/dotnet-core) you want installed.
 
 Schema:
 
@@ -366,7 +366,7 @@ Schema:
 
 `<runtime>` - One of the supported "runtime" values for the [dotnet-install](https://github.com/dotnet/cli/blob/dddac220ba5b6994e297752bebd9acffa3e72342/scripts/obtain/dotnet-install.ps1#L43) script.
 
-`<architecture>` - Optionally include `/<architecture>` when defining the runtime to specify an explicit architecture where "architecture" is on e of the supported values for the [dotnet-install](https://github.com/dotnet/cli/blob/dddac220ba5b6994e297752bebd9acffa3e72342/scripts/obtain/dotnet-install.ps1#L32) script.  Defaults to "auto" if not specified.
+`<architecture>` - Optionally include `/<architecture>` when defining the runtime to specify an explicit architecture where "architecture" is one of the supported values for the [dotnet-install](https://github.com/dotnet/cli/blob/dddac220ba5b6994e297752bebd9acffa3e72342/scripts/obtain/dotnet-install.ps1#L32) script.  Defaults to "auto" if not specified.
 
 ```json
 {
@@ -380,7 +380,7 @@ Schema:
 }
 ```
 
-You may also, use any of the properties defined in `eng/Versions.props` to define a version.
+You may also use any of the properties defined in `eng/Versions.props` to define a version.
 
 Example
 
@@ -396,8 +396,6 @@ Example
 ```
 
 Note: defining `runtimes` in your global.json will signal to Arcade to install a local version of the SDK for the runtimes to use rather than depending on a matching global SDK.
-
-Note: CLI initialization does not run if `artifacts/toolset/[toolsetversion].txt` exists.  If you've modified the shared frameworks ("runtimes") section of global.json , you may need to delete that file to force re-initialization and downloading runtimes.
 
 ### /NuGet.config
 
@@ -558,6 +556,7 @@ folder "InstallDir:MSBuild\Microsoft\VisualStudio\Managed"
 **NOTE:** By defining `VisualStudioInsertionComponent` in your project you are implicitly opting-in to having all of the assemblies included in that package marked for `NGEN`.  If this is not something you want for a given component you may add `<Ngen>false</Ngen>`.
 
 example:
+
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>

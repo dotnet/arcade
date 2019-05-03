@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         public override bool Execute()
         {
-            if(!File.Exists(GlobalJsonPath))
+            if (!File.Exists(GlobalJsonPath))
             {
                 Log.LogWarning($"Unable to find global.json file '{GlobalJsonPath} exiting");
                 return true;
@@ -40,7 +40,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 return !Log.HasLoggedErrors;
             }
 
-            // Documentation says that UTF8 is best for performance - https://github.com/dotnet/corefx/tree/master/src/System.Text.Json/porting_guide#use-text-encoded-as-utf-8-for-best-performance
             var jsonContent = File.ReadAllText(GlobalJsonPath);
             var bytes = Encoding.UTF8.GetBytes(jsonContent);
 

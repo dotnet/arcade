@@ -336,11 +336,6 @@ dotnetlocal_key=`grep -m 1 "runtimes" "$global_json_file"` || true
 if [[ -n "$dotnetlocal_key" ]]; then
   global_json_has_runtimes=true
 fi
-installAdditionalDotNetCoreFrameworks=$global_json_has_runtimes
-# Don't install additional frameworks if global.json does not contain "runtimes" or building from source build
-if [[ -n "${DotNetCoreSdkDir:-}" ]]; then
-  installAdditionalDotNetCoreFrameworks=false
-fi
 
 # HOME may not be defined in some scenarios, but it is required by NuGet
 if [[ -z $HOME ]]; then

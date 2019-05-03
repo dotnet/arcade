@@ -101,7 +101,6 @@ function Build {
     /p:PerformanceTest=$performanceTest `
     /p:Sign=$sign `
     /p:Publish=$publish `
-    /p:__InstallAdditionalDotNetCoreFrameworks=$installAdditionalDotNetCoreFrameworks `
     @properties
 }
 
