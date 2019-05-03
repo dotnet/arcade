@@ -6,12 +6,10 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Security.Cryptography;
 using Microsoft.Build.Framework;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
@@ -115,7 +113,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                         {
                             if (PassIfExistingItemIdentical)
                             {
-                                if (IsFileIdenticalToBlob(item.ItemSpec, blobReference))
+                                if (BlobUtils.IsFileIdenticalToBlob(item.ItemSpec, blobReference))
                                 {
                                     return;
                                 }
@@ -138,45 +136,6 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             }
 
             return !Log.HasLoggedErrors;
-        }
-
-        /// <summary>
-        /// Return a bool indicating whether a local file content is same as 
-        /// the content of the pointed blob. If the blob has the ContentMD5
-        /// property set the comparison is performed uniquely using that.
-        /// Otherwise a byte-per-byte comparison with the content of the file
-        /// is performed.
-        /// </summary>
-        private static bool IsFileIdenticalToBlob(string localFileFullPath, CloudBlockBlob blobReference)
-        {
-            if (!string.IsNullOrEmpty(blobReference.Properties.ContentMD5))
-            {
-                var localMD5 = CalculateMD5(localFileFullPath);
-                var blobMD5 = blobReference.Properties.ContentMD5;
-
-                return blobMD5.Equals(localMD5, StringComparison.OrdinalIgnoreCase);
-            }
-            else
-            {
-                byte[] existingBytes = new byte[blobReference.Properties.Length];
-                byte[] localBytes = File.ReadAllBytes(localFileFullPath);
-
-                blobReference.DownloadToByteArray(existingBytes, 0);
-
-                return localBytes.SequenceEqual(existingBytes);
-            }
-        }
-
-        private static string CalculateMD5(string filename)
-        {
-            using (var md5 = MD5.Create())
-            {
-                using (var stream = File.OpenRead(filename))
-                {
-                    var hash = md5.ComputeHash(stream);
-                    return Convert.ToBase64String(hash);
-                }
-            }
         }
     }
 }

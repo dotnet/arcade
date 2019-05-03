@@ -97,8 +97,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             try
             {
-                bool result = await PushAsync(items, options);
-                return result;
+                return await PushAsync(items, options);
             }
             catch (Exception e)
             {
@@ -136,7 +135,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public async Task UploadAssetAsync(
             ITaskItem item,
             SemaphoreSlim clientThrottle,
-            int uploadTimeout,
             PushOptions options)
         {
             string relativeBlobPath = item.GetMetadata("RelativeBlobPath");
@@ -147,8 +145,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string recursiveDir = item.GetMetadata("RecursiveDir");
                 relativeBlobPath = $"{recursiveDir}{fileName}";
             }
-
-            string contentType = item.GetMetadata("ContentType");
 
             relativeBlobPath = $"{feed.RelativePath}{relativeBlobPath}".Replace("\\", "/");
 
@@ -166,19 +162,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             try
             {
-                UploadClient uploadClient = new UploadClient(Log);
-
                 if (!options.AllowOverwrite && await feed.CheckIfBlobExistsAsync(relativeBlobPath))
                 {
                     if (options.PassIfExistingItemIdentical)
                     {
-                        if (!await uploadClient.FileEqualsExistingBlobAsync(
+                        if (!BlobUtils.IsFileIdenticalToBlob(
                             feed.AccountName,
                             feed.AccountKey,
                             feed.ContainerName,
                             item.ItemSpec,
-                            relativeBlobPath,
-                            uploadTimeout))
+                            relativeBlobPath))
                         {
                             Log.LogError(
                                 $"Item '{item}' already exists with different contents " +
@@ -193,15 +186,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 else
                 {
                     Log.LogMessage($"Uploading {item} to {relativeBlobPath}.");
-                    await uploadClient.UploadBlockBlobAsync(
-                        CancellationToken,
+                    await BlobUtils.UploadBlockBlobAsync(
                         feed.AccountName,
                         feed.AccountKey,
                         feed.ContainerName,
                         item.ItemSpec,
-                        relativeBlobPath,
-                        contentType,
-                        uploadTimeout);
+                        relativeBlobPath);
                 }
             }
             catch (Exception exc)
