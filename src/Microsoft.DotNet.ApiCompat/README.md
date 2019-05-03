@@ -2,7 +2,7 @@
 
 APICompat is a tool which may be used to test API compatibility between a two .NET assemblies.
 
-When testing the tool will compare a *contract* to an *implementation*.  
+When testing, the tool will compare a *contract* to an *implementation*.  
 
 The *contract* represents the API that's expected : for example a reference assembly or a previous version of an assembly.
 
@@ -10,9 +10,9 @@ The *implementation* represents the API that's provided : for example the curren
 
 ## Usage
 
-API Compat can be used by referencing this Microsoft.DotNet.ApiCompat package from the *implementation* project, and providing the path to the *contract* via a single `@(ResolvedMatchingContract)` item.  All the depene
+API Compat can be used by referencing this Microsoft.DotNet.ApiCompat package from the *implementation* project, and providing the path to the *contract* via a single `@(ResolvedMatchingContract)` item.  Dependencies of `@(ResolvedMatchingContract)` must be specified in either `DependencyPaths` metadata on the items themselves or via the `$(ContractDependencyPaths)` property.
 
-When API Compat identifies an error 
+When API Compat identifies an error it will log the error and fail the build.  If you wish to ignore the error you can copy the error text to a baseline file (see below).  Take care when doing this as these errors represent compatibility problems between the *contract* and *implementation*.
 
 ## Required setting
 
@@ -26,7 +26,7 @@ When API Compat identifies an error
 `$(RunApiCompatForSrc)` - true to run APICompat treating project output as *implementation* and `@(ResolvedMatchingContract)` as *contract*, defaults to true.
 `$(RunMatchingRefApiCompat)` - true to run APICompat treating project output as *contract* and  `@(ResolvedMatchingContract)` as *implementation*, defaults to true.  This is also known as reverse API compat and can help ensure that every public API defined in a project is exposed in `@(ResolvedMatchingContract)`.
 
-`$(ApiCompatExcludeAttributeList)` - Attributes to exclude from APICompat checks 
+`$(ApiCompatExcludeAttributeList)` - Attributes to exclude from APICompat checks.  This is a text file containing types in DocID format, EG: T:Namespace.TypeName.
 `$(ApiCompatEnforceOptionalRules)` - true to enforce optional rules, default is false.  An example of an optional rule is parameter naming which can break source compatibility but not binary compatibility.
 
 
