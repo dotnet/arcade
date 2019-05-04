@@ -11,13 +11,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 {
     /// <summary>
     /// File version has 4 parts and need to increase every official build.This is especially important when building MSIs.
-    /// 
-    /// FILEMAJOR.FILEMINOR.FILEPATCH.FILEREVISION
-    /// 
-    /// FILEMAJOR: Specified in the first part of VersionPrefix property.
-    /// FILEMINOR: Set to MINOR* 100 + PATCH / 100, where MINOR and PATCH are the 2nd and 3rd parts of VersionPrefix property.
-    /// FILEPATCH: Set to (PATCH % 100) * 100 + yy.
-    /// FILEREVISION: Set to(50 * mm + dd) * 100 + r.This algorithm makes it easy to parse the month and date from FILEREVISION while staying in the range of a short which is what a version element uses.
+    /// See https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Versioning.md#assembly-version.
     /// </summary>
     public class CalculateAssemblyAndFileVersions : Task
     {

@@ -13,7 +13,7 @@
   
   <Target Name="_InitializeAssemblyVersion" BeforeTargets="GetAssemblyVersion">
     <Microsoft.DotNet.Arcade.Sdk.CalculateAssemblyAndFileVersions
-      VersionPrefix="$(VersionPrefix)"
+      VersionPrefix="$(_OriginalVersionPrefix)"
       BuildNumber="$(_BuildNumber)"
       PatchNumber="$(_PatchNumber)"
       AutoGenerateAssemblyVersion="$(AutoGenerateAssemblyVersion)"
