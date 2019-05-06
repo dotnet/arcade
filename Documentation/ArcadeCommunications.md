@@ -1,0 +1,40 @@
+# Types of Arcade Communication
+
+## Areas to Communicate About
+There are several areas around which  communication will occur.  The nature of these updates remain the same for each of these areas.
+- DNC Services (Helix, Darc, etc) 
+- Shared Tools (Arcade SDK, Signing, etc)
+- Backing Resources (Azure storage, ScaleSets, Microbuild, etc)
+
+## Classes of Updates to Communicate
+- **Breaking** - Breaks something.  This type is the most severe and should be a rare occurrence
+- **Disruptive** - Change doesn’t break, but either adds debt with the product teams OR is considered risky
+  - Examples: release pipelines, licensing, cert removal
+- **Minimal risk** - Some risk, but likely will be fine (these might also be called “updates of note”)
+  - Examples: new feature, notable bug fix, etc. 
+- **Minor, low risk** - Very low risk, and most folks won't care.  
+  - Most changes are these last two bullets.
+  - Examples: security update, minor bug fixes, etc
+
+## Engineering Services Policy for Updates
+- Product release schedules are published and kept "top of mind" for the team
+- Tools will **not** flow to release/shipping branches (only to master/dev)
+- No updates to shared services during stabilization period (often a week) leading up to release
+- Published bar for when we’ll take changes (*link to doc here*)
+- Published bar used for determining class of update/change (*link to bar document*)
+
+## Communication Mechanics/Methods
+- Breaking changes follow procedure  (*add link here*) 
+- Disruptive changes follow procedure (*add link here*)
+- Release notes with “updates of note” (human crafted)
+  - Done every time an update is deployed for our services
+  - Done at most weekly for tools (e.g. Arcade SDK).
+  - Done when items of note occur in one of our backing resources.  For example, public feeds for Azure Artifacts
+- Blog entry for larger features/updates of interest
+
+## Automation
+The intent is to provide access to a change log which contains all PR’s and the latest SHAs which is always available.
+- Log is auto generated and posted (not emailed)
+- Is not always categorized by type of change because of automation, e.g. breaking etc  (add ML in the future?)
+- Resource updates and 2nd party services are out of scope for this automation piece
+
