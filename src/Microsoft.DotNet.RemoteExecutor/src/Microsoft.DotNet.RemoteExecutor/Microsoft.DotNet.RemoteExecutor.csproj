@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netcoreapp2.1;net472;netstandard2.0</TargetFrameworks>
     <Description>This package provides support for running tests out-of-process.</Description>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <IsPackable>true</IsPackable>
@@ -13,18 +13,35 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.RemoteExecutorHost\Microsoft.DotNet.RemoteExecutorHost.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\Microsoft.DotNet.RemoteExecutorHost\Microsoft.DotNet.RemoteExecutorHost.csproj"
+                      Condition="'$(TargetFramework)' != 'netstandard2.0'"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="Content"
+                      CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(RepoRoot)LICENSE.txt" PackagePath="LICENSE.txt" Pack="true"/>
-    <None Include="$(RepoRoot)THIRD-PARTY-NOTICES.txt" PackagePath="THIRD-PARTY-NOTICES.txt" Pack="true"/>
+    <Content Include="build\$(MSBuildProjectName).targets" PackagePath="build\$(MSBuildProjectName).targets" Pack="true" />
+    <None Include="$(RepoRoot)LICENSE.txt" PackagePath="LICENSE.txt" Pack="true" />
+    <None Include="$(RepoRoot)THIRD-PARTY-NOTICES.txt" PackagePath="THIRD-PARTY-NOTICES.txt" Pack="true" />
   </ItemGroup>
 
-  <Target Name="PackBuildOutputs" DependsOnTargets="ResolveProjectReferences;SatelliteDllsProjectOutputGroup;DebugSymbolsProjectOutputGroup;SatelliteDllsProjectOutputGroupDependencies;ResolveAssemblyReferences">
-    <ItemGroup>
-      <TfmSpecificPackageFile Include="$(OutputPath)Microsoft.DotNet.RemoteExecutorHost.dll" PackagePath="lib\$(TargetFramework)\" />
-      <TfmSpecificPackageFile Include="$(OutputPath)Microsoft.DotNet.RemoteExecutorHost.runtimeconfig.json" PackagePath="lib\$(TargetFramework)\" />
+  <Target Name="PackBuildOutputs" DependsOnTargets="ResolveProjectReferences;ResolveAssemblyReferences;CopyFilesToOutputDirectory">
+    <MSBuild 
+        Projects="@(ProjectReference)" 
+        Targets="GetTargetPath">
+        <Output TaskParameter="TargetOutputs" ItemName="ProjectReferenceTargetPath" />
+    </MSBuild>
+    <ItemGroup Condition="'$(TargetFramework)' != 'net472'">
+      <TfmSpecificPackageFile Include="$(OutputPath)$(TargetName).deps.json" PackagePath="lib\$(TargetFramework)\" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
+      <TfmSpecificPackageFile Include="$(OutputPath)%(ProjectReference.Filename).dll" PackagePath="tools\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="$([System.IO.Path]::GetDirectoryName('%(ProjectReferenceTargetPath.Identity)'))\%(ProjectReferenceTargetPath.Filename).runtimeconfig.json" PackagePath="tools\$(TargetFramework)\" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+      <TfmSpecificPackageFile Include="$(OutputPath)%(ProjectReference.Filename).exe" PackagePath="tools\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="$([System.IO.Path]::GetDirectoryName('%(ProjectReferenceTargetPath.Identity)'))\%(ProjectReferenceTargetPath.Filename)%(ProjectReferenceTargetPath.Extension).config" PackagePath="tools\$(TargetFramework)\" />
     </ItemGroup>
   </Target>
 
