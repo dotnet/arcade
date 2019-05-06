@@ -184,9 +184,7 @@ namespace Microsoft.DotNet.GitSync
                     foreach (var change in newChanges.changes[sourceRepository.Name])
                     {
                         var commit = repo.Lookup<Commit>(change);
-                        if (!IsMirrorCommit(commit.Message, targetRepo.Configuration.MirrorSignatureUser)
-                            && commit.Parents.Count() == 1
-                            )
+                        if (!IsMirrorCommit(commit.Message, targetRepo.Configuration.MirrorSignatureUser))
                         {
                             s_logger.Info($"Applying {change}");
                             var patch = FormatPatch(sourceRepository, change);
@@ -213,6 +211,7 @@ namespace Microsoft.DotNet.GitSync
         }
 
         private static bool IsMirrorCommit(string message, string author) => message.Contains($"Signed-off-by: {author} <{author}@microsoft.com>");
+
         private static string FormatPatch(RepositoryInfo sourceRepository, string sha)
         {
             var result = Runner.RunCommand("git",
@@ -239,7 +238,7 @@ namespace Microsoft.DotNet.GitSync
         {
             var sourceSlashIgnore = 1 + sourceRepository.SharedPath.Count(c => c == '\\') + 1;
             var result = Runner.RunCommand("git",
-                $"-c \"user.name={s_mirrorSignatureUserName}\" -C \"{targetRepository.Path}\" am --signoff -p{sourceSlashIgnore} --directory=\"{targetRepository.SharedPath.Replace('\\', '/')}\"",
+                $"-c \"user.name={s_mirrorSignatureUserName}\" -C \"{targetRepository.Path}\" am --signoff --reject --3way -p{sourceSlashIgnore} --directory=\"{targetRepository.SharedPath.Replace('\\', '/')}\"",
                 s_logger, patch);
             s_logger.Debug(result.Output);
             if (result.ExitCode != 0)
@@ -281,7 +280,7 @@ namespace Microsoft.DotNet.GitSync
             var additionalAssignees = await Task.WhenAll(commits.Select(c => GetAuthorAsync(targetRepo, c.Sha)).Distinct());
             try
             {
-                var update = new PullRequestUpdate() { Body = pr.Body + "\n\n cc " + string.Join(" ", additionalAssignees.Select(a => "@" + a)) };
+                var update = new PullRequestUpdate() { Body = pr.Body + "\n\n cc " + string.Join(" ", additionalAssignees.Select(a => "@" + a).Distinct()) };
                 await Client.PullRequest.Update(targetRepo.UpstreamOwner, targetRepo.Name, pr.Number, update);
             }
             catch (Exception)

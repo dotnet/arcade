@@ -68,6 +68,8 @@ It is possible that a native toolset will require more than one shim.
 
 Native toolset assets will be placed in an Azure blob storage container.  The default location is https://netcorenativeassets.blob.core.windows.net/resource-packages
 
+You can browse the installers available using this url - https://netcorenativeassets.blob.core.windows.net/resource-packages/?restype=container&comp=list
+
 ## Blob storage layout
 
 ```Text
@@ -105,6 +107,10 @@ The `external` folder is a folder structure that contains all installers and res
 
 ## Questions
 
+**How do I know what installers are already available in the container?**
+
+https://netcorenativeassets.blob.core.windows.net/resource-packages/?restype=container&comp=list
+
 **How will we handle installers if there are distro specific requirements?**
 
 This will likely come up very quickly and deserves consideration.  The current plan is to allow each installer to handle this as needed.
@@ -116,6 +122,8 @@ This will likely come up very quickly and deserves consideration.  The current p
 * **Windows**
   * Packages should be uploaded to the `windows/<tool-name>` folder structure in the container.
   * Naming convention for packages is as follows `<tool-name>-<version>-<win32 | win64>-<x86 | x64>.zip`
+  * If a zip file will be unpacked on Windows, create it only using a tool that follows the zip format's specifications and allows for reliable extraction using .NET's `System.IO.Compression` APIs or `powershell`
+    * Creating the zip file in `powershell` using `Compress-Archive` would be one recommended approach.
   * Once the package has been uploaded, you should be able to add a reference to it in your global.json file.
 
 * **Linux**

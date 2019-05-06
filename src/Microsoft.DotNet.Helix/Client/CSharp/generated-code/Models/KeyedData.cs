@@ -23,9 +23,15 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                return
-                    !(Key == default) &&
-                    !(Data == default);
+                if (Key == default)
+                {
+                    return false;
+                }
+                if (Data == default)
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

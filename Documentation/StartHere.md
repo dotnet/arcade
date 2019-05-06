@@ -59,7 +59,7 @@ some highlights
 - [Guidance for defaults](DefaultsGuidance.md)
 - [Versioning rules](CorePackages/Versioning.md)
 - [Dependencies Flow Plan](DependenciesFlowPlan.md): Flowing dependencies with Darc, Maestro and BAR.
-- [How to Create and Arcade Package](HowToCreatePackages.md)
+- [How to Create an Arcade Package](HowToCreatePackages.md)
 - [.NET Core Infrastructure Ecosystem Overview](InfrastructureEcosystemOverview.md)
 - [Toolset Publish/Consume Contract](PublishConsumeContract.md)
 - [Servicing](Servicing.md)

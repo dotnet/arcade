@@ -25,10 +25,10 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
         public IImmutableList<PropertyModel> Properties { get; }
 
         public IEnumerable<PropertyModel> RequiredAndReadOnlyProperties =>
-            Properties.Where(p => p.Required || p.ReadOnly);
+            Properties.Where(p => p.Required && p.ReadOnly)
+                .Concat(Properties.Where(p => p.Required && !p.ReadOnly))
+                .Concat(Properties.Where(p => !p.Required && p.ReadOnly));
 
         public IEnumerable<PropertyModel> RequiredProperties => Properties.Where(p => p.Required);
-
-        public bool Verifyable => Properties.Any(p => p.Required);
     }
 }

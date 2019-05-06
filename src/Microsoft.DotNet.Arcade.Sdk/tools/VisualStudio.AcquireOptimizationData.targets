@@ -15,17 +15,20 @@
   <UsingTask AssemblyFile="$(_VisualStudioBuildTasksAssembly)" TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.FindLatestDrop"/>
 
   <PropertyGroup>
+    <!-- TODO: remove (https://github.com/dotnet/arcade/issues/2092) -->
     <EnablePartialNgenOptimization Condition="'$(EnablePartialNgenOptimization)' == '' and '$(Configuration)' == 'Release' and '$(OfficialBuild)' == 'true'">true</EnablePartialNgenOptimization>
+
+    <EnableNgenOptimization Condition="'$(EnableNgenOptimization)' == ''">$(EnablePartialNgenOptimization)</EnableNgenOptimization>
   </PropertyGroup>
   
   <!--
-    Acquire optimization data from VS drop, unless suppressed by setting EnablePartialNgenOptimization to false.
+    Acquire optimization data from VS drop, unless suppressed by setting EnableNgenOptimization to false.
     Find the latest optimization data drop and downloads it to IbcOptimizationDataDir directory.
   -->
   <Target Name="_AcquireVisualStudioOptimizationData"
           DependsOnTargets="_PrepareAcquireVisualStudioOptimizationData;_DownloadVisualStudioOptimizationDataOpt"
           AfterTargets="Restore"
-          Condition="'$(EnablePartialNgenOptimization)' == 'true'">
+          Condition="'$(EnableNgenOptimization)' == 'true'">
   </Target>
   
   <Target Name="_PrepareAcquireVisualStudioOptimizationData">
@@ -45,9 +48,9 @@
   </Target>
 
   <Target Name="_DownloadVisualStudioOptimizationDataOpt" Condition="$(_DropToolExists)">
-    <Error Text="VisualStudioDropAccessToken property has to be specified when EnablePartialNgenOptimization and OfficialBuild is true" Condition="'$(VisualStudioDropAccessToken)' == '' and '$(OfficialBuild)' == 'true'"/>
-    <Error Text="RepositoryName property has to be specified when EnablePartialNgenOptimization is true" Condition="'$(RepositoryName)' == ''"/>
-    <Error Text="VisualStudioIbcSourceBranchName property has to be specified when EnablePartialNgenOptimization is true" Condition="'$(VisualStudioIbcSourceBranchName)' == ''"/>
+    <Error Text="VisualStudioDropAccessToken property has to be specified when EnableNgenOptimization and OfficialBuild is true" Condition="'$(VisualStudioDropAccessToken)' == '' and '$(OfficialBuild)' == 'true'"/>
+    <Error Text="RepositoryName property has to be specified when EnableNgenOptimization is true" Condition="'$(RepositoryName)' == ''"/>
+    <Error Text="VisualStudioIbcSourceBranchName property has to be specified when EnableNgenOptimization is true" Condition="'$(VisualStudioIbcSourceBranchName)' == ''"/>
 
     <PropertyGroup>
       <_DropServiceUrl>https://devdiv.artifacts.visualstudio.com</_DropServiceUrl>

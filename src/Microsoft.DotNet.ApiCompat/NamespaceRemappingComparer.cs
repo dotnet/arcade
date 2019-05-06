@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -114,7 +114,7 @@ namespace Microsoft.Cci.Comparers
 
                 if (split.Length != 2)
                 {
-                    Debug.WriteLine("ApiCompat NamespaceRemappingComparer: Unparsible line found in file {0}.  Line: \"{1}\"", mappingFile, mapping);
+                    Debug.WriteLine("ApiCompat NamespaceRemappingComparer: unparseable line found in file {0}.  Line: \"{1}\"", mappingFile, mapping);
                     continue;
                 }
 

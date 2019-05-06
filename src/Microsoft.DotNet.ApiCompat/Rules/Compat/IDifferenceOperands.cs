@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,7 +16,7 @@ namespace Microsoft.Cci.Differs
         /// </summary>
         string Contract { get; }
         /// <summary>
-        /// Name of right operand of a difference operation.  Typically called an implemenation.
+        /// Name of right operand of a difference operation.  Typically called an implementation.
         /// </summary>
         string Implementation { get; }
     }

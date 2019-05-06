@@ -1,0 +1,37 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Execute">
+  <!--
+    Optional variables:
+      AssetManifestFilePath      Output file path for manifest file
+      PackagesToPublishPattern   Property to declare a file glob for selecting the files to be pushed. (eg. $(OutputPath)*.zip)
+  -->
+  <!-- Allow repos to define sdk task properties -->
+  <Import Project="$(RepositoryEngineeringDir)GenerateBuildManifest.props" Condition="Exists('$(RepositoryEngineeringDir)GenerateBuildManifest.props')" />
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AssetManifestFilePath Condition="'$(AssetManifestFilePath)' == ''">$(ArtifactsLogDir)AssetManifest\$(OS)-$(PlatformName).xml</AssetManifestFilePath>
+  </PropertyGroup>
+  
+  <ItemGroup Condition="'$(PackagesToPublishPattern)' != ''">
+    <ItemsToPush Remove="@(ItemsToPush)" />
+    <ItemsToPush Include="$(PackagesToPublishPattern)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="microsoft.dotnet.build.tasks.feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" GeneratePathProperty="true"/>
+  </ItemGroup>
+  <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(PkgMicrosoft_DotNet_Build_Tasks_Feed)\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Feed.dll" />
+
+  <Target Name="Execute">
+    <GenerateBuildManifest Artifacts="@(ItemsToPush)"
+                           OutputPath="$(AssetManifestFilePath)"
+                           BuildId="$(BUILD_BUILDNUMBER)"
+                           RepoUri="$(BUILD_REPOSITORY_URI)"
+                           RepoBranch="$(BUILD_SOURCEBRANCH)"
+                           RepoCommit="$(BUILD_SOURCEVERSION)" />
+  </Target>
+</Project>

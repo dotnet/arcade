@@ -6,8 +6,9 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NuGet;
 using NuGet.Frameworks;
-using NuGet.Packaging.Core;
 using NuGet.Packaging;
+using NuGet.Packaging.Core;
+using NuGet.Packaging.Licenses;
 using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
@@ -15,12 +16,13 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
 using System.Text;
+using System.Xml.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     public class GenerateNuSpec : Task
     {
-        private const string NuSpecXmlNamespace = @"http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd";
+        private static readonly XNamespace NuSpecXmlNamespace = @"http://schemas.microsoft.com/packaging/2013/01/nuspec.xsd";
 
         public string InputFileName { get; set; }
 
@@ -58,6 +60,16 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         public string IconUrl { get; set; }
 
         public string LicenseUrl { get; set; }
+
+        public string PackageLicenseExpression { get; set; }
+
+        public string RepositoryType { get; set; }
+
+        public string RepositoryUrl { get; set; }
+
+        public string RepositoryBranch { get; set; }
+
+        public string RepositoryCommit { get; set; }
 
         public string Copyright { get; set; }
 
@@ -104,14 +116,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             }
 
             var directory = Path.GetDirectoryName(OutputFileName);
-            if (!Directory.Exists(directory))
+            if (!String.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
 
             using (var file = File.Create(OutputFileName))
             {
-                manifest.Save(file, false);
+                Save(manifest, file);
             }
         }
 
@@ -124,12 +136,36 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             var newSource = "";
             using (var stream = new MemoryStream())
             {
-                newManifest.Save(stream);
+                Save(newManifest, stream);
                 stream.Seek(0, SeekOrigin.Begin);
                 newSource = Encoding.UTF8.GetString(stream.ToArray());
             }
 
             return oldSource != newSource;
+        }
+
+        private void Save(Manifest manifest, Stream stream)
+        {
+            if (!string.IsNullOrEmpty(PackageLicenseExpression) && string.IsNullOrEmpty(LicenseUrl))
+            {
+                // nuget issue: https://github.com/NuGet/Home/issues/7894
+                // remove licenseUrl that NuGet added from the expression.  It will still add the licenseUrl when packing, which won't break validation.
+                using (var memStream = new MemoryStream())
+                {
+                    manifest.Save(memStream);
+                    memStream.Seek(0, SeekOrigin.Begin);
+
+                    var nuspec = XDocument.Load(memStream);
+
+                    var licenseUrlElement = nuspec.Descendants(NuSpecXmlNamespace + "licenseUrl").Single();
+                    licenseUrlElement?.Remove();
+                    nuspec.Save(stream);
+                }
+            }
+            else
+            {
+                manifest.Save(stream);
+            }
         }
 
         private Manifest CreateManifest()
@@ -161,19 +197,33 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             manifestMetadata.UpdateMember(x => x.Description, Description);
             manifestMetadata.DevelopmentDependency |= DevelopmentDependency;
             manifestMetadata.UpdateMember(x => x.FrameworkReferences, GetFrameworkAssemblies());
-            if (IconUrl != null)
+            if (!string.IsNullOrEmpty(IconUrl))
             {
                 manifestMetadata.SetIconUrl(IconUrl);
             }
             manifestMetadata.UpdateMember(x => x.Id, Id);
             manifestMetadata.UpdateMember(x => x.Language, Language);
-            if (LicenseUrl != null)
+
+            if (!string.IsNullOrEmpty(PackageLicenseExpression))
+            {
+                manifestMetadata.LicenseMetadata = new LicenseMetadata(
+                    type: LicenseType.Expression,
+                    license: PackageLicenseExpression,
+                    expression: NuGetLicenseExpression.Parse(PackageLicenseExpression),
+                    warningsAndErrors: null,
+                    LicenseMetadata.EmptyVersion);
+
+            }
+            else if (!string.IsNullOrEmpty(LicenseUrl))
             {
                 manifestMetadata.SetLicenseUrl(LicenseUrl);
             }
+
+            manifestMetadata.Repository = new RepositoryMetadata(RepositoryType ?? "", RepositoryUrl ?? "", RepositoryBranch ?? "", RepositoryCommit ?? "");
+
             manifestMetadata.UpdateMember(x => x.MinClientVersionString, MinClientVersion);
             manifestMetadata.UpdateMember(x => x.Owners, Owners?.Split(';'));
-            if (ProjectUrl != null)
+            if (!string.IsNullOrEmpty(ProjectUrl))
             {
                 manifestMetadata.SetProjectUrl(ProjectUrl);
             }

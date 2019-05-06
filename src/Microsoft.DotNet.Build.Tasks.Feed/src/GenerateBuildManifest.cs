@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             try
             {
-                var buildModel = BuildManifestUtil.CreateModelFromItems(Artifacts, BuildId, BuildData, RepoUri, RepoBranch, RepoCommit);
+                var buildModel = BuildManifestUtil.CreateModelFromItems(Artifacts, BuildId, BuildData, RepoUri, RepoBranch, RepoCommit, Log);
 
                 buildModel.WriteAsXml(OutputPath, Log);
             }

@@ -83,6 +83,17 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
+        public static bool IsCrossgened(string filePath)
+        {
+            const int CROSSGEN_FLAG = 4;
+
+            using (var stream = new FileStream(filePath, FileMode.Open))
+            using (var peReader = new PEReader(stream))
+            {
+                return ((int)peReader.PEHeaders.CorHeader.Flags & CROSSGEN_FLAG) == CROSSGEN_FLAG;
+            }
+        }
+
         public static bool IsAuthenticodeSigned(Stream assemblyStream)
         {
             using (var peReader = new PEReader(assemblyStream))
@@ -91,6 +102,23 @@ namespace Microsoft.DotNet.SignTool
                 var entry = headers.PEHeader.CertificateTableDirectory;
 
                 return entry.Size > 0;
+            }
+        }
+
+        public static string GetPublicKeyToken(string fullPath)
+        {
+            try
+            {
+                AssemblyName assemblyName = AssemblyName.GetAssemblyName(fullPath);
+                byte[] pktBytes = assemblyName.GetPublicKeyToken();
+
+                return (pktBytes == null || pktBytes.Length == 0) ? 
+                    string.Empty : 
+                    string.Join("", pktBytes.Select(b => b.ToString("x2")));
+            }
+            catch (BadImageFormatException)
+            {
+                return string.Empty;
             }
         }
     }

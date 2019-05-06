@@ -15,7 +15,7 @@ namespace {{pascalCaseNs Namespace}}.Models
         {{pascalCase this}},
         {{/each}}
         {{else}}
-        public {{pascalCase Name}}({{#each RequiredAndReadOnlyProperties}}{{typeRef Type}} {{camelCase Name}}{{#unless @last}}, {{/unless}}{{/each}})
+        public {{pascalCase Name}}({{#each RequiredAndReadOnlyProperties}}{{typeRef Type}}{{#if (and (not Required) (not (IsNullable Type)))}}?{{/if}} {{camelCase Name}}{{#unless @last}}, {{/unless}}{{/each}})
         {
             {{#each RequiredAndReadOnlyProperties}}
             {{pascalCase Name}} = {{camelCase Name}};
@@ -24,20 +24,25 @@ namespace {{pascalCaseNs Namespace}}.Models
         {{#each Properties}}
 
         [JsonProperty("{{Name}}")]
-        public {{typeRef Type}} {{pascalCase Name}} { get;{{#if ReadOnly}}{{else}} set;{{/if}} }
+        public {{typeRef Type}}{{#if (and (not Required) (not (IsNullable Type)))}}?{{/if}} {{pascalCase Name}} { get;{{#if ReadOnly}}{{else}} set;{{/if}} }
         {{/each}}
         {{/if}}
-        {{#if Verifyable}}
+        {{#if (isVerifyable this)}}
 
         [JsonIgnore]
         public bool IsValid
         {
             get
             {
-                return
-                    {{#each RequiredProperties}}
-                    !({{#nullCheck Type}}{{pascalCase Name}}{{/nullCheck}}){{#if @last}};{{else}} &&{{/if}}
-                    {{/each}}
+                {{#each Properties}}
+                {{#if (and Required (isNullable Type))}}
+                if ({{#nullCheck Type}}{{pascalCase Name}}{{/nullCheck}})
+                {
+                    return false;
+                }
+                {{/if}}
+                {{/each}}
+                return true;
             }
         }
         {{/if}}

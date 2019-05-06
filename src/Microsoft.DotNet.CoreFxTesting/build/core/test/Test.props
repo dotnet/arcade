@@ -6,19 +6,28 @@
     <IncludeTestFrameworkReferences>true</IncludeTestFrameworkReferences>
     <TestRunnerConfigPath>$(TestAssetsDir)xunit.runner.json</TestRunnerConfigPath>
     <TestResultsName>testResults.xml</TestResultsName>
+    <RemoteExecutorHostName>Microsoft.DotNet.RemoteExecutorHost</RemoteExecutorHostName>
 
     <GenerateRunScriptDependsOn>ValidateTargetOSTrait;$(GenerateRunScriptDependsOn);</GenerateRunScriptDependsOn>
   </PropertyGroup>
 
-  <!-- Test runner config file. -->
   <ItemGroup>
+    <!-- Test runner config file. -->
     <SupplementalTestData Condition="'$(SkipTestRunnerConfigCopying)' != 'true'" Include="$(TestRunnerConfigPath)" />
+    <SupplementalTestData Include="$(RuntimePath)Microsoft.DotNet.XUnitExtensions.dll" />
+    <SupplementalTestData Include="$(RuntimePath)xunit.assert.dll" />
+    <SupplementalTestData Include="$(RuntimePath)xunit.core.dll" />
+    <SupplementalTestData Include="$(RuntimePath)xunit.abstractions.dll" />
+    <SupplementalTestData Include="$(RuntimePath)CoreFx.Private.TestUtilities.dll" />
   </ItemGroup>
-  
+
   <!-- Supplemental test data. -->
   <ItemGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
     <SupplementalTestData Include="$(RuntimePath)$(TestRunnerName)" />
     <SupplementalTestData Include="$(TestRuntimeConfigPath)" DestinationName="$(TestRunnerNameWithoutExtension).runtimeconfig.json" />
+    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)Microsoft.DotNet.RemoteExecutor.dll" />
+    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)$(RemoteExecutorHostName).dll" />
+    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(TestRuntimeConfigPath)" DestinationName="$(RemoteExecutorHostName).runtimeconfig.json" />
     <SupplementalTestData Include="$(RuntimePath)xunit.execution.dotnet.dll" />
     <SupplementalTestData Include="$(RuntimePath)xunit.runner.reporters.netcoreapp10.dll" />
     <SupplementalTestData Include="$(RuntimePath)xunit.runner.utility.netcoreapp10.dll" />
@@ -27,19 +36,14 @@
   <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
     <SupplementalTestData Include="$(RuntimePath)$(TestRunnerName)" />
     <SupplementalTestData Include="$(TestRuntimeConfigPath)" DestinationName="$(TestRunnerName).config" />
+    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)Microsoft.DotNet.RemoteExecutor.dll" />
+    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)$(RemoteExecutorHostName).dll" />
+    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(TestRuntimeConfigPath)" DestinationName="$(RemoteExecutorHostName).dll.config" />
     <SupplementalTestData Include="$(RuntimePath)xunit.execution.desktop.dll" />
     <SupplementalTestData Include="$(RuntimePath)xunit.runner.reporters.net452.dll" />
     <SupplementalTestData Include="$(RuntimePath)xunit.runner.utility.net452.dll" />
   </ItemGroup>
 
-  <!-- Helix dependencies -->
-  <ItemGroup Condition="'$(IncludeTestFrameworkReferences)' == 'true'">
-    <TestArchiveDependencies Include="$(RuntimePath)Microsoft.DotNet.XUnitExtensions.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.assert.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.core.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.abstractions.dll" />
-  </ItemGroup>
-  
   <Import Project="$(MSBuildThisFileDirectory)References.props" />
 
 </Project>

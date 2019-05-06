@@ -16,6 +16,7 @@ namespace Xunit
         Net461 = 0x10,
         Net462 = 0x20,
         Net463 = 0x40,
+        Net472 = 0x60,
         Netcore50 = 0x80,
         Netcore50aot = 0x100,
         Netcoreapp1_0 = 0x200,

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace Microsoft.DotNet.SwaggerGenerator.Modeler
@@ -8,26 +8,22 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
         public ServiceClientModel(
             string clientName,
             string @namespace,
-            string host,
-            string scheme,
+            string baseUrl,
             IEnumerable<TypeModel> types,
             IEnumerable<MethodGroupModel> methodGroups)
         {
             Name = clientName;
             Namespace = @namespace;
-            Host = host;
-            Scheme = scheme;
+            BaseUrl = baseUrl;
             Types = types.ToImmutableList();
             MethodGroups = methodGroups.ToImmutableList();
         }
 
-        public ImmutableList<TypeModel> Types { get; }
+        public IImmutableList<TypeModel> Types { get; }
 
         public IImmutableList<MethodGroupModel> MethodGroups { get; }
 
-        public string Scheme { get; }
-
-        public string Host { get; }
+        public string BaseUrl { get; }
 
         public string Name { get; }
         public string Namespace { get; }

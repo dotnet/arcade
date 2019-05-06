@@ -224,7 +224,9 @@ The file is present in the repo and defines versions of all dependencies used in
     <VersionPrefix>1.0.0</VersionPrefix>
     <!-- Package pre-release suffix not including build number -->
     <PreReleaseVersionLabel>rc2</PreReleaseVersionLabel>
-  
+    <!-- Optional: base short date used for calculating version numbers of release-only packages (e.g. global tools) -->
+    <VersionBaseShortDate>19000</VersionBaseShortDate>
+
     <!-- Opt-in repo features -->
     <UsingToolVSSDK>true</UsingToolVSSDK>
     <UsingToolIbcOptimization>true</UsingToolIbcOptimization>
@@ -329,6 +331,23 @@ Optionally, a list of Visual Studio [workload component ids](https://docs.micros
 }
 ```
 
+If the build runs on a Windows machine that does not have the required Visual Studio version installed the `build.ps1` script attempts to use xcopy-deployable MSBuild package [`RoslynTools.MSBuild`](https://dotnet.myget.org/feed/roslyn-tools/package/nuget/RoslynTools.MSBuild). This package will allow the build to run on desktop msbuild but it may not provide all tools that the repository needs to build all projects and/or run all tests.
+
+The version of `RoslynTools.MSBuild` package can be specified in `global.json` file under `tools` like so:
+
+```json
+{
+  "tools": {
+    "vs": {
+      "version": "16.0"
+    },
+    "xcopy-msbuild": "16.0.0-rc1-alpha"
+  }
+}
+```
+
+If it is not specified the build script attempts to find `RoslynTools.MSBuild` version `{VSMajor}.{VSMinor}.0-alpha` where `VSMajor.VSMinor` is the value of `tools.vs.version`.
+
 `/NuGet.config` file is present and specifies the MyGet feed to retrieve Arcade SDK from like so:
 
 ```xml
@@ -354,12 +373,19 @@ Optionally, a list of Visual Studio [workload component ids](https://docs.micros
 It is a common practice to specify properties applicable to all (most) projects in the repository in `Directory.Build.props`, e.g. public keys for `InternalsVisibleTo` project items.
 
 ```xml
-<PropertyGroup>  
+<Project>
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />    
+  <PropertyGroup> 
+    <!-- Public keys used by InternalsVisibleTo project items -->
+    <MoqPublicKey>00240000048000009400...</MoqPublicKey> 
 
-  <!-- Public keys used by InternalsVisibleTo project items -->
-  <MoqPublicKey>00240000048000009400...</MoqPublicKey> 
-</PropertyGroup>
+    <!-- 
+      Specify license used for packages produced by the repository.
+      Use PackageLicenseExpressionInternal for closed-source licenses.
+    -->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+</Project>
 ```
 
 ### /Directory.Build.targets
@@ -371,6 +397,20 @@ It is a common practice to specify properties applicable to all (most) projects 
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 </Project>
 ```
+
+### /License.txt
+
+The root of the repository shall include a license file named `license.txt`, `license.md` or `license` (any casing is allowed).
+It is expected that all packages built from the repository have the same license, which is the license declared in the repository root license file.
+
+If the repository uses open source license it shall specify the license name globally using `PackageLicenseExpression` property, e.g. in [Directory.Build.props](https://github.com/dotnet/arcade/blob/master/Documentation/ArcadeSdk.md#directorybuildprops).
+If the repository uses a closed source license it shall specify the license name using `PackageLicenseExpressionInternal` property. In this case the closed source license file is automatically added to any package build by the repository.
+
+If `PackageLicenseExpression(Internal)` property is set Arcade SDK validates that the content of the license file in the repository root matches the content of 
+the [well-known license file](https://github.com/dotnet/arcade/tree/master/src/Microsoft.DotNet.Arcade.Sdk/tools/Licenses) that corresponds to the value of the license expression.
+This validation can be suppressed by setting `SuppressLicenseValidation` to `true` if necessary (not recommended).
+
+See [NuGet documentation](https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#packing-a-license-expression-or-a-license-file) for details.
 
 ### Source Projects
 
@@ -394,6 +434,22 @@ Projects shall use `Microsoft.NET.Sdk` SDK like so:
 ## Other Projects
 
 It might be useful to create other top-level directories containing projects that are not standard C#/VB/F# projects. For example, projects that aggregate outputs of multiple projects into a single NuGet package or Willow component. These projects should also be included in the main solution so that the build driver includes them in build process, but their `Directory.Build.*` may be different from source projects. Hence the different root directory.
+
+## Building source packages
+
+Arcade SDK provides targets for building source packages.
+
+Set `IsSourcePackage` to `true` to indicate that the project produces a source package (along with `IsPackable`, `PackageDescription` and other package properties).
+
+If the project does not have an explicitly provided `.nuspec` file (`NuspecFile` property is empty) setting `IsSourcePackage` to `true` will trigger a target that 
+puts sources contained in the project directory to the `contentFiles` directory of the source package produced by the project.
+
+In addition a `build/$(PackageId).targets` file will be auto-generated that links the sources contained in the package to the source server via a Source Link target.
+If your package already has a `build/$(PackageId).targets` file set `SourcePackageSourceLinkTargetsFileName` property to a different file name (e.g. `SourceLink.targets`)
+and import the file from `build/$(PackageId).targets`. 
+
+If the project is packaged using a custom `.nuspec` file then the source and targets files must be listed in the `.nuspec` file. The path to the generated Source Link 
+targets file will be available within the `.nuspec` file via variable `$SourceLinkTargetsFilePath$`.
 
 ## Building VSIX packages (optional)
 
@@ -576,11 +632,11 @@ The Arcade SDK includes targets that enable IBC optimization data to be embedded
 
 To enable this functionality set `UsingToolIbcOptimization` to `true` in `/eng/Versions.props`.
 
-Typically, not all projects in a repository need IBC data embedded. Set `ApplyPartialNgenOptimization` 
-to `true` in a project to indicate that the assemblies produced by the project should get IBC data embedded.
+Typically, not all projects in a repository need IBC data embedded. Set `ApplyNgenOptimization` 
+to `partial` or `full` in a project to indicate that the assemblies produced by the project should get IBC data embedded.
 
-Use `EnablePartialNgenOptimization` property to control when IBC data embedding is gonna be performed. 
-Unless specified otherwise, `EnablePartialNgenOptimization` is set to `true` if `Configuration` is `Release` 
+Use `EnableNgenOptimization` property to control when IBC data embedding is gonna be performed. 
+Unless specified otherwise, `EnableNgenOptimization` is set to `true` if `Configuration` is `Release` 
 and `OfficialBuild` is `true`.
 
 The IBC data embedding is performed by an internal tool `ibcmerge.exe` provided by `Microsoft.Dotnet.IbcMerge` 
@@ -612,8 +668,8 @@ next to the assembly and all of its  copies. Multiple flavors of an assembly wit
 it is possible to update the target to group assemblies by MVID instead of file name.
 
 During the build IBC data embedding is performed by `ApplyOptimizations` target, which invokes `ibcmerge.exe` tool.
-The target runs when `EnablePartialNgenOptimization` is `true` and the project sets `ApplyPartialNgenOptimization`
-to `true`. The target consumes item group `OptimizeAssembly`, whose items are full paths to the assemblies to have
+The target runs when `EnableNgenOptimization` is `true` and the project sets `ApplyNgenOptimization`
+to `partial` or `full`. The target consumes item group `OptimizeAssembly`, whose items are full paths to the assemblies to have
 IBC data embedded. The assemblies are updated in-place. By default, `OptimizeAssembly` is initialized with
 the path of the intermediate assembly compiled by the project (this is the file the `CoreCompile` target builds
 to `obj` directory). The project may update `OptimizeAssembly` item group before `ApplyOptimizations` target is
@@ -629,7 +685,7 @@ To enable this functionality set `UsingToolVisualStudioIbcTraining` to `true` in
 
 ### Visual Studio IBC Data Acquisition
 
-Set `EnablePartialNgenOptimization` property globally or in `/eng/Tools.props` to control when IBC data should be acquired.
+Set `EnableNgenOptimization` property globally or in `/eng/Tools.props` to control when IBC data should be acquired.
 
 The IBC data acquisition is performed by an internal tool `drop.exe` provided by `Drop.App` package from an internal Azure
 DevOps feed. The repository build definition thus must invoke Azure DevOps task that restores internal tools in order for
@@ -741,11 +797,11 @@ To test IBC data embedding and IBC training inputs generation locally:
 nuget.exe restore eng\common\internal\Tools.csproj
 ```
 
-NuGet.exe may ask for credentials.
+NuGet.exe may ask for credentials. Note: You need a [credential provider](https://docs.microsoft.com/en-us/azure/devops/artifacts/nuget/nuget-exe?view=azure-devops#download-the-credential-provider-directly) for NuGet to be able to successfully authenticate.
 
 2. Run build with the following arguments (choose values of `RepositoryName` and `VisualStudioIbcSourceBranchName` as appropriate):
 ```
-build -configuration Release -restore -ci /p:EnablePartialNgenOptimization=true /p:RepositoryName=dotnet/roslyn /p:VisualStudioIbcSourceBranchName=dev16.0-vs-deps
+build -configuration Release -restore -ci /p:EnableNgenOptimization=true /p:RepositoryName=dotnet/roslyn /p:VisualStudioIbcSourceBranchName=dev16.0-vs-deps
 ```
 
 ## Project Properties Defined by the SDK
@@ -780,14 +836,18 @@ By default, all _shipping_ libraries are localized.
 
 When `UsingToolNuGetRepack` is true _shipping_ packages are repackaged as release/pre-release packages to `artifacts\packages\$(Configuration)\Release` and `artifacts\packages\$(Configuration)\PreRelease` directories, respectively.
 
+### `IsVisualStudioBuildPackage` (bool)
+
+Set to `true` in projects that build Visual Studio Build (CoreXT) packages. These packages are non-shipping, but their content is shipping. They are inserted into and referenced from the internal DevDiv `VS` repository.
+
 ### `PublishWindowsPdb` (bool)
 
 `true` (default) if the PDBs produced by the project should be converted to Windows PDB and published to Microsoft symbol servers.
 Set to `false` to override the default (uncommon).
 
-### `ApplyPartialNgenOptimization` (bool)
+### `ApplyNgenOptimization` (`partial`, `full` or empty)
 
-Set to `true` in a shipping project to require IBC optimization data to be available for the project and embed them into the binary during official build. 
+Set to `partial` or `full` in a shipping project to require IBC optimization data to be available for the project and embed them into the binary during official build. The value of `partial` indicates partial NGEN, whereas `full` means full NGEN optimization.
 
 ### `SkipTests` (bool)
 
@@ -807,13 +867,13 @@ By default, the test runner will run tests for all frameworks a test project tar
 For example, consider a project that has `<TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>`. To only run .NET Core tests run 
 
 ```text
-msbuild Project.UnitTests.csproj /p:TestTargetFrameworks=netcoreapp2.1
+msbuild Project.UnitTests.csproj /t:Test /p:TestTargetFrameworks=netcoreapp2.1
 ```
 
 To specify multiple target frameworks on command line quote the property value like so:
 
 ```text
-msbuild Project.UnitTests.csproj /p:TestTargetFrameworks="netcoreapp2.1;net472"
+msbuild Project.UnitTests.csproj /t:Test /p:TestTargetFrameworks="netcoreapp2.1;net472"
 ```
 
 ### `TestRuntime` (string)
@@ -823,19 +883,49 @@ Runtime to use for running tests. Currently supported values are: `Core` (.NET C
 For example, the following runs .NET Framework tests using Mono runtime:
 
 ```text
-msbuild Project.UnitTests.csproj /p:TestTargetFrameworks=net472 /p:TestRuntime=Mono
+msbuild Project.UnitTests.csproj /t:Test /p:TestTargetFrameworks=net472 /p:TestRuntime=Mono
 ```
 
 ### `TestRunnerAdditionalArguments` (string)
 
 Additional command line arguments passed to the test runner (e.g. `xunit.console.exe`).
 
-### 'TestRuntimeAdditionalArguments' (string)
+### `TestRuntimeAdditionalArguments` (string)
 
 Additional command line arguments passed to the test runtime (i.e. `dotnet` or `mono`). Applicable only when `TestRuntime` is `Core` or `Mono`. 
 
 For example, to invoke Mono with debug flags `--debug` (to get stack traces with line number information), set `TestRuntimeAdditionalArguments` to `--debug`.
 To override the default Shared Framework version that is selected based on the test project TFM, set `TestRuntimeAdditionalArguments` to `--fx-version x.y.z`.
 
+### `GenerateResxSource` (bool)
 
+When set to true, Arcade will generate a class source for all embedded .resx files.
 
+If source should only be generated for some .resx files, this can be turned on for individual files like this:
+
+```xml
+<ItemGroup>
+   <EmbeddedResource Update="MyResources.resx" GenerateSource="true" />
+</ItemGroup>
+```
+
+The contents of the generated source can be fine-tuned with these additional settings.
+
+#### `GenerateResxSourceEmitFormatMethods` (bool)
+
+When a string in the resx file has argument placeholders, generate a `.FormatXYZ(...)` method with parameters for each placeholder in the string.
+
+Example: if the resx file contains a string "This has {0} and {1} placeholders", this method will be generated:
+```c#
+class Resources
+{
+  // ...
+  public static string FormatMyString(object p0, object p1) { /* ..uses string.Format()... */ }
+}
+```
+
+#### `GenerateResxSourceIncludeDefaultValues` (bool)
+If set to true calls to GetResourceString receive a default resource string value.
+
+#### `GenerateResxSourceOmitGetResourceString` (bool)
+If set to true the GetResourceString method is not included in the generated class and must be specified in a separate source file.

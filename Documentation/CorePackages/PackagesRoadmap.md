@@ -14,7 +14,7 @@ The following list provides a summary of the state of each package. For more inf
   - There is documentation about it.
   - Already included in the Arcade SDK.
 - **Principal TODOs**:
-  - Finish implementing what is described in the [documentation](.\Versioning.md).
+  - Finish implementing what is described in the [documentation](Versioning.md).
 - **When could start being consumed by other repositories**: S139 => 8/10
 
 ### Signing

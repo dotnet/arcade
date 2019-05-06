@@ -1,8 +1,6 @@
 using System;
 using System.Text;
 using Microsoft.DotNet.SwaggerGenerator.Modeler;
-using Newtonsoft.Json;
-using Swashbuckle.AspNetCore.Swagger;
 
 namespace Microsoft.DotNet.SwaggerGenerator
 {
@@ -134,20 +132,6 @@ namespace Microsoft.DotNet.SwaggerGenerator
             }
 
             return builder.ToString();
-        }
-    }
-
-    public static class SwaggerSerializer
-    {
-        public static SwaggerDocument Deserialize(JsonReader reader)
-        {
-            var serializer = new JsonSerializer
-            {
-                ContractResolver = new SwaggerContractResolver(new JsonSerializerSettings()),
-                Converters = {new ParameterConverter(), new SecuritySchemeConverter()},
-                MetadataPropertyHandling = MetadataPropertyHandling.Ignore
-            };
-            return serializer.Deserialize<SwaggerDocument>(reader);
         }
     }
 }

@@ -122,6 +122,8 @@ namespace Microsoft.DotNet.Helix.Sdk
         ///     PostCommands
         ///       A collection of commands that will run for this work item after the 'Command' Runs
         ///       Use ';' to separate commands and escape a ';' with ';;'
+        ///     Destination
+        ///       The directory in which to unzip the correlation payload on the Helix agent
         /// </remarks>
         public ITaskItem[] WorkItems { get; set; }
 
@@ -364,7 +366,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             // Capture helix command exit code, in case work item command (i.e xunit call) exited with a failure,
             // this way we can exit the process honoring that exit code, needed for retry.
-            yield return IsPosixShell ? $"{exitCodeVariableName}=$?" : $"set {exitCodeVariableName}=%ERRORLEVEL%";
+            yield return IsPosixShell ? $"export {exitCodeVariableName}=$?" : $"set {exitCodeVariableName}=%ERRORLEVEL%";
 
             if (workItem.TryGetMetadata("PostCommands", out string workItemPostCommandsString))
             {
@@ -435,11 +437,20 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             string path = correlationPayload.GetMetadata("FullPath");
             string uri = correlationPayload.GetMetadata("Uri");
+            string destination = correlationPayload.GetMetadata("Destination") ?? "";
 
             if (!string.IsNullOrEmpty(uri))
             {
-                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload URI '{uri}'");
-                return def.WithCorrelationPayloadUris(new Uri(uri));
+                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload URI '{uri}', destination '{destination}'");
+
+                if (!string.IsNullOrEmpty(destination))
+                {
+                    return def.WithCorrelationPayloadUris(new Dictionary<Uri, string>() { { new Uri(uri), destination } });
+                }
+                else
+                {
+                    return def.WithCorrelationPayloadUris(new Uri(uri));
+                }
             }
 
             if (Directory.Exists(path))
@@ -447,14 +458,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                 string includeDirectoryNameStr = correlationPayload.GetMetadata("IncludeDirectoryName");
                 bool.TryParse(includeDirectoryNameStr, out bool includeDirectoryName);
 
-                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Directory '{path}'");
-                return def.WithCorrelationPayloadDirectory(path, includeDirectoryName);
+                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Directory '{path}', destination '{destination}'");
+                return def.WithCorrelationPayloadDirectory(path, includeDirectoryName, destination);
             }
 
             if (File.Exists(path))
             {
-                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Archive '{path}'");
-                return def.WithCorrelationPayloadArchive(path);
+                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Archive '{path}', destination '{destination}'");
+                return def.WithCorrelationPayloadArchive(path, destination);
             }
 
             Log.LogError($"Correlation Payload '{path}' not found.");

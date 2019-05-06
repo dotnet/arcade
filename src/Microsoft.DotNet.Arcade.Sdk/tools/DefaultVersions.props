@@ -15,8 +15,7 @@
   <!-- TODO: remove conditions on the following imports (see https://github.com/dotnet/arcade/issues/1982) -->
   <Import Project="DefaultVersions.Generated.props" Condition="Exists('DefaultVersions.Generated.props')"/>
   <Import Project="$(VersionsPropsPath)" Condition="Exists('$(VersionsPropsPath)')"/>
-  <Import Project="Version.props" Condition="Exists('Version.props')"/>
-  
+
   <!-- 
     Configure NuGet Restore to only use NuGet.config file in the repository root.
     This makes sure we do not depend on any NuGet.config files located outside of the repository.
@@ -26,6 +25,14 @@
   -->
   <PropertyGroup>
     <RestoreConfigFile>$(RepoRoot)NuGet.config</RestoreConfigFile>
+  </PropertyGroup>
+  
+  <!-- 
+    Prevent NuGet from using cached packages 
+    Workaround for https://github.com/NuGet/Home/issues/3116
+  -->
+  <PropertyGroup>
+    <RestoreNoCache Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</RestoreNoCache>
   </PropertyGroup>
   
   <!--
@@ -71,7 +78,7 @@
     <DropAppVersion Condition="'$(DropAppVersion)' == ''">17.144.28413-buildid7983345</DropAppVersion>
     <MicroBuildPluginsSwixBuildVersion Condition="'$(MicroBuildPluginsSwixBuildVersion)' == ''">1.0.422</MicroBuildPluginsSwixBuildVersion>
     <MicroBuildCoreVersion Condition="'$(MicroBuildCoreVersion)' == ''">0.2.0</MicroBuildCoreVersion>
-    <MicrosoftDotNetIBCMergeVersion Condition="'$(MicrosoftDotNetIBCMergeVersion)' == ''">4.8.0-beta.19111.1</MicrosoftDotNetIBCMergeVersion>
+    <MicrosoftDotNetIBCMergeVersion Condition="'$(MicrosoftDotNetIBCMergeVersion)' == ''">5.0.6-beta.19203.1</MicrosoftDotNetIBCMergeVersion>
     <MicrosoftNETTestSdkVersion Condition="'$(MicrosoftNETTestSdkVersion)' == ''">15.9.0</MicrosoftNETTestSdkVersion>
     <MicrosoftNetFrameworkReferenceAssembliesVersion Condition="'$(MicrosoftNetFrameworkReferenceAssembliesVersion)' == ''">1.0.0-alpha-5</MicrosoftNetFrameworkReferenceAssembliesVersion>
     <MicrosoftVSSDKBuildToolsVersion Condition="'$(MicrosoftVSSDKBuildToolsVersion)' == ''">15.1.192</MicrosoftVSSDKBuildToolsVersion>
@@ -79,14 +86,14 @@
     <RoslynToolsModifyVsixManifestVersion Condition="'$(RoslynToolsModifyVsixManifestVersion)' == ''">1.0.0-beta2-63222-01</RoslynToolsModifyVsixManifestVersion>
     <RoslynToolsNuGetRepackVersion Condition="'$(RoslynToolsNuGetRepackVersion)' == ''">1.0.0-beta3.18526.1</RoslynToolsNuGetRepackVersion>
     <MicrosoftDotNetSignToolVersion Condition="'$(MicrosoftDotNetSignToolVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetSignToolVersion>
-    <XliffTasksVersion Condition="'$(XliffTasksVersion)' == ''">0.2.0-beta-63004-01</XliffTasksVersion>
+    <XliffTasksVersion Condition="'$(XliffTasksVersion)' == ''">1.0.0-beta.19252.1</XliffTasksVersion>
     <XUnitVersion Condition="'$(XUnitVersion)' == ''">2.4.1-pre.build.4059</XUnitVersion>
     <XUnitRunnerConsoleVersion Condition="'$(XUnitRunnerConsoleVersion)' == ''">$(XUnitVersion)</XUnitRunnerConsoleVersion>
     <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">$(XUnitVersion)</XUnitRunnerVisualStudioVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">2.2.0-beta.19126.6</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">2.2.0-beta.19170.2</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftSourceLinkVersion Condition="'$(MicrosoftSourceLinkVersion)' == ''">1.0.0-beta2-18618-05</MicrosoftSourceLinkVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion Condition="'$(MicrosoftSymbolUploaderBuildTaskVersion)' == ''">1.0.0-beta-63604-05</MicrosoftSymbolUploaderBuildTaskVersion>
-    <VSWhereVersion Condition="'$(VSWhereVersion)' == ''">2.5.2</VSWhereVersion>
+    <VSWhereVersion Condition="'$(VSWhereVersion)' == ''">2.6.7</VSWhereVersion>
     <SNVersion Condition="'$(SNVersion)' == ''">1.0.0</SNVersion>
     <MicrosoftDotNetBuildTasksVisualStudioVersion Condition="'$(MicrosoftDotNetBuildTasksVisualStudioVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksVisualStudioVersion>
   </PropertyGroup>

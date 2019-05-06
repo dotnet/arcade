@@ -3,7 +3,8 @@
   <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.props"/>
 
   <PropertyGroup>
-    <HelixSource>pr/dotnet/arcade/$(BUILD_SOURCEBRANCH)/</HelixSource>
+    <HelixSource Condition=" '$(HelixAccessToken)' == '' ">pr/dotnet/arcade/$(BUILD_SOURCEBRANCH)/</HelixSource>
+    <HelixSource Condition=" '$(HelixAccessToken)' != '' ">official/dotnet/arcade/$(BUILD_SOURCEBRANCH)/</HelixSource>
     <HelixType>test/product/</HelixType>
     <HelixBuild>$(BUILD_BUILDNUMBER)</HelixBuild>
     <HelixBuild Condition="'$(HelixBuild)' == ''">123460.01</HelixBuild>
@@ -17,6 +18,28 @@
     <EnableXUnitReporter>true</EnableXUnitReporter>
     <FailOnMissionControlTestFailure>true</FailOnMissionControlTestFailure>
   </PropertyGroup>
+
+  <ItemGroup>
+    <HelixWorkItem Include="JUnitTest">
+      <Command>echo 'done!'</Command>
+      <PayloadDirectory>$(MSBuildThisFileDirectory)Junit</PayloadDirectory>
+    </HelixWorkItem>
+  </ItemGroup>
+  <ItemGroup>
+    <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese"/>
+    <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese2"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <HelixWorkItem Include="TrxTest">
+      <Command>echo 'done!'</Command>
+      <PayloadDirectory>$(MSBuildThisFileDirectory)Trx</PayloadDirectory>
+    </HelixWorkItem>
+  </ItemGroup>
+  <ItemGroup>
+    <AzurePipelinesExpectedTestFailure Include="tests.UnitTest1.TestMethod1"/>
+    <AzurePipelinesExpectedTestFailure Include="tests.UnitTest1.TestMethod4"/>
+  </ItemGroup>
 
   <ItemGroup>
     <XUnitProject Include="..\src\**\*.Tests.csproj"/>

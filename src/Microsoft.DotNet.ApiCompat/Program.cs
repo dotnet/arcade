@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.ApiCompat
             CommandOption contractCoreAssembly = app.Option("--contract-core-assembly", "Simple name for the core assembly to use.", CommandOptionType.SingleValue);
             CommandOption ignoreDesignTimeFacades = app.Option("--ignore-design-time-facades", "Ignore design time facades in the contract set while analyzing.", CommandOptionType.NoValue);
             CommandOption warnOnIncorrectVersion = app.Option("--warn-on-incorrect-version", "Warn if the contract version number doesn't match the found implementation version number.", CommandOptionType.NoValue);
-            CommandOption warnOnMissingAssemblies = app.Option("--warn-on-missing-assemblies", "Warn if the contract assembly cannot be found in the implementation directories. Default is to error and not do anlysis.", CommandOptionType.NoValue);
+            CommandOption warnOnMissingAssemblies = app.Option("--warn-on-missing-assemblies", "Warn if the contract assembly cannot be found in the implementation directories. Default is to error and not do analysis.", CommandOptionType.NoValue);
             CommandOption excludeNonBrowsable = app.Option("--exclude-non-browsable", "When MDIL servicing rules are not being enforced, exclude validation on types that are marked with EditorBrowsable(EditorBrowsableState.Never).", CommandOptionType.NoValue);
             CommandOption excludeAttributes = app.Option("--exclude-attributes", "Specify a api list in the DocId format of which attributes to exclude.", CommandOptionType.SingleValue);
             CommandOption enforceOptionalRules = app.Option("--enforce-optional-rules", "Enforce optional rules, in addition to the mandatory set of rules.", CommandOptionType.NoValue);

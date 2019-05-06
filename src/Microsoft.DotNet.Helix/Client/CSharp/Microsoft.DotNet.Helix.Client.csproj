@@ -1,9 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="$(RepoRoot)\src\Microsoft.DotNet.SwaggerGenerator\Microsoft.DotNet.SwaggerGenerator.MSBuild\build\Microsoft.DotNet.SwaggerGenerator.MSBuild.props" />
-
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <VersionPrefix>2.0.0</VersionPrefix>
-    <TargetFrameworks>netstandard2.0;$(NetFxTfm)</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net472</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <Description>This package provides access to the Helix Api located at https://helix.dot.net/</Description>
     <LangVersion>latest</LangVersion>
@@ -17,17 +15,11 @@
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageReference Include="System.Text.Encodings.Web" Version="$(SystemTextEncodingsWebVersion)" />
+
+    <!--<ProjectReference Include="..\..\..\Microsoft.DotNet.SwaggerGenerator\Microsoft.DotNet.SwaggerGenerator.MSBuild\Microsoft.DotNet.SwaggerGenerator.MSBuild.csproj" />-->
   </ItemGroup>
 
   <ItemGroup>
     <None Include="$(RepoRoot)LICENSE.TXT;$(RepoRoot)THIRD-PARTY-NOTICES.TXT" Pack="true" PackagePath="%(Filename)%(Extension)" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <_BuildConfig Condition="'$(_BuildConfig)' == ''">Debug</_BuildConfig>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(RepoRoot)/artifacts/bin/Microsoft.DotNet.SwaggerGenerator.MSBuild/$(_BuildConfig)/netcoreapp2.1/publish/Microsoft.DotNet.SwaggerGenerator.MSBuild.dll</MicrosoftDotNetSwaggerGeneratorMSBuildTasksAssembly>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(RepoRoot)/artifacts/bin/Microsoft.DotNet.SwaggerGenerator.MSBuild/$(_BuildConfig)/net472/Microsoft.DotNet.SwaggerGenerator.MSBuild.dll</MicrosoftDotNetSwaggerGeneratorMSBuildTasksAssembly>
-  </PropertyGroup>
-
-  <Import Project="$(RepoRoot)\src\Microsoft.DotNet.SwaggerGenerator\Microsoft.DotNet.SwaggerGenerator.MSBuild\build\Microsoft.DotNet.SwaggerGenerator.MSBuild.targets" />
 </Project>

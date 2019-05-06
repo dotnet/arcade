@@ -137,13 +137,16 @@ while [[ $# > 0 ]]; do
       node_reuse=$2
       shift
       ;;
-    /p:*)
+    -p:*|/p:*)
       properties="$properties $1"
       ;;
-    /m:*)
+    -m:*|/m:*)
       properties="$properties $1"
       ;;
-    /bl:*)
+    -bl:*|/bl:*)
+      properties="$properties $1"
+      ;;
+    -dl:*|/dl:*)
       properties="$properties $1"
       ;;
     *)
@@ -213,6 +216,10 @@ fi
 # Remove once repos are updated.
 if [[ -n "${useInstalledDotNetCli:-}" ]]; then
   use_installed_dotnet_cli="$useInstalledDotNetCli"
+fi
+
+if [[ "$restore" == true && -z ${DisableNativeToolsetInstalls:-} ]]; then
+  InitializeNativeTools
 fi
 
 Build

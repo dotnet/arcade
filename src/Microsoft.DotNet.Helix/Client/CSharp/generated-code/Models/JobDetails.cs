@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string Build { get; set; }
 
         [JsonProperty("Properties")]
-        public JobDetailsProperties Properties { get; set; }
+        public Newtonsoft.Json.Linq.JToken Properties { get; set; }
 
         [JsonProperty("Errors")]
         public IImmutableList<WorkItemError> Errors { get; set; }
@@ -67,14 +67,35 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                return
-                    !(string.IsNullOrEmpty(JobList)) &&
-                    !(WorkItems == default) &&
-                    !(string.IsNullOrEmpty(Name)) &&
-                    !(string.IsNullOrEmpty(WaitUrl)) &&
-                    !(string.IsNullOrEmpty(Source)) &&
-                    !(string.IsNullOrEmpty(Type)) &&
-                    !(string.IsNullOrEmpty(Build));
+                if (string.IsNullOrEmpty(JobList))
+                {
+                    return false;
+                }
+                if (WorkItems == default)
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Name))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(WaitUrl))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Source))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Type))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Build))
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

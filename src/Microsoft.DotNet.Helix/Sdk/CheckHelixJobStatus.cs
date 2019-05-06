@@ -32,21 +32,21 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             await Task.Yield();
             Log.LogMessage($"Checking status of job {jobName}");
-            var workItems = await HelixApi.RetryAsync(
-                () => HelixApi.WorkItem.ListAsync(jobName),
+            var status = await HelixApi.RetryAsync(
+                () => HelixApi.Job.PassFailAsync(jobName),
                 LogExceptionRetry);
-            var waitingCount = workItems.Count(wi => wi.State == "Waiting");
-            var runningCount = workItems.Count(wi => wi.State == "Running");
-            if (waitingCount != 0 || runningCount != 0)
+            if (status.Working > 0)
             {
                 Log.LogError(
-                    $"This task can only be used on completed jobs. There are {waitingCount} waiting and {runningCount} running work items.");
+                    $"This task can only be used on completed jobs. There are {status.Working} of {status.Total} unfinished work items.");
                 return;
             }
             if (FailOnWorkItemFailure)
             {
-                // determines whether any of the work items failed (fireballed)
-                await Task.WhenAll(workItems.Select(wi => CheckForWorkItemFailureAsync(wi.Name, jobName)));
+                foreach (string failedWorkItem in status.Failed)
+                {
+                    Log.LogError($"Work item {failedWorkItem} in job {jobName} has failed.");
+                }
             }
 
             if (FailOnMissionControlTestFailure)
@@ -118,36 +118,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             return false;
-        }
-
-        private async Task CheckForWorkItemFailureAsync(string workItemName, string jobName)
-        {
-            await Task.Yield();
-            try
-            {
-                WorkItemDetails details = await HelixApi.RetryAsync(
-                    () => HelixApi.WorkItem.DetailsAsync(workItemName, jobName),
-                    LogExceptionRetry);
-                string message = $"Work item {workItemName} in job {jobName} has {details.State} with exit code {details.ExitCode}";
-                if (IsFailed(details))
-                {
-                    Log.LogError(message);
-                }
-                else
-                {
-                    Log.LogMessage(MessageImportance.Low, message);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.LogError($"Unable to get work item status for '{workItemName}', assuming failure. Exception: {ex}");
-            }
-        }
-
-        private bool IsFailed(WorkItemDetails details)
-        {
-            // The State property will not be populated with "Failed" if kusto hasn't finished ingesting data. Check the ExitCode also.
-            return details.State == "Failed" || details.ExitCode != 0;
         }
     }
 }

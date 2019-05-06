@@ -58,7 +58,7 @@
     <!-- Tell ResolveMatchingContract to run and resolve contract to project reference -->
     <ResolveMatchingContract>true</ResolveMatchingContract>
     <NotSupportedSourceFile>$(IntermediateOutputPath)$(TargetName).notsupported.cs</NotSupportedSourceFile>
-    <CoreCompileDependsOn>$(CoreCompileDependsOn);GenerateNotSupportedSource</CoreCompileDependsOn>
+    <CoreCompileDependsOn>GenerateNotSupportedSource;$(CoreCompileDependsOn)</CoreCompileDependsOn>
     <!-- Not supported sources are created from the ref assembly, we currently don't produce finalizers in dummmy assemblies, so we disable ApiCompat to not fail. -->
     <RunApiCompat>false</RunApiCompat>
   </PropertyGroup>
@@ -88,6 +88,7 @@
       <GenAPIArgs>"%(ResolvedMatchingContract.Identity)"</GenAPIArgs>
       <GenAPIArgs>$(GenAPIArgs) --lib-path "@(_referencePathDirectories)"</GenAPIArgs>
       <GenAPIArgs>$(GenAPIArgs) --out "$(NotSupportedSourceFile)"</GenAPIArgs>
+      <GenAPIArgs Condition="'$(LangVersion)' != ''">$(GenAPIArgs) --lang-version "$(LangVersion)"</GenAPIArgs>
       <GenAPIArgs Condition="'$(GeneratePlatformNotSupportedAssembly)' == 'true' or '$(GeneratePlatformNotSupportedAssemblyMessage)' != ''">$(GenAPIArgs) --throw "$(GeneratePlatformNotSupportedAssemblyMessage)"</GenAPIArgs>
       <GenAPIArgs Condition="'$(GeneratePlatformNotSupportedAssemblyWithGlobalPrefix)' == 'true'">$(GenAPIArgs) --global</GenAPIArgs>
     </PropertyGroup>

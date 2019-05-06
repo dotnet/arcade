@@ -58,18 +58,39 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("JobStartIdentifier")]
         public string JobStartIdentifier { get; set; }
 
+        [JsonProperty("ResultContainerPrefix")]
+        public string ResultContainerPrefix { get; set; }
+
         [JsonIgnore]
         public bool IsValid
         {
             get
             {
-                return
-                    !(string.IsNullOrEmpty(Source)) &&
-                    !(string.IsNullOrEmpty(Type)) &&
-                    !(string.IsNullOrEmpty(Build)) &&
-                    !(Properties == default) &&
-                    !(string.IsNullOrEmpty(ListUri)) &&
-                    !(string.IsNullOrEmpty(QueueId));
+                if (string.IsNullOrEmpty(Source))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Type))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(Build))
+                {
+                    return false;
+                }
+                if (Properties == default)
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(ListUri))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(QueueId))
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

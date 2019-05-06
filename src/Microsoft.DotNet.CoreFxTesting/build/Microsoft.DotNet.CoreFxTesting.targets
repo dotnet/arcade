@@ -4,13 +4,10 @@
 
   <PropertyGroup>
     <TargetOS Condition="'$(TargetOS)' == ''">$(DefaultOSGroup)</TargetOS>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <IncludeDefaultTestReferences Condition="'$(IncludeDefaultTestReferences)' == '' AND '$(IsTestProject)' == 'true'">true</IncludeDefaultTestReferences>
   </PropertyGroup>
 
-  <!-- 
+  <!--
     Runtime settings support.
     Copies the app.config / runtimeSettings.json file to the OutDir.
   -->
@@ -58,21 +55,18 @@
 
   </Target>
 
-  <!-- 
+  <!--
     Shared framework deps file generation.
     Produces a test shared-framework deps file.
     To use invoke target directly specifying NETCoreAppTestSharedFrameworkPath property.
   -->
-  <UsingTask TaskName="GenerateTestSharedFrameworkDepsFile" AssemblyFile="$(MSBuildTestAssemblyPath)"/>
+  <UsingTask TaskName="GenerateTestSharedFrameworkDepsFile" AssemblyFile="$(CoreFxTestingAssemblyPath)"/>
   <Target Name="GenerateTestSharedFrameworkDepsFile" Condition="'$(GenerateTestSharedFrameworkDepsFile)' == 'true'">
     <GenerateTestSharedFrameworkDepsFile SharedFrameworkDirectory="$(NETCoreAppTestSharedFrameworkPath)" />
   </Target>
 
   <!-- UAP resource generation needed by both source and test projects. -->
   <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Resources.uap.targets" />
-
-  <!-- Performance test data upload to Benchview. -->
-  <Import Condition="'$(EnableBenchviewTarget)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestCoreDir)', 'performance', 'Benchview.targets'))" />
 
   <!-- Full coverage report. -->
   <Import Condition="'$(EnableFullCoverageReportTarget)' == 'true' AND '$(SkipCoverageReport)' != 'true' AND '$(Coverage)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestCoreDir)', 'coverage', 'CoverageReport.targets'))" />

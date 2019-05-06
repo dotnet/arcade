@@ -68,6 +68,13 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
       ""fileName"": ""/SQLitePCLRaw.batteries_green.dll"",
     },
     {
+      ""fileName"": ""/ko/Microsoft.CodeAnalysis.CSharp.resources.dll"",
+      ""ngen"": true,
+      ""ngenArchitecture"": ""All"",
+      ""ngenApplication"": """",
+      ""ngenPriority"": 3
+    },
+    {
       ""fileName"": ""/x/y/z/Microsoft.CodeAnalysis.CSharp.dll"",
       ""ngen"": true,
       ""ngenArchitecture"": ""All"",
@@ -157,7 +164,7 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
             Assert.Equal(
 @"{
   ""Technology"": ""IBC"",
-  ""RelativeInstallationPath"": ""Common7\\IDE\\CommonExtensions\\Microsoft\\ManagedLanguages\\VBCSharp\\LanguageServices\\xyzMicrosoft.CodeAnalysis.CSharp.dll"",
+  ""RelativeInstallationPath"": ""Common7\\IDE\\CommonExtensions\\Microsoft\\ManagedLanguages\\VBCSharp\\LanguageServices\\x\\y\\z\\Microsoft.CodeAnalysis.CSharp.dll"",
   ""InstrumentationArguments"": ""/ExeConfig:\""%VisualStudio.InstallationUnderTest.Path%\\Common7\\IDE\\vsn.exe\""""
 }
 ", json);

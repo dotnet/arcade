@@ -2,11 +2,10 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
-  <!-- TODO: Fix VB test project reference to Test SDK. -->
-  <Import Condition="'$(Language)' != 'VB' AND ('$(BuildingNETCoreAppVertical)' == 'true' OR '$(BuildingNETFxVertical)' == 'true')" Project="$(RuntimePath)Microsoft.NET.Test.Sdk.targets" />
+  <Import Condition="'$(BuildingNETCoreAppVertical)' == 'true' OR '$(BuildingNETFxVertical)' == 'true'" Project="$(RuntimePath)Microsoft.NET.Test.Sdk.targets" />
 
   <Choose>
-    <When Condition="'$(BuildingNETCoreAppVertical)' == 'true'">  
+    <When Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
       <ItemGroup>
         <!-- <ReferenceFromRuntime Include="Microsoft.DotNet.PlatformAbstractions" /> -->
         <ReferenceFromRuntime Include="Microsoft.Extensions.DependencyModel" />
@@ -24,8 +23,8 @@
       <ItemGroup>
         <SupplementalTestData Include="$(RuntimePath)xunit.runner.visualstudio.dotnetcore.testadapter.dll" />
       </ItemGroup>
-    </When>  
-    <When Condition="'$(BuildingNETFxVertical)' == 'true'">  
+    </When>
+    <When Condition="'$(BuildingNETFxVertical)' == 'true'">
       <ItemGroup>
         <ReferenceFromRuntime Include="Microsoft.VisualStudio.CodeCoverage.Shim" />
         <ReferenceFromRuntime Include="xunit.runner.visualstudio.testadapter" />

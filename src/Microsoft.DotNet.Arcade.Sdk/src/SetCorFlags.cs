@@ -13,7 +13,7 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-#if NET461
+#if NET472
     [LoadInSeparateAppDomain]
     public class SetCorFlags : AppDomainIsolatedTask
     {
@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         public override bool Execute()
         {
-#if NET461
+#if NET472
             AssemblyResolution.Log = Log;
 #endif
             try
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
             finally
             {
-#if NET461
+#if NET472
                 AssemblyResolution.Log = null;
 #endif
             }

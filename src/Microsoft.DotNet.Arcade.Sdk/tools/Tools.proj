@@ -23,6 +23,7 @@
       $(RestoreSources);
       https://api.nuget.org/v3/index.json;
       https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
+      https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json;
       https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json
     </RestoreSources>
     <RestoreSources Condition="'$(UsingToolSymbolUploader)' == 'true'">

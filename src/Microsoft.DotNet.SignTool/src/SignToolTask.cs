@@ -13,7 +13,7 @@ using System.Runtime.Versioning;
 
 namespace Microsoft.DotNet.SignTool
 {
-#if NET461
+#if NET472
     [LoadInSeparateAppDomain]
     public class SignToolTask : AppDomainIsolatedTask
     {
@@ -134,7 +134,7 @@ namespace Microsoft.DotNet.SignTool
 
         public override bool Execute()
         {
-#if NET461
+#if NET472
             AssemblyResolution.Log = Log;
 #endif
             try
@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.SignTool
             }
             finally
             {
-#if NET461
+#if NET472
                 AssemblyResolution.Log = null;
 #endif
                 Log.LogMessage(MessageImportance.High, "SignToolTask execution finished.");

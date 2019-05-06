@@ -33,32 +33,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AccountKey { get; set; }
 
         /// <summary>
-        /// When set to true packages with the same name will be overriden on 
-        /// the target feed.
-        /// </summary>
-        public bool Overwrite { get; set; }
-
-        /// <summary>
-        /// Enables idempotency when Overwrite is false.
-        /// 
-        /// false: (default) Attempting to upload an item that already exists fails.
-        /// 
-        /// true: When an item already exists, download the existing blob to check if it's
-        /// byte-for-byte identical to the one being uploaded. If so, pass. If not, fail.
-        /// </summary>
-        public bool PassIfExistingItemIdentical { get; set; }
-
-        /// <summary>
-        /// Maximum number of concurrent pushes of assets to the flat container.
-        /// </summary>
-        public int MaxClients { get; set; } = 8;
-
-        /// <summary>
-        /// Maximum allowed timeout per upload request to the flat container.
-        /// </summary>
-        public int UploadTimeoutInMinutes { get; set; } = 5;
-
-        /// <summary>
         /// Full path to the assets to publish manifest.
         /// </summary>
         [Required]
@@ -94,6 +68,32 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         [Required]
         public string BuildAssetRegistryToken { get; set; }
+
+        /// <summary>
+        /// When set to true packages with the same name will be overriden on 
+        /// the target feed.
+        /// </summary>
+        public bool Overwrite { get; set; }
+
+        /// <summary>
+        /// Enables idempotency when Overwrite is false.
+        /// 
+        /// false: (default) Attempting to upload an item that already exists fails.
+        /// 
+        /// true: When an item already exists, download the existing blob to check if it's
+        /// byte-for-byte identical to the one being uploaded. If so, pass. If not, fail.
+        /// </summary>
+        public bool PassIfExistingItemIdentical { get; set; }
+
+        /// <summary>
+        /// Maximum number of concurrent pushes of assets to the flat container.
+        /// </summary>
+        public int MaxClients { get; set; } = 8;
+
+        /// <summary>
+        /// Maximum allowed timeout per upload request to the flat container.
+        /// </summary>
+        public int UploadTimeoutInMinutes { get; set; } = 5;
 
         public override bool Execute()
         {

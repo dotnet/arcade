@@ -1,16 +1,59 @@
 ﻿#!/usr/bin/env bash
 
-export RUNTIME_PATH=${1%/}
-export EXECUTION_DIR=$(dirname "$0")
+usage()
+{
+  echo "Usage: RunTests.sh {-r|--runtime-path} <runtime-path> [{-d|--dotnet-root} <dotnet-root>] [{-g|--global-tools-dir} <global-tools-dir>] [{--rsp-file} <rsp-file>]"
+  echo ""
+  echo "Parameters:"
+  echo "--runtime-path           (Mandatory) Testhost containing the test runtime used during test execution (short: -r)"
+  echo "--dotnet-root            SDK directory for hosting shims and tools (short: -d)"
+  echo "--global-tools-dir       Global tools directory (short: -g)"
+  echo "--rsp-file               RSP file to pass in additional arguments"
+  echo "--help                   Print help and exit (short: -h)"
+}
 
-# Point to the locally installed SDK.
-if [[ $2 ]]; then
-  export DOTNET_ROOT=$2
-fi
+EXECUTION_DIR=$(dirname "$0")
+RUNTIME_PATH=''
+GLOBAL_TOOLS_DIR=''
+RSP_FILE=''
 
-# Global tools path
-if [[ $3 ]]; then
-  export GLOBAL_TOOLS_DIR=$3
+while [[ $# > 0 ]]; do
+  opt="$(echo "${1}" | awk '{print tolower($0)}')"
+  case "$opt" in
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    --runtime-path|-r)
+      RUNTIME_PATH=$2
+      shift
+      ;;
+    --dotnet-root|-d)
+      export DOTNET_ROOT=$2
+      shift
+      ;;
+    --global-tools-dir|-g)
+      GLOBAL_TOOLS_DIR=$2
+      shift
+      ;;
+    --rsp-file)
+      RSP_FILE=\@$2
+      shift
+      ;;
+    *)
+      echo "Invalid argument: $1"
+      usage
+      exit -1
+      ;;
+  esac
+
+  shift
+done
+
+if [ "$RUNTIME_PATH" == "" ]; then
+  echo "error: -r|--runtime-path argument is required."
+  usage
+  exit -1
 fi
 
 # Don't use a globally installed SDK.
@@ -96,12 +139,6 @@ function copy_core_file_to_temp_location {
   echo "Copying core file $core_file_name to $new_location in case you need it."
   cp $core_file_name $new_location
 }
-
-if [ "$RUNTIME_PATH" == "" ]
-then
-echo error: RUNTIME_PATH is not defined.  Usage: $0 RUNTIME_PATH
-exit -1
-fi
 
 # ========================= BEGIN Core File Setup ============================
 if [ "$(uname -s)" == "Darwin" ]; then

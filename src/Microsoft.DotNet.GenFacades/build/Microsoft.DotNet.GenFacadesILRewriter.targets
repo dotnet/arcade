@@ -1,0 +1,95 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+  <PropertyGroup>
+    <!-- reference facades will always have overlapping types so suppress compiler warnings -->
+    <NoWarn>$(NoWarn);0436</NoWarn>
+  </PropertyGroup>
+
+  <!-- Inputs and outputs of FillPartialFacade -->
+  <PropertyGroup>
+    <PartialFacadeAssemblyPath>$(IntermediateOutputPath)$(TargetName)$(TargetExt)</PartialFacadeAssemblyPath>
+    <PartialFacadeSymbols>$(IntermediateOutputPath)$(TargetName).pdb</PartialFacadeSymbols>
+    <GenFacadesInputPath>$(IntermediateOutputPath)PreGenFacades/</GenFacadesInputPath>
+    <GenFacadesInputAssembly>$(GenFacadesInputPath)$(TargetName)$(TargetExt)</GenFacadesInputAssembly>
+    <GenFacadesInputSymbols>$(GenFacadesInputPath)$(TargetName).pdb</GenFacadesInputSymbols>
+    <GenFacadesOutputPath>$(IntermediateOutputPath)</GenFacadesOutputPath>
+    <GenFacadesResponseFile>$(GenFacadesInputPath)genfacades.rsp</GenFacadesResponseFile>
+  </PropertyGroup>
+
+  <!-- Hook both partial-facade-related targets into TargetsTriggeredByCompilation. This will cause them
+          to only be invoked upon a successful compilation; they can conceptualized as an extension
+          of the assembly compilation process.
+  -->
+  <PropertyGroup>
+    <TargetsTriggeredByCompilation Condition="'$(DesignTimeBuild)' != 'true'">
+      $(TargetsTriggeredByCompilation);FillPartialFacadeUsingTask
+    </TargetsTriggeredByCompilation>
+  </PropertyGroup>
+
+  <!-- FillPartialFacade
+       Inputs:
+         * An "input assembly"
+         * A contract assembly
+         * Seed assemblies
+
+       Fills the "input assembly" by finding types in the contract assembly that are missing from it, and adding type-forwards
+         to those matching types in the seed assemblies.
+  -->
+  <Target Name="FillPartialFacadeUsingTask" DependsOnTargets="$(FillPartialFacadeDependsOn)">
+
+    <ItemGroup>
+      <!-- References used for compilation are automatically included as seed assemblies -->
+      <GenFacadesSeeds Include="@(ReferencePath)" />
+    </ItemGroup>
+
+    <Error Text="No single matching contract found." Condition="'$(IsReferenceAssembly)' != 'true' and '@(ResolvedMatchingContract->Count())' != '1'" />
+
+    <MakeDir Directories="$(GenFacadesInputPath)" />
+
+    <!-- Move the assembly into a subdirectory for GenFacades -->
+    <Move SourceFiles="$(PartialFacadeAssemblyPath)"
+          DestinationFolder="$(GenFacadesInputPath)"
+    />
+
+    <PropertyGroup>
+      <ProducePdb>true</ProducePdb>
+      <!-- Partial facade PDB generation only functions on Windows -->
+      <ProducePdb Condition="'$(DebugSymbols)' == 'false' or '$(OS)' != 'Windows_NT'">false</ProducePdb>
+      <GenFacadesIgnoreMissingTypes Condition="'$(GenFacadesIgnoreMissingTypes)' == ''">false</GenFacadesIgnoreMissingTypes>
+      <GenFacadesIgnoreBuildAndRevisionMismatch Condition="'$(GenFacadesIgnoreBuildAndRevisionMismatch)' == ''">false</GenFacadesIgnoreBuildAndRevisionMismatch>
+    </PropertyGroup>
+
+    <!-- Move the PDB into a subdirectory for GenFacades if we are producing PDBs -->
+    <Move SourceFiles="$(PartialFacadeSymbols)"
+          DestinationFolder="$(GenFacadesInputPath)"
+          Condition="$(ProducePdb)" />
+
+    <PropertyGroup Condition="'$(IsReferenceAssembly)' == 'true'">
+      <GenFacadesContracts>$(GenFacadesInputAssembly)</GenFacadesContracts>
+      <GenFacadesBuildPartialReferenceFacade>true</GenFacadesBuildPartialReferenceFacade>
+    </PropertyGroup>
+
+    <GenFacadesTask
+      PartialFacadeAssemblyPath="$(GenFacadesPartialFacadeAssemblyPath)"
+      Contracts="$(GenFacadesContracts)"
+      Seeds="@(GenFacadesSeeds, ',')"
+      FacadePath="$(GenFacadesOutputPath.TrimEnd('/'))"
+      SeedTypePreferencesUnsplit="@(SeedTypePreference)"
+      ProducePdb="$(ProducePdb)"
+      ClearBuildAndRevision="$(GenFacadesClearBuildAndRevision)"
+      IgnoreMissingTypes="$(GenFacadesIgnoreMissingTypes)"
+      IgnoreBuildAndRevisionMismatch="$(GenFacadesIgnoreBuildAndRevisionMismatch)"
+      BuildDesignTimeFacades="$(GenFacadesBuildDesignTimeFacades)"
+      InclusionContracts="$(GenFacadesInclusionContracts)"
+      SeedLoadErrorTreatment="$(GenFacadesSeedLoadErrorTreatment)"
+      ContractLoadErrorTreatment="$(GenFacadesContractLoadErrorTreatment)"
+      ForceZeroVersionSeeds="$(GenFacadesForceZeroVersionSeeds)"
+      BuildPartialReferenceFacade="$(GenFacadesBuildPartialReferenceFacade)"
+    />
+
+    <ItemGroup>
+      <FileWrites Include="$(GenFacadesInputAssembly)" />
+      <FileWrites Include="$(GenFacadesInputSymbols)" />
+    </ItemGroup>
+  </Target> 
+</Project>

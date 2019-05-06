@@ -14,9 +14,14 @@ namespace {{pascalCaseNs Namespace}}
     public partial interface I{{pascalCase Name}}
     {
         {{#each Methods}}
-        {{#if ResponseIsVoid}}Task{{else}}Task<{{typeRef ResponseType}}>{{/if}} {{Name}}Async(
+        {{#if ResponseIsVoid}}Task{{else}}Task<
+        {{~#if Paginated~}}
+        PagedResponse<{{typeRef ResponseType.BaseType}}>
+        {{~else~}}
+        {{~typeRef ResponseType~}}
+        {{~/if~}}>{{/if}} {{Name}}Async(
             {{#each FormalParameters}}
-            {{typeRef Type}} {{camelCase Name}}{{#unless Required}} = default{{/unless}},
+            {{typeRef Type}}{{#if (and (not Required) (not (IsNullable Type)))}}?{{/if}} {{camelCase Name}}{{#unless Required}} = default{{/unless}},
             {{/each}}
             CancellationToken cancellationToken = default
         );
@@ -38,13 +43,38 @@ namespace {{pascalCaseNs Namespace}}
 
         partial void HandleFailed{{Name}}Request(RestApiException ex);
 
-        public async Task{{#unless ResponseIsVoid}}<{{typeRef ResponseType}}>{{/unless}} {{Name}}Async(
+        public async {{#if ResponseIsVoid}}Task{{else}}Task<
+        {{~#if Paginated~}}
+        PagedResponse<{{typeRef ResponseType.BaseType}}>
+        {{~else~}}
+        {{~typeRef ResponseType~}}
+        {{~/if~}}>{{/if}} {{Name}}Async(
             {{#each FormalParameters}}
-            {{typeRef Type}} {{camelCase Name}}{{#unless Required}} = default{{/unless}},
+            {{typeRef Type}}{{#if (and (not Required) (not (IsNullable Type)))}}?{{/if}} {{camelCase Name}}{{#unless Required}} = default{{/unless}},
             {{/each}}
             CancellationToken cancellationToken = default
         )
         {
+            {{#if ResponseIsVoid}}
+            using (await {{Name}}InternalAsync(
+                {{#each FormalParameters}}
+                {{camelCase Name}},
+                {{/each}}
+                cancellationToken
+            ).ConfigureAwait(false))
+            {
+                return;
+            }
+            {{else}}
+            {{#if ResponseIsFile}}
+            var _res = await {{Name}}InternalAsync(
+                {{#each FormalParameters}}
+                {{camelCase Name}},
+                {{/each}}
+                cancellationToken
+            ).ConfigureAwait(false);
+            return new ResponseStream(_res.Body, _res);
+            {{else}}
             using (var _res = await {{Name}}InternalAsync(
                 {{#each FormalParameters}}
                 {{camelCase Name}},
@@ -52,17 +82,34 @@ namespace {{pascalCaseNs Namespace}}
                 cancellationToken
             ).ConfigureAwait(false))
             {
-                {{#if ResponseIsVoid}}
-                return;
+                {{#if Paginated}}
+                return new PagedResponse<{{typeRef ResponseType.BaseType}}>(Client, On{{Name}}Failed, _res);
                 {{else}}
                 return _res.Body;
                 {{/if}}
             }
+            {{/if}}
+            {{/if}}
+        }
+
+        internal async Task On{{Name}}Failed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException{{#if ErrorType}}<{{typeRef ErrorType}}>{{/if}}(
+                new HttpRequestMessageWrapper(req, {{#if BodyParameter}}content{{else}}null{{/if}}),
+                new HttpResponseMessageWrapper(res, content)
+                {{~#if ErrorType}},
+                Client.Deserialize<{{typeRef ErrorType}}>(content)
+                {{/if~}});
+            HandleFailed{{Name}}Request(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
         }
 
         internal async Task<HttpOperationResponse{{#unless ResponseIsVoid}}<{{typeRef ResponseType}}>{{/unless}}> {{Name}}InternalAsync(
             {{#each FormalParameters}}
-            {{typeRef Type}} {{camelCase Name}}{{#unless Required}} = default{{/unless}},
+            {{typeRef Type}}{{#if (and (not Required) (not (IsNullable Type)))}}?{{/if}} {{camelCase Name}}{{#unless Required}} = default{{/unless}},
             {{/each}}
             CancellationToken cancellationToken = default
         )
@@ -75,13 +122,13 @@ namespace {{pascalCaseNs Namespace}}
             }
 
             {{/if}}
-            {{/each}}
-            {{#each VerifyableParameters}}
-            if ({{#unless Required}}{{#notNullCheck Type}}{{camelCase Name}}{{/notNullCheck}} && {{/unless}}!{{camelCase Name}}.IsValid)
+            {{#if (isVerifyable Type)}}
+            if (!{{camelCase Name}}.IsValid)
             {
                 throw new ArgumentException("The parameter is not valid", nameof({{camelCase Name}}));
             }
 
+            {{/if}}
             {{/each}}
             {{#each ConstantParameters}}
             const {{typeRef Type}} {{camelCase Name}} = "{{Type.Value}}";
@@ -150,24 +197,12 @@ namespace {{pascalCaseNs Namespace}}
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException{{#if ErrorType}}<{{typeRef ErrorType}}>{{/if}}(
-                        new HttpRequestMessageWrapper(_req, {{#if BodyParameter}}_requestContent{{else}}null{{/if}}),
-                        new HttpResponseMessageWrapper(_res, _responseContent)
-                        {{~#if ErrorType}},
-                        Client.Deserialize<{{typeRef ErrorType}}>(_responseContent)
-                        {{/if~}}
-                    );
-                    HandleFailed{{Name}}Request(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await On{{Name}}Failed(_req, _res);
                 }
                 {{#unless ResponseIsFile}}
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 {{#if ResponseIsVoid}}
                 return new HttpOperationResponse
                 {{else}}
@@ -181,7 +216,7 @@ namespace {{pascalCaseNs Namespace}}
                     {{/unless}}
                 };
                 {{else}}
-                var _responseStream = await _res.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                Stream _responseStream = await _res.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<System.IO.Stream>
                 {
                     Request = _req,

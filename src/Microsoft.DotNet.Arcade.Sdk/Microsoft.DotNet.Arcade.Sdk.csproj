@@ -1,8 +1,7 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
-
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
 
     <ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
 
@@ -29,6 +28,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.Arcade.Sdk.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="sdk/Sdk.props;sdk/Sdk.targets" Pack="true">
       <PackagePath>sdk/%(Filename)%(Extension)</PackagePath>
     </None>
@@ -44,10 +47,7 @@
     <Compile Include="..\Common\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
   </ItemGroup>
   
-  <Target Name="_GenerateSdkVersionFile"
-          Inputs="$(MSBuildAllProjects)"
-          Outputs="$(_GeneratedVersionFilePath)"
-          BeforeTargets="GenerateNuSpec">
+  <Target Name="_GenerateSdkVersionFile" Inputs="$(MSBuildAllProjects)" Outputs="$(_GeneratedVersionFilePath)" BeforeTargets="GenerateNuSpec">
 
     <PropertyGroup>
       <_SdkVersionPropsContent>
@@ -61,10 +61,10 @@
   </_SdkVersionPropsContent>
     </PropertyGroup>
     
-    <WriteLinesToFile File="$(_GeneratedVersionFilePath)" Lines="$(_SdkVersionPropsContent)" Overwrite="true"/>
+    <WriteLinesToFile File="$(_GeneratedVersionFilePath)" Lines="$(_SdkVersionPropsContent)" Overwrite="true" />
 
     <ItemGroup>
-      <FileWrites Include="$(_GeneratedVersionFilePath)"/>
+      <FileWrites Include="$(_GeneratedVersionFilePath)" />
     </ItemGroup>
   </Target>
 

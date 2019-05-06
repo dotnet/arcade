@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+</Project>

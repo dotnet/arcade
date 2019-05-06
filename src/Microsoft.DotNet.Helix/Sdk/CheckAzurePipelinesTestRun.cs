@@ -11,34 +11,79 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         [Required]
         public int TestRunId { get; set; }
 
+        public ITaskItem[] ExpectedTestFailures { get; set; }
+
         protected override async Task ExecuteCoreAsync(HttpClient client)
         {
-            await RetryAsync(
+            if (ExpectedTestFailures?.Length > 0)
+            {
+                await ValidateExpectedTestFailuresAsync(client);
+                return;
+            }
+            var data = await RetryAsync(
                 async () =>
                 {
                     using (var req = new HttpRequestMessage(
                         HttpMethod.Get,
-                        $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}?api-version=5.0-preview.2"))
+                        $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}?api-version=5.0"))
                     {
                         using (var res = await client.SendAsync(req))
                         {
-                            var data = await ParseResponseAsync(req, res);
-                            if (data != null && data["runStatistics"] is JArray runStatistics)
-                            {
-                                var failed = runStatistics.Children()
-                                    .FirstOrDefault(stat => stat["outcome"]?.ToString() == "Failed");
-                                if (failed != null)
-                                {
-                                    Log.LogError($"Test run {TestRunId} has one or more failing tests.");
-                                }
-                                else
-                                {
-                                    Log.LogMessage(MessageImportance.Low, $"Test run {TestRunId} has not failed.");
-                                }
-                            }
+                            return await ParseResponseAsync(req, res);
                         }
                     }
                 });
+            if (data != null && data["runStatistics"] is JArray runStatistics)
+            {
+                var failed = runStatistics.Children()
+                    .FirstOrDefault(stat => stat["outcome"]?.ToString() == "Failed");
+                if (failed != null)
+                {
+                    Log.LogError($"Test run {TestRunId} has one or more failing tests.");
+                }
+                else
+                {
+                    Log.LogMessage(MessageImportance.Low, $"Test run {TestRunId} has not failed.");
+                }
+            }
+        }
+
+        private async Task ValidateExpectedTestFailuresAsync(HttpClient client)
+        {
+            var data = await RetryAsync(
+                async () =>
+                {
+                    using (var req = new HttpRequestMessage(
+                        HttpMethod.Get,
+                        $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}/results?api-version=5.0&outcomes=Failed"))
+                    {
+                        using (var res = await client.SendAsync(req))
+                        {
+                            return await ParseResponseAsync(req, res);
+                        }
+                    }
+                });
+
+            var failedResults = (JArray) data["value"];
+            var expectedFailures = ExpectedTestFailures.Select(i => i.GetMetadata("Identity")).ToHashSet();
+            foreach (var failedResult in failedResults)
+            {
+                var testName = (string) failedResult["automatedTestName"];
+                if (expectedFailures.Contains(testName))
+                {
+                    expectedFailures.Remove(testName);
+                    Log.LogMessage($"TestRun {TestRunId}: Test {testName} has failed and was expected to fail.");
+                }
+                else
+                {
+                    Log.LogError($"TestRun {TestRunId}: Test {testName} has failed and is not expected to fail.");
+                }
+            }
+
+            foreach (var expectedFailure in expectedFailures)
+            {
+                Log.LogError($"TestRun {TestRunId}: Test {expectedFailure} was expected to fail but did not fail.");
+            }
         }
     }
 }

@@ -10,7 +10,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit" Version="$(XUnitVersion)" />
+    <PackageReference Include="xunit.extensibility.core" Version="2.4.0" />
+    <PackageReference Include="xunit.extensibility.execution" Version="2.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(RepoRoot)LICENSE.txt" PackagePath="LICENSE.txt" Pack="true"/>
+    <None Include="$(RepoRoot)THIRD-PARTY-NOTICES.txt" PackagePath="THIRD-PARTY-NOTICES.txt" Pack="true"/>
   </ItemGroup>
 
 </Project>

@@ -60,32 +60,67 @@
   -->
   <Target Name="InitializeStandardNuspecProperties"
           BeforeTargets="GenerateNuspec"
-          DependsOnTargets="_InitializeNuspecRepositoryInformationPropertiesWorkaround">
+          DependsOnTargets="_InitializeNuspecRepositoryInformationPropertiesWorkaround"
+          Condition="'$(IsPackable)' == 'true'">
 
     <PropertyGroup>
+      <PackageId Condition="'$(NuspecPackageId)' != ''">$(NuspecPackageId)</PackageId>
       <PackageProjectUrl Condition="'$(PackageProjectUrl)' == ''">$(RepositoryUrl)</PackageProjectUrl>
     </PropertyGroup>
 
     <Error Text="PackageDescription must be specified" Condition="'$(PackageDescription)' == ''"/>
     <Error Text="PackageProjectUrl must be specified" Condition="'$(PackageProjectUrl)' == ''"/>
+    <Error Text="RepositoryUrl must be specified" Condition="'$(RepositoryUrl)' == ''"/>
+    <Error Text="RepositoryCommit must be specified" Condition="'$(RepositoryCommit)' == ''"/>
+    <Error Text="RepositoryType must be specified" Condition="'$(RepositoryType)' == ''"/>
+    <Error Text="Either PackageLicenseExpression or PackageLicenseFile must be specified" Condition="'$(PackageLicenseExpression)' == '' and '$(PackageLicenseFile)' == ''"/>
+
+    <PropertyGroup Condition="'$(NuspecFile)' != '' and '$(NuspecProperties)' == ''">
+      <_LicenseElement/>
+      <_LicenseElement Condition="'$(PackageLicenseExpression)' != ''">
+        <license type="expression">$(PackageLicenseExpression)</license>
+      </_LicenseElement>
+      <_LicenseElement Condition="'$(PackageLicenseFile)' != ''">
+        <license type="file">$(PackageLicenseFile)</license>
+      </_LicenseElement>
+
+      <_TagsElement/>
+      <_TagsElement Condition="'$(PackageTags)' != ''">
+        <tags>$(PackageTags.Replace(';', ' '))</tags>
+      </_TagsElement>
+
+      <_IconUrlElement/>
+      <_IconUrlElement Condition="'$(PackageIconUrl)' != ''">
+        <iconUrl>$(PackageIconUrl)</iconUrl>
+      </_IconUrlElement>
+
+      <_ReleaseNotesElement/>
+      <_ReleaseNotesElement Condition="'$(PackageReleaseNotes)' != ''">
+        <releaseNotes>$(PackageReleaseNotes)</releaseNotes>
+      </_ReleaseNotesElement>
+
+      <_CommonMetadataElements>
+        <id>$(PackageId)</id>
+        <description>$(PackageDescription)</description>
+        <version>$(PackageVersion)</version>
+        <authors>$(Authors)</authors>
+        <requireLicenseAcceptance>$(PackageRequireLicenseAcceptance)</requireLicenseAcceptance>
+        $(_TagsElement)
+        $(_LicenseElement)
+        $(_IconUrlElement)
+        $(_ReleaseNotesElement)
+        <projectUrl>$(PackageProjectUrl)</projectUrl>
+        <copyright>$(Copyright)</copyright>
+        <developmentDependency>$(DevelopmentDependency)</developmentDependency>
+        <serviceable>$(Serviceable)</serviceable>
+        <repository type="$(RepositoryType)" url="$(RepositoryUrl)" commit="$(RepositoryCommit)" />
+      </_CommonMetadataElements>
+    </PropertyGroup>
 
     <ItemGroup Condition="'$(NuspecFile)' != '' and '$(NuspecProperties)' == ''">
+      <NuspecProperty Include="CommonMetadataElements=$(_CommonMetadataElements)"/>
       <NuspecProperty Include="PackageId=$(PackageId)"/>
-      <NuspecProperty Include="Authors=$(Authors)"/>
-      <NuspecProperty Include="PackageDescription=$(PackageDescription)"/>
-      <NuspecProperty Include="Copyright=$(Copyright)"/>
       <NuspecProperty Include="Version=$(PackageVersion)"/>
-      <NuspecProperty Include="Serviceable=$(Serviceable)"/>
-      <NuspecProperty Include="DevelopmentDependency=$(DevelopmentDependency)"/>
-      <NuspecProperty Include="RequireLicenseAcceptance=$(PackageRequireLicenseAcceptance)"/>
-      <NuspecProperty Include="PackageLicenseUrl=$(PackageLicenseUrl)"/>
-      <NuspecProperty Include="PackageProjectUrl=$(PackageProjectUrl)"/>
-      <NuspecProperty Include="PackageIconUrl=$(PackageIconUrl)" Condition="'$(PackageIconUrl)' != ''" />
-      <NuspecProperty Include="PackageReleaseNotes=$(PackageReleaseNotes)" Condition="'$(PackageReleaseNotes)' != ''" />
-      <NuspecProperty Include="PackageTags=$(PackageTags)" Condition="'$(PackageTags)' != ''" />
-      <NuspecProperty Include="RepositoryUrl=$(RepositoryUrl)" Condition="'$(RepositoryUrl)' != ''" />
-      <NuspecProperty Include="RepositoryType=$(RepositoryType)" Condition="'$(RepositoryType)' != ''" />
-      <NuspecProperty Include="RepositoryCommit=$(RepositoryCommit)" Condition="'$(RepositoryCommit)' != ''" />
       <NuspecProperty Include="ProjectDirectory=$(MSBuildProjectDirectory)"/>
     </ItemGroup>
     <PropertyGroup Condition="'$(NuspecFile)' != '' and '$(NuspecProperties)' == ''">
@@ -116,9 +151,25 @@
     <PackageId>*$(MSBuildProjectName)*</PackageId>
   </PropertyGroup>
 
-  <Target Name="_SetPackageId" BeforeTargets="InitializeStandardNuspecProperties;GenerateNuSpec" Condition="'$(NuspecPackageId)' != ''">
+  <!--
+    Source packaging helpers.
+  -->
+
+  <PropertyGroup Condition="'$(IsPackable)' == 'true' and '$(IsSourcePackage)' == 'true'">
+    <TargetsForTfmSpecificContentInPackage Condition="'$(NuspecFile)' == ''">$(TargetsForTfmSpecificContentInPackage);_AddSourceFilesToSourcePackage</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <Target Name="_AddSourceFilesToSourcePackage">
     <PropertyGroup>
-      <PackageId>$(NuspecPackageId)</PackageId>
+      <!-- TODO: language to dir name mapping (https://github.com/Microsoft/msbuild/issues/2101) -->
+      <_LanguageDirName>$(DefaultLanguageSourceExtension.TrimStart('.'))</_LanguageDirName>
     </PropertyGroup>
+
+    <ItemGroup>
+      <_File Remove="@(_File)"/>
+      <_File Include="$(MSBuildProjectDirectory)\**\*$(DefaultLanguageSourceExtension)" TargetDir="contentFiles/$(_LanguageDirName)/$(TargetFramework)" BuildAction="Compile" />
+
+      <TfmSpecificPackageFile Include="@(_File)" PackagePath="%(_File.TargetDir)/%(_File.RecursiveDir)%(_File.FileName)%(_File.Extension)"/>
+    </ItemGroup>
   </Target>
 </Project>

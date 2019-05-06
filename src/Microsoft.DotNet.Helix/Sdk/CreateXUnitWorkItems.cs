@@ -37,6 +37,12 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public bool IsPosixShell { get; set; }
 
+        /// <summary>
+        /// Optional timeout for all created workitems
+        /// Defaults to 300s
+        /// </summary>
+        public string XUnitWorkItemTimeout { get; set; }
+
         public string XUnitArguments { get; set; }
 
         /// <summary>
@@ -99,7 +105,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string driver = runtimeTargetFramework.Contains("core") ? $"{PathToDotnet} exec " : "";
             string runnerName = runtimeTargetFramework.Contains("core") ? "xunit.console.dll" : "xunit.console.exe";
             string correlationPayload = IsPosixShell ? "$HELIX_CORRELATION_PAYLOAD" : "%HELIX_CORRELATION_PAYLOAD%";
-            string xUnitRunner = $"{correlationPayload}/tools/{runtimeTargetFramework}/{runnerName}";
+            string xUnitRunner = $"{correlationPayload}/xunit-runner/tools/{runtimeTargetFramework}/{runnerName}";
 
             if (runtimeTargetFramework.Contains("core"))
             {
@@ -118,11 +124,21 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishDirectory}, Command: {command}");
 
+            TimeSpan timeout = TimeSpan.FromMinutes(5);
+            if (!string.IsNullOrEmpty(XUnitWorkItemTimeout))
+            {
+                if (!TimeSpan.TryParse(XUnitWorkItemTimeout, out timeout))
+                {
+                    Log.LogWarning($"Invalid value \"{XUnitWorkItemTimeout}\" provided for XUnitWorkItemTimeout; falling back to default value of \"00:05:00\" (5 minutes)");
+                }
+            }
+
             return new Microsoft.Build.Utilities.TaskItem(assemblyName, new Dictionary<string, string>()
             {
                 { "Identity", assemblyName },
                 { "PayloadDirectory", publishDirectory },
-                { "Command", command }
+                { "Command", command },
+                { "Timeout", timeout.ToString() },
             });
         }
     }

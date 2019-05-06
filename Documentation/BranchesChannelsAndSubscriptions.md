@@ -169,7 +169,7 @@ Let's say dotnet/corefx's master branch is the second branch to be onboarded.  d
 2. Onboard dotnet/corefx to Arcade style publishing.  Arcade publishing will push build assets to shared storage locations and notify the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) of new builds.
 3. Onboard dotnet/corefx to Arcade style dependency management - Create a Dependency.Versions.xml and associated dependency props files in the master branch.  Use Darc to add dependencies for specific dotnet/coreclr dependencies (e.g. Microsoft.NETCore.Runtime.Coreclr). These dependencies were produced by dotnet/coreclr builds and assigned to the '.NET Core 3.0.0' channel.
 4. Create content - Build dotnet/corefx's master branch (let's say its ID is 'dotnet/corefx#3')  Through arcade publishing a new entry for this build will be created in the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md).  'dotnet/corefx#3' will not initially have a channel..
-6. Assign new dotnet/corefx build to the channel - dotnet/coreclr's master branch creates content for '.NET Core 3.0.0' channel, so use the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) to assign 'dotnet/corefx#3' to '.NET Core 3.0.0'
+6. Assign new dotnet/corefx build to the channel - dotnet/corefx's master branch creates content for '.NET Core 3.0.0' channel, so use the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) to assign 'dotnet/corefx#3' to '.NET Core 3.0.0'
 7. Assign future builds of a specific branch a default channel (if desired) - Use the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) to map dotnet/corefx master onto '.NET Core 3.0.0'.
 8. Add a subscription to automatically pull new dotnet/coreclr dependencies into dotnet/corefx's master branch. Subscription info
    - Mapping - Any dotnet/coreclr .NET Core 3.0.0 asset -> dotnet/corefx's master branch
@@ -363,7 +363,7 @@ dotnet/roslyn
 Let's say a user wants to do work in core-setup and aspnet/universe on previously created branches for feature/foo.  Basically that means that they probably want to have the output of those branches appear in the SDK.  Remember the Product Construction v2 rules:
 - Since all changes involve commits, that means that there must be a new branch of core-sdk that can take the output aspnet/universe and core-setup branches.
 - No more than one channel per input repo may flow input a repo+branch combo (e.g. cannot have dotnet/core-setup's .NET Core 3.0 and dotnet/core-setup's .NET Core 3.1 assets flow to dotnet/core-sdk master as there will be collisions)
-- A single channel may not recieve input from two different branches in the same repo.
+- A single channel may not receive input from two different branches in the same repo.
 
 This means that we need:
 - A new Dev channel that builds from the new branches are assigned to

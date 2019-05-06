@@ -16,7 +16,7 @@
 
   <PropertyGroup>
     <_MicrosoftDotNetMaestroTasksBaseDir>$(NuGetPackageRoot)microsoft.dotnet.maestro.tasks\$(MicrosoftDotNetMaestroTasksVersion)\tools\</_MicrosoftDotNetMaestroTasksBaseDir>
-    <_MicrosoftDotNetMaestroTasksDir>$(_MicrosoftDotNetMaestroTasksBaseDir)net461</_MicrosoftDotNetMaestroTasksDir>
+    <_MicrosoftDotNetMaestroTasksDir>$(_MicrosoftDotNetMaestroTasksBaseDir)net472</_MicrosoftDotNetMaestroTasksDir>
     <_MicrosoftDotNetMaestroTasksDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(_MicrosoftDotNetMaestroTasksBaseDir)netcoreapp2.1</_MicrosoftDotNetMaestroTasksDir>
   </PropertyGroup>
   
@@ -29,6 +29,8 @@
     
     <PushMetadataToBuildAssetRegistry ManifestsPath="$(ManifestsPath)"
                                       BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
-                                      MaestroApiEndpoint="$(MaestroApiEndpoint)" />
+                                      MaestroApiEndpoint="$(MaestroApiEndpoint)"
+                                      PublishUsingPipelines="$(PublishUsingPipelines)"
+                                      RepoRoot="$(RepoRoot)"/>
   </Target>
 </Project>

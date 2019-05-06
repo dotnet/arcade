@@ -41,12 +41,19 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                return
-                    !(Created == default) &&
-                    !(Expiration == default) &&
-                    !(string.IsNullOrEmpty(Creator)) &&
-                    !(string.IsNullOrEmpty(ContainerName)) &&
-                    !(string.IsNullOrEmpty(StorageAccountName));
+                if (string.IsNullOrEmpty(Creator))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(ContainerName))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(StorageAccountName))
+                {
+                    return false;
+                }
+                return true;
             }
         }
     }

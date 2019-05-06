@@ -20,7 +20,8 @@
   <Target Name="GenerateLaunchSettingsFile">
 
     <Copy SourceFiles="$(LaunchSettingsInputFileFullPath)"
-          DestinationFiles="$(LaunchSettingsOutputFileFullPath)" />
+          DestinationFiles="$(LaunchSettingsOutputFileFullPath)"
+          SkipUnchangedFiles="true" />
 
   </Target>
 

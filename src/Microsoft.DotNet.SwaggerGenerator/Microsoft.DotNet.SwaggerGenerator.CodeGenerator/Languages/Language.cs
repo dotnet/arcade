@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
             var file = new FileInfo(path);
             using (StreamReader reader = file.OpenText())
             {
-                return hb.Compile(reader);
+                    return hb.Compile(reader);
             }
         }
     }
@@ -51,6 +51,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
             _languages = new Dictionary<string, Language>(StringComparer.OrdinalIgnoreCase)
             {
                 ["csharp"] = new CSharp(),
+                ["angular"] = new Angular(),
             };
         }
 

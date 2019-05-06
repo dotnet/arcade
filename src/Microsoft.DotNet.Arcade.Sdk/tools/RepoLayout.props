@@ -42,6 +42,7 @@
 
   <PropertyGroup>
     <RepositoryEngineeringDir>$(RepoRoot)eng\</RepositoryEngineeringDir>
+    <RepositoryToolsDir>$(RepoRoot).tools\</RepositoryToolsDir>
 
     <VersionsPropsPath>$(RepositoryEngineeringDir)Versions.props</VersionsPropsPath>
 
@@ -50,6 +51,7 @@
     <ArtifactsObjDir>$(ArtifactsDir)obj\</ArtifactsObjDir>
     <ArtifactsBinDir>$(ArtifactsDir)bin\</ArtifactsBinDir>
     <ArtifactsLogDir>$(ArtifactsDir)log\$(Configuration)\</ArtifactsLogDir>
+    <ArtifactsLogNgenDir>$(ArtifactsLogDir)ngen\</ArtifactsLogNgenDir>
     <ArtifactsTmpDir>$(ArtifactsDir)tmp\$(Configuration)\</ArtifactsTmpDir>
     <ArtifactsTestResultsDir>$(ArtifactsDir)TestResults\$(Configuration)\</ArtifactsTestResultsDir>
     <ArtifactsSymStoreDirectory>$(ArtifactsDir)SymStore\$(Configuration)\</ArtifactsSymStoreDirectory>
@@ -59,5 +61,6 @@
     <VisualStudioSetupOutputPath>$(ArtifactsDir)VSSetup\$(Configuration)\</VisualStudioSetupOutputPath>
     <VisualStudioSetupInsertionPath>$(VisualStudioSetupOutputPath)Insertion\</VisualStudioSetupInsertionPath>
     <VisualStudioSetupIntermediateOutputPath>$(ArtifactsDir)VSSetup.obj\$(Configuration)\</VisualStudioSetupIntermediateOutputPath>
+    <VisualStudioBuildPackagesDir>$(VisualStudioSetupOutputPath)DevDivPackages\</VisualStudioBuildPackagesDir>
   </PropertyGroup>
 </Project>

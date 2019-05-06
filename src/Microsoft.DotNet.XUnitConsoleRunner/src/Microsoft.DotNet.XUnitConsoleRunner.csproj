@@ -8,7 +8,7 @@
     <RootNamespace>Xunit.ConsoleClient</RootNamespace>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <IsPackable>true</IsPackable>
-    <VersionPrefix>2.5.0</VersionPrefix>
+    <VersionPrefix>2.5.1</VersionPrefix>
     <LangVersion>latest</LangVersion>
     <DefaultItemExcludes Condition="'$(DefineConstants)' == 'WINDOWS_UWP'">common\AssemblyResolution\**;$(DefaultItemExcludes)</DefaultItemExcludes>
   </PropertyGroup>

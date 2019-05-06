@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.DotNet.SwaggerGenerator.Modeler;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Readers;
 using Mono.Options;
-using Newtonsoft.Json;
-using Swashbuckle.AspNetCore.Swagger;
 
 namespace Microsoft.DotNet.SwaggerGenerator.CmdLine
 {
@@ -78,7 +79,16 @@ namespace Microsoft.DotNet.SwaggerGenerator.CmdLine
 
             ILogger logger = new LoggerFactory().AddConsole().CreateLogger("dotnet-swaggergen");
 
-            SwaggerDocument document = await GetSwaggerDocument(input);
+            var (diagnostic, document) = await GetSwaggerDocument(input);
+            if (diagnostic.Errors.Any())
+            {
+                foreach (var error in diagnostic.Errors)
+                {
+                    Console.Error.WriteLine($"error: In {error.Pointer} '{error.Message}'");
+                }
+
+                Console.Error.WriteLine("OpenApi Document parsing resulted in errors. Output may be compromised.");
+            }
 
             var generator = new ServiceClientModelFactory(generatorOptions);
             ServiceClientModel model = generator.Create(document);
@@ -100,15 +110,15 @@ namespace Microsoft.DotNet.SwaggerGenerator.CmdLine
             return 0;
         }
 
-        private static async Task<SwaggerDocument> GetSwaggerDocument(string input)
+        private static async Task<(OpenApiDiagnostic, OpenApiDocument)> GetSwaggerDocument(string input)
         {
             using (var client = new HttpClient())
             {
                 using (Stream docStream = await client.GetStreamAsync(input))
-                using (var reader = new StreamReader(docStream))
-                using (var jsonReader = new JsonTextReader(reader))
                 {
-                    return SwaggerSerializer.Deserialize(jsonReader);
+                    var doc = ServiceClientModelFactory.ReadDocument(docStream, out OpenApiDiagnostic diagnostic);
+
+                    return (diagnostic, doc);
                 }
             }
         }

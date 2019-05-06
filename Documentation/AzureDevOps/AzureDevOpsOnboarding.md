@@ -7,6 +7,7 @@
 - [Agent Queues](#agent-queues)
 - [CI badge link](#ci-badge-link)
 - [Signed builds](#signed-builds)
+- [Generate Graph Files](#generate-graph-files)
 - [Security](#security)
 - [Notes about YAML](#notes-about-yaml)
 - [Troubleshooting](#troubleshooting)
@@ -47,46 +48,59 @@ See the [dotnet-bot-github-service-endpoint documentation](https://github.com/do
 
 ## Agent queues
 
-Agent queue use / configuration / etc... is likely to change very soon when Azure DevOps enables "bring your own cloud".
+We now use Azure Pool Providers to deploy VMs as build agents.  Workflows defined in yaml that still use the "phases" syntax will not able to take advantage of this feature.  See [this document](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/PhaseToJobSchemaChange.md) for details how to migrate if you are in this scenario.
+
+To use an Azure Pool provider, you need to specify both the name of the pool provider and the Helix Queue it uses.  This looks something like:
+``` yaml
+          name: NetCorePoolNameFromBelow-Pool
+          queue: Helix.Queue.From.Below
+```          
 
 Current machine pool recommendations:
 
-### External
+### External : (Pool Provider: NetCorePublic-Int-Pool)
 
-| OS         | Recommended pool     | Additional pool option     |
-| ---------- | -------------------- | -------------------------- |
-| Windows_NT | Hosted VS2017        | dotnet-external-temp |
-| Linux      | Hosted Ubuntu 1604   | dnceng-linux-external-temp |
-| OSX        | Hosted MacOS         | |
+| OS         | Recommended pool     | Pool Provider Queue(s)     | Notes | 
+| ---------- | -------------------- | -------------------------- | ----- |
+| Windows_NT | Hosted VS2017        | buildpool.windows.10.amd64.vs2017.open  | |
+|            |                      | buildpool.windows.10.amd64.vs2019.open     | Not available yet |
+|            |                      | buildpool.windows.10.amd64.vs2019.bt.open  | BuildTools SKU: No interactive VS components |
+|            |                      | buildpool.windows.10.amd64.es.vs2017.open  | Spanish OS, VS2017 |
+| Linux      | Hosted Ubuntu 1604   | buildpool.ubuntu.1604.amd64.open | |
+| OSX        | Hosted MacOS         | n/a | |
 
-### Internal
+### Internal : (Pool Provider: NetCoreInternal-Int-Pool)
 
-| OS         | Access   | Recommended pool     | Additional pool option |
-| ---------- | -------- | ---------------------| ---------------------- |
-| Windows_NT | Internal | dotnet-internal-temp | |
-| Linux      | Internal | Hosted Ubuntu 1604   | dnceng-linux-internal-temp |
-| OSX        | Internal | Hosted Mac Internal  | |
+| OS         | Recommended pool     | Pool Provider Queue(s)      | Notes | 
+| ---------- | -------------------- | --------------------------- | ----- |
+| Windows_NT | Use Pool Provider -> | buildpool.windows.10.amd64.vs2017  | |
+|            |                      | buildpool.windows.10.amd64.vs2019     | Not available yet |
+|            |                      | buildpool.windows.10.amd64.vs2019.bt  | BuildTools SKU: No interactive VS components other than IIS Express |
+| Linux      | Hosted Ubuntu 1604   | buildpool.ubuntu.1604.amd64 |
+| OSX        | Hosted Mac Internal  | |
 
 A couple of notes:
 
 - [Hosted pool](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml) capabilities
 
-- dotnet-external-temp and dotnet-internal-temp queues:
+  - Whenever possible, you're always encouraged to use the hosted agent pools for your builds.  These don't come from the same budget as other build agents, and have far more MacOS machines than the Engineering Services team has.  
 
-  - Windows Server 2016
+- BuildPool Helix machines will be defined in the [dnceng internal repo 'dotnet-helix-machines'](https://dnceng.visualstudio.com/internal/_git/dotnet-helix-machines?path=%2Fdefinitions%2Fshared&version=GBmaster).  While this format is a bit dense, it is what is used by the deployment system so represents precisely what was on the machines for a given date of deployment.  As such, the descriptions below are not necessarily up-to-date but do represent what these queues had as of this edit.
 
+- BuildPool.Windows queues:
+
+  - Windows Client RS4 or higher
   - 4 cores
-
   - 512 GB disk space capacity (not SSD)
+  - BuildPool.Windows.10.Amd64.VS2017 - Visual Studio 2017 15.9
+  - Buildpool.Windows.10.Amd64.ES.VS2017.Open  - Visual Studio 2017 15.9 EN-US on ES-ES OS
+  - BuildPool.Windows.10.Amd64.VS2019 - Visual Studio 2019 16.0
+  - BuildPool.Windows.10.Amd64.VS2019.BT - Visual Studio 2017 16.0 'BuildTools' SKU (no UI)
 
-  - Visual Studio 2017 15.8
-
-- dnceng-linux-external-temp and dnceng-linux-internal-temp queues:
-
+- BuildPool.Ubuntu queues:
   - Ubuntu 16.04
-
-  - Docker 17.12.1
-
+  - Docker 18.09.2
+  - 4 cores
   - 512 GB disk space capacity (not SSD)
 
 ## CI badge link
@@ -104,6 +118,10 @@ https://dev.azure.com/dnceng/public/_build?definitionId=208&branchName=master
 ## Signed Builds
 
 dev.azure.com/dnceng now has support for signed builds.  Code should be mirrored to dev.azure.com/dnceng/internal as outlined in the [Azure DevOps Guidance](./AzureDevOpsGuidance.md#projects).  See [MovingFromDevDivToDncEng.md](./MovingFromDevDivToDncEng.md) for information about moving signed builds from DevDiv to DncEng.
+
+## Generate Graph Files
+
+Generation of graph files as part of official builds is now supported. See [GeneratingGraphFiles.md](GeneratingGraphFiles.md) for information on how to opt-in to this feature.
 
 ## Security
 

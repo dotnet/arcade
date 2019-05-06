@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         );
 
-        Task<IImmutableDictionary<string, PropertiesResponse>> PropertiesAsync(
+        Task<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>> PropertiesAsync(
             string filterBuild = default,
             string filterCreator = default,
             string filterName = default,
@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.Helix.Client
         );
 
         Task<MultiSourceResponse> MultiSourceAsync(
-            MultiSourceRequest request,
+            MultiSourceRequest body,
             CancellationToken cancellationToken = default
         );
 
@@ -882,7 +882,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedPropertiesRequest(RestApiException ex);
 
-        public async Task<IImmutableDictionary<string, PropertiesResponse>> PropertiesAsync(
+        public async Task<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>> PropertiesAsync(
             string filterBuild = default,
             string filterCreator = default,
             string filterName = default,
@@ -904,7 +904,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
-        internal async Task<HttpOperationResponse<IImmutableDictionary<string, PropertiesResponse>>> PropertiesInternalAsync(
+        internal async Task<HttpOperationResponse<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>>> PropertiesInternalAsync(
             string filterBuild = default,
             string filterCreator = default,
             string filterName = default,
@@ -968,11 +968,11 @@ namespace Microsoft.DotNet.Helix.Client
                     throw ex;
                 }
                 _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<IImmutableDictionary<string, PropertiesResponse>>
+                return new HttpOperationResponse<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>>
                 {
                     Request = _req,
                     Response = _res,
-                    Body = Client.Deserialize<IImmutableDictionary<string, PropertiesResponse>>(_responseContent),
+                    Body = Client.Deserialize<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>>(_responseContent),
                 };
             }
             catch (Exception)
@@ -1342,12 +1342,12 @@ namespace Microsoft.DotNet.Helix.Client
         partial void HandleFailedMultiSourceRequest(RestApiException ex);
 
         public async Task<MultiSourceResponse> MultiSourceAsync(
-            MultiSourceRequest request,
+            MultiSourceRequest body,
             CancellationToken cancellationToken = default
         )
         {
             using (var _res = await MultiSourceInternalAsync(
-                request,
+                body,
                 cancellationToken
             ).ConfigureAwait(false))
             {
@@ -1356,13 +1356,13 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
         internal async Task<HttpOperationResponse<MultiSourceResponse>> MultiSourceInternalAsync(
-            MultiSourceRequest request,
+            MultiSourceRequest body,
             CancellationToken cancellationToken = default
         )
         {
-            if (request == default)
+            if (body == default)
             {
-                throw new ArgumentNullException(nameof(request));
+                throw new ArgumentNullException(nameof(body));
             }
 
 
@@ -1382,9 +1382,9 @@ namespace Microsoft.DotNet.Helix.Client
                 _req = new HttpRequestMessage(HttpMethod.Post, _url);
 
                 string _requestContent = null;
-                if (request != default)
+                if (body != default)
                 {
-                    _requestContent = Client.Serialize(request);
+                    _requestContent = Client.Serialize(body);
                     _req.Content = new StringContent(_requestContent, Encoding.UTF8)
                     {
                         Headers =
