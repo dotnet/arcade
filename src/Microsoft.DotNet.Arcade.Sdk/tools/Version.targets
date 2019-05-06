@@ -12,6 +12,8 @@
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.CalculateAssemblyAndFileVersions" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
   
   <Target Name="_InitializeAssemblyVersion" BeforeTargets="GetAssemblyVersion">
+    <Warning Text="AssemblyVersion '$(AssemblyVersion)' overridden by auto-generated version" Condition="'$(AssemblyVersion)' != '' and '$(AutoGenerateAssemblyVersion)' == 'true'"/>
+    
     <Microsoft.DotNet.Arcade.Sdk.CalculateAssemblyAndFileVersions
       VersionPrefix="$(_OriginalVersionPrefix)"
       BuildNumber="$(_BuildNumber)"
@@ -19,7 +21,7 @@
       AutoGenerateAssemblyVersion="$(AutoGenerateAssemblyVersion)"
       Condition="'$(VersionSuffixDateStamp)' != ''">
 
-      <Output TaskParameter="AssemblyVersion" PropertyName="AssemblyVersion"/>
+      <Output TaskParameter="AssemblyVersion" PropertyName="AssemblyVersion" Condition="'$(AssemblyVersion)' == '' or '$(AutoGenerateAssemblyVersion)' == 'true'"/>
       <Output TaskParameter="FileVersion" PropertyName="FileVersion"/>
     </Microsoft.DotNet.Arcade.Sdk.CalculateAssemblyAndFileVersions>
 
