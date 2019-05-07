@@ -5,7 +5,6 @@ namespace Xunit.ConsoleClient
 {
     public class Program
     {
-        [STAThread]
         public static int Main(string[] args)
         {
             // This code must not contain any references to code in any external assembly (or any code that references any code in any
