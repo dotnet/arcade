@@ -101,6 +101,6 @@ Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins su
 | Microsoft_TestFx              | sarabjot     || [1.2.1](https://ci.dot.net/job/Microsoft_testfx/job/1.2.1/) ||
 | Microsoft_Vipr                | mmainer      || external | jrprather is managing migration |
 | Microsoft_XUnitPerformance    | jorive       || [master](https://ci.dot.net/job/Microsoft_xunit-performance/job/master/), [citest](https://ci.dot.net/job/Microsoft_xunit-performance/job/citest/) ||
-| mono_linker                   | svbomer      || [master](https://ci.dot.net/job/mono_linker/job/master/) ||
+| mono_linker                   | svbomer      | Complete | [master](https://ci.dot.net/job/mono_linker/job/master/) ||
 | pxt*                          | peli de halleux || external | jrprather is managing migration |
 
