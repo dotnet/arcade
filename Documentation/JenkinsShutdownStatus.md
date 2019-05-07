@@ -67,7 +67,7 @@ Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins su
 | dotnet-CoreClr                | russellk     || [uwp6.2](https://ci.dot.net/job/dotnet_coreclr/job/release_uwp6.2/) ||
 | dotnet-CoreFx                 | danmose      || [uwp6.2](https://ci.dot.net/job/dotnet_corefx/job/release_uwp6.2/) ||
 | dotnet-Core-Setup             | dleeapho     || [uwp6.0](https://ci.dot.net/job/dotnet_core-setup/job/release_uwp6.0/) ||
-| dotnet_WCF                    | stebon       || [uwp6.0](https://ci.dot.net/job/dotnet_wcf/job/release_uwp6.0/), [uwp6.1](https://ci.dot.net/job/dotnet_wcf/job/release_uwp6.1/), [uwp6.2](https://ci.dot.net/job/dotnet_wcf/job/release_uwp6.2/) ||
+| dotnet_WCF                    | stebon       | stebon discussing a plan with alicia li | [uwp6.0](https://ci.dot.net/job/dotnet_wcf/job/release_uwp6.0/), [uwp6.1](https://ci.dot.net/job/dotnet_wcf/job/release_uwp6.1/), [uwp6.2](https://ci.dot.net/job/dotnet_wcf/job/release_uwp6.2/) ||
 
 ## Jenkins - Other
 
@@ -92,7 +92,7 @@ Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins su
 | dotnet_SymReader-Portable     | tmat         | Complete | [1.5.0](https://ci.dot.net/job/dotnet_symreader-portable/job/release_1.5.0/) | Removed, not needed |
 | dotnet_Templating             | vramak       | Complete | [stabilize](https://ci.dot.net/job/dotnet_templating/job/stabilize/) | No actual jenkins jobs |
 | dotnet_Versions               | mmitche      | Complete | [master](https://ci.dot.net/job/dotnet_versions/job/master/) ||
-| dotnet_WCF                    | stebon       || [master](https://ci.dot.net/job/dotnet_wcf/job/master/) ||
+| dotnet_WCF                    | stebon       | stebon discussing a plan with alicia li | [master](https://ci.dot.net/job/dotnet_wcf/job/master/) ||
 | dotnet_Xliff-Tasks            | tomescht     | Complete | [master](https://ci.dot.net/job/dotnet_xliff-tasks/job/master/) ||
 | Microsoft_ChakraCore          | louisl       || external | jrprather is managing migration |
 | Microsoft_ConcordExtensibilitySamples | greggm || external | jrprather is managing migration |
