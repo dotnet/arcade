@@ -49,7 +49,7 @@ Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins su
 | dotnet_SDK                    | licavalc     | In Progress | [2.1.5xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.1.5xx/), [2.1.6xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.1.6xx/), [2.1.7xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.1.7xx/), [2.2.1xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.2.1xx/), [2.2.2xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.2.2xx/), [2.2.3xx](https://ci.dot.net/job/dotnet_sdk/job/release_2.2.3xx/), [1.0.0](https://ci.dot.net/job/dotnet_sdk/job/rel_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_sdk/job/rel_1.1.0/) ||
 | dotnet_Standard               | danmose      | Complete | [2.0.0](https://ci.dot.net/job/dotnet_standard/job/release_2.0.0/) ||
 | dotnet_Templating             | vramak       | Complete | [2.1](https://ci.dot.net/job/dotnet_templating/job/release_2.1/) | Jobs were |
-| dotnet_WCF                    | stebon       || [2.1](https://ci.dot.net/job/dotnet_wcf/job/release_2.1.0/), [2.0.0](https://ci.dot.net/job/dotnet_wcf/job/release_2.0.0/), [1.0.0](https://ci.dot.net/job/dotnet_wcf/job/release_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_wcf/job/release_1.1.0/) ||
+| dotnet_WCF                    | stebon       | stebon discussing a plan with alicia li | [2.1](https://ci.dot.net/job/dotnet_wcf/job/release_2.1.0/), [2.0.0](https://ci.dot.net/job/dotnet_wcf/job/release_2.0.0/), [1.0.0](https://ci.dot.net/job/dotnet_wcf/job/release_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_wcf/job/release_1.1.0/) ||
 
 ## Jenkins - VS
 
