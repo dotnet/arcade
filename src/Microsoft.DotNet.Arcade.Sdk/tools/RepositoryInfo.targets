@@ -6,7 +6,7 @@
 
     <!-- Disable SourceLink when building on ARM (libgit2 does not support it currently) or during source build (SourceLink is not buildable from source currently) -->
     <EnableSourceControlManagerQueries Condition="'$(DotNetBuildFromSource)' == 'true'">false</EnableSourceControlManagerQueries>
-    <EnableSourceControlManagerQueries Condition="$(_ProcessArchitecture.StartsWith('arm'))">false</EnableSourceControlManagerQueries>
+    <EnableSourceControlManagerQueries Condition="$(_ProcessArchitecture.StartsWith('Arm'))">false</EnableSourceControlManagerQueries>
 
     <!-- By default disable Source Link when we can't query source control. The commit sha and repo url can still be supplied manually. -->
     <EnableSourceLink Condition="'$(EnableSourceControlManagerQueries)' != 'true' and '$(EnableSourceLink)' == ''">false</EnableSourceLink>
