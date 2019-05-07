@@ -24,7 +24,7 @@ When API Compat identifies an error it will log the error and fail the build.  I
 
 `$(RunApiCompat)` - true to run APICompat, defaults to true
 `$(RunApiCompatForSrc)` - true to run APICompat treating project output as *implementation* and `@(ResolvedMatchingContract)` as *contract*, defaults to true.
-`$(RunMatchingRefApiCompat)` - true to run APICompat treating project output as *contract* and  `@(ResolvedMatchingContract)` as *implementation*, defaults to true.  This is also known as reverse API compat and can help ensure that every public API defined in a project is exposed in `@(ResolvedMatchingContract)`.
+`$(RunMatchingRefApiCompat)` - true to run APICompat treating project output as *contract* and  `@(ResolvedMatchingContract)` as *implementation*, defaults to false.  This is also known as reverse API compat and can help ensure that every public API defined in a project is exposed in `@(ResolvedMatchingContract)`.
 
 `$(ApiCompatExcludeAttributeList)` - Attributes to exclude from APICompat checks.  This is a text file containing types in DocID format, EG: T:Namespace.TypeName.
 `$(ApiCompatEnforceOptionalRules)` - true to enforce optional rules, default is false.  An example of an optional rule is parameter naming which can break source compatibility but not binary compatibility.
