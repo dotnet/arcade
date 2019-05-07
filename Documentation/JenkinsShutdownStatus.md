@@ -83,7 +83,7 @@ Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins su
 | dotnet_Interactive-Window     | tmat         | Complete | [master](https://ci.dot.net/job/dotnet_interactive-window/job/master/) | Already moved to Azure DevOps and can be removed? |
 | dotnet_Metadata-Tools         | tmat         || [master](https://ci2.dot.net/job/dotnet_metadata-tools/job/master/) | Already moved to Azure DevOps and can be removed? |
 | dotnet_Orleans                | sbykov       || [master](https://ci.dot.net/job/dotnet_orleans/job/master/) ||
-| dotnet_Perf-Infra             | anscoggi     || [stability](https://ci2.dot.net/job/dotnet_perf-infra/job/stability/), [startup](https://ci2.dot.net/job/dotnet_perf-infra/job/startup/) ||
+| dotnet_Perf-Infra             | anscoggi     | Complete | [stability](https://ci2.dot.net/job/dotnet_perf-infra/job/stability/), [startup](https://ci2.dot.net/job/dotnet_perf-infra/job/startup/) ||
 | dotnet_Roslyn-Analyzers       | tmat         | Complete | [master](https://ci.dot.net/job/dotnet_roslyn-analyzers/job/master/), [2.6.x](https://ci.dot.net/job/dotnet_roslyn-analyzers/job/2.6.x/), [2.9.x](https://ci.dot.net/job/dotnet_roslyn-analyzers/job/2.9.x/)| Planned |
 | dotnet_Roslyn-Tools           | tmat         | Complete | [master](https://ci.dot.net/job/dotnet_roslyn-tools/job/master/) ||
 | dotnet_SDK                    | licavalc     | Complete | [experimental-classic-projects](https://ci.dot.net/job/dotnet_sdk/job/experimental-classic-projects/) | Removed, old branch not needed. |
