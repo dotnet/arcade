@@ -478,7 +478,7 @@ function Stop-Processes() {
 # Terminates the script if the build fails.
 #
 function MSBuild() {
-  if ($pipelinesLog) {
+  if ($pipelinesLog -and $msbuildEngine) {
     $toolsetBuildProject = InitializeToolset
     $tf = if ($msbuildEngine -eq "dotnet") { "netcoreapp2.1" } else { "net472" }
     $path = Split-Path -parent $toolsetBuildProject
