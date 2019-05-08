@@ -483,7 +483,7 @@ function MSBuild() {
     $tf = if ($msbuildEngine -eq "dotnet") { "netcoreapp2.1" } else { "net472" }
     $path = Split-Path -parent $toolsetBuildProject
     $path = Join-Path $path "$tf\Microsoft.DotNet.Arcade.Sdk.dll"
-    $args += " /logger:`"$path`""
+    $args += "/logger:$path"
   }
 
   MSBuild-Core @args
