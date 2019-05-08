@@ -183,13 +183,13 @@
   </ItemGroup>
 
   <PropertyGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true' and '$(RepositoryUrl)' == ''">
-    <RepositoryUrl Condition="'$(ContinuousIntegrationBuild)' == 'true'">$([System.Text.RegularExpressions.Regex]::Replace($(BUILD_REPOSITORY_URI), $(_TranslateUrlPattern), $(_TranslateUrlReplacement)))</RepositoryUrl>
-    <RepositoryUrl Condition="'$(ContinuousIntegrationBuild)' != 'true'">file://$(RepoRoot)</RepositoryUrl>
+    <RepositoryUrl Condition="'$(BUILD_REPOSITORY_URI)' != ''">$([System.Text.RegularExpressions.Regex]::Replace($(BUILD_REPOSITORY_URI), $(_TranslateUrlPattern), $(_TranslateUrlReplacement)))</RepositoryUrl>
+    <RepositoryUrl Condition="'$(BUILD_REPOSITORY_URI)' == ''">file://$(RepoRoot)</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true' and '$(RepositoryCommit)' == ''">
-    <RepositoryCommit Condition="'$(ContinuousIntegrationBuild)' == 'true'">$(BUILD_SOURCEVERSION)</RepositoryCommit>
-    <RepositoryCommit Condition="'$(ContinuousIntegrationBuild)' != 'true'">0000000000000000000000000000000000000000</RepositoryCommit>
+    <RepositoryCommit Condition="'$(BUILD_SOURCEVERSION)' != ''">$(BUILD_SOURCEVERSION)</RepositoryCommit>
+    <RepositoryCommit Condition="'$(BUILD_SOURCEVERSION)' == ''">0000000000000000000000000000000000000000</RepositoryCommit>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true' and '$(RepositoryType)' == ''">
