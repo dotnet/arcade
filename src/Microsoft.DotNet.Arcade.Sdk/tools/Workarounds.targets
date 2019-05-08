@@ -172,4 +172,27 @@
       <TfmSpecificPackageFile Include="@(_File)" PackagePath="%(_File.TargetDir)/%(_File.RecursiveDir)%(_File.FileName)%(_File.Extension)"/>
     </ItemGroup>
   </Target>
+
+  <!--
+    Workarounds for Source Link not being available for Arm.
+    Set the SourceRoot to repo root to facilitate deterministic source paths when SCM queries are disabled.
+    Set the RepositoryUrl to the Build.Repository.Uri Azure DevOps build variable if on CI, otherwise to local repo path.
+  -->
+  <ItemGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true'">
+    <SourceRoot Include="$(RepoRoot)" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true' and '$(RepositoryUrl)' == ''">
+    <RepositoryUrl Condition="'$(ContinuousIntegrationBuild)' == 'true'">$([System.Text.RegularExpressions.Regex]::Replace($(BUILD_REPOSITORY_URI), $(_TranslateUrlPattern), $(_TranslateUrlReplacement)))</RepositoryUrl>
+    <RepositoryUrl Condition="'$(ContinuousIntegrationBuild)' != 'true'">file://$(RepoRoot)</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true' and '$(RepositoryCommit)' == ''">
+    <RepositoryCommit Condition="'$(ContinuousIntegrationBuild)' == 'true'">$(BUILD_SOURCEVERSION)</RepositoryCommit>
+    <RepositoryCommit Condition="'$(ContinuousIntegrationBuild)' != 'true'">0000000000000000000000000000000000000000</RepositoryCommit>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true' and '$(RepositoryType)' == ''">
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
 </Project>

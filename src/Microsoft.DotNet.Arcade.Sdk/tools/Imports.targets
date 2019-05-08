@@ -10,7 +10,7 @@
     Some projects do not import Common targets, so BeforeCommonTargets.targets doesn't get imported. 
     (https://github.com/dotnet/arcade/issues/2676).
   -->
-  <Import Project="BeforeCommonTargets.targets" Condition="'$(_ArcadeBeforeCommonTargetsImported)' != 'true'"/>
+  <Import Project="BeforeCommonTargets.targets" Condition="'$(_ArcadeBeforeCommonTargetsImported)' != 'true' and '$(IsCrossTargetingBuild)' != 'true'"/>
 
   <Import Project="ProjectDefaults.targets"/>
   <Import Project="StrongName.targets"/>

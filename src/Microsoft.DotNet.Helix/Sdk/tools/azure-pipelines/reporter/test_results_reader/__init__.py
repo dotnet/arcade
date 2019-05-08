@@ -16,7 +16,7 @@ def __no_results_result():
         result = 'Pass'
         failure_message = None
 
-    yield TestResult(
+    return TestResult(
         name=u'{}.WorkItemExecution'.format(work_item_name),
         kind=u'unknown',
         type_name=u'{}'.format(work_item_name),
@@ -42,14 +42,14 @@ def construct_log_uri(name):
 
 
 def get_log_files(dir):
-    print "Searching '{}' for log files".format(dir)
+    print("Searching '{}' for log files".format(dir))
     for name in os.listdir(dir):
         path = os.path.join(dir, name)
         root, ext = os.path.splitext(path)
         if ext == ".log":
-            print "Found log '{}'".format(path)
+            print("Found log '{}'".format(path))
             uri = construct_log_uri(name)
-            print "Uri '{}'".format(uri)
+            print("Uri '{}'".format(uri))
             yield name, uri
 
 
@@ -60,7 +60,7 @@ def construct_log_list(log_files):
     lines = [line(name, url) for name, url in log_files]
 
     output = u"<ul>" + u"".join(lines) + u"</ul>"
-    print "Generated log list: {}".format(output)
+    print("Generated log list: {}".format(output))
     return output
 
 
@@ -79,19 +79,24 @@ def add_logs(tr, log_list):
 def read_results(dir):
     # type: (str) -> Iterable[TestResult]
 
-    print "Searching '{}' for test results files".format(dir)
-
     log_files = list(get_log_files(os.path.join(get_env("HELIX_WORKITEM_ROOT"), "..")))
-
     log_list = construct_log_list(log_files)
+
+    print("Searching '{}' for test results files".format(dir))
+
+    found = False
 
     for root, dirs, files in os.walk(dir):
         for file_name in files:
             for f in all_formats:
                 if file_name.endswith(tuple(f.acceptable_file_suffixes)):
                     file_path = os.path.join(root, file_name)
-                    print 'Found results file {} with format {}'.format(file_path, f.name)
-                    return (add_logs(tr, log_list) for tr in f.read_results(file_path))
+                    print('Found results file {} with format {}'.format(file_path, f.name))
+                    found = True
+                    file_results = (add_logs(tr, log_list) for tr in f.read_results(file_path))
+                    for result in file_results:
+                        yield result
 
-    print 'No results file found in any of the following formats: {}'.format(', '.join((f.name for f in all_formats)))
-    return __no_results_result()
+    if not found:
+        print('No results file found in any of the following formats: {}'.format(', '.join((f.name for f in all_formats))))
+        yield add_logs(__no_results_result(), log_list)

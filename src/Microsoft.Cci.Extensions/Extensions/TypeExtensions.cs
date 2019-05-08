@@ -713,11 +713,9 @@ namespace Microsoft.Cci.Extensions
 
         public static bool IsConstructorVisible(this ITypeDefinition type)
         {
-            foreach (var item in type.GetAllMembers())
+            foreach (var method in type.Methods)
             {
-                if (item is IMethodDefinition method &&
-                    method.IsConstructor &&
-                    method.IsVisibleOutsideAssembly())
+                if (method.IsConstructor && method.IsVisibleOutsideAssembly())
                 {
                     return true;
                 }
