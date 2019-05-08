@@ -4,8 +4,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
@@ -19,7 +23,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
         private readonly MessageBuilder _builder = new MessageBuilder();
         private readonly Dictionary<BuildEventContext, Guid> _buildEventContextMap = new Dictionary<BuildEventContext, Guid>(BuildEventContextComparer.Instance);
         private readonly Dictionary<Guid, ProjectInfo> _projectInfoMap = new Dictionary<Guid, ProjectInfo>();
+        private readonly Dictionary<Guid, string> _targetsMap = new Dictionary<Guid, string>();
         private readonly HashSet<Guid> _detailedLoggedSet = new HashSet<Guid>();
+        private readonly HttpClient _http = new HttpClient();
         private HashSet<string> _ignoredTargets;
         private string _solutionDirectory;
 
@@ -172,6 +178,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         private void OnProjectFinished(object sender, ProjectFinishedEventArgs e)
         {
+            ReportToAnalytics(e);
+
             if (!_buildEventContextMap.TryGetValue(e.BuildEventContext, out Guid projectId) ||
                 !_projectInfoMap.TryGetValue(projectId, out ProjectInfo projectInfo))
             {
@@ -249,14 +257,97 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
         }
 
-        private string GetTargets(List<string> targetNames)
+        private void ReportToAnalytics(ProjectFinishedEventArgs projectFinished)
         {
-            if (targetNames == null || targetNames.Count == 0)
+            try
             {
-                return null;
-            }
+                string agentName = Environment.GetEnvironmentVariable("AGENT_NAME");
+                string buildId = Environment.GetEnvironmentVariable("BUILD_BUILDID");
+                string buildName = Environment.GetEnvironmentVariable("BUILD_BUILDNUMBER");
+                string repositoryUri = Environment.GetEnvironmentVariable("BUILD_REPOSITORY_URI");
+                string sourceBranch = Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH");
 
-            return string.Join(", ", targetNames);
+                if (string.IsNullOrEmpty(agentName) ||
+                    string.IsNullOrEmpty(buildId) ||
+                    string.IsNullOrEmpty(buildName) ||
+                    string.IsNullOrEmpty(repositoryUri) ||
+                    string.IsNullOrEmpty(sourceBranch))
+                {
+                    return;
+                }
+
+                if (!_buildEventContextMap.TryGetValue(projectFinished.BuildEventContext, out var id) ||
+                    !_targetsMap.TryGetValue(id, out var targets))
+                {
+                    targets = "--";
+                }
+
+                var eventTelemetryEnvelope = new JObject
+                {
+                    {"name", "Microsoft.ApplicationInsights.Event"},
+                    {"time", DateTime.UtcNow.ToString("O")},
+                    {"iKey", "82db48c2-1490-471b-a273-d7ac4585c8e8"},
+                    {"flags", 0x200000},
+                    {
+                        "tags",
+                        new JObject
+                        {
+                            {"ai.cloud.roleInstance", agentName}
+                        }
+                    },
+                    {
+                        "data",
+                        new JObject
+                        {
+                            {"baseType", "EventData"},
+                            {
+                                "baseData",
+                                new JObject
+                                {
+                                    {"ver", 2},
+                                    {"name", "buildResults"},
+                                    {
+                                        "properties",
+                                        new JObject
+                                        {
+                                            {"branch", sourceBranch},
+                                            {"buildId", buildId},
+                                            {"buildName", buildName},
+                                            {"project", projectFinished.ProjectFile ?? "Unknown"},
+                                            {"repository", repositoryUri},
+                                            {"succeeded", projectFinished.Succeeded.ToString()},
+                                            {"targets", targets},
+                                        }
+                                    },
+                                    {"measurements", new JObject()},
+                                }
+                            }
+                        }
+                    }
+                };
+
+                HttpResponseMessage response = _http.PostAsync(
+                        "https://dc.services.visualstudio.com/v2/track",
+                        new StringContent(eventTelemetryEnvelope.ToString(Formatting.None),
+                            Encoding.UTF8,
+                            "application/json")
+                    )
+                    .GetAwaiter()
+                    .GetResult();
+
+                // This analytics call isn't critical enough to do anything about, we'll get enough of them in aggregate to serve our purposes
+                // so don't check the response code, just dispose it
+                response.Dispose();
+            }
+            catch (Exception ex)
+            {
+                // Not anything useful we can do here.
+                _builder.Start("logissue");
+                _builder.AddProperty("type", "warning");
+                _builder.AddProperty("code", "AI0001");
+                _builder.Finish(ex.Message);
+                Console.WriteLine(_builder.GetMessage());
+            }
         }
 
         internal sealed class LoggerParameters
