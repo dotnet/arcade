@@ -177,7 +177,6 @@ function InstallDotNet {
   if [[ "$#" -ge "5" ]]; then
     skipNonVersionedFilesArg="--skip-non-versioned-files"
   fi
-
   bash "$install_script" --version $version --install-dir "$root" $archArg $runtimeArg $skipNonVersionedFilesArg || {
     local exit_code=$?
     echo "Failed to install dotnet SDK (exit code '$exit_code')." >&2
