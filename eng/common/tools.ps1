@@ -358,7 +358,7 @@ function InitializeBuildTool() {
       ExitWithExitCode 1
     }
 
-    $buildTool = @{ Path = Join-Path $dotnetRoot "dotnet.exe"; Command = "msbuild"; Tool = "dotnet" }
+    $buildTool = @{ Path = Join-Path $dotnetRoot "dotnet.exe"; Command = "msbuild"; Tool = "dotnet"; Framework = "netcoreapp2.1" }
   } elseif ($msbuildEngine -eq "vs") {
     try {
       $msbuildPath = InitializeVisualStudioMSBuild -install:$restore
@@ -367,7 +367,7 @@ function InitializeBuildTool() {
       ExitWithExitCode 1
     }
 
-    $buildTool = @{ Path = $msbuildPath; Command = ""; Tool = "vs" }
+    $buildTool = @{ Path = $msbuildPath; Command = ""; Tool = "vs"; Framework = "net472" }
   } else {
     Write-Host "Unexpected value of -msbuildEngine: '$msbuildEngine'." -ForegroundColor Red
     ExitWithExitCode 1
@@ -481,9 +481,8 @@ function MSBuild() {
   if ($pipelinesLog) {
     $buildTool = InitializeBuildTool
     $toolsetBuildProject = InitializeToolset
-    $tf = if ($buildTool.Tool -eq "vs") { "net472" } else { "netcoreapp2.1" }
     $path = Split-Path -parent $toolsetBuildProject
-    $path = Join-Path $path "$tf\Microsoft.DotNet.Arcade.Sdk.dll"
+    $path = Join-Path $path (Join-Path $buildTool.Framework "Microsoft.DotNet.Arcade.Sdk.dll")
     $args += "/logger:$path"
   }
 
