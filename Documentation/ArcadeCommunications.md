@@ -32,7 +32,7 @@ There are several areas around which  communication will occur.  The nature of t
 - Published bar used for determining class of update/change (*link to bar document*)
 
 ## Communication Mechanics/Methods
-- Breaking changes follow procedure  (*add link here*) 
+- Breaking changes follow procedure [Arcade Breaking Changes Policy document](BreakingChangesPolicy.md) 
 - Disruptive changes follow procedure (*add link here*)
 - Release notes with “updates of note” (human crafted)
   - Done every time an update is deployed for our services
