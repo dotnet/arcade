@@ -67,6 +67,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 eventSource.ProjectFinished += OnProjectFinished;
                 eventSource.ProjectStarted += OnProjectStarted;
             }
+
+            eventSource.ProjectFinished += ReportToAnalytics;
         }
 
         public void Shutdown()
@@ -178,8 +180,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         private void OnProjectFinished(object sender, ProjectFinishedEventArgs e)
         {
-            ReportToAnalytics(e);
-
             if (!_buildEventContextMap.TryGetValue(e.BuildEventContext, out Guid projectId) ||
                 !_projectInfoMap.TryGetValue(projectId, out ProjectInfo projectInfo))
             {
@@ -257,7 +257,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
         }
 
-        private void ReportToAnalytics(ProjectFinishedEventArgs projectFinished)
+        private void ReportToAnalytics(object sender, ProjectFinishedEventArgs projectFinishedEventArgs)
         {
             try
             {
