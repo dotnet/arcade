@@ -9,19 +9,12 @@
   -->
 
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateResxSource" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
-
-  <ItemDefinitionGroup>
-    <EmbeddedResource>
-      <!-- Applies generally to all resource types (although only resx is currently supported here). When set to 'true', source generators should run during the build target. -->
-      <GenerateSource></GenerateSource>
-    </EmbeddedResource>
-  </ItemDefinitionGroup>
   
   <!-- Set the Generator metadata so that VS triggers design-time build whenever the .resx file is saved -->
   <ItemGroup>
     <EmbeddedResource Update="@(EmbeddedResource)">
       <GenerateSource Condition="'%(Extension)' == '.resx' and '%(GenerateSource)' == '' and '$(GenerateResxSource)' == 'true'">true</GenerateSource>
-      <Generator Condition="'%(Extension)' == '.resx' and ('%(GenerateSource)' == 'true' or ('%(GenerateSource)' == '' and '$(GenerateResxSource)' == 'true') )">MSBuild:_GenerateResxSource</Generator>
+      <Generator Condition="'%(Extension)' == '.resx' and '%(Generator)' == '' and ('%(GenerateSource)' == 'true' or ('%(GenerateSource)' == '' and '$(GenerateResxSource)' == 'true') )">MSBuild:_GenerateResxSource</Generator>
     </EmbeddedResource>
   </ItemGroup>
 
