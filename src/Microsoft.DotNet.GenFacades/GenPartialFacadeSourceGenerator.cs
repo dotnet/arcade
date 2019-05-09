@@ -33,10 +33,10 @@ namespace Microsoft.DotNet.GenFacades
             IEnumerable<string> referenceTypes = GetPublicVisibleTypes(contractAssembly, includeTypeForwards: true);
 
             // Normalizing and Removing Relative Segments from the seed paths.
-            IEnumerable<string> distinctSeeds = seeds.Select(seed => Path.GetFullPath(seed)).Distinct();
-            IEnumerable<string> seedNames = distinctSeeds.Select(seed => Path.GetFileName(seed));
+            string[] distinctSeeds = seeds.Select(seed => Path.GetFullPath(seed)).Distinct().ToArray();
+            string[] seedNames = distinctSeeds.Select(seed => Path.GetFileName(seed)).ToArray();
 
-            if (distinctSeeds.Count() != seedNames.Distinct().Count())
+            if (distinctSeeds.Count() != seedNames.Distinct(StringComparer.InvariantCultureIgnoreCase).Count())
             {
                 IEnumerable<string> duplicates = seedNames.GroupBy(x => x)
                     .Where(g => g.Count() > 1)
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.GenFacades
                 return false;
             }
 
-            IReadOnlyDictionary<string, List<string>> seedTypes = GenerateTypeTable(distinctSeeds);
+            IReadOnlyDictionary<string, IList<string>> seedTypes = GenerateTypeTable(distinctSeeds);
 
             if (OmitTypes != null)
                 referenceTypes = referenceTypes.Where(type => !OmitTypes.Contains(type));
@@ -104,13 +104,11 @@ namespace Microsoft.DotNet.GenFacades
                     foreach (var typeDefinationHandle in reader.TypeDefinitions)
                     {
                         TypeDefinition typeDefination = reader.GetTypeDefinition(typeDefinationHandle);
-                        string typeName = reader.GetString(typeDefination.Name);
 
                         // Ignoring Nested types
                         if (!typeDefination.IsNested && IsPublic(typeDefination))
                         {
-                            string namespaceName = reader.GetString(typeDefination.Namespace);
-                            yield return namespaceName + "." + typeName;
+                            yield return GetTypeName(typeDefination.Namespace, typeDefination.Name, reader);
                         }
                     }
                     
@@ -119,17 +117,20 @@ namespace Microsoft.DotNet.GenFacades
                         // Enumerating typeforwards
                         foreach (var exportedTypeHandle in reader.ExportedTypes)
                         {
-                            var exportedType = reader.GetExportedType(exportedTypeHandle);
+                            ExportedType exportedType = reader.GetExportedType(exportedTypeHandle);
                             if (exportedType.IsForwarder)
                             {
-                                yield return exportedType.Namespace.IsNil
-                                    ? reader.GetString(exportedType.Name)
-                                    : reader.GetString(exportedType.Namespace) + "." + reader.GetString(exportedType.Name);
+                                yield return GetTypeName(exportedType.Namespace, exportedType.Name, reader);
                             }
                         }
                     }
                 }
             }
+        }
+
+        private static string GetTypeName(StringHandle namespaceHandle, StringHandle typeHandle, MetadataReader reader)
+        {            
+            return namespaceHandle.IsNil ? reader.GetString(typeHandle) : reader.GetString(namespaceHandle) + "." + reader.GetString(typeHandle);
         }
 
         // This acts as a filter for public types.
@@ -138,9 +139,9 @@ namespace Microsoft.DotNet.GenFacades
             return (typeDefination.Attributes & TypeAttributes.Public) != 0;
         }
 
-        private static IReadOnlyDictionary<string, List<string>> GenerateTypeTable(IEnumerable<string> seedAssemblies)
+        private static IReadOnlyDictionary<string, IList<string>> GenerateTypeTable(IEnumerable<string> seedAssemblies)
         {
-            var typeTable = new Dictionary<string, List<string>>();
+            var typeTable = new Dictionary<string, IList<string>>();
             foreach(string assembly in seedAssemblies)
             {                
                 IEnumerable<string> types = GetPublicVisibleTypes(assembly);
@@ -152,11 +153,11 @@ namespace Microsoft.DotNet.GenFacades
             return typeTable;
         }
 
-        private static void AddTypeToTable(Dictionary<string, List<string>> typeTable, string type, string assemblyName)
+        private static void AddTypeToTable(Dictionary<string, IList<string>> typeTable, string type, string assemblyName)
         {
             if (type != null)
             {
-                List<string> assemblyListForTypes;
+                IList<string> assemblyListForTypes;
                 if (!typeTable.TryGetValue(type, out assemblyListForTypes))
                 {
                     assemblyListForTypes = new List<string>(1);

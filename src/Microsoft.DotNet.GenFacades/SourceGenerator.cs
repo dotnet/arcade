@@ -14,14 +14,14 @@ namespace Microsoft.DotNet.GenFacades
     {
         private readonly IReadOnlyDictionary<string, string> _seedTypePreferences;
         private readonly IEnumerable<string> _referenceTypes;
-        private readonly IReadOnlyDictionary<string, List<string>> _seedTypes;
+        private readonly IReadOnlyDictionary<string, IList<string>> _seedTypes;
         private readonly string _outputSourcePath;
         private readonly HashSet<string> _ignoreMissingTypesList = new HashSet<string>();
         private readonly TaskLoggingHelper _logger;
 
         public SourceGenerator(
             IEnumerable<string> referenceTypes,
-            IReadOnlyDictionary<string, List<string>> seedTypes,
+            IReadOnlyDictionary<string, IList<string>> seedTypes,
             IReadOnlyDictionary<string, string> seedTypePreferences,
             string outputSourcePath,
             string[] ignoreMissingTypesList,
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.GenFacades
 
             foreach (string type in typesToForward.OrderBy(s => s))
             {
-                List<string> seedTypes;
+                IList<string> seedTypes;
                 if (!_seedTypes.TryGetValue(type, out seedTypes))
                 {
                     if (!ignoreMissingTypes && !_ignoreMissingTypesList.Contains(type))
