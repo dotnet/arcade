@@ -12,8 +12,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <RestoreSources Condition="'$(DotNetBuildOffline)' == 'true'">$(DotNetRestoreSources)</RestoreSources>
-    <RestoreSources Condition="'$(DotNetBuildOffline)' != 'true'">
+    <RestoreSources>
       https://api.nuget.org/v3/index.json;
       https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
     </RestoreSources>
