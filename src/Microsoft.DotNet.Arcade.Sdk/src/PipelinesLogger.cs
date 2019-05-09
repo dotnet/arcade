@@ -3,11 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -23,7 +20,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
         private readonly MessageBuilder _builder = new MessageBuilder();
         private readonly Dictionary<BuildEventContext, Guid> _buildEventContextMap = new Dictionary<BuildEventContext, Guid>(BuildEventContextComparer.Instance);
         private readonly Dictionary<Guid, ProjectInfo> _projectInfoMap = new Dictionary<Guid, ProjectInfo>();
-        private readonly Dictionary<Guid, string> _targetsMap = new Dictionary<Guid, string>();
+        private readonly Dictionary<BuildEventContext, string> _targetsMap = new Dictionary<BuildEventContext, string>();
         private readonly HashSet<Guid> _detailedLoggedSet = new HashSet<Guid>();
         private readonly HttpClient _http = new HttpClient();
         private HashSet<string> _ignoredTargets;
@@ -67,6 +64,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 eventSource.ProjectFinished += OnProjectFinished;
                 eventSource.ProjectStarted += OnProjectStarted;
             }
+
+            eventSource.ProjectStarted += RecordTargets;
+            eventSource.ProjectFinished += ReportToAnalytics;
         }
 
         public void Shutdown()
@@ -178,8 +178,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         private void OnProjectFinished(object sender, ProjectFinishedEventArgs e)
         {
-            ReportToAnalytics(e);
-
             if (!_buildEventContextMap.TryGetValue(e.BuildEventContext, out Guid projectId) ||
                 !_projectInfoMap.TryGetValue(projectId, out ProjectInfo projectInfo))
             {
@@ -257,7 +255,12 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
         }
 
-        private void ReportToAnalytics(ProjectFinishedEventArgs projectFinished)
+        private void RecordTargets(object sender, ProjectStartedEventArgs e)
+        {
+            _targetsMap[e.BuildEventContext] = e.TargetNames;
+        }
+
+        private void ReportToAnalytics(object sender, ProjectFinishedEventArgs projectFinished)
         {
             try
             {
@@ -276,8 +279,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     return;
                 }
 
-                if (!_buildEventContextMap.TryGetValue(projectFinished.BuildEventContext, out var id) ||
-                    !_targetsMap.TryGetValue(id, out var targets))
+                if (!_targetsMap.TryGetValue(projectFinished.BuildEventContext, out var targets))
                 {
                     targets = "--";
                 }
