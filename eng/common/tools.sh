@@ -165,11 +165,11 @@ function InstallDotNet {
   local install_script=$_GetDotNetInstallScript
 
   local archArg=''
-  if [[ -n "${3:-}"]]; then
+  if [[ -n "${3:-}" ]]; then
     archArg="--architecture $3"
   fi
   local runtimeArg=''
-  if [[ -n "${4:-}"]]; then
+  if [[ -n "${4:-}" ]]; then
     runtimeArg="--runtime $4"
   fi
 
