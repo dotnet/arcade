@@ -41,7 +41,7 @@ There are several areas around which  communication will occur.  The nature of t
 - Blog entry for larger features/updates of interest
 
 ## Automation
-The intent is to provide access to a change log which contains all PR’s and the latest SHAs which is always available.
+The intent is to provide access to a change log which contains all PR’s and the latest SHAs which is always available. (*NOTE: this is not yet implemented*)
 - Log is auto generated and posted (not emailed)
 - Is not always categorized by type of change because of automation, e.g. breaking etc  (add ML in the future?)
 - Resource updates and 2nd party services are out of scope for this automation piece
