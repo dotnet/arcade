@@ -4,12 +4,13 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.Cci;
-using Microsoft.Cci.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 
 namespace Microsoft.DotNet.GenFacades
 {
@@ -17,7 +18,7 @@ namespace Microsoft.DotNet.GenFacades
     {
         public static bool Execute(
             string[] seeds,
-            string referenceAssembly,
+            string contractAssembly,
             string[] compileFiles,
             string defineConstants,
             string outputSourcePath,
@@ -27,26 +28,17 @@ namespace Microsoft.DotNet.GenFacades
             string[] OmitTypes = null,
             ITaskItem[] seedTypePreferencesList = null)
         {
-            var nameTable = new NameTable();
-            var internFactory = new InternFactory();
-
             Dictionary<string, string> seedTypePreferences = ParseSeedTypePreferences(seedTypePreferencesList, logger);
 
-            using (var contractHost = new HostEnvironment(nameTable, internFactory))
-            using (var seedHost = new HostEnvironment(nameTable, internFactory))
-            {
-                IAssembly contractAssembly = contractHost.LoadAssembly(referenceAssembly);
-                IEnumerable<string> referenceTypes = GetPublicVisibleTypes(contractAssembly);
+            IEnumerable<string> referenceTypes = GetPublicVisibleTypes(contractAssembly, includeTypeForwards: true);
 
-                if (OmitTypes != null)
-                    referenceTypes = referenceTypes.Where(type => !OmitTypes.Contains(type));
+            IReadOnlyDictionary<string, IReadOnlyList<string>> seedTypes = GenerateTypeTable(seeds);
 
-                IAssembly[] seedAssemblies = LoadAssemblies(seedHost, seeds).ToArray();
-                var seedTypes = GenerateTypeTable(seedAssemblies, contractAssembly);
+            if (OmitTypes != null)
+                referenceTypes = referenceTypes.Where(type => !OmitTypes.Contains(type));
 
-                var sourceGenerator = new SourceGenerator(referenceTypes, seedTypes, seedTypePreferences, outputSourcePath, ignoreMissingTypesList, logger);
-                return sourceGenerator.GenerateSource(compileFiles, ParseDefineConstants(defineConstants), ignoreMissingTypes);
-            }
+            var sourceGenerator = new SourceGenerator(referenceTypes, seedTypes, seedTypePreferences, outputSourcePath, ignoreMissingTypesList, logger);
+            return sourceGenerator.GenerateSource(compileFiles, ParseDefineConstants(defineConstants), ignoreMissingTypes);
         }
 
         private static IEnumerable<string> ParseDefineConstants(string defineConstants)
@@ -86,82 +78,74 @@ namespace Microsoft.DotNet.GenFacades
             return dictionary;
         }
 
-        private static IEnumerable<IAssembly> LoadAssemblies(HostEnvironment host, string[] assemblyPaths)
+        private static IEnumerable<string> GetPublicVisibleTypes(string assembly, bool includeTypeForwards = false)
         {
-            host.UnifyToLibPath = true;
-
-            foreach (string path in assemblyPaths)
+            using (var peReader = new PEReader(new FileStream(assembly, FileMode.Open, FileAccess.Read, FileShare.Delete | FileShare.Read)))
             {
-                if (Directory.Exists(path))
+                if (peReader.HasMetadata)
                 {
-                    host.AddLibPath(Path.GetFullPath(path));
+                    MetadataReader reader = peReader.GetMetadataReader();
+
+                    // Enumerating typeDefinatons
+                    foreach (var typeDefinationHandle in reader.TypeDefinitions)
+                    {
+                        TypeDefinition typeDefination = reader.GetTypeDefinition(typeDefinationHandle);
+                        string typeName = reader.GetString(typeDefination.Name);
+
+                        // Ignoring Nested types
+                        if (typeName != "<Module>" && !typeDefination.Namespace.IsNil && CheckTypeVisibility(typeDefination))
+                        {
+                            string namespaceName = reader.GetString(typeDefination.Namespace);
+                            yield return namespaceName + "." + typeName;
+                        }
+                    }
+                    
+                    if (includeTypeForwards)
+                    {
+                        // Enumerating typeforwards
+                        foreach (var exportedTypeHandle in reader.ExportedTypes)
+                        {
+                            var exportedType = reader.GetExportedType(exportedTypeHandle);
+                            if (exportedType.IsForwarder && !exportedType.Namespace.IsNil)
+                                yield return reader.GetString(exportedType.Namespace) + "." + reader.GetString(exportedType.Name);
+                        }
+                    }
                 }
-                else if (File.Exists(path))
-                {
-                    host.AddLibPath(Path.GetDirectoryName(Path.GetFullPath(path)));
-                }
-            }
-
-            return host.LoadAssemblies(assemblyPaths);
-        }
-
-        private static IEnumerable<string> GetPublicVisibleTypes(IAssembly contractAssembly)
-        {
-            var typeForwardsToForward = contractAssembly.ExportedTypes.Select(alias => alias.AliasedType)
-                                                                      .OfType<INamespaceTypeReference>();
-
-            var typesToForward = contractAssembly.GetAllTypes().Where(t => TypeHelper.IsVisibleOutsideAssembly(t))
-                                                               .OfType<INamespaceTypeDefinition>();
-
-            return typeForwardsToForward.Concat(typesToForward)
-                                        .Select(type => TypeHelper.GetTypeName(type, NameFormattingOptions.UseGenericTypeNameSuffix)).ToList();
-        }
-
-        private static void AddNestedTypesFromSeeds(List<string> types, INamedTypeDefinition type)
-        {
-            foreach (var nestedType in type.NestedTypes)
-            {
-                if (TypeHelper.IsVisibleOutsideAssembly(nestedType))
-                    types.Add(TypeHelper.GetTypeName(nestedType));
-                AddNestedTypesFromSeeds(types, nestedType);
             }
         }
 
-        private static IReadOnlyDictionary<string, IReadOnlyList<INamedTypeDefinition>> GenerateTypeTable(IEnumerable<IAssembly> seedAssemblies, IAssembly refAssembly = null)
+        // This is added to remove compiler generated internal types.
+        private static bool CheckTypeVisibility(TypeDefinition typeDefination)
         {
-            var typeTable = new Dictionary<string, IReadOnlyList<INamedTypeDefinition>>();
-            foreach (var assembly in seedAssemblies)
+            return (typeDefination.Attributes & TypeAttributes.Public) != 0;
+        }
+
+        private static IReadOnlyDictionary<string, IReadOnlyList<string>> GenerateTypeTable(IEnumerable<string> seedAssemblies)
+        {
+            var typeTable = new Dictionary<string, IReadOnlyList<string>>();
+            foreach(string assembly in seedAssemblies)
             {                
-                bool internalsVisibleTo = refAssembly != null && UnitHelper.AssemblyOneAllowsAssemblyTwoToAccessItsInternals(assembly, refAssembly);
-
-                foreach (var type in assembly.GetAllTypes().OfType<INamedTypeDefinition>())
-                {         
-                    if (internalsVisibleTo ? TypeHelper.IsVisibleToFriendAssemblies(type) : TypeHelper.IsVisibleOutsideAssembly(type))
-                        AddTypeAndNestedTypesToTable(typeTable, type);
+                IEnumerable<string> types = GetPublicVisibleTypes(assembly);
+                foreach (string type in types)
+                {
+                    AddTypeToTable(typeTable, type, assembly);
                 }
             }
             return typeTable;
         }
 
-        private static void AddTypeAndNestedTypesToTable(Dictionary<string, IReadOnlyList<INamedTypeDefinition>> typeTable, INamedTypeDefinition type)
+        private static void AddTypeToTable(Dictionary<string, IReadOnlyList<string>> typeTable, string type, string assembly)
         {
             if (type != null)
             {
-                IReadOnlyList<INamedTypeDefinition> seedTypes;
-                string typeName = TypeHelper.GetTypeName(type, NameFormattingOptions.UseGenericTypeNameSuffix);
-                if (!typeTable.TryGetValue(typeName, out seedTypes))
+                IReadOnlyList<string> seedTypes;                
+                if (!typeTable.TryGetValue(type, out seedTypes))
                 {
-                    seedTypes = new List<INamedTypeDefinition>(1);
-                    typeTable.Add(typeName, seedTypes);
+                    seedTypes = new List<string>(1);
+                    typeTable.Add(type, seedTypes);
                 }
                 if (!seedTypes.Contains(type))
-                    ((List<INamedTypeDefinition>)seedTypes).Add(type);
-
-                foreach (INestedTypeDefinition nestedType in type.NestedTypes)
-                {
-                    if (TypeHelper.IsVisibleOutsideAssembly(nestedType))
-                        AddTypeAndNestedTypesToTable(typeTable, nestedType);
-                }
+                    ((List<string>)seedTypes).Add(assembly);
             }
         }
     }
