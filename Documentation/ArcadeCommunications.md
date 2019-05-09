@@ -1,10 +1,18 @@
-# Types of Arcade Communication
+# Types of Engineering Services Change Communication
 
-## Areas to Communicate About
+## Goals and Success Criteria
+The primary goal is to communicate updates, new features, and anything of note that is changing.  Success looks like:
+- No surprises
+- New value is known
+- Breaking changes are expected, and proper runway is given to mitigate
+- All changes (big or small) accessible for investigations
+
+## Areas to Communicate Changes 
 There are several areas around which  communication will occur.  The nature of these updates remain the same for each of these areas.
 - DNC Services (Helix, Darc, etc) 
 - Shared Tools (Arcade SDK, Signing, etc)
 - Backing Resources (Azure storage, ScaleSets, Microbuild, etc)
+- Guidance and best practices
 
 ## Classes of Updates to Communicate
 - **Breaking** - Breaks something.  This type is the most severe and should be a rare occurrence
@@ -17,8 +25,8 @@ There are several areas around which  communication will occur.  The nature of t
   - Examples: security update, minor bug fixes, etc
 
 ## Engineering Services Policy for Updates
-- Product release schedules are published and kept "top of mind" for the team
-- Tools will **not** flow to release/shipping branches (only to master/dev)
+- .NET Core Product release schedules are published and kept "top of mind" for the team
+- Tools will **not** automatically flow to release/shipping branches (only to master/dev)
 - No updates to shared services during stabilization period (often a week) leading up to release
 - Published bar for when we’ll take changes (*link to doc here*)
 - Published bar used for determining class of update/change (*link to bar document*)
