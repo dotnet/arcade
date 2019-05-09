@@ -22,7 +22,7 @@ Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins su
 
 | Repo                       | Owner            | Status      | Risk   | Curent Jenkins jobs | Notes |
 | ---------------------------| ---------------- |:-----------:|:------:| ------------------- | ----- |
-| **CoreClr**                | russellk         | In progress | Medium | [ci1](https://ci.dot.net/job/dotnet_coreclr/) | CoreCLR default-triggered Jenkins jobs should be disabled by 5/3.  We will continue to leverage Jenkins for certain automated outerloop testing as long as it is around, but it will no longer be critical.|
+| **CoreClr**                | russellk         | Complete* || [ci1](https://ci.dot.net/job/dotnet_coreclr/) | *CoreCLR will continue to leverage Jenkins for certain automated outerloop testing as long as it is around, but these are not blocking Jenkins shutdown.|
 | **dotnet-docker**          | msimons          | Complete    ||||
 | **dotnet-framework-docker**| msimons          | Complete    ||||
 |**dotnet-buildtools-prereqs-docker** | msimons | Complete    ||||
