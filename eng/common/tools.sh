@@ -165,11 +165,11 @@ function InstallDotNet {
   local install_script=$_GetDotNetInstallScript
 
   local archArg=''
-  if [[ "$#" -ge "3" ]]; then
+  if [[ "$#" -ge 3 && "$3" != '' ]]; then
     archArg="--architecture $3"
   fi
   local runtimeArg=''
-  if [[ "$#" -ge "4" ]]; then
+  if [[ "$#" -ge 4 && "$4" != '' ]]; then
     runtimeArg="--runtime $4"
   fi
 
@@ -177,6 +177,7 @@ function InstallDotNet {
   if [[ "$#" -ge "5" ]]; then
     skipNonVersionedFilesArg="--skip-non-versioned-files"
   fi
+
   bash "$install_script" --version $version --install-dir "$root" $archArg $runtimeArg $skipNonVersionedFilesArg || {
     local exit_code=$?
     echo "Failed to install dotnet SDK (exit code '$exit_code')." >&2
