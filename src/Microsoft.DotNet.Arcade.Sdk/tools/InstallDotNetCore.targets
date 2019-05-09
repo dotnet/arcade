@@ -8,6 +8,9 @@
       <_DotNetInstallScript>$(RepositoryEngineeringDir)common\dotnet-install.cmd</_DotNetInstallScript>
       <_DotNetInstallScript Condition="'$(OS)' != 'Windows_NT'">$(RepositoryEngineeringDir)common\dotnet-install.sh</_DotNetInstallScript>
     </PropertyGroup>
+    
+    <Exec Condition="'$(OS)' != 'Windows_NT'"
+          Command="chmod +x &quot;$(_DotNetInstallScript)&quot;" />
 
     <InstallDotNetCore
       VersionsPropsPath="$(RepoRoot)eng\Versions.props"
