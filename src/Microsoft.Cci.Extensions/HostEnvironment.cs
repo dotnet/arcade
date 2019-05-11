@@ -224,15 +224,46 @@ namespace Microsoft.Cci.Extensions
             if (_coreAssemblyIdentity != null)
                 return _coreAssemblyIdentity;
 
-            // Try to find the assembly which believes itself is the core assembly
             foreach (var assembly in this.LoadedUnits.OfType<IAssembly>())
             {
-                if (assembly.AssemblyIdentity.Equals(assembly.CoreAssemblySymbolicIdentity))
-                    return assembly.AssemblyIdentity;
+                AssemblyIdentity coreIdentity = ResolveCoreAssemblyIdentity(assembly);
+
+                if (coreIdentity != null)
+                {
+                    return coreIdentity;
+                }
             }
 
             // Otherwise fallback to CCI's default core assembly loading logic.
             return base.GetCoreAssemblySymbolicIdentity();
+        }
+
+        private AssemblyIdentity ResolveCoreAssemblyIdentity(IAssembly assembly)
+        {
+            AssemblyIdentity coreIdentity = assembly.CoreAssemblySymbolicIdentity;
+
+            // Try to find the assembly which believes itself is the core assembly
+            while (!assembly.AssemblyIdentity.Equals(coreIdentity))
+            {
+                if (coreIdentity == null || coreIdentity == Dummy.AssemblyIdentity)
+                {
+                    return null;
+                }
+
+                coreIdentity = ProbeLibPaths(coreIdentity);
+
+                // push down until we can find an assembly that is the core assembly
+                assembly = LoadAssembly(coreIdentity);
+
+                if (assembly == null || assembly == Dummy.Assembly)
+                {
+                    return null;
+                }
+
+                coreIdentity = assembly.CoreAssemblySymbolicIdentity;
+            }
+
+            return coreIdentity;
         }
 
         public void SetCoreAssembly(AssemblyIdentity coreAssembly)
