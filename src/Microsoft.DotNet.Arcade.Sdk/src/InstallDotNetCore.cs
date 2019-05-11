@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 
@@ -94,9 +95,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                     if(version != null)
                                     {
                                         string arguments = $"-runtime \"{runtimeItem.Key}\" -version \"{version.ToNormalizedString()}\"";
-                                        if (!string.IsNullOrWhiteSpace(item.Value))
+                                        string architecture = item.Value;
+                                        if (!string.IsNullOrWhiteSpace(architecture))
                                         {
-                                            arguments += $" -architecture {item.Value}";
+                                            arguments += $" -architecture {architecture}";
+                                        }
+                                        else if (RuntimeInformation.OSArchitecture == Architecture.X86 ||
+                                                 RuntimeInformation.OSArchitecture == Architecture.X64)
+                                        {
+                                            arguments += " -architecture x64";
                                         }
                                         Log.LogMessage(MessageImportance.Low, $"Executing: {DotNetInstallScript} {arguments}");
                                         var process = Process.Start(new ProcessStartInfo()
