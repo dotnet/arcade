@@ -5,6 +5,7 @@
 using Microsoft.Build.Framework;
 using Microsoft.Azure.Storage.Blob;
 using System.Threading.Tasks;
+using System;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
@@ -64,26 +65,33 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
         public async Task<bool> ExecuteAsync()
         {
-            AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
-
-            if (FailIfExists && await blobUtils.CheckIfContainerExistsAsync())
+            try
             {
-                Log.LogError($"Container {ContainerName} already exists in storage account {AccountName}.");
-                return false;
+                AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
+
+                if (FailIfExists && await blobUtils.CheckIfContainerExistsAsync())
+                {
+                    Log.LogError($"Container {ContainerName} already exists in storage account {AccountName}.");
+                    return false;
+                }
+
+                BlobContainerPermissions permissions = new BlobContainerPermissions
+                {
+                    PublicAccess = IsPublic ? BlobContainerPublicAccessType.Blob : BlobContainerPublicAccessType.Off
+                };
+
+                StorageUri = await blobUtils.CreateContainerAsync(permissions);
+
+                ReadOnlyToken = blobUtils.CreateSASToken(ReadOnlyTokenDaysValid, SharedAccessBlobPermissions.Read);
+
+                WriteOnlyToken = blobUtils.CreateSASToken(WriteOnlyTokenDaysValid, SharedAccessBlobPermissions.Write);
+            }
+            catch (Exception e)
+            {
+                Log.LogErrorFromException(e);
             }
 
-            BlobContainerPermissions permissions = new BlobContainerPermissions
-            {
-                PublicAccess = IsPublic ? BlobContainerPublicAccessType.Blob : BlobContainerPublicAccessType.Off
-            };
-
-            StorageUri = await blobUtils.CreateContainerAsync(permissions);
-
-            ReadOnlyToken = blobUtils.CreateSASToken(ReadOnlyTokenDaysValid, SharedAccessBlobPermissions.Read);
-
-            WriteOnlyToken = blobUtils.CreateSASToken(WriteOnlyTokenDaysValid, SharedAccessBlobPermissions.Write);
-
-            return true;
+            return !Log.HasLoggedErrors;
         }
     }
 }
