@@ -88,6 +88,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             {
                 CloudBlobClient cloudBlobClient = storageAccount.CreateCloudBlobClient();
                 CloudBlobContainer cloudBlobContainer = cloudBlobClient.GetContainerReference(ContainerName);
+                BlobUtils blobUtils = new BlobUtils(AccountName, AccountKey, ContainerName);
 
                 List<Task> uploadTasks = new List<Task>();
 
@@ -113,7 +114,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                         {
                             if (PassIfExistingItemIdentical)
                             {
-                                if (BlobUtils.IsFileIdenticalToBlob(item.ItemSpec, blobReference))
+                                if (blobUtils.IsFileIdenticalToBlob(item.ItemSpec, blobReference))
                                 {
                                     return;
                                 }

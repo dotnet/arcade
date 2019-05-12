@@ -159,16 +159,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             try
             {
-                if (!options.AllowOverwrite && await BlobUtils.CheckIfBlobExistsAsync(AccountName, AccountKey, ContainerName, relativeBlobPath))
+                BlobUtils blobUtils = new BlobUtils(AccountName, AccountKey, ContainerName);
+
+                if (!options.AllowOverwrite && await blobUtils.CheckIfBlobExistsAsync(relativeBlobPath))
                 {
                     if (options.PassIfExistingItemIdentical)
                     {
-                        if (!BlobUtils.IsFileIdenticalToBlob(
-                            AccountName,
-                            AccountKey,
-                            ContainerName,
-                            item.ItemSpec,
-                            relativeBlobPath))
+                        if (!blobUtils.IsFileIdenticalToBlob(item.ItemSpec, relativeBlobPath))
                         {
                             Log.LogError(
                                 $"Item '{item}' already exists with different contents " +
@@ -183,12 +180,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 else
                 {
                     Log.LogMessage($"Uploading {item} to {relativeBlobPath}.");
-                    await BlobUtils.UploadBlockBlobAsync(
-                        AccountName,
-                        AccountKey,
-                        ContainerName,
-                        item.ItemSpec,
-                        relativeBlobPath);
+                    await blobUtils.UploadBlockBlobAsync(item.ItemSpec, relativeBlobPath);
                 }
             }
             catch (Exception exc)

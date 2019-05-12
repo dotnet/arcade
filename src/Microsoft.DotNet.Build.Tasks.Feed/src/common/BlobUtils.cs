@@ -9,19 +9,22 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
-    static class BlobUtils
+    public class BlobUtils
     {
-        public static CloudBlockBlob GetBlockBlob(
-            string AccountName,
-            string AccountKey,
-            string ContainerName,
-            string destinationBlob)
+        public CloudBlobContainer Container { get; set; }
+
+        public BlobUtils(string AccountName, string AccountKey, string ContainerName)
         {
-            CloudBlobClient cloudBlobClient = new CloudStorageAccount(new StorageCredentials(AccountName, AccountKey), true).CreateCloudBlobClient();
+            StorageCredentials credentials = new StorageCredentials(AccountName, AccountKey);
+            CloudStorageAccount storageAccount = new CloudStorageAccount(credentials, true);
+            CloudBlobClient cloudBlobClient = storageAccount.CreateCloudBlobClient();
 
-            CloudBlobContainer cloudBlobContainer = cloudBlobClient.GetContainerReference(ContainerName);
+            Container = cloudBlobClient.GetContainerReference(ContainerName);
+        }
 
-            return cloudBlobContainer.GetBlockBlobReference(destinationBlob);
+        public CloudBlockBlob GetBlockBlob(string destinationBlob)
+        {
+            return Container.GetBlockBlobReference(destinationBlob);
         }
 
         public static string CalculateMD5(string filename)
@@ -36,28 +39,16 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             }
         }
 
-        public static async Task UploadBlockBlobAsync(
-            string AccountName,
-            string AccountKey,
-            string ContainerName,
-            string filePath,
-            string destinationBlob)
+        public async Task UploadBlockBlobAsync(string filePath, string blobPath)
         {
-            destinationBlob = destinationBlob.Replace("\\", "/");
-
-            CloudBlockBlob cloudBlockBlob = BlobUtils.GetBlockBlob(AccountName, AccountKey, ContainerName, destinationBlob);
+            CloudBlockBlob cloudBlockBlob = GetBlockBlob(blobPath.Replace("\\", "/"));
 
             await cloudBlockBlob.UploadFromFileAsync(filePath);
         }
 
-        public static bool IsFileIdenticalToBlob(
-            string AccountName,
-            string AccountKey,
-            string ContainerName,
-            string destinationBlob,
-            string localFileFullPath)
+        public bool IsFileIdenticalToBlob(string blobPath, string localFileFullPath)
         {
-            CloudBlockBlob blobReference = GetBlockBlob(AccountName, AccountKey, ContainerName, destinationBlob);
+            CloudBlockBlob blobReference = GetBlockBlob(blobPath);
 
             return IsFileIdenticalToBlob(localFileFullPath, blobReference);
         }
@@ -69,7 +60,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         /// Otherwise a byte-per-byte comparison with the content of the file
         /// is performed.
         /// </summary>
-        public static bool IsFileIdenticalToBlob(string localFileFullPath, CloudBlockBlob blobReference)
+        public bool IsFileIdenticalToBlob(string localFileFullPath, CloudBlockBlob blobReference)
         {
             blobReference.FetchAttributes();
 
@@ -91,13 +82,9 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             }
         }
 
-        public static async Task<bool> CheckIfBlobExistsAsync(
-            string AccountName,
-            string AccountKey,
-            string ContainerName,
-            string destinationBlob)
+        public async Task<bool> CheckIfBlobExistsAsync(string blobPath)
         {
-            var blob = GetBlockBlob(AccountName, AccountKey, ContainerName, destinationBlob);
+            var blob = GetBlockBlob(blobPath);
 
             return await blob.ExistsAsync();
         }
