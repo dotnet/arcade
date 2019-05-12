@@ -159,7 +159,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             try
             {
-                BlobUtils blobUtils = new BlobUtils(AccountName, AccountKey, ContainerName);
+                AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
 
                 if (!options.AllowOverwrite && await blobUtils.CheckIfBlobExistsAsync(relativeBlobPath))
                 {

@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             {
                 CloudBlobClient cloudBlobClient = storageAccount.CreateCloudBlobClient();
                 CloudBlobContainer cloudBlobContainer = cloudBlobClient.GetContainerReference(ContainerName);
-                BlobUtils blobUtils = new BlobUtils(AccountName, AccountKey, ContainerName);
+                AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
 
                 List<Task> uploadTasks = new List<Task>();
 

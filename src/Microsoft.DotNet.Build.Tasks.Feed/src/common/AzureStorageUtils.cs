@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
-    public class BlobUtils
+    public class AzureStorageUtils
     {
         public CloudBlobContainer Container { get; set; }
 
-        public BlobUtils(string AccountName, string AccountKey, string ContainerName)
+        public AzureStorageUtils(string AccountName, string AccountKey, string ContainerName)
         {
             StorageCredentials credentials = new StorageCredentials(AccountName, AccountKey);
             CloudStorageAccount storageAccount = new CloudStorageAccount(credentials, true);
@@ -80,6 +80,31 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
                 return localBytes.SequenceEqual(existingBytes);
             }
+        }
+
+        public async Task<string> CreateContainerAsync(BlobContainerPermissions permissions)
+        {
+            await Container.CreateIfNotExistsAsync();
+            await Container.SetPermissionsAsync(permissions);
+
+            return Container.Uri.ToString();
+        }
+
+        public string CreateSASToken(int tokenExpirationInDays, SharedAccessBlobPermissions containerPermissions)
+        {
+            SharedAccessBlobPolicy sasConstraints = new SharedAccessBlobPolicy
+            {
+                SharedAccessExpiryTime = DateTimeOffset.UtcNow.AddDays(tokenExpirationInDays),
+                Permissions = containerPermissions
+            };
+
+            //Generate the shared access signature on the container, setting the constraints directly on the signature.
+            return Container.GetSharedAccessSignature(sasConstraints);
+        }
+
+        public Task<bool> CheckIfContainerExistsAsync()
+        {
+            return Container.ExistsAsync();
         }
 
         public async Task<bool> CheckIfBlobExistsAsync(string blobPath)
