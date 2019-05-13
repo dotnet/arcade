@@ -31,11 +31,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(DotNetBuildFromSource)' == 'true'">
-    <Compile Remove="FacadeGenerationException.cs" />
-    <Compile Remove="GenFacades.cs" />
-    <Compile Remove="GenFacadesTask.cs" />
-    <Compile Remove="TypeReferenceRewriter.cs" />
-    <Compile Remove="VersionResourceSerializer.cs" />
+    <Compile Remove="ILRewriter\**" />
   </ItemGroup>
 
   <!-- On Core, these native binaries wind up in the Runtimes folder of this package. For Desktop, we have to manually mark them to get them packed -->
