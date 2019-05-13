@@ -4,13 +4,13 @@
   <PropertyGroup>
     <AddSourceToFilesToPackageDependsOn>$(AddSourceToFilesToPackageDependsOn);GenerateInternalTypesSource</AddSourceToFilesToPackageDependsOn>
 
-    <!-- If ToolHostCmd is undefined, we default to assuming 'dotnet' is on the path -->
-    <ToolHostCmd Condition="'$(ToolHostCmd)' == ''">dotnet</ToolHostCmd>
+    <!-- If DotNetTool is undefined, we default to assuming 'dotnet' is on the path -->
+    <DotNetTool Condition="'$(DotNetTool)' == ''">dotnet</DotNetTool>
 
     <_SourceRewriterPath Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)\..\tools\netcoreapp2.1\Microsoft.DotNet.SourceRewriter.dll</_SourceRewriterPath>
     <_SourceRewriterPath Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.SourceRewriter.exe</_SourceRewriterPath>
 
-    <_SourceRewriterCommand Condition="'$(MSBuildRuntimeType)' == 'core'">$(ToolHostCmd) $(_SourceRewriterPath)</_SourceRewriterCommand>
+    <_SourceRewriterCommand Condition="'$(MSBuildRuntimeType)' == 'core'">"$(DotNetTool)" $(_SourceRewriterPath)</_SourceRewriterCommand>
     <_SourceRewriterCommand Condition="'$(MSBuildRuntimeType)' != 'core' and '$(OS)' == 'Windows_NT'">$(_SourceRewriterPath)</_SourceRewriterCommand>
     <_SourceRewriterCommand Condition="'$(MSBuildRuntimeType)' != 'core' and '$(OS)' != 'Windows_NT'">mono --runtime=v4.0.30319 "$(_SourceRewriterPath)"</_SourceRewriterCommand>
   </PropertyGroup>
