@@ -5,7 +5,7 @@ The primary goal is to communicate updates, new features, and anything of note t
 - No surprises
 - New value is known
 - Breaking changes are expected, and proper runway is given to mitigate
-- All changes (big or small) accessible for investigations
+- All changes (big or small) available to help with transparency that enables easy diagnosability
 
 ## Areas to Communicate Changes 
 There are several areas around which  communication will occur.  The nature of these updates remain the same for each of these areas.
@@ -28,12 +28,12 @@ There are several areas around which  communication will occur.  The nature of t
 - .NET Core Product release schedules are published and kept "top of mind" for the team
 - Tools will **not** automatically flow to release/shipping branches (only to master/dev)
 - No updates to shared services during stabilization period (often a week) leading up to release
-- Published bar for when we’ll take changes (*link to doc here*)
-- Published bar used for determining class of update/change (*link to bar document*)
+- Published bar for when we’ll take changes [Arcade Change Bar](ChangeBar.md) 
+- Published bar used for determining class of update/change [Arcade Change Bar](ChangeBar.md) 
 
 ## Communication Mechanics/Methods
-- Breaking changes follow procedure [Arcade Breaking Changes Policy document](BreakingChangesPolicy.md) 
-- Disruptive changes follow procedure (*add link here*)
+- Breaking changes follow procedure [Arcade Changes Policy document](ChangesPolicy.md) 
+- Disruptive changes follow procedure [Arcade Changes Policy document](ChangesPolicy.md) 
 - Release notes with “updates of note” (human crafted)
   - Done every time an update is deployed for our services
   - Done at most weekly for tools (e.g. Arcade SDK).

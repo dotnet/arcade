@@ -25,7 +25,7 @@ The short answer is that the final arbitrator is the Arcade owner, which current
 Time and again differences get worked out when these items occur.  To be sure, it's not easy and we're often tempted to think "it shouldn't be this hard".  While perhaps that's true - the reality is that sometimes it IS this hard, and there's really no easy path through.  The good news is that in Arcade, this is relatively rare.
 
 ## Helpful Tactics/Advice when it's challenging
-* Where there are differences that are challenging, see the '[Defaults Guidance](DefaultsGuidance.md)' doc for help on framing and definitions.
+* Where there are differences that are challenging, see the '[Defaults Guidance](./DefaultsGuidance.md)' doc for help on framing and definitions.
 * Always feel free to reach out to the Arcade owner (currently @markwilkie) for advice and next steps and another perspective.
 * Search for common ground, then work out from there.
 * Remember that there's no such thing as "winning" an argument.  There's only working to find the best path forward for .NET Core.

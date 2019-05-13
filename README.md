@@ -24,7 +24,7 @@ Documentation, tutorials, and guides may be found in the [Start Here](Documentat
 
 ### How to contribute
 
-- [How to contribute to Arcade guide](https://github.com/dotnet/arcade/ArcadeContributorGuidance.md)
+- [How to contribute to Arcade guide](https://github.com/dotnet/arcade/Policy/ArcadeContributorGuidance.md)
 
 - [Pull requests](https://github.com/dotnet/arcade/pulls): [Open](https://github.com/dotnet/arcade/pulls?q=is%3Aopen+is%3Apr)/[Closed](https://github.com/dotnet/arcade/pulls?q=is%3Apr+is%3Aclosed)
 
