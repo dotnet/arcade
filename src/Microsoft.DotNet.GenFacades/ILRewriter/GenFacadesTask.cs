@@ -10,7 +10,7 @@ using System.Diagnostics;
 using System.Linq;
 using MSBuild = Microsoft.Build.Utilities;
 
-namespace Microsoft.DotNet.GenFacades
+namespace Micorosft.DotNet.GenFacdes.ILRewriter
 {
     /// <summary>
     /// Runs GenFacades In-Proc.
