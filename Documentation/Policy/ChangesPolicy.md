@@ -17,7 +17,6 @@ Again, the intent is to not break consumers outside of major versions wherever p
 1. A day later email 'dncpartners' and give them a minimum of a 2 day warning 
 1. Two days later, a 'we're doing this now' email to ‘dncpartners’
 1. Proactively provide support and/or help as required 
-2. 
 
 # Arcade Disruptive Changes Policy
 
