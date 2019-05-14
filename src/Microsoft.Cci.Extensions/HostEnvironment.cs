@@ -224,7 +224,9 @@ namespace Microsoft.Cci.Extensions
             if (_coreAssemblyIdentity != null)
                 return _coreAssemblyIdentity;
 
-            foreach (var assembly in this.LoadedUnits.OfType<IAssembly>())
+            IAssembly[] loadedAssemblies = this.LoadedUnits.OfType<IAssembly>().ToArray();
+
+            foreach (var assembly in loadedAssemblies)
             {
                 AssemblyIdentity coreIdentity = ResolveCoreAssemblyIdentity(assembly);
 
