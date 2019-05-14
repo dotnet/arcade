@@ -20,7 +20,7 @@ function InstallDarcCli ($darcVersion) {
   # If the user didn't explicitly specify the darc version,
   # query the Maestro API for the correct version of darc to install.
   if (-not $darcVersion) {
-    $darcVersion = $(Invoke-WebRequest $versionEndpoint).Content
+    $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
   }
   
   $arcadeServicesSource = 'https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json'
