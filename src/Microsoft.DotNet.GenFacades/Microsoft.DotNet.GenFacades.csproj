@@ -16,7 +16,7 @@
     <PackageReference Include="System.Reflection.Metadata" Version="1.6.0" />
   </ItemGroup>
 
-  <!-- Required for compiling Micorosft.DotNet.GenFacdes.ILRewriter -->
+  <!-- Required for compiling Microsoft.DotNet.GenFacades.ILRewriter -->
   <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
     <PackageReference Include="Microsoft.Cci" Version="$(MicrosoftCciVersion)" />
     <PackageReference Include="Microsoft.DiaSymReader.Converter" Version="$(MicrosoftDiaSymReaderConverterVersion)" />

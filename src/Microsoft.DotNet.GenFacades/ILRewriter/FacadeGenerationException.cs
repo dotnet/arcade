@@ -4,7 +4,7 @@
 
 using System;
 
-namespace Micorosft.DotNet.GenFacdes.ILRewriter
+namespace Microsoft.DotNet.GenFacades.ILRewriter
 {
     internal sealed class FacadeGenerationException : Exception
     {
