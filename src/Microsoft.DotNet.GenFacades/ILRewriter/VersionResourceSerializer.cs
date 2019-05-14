@@ -13,7 +13,7 @@ using DWORD = System.UInt32;
 using WCHAR = System.Char;
 using WORD = System.UInt16;
 
-namespace Micorosft.DotNet.GenFacdes.ILRewriter
+namespace Microsoft.DotNet.GenFacades.ILRewriter
 {
     internal class VersionResourceSerializer
     {
