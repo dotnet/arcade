@@ -3,13 +3,13 @@
 <Project DefaultTargets="Build">
 
   <PropertyGroup>
-    <!-- If ToolHostCmd is undefined, we default to assuming 'dotnet' is on the path -->
-    <ToolHostCmd Condition="'$(ToolHostCmd)' == ''">dotnet</ToolHostCmd>
+    <!-- If DotNetTool is undefined, we default to assuming 'dotnet' is on the path -->
+    <DotNetTool Condition="'$(DotNetTool)' == ''">dotnet</DotNetTool>
 
     <_ApiCompatPath Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)\..\tools\netcoreapp2.1\Microsoft.DotNet.ApiCompat.dll</_ApiCompatPath>
     <_ApiCompatPath Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.ApiCompat.exe</_ApiCompatPath>
 
-    <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' == 'core'">$(ToolHostCmd) "$(_ApiCompatPath)"</_ApiCompatCommand>
+    <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' == 'core'">"$(DotNetTool)" "$(_ApiCompatPath)"</_ApiCompatCommand>
     <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' != 'core' and '$(OS)' == 'Windows_NT'">"$(_ApiCompatPath)"</_ApiCompatCommand>
     <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' != 'core' and '$(OS)' != 'Windows_NT'">mono --runtime=v4.0.30319 "$(_ApiCompatPath)"</_ApiCompatCommand>
 
