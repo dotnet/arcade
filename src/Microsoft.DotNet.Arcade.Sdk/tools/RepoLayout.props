@@ -15,8 +15,8 @@
     <!-- Respect environment variable for the NuGet Packages Root if set; otherwise, use the current default location -->
     <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' != ''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)'))</NuGetPackageRoot>
     <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$([MSBuild]::NormalizeDirectory('$(NUGET_PACKAGES)'))</NuGetPackageRoot>
-    <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == '' AND '$(OS)' == 'Windows_NT'">$([MSBuild]::NormalizeDirectory('$(UserProfile)', '.nuget', 'packages'))</NuGetPackageRoot>
-    <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == '' AND '$(OS)' != 'Windows_NT'">$([MSBuild]::NormalizeDirectory('$(HOME)', '.nuget', 'packages'))</NuGetPackageRoot>
+    <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == '' and '$(OS)' == 'Windows_NT'">$([MSBuild]::NormalizeDirectory('$(UserProfile)', '.nuget', 'packages'))</NuGetPackageRoot>
+    <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == '' and '$(OS)' != 'Windows_NT'">$([MSBuild]::NormalizeDirectory('$(HOME)', '.nuget', 'packages'))</NuGetPackageRoot>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -25,14 +25,15 @@
 
   <PropertyGroup Condition="'$(DotNetTool)' == ''">
     <!-- Respect environment variable for the .NET install directory if set; otherwise, use the repo default location -->
-    <DotNetRoot Condition="'$(DOTNET_INSTALL_DIR)' != ''">$([MSBuild]::NormalizeDirectory('$(DOTNET_INSTALL_DIR)'))</DotNetRoot>
+    <DotNetRoot Condition="'$(DOTNET_INSTALL_DIR)' != ''">$(DOTNET_INSTALL_DIR)</DotNetRoot>
+    <DotNetRoot Condition="'$(DotNetRoot)' != ''">$([MSBuild]::NormalizeDirectory('$(DotNetRoot)'))</DotNetRoot>
     <DotNetRoot Condition="'$(DotNetRoot)' == ''">$([MSBuild]::NormalizeDirectory('$(RepoRoot)', '.dotnet'))</DotNetRoot>
 
     <!-- Let the exec task find dotnet on PATH -->
     <DotNetRoot Condition="!Exists($(DotNetRoot))"/>
 
-    <DotNetTool Condition="'$(OS)' == 'Windows_NT'">$([MSBuild]::NormalizePath('$(DotNetRoot)', 'dotnet.exe'))</DotNetTool>
-    <DotNetTool Condition="'$(OS)' != 'Windows_NT'">$([MSBuild]::NormalizeDirectory('$(DotNetRoot)', 'dotnet'))</DotNetTool>
+    <DotNetTool Condition="'$(OS)' == 'Windows_NT'">$(DotNetRoot)dotnet.exe</DotNetTool>
+    <DotNetTool Condition="'$(OS)' != 'Windows_NT'">$(DotNetRoot)dotnet</DotNetTool>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(MonoTool)' == ''">
