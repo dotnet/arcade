@@ -327,7 +327,6 @@ function MSBuild {
 }
 
 function MSBuild-Core {
-
   if [[ "$ci" == true ]]; then
     if [[ "$binary_log" != true ]]; then
       echo "Binary log must be enabled in CI build." >&2
