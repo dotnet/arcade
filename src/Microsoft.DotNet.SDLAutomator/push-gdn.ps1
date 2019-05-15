@@ -1,5 +1,6 @@
 Param(
   [string] $Repository,
+  [string] $BranchName="master",
   [string] $GdnFolder,
   [string] $DncEngAccessToken,
   [string] $PushReason
@@ -20,7 +21,7 @@ if ($LASTEXITCODE -ne 0) {
   Write-Error "Git clone failed with exit code $LASTEXITCODE."
 }
 # We copy the .gdn folder from our local run into the git repository so it can be committed
-$sdlRepositoryFolder = Join-Path (Join-Path $sdlDir $Repository) ".gdn"
+$sdlRepositoryFolder = Join-Path (Join-Path (Join-Path $sdlDir $Repository) $BranchName) ".gdn"
 if (Get-Command Robocopy) {
   Robocopy /S $GdnFolder $sdlRepositoryFolder
 } else {
@@ -34,8 +35,8 @@ git add .
 if ($LASTEXITCODE -ne 0) {
   Write-Error "Git add failed with exit code $LASTEXITCODE."
 }
-Write-Host "git commit -m `"$PushReason for $Repository`""
-git commit -m "$PushReason for $Repository"
+Write-Host "git commit -m `"$PushReason for $Repository/$BranchName`""
+git commit -m "$PushReason for $Repository/$BranchName"
 if ($LASTEXITCODE -ne 0) {
   Write-Error "Git commit failed with exit code $LASTEXITCODE."
 }
