@@ -23,15 +23,15 @@ foreach ($tool in $ToolsList) {
   # We have to manually configure tools that run on source to look at the source directory only
   if ($tool -eq "credscan") {
     Write-Host "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --args `"TargetDirectory : $TargetDirectory`" --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive"
-    Invoke-Expression "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --args `"TargetDirectory : $TargetDirectory`" --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive"
+    &$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --args `"TargetDirectory : $TargetDirectory`" --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive
     $gdnConfig = "--config $gdnConfigFile"
   }
   if ($tool -eq "policheck") {
     Write-Host "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --args `"Target : $TargetDirectory`" --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive"
-    Invoke-Expression "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --args `"Target : $TargetDirectory`" --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive"
+    &$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --args `"Target : $TargetDirectory`" --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive
     $gdnConfig = "--config $gdnConfigFile"
   }
 
   Write-Host "$GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel $gdnConfig"
-  Invoke-Expression "$GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel $gdnConfig"
+  &$GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel $gdnConfig
 }

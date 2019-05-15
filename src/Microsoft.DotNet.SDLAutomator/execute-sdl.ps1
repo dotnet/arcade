@@ -27,7 +27,7 @@ $gdnFolder = Join-Path $ArtifactsDirectory ".gdn"
 if ($TsaOnboard) {
   if ($TsaCodebaseName -and $TsaNotificationEmail -and $TsaCodebaseAdmin -and $TsaBugAreaPath) {
     Write-Host "$GuardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"https://dev.azure.com/dnceng/`" --project-name `"internal`" --area-path `"$TsaBugAreaPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel"
-    Invoke-Expression "$GuardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"https://dev.azure.com/dnceng/`" --project-name `"internal`" --area-path `"$TsaBugAreaPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel"
+    &$GuardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"https://dev.azure.com/dnceng/`" --project-name `"internal`" --area-path `"$TsaBugAreaPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel
     if ($LASTEXITCODE -ne 0) {
       Write-Error "Guardian tsa-onboard failed with exit code $LASTEXITCODE."
     }
@@ -51,7 +51,7 @@ if ($TsaPublish) {
   if ($BranchName -and $BuildNumber) {
     $TsaRepositoryName = $Repository.Replace("/", "-")
     Write-Host "$GuardianCliLocation tsa-publish --all-tools --repository-name $TsaRepositoryName --branch-name $BranchName --build-number $BuildNumber --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel"
-    Invoke-Expression "$GuardianCliLocation tsa-publish --all-tools --repository-name $TsaRepositoryName --branch-name $BranchName --build-number $BuildNumber --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel"
+    &$GuardianCliLocation tsa-publish --all-tools --repository-name $TsaRepositoryName --branch-name $BranchName --build-number $BuildNumber --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel
     if ($LASTEXITCODE -ne 0) {
       Write-Error "Guardian tsa-publish failed with exit code $LASTEXITCODE."
     }

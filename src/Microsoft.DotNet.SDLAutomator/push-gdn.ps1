@@ -27,8 +27,7 @@ if (Get-Command Robocopy) {
   rsync -r $GdnFolder $sdlRepositoryFolder
 }
 # cd to the sdl-config directory so we can run git there
-$currentDirectory = (Get-Location).Path
-Set-Location $sdlDir
+Push-Location $sdlDir
 # git add . --> git commit --> git push
 Write-Host "git add ."
 git add .
@@ -47,4 +46,4 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Return to the original directory
-Set-Location $currentDirectory
+Pop-Location
