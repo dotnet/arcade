@@ -41,7 +41,7 @@ Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins su
 
 | Job name                      | Owner        | Status | Jenkins jobs | Notes |
 | ----------------------------- | ------------ | ------ | ------------ | ----- |
-| aspnet-EntityFrameworkCore    | dougbu       || [2.1](https://ci.dot.net/job/aspnet_EntityFrameworkCore/job/release_2.1/), [2.2](https://ci.dot.net/job/aspnet_EntityFrameworkCore/job/release_2.2/) | Brice Lamson to confirm if these are needed |
+| aspnet-EntityFrameworkCore    | dougbu       | Complete | [2.1](https://ci.dot.net/job/aspnet_EntityFrameworkCore/job/release_2.1/), [2.2](https://ci.dot.net/job/aspnet_EntityFrameworkCore/job/release_2.2/) | Brice Lamson to confirm if these are needed |
 | dotnet-CLI                    | licavalc     | In Progress | [2.1.5xx](https://ci.dot.net/job/dotnet_cli/job/release_2.1.5xx/), [2.1.6xx](https://ci.dot.net/job/dotnet_cli/job/release_2.1.6xx/), [2.1.7xx](https://ci.dot.net/job/dotnet_cli/job/release_2.1.7xx/), [2.2.1xx](https://ci.dot.net/job/dotnet_cli/job/release_2.2.1xx/), [2.2.2xx](https://ci.dot.net/job/dotnet_cli/job/release_2.2.2xx/), [2.2.3xx](https://ci.dot.net/job/dotnet_cli/job/release_2.2.3xx/), [1.0.0](https://ci.dot.net/job/dotnet_cli/job/rel_1.0.0/), [1.0.1](https://ci.dot.net/job/dotnet_cli/job/rel_1.0.1/), [1.1.0](https://ci.dot.net/job/dotnet_cli/job/rel_1.1.0/) ||
 | dotnet-CoreClr                | russellk     || [2.1](https://ci.dot.net/job/dotnet_coreclr/job/release_2.1/), [2.2](https://ci.dot.net/job/dotnet_coreclr/job/release_2.2/), [1.0.0](https://ci.dot.net/job/dotnet_coreclr/job/release_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_coreclr/job/release_1.1.0/), [2.1/2.2 perf](https://ci2.dot.net/job/dotnet_coreclr/job/perf/) ||
 | dotnet-CoreFx                 | danmose      | In Progress | [2.1](https://ci.dot.net/job/dotnet_corefx/job/release_2.1/), [2.2](https://ci.dot.net/job/dotnet_corefx/job/release_2.2/), [1.0.0](https://ci.dot.net/job/dotnet_corefx/job/release_1.0.0/), [1.1.0](https://ci.dot.net/job/dotnet_corefx/job/release_1.1.0/), [2.1/2.2 perf](https://ci2.dot.net/job/dotnet_corefx/job/perf/)||
@@ -77,9 +77,9 @@ Jenkins for CI has been replaced by Azure DevOps.  **The last day for Jenkins su
 | dotnet_CITest                 | mmitche      | Complete | [stability](https://ci2.dot.net/job/dotnet_citest/job/stability/) | Not Needed |
 | dotnet_Core                   | mmitche      | Complete | [master](https://ci2.dot.net/job/dotnet_core/job/master/) ||
 | dotnet-CoreClr                | russellk     || [pipelines](https://ci.dot.net/job/dotnet_coreclr/job/pipelines/) ||
-| dotnet-CoreFx                 | danmose      || [pipelines](https://ci.dot.net/job/dotnet_corefx/job/pipelines/)||
+| dotnet-CoreFx                 | danmose      | Complete | [pipelines](https://ci.dot.net/job/dotnet_corefx/job/pipelines/)||
 | dotnet_CoreRt                 | sergeyk      | Waiting for WASM queues which will be available with the next rollout | [master](https://ci.dot.net/job/dotnet_corert/job/master/) ||
-| dotnet-Core-Setup             | dleeapho     | In Progress | [pipelines](https://ci.dot.net/job/dotnet_core-setup/job/pipelines/) ||
+| dotnet-Core-Setup             | dleeapho     | Complete | [pipelines](https://ci.dot.net/job/dotnet_core-setup/job/pipelines/) ||
 | dotnet_Interactive-Window     | tmat         | Complete | [master](https://ci.dot.net/job/dotnet_interactive-window/job/master/) | Already moved to Azure DevOps and can be removed? |
 | dotnet_Metadata-Tools         | tmat         | Complete | [master](https://ci2.dot.net/job/dotnet_metadata-tools/job/master/) | Already moved to Azure DevOps and can be removed? |
 | dotnet_Orleans                | sbykov       || [master](https://ci.dot.net/job/dotnet_orleans/job/master/) ||
