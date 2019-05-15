@@ -2,6 +2,7 @@ using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NuGet.Versioning;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -70,7 +71,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                 else
                                 {
                                     var proj = Project.FromFile(VersionsPropsPath, new Build.Definition.ProjectOptions());
-                                    properties = proj.AllEvaluatedProperties.ToLookup(p => p.Name);
+                                    properties = proj.AllEvaluatedProperties.ToLookup(p => p.Name, StringComparer.OrdinalIgnoreCase );
                                 }
                             }
                             
