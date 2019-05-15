@@ -28,8 +28,8 @@ The desired product KPI metrics are listed below, with the following fields:
   For example, staleness can be aggregated such that even if all direct inputs
   to a repository A are new, if those inputs have stale inputs, then A is viewed
   as stale.
-  - **Drives Action** - What action can be taken to improve the metric and thus
-    improve the chances of shipping with high quality.
+- **Drives Action** - What action can be taken to improve the metric and thus
+  improve the chances of shipping with high quality.
 
 | Name | Qualifier | Indicates | Drives Action |
 | ---- | --------- | --------- | ------------- |
