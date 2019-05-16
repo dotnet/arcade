@@ -4,20 +4,13 @@ Param(
   [string] $architecture = "",
   [string] $version = "Latest",
   [string] $runtime = "dotnet",
-  [string] $installdir = ""
+  [string] $installdir = Join-Path $RepoRoot ".dotnet"
 )
 
 . $PSScriptRoot\tools.ps1
 
 try {
-  $dotnetRoot = Join-Path $RepoRoot ".dotnet"
-  
-  $dotnetInstallLocation = $installdir
-  if (-not $dotnetInstallLocation) {
-    $dotnetInstallLocation = $dotnetRoot
-  }
-
-  InstallDotNet $dotnetInstallLocation $version $architecture $runtime $true
+   InstallDotNet $installdir $version $architecture $runtime $true
 } 
 catch {
   Write-Host $_

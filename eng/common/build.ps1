@@ -79,7 +79,7 @@ function Build {
   InitializeCustomToolset
 
   $bl = if ($binaryLog) { "/bl:" + (Join-Path $LogDir "Build.binlog") } else { "" }
-  $pl = if ($platform) { "/p:Platform=$platform" } else { "" }
+  $platformArg = if ($platform) { "/p:Platform=$platform" } else { "" }
 
   if ($projects) {
     # Re-assign properties to a new variable because PowerShell doesn't let us append properties directly for unclear reasons.
@@ -91,7 +91,7 @@ function Build {
 
   MSBuild $toolsetBuildProj `
     $bl `
-    $pl `
+    $platformArg `
     /p:Configuration=$configuration `
     /p:RepoRoot=$RepoRoot `
     /p:Restore=$restore `
