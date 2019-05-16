@@ -13,7 +13,6 @@
           Command="chmod +x &quot;$(_DotNetInstallScript)&quot;" />
 
     <InstallDotNetCore
-      RepoRoot="$(RepoRoot)"
       VersionsPropsPath="$(RepoRoot)eng\Versions.props"
       GlobalJsonPath="$(RepoRoot)global.json"
       DotNetInstallScript="$(_DotNetInstallScript)"
