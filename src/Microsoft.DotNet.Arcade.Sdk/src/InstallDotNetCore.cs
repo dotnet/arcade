@@ -28,7 +28,10 @@ namespace Microsoft.DotNet.Arcade.Sdk
         public string DotNetInstallScript { get; set; }
         [Required]
         public string GlobalJsonPath { get; set; }
+        [Required]
         public string Platform { get; set; }
+        [Required]
+        public string RepoRoot { get; set; }
 
         public override bool Execute()
         {
@@ -56,7 +59,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
                         foreach (var runtime in dotnetLocalElement.EnumerateObject())
                         {
                             var items = GetItemsFromJsonElementArray(runtime, out string runtimeName);
-                            runtimeItems.Add(runtimeName, items);
+                            if (runtimeItems.ContainsKey(runtimeName))
+                            {
+                                runtimeItems[runtimeName] = runtimeItems[runtimeName].Concat(items);
+                            }
+                            else
+                            {
+                                runtimeItems.Add(runtimeName, items);
+                            }
                         }
                         if (runtimeItems.Count > 0)
                         {
@@ -97,16 +107,26 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                     if(version != null)
                                     {
                                         string arguments = $"-runtime \"{runtimeItem.Key}\" -version \"{version.ToNormalizedString()}\"";
+                                        string installdir = Path.Combine(RepoRoot, ".dotnet");
+
                                         string architecture = item.Value;
                                         if (!string.IsNullOrWhiteSpace(architecture))
                                         {
                                             arguments += $" -architecture {architecture}";
+                                            if (string.Equals(architecture, "x86", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                installdir = Path.Combine(installdir, "x86");
+                                            }
                                         }
                                         else
                                         {
                                             if (!string.IsNullOrWhiteSpace(Platform) && !string.Equals(Platform, "AnyCpu", StringComparison.OrdinalIgnoreCase))
                                             {
                                                 arguments += $" -architecture {Platform}";
+                                                if (string.Equals(Platform, "x86", StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    installdir = Path.Combine(installdir, "x86");
+                                                }
                                             }
                                             else if (RuntimeInformation.OSArchitecture == Architecture.X86 ||
                                                      RuntimeInformation.OSArchitecture == Architecture.X64)
@@ -114,6 +134,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                                 arguments += " -architecture x64";
                                             }
                                         }
+
+                                        arguments += $" -installdir {installdir}";
                                         Log.LogMessage(MessageImportance.Low, $"Executing: {DotNetInstallScript} {arguments}");
                                         var process = Process.Start(new ProcessStartInfo()
                                         {

@@ -3,7 +3,8 @@ Param(
   [string] $verbosity = "minimal",
   [string] $architecture = "",
   [string] $version = "Latest",
-  [string] $runtime = "dotnet"
+  [string] $runtime = "dotnet",
+  [string] $installdir = ""
 )
 
 . $PSScriptRoot\tools.ps1
@@ -11,11 +12,11 @@ Param(
 try {
   $dotnetRoot = Join-Path $RepoRoot ".dotnet"
   
-  $dotnetInstallLocation = $dotnetRoot
-  if ($architecture -and -not ($architecture -like '')) {
-    $dotnetInstallLocation = Join-Path $dotnetRoot $architecture
+  $dotnetInstallLocation = $installdir
+  if (-not $dotnetInstallLocation) {
+    $dotnetInstallLocation = $dotnetRoot
   }
-  
+
   InstallDotNet $dotnetInstallLocation $version $architecture $runtime $true
 } 
 catch {

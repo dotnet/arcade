@@ -1,7 +1,7 @@
 [CmdletBinding(PositionalBinding=$false)]
 Param(
   [string][Alias('c')]$configuration = "Debug",
-  [string][Alias('p')]$platform = $null,
+  [string]$platform = $null,
   [string] $projects,
   [string][Alias('v')]$verbosity = "minimal",
   [string] $msbuildEngine = $null,
@@ -30,7 +30,7 @@ Param(
 function Print-Usage() {
     Write-Host "Common settings:"
     Write-Host "  -configuration <value>  Build configuration: 'Debug' or 'Release' (short: -c)"
-    Write-Host "  -platform <value>       Platform configuration: 'x86', 'x64' or any valid Platform value to pass to msbuild (short: -p)"
+    Write-Host "  -platform <value>       Platform configuration: 'x86', 'x64' or any valid Platform value to pass to msbuild"
     Write-Host "  -verbosity <value>      Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic] (short: -v)"
     Write-Host "  -binaryLog              Output binary log (short: -bl)"
     Write-Host "  -help                   Print help and exit"
