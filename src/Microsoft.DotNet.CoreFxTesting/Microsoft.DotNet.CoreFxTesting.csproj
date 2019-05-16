@@ -5,6 +5,7 @@
     <Description>This package provides support for running tests inside CoreFx.</Description>
     <PackageType>MSBuildSdk</PackageType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>
