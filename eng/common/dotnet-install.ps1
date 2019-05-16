@@ -10,7 +10,13 @@ Param(
 
 try {
   $dotnetRoot = Join-Path $RepoRoot ".dotnet"
-  InstallDotNet $dotnetRoot $version $architecture $runtime $true
+  
+  $dotnetInstallLocation = $dotnetRoot
+  if ($architecture -and -not ($architecture -like '')) {
+    $dotnetInstallLocation = Join-Path $dotnetRoot $architecture
+  }
+  
+  InstallDotNet $dotnetInstallLocation $version $architecture $runtime $true
 } 
 catch {
   Write-Host $_

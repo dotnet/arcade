@@ -15,7 +15,8 @@
     <InstallDotNetCore
       VersionsPropsPath="$(RepoRoot)eng\Versions.props"
       GlobalJsonPath="$(RepoRoot)global.json"
-      DotNetInstallScript="$(_DotNetInstallScript)"/>
+      DotNetInstallScript="$(_DotNetInstallScript)"
+      Platform="$(Platform)"/>
   </Target>
 
 </Project>
