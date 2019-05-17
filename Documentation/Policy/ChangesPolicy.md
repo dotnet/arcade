@@ -4,7 +4,7 @@
 In a nutshell, no breaking changes within a major version (SemVer rules) except where absolutely necessary.  To be sure there are some nuances to this, but in general - Arcade doesn't do breaking changes.  
 
 ## Validation:
-In order to no break Arcade consumers, there must be comprehensive validation *before* pushing to the latest channel.  From there, it's expected that the repo's PR validation would catch things specific to that repo.  More specific here. [Arcade Validation Document](../Validation/Overview.md)
+In order to not break Arcade consumers, there must be comprehensive validation *before* pushing to the latest channel.  From there, it's expected that the repo's PR validation would catch things specific to that repo.  More specific here. [Arcade Validation Document](../Validation/Overview.md)
 
 ## Policy:
 Again, the intent is to not break consumers outside of major versions wherever possible.  A bit more on this:
@@ -24,7 +24,7 @@ Again, the intent is to not break consumers outside of major versions wherever p
 From time to time, it is necessary or desirable to make a change which is not technically breaking, but is likely disruptive. The process is largely the same as breaking changes.
 
 ## Validation:
-In order to no break Arcade consumers, there must be comprehensive validation *before* pushing to the latest channel.  From there, it's expected that the repo's PR validation would catch things specific to that repo.  More specific here. [Arcade Validation Document](../Validation/Overview.md)
+In order to not break Arcade consumers, there must be comprehensive validation *before* pushing to the latest channel.  From there, it's expected that the repo's PR validation would catch things specific to that repo.  More specific here. [Arcade Validation Document](../Validation/Overview.md)
 
 ## Policy:
 Disruptive changes should be minimal.  However, it should be understood that they will happen, although very infrequently.  As a rule of thumb, if there is more than one (1) disruptive change per month, a root cause investigation should be initiated.
