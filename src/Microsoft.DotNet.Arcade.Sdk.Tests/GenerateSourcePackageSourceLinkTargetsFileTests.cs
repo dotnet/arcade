@@ -2,8 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.Build.Utilities;
 using System.Collections.Generic;
+using System.IO;
+using System.Xml.Linq;
+using Microsoft.Build.Utilities;
 using TestUtilities;
 using Xunit;
 
@@ -29,8 +31,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             };
 
             string content = task.GetOutputFileContent();
-            AssertEx.AssertEqualToleratingWhitespaceDifferences(@"
-<?xml version=""1.0"" encoding=""utf-8""?>
+            AssertEx.AssertEqualToleratingWhitespaceDifferences(@"<?xml version=""1.0"" encoding=""utf-8""?>
 <Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
   <Target Name=""_AddSourcePackageSourceRoot_CFB3FCB48DA6C1861F924045FCA162F513465D35"" BeforeTargets=""InitializeSourceControlInformation"">
     <ItemGroup>
@@ -48,6 +49,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
   </Target>
 </Project>
 ", content);
+            XDocument.Load(new StringReader(content));
         }
     }
 }
