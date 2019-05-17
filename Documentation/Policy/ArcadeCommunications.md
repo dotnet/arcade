@@ -9,7 +9,7 @@ The primary goal is to communicate updates, new features, and anything of note t
 
 ## Areas to Communicate Changes 
 There are several areas around which  communication will occur.  The nature of these updates remain the same for each of these areas.
-- DNC Services (Helix, Darc, etc) 
+- DNCeng Services (Helix, Darc, etc) 
 - Shared Tools (Arcade SDK, Signing, etc)
 - Backing Resources (Azure storage, ScaleSets, Microbuild, etc)
 - Guidance and best practices
