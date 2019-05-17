@@ -36,7 +36,7 @@ There are several areas around which  communication will occur.  The nature of t
 - Disruptive changes follow procedure [Arcade Changes Policy document](ChangesPolicy.md) 
 - Release notes with “updates of note” (human crafted)
   - Done every time an update is deployed for our services
-  - Done at most weekly for tools (e.g. Arcade SDK).
+  - Done at most weekly for tools (e.g. Arcade SDK)
   - Done when items of note occur in one of our backing resources.  For example, public feeds for Azure Artifacts
 - Blog entry for larger features/updates of interest
 
