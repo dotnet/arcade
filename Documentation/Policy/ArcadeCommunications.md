@@ -8,8 +8,8 @@ The primary goal is to communicate updates, new features, and anything of note t
 - All changes (big or small) available to help with transparency that enables easy diagnosability
 
 ## Areas to Communicate Changes 
-There are several areas around which  communication will occur.  The nature of these updates remain the same for each of these areas.
-- DNC Services (Helix, Darc, etc) 
+There are several areas around which communication will occur.  The nature of these updates remain the same for each of these areas.
+- DNCeng Services (Helix, Darc, etc) 
 - Shared Tools (Arcade SDK, Signing, etc)
 - Backing Resources (Azure storage, ScaleSets, Microbuild, etc)
 - Guidance and best practices
@@ -36,7 +36,7 @@ There are several areas around which  communication will occur.  The nature of t
 - Disruptive changes follow procedure [Arcade Changes Policy document](ChangesPolicy.md) 
 - Release notes with “updates of note” (human crafted)
   - Done every time an update is deployed for our services
-  - Done at most weekly for tools (e.g. Arcade SDK).
+  - Done at most weekly for tools (e.g. Arcade SDK)
   - Done when items of note occur in one of our backing resources.  For example, public feeds for Azure Artifacts
 - Blog entry for larger features/updates of interest
 
