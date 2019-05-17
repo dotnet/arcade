@@ -1,20 +1,33 @@
 # Onboarding Azure DevOps
 
-- [Project Guidance](#project-guidance)
-- [GitHub to DncEng Internal mirror](#github-to-dnceng-internal-mirror)
-- [Azure DevOps Pull Request and CI builds](#Azure-DevOps-pull-request-and-ci-builds)
-- [Azure DevOps service connection](#Azure-DevOps-service-connection)
-- [Agent Queues](#agent-queues)
-- [CI badge link](#ci-badge-link)
-- [Signed builds](#signed-builds)
-- [Generate Graph Files](#generate-graph-files)
-- [Security](#security)
-- [Notes about YAML](#notes-about-yaml)
-- [Troubleshooting](#troubleshooting)
+- [Onboarding Azure DevOps](#onboarding-azure-devops)
+  - [Project Guidance](#project-guidance)
+  - [GitHub to DncEng Internal mirror](#github-to-dnceng-internal-mirror)
+  - [Azure DevOps Pull Request and CI builds](#azure-devops-pull-request-and-ci-builds)
+  - [Azure DevOps service connection](#azure-devops-service-connection)
+    - [GitHub connections](#github-connections)
+      - [Switching service connections](#switching-service-connections)
+    - [Git (internal) connections](#git-internal-connections)
+  - [Agent queues](#agent-queues)
+    - [External : (Pool Provider: NetCorePublic-Int-Pool)](#external--pool-provider-netcorepublic-int-pool)
+    - [Internal : (Pool Provider: NetCoreInternal-Int-Pool)](#internal--pool-provider-netcoreinternal-int-pool)
+  - [CI badge link](#ci-badge-link)
+  - [Signed Builds](#signed-builds)
+  - [Generate Graph Files](#generate-graph-files)
+  - [Security](#security)
+  - [Notes about Yaml](#notes-about-yaml)
+  - [Troubleshooting](#troubleshooting)
+    - [Known issues](#known-issues)
+    - [Queuing builds](#queuing-builds)
+      - [YAML](#yaml)
+      - [Resource authorization](#resource-authorization)
+        - [Unauthorized service endpoints and resources](#unauthorized-service-endpoints-and-resources)
+        - [Unauthorized agent pools](#unauthorized-agent-pools)
+      - [Self references endpoint](#self-references-endpoint)
 
 ## Project Guidance
 
-[Project guidance](./AzureDevOpsGuidance.md) - Covers guidance on naming conventions, folder structure, projects, Pipelines, etc...
+[Project guidance](./Policy/AzureDevOpsGuidance.md) - Covers guidance on naming conventions, folder structure, projects, Pipelines, etc...
 
 ## GitHub to DncEng Internal mirror
 
@@ -117,7 +130,7 @@ https://dev.azure.com/dnceng/public/_build?definitionId=208&branchName=master
 
 ## Signed Builds
 
-dev.azure.com/dnceng now has support for signed builds.  Code should be mirrored to dev.azure.com/dnceng/internal as outlined in the [Azure DevOps Guidance](./AzureDevOpsGuidance.md#projects).  See [MovingFromDevDivToDncEng.md](./MovingFromDevDivToDncEng.md) for information about moving signed builds from DevDiv to DncEng.
+dev.azure.com/dnceng now has support for signed builds.  Code should be mirrored to dev.azure.com/dnceng/internal as outlined in the [Azure DevOps Guidance](./Policy/AzureDevOpsGuidance.md#projects).  See [MovingFromDevDivToDncEng.md](./MovingFromDevDivToDncEng.md) for information about moving signed builds from DevDiv to DncEng.
 
 ## Generate Graph Files
 
