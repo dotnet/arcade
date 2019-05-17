@@ -28,6 +28,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
         public string DotNetInstallScript { get; set; }
         [Required]
         public string GlobalJsonPath { get; set; }
+        [Required]
+        public string Platform { get; set; }
 
         public override bool Execute()
         {
@@ -55,7 +57,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
                         foreach (var runtime in dotnetLocalElement.EnumerateObject())
                         {
                             var items = GetItemsFromJsonElementArray(runtime, out string runtimeName);
-                            runtimeItems.Add(runtimeName, items);
+                            if (runtimeItems.ContainsKey(runtimeName))
+                            {
+                                runtimeItems[runtimeName] = runtimeItems[runtimeName].Concat(items);
+                            }
+                            else
+                            {
+                                runtimeItems.Add(runtimeName, items);
+                            }
                         }
                         if (runtimeItems.Count > 0)
                         {
@@ -96,16 +105,25 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                     if(version != null)
                                     {
                                         string arguments = $"-runtime \"{runtimeItem.Key}\" -version \"{version.ToNormalizedString()}\"";
+
                                         string architecture = item.Value;
                                         if (!string.IsNullOrWhiteSpace(architecture))
                                         {
                                             arguments += $" -architecture {architecture}";
                                         }
-                                        else if (RuntimeInformation.OSArchitecture == Architecture.X86 ||
-                                                 RuntimeInformation.OSArchitecture == Architecture.X64)
+                                        else
                                         {
-                                            arguments += " -architecture x64";
+                                            if (!string.IsNullOrWhiteSpace(Platform) && !string.Equals(Platform, "AnyCpu", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                arguments += $" -architecture {Platform}";
+                                            }
+                                            else if (RuntimeInformation.OSArchitecture == Architecture.X86 ||
+                                                     RuntimeInformation.OSArchitecture == Architecture.X64)
+                                            {
+                                                arguments += " -architecture x64";
+                                            }
                                         }
+
                                         Log.LogMessage(MessageImportance.Low, $"Executing: {DotNetInstallScript} {arguments}");
                                         var process = Process.Start(new ProcessStartInfo()
                                         {
