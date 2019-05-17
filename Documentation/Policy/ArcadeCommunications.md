@@ -8,7 +8,7 @@ The primary goal is to communicate updates, new features, and anything of note t
 - All changes (big or small) available to help with transparency that enables easy diagnosability
 
 ## Areas to Communicate Changes 
-There are several areas around which  communication will occur.  The nature of these updates remain the same for each of these areas.
+There are several areas around which communication will occur.  The nature of these updates remain the same for each of these areas.
 - DNCeng Services (Helix, Darc, etc) 
 - Shared Tools (Arcade SDK, Signing, etc)
 - Backing Resources (Azure storage, ScaleSets, Microbuild, etc)
