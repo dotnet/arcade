@@ -1,5 +1,5 @@
 Param(
-  [string] $GuardianPackageVersion,                     # Required: the path to the guardian CLI executable
+  [string] $GuardianPackageName,                        # Required: the name of guardian CLI packge
   [string] $NugetPackageDirectory,                      # Required: directory where NuGet packages are installed
   [string] $Repository,                                 # Required: the name of the repository (e.g. dotnet/arcade)
   [string] $BranchName="master",                        # Optional: name of branch or version of gdn settings; defaults to master
@@ -22,7 +22,7 @@ Param(
   [string] $GuardianLoggerLevel="Standard"              # Optional: the logger level for the Guardian CLI; options are Trace, Verbose, Standard, Warning, and Error
 )
 
-$guardianCliLocation = Join-Path $NugetPackageDirectory (Join-Path "Microsoft.Guardian.Cli" (Join-Path $GuardianPackageVersion (Join-Path "tools" "Microsoft.Guardian.Cli.exe")))
+$guardianCliLocation = Join-Path $NugetPackageDirectory (Join-Path $GuardianPackageName (Join-Path "tools" "guardian")))
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
