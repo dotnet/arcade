@@ -1,5 +1,6 @@
 Param(
-  [string] $GuardianCliLocation,                        # Required: the path to the guardian CLI executable
+  [string] $GuardianPackageVersion,                     # Required: the path to the guardian CLI executable
+  [string] $NugetPackageDirectory,                      # Required: directory where NuGet packages are installed
   [string] $Repository,                                 # Required: the name of the repository (e.g. dotnet/arcade)
   [string] $BranchName="master",                        # Optional: name of branch or version of gdn settings; defaults to master
   [string] $SourceDirectory,                            # Required: the directory where source files are located
@@ -21,16 +22,18 @@ Param(
   [string] $GuardianLoggerLevel="Standard"              # Optional: the logger level for the Guardian CLI; options are Trace, Verbose, Standard, Warning, and Error
 )
 
+$guardianCliLocation = Join-Path $NugetPackageDirectory (Join-Path "Microsoft.Guardian.Cli" (Join-Path $GuardianPackageVersion (Join-Path "tools" "Microsoft.Guardian.Cli.exe")))
+
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
 
-& $(Join-Path $PSScriptRoot "init-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -Repository $Repository -BranchName $BranchName -WorkingDirectory $ArtifactsDirectory -DncEngAccessToken $DncEngAccessToken -GuardianLoggerLevel $GuardianLoggerLevel
+& $(Join-Path $PSScriptRoot "init-sdl.ps1") -GuardianCliLocation $guardianCliLocation -Repository $Repository -BranchName $BranchName -WorkingDirectory $ArtifactsDirectory -DncEngAccessToken $DncEngAccessToken -GuardianLoggerLevel $GuardianLoggerLevel
 $gdnFolder = Join-Path $ArtifactsDirectory ".gdn"
 
 if ($TsaOnboard) {
   if ($TsaCodebaseName -and $TsaNotificationEmail -and $TsaCodebaseAdmin -and $TsaBugAreaPath) {
-    Write-Host "$GuardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"https://dev.azure.com/dnceng/`" --project-name `"internal`" --area-path `"$TsaBugAreaPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel"
-    &$GuardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"https://dev.azure.com/dnceng/`" --project-name `"internal`" --area-path `"$TsaBugAreaPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel
+    Write-Host "$guardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"https://dev.azure.com/dnceng/`" --project-name `"internal`" --area-path `"$TsaBugAreaPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel"
+    &$guardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"https://dev.azure.com/dnceng/`" --project-name `"internal`" --area-path `"$TsaBugAreaPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel
     if ($LASTEXITCODE -ne 0) {
       Write-Error "Guardian tsa-onboard failed with exit code $LASTEXITCODE."
     }
@@ -40,10 +43,10 @@ if ($TsaOnboard) {
 }
 
 if ($ArtifactToolsList -and $ArtifactToolsList.Count -gt 0) {
-  & $(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -WorkingDirectory $ArtifactsDirectory -TargetDirectory $ArtifactsDirectory -GdnFolder $gdnFolder -ToolsList $ArtifactToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel
+  & $(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $guardianCliLocation -WorkingDirectory $ArtifactsDirectory -TargetDirectory $ArtifactsDirectory -GdnFolder $gdnFolder -ToolsList $ArtifactToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel
 }
 if ($SourceToolsList -and $SourceToolsList.Count -gt 0) {
-  & $(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $GuardianCliLocation -WorkingDirectory $ArtifactsDirectory -TargetDirectory $SourceDirectory -GdnFolder $gdnFolder -ToolsList $SourceToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel
+  & $(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $guardianCliLocation -WorkingDirectory $ArtifactsDirectory -TargetDirectory $SourceDirectory -GdnFolder $gdnFolder -ToolsList $SourceToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel
 }
 
 if ($UpdateBaseline) {
@@ -55,8 +58,8 @@ if ($TsaPublish) {
     if (-not $TsaRepositoryName) {
       $TsaRepositoryName = "$($Repository.Replace("/", "-")-$BranchName)"
     }
-    Write-Host "$GuardianCliLocation tsa-publish --all-tools --repository-name `"$TsaRepositoryName`" --branch-name `"$TsaBranchName`" --build-number `"$BuildNumber`" --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel"
-    &$GuardianCliLocation tsa-publish --all-tools --repository-name "$TsaRepositoryName" --branch-name "$TsaBranchName" --build-number "$BuildNumber" --codebase-name "$TsaCodebaseName" --project-name "$TsaProjectName" --working-directory $SourceDirectory  --logger-level $GuardianLoggerLevel
+    Write-Host "$guardianCliLocation tsa-publish --all-tools --repository-name `"$TsaRepositoryName`" --branch-name `"$TsaBranchName`" --build-number `"$BuildNumber`" --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel"
+    &$guardianCliLocation tsa-publish --all-tools --repository-name "$TsaRepositoryName" --branch-name "$TsaBranchName" --build-number "$BuildNumber" --codebase-name "$TsaCodebaseName" --project-name "$TsaProjectName" --working-directory $SourceDirectory  --logger-level $GuardianLoggerLevel
     if ($LASTEXITCODE -ne 0) {
       Write-Error "Guardian tsa-publish failed with exit code $LASTEXITCODE."
     }
