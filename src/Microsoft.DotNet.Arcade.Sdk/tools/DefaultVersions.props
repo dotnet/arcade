@@ -80,7 +80,7 @@
     <MicroBuildCoreVersion Condition="'$(MicroBuildCoreVersion)' == ''">0.2.0</MicroBuildCoreVersion>
     <MicrosoftDotNetIBCMergeVersion Condition="'$(MicrosoftDotNetIBCMergeVersion)' == ''">5.0.6-beta.19203.1</MicrosoftDotNetIBCMergeVersion>
     <MicrosoftNETTestSdkVersion Condition="'$(MicrosoftNETTestSdkVersion)' == ''">15.9.0</MicrosoftNETTestSdkVersion>
-    <MicrosoftNetFrameworkReferenceAssembliesVersion Condition="'$(MicrosoftNetFrameworkReferenceAssembliesVersion)' == ''">1.0.0-alpha-5</MicrosoftNetFrameworkReferenceAssembliesVersion>
+    <MicrosoftNetFrameworkReferenceAssembliesVersion Condition="'$(MicrosoftNetFrameworkReferenceAssembliesVersion)' == ''">1.0.0-preview.2</MicrosoftNetFrameworkReferenceAssembliesVersion>
     <MicrosoftVSSDKBuildToolsVersion Condition="'$(MicrosoftVSSDKBuildToolsVersion)' == ''">15.1.192</MicrosoftVSSDKBuildToolsVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion Condition="'$(MicrosoftDiaSymReaderPdb2PdbVersion)' == ''">1.1.0-beta1-62506-02</MicrosoftDiaSymReaderPdb2PdbVersion>
     <RoslynToolsModifyVsixManifestVersion Condition="'$(RoslynToolsModifyVsixManifestVersion)' == ''">1.0.0-beta2-63222-01</RoslynToolsModifyVsixManifestVersion>
@@ -110,7 +110,6 @@
     <RestoreSources>$(RestoreSources);https://api.nuget.org/v3/index.json</RestoreSources>
     <RestoreSources Condition="'$(UsingToolXliff)' == 'true' and $(XliffTasksVersion.Contains('-'))">$(RestoreSources);https://dotnet.myget.org/F/dotnet-core/api/v3/index.json</RestoreSources>
     <RestoreSources Condition="'$(UsingToolMicrosoftNetCompilers)' == 'true' and $(MicrosoftNetCompilersToolsetVersion.Contains('-'))">$(RestoreSources);https://dotnet.myget.org/F/roslyn/api/v3/index.json</RestoreSources>
-    <RestoreSources Condition="'$(UsingToolNetFrameworkReferenceAssemblies)' == 'true'">$(RestoreSources);https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json</RestoreSources>
     <RestoreSources Condition="$(XUnitVersion.Contains('-')) or $(XUnitRunnerVisualStudioVersion.Contains('-')) or $(XUnitRunnerVisualStudioVersion.Contains('-'))">$(RestoreSources);https://www.myget.org/F/xunit/api/v3/index.json</RestoreSources>
     <RestoreSources Condition="$(MicrosoftSourceLinkVersion.Contains('-'))">$(RestoreSources);https://dotnet.myget.org/F/sourcelink/api/v3/index.json</RestoreSources>
     
