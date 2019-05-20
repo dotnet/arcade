@@ -22,10 +22,10 @@ Param(
   [string] $GuardianLoggerLevel="Standard"              # Optional: the logger level for the Guardian CLI; options are Trace, Verbose, Standard, Warning, and Error
 )
 
-$guardianCliLocation = Join-Path $NugetPackageDirectory (Join-Path $GuardianPackageName (Join-Path "tools" "guardian")))
-
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
+
+$guardianCliLocation = Join-Path $NugetPackageDirectory (Join-Path $GuardianPackageName (Join-Path "tools" "guardian")))
 
 & $(Join-Path $PSScriptRoot "init-sdl.ps1") -GuardianCliLocation $guardianCliLocation -Repository $Repository -BranchName $BranchName -WorkingDirectory $ArtifactsDirectory -DncEngAccessToken $DncEngAccessToken -GuardianLoggerLevel $GuardianLoggerLevel
 $gdnFolder = Join-Path $ArtifactsDirectory ".gdn"
