@@ -1,6 +1,7 @@
 Param(
-  [string] $GuardianPackageName,                        # Required: the name of guardian CLI packge
-  [string] $NugetPackageDirectory,                      # Required: directory where NuGet packages are installed
+  [string] $GuardianPackageName,                        # Required: the name of guardian CLI pacakge (not needed if GuardianCliLocation is specified)
+  [string] $NugetPackageDirectory,                      # Required: directory where NuGet packages are installed (not needed if GuardianCliLocation is specified)
+  [string] $GuardianCliLocation,                        # Optional: Direct location of Guardian CLI executable if GuardianPackageName & NugetPackageDirectory are not specified
   [string] $Repository,                                 # Required: the name of the repository (e.g. dotnet/arcade)
   [string] $BranchName="master",                        # Optional: name of branch or version of gdn settings; defaults to master
   [string] $SourceDirectory,                            # Required: the directory where source files are located
@@ -26,7 +27,11 @@ $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
 $LASTEXITCODE = 0
 
-$guardianCliLocation = Join-Path $NugetPackageDirectory (Join-Path $GuardianPackageName (Join-Path "tools" "guardian"))
+if ($GuardianPackageName) {
+  $guardianCliLocation = Join-Path $NugetPackageDirectory (Join-Path $GuardianPackageName (Join-Path "tools" "guardian"))
+} else {
+  $guardianCliLocation = $GuardianCliLocation
+}
 
 & $(Join-Path $PSScriptRoot "init-sdl.ps1") -GuardianCliLocation $guardianCliLocation -Repository $Repository -BranchName $BranchName -WorkingDirectory $ArtifactsDirectory -DncEngAccessToken $DncEngAccessToken -GuardianLoggerLevel $GuardianLoggerLevel
 $gdnFolder = Join-Path $ArtifactsDirectory ".gdn"

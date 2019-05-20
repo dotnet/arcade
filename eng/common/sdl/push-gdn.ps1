@@ -36,8 +36,8 @@ git add .
 if ($LASTEXITCODE -ne 0) {
   Write-Error "Git add failed with exit code $LASTEXITCODE."
 }
-Write-Host "git commit -m `"$PushReason for $Repository/$BranchName`""
-git commit -m "$PushReason for $Repository/$BranchName"
+Write-Host "git -c user.email=`"dn-bot@microsoft.com`" -c user.name=`"Dotnet Bot`" commit -m `"$PushReason for $Repository/$BranchName`""
+git -c user.email="dn-bot@microsoft.com" -c user.name="Dotnet Bot" commit -m "$PushReason for $Repository/$BranchName"
 if ($LASTEXITCODE -ne 0) {
   Write-Error "Git commit failed with exit code $LASTEXITCODE."
 }
