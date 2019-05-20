@@ -9,6 +9,7 @@ Param(
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
+$LASTEXITCODE = 0
 
 # Construct basic auth from AzDO access token; construct URI to the repository's gdn folder stored in that repository; construct location of zip file
 $encodedPat = [Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$DncEngAccessToken"))

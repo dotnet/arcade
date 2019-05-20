@@ -8,6 +8,7 @@ Param(
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
+$LASTEXITCODE = 0
 
 # We create the temp directory where we'll store the sdl-config repository
 $sdlDir = Join-Path $env:TEMP "sdl"
