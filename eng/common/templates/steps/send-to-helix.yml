@@ -35,6 +35,7 @@ steps:
       HelixSource: ${{ parameters.HelixSource }}
       HelixType: ${{ parameters.HelixType }}
       HelixBuild: ${{ parameters.HelixBuild }}
+      HelixConfiguration:  ${{ parameters.HelixConfiguration }}
       HelixTargetQueues: ${{ parameters.HelixTargetQueues }}
       HelixAccessToken: ${{ parameters.HelixAccessToken }}
       HelixPreCommands: ${{ parameters.HelixPreCommands }}
@@ -64,6 +65,7 @@ steps:
       HelixSource: ${{ parameters.HelixSource }}
       HelixType: ${{ parameters.HelixType }}
       HelixBuild: ${{ parameters.HelixBuild }}
+      HelixConfiguration:  ${{ parameters.HelixConfiguration }}
       HelixTargetQueues: ${{ parameters.HelixTargetQueues }}
       HelixAccessToken: ${{ parameters.HelixAccessToken }}
       HelixPreCommands: ${{ parameters.HelixPreCommands }}
