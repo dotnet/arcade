@@ -249,7 +249,7 @@ namespace Microsoft.DotNet.GenAPI
 
             if (!string.IsNullOrWhiteSpace(excludeAttributesList))
             {
-                includeFilter = new IntersectionFilter(includeFilter, new ExcludeAttributesFilter(excludeAttributesList));
+                includeFilter = new IntersectionFilter(includeFilter, new ExcludeAttributesFilter(excludeAttributesList, includeForwardedTypes: includeForwardedTypes));
             }
 
             return includeFilter;
