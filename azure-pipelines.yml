@@ -9,7 +9,7 @@ jobs:
   - checkout: self
     clean: true
   # Use utility script to run script command dependent on agent OS.
-    - script: echo "##vso[task.logissue type=warning]this is an warning logissue"
+  - script: echo "##vso[task.logissue type=warning]this is an warning logissue"
   - script: echo "##vso[task.logdetail id=11111111-1111-1111-1111-111111111111;type=build;name=test1;order=1]create record"
   - script: echo "##vso[task.logdetail id=11111111-1111-1111-1111-111111111112;type=build;name=test2;order=1]create record2"
   - script: echo "##vso[task.logdetail id=11111111-1111-1111-1111-111111111111;type=build;name=test3;order=1]create record3"
