@@ -21,10 +21,27 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
       ""tests"": [
         {
           ""container"": ""DDRIT.RPS.CSharp"",
-          ""testCases"": [
-            ""DDRIT.RPS.CSharp.CSharpTest.EditingAndDesigner""
-          ]
-    }
+          ""filteredTestCases"" : [
+            {
+                ""filename"" : ""/x/y/z/Microsoft.CodeAnalysis.CSharp.dll"",
+                ""testCases"": [
+                    ""DDRIT.RPS.CSharp.CSharpTest.EditingAndDesigner""
+                 ]
+            },
+            {
+                ""filename"" : ""/x/y/z/Microsoft.CodeAnalysis.dll"",
+                ""testCases"": [
+                    ""DDRIT.RPS.CSharp.CSharpTest.BuildAndDebugging""
+                 ]
+            }
+           ]
+        },
+        {
+          ""container"": ""TeamEng"",
+          ""testCases"" : [
+            ""TeamEng.OptProfTest.vs_debugger_start_no_build_cs_scribble""
+           ]
+        }
       ]
     }
   ],
@@ -80,6 +97,20 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
       ""ngenArchitecture"": ""All"",
       ""ngenApplication"": """",
       ""ngenPriority"": 3
+    },
+    {
+      ""fileName"": ""/x/y/z/Microsoft.CodeAnalysis.dll"",
+      ""ngen"": true,
+      ""ngenArchitecture"": ""All"",
+      ""ngenApplication"": """",
+      ""ngenPriority"": 3
+    },
+    {
+      ""fileName"": ""/x/y/z/Microsoft.CodeAnalysis.VisualBasic.dll"",
+      ""ngen"": true,
+      ""ngenArchitecture"": ""All"",
+      ""ngenApplication"": """",
+      ""ngenPriority"": 3
     }
   ]
 }
@@ -129,12 +160,19 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
             AssertEx.SetEqual(new[] 
             {
                 Path.Combine(outputDir, @"DDRIT.RPS.CSharp"),
+                Path.Combine(outputDir, @"TeamEng"),
                 Path.Combine(outputDir, @"DDRIT.RPS.CSharp\Configurations"),
                 Path.Combine(outputDir, @"DDRIT.RPS.CSharp\Configurations\DDRIT.RPS.CSharp.CSharpTest.BuildAndDebugging"),
                 Path.Combine(outputDir, @"DDRIT.RPS.CSharp\Configurations\DDRIT.RPS.CSharp.CSharpTest.EditingAndDesigner"),
                 Path.Combine(outputDir, @"DDRIT.RPS.CSharp\Configurations\DDRIT.RPS.CSharp.CSharpTest.BuildAndDebugging\System.Collections.Immutable.0.IBC.json"),
                 Path.Combine(outputDir, @"DDRIT.RPS.CSharp\Configurations\DDRIT.RPS.CSharp.CSharpTest.BuildAndDebugging\System.Collections.Immutable.1.IBC.json"),
-                Path.Combine(outputDir, @"DDRIT.RPS.CSharp\Configurations\DDRIT.RPS.CSharp.CSharpTest.EditingAndDesigner\xyzMicrosoft.CodeAnalysis.CSharp.0.IBC.json")
+                Path.Combine(outputDir, @"DDRIT.RPS.CSharp\Configurations\DDRIT.RPS.CSharp.CSharpTest.BuildAndDebugging\xyzMicrosoft.CodeAnalysis.0.IBC.json"),
+                Path.Combine(outputDir, @"DDRIT.RPS.CSharp\Configurations\DDRIT.RPS.CSharp.CSharpTest.EditingAndDesigner\xyzMicrosoft.CodeAnalysis.CSharp.0.IBC.json"),
+                Path.Combine(outputDir, @"TeamEng\Configurations"),
+                Path.Combine(outputDir, @"TeamEng\Configurations\TeamEng.OptProfTest.vs_debugger_start_no_build_cs_scribble"),
+                Path.Combine(outputDir, @"TeamEng\Configurations\TeamEng.OptProfTest.vs_debugger_start_no_build_cs_scribble\xyzMicrosoft.CodeAnalysis.0.IBC.json"),
+                Path.Combine(outputDir, @"TeamEng\Configurations\TeamEng.OptProfTest.vs_debugger_start_no_build_cs_scribble\xyzMicrosoft.CodeAnalysis.CSharp.0.IBC.json"),
+                Path.Combine(outputDir, @"TeamEng\Configurations\TeamEng.OptProfTest.vs_debugger_start_no_build_cs_scribble\xyzMicrosoft.CodeAnalysis.VisualBasic.0.IBC.json")
             }, entries);
 
 
@@ -165,6 +203,16 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
 @"{
   ""Technology"": ""IBC"",
   ""RelativeInstallationPath"": ""Common7\\IDE\\CommonExtensions\\Microsoft\\ManagedLanguages\\VBCSharp\\LanguageServices\\x\\y\\z\\Microsoft.CodeAnalysis.CSharp.dll"",
+  ""InstrumentationArguments"": ""/ExeConfig:\""%VisualStudio.InstallationUnderTest.Path%\\Common7\\IDE\\vsn.exe\""""
+}
+", json);
+            JObject.Parse(json);
+
+            json = File.ReadAllText(Path.Combine(outputDir, @"TeamEng\Configurations\TeamEng.OptProfTest.vs_debugger_start_no_build_cs_scribble\xyzMicrosoft.CodeAnalysis.VisualBasic.0.IBC.json"));
+            Assert.Equal(
+@"{
+  ""Technology"": ""IBC"",
+  ""RelativeInstallationPath"": ""Common7\\IDE\\CommonExtensions\\Microsoft\\ManagedLanguages\\VBCSharp\\LanguageServices\\x\\y\\z\\Microsoft.CodeAnalysis.VisualBasic.dll"",
   ""InstrumentationArguments"": ""/ExeConfig:\""%VisualStudio.InstallationUnderTest.Path%\\Common7\\IDE\\vsn.exe\""""
 }
 ", json);
