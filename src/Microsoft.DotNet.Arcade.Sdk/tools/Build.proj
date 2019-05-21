@@ -43,6 +43,12 @@
     <_OriginalProjectsValue>$(Projects)</_OriginalProjectsValue>
   </PropertyGroup>
 
+  <ItemDefinitionGroup>
+    <ProjectToBuild>
+      <RestoreInParallel>true</RestoreInParallel>
+    </ProjectToBuild>
+  </ItemDefinitionGroup>
+
   <Import Project="RepoLayout.props"/>
 
   <!-- Allow for repo specific Build properties such as the list of Projects to build -->
@@ -135,20 +141,6 @@
       <_SolutionBuildProps Include="__DeployProjectOutput=$(Deploy)" Condition="'$(Deploy)' != ''"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <!-- Find any ProjectToBuild items that are not .sln. We don't currently support mixing .sln with other types. We could make it work, but don't have a customer for it yet. -->
-      <_ProjectToBuildExtension Include="%(ProjectToBuild.Extension)" Condition="'%(ProjectToBuild.Extension)' != '' and '%(ProjectToBuild.Extension)' != '.sln' " />
-    </ItemGroup>
-
-    <PropertyGroup>
-      <!-- Normalize paths to avoid false warnings by NuGet about missing project references. -->
-      <ProjectToBuildList>@(ProjectToBuild->'%(FullPath)')</ProjectToBuildList>
-      <_BuildSolutions>@(ProjectToBuild->AnyHaveMetadataValue('Extension', '.sln'))</_BuildSolutions>
-    </PropertyGroup>
-
-    <Error Condition="'$(_BuildSolutions)' == 'true' and '@(_ProjectToBuildExtension)' != '' "
-           Text="Mixing .sln and other project formats in ProjectToBuild is not supported." />
-
     <!--
       Restore built-in tools.
     -->
@@ -158,13 +150,13 @@
              Condition="'$(Restore)' == 'true'"/>
 
     <!--
-      Restore solution.
-    
+      Restore solutions and projects.
+
       Run solution restore separately from the other targets, in a different build phase.
       Since restore brings in new .props and .targets files we need to rerun evaluation.
 
       Workarounds:
-      - Invoke restore using NuGet.targets directly (see https://github.com/NuGet/Home/issues/7648). 
+      - Invoke restore using NuGet.targets directly (see https://github.com/NuGet/Home/issues/7648).
         This avoids duplicate calls to RestoreTask and race conditions on writing restore results to disk.
 
       - msbuild caches the metaproject for the solution (see https://github.com/Microsoft/msbuild/issues/1695)
@@ -172,25 +164,53 @@
     -->
 
     <PropertyGroup>
-      <RestoreUsingNuGetTargets Condition="'$(RestoreUsingNuGetTargets)' == '' and '$(_BuildSolutions)' == 'false'">true</RestoreUsingNuGetTargets>
+      <!-- This can be set to false as an optimization for repos that don't use NuGet. -->
+      <RestoreUsingNuGetTargets Condition="'$(RestoreUsingNuGetTargets)' == ''">true</RestoreUsingNuGetTargets>
 
       <!-- IsRunningFromVisualStudio may be true even when running msbuild.exe from command line. This generally means that MSBUild is Visual Studio installation and therefore we need to find NuGet.targets in a different location.  -->
       <_NuGetRestoreTargets>$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
       <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
     </PropertyGroup>
 
+    <!--
+      Detect which projects support restoring with NuGet targets.
+      As a perf optimization, the Properties list here should match exactly with
+      the properties passed to the "Restore" target a few lines below.
+      This helps MSBuild cache the result of _IsProjectRestoreSupported.
+    -->
     <MSBuild Projects="@(ProjectToBuild)"
              Properties="@(_SolutionBuildProps);__BuildPhase=SolutionRestore"
              RemoveProperties="$(_RemoveProps)"
-             Targets="Restore"
+             Targets="_IsProjectRestoreSupported"
+             SkipNonexistentTargets="true"
              BuildInParallel="true"
-             Condition="'$(RestoreUsingNuGetTargets)' != 'true' and '$(Restore)' == 'true'"/>
+             Condition="'$(RestoreUsingNuGetTargets)' != 'false' and '%(ProjectToBuild.Extension)' != '.sln' and '$(Restore)' == 'true'">
 
-    <MSBuild Projects="$(_NuGetRestoreTargets)"
-             Properties="@(_SolutionBuildProps);RestoreGraphProjectInput=$(ProjectToBuildList);__BuildPhase=SolutionRestore"
+      <Output TaskParameter="TargetOutputs" ItemName="_ProjectToRestoreWithNuGet" />
+    </MSBuild>
+
+    <PropertyGroup>
+      <!-- Normalize paths to avoid false warnings by NuGet about missing project references. -->
+      <_ProjectToRestoreWithNuGetList>@(_ProjectToRestoreWithNuGet->'%(FullPath)')</_ProjectToRestoreWithNuGetList>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_ProjectToRestore Include="$(_NuGetRestoreTargets)" Condition="'$(_ProjectToRestoreWithNuGetList)' != '' and '$(RestoreUsingNuGetTargets)' != 'false'">
+        <AdditionalProperties>RestoreGraphProjectInput=$(_ProjectToRestoreWithNuGetList)</AdditionalProperties>
+        <RestoreInParallel>true</RestoreInParallel>
+      </_ProjectToRestore>
+
+      <!-- Invoke the 'Restore' target on solutions and projects which do not support NuGet. -->
+      <_ProjectToRestore Include="@(ProjectToBuild)" Exclude="@(_ProjectToRestoreWithNuGet)" />
+    </ItemGroup>
+
+    <MSBuild Projects="@(_ProjectToRestore)"
+             Properties="@(_SolutionBuildProps);__BuildPhase=SolutionRestore"
              RemoveProperties="$(_RemoveProps)"
              Targets="Restore"
-             Condition="'$(RestoreUsingNuGetTargets)' == 'true' and '$(Restore)' == 'true'"/>
+             SkipNonexistentTargets="true"
+             BuildInParallel="%(_ProjectToRestore.RestoreInParallel)"
+             Condition="'$(Restore)' == 'true'"/>
 
     <!--
       Build solution.
