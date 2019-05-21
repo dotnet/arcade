@@ -3,11 +3,10 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net472</TargetFrameworks>
-    <ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
 
     <IsPackable>true</IsPackable>
 
-    <Description>Common toolset for building .NET Core shared frameworks</Description>
+    <Description>Common toolset for building .NET targeting, apphost, and runtime packs</Description>
     <PackageTags>MSBuild;SDK</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
     <PackageType>MSBuildSdk</PackageType>
@@ -18,10 +17,10 @@
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
     <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="$(MicrosoftExtensionsDependencyModelVersion)" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Compile Include="..\..\Common\AssemblyResolution.cs" />
   </ItemGroup>
-  
+
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>

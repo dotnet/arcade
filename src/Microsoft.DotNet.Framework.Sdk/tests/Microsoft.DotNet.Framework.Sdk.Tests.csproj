@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Microsoft.DotNet.SharedFramework.Sdk.csproj" />
+    <ProjectReference Include="..\src\Microsoft.DotNet.Framework.Sdk.csproj" />
     <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="$(MicrosoftExtensionsDependencyModelVersion)" />
   </ItemGroup>
 
