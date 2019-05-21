@@ -28,8 +28,9 @@
        <PropertyGroup>
          <RestoreSources>
            $(RestoreSources);
-           https://www.myget.org/F/nugetbuild/api/v3/index.json;
-           https://dotnet.myget.org/F/dotnet-web/api/v3/index.json
+           https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
+           https://dotnet.myget.org/F/symreader-converter/api/v3/index.json;
+           https://dotnet.myget.org/F/symreader/api/v3/index.json
          </RestoreSources>
        </PropertyGroup>
        ```
