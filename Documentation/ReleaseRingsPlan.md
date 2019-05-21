@@ -59,10 +59,12 @@ post-build script. Zips are validated by the ASP team against an App Services te
 ### Final Release/Publish Ring (Publish Release channel)
  
 1. No build required
-2. Publish and validate NuGet symbols
-3. Publish and validate Linux distributions
-4. Antares deployment
-5. Publish and validate Docker
-6. Publish Docs
-7. Publish and validate to NuGet
-8. Publish and validate to CDN
+2. Publish and validate to CDN
+3. Publish and validate to NuGet
+4. Publish and validate NuGet symbols
+5. Publish and validate Linux distributions
+6. Antares deployment*
+7. Publish and validate Docker
+8. Publish Docs
+
+*Can run as a parallel task
