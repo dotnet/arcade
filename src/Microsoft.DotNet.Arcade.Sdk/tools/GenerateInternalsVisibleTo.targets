@@ -15,7 +15,8 @@
     <ItemGroup>
       <_InternalsVisibleToAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
         <_Parameter1 Condition="'%(InternalsVisibleTo.Key)' != ''">%(InternalsVisibleTo.Identity), PublicKey=%(InternalsVisibleTo.Key)</_Parameter1>
-        <_Parameter1 Condition="'%(InternalsVisibleTo.Key)' == ''">%(InternalsVisibleTo.Identity), PublicKey=$(PublicKey)</_Parameter1>
+        <_Parameter1 Condition="'%(InternalsVisibleTo.Key)' == '' and '$(PublicKey)' != ''">%(InternalsVisibleTo.Identity), PublicKey=$(PublicKey)</_Parameter1>
+        <_Parameter1 Condition="'%(InternalsVisibleTo.Key)' == '' and '$(PublicKey)' == ''">%(InternalsVisibleTo.Identity)</_Parameter1>
       </_InternalsVisibleToAttribute>
     </ItemGroup>
   </Target>
