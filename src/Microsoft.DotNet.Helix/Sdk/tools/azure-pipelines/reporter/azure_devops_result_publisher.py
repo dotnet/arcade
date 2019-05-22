@@ -52,6 +52,8 @@ class AzureDevOpsTestResultPublisher:
             if published_result.automated_test_name in results_with_attachments:
                 result = results_with_attachments.get(published_result.automated_test_name)
                 for attachment in result.attachments:
+                    print(attachment.name)
+                    print(attachment.text)
                     stream=base64.b64encode(attachment.text.encode())
                     print(stream)
                     test_client.create_test_result_attachment(TestAttachmentRequestModel(
