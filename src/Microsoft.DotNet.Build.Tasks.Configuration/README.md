@@ -57,7 +57,7 @@ Supports copying to additional paths based on which configuration among `BuildCo
 ### BinPlacing Items
 
 - BinPlaceItem
-    - Typically comuputed by the BinPlacing targets to determine what assets to binplace.
+    - Typically computed by the BinPlacing targets to determine what assets to binplace.
     - Identity: source of file to binplace.  For example: the built output dll, pdb, content files, etc.
     - Metadata:
         - TargetPath: when specified can indicate the relative path, including filename, to place the item.
