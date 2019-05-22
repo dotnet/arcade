@@ -2,13 +2,14 @@
 
 usage()
 {
-  echo "Usage: RunTests.sh {-r|--runtime-path} <runtime-path> [{-d|--dotnet-root} <dotnet-root>] [{-g|--global-tools-dir} <global-tools-dir>] [{--rsp-file} <rsp-file>]"
+  echo "Usage: RunTests.sh {-r|--runtime-path} <runtime-path> [{-d|--dotnet-root} <dotnet-root>] [{-g|--global-tools-dir} <global-tools-dir>] [{--rsp-file} <rsp-file>] [{--test-env-file} <test-env-file>]"
   echo ""
   echo "Parameters:"
   echo "--runtime-path           (Mandatory) Testhost containing the test runtime used during test execution (short: -r)"
   echo "--dotnet-root            SDK directory for hosting shims and tools (short: -d)"
   echo "--global-tools-dir       Global tools directory (short: -g)"
-  echo "--rsp-file               RSP file to pass in additional arguments"
+  echo "--rsp-file               RSP file to pass in additional arguments to xunit"
+  echo "--test-env-file          Test environment batch file"
   echo "--help                   Print help and exit (short: -h)"
 }
 
@@ -16,6 +17,7 @@ EXECUTION_DIR=$(dirname "$0")
 RUNTIME_PATH=''
 GLOBAL_TOOLS_DIR=''
 RSP_FILE=''
+TEST_ENV_FILE=''
 
 while [[ $# > 0 ]]; do
   opt="$(echo "${1}" | awk '{print tolower($0)}')"
@@ -38,6 +40,10 @@ while [[ $# > 0 ]]; do
       ;;
     --rsp-file)
       RSP_FILE=\@$2
+      shift
+      ;;
+    --test-env-file)
+      TEST_ENV_FILE=$2
       shift
       ;;
     *)
@@ -167,10 +173,19 @@ fi
 # ========================= BEGIN Test Execution =============================
 echo ----- start $(date +"%T") ===============  To repro directly: ===================================================== 
 echo pushd $EXECUTION_DIR
+if [ "$TEST_ENV_FILE" != "" ]; then
+  echo source $TEST_ENV_FILE
+  echo ============ Test environment file:
+  cat $TEST_ENV_FILE
+  echo ============ End test environment file
+fi
 [[RunCommandsEcho]]
 echo popd
 echo ===========================================================================================================
 pushd $EXECUTION_DIR
+if [ "$TEST_ENV_FILE" != "" ]; then
+  source $TEST_ENV_FILE
+fi
 [[RunCommands]]
 test_exitcode=$?
 popd
