@@ -7,6 +7,7 @@ using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System.Xml.Linq;
 using Xunit;
 using Xunit.Abstractions;
+using System;
 
 namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
 {
