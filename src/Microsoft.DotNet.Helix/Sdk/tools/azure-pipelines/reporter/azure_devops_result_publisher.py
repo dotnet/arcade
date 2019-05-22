@@ -54,7 +54,7 @@ class AzureDevOpsTestResultPublisher:
                 for attachment in result.attachments:
                     test_client.create_test_result_attachment(TestAttachmentRequestModel(
                         file_name=text(attachment.name),
-                        stream=base64.b64encode(attachment.text.encode("utf-8")),
+                        stream=base64.b64encode(attachment.text.encode()),
                     ), self.team_project, self.test_run_id, published_result.id)
 
     def convert_results(self, results):
