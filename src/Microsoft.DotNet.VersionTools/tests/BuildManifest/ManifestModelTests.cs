@@ -20,6 +20,12 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
         }
 
         [Fact]
+        public void FireballTest()
+        {
+            throw new NullReferenceException(); 
+        }
+
+        [Fact]
         public void TestExampleBuildManifestRoundtrip()
         {
             XElement xml = XElement.Parse(ExampleBuildString);
