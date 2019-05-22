@@ -1,0 +1,27 @@
+﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net472</TargetFrameworks>
+    <ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
+
+    <IsPackable>true</IsPackable>
+
+    <Description>Common toolset for building .NET Core shared frameworks</Description>
+    <PackageTags>MSBuild;SDK</PackageTags>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <PackageType>MSBuildSdk</PackageType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="$(MicrosoftExtensionsDependencyModelVersion)" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Include="..\..\Common\AssemblyResolution.cs" />
+  </ItemGroup>
+  
+  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
+</Project>

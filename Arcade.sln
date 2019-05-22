@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.271
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.202
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Feed", "src\Microsoft.DotNet.Build.Tasks.Feed\Microsoft.DotNet.Build.Tasks.Feed.csproj", "{941D335B-AA65-4089-9502-F306B108D182}"
 EndProject
@@ -92,6 +92,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.RemoteExecutorHost", "src\Microsoft.DotNet.RemoteExecutor\src\Microsoft.DotNet.RemoteExecutorHost\Microsoft.DotNet.RemoteExecutorHost.csproj", "{5588033C-A6F5-4824-8E58-A369F644CDF8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XUnitExtensions.Tests", "src\Microsoft.DotNet.XUnitExtensions\tests\Microsoft.DotNet.XUnitExtensions.Tests.csproj", "{036A1269-EA1B-457A-8447-D90AEF80BAF9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.SharedFramework.Sdk.Tests", "src\Microsoft.DotNet.SharedFramework.Sdk\tests\Microsoft.DotNet.SharedFramework.Sdk.Tests.csproj", "{ADDF997D-AC63-44A2-80C8-6AB0319AB91C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.SharedFramework.Sdk", "src\Microsoft.DotNet.SharedFramework.Sdk\src\Microsoft.DotNet.SharedFramework.Sdk.csproj", "{18EB23E8-A149-4229-AF8E-AD86F6383CBB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -579,6 +583,30 @@ Global
 		{036A1269-EA1B-457A-8447-D90AEF80BAF9}.Release|x64.Build.0 = Release|Any CPU
 		{036A1269-EA1B-457A-8447-D90AEF80BAF9}.Release|x86.ActiveCfg = Release|Any CPU
 		{036A1269-EA1B-457A-8447-D90AEF80BAF9}.Release|x86.Build.0 = Release|Any CPU
+		{ADDF997D-AC63-44A2-80C8-6AB0319AB91C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADDF997D-AC63-44A2-80C8-6AB0319AB91C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADDF997D-AC63-44A2-80C8-6AB0319AB91C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{ADDF997D-AC63-44A2-80C8-6AB0319AB91C}.Debug|x64.Build.0 = Debug|Any CPU
+		{ADDF997D-AC63-44A2-80C8-6AB0319AB91C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{ADDF997D-AC63-44A2-80C8-6AB0319AB91C}.Debug|x86.Build.0 = Debug|Any CPU
+		{ADDF997D-AC63-44A2-80C8-6AB0319AB91C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADDF997D-AC63-44A2-80C8-6AB0319AB91C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADDF997D-AC63-44A2-80C8-6AB0319AB91C}.Release|x64.ActiveCfg = Release|Any CPU
+		{ADDF997D-AC63-44A2-80C8-6AB0319AB91C}.Release|x64.Build.0 = Release|Any CPU
+		{ADDF997D-AC63-44A2-80C8-6AB0319AB91C}.Release|x86.ActiveCfg = Release|Any CPU
+		{ADDF997D-AC63-44A2-80C8-6AB0319AB91C}.Release|x86.Build.0 = Release|Any CPU
+		{18EB23E8-A149-4229-AF8E-AD86F6383CBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18EB23E8-A149-4229-AF8E-AD86F6383CBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18EB23E8-A149-4229-AF8E-AD86F6383CBB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{18EB23E8-A149-4229-AF8E-AD86F6383CBB}.Debug|x64.Build.0 = Debug|Any CPU
+		{18EB23E8-A149-4229-AF8E-AD86F6383CBB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{18EB23E8-A149-4229-AF8E-AD86F6383CBB}.Debug|x86.Build.0 = Debug|Any CPU
+		{18EB23E8-A149-4229-AF8E-AD86F6383CBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18EB23E8-A149-4229-AF8E-AD86F6383CBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18EB23E8-A149-4229-AF8E-AD86F6383CBB}.Release|x64.ActiveCfg = Release|Any CPU
+		{18EB23E8-A149-4229-AF8E-AD86F6383CBB}.Release|x64.Build.0 = Release|Any CPU
+		{18EB23E8-A149-4229-AF8E-AD86F6383CBB}.Release|x86.ActiveCfg = Release|Any CPU
+		{18EB23E8-A149-4229-AF8E-AD86F6383CBB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
