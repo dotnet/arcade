@@ -18,8 +18,8 @@ Detailed information about the machines in an agent queue can be found in the [d
 ## Test Execution
 All test execution should run through helix. An up to date list of helix queues can be obtained from the [Helix Queue Info Api] using the following steps.
  * Perform an HTTP GET of https://helix.dot.net/api/2018-03-14/info/queues with your http requesting software of choice. (A web browser works fine)
- * You will be presented with a json array containing descriptions of all the queues avaliable in helix.
- * All of the queues in the list are avaliable for use in helix. Detailed information about machine setup can be found in the [dotnet-helix-machines] repo.
+ * You will be presented with a json array containing descriptions of all the queues available in helix.
+ * All of the queues in the list are available for use in helix. Detailed information about machine setup can be found in the [dotnet-helix-machines] repo.
  * Submit your test jobs to helix using the [Helix Sdk].
 
 
