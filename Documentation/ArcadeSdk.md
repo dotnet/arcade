@@ -880,7 +880,7 @@ Examples of usage:
 
 - Set `IsShipping` property to `false` in projects that produce VSIX packages that are only used only within the repository (e.g. to facilitate integration tests or VS F5) and not expected to be installed by customers.
 
-- Set `IsShippingPackage` property to `false` in projects that package  _shipping_ asesmblies in packages that facilitate transport of assets from one repository to another one, which extracts the assemblies and _ships_ them in a  _shipping_ container.
+- Set `IsShippingPackage` property to `false` in projects that package  _shipping_ assemblies in packages that facilitate transport of assets from one repository to another one, which extracts the assemblies and _ships_ them in a  _shipping_ container.
 
 All assemblies, packages and VSIXes are signed by default, regardless of whether they are _shipping_ or not.
 
