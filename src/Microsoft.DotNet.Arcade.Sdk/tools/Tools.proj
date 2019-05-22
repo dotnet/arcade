@@ -55,15 +55,15 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <RepoToolManifest>$([MSBuild]::NormalizePath('$(RepositoryEngineeringDir), 'dotnet-tools.json'))</RepoToolManifest>
+    <_RepoToolManifest>$([MSBuild]::NormalizePath('$(RepositoryEngineeringDir), '.config' 'dotnet-tools.json'))</_RepoToolManifest>
   </PropertyGroup>
 
   <Target Name="RestoreRepoTools"
-          Condition="'$(DotNetBuildFromSource)' != 'true' and Exists('$(RepoToolManifest)')"
+          Condition="'$(DotNetBuildFromSource)' != 'true' and Exists('$(_RepoToolManifest)')"
           AfterTargets="Restore">
 
     <PropertyGroup>
-      <RestoreRepoToolsCommmand>"$(DotNetTool)" tool restore --tool-manifest "$(RepoToolManifest)"</RestoreRepoToolsCommmand>
+      <RestoreRepoToolsCommmand>"$(DotNetTool)" tool restore</RestoreRepoToolsCommmand>
       <RestoreRepoToolsSources Condition="'@(RestoreSources)' != ''"> --add-source @(RestoreSources -> '"%(Identity)"', ' --add-source ')</RestoreRepoToolsSources>
     </PropertyGroup>
 
