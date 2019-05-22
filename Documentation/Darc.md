@@ -165,7 +165,7 @@ property as inputs to a PackageReference element or wherever else may need a
 version number.
 
 After adding, it is recommended that you use darc to fill out the missing
-dependency information.  The information can also be filled in after commiting by Maestro++
+dependency information.  The information can also be filled in after committing by Maestro++
 using dependency flow, but passing your CI without a filled-in version number
 may be difficult. See [Updating dependencies in your local repository](#updating-dependencies-in-your-local-repository)
 
@@ -324,7 +324,7 @@ index 8e5dab10..ede83435 100644
 ### Removing dependencies from a repository
 
 Removing a dependency from a repository involves simply removing the appropriate
-`Dependency` block from eng/Version.Details.xml and commiting. At that point, neither darc nor
+`Dependency` block from eng/Version.Details.xml and committing. At that point, neither darc nor
 Maestro++ will know anything about it any longer.
 
 ### Changing a dependency's type
