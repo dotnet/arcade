@@ -564,7 +564,7 @@ flows its 'last' build to core-sdk and other repos.  The graph stabilizes.
 Then, at the last moment, they make a test only fix and check it in.  It flows
 to core-sdk quickly, but gets held up in the other repos that pull
 Microsoft.NETCore.App due to them not taking any new PRs.  This certainly counts
-as an incoherency, but becuase there is no semantic product difference between
+as an incoherency, but because there is no semantic product difference between
 the two versions in the graph there may be no harm in shipping with that
 incoherency.
 
