@@ -40,7 +40,7 @@ The following properties may be defined:
  - BuildAllConfigurations: set to true in order to build all configurations for a project when a specific Configuration hasn't already been set.
  - BuildConfigurations: the relevant configurations of a project, analogous to TargetFrameworks
  - PackageConfigurations: typically a subset of BuildConfigurations that is used when building a packaging project and behaves in a similar manner.
- - Both BuildConfiruations and PackageConfigurations should be defined in a `Configurations.props` file next to the project itself.  Why? Because these must be defined *before* the props which parse out configuration statically for scenario 1 above.  We could avoid this if we instead always had an outer build when that could dispatch to an inner Build/Clean/ReBuild/etc target.
+ - Both BuildConfigurations and PackageConfigurations should be defined in a `Configurations.props` file next to the project itself.  Why? Because these must be defined *before* the props which parse out configuration statically for scenario 1 above.  We could avoid this if we instead always had an outer build when that could dispatch to an inner Build/Clean/ReBuild/etc target.
  - AdditionalBuildConfigurations: build the best configuration for additional build configurations.  Only honored in traversal builds.  It creates a middle-ground between BuildConfiguration (build single best for one configuration) and BuildAllConfigurations.
 
 ### Configuration Targets
