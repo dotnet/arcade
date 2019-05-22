@@ -6,7 +6,7 @@ This package implements a cross-targeting configuration system that permits over
 
 This configuration system differs from that provided by the .NET SDK in a couple distinct ways:
 1. The behavior of a project in pre-SDK projects was to build a *single* default configuration.  The behavior of SDK projects is to build *all* configurations.  The behavior of this system is to build the *best* configuration of `BuildConfigurations` for the current `BuildConfiguration`.
-2. The behavior of a project reference in pre-SDK projects was to build the *same* configuration as the referencing project (or *specific* configuration in case of an SLN).  The behavior of SDK projects is to build the *most-compatible TargetFramework*, where compatibility mappings are known by NuGet and not extensible.  The behavior of this system is to build the *most-compatible Configuration* where the compatibilty mappings are provided by the repository.
+2. The behavior of a project reference in pre-SDK projects was to build the *same* configuration as the referencing project (or *specific* configuration in case of an SLN).  The behavior of SDK projects is to build the *most-compatible TargetFramework*, where compatibility mappings are known by NuGet and not extensible.  The behavior of this system is to build the *most-compatible Configuration* where the compatibility mappings are provided by the repository.
 
 Extends "traversal" builds: projects which use `@(Project)` items to refer to projects which need to be built.  These are extended by acting as outer builds for the projects listed and selecting the subset of configurations in those projects to build.
 
