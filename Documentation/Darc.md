@@ -164,7 +164,7 @@ After doing this, you can use the generated `MicrosoftNETCoreAppPackageVersion`
 property as inputs to a PackageReference element or wherever else may need a
 version number.
 
-After addding, it is recommended that you use darc to fill out the missing
+After adding, it is recommended that you use darc to fill out the missing
 dependency information.  The information can also be filled in after commiting by Maestro++
 using dependency flow, but passing your CI without a filled-in version number
 may be difficult. See [Updating dependencies in your local repository](#updating-dependencies-in-your-local-repository)
