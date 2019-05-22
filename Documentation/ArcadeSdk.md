@@ -697,7 +697,7 @@ The IBC data embedding is performed by an internal tool `ibcmerge.exe` provided 
 package from an internal Azure DevOps feed. The repository build definition thus must invoke Azure DevOps task 
 that restores internal tools in order for IBC data embedding to work. See [Restoring internal tools](#restoring-internal-tools).
 
-Unless the repository is using an IBC data acquision mechanism built into the Arcade SDK (such as
+Unless the repository is using an IBC data acquisition mechanism built into the Arcade SDK (such as
 [Visual Studio IBC Data Acquisition](#visual-studio-ibc-data-acquisition)) the repository must set the value of
 `IbcOptimizationDataDir` property and its build must ensure that IBC data are present at the location specified
 by this property before the `Build` target is executed. It is recommended that such logic is implemented in
