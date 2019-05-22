@@ -55,7 +55,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <_RepoToolManifest>$([MSBuild]::NormalizePath('$(RepositoryEngineeringDir), '.config' 'dotnet-tools.json'))</_RepoToolManifest>
+    <_RepoToolManifest>$([MSBuild]::NormalizePath('$(RepoRoot), '.config' 'dotnet-tools.json'))</_RepoToolManifest>
   </PropertyGroup>
 
   <Target Name="RestoreRepoTools"
