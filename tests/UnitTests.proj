@@ -28,6 +28,7 @@
   <ItemGroup>
     <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese"/>
     <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese2"/>
+    <AzurePipelinesExpectedTestFailure Include="ManifestModelTests.FireballTest"/>
   </ItemGroup>
 
   <ItemGroup>
