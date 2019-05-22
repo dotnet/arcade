@@ -93,6 +93,7 @@ The list of available Helix queues can be found on the [Helix homepage](https://
       # HelixBuild: $(Build.BuildNumber) -- This property is set by default
       HelixTargetQueues: Windows.10.Amd64.Open;Windows.81.Amd64.Open;Windows.7.Amd64.Open # specify appropriate queues here; see https://helix.dot.net/ for a list of queues
       # HelixAccessToken: $(HelixAccessToken) this token is only for internal builds
+      # HelixConfiguration: '' -- any property that you would like to attached to a job
       # HelixPreCommands: '' -- any commands that you would like to run prior to running your job
       # HelixPostCommands: '' -- any commands that you would like to run after running your job
       XUnitProjects: $(Build.SourcesDirectory)/HelloTests/HelloTests.csproj # specify your xUnit projects (semicolon delimited) here!
