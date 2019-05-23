@@ -43,7 +43,7 @@
 
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateSourcePackageSourceLinkTargetsFile" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
 
-  <PropertyGroup Condition="'$(IsPackable)' == 'true' and '$(IsSourcePackage)' == 'true'">
+  <PropertyGroup Condition="'$(IsPackable)' == 'true' and '$(IsSourcePackage)' == 'true' and '$(DotNetBuildFromSource)' != 'true'">
     <BeforePack>$(BeforePack);_AddSourcePackageSourceLinkFile</BeforePack>
   </PropertyGroup>
 
