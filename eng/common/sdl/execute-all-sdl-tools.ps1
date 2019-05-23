@@ -15,11 +15,13 @@ Param(
   [string] $BuildNumber=$env:BUILD_BUILDNUMBER,         # Optional: required for TSA publish; defaults to $(Build.BuildNumber)
   [bool] $UpdateBaseline=$False,                        # Optional: if true, will update the baseline in the repository; should only be run after fixing any issues which need to be fixed
   [bool] $TsaOnboard=$False,                            # Optional: if true, will onboard the repository to TSA; should only be run once
+  [string] $TsaInstanceURL,                             # Optional: only needed if TsaOnboard or TsaPublish is true; the instance-url registered with TSA
   [string] $TsaCodebaseName,                            # Optional: only needed if TsaOnboard or TsaPublish is true; the name of the codebase registered with TSA
   [string] $TsaProjectName,                             # Optional: only needed if TsaOnboard or TsaPublish is true; the name of the project registered with TSA
   [string] $TsaNotificationEmail,                       # Optional: only needed if TsaOnboard is true; the email(s) which will receive notifications of TSA bug filings (e.g. alias@microsoft.com)
   [string] $TsaCodebaseAdmin,                           # Optional: only needed if TsaOnboard is true; the aliases which are admins of the TSA codebase (e.g. DOMAIN\alias)
   [string] $TsaBugAreaPath,                             # Optional: only needed if TsaOnboard is true; the area path where TSA will file bugs in AzDO
+  [string] $TsaIterationPath,                           # Optional: only needed if TsaOnboard is true; the iteration path where TSA will file bugs in AzDO
   [string] $GuardianLoggerLevel="Standard"              # Optional: the logger level for the Guardian CLI; options are Trace, Verbose, Standard, Warning, and Error
 )
 
@@ -38,8 +40,8 @@ $gdnFolder = Join-Path $ArtifactsDirectory ".gdn"
 
 if ($TsaOnboard) {
   if ($TsaCodebaseName -and $TsaNotificationEmail -and $TsaCodebaseAdmin -and $TsaBugAreaPath) {
-    Write-Host "$guardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"https://dev.azure.com/dnceng/`" --project-name `"internal`" --area-path `"$TsaBugAreaPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel"
-    &$guardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"https://dev.azure.com/dnceng/`" --project-name `"internal`" --area-path `"$TsaBugAreaPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel
+    Write-Host "$guardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"$TsaInstanceURL`" --project-name `"$TsaProjectName`" --area-path `"$TsaBugAreaPath`" --iteration-path `"$TsaIterationPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel"
+    &$guardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"$TsaInstanceURL`" --project-name `"$TsaProjectName`" --area-path `"$TsaBugAreaPath`" --iteration-path `"$TsaIterationPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel
     if ($LASTEXITCODE -ne 0) {
       Write-Error "Guardian tsa-onboard failed with exit code $LASTEXITCODE."
     }
