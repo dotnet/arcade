@@ -26,6 +26,12 @@
     </HelixWorkItem>
   </ItemGroup>
   <ItemGroup>
+    <HelixWorkItem Include="CrashTest">
+      <Command>python crash.py</Command>
+      <PayloadDirectory>$(MSBuildThisFileDirectory)Py</PayloadDirectory>
+    </HelixWorkItem>
+  </ItemGroup>
+  <ItemGroup>
     <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese"/>
     <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese2"/>
     <AzurePipelinesExpectedTestFailure Include="Microsoft.DotNet.VersionTools.Tests.BuildManifest.ManifestModelTests.FireballTest"/>
