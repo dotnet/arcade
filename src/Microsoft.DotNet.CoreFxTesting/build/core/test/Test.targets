@@ -70,7 +70,7 @@
         <TestRunnerName>xunit.console.dll</TestRunnerName>
         <TestRunnerNameWithoutExtension>$([System.IO.Path]::GetFileNameWithoutExtension('$(TestRunnerName)'))</TestRunnerNameWithoutExtension>
 
-        <RunCommand>$(RunScriptHost)</RunCommand>
+        <RunCommand>"$(RunScriptHost)"</RunCommand>
         <RunArguments>$(TestRunnerName) $(RunArguments)</RunArguments>
       </PropertyGroup>
     </When>

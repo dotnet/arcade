@@ -3,9 +3,6 @@
 <Project>
 
   <PropertyGroup>
-    <CoverageReportExecutablePath Condition="'$(CoverageReportExecutablePath)' == '' AND '$(TargetOS)' == 'Windows_NT'">$(RunScriptGlobalToolsDir)reportgenerator.exe</CoverageReportExecutablePath>
-    <CoverageReportExecutablePath Condition="'$(CoverageReportExecutablePath)' == '' AND '$(TargetOS)' != 'Windows_NT'">$(RunScriptGlobalToolsDir)reportgenerator</CoverageReportExecutablePath>
-
     <CoverageReportInputPath Condition="'$(CoverageReportInputPath)' == ''">$(CoverageOutputPath)</CoverageReportInputPath>
     <!-- We use NormalizePath as ReportGenerator's command line argument syntax doesn't work well with trailing slashes. -->
     <CoverageReportDir Condition="'$(CoverageReportDir)' == ''">$([MSBuild]::NormalizePath('$(TestPath)', 'report'))</CoverageReportDir>
@@ -13,8 +10,7 @@
     <CoverageReportVerbosity Condition="'$(CoverageReportVerbosity)' == ''">Info</CoverageReportVerbosity>
     <CoverageReportResultsPath>$([MSBuild]::NormalizePath('$(CoverageReportDir)', 'index.htm'))</CoverageReportResultsPath>
 
-    <CoverageReportCommandLine>"$(CoverageReportExecutablePath)" "-reports:$(CoverageReportInputPath)" "-targetdir:$(CoverageReportDir)" "-reporttypes:$(CoverageReportTypes)" "-verbosity:$(CoverageReportVerbosity)"</CoverageReportCommandLine>
-    <CoverageReportOpenCommandLine Condition="'$(PopCoverageReport)' == 'true' AND '$(TargetOS)' == 'Windows_NT'">start $(CoverageReportResultsPath)</CoverageReportOpenCommandLine>
+    <CoverageReportCommandLine>"$(RunScriptHost)" tool run reportgenerator "-reports:$(CoverageReportInputPath)" "-targetdir:$(CoverageReportDir)" "-reporttypes:$(CoverageReportTypes)" "-verbosity:$(CoverageReportVerbosity)"</CoverageReportCommandLine>
   </PropertyGroup>
 
   <!-- Skip generating individual reports if a full report is generated. -->

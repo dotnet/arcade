@@ -163,7 +163,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         var assetRecord = buildInformation.Assets
                             .Where(a => a.Name.Equals(package.Id) && a.Version.Equals(package.Version))
-                            .Single();
+                            .FirstOrDefault();
 
                         if (assetRecord == null)
                         {

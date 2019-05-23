@@ -54,6 +54,24 @@
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.VisualStudio" Version="$(MicrosoftDotNetBuildTasksVisualStudioVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" IsImplicitlyDefined="true" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <_RepoToolManifest>$([MSBuild]::NormalizePath('$(RepoRoot)', '.config', 'dotnet-tools.json'))</_RepoToolManifest>
+  </PropertyGroup>
+
+  <Target Name="RestoreRepoTools"
+          Condition="'$(DotNetBuildFromSource)' != 'true' and Exists('$(_RepoToolManifest)')"
+          AfterTargets="Restore">
+
+    <PropertyGroup>
+      <RestoreRepoToolsCommmand>"$(DotNetTool)" tool restore</RestoreRepoToolsCommmand>
+      <RestoreRepoToolsSources Condition="'@(RestoreSources)' != ''"> --add-source @(RestoreSources -> '"%(Identity)"', ' --add-source ')</RestoreRepoToolsSources>
+    </PropertyGroup>
+
+    <Exec Command="$(RestoreRepoToolsCommmand)"
+          WorkingDirectory="$(RepoRoot)" />
+
+  </Target>
+
   <!-- Repository extensibility point -->
   <Import Project="$(RepositoryEngineeringDir)Tools.props" Condition="Exists('$(RepositoryEngineeringDir)Tools.props')" />
 
