@@ -9,7 +9,43 @@
     <PackageReference Include="Microsoft.SourceLink.Vsts.Git" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
-    <!-- The convention for names of Azure DevOps repositories mirrored from GitHub is "{GitHub org name}-{GitHub repository name}" -->
+  <!--
+    Workarounds for Source Link not being available for Arm.
+    Set the SourceRoot to repo root to facilitate deterministic source paths when SCM queries are disabled.
+    Set the RepositoryUrl to the Build.Repository.Uri Azure DevOps build variable if on CI, otherwise to local repo path.
+  -->
+
+  <PropertyGroup>
+    <_ProcessArchitecture>$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)</_ProcessArchitecture>
+  </PropertyGroup>
+
+  <!-- Disable SourceLink when building on ARM (libgit2 does not support it currently) or during source build (SourceLink is not buildable from source currently) -->
+  <PropertyGroup Condition="'$(DotNetBuildFromSource)' == 'true' or $(_ProcessArchitecture.StartsWith('Arm'))">
+    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
+    <EnableSourceLink>false</EnableSourceLink>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true'">
+    <SourceRoot Include="$(RepoRoot)" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true' and '$(RepositoryUrl)' == ''">
+    <RepositoryUrl Condition="'$(BUILD_REPOSITORY_URI)' != ''">$([System.Text.RegularExpressions.Regex]::Replace($(BUILD_REPOSITORY_URI), $(_TranslateUrlPattern), $(_TranslateUrlReplacement)))</RepositoryUrl>
+    <RepositoryUrl Condition="'$(BUILD_REPOSITORY_URI)' == ''">file://$(RepoRoot)</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true' and '$(RepositoryCommit)' == ''">
+    <RepositoryCommit Condition="'$(BUILD_SOURCEVERSION)' != ''">$(BUILD_SOURCEVERSION)</RepositoryCommit>
+    <RepositoryCommit Condition="'$(BUILD_SOURCEVERSION)' == ''">0000000000000000000000000000000000000000</RepositoryCommit>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true' and '$(RepositoryType)' == ''">
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <!-- 
+    The convention for names of Azure DevOps repositories mirrored from GitHub is "{GitHub org name}-{GitHub repository name}"
+  -->
   <PropertyGroup>
     <!-- There are quite a few git repo forms:
       https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-services
@@ -43,7 +79,7 @@
 
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateSourcePackageSourceLinkTargetsFile" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
 
-  <PropertyGroup Condition="'$(IsPackable)' == 'true' and '$(IsSourcePackage)' == 'true' and '$(DotNetBuildFromSource)' != 'true'">
+  <PropertyGroup Condition="'$(IsPackable)' == 'true' and '$(IsSourcePackage)' == 'true' and '$(EnableSourceLink)' == 'true'">
     <BeforePack>$(BeforePack);_AddSourcePackageSourceLinkFile</BeforePack>
   </PropertyGroup>
 
