@@ -94,7 +94,7 @@
       <!-- Escape arguments with user inputs. -->
       <RunArguments>$([MSBuild]::Escape('$(RunArguments)'))</RunArguments>
 
-      <RunScriptCommand Condition="'$(RunScriptCommand)' == ''">"$(RunCommand)" $(RunArguments)</RunScriptCommand>
+      <RunScriptCommand Condition="'$(RunScriptCommand)' == ''">$(RunCommand) $(RunArguments)</RunScriptCommand>
     </PropertyGroup>
 
     <!-- Set $(TestDebugger) to eg c:\debuggers\windbg.exe to run tests under a debugger. -->
