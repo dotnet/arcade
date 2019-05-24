@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Auth;
 using Microsoft.Azure.Storage.Blob;
@@ -46,11 +50,11 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             await cloudBlockBlob.UploadFromFileAsync(filePath);
         }
 
-        public bool IsFileIdenticalToBlob(string blobPath, string localFileFullPath)
+        public async Task<bool> IsFileIdenticalToBlobAsync(string blobPath, string localFileFullPath)
         {
             CloudBlockBlob blobReference = GetBlockBlob(blobPath);
 
-            return IsFileIdenticalToBlob(localFileFullPath, blobReference);
+            return await IsFileIdenticalToBlob(localFileFullPath, blobReference);
         }
 
         /// <summary>
@@ -60,7 +64,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         /// Otherwise a byte-per-byte comparison with the content of the file
         /// is performed.
         /// </summary>
-        public bool IsFileIdenticalToBlob(string localFileFullPath, CloudBlockBlob blobReference)
+        public async Task<bool> IsFileIdenticalToBlob(string localFileFullPath, CloudBlockBlob blobReference)
         {
             blobReference.FetchAttributes();
 
@@ -73,12 +77,40 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             }
             else
             {
-                byte[] existingBytes = new byte[blobReference.Properties.Length];
-                byte[] localBytes = File.ReadAllBytes(localFileFullPath);
+                int OneMegaBytes = 1 * 1024 * 1024;
 
-                blobReference.DownloadToByteArray(existingBytes, 0);
+                if (blobReference.Properties.Length < OneMegaBytes) {
+                    byte[] existingBytes = new byte[blobReference.Properties.Length];
+                    byte[] localBytes = File.ReadAllBytes(localFileFullPath);
 
-                return localBytes.SequenceEqual(existingBytes);
+                    blobReference.DownloadToByteArray(existingBytes, 0);
+
+                    return localBytes.SequenceEqual(existingBytes);
+                }
+                else
+                {
+                    using (Stream localFileStream = File.OpenRead(localFileFullPath))
+                    using (Stream blobStream = await blobReference.OpenReadAsync())
+                    {
+                        byte[] localBuffer = new byte[OneMegaBytes];
+                        byte[] remoteBuffer = new byte[OneMegaBytes];
+                        int bytesLocalFile = 0;
+
+                        do
+                        {
+                            bytesLocalFile = await blobStream.ReadAsync(remoteBuffer, 0, OneMegaBytes);
+                            int bytesBlobFile = await localFileStream.ReadAsync(localBuffer, 0, OneMegaBytes);
+
+                            if ((bytesLocalFile != bytesBlobFile) || !remoteBuffer.SequenceEqual(localBuffer))
+                            {
+                                return false;
+                            }
+                        }
+                        while (bytesLocalFile > 0);
+
+                        return true;
+                    }
+                }
             }
         }
 

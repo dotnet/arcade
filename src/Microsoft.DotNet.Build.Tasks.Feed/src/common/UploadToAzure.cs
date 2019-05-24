@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                         {
                             if (PassIfExistingItemIdentical)
                             {
-                                if (blobUtils.IsFileIdenticalToBlob(item.ItemSpec, blobReference))
+                                if (await blobUtils.IsFileIdenticalToBlob(item.ItemSpec, blobReference))
                                 {
                                     return;
                                 }
