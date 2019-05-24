@@ -441,7 +441,7 @@
     <!-- Harvest files from HarvestAdditionalPackages, but don't calculate support-->
     <HarvestPackage PackageId="%(HarvestAdditionalPackages.Identity)"
                     PackageVersion="%(HarvestAdditionalPackages.Version)"
-                    PackagesFolder="$(PackagesDir)"
+                    PackagesFolder="$(NuGetPackageRoot)"
                     Files="@(File)"
                     RuntimeFile="$(RuntimeIdGraphDefinitionFile)"
                     HarvestAssets="$(HarvestFiles)"

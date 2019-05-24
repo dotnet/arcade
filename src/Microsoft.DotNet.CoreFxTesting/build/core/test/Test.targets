@@ -38,17 +38,16 @@
     <!-- Traits -->
     <_withCategories Condition="'$(WithCategories)' != ''">;$(WithCategories.Trim(';'))</_withCategories>
     <_withoutCategories Condition="'$(WithoutCategories)' != ''">;$(WithoutCategories.Trim(';'))</_withoutCategories>
-    <!-- Default non categories -->
+    <!-- Default categories -->
+    <_withCategories Condition="'$(TestScope)' == 'outerloop'">$(_withCategories);OuterLoop</_withCategories>
+    <_withoutCategories Condition="'$(TestScope)' == '' or '$(TestScope)' == 'innerloop'">$(_withoutCategories);OuterLoop</_withoutCategories>
     <_withoutCategories Condition="!$(_withCategories.Contains('failing'))">$(_withoutCategories);failing</_withoutCategories>
-    <_withoutCategories Condition="'$(OuterLoop)' != 'true'">$(_withoutCategories);OuterLoop</_withoutCategories>
+    <!-- Add to run argument string -->
     <RunArguments>$(RunArguments)$(_withCategories.Replace(';', ' -trait category='))</RunArguments>
     <RunArguments>$(RunArguments)$(_withoutCategories.Replace(';', ' -notrait category='))</RunArguments>
 
     <!-- User passed in options. -->
     <RunArguments Condition="'$(XUnitOptions)' != ''">$(RunArguments) $(XUnitOptions)</RunArguments>
-
-    <!-- Escape arguments with user inputs. -->
-    <RunArguments>$([MSBuild]::Escape('$(RunArguments)'))</RunArguments>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -71,7 +70,7 @@
         <TestRunnerName>xunit.console.dll</TestRunnerName>
         <TestRunnerNameWithoutExtension>$([System.IO.Path]::GetFileNameWithoutExtension('$(TestRunnerName)'))</TestRunnerNameWithoutExtension>
 
-        <RunCommand>$(RunScriptHost)</RunCommand>
+        <RunCommand>"$(RunScriptHost)"</RunCommand>
         <RunArguments>$(TestRunnerName) $(RunArguments)</RunArguments>
       </PropertyGroup>
     </When>
@@ -111,53 +110,6 @@
 
         <!-- Uninstall -->
         <PostRunScriptCommands Include="call &quot;$(LauncherPath)&quot; -uninstall appxmanifest.xml $(TestAssembly)" />
-      </ItemGroup>
-    </When>
-
-    <When Condition="'$(UseDotNetNativeToolchain)' == 'true'">
-      <PropertyGroup>
-        <TestRunnerName>xunit.console.exe</TestRunnerName>
-        <RunCommand>$(TestRunnerName)</RunCommand>
-
-        <!-- We use the netcoreapp runner for ILC but change its extension to .exe to satisfy ILC. -->
-        <OriginalTestRunnerName>xunit.console.dll</OriginalTestRunnerName>
-
-        <RunScriptILCFolder>%RUNTIME_PATH%\TestILC</RunScriptILCFolder>
-        <RunScriptILCInputFolder>%RUNTIME_PATH%\ILCInputFolder</RunScriptILCInputFolder>
-        <ILCBuildType Condition="'$(ILCBuildType)' == ''">ret</ILCBuildType>
-        <_UseSharedAssemblies Condition="'$(EnableMultiFileILCTests)' == 'true'">-useSharedAssemblies</_UseSharedAssemblies>
-        <_ILCWin32 Condition="'$(BuildingUAPAOTVertical)' != 'true'">-win32</_ILCWin32>
-        <ILCTestDir>native</ILCTestDir>
-      </PropertyGroup>
-
-      <ItemGroup>
-        <!-- Copy the runtime binaries over. -->
-        <RunScriptCommands Include="for /R &quot;$(RunScriptILCInputFolder)&quot; %25%25I in (%2A) do @if not exist &quot;%25%25~nxI&quot; (mklink /H &quot;%25%25~nxI&quot; &quot;%25%25I&quot; 1>NUL)" />
-
-        <!-- Copy the default ILC rd.xml over. -->
-        <RunScriptCommands Include="copy /y $(RunScriptILCFolder)\default.rd.xml" />
-
-        <!-- Rename the test runner's extension from dll to exe to satisfy ILC. -->
-        <RunScriptCommands Include="move /y $(OriginalTestRunnerName) $(TestRunnerName)" />
-
-        <!-- Clean out dir and call ILC. -->
-        <RunScriptCommands Include="if exist $(ILCTestDir) rmdir /s /q $(ILCTestDir)" />
-        <RunScriptCommands Include="call $(RunScriptILCFolder)\ilc.exe -ExeName $(TestRunnerName) -in . -out $(ILCTestDir) -usedefaultpinvoke -buildtype $(ILCBuildType) -v diag $(_UseSharedAssemblies) $(_ILCWin32)" />
-
-        <!-- Save error level as the subsequent commands overwrite it and exit if an error happened. -->
-        <RunScriptCommands Include="set ILCERRORLEVEL=%ERRORLEVEL%" />
-        <RunScriptCommands Include="if not [%ILCERRORLEVEL%] == [0] exit /b %ILCERRORLEVEL%" />
-
-        <!-- Copy vcruntime dependency to the ILC output dir. -->
-        <RunScriptCommands Include="copy /y $(RunScriptILCFolder)\CRT\vcruntime140_app.dll $(ILCTestDir)" />
-
-        <!-- Clean the test assembly so that it doesn't get loaded again. -->
-        <RunScriptCommands Include="echo > $(ILCTestDir)\$(TestAssembly)" />
-
-        <RunScriptCommands Include="cd $(ILCTestDir)"/>
-
-        <!-- These will cause failures if execution is skipped, such as on ARM -->
-        <PostRunScriptCommands Condition="'$(ArchGroup)' != 'arm'" Include="copy /y $(TestResultsName) %EXECUTION_DIR%" />
       </ItemGroup>
     </When>
 

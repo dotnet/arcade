@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
+using JetBrains.Annotations;
 using Microsoft.OpenApi.Models;
 
 namespace Microsoft.DotNet.SwaggerGenerator.Modeler
@@ -14,13 +15,15 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
             HttpMethod httpMethod,
             TypeReference responseType,
             TypeReference errorType,
-            IEnumerable<ParameterModel> parameters)
+            IEnumerable<ParameterModel> parameters,
+            PaginatedOpenApiExtension paginated)
         {
             Name = name;
             Path = path;
             HttpMethod = httpMethod;
             ResponseType = responseType;
             ErrorType = errorType;
+            Paginated = paginated;
             Parameters = parameters.ToImmutableList();
         }
 
@@ -30,6 +33,9 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
         public IImmutableList<ParameterModel> Parameters { get; }
         public TypeReference ResponseType { get; }
         public TypeReference ErrorType { get; }
+
+        [CanBeNull]
+        public PaginatedOpenApiExtension Paginated { get; }
 
         public bool ResponseIsVoid => ResponseType == TypeReference.Void;
 

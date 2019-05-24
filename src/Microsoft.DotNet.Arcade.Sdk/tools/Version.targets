@@ -9,12 +9,21 @@
       SemanticVersioningV1        "true" if the Version needs to respect SemVer 1.0. Default is false, which means format following SemVer 2.0.
   -->
 
-  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.CalculateFileVersion" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.CalculateAssemblyAndFileVersions" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
   
   <Target Name="_InitializeAssemblyVersion" BeforeTargets="GetAssemblyVersion">
-    <Microsoft.DotNet.Arcade.Sdk.CalculateFileVersion VersionPrefix="$(VersionPrefix)" OfficialBuildId="$(_BuildNumber)" Condition="'$(VersionSuffixDateStamp)' != ''">
+    <Warning Text="AssemblyVersion '$(AssemblyVersion)' overridden by auto-generated version" Condition="'$(AssemblyVersion)' != '' and '$(AutoGenerateAssemblyVersion)' == 'true'"/>
+    
+    <Microsoft.DotNet.Arcade.Sdk.CalculateAssemblyAndFileVersions
+      VersionPrefix="$(_OriginalVersionPrefix)"
+      BuildNumber="$(_BuildNumber)"
+      PatchNumber="$(_PatchNumber)"
+      AutoGenerateAssemblyVersion="$(AutoGenerateAssemblyVersion)"
+      Condition="'$(VersionSuffixDateStamp)' != ''">
+
+      <Output TaskParameter="AssemblyVersion" PropertyName="AssemblyVersion" Condition="'$(AssemblyVersion)' == '' or '$(AutoGenerateAssemblyVersion)' == 'true'"/>
       <Output TaskParameter="FileVersion" PropertyName="FileVersion"/>
-    </Microsoft.DotNet.Arcade.Sdk.CalculateFileVersion>
+    </Microsoft.DotNet.Arcade.Sdk.CalculateAssemblyAndFileVersions>
 
     <PropertyGroup Condition="'$(VersionSuffixDateStamp)' == ''">
       <!--

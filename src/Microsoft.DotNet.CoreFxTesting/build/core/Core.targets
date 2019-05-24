@@ -7,7 +7,7 @@
     <TestAssembly Condition="'$(TestAssembly)' == ''">$(TargetFileName)</TestAssembly>
     <TestAssemblyFullPath>$([MSBuild]::NormalizePath('$(TestPath)', '$(TestAssembly)'))</TestAssemblyFullPath>
     <RunWorkingDirectory>$(TestPath)</RunWorkingDirectory>
-    <ArchiveTest Condition="'$(ArchiveTests.ToLower())' == 'all' OR $(MSBuildProjectName.EndsWith('.$(ArchiveTests)'))">true</ArchiveTest>
+    <ArchiveTest Condition="'$(ArchiveTest)' == '' AND ('$(ArchiveTests.ToLower())' == 'all' OR $(MSBuildProjectName.EndsWith('.$(ArchiveTests)')))">true</ArchiveTest>
 
     <!-- Publish the test data as part of the build to enable VS test runs. -->
     <PrepareForRunDependsOn>$(PrepareForRunDependsOn);PublishSupplementalTestData;</PrepareForRunDependsOn>
@@ -87,22 +87,20 @@
           DependsOnTargets="$(GenerateRunScriptDependsOn)">
 
     <PropertyGroup>
-      <RunScriptCommand Condition="'$(RunScriptCommand)' == ''">"$(RunCommand)" $(RunArguments)</RunScriptCommand>
+      <!-- RSP file support. -->
+      <RunArguments Condition="'$(TargetOS)' == 'Windows_NT'">$(RunArguments) %RSP_FILE%</RunArguments>
+      <RunArguments Condition="'$(TargetOS)' != 'Windows_NT'">$(RunArguments) $RSP_FILE</RunArguments>
+
+      <!-- Escape arguments with user inputs. -->
+      <RunArguments>$([MSBuild]::Escape('$(RunArguments)'))</RunArguments>
+
+      <RunScriptCommand Condition="'$(RunScriptCommand)' == ''">$(RunCommand) $(RunArguments)</RunScriptCommand>
     </PropertyGroup>
 
     <!-- Set $(TestDebugger) to eg c:\debuggers\windbg.exe to run tests under a debugger. -->
     <PropertyGroup Condition="'$(TestDebugger)' != ''">
       <RunScriptCommand Condition="!$(TestDebugger.Contains('devenv'))">$(TestDebugger) $(RunScriptCommand)</RunScriptCommand>
       <RunScriptCommand Condition=" $(TestDebugger.Contains('devenv'))">$(TestDebugger) /debugexe $(RunScriptCommand)</RunScriptCommand>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(UseDotNetNativeToolchain)' == 'true' AND '$(ArchGroup)' == 'arm'">
-      <!--
-        Currently (and probably forever) we can't build AOT on ARM,
-        So if we're running on ARM, what we really want to do is encapsulate
-        the test command into a script that can be run on another machine
-      -->
-      <RunScriptCommand>echo $(RunScriptCommand)> .\RunContinuation.cmd</RunScriptCommand>
     </PropertyGroup>
 
     <ItemGroup>
@@ -189,8 +187,14 @@
     <Error Condition="!Exists('$(TestAssemblyFullPath)')"
            Text="Test assembly couldn't be found. Make sure to build the test project first." />
 
+    <PropertyGroup>
+      <RunTestsCommand>"$(RunScriptOutputPath)" --runtime-path "$(TestHostRootPath.TrimEnd('\/'))" --dotnet-root "$(DotNetRoot.TrimEnd('\/'))"</RunTestsCommand>
+      <RunTestsCommand Condition="'$(UseGlobalTools)' == 'true'">$(RunTestsCommand) --global-tools-dir "$(GlobalToolsDir.TrimEnd('\/'))"</RunTestsCommand>
+      <RunTestsCommand Condition="'$(TestRspFile)' != ''">$(RunTestsCommand) --rsp-file "$(TestRspFile)"</RunTestsCommand>
+    </PropertyGroup>
+
     <!-- Invoke the run script with the test host as the runtime path. -->
-    <Exec Command="&quot;$(RunScriptOutputPath)&quot; &quot;$(TestHostRootPath.TrimEnd('\/'))&quot; &quot;$(DotNetRoot.TrimEnd('\/'))&quot; &quot;$(GlobalToolsDir.TrimEnd('\/'))&quot;"
+    <Exec Command="$(RunTestsCommand)"
           ContinueOnError="true"
           IgnoreStandardErrorWarningFormat="true">
       <Output PropertyName="TestRunExitCode" TaskParameter="ExitCode" />

@@ -80,8 +80,26 @@ namespace Microsoft.Cci.Traversers
 
         public virtual void Visit(IEnumerable<ITypeDefinitionMember> members)
         {
+            // We don't want to apply a different sort order if one already exists
+            // and instead want to apply it in addition to the current sort order.
+            //
+            // This can happen for enums, as an example, where we want to prefer numeric
+            // order rather than the default alphabetical order.
+
+            if (members is IOrderedEnumerable<ITypeDefinitionMember> orderedTypeDefinitionMembers)
+            {
+                members = orderedTypeDefinitionMembers.ThenBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
+            }
+            else if (members is IOrderedEnumerable<IFieldDefinition> orderedFieldDefinitionMembers)
+            {
+                // This is required due to IOrderedEnumerable being covariant on .NET Core, but not on .NET Framework
+                members = orderedFieldDefinitionMembers.ThenBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
+            }
+            else
+            {
+                members = members.OrderBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
+            }
             members = members.Where(_filter.Include);
-            members = members.OrderBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
 
             foreach (var member in members)
                 Visit(member);
@@ -89,6 +107,12 @@ namespace Microsoft.Cci.Traversers
 
         public virtual void Visit(ITypeDefinition parentType, IEnumerable<IFieldDefinition> fields)
         {
+            if (parentType.IsEnum)
+            {
+                // Enums are generally sorted in numeric order, rather than alphabetically
+                // We will try to do the same here to make it more consistent with the impl
+                fields = fields.OrderBy((fieldDefinition) => fieldDefinition.Constant.Value);
+            }
             this.Visit((IEnumerable<ITypeDefinitionMember>)fields);
         }
 

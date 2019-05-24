@@ -1,7 +1,7 @@
 import os
 import sys
 import traceback
-from Queue import Queue
+from queue import Queue
 from threading import Thread
 
 from test_results_reader import read_results
@@ -33,9 +33,9 @@ class UploadWorker(Thread):
 
     def run(self):
         self.__print("starting...")
-        while True:
-            item = self.queue.get()
+        while True:            
             try:
+                item = self.queue.get()
                 self.__process(item)
             except:
                 self.__print("got error: {}".format(traceback.format_exc()))
@@ -61,34 +61,34 @@ def process_args():
 def main():
     collection_uri, team_project, test_run_id, access_token = process_args()
 
-    print "Got args", collection_uri, team_project, test_run_id, access_token
+    print("Got args", collection_uri, team_project, test_run_id, access_token)
 
     worker_count = 10
     q = Queue()
 
-    print "Main thread starting workers"
+    print("Main thread starting workers")
 
     for i in range(worker_count):
         worker = UploadWorker(q, i, collection_uri, team_project, test_run_id, access_token)
         worker.daemon = True
         worker.start()
 
-    print "Beginning reading of test results."
+    print("Beginning reading of test results.")
 
     all_results = read_results(os.getcwd())
     batch_size = 1000
     batches = batch(all_results, batch_size)
 
-    print "Uploading results in batches of size {}".format(batch_size)
+    print("Uploading results in batches of size {}".format(batch_size))
 
     for b in batches:
         q.put(b)
 
-    print "Main thread finished queueing batches"
+    print("Main thread finished queueing batches")
 
     q.join()
 
-    print "Main thread exiting"
+    print("Main thread exiting")
 
 
 if __name__ == '__main__':

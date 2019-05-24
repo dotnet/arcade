@@ -243,7 +243,7 @@ namespace Xunit.ConsoleClient
 
                 if (optionName.StartsWith("@", StringComparison.Ordinal))
                 {
-                    ParseRspFile(optionName.Substring(1));
+                    ParseRspFile(option.Key.Substring(1));
                     continue;
                 }
 

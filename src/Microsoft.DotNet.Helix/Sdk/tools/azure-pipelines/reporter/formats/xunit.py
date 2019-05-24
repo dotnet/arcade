@@ -1,5 +1,5 @@
 import xml.etree.ElementTree
-from result_format import ResultFormat
+from .result_format import ResultFormat
 from defs import TestResult, TestResultAttachment
 
 
@@ -14,7 +14,7 @@ class XUnitFormat(ResultFormat):
         return 'xunit'
 
     @property
-    def acceptable_file_names(self):
+    def acceptable_file_suffixes(self):
         yield 'testResults.xml'
         yield 'test-results.xml'
         yield 'test_results.xml'

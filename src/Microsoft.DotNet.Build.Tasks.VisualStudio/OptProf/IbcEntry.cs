@@ -16,14 +16,16 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
         private const string VSInstallationRootVar = "%VisualStudio.InstallationUnderTest.Path%";
         private const string DefaultNgenApplication = VSInstallationRootVar + "\\Common7\\IDE\\vsn.exe";
 
+        public readonly string EntryName;
         public readonly string RelativeInstallationPath;
         public readonly string InstrumentationArguments;
         public readonly string RelativeDirectoryPath;
 
-        public IbcEntry(string relativeInstallationPath, string relativeDirectoryPath, string ngenApplicationPath)
+        public IbcEntry(string entryName, string relativeInstallationPath, string relativeDirectoryPath, string ngenApplicationPath)
         {
             string commandLineArg(string name, string value) => $"/{name}:\"{value}\"";
 
+            EntryName = entryName;
             RelativeInstallationPath = relativeInstallationPath;
             RelativeDirectoryPath = relativeDirectoryPath;
             InstrumentationArguments = commandLineArg("ExeConfig", ngenApplicationPath);
@@ -41,6 +43,7 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
             foreach (var args in assembly.InstrumentationArguments)
             {
                 yield return new IbcEntry(
+                    assembly.Assembly,
                     relativeInstallationPath: args.RelativeInstallationFolder.Replace("/", "\\") + $"\\{assembly.Assembly}",
                     relativeDirectoryPath: "",
                     ngenApplicationPath: Path.Combine(VSInstallationRootVar, args.InstrumentationExecutable.Replace("/", "\\")));
@@ -59,6 +62,12 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
                        StringComparer.OrdinalIgnoreCase.Equals(ext, ".exe");
             }
 
+            bool isSatelliteAssembly(string filePath)
+                => Path.GetFileNameWithoutExtension(filePath).EndsWith(".resources");
+
+            bool includeInIbcTraining(JToken file, string fileName)
+                => isNgened(file) && isPEFile(fileName) && !isSatelliteAssembly(fileName);
+
             string replacePrefix(string path, string prefix, string replacement)
                 => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ? replacement + path.Substring(prefix.Length) : path;
 
@@ -67,18 +76,19 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
                 var extensionDir = replacePrefix((string)json["extensionDir"], "[installdir]\\", "");
                 return from file in (JArray)json["files"]
                        let fileName = (string)file["fileName"]
-                       where isNgened(file) && isPEFile(fileName)
+                       where includeInIbcTraining(file, fileName)
                        let filePath = $"{extensionDir}\\{fileName.TrimStart('/').Replace("/", "\\")}"
-                       select new IbcEntry(filePath, relativeDirectoryPath: Path.GetDirectoryName(fileName), DefaultNgenApplication);
+                       select new IbcEntry(fileName, filePath, relativeDirectoryPath: Path.GetDirectoryName(fileName), DefaultNgenApplication);
             }
             else
             {
                 return from file in (JArray)json["files"]
                        let fileName = (string)file["fileName"]
                        let ngenApplication = (string)file["ngenApplication"]
-                       where isNgened(file) && isPEFile(fileName)
+                       where includeInIbcTraining(file, fileName)
                        let filePath = fileName.Replace("/Contents/", string.Empty).Replace("/", "\\")
                        select new IbcEntry(
+                           fileName,
                            filePath,
                            relativeDirectoryPath: "",
                            (ngenApplication != null) ? replacePrefix(ngenApplication, "[installdir]", VSInstallationRootVar) : DefaultNgenApplication);

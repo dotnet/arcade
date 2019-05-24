@@ -6,12 +6,15 @@ from typing import Iterable
 class ResultFormat:
     __metaclass__ = ABCMeta
 
+    def __init__(self):
+        pass
+
     @abstractproperty
     def name(self):
         pass
 
     @abstractproperty
-    def acceptable_file_names(self):
+    def acceptable_file_suffixes(self):
         # type: () -> Iterable[str]
         pass
 

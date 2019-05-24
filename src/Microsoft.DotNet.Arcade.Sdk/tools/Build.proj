@@ -34,17 +34,7 @@
     Pack                            "true" to build NuGet packages and VS insertion manifests
     Sign                            "true" to sign built binaries
     Publish                         "true" to publish artifacts (e.g. symbols)
-
-    Workaround for https://github.com/NuGet/Home/issues/4695
-    QuietRestore                    "true" to suppress Restore output.
-    QuietRestoreBinaryLog           "true" to produce binary log for Restore.
   -->
-
-  <PropertyGroup>
-    <!-- IsRunningFromVisualStudio may be true even when running msbuild.exe from command line. This generally means that MSBUild is Visual Studio installation and therefore we need to find NuGet.targets in a different location.  -->
-    <NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'=='' and '$([MSBuild]::IsRunningFromVisualStudio())'=='true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</NuGetRestoreTargets>
-    <NuGetRestoreTargets Condition="'$(NuGetRestoreTargets)'==''">$(MSBuildToolsPath)\NuGet.targets</NuGetRestoreTargets>
-  </PropertyGroup>
 
   <PropertyGroup>
     <_RepoRootOriginal>$(RepoRoot)</_RepoRootOriginal>
@@ -88,19 +78,6 @@
     <Error Text="Property 'RepoRoot' must be specified" Condition="'$(_RepoRootOriginal)' == ''"/>
     <Error Text="File 'global.json' must exist in directory specified by RepoRoot: '$(_RepoRootOriginal)'" Condition="'$(_RepoRootOriginal)' != '' and !Exists('$(RepoRoot)global.json')"/>
 
-    <PropertyGroup>
-      <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' != 'Core'">"$(MSBuildBinPath)\MSBuild.exe" /nodeReuse:false</_MSBuildCmd>
-      <_MSBuildCmd Condition="'$(MSBuildRuntimeType)' == 'Core'">"$(DotNetTool)" msbuild</_MSBuildCmd>
-    </PropertyGroup>
-
-    <PropertyGroup>
-      <_QuietRestore>false</_QuietRestore>
-      <_QuietRestore Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(QuietRestore)' == 'true'">true</_QuietRestore>
-
-      <_RestoreTools>false</_RestoreTools>
-      <_RestoreTools Condition="'$(Restore)' == 'true'">true</_RestoreTools>
-    </PropertyGroup>
-
     <ItemGroup>
       <_SolutionBuildTargets Include="Rebuild" Condition="'$(Rebuild)' == 'true'" />
       <_SolutionBuildTargets Include="Build" Condition="'$(Build)' == 'true' and '$(Rebuild)' != 'true'" />
@@ -115,7 +92,7 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <_RemoveProps>Projects;Restore;QuietRestore;QuietRestoreBinaryLog;Deploy;Sign;Publish;@(_SolutionBuildTargets)</_RemoveProps>
+      <_RemoveProps>Projects;Restore;Deploy;Sign;Publish;@(_SolutionBuildTargets)</_RemoveProps>
     </PropertyGroup>
 
     <ItemGroup>
@@ -123,6 +100,7 @@
       <_CommonProps Include="ContinuousIntegrationBuild=$(ContinuousIntegrationBuild)"/>
       <_CommonProps Include="RepoRoot=$(RepoRoot)"/>
       <_CommonProps Include="VersionsPropsPath=$(VersionsPropsPath)"/>
+
       <!--
         When building from source we suppress restore for projects that set ExcludeFromSourceBuild=true.
         NuGet Restore task reports a warning for such projects, which we suppress here.
@@ -136,7 +114,7 @@
       <_CommonProps Include="VCTargetsPath=$([MSBuild]::ValueOrDefault('$(VCTargetsPath)', '$([MSBuild]::GetVsInstallRoot())\Common7\IDE\VC\VCTargets\'))" Condition="'$(MSBuildRuntimeType)' != 'Core'"/>
     </ItemGroup>
 
-    <ItemGroup Condition="$(_RestoreTools)">
+    <ItemGroup Condition="'$(Restore)' == 'true'">
       <_RestoreToolsProps Include="@(_CommonProps)"/>
       <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
@@ -158,23 +136,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <_SolutionBuildPropsArgs Include="@(_SolutionBuildProps->'/p:%(Identity)\')" Condition="$([MSBuild]::ValueOrDefault(%(_SolutionBuildProps.Identity), '').EndsWith('\'))" />
-      <_SolutionBuildPropsArgs Include="@(_SolutionBuildProps->'/p:%(Identity)')" Condition="!$([MSBuild]::ValueOrDefault(%(_SolutionBuildProps.Identity), '').EndsWith('\'))" />
-      <_RestoreToolsPropArgs Include="@(_RestoreToolsProps->'/p:%(Identity)\')" Condition="$([MSBuild]::ValueOrDefault(%(_RestoreToolsProps.Identity), '').EndsWith('\'))" />
-      <_RestoreToolsPropArgs Include="@(_RestoreToolsProps->'/p:%(Identity)')" Condition="!$([MSBuild]::ValueOrDefault(%(_RestoreToolsProps.Identity), '').EndsWith('\'))" />
-    </ItemGroup>
-
-    <PropertyGroup>
-      <_SolutionBuildPropsCmdLine>"@(_SolutionBuildPropsArgs, '" "')"</_SolutionBuildPropsCmdLine>
-      <_RestoreToolsPropsCmdLine>"@(_RestoreToolsPropArgs, '" "')"</_RestoreToolsPropsCmdLine>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(QuietRestoreBinaryLog)' == 'true'">
-      <_SolutionBuildPropsCmdLine>$(_SolutionBuildPropsCmdLine) /bl:"$(ArtifactsLogDir)RestoreRepoTools.binlog"</_SolutionBuildPropsCmdLine>
-      <_RestoreToolsPropsCmdLine>$(_RestoreToolsPropsCmdLine) /bl:"$(ArtifactsLogDir)Restore.binlog"</_RestoreToolsPropsCmdLine>
-    </PropertyGroup>
-
-    <ItemGroup>
       <!-- Find any ProjectToBuild items that are not .sln. We don't currently support mixing .sln with other types. We could make it work, but don't have a customer for it yet. -->
       <_ProjectToBuildExtension Include="%(ProjectToBuild.Extension)" Condition="'%(ProjectToBuild.Extension)' != '' and '%(ProjectToBuild.Extension)' != '.sln' " />
     </ItemGroup>
@@ -183,28 +144,10 @@
       <!-- Normalize paths to avoid false warnings by NuGet about missing project references. -->
       <ProjectToBuildList>@(ProjectToBuild->'%(FullPath)')</ProjectToBuildList>
       <_BuildSolutions>@(ProjectToBuild->AnyHaveMetadataValue('Extension', '.sln'))</_BuildSolutions>
-      <RestoreUsingNuGetTargets Condition="'$(RestoreUsingNuGetTargets)' == '' AND '$(_BuildSolutions)' == 'false'">true</RestoreUsingNuGetTargets>
     </PropertyGroup>
 
     <Error Condition="'$(_BuildSolutions)' == 'true' and '@(_ProjectToBuildExtension)' != '' "
            Text="Mixing .sln and other project formats in ProjectToBuild is not supported." />
-
-    <!--
-      Workaround for https://github.com/NuGet/Home/issues/4695.
-      We launch a new msbuild process to restore.
-    -->
-    <Message Text="Restoring packages ..." Importance="high" Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" />
-
-    <MakeDir Directories="$(ArtifactsLogDir)" Condition="'$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" />
-
-    <Exec Command='$(_MSBuildCmd) "$(MSBuildProjectDirectory)\Tools.proj" /nologo /m /v:quiet /t:Restore $(_RestoreToolsPropsCmdLine)'
-          Condition="'$(_RestoreTools)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
-
-    <Exec Command='$(_MSBuildCmd) "@(ProjectToBuild)" /nologo /m /v:quiet /t:Restore $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
-          Condition="'$(RestoreUsingNuGetTargets)' != 'true' and '$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
-
-    <Exec Command='$(_MSBuildCmd) "$(NuGetRestoreTargets)" "/p:RestoreGraphProjectInput:$(ProjectToBuildList)" /nologo /m /v:quiet /t:Restore $(_SolutionBuildPropsCmdLine) /p:__BuildPhase=SolutionRestore'
-          Condition="'$(RestoreUsingNuGetTargets)' == 'true' and '$(Restore)' == 'true' and '$(_QuietRestore)' == 'true'" StandardOutputImportance="normal" />
 
     <!--
       Restore built-in tools.
@@ -212,31 +155,42 @@
     <MSBuild Projects="Tools.proj"
              Targets="Restore"
              Properties="@(_RestoreToolsProps)"
-             Condition="'$(_RestoreTools)' == 'true' and '$(_QuietRestore)' != 'true'"/>
+             Condition="'$(Restore)' == 'true'"/>
 
     <!--
+      Restore solution.
+    
       Run solution restore separately from the other targets, in a different build phase.
       Since restore brings in new .props and .targets files we need to rerun evaluation.
 
-      Note: msbuild caches the metaproject for the solution (see https://github.com/Microsoft/msbuild/issues/1695)
-      We invalidate the cache by changing the value of __BuildPhase property.
+      Workarounds:
+      - Invoke restore using NuGet.targets directly (see https://github.com/NuGet/Home/issues/7648). 
+        This avoids duplicate calls to RestoreTask and race conditions on writing restore results to disk.
+
+      - msbuild caches the metaproject for the solution (see https://github.com/Microsoft/msbuild/issues/1695)
+        We invalidate the cache by changing the value of __BuildPhase property.
     -->
+
+    <PropertyGroup>
+      <RestoreUsingNuGetTargets Condition="'$(RestoreUsingNuGetTargets)' == '' and '$(_BuildSolutions)' == 'false'">true</RestoreUsingNuGetTargets>
+
+      <!-- IsRunningFromVisualStudio may be true even when running msbuild.exe from command line. This generally means that MSBUild is Visual Studio installation and therefore we need to find NuGet.targets in a different location.  -->
+      <_NuGetRestoreTargets>$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
+      <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
+    </PropertyGroup>
+
     <MSBuild Projects="@(ProjectToBuild)"
              Properties="@(_SolutionBuildProps);__BuildPhase=SolutionRestore"
              RemoveProperties="$(_RemoveProps)"
              Targets="Restore"
              BuildInParallel="true"
-             Condition="'$(RestoreUsingNuGetTargets)' != 'true' and '$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
+             Condition="'$(RestoreUsingNuGetTargets)' != 'true' and '$(Restore)' == 'true'"/>
 
-    <!--
-      Workaround for https://github.com/NuGet/Home/issues/7648.
-      Invoke restore using NuGet.targets directly. This avoids duplicate calls to RestoreTask and race conditions on writing restore results to disk.
-    -->
-    <MSBuild Projects="$(NuGetRestoreTargets)"
+    <MSBuild Projects="$(_NuGetRestoreTargets)"
              Properties="@(_SolutionBuildProps);RestoreGraphProjectInput=$(ProjectToBuildList);__BuildPhase=SolutionRestore"
              RemoveProperties="$(_RemoveProps)"
              Targets="Restore"
-             Condition="'$(RestoreUsingNuGetTargets)' == 'true' and '$(Restore)' == 'true' and '$(_QuietRestore)' != 'true'"/>
+             Condition="'$(RestoreUsingNuGetTargets)' == 'true' and '$(Restore)' == 'true'"/>
 
     <!--
       Build solution.

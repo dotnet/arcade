@@ -68,6 +68,12 @@ namespace Microsoft.Cci.Writers
             set { _declarationWriter.AlwaysIncludeBase = value; }
         }
 
+        public Version LangVersion
+        {
+            get { return _declarationWriter.LangVersion; }
+            set { _declarationWriter.LangVersion = value; }
+        }
+
         public void WriteAssemblies(IEnumerable<IAssembly> assemblies)
         {
             foreach (var assembly in assemblies)

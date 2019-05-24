@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
-    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
     <PackageType>MSBuildSdk</PackageType>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
@@ -11,19 +11,31 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" Publish="false" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" Publish="false" />
+    <!-- Microsoft.CodeAnalysis is also loaded by the msbuild. So this version should match the msbuild version of the assembly. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MsbuildTaskMicrosoftCodeAnalysisCSharpVersion)" ExcludeAssets="analyzers" />
+    <PackageReference Include="System.Reflection.Metadata" Version="1.6.0" />
+  </ItemGroup>
+
+  <!-- Required for compiling Microsoft.DotNet.GenFacades.ILRewriter -->
+  <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
     <PackageReference Include="Microsoft.Cci" Version="$(MicrosoftCciVersion)" />
     <PackageReference Include="Microsoft.DiaSymReader.Converter" Version="$(MicrosoftDiaSymReaderConverterVersion)" />
     <PackageReference Include="Microsoft.DiaSymReader.Native" Version="$(MicrosoftDiaSymReaderNativeVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="$(MicrosoftCodeAnalysisAnalyzersVersion)" />
-    <!-- Microsoft.CodeAnalysis is also loaded by the msbuild. So this version should match the msbuild version of the assembly. -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.0.0" ExcludeAssets="analyzers" />
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.0.0" />
     <PackageReference Include="System.Diagnostics.FileVersionInfo" Version="4.3.0" />
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
+    <ProjectReference Include="..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(DotNetBuildFromSource)' == 'true'">
+    <Compile Remove="ILRewriter\**" />
+  </ItemGroup>
+
   <!-- On Core, these native binaries wind up in the Runtimes folder of this package. For Desktop, we have to manually mark them to get them packed -->
-  <ItemGroup Condition="'$(TargetFramework)'=='net472'">
+  <ItemGroup Condition="'$(TargetFramework)'=='net472' and '$(DotNetBuildFromSource)' != 'true'">
     <None Include="$(NuGetPackageRoot)\microsoft.diasymreader.native\$(MicrosoftDiaSymReaderNativeVersion)\runtimes\win\native\Microsoft.DiaSymReader.Native.x86.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>false</Visible>
@@ -34,9 +46,6 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
-  </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 

@@ -172,6 +172,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
             {
                 var model = context.ClientModel;
                 context.WriteTemplate(context.Options.ClientName, context.Templates["ServiceClient"], model);
+                context.WriteTemplate("PagedResponse", context.Templates["PagedResponse"], model);
 
                 foreach (TypeModel type in model.Types)
                 {

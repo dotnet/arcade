@@ -351,18 +351,29 @@ namespace Microsoft.Cci.Extensions.CSharp
             return true;
         }
 
+        public static bool IsAssembly(this ITypeDefinition type)
+        {
+            return type.GetVisibility() == TypeMemberVisibility.FamilyAndAssembly ||
+                   type.GetVisibility() == TypeMemberVisibility.Assembly;
+        }
+
         public static bool IsAssembly(this ITypeDefinitionMember member)
         {
             return member.Visibility == TypeMemberVisibility.FamilyAndAssembly ||
                    member.Visibility == TypeMemberVisibility.Assembly;
         }
 
-        public static bool InSameUnit(ITypeDefinitionMember member1, ITypeDefinitionMember member2)
+        public static bool InSameUnit(ITypeDefinition type1, ITypeDefinition type2)
         {
-            IUnit unit1 = TypeHelper.GetDefiningUnit(member1.ContainingTypeDefinition);
-            IUnit unit2 = TypeHelper.GetDefiningUnit(member2.ContainingTypeDefinition);
+            IUnit unit1 = TypeHelper.GetDefiningUnit(type1);
+            IUnit unit2 = TypeHelper.GetDefiningUnit(type2);
 
             return UnitHelper.UnitsAreEquivalent(unit1, unit2);
+        }
+
+        public static bool InSameUnit(ITypeDefinitionMember member1, ITypeDefinitionMember member2)
+        {
+            return InSameUnit(member1.ContainingTypeDefinition, member2.ContainingTypeDefinition);
         }
 
         public static ITypeReference GetReturnType(this ITypeDefinitionMember member)
@@ -492,6 +503,38 @@ namespace Microsoft.Cci.Extensions.CSharp
                 }
             }
             return Dummy.Method;
+        }
+
+        public static ITypeDefinition GetHiddenBaseType(this ITypeDefinition type, ICciFilter filter = null)
+        {
+            if (!(type is INestedTypeDefinition nestedType))
+            {
+                return Dummy.Type;
+            }
+
+            ITypeDefinition containingType = nestedType.ContainingTypeDefinition;
+
+            foreach (ITypeReference baseClassRef in containingType.GetAllBaseTypes())
+            {
+                ITypeDefinition baseClass = baseClassRef.ResolvedType;
+                foreach (ITypeDefinition baseType in baseClass.GetMembersNamed(nestedType.Name, ignoreCase: false).OfType<ITypeDefinition>())
+                {
+                    if (baseType.GetVisibility() == TypeMemberVisibility.Private)
+                    {
+                        continue;
+                    }
+
+                    if (IsAssembly(baseType) && !InSameUnit(baseType, nestedType))
+                        continue;
+
+                    if (filter != null && !filter.Include(baseType))
+                        continue;
+
+                    return baseType;
+                }
+            }
+
+            return Dummy.Type;
         }
 
         public static bool SignaturesParametersAreEqual(this ISignature sig1, ISignature sig2)

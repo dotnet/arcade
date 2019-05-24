@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             };
         }
 
-        public async Task PredictAndApplyLabelAsync(int number, string title, string body, int? milestone, ILogger logger)
+        public async Task PredictAndApplyLabelAsync(int number, string title, string body, ILogger logger)
         {
             if (_client == null)
             {
@@ -71,11 +71,14 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             };
 
             string label = await Predictor.PredictAsync(corefxIssue, logger, _threshold);
-            if (label != null)
+
+            Issue issueGithubVersion = await _client.Issue.Get(_repoOwner, _repoName, number);
+
+            if (label != null && issueGithubVersion.Labels.Count == 0)
             {
                 var issueUpdate = new IssueUpdate();
                 issueUpdate.AddLabel(label);
-                issueUpdate.Milestone = milestone; // The number of milestone associated with the issue.
+                issueUpdate.Milestone = issueGithubVersion.Milestone.Number; // The number of milestone associated with the issue.
 
                 await _client.Issue.Update(_repoOwner, _repoName, number, issueUpdate);
             }

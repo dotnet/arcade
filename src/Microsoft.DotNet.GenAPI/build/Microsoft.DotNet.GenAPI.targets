@@ -3,14 +3,14 @@
 <Project>
 
   <PropertyGroup>
-    <!-- If ToolHostCmd is undefined, we default to assuming 'dotnet' is on the path -->
-    <ToolHostCmd Condition="'$(ToolHostCmd)' == ''">dotnet</ToolHostCmd>
+    <!-- If DotNetTool is undefined, we default to assuming 'dotnet' is on the path -->
+    <DotNetTool Condition="'$(DotNetTool)' == ''">dotnet</DotNetTool>
 
     <GenAPITargetPath Condition="'$(GenAPITargetPath)' == ''">$(TargetDir)$(TargetName).cs</GenAPITargetPath>
     <_GenAPIPath Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)\..\tools\netcoreapp2.1\Microsoft.DotNet.GenAPI.dll</_GenAPIPath>
     <_GenAPIPath Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.GenAPI.exe</_GenAPIPath>
 
-    <_GenAPICommand Condition="'$(MSBuildRuntimeType)' == 'core'">$(ToolHostCmd) "$(_GenAPIPath)"</_GenAPICommand>
+    <_GenAPICommand Condition="'$(MSBuildRuntimeType)' == 'core'">"$(DotNetTool)" "$(_GenAPIPath)"</_GenAPICommand>
     <_GenAPICommand Condition="'$(MSBuildRuntimeType)' != 'core' and '$(OS)' == 'Windows_NT'">"$(_GenAPIPath)"</_GenAPICommand>
     <_GenAPICommand Condition="'$(MSBuildRuntimeType)' != 'core' and '$(OS)' != 'Windows_NT'">mono --runtime=v4.0.30319 "$(_GenAPIPath)"</_GenAPICommand>
 
@@ -88,6 +88,7 @@
       <GenAPIArgs>"%(ResolvedMatchingContract.Identity)"</GenAPIArgs>
       <GenAPIArgs>$(GenAPIArgs) --lib-path "@(_referencePathDirectories)"</GenAPIArgs>
       <GenAPIArgs>$(GenAPIArgs) --out "$(NotSupportedSourceFile)"</GenAPIArgs>
+      <GenAPIArgs Condition="'$(LangVersion)' != ''">$(GenAPIArgs) --lang-version "$(LangVersion)"</GenAPIArgs>
       <GenAPIArgs Condition="'$(GeneratePlatformNotSupportedAssembly)' == 'true' or '$(GeneratePlatformNotSupportedAssemblyMessage)' != ''">$(GenAPIArgs) --throw "$(GeneratePlatformNotSupportedAssemblyMessage)"</GenAPIArgs>
       <GenAPIArgs Condition="'$(GeneratePlatformNotSupportedAssemblyWithGlobalPrefix)' == 'true'">$(GenAPIArgs) --global</GenAPIArgs>
     </PropertyGroup>

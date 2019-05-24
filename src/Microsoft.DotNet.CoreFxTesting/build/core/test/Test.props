@@ -14,6 +14,11 @@
   <ItemGroup>
     <!-- Test runner config file. -->
     <SupplementalTestData Condition="'$(SkipTestRunnerConfigCopying)' != 'true'" Include="$(TestRunnerConfigPath)" />
+    <SupplementalTestData Include="$(RuntimePath)Microsoft.DotNet.XUnitExtensions.dll" />
+    <SupplementalTestData Include="$(RuntimePath)xunit.assert.dll" />
+    <SupplementalTestData Include="$(RuntimePath)xunit.core.dll" />
+    <SupplementalTestData Include="$(RuntimePath)xunit.abstractions.dll" />
+    <SupplementalTestData Include="$(RuntimePath)CoreFx.Private.TestUtilities.dll" />
   </ItemGroup>
 
   <!-- Supplemental test data. -->
@@ -32,20 +37,11 @@
     <SupplementalTestData Include="$(RuntimePath)$(TestRunnerName)" />
     <SupplementalTestData Include="$(TestRuntimeConfigPath)" DestinationName="$(TestRunnerName).config" />
     <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)Microsoft.DotNet.RemoteExecutor.dll" />
-    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)$(RemoteExecutorHostName).dll" />
-    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(TestRuntimeConfigPath)" DestinationName="$(RemoteExecutorHostName).dll.config" />
+    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)$(RemoteExecutorHostName).exe" />
+    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(TestRuntimeConfigPath)" DestinationName="$(RemoteExecutorHostName).exe.config" />
     <SupplementalTestData Include="$(RuntimePath)xunit.execution.desktop.dll" />
     <SupplementalTestData Include="$(RuntimePath)xunit.runner.reporters.net452.dll" />
     <SupplementalTestData Include="$(RuntimePath)xunit.runner.utility.net452.dll" />
-  </ItemGroup>
-
-  <!-- Helix dependencies -->
-  <ItemGroup Condition="'$(IncludeTestFrameworkReferences)' == 'true'">
-    <TestArchiveDependencies Include="$(RuntimePath)Microsoft.DotNet.XUnitExtensions.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.assert.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.core.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)xunit.abstractions.dll" />
-    <TestArchiveDependencies Include="$(RuntimePath)CoreFx.Private.TestUtilities.dll" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)References.props" />

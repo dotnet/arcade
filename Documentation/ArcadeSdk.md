@@ -212,7 +212,6 @@ optimizations by setting 'RestoreUsingNuGetTargets' to false.
 
 CoreFx does not use the default build projects in its repo - [example](https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/Build.props).
 
-
 ### /eng/Versions.props: A single file listing component versions and used tools
 
 The file is present in the repo and defines versions of all dependencies used in the repository, the NuGet feeds they should be restored from and the version of the components produced by the repo build.
@@ -224,7 +223,9 @@ The file is present in the repo and defines versions of all dependencies used in
     <VersionPrefix>1.0.0</VersionPrefix>
     <!-- Package pre-release suffix not including build number -->
     <PreReleaseVersionLabel>rc2</PreReleaseVersionLabel>
-  
+    <!-- Optional: base short date used for calculating version numbers of release-only packages (e.g. global tools) -->
+    <VersionBaseShortDate>19000</VersionBaseShortDate>
+
     <!-- Opt-in repo features -->
     <UsingToolVSSDK>true</UsingToolVSSDK>
     <UsingToolIbcOptimization>true</UsingToolIbcOptimization>
@@ -291,7 +292,7 @@ Targets executed in a step right after the solution is built.
 
 Targets executed in a step right after artifacts has been signed.
 
-### /global.json, /NuGet.config
+### /global.json
 
 `/global.json` file is present and specifies the version of the dotnet and `Microsoft.DotNet.Arcade.Sdk` SDKs.
 
@@ -329,6 +330,77 @@ Optionally, a list of Visual Studio [workload component ids](https://docs.micros
 }
 ```
 
+If the build runs on a Windows machine that does not have the required Visual Studio version installed the `build.ps1` script attempts to use xcopy-deployable MSBuild package [`RoslynTools.MSBuild`](https://dotnet.myget.org/feed/roslyn-tools/package/nuget/RoslynTools.MSBuild). This package will allow the build to run on desktop msbuild but it may not provide all tools that the repository needs to build all projects and/or run all tests.
+
+The version of `RoslynTools.MSBuild` package can be specified in `global.json` file under `tools` like so:
+
+```json
+{
+  "tools": {
+    "vs": {
+      "version": "16.0"
+    },
+    "xcopy-msbuild": "16.0.0-rc1-alpha"
+  }
+}
+```
+
+If it is not specified the build script attempts to find `RoslynTools.MSBuild` version `{VSMajor}.{VSMinor}.0-alpha` where `VSMajor.VSMinor` is the value of `tools.vs.version`.
+
+#### Example: Restoring multiple .NET Core Runtimes for running tests
+
+In /global.json, specify a `runtimes` section and list the [shared runtime versions](https://dotnet.microsoft.com/download/dotnet-core) you want installed.
+
+Schema:
+
+```text
+{
+  "tools": {
+    "dotnet": "<version>",                                           // define CLI SDK version
+    "runtimes": {                                                    // optional runtimes section
+      "<runtime>": [ "<version>", ..., "<version>" ],
+      ...,
+      "<runtime>/<architecture>": [ "<version>", ..., "<version>" ]
+    }
+  }
+}
+```
+
+`<runtime>` - One of the supported "runtime" values for the [dotnet-install](https://github.com/dotnet/cli/blob/dddac220ba5b6994e297752bebd9acffa3e72342/scripts/obtain/dotnet-install.ps1#L43) script.
+
+`<architecture>` - Optionally include `/<architecture>` when defining the runtime to specify an explicit architecture where "architecture" is one of the supported values for the [dotnet-install](https://github.com/dotnet/cli/blob/dddac220ba5b6994e297752bebd9acffa3e72342/scripts/obtain/dotnet-install.ps1#L32) script.  Defaults to "auto" if not specified.
+
+```json
+{
+  "tools": {
+    "dotnet": "3.0.100-preview3-010431",
+    "runtimes": {
+      "dotnet/x64": [ "2.1.7" ],
+      "aspnetcore/x64": [ "3.0.0-build-20190219.1" ]
+    }
+  }
+}
+```
+
+You may also use any of the properties defined in `eng/Versions.props` to define a version.
+
+Example
+
+```json
+{
+  "tools": {
+    "dotnet": "3.0.100-preview3-010431",
+    "runtimes": {
+      "dotnet/x64": [ "2.1.7", "$(MicrosoftNetCoreAppVersion)" ]
+    }
+  }
+}
+```
+
+Note: defining `runtimes` in your global.json will signal to Arcade to install a local version of the SDK for the runtimes to use rather than depending on a matching global SDK.
+
+### /NuGet.config
+
 `/NuGet.config` file is present and specifies the MyGet feed to retrieve Arcade SDK from like so:
 
 ```xml
@@ -354,18 +426,19 @@ Optionally, a list of Visual Studio [workload component ids](https://docs.micros
 It is a common practice to specify properties applicable to all (most) projects in the repository in `Directory.Build.props`, e.g. public keys for `InternalsVisibleTo` project items.
 
 ```xml
-<PropertyGroup>  
+<Project>
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />    
+  <PropertyGroup> 
+    <!-- Public keys used by InternalsVisibleTo project items -->
+    <MoqPublicKey>00240000048000009400...</MoqPublicKey> 
 
-  <!-- Public keys used by InternalsVisibleTo project items -->
-  <MoqPublicKey>00240000048000009400...</MoqPublicKey> 
-
-  <!-- 
-    Specify license used for packages produced by the repository.
-    Use PackageLicenseExpressionInternal for closed-source licenses.
-   -->
-  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-</PropertyGroup>
+    <!-- 
+      Specify license used for packages produced by the repository.
+      Use PackageLicenseExpressionInternal for closed-source licenses.
+    -->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+</Project>
 ```
 
 ### /Directory.Build.targets
@@ -414,6 +487,22 @@ Projects shall use `Microsoft.NET.Sdk` SDK like so:
 ## Other Projects
 
 It might be useful to create other top-level directories containing projects that are not standard C#/VB/F# projects. For example, projects that aggregate outputs of multiple projects into a single NuGet package or Willow component. These projects should also be included in the main solution so that the build driver includes them in build process, but their `Directory.Build.*` may be different from source projects. Hence the different root directory.
+
+## Building source packages
+
+Arcade SDK provides targets for building source packages.
+
+Set `IsSourcePackage` to `true` to indicate that the project produces a source package (along with `IsPackable`, `PackageDescription` and other package properties).
+
+If the project does not have an explicitly provided `.nuspec` file (`NuspecFile` property is empty) setting `IsSourcePackage` to `true` will trigger a target that 
+puts sources contained in the project directory to the `contentFiles` directory of the source package produced by the project.
+
+In addition a `build/$(PackageId).targets` file will be auto-generated that links the sources contained in the package to the source server via a Source Link target.
+If your package already has a `build/$(PackageId).targets` file set `SourcePackageSourceLinkTargetsFileName` property to a different file name (e.g. `SourceLink.targets`)
+and import the file from `build/$(PackageId).targets`. 
+
+If the project is packaged using a custom `.nuspec` file then the source and targets files must be listed in the `.nuspec` file. The path to the generated Source Link 
+targets file will be available within the `.nuspec` file via variable `$SourceLinkTargetsFilePath$`.
 
 ## Building VSIX packages (optional)
 
@@ -485,6 +574,7 @@ folder "InstallDir:MSBuild\Microsoft\VisualStudio\Managed"
 **NOTE:** By defining `VisualStudioInsertionComponent` in your project you are implicitly opting-in to having all of the assemblies included in that package marked for `NGEN`.  If this is not something you want for a given component you may add `<Ngen>false</Ngen>`.
 
 example:
+
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -800,6 +890,10 @@ By default, all _shipping_ libraries are localized.
 
 When `UsingToolNuGetRepack` is true _shipping_ packages are repackaged as release/pre-release packages to `artifacts\packages\$(Configuration)\Release` and `artifacts\packages\$(Configuration)\PreRelease` directories, respectively.
 
+### `IsVisualStudioBuildPackage` (bool)
+
+Set to `true` in projects that build Visual Studio Build (CoreXT) packages. These packages are non-shipping, but their content is shipping. They are inserted into and referenced from the internal DevDiv `VS` repository.
+
 ### `PublishWindowsPdb` (bool)
 
 `true` (default) if the PDBs produced by the project should be converted to Windows PDB and published to Microsoft symbol servers.
@@ -857,5 +951,35 @@ Additional command line arguments passed to the test runtime (i.e. `dotnet` or `
 For example, to invoke Mono with debug flags `--debug` (to get stack traces with line number information), set `TestRuntimeAdditionalArguments` to `--debug`.
 To override the default Shared Framework version that is selected based on the test project TFM, set `TestRuntimeAdditionalArguments` to `--fx-version x.y.z`.
 
+### `GenerateResxSource` (bool)
 
+When set to true, Arcade will generate a class source for all embedded .resx files.
 
+If source should only be generated for some .resx files, this can be turned on for individual files like this:
+
+```xml
+<ItemGroup>
+   <EmbeddedResource Update="MyResources.resx" GenerateSource="true" />
+</ItemGroup>
+```
+
+The contents of the generated source can be fine-tuned with these additional settings.
+
+#### `GenerateResxSourceEmitFormatMethods` (bool)
+
+When a string in the resx file has argument placeholders, generate a `.FormatXYZ(...)` method with parameters for each placeholder in the string.
+
+Example: if the resx file contains a string "This has {0} and {1} placeholders", this method will be generated:
+```c#
+class Resources
+{
+  // ...
+  public static string FormatMyString(object p0, object p1) { /* ..uses string.Format()... */ }
+}
+```
+
+#### `GenerateResxSourceIncludeDefaultValues` (bool)
+If set to true calls to GetResourceString receive a default resource string value.
+
+#### `GenerateResxSourceOmitGetResourceString` (bool)
+If set to true the GetResourceString method is not included in the generated class and must be specified in a separate source file.

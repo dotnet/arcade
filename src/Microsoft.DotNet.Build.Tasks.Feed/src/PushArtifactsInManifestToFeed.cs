@@ -4,6 +4,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Maestro.Client;
+using Microsoft.DotNet.Maestro.Client.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -162,7 +163,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         var assetRecord = buildInformation.Assets
                             .Where(a => a.Name.Equals(package.Id) && a.Version.Equals(package.Version))
-                            .Single();
+                            .FirstOrDefault();
 
                         if (assetRecord == null)
                         {
@@ -170,7 +171,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             continue;
                         }
 
-                        await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id.Value, ExpectedFeedUrl, "NugetFeed");
+                        await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, ExpectedFeedUrl);
                     }
                 }
 
@@ -210,7 +211,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             continue;
                         }
 
-                        await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id.Value, ExpectedFeedUrl, "NugetFeed");
+                        await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, ExpectedFeedUrl);
                     }
                 }
             }

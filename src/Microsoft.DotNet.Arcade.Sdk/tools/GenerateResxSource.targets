@@ -9,11 +9,12 @@
   -->
 
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateResxSource" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
-
+  
   <!-- Set the Generator metadata so that VS triggers design-time build whenever the .resx file is saved -->
   <ItemGroup>
     <EmbeddedResource Update="@(EmbeddedResource)">
-      <Generator Condition="'%(GenerateSource)' == 'true'">MSBuild:_GenerateResxSource</Generator>
+      <GenerateSource Condition="'%(Extension)' == '.resx' and '%(GenerateSource)' == '' and '$(GenerateResxSource)' == 'true'">true</GenerateSource>
+      <Generator Condition="'%(Extension)' == '.resx' and '%(Generator)' == '' and ('%(GenerateSource)' == 'true' or ('%(GenerateSource)' == '' and '$(GenerateResxSource)' == 'true') )">MSBuild:_GenerateResxSource</Generator>
     </EmbeddedResource>
   </ItemGroup>
 
@@ -23,7 +24,7 @@
                             _GetEmbeddedResourcesWithSourceGeneration;
                             _BatchGenerateResxSource">
     <ItemGroup>
-      <GeneratedResxSource Include="@(EmbeddedResourceSG->'%(SourceOutputPath)')" />
+      <GeneratedResxSource Include="@(EmbeddedResourceSGResx->'%(SourceOutputPath)')" />
       <FileWrites Include="@(GeneratedResxSource)" />
       <Compile Include="@(GeneratedResxSource)" />
     </ItemGroup>
@@ -39,18 +40,19 @@
   </Target>
 
   <Target Name="_BatchGenerateResxSource"
-          Inputs="@(EmbeddedResourceSG)"
-          Outputs="%(EmbeddedResourceSG.SourceOutputPath)">
+          Inputs="@(EmbeddedResourceSGResx)"
+          Outputs="%(EmbeddedResourceSGResx.SourceOutputPath)">
 
     <Microsoft.DotNet.Arcade.Sdk.GenerateResxSource
       Language="$(Language)"
-      ResourceFile="%(EmbeddedResourceSG.FullPath)"
-      ResourceName="%(EmbeddedResourceSG.ManifestResourceName)"
-      ResourceClassName="%(EmbeddedResourceSG.ClassName)"
-      AsConstants="%(EmbeddedResourceSG.GenerateResourcesCodeAsConstants)"
+      ResourceFile="%(EmbeddedResourceSGResx.FullPath)"
+      ResourceName="%(EmbeddedResourceSGResx.ManifestResourceName)"
+      ResourceClassName="%(EmbeddedResourceSGResx.ClassName)"
+      AsConstants="%(EmbeddedResourceSGResx.GenerateResourcesCodeAsConstants)"
       OmitGetResourceString="$(GenerateResxSourceOmitGetResourceString)"
       IncludeDefaultValues="$(GenerateResxSourceIncludeDefaultValues)"
-      OutputPath="%(EmbeddedResourceSG.SourceOutputPath)" />
+      EmitFormatMethods="$(GenerateResxSourceEmitFormatMethods)"
+      OutputPath="%(EmbeddedResourceSGResx.SourceOutputPath)" />
   </Target>
 
   <Target Name="_GetEmbeddedResourcesWithSourceGeneration" Condition="'@(EmbeddedResource)' != ''">
@@ -66,6 +68,8 @@
         <SourceOutputPath Condition="'%(EmbeddedResourceSG.SourceOutputPath)' == '' AND '%(EmbeddedResourceSG.ClassName)' != ''">$(IntermediateOutputPath)%(EmbeddedResourceSG.ClassName).$(_EmbeddedResourceSourceExtension)</SourceOutputPath>
         <SourceOutputPath Condition="'%(EmbeddedResourceSG.SourceOutputPath)' == '' AND '%(EmbeddedResourceSG.ClassName)' == ''">$(IntermediateOutputPath)%(EmbeddedResourceSG.ManifestResourceName).$(_EmbeddedResourceSourceExtension)</SourceOutputPath>
       </EmbeddedResourceSG>
+      <!-- Other source generators might exist, so create a separate group for the items that are set to use the generator from this targets file. -->
+      <EmbeddedResourceSGResx Include="@(EmbeddedResourceSG->WithMetadataValue('Generator', 'MSBuild:_GenerateResxSource'))" />
     </ItemGroup>
   </Target>
 </Project>
