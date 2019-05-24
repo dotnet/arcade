@@ -1,6 +1,6 @@
 # Microsoft.DotNet.Framework.Sdk
 
-Projects which need to create a .NET platform packages can use this SDK to
+Projects which need to create .NET platform packages can use this SDK to
 generate some of the required content.
 
 .NET Core runtimes generally require at least two kinds of packages, so the
@@ -11,7 +11,7 @@ inform the custom SDK how to build a shared framework.
 
 ### Project file API
 
-Example usage for a project that produces a .NET Core shared runtime.
+Example usage for a project that produces a .NET Core runtime pack.
 
 ```xml
 <Project Sdk="Microsoft.DotNet.Framework.Sdk">
@@ -71,7 +71,7 @@ This determines which kind of manifests and assets are included in the package.
 The SDK currently supports two values:
 
 * `TargetingPack` - generate a .NET targeting pack
-* `RuntimePack` - generate a .NET Core shared runtime pack
+* `RuntimePack` - generate a .NET Core runtime pack
 
 ### `RuntimeIdentifier`
 
