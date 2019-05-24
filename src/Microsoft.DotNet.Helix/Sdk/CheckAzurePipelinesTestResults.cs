@@ -9,6 +9,8 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 {
     public class CheckAzurePipelinesTestResults : AzureDevOpsTask
     {
+        public int[] TestRunIds { get; set; }
+
         public ITaskItem[] ExpectedTestFailures { get; set; }
 
         protected override async Task ExecuteCoreAsync(HttpClient client)
@@ -56,34 +58,9 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
         }
 
-        private async Task<int[]> GetRunsAsync(HttpClient client)
-        {
-            var data = await RetryAsync(
-                async () =>
-                {
-                    using (var req = new HttpRequestMessage(
-                        HttpMethod.Get,
-                        $"{CollectionUri}{TeamProject}/_apis/test/runs?buildUri=vstfs:///Build/Build/{BuildId}&api-version=5.0"))
-                    {
-                        using (var res = await client.SendAsync(req))
-                        {
-                            return await ParseResponseAsync(req, res);
-                        }
-                    }
-                });
-            if (data != null && data["value"] is JArray runList)
-            {
-                return runList.OfType<JObject>().Select(o => o["id"].ToObject<int>()).ToArray();
-            }
-
-            Log.LogError("Unable to get list of test runs from build.");
-            return Array.Empty<int>();
-        }
-
         private async Task ValidateExpectedTestFailuresAsync(HttpClient client)
         {
-            var runs = await GetRunsAsync(client);
-            foreach (var runId in runs)
+            foreach (var runId in TestRunIds)
             {
                 var data = await RetryAsync(
                     async () =>
