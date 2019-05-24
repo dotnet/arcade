@@ -53,7 +53,6 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         [Obsolete]
         public int MaxClients { get; set; } = 8;
 
-        [Obsolete]
         public int UploadTimeoutInMinutes { get; set; } = 5;
 
         public void Cancel()
@@ -123,7 +122,9 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                             throw new Exception(string.Format("The blob '{0}' already exists.", relativeBlobPath));
                         }
 
-                        await blobReference.UploadFromFileAsync(item.ItemSpec);
+                        CancellationTokenSource timeoutTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(UploadTimeoutInMinutes));
+
+                        await blobReference.UploadFromFileAsync(item.ItemSpec, timeoutTokenSource.Token);
                     }));
                 }
 
