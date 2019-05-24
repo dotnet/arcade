@@ -26,15 +26,8 @@
     </HelixWorkItem>
   </ItemGroup>
   <ItemGroup>
-    <HelixWorkItem Include="CrashTest">
-      <Command>python crash.py</Command>
-      <PayloadDirectory>$(MSBuildThisFileDirectory)Py</PayloadDirectory>
-    </HelixWorkItem>
-  </ItemGroup>
-  <ItemGroup>
     <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese"/>
     <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese2"/>
-    <AzurePipelinesExpectedTestFailure Include="Microsoft.DotNet.VersionTools.Tests.BuildManifest.ManifestModelTests.FireballTest"/>
   </ItemGroup>
 
   <ItemGroup>
@@ -68,7 +61,6 @@
     <HelixTargetQueue Include="Debian.9.Amd64"/>
     <HelixTargetQueue Include="RedHat.7.Amd64"/>
     <HelixTargetQueue Include="Windows.10.Amd64"/>
-    <HelixTargetQueue Include="Osx.1014.Amd64"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">

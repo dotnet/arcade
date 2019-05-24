@@ -7,7 +7,6 @@ using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System.Xml.Linq;
 using Xunit;
 using Xunit.Abstractions;
-using System;
 
 namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
 {
@@ -18,12 +17,6 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
         public ManifestModelTests(ITestOutputHelper output)
         {
             _output = output;
-        }
-
-        [Fact]
-        public void FireballTest()
-        {
-            throw new NullReferenceException(); 
         }
 
         [Fact]

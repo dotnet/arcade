@@ -52,15 +52,12 @@ class AzureDevOpsTestResultPublisher:
             if published_result.automated_test_name in results_with_attachments:
                 result = results_with_attachments.get(published_result.automated_test_name)
                 for attachment in result.attachments:
-                    print(attachment.name)
-                    print(attachment.text)
                     try:
                         # Python 3 will throw a TypeError exception because b64encode expects bytes
                         stream=base64.b64encode(text(attachment.text))
                     except TypeError:
                         # stream has to be a string but b64encode takes and returns bytes on Python 3
                         stream=base64.b64encode(bytes(attachment.text, "utf-8")).decode("utf-8") 
-                    print(stream)
                     test_client.create_test_result_attachment(TestAttachmentRequestModel(
                         file_name=text(attachment.name),
                         stream=stream,
