@@ -32,10 +32,9 @@
     <StopAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)"/>
   </Target>
 
-  <Target Name="CheckTestRuns"
+  <Target Name="CheckTestResults"
           BeforeTargets="AfterTest"
-          Condition="$(FailOnTestFailure)"
-          Outputs="%(HelixTargetQueue.Identity)">
-    <CheckAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)" ExpectedTestFailures="@(AzurePipelinesExpectedTestFailure)"/>
+          Condition="$(FailOnTestFailure)">
+    <CheckAzurePipelinesTestResults ExpectedTestFailures="@(AzurePipelinesExpectedTestFailure)"/>
   </Target>
 </Project>
