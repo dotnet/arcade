@@ -1,3 +1,5 @@
+# Source for this file was taken from https://github.com/microsoft/azure-pipelines-task-lib/blob/11c9439d4af17e6475d9fe058e6b2e03914d17e6/powershell/VstsTaskSdk/LoggingCommandFunctions.ps1
+
 $script:loggingCommandPrefix = '##vso['
 $script:loggingCommandEscapeMappings = @( # TODO: WHAT ABOUT "="? WHAT ABOUT "%"?
     New-Object psobject -Property @{ Token = ';' ; Replacement = '%3B' }
