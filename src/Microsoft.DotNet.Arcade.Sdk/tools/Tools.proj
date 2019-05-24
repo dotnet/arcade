@@ -64,7 +64,7 @@
 
     <PropertyGroup>
       <RestoreRepoToolsCommmand>"$(DotNetTool)" tool restore</RestoreRepoToolsCommmand>
-      <RestoreRepoToolsSources Condition="'@(RestoreSources)' != ''"> --add-source @(RestoreSources -> '"%(Identity)"', ' --add-source ')</RestoreRepoToolsSources>
+      <RestoreRepoToolsCommmand Condition="'@(RestoreSources)' != ''">$(RestoreRepoToolsCommmand) --add-source @(RestoreSources -> '"%(Identity)"', ' --add-source ')</RestoreRepoToolsCommmand>
     </PropertyGroup>
 
     <Exec Command="$(RestoreRepoToolsCommmand)"
