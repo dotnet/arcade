@@ -27,7 +27,7 @@ def __no_results_result():
         failure_message=u'{}'.format(failure_message),
         stack_trace=None,
         skip_reason=None,
-        attachments=None,
+        attachments=[],
     )
 
 
