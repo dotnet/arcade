@@ -710,5 +710,17 @@ namespace Microsoft.Cci.Extensions
                     return ApiKind.Method;
             }
         }
+
+        public static bool IsConstructorVisible(this ITypeDefinition type)
+        {
+            foreach (var method in type.Methods)
+            {
+                if (method.IsConstructor && method.IsVisibleOutsideAssembly())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

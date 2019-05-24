@@ -1,6 +1,6 @@
 # dev.azure.com/dnceng Internal Mirror
 
-Public code should be mirrored to dev.azure.com/dnceng/internal (see [Azure DevOps Guidance](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/AzureDevOpsGuidance.md)).  These are the steps for setting up your GitHub repo to mirror into dev.azure.com/dnceng/internal.
+Public code should be mirrored to dev.azure.com/dnceng/internal (see [Azure DevOps Guidance](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/Policy/AzureDevOpsGuidance.md)).  These are the steps for setting up your GitHub repo to mirror into dev.azure.com/dnceng/internal.
 
 1. Add the [maestro web hook](https://github.com/dotnet/core-eng/blob/master/Documentation/Maestro/web-hooks.md)
 2. Make sure you have created a repo in the dev.azure.com/dnceng/internal project that is in the format "{org}-{repo}" (replace  any `/` with `-` in the GitHub repo name).

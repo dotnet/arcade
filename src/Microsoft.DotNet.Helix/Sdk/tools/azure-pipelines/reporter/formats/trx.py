@@ -1,6 +1,6 @@
 import glob
 import xml.etree.ElementTree
-from result_format import ResultFormat
+from .result_format import ResultFormat
 from defs import TestResult, TestResultAttachment
 
 
@@ -62,7 +62,12 @@ class TRXFormat(ResultFormat):
 
                 if outcome == "NotExecuted":
                     result = "Skip"
-                    skip_reason = u""
+                    output_element = element.find("vstest:Output", ns)
+                    if output_element is not None:
+                        stdout_element = output_element.find("vstest:StdOut", ns)
+                        if stdout_element is not None:
+                            skip_reason = stdout_element.text
+
                 elif outcome == "Failed":
                     result = "Fail"
                     output_element = element.find("vstest:Output", ns)

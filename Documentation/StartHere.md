@@ -54,9 +54,10 @@ some highlights
 ### Concepts and Goals
 
 - [Arcade overview](Overview.md)
+- [Arcade communications](./Policy/ArcadeCommunications.md)
 - [How dependency flow works in .NET Core
   3](BranchesChannelsAndSubscriptions.md)
-- [Guidance for defaults](DefaultsGuidance.md)
+- [Guidance for defaults](./Policy/DefaultsGuidance.md)
 - [Versioning rules](CorePackages/Versioning.md)
 - [Dependencies Flow Plan](DependenciesFlowPlan.md): Flowing dependencies with Darc, Maestro and BAR.
 - [How to Create an Arcade Package](HowToCreatePackages.md)

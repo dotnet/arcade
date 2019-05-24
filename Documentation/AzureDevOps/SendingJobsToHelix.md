@@ -92,7 +92,8 @@ The list of available Helix queues can be found on the [Helix homepage](https://
       HelixType: type/tests
       # HelixBuild: $(Build.BuildNumber) -- This property is set by default
       HelixTargetQueues: Windows.10.Amd64.Open;Windows.81.Amd64.Open;Windows.7.Amd64.Open # specify appropriate queues here; see https://helix.dot.net/ for a list of queues
-      HelixAccessToken: $(BotAccount-dotnet-github-anon-kaonashi-bot-helix-token) # this token is only for external (public) builds
+      # HelixAccessToken: $(HelixAccessToken) this token is only for internal builds
+      # HelixConfiguration: '' -- any property that you would like to attached to a job
       # HelixPreCommands: '' -- any commands that you would like to run prior to running your job
       # HelixPostCommands: '' -- any commands that you would like to run after running your job
       XUnitProjects: $(Build.SourcesDirectory)/HelloTests/HelloTests.csproj # specify your xUnit projects (semicolon delimited) here!
@@ -108,7 +109,7 @@ The list of available Helix queues can be found on the [Helix homepage](https://
       DotNetCliVersion: 2.1.403 # full list of versions here: https://raw.githubusercontent.com/dotnet/core/master/release-notes/releases.json
       EnableXUnitReporter: true # required for reporting out xUnit test results to Mission Control
       # WaitForWorkItemCompletion: true -- defaults to true
-      Creator: arcade # specify an appropriate Creator here -- required for IsExternal true
+      Creator: arcade # specify an appropriate Creator here -- required for external builds
       # DisplayNamePrefix: 'Send job to Helix' -- the Helix task's display name in AzDO. Defaults to 'Send job to Helix'
       # condition: succeeded() - defaults to succeeded()
 ```

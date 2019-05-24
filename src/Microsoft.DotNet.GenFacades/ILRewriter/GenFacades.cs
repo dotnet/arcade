@@ -15,7 +15,7 @@ using System.Globalization;
 using Microsoft.DiaSymReader.Tools;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.GenFacades
+namespace Microsoft.DotNet.GenFacades.ILRewriter
 {
     public class Generator
     {

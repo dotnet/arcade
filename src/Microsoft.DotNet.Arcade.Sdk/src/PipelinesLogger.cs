@@ -3,9 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
@@ -247,16 +245,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                 return projectFile + targetFrameworkQualifier + targetNamesQualifier;
             }
-        }
-
-        private string GetTargets(List<string> targetNames)
-        {
-            if (targetNames == null || targetNames.Count == 0)
-            {
-                return null;
-            }
-
-            return string.Join(", ", targetNames);
         }
 
         internal sealed class LoggerParameters

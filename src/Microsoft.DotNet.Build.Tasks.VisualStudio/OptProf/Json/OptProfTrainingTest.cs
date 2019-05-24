@@ -13,5 +13,8 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
 
         [JsonProperty(PropertyName = "testCases", Order = 3)]
         public string[] TestCases { get; set; }
+
+        [JsonProperty(PropertyName = "filteredTestCases", Order = 3)]
+        public OptProfFileFilteredTest[] FilteredTestCases { get; set; }
     }
 }

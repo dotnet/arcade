@@ -6,6 +6,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -43,6 +44,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
         [Required]
         public string OutputDirectory { get; set; }
 
+        /// <summary>
+        /// From IBCMerge.MethodProfilingDataFlags
+        /// </summary>
+        private const int ReadMethodCode = 0x1;
+
         public override bool Execute()
         {
             var document = XDocument.Load(IbcXmlFilePath);
@@ -52,9 +58,10 @@ namespace Microsoft.DotNet.Arcade.Sdk
             {
                 foreach (var child in parentElement.Elements("Item"))
                 {
-                    var flags = child.Attribute("flags");
+                    var flagsInt = child.Attribute("flagsInt");
                     var name = child.Attribute("name");
-                    if (flags?.Value.Contains("ReadMethodCode") == true && name != null)
+                    if (int.TryParse(flagsInt?.Value.Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int parsedFlagsInt) 
+                        && (parsedFlagsInt & ReadMethodCode) == 1)
                     {
                         items.Add(name.Value);
                     }

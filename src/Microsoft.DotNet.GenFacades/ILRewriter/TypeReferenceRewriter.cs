@@ -6,7 +6,7 @@ using Microsoft.Cci;
 using Microsoft.Cci.MutableCodeModel;
 using System;
 
-namespace Microsoft.DotNet.GenFacades
+namespace Microsoft.DotNet.GenFacades.ILRewriter
 {
     internal sealed class TypeReferenceRewriter : MetadataRewriter
     {

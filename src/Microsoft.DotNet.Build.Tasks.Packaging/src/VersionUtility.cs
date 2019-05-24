@@ -9,7 +9,7 @@ using System.Reflection.PortableExecutable;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    internal static class VersionUtility
+    public static class VersionUtility
     {
         public static readonly Version MaxVersion = new Version(int.MaxValue, int.MaxValue, int.MaxValue, int.MaxValue);
 
@@ -17,8 +17,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         {
             return (referenceVersion.Major == definitionVersion.Major &&
                 referenceVersion.Minor == definitionVersion.Minor &&
-                referenceVersion.Build <= definitionVersion.Build &&
-                referenceVersion.Revision <= definitionVersion.Revision);
+                    (referenceVersion.Build < definitionVersion.Build || // If the Build number is greater, then we don't need to check revision
+                    (referenceVersion.Build == definitionVersion.Build && referenceVersion.Revision <= definitionVersion.Revision)));
         }
 
 

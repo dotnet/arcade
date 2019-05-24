@@ -17,8 +17,6 @@ setlocal
     call :LauncherMain arm64
     call :RunnerMain arm64
 
-    call :XUnitConsoleRunner
-
     echo on
     goto :EOF
 
@@ -30,14 +28,6 @@ setlocal
 
     REM Copy the launcher executable
     xcopy /y "%LauncherSourceFolder%\bin\%_platform%\Release\WindowsStoreAppLauncher.exe" "%DestinationFolder%\Tools\%_platform%\Launcher\"
-    GOTO :EOF
-
-:XUnitConsoleRunner
-    REM Rebuild the runner
-    msbuild /t:rebuild "%XUnitConsoleRunnerFolder%\Microsoft.DotNet.XUnitConsoleRunner.csproj" /p:DefineConstants="WINDOWS_UWP" /p:OutputPath="bin\WINDOWS_UWP"
-
-    REM Copy the runner executable
-    xcopy /y "%XUnitConsoleRunnerFolder%\bin\WINDOWS_UWP\*" "%DestinationFolder%\lib\netcoreapp2.0\"
     GOTO :EOF
 
 :RunnerMain

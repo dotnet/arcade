@@ -5,7 +5,13 @@
     Import NuGet targets to WPF temp projects (workaround for https://github.com/dotnet/sourcelink/issues/91) 
   -->
   <Import Project="$(_WpfTempProjectNuGetFilePathNoExt).targets" Condition="'$(_WpfTempProjectNuGetFilePathNoExt)' != '' and Exists('$(_WpfTempProjectNuGetFilePathNoExt).targets')"/>
-  
+
+  <!-- 
+    Some projects do not import Common targets, so BeforeCommonTargets.targets doesn't get imported. 
+    (https://github.com/dotnet/arcade/issues/2676).
+  -->
+  <Import Project="BeforeCommonTargets.targets" Condition="'$(_ArcadeBeforeCommonTargetsImported)' != 'true' and '$(IsCrossTargetingBuild)' != 'true'"/>
+
   <Import Project="ProjectDefaults.targets"/>
   <Import Project="StrongName.targets"/>
   <Import Project="GenerateInternalsVisibleTo.targets" />

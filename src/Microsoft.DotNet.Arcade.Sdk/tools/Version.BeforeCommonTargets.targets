@@ -53,6 +53,7 @@
   -->
   <PropertyGroup>
     <VersionPrefix Condition="'$(MajorVersion)' != '' and '$(MinorVersion)' != ''">$(MajorVersion).$(MinorVersion).0</VersionPrefix>
+    <_OriginalVersionPrefix>$(VersionPrefix)</_OriginalVersionPrefix>
   </PropertyGroup>
 
   <!--

@@ -117,9 +117,23 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
             foreach (var test in tests)
             {
                 var configurationsDir = Path.Combine(OutputDirectory, test.Container, "Configurations");
-                foreach (var fullyQualifiedName in test.TestCases)
+                if (test.TestCases is object)
                 {
-                    WriteEntries(ibcEntries, Path.Combine(configurationsDir, fullyQualifiedName));
+                    foreach (var fullyQualifiedName in test.TestCases)
+                    {
+                        WriteEntries(ibcEntries, Path.Combine(configurationsDir, fullyQualifiedName));
+                    }
+                }
+                else if (test.FilteredTestCases is object)
+                {
+                    foreach(var filteredTestCase in test.FilteredTestCases)
+                    {
+                        var filteredIbcEntries = ibcEntries.Where(ibc => ibc.EntryName == filteredTestCase.FileName).ToArray();
+                        foreach (var fullyQualifiedName in filteredTestCase.TestCases)
+                        {
+                            WriteEntries(filteredIbcEntries, Path.Combine(configurationsDir, fullyQualifiedName));
+                        }
+                    }
                 }
             }
         }

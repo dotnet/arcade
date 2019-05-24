@@ -4,11 +4,9 @@
 
   <!-- Wrap RunCommand and RunArguments inside code coverage invocation. -->
   <PropertyGroup>
-    <CoverageExecutablePath Condition="'$(CoverageExecutablePath)' == '' AND '$(TargetOS)' == 'Windows_NT'">$(RunScriptGlobalToolsDir)coverlet.exe</CoverageExecutablePath>
-    <CoverageExecutablePath Condition="'$(CoverageExecutablePath)' == '' AND '$(TargetOS)' != 'Windows_NT'">$(RunScriptGlobalToolsDir)coverlet</CoverageExecutablePath>
     <RunArguments>"$(TestAssembly)" --target "$(RunCommand)" --targetargs "$(RunArguments)" --format "$(CoverageFormat)" --output "$(CoverageOutputPath)" --threshold "$(CoverageThreshold)" --threshold-type "$(CoverageThresholdType)"</RunArguments>
     <RunArguments Condition="'$(CoverageSourceLink)' == 'true'">$(RunArguments) --use-source-link</RunArguments>
-    <RunCommand>$(CoverageExecutablePath)</RunCommand>
+    <RunCommand>"$(RunScriptHost)" tool run coverlet</RunCommand>
   </PropertyGroup>
 
   <Target Name="SetupCoverageFilter">

@@ -46,7 +46,10 @@ namespace {{pascalCaseNs Namespace}}
             _onFailure = onFailure;
             Client = client;
             Values = response.Body;
-            var linkHeader = response.Response.Headers.GetValues("Link");
+            if (!response.Response.Headers.TryGetValues("Link", out var linkHeader))
+            {
+                return;
+            }
             var links = ParseLinkHeader(linkHeader).ToList();
             FirstPageLink = links.FirstOrDefault(t => t.rel == "first").href;
             PrevPageLink = links.FirstOrDefault(t => t.rel == "prev").href;

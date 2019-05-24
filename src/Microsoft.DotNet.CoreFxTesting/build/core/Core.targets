@@ -94,22 +94,13 @@
       <!-- Escape arguments with user inputs. -->
       <RunArguments>$([MSBuild]::Escape('$(RunArguments)'))</RunArguments>
 
-      <RunScriptCommand Condition="'$(RunScriptCommand)' == ''">"$(RunCommand)" $(RunArguments)</RunScriptCommand>
+      <RunScriptCommand Condition="'$(RunScriptCommand)' == ''">$(RunCommand) $(RunArguments)</RunScriptCommand>
     </PropertyGroup>
 
     <!-- Set $(TestDebugger) to eg c:\debuggers\windbg.exe to run tests under a debugger. -->
     <PropertyGroup Condition="'$(TestDebugger)' != ''">
       <RunScriptCommand Condition="!$(TestDebugger.Contains('devenv'))">$(TestDebugger) $(RunScriptCommand)</RunScriptCommand>
       <RunScriptCommand Condition=" $(TestDebugger.Contains('devenv'))">$(TestDebugger) /debugexe $(RunScriptCommand)</RunScriptCommand>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(UseDotNetNativeToolchain)' == 'true' AND '$(ArchGroup)' == 'arm'">
-      <!--
-        Currently (and probably forever) we can't build AOT on ARM,
-        So if we're running on ARM, what we really want to do is encapsulate
-        the test command into a script that can be run on another machine
-      -->
-      <RunScriptCommand>echo $(RunScriptCommand)> .\RunContinuation.cmd</RunScriptCommand>
     </PropertyGroup>
 
     <ItemGroup>
