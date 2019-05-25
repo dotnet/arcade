@@ -4,31 +4,26 @@
 
   <PropertyGroup>
     <CoverageReportInputPath Condition="'$(CoverageReportInputPath)' == ''">$(CoverageOutputPath)</CoverageReportInputPath>
-    <!-- We use NormalizePath as ReportGenerator's command line argument syntax doesn't work well with trailing slashes. -->
-    <CoverageReportDir Condition="'$(CoverageReportDir)' == ''">$([MSBuild]::NormalizePath('$(TestPath)', 'report'))</CoverageReportDir>
+    <CoverageReportDir Condition="'$(CoverageReportDir)' == ''">$([MSBuild]::NormaliizeDirectory('$(TestPath)', 'report'))</CoverageReportDir>
     <CoverageReportTypes Condition="'$(CoverageReportTypes)' == ''">Html</CoverageReportTypes>
     <CoverageReportVerbosity Condition="'$(CoverageReportVerbosity)' == ''">Info</CoverageReportVerbosity>
     <CoverageReportResultsPath>$([MSBuild]::NormalizePath('$(CoverageReportDir)', 'index.htm'))</CoverageReportResultsPath>
 
-    <CoverageReportCommandLine>"$(DotNetTool)" tool run reportgenerator "-reports:$(CoverageReportInputPath)" "-targetdir:$(CoverageReportDir)" "-reporttypes:$(CoverageReportTypes)" "-verbosity:$(CoverageReportVerbosity)"</CoverageReportCommandLine>
+    <CoverageReportCommandLine>"$(DotNetTool)" tool run reportgenerator "-reports:$(CoverageReportInputPath)" "-targetdir:$(CoverageReportDir.TrimEnd('\/'))" "-reporttypes:$(CoverageReportTypes)" "-verbosity:$(CoverageReportVerbosity)"</CoverageReportCommandLine>
   </PropertyGroup>
 
   <!-- Skip generating individual reports if a full report is generated. -->
   <ItemGroup Condition="'$(GenerateFullCoverageReport)' != 'true'">
     <PostRunScriptCommands Include="$(CoverageReportCommandLine)" />
-    <PostRunScriptCommands Condition="'$(CoverageReportOpenCommandLine)' != ''" Include="$(CoverageReportOpenCommandLine)" />
   </ItemGroup>
 
   <Target Name="GenerateCoverageReport"
+          Condition="'$(GenerateFullCoverageReport)' == 'true'"
           AfterTargets="TestAllProjects"
           Inputs="$(CoverageReportInputPath)"
-          Outputs="$(CoverageReportResultsPath)"
-          Condition="'$(GenerateFullCoverageReport)' == 'true'">
+          Outputs="$(CoverageReportResultsPath)">
 
     <Exec Command="$(CoverageReportCommandLine)" />
-
-    <Exec Command="$(CoverageReportOpenCommandLine)"
-          Condition="'$(CoverageReportOpenCommandLine)' != ''" />
 
   </Target>
 

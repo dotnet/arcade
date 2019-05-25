@@ -8,8 +8,7 @@
     <CoverageThresholdType Condition="$(CoverageThresholdType) == ''">line,branch,method</CoverageThresholdType>
     <CoverageFormat Condition="'$(CoverageFormat)' == ''">opencover</CoverageFormat>
     <CoverageSourceLink Condition="'$(CoverageSourceLink)' == ''">true</CoverageSourceLink>
-
-    <GenerateRunScriptDependsOn>$(GenerateRunScriptDependsOn);SetupCoverageFilter</GenerateRunScriptDependsOn>
+    <CoverageVerbosity Condition="'$(CoverageVerbosity)' == ''">normal</CoverageVerbosity>
   </PropertyGroup>
 
 </Project>

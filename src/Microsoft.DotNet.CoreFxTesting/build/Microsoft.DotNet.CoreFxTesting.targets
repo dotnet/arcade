@@ -4,53 +4,74 @@
 
   <PropertyGroup>
     <TargetOS Condition="'$(TargetOS)' == ''">$(DefaultOSGroup)</TargetOS>
-    <IncludeDefaultTestReferences Condition="'$(IncludeDefaultTestReferences)' == '' AND '$(IsTestProject)' == 'true'">true</IncludeDefaultTestReferences>
+    <IncludeDefaultTestReferences Condition="'$(IncludeDefaultTestReferences)' == '' and '$(IsTestProject)' == 'true'">true</IncludeDefaultTestReferences>
   </PropertyGroup>
-
-  <!--
-    Runtime settings support.
-    Copies the app.config / runtimeSettings.json file to the OutDir.
-  -->
 
   <PropertyGroup>
-    <TestRuntimeConfigName Condition="'$(BuildingNETCoreAppVertical)' == 'true'">netcoreapp.runtimeconfig.json</TestRuntimeConfigName>
-    <TestRuntimeConfigName Condition="'$(BuildingNETFxVertical)' == 'true'">netfx.exe.config</TestRuntimeConfigName>
-    <TestRuntimeConfigExtension Condition="'$(BuildingNETCoreAppVertical)' == 'true'">.runtimeconfig.json</TestRuntimeConfigExtension>
-    <TestRuntimeConfigExtension Condition="'$(BuildingNETFxVertical)' == 'true'">.exe.config</TestRuntimeConfigExtension>
-    <TestRuntimeConfigPath Condition="'$(TestRuntimeConfigPath)' == ''">$(TestAssetsDir)$(TestRuntimeConfigName)</TestRuntimeConfigPath>
+    <!-- Copies the app.config file to the OutDir. -->
+    <TestRuntimeTemplateConfigPath Condition="'$(TestRuntimeTemplateConfigPath)' == '' and '$(BuildingNETFxVertical)' == 'true'">$(TestAssetsDir)netfx.exe.config</TestRuntimeTemplateConfigPath>
 
-    <!-- By default copy the test runtime config file for test projects and executable test support projects. -->
-    <EnableTestRuntimeConfig Condition="'$(EnableTestRuntimeConfig)' == '' AND '$(IsTestProject)' == 'true' AND ('$(IsTestSupportProject)' != 'true' OR '$(OutputType.ToLower())' == 'exe')">true</EnableTestRuntimeConfig>
+    <!-- By default copy the test runtime config file for executable test projects (+ test support projects). -->
+    <GenerateRuntimeConfigurationFiles Condition="'$(IsTestProject)' == 'true' and ('$(IsTestSupportProject)' != 'true' or '$(OutputType.ToLower())' == 'exe')">true</GenerateRuntimeConfigurationFiles>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Include="$(TestRuntimeConfigPath)"
-          Link="$(TargetName)$(TestRuntimeConfigExtension)"
+  <ItemGroup Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'">
+    <None Include="$(TestRuntimeTemplateConfigPath)"
+          Condition="'$(BuildingNETFxVertical)' == 'true'"
+          Link="$(TargetName).exe.config"
           CopyToOutputDirectory="PreserveNewest"
-          Visible="false"
-          Condition="'$(EnableTestRuntimeConfig)' == 'true' AND
-                    ('$(BuildingNETCoreAppVertical)' == 'true' OR '$(BuildingNETFxVertical)' == 'true')" />
+          Visible="false" />
+    <!--
+      Include deps.json and runtimeconfig.json in ContentWithTargetPath so they will 
+      be copied to the output folder of projects that reference this one.
+      Tracking issue: https://github.com/dotnet/sdk/issues/1675
+    -->
+    <ContentWithTargetPath Include="$(ProjectDepsFilePath)"
+                           Condition="'$(BuildingNETCoreAppVertical)' == 'true' and '$(GenerateDependencyFile)' == 'true'"
+                           CopyToOutputDirectory="PreserveNewest"
+                           TargetPath="$(ProjectDepsFileName)" />
+    <ContentWithTargetPath Include="$(ProjectRuntimeConfigFilePath)"
+                           Condition="'$(BuildingNETCoreAppVertical)' == 'true'"
+                           CopyToOutputDirectory="PreserveNewest"
+                           TargetPath="$(ProjectRuntimeConfigFileName)" />
   </ItemGroup>
 
   <!--
-    Auto references support.
-    Used by test projects and companions.
-  -->
+    As we disabled implicit framework references but want to populate the framework node in the runtimeconfig's 
+    runtimeOptions node we manually set the RuntimeFramework. 
+    At that point restore and conflict resolution already happened therefore setting the item here has no side effects.
+   -->
+  <Target Name="SetRuntimeFrameworksBeforeGenerateConfigurationFiles"
+          Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'"
+          BeforeTargets="GenerateBuildRuntimeConfigurationFiles">
 
+    <ItemGroup>
+      <RuntimeFramework Include="Microsoft.NETCore.App" Version="$(ProductVersion)" />
+    </ItemGroup>
+
+  </Target>
+
+  <!-- Auto references support. Used by test projects and companions. -->
   <Target Name="AddDefaultTestReferences"
-          Condition="'$(IncludeDefaultReferences)' == 'true' AND '$(IncludeDefaultTestReferences)' == 'true'"
+          Condition="'$(IncludeDefaultReferences)' == 'true' and '$(IncludeDefaultTestReferences)' == 'true'"
           BeforeTargets="SetupDefaultReferences">
 
     <ItemGroup>
       <!-- Harmless, but causes PRI targets to run -->
       <DefaultReferenceExclusions Include="System.Runtime.WindowsRuntime.UI.Xaml" />
-      <DefaultReferenceExclusions Include="@(ReferenceFromRuntime)"/>
+      <DefaultReferenceExclusions Include="$(MSBuildProjectName)" />
 
       <!-- Reference everything in the targeting pack directory -->
       <DefaultReferenceDirs Include="$(RefPath)" />
       <DefaultReferenceItems Include="%(DefaultReferenceDirs.Identity)/*.dll" />
 
-      <DefaultReference Include="%(DefaultReferenceItems.Filename)" Exclude="@(DefaultReferenceExclusions)" />
+      <DefaultReferenceExclusions>
+        <RefDir>%(DefaultReferenceDirs.Identity)</RefDir>
+      </DefaultReferenceExclusions>
+      <_defaultReferenceExclusionsFullPath Include="%(DefaultReferenceExclusions.RefDir)%(DefaultReferenceExclusions.Identity).dll" />
+
+      <!-- Ensure conflict resolution can see these references. -->
+      <Reference Include="%(DefaultReferenceItems.FullPath)" Private="false" Exclude="@(_defaultReferenceExclusionsFullPath)"  />
     </ItemGroup>
 
   </Target>
@@ -69,9 +90,9 @@
   <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Resources.uap.targets" />
 
   <!-- Full coverage report. -->
-  <Import Condition="'$(EnableFullCoverageReportTarget)' == 'true' AND '$(SkipCoverageReport)' != 'true' AND '$(Coverage)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestCoreDir)', 'coverage', 'CoverageReport.targets'))" />
+  <Import Condition="'$(EnableFullCoverageReportTarget)' == 'true' and '$(SkipCoverageReport)' != 'true' and '$(Coverage)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestCoreDir)', 'coverage', 'CoverageReport.targets'))" />
 
   <!-- Import the core testing infrastructure only for test projects. -->
-  <Import Condition="'$(IsTestProject)' == 'true' AND '$(IsTestSupportProject)' != 'true'"  Project="$(TestCoreDir)Core.targets" />
+  <Import Condition="'$(IsTestProject)' == 'true' and '$(IsTestSupportProject)' != 'true'"  Project="$(TestCoreDir)Core.targets" />
 
 </Project>

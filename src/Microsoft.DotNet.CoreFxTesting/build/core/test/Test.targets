@@ -36,6 +36,7 @@
     <RunArguments Condition="'$(BuildingNETFxVertical)' == 'true' and '$(XUnitNoAppdomain)' == 'true'">$(RunArguments) -noappdomain</RunArguments>
 
     <!-- Traits -->
+    <WithoutCategories Condition="'$(WithoutCategories)' == '' and '$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuildId)' == ''">IgnoreForCI</WithoutCategories>
     <_withCategories Condition="'$(WithCategories)' != ''">;$(WithCategories.Trim(';'))</_withCategories>
     <_withoutCategories Condition="'$(WithoutCategories)' != ''">;$(WithoutCategories.Trim(';'))</_withoutCategories>
     <!-- Default categories -->
@@ -62,14 +63,46 @@
 
   </Target>
 
+  <!-- Overwrite the runner config file with the app local one. -->
+  <Target Name="OverwriteTestRunnerConfigFile"
+          Condition="'$(BuildingNETFxVertical)' == 'true' or '$(BuildingNetCoreAppVertical)' == 'true'"
+          AfterTargets="CopyFilesToOutputDirectory">
+
+    <PropertyGroup>
+      <TestRunnerNameWithoutExtension>$([System.IO.Path]::GetFileNameWithoutExtension('$(TestRunnerName)'))</TestRunnerNameWithoutExtension>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
+      <_testRunnerConfigSourceFile Include="$(TargetDir)$(TargetName).exe.config" />
+      <_testRunnerConfigSourceFile Include="$(TargetDir)$(TargetName).exe.config" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
+      <_testRunnerConfigDestFile Include="$(TargetDir)$(TestRunnerName).config" />
+      <_testRunnerConfigDestFile Include="$(TargetDir)Microsoft.DotNet.RemoteExecutorHost.exe.config" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(BuildingNetCoreAppVertical)' == 'true'">
+      <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigFilePath)" Condition="Exists('$(ProjectRuntimeConfigFilePath)')" />
+      <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigDevFilePath)" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)')" />
+      <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigFilePath)" Condition="Exists('$(ProjectRuntimeConfigFilePath)') and '$(IncludeRemoteExecutor)' == 'true'" />
+      <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigDevFilePath)" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)') and '$(IncludeRemoteExecutor)' == 'true'" />
+      <_testRunnerConfigDestFile Include="$(TargetDir)$(TestRunnerNameWithoutExtension).runtimeconfig.json" Condition="Exists('$(ProjectRuntimeConfigFilePath)')" />
+      <_testRunnerConfigDestFile Include="$(TargetDir)$(TestRunnerNameWithoutExtension).runtimeconfig.dev.json" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)')" />
+      <_testRunnerConfigDestFile Include="$(TargetDir)Microsoft.DotNet.RemoteExecutorHost.runtimeconfig.json" Condition="Exists('$(ProjectRuntimeConfigFilePath)') and '$(IncludeRemoteExecutor)' == 'true'" />
+      <_testRunnerConfigDestFile Include="$(TargetDir)Microsoft.DotNet.RemoteExecutorHost.runtimeconfig.dev.json" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)') and '$(IncludeRemoteExecutor)' == 'true'" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(_testRunnerConfigSourceFile)"
+          Condition="'@(_testRunnerConfigSourceFile)' != ''"
+          DestinationFiles="@(_testRunnerConfigDestFile)"
+          SkipUnchangedFiles="true" />
+
+  </Target>
+
   <!-- Setup run commands. -->
   <Choose>
 
     <When Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
       <PropertyGroup>
         <TestRunnerName>xunit.console.dll</TestRunnerName>
-        <TestRunnerNameWithoutExtension>$([System.IO.Path]::GetFileNameWithoutExtension('$(TestRunnerName)'))</TestRunnerNameWithoutExtension>
-
         <RunCommand>"$(RunScriptHost)"</RunCommand>
         <RunArguments>$(TestRunnerName) $(RunArguments)</RunArguments>
       </PropertyGroup>
