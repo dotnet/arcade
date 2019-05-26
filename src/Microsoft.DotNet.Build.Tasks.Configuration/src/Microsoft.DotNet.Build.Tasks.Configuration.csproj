@@ -6,7 +6,7 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
     <Title>Configuration system for cross-targeting and filtering projects.</Title>
-    <PackageDescription>This package provides the following MSBuild tasks: FindBestConfiguration, GenerateConfigurationProps</PackageDescription>
+    <PackageDescription>This package provides the following MSBuild tasks: FindBestConfiguration, GenerateConfigurationProps, UpdateVSConfigurations, ParseBuildConfigurations, NormalizeConfigurations</PackageDescription>
     <DefaultItemExcludes Condition="'$(TargetFramework)' != 'net472'">**/*.Desktop.*</DefaultItemExcludes>
   </PropertyGroup>
 
