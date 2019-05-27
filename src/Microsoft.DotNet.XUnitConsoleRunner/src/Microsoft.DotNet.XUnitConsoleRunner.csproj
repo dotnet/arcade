@@ -6,11 +6,11 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputType>Exe</OutputType>
     <RootNamespace>Xunit.ConsoleClient</RootNamespace>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <IsPackable>true</IsPackable>
     <VersionPrefix>2.5.1</VersionPrefix>
-    <LangVersion>latest</LangVersion>
     <DefaultItemExcludes Condition="'$(DefineConstants)' == 'WINDOWS_UWP'">common\AssemblyResolution\**;$(DefaultItemExcludes)</DefaultItemExcludes>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,5 +26,7 @@
     <PackageReference Include="xunit.abstractions" Version="$(XUnitAbstractionsVersion)" />
     <PackageReference Include="xunit.extensibility.core" Version="$(XUnitVersion)" />
   </ItemGroup>
+
+  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 
 </Project>

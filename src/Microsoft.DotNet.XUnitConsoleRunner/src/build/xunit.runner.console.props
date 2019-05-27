@@ -1,7 +1,0 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
-  <PropertyGroup>
-    <XunitConsoleNetCore2AppPath>$(MSBuildThisFileDirectory)..\tools\netcoreapp2.0\xunit.console.dll</XunitConsoleNetCore2AppPath>
-  </PropertyGroup>
-
-</Project>
