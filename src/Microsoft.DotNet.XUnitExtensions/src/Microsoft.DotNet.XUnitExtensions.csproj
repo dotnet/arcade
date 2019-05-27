@@ -5,13 +5,13 @@
     <OutputType>Library</OutputType>
     <AssemblyName>Microsoft.DotNet.XUnitExtensions</AssemblyName>
     <IsPackable>true</IsPackable>    
-    <VersionPrefix>2.4.0</VersionPrefix>
+    <VersionPrefix>2.4.1</VersionPrefix>
     <Description>This package provides things like various traits and discovers like OuterLoop/ActiveIssue that are used by .NET Core framework test projects.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit.extensibility.core" Version="2.4.0" />
-    <PackageReference Include="xunit.extensibility.execution" Version="2.4.0" />
+    <PackageReference Include="xunit.extensibility.core" Version="$(XUnitVersion)" />
+    <PackageReference Include="xunit.extensibility.execution" Version="$(XUnitVersion)" />
   </ItemGroup>
 
   <ItemGroup>
