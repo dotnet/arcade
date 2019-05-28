@@ -336,17 +336,14 @@ namespace Microsoft.Cci.Writers.CSharp
             }
 
             int genericArgumentsCount = 0;
-            bool hasNullableAttribute = nullableAttributeArgument != null;
-            bool hasDynamicAttribute = dynamicAttributeArgument is bool ? (bool)dynamicAttributeArgument : dynamicAttributeArgument != null;
             bool isNullableValueType = false;
-            bool isValueTuple;
-            if (type is IGenericTypeInstanceReference genericType && 
-                ((isValueTuple = genericType.IsValueTuple()) || hasNullableAttribute || hasDynamicAttribute))
+            if (type is IGenericTypeInstanceReference genericType)
             {
                 genericArgumentsCount = genericType.GenericArguments.Count();
 
                 int genericArgumentsInChildTypes = 0;
                 int valueTupleLocalIndex = valueTupleNameIndex;
+                bool isValueTuple = genericType.IsValueTuple();
                 bool shouldWriteNestedValueTuple = !isValueTupleParameter || genericParameterIndex != 7;
                 isNullableValueType = genericType.IsNullableValueType();
 
@@ -425,7 +422,7 @@ namespace Microsoft.Cci.Writers.CSharp
                     }
                 }
             }
-            else if (type is IArrayType arrayType && (hasNullableAttribute || hasDynamicAttribute))
+            else if (type is IArrayType arrayType)
             {
                 WriteTypeNameRecursive(arrayType.ElementType, namingOptions, valueTupleNames, ref valueTupleNameIndex,
                     nullableAttributeArgument, dynamicAttributeArgument, typeDepth + 1);
@@ -457,7 +454,7 @@ namespace Microsoft.Cci.Writers.CSharp
         private void WriteTypeName(ITypeReference type, bool noSpace = false, bool useTypeKeywords = true,
             bool omitGenericTypeList = false, object nullableAttributeArgument = null, object dynamicAttributeArgument = null, string[] valueTupleNames = null)
         {
-            NameFormattingOptions namingOptions = NameFormattingOptions.TypeParameters | NameFormattingOptions.ContractNullable;
+            NameFormattingOptions namingOptions = NameFormattingOptions.TypeParameters | NameFormattingOptions.ContractNullable | NameFormattingOptions.OmitTypeArguments; ;
 
             if (useTypeKeywords)
                 namingOptions |= NameFormattingOptions.UseTypeKeywords;
@@ -470,10 +467,6 @@ namespace Microsoft.Cci.Writers.CSharp
 
             if (omitGenericTypeList)
                 namingOptions |= NameFormattingOptions.EmptyTypeParameterList;
-
-            if (nullableAttributeArgument != null ||
-                (dynamicAttributeArgument is bool ? (bool)dynamicAttributeArgument : dynamicAttributeArgument != null))
-                namingOptions |= NameFormattingOptions.OmitTypeArguments;
 
             int valueTupleNameIndex = 0;
             WriteTypeNameRecursive(type, namingOptions, valueTupleNames, ref valueTupleNameIndex, nullableAttributeArgument, dynamicAttributeArgument);
