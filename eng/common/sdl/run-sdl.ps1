@@ -15,7 +15,6 @@ $LASTEXITCODE = 0
 # We store config files in the r directory of .gdn
 Write-Host $ToolsList
 $gdnConfigPath = Join-Path $GdnFolder "r"
-$gdnConfig = ""
 
 foreach ($tool in $ToolsList) {
   $gdnConfigFile = Join-Path $gdnConfigPath "$tool-configure.gdnconfig"
