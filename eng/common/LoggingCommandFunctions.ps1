@@ -160,3 +160,46 @@ function Write-LoggingCommand {
         Write-Host $command
     }
 }
+
+function Write-LogIssue {
+    [CmdletBinding()]
+    param(
+        [ValidateSet('warning', 'error')]
+        [Parameter(Mandatory = $true)]
+        [string]$Type,
+        [string]$Message,
+        [string]$ErrCode,
+        [string]$SourcePath,
+        [string]$LineNumber,
+        [string]$ColumnNumber,
+        [switch]$AsOutput)
+
+    $command = Format-LoggingCommand -Area 'task' -Event 'logissue' -Data $Message -Properties @{
+            'type' = $Type
+            'code' = $ErrCode
+            'sourcepath' = $SourcePath
+            'linenumber' = $LineNumber
+            'columnnumber' = $ColumnNumber
+        }
+    if ($AsOutput) {
+        return $command
+    }
+
+    if ($Type -eq 'error') {
+        $foregroundColor = $host.PrivateData.ErrorForegroundColor
+        $backgroundColor = $host.PrivateData.ErrorBackgroundColor
+        if ($foregroundColor -isnot [System.ConsoleColor] -or $backgroundColor -isnot [System.ConsoleColor]) {
+            $foregroundColor = [System.ConsoleColor]::Red
+            $backgroundColor = [System.ConsoleColor]::Black
+        }
+    } else {
+        $foregroundColor = $host.PrivateData.WarningForegroundColor
+        $backgroundColor = $host.PrivateData.WarningBackgroundColor
+        if ($foregroundColor -isnot [System.ConsoleColor] -or $backgroundColor -isnot [System.ConsoleColor]) {
+            $foregroundColor = [System.ConsoleColor]::Yellow
+            $backgroundColor = [System.ConsoleColor]::Black
+        }
+    }
+
+    Write-Host $command -ForegroundColor $foregroundColor -BackgroundColor $backgroundColor
+}
