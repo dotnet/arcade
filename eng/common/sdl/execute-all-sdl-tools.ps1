@@ -29,13 +29,15 @@ $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
 $LASTEXITCODE = 0
 
+$RepoName = $Repository -replace '(.*?)-(.*)', '$1/$2';
+
 if ($GuardianPackageName) {
   $guardianCliLocation = Join-Path $NugetPackageDirectory (Join-Path $GuardianPackageName (Join-Path "tools" "guardian"))
 } else {
   $guardianCliLocation = $GuardianCliLocation
 }
 
-& $(Join-Path $PSScriptRoot "init-sdl.ps1") -GuardianCliLocation $guardianCliLocation -Repository $Repository -BranchName $BranchName -WorkingDirectory $ArtifactsDirectory -DncEngAccessToken $DncEngAccessToken -GuardianLoggerLevel $GuardianLoggerLevel
+& $(Join-Path $PSScriptRoot "init-sdl.ps1") -GuardianCliLocation $guardianCliLocation -Repository $RepoName -BranchName $BranchName -WorkingDirectory $ArtifactsDirectory -DncEngAccessToken $DncEngAccessToken -GuardianLoggerLevel $GuardianLoggerLevel
 $gdnFolder = Join-Path $ArtifactsDirectory ".gdn"
 
 if ($TsaOnboard) {
@@ -58,13 +60,13 @@ if ($SourceToolsList -and $SourceToolsList.Count -gt 0) {
 }
 
 if ($UpdateBaseline) {
-  & (Join-Path $PSScriptRoot "push-gdn.ps1") -Repository $Repository -BranchName $BranchName -GdnFolder $GdnFolder -DncEngAccessToken $DncEngAccessToken -PushReason "Update baseline"
+  & (Join-Path $PSScriptRoot "push-gdn.ps1") -Repository $RepoName -BranchName $BranchName -GdnFolder $GdnFolder -DncEngAccessToken $DncEngAccessToken -PushReason "Update baseline"
 }
 
 if ($TsaPublish) {
   if ($TsaBranchName -and $BuildNumber) {
     if (-not $TsaRepositoryName) {
-      $TsaRepositoryName = "$($Repository.Replace("/", "-")-$BranchName)"
+      $TsaRepositoryName = "$($Repository)-$($BranchName)"
     }
     Write-Host "$guardianCliLocation tsa-publish --all-tools --repository-name `"$TsaRepositoryName`" --branch-name `"$TsaBranchName`" --build-number `"$BuildNumber`" --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"$TsaInstanceURL`" --project-name `"$TsaProjectName`" --area-path `"$TsaBugAreaPath`" --iteration-path `"$TsaIterationPath`" --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel"
     &$guardianCliLocation tsa-publish --all-tools --repository-name "$TsaRepositoryName" --branch-name "$TsaBranchName" --build-number "$BuildNumber" --codebase-name "$TsaCodebaseName" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"$TsaInstanceURL`" --project-name `"$TsaProjectName`" --area-path `"$TsaBugAreaPath`" --iteration-path `"$TsaIterationPath`" --working-directory $SourceDirectory  --logger-level $GuardianLoggerLevel
