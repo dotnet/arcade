@@ -62,9 +62,13 @@
           Condition="'$(DotNetBuildFromSource)' != 'true' and Exists('$(_RepoToolManifest)')"
           AfterTargets="Restore">
 
+    <ItemGroup>
+      <_RestoreSources Include="$(RestoreSources)" />
+    </ItemGroup>
+
     <PropertyGroup>
       <RestoreRepoToolsCommmand>"$(DotNetTool)" tool restore</RestoreRepoToolsCommmand>
-      <RestoreRepoToolsCommmand Condition="'@(RestoreSources)' != ''">$(RestoreRepoToolsCommmand) --add-source @(RestoreSources -> '"%(Identity)"', ' --add-source ')</RestoreRepoToolsCommmand>
+      <RestoreRepoToolsCommmand Condition="'@(_RestoreSources)' != ''">$(RestoreRepoToolsCommmand) --add-source @(_RestoreSources -> '"%(Identity)"', ' --add-source ')</RestoreRepoToolsCommmand>
     </PropertyGroup>
 
     <Exec Command="$(RestoreRepoToolsCommmand)"
