@@ -32,7 +32,7 @@ $LASTEXITCODE = 0
 $RepoName = $Repository -replace '(.*?)-(.*)', '$1/$2';
 
 if ($GuardianPackageName) {
-  $guardianCliLocation = Join-Path $NugetPackageDirectory (Join-Path $GuardianPackageName (Join-Path "tools" "guardian"))
+  $guardianCliLocation = Join-Path $NugetPackageDirectory (Join-Path $GuardianPackageName (Join-Path "tools" "guardian.cmd"))
 } else {
   $guardianCliLocation = $GuardianCliLocation
 }
@@ -43,7 +43,7 @@ $gdnFolder = Join-Path $ArtifactsDirectory ".gdn"
 if ($TsaOnboard) {
   if ($TsaCodebaseName -and $TsaNotificationEmail -and $TsaCodebaseAdmin -and $TsaBugAreaPath) {
     Write-Host "$guardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"$TsaInstanceUrl`" --project-name `"$TsaProjectName`" --area-path `"$TsaBugAreaPath`" --iteration-path `"$TsaIterationPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel"
-    &$guardianCliLocation tsa-onboard --codebase-name "$TsaCodebaseName" --notification-alias "$TsaNotificationEmail" --codebase-admin "$TsaCodebaseAdmin" --instance-url "$TsaInstanceUrl" --project-name "$TsaProjectName" --area-path "$TsaBugAreaPath" --iteration-path "$TsaIterationPath" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel
+    & $guardianCliLocation tsa-onboard --codebase-name "$TsaCodebaseName" --notification-alias "$TsaNotificationEmail" --codebase-admin "$TsaCodebaseAdmin" --instance-url "$TsaInstanceUrl" --project-name "$TsaProjectName" --area-path "$TsaBugAreaPath" --iteration-path "$TsaIterationPath" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel
     if ($LASTEXITCODE -ne 0) {
       Write-Error "Guardian tsa-onboard failed with exit code $LASTEXITCODE."
     }
@@ -69,7 +69,7 @@ if ($TsaPublish) {
       $TsaRepositoryName = "$($Repository)-$($BranchName)"
     }
     Write-Host "$guardianCliLocation tsa-publish --all-tools --repository-name `"$TsaRepositoryName`" --branch-name `"$TsaBranchName`" --build-number `"$BuildNumber`" --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"$TsaInstanceUrl`" --project-name `"$TsaProjectName`" --area-path `"$TsaBugAreaPath`" --iteration-path `"$TsaIterationPath`" --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel"
-    &$guardianCliLocation tsa-publish --all-tools --repository-name "$TsaRepositoryName" --branch-name "$TsaBranchName" --build-number "$BuildNumber" --codebase-name "$TsaCodebaseName" --notification-alias "$TsaNotificationEmail" --codebase-admin "$TsaCodebaseAdmin" --instance-url "$TsaInstanceUrl" --project-name "$TsaProjectName" --area-path "$TsaBugAreaPath" --iteration-path "$TsaIterationPath" --working-directory $SourceDirectory  --logger-level $GuardianLoggerLevel
+    & $guardianCliLocation tsa-publish --all-tools --repository-name "$TsaRepositoryName" --branch-name "$TsaBranchName" --build-number "$BuildNumber" --codebase-name "$TsaCodebaseName" --notification-alias "$TsaNotificationEmail" --codebase-admin "$TsaCodebaseAdmin" --instance-url "$TsaInstanceUrl" --project-name "$TsaProjectName" --area-path "$TsaBugAreaPath" --iteration-path "$TsaIterationPath" --working-directory $SourceDirectory  --logger-level $GuardianLoggerLevel
     if ($LASTEXITCODE -ne 0) {
       Write-Error "Guardian tsa-publish failed with exit code $LASTEXITCODE."
     }
