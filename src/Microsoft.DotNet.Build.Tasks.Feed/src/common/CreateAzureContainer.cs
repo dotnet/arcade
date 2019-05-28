@@ -3,11 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
+using Microsoft.Azure.Storage.Blob;
 using System.Threading.Tasks;
+using System;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
@@ -67,84 +65,32 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
         public async Task<bool> ExecuteAsync()
         {
-            ParseConnectionString();
-            // If the connection string AND AccountKey & AccountName are provided, error out.
-            if (Log.HasLoggedErrors)
+            try
             {
-                return false;
-            }
+                AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
 
-            Log.LogMessage(
-                MessageImportance.High,
-                "Creating container named '{0}' in storage account {1}.",
-                ContainerName,
-                AccountName);
-            string url = string.Format(
-                "https://{0}.blob.core.windows.net/{1}?restype=container",
-                AccountName,
-                ContainerName);
-            StorageUri = string.Format(
-                "https://{0}.blob.core.windows.net/{1}/",
-                AccountName,
-                ContainerName);
-
-            Log.LogMessage(MessageImportance.Low, "Sending request to create Container");
-            using (HttpClient client = new HttpClient())
-            {
-                List<Tuple<string, string>> additionalHeaders = null;
-
-                if (IsPublic)
+                if (FailIfExists && await blobUtils.CheckIfContainerExistsAsync())
                 {
-                    Tuple<string, string> headerBlobType = new Tuple<string, string>("x-ms-blob-public-access", "blob");
-                    additionalHeaders = new List<Tuple<string, string>>() { headerBlobType };
+                    Log.LogError($"Container {ContainerName} already exists in storage account {AccountName}.");
+                    return false;
                 }
 
-                var createRequest = AzureHelper.RequestMessage("PUT", url, AccountName, AccountKey, additionalHeaders);
-
-                Func<HttpResponseMessage, bool> validate = (HttpResponseMessage response) =>
+                BlobContainerPermissions permissions = new BlobContainerPermissions
                 {
-                    // the Conflict status (409) indicates that the container already exists, so
-                    // if FailIfExists is set to false and we get a 409 don't fail the task.
-                    return response.IsSuccessStatusCode || (!FailIfExists && response.StatusCode == HttpStatusCode.Conflict);
+                    PublicAccess = IsPublic ? BlobContainerPublicAccessType.Blob : BlobContainerPublicAccessType.Off
                 };
 
-                using (HttpResponseMessage response = await AzureHelper.RequestWithRetry(Log, client, createRequest, validate))
-                {
-                    try
-                    {
-                        Log.LogMessage(
-                            MessageImportance.Low,
-                            "Received response to create Container {0}: Status Code: {1} {2}",
-                            ContainerName, response.StatusCode, response.Content.ToString());
+                StorageUri = await blobUtils.CreateContainerAsync(permissions);
 
-                        // specifying zero is valid, it means "I don't want a token"
-                        if (ReadOnlyTokenDaysValid > 0)
-                        {
-                            ReadOnlyToken = AzureHelper.CreateContainerSasToken(
-                                AccountName,
-                                ContainerName,
-                                AccountKey,
-                                AzureHelper.SasAccessType.Read,
-                                ReadOnlyTokenDaysValid);
-                        }
+                ReadOnlyToken = blobUtils.CreateSASToken(ReadOnlyTokenDaysValid, SharedAccessBlobPermissions.Read);
 
-                        // specifying zero is valid, it means "I don't want a token"
-                        if (WriteOnlyTokenDaysValid > 0)
-                        {
-                            WriteOnlyToken = AzureHelper.CreateContainerSasToken(
-                                AccountName,
-                                ContainerName,
-                                AccountKey,
-                                AzureHelper.SasAccessType.Write,
-                                WriteOnlyTokenDaysValid);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Log.LogErrorFromException(e, true);
-                    }
-                }
+                WriteOnlyToken = blobUtils.CreateSASToken(WriteOnlyTokenDaysValid, SharedAccessBlobPermissions.Write);
             }
+            catch (Exception e)
+            {
+                Log.LogErrorFromException(e);
+            }
+
             return !Log.HasLoggedErrors;
         }
     }
