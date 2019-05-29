@@ -64,16 +64,20 @@
   
   <Target Name="_AddBuildOutputToPackageCore" DependsOnTargets="Publish" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
     <ItemGroup>
+      <FilteredPackageFiles Include="$(PublishDir)**"
+                            Exclude="$(PublishDir)%(PackageExcludeFile.Identity)" />
       <!-- Publish .NET Core assets and include them in the package under tools directory. -->
-      <TfmSpecificPackageFile Include="$(PublishDir)**" 
+      <TfmSpecificPackageFile Include="@(FilteredPackageFiles)"
                               PackagePath="tools/$(TargetFramework)/%(RecursiveDir)%(FileName)%(Extension)"/>
     </ItemGroup>
   </Target>
 
   <Target Name="_AddBuildOutputToPackageDesktop" Condition="'$(TargetFrameworkIdentifier)' != '.NETCoreApp'">
     <ItemGroup>
+      <FilteredPackageFiles Include="$(OutputPath)**"
+                            Exclude="$(OutputPath)%(PackageExcludeFile.Identity)" />
       <!-- Include .NET Framework build outputs in the package under tools directory. -->
-      <TfmSpecificPackageFile Include="$(OutputPath)**" PackagePath="tools/$(TargetFramework)/%(RecursiveDir)%(FileName)%(Extension)"/>
+      <TfmSpecificPackageFile Include="@(FilteredPackageFiles)" PackagePath="tools/$(TargetFramework)/%(RecursiveDir)%(FileName)%(Extension)"/>
     </ItemGroup>
   </Target>
 </Project>

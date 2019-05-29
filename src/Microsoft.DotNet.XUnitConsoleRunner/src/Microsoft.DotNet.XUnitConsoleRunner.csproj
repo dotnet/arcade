@@ -14,6 +14,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageExcludeFile Include="xunit.core.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="HTML.xslt" />
     <EmbeddedResource Include="NUnitXml.xslt" />
     <EmbeddedResource Include="xUnit1.xslt" />
