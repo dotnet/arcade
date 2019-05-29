@@ -12,65 +12,6 @@ $script:loggingCommandEscapeMappings = @( # TODO: WHAT ABOUT "="? WHAT ABOUT "%"
 # TODO: BUG: Escape % ???
 # TODO: Add test to verify don't need to escape "=".
 
-<#
-.SYNOPSIS
-See https://github.com/Microsoft/vsts-tasks/blob/master/docs/authoring/commands.md
-
-.PARAMETER AsOutput
-Indicates whether to write the logging command directly to the host or to the output pipeline.
-#>
-function Write-SetVariable {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Name,
-        [string]$Value,
-        [switch]$Secret,
-        [switch]$AsOutput)
-
-    Write-LoggingCommand -Area 'task' -Event 'setvariable' -Data $Value -Properties @{
-            'variable' = $Name
-            'issecret' = $Secret
-        } -AsOutput:$AsOutput
-}
-
-<#
-.SYNOPSIS
-See https://github.com/Microsoft/vsts-tasks/blob/master/docs/authoring/commands.md
-
-.PARAMETER AsOutput
-Indicates whether to write the logging command directly to the host or to the output pipeline.
-#>
-function Write-TaskError {
-    [CmdletBinding()]
-    param(
-        [string]$Message,
-        [string]$ErrCode,
-        [string]$SourcePath,
-        [string]$LineNumber,
-        [string]$ColumnNumber,
-        [switch]$AsOutput)
-
-    Write-LogIssue -Type error @PSBoundParameters
-}
-
-<#
-.SYNOPSIS
-See https://github.com/Microsoft/vsts-tasks/blob/master/docs/authoring/commands.md
-
-.PARAMETER AsOutput
-Indicates whether to write the logging command directly to the host or to the output pipeline.
-#>
-function Write-PrependPath {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Path,
-        [switch]$AsOutput)
-
-    Write-LoggingCommand -Area 'task' -Event 'prependpath' -Data $Path -AsOutput:$AsOutput
-}
-
 <########################################
 # Private functions.
 ########################################>

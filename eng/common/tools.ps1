@@ -97,6 +97,7 @@ function Write-PipelineTaskError {
   param(
     [Parameter(Mandatory = $true)]
     [string]$Message,
+    [Parameter(Mandatory = $false)]
     [string]$Type = 'error',
     [string]$ErrCode,
     [string]$SourcePath,
@@ -119,13 +120,10 @@ function Write-PipelineTaskError {
       Write-Host $Message
       return
     }
-
-    if($Type -eq 'error') {
-      Write-TaskError -Message:$Message -ErrCode:$ErrCode -SourcePath:$SourcePath -LineNumber:$LineNumber -ColumnNumber:$ColumnNumber -AsOutput:$AsOutput
+    if(-not $PSBoundParameters.ContainsKey('Type')) {
+      $PSBoundParameters.Add('Type', 'error')
     }
-    else {
-      Write-TaskWarning -Message:$Message -ErrCode:$ErrCode -SourcePath:$SourcePath -LineNumber:$LineNumber -ColumnNumber:$ColumnNumber -AsOutput:$AsOutput
-    }
+    Write-LogIssue @PSBoundParameters
 }
 
 function Write-PipelineSetVariable {
@@ -138,7 +136,10 @@ function Write-PipelineSetVariable {
     [switch]$AsOutput)
 
     if($ci) {
-      Write-SetVariable -Name:$Name -Value:$Value -Secret:$Secret -AsOutput:$AsOutput
+      Write-LoggingCommand -Area 'task' -Event 'setvariable' -Data $Value -Properties @{
+        'variable' = $Name
+        'issecret' = $Secret
+      } -AsOutput:$AsOutput
     }
 }
 
@@ -149,7 +150,7 @@ function Write-PipelinePrependPath {
     [string]$Path,
     [switch]$AsOutput)
     if($ci) {
-      Write-PrependPath -Path:$Path -AsOutput:$AsOutput
+      Write-LoggingCommand -Area 'task' -Event 'prependpath' -Data $Path -AsOutput:$AsOutput
     }
 }
 
