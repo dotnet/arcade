@@ -29,6 +29,7 @@ Try
     Remove-Item -Force -Recurse $gdnFolder
   }
   [System.IO.Compression.ZipFile]::ExtractToDirectory($zipFile, $WorkingDirectory)
+  Write-Host $gdnFolder
 } Catch [System.Net.WebException] {
   # if the folder does not exist, we'll do a guardian init and push it to the remote repository
   Write-Host "Initializing Guardian..."
