@@ -14,10 +14,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageExcludeFile Include="xunit.core.dll" />
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Include="HTML.xslt" />
     <EmbeddedResource Include="NUnitXml.xslt" />
     <EmbeddedResource Include="xUnit1.xslt" />
@@ -28,7 +24,6 @@
     <PackageReference Include="xunit.runner.reporters" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.runner.utility" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.abstractions" Version="$(XUnitAbstractionsVersion)" />
-    <PackageReference Include="xunit.extensibility.core" Version="$(XUnitVersion)" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
