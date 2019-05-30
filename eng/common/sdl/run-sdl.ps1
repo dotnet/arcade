@@ -15,8 +15,12 @@ $LASTEXITCODE = 0
 # We store config files in the r directory of .gdn
 Write-Host $ToolsList
 $gdnConfigPath = Join-Path $GdnFolder "r"
+$ValidPath = Test-Path $GuardianCliLocation
 
-if (Test-Path $GuardianCliLocation) {
+if ($ValidPath -eq $False) {
+  Write-Error "Invalid Guardian CLI Location."
+}
+else{
 foreach ($tool in $ToolsList) {
   $gdnConfigFile = Join-Path $gdnConfigPath "$tool-configure.gdnconfig"
   $config = $False
@@ -52,7 +56,4 @@ foreach ($tool in $ToolsList) {
     }
   }
 }
-}
-else{
-  Write-Error "Invalid Guardian CLI Location."
 }

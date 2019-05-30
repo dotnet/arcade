@@ -37,7 +37,13 @@ if ($GuardianPackageName) {
   $guardianCliLocation = $GuardianCliLocation
 }
 
-if (Test-Path $guardianCliLocation) {
+$ValidPath = Test-Path $guardianCliLocation
+
+if ($ValidPath -eq $False)
+{
+  Write-Error "Invalid Guardian CLI Location."
+}
+else{
 & $(Join-Path $PSScriptRoot "init-sdl.ps1") -GuardianCliLocation $guardianCliLocation -Repository $RepoName -BranchName $BranchName -WorkingDirectory $ArtifactsDirectory -DncEngAccessToken $DncEngAccessToken -GuardianLoggerLevel $GuardianLoggerLevel
 $gdnFolder = Join-Path $ArtifactsDirectory ".gdn"
 
@@ -78,7 +84,4 @@ if ($TsaPublish) {
     Write-Error "Could not publish to TSA -- not all required values ($$TsaBranchName, $$BuildNumber) were specified."
   }
 }
-}
-else{
-  Write-Error "Invalid Guardian CLI Location."
 }
