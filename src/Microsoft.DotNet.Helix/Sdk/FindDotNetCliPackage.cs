@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 {
     public class FindDotNetCliPackage : BaseTask
     {
-        private static readonly HttpClient _client = new HttpClient();
+        private static readonly HttpClient _client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
         private const string DotNetCliAzureFeed = "https://dotnetcli.azureedge.net/dotnet";
 
         /// <summary>
