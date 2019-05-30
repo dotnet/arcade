@@ -16,6 +16,7 @@ $LASTEXITCODE = 0
 Write-Host $ToolsList
 $gdnConfigPath = Join-Path $GdnFolder "r"
 
+if (Test-Path $GuardianCliLocation) {
 foreach ($tool in $ToolsList) {
   $gdnConfigFile = Join-Path $gdnConfigPath "$tool-configure.gdnconfig"
   $config = $False
@@ -38,4 +39,8 @@ foreach ($tool in $ToolsList) {
   } else {
     & $GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel
   }
+}
+}
+else{
+  Write-Error "Invalid Guardian CLI Location."
 }
