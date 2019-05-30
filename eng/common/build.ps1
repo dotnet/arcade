@@ -126,6 +126,10 @@ try {
     . $configureToolsetScript
   }
 
+  # This is a sentinel file to work around hangs caused by native tool installation.
+  # This is currently tracked by https://github.com/dotnet/arcade/issues/2673
+  # Don't take a dependency on this as this is expected to be temporary unless the work
+  # to revert this is being actively tracked along the mentioned issue.
   $nativeToolsOptOutFile = Join-Path $EngRoot "disable-nativetool-install.workaround"
   if (($restore) -and ($null -eq $env:DisableNativeToolsetInstalls) -and (-not Test-Path $nativeToolsOptOutFile)) {
     InitializeNativeTools

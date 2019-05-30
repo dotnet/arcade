@@ -209,6 +209,10 @@ if [[ -n "${useInstalledDotNetCli:-}" ]]; then
   use_installed_dotnet_cli="$useInstalledDotNetCli"
 fi
 
+# This is a sentinel file to work around hangs caused by native tool installation.
+# This is currently tracked by https://github.com/dotnet/arcade/issues/2673
+# Don't take a dependency on this as this is expected to be temporary unless the work
+# to revert this is being actively tracked along the mentioned issue.
 native_tools_opt_out_file="$eng_root/disable-nativetool-install.workaround"
 if [[ "$restore" == true && -z ${DisableNativeToolsetInstalls:-} && ! -f "$native_tools_opt_out_file" ]]; then
   InitializeNativeTools
