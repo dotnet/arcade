@@ -126,7 +126,8 @@ try {
     . $configureToolsetScript
   }
 
-  if (($restore) -and ($null -eq $env:DisableNativeToolsetInstalls)) {
+  $nativeToolsOptOutFile = Join-Path $EngRoot "disable-nativetool-install.workaround"
+  if (($restore) -and ($null -eq $env:DisableNativeToolsetInstalls) -and (-not Test-Path $nativeToolsOptOutFile)) {
     InitializeNativeTools
   }
 

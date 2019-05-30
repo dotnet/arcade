@@ -209,7 +209,8 @@ if [[ -n "${useInstalledDotNetCli:-}" ]]; then
   use_installed_dotnet_cli="$useInstalledDotNetCli"
 fi
 
-if [[ "$restore" == true && -z ${DisableNativeToolsetInstalls:-} ]]; then
+native_tools_opt_out_file="$eng_root/disable-nativetool-install.workaround"
+if [[ "$restore" == true && -z ${DisableNativeToolsetInstalls:-} && ! -f "$native_tools_opt_out_file" ]]; then
   InitializeNativeTools
 fi
 
