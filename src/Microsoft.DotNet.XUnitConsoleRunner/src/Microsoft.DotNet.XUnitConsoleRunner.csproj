@@ -24,7 +24,6 @@
     <PackageReference Include="xunit.runner.reporters" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.runner.utility" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.abstractions" Version="$(XUnitAbstractionsVersion)" />
-    <PackageReference Include="xunit.extensibility.core" Version="$(XUnitVersion)" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
