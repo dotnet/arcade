@@ -213,8 +213,8 @@ fi
 # This is currently tracked by https://github.com/dotnet/arcade/issues/2673
 # Don't take a dependency on this as this is expected to be temporary unless the work
 # to revert this is being actively tracked along the mentioned issue.
-native_tools_opt_out_file="$eng_root/disable-nativetool-install.workaround"
-if [[ "$restore" == true && -z ${DisableNativeToolsetInstalls:-} && ! -f "$native_tools_opt_out_file" ]]; then
+native_toolset_opt_out_file="$eng_root/disable-native-toolset-installs-workaround"
+if [[ "$restore" == true && -z ${DisableNativeToolsetInstalls:-} && ! -f "$native_toolset_opt_out_file" ]]; then
   InitializeNativeTools
 fi
 
