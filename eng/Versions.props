@@ -69,7 +69,7 @@
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
     <MicrosoftDiaSymReaderConverterVersion>1.1.0-beta1-62810-01</MicrosoftDiaSymReaderConverterVersion>
     <MicrosoftDiaSymReaderNativeVersion>1.7.0</MicrosoftDiaSymReaderNativeVersion>
-    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.19267.2</MicrosoftDotNetMaestroClientVersion>
+    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.19280.1</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>1.0.0-beta.19279.5</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
   </PropertyGroup>
   <PropertyGroup>
