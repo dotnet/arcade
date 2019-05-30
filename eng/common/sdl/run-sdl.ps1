@@ -25,19 +25,31 @@ foreach ($tool in $ToolsList) {
   if ($tool -eq "credscan") {
     Write-Host "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args `" TargetDirectory : $TargetDirectory `""
     & $GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args " TargetDirectory : $TargetDirectory "
+    if ($LASTEXITCODE -ne 0) {
+      Write-Error "Guardian configure for $tool failed with exit code $LASTEXITCODE."
+    }
     $config = $True
   }
   if ($tool -eq "policheck") {
     Write-Host "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args `" Target : $TargetDirectory `""
     & $GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args " Target : $TargetDirectory "
+    if ($LASTEXITCODE -ne 0) {
+      Write-Error "Guardian configure for $tool failed with exit code $LASTEXITCODE."
+    }
     $config = $True
   }
 
   Write-Host "$GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel --config $gdnConfigFile $config"
   if ($config) {
     & $GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel --config $gdnConfigFile
+    if ($LASTEXITCODE -ne 0) {
+      Write-Error "Guardian run for $tool using $gdnConfigFile failed with exit code $LASTEXITCODE."
+    }
   } else {
     & $GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel
+    if ($LASTEXITCODE -ne 0) {
+      Write-Error "Guardian run for $tool failed with exit code $LASTEXITCODE."
+    }
   }
 }
 }
