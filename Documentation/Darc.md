@@ -20,7 +20,7 @@ use darc to achieve them, as well as a general reference guide to darc commands.
 - [Command Reference](#command-reference)
   - [Common Parameters](#common-parameters)
   - [add-channel](#add-channel) - Creates a new channel.
-  - [add](#add) - Add a new dependency to Version.Details.xml.
+  - [add-dependency](#add) - Add a new dependency to Version.Details.xml.
   - [add-default-channel](#add-default-channel) - Add a channel that a build of a branch+repository is automatically applied to.
   - [add-subscription](#add-subscription) - Add a new subscription.
   - [authenticate](#authenticate) - Stores the Azure DevOps and GitHub tokens required for remote operations.
@@ -80,7 +80,7 @@ No verb selected.
 
   add-channel                  Creates a new channel.
 
-  add                          Add a new dependency to Version.Details.xml.
+  add-dependency               Add a new dependency to Version.Details.xml.
 
   add-default-channel          Add a channel that a build of a branch+repository is automatically applied to.
 
@@ -136,7 +136,7 @@ information about each one:
 - Is the dependency version pinned (can be it automatically updated?)
 - Dependency type (toolset or product)
 
-The [`darc add`](#add) command adds a new dependency.  It takes a number of
+The [`darc add-dependency`](#add) command adds a new dependency.  It takes a number of
 parameters, though only `--name` and `--type` are initially required.  It is
 highly recommended at least the `--repo` parameter be provided so that the
 sha/version data can be filled in using [`darc update-dependencies`](#update-dependencies). See [Toolset
@@ -144,7 +144,7 @@ vs. Product Dependencies](#toolset-vs-product-dependencies) below for
 information on type. For example:
 
 ```
-darc add --name 'Microsoft.NETCore.App' --type 'product' --repo https://github.com/dotnet/core-setup
+darc add-dependency --name 'Microsoft.NETCore.App' --type 'product' --repo https://github.com/dotnet/core-setup
 ```
 
 This will add a new dependency called 'Microsoft.NETCore.App' to eng/Version.Details.xml under the
@@ -467,7 +467,6 @@ darc and Maestro++ have a few mechanisms to enable such scenarios:
   Resuming flow from aspnet/Extensions:
 
   ```
-  darc add-default-channel --repo https://github.com/aspnet/Extensions --branch refs/heads/master --channel ".NET Core 3 Dev"
   ```
 - **Disabling or deleting a subscription** - By disabling or deleting a
   subscription, flow between two specific points can be halted.  For instance,
@@ -744,14 +743,14 @@ PS D:\enlistments\arcade> cat .\eng\Version.Details.xml
 </Dependencies>
 ```
 
-Running add
+Running add-dependency
 
 ```
-PS D:\enlistments\arcade> darc add --name "Microsoft.NETCore.App" --type "product" --version 1
+PS D:\enlistments\arcade> darc add-dependency --name "Microsoft.NETCore.App" --type "product" --version 1
                           --commit 2 --repo https://github.com/dotnet/core-setup
 ```
 
-*eng\Version.Details.xml* after add:
+*eng\Version.Details.xml* after add-dependency:
 
 ```
 PS D:\enlistments\arcade> cat .\eng\Version.Details.xml
