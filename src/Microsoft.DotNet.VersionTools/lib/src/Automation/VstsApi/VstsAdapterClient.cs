@@ -15,7 +15,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.DotNet.VersionTools.src.Util
+using Microsoft.DotNet.VersionTools.src.Util;
 
 namespace Microsoft.DotNet.VersionTools.Automation.VstsApi
 {
