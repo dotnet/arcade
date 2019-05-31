@@ -24,24 +24,6 @@ set EXECUTION_DIR=%~dp0
     goto argparser_break
   )
 
-  set "argparser_dotnet_root_specified_inloop="
-  if /i "%argparser_currentarg%"=="-d" ( set "argparser_dotnet_root_specified_inloop=1" )
-  if /i "%argparser_currentarg%"=="--dotnet-root" ( set "argparser_dotnet_root_specified_inloop=1" )
-  if defined argparser_dotnet_root_specified_inloop (
-    if "%~1" == "" ( goto argparser_invalid )
-    set "DOTNET_ROOT=%~1"
-    goto argparser_break
-  )
-
-  set "argparser_global_tool_dir_specified_inloop="
-  if /i "%argparser_currentarg%"=="-g" ( set "argparser_global_tool_dir_specified_inloop=1" )
-  if /i "%argparser_currentarg%"=="--global-tools-dir" ( set "argparser_global_tool_dir_specified_inloop=1" )
-  if defined argparser_global_tool_dir_specified_inloop (
-    if "%~1" == "" ( goto argparser_invalid )
-    set "GLOBAL_TOOLS_DIR=%~1"
-    goto argparser_break
-  )
-
   if /i "%argparser_currentarg%"=="--rsp-file" (
     if "%~1" == "" ( goto argparser_invalid )
     set "RSP_FILE=@%~1"
@@ -87,11 +69,9 @@ exit /b %ERRORLEVEL%
 :: ========================= END Test Execution =================================
 
 :usage
-echo Usage: RunTests.cmd {-r^|--runtime-path} ^<runtime-path^> [{-d^|--dotnet-root} ^<dotnet-root^>] [{-g^|--global-tools-dir} ^<global-tools-dir^>] [{--rsp-file} ^<rsp-file^>]
+echo Usage: RunTests.cmd {-r^|--runtime-path} ^<runtime-path^> [{--rsp-file} ^<rsp-file^>]
 echo.
 echo Parameters:
 echo --runtime-path           (Mandatory) Testhost containing the test runtime used during test execution (short: -r)"
-echo --dotnet-root            SDK directory for hosting shims and tools (short: -d)
-echo --global-tools-dir       Global tools directory (short: -g)
 echo --rsp-file               RSP file to pass in additional arguments
 echo --help                   Print help and exit (short: -h)

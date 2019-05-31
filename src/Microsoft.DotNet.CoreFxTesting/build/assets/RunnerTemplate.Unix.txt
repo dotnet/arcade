@@ -2,19 +2,16 @@
 
 usage()
 {
-  echo "Usage: RunTests.sh {-r|--runtime-path} <runtime-path> [{-d|--dotnet-root} <dotnet-root>] [{-g|--global-tools-dir} <global-tools-dir>] [{--rsp-file} <rsp-file>]"
+  echo "Usage: RunTests.sh {-r|--runtime-path} <runtime-path> [{--rsp-file} <rsp-file>]"
   echo ""
   echo "Parameters:"
   echo "--runtime-path           (Mandatory) Testhost containing the test runtime used during test execution (short: -r)"
-  echo "--dotnet-root            SDK directory for hosting shims and tools (short: -d)"
-  echo "--global-tools-dir       Global tools directory (short: -g)"
   echo "--rsp-file               RSP file to pass in additional arguments"
   echo "--help                   Print help and exit (short: -h)"
 }
 
 EXECUTION_DIR=$(dirname "$0")
 RUNTIME_PATH=''
-GLOBAL_TOOLS_DIR=''
 RSP_FILE=''
 
 while [[ $# > 0 ]]; do
@@ -26,14 +23,6 @@ while [[ $# > 0 ]]; do
       ;;
     --runtime-path|-r)
       RUNTIME_PATH=$2
-      shift
-      ;;
-    --dotnet-root|-d)
-      export DOTNET_ROOT=$2
-      shift
-      ;;
-    --global-tools-dir|-g)
-      GLOBAL_TOOLS_DIR=$2
       shift
       ;;
     --rsp-file)
