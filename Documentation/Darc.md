@@ -164,8 +164,8 @@ After doing this, you can use the generated `MicrosoftNETCoreAppPackageVersion`
 property as inputs to a PackageReference element or wherever else may need a
 version number.
 
-After addding, it is recommended that you use darc to fill out the missing
-dependency information.  The information can also be filled in after commiting by Maestro++
+After adding, it is recommended that you use darc to fill out the missing
+dependency information.  The information can also be filled in after committing by Maestro++
 using dependency flow, but passing your CI without a filled-in version number
 may be difficult. See [Updating dependencies in your local repository](#updating-dependencies-in-your-local-repository)
 
@@ -324,7 +324,7 @@ index 8e5dab10..ede83435 100644
 ### Removing dependencies from a repository
 
 Removing a dependency from a repository involves simply removing the appropriate
-`Dependency` block from eng/Version.Details.xml and commiting. At that point, neither darc nor
+`Dependency` block from eng/Version.Details.xml and committing. At that point, neither darc nor
 Maestro++ will know anything about it any longer.
 
 ### Changing a dependency's type
@@ -564,7 +564,7 @@ flows its 'last' build to core-sdk and other repos.  The graph stabilizes.
 Then, at the last moment, they make a test only fix and check it in.  It flows
 to core-sdk quickly, but gets held up in the other repos that pull
 Microsoft.NETCore.App due to them not taking any new PRs.  This certainly counts
-as an incoherency, but becuase there is no semantic product difference between
+as an incoherency, but because there is no semantic product difference between
 the two versions in the graph there may be no harm in shipping with that
 incoherency.
 

@@ -6,7 +6,7 @@ This package implements a cross-targeting configuration system that permits over
 
 This configuration system differs from that provided by the .NET SDK in a couple distinct ways:
 1. The behavior of a project in pre-SDK projects was to build a *single* default configuration.  The behavior of SDK projects is to build *all* configurations.  The behavior of this system is to build the *best* configuration of `BuildConfigurations` for the current `BuildConfiguration`.
-2. The behavior of a project reference in pre-SDK projects was to build the *same* configuration as the referencing project (or *specific* configuration in case of an SLN).  The behavior of SDK projects is to build the *most-compatible TargetFramework*, where compatibility mappings are known by NuGet and not extensible.  The behavior of this system is to build the *most-compatible Configuration* where the compatibilty mappings are provided by the repository.
+2. The behavior of a project reference in pre-SDK projects was to build the *same* configuration as the referencing project (or *specific* configuration in case of an SLN).  The behavior of SDK projects is to build the *most-compatible TargetFramework*, where compatibility mappings are known by NuGet and not extensible.  The behavior of this system is to build the *most-compatible Configuration* where the compatibility mappings are provided by the repository.
 
 Extends "traversal" builds: projects which use `@(Project)` items to refer to projects which need to be built.  These are extended by acting as outer builds for the projects listed and selecting the subset of configurations in those projects to build.
 
@@ -40,7 +40,7 @@ The following properties may be defined:
  - BuildAllConfigurations: set to true in order to build all configurations for a project when a specific Configuration hasn't already been set.
  - BuildConfigurations: the relevant configurations of a project, analogous to TargetFrameworks
  - PackageConfigurations: typically a subset of BuildConfigurations that is used when building a packaging project and behaves in a similar manner.
- - Both BuildConfiruations and PackageConfigurations should be defined in a `Configurations.props` file next to the project itself.  Why? Because these must be defined *before* the props which parse out configuration statically for scenario 1 above.  We could avoid this if we instead always had an outer build when that could dispatch to an inner Build/Clean/ReBuild/etc target.
+ - Both BuildConfigurations and PackageConfigurations should be defined in a `Configurations.props` file next to the project itself.  Why? Because these must be defined *before* the props which parse out configuration statically for scenario 1 above.  We could avoid this if we instead always had an outer build when that could dispatch to an inner Build/Clean/ReBuild/etc target.
  - AdditionalBuildConfigurations: build the best configuration for additional build configurations.  Only honored in traversal builds.  It creates a middle-ground between BuildConfiguration (build single best for one configuration) and BuildAllConfigurations.
 
 ### Configuration Targets
@@ -57,7 +57,7 @@ Supports copying to additional paths based on which configuration among `BuildCo
 ### BinPlacing Items
 
 - BinPlaceItem
-    - Typically comuputed by the BinPlacing targets to determine what assets to binplace.
+    - Typically computed by the BinPlacing targets to determine what assets to binplace.
     - Identity: source of file to binplace.  For example: the built output dll, pdb, content files, etc.
     - Metadata:
         - TargetPath: when specified can indicate the relative path, including filename, to place the item.
