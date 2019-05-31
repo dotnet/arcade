@@ -17,10 +17,12 @@ Write-Host $ToolsList
 $gdnConfigPath = Join-Path $GdnFolder "r"
 $ValidPath = Test-Path $GuardianCliLocation
 
-if ($ValidPath -eq $False) {
-  Write-Error "Invalid Guardian CLI Location."
+if ($ValidPath -eq $False)
+{
+  Write-Host "Invalid Guardian CLI Location."
+  exit 1
 }
-else{
+
 foreach ($tool in $ToolsList) {
   $gdnConfigFile = Join-Path $gdnConfigPath "$tool-configure.gdnconfig"
   $config = $False
@@ -30,7 +32,8 @@ foreach ($tool in $ToolsList) {
     Write-Host "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args `" TargetDirectory : $TargetDirectory `""
     & $GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args " TargetDirectory : $TargetDirectory "
     if ($LASTEXITCODE -ne 0) {
-      Write-Error "Guardian configure for $tool failed with exit code $LASTEXITCODE."
+      Write-Host "Guardian configure for $tool failed with exit code $LASTEXITCODE."
+      exit $LASTEXITCODE
     }
     $config = $True
   }
@@ -38,7 +41,8 @@ foreach ($tool in $ToolsList) {
     Write-Host "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args `" Target : $TargetDirectory `""
     & $GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args " Target : $TargetDirectory "
     if ($LASTEXITCODE -ne 0) {
-      Write-Error "Guardian configure for $tool failed with exit code $LASTEXITCODE."
+      Write-Host "Guardian configure for $tool failed with exit code $LASTEXITCODE."
+      exit $LASTEXITCODE
     }
     $config = $True
   }
@@ -47,13 +51,15 @@ foreach ($tool in $ToolsList) {
   if ($config) {
     & $GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel --config $gdnConfigFile
     if ($LASTEXITCODE -ne 0) {
-      Write-Error "Guardian run for $tool using $gdnConfigFile failed with exit code $LASTEXITCODE."
+      Write-Host "Guardian run for $tool using $gdnConfigFile failed with exit code $LASTEXITCODE."
+      exit $LASTEXITCODE
     }
   } else {
     & $GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel
     if ($LASTEXITCODE -ne 0) {
-      Write-Error "Guardian run for $tool failed with exit code $LASTEXITCODE."
+      Write-Host "Guardian run for $tool failed with exit code $LASTEXITCODE."
+      exit $LASTEXITCODE
     }
   }
 }
-}
+

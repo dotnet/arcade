@@ -9,19 +9,19 @@ Param(
   [string] $DncEngAccessToken,                          # Required: access token for dnceng; should be provided via KeyVault
   [string[]] $SourceToolsList,                          # Optional: list of SDL tools to run on source code
   [string[]] $ArtifactToolsList,                        # Optional: list of SDL tools to run on built artifacts
-  [bool] $TsaPublish=$False,                            # Optional: true will publish results to TSA; only set to true after onboarding to TSA
-  [string] $TsaBranchName=$env:BUILD_SOURCEBRANCHNAME,  # Optional: required for TSA publish; defaults to $(Build.SourceBranchName)
-  [string] $TsaRepositoryName,                          # Optional: TSA repository name; will be generated automatically if not submitted
+  [bool] $TsaPublish=$False,                            # Optional: true will publish results to TSA; only set to true after onboarding to TSA; TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaBranchName=$env:BUILD_SOURCEBRANCHNAME,  # Optional: required for TSA publish; defaults to $(Build.SourceBranchName); TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaRepositoryName,                          # Optional: TSA repository name; will be generated automatically if not submitted; TSA is the automated framework used to upload test results as bugs.
   [string] $BuildNumber=$env:BUILD_BUILDNUMBER,         # Optional: required for TSA publish; defaults to $(Build.BuildNumber)
   [bool] $UpdateBaseline=$False,                        # Optional: if true, will update the baseline in the repository; should only be run after fixing any issues which need to be fixed
-  [bool] $TsaOnboard=$False,                            # Optional: if true, will onboard the repository to TSA; should only be run once
-  [string] $TsaInstanceUrl,                             # Optional: only needed if TsaOnboard or TsaPublish is true; the instance-url registered with TSA
-  [string] $TsaCodebaseName,                            # Optional: only needed if TsaOnboard or TsaPublish is true; the name of the codebase registered with TSA
-  [string] $TsaProjectName,                             # Optional: only needed if TsaOnboard or TsaPublish is true; the name of the project registered with TSA
-  [string] $TsaNotificationEmail,                       # Optional: only needed if TsaOnboard is true; the email(s) which will receive notifications of TSA bug filings (e.g. alias@microsoft.com)
-  [string] $TsaCodebaseAdmin,                           # Optional: only needed if TsaOnboard is true; the aliases which are admins of the TSA codebase (e.g. DOMAIN\alias)
-  [string] $TsaBugAreaPath,                             # Optional: only needed if TsaOnboard is true; the area path where TSA will file bugs in AzDO
-  [string] $TsaIterationPath,                           # Optional: only needed if TsaOnboard is true; the iteration path where TSA will file bugs in AzDO
+  [bool] $TsaOnboard=$False,                            # Optional: if true, will onboard the repository to TSA; should only be run once; TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaInstanceUrl,                             # Optional: only needed if TsaOnboard or TsaPublish is true; the instance-url registered with TSA; TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaCodebaseName,                            # Optional: only needed if TsaOnboard or TsaPublish is true; the name of the codebase registered with TSA; TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaProjectName,                             # Optional: only needed if TsaOnboard or TsaPublish is true; the name of the project registered with TSA; TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaNotificationEmail,                       # Optional: only needed if TsaOnboard is true; the email(s) which will receive notifications of TSA bug filings (e.g. alias@microsoft.com); TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaCodebaseAdmin,                           # Optional: only needed if TsaOnboard is true; the aliases which are admins of the TSA codebase (e.g. DOMAIN\alias); TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaBugAreaPath,                             # Optional: only needed if TsaOnboard is true; the area path where TSA will file bugs in AzDO; TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaIterationPath,                           # Optional: only needed if TsaOnboard is true; the iteration path where TSA will file bugs in AzDO; TSA is the automated framework used to upload test results as bugs.
   [string] $GuardianLoggerLevel="Standard"              # Optional: the logger level for the Guardian CLI; options are Trace, Verbose, Standard, Warning, and Error
 )
 
@@ -29,7 +29,13 @@ $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
 $LASTEXITCODE = 0
 
-$RepoName = $Repository -replace '(.*?)-(.*)', '$1/$2';
+#Replace repo names to the format of org/repo
+if (!($Repository.contains('/'))) {
+  $RepoName = $Repository -replace '(.*?)-(.*)', '$1/$2';
+}
+else{
+  $RepoName = $Repository;
+}
 
 if ($GuardianPackageName) {
   $guardianCliLocation = Join-Path $NugetPackageDirectory (Join-Path $GuardianPackageName (Join-Path "tools" "guardian.cmd"))
@@ -41,9 +47,10 @@ $ValidPath = Test-Path $guardianCliLocation
 
 if ($ValidPath -eq $False)
 {
-  Write-Error "Invalid Guardian CLI Location."
+  Write-Host "Invalid Guardian CLI Location."
+  exit 1
 }
-else{
+
 & $(Join-Path $PSScriptRoot "init-sdl.ps1") -GuardianCliLocation $guardianCliLocation -Repository $RepoName -BranchName $BranchName -WorkingDirectory $ArtifactsDirectory -DncEngAccessToken $DncEngAccessToken -GuardianLoggerLevel $GuardianLoggerLevel
 $gdnFolder = Join-Path $ArtifactsDirectory ".gdn"
 
@@ -52,10 +59,12 @@ if ($TsaOnboard) {
     Write-Host "$guardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"$TsaInstanceUrl`" --project-name `"$TsaProjectName`" --area-path `"$TsaBugAreaPath`" --iteration-path `"$TsaIterationPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel"
     & $guardianCliLocation tsa-onboard --codebase-name "$TsaCodebaseName" --notification-alias "$TsaNotificationEmail" --codebase-admin "$TsaCodebaseAdmin" --instance-url "$TsaInstanceUrl" --project-name "$TsaProjectName" --area-path "$TsaBugAreaPath" --iteration-path "$TsaIterationPath" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel
     if ($LASTEXITCODE -ne 0) {
-      Write-Error "Guardian tsa-onboard failed with exit code $LASTEXITCODE."
+      Write-Host "Guardian tsa-onboard failed with exit code $LASTEXITCODE."
+      exit $LASTEXITCODE
     }
   } else {
-    Write-Error "Could not onboard to TSA -- not all required values ($$TsaCodebaseName, $$TsaNotificationEmail, $$TsaCodebaseAdmin, $$TsaBugAreaPath) were specified."
+    Write-Host "Could not onboard to TSA -- not all required values ($$TsaCodebaseName, $$TsaNotificationEmail, $$TsaCodebaseAdmin, $$TsaBugAreaPath) were specified."
+    exit 1
   }
 }
 
@@ -78,10 +87,11 @@ if ($TsaPublish) {
     Write-Host "$guardianCliLocation tsa-publish --all-tools --repository-name `"$TsaRepositoryName`" --branch-name `"$TsaBranchName`" --build-number `"$BuildNumber`" --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"$TsaInstanceUrl`" --project-name `"$TsaProjectName`" --area-path `"$TsaBugAreaPath`" --iteration-path `"$TsaIterationPath`" --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel"
     & $guardianCliLocation tsa-publish --all-tools --repository-name "$TsaRepositoryName" --branch-name "$TsaBranchName" --build-number "$BuildNumber" --codebase-name "$TsaCodebaseName" --notification-alias "$TsaNotificationEmail" --codebase-admin "$TsaCodebaseAdmin" --instance-url "$TsaInstanceUrl" --project-name "$TsaProjectName" --area-path "$TsaBugAreaPath" --iteration-path "$TsaIterationPath" --working-directory $ArtifactsDirectory  --logger-level $GuardianLoggerLevel
     if ($LASTEXITCODE -ne 0) {
-      Write-Error "Guardian tsa-publish failed with exit code $LASTEXITCODE."
+      Write-Host "Guardian tsa-publish failed with exit code $LASTEXITCODE."
+      exit $LASTEXITCODE
     }
   } else {
-    Write-Error "Could not publish to TSA -- not all required values ($$TsaBranchName, $$BuildNumber) were specified."
+    Write-Host "Could not publish to TSA -- not all required values ($$TsaBranchName, $$BuildNumber) were specified."
+    exit 1
   }
-}
 }
