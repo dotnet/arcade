@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -20,14 +21,14 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                 await ValidateExpectedTestFailuresAsync(client);
                 return;
             }
-            var data = await RetryAsync(
+            JObject data = await RetryAsync(
                 async () =>
                 {
                     using (var req = new HttpRequestMessage(
                         HttpMethod.Get,
                         $"{CollectionUri}{TeamProject}/_apis/test/resultsummarybybuild?buildId={BuildId}&api-version=5.1-preview.2"))
                     {
-                        using (var res = await client.SendAsync(req))
+                        using (HttpResponseMessage res = await client.SendAsync(req))
                         {
                             return await ParseResponseAsync(req, res);
                         }
@@ -36,11 +37,11 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             if (data != null && data["aggregatedResultsAnalysis"] is JObject aggregatedResultsAnalysis &&
                 aggregatedResultsAnalysis["resultsByOutcome"] is JObject resultsByOutcome)
             {
-                foreach (var property in resultsByOutcome.Properties())
+                foreach (JProperty property in resultsByOutcome.Properties())
                 {
-                    var outcome = property.Name.ToLowerInvariant();
+                    string outcome = property.Name.ToLowerInvariant();
                     var outcomeResults = (JObject)property.Value;
-                    var count = outcomeResults["count"].ToObject<int>();
+                    int count = outcomeResults["count"].ToObject<int>();
                     var message = $"Build has {count} {outcome} tests.";
                     if (outcome == "failed")
                     {
@@ -62,7 +63,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         {
             foreach (var runId in TestRunIds)
             {
-                var data = await RetryAsync(
+                JObject data = await RetryAsync(
                     async () =>
                     {
                         using (var req = new HttpRequestMessage(
@@ -70,7 +71,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                             $"{CollectionUri}{TeamProject}/_apis/test/runs/{runId}/results?api-version=5.0&outcomes=Failed")
                         )
                         {
-                            using (var res = await client.SendAsync(req))
+                            using (HttpResponseMessage res = await client.SendAsync(req))
                             {
                                 return await ParseResponseAsync(req, res);
                             }
@@ -78,7 +79,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     });
 
                 var failedResults = (JArray) data["value"];
-                var expectedFailures = ExpectedTestFailures.Select(i => i.GetMetadata("Identity")).ToHashSet();
+                HashSet<string> expectedFailures = ExpectedTestFailures.Select(i => i.GetMetadata("Identity")).ToHashSet();
                 foreach (var failedResult in failedResults)
                 {
                     var testName = (string) failedResult["automatedTestName"];
@@ -93,7 +94,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     }
                 }
 
-                foreach (var expectedFailure in expectedFailures)
+                foreach (string expectedFailure in expectedFailures)
                 {
                     Log.LogError($"TestRun {runId}: Test {expectedFailure} was expected to fail but did not fail.");
                 }
