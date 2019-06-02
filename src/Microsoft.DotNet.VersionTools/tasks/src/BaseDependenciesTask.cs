@@ -297,7 +297,7 @@ namespace Microsoft.DotNet.Build.Tasks.VersionTools
                 Log.LogError(
                     $"Metadata {ReplacementSubstituteNewMetadataName} supplied for updater " +
                     $"{step.ItemSpec} without {ReplacementSubstituteOldMetadataName}. " +
-                    "It is impossbile to replace the empty string with something.");
+                    "It is impossible to replace the empty string with something.");
             }
 
             return updater;

@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.SignTool
 
         /// <summary>
         /// List of file names that should be ignored when checking
-        /// for correcteness of strong name signature.
+        /// for correctness of strong name signature.
         /// </summary>
         public string[] ItemsToSkipStrongNameCheck { get; set; }
 

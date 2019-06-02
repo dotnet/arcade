@@ -233,7 +233,7 @@ namespace Microsoft.DotNet.GenFacades.ILRewriter
         /// <summary>
         /// Given dllInputPath determine if it is portable.  If so convert it *\WindowsPdb\*.pdb and update 'pdbInputPath' to 
         /// point to this converted file.
-        /// Returns true if the conversion was done (that is the original file was protable).  
+        /// Returns true if the conversion was done (that is the original file was portable).  
         /// 'dllInputPath' is the DLL that goes along with 'pdbInputPath'.  
         /// </summary>
         private static bool ConvertFromPortableIfNecessary(string dllInputPath, ref string pdbInputPath)

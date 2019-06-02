@@ -67,7 +67,7 @@ namespace Microsoft.SignCheck.Interop.PortableExecutable
         }
 
         /// <summary>
-        /// Exposes access to the The CLR runtime header.
+        /// Exposes access to the CLR runtime header.
         /// </summary>
         public IMAGE_COR20_HEADER ImageCor20Header
         {

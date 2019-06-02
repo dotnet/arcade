@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -15,7 +15,7 @@ using Xunit.Sdk;
 /// where people will typo on the "Category" key part of the Trait. 
 /// On order to achieve the same behaviour as on MSTest, a custom [TestCategory] was created 
 /// to mimic the MSTest one and avoid replace it on every existent test. 
-/// The tests can be filtered by xunit runners by usage of "-trait" on the command line with the expresion like
+/// The tests can be filtered by xunit runners by usage of "-trait" on the command line with the expression like
 /// <code>-trait "Category=BVT"</code> for example that will only run the tests with [TestCategory("BVT")] on it.
 /// </summary>
 

@@ -619,7 +619,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     return true;
                 }
 
-                // inbox if explict entry is greater than or equal to current
+                // inbox if explicit entry is greater than or equal to current
                 return permitRevisions ? 
                     VersionUtility.IsCompatibleApiVersion(assemblyVersionInbox, assemblyVersion) : 
                     assemblyVersionInbox >= assemblyVersion;

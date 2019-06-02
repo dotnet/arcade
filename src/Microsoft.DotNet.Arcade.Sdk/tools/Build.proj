@@ -12,7 +12,7 @@
     DotNetRestoreSourcePropsPath    Overrides of ResourceSources (list of NuGet feeds to download dependencies from)
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetBuildOffline              Building without access to NuGet servers.
-    DotNetOutputBlobFeedDir         Directory to publish Source Build assets to (packages, symbol pacakges, installers, etc.).
+    DotNetOutputBlobFeedDir         Directory to publish Source Build assets to (packages, symbol packages, installers, etc.).
     DotNetPublishUsingPipelines     Publish assets using Azure DevOps release pipelines.
     DotNetArtifactsCategory         Type of assets being produced by the build.
     DotNetPublishToBlobFeed         Publish assets to blob feed using DotNetPublishBlobFeedUrl and DotNetPublishBlobFeedKey.
@@ -87,7 +87,7 @@
     <ItemGroup>
       <_SolutionBuildTargets Include="Rebuild" Condition="'$(Rebuild)' == 'true'" />
       <_SolutionBuildTargets Include="Build" Condition="'$(Build)' == 'true' and '$(Rebuild)' != 'true'" />
-      <!-- Extensbility point to run addition build targets after build. -->
+      <!-- Extensibility point to run addition build targets after build. -->
       <_SolutionBuildTargets Include="@(SolutionBuildTargets)" />
       <!-- Deploy target is set up to chain after Build so that F5 in VS works. -->
       <_SolutionBuildTargets Include="Test" Condition="'$(Test)' == 'true'" />

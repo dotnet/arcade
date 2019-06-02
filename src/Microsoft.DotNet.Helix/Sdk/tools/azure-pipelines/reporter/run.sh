@@ -12,7 +12,7 @@ if [ ! -f $ENV_PATH/bin/python ]; then
 fi
 
 if $ENV_PATH/bin/python -c 'import future'; then
-  echo "future module already avaliable"
+  echo "future module already available"
 else
   $ENV_PATH/bin/python -m pip install future==0.17.1
 fi

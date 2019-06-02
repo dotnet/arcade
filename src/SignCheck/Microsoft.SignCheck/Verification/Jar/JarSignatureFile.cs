@@ -159,7 +159,7 @@ namespace Microsoft.SignCheck.Verification.Jar
                 }
                 else
                 {
-                    // Signatue file contains an entry that's not present in the MANIFEST.MF file
+                    // Signature file contains an entry that's not present in the MANIFEST.MF file
                     JarError.AddError(String.Format(JarResources.MissingManifestEntry, signatureFileEntry.Name, SignatureFilePath));
                     return false;
                 }

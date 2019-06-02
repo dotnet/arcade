@@ -178,7 +178,7 @@
     <value>Timestamp ({0}) outside validity period ({1} to {2}).</value>
   </data>
   <data name="DetailTimestampSkipped" xml:space="preserve">
-    <value>Timestmap: Skipped</value>
+    <value>Timestamp: Skipped</value>
   </data>
   <data name="DetailVsixMultipleSignatures" xml:space="preserve">
     <value>Multiple signatures found.</value>

@@ -149,7 +149,7 @@ namespace Microsoft.DotNet.GitSync
                         else
                         {
                             UpdateEntities(_listCommits, "Commits are already Mirrored");
-                            s_logger.Info($"Commit Entries modififed to show mirrored in the azure table");
+                            s_logger.Info($"Commit Entries modified to show mirrored in the azure table");
                         }
                     }
 
@@ -292,7 +292,7 @@ namespace Microsoft.DotNet.GitSync
             };
             s_logger.Info($"Pull request #{pr.Number} created for {prBranch}");
             UpdateEntities(_listCommits, pr.Url.ToString());
-            s_logger.Info($"Commit Entries modififed to show mirrored in the azure table");
+            s_logger.Info($"Commit Entries modified to show mirrored in the azure table");
             ConfigFile.Save(targetRepo.Configuration);
         }
 

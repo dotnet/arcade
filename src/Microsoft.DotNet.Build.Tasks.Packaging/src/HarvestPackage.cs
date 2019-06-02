@@ -295,7 +295,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             var desktopRefVersions = liveDesktopDlls.Where(d => d.IsRef && d.Version != null).Select(d => d.Version);
             var desktopLibVersions = liveDesktopDlls.Where(d => !d.IsRef && d.Version != null).Select(d => d.Version);
             
-            // find destkop assemblies with no matching lib.
+            // find desktop assemblies with no matching lib.
             var preserveRefVersion = new HashSet<Version>(desktopLibVersions);
             preserveRefVersion.ExceptWith(desktopRefVersions);
 

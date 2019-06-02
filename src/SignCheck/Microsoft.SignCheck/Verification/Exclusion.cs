@@ -60,7 +60,7 @@ namespace Microsoft.SignCheck.Verification
         }
 
         /// <summary>
-        /// Returns an array of parent files or null if there are no entries. Each parent file is spearated by '|'.
+        /// Returns an array of parent files or null if there are no entries. Each parent file is separated by '|'.
         /// </summary>
         public string[] ParentFiles
         {

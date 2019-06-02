@@ -8,7 +8,7 @@
     <_GetTestsToRunTarget Condition="'$(TargetFrameworks)' == ''">_InnerGetTestsToRun</_GetTestsToRunTarget>
     <_GetTestsToRunTarget Condition="'$(TargetFrameworks)' != ''">_OuterGetTestsToRun</_GetTestsToRunTarget>
 
-    <!-- The runtime to run tests on: 'Core', 'Mono', 'Full' (dekstop FX). -->
+    <!-- The runtime to run tests on: 'Core', 'Mono', 'Full' (desktop FX). -->
     <TestRuntime Condition="'$(TestRuntime)' == '' and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'">Core</TestRuntime>
     <TestRuntime Condition="'$(TestRuntime)' == '' and '$(MSBuildRuntimeType)' == 'Mono'">Mono</TestRuntime>
     <TestRuntime Condition="'$(TestRuntime)' == '' and '$(OS)' == 'Windows_NT'">Full</TestRuntime>

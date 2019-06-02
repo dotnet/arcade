@@ -14,7 +14,7 @@ namespace Microsoft.SignCheck.Verification
 {
     public class SignatureVerificationManager
     {
-        // Dictionary holding the known verifiers, indexed by file extenion
+        // Dictionary holding the known verifiers, indexed by file extension
         private static Dictionary<string, FileVerifier> _fileVerifiers = null;
         private static FileVerifier _unsupportedFileVerifier = new UnsupportedFileVerifier();
         private List<SignatureVerificationResult> _results;

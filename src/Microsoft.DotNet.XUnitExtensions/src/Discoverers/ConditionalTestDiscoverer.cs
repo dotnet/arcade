@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.XUnitExtensions
     {
         // This helper method evaluates the given condition member names for a given set of test cases.
         // If any condition member evaluates to 'false', the test cases are marked to be skipped.
-        // The skip reason is the collection of all the condition members that evalated to 'false'.
+        // The skip reason is the collection of all the condition members that evaluated to 'false'.
         internal static IEnumerable<IXunitTestCase> Discover(
                                                         ITestFrameworkDiscoveryOptions discoveryOptions,
                                                         IMessageSink diagnosticMessageSink,

@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.SignTool
         public static readonly SignInfo Ignore = new SignInfo(ignoreThisFile: true, alreadySigned: false);
 
         /// <summary>
-        /// Used to flag that the the file is already signed.
+        /// Used to flag that the file is already signed.
         /// </summary>
         public static readonly SignInfo AlreadySigned = new SignInfo(ignoreThisFile: false, alreadySigned: true);
 

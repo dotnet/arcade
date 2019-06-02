@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                     {
                                         var propertyName = item.Key.Trim('$', '(', ')');
 
-                                        // Unable to parse version, try to find the corresponding identifer from the MSBuild loaded MSBuild properties
+                                        // Unable to parse version, try to find the corresponding identifier from the MSBuild loaded MSBuild properties
                                         string evaluatedValue = properties[propertyName].First().EvaluatedValue;
                                         if (!SemanticVersion.TryParse(evaluatedValue, out version))
                                         {

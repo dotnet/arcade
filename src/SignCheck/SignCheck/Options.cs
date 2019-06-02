@@ -20,7 +20,7 @@ namespace SignCheck
 
         [Option('f', "file-status",
             Separator = ',',
-            HelpText = "Report the status of a speficic set of files. Any combination of the following values are allowed. Values are separated by a ','. 'UnsignedFiles', 'SignedFiles', 'SkippedFiles', 'ExcludedFiles', 'AllFiles'. Default is 'UnsignedFiles'")]
+            HelpText = "Report the status of a specific set of files. Any combination of the following values are allowed. Values are separated by a ','. 'UnsignedFiles', 'SignedFiles', 'SkippedFiles', 'ExcludedFiles', 'AllFiles'. Default is 'UnsignedFiles'")]
         public IEnumerable<string> FileStatus
         {
             get;

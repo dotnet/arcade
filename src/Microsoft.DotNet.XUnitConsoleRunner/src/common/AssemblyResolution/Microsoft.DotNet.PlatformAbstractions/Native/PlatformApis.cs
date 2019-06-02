@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -120,7 +120,7 @@ namespace Internal.Microsoft.DotNet.PlatformAbstractions.Native
 
         // For some distros, we don't want to use the full version from VERSION_ID. One example is
         // Red Hat Enterprise Linux, which includes a minor version in their VERSION_ID but minor
-        // versions are backwards compatable.
+        // versions are backwards compatible.
         //
         // In this case, we'll normalized RIDs like 'rhel.7.2' and 'rhel.7.3' to a generic
         // 'rhel.7'. This brings RHEL in line with other distros like CentOS or Debian which

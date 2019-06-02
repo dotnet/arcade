@@ -170,7 +170,7 @@ namespace Microsoft.Cci.Writers
                 {
                     var genericTypedFields = excludedFields.Where(f => f.Type.UnWrap().IsGenericParameter());
 
-                    // Compiler needs to see any fields, even private, that have generic arugments to be able
+                    // Compiler needs to see any fields, even private, that have generic arguments to be able
                     // to validate there aren't any struct layout cycles
                     foreach (var genericField in genericTypedFields)
                         newFields.Add(genericField);
@@ -232,7 +232,7 @@ namespace Microsoft.Cci.Writers
 
             if (_styleWriter != null)
             {
-                // Favor overrides over interface implemenations (i.e. consider override Dispose() as an override and not an interface implementation)
+                // Favor overrides over interface implementations (i.e. consider override Dispose() as an override and not an interface implementation)
                 if (this.HighlightBaseMembers && member.IsOverride())
                     style = _styleWriter.StartStyle(SyntaxStyle.InheritedMember);
                 else if (this.HighlightInterfaceMembers && member.IsInterfaceImplementation())

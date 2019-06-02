@@ -34,7 +34,7 @@
   </PropertyGroup>
 
   <!--
-    We need to write out this sentinel file so that when ApplyOptimizations runs and compares the intermediate assemby location
+    We need to write out this sentinel file so that when ApplyOptimizations runs and compares the intermediate assembly location
     against itself the PostCompileBinaryModificationSentinelFile will have a newer timestamp allowing the target to be run.
   -->
   <Target Name="PostCompileBinaryModification"

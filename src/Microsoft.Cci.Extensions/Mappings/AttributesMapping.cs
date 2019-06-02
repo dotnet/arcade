@@ -90,7 +90,7 @@ namespace Microsoft.Cci.Mappings
 
         public bool Equals(AttributeGroup that)
         {
-            // For this comparision we want to use the full decl string for the attribute not just the docid of the constructor
+            // For this comparison we want to use the full decl string for the attribute not just the docid of the constructor
             return this.Attributes.SequenceEqual(that.Attributes, _comparer);
         }
     }

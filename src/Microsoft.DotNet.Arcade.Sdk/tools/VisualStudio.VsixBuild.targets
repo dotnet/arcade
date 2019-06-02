@@ -16,7 +16,7 @@
          This stub file is used by VisualStudio.Insertion.proj to compose insertion components.
          
       2) SwixBuild
-         Builds a Willow compoment out of SwrFiles.
+         Builds a Willow component out of SwrFiles.
          Writes a stub file to component intermediate directory.
   -->
   
@@ -26,7 +26,7 @@
       The build produces VSIXes with the flag on and FinalizeInsertionVsixFiles target then makes a copy to VisualStudioSetupInsertionPath
       and updates the manifest.
       Instead the VSIX installer should allow to override the experimental flag, so that we can only produce a single VSIX and
-      build VSIX that is going to be inserted into VS directrly to directory $(VisualStudioSetupInsertionPath).
+      build VSIX that is going to be inserted into VS directly to directory $(VisualStudioSetupInsertionPath).
     -->
     <_TargetVsixContainerDir>$(VisualStudioSetupOutputPath)</_TargetVsixContainerDir>
 

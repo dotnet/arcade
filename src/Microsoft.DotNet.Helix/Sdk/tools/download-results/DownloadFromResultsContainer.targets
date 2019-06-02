@@ -19,7 +19,7 @@
       <_shouldDownloadResults Condition="'@(_workItemsWithDownloadMetadata)' != '' AND '$(HelixResultsDestinationDir)' != ''">true</_shouldDownloadResults>
     </PropertyGroup>
 
-    <Warning Text="DownloadFromResultsContainer will be skipped for job %(SentJob.Identity) becaue results container uri is empty" Condition="'%(SentJob.ResultsContainerUri)' == '' AND $(_shouldDownloadResults)" />
+    <Warning Text="DownloadFromResultsContainer will be skipped for job %(SentJob.Identity) because results container uri is empty" Condition="'%(SentJob.ResultsContainerUri)' == '' AND $(_shouldDownloadResults)" />
 
     <DownloadFromResultsContainer
         Condition="$(_shouldDownloadResults) AND '%(SentJob.ResultsContainerUri)' != ''"

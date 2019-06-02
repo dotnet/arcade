@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
             if (versionsToConsider.Any())
             {
-                // use the version of the higest reference assembly;
+                // use the version of the highest reference assembly;
                 Version = versionsToConsider.Max().ToString();
             }
 

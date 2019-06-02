@@ -145,7 +145,7 @@ namespace Microsoft.Cci.Writers.CSharp
             }
             else
             {
-                // For In/Out we should not emit them until we find a scenario that is needs thems.
+                // For In/Out we should not emit them until we find a scenario that is needs them.
                 //if (parameter.IsIn)
                 //   WriteFakeAttribute("System.Runtime.InteropServices.In", writeInline: true);
                 //if (parameter.IsOut)

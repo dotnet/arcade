@@ -43,7 +43,7 @@ namespace Microsoft.SignCheck.Verification
                 pwszURLReference = IntPtr.Zero
             };
 
-            // Potential memory leak. Need to invetigate
+            // Potential memory leak. Need to investigate
             Marshal.StructureToPtr(fileInfo, data.pFile, false);
 
             IntPtr pGuid = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(Guid)));
@@ -142,7 +142,7 @@ namespace Microsoft.SignCheck.Verification
             var signedCms = new SignedCms();
             signedCms.Decode(vData);
 
-            // Timestamp informaiton can be stored in multiple sections.
+            // Timestamp information can be stored in multiple sections.
             // A single SHA1 stores the timestamp as a counter sign in the unsigned attributes
             // Multiple authenticode signatures will store additional information as a nested signature
             // In the case of SHA2 signatures, we need to find and decode the timestamp token (RFC3161).
