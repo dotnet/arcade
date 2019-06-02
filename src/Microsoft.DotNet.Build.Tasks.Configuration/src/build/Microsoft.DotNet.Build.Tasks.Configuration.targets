@@ -13,7 +13,8 @@
   </PropertyGroup>
 
   <!-- Runs as an inital target, parses the BuildConfigurations string and maps it to TargetFrameworks. -->
-  <Target Name="ParseBuildConfigurations">
+  <Target Name="ParseBuildConfigurations"
+          Condition="'$(SkipParseBuildConfigurations)' != 'true'">
     <ParseBuildConfigurations Properties="@(Property)"
                               PropertyValues="@(PropertyValue)"
                               BuildConfigurations="$(BuildConfigurations)">
