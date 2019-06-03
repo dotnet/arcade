@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Git.IssueManager.Clients
 
         private static HttpClient GetHttpClient(string accountName, string projectName, string personalAccessToken)
         {
-            HttpClient client = new HttpClient
+            HttpClient client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true })
             {
                 BaseAddress = new Uri($"https://dev.azure.com/{accountName}/{projectName}/")
             };

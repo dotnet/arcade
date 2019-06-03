@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.DotNet.VersionTools.src.Util;
 
 namespace Microsoft.DotNet.VersionTools
 {
@@ -31,7 +32,7 @@ namespace Microsoft.DotNet.VersionTools
             string rawBuildInfoBaseUrl,
             bool fetchLatestReleaseFile = true)
         {
-            using (var client = new HttpClient())
+            using (var client = X509Helper.GetHttpClientWithCertRevocation())
             {
                 return GetAsync(
                     client,
