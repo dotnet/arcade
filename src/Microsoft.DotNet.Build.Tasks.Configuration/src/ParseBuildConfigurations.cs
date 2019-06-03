@@ -35,7 +35,10 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                     Log.LogError($"Could not derive a TargetFramework from BuildConfiguration '{buildConfiguration}'.");
                 }
 
-                targetFrameworks.Add(targetFramework);
+                if (!targetFrameworks.Contains(targetFramework))
+                {
+                    targetFrameworks.Add(targetFramework);
+                }
             }
 
             TargetFrameworks = string.Join(";", targetFrameworks);
