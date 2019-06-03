@@ -11,7 +11,7 @@ using System.Text;
 
 namespace Microsoft.DotNet.Build.Tasks.Configuration
 {
-    public class ParseBuildConfigurations : ConfigurationTask
+    public class DeriveTargetFrameworks : ConfigurationTask
     {
         [Required]
         public string[] BuildConfigurations { get; set; }

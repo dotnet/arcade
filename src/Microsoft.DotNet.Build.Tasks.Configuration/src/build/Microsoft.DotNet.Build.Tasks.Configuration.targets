@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
-<Project InitialTargets="ParseBuildConfigurations">
+<Project InitialTargets="DeriveTargetFrameworks">
   <UsingTask TaskName="GenerateConfigurationProps" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
   <UsingTask TaskName="FindBestConfigurations" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
   <UsingTask TaskName="NormalizeConfigurations" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
   <UsingTask TaskName="UpdateVSConfigurations" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
-  <UsingTask TaskName="ParseBuildConfigurations" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
+  <UsingTask TaskName="DeriveTargetFrameworks" AssemblyFile="$(DotNetBuildTasksConfigurationDll)"/>
 
   <PropertyGroup>
     <_traversalBuildConfigurations>$(BuildConfiguration)</_traversalBuildConfigurations>
@@ -13,13 +13,13 @@
   </PropertyGroup>
 
   <!-- Runs as an inital target, parses the BuildConfigurations string and maps it to TargetFrameworks. -->
-  <Target Name="ParseBuildConfigurations"
-          Condition="'$(SkipParseBuildConfigurations)' != 'true'">
-    <ParseBuildConfigurations Properties="@(Property)"
-                              PropertyValues="@(PropertyValue)"
-                              BuildConfigurations="$(BuildConfigurations)">
+  <Target Name="DeriveTargetFrameworks"
+          Condition="'$(SkipDeriveTargetFrameworks)' != 'true'">
+    <DeriveTargetFrameworks Properties="@(Property)"
+                            PropertyValues="@(PropertyValue)"
+                            BuildConfigurations="$(BuildConfigurations)">
       <Output TaskParameter="TargetFrameworks" PropertyName="TargetFrameworks" />
-    </ParseBuildConfigurations>
+    </DeriveTargetFrameworks>
   </Target>
 
   <!-- Runs during traversal when BuildAllConfigurations is set to expand each project
@@ -157,6 +157,11 @@
        <PackageConfigurations>@(_packageConfigurations)</PackageConfigurations>
      </PropertyGroup>
   </Target>
+
+  <Target Name="AnnotateImplicitProjectReference"
+          DependsOnTargets="AnnotateProjectReference"
+          AfterTargets="IncludeTransitiveProjectReferences"
+          Condition="$(DisableTransitiveProjectReferences) != 'true'" />
 
   <!-- Runs in a leaf project (csproj) to determine best configuration for ProjectReferences -->
   <Target Name="AnnotateProjectReference"
