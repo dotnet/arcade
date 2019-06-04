@@ -158,14 +158,12 @@
      </PropertyGroup>
   </Target>
 
-  <Target Name="AnnotateImplicitProjectReference"
-          DependsOnTargets="AnnotateProjectReference"
-          AfterTargets="IncludeTransitiveProjectReferences"
-          Condition="$(DisableTransitiveProjectReferences) != 'true'" />
-
-  <!-- Runs in a leaf project (csproj) to determine best configuration for ProjectReferences -->
+  <!--
+    Runs in a leaf project (csproj) to determine best configuration for ProjectReferences.
+    Make sure to run late enough for transitive dependencies which runs before AssignProjectConfiguration.
+  -->
   <Target Name="AnnotateProjectReference"
-          BeforeTargets="AssignProjectConfiguration"
+          AfterTargets="IncludeTransitiveProjectReferences"
           Condition="'@(ProjectReference)' != ''"
           Inputs="%(ProjectReference.Identity)"
           Outputs="unused">
