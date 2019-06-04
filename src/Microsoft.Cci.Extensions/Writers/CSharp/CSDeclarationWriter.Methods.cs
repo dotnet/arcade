@@ -22,6 +22,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
             WriteAttributes(method.Attributes);
             WriteAttributes(method.SecurityAttributes);
+            WriteAttributes(method.ReturnValueAttributes, prefix: "return");
 
             if (method.IsDestructor())
             {
@@ -127,8 +128,6 @@ namespace Microsoft.Cci.Writers.CSharp
 
             if (!isOperator && !method.IsConstructor)
             {
-                WriteAttributes(method.ReturnValueAttributes, true);
-
                 if (method.Attributes.HasIsReadOnlyAttribute() && (LangVersion >= LangVersion8_0))
                 {
                     WriteKeyword("readonly");

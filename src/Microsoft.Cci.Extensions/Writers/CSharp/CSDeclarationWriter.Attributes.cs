@@ -133,9 +133,10 @@ namespace Microsoft.Cci.Writers.CSharp
                 WriteAttribute(attribute, prefix);
                 first = false;
             }
-            WriteSymbol("]");
+            WriteSymbol("]", addSpace: writeInline);
             if (!writeInline)
                 _writer.WriteLine();
+
         }
 
         public void WriteAttribute(ICustomAttribute attribute, string prefix = null, SecurityAction action = SecurityAction.ActionNil)
@@ -143,7 +144,7 @@ namespace Microsoft.Cci.Writers.CSharp
             if (!string.IsNullOrEmpty(prefix))
             {
                 WriteKeyword(prefix);
-                WriteSymbol(":");
+                WriteSymbol(":", addSpace: true);
             }
             WriteTypeName(attribute.Constructor.ContainingType, noSpace: true); // Should we strip Attribute from name?
 

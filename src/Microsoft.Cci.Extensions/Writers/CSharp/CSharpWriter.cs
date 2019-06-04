@@ -173,7 +173,10 @@ namespace Microsoft.Cci.Writers
                     // Compiler needs to see any fields, even private, that have generic arguments to be able
                     // to validate there aren't any struct layout cycles
                     foreach (var genericField in genericTypedFields)
-                        newFields.Add(genericField);
+                    {
+                        IFieldDefinition fieldType = DummyFieldWriterHelper(parentType, System.Linq.Enumerable.Empty<IFieldDefinition>(), genericField.Type, genericField.Name.Value);
+                        newFields.Add(fieldType);
+                    }
 
                     // For definiteassignment checks the compiler needs to know there is a private field
                     // that has not been initialized so if there are any we need to add a dummy private
