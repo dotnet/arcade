@@ -6,7 +6,7 @@
   <PropertyGroup>
     <RunArguments>"$(TestAssembly)" --target "$(RunCommand)" --targetargs "$(RunArguments)" --format "$(CoverageFormat)" --output "$(CoverageOutputPath)" --threshold "$(CoverageThreshold)" --threshold-type "$(CoverageThresholdType)"</RunArguments>
     <RunArguments Condition="'$(CoverageSourceLink)' == 'true'">$(RunArguments) --use-source-link</RunArguments>
-    <RunCommand>"$(RunScriptHost)" tool run coverlet</RunCommand>
+    <RunCommand>"$(DotNetTool)" tool run coverlet</RunCommand>
   </PropertyGroup>
 
   <Target Name="SetupCoverageFilter">
