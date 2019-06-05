@@ -1,5 +1,5 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
-<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="PublishSymbols">
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Execute">
   <!--
     This MSBuild file is intended to be used as the body of the default 
     publishing release pipeline. The release pipeline will use this file
@@ -29,7 +29,7 @@
 
   <Import Project="$(NuGetPackageRoot)microsoft.symboluploader.build.task\$(MicrosoftSymbolUploaderBuildTaskVersion)\build\PublishSymbols.targets" />
     
-  <Target Name="PublishSymbols">
+  <Target Name="Execute">
     <ItemGroup>
       <FilesToPublishToSymbolServer Include="$(PDBArtifactsDirectory)\*.pdb"/>
       <PackagesToPublishToSymbolServer Include="$(BlobBasePath)\*.symbols.nupkg"/>

@@ -1,5 +1,5 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
-<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="PublishToFeed">
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Execute">
   <!--
     This MSBuild file is intended to be used as the body of the default 
     publishing release pipeline. The release pipeline will use this file
@@ -14,7 +14,7 @@
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets" />
 
-  <Target Name="PublishToFeed">
+  <Target Name="Execute">
     <Error Condition="'$(ArtifactsCategory)' == ''" Text="ArtifactsCategory: The artifacts' category produced by the build wasn't provided." />
     <Error Condition="'$(AccountKeyToStaticFeed)' == ''" Text="AccountKeyToStaticFeed: Account key for target feed wasn't provided." />
     <Error Condition="'$(ManifestsBasePath)' == ''" Text="Full path to asset manifests directory wasn't provided." />
