@@ -18,8 +18,7 @@ info-5.1-5.el7.aarch64.rpm
 coreutils-8.22-23.el7.aarch64.rpm
 chkconfig-1.7.4-1.el7.aarch64.rpm
 
-#
-NSS
+# NSS
 nss-sysinit-3.36.0-7.el7_5.aarch64.rpm
 nss-util-3.36.0-1.el7_5.aarch64.rpm
 nss-softokn-3.36.0-5.el7_5.aarch64.rpm
@@ -29,8 +28,7 @@ nss-3.36.0-7.el7_5.aarch64.rpm
 nss-pem-1.0.3-5.el7.aarch64.rpm
 nspr-4.19.0-1.el7_5.aarch64.rpm
 
-#
-curl
+# curl
 curl-7.29.0-51.el7.aarch64.rpm
 openssl-libs-1.0.2k-16.el7.aarch64.rpm
 libcurl-7.29.0-51.el7.aarch64.rpm
@@ -38,8 +36,7 @@ libssh2-1.4.3-12.el7.aarch64.rpm
 openldap-2.4.44-20.el7.aarch64.rpm
 cyrus-sasl-lib-2.1.26-23.el7.aarch64.rpm
 
-#
-RPM
+# rpm
 rpm-libs-4.11.3-35.el7.aarch64.rpm
 libselinux-2.5-14.1.el7.aarch64.rpm
 libcap-2.22-9.el7.aarch64.rpm

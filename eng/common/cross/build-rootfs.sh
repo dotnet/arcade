@@ -31,6 +31,8 @@ __AlpinePackages+=" llvm-dev"
 __AlpinePackages+=" llvm-dev"
 
 # symlinks fixer
+__UbuntuPackages+=" symlinks"
+
 __CentosPackages+=" gcc"
 
 # CoreCLR and CoreFX dependencies
@@ -44,7 +46,7 @@ __AlpinePackages+=" libunwind-dev"
 __AlpinePackages+=" lttng-ust-dev"
 
 __CentosPackages+=" gettext-devel"
-__AlpinePackages+=" libicu-devel"
+__CentosPackages+=" libicu-devel"
 __CentosPackages+=" libunwind-devel"
 
 # CoreFX dependencies
