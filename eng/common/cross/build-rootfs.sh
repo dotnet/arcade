@@ -262,19 +262,20 @@ elif [[ "$__LinuxCodeName" == "centos7" ]]; then
 
     # Phase 1 is done. We should have enough to run commands from with roofs
 
-    #cp $__CrossDir/$__BuildArch/CentOS7* $__RootfsDir/etc/yum.repos.d
-
     # update packages to current and fix any broken  dependencies from stage 1
     chroot $__RootfsDir yum update -y
     chroot $__RootfsDir yum -y reinstall rpm rpm-python yum yum-utils nss ca-certificates
     chroot $__RootfsDir yum --assumeyes install $__CentosPackages
 
-    # Centos has symbolic links to /lib... and that does work only in chroot but not with sysfs.
+    # Centos has symbolic links to /lib... and that does work only in chroot but not with sysroot.
     rm -f $__RootfsDir/usr/lib/gcc/$__CentosArch-redhat-linux/*/libgcc_s.so
     (cd $__RootfsDir/usr/lib/gcc/$__CentosArch-redhat-linux/4.8.5/ ; cp $__RootfsDir/lib64/libgcc_s-*.so.* libgcc_s.so)
 
     # build en_US.UTF-8 locale
     localedef -v -c -i en_US -f UTF-8 en_US.UTF-8
+
+    # stop resolver with generic one.
+    echo "nameserver 8.8.8.8" > $__RootfsDir/etc/resolv.conf
 elif [[ -n $__LinuxCodeName ]]; then
     qemu-debootstrap --arch $__UbuntuArch $__LinuxCodeName $__RootfsDir $__UbuntuRepo
     cp $__CrossDir/$__BuildArch/sources.list.$__LinuxCodeName $__RootfsDir/etc/apt/sources.list
