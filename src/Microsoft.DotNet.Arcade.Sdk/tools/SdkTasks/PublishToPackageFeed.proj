@@ -51,8 +51,6 @@
       <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'ASPNETBLAZOR'">https://dotnetfeed.blob.core.windows.net/aspnet-blazor/index.json</TargetStaticFeed>
     </PropertyGroup>
 
-    <Message Text="Bar key = $(BuildAssetRegistryToken)" Importance="high" />
-
     <Error 
       Condition="'$(TargetStaticFeed)' == ''" 
       Text="'$(ArtifactsCategory)' wasn't recognized as a valid artifact category. Valid categories are: '.NetCore' and '.NetCoreValidation'" />
