@@ -4,7 +4,7 @@ usage()
 {
     echo "Usage: $0 [BuildArch] [LinuxCodeName] [lldbx.y] [--skipunmount] --rootfsdir <directory>]"
     echo "BuildArch can be: arm(default), armel, arm64, x86"
-    echo "LinuxCodeName - optional, Code name for Linux, can be: trusty, xenial(default), zesty, bionic, alpine. If BuildArch is armel, LinuxCodeName is jessie(default) or tizen."
+    echo "LinuxCodeName - optional, Code name for Linux, can be: trusty, xenial(default), zesty, stretch, buster, bionic, alpine, centos7. If BuildArch is armel, LinuxCodeName is jessie(default) or tizen."
     echo "lldbx.y - optional, LLDB version, can be: lldb3.9(default), lldb4.0, lldb5.0, lldb6.0 no-lldb. Ignored for alpine"
     echo "--skipunmount - optional, will skip the unmount of rootfs folder."
     exit 1
@@ -28,8 +28,10 @@ __AlpinePackages+=" linux-headers"
 __AlpinePackages+=" lldb-dev"
 __AlpinePackages+=" llvm-dev"
 
+__AlpinePackages+=" llvm-dev"
+
 # symlinks fixer
-__UbuntuPackages+=" symlinks"
+__CentosPackages+=" gcc"
 
 # CoreCLR and CoreFX dependencies
 __UbuntuPackages+=" libicu-dev"
@@ -41,6 +43,10 @@ __AlpinePackages+=" icu-dev"
 __AlpinePackages+=" libunwind-dev"
 __AlpinePackages+=" lttng-ust-dev"
 
+__CentosPackages+=" gettext-devel"
+__AlpinePackages+=" libicu-devel"
+__CentosPackages+=" libunwind-devel"
+
 # CoreFX dependencies
 __UbuntuPackages+=" libcurl4-openssl-dev"
 __UbuntuPackages+=" libkrb5-dev"
@@ -51,6 +57,11 @@ __AlpinePackages+=" curl-dev"
 __AlpinePackages+=" krb5-dev"
 __AlpinePackages+=" openssl-dev"
 __AlpinePackages+=" zlib-dev"
+
+__CentosPackages+=" curl-devel"
+__CentosPackages+=" krb5-devel"
+__CentosPackages+=" openssl-devel"
+__CentosPackages+=" zlib-devel "
 
 __UnprocessedBuildArgs=
 while :; do
@@ -74,6 +85,7 @@ while :; do
             __BuildArch=arm64
             __UbuntuArch=arm64
             __AlpineArch=aarch64
+            __CentosArch=aarch64
             __QEMUArch=aarch64
             ;;
         armel)
@@ -156,6 +168,10 @@ while :; do
             __LinuxCodeName=alpine
             __UbuntuRepo=
             ;;
+        centos7)
+            __LinuxCodeName=centos7
+            __UbuntuRepo=
+            ;;
         --skipunmount)
             __SkipUnmount=1
             ;;
@@ -206,6 +222,57 @@ if [[ "$__LinuxCodeName" == "alpine" ]]; then
       -U --allow-untrusted --root $__RootfsDir --arch $__AlpineArch --initdb \
       add $__AlpinePackages
     rm -r $__ApkToolsDir
+elif [[ "$__LinuxCodeName" == "centos7" ]]; then
+    RPM=`which rpm`
+    if [ -z "$RPM" ]; then
+        echo "Please install 'rpm' executable."
+        exit 1;
+    fi
+
+    if [ -z "$__CentosArch" ]; then
+        echo $__BuildArch is unsupported architecture for Centos7.
+        exit 1
+    fi
+
+    mkdir -p $__RootfsDir/var/lib/rpm $__RootfsDir/etc $__RootfsDir/dev $__RootfsDir/tmp $__RootfsDir/usr/bin
+
+    mkdir -p $__RootfsDir/usr/bin
+
+    $RPM --rebuilddb --root=$__RootfsDir
+
+    mknod -m 666 $__RootfsDir/dev/null c 1 3
+    mknod -m 666 $__RootfsDir/dev/random c 1 8
+    mknod -m 666 $__RootfsDir/dev/urandom c 1 9
+
+    cat $__CrossDir/$__BuildArch/centos7/packages | while read PACKAGE ; do
+        if [ -z "$PACKAGE" ] || [[ $PACKAGE == \#* ]]; then
+            continue
+        fi
+        echo installing $PACKAGE
+        rpm -i --root=$__RootfsDir --dbpath=/var/lib/rpm/ --ignorearch --force --nodeps  http://mirror.centos.org/altarch/7/os/$__CentosArch/Packages/${PACKAGE}
+    done
+
+    cp  /usr/bin/qemu-$__QEMUArch-static $__RootfsDir/usr/bin
+    # setup DNS. Some networks do no allow external lookup so start with host version.
+    cp /etc/resolv.conf  $__RootfsDir/etc
+    echo "nameserver 8.8.8.8" >> $__RootfsDir/etc/resolv.conf
+    cp  /usr/bin/qemu-$__QEMUArch-static $__RootfsDir/usr/bin
+
+    # Phase 1 is done. We should have enough to run commands from with roofs
+
+    #cp $__CrossDir/$__BuildArch/CentOS7* $__RootfsDir/etc/yum.repos.d
+
+    # update packages to current and fix any broken  dependencies from stage 1
+    chroot $__RootfsDir yum update -y
+    chroot $__RootfsDir yum -y reinstall rpm rpm-python yum yum-utils nss ca-certificates
+    chroot $__RootfsDir yum --assumeyes install $__CentosPackages
+
+    # Centos has symbolic links to /lib... and that does work only in chroot but not with sysfs.
+    rm -f $__RootfsDir/usr/lib/gcc/$__CentosArch-redhat-linux/*/libgcc_s.so
+    (cd $__RootfsDir/usr/lib/gcc/$__CentosArch-redhat-linux/4.8.5/ ; cp $__RootfsDir/lib64/libgcc_s-*.so.* libgcc_s.so)
+
+    # build en_US.UTF-8 locale
+    localedef -v -c -i en_US -f UTF-8 en_US.UTF-8
 elif [[ -n $__LinuxCodeName ]]; then
     qemu-debootstrap --arch $__UbuntuArch $__LinuxCodeName $__RootfsDir $__UbuntuRepo
     cp $__CrossDir/$__BuildArch/sources.list.$__LinuxCodeName $__RootfsDir/etc/apt/sources.list
