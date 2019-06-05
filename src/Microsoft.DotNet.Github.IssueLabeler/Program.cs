@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
     {
         public static void Main(string[] args)
         {
-            if (args[0].Equals("Download", StringComparison.CurrentCultureIgnoreCase))
+            if (args.Length > 0 && args[0].Equals("Download", StringComparison.CurrentCultureIgnoreCase))
             {
                 CommandLineOptions myOptions = null;
                 Parser.Default.ParseArguments<CommandLineOptions>(args).WithParsed(opts => myOptions = opts);

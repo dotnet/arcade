@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Github.IssueLabeler
         public async Task DownloadAndSaveAsync()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Id\tArea\tTitle\tDescription");
+            File.WriteAllText(_outputFile, "Id\tArea\tTitle\tDescription");
             for (int i = _startIndex; i < _endIndex; i++)
             {
                 try
@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                             string title = RemoveNewLineCharacters(issue.Title);
                             string description = RemoveNewLineCharacters(issue.Body);
                             // Ordering is important here because we are using the same ordering on the prediction side.
-                            sb.AppendLine($"{issue.Number}\t{label.Name}\t\"{title}\"\t\"{description}\"");
+                            sb.AppendLine($"{label.Name}\t\"{title}\"\t\"{description}\"");
                         }
                     }
 

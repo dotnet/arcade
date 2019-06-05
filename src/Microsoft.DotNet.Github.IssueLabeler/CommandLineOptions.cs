@@ -11,10 +11,10 @@ namespace Microsoft.DotNet.Github.IssueLabeler
         [Option('e', "EndIndex", Required = true, HelpText = "Ending Github issue number")]
         public int EndIndex { get; set; }
 
-        [Option('o', "OutputFile", Required = true, HelpText = ".tsv Output File Path")]
+        [Option('f', "OutputFile", Required = true, HelpText = ".tsv Output File Path")]
         public string Output { get; set; }
 
-        [Option('u', "RepoOwner", Required = true, HelpText = "Repository owner")]
+        [Option('o', "RepoOwner", Required = true, HelpText = "Repository owner")]
         public string Owner { get; set; }
 
         [Option('r', "RepoName", Required = true, HelpText = "Repository Name")]
