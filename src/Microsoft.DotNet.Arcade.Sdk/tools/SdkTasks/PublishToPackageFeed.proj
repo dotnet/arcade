@@ -12,8 +12,6 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
 
-  <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets" />
-
   <Target Name="Execute">
     <Error Condition="'$(ArtifactsCategory)' == ''" Text="ArtifactsCategory: The artifacts' category produced by the build wasn't provided." />
     <Error Condition="'$(AccountKeyToStaticFeed)' == ''" Text="AccountKeyToStaticFeed: Account key for target feed wasn't provided." />

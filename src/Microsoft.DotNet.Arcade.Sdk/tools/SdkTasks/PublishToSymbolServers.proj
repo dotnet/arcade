@@ -27,8 +27,6 @@
     </RestoreSources>
   </PropertyGroup>
 
-  <Import Project="$(NuGetPackageRoot)microsoft.symboluploader.build.task\$(MicrosoftSymbolUploaderBuildTaskVersion)\build\PublishSymbols.targets" />
-    
   <Target Name="Execute">
     <ItemGroup>
       <FilesToPublishToSymbolServer Include="$(PDBArtifactsDirectory)\*.pdb"/>
