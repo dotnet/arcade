@@ -28,8 +28,6 @@ __AlpinePackages+=" linux-headers"
 __AlpinePackages+=" lldb-dev"
 __AlpinePackages+=" llvm-dev"
 
-__AlpinePackages+=" llvm-dev"
-
 # symlinks fixer
 __UbuntuPackages+=" symlinks"
 
