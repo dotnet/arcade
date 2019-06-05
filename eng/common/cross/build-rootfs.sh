@@ -253,12 +253,10 @@ elif [[ "$__LinuxCodeName" == "centos7" ]]; then
     done
 
     cp  /usr/bin/qemu-$__QEMUArch-static $__RootfsDir/usr/bin
-    # setup DNS. Some networks do no allow external lookup so start with host version.
-    cp /etc/resolv.conf  $__RootfsDir/etc
-    echo "nameserver 8.8.8.8" >> $__RootfsDir/etc/resolv.conf
-    cp  /usr/bin/qemu-$__QEMUArch-static $__RootfsDir/usr/bin
 
     # Phase 1 is done. We should have enough to run commands from with roofs
+    cp /etc/resolv.conf  $__RootfsDir/etc
+    echo "nameserver 8.8.8.8" >> $__RootfsDir/etc/resolv.conf
 
     # update packages to current and fix any broken  dependencies from stage 1
     chroot $__RootfsDir yum update -y
@@ -272,7 +270,7 @@ elif [[ "$__LinuxCodeName" == "centos7" ]]; then
     # build en_US.UTF-8 locale
     localedef -v -c -i en_US -f UTF-8 en_US.UTF-8
 
-    # stop resolver with generic one.
+    # stomp resolver with generic one. We should not need network at this point.
     echo "nameserver 8.8.8.8" > $__RootfsDir/etc/resolv.conf
 elif [[ -n $__LinuxCodeName ]]; then
     qemu-debootstrap --arch $__UbuntuArch $__LinuxCodeName $__RootfsDir $__UbuntuRepo
