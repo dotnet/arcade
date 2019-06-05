@@ -64,7 +64,7 @@ try {
 
   Write-Host "Generating flat dependency graph and graphviz file..."
   @flatGraphOptions = @( "--flat", "--coherency", "--graphviz", "$graphVizFilePath" )
-  & "$darcExe" @baseOptions @flatGraphOptions --output-file $flatGraphFilePath
+  & "$darcExe" get-dependency-graph @baseOptions @flatGraphOptions --output-file $flatGraphFilePath
   CheckExitCode "Generating flat and graphviz dependency graph"
 
   Write-Host "Generating graph image $graphVizFilePath"
