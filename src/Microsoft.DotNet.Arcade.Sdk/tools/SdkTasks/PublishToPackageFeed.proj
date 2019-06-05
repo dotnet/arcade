@@ -31,10 +31,8 @@
       TODO: https://github.com/dotnet/arcade/issues/2266
     -->
     <PropertyGroup>
-      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == '.NETCORE'">https://dotnetfeed.blob.core.windows.net/cesar-test/index.json</TargetStaticFeed>
-      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == '.NETCOREVALIDATION'">https://dotnetfeed.blob.core.windows.net/cesar-test2/index.json</TargetStaticFeed>
-      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == '.NETCORESTABLE'">https://dotnetfeed.blob.core.windows.net/cesar-test3/index.json</TargetStaticFeed>
-
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == '.NETCORE'">https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == '.NETCOREVALIDATION'">https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json</TargetStaticFeed>
       <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'ASPNETCORE'">https://dotnetfeed.blob.core.windows.net/aspnet-aspnetcore/index.json</TargetStaticFeed>
       <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'ASPNETCORETOOLING'">https://dotnetfeed.blob.core.windows.net/aspnet-aspnetcore-tooling/index.json</TargetStaticFeed>
       <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'ENTITYFRAMEWORKCORE'">https://dotnetfeed.blob.core.windows.net/aspnet-entityframeworkcore/index.json</TargetStaticFeed>
