@@ -2,6 +2,10 @@
 
 The primary reason to use Helix is to leverage its scalability to run tests. Arcade and the Arcade SDK provide out-of-the-box functionality to interface with Helix.
 
+## Understanding Helix
+
+This document assumes you have familiarity with Helix. If that is not the case, it is recommended that you start [here](https://github.com/dotnet/core-eng/blob/master/Documentation/HelixDocumentation.md).
+
 ## Getting Started
 
 First, you have to import the SDK. Everything that follows requires dotnet-cli ≥ 2.1.300 and needs the following files in a directory at or above the project's directory.
