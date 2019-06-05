@@ -2,7 +2,7 @@
 
 ## Phase 1 - Build telemetry reporting
 
-**Estimated Completion Date:** 5/28
+**Estimated Completion Date:** 6/14
 
 ### Summary
 
