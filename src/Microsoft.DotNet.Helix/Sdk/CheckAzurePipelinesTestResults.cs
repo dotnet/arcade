@@ -12,11 +12,13 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
     {
         public int[] TestRunIds { get; set; }
 
+        public bool DisableFlakyTestSupport { get; set; }
+
         public ITaskItem[] ExpectedTestFailures { get; set; }
 
         protected override async Task ExecuteCoreAsync(HttpClient client)
         {
-            if (ExpectedTestFailures?.Length > 0)
+            if (ExpectedTestFailures?.Length > 0 || DisableFlakyTestSupport)
             {
                 await ValidateExpectedTestFailuresAsync(client);
                 return;
@@ -79,7 +81,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     });
 
                 var failedResults = (JArray) data["value"];
-                HashSet<string> expectedFailures = ExpectedTestFailures.Select(i => i.GetMetadata("Identity")).ToHashSet();
+                HashSet<string> expectedFailures = ExpectedTestFailures?.Select(i => i.GetMetadata("Identity")).ToHashSet() ?? new HashSet<string>();
                 foreach (var failedResult in failedResults)
                 {
                     var testName = (string) failedResult["automatedTestName"];
