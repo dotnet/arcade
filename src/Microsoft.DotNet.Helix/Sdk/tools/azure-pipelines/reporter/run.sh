@@ -11,7 +11,7 @@ if [ ! -f $ENV_PATH/bin/python ]; then
   $ENV_PATH/bin/python -m pip install vsts==0.1.20
 fi
 
-if $ENV_PATH/bin/python -c 'import future'; then
+if $ENV_PATH/bin/python -c "import future"; then
   echo "future module already available"
 else
   $ENV_PATH/bin/python -m pip install future==0.17.1

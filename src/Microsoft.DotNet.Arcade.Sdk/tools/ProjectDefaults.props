@@ -28,11 +28,11 @@
        - Convert Portable PDBs to Windows PDBs and publish the converted PDBs to Symbol Store to allow WinDBG, 
          Watson and other tools to find symbol format they understand.
 
-      Jenkins build:
-       - Embed PDBs to make it easier to debug Jenkins crash dumps.
+      PR validation build:
+       - Embed PDBs to make it easier to debug crash dumps captured on the CI machine.
 
       Developer build:
-       - Embed PDBs to be consistent with Jenkins builds.    
+       - Embed PDBs to be consistent with PR validation build.    
     -->
     <DebugType>portable</DebugType>
     <DebugType Condition="'$(OfficialBuild)' != 'true'">embedded</DebugType>

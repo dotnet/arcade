@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             Log.LogMessage($"Downloading '{Uri}' to '{DestinationPath}'");
 
-            using (var httpClient = new HttpClient())
+            using (var httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }))
             {
                 try
                 {

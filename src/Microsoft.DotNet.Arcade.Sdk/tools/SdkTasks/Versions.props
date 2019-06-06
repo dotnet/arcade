@@ -6,9 +6,11 @@
   <Import Project="..\DefaultVersions.Generated.props" Condition="Exists('..\DefaultVersions.Generated.props')"/>
 
   <PropertyGroup>
-    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.19217.3</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.19305.4</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftDotNetBuildTasksVisualStudioVersion>$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksVisualStudioVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.19170.8</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.19279.5</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignCheckVersion Condition="'$(MicrosoftDotNetSignCheckVersion)' == ''">1.0.0-beta.19177.2</MicrosoftDotNetSignCheckVersion>
+    <MicrosoftSymbolUploaderBuildTaskVersion Condition="'$(MicrosoftSymbolUploaderBuildTaskVersion)' == ''">1.0.0-beta-64131-01</MicrosoftSymbolUploaderBuildTaskVersion>
   </PropertyGroup>
 
   <PropertyGroup>

@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             {
                 string title = issue.Title;
                 int number = issue.Number;
-                string body = issue.Description;
+                string body = issue.Body;
 
                 await Issuelabeler.PredictAndApplyLabelAsync(number, title, body, Logger);
                 Logger.LogInformation("! Labeling completed");
