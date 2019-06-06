@@ -4,6 +4,7 @@
 - [Telemetry format](#telemetry-format)
 - [Writing to the Timeline API](#writing-to-the-timeline-api)
 - [Arcade support for categorized telemetry](#arcade-support-for-writing-categorized-telemetry)
+- [Logging categories](#logging-categories)
 
 ## Overview
 
