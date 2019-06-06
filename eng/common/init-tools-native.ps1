@@ -79,22 +79,22 @@ try {
     $NativeTools.PSObject.Properties | ForEach-Object {
       $ToolName = $_.Name
       $ToolVersion = $_.Value
-      $LocalInstallerArguments =  @( "-ToolName", "$ToolName" )
-      $LocalInstallerArguments += @( "-InstallPath", "$InstallBin" )
-      $LocalInstallerArguments += @( "-BaseUri", "$BaseUri" )
-      $LocalInstallerArguments += @( "-CommonLibraryDirectory", "$EngCommonBaseDir" )
-      $LocalInstallerArguments += @( "-Version", "$ToolVersion" )
+      $LocalInstallerArguments =  @{ ToolName = "$ToolName" }
+      $LocalInstallerArguments += @{ InstallPath = "$InstallBin" }
+      $LocalInstallerArguments += @{ BaseUri = "$BaseUri" }
+      $LocalInstallerArguments += @{ CommonLibraryDirectory = "$EngCommonBaseDir" }
+      $LocalInstallerArguments += @{ Version = "$ToolVersion" }
 
       if ($Verbose) {
-        $LocalInstallerArguments += @( "-Verbose" )
+        $LocalInstallerArguments += @{ Verbose = $True }
       }
       if (Get-Variable 'Force' -ErrorAction 'SilentlyContinue') {
         if($Force) {
-          $LocalInstallerArguments += @( "-Force" )
+          $LocalInstallerArguments += @{ Force = $True }
         }
       }
       if ($Clean) {
-        $LocalInstallerArguments += @( "-Clean" )
+        $LocalInstallerArguments += @{ Clean = $True }
       }
 
       Write-Verbose "Installing $ToolName version $ToolVersion"
