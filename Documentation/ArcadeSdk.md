@@ -983,3 +983,22 @@ If set to true calls to GetResourceString receive a default resource string valu
 
 #### `GenerateResxSourceOmitGetResourceString` (bool)
 If set to true the GetResourceString method is not included in the generated class and must be specified in a separate source file.
+
+
+### `ArcadeVersionProps` (string)
+
+This contains a file path to Arcade's properties file which is used to determine the versioning properties. It can be used in a project
+file when the values for `Version`, `PackageVersion` or `VersionSuffix` need to be used for other derived project properties.
+
+Example:
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="$(ArcadeVersionProps)" />
+
+  <PropertyGroup>
+    <PackageDescription>This is package v$(PackageVersion)</PackageDescription>
+  </PropertyGroup>
+
+</Project>
+```

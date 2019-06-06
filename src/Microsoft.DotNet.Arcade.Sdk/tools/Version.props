@@ -2,6 +2,10 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
+  <PropertyGroup>
+    <_ArcadeVersionPropsImported>true</_ArcadeVersionPropsImported>
+  </PropertyGroup>
+
   <!--
     Specification: https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Versioning.md
     
@@ -121,5 +125,13 @@
     <VersionPrefix Condition="'$(VersionPrefix)' == ''">1.0.0</VersionPrefix>
     <Version>$(VersionPrefix)</Version>
     <Version Condition="'$(VersionSuffix)' != ''">$(Version)-$(VersionSuffix)</Version>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- 
+      This is a commonly used property. Normally this is set by NuGet.Build.Tasks.Pack.targets,
+      but in some projects, it is useful to use this value before NuGet's targets are evaluated.
+    -->
+    <PackageVersion Condition=" '$(PackageVersion)' == '' ">$(Version)</PackageVersion>
   </PropertyGroup>
 </Project>

@@ -6,6 +6,13 @@
     <_ArcadeOverriddenCustomBeforeMicrosoftCommonCrossTargetingTargets>$(CustomBeforeMicrosoftCommonCrossTargetingTargets)</_ArcadeOverriddenCustomBeforeMicrosoftCommonCrossTargetingTargets>
     <CustomBeforeMicrosoftCommonTargets>$(MSBuildThisFileDirectory)BeforeCommonTargets.targets</CustomBeforeMicrosoftCommonTargets>
     <CustomBeforeMicrosoftCommonCrossTargetingTargets>$(MSBuildThisFileDirectory)BeforeCommonTargets.CrossTargeting.targets</CustomBeforeMicrosoftCommonCrossTargetingTargets>
+
+    <!-- 
+      Version.props by default is imported after the project is evaluated and before Microsoft.Common.targets.
+      In cases where the computed version properties are needed within a project file, projects can add an
+      import to $(ArcadeVersionProps).
+    -->
+    <ArcadeVersionProps>$(MSBuildThisFileDirectory)Version.props</ArcadeVersionProps>
   </PropertyGroup>
 
   <Import Project="BuildTasks.props" />
