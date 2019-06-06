@@ -80,7 +80,7 @@ namespace Microsoft.Cci.Differs
                 }
             }
 
-            // Fallback the the default add/remove rules
+            // Fallback the default add/remove rules
             if (difference == DifferenceType.Unknown)
             {
                 T item1 = _mapping[0];

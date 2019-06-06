@@ -134,7 +134,7 @@
 
   <!-- BEGIN project refs-->
   <!-- Don't actually walk the closure all the time, conditioned on GetClosure metadata on ProjectReference.
-       Walking the closure is very expensive for many of our packages and is unecessary since we are very
+       Walking the closure is very expensive for many of our packages and is unnecessary since we are very
        strict about assets that are included in the package.  -->
   <Target Name="_GetProjectClosure"
           Returns="@(_ProjectReferenceClosure)">
@@ -266,7 +266,7 @@
   <!-- BEGIN files-->
   <!-- If the "PreventImplementationReference" property is true, then don't permit references to the
     package implementation from lib.  This is used in the platform specific packages which should
-    not be directly referenced by projects for implemtation dependencies. -->
+    not be directly referenced by projects for implementation dependencies. -->
   <Target Name="PreventImplementationReference">
     <ItemGroup Condition="'$(PreventImplementationReference)' == 'true'">
       <File Include="$(PlaceholderFile)">
@@ -477,7 +477,7 @@
       </PackageFile>
 
       <!-- NuGet will treat TargetPath as a directory if the extensions dont match,
-           however we need to package files without an extension (Unix exectuables).
+           however we need to package files without an extension (Unix executables).
            As such NuGet will always consider TargetPath to be a file path for these
            files.  Ensure that the TargetPath is the file path for these files. -->
       <PackageFile Condition="'%(Extension)' == ''">
@@ -487,7 +487,7 @@
   </Target>
 
   <!--Target that will add the specified source files into the package.
-      In order for this target to run, define SourcePackageFiles item by includding
+      In order for this target to run, define SourcePackageFiles item by including
       all source files that need to be packaged into it. Each source file must have the 
       PackagePath metadata defined, which is the location of where the source file will
       end up in the package-->
@@ -548,7 +548,7 @@
       <RuntimeDependency>
         <TargetPackage Condition="'%(RuntimeDependency.TargetPackage)' == ''">$(Id)</TargetPackage>
       </RuntimeDependency>
-      <!-- don't include runtime depdendencies in the dependency list, they'll be written to the runtime.json -->
+      <!-- don't include runtime dependencies in the dependency list, they'll be written to the runtime.json -->
       <Dependency Remove="@(RuntimeDependency)"/>
     </ItemGroup>
 

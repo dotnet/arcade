@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -88,9 +88,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         }
         /// <summary>
         /// Nuspec files can contain properties that are substituted with values at pack time
-        /// This task property passes through the nuspect properties.
+        /// This task property passes through the nuspec properties.
         /// Each item is a string with the syntax <key>=<value>
-        /// String validation for <key> and <value> is deffered to the NuGet APIs
+        /// String validation for <key> and <value> is deferred to the NuGet APIs
         /// </summary>
         public ITaskItem[] NuspecProperties
         {

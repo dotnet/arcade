@@ -167,7 +167,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         /// </summary>
         PermitInboxRevsion,
         /// <summary>
-        /// Permits a lower version on specified frameworks, semicolon delimitied, than the generation supported by that framework
+        /// Permits a lower version on specified frameworks, semicolon delimited, than the generation supported by that framework
         /// </summary>
         PermitPortableVersionMismatch,
         /// <summary>

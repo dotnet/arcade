@@ -109,7 +109,7 @@ namespace Microsoft.SignCheck.Verification.Jar
 
                         // The start of the individual section (first "Name: xxxx" entry)
                         // indicates the end of the Main section. Avoid x-Name: attributes.
-                        // The first individual Name: attribute will be preceeded by either CR+LF | CR | LF
+                        // The first individual Name: attribute will be preceded by either CR+LF | CR | LF
                         int crNameIndex = ManifestText.IndexOf("\rName:");
                         int lfNameIndex = ManifestText.IndexOf("\nName:");
 

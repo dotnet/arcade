@@ -56,13 +56,13 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 PackageInfo packageInfo;
                 if (!_index.Packages.TryGetValue(name, out packageInfo))
                 {
-                    logMissingInbox($"File {name} was included framework package {_report.Id}/{_report.Version} but that file is missing from package index {string.Join(";", _index.IndexSources)}.  Please add it with approriate {nameof(PackageInfo.InboxOn)} entry for {Framework} or suppress this message with {nameof(Suppression.PermitInbox)} suppression.");
+                    logMissingInbox($"File {name} was included framework package {_report.Id}/{_report.Version} but that file is missing from package index {string.Join(";", _index.IndexSources)}.  Please add it with appropriate {nameof(PackageInfo.InboxOn)} entry for {Framework} or suppress this message with {nameof(Suppression.PermitInbox)} suppression.");
                     continue;
                 }
 
                 if (!packageInfo.InboxOn.IsInbox(fx, testAsset.Version))
                 {
-                    logMissingInbox($"File {name}, version {testAsset.Version} was included framework package {_report.Id}/{_report.Version} but that version is not considered inbox in package index {string.Join(";", _index.IndexSources)}.  Please add it with approriate {nameof(PackageInfo.InboxOn)} entry for {Framework} or suppress this message with {nameof(Suppression.PermitInbox)} suppression.");
+                    logMissingInbox($"File {name}, version {testAsset.Version} was included framework package {_report.Id}/{_report.Version} but that version is not considered inbox in package index {string.Join(";", _index.IndexSources)}.  Please add it with appropriate {nameof(PackageInfo.InboxOn)} entry for {Framework} or suppress this message with {nameof(Suppression.PermitInbox)} suppression.");
                     continue;
                 }
             }
@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     new Action<string>(s => Log.LogMessage(LogImportance.Low, $"Suppressed: {s}")) :
                     new Action<string>(s => Log.LogError(s));
 
-                logMissingPackage($"File {missingInboxAssembly.Key}.dll is marked as inbox for framework {Framework} but was missing from framework package {_report.Id}/{_report.Version}.  Either add the file or update {nameof(PackageInfo.InboxOn)} entry in {string.Join(";", _index.IndexSources)}.   This may be suppressed with with {nameof(Suppression.PermitMissingInbox)} suppression");
+                logMissingPackage($"File {missingInboxAssembly.Key}.dll is marked as inbox for framework {Framework} but was missing from framework package {_report.Id}/{_report.Version}.  Either add the file or update {nameof(PackageInfo.InboxOn)} entry in {string.Join(";", _index.IndexSources)}.   This may be suppressed with {nameof(Suppression.PermitMissingInbox)} suppression");
             }
             
             return !Log.HasLoggedErrors;

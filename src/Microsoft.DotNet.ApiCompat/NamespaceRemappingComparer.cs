@@ -114,7 +114,7 @@ namespace Microsoft.Cci.Comparers
 
                 if (split.Length != 2)
                 {
-                    Debug.WriteLine("ApiCompat NamespaceRemappingComparer: unparseable line found in file {0}.  Line: \"{1}\"", mappingFile, mapping);
+                    Debug.WriteLine("ApiCompat NamespaceRemappingComparer: unparsable line found in file {0}.  Line: \"{1}\"", mappingFile, mapping);
                     continue;
                 }
 

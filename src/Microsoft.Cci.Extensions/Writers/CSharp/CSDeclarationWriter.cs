@@ -214,7 +214,7 @@ namespace Microsoft.Cci.Writers.CSharp
             }
         }
 
-        // Writer Helpers these are the only methods that should directly acess _writer
+        // Writer Helpers these are the only methods that should directly access _writer
         private void WriteKeyword(string keyword, bool noSpace = false)
         {
             _writer.WriteKeyword(keyword);

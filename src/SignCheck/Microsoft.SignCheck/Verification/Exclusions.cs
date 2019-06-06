@@ -80,7 +80,7 @@ namespace Microsoft.SignCheck.Verification
         public bool IsExcluded(string path, string parent, string containerPath)
         {
             // 1. The file/container path matches a file part of the exclusion and the parent matches the parent part of the exclusion.
-            //    Example: bar.dll;*.zip --> Exclude any occurence of bar.dll that is in a zip file
+            //    Example: bar.dll;*.zip --> Exclude any occurrence of bar.dll that is in a zip file
             //             bar.dll;foo.zip --> Exclude bar.dll only if it is contained inside foo.zip
             if (_exclusions.Any(e => (IsMatch(e.FilePatterns, path) || IsMatch(e.FilePatterns, containerPath)) && (IsMatch(e.ParentFiles, parent))))
             {

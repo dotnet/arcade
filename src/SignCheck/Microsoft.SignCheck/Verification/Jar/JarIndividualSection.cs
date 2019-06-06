@@ -45,7 +45,7 @@ namespace Microsoft.SignCheck.Verification.Jar
 
             while (entryStartIndex >= 0)
             {
-                // If there is another entry we can determine where the curren entry ends.
+                // If there is another entry we can determine where the current entry ends.
                 int entryEndIndex = RawText.IndexOf("Name:", entryStartIndex + 1);
 
                 if (entryEndIndex > 0)
