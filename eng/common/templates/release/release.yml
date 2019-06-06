@@ -1,0 +1,75 @@
+parameters:
+  # Which target pool should be used
+  pool:
+    name: 'NetCoreInternal-Pool'
+    queue: 'BuildPool.Windows.10.Amd64.VS2017'
+
+stages:
+- stage: validate
+  dependsOn: build
+  displayName: Validate
+  jobs:
+  - job:
+    displayName: Signing Validation
+    pool:
+      name: ${{ parameters.pool.name }}
+      queue: ${{ parameters.pool.queue }}
+    steps:
+      - task: DownloadBuildArtifacts@0
+        displayName: Download Package Artifacts
+        inputs:
+          buildType: current
+          artifactName: 'PackageArtifacts'
+
+      - task: PowerShell@2
+        displayName: Validate
+        inputs:
+          filePath: eng\common\sdk-task.ps1
+          arguments: -task SigningValidation -restore -msbuildEngine dotnet
+            /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts'
+            /p:Configuration=Release
+        continueOnError: true
+        
+  - job:
+    displayName: SourceLink Validation
+    variables:
+      - template: common-variables.yml
+    pool:
+      name: ${{ parameters.pool.name }}
+      queue: ${{ parameters.pool.queue }}
+    steps:
+      - task: DownloadBuildArtifacts@0
+        displayName: Download Blob Artifacts
+        inputs:
+          buildType: current
+          artifactName: 'BlobArtifacts'
+
+      - task: powershell@1
+        displayName: Install SourceLink CLI
+        inputs:
+          scriptType: inlineScript
+          inlineScript: |
+            dotnet tool install sourcelink --tool-path $(Agent.BuildDirectory)/SourceLinkTool --version $(SourceLinkCLIVersion)
+        
+      - task: PowerShell@2
+        displayName: Validate
+        inputs:
+          filePath: $(Build.SourcesDirectory)/eng/common/release/SourceLinkValidation.ps1
+          arguments: -InputPath $(Build.ArtifactStagingDirectory)\BlobArtifacts\ 
+            -ExtractPath $(Agent.BuildDirectory)\Extract\ 
+            -SourceLinkToolPath $(Agent.BuildDirectory)\SourceLinkTool\ 
+            -GHRepoName $(Build.Repository.Name) 
+            -GHCommit $(Build.SourceVersion)
+        continueOnError: true
+
+- template: \eng\common\templates\release\channels\public-dev-release.yml
+  parameters:
+    pool:
+      name: ${{ parameters.pool.name }}
+      queue: ${{ parameters.pool.queue }}
+
+- template: \eng\common\templates\release\channels\public-validation-release.yml
+  parameters:
+    pool:
+      name: ${{ parameters.pool.name }}
+      queue: ${{ parameters.pool.queue }}

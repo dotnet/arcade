@@ -1,0 +1,106 @@
+parameters:
+  # Which target pool should be used
+  pool:
+    name: 'NetCoreInternal-Pool'
+    queue: 'BuildPool.Windows.10.Amd64.VS2017'
+
+stages:
+- stage: PVR_Publish
+  dependsOn: validate
+  variables:
+    - template: ../common-variables.yml
+  displayName: Validation Channel
+  jobs:
+  - template: ../setup-maestro-vars.yml
+    parameters:
+      pool:
+        name: ${{ parameters.pool.name }}
+        queue: ${{ parameters.pool.queue }}
+
+  - job:
+    displayName: Publish to Static Feed
+    dependsOn: setupMaestroVars
+    condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicValidationRelease_Channel_Id)
+    variables:
+      BARBuildId: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
+    pool:
+      name: ${{ parameters.pool.name }}
+      queue: ${{ parameters.pool.queue }}
+    steps:
+      - task: DownloadBuildArtifacts@0
+        displayName: Download Package Artifacts
+        inputs:
+          buildType: current
+          artifactName: 'PackageArtifacts'
+
+      - task: DownloadBuildArtifacts@0
+        displayName: Download Blob Artifacts
+        inputs:
+          buildType: current
+          artifactName: 'BlobArtifacts'
+
+      - task: DownloadBuildArtifacts@0
+        displayName: Download Asset Manifests
+        inputs:
+          buildType: current
+          artifactName: 'AssetManifests'
+
+      - task: PowerShell@2
+        displayName: Publish
+        inputs:
+          filePath: eng\common\sdk-task.ps1
+          arguments: -task PublishToPackageFeed -restore -msbuildEngine dotnet 
+            /p:AccountKeyToStaticFeed='$(dotnetfeed-storage-access-key-1)' 
+            /p:BARBuildId=$(BARBuildId) 
+            /p:MaestroApiEndpoint='$(MaestroApiEndpoint)'
+            /p:BuildAssetRegistryToken='$(MaestroApiPassword)' 
+            /p:ManifestsBasePath='$(Build.ArtifactStagingDirectory)/AssetManifests/' 
+            /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/' 
+            /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/' 
+            /p:ArtifactsCategory='$(_DotNetArtifactsCategory)' 
+            /p:OverrideAssetsWithSameName=true 
+            /p:PassIfExistingItemIdentical=true 
+            /p:Configuration=Release 
+
+
+- stage: PVR_PublishValidation
+  displayName: Publish Validation
+  variables:
+    - template: ../common-variables.yml
+  jobs:
+  - template: ../setup-maestro-vars.yml
+    parameters:
+      pool:
+        name: ${{ parameters.pool.name }}
+        queue: ${{ parameters.pool.queue }}
+
+  - job:
+    displayName: Gather Drop
+    dependsOn: setupMaestroVars
+    condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicValidationRelease_Channel_Id)
+    variables:
+      BARBuildId: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
+    pool:
+      name: ${{ parameters.pool.name }}
+      queue: ${{ parameters.pool.queue }}
+    steps:
+      - task: PowerShell@2
+        displayName: Setup Darc CLI
+        inputs:
+          targetType: filePath
+          filePath: '$(Build.SourcesDirectory)/eng/common/darc-init.ps1'
+
+      - task: powershell@1
+        displayName: Run Darc gather-drop
+        inputs:
+          scriptType: inlineScript
+          inlineScript: |
+            darc gather-drop --non-shipping --continue-on-error --id $(BARBuildId) --output-dir $(Agent.BuildDirectory)/Temp/Drop/ --bar-uri $(MaestroApiEndpoint) --password $(MaestroApiPassword)
+        continueOnError: true
+
+  - template: ../promote-build.yml
+    parameters:
+      ChannelId: ${{ variables.PublicValidationRelease_Channel_Id }}
+      pool:
+        name: ${{ parameters.pool.name }}
+        queue: ${{ parameters.pool.queue }}

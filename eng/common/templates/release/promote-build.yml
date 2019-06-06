@@ -1,0 +1,29 @@
+parameters:
+  ChannelId: 0
+  # Which target pool should be used
+  pool:
+    name: 'NetCoreInternal-Pool'
+    queue: 'BuildPool.Windows.10.Amd64.VS2017'
+
+jobs:
+- job:
+  displayName: Promote Build
+  dependsOn: setupMaestroVars
+  condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], ${{ parameters.ChannelId }})
+  variables:
+    BARBuildId: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
+    ChannelId: ${{ parameters.ChannelId }}
+  pool:
+      name: ${{ parameters.pool.name }}
+      queue: ${{ parameters.pool.queue }}
+  steps:
+    - task: powershell@1
+      displayName: Add Build to Channel
+      inputs:
+        scriptType: inlineScript
+        inlineScript: |
+          $headers = @{
+            "Accept" = "application/json"
+            "Authorization" = "Bearer $(MaestroApiPassword)"
+          }
+          Invoke-RestMethod -Method Post -Headers $headers -Uri $(MaestroApiEndpoint)api/channels/$(ChannelId)/builds/$(BARBuildId)?api-version=2019-01-16
