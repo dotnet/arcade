@@ -1,0 +1,7 @@
+[epel]
+name=Epel rebuild for armhfp
+baseurl=https://armv7.dev.centos.org/repodir/epel-pass-1/
+enabled=0
+gpgcheck=0
+
+

@@ -15,6 +15,7 @@ __CrossDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 __InitialDir=$PWD
 __BuildArch=arm
 __UbuntuArch=armhf
+__CentosArch=armhfp
 __UbuntuRepo="http://ports.ubuntu.com/"
 __LLDB_Package="liblldb-3.9-dev"
 __SkipUnmount=0
@@ -79,6 +80,7 @@ while :; do
             __BuildArch=arm
             __UbuntuArch=armhf
             __AlpineArch=armhf
+            __CentosArch=armhfp
             __QEMUArch=arm
             ;;
         arm64)
@@ -234,7 +236,7 @@ elif [[ "$__LinuxCodeName" == "centos7" ]]; then
         exit 1
     fi
 
-    mkdir -p $__RootfsDir/var/lib/rpm $__RootfsDir/etc $__RootfsDir/dev $__RootfsDir/tmp $__RootfsDir/usr/bin
+    mkdir -p $__RootfsDir/var/lib/rpm $__RootfsDir/etc $__RootfsDir/dev $__RootfsDir/tmp $__RootfsDir/usr/bin $__RootfsDir/proc $__RootfsDir/etc/pki/rpm-gpg
 
     mkdir -p $__RootfsDir/usr/bin
 
@@ -244,6 +246,13 @@ elif [[ "$__LinuxCodeName" == "centos7" ]]; then
     mknod -m 666 $__RootfsDir/dev/random c 1 8
     mknod -m 666 $__RootfsDir/dev/urandom c 1 9
 
+    cp  /usr/bin/qemu-$__QEMUArch-static $__RootfsDir/usr/bin
+    if [ -f $__CrossDir/$__BuildArch/centos7/cpuinfo ]; then
+        cp $__CrossDir/$__BuildArch/centos7/cpuinfo $__RootfsDir/proc
+    fi
+
+    cp $__CrossDir/$__BuildArch/centos7/RPM-GPG-KEY* $__RootfsDir/etc/pki/rpm-gpg
+
     cat $__CrossDir/$__BuildArch/centos7/packages | while read PACKAGE ; do
         if [ -z "$PACKAGE" ] || [[ $PACKAGE == \#* ]]; then
             continue
@@ -252,11 +261,10 @@ elif [[ "$__LinuxCodeName" == "centos7" ]]; then
         rpm -i --root=$__RootfsDir --dbpath=/var/lib/rpm/ --ignorearch --force --nodeps  http://mirror.centos.org/altarch/7/os/$__CentosArch/Packages/${PACKAGE}
     done
 
-    cp  /usr/bin/qemu-$__QEMUArch-static $__RootfsDir/usr/bin
-
     # Phase 1 is done. We should have enough to run commands from with roofs
     cp /etc/resolv.conf  $__RootfsDir/etc
     echo "nameserver 8.8.8.8" >> $__RootfsDir/etc/resolv.conf
+    cp $__CrossDir/$__BuildArch/centos7/*repo $__RootfsDir/etc/yum.repos.d/
 
     # update packages to current and fix any broken  dependencies from stage 1
     chroot $__RootfsDir yum update -y
@@ -264,8 +272,13 @@ elif [[ "$__LinuxCodeName" == "centos7" ]]; then
     chroot $__RootfsDir yum --assumeyes install $__CentosPackages
 
     # Centos has symbolic links to /lib... and that does work only in chroot but not with sysroot.
-    rm -f $__RootfsDir/usr/lib/gcc/$__CentosArch-redhat-linux/*/libgcc_s.so
-    (cd $__RootfsDir/usr/lib/gcc/$__CentosArch-redhat-linux/4.8.5/ ; cp $__RootfsDir/lib64/libgcc_s-*.so.* libgcc_s.so)
+    if [ $__BuildArch == 'arm' ]; then
+        rm -f $__RootfsDir/usr/lib/gcc/armv7hl-redhat-linux-gnueabi/*/libgcc_s.so
+        (cd $__RootfsDir/usr/lib/gcc/armv7hl-redhat-linux-gnueabi/4.8.5/ ; cp $__RootfsDir/lib/libgcc_s-*.so.* libgcc_s.so)
+    elif [ $__BuildArch == 'arm64' ]; then
+        rm -f $__RootfsDir/usr/lib/gcc/$__CentosArch-redhat-linux/*/libgcc_s.so
+        (cd $__RootfsDir/usr/lib/gcc/$__CentosArch-redhat-linux/4.8.5/ ; cp $__RootfsDir/lib64/libgcc_s-*.so.* libgcc_s.so)
+    fi
 
     # build en_US.UTF-8 locale
     localedef -v -c -i en_US -f UTF-8 en_US.UTF-8
