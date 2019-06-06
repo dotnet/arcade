@@ -154,7 +154,7 @@ fi
 # ========================= END Core File Setup ==============================
 
 # ========================= BEGIN Test Execution =============================
-echo ----- start $(date +"%T") ===============  To repro directly: ===================================================== 
+echo ----- start $(date) ===============  To repro directly: ===================================================== 
 echo pushd $EXECUTION_DIR
 [[RunCommandsEcho]]
 echo popd
@@ -163,7 +163,7 @@ pushd $EXECUTION_DIR
 [[RunCommands]]
 test_exitcode=$?
 popd
-echo ----- end $(date +"%T") ----- exit code $test_exitcode ----------------------------------------------------------
+echo ----- end $(date) ----- exit code $test_exitcode ----------------------------------------------------------
 
 if [ "${exitcode_list[$test_exitcode]}" != "" ]; then
   echo exit code $test_exitcode means ${exitcode_list[$test_exitcode]}
