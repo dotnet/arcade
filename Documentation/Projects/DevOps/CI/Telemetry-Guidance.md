@@ -57,7 +57,7 @@ into Arcade's [Sign.proj](https://github.com/dotnet/arcade/blob/master/src/Micro
 
 ## Logging categories
 
-We are not intending to be proscriptive are hard-lined about a specific set of categories that a repo must use when sending telemetry.  Initially, however, we will modify Arcade to categorize "Restore", "Build", "Test", "Sign", "Publish", and "InitializeToolset" (Arcade script) changes.
+We are not intending to be proscriptive are hard-lined about a specific set of categories that a repo must use when sending telemetry.  Initially, however, we should look to modify Arcade to categorize "Restore", "Build", "Test", "Sign", and "InitializeToolset" (Arcade script) changes.
 
 ### Example chart
 
