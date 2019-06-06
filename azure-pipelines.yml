@@ -44,7 +44,7 @@ jobs:
       timeoutInMinutes: 90
       pool:
         # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
-        # Will eventually change this to two BYOC pools.
+        # Will eventually change this to two BYOC pools. Added comment to kick rebuild
         ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
           name: NetCorePublic-Int-Pool
           queue: BuildPool.Windows.10.Amd64.VS2017.Open
