@@ -35,9 +35,9 @@
       <SignCheckArgs Include="--recursive" />
       <SignCheckArgs Include="--traverse-subfolders" />
       <SignCheckArgs Include="--file-status AllFiles" />
-      <SignCheckArgs Include="--log-file '$(SignCheckLog)'" />
-      <SignCheckArgs Include="--error-log-file '$(SignCheckErrorLog)'" />
-      <SignCheckArgs Include="--input-files '$(SignCheckInputDir)'" />
+      <SignCheckArgs Include="--log-file $(SignCheckLog)" />
+      <SignCheckArgs Include="--error-log-file $(SignCheckErrorLog)" />
+      <SignCheckArgs Include="--input-files $(SignCheckInputDir)" />
       
       <SignCheckArgs Include="--exclusions-file '$(SignCheckExclusionsFile)'" Condition="'$(SignCheckExclusionsFile)' != '' and Exists($(SignCheckExclusionsFile))" />
       <SignCheckArgs Include="--verify-jar" Condition="'$(EnableJarSigningCheck)' == 'true'" />
