@@ -17,7 +17,7 @@ jobs:
       name: ${{ parameters.pool.name }}
       queue: ${{ parameters.pool.queue }}
   steps:
-    - task: powershell@1
+    - task: PowerShell@2
       displayName: Add Build to Channel
       inputs:
         scriptType: inlineScript

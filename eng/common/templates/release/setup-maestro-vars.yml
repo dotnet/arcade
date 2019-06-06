@@ -15,9 +15,9 @@ jobs:
       displayName: Download Release Configs
       inputs:
         buildType: current
-        artifactName: 'ReleaseConfigs'
+        artifactName: ReleaseConfigs
 
-    - task: powershell@1
+    - task: PowerShell@2
       name: setReleaseVars
       displayName: Set Release Configs Vars
       inputs:

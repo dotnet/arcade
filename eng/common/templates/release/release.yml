@@ -19,7 +19,7 @@ stages:
         displayName: Download Package Artifacts
         inputs:
           buildType: current
-          artifactName: 'PackageArtifacts'
+          artifactName: PackageArtifacts
 
       - task: PowerShell@2
         displayName: Validate
@@ -42,9 +42,9 @@ stages:
         displayName: Download Blob Artifacts
         inputs:
           buildType: current
-          artifactName: 'BlobArtifacts'
+          artifactName: BlobArtifacts
 
-      - task: powershell@1
+      - task: PowerShell@2
         displayName: Install SourceLink CLI
         inputs:
           scriptType: inlineScript
@@ -55,9 +55,9 @@ stages:
         displayName: Validate
         inputs:
           filePath: $(Build.SourcesDirectory)/eng/common/release/SourceLinkValidation.ps1
-          arguments: -InputPath $(Build.ArtifactStagingDirectory)\BlobArtifacts\ 
-            -ExtractPath $(Agent.BuildDirectory)\Extract\ 
-            -SourceLinkToolPath $(Agent.BuildDirectory)\SourceLinkTool\ 
+          arguments: -InputPath $(Build.ArtifactStagingDirectory)/BlobArtifacts/ 
+            -ExtractPath $(Agent.BuildDirectory)/Extract/ 
+            -SourceLinkToolPath $(Agent.BuildDirectory)/SourceLinkTool/ 
             -GHRepoName $(Build.Repository.Name) 
             -GHCommit $(Build.SourceVersion)
         continueOnError: true

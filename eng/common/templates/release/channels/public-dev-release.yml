@@ -29,14 +29,14 @@ stages:
         displayName: Download PDB Artifacts
         inputs:
           buildType: current
-          artifactName: 'PDBArtifacts'
+          artifactName: PDBArtifacts
         continueOnError: true
 
       - task: DownloadBuildArtifacts@0
         displayName: Download Blob Artifacts
         inputs:
           buildType: current
-          artifactName: 'BlobArtifacts'
+          artifactName: BlobArtifacts
 
       - task: PowerShell@2
         displayName: Publish
@@ -63,19 +63,19 @@ stages:
         displayName: Download Package Artifacts
         inputs:
           buildType: current
-          artifactName: 'PackageArtifacts'
+          artifactName: PackageArtifacts
 
       - task: DownloadBuildArtifacts@0
         displayName: Download Blob Artifacts
         inputs:
           buildType: current
-          artifactName: 'BlobArtifacts'
+          artifactName: BlobArtifacts
 
       - task: DownloadBuildArtifacts@0
         displayName: Download Asset Manifests
         inputs:
           buildType: current
-          artifactName: 'AssetManifests'
+          artifactName: AssetManifests
 
       - task: PowerShell@2
         displayName: Publish
@@ -118,9 +118,9 @@ stages:
         displayName: Download Package Artifacts
         inputs:
           buildType: current
-          artifactName: 'PackageArtifacts'
+          artifactName: PackageArtifacts
 
-      - task: powershell@1
+      - task: PowerShell@2
         displayName:  Install DotNet Symbol
         inputs:
           scriptType: inlineScript
@@ -132,7 +132,7 @@ stages:
         inputs:
           targetType: filePath
           filePath: '$(Build.SourcesDirectory)/eng/common/release/CheckSymbols.ps1'
-          arguments: -InputPath $(Build.ArtifactStagingDirectory)\PackageArtifacts\ -ExtractPath $(Agent.BuildDirectory)\Temp\ -SymbolToolPath $(Agent.BuildDirectory)\SymbolTool\
+          arguments: -InputPath $(Build.ArtifactStagingDirectory)/PackageArtifacts/ -ExtractPath $(Agent.BuildDirectory)/Temp/ -SymbolToolPath $(Agent.BuildDirectory)/SymbolTool/
 
   - job:
     displayName: Gather Drop
@@ -150,7 +150,7 @@ stages:
           targetType: filePath
           filePath: '$(Build.SourcesDirectory)/eng/common/darc-init.ps1'
 
-      - task: powershell@1
+      - task: PowerShell@2
         displayName: Run Darc gather-drop
         inputs:
           scriptType: inlineScript
