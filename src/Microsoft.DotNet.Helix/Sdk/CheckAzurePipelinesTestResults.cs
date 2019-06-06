@@ -12,13 +12,13 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
     {
         public int[] TestRunIds { get; set; }
 
-        public bool DisableFlakyTestSupport { get; set; }
+        public string DisableFlakyTestSupport { get; set; }
 
         public ITaskItem[] ExpectedTestFailures { get; set; }
 
         protected override async Task ExecuteCoreAsync(HttpClient client)
         {
-            if (ExpectedTestFailures?.Length > 0 || DisableFlakyTestSupport)
+            if (ExpectedTestFailures?.Length > 0 || !string.IsNullOrEmpty(DisableFlakyTestSupport))
             {
                 await ValidateExpectedTestFailuresAsync(client);
                 return;
