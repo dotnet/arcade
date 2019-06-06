@@ -171,6 +171,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             continue;
                         }
 
+                        var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
+
+                        if (assetWithLocations?.Locations.Any(al => al.Location.Equals(ExpectedFeedUrl, StringComparison.OrdinalIgnoreCase)) ?? false)
+                        {
+                            Log.LogMessage($"Asset with Id {package.Id}, Version {package.Version} already has location {ExpectedFeedUrl}");
+                            continue;
+                        }
+
                         await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, ExpectedFeedUrl);
                     }
                 }
@@ -211,7 +219,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             continue;
                         }
 
-                        await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, ExpectedFeedUrl);
+                        var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
+
+                        if (assetWithLocations?.Locations.Any(al => al.Location.Equals(ExpectedFeedUrl, StringComparison.OrdinalIgnoreCase)) ?? false)
+                        {
+                            Log.LogMessage($"Asset with Id {package.Id} already has location {ExpectedFeedUrl}");
+                            continue;
+                        }
+
+                        await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, ExpectedFeedUrl);
                     }
                 }
             }
