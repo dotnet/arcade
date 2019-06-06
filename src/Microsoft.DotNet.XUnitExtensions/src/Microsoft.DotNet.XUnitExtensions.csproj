@@ -7,6 +7,7 @@
     <IsPackable>true</IsPackable>    
     <VersionPrefix>2.4.1</VersionPrefix>
     <Description>This package provides things like various traits and discovers like OuterLoop/ActiveIssue that are used by .NET Core framework test projects.</Description>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>

@@ -4,6 +4,7 @@
     <TargetFramework>net472</TargetFramework>
     <SignAssembly>false</SignAssembly>
     <LangVersion>latest</LangVersion>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>

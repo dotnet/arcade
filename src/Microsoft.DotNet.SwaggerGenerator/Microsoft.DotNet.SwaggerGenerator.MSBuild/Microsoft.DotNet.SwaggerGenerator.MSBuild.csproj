@@ -6,6 +6,7 @@
     <IsPackable>true</IsPackable>
     <Description>This package provides support for generating client library code from a swagger document.</Description>
     <DevelopmentDependency>true</DevelopmentDependency>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>
