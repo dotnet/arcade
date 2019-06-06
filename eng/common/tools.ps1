@@ -475,9 +475,11 @@ function GetSdkTaskProject([string]$taskName) {
 
 function InitializeNativeTools() {
   if (Get-Member -InputObject $GlobalJson -Name "native-tools") {
-    $nativeArgs= @()
+    $nativeArgs= @{}
     if ($ci) {
-      $nativeArgs = @( "-InstallDirectory", "$ToolsDir" )
+      $nativeArgs = @{
+        InstallDirectory = "$ToolsDir"
+      }
     }
     & "$PSScriptRoot/init-tools-native.ps1" @nativeArgs
   }
