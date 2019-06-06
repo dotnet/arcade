@@ -16,6 +16,8 @@ Phase 1a and 1b (below) are parallel work streams.
 
 - In progress - provide [guidance](https://github.com/dotnet/core-eng/issues/6390) on what “good” error telemetry is.  Guidance can also include general rules for different types of failures (timeouts, cancelled jobs, bad yaml parsing, other azdo failures, etc...)
 
+  [Guidance document](./Telemetry-Guidance.md)
+
 - In progress - [report powershell pipeline errors](https://github.com/dotnet/arcade/issues/2038)
 
 - Done - report bash pipeline errors

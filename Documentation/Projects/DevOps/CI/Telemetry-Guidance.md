@@ -54,3 +54,15 @@ If we add...
 ```
 
 into Arcade's [Sign.proj](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) file, then any CI failures in Signing targets will be properly tagged by Arcade's logger.  This will enable categorization for anyone using Arcade.
+
+## Logging categories
+
+We are not intending to be proscriptive are hard-lined about a specific set of categories that a repo must use when sending telemetry.  Initially, however, we will modify Arcade to categorize "Restore", "Build", "Test", "Sign", "Publish", and "InitializeToolset" (Arcade script) changes.
+
+### Example chart
+
+This is a completely made up example of a possible way we could surface this data.
+
+[Category chart](./Category-sample.png)
+
+Repos may provide their own categories or use existing reports as examples of good category names.
