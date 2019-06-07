@@ -1,9 +1,5 @@
 parameters:
   ChannelId: 0
-  # Which target pool should be used
-  pool:
-    name: 'NetCoreInternal-Pool'
-    queue: 'BuildPool.Windows.10.Amd64.VS2017'
 
 jobs:
 - job:
@@ -14,14 +10,13 @@ jobs:
     BARBuildId: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
     ChannelId: ${{ parameters.ChannelId }}
   pool:
-      name: ${{ parameters.pool.name }}
-      queue: ${{ parameters.pool.queue }}
+    name: Hosted Windows 2019 with VS2019
   steps:
     - task: PowerShell@2
       displayName: Add Build to Channel
       inputs:
-        scriptType: inlineScript
-        inlineScript: |
+        targetType: inline
+        script: |
           $headers = @{
             "Accept" = "application/json"
             "Authorization" = "Bearer $(MaestroApiPassword)"

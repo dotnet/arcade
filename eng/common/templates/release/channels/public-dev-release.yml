@@ -1,9 +1,3 @@
-parameters:
-  # Which target pool should be used
-  pool:
-    name: 'NetCoreInternal-Pool'
-    queue: 'BuildPool.Windows.10.Amd64.VS2017'
-
 stages:
 - stage: Publish
   dependsOn: validate
@@ -12,18 +6,13 @@ stages:
   displayName: Developer Channel
   jobs:
   - template: ../setup-maestro-vars.yml
-    parameters:
-      pool:
-        name: ${{ parameters.pool.name }}
-        queue: ${{ parameters.pool.queue }}
 
   - job:
     displayName: Symbol Publishing
     dependsOn: setupMaestroVars
     condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicDevRelease_Channel_Id)
     pool:
-      name: ${{ parameters.pool.name }}
-      queue: ${{ parameters.pool.queue }}
+      name: Hosted Windows 2019 with VS2019
     steps:
       - task: DownloadBuildArtifacts@0
         displayName: Download PDB Artifacts
@@ -56,8 +45,7 @@ stages:
       BARBuildId: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
     condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicDevRelease_Channel_Id)
     pool:
-      name: ${{ parameters.pool.name }}
-      queue: ${{ parameters.pool.queue }}
+      name: Hosted Windows 2019 with VS2019
     steps:
       - task: DownloadBuildArtifacts@0
         displayName: Download Package Artifacts
@@ -101,18 +89,13 @@ stages:
     - template: ../common-variables.yml  
   jobs:
   - template: ../setup-maestro-vars.yml
-    parameters:
-      pool:
-        name: ${{ parameters.pool.name }}
-        queue: ${{ parameters.pool.queue }}
 
   - job:
     displayName: Symbol Availability
     dependsOn: setupMaestroVars
     condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicDevRelease_Channel_Id)
     pool:
-      name: ${{ parameters.pool.name }}
-      queue: ${{ parameters.pool.queue }}
+      name: Hosted Windows 2019 with VS2019
     steps:
       - task: DownloadBuildArtifacts@0
         displayName: Download Package Artifacts
@@ -121,18 +104,11 @@ stages:
           artifactName: PackageArtifacts
 
       - task: PowerShell@2
-        displayName:  Install DotNet Symbol
-        inputs:
-          scriptType: inlineScript
-          inlineScript: |
-            dotnet tool install dotnet-symbol --tool-path $(Agent.BuildDirectory)/SymbolTool --version $(SymbolToolVersion) --add-source https://api.nuget.org/v3/index.json
-        
-      - task: PowerShell@2
         displayName: Check Symbol Availability
         inputs:
-          targetType: filePath
-          filePath: '$(Build.SourcesDirectory)/eng/common/release/CheckSymbols.ps1'
-          arguments: -InputPath $(Build.ArtifactStagingDirectory)/PackageArtifacts/ -ExtractPath $(Agent.BuildDirectory)/Temp/ -SymbolToolPath $(Agent.BuildDirectory)/SymbolTool/
+          filePath: $(Build.SourcesDirectory)/eng/common/release/symbols-validation.ps1
+          arguments: -InputPath $(Build.ArtifactStagingDirectory)/PackageArtifacts/ -ExtractPath $(Agent.BuildDirectory)/Temp/ -DotnetSymbolVersion $(SymbolToolVersion)
+        continueOnError: true
 
   - job:
     displayName: Gather Drop
@@ -141,8 +117,7 @@ stages:
       BARBuildId: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
     condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicDevRelease_Channel_Id)
     pool:
-      name: ${{ parameters.pool.name }}
-      queue: ${{ parameters.pool.queue }}
+      name: Hosted Windows 2019 with VS2019
     steps:
       - task: PowerShell@2
         displayName: Setup Darc CLI
@@ -153,14 +128,11 @@ stages:
       - task: PowerShell@2
         displayName: Run Darc gather-drop
         inputs:
-          scriptType: inlineScript
-          inlineScript: |
+          targetType: inline
+          script: |
             darc gather-drop --non-shipping --continue-on-error --id $(BARBuildId) --output-dir $(Agent.BuildDirectory)/Temp/Drop/ --bar-uri $(MaestroApiEndpoint) --password $(MaestroApiPassword)
         continueOnError: true
 
   - template: ../promote-build.yml
     parameters:
       ChannelId: ${{ variables.PublicDevRelease_Channel_Id }}
-      pool:
-        name: ${{ parameters.pool.name }}
-        queue: ${{ parameters.pool.queue }}
