@@ -138,7 +138,7 @@ namespace {{pascalCaseNs Namespace}}
 
             if (value is Enum)
             {
-                return result[1..result.Length-1];
+                return result.Substring(1, result.Length-2);
             }
 
             return result;
