@@ -2,23 +2,27 @@ param (
     $dotnetsymbolVersion = $null
 )
 
-$verbosity = "m"
+$ErrorActionPreference = "Stop"
+Set-StrictMode -Version 2.0
+
 . $PSScriptRoot\..\tools.ps1
+
+$verbosity = "minimal"
 
 function Installdotnetsymbol ($dotnetsymbolVersion) {
   $dotnetsymbolPackageName = "dotnet-symbol"
 
   $dotnetRoot = InitializeDotNetCli -install:$true
   $dotnet = "$dotnetRoot\dotnet.exe"
-  $toolList = Invoke-Expression "& `"$dotnet`" tool list -g"
+  $toolList = & "$dotnet" tool list --global
 
   if ($toolList -like "*$dotnetsymbolPackageName*") {
-    Invoke-Expression "& `"$dotnet`" tool uninstall $dotnetsymbolPackageName -g"
+    & "$dotnet" tool uninstall $dotnetsymbolPackageName --global
   }
  
   Write-Host "Installing dotnet-symbol version $dotnetsymbolVersion..."
   Write-Host "You may need to restart your command window if this is the first dotnet tool you have installed."
-  Invoke-Expression "& `"$dotnet`" tool install $dotnetsymbolPackageName --version $dotnetsymbolVersion -v $verbosity -g"
+  & "$dotnet" tool install $dotnetsymbolPackageName --version $dotnetsymbolVersion --verbosity $verbosity --global
 }
 
 Installdotnetsymbol $dotnetsymbolVersion

@@ -5,6 +5,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+Set-StrictMode -Version 2.0
+
 . $PSScriptRoot\..\tools.ps1
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -70,7 +72,8 @@ function CountMissingSymbols {
 
   # Ensure input file exist
   if (!(Test-Path $PackagePath)) {
-    throw "Input file does not exist: $PackagePath"
+    Write-PipelineTaskError "Input file does not exist: $PackagePath"
+    ExitWithExitCode 1
   }
   
   # Extensions for which we'll look for symbols
@@ -158,11 +161,10 @@ function CheckSymbolsAvailable {
     }
 }
 
-function CheckExitCode ([string]$stage)
-{
+function CheckExitCode ([string]$stage) {
   $exitCode = $LASTEXITCODE
   if ($exitCode -ne 0) {
-    Write-Host "Something failed in stage: '$stage'. Check for errors above. Exiting now..."
+    Write-PipelineTaskError "Something failed while '$stage'. Check for errors above. Exiting now..."
     ExitWithExitCode $exitCode
   }
 }

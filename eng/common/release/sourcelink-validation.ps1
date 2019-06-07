@@ -6,13 +6,15 @@ param(
   [Parameter(Mandatory=$true)][string] $SourcelinkCliVersion    # Version of SourceLink CLI to use
 )
 
+$ErrorActionPreference = "Stop"
+Set-StrictMode -Version 2.0
+
+. $PSScriptRoot\..\tools.ps1
+
 # Cache/HashMap (File -> Exist flag) used to consult whether a file exist 
 # in the repository at a specific commit point. This is populated by inserting
 # all files present in the repo at a specific commit point.
 $global:RepoFiles = @{}
-
-$ErrorActionPreference = "Stop"
-. $PSScriptRoot\..\tools.ps1
 
 $ValidatePackage = {
   param( 
@@ -21,7 +23,8 @@ $ValidatePackage = {
 
   # Ensure input file exist
   if (!(Test-Path $PackagePath)) {
-    throw "Input file does not exist: $PackagePath"
+    Write-PipelineTaskError "Input file does not exist: $PackagePath"
+    ExitWithExitCode 1
   }
 
   # Extensions for which we'll look for SourceLink information
@@ -119,8 +122,6 @@ $ValidatePackage = {
               $global:LASTEXITCODE = 1
             }
           }
-
-          Pop-Location
         }
       
         &$ValidateFile $TargetFile $FileName ([ref]$FailedFiles)
@@ -136,9 +137,8 @@ $ValidatePackage = {
 function ValidateSourceLinkLinks {
   if (!($GHRepoName -Match "^[^\s\/]+/[^\s\/]+$")) {
     if (!($GHRepoName -Match "^[^\s-]+-[^\s]+$")) {
-      Write-Host "GHRepoName should be in the format <org>/<repo> or <org>-<repo>"
-      $global:LASTEXITCODE = 1
-      return
+      Write-PipelineTaskError "GHRepoName should be in the format <org>/<repo> or <org>-<repo>"
+      ExitWithExitCode 1
     }
     else {
       $GHRepoName = $GHRepoName -replace '^([^\s-]+)-([^\s]+)$', '$1/$2';
@@ -146,9 +146,8 @@ function ValidateSourceLinkLinks {
   }
 
   if (!($GHCommit -Match "^[0-9a-fA-F]{40}$")) {
-    Write-Host "GHCommit should be a 40 chars hexadecimal string"
-    $global:LASTEXITCODE = 1
-    return
+    Write-PipelineTaskError "GHCommit should be a 40 chars hexadecimal string"
+    ExitWithExitCode 1
   }
 
   $RepoTreeURL = -Join("http://api.github.com/repos/", $GHRepoName, "/git/trees/", $GHCommit, "?recursive=1")
@@ -167,10 +166,9 @@ function ValidateSourceLinkLinks {
     }
   }
   catch {
-    Write-Host "Problems downloading the list of files from the repo. Url used: $RepoTreeURL"
+    Write-PipelineTaskError "Problems downloading the list of files from the repo. Url used: $RepoTreeURL"
     Write-Host $_
-    $global:LASTEXITCODE = 1
-    return
+    ExitWithExitCode 1
   }
   
   if (Test-Path $ExtractPath) {
@@ -189,11 +187,10 @@ function ValidateSourceLinkLinks {
   }
 }
 
-function CheckExitCode ([string]$stage)
-{
+function CheckExitCode ([string]$stage) {
   $exitCode = $LASTEXITCODE
   if ($exitCode -ne 0) {
-    Write-Host "Something failed in stage: '$stage'. Check for errors above. Exiting now..."
+    Write-PipelineTaskError "Something failed while '$stage'. Check for errors above. Exiting now..."
     ExitWithExitCode $exitCode
   }
 }
