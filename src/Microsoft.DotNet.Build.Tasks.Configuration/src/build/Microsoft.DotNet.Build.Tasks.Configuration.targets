@@ -163,7 +163,7 @@
     Make sure to run late enough for transitive dependencies which runs before AssignProjectConfiguration.
   -->
   <Target Name="AnnotateProjectReference"
-          AfterTargets="IncludeTransitiveProjectReferences"
+          AfterTargets="ResolvePackageDependenciesForBuild"
           Condition="'@(ProjectReference)' != ''"
           Inputs="%(ProjectReference.Identity)"
           Outputs="unused">
