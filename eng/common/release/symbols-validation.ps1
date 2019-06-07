@@ -1,8 +1,11 @@
 param(
-  [Parameter(Mandatory=$true)][string] $InputPath,       # Full path to directory where NuGet packages to be checked are stored
-  [Parameter(Mandatory=$true)][string] $ExtractPath,     # Full path to directory where the packages will be extracted during validation
-  [Parameter(Mandatory=$true)][string] $SymbolToolPath   # Full path to directory where dotnet symbol-tool was installed
+  [Parameter(Mandatory=$true)][string] $InputPath,              # Full path to directory where NuGet packages to be checked are stored
+  [Parameter(Mandatory=$true)][string] $ExtractPath,            # Full path to directory where the packages will be extracted during validation
+  [Parameter(Mandatory=$true)][string] $DotnetSymbolVersion     # Version of dotnet symbol to use
 )
+
+$ErrorActionPreference = "Stop"
+. $PSScriptRoot\..\tools.ps1
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
@@ -35,7 +38,10 @@ function FirstMatchingSymbolDescriptionOrDefault {
   # DWARF file for a .dylib
   $DylibDwarf = $SymbolPath.Replace($Extension, ".dylib.dwarf")
  
-  .\dotnet-symbol.exe --symbols --modules --windows-pdbs $TargetServerParam $FullPath -o $SymbolsPath | Out-Null
+  $dotnetsymbolExe = "$env:USERPROFILE\.dotnet\tools"
+  $dotnetsymbolExe = Resolve-Path "$dotnetsymbolExe\dotnet-symbol.exe"
+
+  & $dotnetsymbolExe --symbols --modules --windows-pdbs $TargetServerParam $FullPath -o $SymbolsPath | Out-Null
 
   if (Test-Path $PdbPath) {
     return "PDB"
@@ -79,9 +85,6 @@ function CountMissingSymbols {
   $SymbolsPath = Join-Path -Path $ExtractPath -ChildPath "Symbols"
   
   [System.IO.Compression.ZipFile]::ExtractToDirectory($PackagePath, $ExtractPath)
-
-  # Makes easier to reference `symbol tool`
-  Push-Location $SymbolToolPath
 
   Get-ChildItem -Recurse $ExtractPath |
     Where-Object {$RelevantExtensions -contains $_.Extension} |
@@ -155,4 +158,26 @@ function CheckSymbolsAvailable {
     }
 }
 
-CheckSymbolsAvailable
+function CheckExitCode ([string]$stage)
+{
+  $exitCode = $LASTEXITCODE
+  if ($exitCode -ne 0) {
+    Write-Host "Something failed in stage: '$stage'. Check for errors above. Exiting now..."
+    ExitWithExitCode $exitCode
+  }
+}
+
+try {
+  Write-Host "Installing dotnet symbol ..."
+  Get-Location
+  . $PSScriptRoot\dotnetsymbol-init.ps1 -dotnetsymbolVersion $DotnetSymbolVersion
+  CheckExitCode "Running dotnetsymbol-init"
+
+  CheckSymbolsAvailable
+}
+catch {
+  Write-Host $_
+  Write-Host $_.Exception
+  Write-Host $_.ScriptStackTrace
+  ExitWithExitCode 1
+}

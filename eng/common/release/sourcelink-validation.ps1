@@ -1,15 +1,18 @@
 param(
-  [Parameter(Mandatory=$true)][string] $InputPath,           # Full path to directory where Symbols.NuGet packages to be checked are stored
-  [Parameter(Mandatory=$true)][string] $ExtractPath,         # Full path to directory where the packages will be extracted during validation
-  [Parameter(Mandatory=$true)][string] $SourceLinkToolPath,  # Full path to directory where dotnet SourceLink CLI was installed
-  [Parameter(Mandatory=$false)][string] $GHRepoName,         # GitHub name of the repo including the Org. E.g., dotnet/arcade
-  [Parameter(Mandatory=$false)][string] $GHCommit            # GitHub commit SHA used to build the packages
+  [Parameter(Mandatory=$true)][string] $InputPath,              # Full path to directory where Symbols.NuGet packages to be checked are stored
+  [Parameter(Mandatory=$true)][string] $ExtractPath,            # Full path to directory where the packages will be extracted during validation
+  [Parameter(Mandatory=$true)][string] $GHRepoName,             # GitHub name of the repo including the Org. E.g., dotnet/arcade
+  [Parameter(Mandatory=$true)][string] $GHCommit,               # GitHub commit SHA used to build the packages
+  [Parameter(Mandatory=$true)][string] $SourcelinkCliVersion    # Version of SourceLink CLI to use
 )
 
 # Cache/HashMap (File -> Exist flag) used to consult whether a file exist 
 # in the repository at a specific commit point. This is populated by inserting
 # all files present in the repo at a specific commit point.
 $global:RepoFiles = @{}
+
+$ErrorActionPreference = "Stop"
+. $PSScriptRoot\..\tools.ps1
 
 $ValidatePackage = {
   param( 
@@ -59,10 +62,9 @@ $ValidatePackage = {
             [ref] $FailedFiles
           )
 
-          # Makes easier to reference `sourcelink cli`
-          Push-Location $using:SourceLinkToolPath
-
-          $SourceLinkInfos = .\sourcelink.exe print-urls $FullPath | Out-String
+          $sourcelinkExe = "$env:USERPROFILE\.dotnet\tools"
+          $sourcelinkExe = Resolve-Path "$sourcelinkExe\sourcelink.exe"
+          $SourceLinkInfos = & $sourcelinkExe print-urls $FullPath | Out-String
 
           if ($LASTEXITCODE -eq 0 -and -not ([string]::IsNullOrEmpty($SourceLinkInfos))) {
             $NumFailedLinks = 0
@@ -85,7 +87,7 @@ $ValidatePackage = {
                     
                       # Only GitHub links are valid
                       if ($Uri.AbsoluteURI -ne $null -and $Uri.Host -match "github") {
-                        $Status = (Invoke-WebRequest -Uri $Link -UseBasicParsing -Method HEAD -TimeoutSec 5).StatusCode
+                        $Status = (Invoke-WebRequest -UseBasicParsing -Uri $Link -UseBasicParsing -Method HEAD -TimeoutSec 5).StatusCode
                       }
                       else {
                         $Status = 0
@@ -149,12 +151,12 @@ function ValidateSourceLinkLinks {
     return
   }
 
-  $RepoTreeURL = -Join("https://api.github.com/repos/", $GHRepoName, "/git/trees/", $GHCommit, "?recursive=1")
+  $RepoTreeURL = -Join("http://api.github.com/repos/", $GHRepoName, "/git/trees/", $GHCommit, "?recursive=1")
   $CodeExtensions = @(".cs", ".vb", ".fs", ".fsi", ".fsx", ".fsscript")
 
   try {
     # Retrieve the list of files in the repo at that particular commit point and store them in the RepoFiles hash
-    $Data = Invoke-WebRequest $RepoTreeURL | ConvertFrom-Json | Select-Object -ExpandProperty tree
+    $Data = Invoke-WebRequest $RepoTreeURL -UseBasicParsing | ConvertFrom-Json | Select-Object -ExpandProperty tree
   
     foreach ($file in $Data) {
       $Extension = [System.IO.Path]::GetExtension($file.path)
@@ -187,4 +189,26 @@ function ValidateSourceLinkLinks {
   }
 }
 
-Measure-Command { ValidateSourceLinkLinks }
+function CheckExitCode ([string]$stage)
+{
+  $exitCode = $LASTEXITCODE
+  if ($exitCode -ne 0) {
+    Write-Host "Something failed in stage: '$stage'. Check for errors above. Exiting now..."
+    ExitWithExitCode $exitCode
+  }
+}
+
+try {
+  Write-Host "Installing SourceLink CLI..."
+  Get-Location
+  . $PSScriptRoot\sourcelink-cli-init.ps1 -sourcelinkCliVersion $SourcelinkCliVersion
+  CheckExitCode "Running sourcelink-cli-init"
+
+  Measure-Command { ValidateSourceLinkLinks }
+}
+catch {
+  Write-Host $_
+  Write-Host $_.Exception
+  Write-Host $_.ScriptStackTrace
+  ExitWithExitCode 1
+}
