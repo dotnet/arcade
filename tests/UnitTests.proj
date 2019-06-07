@@ -26,8 +26,8 @@
     </HelixWorkItem>
   </ItemGroup>
   <ItemGroup>
-    <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese"/>
-    <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese2"/>
+    <!-- <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese"/>
+    <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese2"/> -->
   </ItemGroup>
 
   <ItemGroup>
@@ -37,8 +37,8 @@
     </HelixWorkItem>
   </ItemGroup>
   <ItemGroup>
-    <AzurePipelinesExpectedTestFailure Include="tests.UnitTest1.TestMethod1"/>
-    <AzurePipelinesExpectedTestFailure Include="tests.UnitTest1.TestMethod4"/>
+    <!-- <AzurePipelinesExpectedTestFailure Include="tests.UnitTest1.TestMethod1"/>
+    <AzurePipelinesExpectedTestFailure Include="tests.UnitTest1.TestMethod4"/> -->
   </ItemGroup>
 
   <ItemGroup>
