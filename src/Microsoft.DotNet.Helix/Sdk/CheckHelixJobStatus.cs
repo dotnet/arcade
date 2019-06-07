@@ -1,11 +1,11 @@
+using System;
 using Microsoft.Build.Framework;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Helix.Client.Models;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -21,20 +21,23 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public bool FailOnMissionControlTestFailure { get; set; } = false;
 
-        protected override async Task ExecuteCore()
+        protected override async Task ExecuteCore(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             List<string> jobNames = Jobs.Select(j => j.GetMetadata("Identity")).ToList();
 
-            await Task.WhenAll(jobNames.Select(CheckHelixJobAsync));
+            await Task.WhenAll(jobNames.Select(n => CheckHelixJobAsync(n, cancellationToken)));
         }
 
-        private async Task CheckHelixJobAsync(string jobName)
+        private async Task CheckHelixJobAsync(string jobName, CancellationToken cancellationToken)
         {
             await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
             Log.LogMessage($"Checking status of job {jobName}");
             var status = await HelixApi.RetryAsync(
                 () => HelixApi.Job.PassFailAsync(jobName),
-                LogExceptionRetry);
+                LogExceptionRetry,
+                cancellationToken);
             if (status.Working > 0)
             {
                 Log.LogError(
@@ -45,7 +48,9 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 foreach (string failedWorkItem in status.Failed)
                 {
-                    Log.LogError($"Work item {failedWorkItem} in job {jobName} has failed.");
+                    var consoleUri = HelixApi.BaseUri.AbsoluteUri.TrimEnd('/') + $"/api/2018-03-14/jobs/{jobName}/workitems/{Uri.EscapeDataString(failedWorkItem)}/console";
+
+                    Log.LogError($"Work item {failedWorkItem} in job {jobName} has failed, logs available here: {consoleUri}.");
                 }
             }
 
@@ -59,6 +64,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
 
                     Log.LogMessage($"Job {jobName} is still processing xunit results.");
+                    cancellationToken.ThrowIfCancellationRequested();
                 }
             }
         }

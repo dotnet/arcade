@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Encodings.Web;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
@@ -149,7 +150,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private CommandPayload _commandPayload;
 
-        protected override async Task ExecuteCore()
+        protected override async Task ExecuteCore(CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(AccessToken) && string.IsNullOrEmpty(Creator))
             {
@@ -166,6 +167,8 @@ namespace Microsoft.DotNet.Helix.Sdk
             Source = Source.ToLowerInvariant();
             Type = Type.ToLowerInvariant();
             Build = Build.ToLowerInvariant();
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             using (_commandPayload = new CommandPayload(this))
             {
@@ -235,11 +238,13 @@ namespace Microsoft.DotNet.Helix.Sdk
                 JobCorrelationId = job.CorrelationId;
                 ResultsContainerUri = job.ResultsContainerUri;
                 ResultsContainerReadSAS = job.ResultsContainerReadSAS;
+                cancellationToken.ThrowIfCancellationRequested();
             }
 
             string mcUri = await GetMissionControlResultUri();
 
             Log.LogMessage(MessageImportance.High, $"Results will be available from {mcUri}");
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         private IJobDefinition AddProperty(IJobDefinition def, ITaskItem property)
