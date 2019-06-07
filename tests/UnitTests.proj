@@ -20,6 +20,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <HelixWorkItem Include="Fail">
+      <Command>exit -1</Command>
+    </HelixWorkItem>
+
     <HelixWorkItem Include="JUnitTest">
       <Command>echo 'done!'</Command>
       <PayloadDirectory>$(MSBuildThisFileDirectory)Junit</PayloadDirectory>
