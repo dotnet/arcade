@@ -6,6 +6,7 @@
     <PackageType>MSBuildSdk</PackageType>
     <LangVersion>latest</LangVersion>
     <DefaultItemExcludes Condition="'$(TargetFramework)' != 'net472'">**/*.Desktop.*</DefaultItemExcludes>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>

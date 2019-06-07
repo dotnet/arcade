@@ -6,6 +6,7 @@
     <IsPackable>true</IsPackable>
     <RootNamespace>Microsoft.DotNet.Helix.Client</RootNamespace>
     <Description>This package provides a simple API for constructing and sending jobs to the Helix Api</Description>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>

@@ -8,6 +8,7 @@
 
     <SwaggerDocumentUri>https://helix.dot.net/swagger/docs</SwaggerDocumentUri>
     <SwaggerClientName>HelixApi</SwaggerClientName>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>

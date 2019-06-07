@@ -8,6 +8,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dotnet-swaggergen</ToolCommandName>
     <SignAssembly>false</SignAssembly>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>
