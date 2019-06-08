@@ -35,6 +35,6 @@
   <Target Name="CheckTestResults"
           BeforeTargets="AfterTest"
           Condition="$(FailOnTestFailure)">
-    <CheckAzurePipelinesTestResults ExpectedTestFailures="@(AzurePipelinesExpectedTestFailure)" DisableFlakyTestSupport="$(AzurePipelinesDisableFlakyTestSupport)" TestRunIds="@(HelixTargetQueue -> '%(TestRunId)')"/>
+    <CheckAzurePipelinesTestResults ExpectedTestFailures="@(AzurePipelinesExpectedTestFailure)" EnableFlakyTestSupport="$(AzurePipelinesEnableFlakyTestSupport)" TestRunIds="@(HelixTargetQueue -> '%(TestRunId)')"/>
   </Target>
 </Project>
