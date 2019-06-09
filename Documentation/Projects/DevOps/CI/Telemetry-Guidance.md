@@ -49,6 +49,10 @@ Project properties are useful to set a generic categorization for a project.  Th
 If we add...
 
 ```XML
+<UsingTask
+  TaskName="Telemetry"
+  AssemblyFile="Microsoft.Build.Tasks.Core.dll" />
+
 <PropertyGroup>
   <NETCORE_ENGINEERING_TELEMETRY>Build</NETCORE_ENGINEERING_TELEMETRY>
 </PropertyGroup>

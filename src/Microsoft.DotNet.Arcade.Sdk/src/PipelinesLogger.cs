@@ -54,14 +54,12 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 _ignoredTargets.UnionWith(targetsNotLogged.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries));
             }
 
-
             eventSource.ErrorRaised += OnErrorRaised;
             eventSource.WarningRaised += OnWarningRaised;
+            eventSource.ProjectStarted += OnProjectStarted;
 
             IEventSource2 eventSource2 = eventSource as IEventSource2;
             eventSource2.TelemetryLogged += OnTelemetryLogged;
-
-            eventSource.ProjectStarted += OnProjectStarted;
 
             if (Verbosity == LoggerVerbosity.Diagnostic)
             {
