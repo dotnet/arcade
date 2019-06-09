@@ -6,6 +6,7 @@
     <_ArcadeOverriddenCustomBeforeMicrosoftCommonCrossTargetingTargets>$(CustomBeforeMicrosoftCommonCrossTargetingTargets)</_ArcadeOverriddenCustomBeforeMicrosoftCommonCrossTargetingTargets>
     <CustomBeforeMicrosoftCommonTargets>$(MSBuildThisFileDirectory)BeforeCommonTargets.targets</CustomBeforeMicrosoftCommonTargets>
     <CustomBeforeMicrosoftCommonCrossTargetingTargets>$(MSBuildThisFileDirectory)BeforeCommonTargets.CrossTargeting.targets</CustomBeforeMicrosoftCommonCrossTargetingTargets>
+    <NETCORE_ENGINEERING_TELEMETRY>$(_NETCORE_ENGINEERING_TELEMETRY)</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>
 
   <Import Project="BuildTasks.props" />

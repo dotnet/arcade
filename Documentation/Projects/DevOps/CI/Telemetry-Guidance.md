@@ -38,11 +38,11 @@ Repos with custom scripts can add telemetry categorization by using Arcade's log
 
 ### Arcade MSBuild logger support
 
-Arcade's MSBuild logger will be modified to look for an `NETCORE_ENGINEERING_TELEMETRY` property.  If present, then error output will be decorated in the expected [telemetry format](#telemetry-format).
+Arcade's MSBuild logger looks for an `NETCORE_ENGINEERING_TELEMETRY` static or global property.  If present, then error output will be decorated in the expected [telemetry format](#telemetry-format).
 
-This will allow us to add telemetry properties into MSBuild targets which will then decorate the Timeline API results with the expected categorization.  
+This will allow us to add telemetry properties into MSBuild projects which will then decorate the Timeline API results with the expected categorization.  
 
-Repos with custom MSBuild targets that are using Arcade's pipeline logger, will get similar functionality by adding the "NETCORE_ENGINEERING_TELEMETRY" property group or defining an environment variable with their desired categorization (MSBuild automatically turns environment variables into MSBuild properties).
+Project properties are useful to set a generic categorization for a project.  This model works well for Arcade because Arcade directly invokes MSBuild on a project and we can specify a categorization when that invocation occurs.  For dynamic categorization (specifying a category to be set when a target is executing), you can use MSBuilds "Telemetry" task.
 
 #### Example
 
@@ -50,15 +50,24 @@ If we add...
 
 ```XML
 <PropertyGroup>
-  <NETCORE_ENGINEERING_TELEMETRY>Signing</NETCORE_ENGINEERING_TELEMETRY>
+  <NETCORE_ENGINEERING_TELEMETRY>Build</NETCORE_ENGINEERING_TELEMETRY>
 </PropertyGroup>
+
+<Target Name="Build" />
+
+<Target Name="MyCustomBuildTarget"
+        AfterTargets="Build">
+    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Custom" />
+</Target>
 ```
 
-into Arcade's [Sign.proj](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) file, then any CI failures in Signing targets will be properly tagged by Arcade's logger.  This will enable categorization for anyone using Arcade.
+into a project file, then any CI failures in the "Build" target will be categorizedas "Build".  Any failure in "MyCustomBuildTarget" will be categorized as "Custom" because of the "Telemetry" task.  
+
+Arcade will use a combination of the above techniques to enable categorization for anyone using Arcade.
 
 ## Logging categories
 
-We are not intending to be proscriptive are hard-lined about a specific set of categories that a repo must use when sending telemetry.  Initially, however, we should look to modify Arcade to categorize "Restore", "Build", "Test", "Sign", and "InitializeToolset" (Arcade script) changes.
+We are not intending to be proscriptive are hard-lined about a specific set of categories that a repo must use when sending telemetry.  Initially, however, we will modify Arcade to categorize "Restore", "Build", "Test", "Sign", and "InitializeToolset" (Arcade script) changes.
 
 ### Example chart
 
