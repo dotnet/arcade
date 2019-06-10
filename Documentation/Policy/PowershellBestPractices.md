@@ -8,6 +8,8 @@ Invoke-Expression and non-parameterized script blocks are both vulnerable to inj
 
 ### Invoke-Expression injection
 
+Invoke-Expression executes a specified string, which is vulnerable to injection attacks. As an example:
+
 ```powershell
 $function = "Write-Host"
 $argument = "hello; Write-Host injected"
@@ -80,9 +82,11 @@ In general, this guidance can be summarized as **don't use [ScriptBlock]::Create
 
 ## Prefix script and executable calls with &; check $LASTEXITCODE
 
-When a script/executable is prefixed with an ampersand (`&`), the command which follows is can be in quotation marks or include variables. This is not the case when the ampersand is not included. Thus, we recommend always using the ampersand.
+When a script/executable is prefixed with an ampersand (`&`), the command which follows can be in quotation marks or include variables. This is not the case when the ampersand is not included. Thus, we recommend always using the ampersand.
 
 Relatedly, `$LASTEXITCODE` should always be checked after running an executable to ensure that the script fails (or at least responds appropriately) to the executable failing.
+
+There is a known issue when using `$LASTEXITCODE` in release builds where PowerShell will report that the variable has not been set. As a workaround, simply set `$LASTEXITCODE = 0` at the top of your script.
 
 ## Set StrictMode and ErrorActionPreference at the top of every file
 
@@ -97,7 +101,7 @@ This will ensure PowerShell uses the proper version and that encountered errors 
 
 ## Do not use aliases in scripts
 
-Commandlet aliases (such as `ls` for `Get-ChildItem` and `echo` for `Write-Output`) are not universal across all machines and all installs of PowerShell. Always use the actual commandlet name.
+Commandlet aliases (such as `ls` for `Get-ChildItem` and `echo` for `Write-Output`) are not universal across all machines and all installs of PowerShell. Furthermore, aliases can cause confusion as the commandlets frequently behave entirely differently from the commands the aliases are named for, e.g. cmd's `dir` vs. `Get-ChildItem` or bash's `wget` and `curl` vs. `Invoke-WebRequest`. Always use the actual commandlet name.
 
 To determine what commandlet an alias points to, simply run:
 
