@@ -101,9 +101,9 @@ This will ensure PowerShell uses the proper version and that encountered errors 
 
 ## Do not use aliases in scripts
 
-Commandlet aliases (such as `ls` for `Get-ChildItem` and `echo` for `Write-Output`) are not universal across all machines and all installs of PowerShell. Furthermore, aliases can cause confusion as the commandlets frequently behave entirely differently from the commands the aliases are named for, e.g. cmd's `dir` vs. `Get-ChildItem` or bash's `wget` and `curl` vs. `Invoke-WebRequest`. Always use the actual commandlet name.
+Cmdlet aliases (such as `ls` for `Get-ChildItem` and `echo` for `Write-Output`) are not universal across all machines and all installs of PowerShell. Furthermore, aliases can cause confusion as the cmdlets frequently behave entirely differently from the commands the aliases are named for, e.g. cmd's `dir` vs. `Get-ChildItem` or bash's `wget` and `curl` vs. `Invoke-WebRequest`. Always use the actual cmdlet name.
 
-To determine what commandlet an alias points to, simply run:
+To determine what cmdlet an alias points to, simply run:
 
 ```powershell
 Get-Alias $alias
@@ -122,3 +122,19 @@ CommandType     Name                                               Version    So
 -----------     ----                                               -------    ------
 Alias           ls -> Get-ChildItem
 ```
+
+## Use CIM cmdlets rather than WMI ones
+
+PowerShell recommends avoiding all the WMI cmdlets (`Get-WmiObject`, `Remove-WmiObject`, `Invoke-WmiObject`, `Register-WmiEvent`, `Set-WmiInstance`) and instead using the CIM ones (respectively, `Get-CimInstance`, `Remove-CimInstance`, `Invoke-CimMethod`, `Register-CimIndicationEvent`, `Set-CimInstance`).
+
+## Disable positional binding for your paremters
+
+Positional parameters cause problems for code maintenance, as adding new parameters later down the line can break previous invocations. Instead, parameters should always be called explicitly. Setting:
+
+```powershell
+[CmdletBinding(PositionalBinding=$false)]
+```
+
+will force this behavior.
+
+##
