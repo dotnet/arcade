@@ -1,5 +1,5 @@
 param (
-    $dotnetsymbolVersion = $null
+  $dotnetsymbolVersion = $null
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,13 +16,14 @@ function Installdotnetsymbol ($dotnetsymbolVersion) {
   $dotnet = "$dotnetRoot\dotnet.exe"
   $toolList = & "$dotnet" tool list --global
 
-  if ($toolList -like "*$dotnetsymbolPackageName*") {
-    & "$dotnet" tool uninstall $dotnetsymbolPackageName --global
+  if (($toolList -like "*$dotnetsymbolPackageName*") -and ($toolList -like "*$dotnetsymbolVersion*")) {
+    Write-Host "dotnet-symbol version $dotnetsymbolVersion is already installed."
   }
- 
-  Write-Host "Installing dotnet-symbol version $dotnetsymbolVersion..."
-  Write-Host "You may need to restart your command window if this is the first dotnet tool you have installed."
-  & "$dotnet" tool install $dotnetsymbolPackageName --version $dotnetsymbolVersion --verbosity $verbosity --global
+  else {
+    Write-Host "Installing dotnet-symbol version $dotnetsymbolVersion..."
+    Write-Host "You may need to restart your command window if this is the first dotnet tool you have installed."
+    & "$dotnet" tool install $dotnetsymbolPackageName --version $dotnetsymbolVersion --verbosity $verbosity --global
+  }
 }
 
 Installdotnetsymbol $dotnetsymbolVersion

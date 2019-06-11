@@ -21,6 +21,8 @@ $ValidatePackage = {
     [string] $PackagePath                                 # Full path to a Symbols.NuGet package
   )
 
+  . $using:PSScriptRoot\..\tools.ps1
+
   # Ensure input file exist
   if (!(Test-Path $PackagePath)) {
     Write-PipelineTaskError "Input file does not exist: $PackagePath"
@@ -41,96 +43,106 @@ $ValidatePackage = {
 
   [System.IO.Directory]::CreateDirectory($ExtractPath);
 
-  $zip = [System.IO.Compression.ZipFile]::OpenRead($PackagePath)
+  try {
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($PackagePath)
 
-  $zip.Entries | 
-    Where-Object {$RelevantExtensions -contains [System.IO.Path]::GetExtension($_.Name)} |
-      ForEach-Object {
-        $FileName = $_.FullName
-        $Extension = [System.IO.Path]::GetExtension($_.Name)
-        $FakeName = -Join((New-Guid), $Extension)
-        $TargetFile = Join-Path -Path $ExtractPath -ChildPath $FakeName 
+    $zip.Entries | 
+      Where-Object {$RelevantExtensions -contains [System.IO.Path]::GetExtension($_.Name)} |
+        ForEach-Object {
+          $FileName = $_.FullName
+          $Extension = [System.IO.Path]::GetExtension($_.Name)
+          $FakeName = -Join((New-Guid), $Extension)
+          $TargetFile = Join-Path -Path $ExtractPath -ChildPath $FakeName 
 
-        # We ignore resource DLLs
-        if ($FileName.EndsWith(".resources.dll")) {
-          return
-        }
+          # We ignore resource DLLs
+          if ($FileName.EndsWith(".resources.dll")) {
+            return
+          }
 
-        [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, $TargetFile, $true)
+          [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, $TargetFile, $true)
 
-        $ValidateFile = {
-          param( 
-            [string] $FullPath,                                # Full path to the module that has to be checked
-            [string] $RealPath,
-            [ref] $FailedFiles
-          )
+          $ValidateFile = {
+            param( 
+              [string] $FullPath,                                # Full path to the module that has to be checked
+              [string] $RealPath,
+              [ref] $FailedFiles
+            )
 
-          $sourcelinkExe = "$env:USERPROFILE\.dotnet\tools"
-          $sourcelinkExe = Resolve-Path "$sourcelinkExe\sourcelink.exe"
-          $SourceLinkInfos = & $sourcelinkExe print-urls $FullPath | Out-String
+            $sourcelinkExe = "$env:USERPROFILE\.dotnet\tools"
+            $sourcelinkExe = Resolve-Path "$sourcelinkExe\sourcelink.exe"
+            $SourceLinkInfos = & $sourcelinkExe print-urls $FullPath | Out-String
 
-          if ($LASTEXITCODE -eq 0 -and -not ([string]::IsNullOrEmpty($SourceLinkInfos))) {
-            $NumFailedLinks = 0
+            if ($LASTEXITCODE -eq 0 -and -not ([string]::IsNullOrEmpty($SourceLinkInfos))) {
+              $NumFailedLinks = 0
 
-            # We only care about Http addresses
-            $Matches = (Select-String '(http[s]?)(:\/\/)([^\s,]+)' -Input $SourceLinkInfos -AllMatches).Matches
+              # We only care about Http addresses
+              $Matches = (Select-String '(http[s]?)(:\/\/)([^\s,]+)' -Input $SourceLinkInfos -AllMatches).Matches
 
-            if ($Matches.Count -ne 0) {
-              $Matches.Value |
-                ForEach-Object {
-                  $Link = $_
-                  $CommitUrl = -Join("https://raw.githubusercontent.com/", $using:GHRepoName, "/", $using:GHCommit, "/")
-                  $FilePath = $Link.Replace($CommitUrl, "")
-                  $Status = 200
-                  $Cache = $using:RepoFiles
-
-                  if ( !($Cache.ContainsKey($FilePath)) ) {
-                    try {
-                      $Uri = $Link -as [System.URI]
+              if ($Matches.Count -ne 0) {
+                $Matches.Value |
+                  ForEach-Object {
+                    $Link = $_
+                    $CommitUrl = "https://raw.githubusercontent.com/${using:GHRepoName}/${using:GHCommit}/"
                     
-                      # Only GitHub links are valid
-                      if ($Uri.AbsoluteURI -ne $null -and $Uri.Host -match "github") {
-                        $Status = (Invoke-WebRequest -UseBasicParsing -Uri $Link -UseBasicParsing -Method HEAD -TimeoutSec 5).StatusCode
+                    $FilePath = $Link.Replace($CommitUrl, "")
+                    $Status = 200
+                    $Cache = $using:RepoFiles
+
+                    if ( !($Cache.ContainsKey($FilePath)) ) {
+                      try {
+                        $Uri = $Link -as [System.URI]
+                      
+                        # Only GitHub links are valid
+                        if ($Uri.AbsoluteURI -ne $null -and $Uri.Host -match "github") {
+                          $Status = (Invoke-WebRequest -UseBasicParsing -Uri $Link -UseBasicParsing -Method HEAD -TimeoutSec 5).StatusCode
+                        }
+                        else {
+                          $Status = 0
+                        }
                       }
-                      else {
+                      catch {
                         $Status = 0
                       }
                     }
-                    catch {
-                      $Status = 0
-                    }
-                  }
 
-                  if ($Status -ne 200) {
-                    if ($NumFailedLinks -eq 0) {
-                      if ($FailedFiles.Value -eq 0) {
-                        Write-Host
+                    if ($Status -ne 200) {
+                      if ($NumFailedLinks -eq 0) {
+                        if ($FailedFiles.Value -eq 0) {
+                          Write-Host
+                        }
+
+                        Write-Host "`tFile $RealPath has broken links:"
                       }
 
-                      Write-Host "`tFile $RealPath has broken links:"
+                      Write-Host "`t`tFailed to retrieve $Link"
+
+                      $NumFailedLinks++
                     }
-
-                    Write-Host "`t`tFailed to retrieve $Link"
-
-                    $NumFailedLinks++
                   }
-                }
-            }
+              }
 
-            if ($NumFailedLinks -ne 0) {
-              $FailedFiles.value++
-              $global:LASTEXITCODE = 1
+              if ($NumFailedLinks -ne 0) {
+                $FailedFiles.value++
+                $global:LASTEXITCODE = 1
+              }
             }
           }
+        
+          &$ValidateFile $TargetFile $FileName ([ref]$FailedFiles)
         }
-      
-        &$ValidateFile $TargetFile $FileName ([ref]$FailedFiles)
-      }
-
-  $zip.Dispose()
+  }
+  catch {
+  
+  }
+  finally {
+    $zip.Dispose() 
+  }
 
   if ($FailedFiles -eq 0) {
     Write-Host "Passed."
+  }
+  else {
+    Write-PipelineTaskError "$PackagePath has broken SourceLink links."
   }
 }
 

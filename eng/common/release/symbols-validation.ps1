@@ -154,7 +154,8 @@ function CheckSymbolsAvailable {
       $Status = CountMissingSymbols "$InputPath\$FileName"
   
       if ($Status -ne 0) {
-        Write-Error "Missing symbols for $Status modules in the package $FileName"
+	    Write-PipelineTaskError "Missing symbols for $Status modules in the package $FileName"
+		ExitWithExitCode $exitCode
       }
 
       Write-Host

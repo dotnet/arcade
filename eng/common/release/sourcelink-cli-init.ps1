@@ -1,5 +1,5 @@
 param (
-    $sourcelinkCliVersion = $null
+  $sourcelinkCliVersion = $null
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,13 +16,14 @@ function InstallSourcelinkCli ($sourcelinkCliVersion) {
   $dotnet = "$dotnetRoot\dotnet.exe"
   $toolList = & "$dotnet" tool list --global
 
-  if ($toolList -like "*$sourcelinkCliPackageName*") {
-    & "$dotnet" tool uninstall $sourcelinkCliPackageName --global
+  if (($toolList -like "*$sourcelinkCliPackageName*") -and ($toolList -like "*$sourcelinkCliVersion*")) {
+    Write-Host "SourceLink CLI version $sourcelinkCliVersion is already installed."
   }
- 
-  Write-Host "Installing SourceLink CLI version $sourcelinkCliVersion..."
-  Write-Host "You may need to restart your command window if this is the first dotnet tool you have installed."
-  & "$dotnet" tool install $sourcelinkCliPackageName --version $sourcelinkCliVersion --verbosity $verbosity --global
+  else {
+    Write-Host "Installing SourceLink CLI version $sourcelinkCliVersion..."
+    Write-Host "You may need to restart your command window if this is the first dotnet tool you have installed."
+    & "$dotnet" tool install $sourcelinkCliPackageName --version $sourcelinkCliVersion --verbosity $verbosity --global 
+  }
 }
 
 InstallSourcelinkCli $sourcelinkCliVersion
