@@ -139,6 +139,7 @@ function Write-PipelineSetVariable {
       Write-LoggingCommand -Area 'task' -Event 'setvariable' -Data $Value -Properties @{
         'variable' = $Name
         'issecret' = $Secret
+        'isoutput' = 'true'
       } -AsOutput:$AsOutput
     }
 }
