@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             cancellationToken.ThrowIfCancellationRequested();
             Log.LogMessage($"Checking status of job {jobName}");
             var status = await HelixApi.RetryAsync(
-                () => HelixApi.Job.PassFailAsync(jobName),
+                () => HelixApi.Job.PassFailAsync(jobName, cancellationToken),
                 LogExceptionRetry,
                 cancellationToken);
             if (status.Working > 0)
@@ -56,9 +56,9 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (FailOnMissionControlTestFailure)
             {
-                for (; ; await Task.Delay(10000)) // delay every time this loop repeats
+                for (; ; await Task.Delay(10000, cancellationToken)) // delay every time this loop repeats
                 {
-                    if (await MissionControlTestProcessingDoneAsync(jobName))
+                    if (await MissionControlTestProcessingDoneAsync(jobName, cancellationToken))
                     {
                         break;
                     }
@@ -69,13 +69,14 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
         }
 
-        private async Task<bool> MissionControlTestProcessingDoneAsync(string jobName)
+        private async Task<bool> MissionControlTestProcessingDoneAsync(string jobName,
+            CancellationToken cancellationToken)
         {
             var results = await HelixApi.Aggregate.JobSummaryAsync(
                 groupBy: ImmutableList.Create("job.name"),
                 maxResultSets: 1,
-                filterName: jobName
-            );
+                filterName: jobName,
+                cancellationToken: cancellationToken);
 
             if (results.Count != 1)
             {

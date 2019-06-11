@@ -234,6 +234,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 Log.LogMessage(MessageImportance.Normal, "Sending Job...");
 
+                cancellationToken.ThrowIfCancellationRequested();
                 ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg));
                 JobCorrelationId = job.CorrelationId;
                 ResultsContainerUri = job.ResultsContainerUri;

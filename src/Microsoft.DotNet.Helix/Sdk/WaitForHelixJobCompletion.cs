@@ -1,10 +1,6 @@
-using System;
 using Microsoft.Build.Framework;
-using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,7 +18,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             cancellationToken.ThrowIfCancellationRequested();
             // Wait 1 second to allow helix to register the job creation
-            await Task.Delay(1000);
+            await Task.Delay(1000, cancellationToken);
 
             List<string> jobNames = Jobs.Select(j => j.GetMetadata("Identity")).ToList();
 
