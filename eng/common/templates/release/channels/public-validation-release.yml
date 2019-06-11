@@ -6,9 +6,6 @@ stages:
   displayName: Validation Channel
   jobs:
   - template: ../setup-maestro-vars.yml
-    parameters:
-      pool:
-        vmImage: 'windows-2019'
 
   - job:
     displayName: Publish to Static Feed
@@ -55,6 +52,7 @@ stages:
             /p:OverrideAssetsWithSameName=true 
             /p:PassIfExistingItemIdentical=true 
             /p:Configuration=Release 
+        enabled: false
 
 
 - stage: PVR_PublishValidation
@@ -63,9 +61,6 @@ stages:
     - template: ../common-variables.yml
   jobs:
   - template: ../setup-maestro-vars.yml
-    parameters:
-      pool:
-        vmImage: 'windows-2019'
 
   - job:
     displayName: Gather Drop
@@ -95,5 +90,3 @@ stages:
   - template: ../promote-build.yml
     parameters:
       ChannelId: ${{ variables.PublicValidationRelease_30_Channel_Id }}
-      pool:
-        vmImage: 'windows-2019'

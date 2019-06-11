@@ -1,6 +1,5 @@
 parameters:
-  enableSigningValidation: false
-  enableSymbolValidation: false
+  enableSymbolValidation: true
 
 stages:
 - stage: Publish
@@ -85,6 +84,7 @@ stages:
             /p:OverrideAssetsWithSameName=true 
             /p:PassIfExistingItemIdentical=true 
             /p:Configuration=Release 
+        enabled: false
         
 
 - stage: PublishValidation

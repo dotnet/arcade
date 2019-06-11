@@ -7,10 +7,10 @@ stages:
 - stage: validate
   dependsOn: build
   displayName: Validate
-  condition: ${{ parameters.enableSigningValidation }}
   jobs:
   - job:
     displayName: Signing Validation
+    condition: ${{ parameters.enableSigningValidation }}
     pool:
       vmImage: 'windows-2019'
     steps:
