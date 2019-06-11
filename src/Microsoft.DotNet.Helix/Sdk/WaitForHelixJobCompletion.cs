@@ -1,9 +1,7 @@
 using Microsoft.Build.Framework;
-using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Text.Encodings.Web;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Sdk
@@ -16,36 +14,39 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public ITaskItem[] Jobs { get; set; }
 
-        protected override async Task ExecuteCore()
+        protected override async Task ExecuteCore(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             // Wait 1 second to allow helix to register the job creation
-            await Task.Delay(1000);
+            await Task.Delay(1000, cancellationToken);
 
             List<string> jobNames = Jobs.Select(j => j.GetMetadata("Identity")).ToList();
 
-            await Task.WhenAll(jobNames.Select(WaitForHelixJobAsync));
+            cancellationToken.ThrowIfCancellationRequested();
+            await Task.WhenAll(jobNames.Select(n => WaitForHelixJobAsync(n, cancellationToken)));
         }
 
-        private async Task WaitForHelixJobAsync(string jobName)
+        private async Task WaitForHelixJobAsync(string jobName, CancellationToken cancellationToken)
         {
             await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
             Log.LogMessage(MessageImportance.High, $"Waiting for completion of job {jobName}");
 
-            for (;; await Task.Delay(10000)) // delay every time this loop repeats
+            for (;; await Task.Delay(10000, cancellationToken)) // delay every time this loop repeats
             {
-                var workItems = await HelixApi.RetryAsync(
-                    () => HelixApi.WorkItem.ListAsync(jobName),
-                    LogExceptionRetry);
-                var waitingCount = workItems.Count(wi => wi.State == "Waiting");
-                var runningCount = workItems.Count(wi => wi.State == "Running");
-                var finishedCount = workItems.Count(wi => wi.State == "Finished");
-                if (waitingCount == 0 && runningCount == 0 && finishedCount > 0)
+                cancellationToken.ThrowIfCancellationRequested();
+                var pf = await HelixApi.RetryAsync(
+                    () => HelixApi.Job.PassFailAsync(jobName, cancellationToken),
+                    LogExceptionRetry,
+                    cancellationToken);
+                if (pf.Working == 0 && pf.Total != 0)
                 {
-                    Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {finishedCount} finished work items.");
+                    Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {pf.Total} finished work items.");
                     return;
                 }
 
-                Log.LogMessage($"Job {jobName} is not yet completed with Waiting: {waitingCount}, Running: {runningCount}, Finished: {finishedCount}");
+                Log.LogMessage($"Job {jobName} is not yet completed with Pending: {pf.Working}, Finished: {pf.Total - pf.Working}");
+                cancellationToken.ThrowIfCancellationRequested();
             }
         }
     }

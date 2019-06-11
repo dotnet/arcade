@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.Rest;
@@ -28,7 +29,8 @@ namespace Microsoft.DotNet.Helix.Client
             ContainerInformation info = await _helixApi.RetryAsync(
                 () => _helixApiStorage.NewAsync(
                     new ContainerCreationRequest{DesiredName = requestedName, ExpirationInDays = 30}),
-                ex => { });
+                ex => { },
+                CancellationToken.None);
             var client = new CloudBlobClient(new Uri($"https://{info.StorageAccountName}.blob.core.windows.net/"), new StorageCredentials(info.WriteToken));
             CloudBlobContainer container = client.GetContainerReference(info.ContainerName);
             return new Container(container, info);

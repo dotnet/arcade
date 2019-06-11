@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
@@ -55,20 +56,28 @@ namespace Microsoft.DotNet.Helix.Client
                 ;
         }
 
-        public Task<T> RetryAsync<T>(Func<Task<T>> function, Action<Exception> logRetry)
+        public Task<T> RetryAsync<T>(Func<Task<T>> function, Action<Exception> logRetry,
+            CancellationToken cancellationToken)
         {
-            return RetryAsync<T>(function, logRetry, IsRetryableHttpException);
+            return RetryAsync<T>(function, logRetry, IsRetryableHttpException, cancellationToken);
         }
 
-        public async Task<T> RetryAsync<T>(Func<Task<T>> function, Action<Exception> logRetry, Func<Exception, bool> isRetryable)
+        public async Task<T> RetryAsync<T>(Func<Task<T>> function, Action<Exception> logRetry,
+            Func<Exception, bool> isRetryable, CancellationToken cancellationToken)
         {
             var attempt = 0;
             var maxAttempt = RetryCount;
+            cancellationToken.ThrowIfCancellationRequested();
             while (true)
             {
                 try
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     return await function();
+                }
+                catch (OperationCanceledException ocex) when (ocex.CancellationToken == cancellationToken)
+                {
+                    throw;
                 }
                 catch (Exception ex) when (isRetryable(ex))
                 {
@@ -79,7 +88,9 @@ namespace Microsoft.DotNet.Helix.Client
 
                     logRetry(ex);
                 }
+                cancellationToken.ThrowIfCancellationRequested();
                 await Task.Delay(GetRetryDelay(attempt));
+                cancellationToken.ThrowIfCancellationRequested();
                 attempt++;
             }
         }
