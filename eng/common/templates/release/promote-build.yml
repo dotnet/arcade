@@ -7,10 +7,13 @@ jobs:
   dependsOn: setupMaestroVars
   condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], ${{ parameters.ChannelId }})
   variables:
-    BARBuildId: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
-    ChannelId: ${{ parameters.ChannelId }}
+    - name: BARBuildId
+      value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
+    - name: ChannelId
+      value: ${{ parameters.ChannelId }}
+    - group: Publish-Build-Assets
   pool:
-    name: Hosted Windows 2019 with VS2019
+    vmImage: 'windows-2019'
   steps:
     - task: PowerShell@2
       displayName: Add Build to Channel
@@ -19,6 +22,6 @@ jobs:
         script: |
           $headers = @{
             "Accept" = "application/json"
-            "Authorization" = "Bearer $(MaestroApiPassword)"
+            "Authorization" = "Bearer $(MaestroAccessToken)"
           }
-          Invoke-RestMethod -Method Post -Headers $headers -Uri $(MaestroApiEndpoint)api/channels/$(ChannelId)/builds/$(BARBuildId)?api-version=2019-01-16
+          Invoke-RestMethod -Method Post -Headers $headers -Uri https://maestro-prod.westus2.cloudapp.azure.com/api/channels/$(ChannelId)/builds/$(BARBuildId)?api-version=2019-01-16

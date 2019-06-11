@@ -8,16 +8,18 @@ stages:
   - template: ../setup-maestro-vars.yml
     parameters:
       pool:
-        name: Hosted Windows 2019 with VS2019
+        vmImage: 'windows-2019'
 
   - job:
     displayName: Publish to Static Feed
     dependsOn: setupMaestroVars
-    condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicValidationRelease_Channel_Id)
+    condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicValidationRelease_30_Channel_Id)
     variables:
-      BARBuildId: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
+      - name: BARBuildId
+        value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
+      - group: Publish-Build-Assets
     pool:
-      name: Hosted Windows 2019 with VS2019
+      vmImage: 'windows-2019'
     steps:
       - task: DownloadBuildArtifacts@0
         displayName: Download Package Artifacts
@@ -44,8 +46,8 @@ stages:
           arguments: -task PublishToPackageFeed -restore -msbuildEngine dotnet 
             /p:AccountKeyToStaticFeed='$(dotnetfeed-storage-access-key-1)' 
             /p:BARBuildId=$(BARBuildId) 
-            /p:MaestroApiEndpoint='$(MaestroApiEndpoint)'
-            /p:BuildAssetRegistryToken='$(MaestroApiPassword)' 
+            /p:MaestroApiEndpoint='https://maestro-prod.westus2.cloudapp.azure.com'
+            /p:BuildAssetRegistryToken='$(MaestroAccessToken)' 
             /p:ManifestsBasePath='$(Build.ArtifactStagingDirectory)/AssetManifests/' 
             /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/' 
             /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/' 
@@ -63,16 +65,18 @@ stages:
   - template: ../setup-maestro-vars.yml
     parameters:
       pool:
-        name: Hosted Windows 2019 with VS2019
+        vmImage: 'windows-2019'
 
   - job:
     displayName: Gather Drop
     dependsOn: setupMaestroVars
-    condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicValidationRelease_Channel_Id)
+    condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicValidationRelease_30_Channel_Id)
     variables:
-      BARBuildId: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
+      - name: BARBuildId
+        value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
+      - group: Publish-Build-Assets
     pool:
-      name: Hosted Windows 2019 with VS2019
+      vmImage: 'windows-2019'
     steps:
       - task: PowerShell@2
         displayName: Setup Darc CLI
@@ -85,11 +89,11 @@ stages:
         inputs:
           targetType: inline
           script: |
-            darc gather-drop --non-shipping --continue-on-error --id $(BARBuildId) --output-dir $(Agent.BuildDirectory)/Temp/Drop/ --bar-uri $(MaestroApiEndpoint) --password $(MaestroApiPassword)
+            darc gather-drop --non-shipping --continue-on-error --id $(BARBuildId) --output-dir $(Agent.BuildDirectory)/Temp/Drop/ --bar-uri https://maestro-prod.westus2.cloudapp.azure.com --password $(MaestroAccessToken)
         continueOnError: true
 
   - template: ../promote-build.yml
     parameters:
-      ChannelId: ${{ variables.PublicValidationRelease_Channel_Id }}
+      ChannelId: ${{ variables.PublicValidationRelease_30_Channel_Id }}
       pool:
-        name: Hosted Windows 2019 with VS2019
+        vmImage: 'windows-2019'
