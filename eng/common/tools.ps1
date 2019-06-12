@@ -378,7 +378,7 @@ function LocateVisualStudio([object]$vsRequirements = $null){
   }
 
   if (!$vsRequirements) { $vsRequirements = $GlobalJson.tools.vs }
-  $args = @("-latest", "-prerelease", "-format", "json", "-requires", "Microsoft.Component.MSBuild")
+  $args = @("-latest", "-prerelease", "-format", "json", "-requires", "Microsoft.Component.MSBuild", "-products", "*")
 
   if (Get-Member -InputObject $vsRequirements -Name "version") {
     $args += "-version"
