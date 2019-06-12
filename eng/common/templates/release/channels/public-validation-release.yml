@@ -12,9 +12,10 @@ stages:
     dependsOn: setupMaestroVars
     condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicValidationRelease_30_Channel_Id)
     variables:
+      - group: DotNet-Blob-Feed
+      - group: Publish-Build-Assets
       - name: BARBuildId
         value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
-      - group: Publish-Build-Assets
     pool:
       vmImage: 'windows-2019'
     steps:
@@ -52,7 +53,6 @@ stages:
             /p:OverrideAssetsWithSameName=true 
             /p:PassIfExistingItemIdentical=true 
             /p:Configuration=Release 
-        enabled: false
 
 
 - stage: PVR_PublishValidation

@@ -93,14 +93,15 @@ $ValidatePackage = {
                         $Uri = $Link -as [System.URI]
                       
                         # Only GitHub links are valid
-                        if ($Uri.AbsoluteURI -ne $null -and $Uri.Host -match "github") {
-                          $Status = (Invoke-WebRequest -UseBasicParsing -Uri $Link -UseBasicParsing -Method HEAD -TimeoutSec 5).StatusCode
+                        if ($Uri.AbsoluteURI -ne $null -and ($Uri.Host -match "github" -or $Uri.Host -match "githubusercontent")) {
+                          $Status = (Invoke-WebRequest -Uri $Link -UseBasicParsing -Method HEAD -TimeoutSec 5).StatusCode
                         }
                         else {
                           $Status = 0
                         }
                       }
                       catch {
+                        write-host $_
                         $Status = 0
                       }
                     }

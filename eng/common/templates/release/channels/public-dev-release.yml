@@ -14,6 +14,8 @@ stages:
     displayName: Symbol Publishing
     dependsOn: setupMaestroVars
     condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicDevRelease_30_Channel_Id)
+    variables:
+      - group: DotNet-Symbol-Server-Pats
     pool:
       vmImage: 'windows-2019'
     steps:
@@ -45,7 +47,10 @@ stages:
     displayName: Publish to Static Feed
     dependsOn: setupMaestroVars
     variables:
-      BARBuildId: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
+      - group: DotNet-Blob-Feed
+      - group: Publish-Build-Assets
+      - name: BARBuildId
+        value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
     condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicDevRelease_30_Channel_Id)
     pool:
       vmImage: 'windows-2019'
@@ -84,7 +89,6 @@ stages:
             /p:OverrideAssetsWithSameName=true 
             /p:PassIfExistingItemIdentical=true 
             /p:Configuration=Release 
-        enabled: false
         
 
 - stage: PublishValidation
