@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Cci.Extensions.CSharp;
 
@@ -95,12 +96,18 @@ namespace Microsoft.Cci.Writers.CSharp
         private ITypeDefinition _parentType;
         private ITypeReference _type;
         private IName _name;
+        private IEnumerable<ICustomAttribute> _attributes = System.Linq.Enumerable.Empty<ICustomAttribute>();
 
         public DummyPrivateField(ITypeDefinition parentType, ITypeReference type, string name)
         {
             _parentType = parentType;
             _type = type;
             _name = new NameTable().GetNameFor(name);
+        }
+
+        public DummyPrivateField(ITypeDefinition parentType, ITypeReference type, string name, IEnumerable<ICustomAttribute> attributes) : this(parentType, type, name)
+        {
+            _attributes = attributes;
         }
 
         public uint BitLength => 0;
@@ -157,7 +164,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
         public ITypeDefinitionMember ResolvedTypeDefinitionMember { get { throw new System.NotImplementedException(); } }
 
-        public IEnumerable<ICustomAttribute> Attributes => System.Linq.Enumerable.Empty<ICustomAttribute>();
+        public IEnumerable<ICustomAttribute> Attributes => _attributes;
 
         public IEnumerable<ILocation> Locations { get { throw new System.NotImplementedException(); } }
 
