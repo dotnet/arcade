@@ -35,6 +35,9 @@
     <RunArguments Condition="'$(XUnitShowProgress)' == 'true' AND '$(BuildingUAPVertical)' != 'true'">$(RunArguments) -verbose</RunArguments>
     <RunArguments Condition="'$(BuildingNETFxVertical)' == 'true' and '$(XUnitNoAppdomain)' == 'true'">$(RunArguments) -noappdomain</RunArguments>
 
+    <!-- Legacy Outerloop switch -->
+    <TestScope Condition="'$(TestScope)' == '' and '$(Outerloop)' == 'true'">all</TestScope>
+    
     <!-- Traits -->
     <_withCategories Condition="'$(WithCategories)' != ''">;$(WithCategories.Trim(';'))</_withCategories>
     <_withoutCategories Condition="'$(WithoutCategories)' != ''">;$(WithoutCategories.Trim(';'))</_withoutCategories>
