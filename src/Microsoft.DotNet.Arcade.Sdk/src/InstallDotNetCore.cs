@@ -80,14 +80,22 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                 else
                                 {
                                     var proj = Project.FromFile(VersionsPropsPath, new Build.Definition.ProjectOptions());
-                                    properties = proj.AllEvaluatedProperties.ToLookup(p => p.Name, StringComparer.OrdinalIgnoreCase );
+                                    properties = proj.AllEvaluatedProperties.ToLookup(p => p.Name, StringComparer.OrdinalIgnoreCase);
                                 }
                             }
-                            
-                            foreach(var runtimeItem in runtimeItems)
+
+                            foreach (var runtimeItem in runtimeItems)
                             {
-                                foreach(var item in runtimeItem.Value)
+                                foreach (var item in runtimeItem.Value)
                                 {
+                                    string architecture = GetArchitecture(item.Value);
+
+                                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && string.Equals("x86", architecture, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        Log.LogMessage(MessageImportance.Low, "Skipping installing x86 runtimes because this is a non-Windows platform and .NET Core x86 is not currently supported on any non-Windows platform.");
+                                        continue;
+                                    }
+
                                     SemanticVersion version = null;
                                     // Try to parse version
                                     if (!SemanticVersion.TryParse(item.Key, out version))
@@ -102,26 +110,12 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                         }
                                     }
 
-                                    if(version != null)
+                                    if (version != null)
                                     {
                                         string arguments = $"-runtime \"{runtimeItem.Key}\" -version \"{version.ToNormalizedString()}\"";
-
-                                        string architecture = item.Value;
-                                        if (!string.IsNullOrWhiteSpace(architecture))
+                                        if (!string.IsNullOrEmpty(architecture))
                                         {
                                             arguments += $" -architecture {architecture}";
-                                        }
-                                        else
-                                        {
-                                            if (!string.IsNullOrWhiteSpace(Platform) && !string.Equals(Platform, "AnyCpu", StringComparison.OrdinalIgnoreCase))
-                                            {
-                                                arguments += $" -architecture {Platform}";
-                                            }
-                                            else if (RuntimeInformation.OSArchitecture == Architecture.X86 ||
-                                                     RuntimeInformation.OSArchitecture == Architecture.X64)
-                                            {
-                                                arguments += " -architecture x64";
-                                            }
                                         }
 
                                         Log.LogMessage(MessageImportance.Low, $"Executing: {DotNetInstallScript} {arguments}");
@@ -132,7 +126,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                             UseShellExecute = false
                                         });
                                         process.WaitForExit();
-                                        if(process.ExitCode != 0)
+                                        if (process.ExitCode != 0)
                                         {
                                             Log.LogError("dotnet-install failed");
                                         }
@@ -144,6 +138,26 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 }
             }
             return !Log.HasLoggedErrors;
+        }
+
+        private string GetArchitecture(string architecture)
+        {
+            if (!string.IsNullOrWhiteSpace(architecture))
+            {
+                return architecture;
+            }
+            else if (!string.IsNullOrWhiteSpace(Platform) && !string.Equals(Platform, "AnyCpu", StringComparison.OrdinalIgnoreCase))
+            {
+                return Platform;
+            }
+            else if (RuntimeInformation.OSArchitecture == Architecture.X86 ||
+                     RuntimeInformation.OSArchitecture == Architecture.X64)
+            {
+                return "x64";
+            }
+
+            // let dotnet-install.sh/ps1 infer a default arch
+            return null;
         }
 
         /*
@@ -158,7 +172,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             runtime = token.Name;
             string architecture = string.Empty;
-            if(runtime.Contains('/'))
+            if (runtime.Contains('/'))
             {
                 var parts = runtime.Split(new char[] { '/' }, 2);
                 runtime = parts[0];
