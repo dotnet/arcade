@@ -57,6 +57,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
         private IEnumerable<Action> GetConstraints(IGenericParameter parameter)
         {
+            parameter.Attributes.TryGetAttributeOfType("System.Runtime.CompilerServices.NullableAttribute", out ICustomAttribute nullableAttribute);
             if (parameter.MustBeValueType)
                 yield return () => WriteKeyword("struct", noSpace: true);
             else
@@ -66,7 +67,7 @@ namespace Microsoft.Cci.Writers.CSharp
                     {
                         WriteKeyword("class", noSpace: true);
 
-                        if (parameter.Attributes.TryGetAttributeOfType("System.Runtime.CompilerServices.NullableAttribute", out ICustomAttribute nullableAttribute))
+                        if (nullableAttribute != null)
                         {
                             WriteNullableSymbol(GetAttributeArgumentValue<byte>(nullableAttribute), isNullableValueType: false, arrayIndex: 0);
                         }
@@ -89,6 +90,16 @@ namespace Microsoft.Cci.Writers.CSharp
 
                     constraintIndex++;
                     yield return () => WriteTypeName(constraint, noSpace: true, nullableAttributeArgument: nullableAttributeValue);
+                }
+            }
+
+            // If it has no other constraint of any type and the parameter contains a NullableAttribute then it might have a notnull constraint
+            if (constraintIndex == 0 && !parameter.MustBeValueType && !parameter.MustBeReferenceType && nullableAttribute != null)
+            {
+                byte value = (byte)GetAttributeArgumentValue<byte>(nullableAttribute);
+                if ((value & 1) != 0)
+                {
+                    yield return () => WriteKeyword("notnull", noSpace: true);
                 }
             }
 
