@@ -136,5 +136,3 @@ Positional parameters cause problems for code maintenance, as adding new paramet
 ```
 
 will force this behavior.
-
-##
