@@ -8,25 +8,25 @@ stages:
   dependsOn: build
   displayName: Validate
   jobs:
-  - job:
-    displayName: Signing Validation
-    condition: ${{ parameters.enableSigningValidation }}
-    pool:
-      vmImage: 'windows-2019'
-    steps:
-      - task: DownloadBuildArtifacts@0
-        displayName: Download Package Artifacts
-        inputs:
-          buildType: current
-          artifactName: PackageArtifacts
+  - ${{ if eq(parameters.enableSigningValidation, 'true') }}:
+    - job:
+      displayName: Signing Validation
+      pool:
+        vmImage: 'windows-2019'
+      steps:
+        - task: DownloadBuildArtifacts@0
+          displayName: Download Package Artifacts
+          inputs:
+            buildType: current
+            artifactName: PackageArtifacts
 
-      - task: PowerShell@2
-        displayName: Validate
-        inputs:
-          filePath: eng\common\sdk-task.ps1
-          arguments: -task SigningValidation -restore -msbuildEngine dotnet
-            /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts'
-            /p:Configuration=Release
+        - task: PowerShell@2
+          displayName: Validate
+          inputs:
+            filePath: eng\common\sdk-task.ps1
+            arguments: -task SigningValidation -restore -msbuildEngine dotnet
+              /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts'
+              /p:Configuration=Release
 
   - ${{ if eq(parameters.enableSourceLinkValidation, 'true') }}:
     - job:
