@@ -23,8 +23,8 @@ The general workflow for a release looks like:
    additional dependency flow.
 5. Repeat 3-4 until no additional changes appear and build is 'coherent'. See
    [What is coherency and why is it important](#what-is-coherency-and-why-is-it-important)
-6. Starting with SDK (which aggregates all repos), gather a drop for the build.
-7. Validate SDK
+6. Starting with dotnet/core-sdk (which aggregates all repos), gather a drop for the build.
+7. Validate the SDKz
 8. For each additional fix needed, repeat steps 3-7.
 9. Once quality has reached the desired level, release build to public.
 
@@ -43,8 +43,15 @@ graph. This is called **incoherency**. When only a single version of each
 product dependency is referenced throughout the dependency graph, the graph is
 **coherent**.
 
+![Incoherent graph](IncoherentGraph.png)
+*Wildly incoherent graph*
+
+
+![Coherent graph](CoherentGraph.png)
+*Coherent graph, except for one pinned dependency in core-setup*
+
 ***What kinds of problems of does incoherency cause?*** Incoherency represents a
-*possible* error state. For an examplem let's take a look at
+*possible* error state. For an example, let's take a look at
 Microsoft.NETCore.App. Microsoft.NETCore.App represents a specific API surface area.
 While multiple versions of Microsoft.NETCore.App may be referenced in the
 repository dependency graph, the SDK ships with just one. This runtime must
@@ -95,7 +102,7 @@ drive to coherency includes:
 ## Coherency QB workflow
 
 The coherency QB is responsible for the following:
-- **Verifying** the dependency flow is correct and will produced the desired
+- **Verifying** the dependency flow is correct and will produce the desired
   build, and fixing if necessary. Repository owners are generally responsible
   for dependency flow into their repositories and designating branches as
   producing assets for the correct channels. The coherency QB serves as a final
@@ -216,7 +223,7 @@ Commit/branching day happens in the following steps:
    the core-sdk build cannot be turned back on until branding is consistent.
 3. **Turn back on disabled dependency flow if necessary** - If some repositories
    had their dependency flow disabled because of an early branching scenario,
-   now is the time to turn these back on 
+   now is the time to turn these back on.
 4. **Verify dependency flow health** - Once all branching and commits are complete,
    the Coherency QB can verify the release channel health with `darc get-health
    --channel "<channel name>"` and correct any issues. the `darc get-flow-graph`
@@ -330,8 +337,8 @@ To gather a drop:
    2. Start the build definition using that directory using the following parameters
       - Change the CentralBlobFeedUrl to point to an unused, isolated feed. Keep
         the storage account the same but change the container to something new.
-        E.g.
-        https://dotnetfeed.blob.core.windows.net/**dotnet-core-preview6-012258**/index.json.
+          - Container name: dotnet-core-preview6-012258
+          - Full blob feed url: https://dotnetfeed.blob.core.windows.net/dotnet-core-preview6-012258/index.json.
         Note that the container name can only have letters, numbers and dashes.
       - Clear the MyGetFeedUrl parameter (no myget upload)
       - Change PackagePublishGlob to point to a glob of the nuget packages.
