@@ -200,7 +200,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             var fileName = Path.GetFileName(blob.Id);
                             return new MSBuild.TaskItem($"{BlobAssetsBasePath}{fileName}", new Dictionary<string, string>
                             {
-                                {"RelativeBlobPath", $"{BuildManifestUtil.AssetsVirtualDir}{blob.Id}"}
+                                {"RelativeBlobPath", blob.Id}
                             });
                         })
                         .ToArray();

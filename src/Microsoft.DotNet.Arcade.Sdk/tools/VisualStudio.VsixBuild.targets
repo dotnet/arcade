@@ -19,7 +19,13 @@
          Builds a Willow component out of SwrFiles.
          Writes a stub file to component intermediate directory.
   -->
-  
+
+  <PropertyGroup>
+    <_VisualStudioBuildTasksAssembly>$(NuGetPackageRoot)microsoft.dotnet.build.tasks.visualstudio\$(MicrosoftDotNetBuildTasksVisualStudioVersion)\tools\net472\Microsoft.DotNet.Build.Tasks.VisualStudio.dll</_VisualStudioBuildTasksAssembly>
+  </PropertyGroup>
+
+  <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.FinalizeInsertionVsixFile" AssemblyFile="$(_VisualStudioBuildTasksAssembly)" />
+
   <PropertyGroup>
     <!--
       TODO: Currently we need to erase Experimental flag from VSIXes that are inserted into VS.
@@ -153,12 +159,7 @@
 
     <Copy SourceFiles="@(_FinalizeInsertionVsixFilesInputs)" DestinationFolder="$(VisualStudioSetupInsertionPath)" />
 
-    <PropertyGroup>
-      <_ModifyVsixManifestToolExe>$(NuGetPackageRoot)roslyntools.modifyvsixmanifest\$(RoslynToolsModifyVsixManifestVersion)\tools\ModifyVsixManifest.exe</_ModifyVsixManifestToolExe>
-      <_ModifyVsixManifestArgs>--remove=//x:PackageManifest/x:Installation/@Experimental --add-attribute=//x:PackageManifest/x:Installation;SystemComponent;true</_ModifyVsixManifestArgs>
-    </PropertyGroup>
-
-    <Exec Command='"$(_ModifyVsixManifestToolExe)" --vsix="$(VisualStudioSetupInsertionPath)$(TargetVsixContainerName)" $(_ModifyVsixManifestArgs)' />
+    <Microsoft.DotNet.Build.Tasks.VisualStudio.FinalizeInsertionVsixFile VsixFilePath="$(VisualStudioSetupInsertionPath)$(TargetVsixContainerName)" />
 
     <ItemGroup>
       <FileWrites Include="@(_FinalizeInsertionVsixFilesOutputs)"/>

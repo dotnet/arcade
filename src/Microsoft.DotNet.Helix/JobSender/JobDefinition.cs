@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.Rest;
@@ -240,7 +241,8 @@ namespace Microsoft.DotNet.Helix.Client
                         ResultsUriWSAS = resultsStorageContainer?.WriteSas,
                         ResultContainerPrefix = ResultContainerPrefix,
                     }),
-                ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."));
+                ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."),
+                CancellationToken.None);
 
 
             return new SentJob(JobApi, newJob, resultsStorageContainer?.Uri, string.IsNullOrEmpty(Creator) ? resultsStorageContainer?.ReadSas : string.Empty);

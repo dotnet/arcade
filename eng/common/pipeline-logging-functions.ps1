@@ -82,7 +82,8 @@ function Write-PipelineTaskError {
       if($ci) {
         Write-LoggingCommand -Area 'task' -Event 'setvariable' -Data $Value -Properties @{
           'variable' = $Name
-          'issecret' = $Secret
+          'isSecret' = $Secret
+          'isOutput' = 'true'
         } -AsOutput:$AsOutput
       }
   }

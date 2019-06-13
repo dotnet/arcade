@@ -92,6 +92,72 @@ function Exec-Process([string]$command, [string]$commandArgs) {
   }
 }
 
+<<<<<<< HEAD
+=======
+function Write-PipelineTaskError {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Message,
+    [Parameter(Mandatory = $false)]
+    [string]$Type = 'error',
+    [string]$ErrCode,
+    [string]$SourcePath,
+    [string]$LineNumber,
+    [string]$ColumnNumber,
+    [switch]$AsOutput)
+
+    if(!$ci) {
+      if($Type -eq 'error') {
+        Write-Host $Message -ForegroundColor Red
+        return
+      }
+      elseif ($Type -eq 'warning') {
+        Write-Host $Message -ForegroundColor Yellow
+        return
+      }
+    }
+
+    if(($Type -ne 'error') -and ($Type -ne 'warning')) {
+      Write-Host $Message
+      return
+    }
+    if(-not $PSBoundParameters.ContainsKey('Type')) {
+      $PSBoundParameters.Add('Type', 'error')
+    }
+    Write-LogIssue @PSBoundParameters
+}
+
+function Write-PipelineSetVariable {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Name,
+    [string]$Value,
+    [switch]$Secret,
+    [switch]$AsOutput)
+
+    if($ci) {
+      Write-LoggingCommand -Area 'task' -Event 'setvariable' -Data $Value -Properties @{
+        'variable' = $Name
+        'isSecret' = $Secret
+        'isOutput' = 'true'
+      } -AsOutput:$AsOutput
+    }
+}
+
+function Write-PipelinePrependPath {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory=$true)]
+    [string]$Path,
+    [switch]$AsOutput)
+    if($ci) {
+      Write-LoggingCommand -Area 'task' -Event 'prependpath' -Data $Path -AsOutput:$AsOutput
+    }
+}
+
+>>>>>>> ff0f47189f7d8a8b4ad353e37f3fc34aaa3090df
 function InitializeDotNetCli([bool]$install) {
   if (Test-Path variable:global:_DotNetInstallDir) {
     return $global:_DotNetInstallDir
@@ -315,7 +381,7 @@ function LocateVisualStudio([object]$vsRequirements = $null){
   }
 
   if (!$vsRequirements) { $vsRequirements = $GlobalJson.tools.vs }
-  $args = @("-latest", "-prerelease", "-format", "json", "-requires", "Microsoft.Component.MSBuild")
+  $args = @("-latest", "-prerelease", "-format", "json", "-requires", "Microsoft.Component.MSBuild", "-products", "*")
 
   if (Get-Member -InputObject $vsRequirements -Name "version") {
     $args += "-version"

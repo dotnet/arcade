@@ -277,7 +277,7 @@ function InitializeToolset {
   fi
 
   if [[ "$restore" != true ]]; then
-    Write-PipelineTelemetryError -category 'InitializeToolset' "Toolset version $toolsetVersion has not been restored."
+    Write-PipelineTelemetryError -category 'InitializeToolset' "Toolset version $toolset_version has not been restored."
     ExitWithExitCode 2
   fi
 

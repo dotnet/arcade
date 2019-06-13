@@ -20,10 +20,6 @@
     <PackageReference Include="MicroBuild.Plugins.SwixBuild" Version="$(MicroBuildPluginsSwixBuildVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(IsVsixProject)' == 'true'">
-    <PackageReference Include="RoslynTools.ModifyVsixManifest" Version="$(RoslynToolsModifyVsixManifestVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
-  </ItemGroup>
-  
   <ItemGroup Condition="'$(IsVsixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true'">
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="$(MicrosoftVSSDKBuildToolsVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
