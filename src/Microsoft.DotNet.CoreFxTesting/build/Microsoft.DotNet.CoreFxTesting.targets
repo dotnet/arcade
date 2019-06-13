@@ -22,7 +22,7 @@
           CopyToOutputDirectory="PreserveNewest"
           Visible="false" />
     <!--
-      Include deps.json and runtimeconfig.json in ContentWithTargetPath so they will 
+      Include deps.json and runtimeconfig.json in ContentWithTargetPath so they will
       be copied to the output folder of projects that reference this one.
       Tracking issue: https://github.com/dotnet/sdk/issues/1675
     -->
@@ -37,8 +37,8 @@
   </ItemGroup>
 
   <!--
-    As we disabled implicit framework references but want to populate the framework node in the runtimeconfig's 
-    runtimeOptions node we manually set the RuntimeFramework. 
+    As we disabled implicit framework references but want to populate the framework node in the runtimeconfig's
+    runtimeOptions node we manually set the RuntimeFramework.
     At that point restore and conflict resolution already happened therefore setting the item here has no side effects.
    -->
   <Target Name="SetRuntimeFrameworksBeforeGenerateConfigurationFiles"
@@ -59,6 +59,7 @@
     <ItemGroup>
       <!-- Harmless, but causes PRI targets to run -->
       <DefaultReferenceExclusions Include="System.Runtime.WindowsRuntime.UI.Xaml" />
+      <DefaultReferenceExclusions Include="@(ReferenceFromRuntime)"/>
       <DefaultReferenceExclusions Include="$(MSBuildProjectName)" />
 
       <!-- Reference everything in the targeting pack directory -->

@@ -80,7 +80,7 @@
 
     <GenerateRunScript RunCommands="@(RunScriptCommands)"
                        TemplatePath="$(RunScriptInputPath)"
-                       OutputPath ="$(RunScriptOutputPath)" />
+                       OutputPath="$(RunScriptOutputPath)" />
 
     <Exec Condition="'$(TargetOS)' != 'Windows_NT'" Command="chmod +x $(RunScriptOutputPath)" />
 

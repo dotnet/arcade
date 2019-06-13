@@ -73,9 +73,9 @@
     </PropertyGroup>
 
     <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
-      <_testRunnerConfigSourceFile Include="$(TargetDir)$(TargetName).exe.config" />
+      <_testRunnerConfigSourceFile Include="$(TargetDir)$(TargetName).exe.config" Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'" />
       <_testRunnerConfigSourceFile Include="$(TargetDir)$(TargetName).exe.config" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
-      <_testRunnerConfigDestFile Include="$(TargetDir)$(TestRunnerName).config" />
+      <_testRunnerConfigDestFile Include="$(TargetDir)$(TestRunnerName).config" Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'" />
       <_testRunnerConfigDestFile Include="$(TargetDir)Microsoft.DotNet.RemoteExecutorHost.exe.config" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
     </ItemGroup>
 

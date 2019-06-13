@@ -19,7 +19,7 @@
 
     <CompileDependsOn>CopyResxFilesToReswFiles;$(CompileDependsOn);</CompileDependsOn>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <_AllRuntimeDllFiles Include="$(RuntimePath)\*.dll" Exclude="$(RuntimePath)\Microsoft.VisualStudio.TestPlatform.*dll;$(RuntimePath)\Microsoft.TestPlatform.*dll" />
     <_ExternalReswFiles Include="$(_ExternalReswOutputPath)*.resw" Exclude="$(RuntimePath)\Microsoft.VisualStudio.TestPlatform.*resw;$(RuntimePath)\Microsoft.TestPlatform.*resw" />
