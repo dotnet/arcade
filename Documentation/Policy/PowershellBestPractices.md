@@ -1,8 +1,12 @@
 # PowerShell Scripting Best Practices
 
-Arcade uses a lot of PowerShell scripts. This document is intended as guidance for how all PowerShell scripts should be written for security, functionality, and consistency.
+This document is intended as guidance for how all PowerShell scripts should be written for security, functionality, and consistency.
+
+To help enforce these rules during your dev process, consider using [PSScriptAnalyzer](https://github.com/PowerShell/PSScriptAnalyzer). Each of the sections below contains the rule code for enabling the corresponding check in PSScriptAnalyzer where one exists. Additionally, the analyzer is built in as a linter in the [PowerShell VSCode extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.PowerShell). We have created a [settings file](/eng/common/PSScriptAnalyzer.psd1) to be used with this linter.
 
 ## Do not use Invoke-Expression or script blocks built with string concatenation
+
+*PSScriptAnalyzer Rule: AvoidUsingInvokeExpression*
 
 Invoke-Expression and non-parameterized script blocks are both vulnerable to injection.
 
@@ -80,13 +84,24 @@ hello; Write-Host injected
 
 In general, this guidance can be summarized as **don't use [ScriptBlock]::Create**.
 
-## Prefix script and executable calls with &; check $LASTEXITCODE
+## Prefix script and executable calls with &
 
-When a script/executable is prefixed with an ampersand (`&`), the command which follows can be in quotation marks or include variables. This is not the case when the ampersand is not included. Thus, we recommend always using the ampersand.
+When a script/executable is prefixed with an ampersand (`&`), the command which follows can be in quotation marks or include variables. This is not the case when the ampersand is not included. Thus, we recommend always including an ampersand.
+
+## Check $LASTEXITCODE after calling
 
 Relatedly, `$LASTEXITCODE` should always be checked after running an executable to ensure that the script fails (or at least responds appropriately) to the executable failing.
 
-There is a known issue when using `$LASTEXITCODE` in release builds where PowerShell will report that the variable has not been set. As a workaround, simply set `$LASTEXITCODE = 0` at the top of your script.
+Combining this with the previous piece of advice, the way to call `git add .` from a script would be:
+
+```powershell
+& git add .
+if ($LASTEXITCODE -ne 0) {
+  # behavior in case of error
+}
+```
+
+*There is a known issue when using `$LASTEXITCODE` in release builds where PowerShell will report that the variable has not been set. As a workaround, simply set `$LASTEXITCODE = 0` at the top of your script.*
 
 ## Set StrictMode and ErrorActionPreference at the top of every file
 
@@ -100,6 +115,8 @@ $ErrorActionPreference = "Stop"
 This will ensure PowerShell uses the proper version and that encountered errors cause the script to fail.
 
 ## Do not use aliases in scripts
+
+*PSScriptAnalyzer Rule: AvoidUsingCmdletAliases*
 
 Cmdlet aliases (such as `ls` for `Get-ChildItem` and `echo` for `Write-Output`) are not universal across all machines and all installs of PowerShell. Furthermore, aliases can cause confusion as the cmdlets frequently behave entirely differently from the commands the aliases are named for, e.g. cmd's `dir` vs. `Get-ChildItem` or bash's `wget` and `curl` vs. `Invoke-WebRequest`. Always use the actual cmdlet name.
 
@@ -125,9 +142,13 @@ Alias           ls -> Get-ChildItem
 
 ## Use CIM cmdlets rather than WMI ones
 
+*PSScriptAnalyzer Rule: AvoidUsingWMICmdlet*
+
 PowerShell recommends avoiding all the WMI cmdlets (`Get-WmiObject`, `Remove-WmiObject`, `Invoke-WmiObject`, `Register-WmiEvent`, `Set-WmiInstance`) and instead using the CIM ones (respectively, `Get-CimInstance`, `Remove-CimInstance`, `Invoke-CimMethod`, `Register-CimIndicationEvent`, `Set-CimInstance`).
 
-## Disable positional binding for your paremters
+## Disable positional binding for your parameters
+
+*PSScriptAnalyzer Rule: AvoidUsingPositionalParameters*
 
 Positional parameters cause problems for code maintenance, as adding new parameters later down the line can break previous invocations. Instead, parameters should always be called explicitly. Setting:
 
@@ -136,3 +157,5 @@ Positional parameters cause problems for code maintenance, as adding new paramet
 ```
 
 will force this behavior.
+
+*Note: This rule will check for the usage of positional parameters rather than forcing binding to turn them off.*
