@@ -3,47 +3,64 @@
 <Project>
 
   <PropertyGroup>
-    <IncludeTestFrameworkReferences>true</IncludeTestFrameworkReferences>
     <TestRunnerConfigPath>$(TestAssetsDir)xunit.runner.json</TestRunnerConfigPath>
     <TestResultsName>testResults.xml</TestResultsName>
-    <RemoteExecutorHostName>Microsoft.DotNet.RemoteExecutorHost</RemoteExecutorHostName>
-
     <GenerateRunScriptDependsOn>ValidateTargetOSTrait;$(GenerateRunScriptDependsOn);</GenerateRunScriptDependsOn>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Test runner config file. -->
-    <SupplementalTestData Condition="'$(SkipTestRunnerConfigCopying)' != 'true'" Include="$(TestRunnerConfigPath)" />
-    <SupplementalTestData Include="$(RuntimePath)Microsoft.DotNet.XUnitExtensions.dll" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.assert.dll" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.core.dll" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.abstractions.dll" />
-    <SupplementalTestData Include="$(RuntimePath)CoreFx.Private.TestUtilities.dll" />
+    <PackageReference Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="Microsoft.DotNet.RemoteExecutor" Version="$(MicrosoftDotNetRemoteExecutorPackageVersion)" />
+
+    <!-- xunit -->
+    <PackageReference Include="Microsoft.DotNet.XUnitExtensions" Version="$(MicrosoftDotNetXUnitExtensionsPackageVersion)" />
+    <PackageReference Include="xunit.core" Version="$(XUnitPackageVersion)" ExcludeAssets="build" />
+    <PackageReference Include="xunit.assert" Version="$(XUnitPackageVersion)" />
+    <PackageReference Condition="'$(BuildingNetCoreAppVertical)' == 'true'" Include="Microsoft.DotNet.XUnitConsoleRunner" Version="$(MicrosoftDotNetXUnitConsoleRunnerPackageVersion)" />
+    <PackageReference Condition="'$(BuildingNetFxVertical)' == 'true'" Include="xunit.runner.console" Version="$(XUnitPackageVersion)" />
   </ItemGroup>
 
-  <!-- Supplemental test data. -->
-  <ItemGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
-    <SupplementalTestData Include="$(RuntimePath)$(TestRunnerName)" />
-    <SupplementalTestData Include="$(TestRuntimeConfigPath)" DestinationName="$(TestRunnerNameWithoutExtension).runtimeconfig.json" />
-    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)Microsoft.DotNet.RemoteExecutor.dll" />
-    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)$(RemoteExecutorHostName).dll" />
-    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(TestRuntimeConfigPath)" DestinationName="$(RemoteExecutorHostName).runtimeconfig.json" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.execution.dotnet.dll" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.runner.reporters.netcoreapp10.dll" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.runner.utility.netcoreapp10.dll" />
+  <ItemGroup>
+    <!-- Add the runner configuration file -->
+    <None Include="$(TestRunnerConfigPath)"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false" />
+    <!-- Copy test runner to output directory -->
+    <None Include="$([System.IO.Path]::GetDirectoryName('$(XunitConsole472Path)'))\*"
+          Exclude="$([System.IO.Path]::GetDirectoryName('$(XunitConsole472Path)'))\xunit.console.*exe.config;$([System.IO.Path]::GetDirectoryName('$(XunitConsole472Path)'))\xunit.console.x86.exe"
+          Condition="'$(BuildingNetFxVertical)' == 'true'"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false" />
+    <None Include="$([System.IO.Path]::GetDirectoryName('$(XunitConsoleNetCore21AppPath)'))\*"
+          Exclude="$([System.IO.Path]::GetDirectoryName('$(XunitConsoleNetCore21AppPath)'))\xunit.console.deps.json"
+          Condition="'$(BuildingNetCoreAppVertical)' == 'true'"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
-    <SupplementalTestData Include="$(RuntimePath)$(TestRunnerName)" />
-    <SupplementalTestData Include="$(TestRuntimeConfigPath)" DestinationName="$(TestRunnerName).config" />
-    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)Microsoft.DotNet.RemoteExecutor.dll" />
-    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)$(RemoteExecutorHostName).exe" />
-    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(TestRuntimeConfigPath)" DestinationName="$(RemoteExecutorHostName).exe.config" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.execution.desktop.dll" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.runner.reporters.net452.dll" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.runner.utility.net452.dll" />
-  </ItemGroup>
+  <!--
+    Only add the Test SDK with assemblies when building locally for .NET Core.
+    Microsoft.NET.Test.Sdk brings framework assemblies with it: https://github.com/microsoft/vstest/issues/1764
+  -->
+  <ItemGroup Condition="'$(BuildingNetCoreAppVertical)' == 'true' and '$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuildId)' == ''">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkPackageVersion)" IncludeAssets="build" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="$(MicrosoftExtensionsDependencyModelPackageVersion)" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
+    <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="$(MicrosoftNETTestSdkPackageVersion)" ExcludeAssets="all" PrivateAssets="all" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkPackageVersion)" ExcludeAssets="all" PrivateAssets="all" GeneratePathProperty="true" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(XUnitPackageVersion)" PrivateAssets="all" IncludeAssets="build"/>
 
-  <Import Project="$(MSBuildThisFileDirectory)References.props" />
+    <Reference Include="$(PkgMicrosoft_TestPlatform_TestHost)\lib\netstandard1.5\Microsoft.TestPlatform.CommunicationUtilities.dll" />
+    <Reference Include="$(PkgMicrosoft_TestPlatform_TestHost)\lib\netstandard1.5\Microsoft.TestPlatform.CrossPlatEngine.dll" />
+    <Reference Include="$(PkgMicrosoft_TestPlatform_TestHost)\lib\netstandard1.5\Microsoft.VisualStudio.TestPlatform.Common.dll" />
+    <None Include="$(PkgMicrosoft_TestPlatform_TestHost)\lib\netstandard1.5\testhost.dll"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false" />
+    <None Include="$(PkgMicrosoft_TestPlatform_TestHost)\lib\netstandard1.5\testhost.deps.json"
+          Condition="'$(GenerateDependencyFile)' == 'true'"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false" />
+    <Reference Include="$(PkgMicrosoft_TestPlatform_ObjectModel)\lib\netstandard1.5\*.dll" />
+  </ItemGroup>
 
 </Project>

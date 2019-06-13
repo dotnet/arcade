@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <IsTestProject>false</IsTestProject>
-    <IsTestProject Condition="'$(IsUnitTestProject)' == 'true' or '$(IsIntegrationTestProject)' == 'true' or '$(IsPerformanceTestProject)' == 'true'">true</IsTestProject>
+    <IsTestProject Condition="'$(IsUnitTestProject)' == 'true'">true</IsTestProject>
 
     <IsTestSupportProject>false</IsTestSupportProject>
     <IsTestSupportProject Condition="($(MSBuildProjectFullPath.Contains('\tests\')) OR $(MSBuildProjectFullPath.Contains('/tests/'))) AND '$(IsTestProject)' != 'true'">true</IsTestSupportProject>

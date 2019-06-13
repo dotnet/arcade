@@ -4,13 +4,13 @@
             "commandName": "Executable",
             "executablePath": "$(ArtifactsBinDir)testhost/netcoreapp-$(_bc_OSGroup)-$(ConfigurationGroup)-$(ArchGroup)/dotnet.exe",
             "commandLineArgs": "$(RunArguments) -wait -parallel none",
-            "workingDirectory": "$(TestWorkingDir)$(TestProjectName)/netcoreapp-$(_bc_OSGroup)-$(ConfigurationGroup)-$(ArchGroup)/"
+            "workingDirectory": "$(ArtifactsBinDir)$(TestProjectName)/netcoreapp-$(_bc_OSGroup)-$(ConfigurationGroup)-$(ArchGroup)/"
         },
         ".NET Framework xUnit Console": {
             "commandName": "Executable",
-            "executablePath": "$(TestWorkingDir)$(TestProjectName)/netfx-Windows_NT-$(ConfigurationGroup)-$(ArchGroup)/xunit.console.exe",
+            "executablePath": "$(ArtifactsBinDir)$(TestProjectName)/netfx-Windows_NT-$(ConfigurationGroup)-$(ArchGroup)/xunit.console.exe",
             "commandLineArgs": "$(RunArguments) -wait -parallel none",
-            "workingDirectory": "$(TestWorkingDir)$(TestProjectName)/netfx-Windows_NT-$(ConfigurationGroup)-$(ArchGroup)/",
+            "workingDirectory": "$(ArtifactsBinDir)$(TestProjectName)/netfx-Windows_NT-$(ConfigurationGroup)-$(ArchGroup)/",
             "environmentVariables": {
                 "DEVPATH": "$(ArtifactsBinDir)testhost/netfx-Windows_NT-$(ConfigurationGroup)-$(ArchGroup)/"
             }

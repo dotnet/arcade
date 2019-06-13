@@ -19,7 +19,7 @@
 
     <CompileDependsOn>CopyResxFilesToReswFiles;$(CompileDependsOn);</CompileDependsOn>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <_AllRuntimeDllFiles Include="$(RuntimePath)\*.dll" Exclude="$(RuntimePath)\Microsoft.VisualStudio.TestPlatform.*dll;$(RuntimePath)\Microsoft.TestPlatform.*dll" />
     <_ExternalReswFiles Include="$(_ExternalReswOutputPath)*.resw" Exclude="$(RuntimePath)\Microsoft.VisualStudio.TestPlatform.*resw;$(RuntimePath)\Microsoft.TestPlatform.*resw" />
@@ -108,7 +108,9 @@
 
   <!-- This target creates a resources.pri file that contains all the framework resources, this is a common file used by all of our test assemblies that have no specific resources. -->
   <Target Name="MakeCommonResourcesPriFile"
+          Condition="'$(BuildAllConfigurations)' != 'true'"
           DependsOnTargets="CalculateResWFiles;CreateMakePriConfigFileFromTemplate"
+          AfterTargets="BuildAllProjects"
           Inputs="@(_CommonResWFiles)"
           Outputs="$(_CommonPriFile)">
 

@@ -5,6 +5,8 @@
   <PropertyGroup>
     <TestProjectName Condition="'$(TestProjectName)' == ''">$(MSBuildProjectName)</TestProjectName>
     <TestsSuccessfulSemaphoreName>tests.passed</TestsSuccessfulSemaphoreName>
+    <TestDependsOn>GenerateRunScript;RunTests;</TestDependsOn>
+    <RunTestsDependsOn>ValidateTestPlatform;DiscoverRunTestsInputs;DiscoverRunTestsOutputs;</RunTestsDependsOn>
   </PropertyGroup>
 
   <!-- Set env variable to use the local netfx assemblies instead of the ones in the GAC. -->
@@ -12,35 +14,11 @@
     <RunScriptCommands Include="set DEVPATH=%RUNTIME_PATH%" />
   </ItemGroup>
 
-  <!-- Binplace dirs for supplemental test data. -->
-  <ItemGroup>
-    <SupplementalTestDataDir Include="$(TestPath)" />
-    <SupplementalTestDataDir Include="$(OutDir)" />
-  </ItemGroup>
-
-  <!-- Test target execution order. -->
-  <PropertyGroup>
-    <TestDependsOn>
-      $(TestDependsOn);
-      GenerateRunScript;
-      RunTests;
-    </TestDependsOn>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <RunTestsDependsOn>
-      ValidateTestPlatform;
-      $(RunTestsDependsOn);
-      DiscoverRunTestsInputs;
-      DiscoverRunTestsOutputs;
-    </RunTestsDependsOn>
-  </PropertyGroup>
-
   <!--
     Unit/Functional/Integration test support.
     Supported runners: xunit.
   -->
-  <Import Condition="'$(IsUnitTestProject)' == 'true' OR '$(IsIntegrationTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.props'))" />
+  <Import Condition="'$(IsUnitTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.props'))" />
 
   <!--
     Code Coverage support.
