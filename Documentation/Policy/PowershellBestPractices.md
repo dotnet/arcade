@@ -122,6 +122,8 @@ Cmdlet aliases (such as `ls` for `Get-ChildItem` and `echo` for `Write-Output`) 
 
 To determine what cmdlet an alias points to, simply run:
 
+**Exceptions**: `%` and `?` are aliases for `ForEach-Object` and `Where-Object`, respectively. These aliases can be left in code and warnings related to them can be ignored.
+
 ```powershell
 Get-Alias $alias
 ```
