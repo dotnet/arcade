@@ -164,7 +164,7 @@
       AssetsTemporaryDirectory="$(TempWorkingDirectory)" />
 
     <Message
-      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common\PublishToPackageFeed.proj"
+      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common/PublishToPackageFeed.proj"
       Importance="high" />
 
     <!--
@@ -181,7 +181,7 @@
       DestinationFolder="$(TempWorkingDirectory)\$(AssetManifestFileName)" />
     
     <Message
-      Text="##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]$(TempWorkingDirectory)\$(AssetManifestFileName)"
+      Text="##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]$(TempWorkingDirectory)/$(AssetManifestFileName)"
       Importance="high" />
 
     <!--
@@ -214,11 +214,11 @@
       Condition="'@(FilesToPublishToSymbolServer)' != ''"/>
 
     <Message
-      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common\PublishToSymbolServers.proj"
+      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common/PublishToSymbolServers.proj"
       Importance="high" />
 
     <Message
-      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common\CheckSymbols.ps1"
+      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common/CheckSymbols.ps1"
       Importance="high" />
 
   </Target>
