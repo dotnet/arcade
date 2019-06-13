@@ -1,9 +1,11 @@
 using Microsoft.Build.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Collections;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
@@ -17,12 +19,13 @@ namespace Microsoft.DotNet.Arcade.Sdk
         private readonly MessageBuilder _builder = new MessageBuilder();
         private readonly Dictionary<BuildEventContext, Guid> _buildEventContextMap = new Dictionary<BuildEventContext, Guid>(BuildEventContextComparer.Instance);
         private readonly Dictionary<Guid, ProjectInfo> _projectInfoMap = new Dictionary<Guid, ProjectInfo>();
+        private readonly Dictionary<Guid, TelemetryTaskInfo> _taskTelemetryInfoMap = new Dictionary<Guid, TelemetryTaskInfo>();
         private readonly HashSet<Guid> _detailedLoggedSet = new HashSet<Guid>();
         private HashSet<string> _ignoredTargets;
         private string _solutionDirectory;
-
         public LoggerVerbosity Verbosity { get; set; }
         public string Parameters { get; set; }
+        private static readonly string s_TelemetryMarker = "NETCORE_ENGINEERING_TELEMETRY";
 
         public void Initialize(IEventSource eventSource)
         {
@@ -53,14 +56,16 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             eventSource.ErrorRaised += OnErrorRaised;
             eventSource.WarningRaised += OnWarningRaised;
+            eventSource.ProjectStarted += OnProjectStarted;
+
+            IEventSource2 eventSource2 = eventSource as IEventSource2;
+            eventSource2.TelemetryLogged += OnTelemetryLogged;
 
             if (Verbosity == LoggerVerbosity.Diagnostic)
             {
                 eventSource.ProjectFinished += OnProjectFinished;
-                eventSource.ProjectStarted += OnProjectStarted;
             }
         }
-
         public void Shutdown()
         {
 
@@ -72,20 +77,43 @@ namespace Microsoft.DotNet.Arcade.Sdk
             int line,
             int column,
             string code,
-            string message)
+            string message,
+            BuildEventContext buildEventContext)
         {
+            var parentId = _buildEventContextMap.TryGetValue(buildEventContext, out var guid)
+                ? (Guid?)guid
+                : null;
+            string telemetryCategory = null;
+            if (parentId.HasValue)
+            {
+                if(_taskTelemetryInfoMap.TryGetValue(parentId.Value, out TelemetryTaskInfo telemetryInfo))
+                {
+                    telemetryCategory = telemetryInfo.Category;
+                }
+                if (telemetryCategory == null)
+                {
+                    if (_projectInfoMap.TryGetValue(parentId.Value, out ProjectInfo projectInfo))
+                    {
+                        telemetryCategory = projectInfo.PropertiesCategory;
+                    }
+                }
+            }
             _builder.Start("logissue");
             _builder.AddProperty("type", isError ? "error" : "warning");
             _builder.AddProperty("sourcepath", sourceFilePath);
             _builder.AddProperty("linenumber", line);
             _builder.AddProperty("columnnumber", column);
             _builder.AddProperty("code", code);
+            if (telemetryCategory != null)
+            {
+                message = $"({s_TelemetryMarker}={telemetryCategory}) {message}";
+            }
             _builder.Finish(message);
             Console.WriteLine(_builder.GetMessage());
         }
 
         private void LogDetail(
-            Guid id, 
+            Guid id,
             string type,
             string name,
             State state,
@@ -163,11 +191,27 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 parentId: projectInfo.ParentId);
 
         private void OnErrorRaised(object sender, BuildErrorEventArgs e) =>
-            LogErrorOrWarning(isError: true, e.File, e.LineNumber, e.ColumnNumber, e.Code, e.Message);
+            LogErrorOrWarning(isError: true, e.File, e.LineNumber, e.ColumnNumber, e.Code, e.Message, e.BuildEventContext);
 
         private void OnWarningRaised(object sender, BuildWarningEventArgs e) =>
-            LogErrorOrWarning(isError: false, e.File, e.LineNumber, e.ColumnNumber, e.Code, e.Message);
+            LogErrorOrWarning(isError: false, e.File, e.LineNumber, e.ColumnNumber, e.Code, e.Message, e.BuildEventContext);
 
+        private void OnTelemetryLogged(object sender, TelemetryEventArgs e)
+        {
+            if (e.EventName.Equals(s_TelemetryMarker))
+            {
+                e.Properties.TryGetValue("Category", out string telemetryCategory);
+                var parentId = _buildEventContextMap.TryGetValue(e.BuildEventContext, out var guid)
+                ? (Guid?)guid
+                : null;
+
+                if (parentId.HasValue)
+                {
+                    var telemetryInfo = new TelemetryTaskInfo(parentId.Value, telemetryCategory);
+                    _taskTelemetryInfoMap[parentId.Value] = telemetryInfo;
+                }
+            }
+        }
         private void OnProjectFinished(object sender, ProjectFinishedEventArgs e)
         {
             if (!_buildEventContextMap.TryGetValue(e.BuildEventContext, out Guid projectId) ||
@@ -192,21 +236,33 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 return;
             }
 
-            var parentId = _buildEventContextMap.TryGetValue(e.ParentProjectBuildEventContext, out var guid)
-                ? (Guid?)guid
-                : null;
-            var projectInfo = new ProjectInfo(getName(), parentId);
-            _projectInfoMap[projectInfo.Id] = projectInfo;
-            _buildEventContextMap[e.BuildEventContext] = projectInfo.Id;
-            LogBuildEvent(
-                in projectInfo,
-                State.Initialized,
-                startTime: projectInfo.StartTime,
-                endTime: null,
-                progress: "0");
+            string propertyCategory = e.Properties?.Cast<DictionaryEntry>().LastOrDefault(p => p.Key.ToString().Equals(s_TelemetryMarker)).Value?.ToString();
 
+            var parentId = _buildEventContextMap.TryGetValue(e.ParentProjectBuildEventContext, out var guid)
+            ? (Guid?)guid
+            : null;
+
+            var projectInfo = new ProjectInfo(getName(), parentId, propertyCategory);
+
+            _buildEventContextMap[e.BuildEventContext] = projectInfo.Id;
+
+            _projectInfoMap[projectInfo.Id] = projectInfo;
+
+            if (Verbosity == LoggerVerbosity.Diagnostic)
+            {
+                LogBuildEvent(
+                    in projectInfo,
+                    State.Initialized,
+                    startTime: projectInfo.StartTime,
+                    endTime: null,
+                    progress: "0");
+            }
             string getName()
             {
+                if(Verbosity != LoggerVerbosity.Diagnostic)
+                {
+                    return string.Empty;
+                }
                 // Note, website projects (sln file only, no proj file) emit a started event with projectFile == $"{m_solutionDirectory}\\".
                 // This causes issues when attempting to get the relative path (and also Path.GetFileName returns empty string).
                 var projectFile = e.ProjectFile;
@@ -289,19 +345,33 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
         }
 
+        internal readonly struct TelemetryTaskInfo
+        {
+            internal Guid Id { get; }
+            internal string Category { get; }
+
+            internal TelemetryTaskInfo(Guid id, string category)
+            {
+                Id = id;
+                Category = category;
+            }
+        }
+
         internal readonly struct ProjectInfo
         {
             internal string Name { get; }
             internal Guid Id { get; }
             internal Guid? ParentId { get; }
             internal DateTimeOffset StartTime { get; }
+            internal string PropertiesCategory { get; }
 
-            internal ProjectInfo(string name, Guid? parentId)
+            internal ProjectInfo(string name, Guid? parentId, string propertiesCategory)
             {
                 Name = name;
                 Id = Guid.NewGuid();
                 ParentId = parentId;
                 StartTime = DateTimeOffset.UtcNow;
+                PropertiesCategory = propertiesCategory;
             }
         }
 

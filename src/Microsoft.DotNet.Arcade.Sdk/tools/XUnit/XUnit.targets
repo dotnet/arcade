@@ -22,6 +22,10 @@
           Condition="'$(XUnitCoreSettingsFile)' != '' and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
   </ItemGroup>
 
+  <UsingTask
+    TaskName="Telemetry"
+    AssemblyFile="Microsoft.Build.Tasks.Core.dll" />
+
   <!-- 
     Include '*' target to force running tests even if the input assemblies haven't changed and the outputs are present.
     This matches the common expectations that test command always runs all tests in scope.
@@ -29,7 +33,7 @@
   <Target Name="RunTests"
           Inputs="@(TestToRun);*"
           Outputs="%(TestToRun.ResultsStdOutPath);%(TestToRun.ResultsXmlPath);%(TestToRun.ResultsHtmlPath)">
-
+    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test" />
     <PropertyGroup>
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
       <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
