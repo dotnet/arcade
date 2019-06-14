@@ -409,8 +409,9 @@ git push -f https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
     <summary>or if you are using SSH</summary>
 
 ``````
+git fetch
 git branch -D ${mergeBranchName}
-git checkout -b ${mergeBranchName} $BaseBranch
+git checkout -b ${mergeBranchName} origin/$BaseBranch
 git pull git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
 (make changes)
 git commit -m "Updated PR with my changes"
