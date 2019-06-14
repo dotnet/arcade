@@ -168,10 +168,10 @@ stages:
             --test
             --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
             /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
-        displayName: Run Helix Tests
-        env:
-          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-          HelixAccessToken: $(HelixApiAccessToken)
+          displayName: Run Helix Tests
+          env:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            HelixAccessToken: $(HelixApiAccessToken)
 
 # - stage: validate_arcade
 #   dependsOn: build
