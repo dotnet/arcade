@@ -116,14 +116,14 @@ stages:
               --prepareMachine
               /p:Test=false
             displayName: Unix Build / Publish
-        - task: PublishBuildArtifacts@1
-          displayName: Publish Build to AzDo
-          inputs:
-            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping'
-            PublishLocation: Container
-            ArtifactName: BuildArtifacts_$(Agent.Os)_$(Agent.JobName)
-          continueOnError: true
-          condition: always()
+          - task: PublishBuildArtifacts@1
+            displayName: Publish Build to AzDo
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping'
+              PublishLocation: Container
+              ArtifactName: BuildArtifacts_$(Agent.Os)_$(Agent.JobName)
+            continueOnError: true
+            condition: always()
 
 - stage: test
   dependsOn: build
