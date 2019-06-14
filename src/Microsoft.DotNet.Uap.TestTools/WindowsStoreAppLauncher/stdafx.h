@@ -4,9 +4,9 @@
 
 #pragma once
 
-// Force a minimum complier version for VSC++ (security requirement)
+// Force a minimum compiler version for VSC++ (security requirement)
 #if _MSC_VER < 1900 
-#error "Minimum complier version not found"
+#error "Minimum compiler version not found. Minimum version = 1900 (Visual Studio 2015)."
 #endif
 
 #include <Windows.Applicationmodel.Activation.h>
