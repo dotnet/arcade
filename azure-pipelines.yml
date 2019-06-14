@@ -76,7 +76,15 @@ stages:
             -prepareMachine
             $(_InternalBuildArgs)
             /p:Test=false
-          displayName: Windows Build / Publish
+          displayName: Windows Build
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Build to AzDo
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping'
+            PublishLocation: Container
+            ArtifactName: BuildArtifacts_$(Agent.Os)_$(Agent.JobName)
+          continueOnError: true
+          condition: always()
 
       - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
         - job: Linux
@@ -108,6 +116,14 @@ stages:
               --prepareMachine
               /p:Test=false
             displayName: Unix Build / Publish
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Build to AzDo
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping'
+            PublishLocation: Container
+            ArtifactName: BuildArtifacts_$(Agent.Os)_$(Agent.JobName)
+          continueOnError: true
+          condition: always()
 
 - stage: test
   dependsOn: build
@@ -134,12 +150,18 @@ stages:
         steps:
         - checkout: self
           clean: true
+        - task: DownloadPipelineArtifact@1
+          displayName: 'Download Pipeline Artifact'
+          inputs:
+            artifactName: 'BuildArtifact_$(Agent.Os)_$(Agent.JobName)'
         - powershell: eng\common\build.ps1
             -configuration $(_BuildConfig) 
             -prepareMachine
             -ci
+            -restore
             -test
             -projects $(Build.SourcesDirectory)/tests/UnitTests.proj
+            /p:RestoreSources=$(System.ArtifactsDirectory)
             /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
           displayName: Run Helix Tests
           env:
@@ -161,12 +183,18 @@ stages:
         steps:
         - checkout: self
           clean: true
+        - task: DownloadPipelineArtifact@1
+          displayName: 'Download Pipeline Artifact'
+          inputs:
+            artifactName: 'BuildArtifact_$(Agent.Os)_$(Agent.JobName)'
         - script: eng/common/build.sh
             --configuration $(_BuildConfig)
             --prepareMachine
             --ci
+            --restore
             --test
             --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
+            /p:RestoreSources=$(System.ArtifactsDirectory)
             /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
           displayName: Run Helix Tests
           env:
