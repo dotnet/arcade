@@ -30,7 +30,7 @@ resources:
 stages:
 - stage: build
   jobs:
-  - template: /eng/common/templates/job/job.yml
+  - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
       enablePublishBuildArtifacts: true
@@ -112,7 +112,7 @@ stages:
 - stage: test
   dependsOn: build
   jobs:
-  - template: /eng/common/templates/job/job.yml
+  - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enablePublishBuildArtifacts: true
       enableTelemetry: true
