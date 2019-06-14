@@ -82,7 +82,7 @@ stages:
           inputs:
             PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping'
             PublishLocation: Container
-            ArtifactName: BuildArtifacts_$(Agent.Os)_$(Agent.JobName)
+            ArtifactName: BuildArtifacts_$(Agent.JobName)
           continueOnError: true
           condition: always()
 
@@ -121,7 +121,7 @@ stages:
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping'
               PublishLocation: Container
-              ArtifactName: BuildArtifacts_$(Agent.Os)_$(Agent.JobName)
+              ArtifactName: BuildArtifacts_$(Agent.JobName)
             continueOnError: true
             condition: always()
 
@@ -153,7 +153,7 @@ stages:
         - task: DownloadPipelineArtifact@1
           displayName: 'Download Pipeline Artifact'
           inputs:
-            artifactName: 'BuildArtifact_$(Agent.Os)_$(Agent.JobName)'
+            artifactName: 'BuildArtifacts_$(Agent.JobName)'
         - powershell: eng\common\build.ps1
             -configuration $(_BuildConfig) 
             -prepareMachine
@@ -186,7 +186,7 @@ stages:
         - task: DownloadPipelineArtifact@1
           displayName: 'Download Pipeline Artifact'
           inputs:
-            artifactName: 'BuildArtifact_$(Agent.Os)_$(Agent.JobName)'
+            artifactName: 'BuildArtifacts_$(Agent.JobName)'
         - script: eng/common/build.sh
             --configuration $(_BuildConfig)
             --prepareMachine
