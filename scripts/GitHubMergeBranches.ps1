@@ -396,22 +396,24 @@ git push
 Contributors to this repo have permission update this pull request by pushing to the branch '$mergeBranchName'. This can be done to resolve conflicts or make other changes to this pull request before it is merged.
 
 ``````
+git branch -D ${mergeBranchName}
 git checkout -b ${mergeBranchName} $BaseBranch
 git pull https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 (make changes)
 git commit -m "Updated PR with my changes"
-git push https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
+git push -f https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 ``````
 
 <details>
     <summary>or if you are using SSH</summary>
 
 ``````
+git branch -D ${mergeBranchName}
 git checkout -b ${mergeBranchName} $BaseBranch
 git pull git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
 (make changes)
 git commit -m "Updated PR with my changes"
-git push git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
+git push -f git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
 ``````
 
 </details>
