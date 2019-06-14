@@ -4,6 +4,11 @@
 
 #pragma once
 
+// Force a minimum complier version for VSC++ (security requirement)
+#if _MSC_VER < 1900 
+#error "Minimum complier version not found"
+#endif
+
 #include <Windows.Applicationmodel.Activation.h>
 #include <windows.management.deployment.h>
 #include <windows.foundation.h>
