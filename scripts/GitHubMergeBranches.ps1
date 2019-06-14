@@ -396,8 +396,9 @@ git push
 Contributors to this repo have permission update this pull request by pushing to the branch '$mergeBranchName'. This can be done to resolve conflicts or make other changes to this pull request before it is merged.
 
 ``````
+git fetch
 git branch -D ${mergeBranchName}
-git checkout -b ${mergeBranchName} $BaseBranch
+git checkout -b ${mergeBranchName} origin/$BaseBranch
 git pull https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 (make changes)
 git commit -m "Updated PR with my changes"
