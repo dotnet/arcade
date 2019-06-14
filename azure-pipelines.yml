@@ -134,7 +134,7 @@ stages:
       enableTelemetry: true
       helixRepo: dotnet/arcade
       jobs:
-      - job: Windows_test
+      - job: Windows
         pool:
           vmimage: windows-2019
         variables:
@@ -167,7 +167,7 @@ stages:
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: $(HelixApiAccessToken)
-      - job: Linux_test
+      - job: Linux
         pool:
           vmImage: ubuntu-16.04
         variables:
