@@ -100,6 +100,16 @@
 
   </Target>
 
+  <!-- Work around https://github.com/dotnet/sdk/issues/968 -->
+  <Target Name="RemoveXUnitAnalyzer"
+          Condition="'$(EnableXUnitAnalyzer)' != 'true'"
+          BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer)"
+                Condition="'%(Analyzer.NuGetPackageId)' == 'xunit.analyzers'" />
+    </ItemGroup>
+  </Target>
+
   <!-- Setup run commands. -->
   <Choose>
 
