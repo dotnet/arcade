@@ -254,7 +254,7 @@ namespace Microsoft.DotNet.Helix.Client
                 return true;
             }
 
-            return HelixApi.IsRetryableHttpException(ex);
+            return Client.HelixApi.IsRetryableHttpException(ex);
         }
 
         public IJobDefinitionWithTargetQueue WithBuild(string buildNumber)

@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Helix.Client
             return s_rand.Next(min, max);
         }
 
-        public bool IsRetryableHttpException(Exception ex)
+        public static bool IsRetryableHttpException(Exception ex)
         {
             return ex is TaskCanceledException ||
                    ex is OperationCanceledException ||
