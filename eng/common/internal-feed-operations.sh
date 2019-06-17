@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Sets VSS_NUGET_EXTERNAL_FEED_ENDPOINTS based on the "darc-int-*" feeds defined in NuGet.config. This is needed by
+# in build agents by CredProvider to authenticate the restore requests to internal feeds as specified in
+# https://github.com/microsoft/artifacts-credprovider#environment-variables. This should ONLY be called from identified
+# internal builds
 function SetupCredProvider {
   local authToken=$1
   
