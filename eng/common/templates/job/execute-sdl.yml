@@ -2,31 +2,28 @@ parameters:
   Guardian:
     PackageName: Microsoft.Guardian.Cli.0.3.2                  # Optional: the name of guardian CLI pacakge (not needed if GuardianCliLocation is specified). The version is installed from packages.config under eng\common, the GuardianPackageName should be changed if the version changes.
     NugetPackageDirectory: $(Build.SourcesDirectory)\.packages # Optional: directory where NuGet packages are installed (not needed if GuardianCliLocation is specified)
-    CliLocation:                                               # Optional: Direct location of Guardian CLI executable if GuardianPackageName & NugetPackageDirectory are not specified
     LoggerLevel: Standard                                      # Optional: the logger level for the Guardian CLI; options are Trace, Verbose, Standard, Warning, and Error
   Repository: $(Build.Repository.Name)                         # Required: the name of the repository (e.g. dotnet/arcade)
-  BranchName: master                                           # Optional: name of branch or version of gdn settings; defaults to master
+  BranchName: $(Build.SourceBranch)                            # Optional: name of branch or version of gdn settings; defaults to master
   SourceDirectory: $(Build.SourcesDirectory)                   # Required: the directory where source files are located
   ArtifactsDirectory: $(Build.SourcesDirectory)\artifacts      # Required: the directory where build artifacts are located
   DncEngAccessToken: $(dn-bot-dotnet-build-rw-code-rw)         # Required: access token for dnceng; should be provided via KeyVault
   SourceToolsList:                                             # Optional: list of SDL tools to run on source code in the format "xyz,abc,..."
   ArtifactToolsList:                                           # Optional: list of SDL tools to run on built artifacts in the format "xyz,abc,..."
   Tsa:
-    Publish: false                                             # Optional: true will publish results to TSA; only set to true after onboarding to TSA; TSA is the automated framework used to upload test results as bugs.
-    BranchName: $(Build.SourceBranch)                          # Optional: required for TSA publish; defaults to $(Build.SourceBranchName); TSA is the automated framework used to upload test results as bugs.
-    BuildNumber: $(Build.BuildNumber)                          # Optional: required for TSA publish; defaults to $(Build.BuildNumber)
+    Publish: $False                                            # Optional: true will publish results to TSA; only set to true after onboarding to TSA; TSA is the automated framework used to upload test results as bugs.
     InstanceURL:                                               # Optional: only needed if TsaOnboard or TsaPublish is true; the instance-url registered with TSA; TSA is the automated framework used to upload test results as bugs.
     ProjectName:                                               # Optional: only needed if TsaOnboard or TsaPublish is true; the name of the project registered with TSA; TSA is the automated framework used to upload test results as bugs.
     NotificationEmail:                                         # Optional: only needed if TsaOnboard is true; the email(s) which will receive notifications of TSA bug filings (e.g. alias@microsoft.com); TSA is the automated framework used to upload test results as bugs.
-    CodebaseAdmin:                                             # Optional: only needed if TsaOnboard or TsaPublish is true; the name of the codebase registered with TSA; TSA is the automated framework used to upload test results as bugs.
+    CodebaseAdmin:                                             # Optional: only needed if TsaOnboard or TsaPublish is true; the aliases which are admins of the TSA codebase (e.g. DOMAIN\alias); TSA is the automated framework used to upload test results as bugs.
     BugAreaPath:                                               # Optional: only needed if TsaOnboard is true; the area path where TSA will file bugs in AzDO; TSA is the automated framework used to upload test results as bugs.
     IterationPath:                                             # Optional: only needed if TsaOnboard is true; the iteration path where TSA will file bugs in AzDO; TSA is the automated framework used to upload test results as bugs.
     RepositoryName:                                            # Optional: TSA repository name; will be generated automatically if not submitted; TSA is the automated framework used to upload test results as bugs.
-    CodebaseName:                                              # Optional: only needed if TsaOnboard is true; the aliases which are admins of the TSA codebase (e.g. DOMAIN\alias); TSA is the automated framework used to upload test results as bugs.
-    Onboard: false                                             # Optional: if true, will onboard the repository to TSA; should only be run once; TSA is the automated framework used to upload test results as bugs.
-  UpdateBaseline: false                                        # Optional: if true, will update the baseline in the repository; should only be run after fixing any issues which need to be fixed
+    CodebaseName:                                              # Optional: only needed if TsaOnboard is true;  the name of the codebase registered with TSA; TSA is the automated framework used to upload test results as bugs.
+  UpdateBaseline: $False                                       # Optional: if true, will update the baseline in the repository; should only be run after fixing any issues which need to be fixed
   continueOnError: false                                       # optional -- determines whether to continue the build if the step errors; defaults to false
   dependsOn:                                                   # Optional: dependencies of the job
+  additionalParameters: ''
 
 jobs:
 - job: Run_SDL
@@ -37,13 +34,6 @@ jobs:
   steps:
   - checkout: self
     clean: true
-  - powershell: eng\common\build.ps1
-      -configuration Release
-      -restore
-      -prepareMachine
-      -ci
-      /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-    displayName: Windows Build / Publish
   - task: NuGetToolInstaller@1
     displayName: 'Install NuGet.exe'
   - task: NuGetCommand@2
@@ -54,31 +44,26 @@ jobs:
       nugetConfigPath: $(Build.SourcesDirectory)\eng\common\sdl\NuGet.config
       externalFeedCredentials: GuardianConnect
       restoreDirectory: ${{ parameters.Guardian.NugetPackageDirectory }}
-  - powershell: powershell $env:BUILD_SOURCESDIRECTORY\eng\common\sdl\execute-all-sdl-tools.ps1
+  - powershell: eng/common/sdl/execute-all-sdl-tools.ps1
+      -GuardianPackageName ${{ parameters.Guardian.PackageName }}
+      -NugetPackageDirectory ${{ parameters.Guardian.NugetPackageDirectory }}
+      -Repository ${{ parameters.Repository }}
+      -BranchName ${{ parameters.BranchName }}
+      -SourceDirectory ${{ parameters.SourceDirectory }}
+      -ArtifactsDirectory ${{ parameters.ArtifactsDirectory }}
+      -UpdateBaseline ${{ parameters.UpdateBaseline }}
+      -DncEngAccessToken ${{ parameters.DncEngAccessToken }}
+      -SourceToolsList ${{ parameters.SourceToolsList }}
+      -TsaInstanceURL ${{ parameters.Tsa.InstanceURL }}
+      -TsaProjectName ${{ parameters.Tsa.ProjectName }}
+      -TsaNotificationEmail ${{ parameters.Tsa.NotificationEmail }}
+      -TsaCodebaseAdmin ${{ parameters.Tsa.CodebaseAdmin }}
+      -TsaBugAreaPath ${{ parameters.Tsa.BugAreaPath }}
+      -TsaIterationPath ${{ parameters.Tsa.IterationPath }}
+      -TsaRepositoryName ${{ parameters.Tsa.RepositoryName }}
+      -TsaCodebaseName ${{ parameters.Tsa.CodebaseName }}
+      -TsaPublish ${{ parameters.Tsa.Publish }}
+      -LoggerLevel ${{ parameters.Guardian.LoggerLevel }}
+      ${{ parameters.additionalParameters }}
     displayName: Execute SDL
-    env:
-      GuardianPackageName: ${{ parameters.Guardian.PackageName }}
-      NugetPackageDirectory: ${{ parameters.Guardian.NugetPackageDirectory }}
-      GuardianCliLocation: ${{ parameters.Guardian.CliLocation }}
-      Repository: ${{ parameters.Repository }}
-      BranchName:  ${{ parameters.BranchName }}
-      SourceDirectory: ${{ parameters.SourceDirectory }}
-      ArtifactsDirectory: ${{ parameters.ArtifactsDirectory }}
-      DncEngAccessToken: ${{ parameters.DncEngAccessToken }}
-      SourceToolsList: ${{ parameters.SourceToolsList }}
-      ArtifactToolsList: ${{ parameters.ArtifactToolsList }}
-      TsaPublish: ${{ parameters.Tsa.Publish }}
-      TsaBranchName: ${{ parameters.Tsa.BranchName }}
-      BuildNumber: ${{ parameters.Tsa.BuildNumber }}
-      TsaInstanceURL: ${{ parameters.Tsa.InstanceURL }}
-      TsaProjectName: ${{ parameters.Tsa.ProjectName }}
-      TsaNotificationEmail: ${{ parameters.Tsa.NotificationEmail }}
-      TsaCodebaseAdmin: ${{ parameters.Tsa.CodebaseAdmin }}
-      TsaBugAreaPath: ${{ parameters.Tsa.BugAreaPath }}
-      TsaIterationPath: ${{ parameters.Tsa.IterationPath }}
-      TsaRepositoryName: ${{ parameters.Tsa.RepositoryName }}
-      TsaCodebaseName: ${{ parameters.Tsa.CodebaseName }}
-      UpdateBaseline: ${{ parameters.UpdateBaseline }}
-      GuardianLoggerLevel: ${{ parameters.Guardian.LoggerLevel }}
-      TsaOnboard: ${{ parameters.Tsa.Onboard }}
     continueOnError: ${{ parameters.continueOnError }}

@@ -1,28 +1,28 @@
 Param(
-  [string] $GuardianPackageName=$env:GuardianPackageName,        # Required: the name of guardian CLI pacakge (not needed if GuardianCliLocation is specified)
-  [string] $NugetPackageDirectory=$env:NugetPackageDirectory,    # Required: directory where NuGet packages are installed (not needed if GuardianCliLocation is specified)
-  [string] $GuardianCliLocation=$env:GuardianCliLocation,        # Optional: Direct location of Guardian CLI executable if GuardianPackageName & NugetPackageDirectory are not specified
-  [string] $Repository=$env:Repository,                          # Required: the name of the repository (e.g. dotnet/arcade)
-  [string] $BranchName=$env:BranchName,                          # Optional: name of branch or version of gdn settings; defaults to master
-  [string] $SourceDirectory=$env:SourceDirectory,                # Required: the directory where source files are located
-  [string] $ArtifactsDirectory=$env:ArtifactsDirectory,          # Required: the directory where build artifacts are located
-  [string] $DncEngAccessToken=$env:DncEngAccessToken,            # Required: access token for dnceng; should be provided via KeyVault
-  [string] $SourceToolsList=$env:SourceToolsList,                # Optional: list of SDL tools to run on source code
-  [string] $ArtifactToolsList=$env:ArtifactToolsList,            # Optional: list of SDL tools to run on built artifacts
-  [bool] $TsaPublish=$False,                                     # Optional: true will publish results to TSA; only set to true after onboarding to TSA; TSA is the automated framework used to upload test results as bugs.
-  [string] $TsaBranchName=$env:BUILD_SOURCEBRANCHNAME,           # Optional: required for TSA publish; defaults to $(Build.SourceBranchName); TSA is the automated framework used to upload test results as bugs.
-  [string] $TsaRepositoryName=$env:TsaRepositoryName,            # Optional: TSA repository name; will be generated automatically if not submitted; TSA is the automated framework used to upload test results as bugs.
-  [string] $BuildNumber=$env:BUILD_BUILDNUMBER,                  # Optional: required for TSA publish; defaults to $(Build.BuildNumber)
-  [bool] $UpdateBaseline=$False,                                 # Optional: if true, will update the baseline in the repository; should only be run after fixing any issues which need to be fixed
-  [bool] $TsaOnboard=$False,                                     # Optional: if true, will onboard the repository to TSA; should only be run once; TSA is the automated framework used to upload test results as bugs.
-  [string] $TsaInstanceUrl=$env:TsaInstanceURL,                  # Optional: only needed if TsaOnboard or TsaPublish is true; the instance-url registered with TSA; TSA is the automated framework used to upload test results as bugs.
-  [string] $TsaCodebaseName=$env:TsaCodebaseName,                # Optional: only needed if TsaOnboard or TsaPublish is true; the name of the codebase registered with TSA; TSA is the automated framework used to upload test results as bugs.
-  [string] $TsaProjectName=$env:TsaProjectName,                  # Optional: only needed if TsaOnboard or TsaPublish is true; the name of the project registered with TSA; TSA is the automated framework used to upload test results as bugs.
-  [string] $TsaNotificationEmail=$env:TsaNotificationEmail,      # Optional: only needed if TsaOnboard is true; the email(s) which will receive notifications of TSA bug filings (e.g. alias@microsoft.com); TSA is the automated framework used to upload test results as bugs.
-  [string] $TsaCodebaseAdmin=$env:TsaCodebaseAdmin,              # Optional: only needed if TsaOnboard is true; the aliases which are admins of the TSA codebase (e.g. DOMAIN\alias); TSA is the automated framework used to upload test results as bugs.
-  [string] $TsaBugAreaPath=$env:TsaBugAreaPath,                  # Optional: only needed if TsaOnboard is true; the area path where TSA will file bugs in AzDO; TSA is the automated framework used to upload test results as bugs.
-  [string] $TsaIterationPath=$env:TsaIterationPath,              # Optional: only needed if TsaOnboard is true; the iteration path where TSA will file bugs in AzDO; TSA is the automated framework used to upload test results as bugs.
-  [string] $GuardianLoggerLevel="Standard"                       # Optional: the logger level for the Guardian CLI; options are Trace, Verbose, Standard, Warning, and Error
+  [string] $GuardianPackageName,                        # Required: the name of guardian CLI pacakge (not needed if GuardianCliLocation is specified)
+  [string] $NugetPackageDirectory,                      # Required: directory where NuGet packages are installed (not needed if GuardianCliLocation is specified)
+  [string] $GuardianCliLocation,                        # Optional: Direct location of Guardian CLI executable if GuardianPackageName & NugetPackageDirectory are not specified
+  [string] $Repository,                                 # Required: the name of the repository (e.g. dotnet/arcade)
+  [string] $BranchName="master",                        # Optional: name of branch or version of gdn settings; defaults to master
+  [string] $SourceDirectory,                            # Required: the directory where source files are located
+  [string] $ArtifactsDirectory=$env:ArtifactsDir,       # Required: the directory where build artifacts are located
+  [string] $DncEngAccessToken,                          # Required: access token for dnceng; should be provided via KeyVault
+  [string[]] $SourceToolsList,                          # Optional: list of SDL tools to run on source code
+  [string[]] $ArtifactToolsList,                        # Optional: list of SDL tools to run on built artifacts
+  [bool] $TsaPublish=$False,                            # Optional: true will publish results to TSA; only set to true after onboarding to TSA; TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaBranchName=$env:BUILD_SOURCEBRANCHNAME,  # Optional: required for TSA publish; defaults to $(Build.SourceBranchName); TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaRepositoryName,                          # Optional: TSA repository name; will be generated automatically if not submitted; TSA is the automated framework used to upload test results as bugs.
+  [string] $BuildNumber=$env:BUILD_BUILDNUMBER,         # Optional: required for TSA publish; defaults to $(Build.BuildNumber)
+  [bool] $UpdateBaseline=$False,                        # Optional: if true, will update the baseline in the repository; should only be run after fixing any issues which need to be fixed
+  [bool] $TsaOnboard=$False,                            # Optional: if true, will onboard the repository to TSA; should only be run once; TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaInstanceUrl,                             # Optional: only needed if TsaOnboard or TsaPublish is true; the instance-url registered with TSA; TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaCodebaseName,                            # Optional: only needed if TsaOnboard or TsaPublish is true; the name of the codebase registered with TSA; TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaProjectName,                             # Optional: only needed if TsaOnboard or TsaPublish is true; the name of the project registered with TSA; TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaNotificationEmail,                       # Optional: only needed if TsaOnboard is true; the email(s) which will receive notifications of TSA bug filings (e.g. alias@microsoft.com); TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaCodebaseAdmin,                           # Optional: only needed if TsaOnboard is true; the aliases which are admins of the TSA codebase (e.g. DOMAIN\alias); TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaBugAreaPath,                             # Optional: only needed if TsaOnboard is true; the area path where TSA will file bugs in AzDO; TSA is the automated framework used to upload test results as bugs.
+  [string] $TsaIterationPath,                           # Optional: only needed if TsaOnboard is true; the iteration path where TSA will file bugs in AzDO; TSA is the automated framework used to upload test results as bugs.
+  [string] $GuardianLoggerLevel="Standard"              # Optional: the logger level for the Guardian CLI; options are Trace, Verbose, Standard, Warning, and Error
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,13 +37,7 @@ else{
   $RepoName = $Repository;
 }
 
-if ($ArtifactToolsList) {
-  [string[]] $artifactToolList = $ArtifactToolsList.split(",");
-}
-
-if ($SourceToolsList) {
-  [string[]] $sourceToolsList = $SourceToolsList.split(",");
-}
+Write-Host "Params: $GuardianPackageName $NugetPackageDirectory  $GuardianCliLocation"
 
 if ($GuardianPackageName) {
   $guardianCliLocation = Join-Path $NugetPackageDirectory (Join-Path $GuardianPackageName (Join-Path "tools" "guardian.cmd"))
@@ -76,11 +70,11 @@ if ($TsaOnboard) {
   }
 }
 
-if ($artifactToolsList -and $artifactToolsList.Count -gt 0) {
-  & $(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $guardianCliLocation -WorkingDirectory $ArtifactsDirectory -TargetDirectory $ArtifactsDirectory -GdnFolder $gdnFolder -ToolsList $artifactToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel
+if ($ArtifactToolsList -and $ArtifactToolsList.Count -gt 0) {
+  & $(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $guardianCliLocation -WorkingDirectory $ArtifactsDirectory -TargetDirectory $ArtifactsDirectory -GdnFolder $gdnFolder -ToolsList $ArtifactToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel
 }
-if ($sourceToolsList -and $sourceToolsList.Count -gt 0) {
-  & $(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $guardianCliLocation -WorkingDirectory $ArtifactsDirectory -TargetDirectory $SourceDirectory -GdnFolder $gdnFolder -ToolsList $sourceToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel
+if ($SourceToolsList -and $SourceToolsList.Count -gt 0) {
+  & $(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $guardianCliLocation -WorkingDirectory $ArtifactsDirectory -TargetDirectory $SourceDirectory -GdnFolder $gdnFolder -ToolsList $SourceToolsList -DncEngAccessToken $DncEngAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel
 }
 
 if ($UpdateBaseline) {
