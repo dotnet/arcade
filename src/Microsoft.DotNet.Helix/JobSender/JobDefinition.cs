@@ -242,10 +242,16 @@ namespace Microsoft.DotNet.Helix.Client
                         ResultContainerPrefix = ResultContainerPrefix,
                     }),
                 ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."),
+                IsRetryableJobListUriHttpError,
                 CancellationToken.None);
 
 
             return new SentJob(JobApi, newJob, resultsStorageContainer?.Uri, string.IsNullOrEmpty(Creator) ? resultsStorageContainer?.ReadSas : string.Empty);
+        }
+
+        private static bool IsRetryableJobListUriHttpError(Exception ex)
+        {
+            return ex.Message.Contains("Provided Job List Uri is not accessible") && ex.InnerException is RestApiException raex && (int)raex.Response.StatusCode == 400;
         }
 
         public IJobDefinitionWithTargetQueue WithBuild(string buildNumber)
