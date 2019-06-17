@@ -4,7 +4,7 @@
 
   <PropertyGroup>
     <CoverageReportInputPath Condition="'$(CoverageReportInputPath)' == ''">$(CoverageOutputPath)</CoverageReportInputPath>
-    <CoverageReportDir Condition="'$(CoverageReportDir)' == ''">$([MSBuild]::NormaliizeDirectory('$(TestPath)', 'report'))</CoverageReportDir>
+    <CoverageReportDir Condition="'$(CoverageReportDir)' == ''">$([MSBuild]::NormalizeDirectory('$(TestPath)', 'report'))</CoverageReportDir>
     <CoverageReportTypes Condition="'$(CoverageReportTypes)' == ''">Html</CoverageReportTypes>
     <CoverageReportVerbosity Condition="'$(CoverageReportVerbosity)' == ''">Info</CoverageReportVerbosity>
     <CoverageReportResultsPath>$([MSBuild]::NormalizePath('$(CoverageReportDir)', 'index.htm'))</CoverageReportResultsPath>
