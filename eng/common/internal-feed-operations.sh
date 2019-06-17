@@ -58,12 +58,9 @@ function SetupCredProvider {
   if [ ${#endpoints} -gt 2 ]; then 
       # Create the JSON object. It should look like '{"endpointCredentials": [{"endpoint":"http://example.index.json", "username":"optional", "password":"accesstoken"}]}'
       local endpointCredentials="{\"endpointCredentials\": "$endpoints"}"
-      local restoreProjPath="$repo_root/eng/common/restore.proj"
 
       echo "##vso[task.setvariable variable=VSS_NUGET_EXTERNAL_FEED_ENDPOINTS]$endpointCredentials"
       echo "##vso[task.setvariable variable=NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED]False"
-
-      echo "<Project Sdk=\"Microsoft.DotNet.Arcade.Sdk\"/>" > "$restoreProjPath"
   else
     echo "No internal endpoints found in NuGet.config"
   fi
@@ -72,8 +69,12 @@ function SetupCredProvider {
 # Workaround for https://github.com/microsoft/msbuild/issues/4430
 function InstallDotNetSdkAndRestoreArcade {
   local dotnetTempDir="$repo_root/dotnet"
-  local dotnetSdkVersion="2.1.507"
+  local dotnetSdkVersion="2.1.507" # After experimentation we know this version works when restoring the SDK (compared to 3.0.*)
+  local restoreProjPath="$repo_root/eng/common/restore.proj"
+  
   echo "Installing dotnet SDK version $dotnetSdkVersion to restore Arcade SDK..."
+  echo "<Project Sdk=\"Microsoft.DotNet.Arcade.Sdk\"/>" > "$restoreProjPath"
+  
   InstallDotNetSdk "$dotnetTempDir" "$dotnetSdkVersion"
 
   local res=`$dotnetTempDir/dotnet restore $restoreProjPath`
