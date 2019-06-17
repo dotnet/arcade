@@ -9,6 +9,6 @@ namespace Microsoft.DotNet.Helix.Client
         int RetryCount { get; set; }
         double RetryBackOffFactor { get; set; }
         Task<T> RetryAsync<T>(Func<Task<T>> function, Action<Exception> logRetry, CancellationToken cancellationToken);
-        Task<T> RetryAsync<T>(Func<Task<T>> function, Action<Exception> logRetry, Func<Exception, bool> isRetryable, CancellationToken cancellationToken);        
+        Task<T> RetryAsync<T>(Func<Task<T>> function, Action<Exception> logRetry, Func<Exception, bool> isRetryable, CancellationToken cancellationToken);
     }
 }
