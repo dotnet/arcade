@@ -41,7 +41,7 @@ function SetupCredProvider {
   fi
   
   local endpoints='['
-  local nugetConfigPackageValues=`cat "$nugetConfigPath" | grep "key=\"darc-"`
+  local nugetConfigPackageValues=`cat "$nugetConfigPath" | grep "key=\"darc-int-"`
   local pattern="value=\"(.*)\""
 
   for value in $nugetConfigPackageValues 
