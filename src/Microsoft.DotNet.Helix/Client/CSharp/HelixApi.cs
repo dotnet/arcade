@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Helix.Client
             return s_rand.Next(min, max);
         }
 
-        private static bool IsRetryableHttpException(Exception ex)
+        public bool IsRetryableHttpException(Exception ex)
         {
             return ex is TaskCanceledException ||
                    ex is OperationCanceledException ||
@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Helix.Client
                    ex is RestApiException raex && (int)raex.Response.StatusCode >= 500 && (int)raex.Response.StatusCode <= 599 ||
                    ex is NullReferenceException // Null reference exceptions come from autorest for some reason and are retryable
                 ;
-        }
+        }        
 
         public Task<T> RetryAsync<T>(Func<Task<T>> function, Action<Exception> logRetry,
             CancellationToken cancellationToken)

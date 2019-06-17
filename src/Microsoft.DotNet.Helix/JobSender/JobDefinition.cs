@@ -4,13 +4,11 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.Rest;
-using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -249,9 +247,14 @@ namespace Microsoft.DotNet.Helix.Client
             return new SentJob(JobApi, newJob, resultsStorageContainer?.Uri, string.IsNullOrEmpty(Creator) ? resultsStorageContainer?.ReadSas : string.Empty);
         }
 
-        private static bool IsRetryableJobListUriHttpError(Exception ex)
+        public bool IsRetryableJobListUriHttpError(Exception ex)
         {
-            return ex.Message.Contains("Provided Job List Uri is not accessible") && ex.InnerException is RestApiException raex && (int)raex.Response.StatusCode == 400;
+            if (ex.Message.Contains("Provided Job List Uri is not accessible") && ex.InnerException is RestApiException raex && (int)raex.Response.StatusCode == 400)
+            {
+                return true;
+            }
+
+            return HelixApi.IsRetryableHttpException(ex);
         }
 
         public IJobDefinitionWithTargetQueue WithBuild(string buildNumber)
