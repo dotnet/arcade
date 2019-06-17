@@ -72,7 +72,7 @@ function SetupCredProvider {
 # Workaround for https://github.com/microsoft/msbuild/issues/4430
 function InstallDotNetSdkAndRestoreArcade {
   local dotnetTempDir="$repo_root/dotnet"
-  local dotnetSdkVersion="2.1.507" # After experimentation we know this version works when restoring the SDK (compared to 3.0.*)
+  local dotnetSdkVersion="2.1.507"
   echo "Installing dotnet SDK version $dotnetSdkVersion to restore Arcade SDK..."
   InstallDotNetSdk "$dotnetTempDir" "$dotnetSdkVersion"
 

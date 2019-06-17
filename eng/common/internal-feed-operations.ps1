@@ -59,9 +59,8 @@ function SetupCredProvider{
   if (($endpoints | Measure-Object).Count -gt 0) {
       # Create the JSON object. It should look like '{"endpointCredentials": [{"endpoint":"http://example.index.json", "username":"optional", "password":"accesstoken"}]}'
       $endpointCredentials = @{endpointCredentials=$endpoints} | ConvertTo-Json -Compress
-      $restoreProjPath = "$PSScriptRoot\restore.proj"
 
-      # Create the environment variables de AzDo way
+      # Create the environment variables the AzDo way
       Write-LoggingCommand -Area 'task' -Event 'setvariable' -Data $endpointCredentials -Properties @{
         'variable' = 'VSS_NUGET_EXTERNAL_FEED_ENDPOINTS'
         'issecret' = 'false'
@@ -72,8 +71,6 @@ function SetupCredProvider{
         'variable' = 'NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED'
         'issecret' = 'false'
       } 
-
-      '<Project Sdk="Microsoft.DotNet.Arcade.Sdk"/>' | Out-File "$restoreProjPath"
   }
   else
   {
@@ -84,12 +81,13 @@ function SetupCredProvider{
 #Workaround for https://github.com/microsoft/msbuild/issues/4430
 function InstallDotNetSdkAndRestoreArcade {
   $dotnetTempDir = "$RepoRoot\dotnet"
-  $dotnetSdkVersion="2.1.507"
+  $dotnetSdkVersion="2.1.507" # After experimentation we know this version works when restoring the SDK (compared to 3.0.*)
   $dotnet = "$dotnetTempDir\dotnet.exe"
   $restoreProjPath = "$PSScriptRoot\restore.proj"
   
   Write-Host "Installing dotnet SDK version $dotnetSdkVersion to restore Arcade SDK..."
   InstallDotNetSdk "$dotnetTempDir" "$dotnetSdkVersion"
+  '<Project Sdk="Microsoft.DotNet.Arcade.Sdk"/>' | Out-File "$restoreProjPath"
 
   & $dotnet restore $restoreProjPath
 
