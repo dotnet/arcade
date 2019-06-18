@@ -236,14 +236,6 @@ The file is present in the repo and defines versions of all dependencies used in
     <!-- Versions of other dependencies -->   
     <MyPackageVersion>1.2.3-beta</MyPackageVersion>
   </PropertyGroup>
-  
-  <PropertyGroup>
-    <!-- Feeds to use to restore dependent packages from. -->  
-    <RestoreSources>
-      $(RestoreSources);
-      https://dotnet.myget.org/F/myfeed/api/v3/index.json
-    </RestoreSources>
-  </PropertyGroup>
 </Project>
 ```
 
@@ -401,23 +393,23 @@ Note: defining `runtimes` in your global.json will signal to Arcade to install a
 
 ### /NuGet.config
 
-`/NuGet.config` file is present and specifies the MyGet feed to retrieve Arcade SDK from like so:
+`/NuGet.config` file is present and specifies the MyGet feed to retrieve Arcade SDK from and other feeds required by the repository like so:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
-  <!-- Only specify feed for Arcade SDK (see https://github.com/Microsoft/msbuild/issues/2982) -->
   <packageSources>
     <clear />
+    <!-- Feed to use to restore the Arcade SDK from -->  
     <add key="dotnet-core" value="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" />
+    <!-- Feeds to use to restore dependent packages from -->  
+    <add key="my-feed" value="https://dotnet.myget.org/F/myfeed/api/v3/index.json" />
   </packageSources>
   <disabledPackageSources>
     <clear />
   </disabledPackageSources>
 </configuration>
 ```
-
-> An improvement in SKD resolver is proposed to be able to specify the feed in `global.json` file to avoid the need for extra configuration in `NuGet.config`. See https://github.com/Microsoft/msbuild/issues/2982.
 
 ### /Directory.Build.props
 
