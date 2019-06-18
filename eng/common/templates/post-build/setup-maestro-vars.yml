@@ -16,7 +16,7 @@ jobs:
       inputs:
         targetType: inline
         script: |
-          # This is needed to make Write-PipelineSetVariable work in this context
+          # This is needed to make Write-PipelineSetVariable works in this context
           if ($env:BUILD_BUILDNUMBER -ne "" -and $env:BUILD_BUILDNUMBER -ne $null) {
             $ci = $true
 
