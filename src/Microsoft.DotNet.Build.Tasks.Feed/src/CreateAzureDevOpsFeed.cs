@@ -31,13 +31,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string CommitSha { get; set; }
 
         [Required]
-        public string PersonalAccessToken { get; set; }
+        public string AzureDevOpsPersonalAccessToken { get; set; }
 
-        public string FeedsApiVersion { get; set; } = "5.0-preview.1";
+        public string AzureDevOpsFeedsApiVersion { get; set; } = "5.0-preview.1";
 
         public static string AzureDevOpsOrg { get; set; } = "dnceng";
 
-        private readonly string FeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
+        private readonly string AzureDevOpsFeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
 
         public override bool Execute()
         {
@@ -57,33 +57,28 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string accessType = IsInternal ? "internal" : "public";
                 string publicSegment = IsInternal ? string.Empty : "public/";
                 string accessId = IsInternal ? "int" : "pub";
-                string feedName = $"darc-{accessId}-{RepositoryName}-{CommitSha}";
-                bool feedExists = true;
+                string baseFeedName = $"darc-{accessId}-{RepositoryName}-{CommitSha}";
+                string versionedFeedName = baseFeedName;
+                bool needsUniqueName = false;
                 int subVersion = 0;
 
-                Log.LogMessage(MessageImportance.High, $"Creating the new {accessType} Azure DevOps artifacts feed '{feedName}'...");
+                Log.LogMessage(MessageImportance.High, $"Creating the new {accessType} Azure DevOps artifacts feed '{baseFeedName}'...");
 
                 do
                 {
                     using (HttpClient client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true })
                     {
-                        BaseAddress = new Uri(FeedsBaseUrl)
+                        BaseAddress = new Uri(AzureDevOpsFeedsBaseUrl)
                     })
                     {
                         client.DefaultRequestHeaders.Add(
                             "Accept",
-                            $"application/json;api-version={FeedsApiVersion}");
+                            $"application/json;api-version={AzureDevOpsFeedsApiVersion}");
                         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                             "Basic",
-                            Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", PersonalAccessToken))));
+                            Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", AzureDevOpsPersonalAccessToken))));
 
-                        AzureDevOpsArtifactFeed newFeed = new AzureDevOpsArtifactFeed(feedName);
-
-                        // Mimic the permissions added to a feed when created in the browser
-                        newFeed.Permissions.Add(new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:b55de4ed-4b5a-4215-a8e4-0a0a5f71e7d8", 3));
-                        newFeed.Permissions.Add(new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:7ea9116e-9fac-403d-b258-b31fcf1bb293", 3));
-                        newFeed.Permissions.Add(new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1349140002-2196814402-2899064621-3782482097-0-0-0-0-1", 4));
-                        newFeed.Permissions.Add(new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1846651262-2896117056-2992157471-3474698899-1-2052915359-1158038602-2757432096-2854636005", 4));
+                        AzureDevOpsArtifactFeed newFeed = new AzureDevOpsArtifactFeed(versionedFeedName);
 
                         string body = JsonConvert.SerializeObject(newFeed, _serializerSettings);
 
@@ -94,28 +89,22 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         if (response.StatusCode == HttpStatusCode.Created)
                         {
-                            feedExists = false;
+                            needsUniqueName = false;
+                            baseFeedName = versionedFeedName;
                         }
                         else if (response.StatusCode == HttpStatusCode.Conflict)
                         {
-                            if (subVersion > 0)
-                            {
-                                int index = feedName.LastIndexOf('-');
-                                feedName = $"{feedName.Substring(0, index + 1)}{++subVersion}";
-                            }
-                            else
-                            {
-                                feedName = $"{feedName}-{++subVersion}";
-                            }
+                            versionedFeedName = $"{baseFeedName}-{++subVersion}";
+                            needsUniqueName = true;
                         }
                         else
                         {
-                            throw new Exception($"Feed '{feedName}' was not created. Request failed with status code {response.StatusCode}.");
+                            throw new Exception($"Feed '{baseFeedName}' was not created. Request failed with status code {response.StatusCode}. Exception: {await response.Content.ReadAsStringAsync()}");
                         }
                     }
-                } while (feedExists);
+                } while (needsUniqueName);
 
-                TargetFeedURL = $"https://{AzureDevOpsOrg}.pkgs.visualstudio.com/{publicSegment}_packaging/{feedName}";
+                TargetFeedURL = $"https://{AzureDevOpsOrg}.pkgs.visualstudio.com/{publicSegment}_packaging/{baseFeedName}";
 
                 Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created successfully!");
             }
@@ -146,11 +135,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public AzureDevOpsArtifactFeed(string name)
         {
             Name = name;
-            Permissions = new List<Permission>();
         }
 
         public string Name { get; set; }
 
-        public List<Permission> Permissions { get; set; }
+        public readonly List<Permission> Permissions = new List<Permission>
+        {
+            // Mimic the permissions added to a feed when created in the browser
+            new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:b55de4ed-4b5a-4215-a8e4-0a0a5f71e7d8", 3),                      // Project Collection Build Service
+            new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:7ea9116e-9fac-403d-b258-b31fcf1bb293", 3),                      // internal Build Service
+            new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1349140002-2196814402-2899064621-3782482097-0-0-0-0-1", 4),                                      // Feed administrators
+            new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1846651262-2896117056-2992157471-3474698899-1-2052915359-1158038602-2757432096-2854636005", 4)   // Feed administrators and contributors
+        };
     }
 }
