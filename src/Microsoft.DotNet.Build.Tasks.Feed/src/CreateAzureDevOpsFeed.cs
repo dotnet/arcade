@@ -56,45 +56,68 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 string accessType = IsInternal ? "internal" : "public";
                 string publicSegment = IsInternal ? string.Empty : "public/";
-                string feedName = await CalculateUniqueFeedName();
+                string accessId = IsInternal ? "int" : "pub";
+                string feedName = $"darc-{accessId}-{RepositoryName}-{CommitSha}";
+                bool feedExists = true;
+                int subVersion = 0;
 
                 Log.LogMessage(MessageImportance.High, $"Creating the new {accessType} Azure DevOps artifacts feed '{feedName}'...");
 
-                using (HttpClient client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true })
+                do
                 {
-                    BaseAddress = new Uri(FeedsBaseUrl)
-                })
-                {
-                    client.DefaultRequestHeaders.Add(
-                        "Accept",
-                        $"application/json;api-version={FeedsApiVersion}");
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                        "Basic",
-                        Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", PersonalAccessToken))));
-
-                    AzureDevOpsArtifactFeed newFeed = new AzureDevOpsArtifactFeed(feedName);
-
-                    // Mimic the permissions added to a feed when created in the browser
-                    newFeed.Permissions.Add(new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:b55de4ed-4b5a-4215-a8e4-0a0a5f71e7d8", 3));
-                    newFeed.Permissions.Add(new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:7ea9116e-9fac-403d-b258-b31fcf1bb293", 3));
-                    newFeed.Permissions.Add(new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1349140002-2196814402-2899064621-3782482097-0-0-0-0-1", 4));
-                    newFeed.Permissions.Add(new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1846651262-2896117056-2992157471-3474698899-1-2052915359-1158038602-2757432096-2854636005", 4));
-
-                    string body = JsonConvert.SerializeObject(newFeed, _serializerSettings);
-
-                    HttpRequestMessage postMessage = new HttpRequestMessage(HttpMethod.Post, $"{publicSegment}_apis/packaging/feeds");
-                    postMessage.Content = new StringContent(body, Encoding.UTF8, "application/json");
-
-                    HttpResponseMessage response = await client.SendAsync(postMessage);
-
-                    if (response.StatusCode != HttpStatusCode.Created)
+                    using (HttpClient client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true })
                     {
-                        throw new Exception($"Feed '{feedName}' was not created. Request failed with status code {response.StatusCode}.");
+                        BaseAddress = new Uri(FeedsBaseUrl)
+                    })
+                    {
+                        client.DefaultRequestHeaders.Add(
+                            "Accept",
+                            $"application/json;api-version={FeedsApiVersion}");
+                        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                            "Basic",
+                            Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", PersonalAccessToken))));
+
+                        AzureDevOpsArtifactFeed newFeed = new AzureDevOpsArtifactFeed(feedName);
+
+                        // Mimic the permissions added to a feed when created in the browser
+                        newFeed.Permissions.Add(new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:b55de4ed-4b5a-4215-a8e4-0a0a5f71e7d8", 3));
+                        newFeed.Permissions.Add(new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:7ea9116e-9fac-403d-b258-b31fcf1bb293", 3));
+                        newFeed.Permissions.Add(new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1349140002-2196814402-2899064621-3782482097-0-0-0-0-1", 4));
+                        newFeed.Permissions.Add(new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1846651262-2896117056-2992157471-3474698899-1-2052915359-1158038602-2757432096-2854636005", 4));
+
+                        string body = JsonConvert.SerializeObject(newFeed, _serializerSettings);
+
+                        HttpRequestMessage postMessage = new HttpRequestMessage(HttpMethod.Post, $"{publicSegment}_apis/packaging/feeds");
+                        postMessage.Content = new StringContent(body, Encoding.UTF8, "application/json");
+
+                        HttpResponseMessage response = await client.SendAsync(postMessage);
+
+                        if (response.StatusCode == HttpStatusCode.Created)
+                        {
+                            feedExists = false;
+                        }
+                        else if (response.StatusCode == HttpStatusCode.Conflict)
+                        {
+                            if (subVersion > 0)
+                            {
+                                int index = feedName.LastIndexOf('-');
+                                feedName = $"{feedName.Substring(0, index + 1)}{++subVersion}";
+                            }
+                            else
+                            {
+                                feedName = $"{feedName}-{++subVersion}";
+                            }
+                        }
+                        else
+                        {
+                            throw new Exception($"Feed '{feedName}' was not created. Request failed with status code {response.StatusCode}.");
+                        }
                     }
+                } while (feedExists);
 
-                    TargetFeedURL = $"https://{AzureDevOpsOrg}.pkgs.visualstudio.com/{publicSegment}_packaging/{feedName}";
-                }
+                TargetFeedURL = $"https://{AzureDevOpsOrg}.pkgs.visualstudio.com/{publicSegment}_packaging/{feedName}";
 
+                Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created successfully!");
             }
             catch (Exception e)
             {
@@ -102,60 +125,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             return !Log.HasLoggedErrors;
-        }
-
-        private async Task<string> CalculateUniqueFeedName()
-        {
-            string accessId = IsInternal ? "int" : "pub";
-            string feedName = $"darc-{accessId}-{RepositoryName}-{CommitSha}";
-            string publicSegment = IsInternal ? string.Empty : "public/";
-            int subVersion = 0;
-            bool feedExists = true;
-
-            do
-            {
-                using (HttpClient client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true })
-                {
-                    BaseAddress = new Uri(FeedsBaseUrl)
-                })
-                {
-                    client.DefaultRequestHeaders.Add(
-                        "Accept",
-                        $"application/json;api-version={FeedsApiVersion}");
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                        "Basic",
-                        Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", PersonalAccessToken))));
-
-                    HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, $"{publicSegment}_apis/packaging/feeds/{feedName}/");
-                    HttpResponseMessage response = await client.SendAsync(getMessage);
-
-                    if (response.StatusCode == HttpStatusCode.NotFound)
-                    {
-                        feedExists = false;
-                    }
-                    else if (response.StatusCode == HttpStatusCode.OK)
-                    {
-                        // In case the feed name already exist, meaning we have the same repo name + commitSha, we append an increasing counter at the end i.e. darc-int-arcade-123456-1
-                        if (subVersion > 0)
-                        {
-                            int index = feedName.LastIndexOf('-');
-                            feedName = $"{feedName.Substring(0, index + 1)}{++subVersion}";
-                        }
-                        else
-                        {
-                            feedName = $"{feedName}-{++subVersion}";
-                        }
-                    }
-                    else
-                    {
-                        throw new Exception($"Something failed while tring to check if feed '{feedName}' exists. Status code {response.StatusCode}.");
-                    }
-                }
-  
-            }
-            while (feedExists);
-
-            return feedName;
         }
     }
 
