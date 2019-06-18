@@ -87,8 +87,8 @@ try {
   CheckExitCode "Preserve artifacts for stage 1 build" $?
   Write-Host "Stage 2: Build using the local packages"
   
-  AddSourceToNugetConfig $nugetConfigPath $packagesSource
   CheckExitCode "Adding source to NuGet.config"
+  AddSourceToNugetConfig $nugetConfigPath $packagesSource
 
   Write-Host "Updating Dependencies using Darc..."
 
@@ -105,7 +105,7 @@ try {
   Write-Host "Building with updated dependencies"
 
   $ArtifactsLogDir = Join-Path (Join-Path $ArtifactsDir "log") $configuration
-  & .\common\cibuild.cmd -configuration $configuration @Args /p:AdditionalRestoreSources=$packagesSource /p:DotNetPublishBlobFeedUrl=https://dotnetfeed.blob.core.windows.net/dotnet-core-test/index.json
+  & .\common\cibuild.cmd -configuration $configuration @Args /p:DotNetPublishBlobFeedUrl=https://dotnetfeed.blob.core.windows.net/dotnet-core-test/index.json
   CheckExitCode "Official build"
 
   StopDotnetIfRunning
