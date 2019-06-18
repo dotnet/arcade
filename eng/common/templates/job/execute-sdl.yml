@@ -1,7 +1,7 @@
 parameters:
   overrideParameters: ''                                       # Optional: to override values for parameters.
-  additionalParameters: ''                                     # Optional: paramters that need user specific values eg: '-SourceToolsList "abc,def" -ArtifactToolsList "ghi,jkl"''
-  continueOnError: false                                       # optional -- determines whether to continue the build if the step errors; defaults to false
+  additionalParameters: ''                                     # Optional: parameters that need user specific values eg: '-SourceToolsList @("abc","def") -ArtifactToolsList @("ghi","jkl")'
+  continueOnError: false                                       # optional: determines whether to continue the build if the step errors;
   dependsOn: ''                                                # Optional: dependencies of the job
 
 jobs:
