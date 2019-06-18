@@ -34,5 +34,5 @@ jobs:
             Write-Host "Asked Write-PipelineSetVariable to create InitialChannels with value '$Channels'"
           }
           else {
-            Write-Host "This task require AzDO CI environment."
+            Write-Host "This step can only be run in an Azure DevOps CI environment."
           }
