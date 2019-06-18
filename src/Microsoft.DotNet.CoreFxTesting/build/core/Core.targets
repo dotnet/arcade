@@ -167,7 +167,7 @@
 
   </Target>
 
-  <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Core.uap.targets" />
+  <Import Condition="'$(TargetFrameworkIdentifier)' == 'UAP'" Project="$(MSBuildThisFileDirectory)Core.uap.targets" />
 
   <!--
     LaunchSettings.json support.
