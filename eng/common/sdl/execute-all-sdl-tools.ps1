@@ -37,8 +37,6 @@ else{
   $RepoName = $Repository;
 }
 
-Write-Host "Params: $GuardianPackageName $NugetPackageDirectory  $GuardianCliLocation"
-
 if ($GuardianPackageName) {
   $guardianCliLocation = Join-Path $NugetPackageDirectory (Join-Path $GuardianPackageName (Join-Path "tools" "guardian.cmd"))
 } else {
