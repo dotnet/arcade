@@ -22,8 +22,8 @@ parameters:
     CodebaseName:                                              # Optional: only needed if TsaOnboard is true;  the name of the codebase registered with TSA; TSA is the automated framework used to upload test results as bugs.
   UpdateBaseline: $False                                       # Optional: if true, will update the baseline in the repository; should only be run after fixing any issues which need to be fixed
   continueOnError: false                                       # optional -- determines whether to continue the build if the step errors; defaults to false
-  dependsOn:                                                   # Optional: dependencies of the job
-  additionalParameters: ''
+  dependsOn: ''                                                # Optional: dependencies of the job
+  additionalParameters: ''                                     # Optional: additional parameters that are not covered by the list above.
 
 jobs:
 - job: Run_SDL
