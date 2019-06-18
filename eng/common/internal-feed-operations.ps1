@@ -1,4 +1,4 @@
-﻿param(
+param(
   [Parameter(Mandatory=$true)][string] $Operation,
   [string] $AuthToken,
   [string] $CommitSha,
@@ -54,7 +54,7 @@ function SetupCredProvider {
   }
   
   $endpoints = New-Object System.Collections.ArrayList
-  $nugetConfigPackageSources = Select-Xml -Path $nugetConfigPath -XPath "//packageSources/add[contains(@key, 'darc-')]/@value" | foreach{$_.Node.Value}
+  $nugetConfigPackageSources = Select-Xml -Path $nugetConfigPath -XPath "//packageSources/add[contains(@key, 'darc-int-')]/@value" | foreach{$_.Node.Value}
   
   if (($nugetConfigPackageSources | Measure-Object).Count -gt 0 ) {
     foreach ($stableRestoreResource in $nugetConfigPackageSources) {
@@ -67,11 +67,17 @@ function SetupCredProvider {
       # Create the JSON object. It should look like '{"endpointCredentials": [{"endpoint":"http://example.index.json", "username":"optional", "password":"accesstoken"}]}'
       $endpointCredentials = @{endpointCredentials=$endpoints} | ConvertTo-Json -Compress
 
-      # Create the environment variables the AzDo way
-      Write-PipelineSetVariable -Name 'VSS_NUGET_EXTERNAL_FEED_ENDPOINTS' -Value $endpointCredentials
+     # Create the environment variables the AzDo way
+      Write-LoggingCommand -Area 'task' -Event 'setvariable' -Data $endpointCredentials -Properties @{
+        'variable' = 'VSS_NUGET_EXTERNAL_FEED_ENDPOINTS'
+        'issecret' = 'false'
+      } 
 
       # We don't want sessions cached since we will be updating the endpoints quite frequently
-      Write-PipelineSetVariable -Name 'NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED' -Value 'False'
+      Write-LoggingCommand -Area 'task' -Event 'setvariable' -Data 'False' -Properties @{
+        'variable' = 'NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED'
+        'issecret' = 'false'
+      } 
   }
   else
   {
