@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <!-- Copies the app.config file to the OutDir. -->
-    <TestRuntimeTemplateConfigPath Condition="'$(TestRuntimeTemplateConfigPath)' == '' and '$(BuildingNETFxVertical)' == 'true'">$(TestAssetsDir)netfx.exe.config</TestRuntimeTemplateConfigPath>
+    <TestRuntimeTemplateConfigPath Condition="'$(TestRuntimeTemplateConfigPath)' == '' and '$(TargetFrameworkIdentifier)' == '.NETFramework'">$(TestAssetsDir)netfx.exe.config</TestRuntimeTemplateConfigPath>
 
     <!-- By default copy the test runtime config file for executable test projects (+ test support projects). -->
     <GenerateRuntimeConfigurationFiles Condition="'$(IsTestProject)' == 'true' and ('$(IsTestSupportProject)' != 'true' or '$(OutputType.ToLower())' == 'exe')">true</GenerateRuntimeConfigurationFiles>
@@ -17,7 +17,7 @@
 
   <ItemGroup Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'">
     <None Include="$(TestRuntimeTemplateConfigPath)"
-          Condition="'$(BuildingNETFxVertical)' == 'true'"
+          Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'"
           Link="$(TargetName).exe.config"
           CopyToOutputDirectory="PreserveNewest"
           Visible="false" />
@@ -27,11 +27,11 @@
       Tracking issue: https://github.com/dotnet/sdk/issues/1675
     -->
     <ContentWithTargetPath Include="$(ProjectDepsFilePath)"
-                           Condition="'$(BuildingNETCoreAppVertical)' == 'true' and '$(GenerateDependencyFile)' == 'true'"
+                           Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(GenerateDependencyFile)' == 'true'"
                            CopyToOutputDirectory="PreserveNewest"
                            TargetPath="$(ProjectDepsFileName)" />
     <ContentWithTargetPath Include="$(ProjectRuntimeConfigFilePath)"
-                           Condition="'$(BuildingNETCoreAppVertical)' == 'true'"
+                           Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'"
                            CopyToOutputDirectory="PreserveNewest"
                            TargetPath="$(ProjectRuntimeConfigFileName)" />
   </ItemGroup>
@@ -88,7 +88,7 @@
   </Target>
 
   <!-- UAP resource generation needed by both source and test projects. -->
-  <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Resources.uap.targets" />
+  <Import Condition="'$(TargetFrameworkIdentifier)' == 'UAP'" Project="$(MSBuildThisFileDirectory)Resources.uap.targets" />
 
   <!-- Full coverage report. -->
   <Import Condition="'$(EnableFullCoverageReportTarget)' == 'true' and '$(SkipCoverageReport)' != 'true' and '$(Coverage)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestCoreDir)', 'coverage', 'CoverageReport.targets'))" />
