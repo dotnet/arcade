@@ -68,16 +68,10 @@ function SetupCredProvider {
       $endpointCredentials = @{endpointCredentials=$endpoints} | ConvertTo-Json -Compress
 
       # Create the environment variables the AzDo way
-      Write-LoggingCommand -Area 'task' -Event 'setvariable' -Data $endpointCredentials -Properties @{
-        'variable' = 'VSS_NUGET_EXTERNAL_FEED_ENDPOINTS'
-        'issecret' = 'false'
-      } 
+      Write-PipelineSetVariable -Name 'VSS_NUGET_EXTERNAL_FEED_ENDPOINTS' -Value $endpointCredentials
 
       # We don't want sessions cached since we will be updating the endpoints quite frequently
-      Write-LoggingCommand -Area 'task' -Event 'setvariable' -Data 'False' -Properties @{
-        'variable' = 'NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED'
-        'issecret' = 'false'
-      } 
+      Write-PipelineSetVariable -Name 'NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED' -Value 'False'
   }
   else
   {
