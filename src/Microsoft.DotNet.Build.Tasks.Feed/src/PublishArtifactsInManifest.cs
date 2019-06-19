@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (string.IsNullOrWhiteSpace(AssetManifestPath) || !File.Exists(AssetManifestPath))
                 {
-                    Log.LogError($"Problem reading asset manifest path from {AssetManifestPath}");
+                    Log.LogError($"Problem reading asset manifest path from '{AssetManifestPath}'");
                 }
 
                 if (!Directory.Exists(BlobAssetsBasePath))
@@ -236,7 +236,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        private async Task PublishPackagesToAzDoNugetFeedAsync(List<PackageArtifactModel> packagesToPublish,
+        private async Task PublishPackagesToAzDoNugetFeedAsync(
+            List<PackageArtifactModel> packagesToPublish,
             IMaestroApi client,
             Maestro.Client.Models.Build buildInformation,
             FeedConfig feedConfig)
@@ -267,13 +268,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        private async Task PublishPackagesToAzureStorageNugetFeedAsync(List<PackageArtifactModel> packagesToPublish,
+        private async Task PublishPackagesToAzureStorageNugetFeedAsync(
+            List<PackageArtifactModel> packagesToPublish,
             IMaestroApi client,
             Maestro.Client.Models.Build buildInformation,
             FeedConfig feedConfig)
         {
-            PackageAssetsBasePath = PackageAssetsBasePath.TrimEnd(Path.DirectorySeparatorChar,
-                Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            PackageAssetsBasePath = PackageAssetsBasePath.TrimEnd(
+                Path.DirectorySeparatorChar,
+                Path.AltDirectorySeparatorChar) 
+                + Path.DirectorySeparatorChar;
 
             var packages = packagesToPublish.Select(p => $"{PackageAssetsBasePath}{p.Id}.{p.Version}.nupkg");
 
@@ -353,47 +357,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private string InferCategory(string assetId)
         {
-            assetId = assetId.Trim().ToUpper();
+            var extension = Path.GetExtension(assetId).ToUpper();
 
-            if (assetId.EndsWith(".NUPKG"))
+            var whichCategory = new Dictionary<string, string>()
             {
-                return "NetCore";
-            }
-            else if (assetId.EndsWith(".PKG"))
+                { ".NUPKG", "NetCore" },
+                { ".PKG", "OSX" },
+                { ".DEB", "DEB" },
+                { ".RPM", "RPM" },
+                { ".NPM", "NODE" },
+                { ".ZIP", "BINARYLAYOUT" },
+                { ".MSI", "INSTALLER" },
+                { ".SHA", "CHECKSUM" },
+                { ".POM", "MAVEN" },
+                { ".VSIX", "VSIX" },
+            };
+
+            if (whichCategory.TryGetValue(extension, out var category))
             {
-                return "OSX";
-            }
-            else if (assetId.EndsWith(".DEB"))
-            {
-                return "DEB";
-            }
-            else if (assetId.EndsWith(".RPM"))
-            {
-                return "RPM";
-            }
-            else if (assetId.EndsWith(".NPM"))
-            {
-                return "NODE";
-            }
-            else if (assetId.EndsWith(".ZIP"))
-            {
-                return "BINARYLAYOUT";
-            }
-            else if (assetId.EndsWith(".MSI"))
-            {
-                return "INSTALLER";
-            }
-            else if (assetId.EndsWith(".SHA"))
-            {
-                return "CHECKSUM";
-            }
-            else if (assetId.EndsWith(".POM"))
-            {
-                return "MAVEN";
-            }
-            else if (assetId.EndsWith(".VSIX"))
-            {
-                return "VSIX";
+                return category;
             }
             else
             {
