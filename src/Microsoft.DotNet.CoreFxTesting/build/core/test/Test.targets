@@ -68,7 +68,7 @@
 
   <!-- Overwrite the runner config file with the app local one. -->
   <Target Name="OverwriteTestRunnerConfigFile"
-          Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' or '$(TargetFrameworkIdentifier)' == '.NETCore'"
+          Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' or '$(TargetFrameworkIdentifier)' == '.NETCoreApp'"
           AfterTargets="CopyFilesToOutputDirectory">
 
     <PropertyGroup>
