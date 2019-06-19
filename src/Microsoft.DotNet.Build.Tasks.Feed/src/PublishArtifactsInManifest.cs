@@ -288,8 +288,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 PassIfExistingItemIdentical = true
             };
 
-            await blobFeedAction.PushToFeedAsync(packages, pushOptions);
-
             foreach (var package in packagesToPublish)
             {
                 var assetRecord = buildInformation.Assets
@@ -312,6 +310,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, feedConfig.TargetFeedURL);
             }
+
+            await blobFeedAction.PushToFeedAsync(packages, pushOptions);
         }
 
         private Task<int> PublishWithNugetAsync(FeedConfig feedConfig, PackageArtifactModel package)
