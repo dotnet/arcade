@@ -244,8 +244,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             foreach (var package in packagesToPublish)
             {
-                await PublishWithNugetAsync(feedConfig, package);
-
                 var assetRecord = buildInformation.Assets
                     .Where(a => a.Name.Equals(package.Id) && a.Version.Equals(package.Version))
                     .FirstOrDefault();
@@ -255,6 +253,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogError($"Asset with Id {package.Id}, Version {package.Version} isn't registered on the BAR Build with ID {BARBuildId}");
                     continue;
                 }
+
+                await PublishWithNugetAsync(feedConfig, package);
 
                 var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
 
