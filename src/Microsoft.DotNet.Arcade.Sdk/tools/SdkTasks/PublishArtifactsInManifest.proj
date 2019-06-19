@@ -28,7 +28,7 @@
   <Import Project="SetupTargetFeeds.proj" />
 
   <Target Name="Execute" DependsOnTargets="SetupTargetFeeds">
-    <Error Condition="'$(ManifestsBasePath)' == ''" Text="ManifestsBasePath is empty. Please inform full path to asset manifest(s) directory." />
+    <Error Condition="'$(ManifestsBasePath)' == ''" Text="ManifestsBasePath is empty. Please provide the full path to asset manifest(s) directory." />
     <Error Condition="'$(BlobBasePath)' == '' OR '$(PackageBasePath)' == ''" Text="A valid full path to BlobBasePath and PackageBasePath is required." />
 
     <ItemGroup>
