@@ -2,7 +2,7 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
-  <PropertyGroup Condition="'$(BuildingUAPVertical)' == 'true'">
+  <PropertyGroup Condition="'$(TargetFrameworkIdentifier)' == 'UAP'">
     <!--
       Inside an AppContainer we can't write into the WorkingDirectory. As System.IO is used
       to write the results file we can't use the documents folder either. Therefore we write
@@ -14,8 +14,8 @@
   <!-- General xunit options -->
   <PropertyGroup>
     <RunArguments>$(TestAssembly)</RunArguments>
-    <RunArguments Condition="'$(BuildingUAPVertical)' != 'true'">$(RunArguments) -xml $(TestResultsName)</RunArguments>
-    <RunArguments Condition="'$(BuildingUAPVertical)' == 'true'">$(RunArguments) -xml $(UAPResultsPathCmd)</RunArguments>
+    <RunArguments Condition="'$(TargetFrameworkIdentifier)' != 'UAP'">$(RunArguments) -xml $(TestResultsName)</RunArguments>
+    <RunArguments Condition="'$(TargetFrameworkIdentifier)' == 'UAP'">$(RunArguments) -xml $(UAPResultsPathCmd)</RunArguments>
     <RunArguments>$(RunArguments) -nologo</RunArguments>
     <RunArguments Condition="'$(ArchiveTest)' == 'true'">$(RunArguments) -nocolor</RunArguments>
     <RunArguments>$(RunArguments) -notrait category=non$(_bc_TargetGroup)tests</RunArguments>
@@ -32,8 +32,8 @@
     <RunArguments Condition="'$(XUnitMethodName)' != ''">$(RunArguments) -method $(XUnitMethodName)</RunArguments>
     <RunArguments Condition="'$(XUnitClassName)' != ''">$(RunArguments) -class $(XUnitClassName)</RunArguments>
     <!-- There's no verbose switch in the XUnitRunnerUap. -->
-    <RunArguments Condition="'$(XUnitShowProgress)' == 'true' AND '$(BuildingUAPVertical)' != 'true'">$(RunArguments) -verbose</RunArguments>
-    <RunArguments Condition="'$(BuildingNETFxVertical)' == 'true' and '$(XUnitNoAppdomain)' == 'true'">$(RunArguments) -noappdomain</RunArguments>
+    <RunArguments Condition="'$(XUnitShowProgress)' == 'true' AND '$(TargetFrameworkIdentifier)' != 'UAP'">$(RunArguments) -verbose</RunArguments>
+    <RunArguments Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(XUnitNoAppdomain)' == 'true'">$(RunArguments) -noappdomain</RunArguments>
 
     <!-- Legacy Outerloop switch -->
     <TestScope Condition="'$(TestScope)' == '' and '$(Outerloop)' == 'true'">all</TestScope>
@@ -68,21 +68,21 @@
 
   <!-- Overwrite the runner config file with the app local one. -->
   <Target Name="OverwriteTestRunnerConfigFile"
-          Condition="'$(BuildingNETFxVertical)' == 'true' or '$(BuildingNetCoreAppVertical)' == 'true'"
+          Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' or '$(TargetFrameworkIdentifier)' == '.NETCoreApp'"
           AfterTargets="CopyFilesToOutputDirectory">
 
     <PropertyGroup>
       <TestRunnerNameWithoutExtension>$([System.IO.Path]::GetFileNameWithoutExtension('$(TestRunnerName)'))</TestRunnerNameWithoutExtension>
     </PropertyGroup>
 
-    <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
+    <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
       <_testRunnerConfigSourceFile Include="$(TargetDir)$(TargetName).exe.config" Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'" />
       <_testRunnerConfigSourceFile Include="$(TargetDir)$(TargetName).exe.config" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
       <_testRunnerConfigDestFile Include="$(TargetDir)$(TestRunnerName).config" Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'" />
       <_testRunnerConfigDestFile Include="$(TargetDir)Microsoft.DotNet.RemoteExecutorHost.exe.config" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(BuildingNetCoreAppVertical)' == 'true'">
+    <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
       <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigFilePath)" Condition="Exists('$(ProjectRuntimeConfigFilePath)')" />
       <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigDevFilePath)" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)')" />
       <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigFilePath)" Condition="Exists('$(ProjectRuntimeConfigFilePath)') and '$(IncludeRemoteExecutor)' == 'true'" />
@@ -100,10 +100,20 @@
 
   </Target>
 
+  <!-- Work around https://github.com/dotnet/sdk/issues/968 -->
+  <Target Name="RemoveXUnitAnalyzer"
+          Condition="'$(EnableXUnitAnalyzer)' != 'true'"
+          BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer)"
+                Condition="'%(Analyzer.NuGetPackageId)' == 'xunit.analyzers'" />
+    </ItemGroup>
+  </Target>
+
   <!-- Setup run commands. -->
   <Choose>
 
-    <When Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
+    <When Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
       <PropertyGroup>
         <TestRunnerName>xunit.console.dll</TestRunnerName>
         <RunCommand>"$(RunScriptHost)"</RunCommand>
@@ -111,14 +121,14 @@
       </PropertyGroup>
     </When>
 
-    <When Condition="'$(BuildingNETFxVertical)' == 'true'">
+    <When Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
       <PropertyGroup>
         <TestRunnerName>xunit.console.exe</TestRunnerName>
         <RunCommand>$(TestRunnerName)</RunCommand>
       </PropertyGroup>
     </When>
 
-    <When Condition="'$(BuildingUAPVertical)' == 'true'">
+    <When Condition="'$(TargetFrameworkIdentifier)' == 'UAP'">
       <PropertyGroup>
         <!-- Globally registered UWP console app. -->
         <TestRunnerName>XUnitRunnerUap</TestRunnerName>

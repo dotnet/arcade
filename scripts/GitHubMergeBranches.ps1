@@ -168,6 +168,8 @@ function GetOrCreateFork() {
 
 $workDir = "$PSScriptRoot/obj/$RepoOwner/$RepoName"
 New-Item "$PSScriptRoot/obj/" -ItemType Directory -ErrorAction Ignore | Out-Null
+            
+Invoke-Block { & git config --system core.longpaths true }
 
 $fetch = $true
 if (-not (Test-Path $workDir)) {

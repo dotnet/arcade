@@ -2,17 +2,17 @@
     "profiles": {
         ".NET Core xUnit Console": {
             "commandName": "Executable",
-            "executablePath": "$(ArtifactsBinDir)testhost/netcoreapp-$(_bc_OSGroup)-$(ConfigurationGroup)-$(ArchGroup)/dotnet.exe",
-            "commandLineArgs": "$(RunArguments) -wait -parallel none",
-            "workingDirectory": "$(ArtifactsBinDir)$(TestProjectName)/netcoreapp-$(_bc_OSGroup)-$(ConfigurationGroup)-$(ArchGroup)/"
+            "executablePath": "$(TestHostRootPath)dotnet.exe",
+            "commandLineArgs": "$(RunArguments) -parallel none",
+            "workingDirectory": "$(TargetDir)"
         },
         ".NET Framework xUnit Console": {
             "commandName": "Executable",
-            "executablePath": "$(ArtifactsBinDir)$(TestProjectName)/netfx-Windows_NT-$(ConfigurationGroup)-$(ArchGroup)/xunit.console.exe",
-            "commandLineArgs": "$(RunArguments) -wait -parallel none",
-            "workingDirectory": "$(ArtifactsBinDir)$(TestProjectName)/netfx-Windows_NT-$(ConfigurationGroup)-$(ArchGroup)/",
+            "executablePath": "$(TargetDir)xunit.console.exe",
+            "commandLineArgs": "$(RunArguments) -parallel none",
+            "workingDirectory": "$(TargetDir)",
             "environmentVariables": {
-                "DEVPATH": "$(ArtifactsBinDir)testhost/netfx-Windows_NT-$(ConfigurationGroup)-$(ArchGroup)/"
+                "DEVPATH": "$(TestHostRootPath)"
             }
         }
     }

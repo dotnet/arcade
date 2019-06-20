@@ -37,7 +37,6 @@ namespace Microsoft.DotNet.Git.IssueManager.Clients
 
                 response.EnsureSuccessStatusCode();
 
-                string x = await response.Content.ReadAsStringAsync();
                 AzureDevOpsCommit commitResponse = JsonConvert.DeserializeObject<AzureDevOpsCommit>(await response.Content.ReadAsStringAsync());
 
                 if (commitResponse == null)

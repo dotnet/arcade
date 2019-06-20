@@ -16,11 +16,35 @@ jobs:
       inputs:
         targetType: inline
         script: |
+          # This is needed to make Write-PipelineSetVariable works in this context
+          $ci = $true
+
           . "$(Build.SourcesDirectory)/eng/common/tools.ps1"
-             
-          $BarId = Get-Content "$(Build.StagingDirectory)/ReleaseConfigs/BARBuildId.txt" 
+
+          # This check is just temporary while we transition from having separate files
+          # for each variable to a single file for all variables.
+          if (Test-Path -Path "$(Build.StagingDirectory)/ReleaseConfigs/ReleaseConfigs.txt") {
+            $Content = Get-Content "$(Build.StagingDirectory)/ReleaseConfigs/ReleaseConfigs.txt"
+
+            $BarId = $Content | Select -Index 0
+            
+            $Channels = ""
+            $Channels = $Content | Select -Index 1 | ForEach-Object { $Channels += "$_ ," }
+            
+            $IsInternalBuild = $Content | Select -Index 2
+            $IsStableBuild = $Content | Select -Index 3
+          }
+          else {
+            $BarId = Get-Content "$(Build.StagingDirectory)/ReleaseConfigs/BARBuildId.txt" 
+
+            $Channels = ""
+            Get-Content "$(Build.StagingDirectory)/ReleaseConfigs/Channels.txt" | ForEach-Object { $Channels += "$_ ," }        
+
+            $IsInternalBuild = "false"
+            $IsStableBuild = "false"
+          }
+
           Write-PipelineSetVariable -Name 'BARBuildId' -Value $BarId
-           
-          $Channels = ""
-          Get-Content "$(Build.StagingDirectory)/ReleaseConfigs/Channels.txt" | ForEach-Object { $Channels += "$_ ," }
           Write-PipelineSetVariable -Name 'InitialChannels' -Value "$Channels"
+          Write-PipelineSetVariable -Name 'IsInternalBuild' -Value $IsInternalBuild
+          Write-PipelineSetVariable -Name 'IsStableBuild' -Value $IsStableBuild

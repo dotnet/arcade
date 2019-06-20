@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <!-- Set env variable to use the local netfx assemblies instead of the ones in the GAC. -->
-  <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
     <RunScriptCommands Include="set DEVPATH=%RUNTIME_PATH%" />
   </ItemGroup>
 
