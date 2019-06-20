@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#include <string.h>
-#include <wchar.h>
 #include "stdafx.h"
 #include "AppxApp.h"
 #include "Support.h"
