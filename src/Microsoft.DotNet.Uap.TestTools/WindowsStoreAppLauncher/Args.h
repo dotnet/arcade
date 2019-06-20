@@ -223,7 +223,7 @@ public:
 
   void PrintUsage()
   {
-    wprintf(L"%s", Usage().c_str());
+    wprintf_s(L"%s", Usage().c_str());
   }
 private:
   template <typename ErrorFunction>
@@ -303,7 +303,7 @@ struct OptionList<>
     }
     void PrintUsage()
     {
-        wprintf(L"%s", Usage().c_str());
+        wprintf_s(L"%s", Usage().c_str());
     }
     OptionList<>& withInfo(const wstring& exeName, const wstring& positionalArgs, const wstring& positionalArgInfo)
     {
@@ -367,7 +367,7 @@ struct OptionList<Option<T>, Tail...> : public OptionList<Tail...>
     }
     void PrintUsage()
     {
-        wprintf(L"%s", Usage().c_str());
+        wprintf_s(L"%s", Usage().c_str());
     }
 protected:
     template <typename err>
@@ -455,7 +455,7 @@ struct OptionList<OptionWithParam<T>, Tail...> : public OptionList<Tail...>
     }
     void PrintUsage()
     {
-        wprintf(L"%s", Usage().c_str());
+        wprintf_s(L"%s", Usage().c_str());
     }
 protected:
     template <typename err>

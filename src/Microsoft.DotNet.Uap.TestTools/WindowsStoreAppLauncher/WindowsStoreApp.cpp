@@ -118,7 +118,7 @@ wstring WindowsStoreApp::GetAppContainerFolderPath() const
   folderPath += L"\\AppData\\Local\\Packages\\";
   folderPath += get_PackageFamilyName();
   folderPath += L"\\";
-  wprintf(L"Resolved Folder Path: %s\n", folderPath.c_str());
+  wprintf_s(L"Resolved Folder Path: %s\n", folderPath.c_str());
 
   return folderPath;
 }
