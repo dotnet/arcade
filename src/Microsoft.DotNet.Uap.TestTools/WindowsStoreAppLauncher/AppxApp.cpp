@@ -414,7 +414,7 @@ DWORD AppxApp::GetAppExitCode()
     char content[256];
     memset(content, '\0', 256 * sizeof(char));
     file.getline(content, 256);
-    exitCode = strtol(content, NULL, 0);
+    exitCode = strtol(content, NULL, 10);
     wprintf_s(L"Process exited with return code(from exitcode.txt) %d.\n", exitCode);
   }
   else
