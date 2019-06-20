@@ -88,7 +88,7 @@
   </Target>
 
   <!-- UAP resource generation needed by both source and test projects. -->
-  <Import Condition="'$(TargetFrameworkIdentifier)' == 'UAP'" Project="$(MSBuildThisFileDirectory)Resources.uap.targets" />
+  <Import Condition="'$(TargetFrameworkIdentifier)' == 'UAP' and '$(BuildAllConfigurations)' != 'true'" Project="$(MSBuildThisFileDirectory)Resources.uap.targets" />
 
   <!-- Full coverage report. -->
   <Import Condition="'$(EnableFullCoverageReportTarget)' == 'true' and '$(SkipCoverageReport)' != 'true' and '$(Coverage)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestCoreDir)', 'coverage', 'CoverageReport.targets'))" />
