@@ -21,6 +21,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Output]
         public string TargetFeedURL { get; set; }
 
+        [Output]
+        public string TargetFeedName { get; set; }
+
         [Required]
         public bool IsInternal { get; set; }
 
@@ -105,6 +108,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 } while (needsUniqueName);
 
                 TargetFeedURL = $"https://{AzureDevOpsOrg}.pkgs.visualstudio.com/{publicSegment}_packaging/{baseFeedName}";
+                TargetFeedName = baseFeedName;
 
                 Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created successfully!");
             }
