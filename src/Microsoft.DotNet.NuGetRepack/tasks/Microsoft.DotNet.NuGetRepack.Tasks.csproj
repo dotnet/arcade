@@ -3,16 +3,12 @@
   <PropertyGroup>
     <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
 
-    <!-- Using an explicit nuspec file since NuGet Pack target currently doesn't support including dependencies in tools packages -->
     <IsPackable>true</IsPackable>
-    <NuspecFile>$(MSBuildProjectName).nuspec</NuspecFile>
-    <NuspecBasePath>$(OutputPath)</NuspecBasePath>
+    <PackageType>MSBuildSdk</PackageType>
 
     <PackageDescription>Build task for updating version of NuGet packages.</PackageDescription>
     <PackageTags>Arcade Build Tool NuGet version</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
-    
-    <TargetsForTfmSpecificContentInPackage>_CorePublish;$(TargetsForTfmSpecificContentInPackage)</TargetsForTfmSpecificContentInPackage>  
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,5 +24,6 @@
     <InternalsVisibleTo Include="Microsoft.DotNet.NuGetRepack.Tests" />
   </ItemGroup>
 
-  <Target Name="_CorePublish" DependsOnTargets="Publish" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
+  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
+
 </Project>
