@@ -1,9 +1,7 @@
 param(
   [Parameter(Mandatory=$true)][string] $Operation,
   [string] $AuthToken,
-  [string] $CommitSha,
-  [string] $RepoName,
-  [switch] $IsFeedPrivate
+  [string] $CommitSha
 )
 
 $ErrorActionPreference = "Stop"

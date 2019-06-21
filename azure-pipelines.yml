@@ -106,7 +106,8 @@ stages:
             $(_ValidateSdkArgs)
             /p:Test=false
           displayName: Windows Build / Publish
-
+          env:
+            InternalFeedPAT: $(InternalFeedAccessToken)
         - powershell: eng\common\build.ps1
             -configuration $(_BuildConfig) 
             -prepareMachine
@@ -167,6 +168,8 @@ stages:
               --prepareMachine
               /p:Test=false
             displayName: Unix Build / Publish
+            env:
+              InternalFeedPAT: $(InternalFeedAccessToken)
           - script: eng/common/build.sh
               --configuration $(_BuildConfig)
               --prepareMachine

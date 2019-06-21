@@ -149,6 +149,12 @@ while [[ $# > 0 ]]; do
   shift
 done
 
+if [[ ! -z ${InternalFeedPAT:-}]]; then
+  echo "Building from an internal branch. Setting up CredProvider..."
+  . "$scriptroot/internal-feed-operations.sh" --operation 'setup' --authToken "${InternalFeedPAT:-}"
+  . "$scriptroot/internal-feed-operations.sh" --operation 'install-restore'
+fi
+
 if [[ "$ci" == true ]]; then
   pipelines_log=true
   binary_log=true

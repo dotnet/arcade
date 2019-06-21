@@ -90,6 +90,12 @@ jobs:
     timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
 
   variables:
+  - name: InternalFeedAccessToken
+    value: ''
+  - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), contains(variables['Build.SourceBranch'], 'internal')) }}:
+    - group: AzureDevOps-Artifact-Feeds-Pats
+    - name: InternalFeedAccessToken
+      value: $(dn-bot-dnceng-artifact-feeds-rw)
   - ${{ if eq(parameters.enableTelemetry, 'true') }}:
     - name: DOTNET_CLI_TELEMETRY_PROFILE
       value: '$(Build.Repository.Uri)'

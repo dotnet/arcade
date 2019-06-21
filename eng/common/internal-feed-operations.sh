@@ -99,7 +99,6 @@ function InstallDotNetSdkAndRestoreArcade {
 source="${BASH_SOURCE[0]}"
 operation=''
 authToken=''
-repoName=''
 
 while [[ $# > 0 ]]; do
   opt="$(echo "$1" | awk '{print tolower($0)}')"
