@@ -64,12 +64,6 @@ jobs:
       inputs:
         targetType: inline
         script: |
-          if (-Not (Test-Path variable:IsInternalBuild)) {
-            $IsInternalBuild = "false"
-          }
-          if (-Not (Test-Path variable:IsStableBuild)) {
-            $IsStableBuild = "false"
-          }
           Add-Content -Path "$(Build.StagingDirectory)/ReleaseConfigs.txt" -Value $(BARBuildId)
           Add-Content -Path "$(Build.StagingDirectory)/ReleaseConfigs.txt" -Value "$(DefaultChannels)"
           Add-Content -Path "$(Build.StagingDirectory)/ReleaseConfigs.txt" -Value $(IsInternalBuild)
