@@ -39,12 +39,14 @@
         CommitSha="$(CommitSha)"
         PersonalAccessToken="$(TargetFeedPAT)">
       <Output TaskParameter="TargetFeedURL" PropertyName="NewAzDoFeedURL"/>
+      <Output TaskParameter="TargetFeedName" PropertyName="NewAzDoFeedName"/>
     </CreateAzureDevOpsFeed>
 
     <ItemGroup Condition="'$(IsStableBuild)' == 'true'">
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(NewAzDoFeedURL)"
+        FeedName="$(NewAzDoFeedName)"
         Type="AzDoNugetFeed"
         Token="$(TargetFeedPAT)" />
     </ItemGroup>
@@ -54,6 +56,7 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="https://dnceng.pkgs.visualstudio.com/_packaging/dotnet-core-internal/nuget/v3/index.json"
+        FeedName="dotnet-core-internal"
         Type="AzDoNugetFeed"
         Token="$(TargetFeedPAT)" />
     </ItemGroup>
@@ -63,6 +66,7 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="https://dnceng.pkgs.visualstudio.com/_packaging/dotnet-core-validation-public/nuget/v3/index.json"
+        FeedName="dotnet-core-validation-public"
         Type="AzDoNugetFeed"
         Token="$(TargetFeedPAT)" />
     </ItemGroup>
@@ -72,6 +76,7 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="https://dnceng.pkgs.visualstudio.com/_packaging/dotnet-core-public/nuget/v3/index.json"
+        FeedName="dotnet-core-public"
         Type="AzDoNugetFeed"
         Token="$(TargetFeedPAT)" />
     </ItemGroup>
@@ -80,6 +85,8 @@
       Condition="'@(TargetFeedConfig)' == ''"
       Text="It wasn't possible to determine which target feed configuration to use." />
 
+    <Message Text="##vso[task.setvariable variable=AzDoFeedName]%(TargetFeedConfig.FeedName)" Importance="high" />
+    
     <Message
       Text="Artifact with category '%(TargetFeedConfig.Identity)' should go to %(TargetFeedConfig.Type) -> '%(TargetFeedConfig.TargetURL)'"
       Importance="high" />
