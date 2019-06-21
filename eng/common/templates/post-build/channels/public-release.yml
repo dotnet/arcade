@@ -49,6 +49,7 @@ parameters:
     variables:
       - group: DotNet-Blob-Feed
       - group: Publish-Build-Assets
+      - group: dn-bot-dnceng-unviersal-packages-rw
       - name: BARBuildId
         value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
     condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicRelease_30_Channel_Id)
@@ -82,7 +83,8 @@ parameters:
             /p:IsStableBuild=${{ variables.IsStableBuild }}
             /p:IsInternalBuild=${{ variables.IsInternalBuild }}
             /p:NugetPath=${{ variables.NugetPath }}
-            /p:TargetFeedPAT='$(dotnetfeed-storage-access-key-1)' 
+            /p:AzdoTargetFeedPAT='$(AzureDevOps-Artifact-Feeds-Pats)' 
+            /p:AzureStorageTargetFeedPAT='$(dotnetfeed-storage-access-key-1)' 
             /p:BARBuildId=$(BARBuildId) 
             /p:MaestroApiEndpoint='https://maestro-prod.westus2.cloudapp.azure.com'
             /p:BuildAssetRegistryToken='$(MaestroAccessToken)' 
@@ -90,6 +92,14 @@ parameters:
             /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/' 
             /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/' 
             /p:Configuration=Release 
+        
+      - task: PowerShell@2
+        displayName: Publish Blobs to AzDo Feed
+        inputs:
+          filePath: $(Build.SourcesDirectory)/eng/common/post-build/publish-blobs-to-azdo.ps1
+          arguments: -FeedName $(variables.AzDoFeedName) 
+            -SourceFolderCollection $(Build.ArtifactStagingDirectory)/BlobArtifacts/
+            -PersonalAccessToken $(AzureDevOps-Artifact-Feeds-Pats)
 
 
  - stage: PublishValidation
