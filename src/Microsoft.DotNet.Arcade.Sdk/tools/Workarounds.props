@@ -7,8 +7,8 @@
     Since .NET Framework 4.7.2 WPF temp project name ends with _wpftmp suffix and keeps the language specific extension (e.g. csproj). 
   -->
   <PropertyGroup>
-    <IsWpfTempProject>false</IsWpfTempProject>
-    <IsWpfTempProject Condition="$(MSBuildProjectName.EndsWith('_wpftmp'))">true</IsWpfTempProject>
+    <IsWpfTempProject Condition="'$(IsWpfTempProject)' == '' and $(MSBuildProjectName.EndsWith('_wpftmp'))">true</IsWpfTempProject>
+    <IsWpfTempProject Condition="'$(IsWpfTempProject)' == ''">false</IsWpfTempProject>
   </PropertyGroup>
 
   <!--
