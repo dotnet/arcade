@@ -1,0 +1,79 @@
+<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Resources\*.cs" />
+    <None Include="Resources\*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.IO.Compression" Version="$(SystemIOCompressionVersion)" />
+    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\A.1.0.0-beta-12345-01.nupkg">
+      <LogicalName>A.1.0.0-beta-12345-01.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\B.1.0.0-beta-12345-01.nupkg">
+      <LogicalName>B.1.0.0-beta-12345-01.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\C.1.0.0-beta-12345-01.nupkg">
+      <LogicalName>C.1.0.0-beta-12345-01.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\D.1.0.0-beta-12345-01.nupkg">
+      <LogicalName>D.1.0.0-beta-12345-01.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\E.1.0.0-beta.12345.1.nupkg">
+      <LogicalName>E.1.0.0-beta.12345.1.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\F.1.0.0-beta.12345.1.nupkg">
+      <LogicalName>F.1.0.0-beta.12345.1.nupkg</LogicalName>
+    </EmbeddedResource>    
+    <EmbeddedResource Include="Resources\A.1.0.0-beta-final.nupkg">
+      <LogicalName>A.1.0.0-beta-final.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\B.1.0.0-beta-final.nupkg">
+      <LogicalName>B.1.0.0-beta-final.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\C.1.0.0-beta-final.nupkg">
+      <LogicalName>C.1.0.0-beta-final.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\D.1.0.0-beta-final.nupkg">
+      <LogicalName>D.1.0.0-beta-final.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\E.1.0.0-beta.final.nupkg">
+      <LogicalName>E.1.0.0-beta.final.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\F.1.0.0-beta.final.nupkg">
+      <LogicalName>F.1.0.0-beta.final.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\A.1.0.0.nupkg">
+      <LogicalName>A.1.0.0.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\B.1.0.0.nupkg">
+      <LogicalName>B.1.0.0.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\C.1.0.0.nupkg">
+      <LogicalName>C.1.0.0.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\D.1.0.0.nupkg">
+      <LogicalName>D.1.0.0.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\E.1.0.0.nupkg">
+      <LogicalName>E.1.0.0.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\F.1.0.0.nupkg">
+      <LogicalName>F.1.0.0.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Signed.1.2.3.nupkg">
+      <LogicalName>Signed.1.2.3.nupkg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\DotnetTool.1.0.0-beta-12345-01.nupkg">
+      <LogicalName>DotnetTool.1.0.0-beta-12345-01.nupkg</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\tasks\Microsoft.DotNet.NuGetRepack.Tasks.csproj" />
+  </ItemGroup>
+</Project>
