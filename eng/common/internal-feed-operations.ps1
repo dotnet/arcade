@@ -62,20 +62,22 @@ function SetupCredProvider {
   }
 
   if (($endpoints | Measure-Object).Count -gt 0) {
-      # Create the JSON object. It should look like '{"endpointCredentials": [{"endpoint":"http://example.index.json", "username":"optional", "password":"accesstoken"}]}'
-      $endpointCredentials = @{endpointCredentials=$endpoints} | ConvertTo-Json -Compress
+    # Create the JSON object. It should look like '{"endpointCredentials": [{"endpoint":"http://example.index.json", "username":"optional", "password":"accesstoken"}]}'
+    $endpointCredentials = @{endpointCredentials=$endpoints} | ConvertTo-Json -Compress
 
-     # Create the environment variables the AzDo way
-      Write-LoggingCommand -Area 'task' -Event 'setvariable' -Data $endpointCredentials -Properties @{
-        'variable' = 'VSS_NUGET_EXTERNAL_FEED_ENDPOINTS'
-        'issecret' = 'false'
-      } 
+    # Create the environment variables the AzDo way
+    Write-LoggingCommand -Area 'task' -Event 'setvariable' -Data $endpointCredentials -Properties @{
+      'variable' = 'VSS_NUGET_EXTERNAL_FEED_ENDPOINTS'
+      'issecret' = 'false'
+    } 
+      
+    $env:VSS_NUGET_EXTERNAL_FEED_ENDPOINTS = $endpointCredentials
 
-      # We don't want sessions cached since we will be updating the endpoints quite frequently
-      Write-LoggingCommand -Area 'task' -Event 'setvariable' -Data 'False' -Properties @{
-        'variable' = 'NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED'
-        'issecret' = 'false'
-      } 
+    # We don't want sessions cached since we will be updating the endpoints quite frequently
+    Write-LoggingCommand -Area 'task' -Event 'setvariable' -Data 'False' -Properties @{
+      'variable' = 'NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED'
+      'issecret' = 'false'
+    } 
   }
   else
   {

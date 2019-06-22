@@ -116,8 +116,8 @@ try {
   
   if ("$env:InternalFeedPAT" -ne "") {
     Write-Host "Building from an internal branch. Setting up CredProvider..."
-    . $PSScriptRoot\internal-feed-operations.ps1 -Operation 'setup' -AuthToken "$env:InternalFeedPAT"
-    . $PSScriptRoot\internal-feed-operations.ps1 -Operation 'install-restore'
+    & $PSScriptRoot\internal-feed-operations.ps1 -Operation 'setup' -AuthToken "$env:InternalFeedPAT"
+    & $PSScriptRoot\internal-feed-operations.ps1 -Operation 'install-restore'
   }
 
   if ($ci) {

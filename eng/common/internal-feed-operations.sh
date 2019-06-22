@@ -15,7 +15,7 @@ function SetupCredProvider {
 
   local url="https://raw.githubusercontent.com/microsoft/artifacts-credprovider/master/helpers/installcredprovider.sh"  
   
-  echo "Writing the contents of 'installcredprovider.ps1' locally..."
+  echo "Writing the contents of 'installcredprovider.sh' locally..."
   local installcredproviderPath="installcredprovider.sh"
   if command -v curl > /dev/null; then
     curl $url > "$installcredproviderPath"
@@ -62,11 +62,16 @@ function SetupCredProvider {
   endpoints+=']'
 
   if [ ${#endpoints} -gt 2 ]; then 
-      # Create the JSON object. It should look like '{"endpointCredentials": [{"endpoint":"http://example.index.json", "username":"optional", "password":"accesstoken"}]}'
-      local endpointCredentials="{\"endpointCredentials\": "$endpoints"}"
+    # Create the JSON object. It should look like '{"endpointCredentials": [{"endpoint":"http://example.index.json", "username":"optional", "password":"accesstoken"}]}'
+    local endpointCredentials="{\"endpointCredentials\": "$endpoints"}"
 
-      echo "##vso[task.setvariable variable=VSS_NUGET_EXTERNAL_FEED_ENDPOINTS]$endpointCredentials"
-      echo "##vso[task.setvariable variable=NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED]False"
+    # Create the environment variables the AzDo way
+    echo "##vso[task.setvariable variable=VSS_NUGET_EXTERNAL_FEED_ENDPOINTS]$endpointCredentials"
+      
+    export VSS_NUGET_EXTERNAL_FEED_ENDPOINTS="$endpointCredentials"
+    
+    # We don't want sessions cached since we will be updating the endpoints quite frequently
+    echo "##vso[task.setvariable variable=NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED]False"
   else
     echo "No internal endpoints found in NuGet.config"
   fi
