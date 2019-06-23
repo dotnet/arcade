@@ -77,6 +77,24 @@
 
   </Target>
 
+  <PropertyGroup>
+    <PlatformManifestFile>$(TestHostFrameworkPath)PlatformManifest.txt</PlatformManifestFile>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('$(PlatformManifestFile)')">
+    <PackageConflictPlatformManifests Include="$(PlatformManifestFile)" />
+  </ItemGroup>
+
+  <UsingTask TaskName="GenerateFileVersionProps" AssemblyFile="$(CoreFxTestingAssemblyPath)"/>
+  <Target Name="GenerateFileVersionProps" Condition="'$(GenerateFileVersionProps)' == 'true'">
+    <GenerateFileVersionProps Files="@(SharedFrameworkRuntimeFiles)"
+                              PackageId="Microsoft.NETCore.App"
+                              PackageVersion="$(ProductVersion)"
+                              PlatformManifestFile="$(PlatformManifestFile)"
+                              PreferredPackages="Microsoft.NetCore.App"
+                              PermitDllAndExeFilesLackingFileVersion="true" />
+  </Target>
+
   <!--
     Shared framework deps file generation.
     Produces a test shared-framework deps file.
