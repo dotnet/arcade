@@ -86,9 +86,9 @@ try {
   Rename-Item -Path $ArtifactsDir -NewName $stage1ArtifactsFolderName -Verbose
   CheckExitCode "Preserve artifacts for stage 1 build" $?
   Write-Host "Stage 2: Build using the local packages"
-  
-  CheckExitCode "Adding source to NuGet.config"
+
   AddSourceToNugetConfig $nugetConfigPath $packagesSource
+  CheckExitCode "Adding source to NuGet.config"
 
   Write-Host "Updating Dependencies using Darc..."
 

@@ -91,6 +91,8 @@
     <MicrosoftDotNetBuildTasksVisualStudioVersion Condition="'$(MicrosoftDotNetBuildTasksVisualStudioVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksVisualStudioVersion>
   </PropertyGroup>
 
+  <!-- RestoreSources overrides - defines DotNetRestoreSources variable if available -->
+  <Import Project="$(DotNetPackageVersionPropsPath)" Condition="'$(DotNetPackageVersionPropsPath)' != ''"/>
   <!-- 
     Defaults for properties that need to be available to all CI build steps and are dependent on settings specified in eng/Versions.props.
   -->
