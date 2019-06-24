@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                 } while (needsUniqueName);
 
-                TargetFeedURL = $"https://{AzureDevOpsOrg}.pkgs.visualstudio.com/{publicSegment}_packaging/{baseFeedName}/nuget/v3/index.json";
+                TargetFeedURL = $"https://{AzureDevOpsOrg}.pkgs.visualstudio.com/{publicSegment}_packaging/{baseFeedName}";
                 TargetFeedName = baseFeedName;
 
                 Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created successfully!");
