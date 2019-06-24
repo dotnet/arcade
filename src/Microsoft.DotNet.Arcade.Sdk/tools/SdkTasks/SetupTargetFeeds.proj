@@ -7,8 +7,10 @@
     Parameters:
       - IsInternalBuild
       - IsStableBuild
+      - RepositoryName
       - ChannelId
-      - TargetFeedPAT
+      - CommitSha
+      - AzdoTargetFeedPAT
   -->
 
   <Target Name="SetupTargetFeeds">
@@ -25,8 +27,8 @@
       Text="Parameter 'ChannelId' is empty. The ID of the target channel id BAR is required." />
 
     <Error
-      Condition="'$(TargetFeedPAT)' == '' and '$(IsStableBuild)' == 'true'"
-      Text="Parameter 'TargetFeedPAT' is empty. The PAT used for creating AzDO feeds is required for publishing stable builds." />
+      Condition="'$(AzdoTargetFeedPAT)' == '' and '$(IsStableBuild)' == 'true'"
+      Text="Parameter 'AzdoTargetFeedPAT' is empty. The PAT used for creating AzDO feeds is required for publishing stable builds." />
 
     <!--
       When a build is stable we ask `CreateAzureDevOpsFeed` in Tasks.Feed to create a new AzDO feed.
@@ -37,16 +39,27 @@
         IsInternal="$(IsInternalBuild)"
         RepositoryName="$(RepositoryName)"
         CommitSha="$(CommitSha)"
-        PersonalAccessToken="$(TargetFeedPAT)">
+        AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)">
       <Output TaskParameter="TargetFeedURL" PropertyName="NewAzDoFeedURL"/>
+      <Output TaskParameter="TargetFeedName" PropertyName="NewTargetFeedName"/>
     </CreateAzureDevOpsFeed>
 
     <ItemGroup Condition="'$(IsStableBuild)' == 'true'">
       <TargetFeedConfig
+        Condition="'$(IsInternalBuild)' == 'true"
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
-        TargetURL="$(NewAzDoFeedURL)"
+        TargetURL="$(NewAzDoFeedURL)/nuget/v3/index.json"
+        FeedName="$(NewTargetFeedName)"
         Type="AzDoNugetFeed"
-        Token="$(TargetFeedPAT)" />
+        Token="$(AzdoTargetFeedPAT)" />
+
+      <TargetFeedConfig
+        Condition="'$(IsInternalBuild)' == 'false"
+        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
+        TargetURL="$(NewAzDoFeedURL)/nuget/v3/index.json"
+        FeedName="public/$(NewTargetFeedName)"
+        Type="AzDoNugetFeed"
+        Token="$(AzdoTargetFeedPAT)" />
     </ItemGroup>
 
     <!-- Assets for non-stable AND Internal builds are published to a static feed for now. -->
@@ -54,8 +67,9 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="https://dnceng.pkgs.visualstudio.com/_packaging/dotnet-core-internal/nuget/v3/index.json"
+        FeedName="dotnet-core-internal"
         Type="AzDoNugetFeed"
-        Token="$(TargetFeedPAT)" />
+        Token="$(AzdoTargetFeedPAT)" />
     </ItemGroup>
 
     <!-- Public non-stable feed used by `Validation` Channel. -->
@@ -63,8 +77,9 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="https://dnceng.pkgs.visualstudio.com/_packaging/dotnet-core-validation-public/nuget/v3/index.json"
+        FeedName="public/dotnet-core-validation-public"
         Type="AzDoNugetFeed"
-        Token="$(TargetFeedPAT)" />
+        Token="$(AzdoTargetFeedPAT)" />
     </ItemGroup>
 
     <!-- Public non-stable feed used by `.NET Core 3 Dev` Channel. -->
@@ -72,13 +87,22 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="https://dnceng.pkgs.visualstudio.com/_packaging/dotnet-core-public/nuget/v3/index.json"
+        FeedName="public/dotnet-core-public"
         Type="AzDoNugetFeed"
-        Token="$(TargetFeedPAT)" />
+        Token="$(AzdoTargetFeedPAT)" />
     </ItemGroup>
 
     <Error
       Condition="'@(TargetFeedConfig)' == ''"
       Text="It wasn't possible to determine which target feed configuration to use." />
+
+    <Message
+      Text="##vso[task.setvariable variable=AzDoFeedName]%(TargetFeedConfig.FeedName)"
+      Importance="high" />
+
+    <Message
+      Text="##vso[task.setvariable variable=TargetAzDOFeed]%(TargetFeedConfig.TargetURL)"
+      Importance="high" />
 
     <Message
       Text="Artifact with category '%(TargetFeedConfig.Identity)' should go to %(TargetFeedConfig.Type) -> '%(TargetFeedConfig.TargetURL)'"

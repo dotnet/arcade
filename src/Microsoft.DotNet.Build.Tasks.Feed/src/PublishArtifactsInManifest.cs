@@ -253,9 +253,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogError($"Asset with Id {package.Id}, Version {package.Version} isn't registered on the BAR Build with ID {BARBuildId}");
                     continue;
                 }
-
-                await PublishWithNugetAsync(feedConfig, package);
-
+                
                 var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
 
                 if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetFeedURL, StringComparison.OrdinalIgnoreCase)) ?? false)
@@ -313,48 +311,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             await blobFeedAction.PushToFeedAsync(packages, pushOptions);
         }
-
-        private Task<int> PublishWithNugetAsync(FeedConfig feedConfig, PackageArtifactModel package)
-        {
-            var packageFullPath = $"{PackageAssetsBasePath}{Path.DirectorySeparatorChar}{package.Id}.{package.Version}.nupkg";
-
-            var tcs = new TaskCompletionSource<int>();
-
-            Log.LogMessage($"Publishing package {packageFullPath} to target feed {feedConfig.TargetFeedURL} with nuget.exe push");
-
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo()
-                {
-                    FileName = NugetPath,
-                    Arguments = $"push -Source {feedConfig.TargetFeedURL} -apikey {feedConfig.FeedKey} {packageFullPath}",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                },
-                EnableRaisingEvents = true
-            };
-
-            process.Exited += (sender, args) =>
-            {
-                tcs.SetResult(process.ExitCode);
-                if (process.ExitCode != 0)
-                {
-                    Log.LogError($"Nuget push failed with exit code {process.ExitCode}. Standard error output: {process.StandardError.ReadToEnd()}");
-                }
-                else
-                {
-                    Log.LogMessage($"Successfully published package {packageFullPath} to {feedConfig.TargetFeedURL}");
-                }
-                process.Dispose();
-            };
-
-            process.Start();
-
-            return tcs.Task;
-        }
-
+        
         private string InferCategory(string assetId)
         {
             var extension = Path.GetExtension(assetId).ToUpper();
