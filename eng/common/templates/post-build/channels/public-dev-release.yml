@@ -79,9 +79,9 @@ stages:
           filePath: eng\common\sdk-task.ps1
           arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet 
             /p:ChannelId=$(PublicDevRelease_30_Channel_Id)
-            /p:IsStableBuild=true
-            /p:IsInternalBuild=true
-            /p:RepositoryName=arcade
+            /p:IsStableBuild=$(IsStableBuild)
+            /p:IsInternalBuild=$(IsInternalBuild)
+            /p:RepositoryName=$(Build.Repository.Name)
             /p:CommitSha=$(Build.SourceVersion)
             /p:NugetPath=$(Agent.BuildDirectory)\Nuget\NuGet.exe
             /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-unviersal-packages-rw)' 
