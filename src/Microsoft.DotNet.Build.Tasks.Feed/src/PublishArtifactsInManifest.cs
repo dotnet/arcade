@@ -434,7 +434,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             var whichCategory = new Dictionary<string, string>()
             {
-                { ".NUPKG", "NetCore" },
+                { ".NUPKG", "NETCORE" },
                 { ".PKG", "OSX" },
                 { ".DEB", "DEB" },
                 { ".RPM", "RPM" },
