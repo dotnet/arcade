@@ -381,8 +381,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Maestro.Client.Models.Build buildInformation,
             FeedConfig feedConfig)
         {
-            BlobAssetsBasePath = BlobAssetsBasePath.TrimEnd(Path.DirectorySeparatorChar,
-                Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            BlobAssetsBasePath = BlobAssetsBasePath.TrimEnd(
+                Path.DirectorySeparatorChar,
+                Path.AltDirectorySeparatorChar) 
+                + Path.DirectorySeparatorChar;
 
             var blobs = blobsToPublish
                 .Select(blob =>
@@ -452,7 +454,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
             else
             {
-                return "NetCore";
+                return "NETCORE";
             }
         }
     }
