@@ -68,7 +68,7 @@ function PublishUniversalPackage($packageName,$packageVersion,$sourceFolder)
         --feed "$FeedName" `
         --name "$packageName" `
         --version "$packageVersion" `
-        --description "Use  amore descriptive description here" `
+        --description "Use a more descriptive description here" `
         --path "$sourceFolder" 
 }
 

@@ -1,8 +1,8 @@
 parameters:
   enableSymbolValidation: true
 
- stages:
-- stage: Publish
+stages:
+- stage: PubRel_Publish
   dependsOn: validate
   variables:
     - template: ../common-variables.yml
@@ -10,7 +10,7 @@ parameters:
   jobs:
   - template: ../setup-maestro-vars.yml
 
-   - job:
+  - job:
     displayName: Symbol Publishing
     dependsOn: setupMaestroVars
     condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicRelease_30_Channel_Id)
@@ -20,19 +20,12 @@ parameters:
       vmImage: 'windows-2019'
     steps:
       - task: DownloadBuildArtifacts@0
-        displayName: Download PDB Artifacts
+        displayName: Download Artifacts
         inputs:
-          buildType: current
-          artifactName: PDBArtifacts
-        continueOnError: true
+          downloadType: specific files
+          matchingPattern: "*Artifacts*"
 
-       - task: DownloadBuildArtifacts@0
-        displayName: Download Blob Artifacts
-        inputs:
-          buildType: current
-          artifactName: BlobArtifacts
-
-       - task: PowerShell@2
+      - task: PowerShell@2
         displayName: Publish
         inputs:
           filePath: eng\common\sdk-task.ps1
@@ -43,15 +36,19 @@ parameters:
             /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
             /p:Configuration=Release
 
-   - job:
-    displayName: Publish to Static Feed
+  - job:
+    displayName: Publish Assets
     dependsOn: setupMaestroVars
     variables:
       - group: DotNet-Blob-Feed
       - group: Publish-Build-Assets
-      - group: dn-bot-dnceng-unviersal-packages-rw
+      - group: AzureDevOps-Artifact-Feeds-Pats
       - name: BARBuildId
         value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
+      - name: IsStableBuild
+        value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.IsStableBuild'] ]
+      - name: IsInternalBuild
+        value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.IsInternalBuild'] ]
     condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicRelease_30_Channel_Id)
     pool:
       vmImage: 'windows-2019'
@@ -62,13 +59,13 @@ parameters:
           buildType: current
           artifactName: PackageArtifacts
 
-       - task: DownloadBuildArtifacts@0
+      - task: DownloadBuildArtifacts@0
         displayName: Download Blob Artifacts
         inputs:
           buildType: current
           artifactName: BlobArtifacts
 
-       - task: DownloadBuildArtifacts@0
+      - task: DownloadBuildArtifacts@0
         displayName: Download Asset Manifests
         inputs:
           buildType: current
@@ -76,40 +73,54 @@ parameters:
 
       - task: PowerShell@2
         displayName: Publish
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(dn-bot-dnceng-unviersal-packages-rw)
         inputs:
           filePath: eng\common\sdk-task.ps1
           arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet 
-            /p:ChannelId=${{ variables.PublicRelease_30_Channel_Id }}
-            /p:IsStableBuild=${{ variables.IsStableBuild }}
-            /p:IsInternalBuild=${{ variables.IsInternalBuild }}
-            /p:NugetPath=${{ variables.NugetPath }}
-            /p:AzdoTargetFeedPAT='$(AzureDevOps-Artifact-Feeds-Pats)' 
+            /p:ChannelId=$(PublicRelease_30_Channel_Id)
+            /p:IsStableBuild=true
+            /p:IsInternalBuild=false
+            /p:RepositoryName=arcade
+            /p:CommitSha=$(Build.SourceVersion)
+            /p:NugetPath=$(Agent.BuildDirectory)/Nuget/NuGet.exe
+            /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-unviersal-packages-rw)' 
+            /p:TargetFeedPAT='$(dn-bot-dnceng-unviersal-packages-rw)' 
             /p:AzureStorageTargetFeedPAT='$(dotnetfeed-storage-access-key-1)' 
             /p:BARBuildId=$(BARBuildId) 
             /p:MaestroApiEndpoint='https://maestro-prod.westus2.cloudapp.azure.com'
             /p:BuildAssetRegistryToken='$(MaestroAccessToken)' 
             /p:ManifestsBasePath='$(Build.ArtifactStagingDirectory)/AssetManifests/' 
-            /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/' 
-            /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/' 
+            /p:BlobBasePath='$(Build.ArtifactStagingDirectory)\BlobArtifacts' 
+            /p:PackageBasePath='$(Build.ArtifactStagingDirectory)\PackageArtifacts' 
             /p:Configuration=Release 
         
+      - task: NuGetCommand@2
+        displayName: Publish Packages to AzDO Feed
+        inputs:
+          command: push
+          vstsFeed: $(AzDoFeedName)
+          packagesToPush: $(Build.ArtifactStagingDirectory)\PackageArtifacts\*.nupkg
+          publishVstsFeed: $(AzDoFeedName)
+
       - task: PowerShell@2
-        displayName: Publish Blobs to AzDo Feed
+        displayName: Publish Blobs to AzDO Feed
         inputs:
           filePath: $(Build.SourcesDirectory)/eng/common/post-build/publish-blobs-to-azdo.ps1
-          arguments: -FeedName $(variables.AzDoFeedName) 
+          arguments: -FeedName $(AzDoFeedName) 
             -SourceFolderCollection $(Build.ArtifactStagingDirectory)/BlobArtifacts/
-            -PersonalAccessToken $(AzureDevOps-Artifact-Feeds-Pats)
+            -PersonalAccessToken $(dn-bot-dnceng-unviersal-packages-rw)
+        enabled: false
 
 
- - stage: PublishValidation
+- stage: PubRel_PublishValidation
   displayName: Publish Validation
   variables:
     - template: ../common-variables.yml  
   jobs:
   - template: ../setup-maestro-vars.yml
 
-   - ${{ if eq(parameters.enableSymbolValidation, 'true') }}:
+  - ${{ if eq(parameters.enableSymbolValidation, 'true') }}:
     - job:
       displayName: Symbol Availability
       dependsOn: setupMaestroVars
@@ -123,13 +134,13 @@ parameters:
             buildType: current
             artifactName: PackageArtifacts
 
-         - task: PowerShell@2
+        - task: PowerShell@2
           displayName: Check Symbol Availability
           inputs:
             filePath: $(Build.SourcesDirectory)/eng/common/post-build/symbols-validation.ps1
             arguments: -InputPath $(Build.ArtifactStagingDirectory)/PackageArtifacts/ -ExtractPath $(Agent.BuildDirectory)/Temp/ -DotnetSymbolVersion $(SymbolToolVersion)
 
-   - job:
+  - job:
     displayName: Gather Drop
     dependsOn: setupMaestroVars
     variables:
@@ -144,12 +155,12 @@ parameters:
           targetType: filePath
           filePath: '$(Build.SourcesDirectory)/eng/common/darc-init.ps1'
 
-       - task: PowerShell@2
+      - task: PowerShell@2
         displayName: Run Darc gather-drop
         inputs:
           targetType: inline
           script: |
             darc gather-drop --non-shipping --continue-on-error --id $(BARBuildId) --output-dir $(Agent.BuildDirectory)/Temp/Drop/ --bar-uri https://maestro-prod.westus2.cloudapp.azure.com/ --password $(MaestroAccessToken) --latest-location
-   - template: ../promote-build.yml
+  - template: ../promote-build.yml
     parameters:
       ChannelId: ${{ variables.PublicRelease_30_Channel_Id }}
