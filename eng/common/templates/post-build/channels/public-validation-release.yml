@@ -18,8 +18,6 @@ stages:
         value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
       - name: IsStableBuild
         value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.IsStableBuild'] ]
-      - name: IsInternalBuild
-        value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.IsInternalBuild'] ]
     condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicValidationRelease_30_Channel_Id)
     pool:
       vmImage: 'windows-2019'
@@ -68,6 +66,7 @@ stages:
         
       - task: NuGetCommand@2
         displayName: Publish Packages to AzDO Feed
+        condition: contains(variables['TargetAzDOFeed'], 'pkgs.visualstudio.com')
         inputs:
           command: push
           vstsFeed: $(AzDoFeedName)
