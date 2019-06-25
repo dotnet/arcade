@@ -76,20 +76,20 @@
     <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(ChannelId)' == '9'">
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
-        TargetURL="https://dnceng.pkgs.visualstudio.com/_packaging/dotnet-core-validation-public/nuget/v3/index.json"
+        TargetURL="https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json"
         FeedName="public/dotnet-core-validation-public"
-        Type="AzDoNugetFeed"
-        Token="$(AzdoTargetFeedPAT)" />
+        Type="AzureStorageFeed"
+        Token="$(AzureStorageTargetFeedPAT)" />
     </ItemGroup>
 
     <!-- Public non-stable feed used by `.NET Core 3 Dev` Channel. -->
     <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(ChannelId)' == '3'">
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
-        TargetURL="https://dnceng.pkgs.visualstudio.com/_packaging/dotnet-core-public/nuget/v3/index.json"
+        TargetURL="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json"
         FeedName="public/dotnet-core-public"
-        Type="AzDoNugetFeed"
-        Token="$(AzdoTargetFeedPAT)" />
+        Type="AzureStorageFeed"
+        Token="$(AzureStorageTargetFeedPAT)" />
     </ItemGroup>
 
     <Error
