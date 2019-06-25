@@ -33,7 +33,7 @@ All arguments that are not repo specific have default values specified to them, 
 | **TsaCodebaseName**     | string   | TSA Parameter; the name of the codebase registered with TSA; |
 | **TsaProjectName**      | string   | TSA Parameter; the name of the project registered with TSA; |
 | **TsaNotificationEmail**| string   | TSA Parameter; the email(s) which will receive notifications of TSA bug filings (e.g. alias@microsoft.com); |
-| **TsaCodebaseAdmin**    | string   | the aliases which are admins of the TSA codebase (e.g. DOMAIN\alias); |
+| **TsaCodebaseAdmin**    | string   | TSA Parameter; the aliases which are admins of the TSA codebase (e.g. DOMAIN\alias); |
 | **TsaIterationPath**    | string   | TSA Parameter; the area path where TSA will file bugs in AzDO; |
 | GuardianLoggerLevel     | string   | TSA Parameter; the iteration path where TSA will file bugs in AzDO; |
 
