@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-// Copied from https://raw.githubusercontent.com/dotnet/core-setup/master/tools-local/tasks/FileUtilities.cs
+// Copied from https://github.com/dotnet/core-setup/blob/b73c0af268be449db317a7c0718012027cd8b173/tools-local/tasks/FileUtilities.cs
 
 using System;
 using System.Collections.Generic;

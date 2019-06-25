@@ -77,16 +77,8 @@
 
   </Target>
 
-  <PropertyGroup>
-    <PlatformManifestFile>$(TestHostFrameworkPath)PlatformManifest.txt</PlatformManifestFile>
-  </PropertyGroup>
-
-  <ItemGroup Condition="Exists('$(PlatformManifestFile)')">
-    <PackageConflictPlatformManifests Include="$(PlatformManifestFile)" />
-  </ItemGroup>
-
   <UsingTask TaskName="GenerateFileVersionProps" AssemblyFile="$(CoreFxTestingAssemblyPath)"/>
-  <Target Name="GenerateFileVersionProps" Condition="'$(GenerateFileVersionProps)' == 'true'">
+  <Target Name="GenerateFileVersionProps">
     <GenerateFileVersionProps Files="@(SharedFrameworkRuntimeFiles)"
                               PackageId="Microsoft.NETCore.App"
                               PackageVersion="$(ProductVersion)"
@@ -101,7 +93,7 @@
     To use invoke target directly specifying NETCoreAppTestSharedFrameworkPath property.
   -->
   <UsingTask TaskName="GenerateTestSharedFrameworkDepsFile" AssemblyFile="$(CoreFxTestingAssemblyPath)"/>
-  <Target Name="GenerateTestSharedFrameworkDepsFile" Condition="'$(GenerateTestSharedFrameworkDepsFile)' == 'true'">
+  <Target Name="GenerateTestSharedFrameworkDepsFile">
     <GenerateTestSharedFrameworkDepsFile SharedFrameworkDirectory="$(NETCoreAppTestSharedFrameworkPath)" />
   </Target>
 
