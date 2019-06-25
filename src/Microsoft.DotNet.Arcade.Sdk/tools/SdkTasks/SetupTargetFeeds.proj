@@ -95,9 +95,7 @@
     <Error
       Condition="'@(TargetFeedConfig)' == ''"
       Text="It wasn't possible to determine which target feed configuration to use." />
-
-    <Message Text="##vso[task.setvariable variable=AzDoFeedName]%(TargetFeedConfig.FeedName)" Importance="high" />
-    
+   
     <Message
       Text="##vso[task.setvariable variable=AzDoFeedName]%(TargetFeedConfig.FeedName)"
       Importance="high" />
