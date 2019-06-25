@@ -36,7 +36,7 @@ Jeff is also going to look at what data is useful and the kind of reports that a
 
 ## Phase 2 – Capture telemetry
 
-**Estimated Completion Date:** 6/28/2019
+**Estimated Completion Date:** 7/19/2019
 
 ### Summary
 
