@@ -20,10 +20,17 @@ stages:
       vmImage: 'windows-2019'
     steps:
       - task: DownloadBuildArtifacts@0
-        displayName: Download Artifacts
+        displayName: Download PDB Artifacts
         inputs:
-          downloadType: specific files
-          matchingPattern: "*Artifacts*"
+          buildType: current
+          artifactName: PDBArtifacts
+        continueOnError: true
+
+      - task: DownloadBuildArtifacts@0
+        displayName: Download Blob Artifacts
+        inputs:
+          buildType: current
+          artifactName: BlobArtifacts
 
       - task: PowerShell@2
         displayName: Publish
@@ -47,6 +54,8 @@ stages:
         value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
       - name: IsStableBuild
         value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.IsStableBuild'] ]
+      - name: IsInternalBuild
+        value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.IsInternalBuild'] ]
     condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.InternalServicing_30_Channel_Id)
     pool:
       vmImage: 'windows-2019'
@@ -77,17 +86,17 @@ stages:
           filePath: eng\common\sdk-task.ps1
           arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet 
             /p:ChannelId=$(InternalServicing_30_Channel_Id)
-            /p:IsStableBuild=$(IsStableBuild)
-            /p:IsInternalBuild=$(IsInternalBuild)
-            /p:RepositoryName=$(Build.Repository.Name)
+            /p:IsStableBuild=true
+            /p:IsInternalBuild=false
+            /p:RepositoryName=arcade
             /p:CommitSha=$(Build.SourceVersion)
             /p:NugetPath=$(Agent.BuildDirectory)\Nuget\NuGet.exe
             /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-unviersal-packages-rw)' 
             /p:TargetFeedPAT='$(dn-bot-dnceng-unviersal-packages-rw)' 
             /p:AzureStorageTargetFeedPAT='$(dotnetfeed-storage-access-key-1)' 
             /p:BARBuildId=$(BARBuildId) 
-            /p:MaestroApiEndpoint='https://maestro-prod.westus2.cloudapp.azure.com'
-            /p:BuildAssetRegistryToken='$(MaestroAccessToken)' 
+            /p:MaestroApiEndpoint='https://maestro-int.westus2.cloudapp.azure.com'
+            /p:BuildAssetRegistryToken='AAAAQvpNYZLOErtudpuFUCp01HY' 
             /p:ManifestsBasePath='$(Build.ArtifactStagingDirectory)/AssetManifests/' 
             /p:BlobBasePath='$(Build.ArtifactStagingDirectory)\BlobArtifacts' 
             /p:PackageBasePath='$(Build.ArtifactStagingDirectory)\PackageArtifacts' 
@@ -95,7 +104,6 @@ stages:
         
       - task: NuGetCommand@2
         displayName: Publish Packages to AzDO Feed
-        condition: contains(variables['TargetAzDOFeed'], 'pkgs.visualstudio.com')
         inputs:
           command: push
           vstsFeed: $(AzDoFeedName)
@@ -107,10 +115,10 @@ stages:
         inputs:
           filePath: $(Build.SourcesDirectory)/eng/common/post-build/publish-blobs-to-azdo.ps1
           arguments: -FeedName $(AzDoFeedName) 
-            -SourceFolderCollection $(Build.ArtifactStagingDirectory)/BlobArtifacts/
-            -PersonalAccessToken $(dn-bot-dnceng-unviersal-packages-rw)
+            -BlobSourceFolder $(Build.ArtifactStagingDirectory)/BlobArtifacts/
         enabled: false
-
+  
+  - template: ../trigger-subscription.yml
 
 - stage: IS_PublishValidation
   displayName: Publish Validation
@@ -159,8 +167,7 @@ stages:
         inputs:
           targetType: inline
           script: |
-            darc gather-drop --non-shipping --continue-on-error --id $(BARBuildId) --output-dir $(Agent.BuildDirectory)/Temp/Drop/ --bar-uri https://maestro-prod.westus2.cloudapp.azure.com/ --password $(MaestroAccessToken) --latest-location
-        enabled: false
+            darc gather-drop --non-shipping --continue-on-error --id $(BARBuildId) --output-dir $(Agent.BuildDirectory)/Temp/Drop/ --bar-uri https://maestro-int.westus2.cloudapp.azure.com/ --password AAAAQvpNYZLOErtudpuFUCp01HY --latest-location
 
   - template: ../promote-build.yml
     parameters:
