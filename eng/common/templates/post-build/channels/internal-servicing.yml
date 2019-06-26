@@ -112,7 +112,9 @@ stages:
         enabled: false
 
    - template: ../trigger-subscription.yml
-
+      parameters:
+        ChannelId: ${{ variables.InternalServicing_30_Channel_Id }}
+        
 - stage: IS_PublishValidation
   displayName: Publish Validation
   variables:
