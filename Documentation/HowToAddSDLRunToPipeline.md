@@ -72,3 +72,7 @@ If `TsaPublish` is set to true, the output of the SDL tool runs for every build 
 If `TsaNotificationEmail` is set, a notification email will be sent out with a link to the bugs filed for each tool run. 
 
 [Here](https://devdiv.visualstudio.com/DevDiv/_queries/query/?wiql=%20%20%20%20SELECT%20ID%2CSeverity%2CState%2C%5BAssigned%20To%5D%2CTitle%20FROM%20WorkItem%20WHERE%20Tags%20Contains%27TSA%23178337-Arcade-PoliCheck-12345.6%27%20%20%20%20) is the link to bugs filed after a test run for Arcade.
+
+## More Documentation
+- [SDL Control Flow Document](https://github.com/dotnet/core-eng/blob/master/Documentation/Security/ArcadeSecurityControlFlowDocumentation.md)
+- [Introduction to Guardian and TSA](https://github.com/dotnet/core-eng/blob/master/Documentation/Security/IntroToGuardianAndTSA.md)
