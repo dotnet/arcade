@@ -46,7 +46,7 @@
 
     <ItemGroup Condition="'$(IsStableBuild)' == 'true'">
       <TargetFeedConfig
-        Condition="'$(IsInternalBuild)' == 'true"
+        Condition="'$(IsInternalBuild)' == 'true'"
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(NewAzDoFeedURL)/nuget/v3/index.json"
         FeedName="$(NewTargetFeedName)"
@@ -54,7 +54,7 @@
         Token="$(AzdoTargetFeedPAT)" />
 
       <TargetFeedConfig
-        Condition="'$(IsInternalBuild)' == 'false"
+        Condition="'$(IsInternalBuild)' == 'false'"
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(NewAzDoFeedURL)/nuget/v3/index.json"
         FeedName="public/$(NewTargetFeedName)"
