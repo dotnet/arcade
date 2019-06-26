@@ -31,9 +31,7 @@ $ExtractPackage = {
     $zip.Entries | 
     Where-Object {$RelevantExtensions -contains [System.IO.Path]::GetExtension($_.Name)} |
       ForEach-Object {
-          $Extension = [System.IO.Path]::GetExtension($_.Name)
-          $FakeName = -Join((New-Guid), $Extension)
-          $TargetFile = Join-Path -Path $ExtractPath -ChildPath $FakeName 
+          $TargetFile = Join-Path -Path $ExtractPath -ChildPath $_.Name
 
           [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, $TargetFile, $true)
         }
