@@ -21,7 +21,7 @@ function Get-Headers([string]$accept, [string]$barToken) {
 try {
   $maestroHeaders = Get-Headers 'application/json' $BarToken
 
-  # Get build info with info about which channels it has already been promoted to
+  # Get info about which channels the build has already been promoted to
   $getBuildApiEndpoint = "$MaestroEndpoint/api/builds/${BuildId}?api-version=$ApiVersion"
   $buildInfo = Invoke-WebRequest -Method Get -Uri $getBuildApiEndpoint -Headers $maestroHeaders | ConvertFrom-Json
 
