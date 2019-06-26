@@ -36,7 +36,7 @@ stages:
             /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
             /p:Configuration=Release
 
-  - job:
+  - job: publish_assets
     displayName: Publish Assets
     dependsOn: setupMaestroVars
     variables:

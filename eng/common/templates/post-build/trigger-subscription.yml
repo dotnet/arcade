@@ -3,15 +3,15 @@ parameters:
 
 jobs:
 - job: trigger_subscriptions
+  dependsOn: publish_assets
   displayName: Trigger subscriptions
   pool:
       vmImage: 'windows-2019'
   variables:
-    - template: ../common-variables.yml
+    - template: ./common-variables.yml
     - group: Publish-Build-Assets
     - name: IsStableBuild
       value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.IsStableBuild'] ]
-  dependsOn: IS_Publish
   condition: eq(variables['IsStableBuild'], 'true')
   steps:
     - powershell: $(Build.SourcesDirectory)/eng/common/post-build/trigger-subscriptions.ps1
