@@ -13,5 +13,6 @@ jobs:
   steps:
     - powershell: $(Build.SourcesDirectory)/eng/common/post-build/trigger-subscriptions.ps1
        -SourceRepo $(Build.Repository.Uri)
+       -ChannelId $(InternalServicing_30_Channel_Id)
        -BarToken $(MaestroAccessToken)
       displayName: Triggering subscriptions
