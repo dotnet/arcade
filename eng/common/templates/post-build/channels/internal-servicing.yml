@@ -162,6 +162,6 @@ stages:
             darc gather-drop --non-shipping --continue-on-error --id $(BARBuildId) --output-dir $(Agent.BuildDirectory)/Temp/Drop/ --bar-uri https://maestro-prod.westus2.cloudapp.azure.com/ --password $(MaestroAccessToken) --latest-location
         enabled: false
 
-  - template: ../promote-build.yml	
-    parameters:	
+  - template: ../promote-build.yml
+    parameters:
       ChannelId: ${{ variables.InternalServicing_30_Channel_Id }}
