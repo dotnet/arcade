@@ -40,7 +40,7 @@ try {
     }
   }
 
-  Write-Host "Build not promoted to channel $ChannelId. Promoting build ... "
+  Write-Host "Build not present in channel $ChannelId. Promoting build ... "
 
   $promoteBuildApiEndpoint = "$maestroEndpoint/api/channels/${ChannelId}/builds/${BuildId}?api-version=$ApiVersion"
   Invoke-WebRequest -Method Post -Uri $promoteBuildApiEndpoint -Headers $maestroHeaders
