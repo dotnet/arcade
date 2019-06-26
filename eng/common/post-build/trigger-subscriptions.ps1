@@ -1,5 +1,6 @@
 ﻿param(
   [Parameter(Mandatory=$true)][string] $SourceRepo,
+  [Parameter(Mandatory=$true)][int] $ChannelId,
   [string] $MaestroEndpoint = "https://maestro-prod.westus2.cloudapp.azure.com",
   [string] $BarToken,
   [string] $ApiVersion = "2019-01-16"
@@ -34,7 +35,7 @@ $failedTriggeredSubscription = $false
 
 # Get all enabled subscriptions that need dependency flow on 'everyBuild'
 foreach ($subscription in $subscriptions) {
-  if ($subscription.enabled -and $subscription.policy.updateFrequency -like 'everyBuild') {
+  if ($subscription.enabled -and $subscription.policy.updateFrequency -like 'everyBuild' -and $subscription.channel.id -eq $ChannelId) {
     Write-Host "$subscription.id"
     [void]$subscriptionsToTrigger.Add($subscription.id)
   }
