@@ -30,6 +30,7 @@ if (!$subscriptions) {
 }
 
 $subscriptionsToTrigger = New-Object System.Collections.Generic.List[string]
+$failedTriggeredSubscription = $false
 
 # Get all enabled subscriptions that need dependency flow on 'everyBuild'
 foreach ($subscription in $subscriptions) {
@@ -55,5 +56,13 @@ foreach ($subscriptionToTrigger in $subscriptionsToTrigger) {
     Write-Host "There was an error while triggering subscription '$subscriptionToTrigger'"
     Write-Host $_
     Write-Host $_.ScriptStackTrace
+    $failedTriggeredSubscription = $true
   }
 }
+
+if ($failedTriggeredSubscription) {
+  Write-Host "At least one subscription failed to be triggered..."
+  ExitWithExitCode 1
+}
+
+Write-Host "All subscriptions were triggered successfully!"
