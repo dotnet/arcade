@@ -1,5 +1,8 @@
-stages:
-- stage: trigger_subscriptions
+jobs:
+- job: trigger_subscriptions
+  displayName: Trigger subscriptions
+  pool:
+      vmImage: 'windows-2019'
   variables:
     - template: ../common-variables.yml
     - group: Publish-Build-Assets
@@ -7,14 +10,8 @@ stages:
       value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.IsStableBuild'] ]
   dependsOn: IS_Publish
   condition: eq(variables['IsStableBuild'], 'true')
-  displayName: Trigger Subscriptions
-  jobs:
-  - job:
-    displayName: Signing Validation
-      pool:
-        vmImage: 'windows-2019'
-      steps:
-        - powershell: $(Build.SourcesDirectory)/eng/common/post-build/trigger-subscriptions.ps1
-            -SourceRepo $(Build.Repository.Uri)
-            -BarToken $(MaestroAccessToken)
-        displayName: Publish Blobs to AzDO Feed
+  steps:
+    - powershell: $(Build.SourcesDirectory)/eng/common/post-build/trigger-subscriptions.ps1
+       -SourceRepo $(Build.Repository.Uri)
+       -BarToken $(MaestroAccessToken)
+      displayName: Triggering subscriptions
