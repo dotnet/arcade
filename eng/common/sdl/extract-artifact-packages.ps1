@@ -44,6 +44,10 @@ $ExtractPackage = {
   }
  }
  function ExtractArtifacts {
+  if (!(Test-Path $InputPath)) {
+    Write-PipelineTaskError "Input Path does not exist: $InputPath"
+    ExitWithExitCode 1
+  }
   $Jobs = @()
   Get-ChildItem "$InputPath\*.nupkg" |
     ForEach-Object {
