@@ -1,21 +1,11 @@
 parameters:
   ChannelId: 0
 
-jobs:
-- job: trigger_subscriptions
-  dependsOn: publish_assets
-  displayName: Trigger subscriptions
-  pool:
-      vmImage: 'windows-2019'
-  variables:
-    - template: ./common-variables.yml
-    - group: Publish-Build-Assets
-    - name: IsStableBuild
-      value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.IsStableBuild'] ]
-  condition: eq(variables['IsStableBuild'], 'true')
-  steps:
-    - powershell: $(Build.SourcesDirectory)/eng/common/post-build/trigger-subscriptions.ps1
-       -SourceRepo $(Build.Repository.Uri)
-       -ChannelId ${{ parameters.ChannelId }}
-       -BarToken $(MaestroAccessToken)
-      displayName: Triggering subscriptions
+steps:
+- task: PowerShell@2
+  displayName: Triggering subscriptions
+  inputs:
+    filePath: $(Build.SourcesDirectory)/eng/common/post-build/trigger-subscriptions.ps1
+    arguments: -SourceRepo $(Build.Repository.Uri)
+      -ChannelId ${{ parameters.ChannelId }}
+      -BarToken $(MaestroAccessTokenInt)

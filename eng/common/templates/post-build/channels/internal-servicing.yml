@@ -111,9 +111,9 @@ stages:
             -PersonalAccessToken $(dn-bot-dnceng-unviersal-packages-rw)
         enabled: false
 
-  - template: ../trigger-subscription.yml
-    parameters:
-      ChannelId: ${{ variables.InternalServicing_30_Channel_Id }}
+      - template: ../trigger-subscription.yml
+        parameters:
+          ChannelId: ${{ variables.InternalServicing_30_Channel_Id }}
         
 - stage: IS_PublishValidation
   displayName: Publish Validation
