@@ -20,13 +20,13 @@ function Get-Headers([string]$accept, [string]$barToken) {
 
 # Get all the $SourceRepo subscriptions
 $normalizedSurceRepo = $SourceRepo.Replace('dnceng@', '')
-$getSubscriptionsApiEndpoint = "$maestroEndpoint/api/subscriptions?sourceRepository=$SourceRepo&api-version=$apiVersion"
+$getSubscriptionsApiEndpoint = "$maestroEndpoint/api/subscriptions?sourceRepository=$normalizedSurceRepo&api-version=$apiVersion"
 $headers = Get-Headers 'application/json' $barToken
 
 $subscriptions = Invoke-WebRequest -Uri $getSubscriptionsApiEndpoint -Headers $headers | ConvertFrom-Json
 
 if (!$subscriptions) {
-  Write-Host "No subscriptions found for source repo '$SourceRepo'"
+  Write-Host "No subscriptions found for source repo '$normalizedSurceRepo' in channel '$ChannelId'"
   return
 }
 
