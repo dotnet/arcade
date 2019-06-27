@@ -16,9 +16,9 @@ jobs:
     vmImage: 'windows-2019'
   steps:
     - task: PowerShell@2
-        displayName: Add Build to Channel
-        inputs:
+      displayName: Add Build to Channel
+      inputs:
         filePath: $(Build.SourcesDirectory)/eng/common/post-build/promote-build.ps1
         arguments: -BuildId $(BARBuildId) 
-            -ChannelId $(ChannelId) 
-            -BarToken $(MaestroAccessToken)
+          -ChannelId $(ChannelId) 
+          -BarToken $(MaestroAccessToken)
