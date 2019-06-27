@@ -26,7 +26,7 @@ $headers = Get-Headers 'application/json' $barToken
 $subscriptions = Invoke-WebRequest -Uri $getSubscriptionsApiEndpoint -Headers $headers | ConvertFrom-Json
 
 if (!$subscriptions) {
-  Write-Host "No subscriptions found for source repo '$SourceRepo'"
+  Write-Host "No subscriptions found for source repo '$normalizedSurceRepo' in channel '$ChannelId'"
   return
 }
 
