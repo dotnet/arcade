@@ -12,7 +12,6 @@ jobs:
     - group: Publish-Build-Assets
     - name: IsStableBuild
       value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.IsStableBuild'] ]
-  condition: eq(variables['IsStableBuild'], 'true')
   steps:
     - powershell: $(Build.SourcesDirectory)/eng/common/post-build/trigger-subscriptions.ps1
        -SourceRepo $(Build.Repository.Uri)
