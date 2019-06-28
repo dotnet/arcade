@@ -14,6 +14,8 @@ Set-StrictMode -Version 2.0
 try {
   $url = "https://raw.githubusercontent.com/NuGet/NuGetGallery/jver-verify/src/VerifyMicrosoftPackage/verify.ps1" 
 
+  New-Item -ItemType "directory" -Path ${ToolDestinationPath} -Force
+
   Invoke-WebRequest $url -OutFile ${ToolDestinationPath}\verify.ps1 
 
   & ${ToolDestinationPath}\verify.ps1 ${PackagesPath}\*.nupkg
