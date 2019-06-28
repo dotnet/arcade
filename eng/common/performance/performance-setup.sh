@@ -113,7 +113,6 @@ perflab_arguments=
 queue=
 creator=
 helix_source_prefix=
-build_config="$architecture.$kind.$framework"
 
 if [[ "$internal" == true ]]; then
     perflab_arguments="--upload-to-perflab-container"
@@ -170,4 +169,4 @@ echo "##vso[task.setvariable variable=RunFromPerfRepo]$run_from_perf_repo"
 echo "##vso[task.setvariable variable=Creator]$creator"
 echo "##vso[task.setvariable variable=HelixSourcePrefix]$helix_source_prefix"
 echo "##vso[task.setvariable variable=Kind]$kind"
-echo "##vso[task.setvariable variable=_BuildConfig]$build_config"
+echo "##vso[task.setvariable variable=_BuildConfig]$architecture.$kind.$framework"

@@ -12,30 +12,11 @@ Param(
     [string] $Csproj="src\benchmarks\micro\MicroBenchmarks.csproj",
     [string] $Kind="micro",
     [switch] $Internal,
-    [string] $Configurations
+    [string] $Configurations="CompilationMode=$CompilationMode"
 )
 
-. $PSScriptRoot\..\pipeline-logging-functions.ps1
-
-if ($Repository -eq "dotnet/performance") {
-    $RunFromPerformanceRepo = $true;
-}
-else {
-    $RunFromPerformanceRepo = $false;
-}
-
-if ($Configurations -eq [string]::Empty) {
-    $Configurations="CompilationMode=$CompilationMode"
-}
-
-if ($CoreRootDirectory -eq [string]::Empty) {
-    $UseCoreRun = $false
-}
-else {
-    $UseCoreRun = $true
-}
-
-$BuildConfig = "$Architecture.$Kind.$Framework"
+$RunFromPerformanceRepo = ($Repository -eq "dotnet/performance")
+$UseCoreRun = ($CoreRootDirectory -ne [string]::Empty)
 
 $PayloadDirectory = (Join-Path $SourceDirectory "Payload")
 $PerformanceDirectory = (Join-Path $PayloadDirectory "performance")
@@ -84,22 +65,31 @@ $DocsDir = (Join-Path $PerformanceDirectory "docs")
 robocopy $DocsDir $WorkItemDirectory
 
 # Set variables that we will need to have in future steps
-Write-Host "##vso[task.setvariable variable=UseCoreRun]$UseCoreRun"
-Write-Host "##vso[task.setvariable variable=PayloadDirectory]$PayloadDirectory"
-Write-Host "##vso[task.setvariable variable=PerformanceDirectory]$PerformanceDirectory"
-Write-Host "##vso[task.setvariable variable=WorkItemDirectory]$WorkItemDirectory"
-Write-Host "##vso[task.setvariable variable=Queue]$Queue"
-Write-Host "##vso[task.setvariable variable=SetupArguments]$SetupArguments"
-Write-Host "##vso[task.setvariable variable=Python]py -3"
-Write-Host "##vso[task.setvariable variable=ExtraBenchmarkDotNetArguments]$ExtraBenchmarkDotNetArguments"
-Write-Host "##vso[task.setvariable variable=BDNCategories]$RunCategories"
-Write-Host "##vso[task.setvariable variable=TargetCsproj]$Csproj"
-Write-Host "##vso[task.setvariable variable=RunFromPerfRepo]$RunFromPerformanceRepo"
-Write-Host "##vso[task.setvariable variable=Creator]$Creator"
-Write-Host "##vso[task.setvariable variable=PerfLabArguments]$PerfLabArguments"
-Write-Host "##vso[task.setvariable variable=Architecture]$Architecture"
-Write-Host "##vso[task.setvariable variable=HelixSourcePrefix]$HelixSourcePrefix"
-Write-Host "##vso[task.setvariable variable=Kind]$Kind"
-Write-Host "##vso[task.setvariable variable=_BuildConfig]$BuildConfig"
+$ci = $true
+
+. "$PSScriptRoot\..\pipeline-logging-functions.ps1"
+
+# Directories
+Write-PipelineSetVariableCurrentJob -Name 'PayloadDirectory' -Value "$PayloadDirectory"
+Write-PipelineSetVariableCurrentJob -Name 'PerformanceDirectory' -Value "$PerformanceDirectory"
+Write-PipelineSetVariableCurrentJob -Name 'WorkItemDirectory' -Value "$WorkItemDirectory"
+
+# Script Arguments
+Write-PipelineSetVariableCurrentJob -Name 'Python' -Value "py -3"
+Write-PipelineSetVariableCurrentJob -Name 'ExtraBenchmarkDotNetArguments' -Value "$ExtraBenchmarkDotNetArguments"
+Write-PipelineSetVariableCurrentJob -Name 'SetupArguments' -Value "$SetupArguments"
+Write-PipelineSetVariableCurrentJob -Name 'PerfLabArguments' -Value "$PerfLabArguments"
+Write-PipelineSetVariableCurrentJob -Name 'BDNCategories' -Value "$RunCategories"
+Write-PipelineSetVariableCurrentJob -Name 'TargetCsproj' -Value "$Csproj"
+Write-PipelineSetVariableCurrentJob -Name 'Kind' -Value "$Kind"
+Write-PipelineSetVariableCurrentJob -Name 'Architecture' -Value "$Architecture"
+Write-PipelineSetVariableCurrentJob -Name 'UseCoreRun' -Value "$UseCoreRun"
+Write-PipelineSetVariableCurrentJob -Name 'RunFromPerfRepo' -Value "$RunFromPerformanceRepo"
+
+# Helix Arguments
+Write-PipelineSetVariableCurrentJob -Name 'Creator' -Value "$Creator"
+Write-PipelineSetVariableCurrentJob -Name 'Queue' -Value "$Queue"
+Write-PipelineSetVariableCurrentJob -Name 'HelixSourcePrefix' -Value "$HelixSourcePrefix"
+Write-PipelineSetVariableCurrentJob -Name '_BuildConfig' -Value "$Architecture.$Kind.$Framework"
 
 exit 0

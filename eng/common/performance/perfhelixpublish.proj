@@ -56,7 +56,7 @@
   </ItemGroup>
 
   <!-- 
-    Partition the Microbenchamrks project, but nothing else
+    Partition the Microbenchmarks project, but nothing else
   -->
   <ItemGroup Condition="$(TargetCsproj.Contains('MicroBenchmarks.csproj'))">
     <HelixWorkItem Include="@(Partition)">
