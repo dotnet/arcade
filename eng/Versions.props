@@ -56,9 +56,9 @@
     <SystemThreadingTasksExtensionVersion>4.5.1</SystemThreadingTasksExtensionVersion>
     <SystemValueTupleVersion>4.4.0</SystemValueTupleVersion>
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
-    <XUnitVersion>2.4.1-pre.build.4059</XUnitVersion>
+    <XUnitVersion>2.4.1</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
-    <XUnitVSRunnerVersion>2.4.1-pre.build.4059</XUnitVSRunnerVersion>
+    <XUnitVSRunnerVersion>2.4.1</XUnitVSRunnerVersion>
     <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.19327.39</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftDotNetSignToolVersion>1.0.0-beta.19327.39</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
