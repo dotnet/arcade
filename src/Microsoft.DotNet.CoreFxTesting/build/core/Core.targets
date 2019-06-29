@@ -42,8 +42,7 @@
   </Target>
 
   <UsingTask TaskName="GenerateRunScript" AssemblyFile="$(CoreFxTestingAssemblyPath)"/>
-  <Target Name="GenerateRunScript"
-          DependsOnTargets="$(GenerateRunScriptDependsOn)">
+  <Target Name="GenerateRunScript">
 
     <PropertyGroup>
       <!-- RSP file support. -->

@@ -39,7 +39,7 @@
     <TestScope Condition="'$(TestScope)' == '' and '$(Outerloop)' == 'true'">all</TestScope>
     
     <!-- Traits -->
-    <WithoutCategories Condition="'$(WithoutCategories)' == '' and '$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuildId)' == ''">IgnoreForCI</WithoutCategories>
+    <WithoutCategories Condition="'$(ArchiveTest)' == 'true'">IgnoreForCI</WithoutCategories>
     <_withCategories Condition="'$(WithCategories)' != ''">;$(WithCategories.Trim(';'))</_withCategories>
     <_withoutCategories Condition="'$(WithoutCategories)' != ''">;$(WithoutCategories.Trim(';'))</_withoutCategories>
     <!-- Default categories -->
@@ -59,7 +59,8 @@
     <TestsSuccessfulSemaphoreName Condition="'$(WithoutCategories)' != ''">$(TestsSuccessfulSemaphoreName).without$(WithoutCategories.Replace(';', '.'))</TestsSuccessfulSemaphoreName>
   </PropertyGroup>
 
-  <Target Name="ValidateTargetOSTrait">
+  <Target Name="ValidateTargetOSTrait"
+          BeforeTargets="GenerateRunScript">
 
     <Error Condition="'$(TargetOSTrait)' == ''"
            Text="TargetOS [$(TargetOS)] is unknown so we don't know how to configure the test run for this project [$(TestProjectName)]" />
@@ -68,29 +69,21 @@
 
   <!-- Overwrite the runner config file with the app local one. -->
   <Target Name="OverwriteTestRunnerConfigFile"
-          Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' or '$(TargetFrameworkIdentifier)' == '.NETCoreApp'"
+          Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'"
           AfterTargets="CopyFilesToOutputDirectory">
 
-    <PropertyGroup>
-      <TestRunnerNameWithoutExtension>$([System.IO.Path]::GetFileNameWithoutExtension('$(TestRunnerName)'))</TestRunnerNameWithoutExtension>
-    </PropertyGroup>
-
     <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
-      <_testRunnerConfigSourceFile Include="$(TargetDir)$(TargetName).exe.config" Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'" />
+      <_testRunnerConfigSourceFile Include="$(TargetDir)$(TargetName).exe.config" />
       <_testRunnerConfigSourceFile Include="$(TargetDir)$(TargetName).exe.config" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
-      <_testRunnerConfigDestFile Include="$(TargetDir)$(TestRunnerName).config" Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'" />
+      <_testRunnerConfigDestFile Include="$(TargetDir)$(TestRunnerName).config" />
       <_testRunnerConfigDestFile Include="$(TargetDir)Microsoft.DotNet.RemoteExecutorHost.exe.config" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
-      <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigFilePath)" Condition="Exists('$(ProjectRuntimeConfigFilePath)')" />
-      <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigDevFilePath)" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)')" />
-      <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigFilePath)" Condition="Exists('$(ProjectRuntimeConfigFilePath)') and '$(IncludeRemoteExecutor)' == 'true'" />
-      <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigDevFilePath)" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)') and '$(IncludeRemoteExecutor)' == 'true'" />
-      <_testRunnerConfigDestFile Include="$(TargetDir)$(TestRunnerNameWithoutExtension).runtimeconfig.json" Condition="Exists('$(ProjectRuntimeConfigFilePath)')" />
-      <_testRunnerConfigDestFile Include="$(TargetDir)$(TestRunnerNameWithoutExtension).runtimeconfig.dev.json" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)')" />
-      <_testRunnerConfigDestFile Include="$(TargetDir)Microsoft.DotNet.RemoteExecutorHost.runtimeconfig.json" Condition="Exists('$(ProjectRuntimeConfigFilePath)') and '$(IncludeRemoteExecutor)' == 'true'" />
-      <_testRunnerConfigDestFile Include="$(TargetDir)Microsoft.DotNet.RemoteExecutorHost.runtimeconfig.dev.json" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)') and '$(IncludeRemoteExecutor)' == 'true'" />
+    <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and Exists('$(ProjectRuntimeConfigFilePath)')">
+      <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigFilePath)" />
+      <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigFilePath)" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
+      <_testRunnerConfigDestFile Include="$(TargetDir)$([System.IO.Path]::GetFileNameWithoutExtension('$(TestRunnerName)')).runtimeconfig.json" />
+      <_testRunnerConfigDestFile Include="$(TargetDir)Microsoft.DotNet.RemoteExecutorHost.runtimeconfig.json" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
     </ItemGroup>
 
     <Copy SourceFiles="@(_testRunnerConfigSourceFile)"
@@ -102,7 +95,7 @@
 
   <!-- Work around https://github.com/dotnet/sdk/issues/968 -->
   <Target Name="RemoveXUnitAnalyzer"
-          Condition="'$(EnableXUnitAnalyzer)' != 'true'"
+          Condition="'$(DisableXUnitAnalyzer)' == 'true'"
           BeforeTargets="CoreCompile">
     <ItemGroup>
       <Analyzer Remove="@(Analyzer)"
