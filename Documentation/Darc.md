@@ -967,7 +967,7 @@ Default channel mappings can be deleted with [delete-default-channel](#delete-de
 - `--channel` - **(Required)** Name of channel that a build of 'branch' and 'repo' should be applied to.
 - `--branch` - **(Required)** Build of 'repo' on this branch will be
   automatically applied to 'channel'.  Should generally be "refs/heads/branchName"
-- `--repo` - **(Required)** Build of this repo repo on 'branch' will be automatically applied to 'channel'
+- `--repo` - **(Required)** Build of this repo on 'branch' will be automatically applied to 'channel'
 
 **Sample**
 ```
