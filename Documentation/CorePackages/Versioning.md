@@ -155,7 +155,7 @@ If build property `AutoGenerateAssemblyVersion` is _true_ then _File Version_ is
 | **FILE_PATCH**        | (**PATCH** % 100) * 100 + `yy`                    |
 | **FILE_REVISION**     | (50 * `mm` + `dd`) * 100 + `r`                    |
 
-## Recommanded Settings
+## Recommended Settings
 
 It is recommended for **global tools** projects to build assemblies with auto-generated assembly version and pack as _release-only_ packages, 
 i.e. set `AutoGenerateAssemblyVersion` to _true_ and clear `PreReleaseVersionLabel`.
