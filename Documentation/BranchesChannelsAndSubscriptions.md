@@ -158,7 +158,7 @@ Onboarding of new repositories adds new nodes to the product dependency graph. I
     darc channel edit '.NET Core 3.0.0'
     ```
 
-Once the repository graph has more than one node (or if there is a circular dependency, like in the case of dotnet/arcade), it becomes possible to create subscriptions.  Onboarding new repositories after the initial node involves the steps above with the follolwing alterations/additions:
+Once the repository graph has more than one node (or if there is a circular dependency, like in the case of dotnet/arcade), it becomes possible to create subscriptions.  Onboarding new repositories after the initial node involves the steps above with the following alterations/additions:
 
 1. No new channel is necessary if repository/branch being onboarded is producing assets for an existing channel
 2. Repository should be onboarded onto the formal [dependency description format](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md), enabling automated update of dependencies via Darc.
