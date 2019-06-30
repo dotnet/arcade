@@ -4,7 +4,7 @@ This document is intended to provide a practical servicing workflow for .NET Cor
 
 ## Overview
 
-.NET Core 2.1/2.2 were built via the "ProdCon v1" model, in which repositories are strung together via the PipeBuild orchestration system (see below). A build produces outputs to a specified per-repository location.  Those outputs are analyzed and an msbuild property file is created with version numbers for all package outputs.  That property file is fed into any builds of repositories that depend on the previously built repository, which in term produces new outputs, which are analyzed, and so on until a product is produced. Building each invdividual repo after this commit can produce functionally equivalent assets to the final build.
+.NET Core 2.1/2.2 were built via the "ProdCon v1" model, in which repositories are strung together via the PipeBuild orchestration system (see below). A build produces outputs to a specified per-repository location.  Those outputs are analyzed and an msbuild property file is created with version numbers for all package outputs.  That property file is fed into any builds of repositories that depend on the previously built repository, which in term produces new outputs, which are analyzed, and so on until a product is produced. Building each individual repo after this commit can produce functionally equivalent assets to the final build.
 
 The general servicing flow looks like this:
   1. Modify ProdCon definition to reflect the minimal set of repos that must be built.
