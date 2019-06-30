@@ -86,7 +86,7 @@ You can browse the installers available using this url - https://netcorenativeas
 
 ### external resources folder structure
 
-The `external` folder is a folder structure that contains all installers and resources for external depencencies.  These are zips / tarballs /etc... provided by a tool publisher which we have republished into Azure blob storage, organized in folders by the operating system and tool to be installed.
+The `external` folder is a folder structure that contains all installers and resources for external dependencies.  These are zips / tarballs /etc... provided by a tool publisher which we have republished into Azure blob storage, organized in folders by the operating system and tool to be installed.
 
 ## Example - resource-packages container
 
