@@ -63,7 +63,7 @@ Microsoft.NETCore.App, there is a possibility that a breaking change has not
 been reacted to.
 
 ***Does this mean that incoherency is always an error state?*** No. For example, let's
-say that the the incoherency of Microsoft.NETCore.App in the graph only
+say that the incoherency of Microsoft.NETCore.App in the graph only
 represents a single change in coreclr, a single non-breaking JIT bug fix. There
 would technically be no need to ingest the new Microsoft.NETCore.App at each
 point in the graph. Simply shipping the same components against the new runtime
