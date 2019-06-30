@@ -481,7 +481,7 @@ Projects shall use `Microsoft.NET.Sdk` SDK like so:
 
 - Unit test project file names shall end with `.UnitTests` or `.Tests`, e.g. `MyProject.UnitTests.csproj` or `MyProject.Tests.csproj`. 
 - Integration test project file names shall end with `.IntegrationTests`, e.g. `MyProject.IntegrationTests.vbproj`.
-- Performance test project file names shall end with `.PerformanceTests`, e.g. `MyProject.PerformaceTests.csproj`.
+- Performance test project file names shall end with `.PerformanceTests`, e.g. `MyProject.PerformanceTests.csproj`.
 - If `source.extension.vsixmanifest` is present next to the project file the project is by default considered to be a VSIX producing project.
 
 ## Other Projects
