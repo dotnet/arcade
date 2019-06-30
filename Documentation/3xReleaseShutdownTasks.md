@@ -182,7 +182,7 @@ state of the Dev channel subscription state.
    features to get-subscriptions to help out with this exercise*
 
 3. Dump the default channel state and ensure that repositories with a default
-   channel assocation in the Dev channel have a default channel association in the
+   channel association in the Dev channel have a default channel association in the
    Release channel. Where there are gaps work with with repository owners to
    understand which branch will ship the coming release. Some repositories may
    not have default associations and can be left alone. For example nuget
@@ -197,7 +197,7 @@ state of the Dev channel subscription state.
    darc add-default-channel
    ```
 
-   Some typical repositories with odd/no assocations:
+   Some typical repositories with odd/no associations:
    - **dotnet/roslyn** - Branch changes preview to preview to align with VS
    - **microsoft/msbuild** - Branch changes preview to preview to align with VS
    - **dotnet/fsharp** - Branch changes preview to preview to align with VS
