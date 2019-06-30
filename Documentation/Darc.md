@@ -773,7 +773,7 @@ PS C:\enlistments\core-sdk> darc gather-drop --repo https://github.com/dotnet/co
 ```
 
 If no build exists at that drop, darc will show an error. In this case, you
-might try other recents shas, or use the BAR swagger API
+might try other recent shas, or use the BAR swagger API
 (https://maestro-prod.westus2.cloudapp.azure.com/swagger) to look up a build
 id. Remember to authenticate using a token from
 https://maestro-prod.westus2.cloudapp.azure.com/.  Better methods of obtaining
