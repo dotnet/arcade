@@ -382,4 +382,4 @@ matrix: { string: { string: string } }
 
 #### job
 
-The job schema has replaced the phase schema and is publically [documented](https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&tabs=schema#job)
+The job schema has replaced the phase schema and is publicly [documented](https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&tabs=schema#job)

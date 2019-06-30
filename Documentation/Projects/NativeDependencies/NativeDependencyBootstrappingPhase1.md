@@ -34,7 +34,7 @@ It is possible that the landscape will change w.r.t. available technologies, and
 
 ## Plan Overview
 
-- Create zips / tarballs of a couple of xcopy deployable native dependencies (like cmake) which are stored and publically accessible in Azure blob storage.  These will be proof of concept, and not an exhaustive list of native toolset dependencies.
+- Create zips / tarballs of a couple of xcopy deployable native dependencies (like cmake) which are stored and publicly accessible in Azure blob storage.  These will be proof of concept, and not an exhaustive list of native toolset dependencies.
 
 - Determine how repos will define a dependency version list for native dependencies which fits into the [dependency description](https://github.com/dotnet/arcade/pull/120/files) spec or modifies it where necessary.
 
