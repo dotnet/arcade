@@ -131,4 +131,4 @@ Both of these would point to the same yaml file in the forks of the repo:
 From time to time, there are some terms you might encounter in documentation or otherwise.  Here's some I've run across so far and the interpretation.
 
 - collection --> account --> instance (top level thing - e.g. dev.azure.com/dnceng)
-- team --> group of indivduals.  Largely is about the backlog, not much more.  In our case we're not using for permissions.
+- team --> group of individuals.  Largely is about the backlog, not much more.  In our case we're not using for permissions.
