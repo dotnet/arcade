@@ -750,7 +750,7 @@ is passed via `VisualStudioDropAccessToken` property. If the account the officia
 an access to the VS drop storage, the build definition can pass `/p:VisualStudioDropAccessToken=$(System.AccessToken)` to
 the `/eng/common/CIBuild.cmd` script.
 
-The IBC data drop produced by a training run is identitifed by the name of the repository, the branch and the build number
+The IBC data drop produced by a training run is identified by the name of the repository, the branch and the build number
 the trained binaries came from, and a training run id. An example of IBC data identifier is
 `OptimizationData/dotnet/roslyn/master-vs-deps/20190210.1/935479/1`, where `dotnet/roslyn` is the repository name,
 `master-vs-deps` is the branch name, `20190210.1` is the build number and `935479/1` is training run id.
