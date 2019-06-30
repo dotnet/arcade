@@ -1,6 +1,6 @@
 # .NET Core 2.1/2.2 Servicing Workflow
 
-This document is intended to provide a practical servicing worflow for .NET Core 2.1.
+This document is intended to provide a practical servicing workflow for .NET Core 2.1.
 
 ## Overview
 
