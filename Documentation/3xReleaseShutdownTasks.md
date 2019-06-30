@@ -11,10 +11,10 @@ Subscriptions](BranchesChannelsAndSubscriptions.md). Please read if you are unfa
 
 The general workflow for a release looks like:
 1. Commit desired changes to each repository involved in the release.
-    1. For a .NET Core 3.x preview, these changes may be commited by the process
+    1. For a .NET Core 3.x preview, these changes may be committed by the process
        of branching the working (typically master) branch into a release branch
        (like release 3.0)
-    2. For a servicing release, these changes may simply be commited into an
+    2. For a servicing release, these changes may simply be committed into an
        existing release branch.
 2. Official builds and dependency flow begins in each repository with changes.
 3. New commits are built, generating new assets, which flow via Maestro++
