@@ -53,7 +53,7 @@ The "dotnet" service connection is the only dnceng supported connection.  Other 
 
 #### Switching service connections
 
-There is no way to update an existing build definition to use a different service connection.  Instead, you will need to deprecate your current build definition (disable triggers, change the name), and create a new build definition with the same properites.  You should then delete your deprecated definition when you are convinced the new definition works as expected.
+There is no way to update an existing build definition to use a different service connection.  Instead, you will need to deprecate your current build definition (disable triggers, change the name), and create a new build definition with the same properties.  You should then delete your deprecated definition when you are convinced the new definition works as expected.
 
 ### Git (internal) connections
 
