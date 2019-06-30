@@ -27,7 +27,7 @@ Pipelines for the .NET Core Ecosystem should be written with the following goals
 
 ## General Rules
 
-- **A pipeline is defined in code (YAML)** - Defining as much Pipeline configuration in source ensures a testable, servicable, and versionable infrastructure ecosystem.
+- **A pipeline is defined in code (YAML)** - Defining as much Pipeline configuration in source ensures a testable, serviceable, and versionable infrastructure ecosystem.
 
 - **A pipeline does not rely on input variables in the environment** - Environment variables cause lots of issues in pipelines and should be avoided as a means of passing input to a build where possible.
   - They may not be obvious to readers of logs.
