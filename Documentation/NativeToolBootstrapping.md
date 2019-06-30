@@ -159,4 +159,4 @@ Example:
 
 I think that this model will allow us to be a bit more flexible in the types of dependencies that we install and provide a method for non-xcopy deployable dependencies to be installed in the future.  The tool installers may make use of common libraries for installs though.
 
-We are looking into improving this experience to generizice the installers and reduce boilerplate.
+We are looking into improving this experience to genericize the installers and reduce boilerplate.
