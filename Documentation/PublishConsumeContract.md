@@ -128,7 +128,7 @@ Task package symbols should be embedded in the binaries.
 
 Toolset packages will assume the use of Maestro for automatic version uptake.
 
-Toolset packages should be publishing version information to the versions repo so that respositories using automatic version updating can consume them.  When publishing, there should be package versions entries both for the repo producing the package, and for a tools location which aggregates the various toolset packages. [Details are TBD]
+Toolset packages should be publishing version information to the versions repo so that repositories using automatic version updating can consume them.  When publishing, there should be package versions entries both for the repo producing the package, and for a tools location which aggregates the various toolset packages. [Details are TBD]
 
 ## Gallery
 
