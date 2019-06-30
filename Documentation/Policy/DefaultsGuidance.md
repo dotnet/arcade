@@ -24,7 +24,7 @@ It is often challenging to reconcile differences between a given repo build and 
 ### Category 1 - Company, Divisional, or .NET Core requirements  
 
 * Hard requirements (like SDL or certs) that .NET Core must confirm to.
-* These differences **should have no defaults** and should have the required parameters explicitely provided by the repo based on supported options presented by the Arcade SDK.  
+* These differences **should have no defaults** and should have the required parameters explicitly provided by the repo based on supported options presented by the Arcade SDK.  
 * This might also result in cases where the implementation choice Arcade took proves excessively expensive or unreasonable for a specific product team to adopt.  (see other category for more on this)
 * Obviously, any differences here need to be reconciled - but there's always room for the "how" discussion.
 
