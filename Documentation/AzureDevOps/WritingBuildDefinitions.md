@@ -10,7 +10,7 @@ Pipelines for the .NET Core Ecosystem should be written with the following goals
 
   - Builds should integrate with telemetry systems to enable a number of scenarios important to building a more effective .NET Core infrastructure ecosystem, including:
     - Enable build status tracking.
-    - Enabe pass/failure analysis.
+    - Enable pass/failure analysis.
     - Enable test failure analysis.
     - Enable efficient product code flow via Maestro# and Speculative Package Flow.
     - Enable efficient asset tracking.
