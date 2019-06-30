@@ -590,7 +590,7 @@ darc and Maestro++ have a few mechanisms to enable such scenarios:
 
 - **Disabling or deleting a default channel association** - By disabling a
   default channel association for a repo, no new builds of that repo will be
-  automatical assigned to the targeted channel.  This effectively halts
+  automatically assigned to the targeted channel.  This effectively halts
   dependency flow without altering all the subscriptions sourcing from that
   repository.  Furthermore, if a selective fix needs to be flowed, the build
   containing that fix can be selectively assigned to correct channel and the
