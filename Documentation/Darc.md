@@ -533,7 +533,7 @@ dependencies in eng/Version.Details.xml match the outputs of the new builds.
 
 These updates are selective and based on 'subscriptions'. A subscription describes an update
 operation for a specific repository+branch combination, mapping outputs of a
-repository that have beeen applied to a channel (virtual branch) onto matching
+repository that have been applied to a channel (virtual branch) onto matching
 inputs of the target repository+branch.
 
 For example, a build of dotnet/corefx might be applied to the ".NET Core 3 Dev"
@@ -985,7 +985,7 @@ Adds a new subscription to Maestro++.
 
 A subscription describes an update
 operation for a specific repository+branch combination, mapping outputs of a
-repository that have beeen applied to a channel (virtual branch) onto matching
+repository that have been applied to a channel (virtual branch) onto matching
 inputs of the target repository+branch.
 
 For example, a build of dotnet/corefx might be applied to the ".NET Core 3 Dev"
