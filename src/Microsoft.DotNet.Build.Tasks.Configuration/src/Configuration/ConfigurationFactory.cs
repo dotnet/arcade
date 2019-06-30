@@ -147,7 +147,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
         /// Gets all significant combinations in order of precedence
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<Configuration> GetSignficantConfigurations()
+        public IEnumerable<Configuration> GetSignificantConfigurations()
         {
             return GetConfigurations(p => p.Insignificant ? new[] { p.IdentityValue } : GetValues(p));
         }
