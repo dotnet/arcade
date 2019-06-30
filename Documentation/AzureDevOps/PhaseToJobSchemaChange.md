@@ -333,7 +333,7 @@ Notes:
 
   ```yaml
   jobs:
-  - tempate: /eng/common/templates/jobs/jobs.yml
+  - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       jobs:
       - job: Windows_NT
