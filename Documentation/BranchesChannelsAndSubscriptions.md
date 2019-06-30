@@ -52,7 +52,7 @@ Subscriptions have the following characteristics:
 - They have a desired quality metric for when the mapping should be applied (e.g. should tests have passed?)
 - They have a trigger for when the mapping should be applied.
 
-A subscription can be visualized with the following psuedocode
+A subscription can be visualized with the following pseudocode
 
 ```
     function runSubscription(newBuild, subscription) {}
