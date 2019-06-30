@@ -1,6 +1,6 @@
 # .NET Core Infrastructure Ecosystem Overview
 
-This document provides an overview of the infrastructure ecosystem for future .NET Core product developemnt.
+This document provides an overview of the infrastructure ecosystem for future .NET Core product development.
 
 ## Background
 
