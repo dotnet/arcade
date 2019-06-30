@@ -112,7 +112,7 @@ The standard package layout *supports* (not required) consuming packages as [MSB
 
 ### Package dependencies
 
-The tools provided via NuGet packages for MSBuild tasks will be self-contained (include all of their dependenices).  It is important to be deliberate about what dependency versions are included in a package because otherwise the mix-match model of the tools will be broken.  As a starting place, dependency versions should align with what is provided by the core tools SDK.  If you have additional dependencies outside of those in the core tools SDK (or need to change dependency versions), then we should be deliberate (have a conversation with core tools stakeholders) about what those dependencies are and what versions are required.
+The tools provided via NuGet packages for MSBuild tasks will be self-contained (include all of their dependencies).  It is important to be deliberate about what dependency versions are included in a package because otherwise the mix-match model of the tools will be broken.  As a starting place, dependency versions should align with what is provided by the core tools SDK.  If you have additional dependencies outside of those in the core tools SDK (or need to change dependency versions), then we should be deliberate (have a conversation with core tools stakeholders) about what those dependencies are and what versions are required.
 
 ### Best practices
 
