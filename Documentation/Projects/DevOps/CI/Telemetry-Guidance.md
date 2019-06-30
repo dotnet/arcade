@@ -61,7 +61,7 @@ If we add...
 </Target>
 ```
 
-into a project file, then any CI failures in the "Build" target will be categorizedas "Build".  Any failure in "MyCustomBuildTarget" will be categorized as "Custom" because of the "Telemetry" task.  
+into a project file, then any CI failures in the "Build" target will be categorized as "Build".  Any failure in "MyCustomBuildTarget" will be categorized as "Custom" because of the "Telemetry" task.  
 
 Arcade will use a combination of the above techniques to enable categorization for anyone using Arcade.
 
