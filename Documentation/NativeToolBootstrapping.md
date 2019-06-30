@@ -4,7 +4,7 @@ This document is intended to provide insight into the design of native toolset b
 
 ## Overview
 
-Arcade will provide a set of common installation libraries which will be provided to partipating repos via Maestro.  The common libraries will be used to acquire "installers" for native components.
+Arcade will provide a set of common installation libraries which will be provided to participating repos via Maestro.  The common libraries will be used to acquire "installers" for native components.
 
 Repo's will be provided a local bootstrapping file (both an ps1 and an sh file).  The bootstrapper uses the common libraries to install native toolset dependencies.
 
