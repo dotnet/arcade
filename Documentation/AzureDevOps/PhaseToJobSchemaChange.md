@@ -100,11 +100,11 @@ jobs:
     - job: Windows_NT_Job
       pool: dotnet-external-temp
       steps:
-      - ecript: echo Hello World!
+      - script: echo Hello World!
     - job: Linux_Job
       pool: dnceng-linux-external-temp
       steps:
-      - scripts: echo Hello World!
+      - script: echo Hello World!
 ```
 
 Additional example of the [phase to jobs schema transition](#phase-to-jobs-schema-transition)
