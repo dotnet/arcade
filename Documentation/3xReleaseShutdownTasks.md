@@ -314,7 +314,7 @@ Drops of builds are uploaded to
 To gather a drop:
 1. Create a directory (if it does not exist) under the drop root for the
    appropriate preview/release (e.g. `preview6').
-2. Create a directory under that with the appopriate SDK build number. E.g.
+2. Create a directory under that with the appropriate SDK build number. E.g.
    `3.0.100-preview6-012264` of the top level SDK build.
 3. Run `darc gather-drop` to upload the unified drop to the share:
    ```
