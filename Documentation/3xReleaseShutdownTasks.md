@@ -122,7 +122,7 @@ The coherency QB is responsible for the following:
 
 *Note: There is a goal to automate as much of this process as is possible.*
 
-Below specfic steps in the coherency QB are detailed.
+Below specific steps in the coherency QB are detailed.
 
 ### Prepare and verify dependency flow
 
