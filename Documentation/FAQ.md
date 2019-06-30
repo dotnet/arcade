@@ -9,7 +9,7 @@ then will be decommissioned.  This decommission is lined up with the [support
 lifecycle of .NET Core 1.x](https://www.microsoft.com/net/support/policy),
 thus the expected decommission date is June 27, 2019.
 
-**I used machine X in .NET CI, does such a machine exist in azure devops?**
+**I used machine X in .NET CI, does such a machine exist in Azure DevOps?**
 
 In the move from .NET CI, the existing Jenkins static images will not be
 ported.  They are largely opaque and difficult to patch.  Instead, we will
