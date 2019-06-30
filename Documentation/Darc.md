@@ -1006,7 +1006,7 @@ A subscription has a few parts:
 `add-subscription` has two modes of operation:
 - Interactive mode (default) - Interactive mode will take whatever input parameters were
   provided on the command line (if any) and pop an editor where the user can
-  provide the subscription input prameters.
+  provide the subscription input parameters.
 - Command-line only mode (`-q`) - In this mode, the full set of input options must be
  supplied.
 
