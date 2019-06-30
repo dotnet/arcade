@@ -212,7 +212,7 @@ Below is a list of the main parameters that control the logic.
 | DotNetUseShippingVersions  | Arcade | Set to `true` to produce shipping version strings in non-official builds. I.e., instead of fixed values like `42.42.42.42` for `AssemblyVersion`. |
 | DotNetFinalVersionKind     | Arcade | Specify the kind of version being generated: `release`, `prerelease` or empty. |
 | PreReleaseVersionLabel     | Arcade | Pre-release label to be used on the string. E.g., `beta`, `prerelease`, etc. `ci` and `dev` are reserved for non-official CI builds and dev builds, respectively. |
-| VersionPrefix              | .NET   | Specity the leading part of the version string. If empty and both `MajorVersion` and `MinorVersion` are set, initialized to `$(MajorVersion).$(MinorVersion).0`. |
+| VersionPrefix              | .NET   | Specify the leading part of the version string. If empty and both `MajorVersion` and `MinorVersion` are set, initialized to `$(MajorVersion).$(MinorVersion).0`. |
 | MajorVersion               | Arcade | Major version to use in `VersionPrefix`. |
 | MinorVersion               | Arcade | Minor version to use in `VersionPrefix`. |
 | ContinuousIntegrationBuild | .NET   | Specify whether the build is happening on a CI server (PR build or official build). |
