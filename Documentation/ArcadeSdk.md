@@ -526,7 +526,7 @@ Repository that builds VS insertion components must set `VisualStudioDropName` g
 To include the output VSIX of a project in Visual Studio insertion, set the `VisualStudioInsertionComponent` property.
 Multiple VSIXes can specify the same component name, in which case their manifests will be merged into a single insertion unit.
 
-The Visual Studio insertion manifests and VSIXes are generated during Pack task into `VSSetup\Insertion` directory, where they are picked by by MicroBuild Azure DevOps publishing task during official builds.
+The Visual Studio insertion manifests and VSIXes are generated during Pack task into `VSSetup\Insertion` directory, where they are picked up by MicroBuild Azure DevOps publishing task during official builds.
 
 Arcade SDK also enables building VS Setup Components from .swr files (as opposed to components comprised of one or more VSIXes).
 Projects that set `VisualStudioInsertionComponent` but do not have `source.extension.vsixmanifest` are considered to be _swix projects_ (`IsSwixProject` property is set to true).
