@@ -53,5 +53,5 @@
 ## Which branches should I make these changes in?
 
 Prioritize branches that are producing bits for .NET Core 3.  Given the extended
-support lifecyle for .NET Core 2.1, backporting infrastructure to .NET Core 2.1
+support lifecycle for .NET Core 2.1, backporting infrastructure to .NET Core 2.1
 release branches is desired, but .NET Core 3 branches should go first.
