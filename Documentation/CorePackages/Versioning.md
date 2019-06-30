@@ -71,7 +71,7 @@ _Build kind_ is determined based on global build properties `ContinuousIntegrati
 | _false_                      | ""                | ""                       | Local developer build           |
 | _true_                       | ""                | ""                       | PR validation build             |
 | _true_                       | `yyyymmdd.r`      | ""                       | Daily official build            |
-| _true_                       | `yyyymmdd.r`      | "prerelease"             | Final pre-release offical build |
+| _true_                       | `yyyymmdd.r`      | "prerelease"             | Final pre-release official build |
 | _true_                       | `yyyymmdd.r`      | "release"                | Release official build          |
 
 ## Version parts specified by repository
@@ -96,7 +96,7 @@ The pre-release label is determined based on the following table:
 | Local developer build default   | "dev"                                                | "1.2.3-dev"               |
 | PR validation build             | "ci"                                                 | "1.2.3-ci"                |
 | Daily official build            | `PreReleaseVersionLabel`.**SHORT_DATE**.**REVISION** | "1.2.3-preview1.12345.1"  |
-| Final pre-release offical build | `PreReleaseVersionLabel`."final"                     | "1.2.3-beta.final"        |
+| Final pre-release official build | `PreReleaseVersionLabel`."final"                     | "1.2.3-beta.final"        |
 | Release official build          | ""                                                   | "1.2.3"                   |   
 
 In official builds the values of **SHORT_DATE** and **REVISION** are derived from build parameter `OfficialBuildId` with format `20yymmdd.r` like so:
