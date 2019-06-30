@@ -714,7 +714,7 @@ $(IbcOptimizationDataDir)path2\{AssemblyFileName2}\Scenario1.ibc
 $(IbcOptimizationDataDir)path2\{AssemblyFileName2}\Scenario2.ibc
 ...
 ```
-The assemblies must be exaclty those that were used in the training run that produced the IBC data files.
+The assemblies must be exactly those that were used in the training run that produced the IBC data files.
 One assembly might be present in multiple copies in different subdirectories. These copies must be identical
 (an assembly is identified by name only). `ApplyOptimizations` target aggregates all IBC data files present
 next to the assembly and all of its  copies. Multiple flavors of an assembly with the same names
