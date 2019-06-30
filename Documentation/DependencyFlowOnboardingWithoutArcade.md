@@ -91,7 +91,7 @@ If all of your packages are "shipping" packages, you can just specify the `Packa
 
 > `powershell -ExecutionPolicy Bypass -Command "eng\common\sdk-task.ps1 -restore -task GenerateBuildManifest /p:PackagesToPublishPattern=e:\gh\chcosta\arcade\artifacts\packages\Debug\NonShipping\*.nupkg /p:AssetManifestFilePath=e:\gh\chcosta\feed2\manifest.xml" /p:ManifestBuildData="Location=https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json"`
 
-`ManifestBuildData` is used to to provide the "location" metadata which identifies where the assets have been / will be published to (ie, the feed url).
+`ManifestBuildData` is used to provide the "location" metadata which identifies where the assets have been / will be published to (ie, the feed url).
 
 For more control over your assets, you can exclude the `PackagesToPublishPattern` option from the command-line but include "GenerateBuildManifest.props" in your repo.  This will allow you to specify packages that are shipping vs non-shipping (shipping is the default).  More details about shipping are included [here](https://github.com/dotnet/arcade/blob/b0c930c2b44acd03671552f52b925183db0fc8ea/Documentation/Darc.md#gathering-a-build-drop).
 

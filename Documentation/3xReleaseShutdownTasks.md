@@ -308,7 +308,7 @@ for validation. A drop consists of 3 parts:
   dev builds upload packages to feeds that contain a mix of transport and
   shipping packages, as those feeds are needed for downstream builds.
 
-Drops of builds are uploaded to to
+Drops of builds are uploaded to
 `\\vsufile\patches\sign\NET\CORE_BUILDS\3.0.X\3.0.0\`
 
 To gather a drop:
