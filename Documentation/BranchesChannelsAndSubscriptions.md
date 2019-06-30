@@ -813,7 +813,7 @@ dotnet/core-sdk master depends on <- reachable from aspnet/universe
 
 Allow user to modify configuration (branch names, remove subscriptions, add repos, etc.)
 
-**Valdiate and apply configuration**
+**Validate and apply configuration**
 
 Validate the configuration and then apply the configuration using the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) REST API.
 
