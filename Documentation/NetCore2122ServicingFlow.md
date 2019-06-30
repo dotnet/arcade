@@ -36,7 +36,7 @@ The pipebuild descriptions for the builds are held in https://dev.azure.com/devd
 1. Update branding in required repos to reflect the servicing event. How this is done is repository dependent, but generally post-release, the pre-release label is updated in each of the servicing branches to 'servicing' (or something like that) and the patch version element is incremented. The `PB_VersionStamp` default should be changed on the build definition.
 2. Check in fixes to required repositories.
 3. Update ProdCon pipebuild descriptions
-    1. Change to reflect the minimal set of repos that must be built. Typically, the description does not change and contains all the core repositories (coreclr, corefx, core-setup aspnet, extensions, cli). Ocassionally, sdk will have a servicing fix and require an entry in the description file.  When adding or removing builds from prodcon, ensure that dependency and input/output merges are updated.
+    1. Change to reflect the minimal set of repos that must be built. Typically, the description does not change and contains all the core repositories (coreclr, corefx, core-setup aspnet, extensions, cli). Occasionally, sdk will have a servicing fix and require an entry in the description file.  When adding or removing builds from prodcon, ensure that dependency and input/output merges are updated.
     2. Verify/Update input branches
     3. For build of CLI, update the **MicrosoftNETCoreAppLatestVersion1_0** (2.1 + 2.2),
        **MicrosoftNETCoreAppLatestVersion1_1** (2.1 + 2.2), **MicrosoftNETCoreAppLatestVersion2_0** (2.1 only),
