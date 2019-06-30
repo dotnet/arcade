@@ -246,7 +246,7 @@ Commit/branching day happens in the following steps:
 concern is branding. dotnet/core-sdk will publish its outputs to public on the
 main web github page on each build (it overwrites a set of 'latest' blobs based
 on information in the current branch being built). Until the core-sdk branches
-affected by branching/commiting for release (e.g. release/3.0.1xx moves to
+affected by branching/committing for release (e.g. release/3.0.1xx moves to
 previewN and master moves to previewN+1) reflect the branding updates for their
 input dependencies, exposing new builds to the public will cause confusion. The
 builds will have mixed previewN and previewN+1 branding. We want to avoid this.
