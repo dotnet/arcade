@@ -75,7 +75,7 @@ Specific infrastructure ecosystem requirements are implied from the set of produ
 - **Given a SHA and repository that produced an asset, a functionally identical package should be producible by checking out that SHA and building** - Reproducible builds are important, for servicing and development.
   - Implements Requirements
     - Must be able to service the product
-    - Must be able to able to rapdily make changes to individual components. 
+    - Must be able to able to rapidly make changes to individual components. 
   - Affects Components
     - Repository Contracts
 - **For a repository, package dependencies should be described such that the package version, the repo and SHA are all specified in source** - Developers must be able to locate exactly what a repository depends on.
