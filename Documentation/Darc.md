@@ -203,7 +203,7 @@ Some examples:
 
 ##### Toolset
 - **Arcade SDK or other arcade packages** - These packages are not customer
-  facing and do not not ship as part of the product.
+  facing and do not ship as part of the product.
 - **dotnet/corefx's dependency on Microsoft.NETCore.App** - This is a circular
   dependency for testing purposes.
 
