@@ -43,7 +43,7 @@ Bootstrapping a repo will consist of using the CLI (obtainable via a script from
 
 ## Using tools in non-bootstrapping scenarios
 
-There are some scenarios where bootstrapping is not ideal for acquiring tools.  These are scenarios which are not project based, or not tied to a specific repo.  A primary example of this is telemetry, where you want to be able to send information about a build, before a repo has even bootstrapped.  Another may be orchestration (depending on implementation), the orchestration may schedule and report on multiple repo's, but itself is not tied to a repo.  For these scnearios, we would like to be able to provide common tooling.  At this point, there are a couple of ideas being thrown around.
+There are some scenarios where bootstrapping is not ideal for acquiring tools.  These are scenarios which are not project based, or not tied to a specific repo.  A primary example of this is telemetry, where you want to be able to send information about a build, before a repo has even bootstrapped.  Another may be orchestration (depending on implementation), the orchestration may schedule and report on multiple repo's, but itself is not tied to a repo.  For these scenarios, we would like to be able to provide common tooling.  At this point, there are a couple of ideas being thrown around.
 
 - "DotNet CLI install tools" is one option for local toolset installs, but not available until .NET Core 2.1 Preview 2 (at the earliest).
 - "Shared Library" model (like Jenkins), where tools are provided via another common tools repo.
