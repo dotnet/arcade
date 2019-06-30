@@ -2416,7 +2416,7 @@ https://github.com/aspnet/Extensions @ release/3.0-preview6
 
 ### **`get-subscriptions`**
 
-Retrives information about existing subscriptions. This command is generally
+Retrieves information about existing subscriptions. This command is generally
 useful to determine what kind of dependency flow will happen on new builds, or
 to obtain the id of a subscription for use in
 [delete-subscription](#delete-subscription).
