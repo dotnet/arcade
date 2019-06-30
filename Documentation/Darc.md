@@ -957,7 +957,7 @@ should always be applied to its "normal" channel.
 "refs/heads/{branchName}", unless you explicitly know otherwise***.
 
 This is because the BAR reporting functionality pulls the branch name from the
-Azure Devops built in pipeline variables, which specify refs/heads/foo vs. foo.
+Azure DevOps built in pipeline variables, which specify refs/heads/foo vs. foo.
 If your repository is manually reporting to BAR without using the Arcade
 templates, then this name may be different.
 
