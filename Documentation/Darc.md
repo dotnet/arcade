@@ -733,7 +733,7 @@ reported to the Build Asset Registry into a local location. Optionally, this
 build drop may also include any builds that were inputs to this build, based on
 the dependency information in Version.Details.xml. Builds produce various
 outputs that go to various locations. For example, they may produce NuGet
-packges, zips, MSIs, etc. These may be available in the build artifacts, or may
+packages, zips, MSIs, etc. These may be available in the build artifacts, or may
 be located in various storage accounts.  Gather-drop mines the Build Asset
 Registry for these locations and downloads them all to the local directory.
 
@@ -1315,7 +1315,7 @@ reported to the Build Asset Registry into a local location. Optionally, this
 build drop may also include any builds that were inputs to this build, based on
 the dependency information in Version.Details.xml. Builds produce various
 outputs that go to various locations. For example, they may produce NuGet
-packges, zips, MSIs, etc. These may be available in the build artifacts, or may
+packages, zips, MSIs, etc. These may be available in the build artifacts, or may
 be located in various storage accounts.  Gather-drop mines the Build Asset
 Registry for these locations and downloads them all to the local directory.
 
