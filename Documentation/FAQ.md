@@ -5,7 +5,7 @@
 **Where is .NET CI (Jenkins ci.dot.net, ci2.dot.net, ci3.dot.net) going?**
 
 The current .NET CI instances will remain operational for about another year,
-then will be decomissioned.  This decomission is lined up with the [support
+then will be decommissioned.  This decomission is lined up with the [support
 lifecycle of .NET Core 1.x](https://www.microsoft.com/net/support/policy),
 thus the expected decomission date is June 27, 2019.
 
