@@ -25,7 +25,7 @@ In this context, teams pretty much only affect which level the kanban (or whatev
 To keep things as simple (manageable) as possible, we're going to manage permissions coarsely at the project level - pointing directly to existing AD security groups managed in idweb.  **We should not be managing permission outside of this method**
 
 - Permissions will point to existing security groups in AD which are managed in idweb.  This admin is done at the **project** level.  ([Azure DevOps link](https://dev.azure.com/dnceng/internal/_admin/_security))
-- The bulk of folks will be in the 'contributers' group, with special additions for other groups (like admin)
+- The bulk of folks will be in the 'contributors' group, with special additions for other groups (like admin)
 - There are Azure DevOps permission groups that can be set out side of the project context. ([Azure DevOps link](https://dev.azure.com/dnceng/_admin/_security))   **We're not going to use those**
 - It is also possible to set permissions at the team.  **We're not going to do that**
 
