@@ -121,7 +121,7 @@ Specific infrastructure ecosystem requirements are implied from the set of produ
     - Must be able to rapidly make changes to product components
   - Affects Components
     - CI/Build Automation
-- **Build/validation automation can be generated off repository metadata** – We must utilize config-as-code as much as possible to ensure we can rapidly iterate on process and feel confident that changes to process will not damage servicability.
+- **Build/validation automation can be generated off repository metadata** – We must utilize config-as-code as much as possible to ensure we can rapidly iterate on process and feel confident that changes to process will not damage serviceability.
   - Implements Requirements
     - Must be able to rapidly make changes to product components
     - Must be able to rapidly makes changes to the product as a whole
