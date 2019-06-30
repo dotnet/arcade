@@ -207,7 +207,7 @@ Below is a list of the main parameters that control the logic.
 
 | Parameter                  | Scope  | Description                                                  |
 | -------------------------- | ------ | ------------------------------------------------------------ |
-| OfficialBuildId            | Arcade | ID of current build. The accepted format is `yyyyMMdd.r`. Should be passed to build in YAML official build defintion. |
+| OfficialBuildId            | Arcade | ID of current build. The accepted format is `yyyyMMdd.r`. Should be passed to build in YAML official build definition. |
 | SemanticVersioningV1       | Arcade | Set to `true` in `Versions.props` file to use versions compatible with SemVer 1.0. |
 | DotNetUseShippingVersions  | Arcade | Set to `true` to produce shipping version strings in non-official builds. I.e., instead of fixed values like `42.42.42.42` for `AssemblyVersion`. |
 | DotNetFinalVersionKind     | Arcade | Specify the kind of version being generated: `release`, `prerelease` or empty. |
