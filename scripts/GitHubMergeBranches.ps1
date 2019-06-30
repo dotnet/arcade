@@ -81,7 +81,7 @@ function Invoke-Block([scriptblock]$cmd) {
     }
 }
 
-function GetCommiterGitHubName($sha) {
+function GetCommitterGitHubName($sha) {
     $email = & git show -s --format='%ce' $sha
     $key = 'committer'
 
@@ -208,7 +208,7 @@ try {
 
     $authors = $commitsToMerge `
         | % { Write-Host -f Cyan "Merging:`t$(git log --format=$formatString -1 $_)"; $_ } `
-        | % { GetCommiterGitHubName $_ } `
+        | % { GetCommitterGitHubName $_ } `
         | ? { $_ -ne $null } `
         | select -Unique
 
