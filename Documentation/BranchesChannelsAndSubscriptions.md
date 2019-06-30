@@ -754,7 +754,7 @@ Additional options:
                                               to-old = merge from new channel's branches to
                                                 existing channel's branches
 --movement-only                           Channel branch is for code movement only.
-                                            Don't branch where unecessary, instead adding new channel to
+                                            Don't branch where unnecessary, instead adding new channel to
                                             existing mappings (see Unstable builds)
 --internal                                New channel is internal-only
 ```
