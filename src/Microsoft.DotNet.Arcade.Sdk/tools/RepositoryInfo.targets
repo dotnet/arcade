@@ -10,17 +10,13 @@
   </ItemGroup>
 
   <!--
-    Workarounds for Source Link not being available for Arm.
+    Workarounds for Source Link not being available for source build.
     Set the SourceRoot to repo root to facilitate deterministic source paths when SCM queries are disabled.
     Set the RepositoryUrl to the Build.Repository.Uri Azure DevOps build variable if on CI, otherwise to local repo path.
   -->
 
-  <PropertyGroup>
-    <_ProcessArchitecture>$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)</_ProcessArchitecture>
-  </PropertyGroup>
-
-  <!-- Disable SourceLink when building on ARM (libgit2 does not support it currently) or during source build (SourceLink is not buildable from source currently) -->
-  <PropertyGroup Condition="'$(DotNetBuildFromSource)' == 'true' or $(_ProcessArchitecture.StartsWith('Arm'))">
+  <!-- Disable SourceLink when building from source -->
+  <PropertyGroup Condition="'$(DotNetBuildFromSource)' == 'true'">
     <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
     <EnableSourceLink>false</EnableSourceLink>
   </PropertyGroup>
