@@ -1,5 +1,6 @@
 parameters:
   steps: []                       # optional -- any additional steps that need to happen before pulling down the performance repo and sending the performance benchmarks to helix (ie building your repo)
+  variables: []                   # optional -- list of additional variables to send to the template
   jobName: ''                     # required -- job name
   displayName: ''                 # optional -- display name for the job. Will use jobName if not passed
   pool: ''                        # required -- name of the Build pool
@@ -30,9 +31,18 @@ jobs:
         timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
 
         variables:
+
+        - ${{ each variable in parameters.variables }}:
+          - ${{ if ne(variable.name, '') }}:
+            - name: ${{ variable.name }}
+              value: ${{ variable.value }}
+          - ${{ if ne(variable.group, '') }}:
+            - group: ${{ variable.group }}
+
         - IsInternal: ''
         - HelixApiAccessToken: ''
         - HelixPreCommand: ''
+
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           - ${{ if eq(variables['Agent.Os'], 'Windows_NT') }}:
             - HelixPreCommand: 'set "PERFLAB_UPLOAD_TOKEN=$(PerfCommandUploadToken)"'
@@ -42,6 +52,7 @@ jobs:
             - IsInternal: --internal
           - group: DotNet-HelixApi-Access
           - group: dotnet-benchview
+
         workspace:
           clean: all
         pool:
