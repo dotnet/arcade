@@ -154,6 +154,28 @@
 
   </Choose>
 
+  <ItemGroup>
+    <!-- Add the runner configuration file -->
+    <None Include="$(TestRunnerConfigPath)"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false" />
+
+    <!-- Copy test runner to output directory -->
+    <None Include="$([System.IO.Path]::GetDirectoryName('$(XunitConsole472Path)'))\*"
+          Exclude="$([System.IO.Path]::GetDirectoryName('$(XunitConsole472Path)'))\xunit.console.*exe.config;$([System.IO.Path]::GetDirectoryName('$(XunitConsole472Path)'))\xunit.console.x86.exe"
+          Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(XunitConsole472Path)' != ''"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false" />
+
+    <_xunitConsoleNetCoreExclude Include="$([System.IO.Path]::GetDirectoryName('$(XunitConsoleNetCore21AppPath)'))\xunit.console.runtimeconfig.json" />
+    <_xunitConsoleNetCoreExclude Condition="'$(GenerateDependencyFile)' != 'true'" Include="$([System.IO.Path]::GetDirectoryName('$(XunitConsoleNetCore21AppPath)'))\xunit.console.deps.json" />
+    <None Include="$([System.IO.Path]::GetDirectoryName('$(XunitConsoleNetCore21AppPath)'))\*"
+          Exclude="@(_xunitConsoleNetCoreExclude)"
+          Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(XunitConsoleNetCore21AppPath)' != ''"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false" />
+  </ItemGroup>
+
   <!-- Main test targets -->
   <Target Name="Test" DependsOnTargets="$(TestDependsOn)" Condition="'$(IsUnitTestProject)' == 'true'" />
   <Target Name="BuildAndTest" DependsOnTargets="Build;Test" Condition="'$(IsUnitTestProject)' == 'true'" />
