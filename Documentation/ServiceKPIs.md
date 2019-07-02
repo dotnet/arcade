@@ -6,9 +6,9 @@ Contribute to the successful release of .NET Core 3.0 by improving developer pro
 
 ## New Service Guidelines
 
-Telemetry on the health of a service should be considered when the service is designed.
+Health telemetry is a fundamental monitoring tool and should be considered early in the design of a service.
 
-Telemetry storage must be enterprise grade, highly available, and redundant. The data must be made available to reporting services. Application Insights is a preferred channel with easy integration for Azure services. Other storage solutions, like Azure Data Explorer and SQL Server, may also be used.
+Telemetry storage must be enterprise grade, highly available, and redundant. The data must be made available to reporting services. Application Insights is a preferred channel with easy integration for Azure services. Other storage solutions, like Azure Data Explorer and SQL Server, may also be used as appropriate for the particular needs of a service.
 
 As general guidance, consider:
 
