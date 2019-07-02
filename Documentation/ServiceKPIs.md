@@ -47,7 +47,9 @@ These telemetry guidelines are meant to extend but not supersede operational gui
 ### Metrics
 
 Name: Count of issues opened by members outside of DNCEng
+
 Goal: Understand FR workload balance
+
 Action:
 - Significant external customer load indicates issue in documentation or service quality
 - Significant internal customer load indicate technical debt
