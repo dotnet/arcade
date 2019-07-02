@@ -8,16 +8,18 @@ Contribute to the successful release of .NET Core 3.0 by improving developer pro
 
 Telemetry on the health of a service should be considered when the service is designed.
 
-For Azure services, Application Insights is a preferred channel to report telemetry.
+Telemetry storage must be enterprise grade, highly available, and redundant. The data must be made available to reporting services. Application Insights is a preferred channel with easy integration for Azure services. Other storage solutions, like Azure Data Explorer and SQL Server, may also be used.
 
 As general guidance, consider:
 
 - Telemetry related to the _value_ the service provides to its users, example:
+
   - Number of events or triggers
-  - Queries of a particular payload
+  - Queries of a particular endpoint
   - Count of completed tasks
 
 - Telemetry related to the _health_ of the service, example:
+
   - Successful and failed operations
   - Unknown events or triggers
   - Malformed payloads
@@ -25,7 +27,7 @@ As general guidance, consider:
 
 Document the service's telemetry. Include for each metric:
 
-- Technical detail on how the data is collected (to help provide context)
+- Technical detail on _how_ the data is collected (to help provide context)
 - _Why_ the data is collected.
 - What is _good_ and _bad_ for the data? How will a monitor determine when to act?
 - What _action_ should be taken if telemetry indicates "bad"?
