@@ -2,7 +2,7 @@
 
 ## Mission
 
-Contribute to the successful release of .NET Core 3.0 by improving developer productivity through efficient build/test iterations
+Contribute to the successful release of .NET Core 3.0 by improving developer productivity through efficient build/test iterations.
 
 ## New Service Guidelines
 
