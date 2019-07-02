@@ -5,6 +5,7 @@ This Package provides simple Helix Job sending functionality allowing sending jo
 All of the following examples are C# code that is inserted in the following template.
 ```csharp
 using System;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client;
 
 namespace Sample
