@@ -36,7 +36,7 @@ Work with Leadership to identify any additional telemetry for current business e
 
 As GitHub issues is the primary means of work management for DNCEng, it is expected that all First Responder efforts of note be captured as a GitHub issue and added to the "First Responder" Epic. Telemetry and workload data is collected through this channel.
 
-Customers are may initiate communication with the First Responder team through other means, such as team alias and direct communication. Substantive communication should be moved to GitHub to allow telemetery gathering, improve workflow clarity, and increase information sharing.
+Customers may initiate communication with the First Responder team through other means, such as team alias and direct communication. Substantive communication should be moved to GitHub to allow telemetery gathering, improve workflow clarity, and increase information sharing.
 
 Open a new issue for any customer support effort taking more than fifteen minutes.
 
