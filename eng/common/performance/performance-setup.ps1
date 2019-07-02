@@ -70,26 +70,26 @@ $ci = $true
 . "$PSScriptRoot\..\pipeline-logging-functions.ps1"
 
 # Directories
-Write-PipelineSetVariableCurrentJob -Name 'PayloadDirectory' -Value "$PayloadDirectory"
-Write-PipelineSetVariableCurrentJob -Name 'PerformanceDirectory' -Value "$PerformanceDirectory"
-Write-PipelineSetVariableCurrentJob -Name 'WorkItemDirectory' -Value "$WorkItemDirectory"
+Write-PipelineSetVariable -Name 'PayloadDirectory' -Value "$PayloadDirectory" -IsMultiJobVariable $false
+Write-PipelineSetVariable -Name 'PerformanceDirectory' -Value "$PerformanceDirectory" -IsMultiJobVariable $false
+Write-PipelineSetVariable -Name 'WorkItemDirectory' -Value "$WorkItemDirectory" -IsMultiJobVariable $false
 
 # Script Arguments
-Write-PipelineSetVariableCurrentJob -Name 'Python' -Value "py -3"
-Write-PipelineSetVariableCurrentJob -Name 'ExtraBenchmarkDotNetArguments' -Value "$ExtraBenchmarkDotNetArguments"
-Write-PipelineSetVariableCurrentJob -Name 'SetupArguments' -Value "$SetupArguments"
-Write-PipelineSetVariableCurrentJob -Name 'PerfLabArguments' -Value "$PerfLabArguments"
-Write-PipelineSetVariableCurrentJob -Name 'BDNCategories' -Value "$RunCategories"
-Write-PipelineSetVariableCurrentJob -Name 'TargetCsproj' -Value "$Csproj"
-Write-PipelineSetVariableCurrentJob -Name 'Kind' -Value "$Kind"
-Write-PipelineSetVariableCurrentJob -Name 'Architecture' -Value "$Architecture"
-Write-PipelineSetVariableCurrentJob -Name 'UseCoreRun' -Value "$UseCoreRun"
-Write-PipelineSetVariableCurrentJob -Name 'RunFromPerfRepo' -Value "$RunFromPerformanceRepo"
+Write-PipelineSetVariable -Name 'Python' -Value "py -3" -IsMultiJobVariable $false
+Write-PipelineSetVariable -Name 'ExtraBenchmarkDotNetArguments' -Value "$ExtraBenchmarkDotNetArguments" -IsMultiJobVariable $false
+Write-PipelineSetVariable -Name 'SetupArguments' -Value "$SetupArguments" -IsMultiJobVariable $false
+Write-PipelineSetVariable -Name 'PerfLabArguments' -Value "$PerfLabArguments" -IsMultiJobVariable $false
+Write-PipelineSetVariable -Name 'BDNCategories' -Value "$RunCategories" -IsMultiJobVariable $false
+Write-PipelineSetVariable -Name 'TargetCsproj' -Value "$Csproj" -IsMultiJobVariable $false
+Write-PipelineSetVariable -Name 'Kind' -Value "$Kind" -IsMultiJobVariable $false
+Write-PipelineSetVariable -Name 'Architecture' -Value "$Architecture" -IsMultiJobVariable $false
+Write-PipelineSetVariable -Name 'UseCoreRun' -Value "$UseCoreRun" -IsMultiJobVariable $false
+Write-PipelineSetVariable -Name 'RunFromPerfRepo' -Value "$RunFromPerformanceRepo" -IsMultiJobVariable $false
 
 # Helix Arguments
-Write-PipelineSetVariableCurrentJob -Name 'Creator' -Value "$Creator"
-Write-PipelineSetVariableCurrentJob -Name 'Queue' -Value "$Queue"
-Write-PipelineSetVariableCurrentJob -Name 'HelixSourcePrefix' -Value "$HelixSourcePrefix"
-Write-PipelineSetVariableCurrentJob -Name '_BuildConfig' -Value "$Architecture.$Kind.$Framework"
+Write-PipelineSetVariable -Name 'Creator' -Value "$Creator" -IsMultiJobVariable $false
+Write-PipelineSetVariable -Name 'Queue' -Value "$Queue" -IsMultiJobVariable $false
+Write-PipelineSetVariable -Name 'HelixSourcePrefix' -Value "$HelixSourcePrefix" -IsMultiJobVariable $false
+Write-PipelineSetVariable -Name '_BuildConfig' -Value "$Architecture.$Kind.$Framework" -IsMultiJobVariable $false
 
 exit 0
