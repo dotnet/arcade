@@ -36,6 +36,7 @@ var job = await api.Job.Define()
     .WithCommand("echo 'Hai Wurld!'")
     .WithEmptyPayload()
     .AttachToJob()
+  .WithCreator("john")
   .SendAsync();
 
 Console.WriteLine($"Job '{job.CorrelationId}' created.");
