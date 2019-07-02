@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             string processFileName = Process.GetCurrentProcess().MainModule.FileName;
             HostRunnerName = System.IO.Path.GetFileName(processFileName);
 
-            if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Native", StringComparison.OrdinalIgnoreCase) || PlatformDetection.IsInAppContainer)
+            if (PlatformDetection.IsInAppContainer)
             {
                 // Host is required to have a remote execution feature integrated. Currently applies to uap and *aot.
                 Path = processFileName;
@@ -44,6 +44,15 @@ namespace Microsoft.DotNet.RemoteExecutor
                 Path = System.IO.Path.Combine(AppContext.BaseDirectory, "Microsoft.DotNet.RemoteExecutorHost.dll");
                 HostRunner = processFileName;
                 s_extraParameter = Path;
+
+                // Try to find the test assembly invoked by the testhost. We can't use GetEntryAssembly here
+                // as that would return the apphost itself. This could be optimized with recursive checks but
+                // for the current use-cases this seems to be sufficient.
+                string runtimeConfigPath = Assembly.GetCallingAssembly().GetName().Name + ".runtimeconfig.json";
+                if (File.Exists(runtimeConfigPath))
+                {
+                    s_extraParameter = $"--runtimeconfig {runtimeConfigPath} {s_extraParameter}";
+                }
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {

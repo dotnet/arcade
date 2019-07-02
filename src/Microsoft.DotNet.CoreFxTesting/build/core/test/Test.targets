@@ -14,6 +14,7 @@
   <!-- General xunit options -->
   <PropertyGroup>
     <RunArguments>$(TestAssembly)</RunArguments>
+    <RunArguments Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">$(RunArguments) --runtimeconfig $(ProjectRuntimeConfigFileName)</RunArguments>
     <RunArguments Condition="'$(TargetFrameworkIdentifier)' != 'UAP'">$(RunArguments) -xml $(TestResultsName)</RunArguments>
     <RunArguments Condition="'$(TargetFrameworkIdentifier)' == 'UAP'">$(RunArguments) -xml $(UAPResultsPathCmd)</RunArguments>
     <RunArguments>$(RunArguments) -nologo</RunArguments>
@@ -69,21 +70,14 @@
 
   <!-- Overwrite the runner config file with the app local one. -->
   <Target Name="OverwriteTestRunnerConfigFile"
-          Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'"
+          Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true' and '$(TargetFrameworkIdentifier)' == '.NETFramework'"
           AfterTargets="CopyFilesToOutputDirectory">
 
-    <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <ItemGroup>
       <_testRunnerConfigSourceFile Include="$(TargetDir)$(TargetName).exe.config" />
       <_testRunnerConfigSourceFile Include="$(TargetDir)$(TargetName).exe.config" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
       <_testRunnerConfigDestFile Include="$(TargetDir)$(TestRunnerName).config" />
       <_testRunnerConfigDestFile Include="$(TargetDir)Microsoft.DotNet.RemoteExecutorHost.exe.config" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and Exists('$(ProjectRuntimeConfigFilePath)')">
-      <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigFilePath)" />
-      <_testRunnerConfigSourceFile Include="$(ProjectRuntimeConfigFilePath)" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
-      <_testRunnerConfigDestFile Include="$(TargetDir)$([System.IO.Path]::GetFileNameWithoutExtension('$(TestRunnerName)')).runtimeconfig.json" />
-      <_testRunnerConfigDestFile Include="$(TargetDir)Microsoft.DotNet.RemoteExecutorHost.runtimeconfig.json" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
     </ItemGroup>
 
     <Copy SourceFiles="@(_testRunnerConfigSourceFile)"
@@ -167,7 +161,6 @@
           CopyToOutputDirectory="PreserveNewest"
           Visible="false" />
 
-    <_xunitConsoleNetCoreExclude Include="$([System.IO.Path]::GetDirectoryName('$(XunitConsoleNetCore21AppPath)'))\xunit.console.runtimeconfig.json" />
     <_xunitConsoleNetCoreExclude Condition="'$(GenerateDependencyFile)' != 'true'" Include="$([System.IO.Path]::GetDirectoryName('$(XunitConsoleNetCore21AppPath)'))\xunit.console.deps.json" />
     <None Include="$([System.IO.Path]::GetDirectoryName('$(XunitConsoleNetCore21AppPath)'))\*"
           Exclude="@(_xunitConsoleNetCoreExclude)"
