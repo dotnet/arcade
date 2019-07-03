@@ -5,7 +5,9 @@
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.CloudTestTasks;
 using Microsoft.WindowsAzure.Storage;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using Sleet;
@@ -67,6 +69,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 throw new Exception("Unable to parse expected feed. Please check ExpectedFeedUrl.");
             }
+        }
+
+        public BlobFeedAction(SleetSource sleetSource, string accountKey, MSBuild.TaskLoggingHelper log)
+        {
+            ContainerName = sleetSource.Container;
+            RelativePath = sleetSource.FeedSubPath;
+            AccountKey = accountKey;
+            hasToken = true;
+            Log = log;
+            source = sleetSource;
         }
 
         public async Task<bool> PushToFeedAsync(
@@ -318,9 +330,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
             };
 
+            var jsonSerializer = JsonSerializer.Create(
+                new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                    NullValueHandling = NullValueHandling.Ignore
+                });
+
             LocalSettings settings = new LocalSettings
             {
-                Json = JObject.FromObject(sleetSettings)
+                Json = JObject.FromObject(sleetSettings, jsonSerializer)
             };
 
             return settings;
@@ -425,12 +444,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        private async Task<bool> InitAsync()
+        public async Task<bool> InitAsync()
         {
+            AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
+
+            if (!await blobUtils.CheckIfContainerExistsAsync())
+            {
+                throw new Exception($"The informed container for the feed '{ContainerName}' doesn't exist!");
+            }
+
             using (var fileCache = CreateFileCache())
             {
                 LocalSettings settings = GetSettings();
-                AzureFileSystem fileSystem = GetAzureFileSystem(fileCache);
+                var fileSystem = FileSystemFactory.CreateFileSystem(settings, fileCache, source.Name);
                 bool result = await InitCommand.RunAsync(settings, fileSystem, enableCatalog: false, enableSymbols: false, log: new SleetLogger(Log, NuGet.Common.LogLevel.Verbose), token: CancellationToken);
                 return result;
             }
