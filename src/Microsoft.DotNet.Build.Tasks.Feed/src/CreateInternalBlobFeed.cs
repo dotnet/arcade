@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public string AzureStorageAccountKey { get; set; }
 
-        private const string baseUrlRegex = @"https:\/\/(?<containername>[^\.]+).*";
+        private const string baseUrlRegex = @"https:\/\/[^/]+/container/(?<containername>[^/]+).*";
 
         public override bool Execute()
         {
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 else
                 {
-                    Log.LogError($"Could not parse the {nameof(AzureDevOpsFeedsBaseUrl)} to extract the container name: '{AzureDevOpsFeedsBaseUrl}'");
+                    Log.LogError($"Could not parse {nameof(AzureDevOpsFeedsBaseUrl)} to extract the container name: '{AzureDevOpsFeedsBaseUrl}'");
                     return false;
                 }
 
@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     Name = baseFeedName,
                     Type = "azure",
-                    BaseUri = $"{AzureDevOpsFeedsBaseUrl}/{containerName}/{baseFeedName}",
+                    BaseUri = $"{AzureDevOpsFeedsBaseUrl}/{baseFeedName}",
                     AccountName = AzureStorageAccountName,
                     Container = containerName,
                     FeedSubPath = $"{baseFeedName}",

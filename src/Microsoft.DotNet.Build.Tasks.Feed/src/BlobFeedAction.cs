@@ -75,7 +75,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             ContainerName = sleetSource.Container;
             RelativePath = sleetSource.FeedSubPath;
-            AccountName = sleetSource.AccountName;
             AccountKey = accountKey;
             hasToken = true;
             Log = log;
