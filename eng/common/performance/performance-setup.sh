@@ -110,7 +110,7 @@ if [ -z "$configurations" ]; then
     configurations="CompliationMode=$compilation_mode"
 fi
 
-if [ -z "$corerootdirectory" ]; then
+if [ -z "$core_root_directory" ]; then
     use_core_run=false
 fi
 
