@@ -134,9 +134,9 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             return Container.GetSharedAccessSignature(sasConstraints);
         }
 
-        public Task<bool> CheckIfContainerExistsAsync()
+        public async Task<bool> CheckIfContainerExistsAsync()
         {
-            return Container.ExistsAsync();
+            return await Container.ExistsAsync();
         }
 
         public async Task<bool> CheckIfBlobExistsAsync(string blobPath)
