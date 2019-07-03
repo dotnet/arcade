@@ -1,6 +1,6 @@
 # YAML Stages Based Publishing
 
-This document describes the new Yaml based approach that will be used for package publishing.  This applies for builds from public branches, as well as for internal branches, with a few additional considerations.
+This document describes the new YAML based approach that will be used for package publishing.  This applies for builds from public branches, as well as for internal branches, with a few additional considerations.
 
 ## What are YAML stages?
 
@@ -73,7 +73,7 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
 
     The pipeline for a build with stages enabled will similar to this:
 
-    ![build-with-post-build-stages](images/build-with-post-build-stages.png)
+    ![build-with-post-build-stages](./images/build-with-post-build-stages.png)
 
 ## Additional considerations for Internal and stable builds
 
