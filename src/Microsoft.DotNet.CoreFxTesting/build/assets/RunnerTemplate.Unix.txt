@@ -48,9 +48,6 @@ fi
 # Don't use a globally installed SDK.
 export DOTNET_MULTILEVEL_LOOKUP=0
 
-# Roll forward on [major], [minor] and [patch].
-export DOTNET_ROLL_FORWARD_ON_NO_CANDIDATE_FX=2
-
 exitcode_list[0]="Exited Successfully"
 exitcode_list[130]="SIGINT  Ctrl-C occurred. Likely tests timed out."
 exitcode_list[131]="SIGQUIT Ctrl-\ occurred. Core dumped."
