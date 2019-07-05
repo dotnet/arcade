@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     if (options.PassIfExistingItemIdentical)
                     {
-                        if (!await blobUtils.IsFileIdenticalToBlobAsync(item.ItemSpec, relativeBlobPath))
+                        if (!await blobUtils.IsFileIdenticalToBlobAsync(relativeBlobPath, item.ItemSpec))
                         {
                             Log.LogError(
                                 $"Item '{item}' already exists with different contents " +
@@ -346,11 +346,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return settings;
         }
 
-        private AzureFileSystem GetAzureFileSystem(LocalCache fileCache)
+        private ISleetFileSystem GetAzureFileSystem(LocalCache fileCache)
         {
-            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(source.ConnectionString);
-            AzureFileSystem fileSystem = new AzureFileSystem(fileCache, new Uri(source.Path), new Uri(source.Path), storageAccount, source.Name, source.FeedSubPath);
-            return fileSystem;
+            try
+            {
+                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(source.ConnectionString);
+                return new AzureFileSystem(fileCache, new Uri(source.Path), new Uri(source.Path), storageAccount, source.Name, source.FeedSubPath);
+            }
+            catch
+            {
+                return FileSystemFactory.CreateFileSystem(GetSettings(), fileCache, source.Name);
+            }
         }
 
         private async Task<bool> PushAsync(
@@ -368,7 +374,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             // normally performed inside the lock.
             using (var preLockCache = CreateFileCache())
             {
-                AzureFileSystem preLockFileSystem = GetAzureFileSystem(preLockCache);
+                var preLockFileSystem = GetAzureFileSystem(preLockCache);
 
                 if (!options.AllowOverwrite && options.PassIfExistingItemIdentical)
                 {

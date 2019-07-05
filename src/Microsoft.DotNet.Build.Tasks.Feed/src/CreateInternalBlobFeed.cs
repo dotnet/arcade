@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     Name = baseFeedName,
                     Type = "azure",
-                    BaseUri = $"{AzureDevOpsFeedsBaseUrl}/{baseFeedName}",
+                    BaseUri = $"{AzureDevOpsFeedsBaseUrl}{baseFeedName}",
                     AccountName = AzureStorageAccountName,
                     Container = containerName,
                     FeedSubPath = $"{baseFeedName}",
@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 BlobFeedAction bfAction = new BlobFeedAction(sleetSource, AzureStorageAccountKey, Log);
                 await bfAction.InitAsync();
 
-                TargetFeedURL = $"{AzureDevOpsFeedsBaseUrl}/{baseFeedName}";
+                TargetFeedURL = $"{AzureDevOpsFeedsBaseUrl}{baseFeedName}";
                 TargetFeedName = baseFeedName;
 
                 Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created successfully!");
