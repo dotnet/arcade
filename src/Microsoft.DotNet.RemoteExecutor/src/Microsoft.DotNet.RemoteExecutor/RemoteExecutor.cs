@@ -5,6 +5,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -45,11 +46,8 @@ namespace Microsoft.DotNet.RemoteExecutor
                 HostRunner = processFileName;
                 s_extraParameter = Path;
 
-                // Try to find the test assembly invoked by the testhost. We can't use GetEntryAssembly here
-                // as that would return the apphost itself. This could be optimized with recursive checks but
-                // for the current use-cases this seems to be sufficient.
-                string runtimeConfigPath = Assembly.GetCallingAssembly().GetName().Name + ".runtimeconfig.json";
-                if (File.Exists(runtimeConfigPath))
+                string runtimeConfigPath = GetInnerRuntimeConfig();
+                if (runtimeConfigPath != null)
                 {
                     s_extraParameter = $"--runtimeconfig {runtimeConfigPath} {s_extraParameter}";
                 }
@@ -328,6 +326,33 @@ namespace Microsoft.DotNet.RemoteExecutor
             }
 
             return d.GetMethodInfo();
+        }
+
+        private static string GetInnerRuntimeConfig()
+        {
+            const string RuntimeConfigExtension = ".runtimeconfig.json";
+
+            // Try to find the executing assembly. We can't use GetEntryAssembly here
+            // as that would return the testhost in case we are runnig as part of a test.
+            Assembly assembly = Assembly.GetCallingAssembly();
+            string runtimeConfigPath = assembly.GetName().Name + RuntimeConfigExtension;
+            if (File.Exists(runtimeConfigPath))
+            {
+                return runtimeConfigPath;
+            }
+
+            // If the calling assembly is not the executing assembly we deep-dive into
+            // the loaded and their referenced assemblies and search for the most inner runtimeconfig.json.
+            var assemblies = new StackTrace().GetFrames()
+                .Select(frame => frame.GetMethod().ReflectedType.Assembly)
+                .Distinct();
+
+            return assemblies.Select(a => a.GetName())
+                .Concat(assemblies.SelectMany(asm => asm.GetReferencedAssemblies()))
+                .Distinct()
+                .Select(asmName => asmName.Name + RuntimeConfigExtension)
+                .Where(File.Exists)
+                .LastOrDefault();
         }
     }
 }

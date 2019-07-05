@@ -69,7 +69,7 @@
   </Target>
 
   <!-- Overwrite the runner config file with the app local one. -->
-  <Target Name="OverwriteTestRunnerConfigFile"
+  <Target Name="OverwriteDesktopTestRunnerConfigs"
           Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true' and '$(TargetFrameworkIdentifier)' == '.NETFramework'"
           AfterTargets="CopyFilesToOutputDirectory">
 
