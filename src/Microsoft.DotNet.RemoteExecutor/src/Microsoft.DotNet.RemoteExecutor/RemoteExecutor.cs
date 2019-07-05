@@ -335,22 +335,18 @@ namespace Microsoft.DotNet.RemoteExecutor
             // Try to find the executing assembly. We can't use GetEntryAssembly here
             // as that would return the testhost in case we are runnig as part of a test.
             Assembly assembly = Assembly.GetCallingAssembly();
-            string runtimeConfigPath = assembly.GetName().Name + RuntimeConfigExtension;
+            string runtimeConfigPath = System.IO.Path.Combine(AppContext.BaseDirectory, assembly.GetName().Name + RuntimeConfigExtension);
             if (File.Exists(runtimeConfigPath))
             {
                 return runtimeConfigPath;
             }
 
             // If the calling assembly is not the executing assembly we deep-dive into
-            // the loaded and their referenced assemblies and search for the most inner runtimeconfig.json.
-            var assemblies = new StackTrace().GetFrames()
+            // the loaded assemblies and search for the most inner runtimeconfig.json.
+            return new StackTrace().GetFrames()
                 .Select(frame => frame.GetMethod().ReflectedType.Assembly)
-                .Distinct();
-
-            return assemblies.Select(a => a.GetName())
-                .Concat(assemblies.SelectMany(asm => asm.GetReferencedAssemblies()))
                 .Distinct()
-                .Select(asmName => asmName.Name + RuntimeConfigExtension)
+                .Select(asm => System.IO.Path.Combine(AppContext.BaseDirectory, asm.GetName().Name + RuntimeConfigExtension))
                 .Where(File.Exists)
                 .LastOrDefault();
         }
