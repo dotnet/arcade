@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.RemoteExecutor
                 string runtimeConfigPath = GetInnerRuntimeConfig();
                 if (runtimeConfigPath != null)
                 {
-                    s_extraParameter = $"--runtimeconfig {runtimeConfigPath} {s_extraParameter}";
+                    s_extraParameter = $"exec --runtimeconfig \"{runtimeConfigPath}\" \"{s_extraParameter}\"";
                 }
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
