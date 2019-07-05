@@ -353,7 +353,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 CloudStorageAccount storageAccount = CloudStorageAccount.Parse(source.ConnectionString);
                 return new AzureFileSystem(fileCache, new Uri(source.Path), new Uri(source.Path), storageAccount, source.Name, source.FeedSubPath);
             }
-            catch (Exception)
+            catch
             {
                 return FileSystemFactory.CreateFileSystem(GetSettings(), fileCache, source.Name);
             }
