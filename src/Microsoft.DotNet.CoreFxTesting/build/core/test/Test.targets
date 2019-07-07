@@ -14,7 +14,6 @@
   <!-- General xunit options -->
   <PropertyGroup>
     <RunArguments>$(TestAssembly)</RunArguments>
-    <RunArguments Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">$(RunArguments) --runtimeconfig $(ProjectRuntimeConfigFileName)</RunArguments>
     <RunArguments Condition="'$(TargetFrameworkIdentifier)' != 'UAP'">$(RunArguments) -xml $(TestResultsName)</RunArguments>
     <RunArguments Condition="'$(TargetFrameworkIdentifier)' == 'UAP'">$(RunArguments) -xml $(UAPResultsPathCmd)</RunArguments>
     <RunArguments>$(RunArguments) -nologo</RunArguments>
@@ -104,7 +103,7 @@
       <PropertyGroup>
         <TestRunnerName>xunit.console.dll</TestRunnerName>
         <RunCommand>"$(RunScriptHost)"</RunCommand>
-        <RunArguments>$(TestRunnerName) $(RunArguments)</RunArguments>
+        <RunArguments>exec --runtimeconfig $(AssemblyName).runtimeconfig.json $(TestRunnerName) $(RunArguments)</RunArguments>
       </PropertyGroup>
     </When>
 
