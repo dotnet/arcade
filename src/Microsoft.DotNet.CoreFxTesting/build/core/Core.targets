@@ -169,15 +169,6 @@
   <Import Condition="'$(TargetFrameworkIdentifier)' == 'UAP'" Project="$(MSBuildThisFileDirectory)Core.uap.targets" />
 
   <!--
-    LaunchSettings.json support.
-    Generates launchSettings.json files during compilation or on demand.
-
-    Inputs:
-      - EnableLaunchSettings: Intended to be passed in as a global property or being set.
-  -->
-  <Import Condition="'$(EnableLaunchSettings)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'launchSettings', 'LaunchSettings.targets'))" />
-
-  <!--
     Unit/Functional/Integration test support.
     Supported runners: xunit.
   -->
