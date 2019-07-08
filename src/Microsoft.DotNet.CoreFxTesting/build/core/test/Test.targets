@@ -169,8 +169,8 @@
   </ItemGroup>
 
   <!-- Main test targets -->
-  <Target Name="Test" DependsOnTargets="$(TestDependsOn)" Condition="'$(IsUnitTestProject)' == 'true'" />
-  <Target Name="BuildAndTest" DependsOnTargets="Build;Test" Condition="'$(IsUnitTestProject)' == 'true'" />
-  <Target Name="RebuildAndTest" DependsOnTargets="Rebuild;Test" Condition="'$(IsUnitTestProject)' == 'true'" />
+  <Target Name="Test" DependsOnTargets="$(TestDependsOn)" />
+  <Target Name="BuildAndTest" DependsOnTargets="Build;Test" />
+  <Target Name="RebuildAndTest" DependsOnTargets="Rebuild;Test" />
 
 </Project>
