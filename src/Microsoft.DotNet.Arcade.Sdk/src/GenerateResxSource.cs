@@ -147,6 +147,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     return false;
                 }
 
+                string fullValue = value;
                 if (value.Length > maxDocCommentLength)
                 {
                     value = value.Substring(0, maxDocCommentLength) + " ...";
@@ -172,7 +173,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                         if (EmitFormatMethods)
                         {
-                            var resourceString = new ResourceString(name, value);
+                            var resourceString = new ResourceString(name, fullValue);
 
                             if (resourceString.HasArguments)
                             {
