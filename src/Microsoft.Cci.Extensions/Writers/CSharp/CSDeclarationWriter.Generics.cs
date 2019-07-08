@@ -69,7 +69,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
                         if (nullableAttribute != null)
                         {
-                            WriteNullableSymbol(GetAttributeArgumentValue<byte>(nullableAttribute), isNullableValueType: false, arrayIndex: 0);
+                            WriteNullableSymbolForReferenceType(GetAttributeArgumentValue<byte>(nullableAttribute), arrayIndex: 0);
                         }
                     };
             }
