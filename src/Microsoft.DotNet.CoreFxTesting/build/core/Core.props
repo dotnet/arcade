@@ -22,7 +22,7 @@
 
   <!--
     Code Coverage support.
-    Supported runners: coverlet.
+    Supported runners: OpenCover.
 
     Inputs:
       - Coverage: Intended to be passed in as a global property.
