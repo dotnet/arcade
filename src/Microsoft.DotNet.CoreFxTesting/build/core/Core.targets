@@ -172,7 +172,7 @@
     Unit/Functional/Integration test support.
     Supported runners: xunit.
   -->
-  <Import Condition="'$(IsUnitTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.targets'))" />
+  <Import Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.targets'))" />
 
   <!--
     Code Coverage support.
