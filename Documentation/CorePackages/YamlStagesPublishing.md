@@ -1,6 +1,6 @@
-# YAML Stages Based Publishing
+# YAML Stages Based Publishing and Validation
 
-This document describes the new YAML based approach that will be used for package publishing.  This applies for builds from public branches, as well as for internal branches, with a few additional considerations.
+This document describes the new YAML based approach that will be used for build artifact publishing.  This applies for builds from public branches, as well as for internal branches, with a few additional considerations.
 
 ## What are YAML stages?
 
@@ -12,19 +12,54 @@ The official documentation for YAML Stages can be found [here](https://docs.micr
 
 Using stages for publishing seeks to unify the Arcade SDK build artifact publishing mechanisms into a single solution that brings together the advantages of both the in-build synchronous publishing and the release pipeline based asynchronous publishing approaches.
 
-* Publishing is decoupled from the build. It's easier to reason about build failures as oposed to publishing failures.
-* All the information about a build is available in a single location. All stages run as part of the same Pipeline definition, so there is no need to go to a separate Release Pipeline to reason about it.
+* Clearly separate the concepts of build, publishing and validation(s)
+* Support publishing/validation related errors to be reported in the same UI as the build errors.
 * Additional stages can be added after the publishing has happened, allowing for extensibility to the default arcade publishing.
 
 ## How to onboard onto YAML based publishing
 
 In order to use this new publishing mechanism, the easiest way to start is by making your existing build pipeline a single stage, and adding a second stage that is driven by a template distributed with Arcade.
 
+1. Disable package publishing during the build:
+
+    Set the `enablePublishUsingPipelines` template parameter to `true` when calling the `/eng/common/templates/jobs/jobs.yml` template.
+
+    ```YAML
+    jobs:
+    - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        enablePublishUsingPipelines: true
+    ```
+
+    It is recommended to use the jobs.yml template to manage this property, as it will make sure to flow it to all the jobs and steps that require it.  The template also handles a lot of the boilerplate steps that need to be performed during the build, such as the publishing of build assets to the BAR. More information about the jobs.yml template can be found [here](../AzureDevOps/PhaseToJobSchemaChange.md#--what-is-the-engcommontemplatesjobsjobsyml-template) If it is not possible for the repo to use the jobs.yml template, the following steps need to be performed:
+
+    * Set a variable called `_PublishUsingPipelines` with a value of `true` so that the gathering of asset manifests won't be performed during the build.
+
+      ```YAML
+      variables:
+      - name: _PublishUsingPipelines
+        value: true
+        ...
+      ```
+
+    * Set the `publishUsingPipelines` parameter to true when calling the [publish-build-assets.yml](../../eng/common/templates/job/publish-build-assets.yml) template.
+
+      ```YAML
+      - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+        - template: /eng/common/templates/job/publish-build-assets.yml
+          parameters:
+            ...
+            publishUsingPipelines: true
+            ...
+      ```
+
 1. Add the stages keyword to your existing pipeline's YAML:
 
     ```YAML
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        enablePublishUsingPipelines: true
     ...
     ```
 
@@ -36,30 +71,29 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
     displayName: Build
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        enablePublishUsingPipelines: true
     ...
     ```
 
-2. Add the new post-build arcade template as a separate stage for official builds
+1. Add the new [post-build.yml](../../eng/common/templates/post-build/post-build.yml) arcade template as a separate stage for official builds
 
     ```YAML
     - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - template: eng\common\templates\post-build\post-build.yml
         parameters:
         enableSymbolValidation: false
-        enableSourceLinkValidation: false
-        SDLValidationParameters:
-            enable: false
     ```
 
     The parameters for the template are the following:
 
-    | Name                         | Type     | Description                                                  |
-    | -----------------------------| -------- | ------------------------------------------------------------ |
-    | enableSourceLinkValidation   | bool     | Run sourcelink validation during the post-build stage.       |
-    | enableSigningValidation      | bool     | Run signing validation during the post-build stage.          |
-    | enableSymbolValidation       | bool     | Run symbol validation during the post-build stage.           |
-    | enableNugetValidation        | bool     | Run NuGet package validation tool during the post build stage.|
-    | SDLValidationParameters      | bool     | Parameters for the SDL job template, as documented in the [SDL template documentation](../HowToAddSDLRunToPipeline.md) |
+    | Name                         | Type     | Description                                                   |Default Value     |
+    | -----------------------------| -------- | ------------------------------------------------------------- |----- |
+    | enableSourceLinkValidation   | bool     | Run sourcelink validation during the post-build stage.        | true |
+    | enableSigningValidation      | bool     | Run signing validation during the post-build stage.           | true |
+    | enableSymbolValidation       | bool     | Run symbol validation during the post-build stage.            | true |
+    | enableNugetValidation        | bool     | Run NuGet package validation tool during the post build stage.| true |
+    | SDLValidationParameters      | object   | Parameters for the SDL job template, as documented in the [SDL template documentation](../HowToAddSDLRunToPipeline.md) | -- |
 
     Examples of the use of stages can be found in the Arcade family of repos:
 
@@ -67,17 +101,17 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
     * [Arcade-Validation](https://github.com/dotnet/arcade-validation/blob/master/azure-pipelines.yml)
     * [Arcade-Services](https://github.com/dotnet/arcade-services/blob/master/azure-pipelines.yml)
 
-3. Once the post-build template is added, a repo's official build will include a series of stages contain a series of jobs to publish to the different available feeds, depending on the Maestro++ channel that the build is assigned to.  For more information on channels, see the [Channels, Branches and Subscriptions document](../BranchesChannelsAndSubscriptions.md).
+1. Once the post-build template is added, a repo's official build will include a series of stages that will publish to the different available feeds, depending on the BAR default channel that the build will be assigned to.  For more information on channels, see the [Channels, Branches and Subscriptions document](../BranchesChannelsAndSubscriptions.md).
 
-    **Note:** At the moment, triggering stages manually is not supported by Azure DevOps. We are relying on the default channels that a build should be assigned to in order to determine which publishing stages should be triggered.
+    **Note:** At the moment, triggering stages manually is not supported by Azure DevOps. Once this capability is in place, builds will be able to publish to additional channels besided the default.
 
-    The pipeline for a build with stages enabled will similar to this:
+    The pipeline for a build with stages enabled will look similar to this:
 
     ![build-with-post-build-stages](./images/build-with-post-build-stages.png)
 
 ## Additional considerations for Internal and stable builds
 
-In order to publish packages meant for internal servicing or that wish to produce stable packages require some additional setup so that publishing, dependency flow and package restore work correctly.
+In order to publish stable packages, or those meant for internal servicing releases, require some additional setup so that publishing, dependency flow and package restore work correctly.
 
 ### Builds from internal/ branches
 
@@ -101,3 +135,5 @@ For stable builds, where every build will produce packages with the same version
   </packageSources>
 </configuration>
 ```
+
+The PackageSources enclosed in the `<!--Begin: Package sources managed by Dependency Flow automation. Do not edit the sources below.-->` and `<!--End: Package sources managed by Dependency Flow automation. Do not edit the sources above.-->` comments are managed by automation, and will be added and removed by dependency update pull requests as they are needed.
