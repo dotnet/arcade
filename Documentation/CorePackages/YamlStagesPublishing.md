@@ -6,7 +6,7 @@ This document describes the new YAML based approach that will be used for build 
 
 Stages are a concept introduced by Azure DevOps to organize the jobs in a pipeline.  Just like Jobs are a collection of Steps, Stages can be thought about as a collection of Jobs, where for example, the same pipeline can be split into Build, Test, Publishing, and deployment stages.
 Stages are the way that Azure DevOps is bringing build and release pipelines together, and are going to be the replacement for the RM UI based release pipelines.
-The official documentation for YAML Stages can be found [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/stages?view=azure-devops&tabs=yaml)
+The official documentation for YAML Stages can be found [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/stages?view=azure-devops&tabs=yaml).
 
 ## Why use YAML stages for publishing?
 
@@ -31,7 +31,7 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
         enablePublishUsingPipelines: true
     ```
 
-    It is recommended to use the jobs.yml template to manage this property, as it will make sure to flow it to all the jobs and steps that require it.  The template also handles a lot of the boilerplate steps that need to be performed during the build, such as the publishing of build assets to the BAR. More information about the jobs.yml template can be found [here](../AzureDevOps/PhaseToJobSchemaChange.md#--what-is-the-engcommontemplatesjobsjobsyml-template) If it is not possible for the repo to use the jobs.yml template, the following steps need to be performed:
+    It is recommended to use the jobs.yml template to manage this property, as it will make sure to flow it to all the jobs and steps that require it.  The template also handles a lot of the boilerplate steps that need to be performed during the build, such as the publishing of build assets to the BAR. More information about the jobs.yml template can be found [here](../AzureDevOps/PhaseToJobSchemaChange.md#--what-is-the-engcommontemplatesjobsjobsyml-template).  If it is not possible for the repo to use the jobs.yml template, the following steps need to be performed:
 
     * Set a variable called `_PublishUsingPipelines` with a value of `true` so that the gathering of asset manifests won't be performed during the build.
 
@@ -76,7 +76,7 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
     ...
     ```
 
-1. Add the new [post-build.yml](../../eng/common/templates/post-build/post-build.yml) arcade template as a separate stage for official builds
+1. Add the new [post-build.yml](../../eng/common/templates/post-build/post-build.yml) arcade template as a separate stage for official builds:
 
     ```YAML
     - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -103,7 +103,7 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
 
 1. Once the post-build template is added, a repo's official build will include a series of stages that will publish to the different available feeds, depending on the BAR default channel that the build will be assigned to.  For more information on channels, see the [Channels, Branches and Subscriptions document](../BranchesChannelsAndSubscriptions.md).
 
-    **Note:** At the moment, triggering stages manually is not supported by Azure DevOps. Once this capability is in place, builds will be able to publish to additional channels besided the default.
+    **Note:** At the moment, triggering stages manually is not supported by Azure DevOps. Once this capability is in place, builds will be able to publish to additional channels besides the default.
 
     The pipeline for a build with stages enabled will look similar to this:
 
@@ -113,13 +113,13 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
 
 In order to publish stable packages, or those meant for internal servicing releases, require some additional setup so that publishing, dependency flow and package restore work correctly.
 
-### Builds from internal/ branches
+### Builds from internal/* branches
 
 Packages from internal/ branches will not be published to public feeds, but will instead be published to a private transport feed. In order to be able to restore packages from these feeds, repos will need to add the feed to both their NuGet.config and eng\versions.props files.
 
 ### Stable builds
 
-For stable builds, where every build will produce packages with the same version, the publishing pipeline will generate a new package feed and publish the packages there. In order to be able to restore these packages, Maestro++ will flow the package feeds required to restore any packages located in any such feeds into the repo's NuGet.config as part of a dependency update PR.
+For stable builds, where every build will produce packages with the same version, the publishing pipeline will generate a new package feed to publish the build artifacts on every build. In order for dependent repos to be able to restore these packages, Maestro++ will flow the feed information required to restore packages located in any such feeds into the repo's NuGet.config as part of a dependency update PR.
 
 ```XML
 <?xml version="1.0" encoding="utf-8"?>
