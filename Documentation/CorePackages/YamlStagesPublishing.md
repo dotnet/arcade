@@ -115,7 +115,7 @@ In order to publish packages for stable and internal servicing releases, some ad
 
 ### Builds from internal/* branches
 
-Packages from internal/ branches will not be published to public feeds, but will instead be published to a private transport feed. In order to be able to restore packages from these feeds, repos will need to add the feed to both their NuGet.config and eng\versions.props files.
+Packages from internal/ branches will not be published to public feeds, but will instead be published to a private transport feed provided by @dnceng. In order to be able to restore packages from this feed, repos will need to add the feed to their NuGet.config file.
 
 ### Stable builds
 
