@@ -107,7 +107,7 @@ Generate a manifest
 
 If all of your packages are "shipping" packages, you can just specify the `PackagesToPublishPattern` on the command-line and you do not need to include the "GenerateBuildManifest.props" file mentioned above...
 
-> `powershell -ExecutionPolicy Bypass -Command "eng\common\sdk-task.ps1 -restore -task GenerateBuildManifest /p:PackagesToPublishPattern=e:\gh\chcosta\arcade\artifacts\packages\Debug\NonShipping\*.nupkg /p:AssetManifestFilePath=e:\gh\chcosta\feed2\manifest.xml" /p:ManifestBuildData="Location=https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" /p:BUILD_BUILDNUMBER=$BuildNumber`
+> `powershell -ExecutionPolicy Bypass -Command "eng\common\sdk-task.ps1 -restore -task GenerateBuildManifest /p:PackagesToPublishPattern=e:\gh\chcosta\arcade\artifacts\packages\Debug\NonShipping\*.nupkg /p:AssetManifestFilePath=e:\gh\chcosta\feed2\manifest.xml" /p:ManifestBuildData="Location=https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json"`
 
 `ManifestBuildData` is used to provide the "location" metadata which identifies where the assets have been / will be published to (ie, the feed url).
 
