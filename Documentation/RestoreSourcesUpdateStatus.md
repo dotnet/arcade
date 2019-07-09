@@ -22,8 +22,8 @@ We need repo owners to complete a two-part work explained bellow in the followin
 | Repo                       | Owner            |  Status           | Notes              |
 | ---------------------------| ---------------- | ---------         | -------------------|
 | Arcade                     | mawilkie         | Part 1 complete   |                    |
-| Arcade-Validation          | mawilkie         |                   |                    |
-| Arcade-Services            | mawilkie         |                   |                    |
+| Arcade-Validation          | mawilkie         | Part 1 complete   |                    |
+| Arcade-Services            | mawilkie         | Part 1 complete   |                    |
 | Standard                   | danmose          |                   |                    |
 | SymReader                  | tmat             |                   |                    |
 | SymReader-Portable         | tmat             |                   |                    |
