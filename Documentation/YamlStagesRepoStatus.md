@@ -4,12 +4,14 @@
 
 1. Transition to [YAML stages based publishing](./CorePackages/YamlStagesPublishing.md) and the post-build YAML template.
 
+Target completion date is 8/13/2019.
+
 ## Status Overview
 
 | Repo                       | Owner            | Status   | Risk Assessment                                                                      | Notes|
 | ---------------------------| ---------------- | -------- |--------------------------------------------------------------------------------------| -----|
-| Arcade                     | mawilkie         | Complete | ➖ | |
-| Arcade-Services            | mawilkie         | Complete | ➖ | |
+| Arcade                     | mawilkie         | Complete | ✔️ | |
+| Arcade-Services            | mawilkie         | Complete | ✔️ | |
 | aspnet-AspNetCore          | dougbu/johluo    | On track | ➖ | |
 | aspnet-AspNetCore-Tooling  | dougbu/johluo    | On track | ➖ | |
 | aspnet-EntityFrameworkCore | dougbu/johluo    | On track | ➖ | |
