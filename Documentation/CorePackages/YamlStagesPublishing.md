@@ -109,7 +109,7 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
 
     ![build-with-post-build-stages](./images/build-with-post-build-stages.png)
 
-## Additional considerations for Internal and stable builds
+## Additional considerations for internal and stable builds
 
 In order to publish stable packages, or those meant for internal servicing releases, require some additional setup so that publishing, dependency flow and package restore work correctly.
 
