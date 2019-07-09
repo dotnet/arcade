@@ -6,8 +6,8 @@
 
 ## Status Overview
 
-| Repo                       | Owner            | Status   | Risk Assessment                                                                        Notes |
-| ---------------------------| ---------------- | -------- |:--------------------------------------------------------------------------------------| ----- |
+| Repo                       | Owner            | Status   | Risk Assessment                                                                      | Notes|
+| ---------------------------| ---------------- | -------- |--------------------------------------------------------------------------------------| -----|
 | Arcade                     | mawilkie         | Complete | ➖ | |
 | Arcade-Services            | mawilkie         | Complete | ➖ | |
 | aspnet-AspNetCore          | dougbu/johluo    | On track | ➖ | |
