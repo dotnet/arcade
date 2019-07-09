@@ -23,6 +23,7 @@
       - AzureStorageAccountName
       - AzureStorageAccountKey
       - AzureDevOpsFeedsBaseUrl
+      - ArtifactsCategory
   -->
 
   <PropertyGroup>
