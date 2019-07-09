@@ -34,8 +34,10 @@
       Text="Parameters 'AzureStorageAccountName/Key' are empty." />
 
     <!--
-      When a build is stable we ask `CreateAzureDevOpsFeed` in Tasks.Feed to create a new AzDO feed.
-      That feed will be public/internal depending on whether the build is public/internal.
+      When a build is stable we ask `CreateInternalBlobFeed` in Tasks.Feed to create a new AzDO feed.
+      That task will return an Azure Storage feed wrapped by an authenticated Azure function proxy,
+      we use that to mimic an internal/authenticated feed. This will likely change in the future once
+      we switch to using AzDO private feeds.
     -->
     <CreateInternalBlobFeed
         Condition="'$(IsStableBuild)' == 'true'"
