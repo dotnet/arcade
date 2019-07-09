@@ -9,7 +9,7 @@ We need repo owners to complete a two-part work explained bellow in the followin
 
 1) Copy the list of feeds from `Version.props` file to `NuGet.config` file in the repository root. Keep the feeds in `Version.props` file
 2) Merge this change
-3) Update the Status of your repo in the table bellow to "Part 1 complete"
+3) Update the Status of your repo in the table below to "Part 1 complete"
 4) Once all repos have completed Part 1, https://github.com/dotnet/arcade/pull/3041 will be merged and changes propagated to all repos
 5) Arcade working group member will inform that #4 is complete and will inform the working group that Part 2 can be done
 6) Delete the code that sets `RestoreSources` in `Version.props`
