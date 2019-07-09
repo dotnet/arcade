@@ -331,24 +331,17 @@ namespace Microsoft.DotNet.RemoteExecutor
         private static string GetInnerRuntimeConfig()
         {
             const string RuntimeConfigExtension = ".runtimeconfig.json";
+            var currentAssembly = typeof(RemoteExecutor).Assembly;
 
-            // Try to find the executing assembly. We can't use GetEntryAssembly here
-            // as that would return the testhost in case we are runnig as part of a test.
-            Assembly assembly = Assembly.GetCallingAssembly();
-            string runtimeConfigPath = System.IO.Path.Combine(AppContext.BaseDirectory, assembly.GetName().Name + RuntimeConfigExtension);
-            if (File.Exists(runtimeConfigPath))
-            {
-                return runtimeConfigPath;
-            }
-
-            // If the calling assembly is not the executing assembly we deep-dive into
-            // the loaded assemblies and search for the most inner runtimeconfig.json.
+            // We deep-dive into the loaded assemblies and search for the most inner runtimeconfig.json.
+            // We need to check for null as global methods in a module don't belong to a type.
             return new StackTrace().GetFrames()
-                .Select(frame => frame.GetMethod().ReflectedType.Assembly)
+                .Select(frame => frame.GetMethod()?.ReflectedType?.Assembly)
+                .Where(asm => asm != null && asm != currentAssembly)
                 .Distinct()
                 .Select(asm => System.IO.Path.Combine(AppContext.BaseDirectory, asm.GetName().Name + RuntimeConfigExtension))
                 .Where(File.Exists)
-                .LastOrDefault();
+                .FirstOrDefault();
         }
     }
 }
