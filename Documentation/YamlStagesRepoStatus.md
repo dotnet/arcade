@@ -2,38 +2,38 @@
 
 ## Primary Deliverables
 
-1. Transition to [YAML stages based publishing](./CorePackages/YamlStagesPublishing.md)
-2. Internal branches, default channels, and subscriptions are created in BAR
+1. Transition to [YAML stages based publishing](./CorePackages/YamlStagesPublishing.md) and the post-build YAML template.
 
 ## Status Overview
 
-| Repo                       | Owner            | Status   | Risk Assessment                                                                       | Plan | Notes |
-| ---------------------------| ---------------- | -------- |:--------------------------------------------------------------------------------------| ----- |----- |
-| Arcade                     | mawilkie         | On track | ➖ | | |
-| aspnet-AspNetCore          | dougbu/johluo    | On track | ➖ | | |
-| aspnet-AspNetCore-Tooling  | dougbu/johluo    | On track | ➖ | | |
-| aspnet-EntityFrameworkCore | dougbu/johluo    | On track | ➖ | | |
-| aspnet-Extensions          | dougbu/johluo    | On track | ➖ | | |
-| CLI                        | licavalc         | On track | ➖ | | |
-| CLICommandLineParser       | licavalc         | On track | ➖ | | |
-| CLI-Migrate                | licavalc         | On track | ➖ | | |
-| CoreClr                    | russellk         | On track | ➖ | | |
-| CoreFx                     | danmose          | On track | ➖ | | |
-| Core-SDK                   | licavalc         | On track | ➖ | | |
-| Core-Setup                 | dleeapho         | On track | ➖ | | |
-| FSharp                     | brettfo          | On track | ➖ | | |
-| MSBuild                    | licavalc         | On track | ➖ | | |
-| Roslyn                     | jaredpar         | On track | ➖ | | |
-| SDK                        | licavalc         | On track | ➖ | | |
-| Standard                   | danmose          | On track | ➖ | | |
-| SymReader                  | tmat             | On track | ➖ | | |
-| SymReader-Portable         | tmat             | On track | ➖ | | |
-| Templating                 | vramak           | On track | ➖ | | |
-| Test-Templates             | sasin            | On track | ➖ | | |
-| Toolset                    | licavalc         | On track | ➖ | | |
-| WebSDK                     | vramak           | On track | ➖ | | |
-| WinForms                   | mmcgaw           | On track | ➖ | | |
-| WPF                        | vatsan-madhavan  | On track | ➖ | | |
+| Repo                       | Owner            | Status   | Risk Assessment                                                                        Notes |
+| ---------------------------| ---------------- | -------- |:--------------------------------------------------------------------------------------| ----- |
+| Arcade                     | mawilkie         | Complete | ➖ | |
+| Arcade-Services            | mawilkie         | Complete | ➖ | |
+| aspnet-AspNetCore          | dougbu/johluo    | On track | ➖ | |
+| aspnet-AspNetCore-Tooling  | dougbu/johluo    | On track | ➖ | |
+| aspnet-EntityFrameworkCore | dougbu/johluo    | On track | ➖ | |
+| aspnet-Extensions          | dougbu/johluo    | On track | ➖ | |
+| CLI                        | licavalc         | On track | ➖ | |
+| CLICommandLineParser       | licavalc         | On track | ➖ | |
+| CLI-Migrate                | licavalc         | On track | ➖ | |
+| CoreClr                    | russellk         | On track | ➖ | |
+| CoreFx                     | danmose          | On track | ➖ | |
+| Core-SDK                   | licavalc         | On track | ➖ | |
+| Core-Setup                 | dleeapho         | On track | ➖ | |
+| FSharp                     | brettfo          | On track | ➖ | |
+| MSBuild                    | licavalc         | On track | ➖ | |
+| Roslyn                     | jaredpar         | On track | ➖ | |
+| SDK                        | licavalc         | On track | ➖ | |
+| Standard                   | danmose          | On track | ➖ | |
+| SymReader                  | tmat             | On track | ➖ | |
+| SymReader-Portable         | tmat             | On track | ➖ | |
+| Templating                 | vramak           | On track | ➖ | |
+| Test-Templates             | sasin            | On track | ➖ | |
+| Toolset                    | licavalc         | On track | ➖ | |
+| WebSDK                     | vramak           | On track | ➖ | |
+| WinForms                   | mmcgaw           | On track | ➖ | |
+| WPF                        | vatsan-madhavan  | On track | ➖ | |
 
 | Status   | Description |
 | -------- | ----------- |
