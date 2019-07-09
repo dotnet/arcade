@@ -1,4 +1,4 @@
-# .NET Core 3 ResourceSources update
+# .NET Core 3 RestoreSources update
 
 We decided to use Azure DevOps artifact internal feeds to store the assets we produce during internal builds. While testing that things
 worked, we found out that `nuget restore` doesn't support internal feeds that are defined in `RestoreSources` and it expects that ALL the
