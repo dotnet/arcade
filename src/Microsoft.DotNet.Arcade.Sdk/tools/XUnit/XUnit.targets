@@ -34,6 +34,7 @@
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
       <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
       <_TestRuntime>%(TestToRun.TestRuntime)</_TestRuntime>
+      <_TestTimeout>%(TestToRun.TestTimeout)</_TestTimeout>
       <_TestRunnerAdditionalArguments>%(TestToRun.TestRunnerAdditionalArguments)</_TestRunnerAdditionalArguments>
 
       <!-- Always use net472 for desktop to enable displaying source location from Portable PDBs in stack traces -->
@@ -86,7 +87,12 @@
     <Delete Files="@(_OutputFiles)" />
 
     <Message Text="Running tests: $(_TestAssembly) [$(_TestEnvironment)]" Importance="high"/>
-    <Exec Command='$(_TestRunnerCommand)' LogStandardErrorAsError="false" WorkingDirectory="$(_TargetDir)" IgnoreExitCode="true">
+    <Exec Command='$(_TestRunnerCommand)'
+          LogStandardErrorAsError="false"
+          WorkingDirectory="$(_TargetDir)"
+          IgnoreExitCode="true"
+          Timeout="$(_TestTimeout)"
+          ContinueOnError="WarnAndContinue">
       <Output TaskParameter="ExitCode" PropertyName="_TestErrorCode" />
     </Exec>
 

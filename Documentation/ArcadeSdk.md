@@ -951,6 +951,10 @@ Additional command line arguments passed to the test runtime (i.e. `dotnet` or `
 For example, to invoke Mono with debug flags `--debug` (to get stack traces with line number information), set `TestRuntimeAdditionalArguments` to `--debug`.
 To override the default Shared Framework version that is selected based on the test project TFM, set `TestRuntimeAdditionalArguments` to `--fx-version x.y.z`.
 
+### `TestTimeout` (int)
+
+Timeout to apply to an individual invocation of the test runner (e.g. `xunit.console.exe`) for a single configuration. Integer number of milliseconds.
+
 ### `GenerateResxSource` (bool)
 
 When set to true, Arcade will generate a class source for all embedded .resx files.
