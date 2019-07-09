@@ -81,7 +81,7 @@ stages:
             /p:IsInternalBuild=$(IsInternalBuild)
             /p:RepositoryName=$(Build.Repository.Name)
             /p:CommitSha=$(Build.SourceVersion)
-            /p:AzureStorageAccountName=dotnetfeed
+            /p:AzureStorageAccountName=$(ProxyBackedFeedsAccountName)
             /p:AzureStorageAccountKey=$(dotnetfeed-storage-access-key-1)
             /p:AzureDevOpsFeedsBaseUrl=$(dotnetfeed-internal-private-feed-url)
             /p:NugetPath=$(Agent.BuildDirectory)\Nuget\NuGet.exe
