@@ -18,7 +18,11 @@
       - IsInternalBuild
       - IsStableBuild
       - ChannelId
-      - TargetFeedPAT
+      - RepositoryName
+      - CommitSha
+      - AzureStorageAccountName
+      - AzureStorageAccountKey
+      - AzureDevOpsFeedsBaseUrl
   -->
 
   <PropertyGroup>
