@@ -440,11 +440,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             // Matches package feeds like
             // https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
-            const string classicalStaticFeedPattern =
+            const string azureStorageStaticBlobFeedPattern =
                 @"https://([a-z-]+).blob.core.windows.net/[^/]+/index.json";
 
             var proxyBackedFeedMatch = Regex.Match(feedConfig.TargetFeedURL, azureStorageProxyFeedPattern);
-            var classicalStaticFeedMatch = Regex.Match(feedConfig.TargetFeedURL, classicalStaticFeedPattern);
+            var azureStorageStaticBlobFeedMatch = Regex.Match(feedConfig.TargetFeedURL, azureStorageStaticBlobFeedPattern);
 
             if (proxyBackedFeedMatch.Success)
             {
@@ -467,7 +467,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 return new BlobFeedAction(sleetSource, feedConfig.FeedKey, Log);
             }
-            else if (classicalStaticFeedMatch.Success)
+            else if (azureStorageStaticBlobFeedMatch.Success)
             {
                 return new BlobFeedAction(feedConfig.TargetFeedURL, feedConfig.FeedKey, Log);
             }
