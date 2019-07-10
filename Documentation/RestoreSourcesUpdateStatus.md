@@ -38,10 +38,13 @@ We need repo owners to complete a two-part work explained bellow in the followin
 | aspnet-EntityFrameworkCore | namc             |                   |                    |
 | aspnet-Extensions          | namc             |                   |                    |
 | aspnet-AspNetCore-Tooling  | namc             |                   |                    |
+| aspnet-Blazor              | namc             | Part 1 complete   | No change needed   |
+| aspnet-EntityFramework6    | namc             | Part 1 complete   | No change needed   |
+| aspnet-AspLabs             | namc             |                   |                    |
 | CLI                        | licavalc         |                   |                    |
 | CLI-Migrate                | licavalc         |                   |                    |
 | CLICommandLineParser       | licavalc         |                   |                    |
-| nuget-NugetClient          | dtivel           |                   |                    |
+| nuget-NugetClient          | dtivel           | Part 1 complete   | No change needed   |
 | aspnet-AspNetCore          | namc             |                   |                    |
 | Core-Setup                 | dleeapho         |                   |                    |
 | MSBuild                    | licavalc         |                   |                    |
