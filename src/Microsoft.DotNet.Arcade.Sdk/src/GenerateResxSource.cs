@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
         private bool IsLetterChar(UnicodeCategory cat)
         {
             // letter-character:
-            //   A Unicode character of classes Lu, Ll, Lt, Lm, Lo, or Nl 
+            //   A Unicode character of classes Lu, Ll, Lt, Lm, Lo, or Nl
             //   A Unicode-escape-sequence representing a character of classes Lu, Ll, Lt, Lm, Lo, or Nl
 
             switch (cat)
@@ -147,13 +147,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     return false;
                 }
 
-                string fullValue = value;
-                if (value.Length > maxDocCommentLength)
-                {
-                    value = value.Substring(0, maxDocCommentLength) + " ...";
-                }
+                string docCommentString = value.Length > maxDocCommentLength ? value.Substring(0, maxDocCommentLength) + " ..." : value;
 
-                RenderDocComment(language, memberIndent, strings, value);
+                RenderDocComment(language, memberIndent, strings, docCommentString);
 
                 string identifier = IsLetterChar(CharUnicodeInfo.GetUnicodeCategory(name[0])) ? name : "_" + name;
 
@@ -173,11 +169,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                         if (EmitFormatMethods)
                         {
-                            var resourceString = new ResourceString(name, fullValue);
+                            var resourceString = new ResourceString(name, value);
 
                             if (resourceString.HasArguments)
                             {
-                                RenderDocComment(language, memberIndent, strings, value);
+                                RenderDocComment(language, memberIndent, strings, docCommentString);
                                 RenderFormatMethod(memberIndent, language, strings, resourceString);
                             }
                         }
@@ -336,8 +332,8 @@ End Namespace";
                 }
             }
 
-            // The ResourceManager property being initialized lazily is an important optimization that lets .NETNative 
-            // completely remove the ResourceManager class if the disk space saving optimization to strip resources 
+            // The ResourceManager property being initialized lazily is an important optimization that lets .NETNative
+            // completely remove the ResourceManager class if the disk space saving optimization to strip resources
             // (/DisableExceptionMessages) is turned on in the compiler.
             string result;
             switch (language)
