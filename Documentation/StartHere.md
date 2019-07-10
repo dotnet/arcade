@@ -23,7 +23,7 @@ areas:
   internal as well as public changes.
 - **Improving our inter-repo dependency version management (Darc)** - Improve
   the rate at which dependencies are updated in repos, improve content
-  tracability, etc.
+  traceability, etc.
 
 ## Does my repository need to be involved?
 

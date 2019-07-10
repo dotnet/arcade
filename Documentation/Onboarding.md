@@ -2,7 +2,7 @@
 
 - Onboard onto the arcade SDK, which provides templates (building blocks) for
   interacting with Azure DevOps, as well as shared tooling for signing,
-  packaging, publishing and general build infrastructure.  (Here's a [video of a walkthough](https://msit.microsoftstream.com/video/e22d2dad-ef72-4cca-9b62-7e33621f86a1) which might help too)
+  packaging, publishing and general build infrastructure.  (Here's a [video of a walkthrough](https://msit.microsoftstream.com/video/e22d2dad-ef72-4cca-9b62-7e33621f86a1) which might help too)
 
     **Arcade SDK onboarding**
     1. Add a
@@ -53,5 +53,5 @@
 ## Which branches should I make these changes in?
 
 Prioritize branches that are producing bits for .NET Core 3.  Given the extended
-support lifecyle for .NET Core 2.1, backporting infrastructure to .NET Core 2.1
+support lifecycle for .NET Core 2.1, backporting infrastructure to .NET Core 2.1
 release branches is desired, but .NET Core 3 branches should go first.

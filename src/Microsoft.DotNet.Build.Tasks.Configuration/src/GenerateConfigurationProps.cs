@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
         /// </summary>
         /// <param name="propertyName">name of property to parse</param>
         /// <param name="project">project to update</param>
-        private void ParseProperties(string propertyName, ProjectRootElement project, bool includeAdditionalProperites, Func<PropertyInfo, bool> configurationSelector, string parsedValuePrefix = null)
+        private void ParseProperties(string propertyName, ProjectRootElement project, bool includeAdditionalProperties, Func<PropertyInfo, bool> configurationSelector, string parsedValuePrefix = null)
         {
             var parseConfigurationPropertyGroup = project.LastChild as ProjectPropertyGroupElement;
 
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                     var whenPropertiesElement = project.CreateWhenElement(propertiesCondition);
                     choosePropertiesElement.AppendChild(whenPropertiesElement);
 
-                    AddProperties(whenPropertiesElement, value, includeAdditionalProperites, parsedValuePrefix);
+                    AddProperties(whenPropertiesElement, value, includeAdditionalProperties, parsedValuePrefix);
                 }
 
                 if (property.Insignificant)
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                         choosePropertiesElement.AppendChild(whenPropertiesElement);
 
                         // only write additionalProperties since actual property is already set,.
-                        AddProperties(whenPropertiesElement, value, includeAdditionalProperites, parsedValuePrefix, includePropertyValue:false);
+                        AddProperties(whenPropertiesElement, value, includeAdditionalProperties, parsedValuePrefix, includePropertyValue:false);
                     }
                 }
 
@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
 
                 if (property.DefaultValue != null)
                 {
-                    AddProperties(otherwisePropertiesElement, property.DefaultValue, includeAdditionalProperites, parsedValuePrefix);
+                    AddProperties(otherwisePropertiesElement, property.DefaultValue, includeAdditionalProperties, parsedValuePrefix);
                 }
                 else
                 {

@@ -234,7 +234,7 @@ try {
         $remoteName = 'fork'
 
         try {
-            # remove remote if it already exists and re-confgure
+            # remove remote if it already exists and re-configure
             Invoke-Block { & git remote remove fork }
         }
         catch { }

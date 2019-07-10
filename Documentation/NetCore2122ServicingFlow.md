@@ -1,10 +1,10 @@
 # .NET Core 2.1/2.2 Servicing Workflow
 
-This document is intended to provide a practical servicing worflow for .NET Core 2.1.
+This document is intended to provide a practical servicing workflow for .NET Core 2.1.
 
 ## Overview
 
-.NET Core 2.1/2.2 were built via the "ProdCon v1" model, in which repositories are strung together via the PipeBuild orchestration system (see below). A build produces outputs to a specified per-repository location.  Those outputs are analyzed and an msbuild property file is created with version numbers for all package outputs.  That property file is fed into any builds of repositories that depend on the previously built repository, which in term produces new ouputs, which are analyzed, and so on until a product is produced. Building each invdividual repo after this commit can produce functionally equivalent assets to the final build.
+.NET Core 2.1/2.2 were built via the "ProdCon v1" model, in which repositories are strung together via the PipeBuild orchestration system (see below). A build produces outputs to a specified per-repository location.  Those outputs are analyzed and an msbuild property file is created with version numbers for all package outputs.  That property file is fed into any builds of repositories that depend on the previously built repository, which in term produces new outputs, which are analyzed, and so on until a product is produced. Building each individual repo after this commit can produce functionally equivalent assets to the final build.
 
 The general servicing flow looks like this:
   1. Modify ProdCon definition to reflect the minimal set of repos that must be built.
@@ -36,7 +36,7 @@ The pipebuild descriptions for the builds are held in https://dev.azure.com/devd
 1. Update branding in required repos to reflect the servicing event. How this is done is repository dependent, but generally post-release, the pre-release label is updated in each of the servicing branches to 'servicing' (or something like that) and the patch version element is incremented. The `PB_VersionStamp` default should be changed on the build definition.
 2. Check in fixes to required repositories.
 3. Update ProdCon pipebuild descriptions
-    1. Change to reflect the minimal set of repos that must be built. Typically, the description does not change and contains all the core repositories (coreclr, corefx, core-setup aspnet, extensions, cli). Ocassionally, sdk will have a servicing fix and require an entry in the description file.  When adding or removing builds from prodcon, ensure that dependency and input/output merges are updated.
+    1. Change to reflect the minimal set of repos that must be built. Typically, the description does not change and contains all the core repositories (coreclr, corefx, core-setup aspnet, extensions, cli). Occasionally, sdk will have a servicing fix and require an entry in the description file.  When adding or removing builds from prodcon, ensure that dependency and input/output merges are updated.
     2. Verify/Update input branches
     3. For build of CLI, update the **MicrosoftNETCoreAppLatestVersion1_0** (2.1 + 2.2),
        **MicrosoftNETCoreAppLatestVersion1_1** (2.1 + 2.2), **MicrosoftNETCoreAppLatestVersion2_0** (2.1 only),

@@ -100,11 +100,11 @@ jobs:
     - job: Windows_NT_Job
       pool: dotnet-external-temp
       steps:
-      - ecript: echo Hello World!
+      - script: echo Hello World!
     - job: Linux_Job
       pool: dnceng-linux-external-temp
       steps:
-      - scripts: echo Hello World!
+      - script: echo Hello World!
 ```
 
 Additional example of the [phase to jobs schema transition](#phase-to-jobs-schema-transition)
@@ -333,7 +333,7 @@ Notes:
 
   ```yaml
   jobs:
-  - tempate: /eng/common/templates/jobs/jobs.yml
+  - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       jobs:
       - job: Windows_NT
@@ -382,4 +382,4 @@ matrix: { string: { string: string } }
 
 #### job
 
-The job schema has replaced the phase schema and is publically [documented](https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&tabs=schema#job)
+The job schema has replaced the phase schema and is publicly [documented](https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&tabs=schema#job)

@@ -33,9 +33,9 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
         [Flags]
         private enum ConfigurationValueCategories
         {
-            Signficant            = 0b000001,
+            Significant           = 0b000001,
             SignificantDefault    = 0b000010,
-            Insignficant          = 0b000100,
+            Insignificant         = 0b000100,
             InsignificantDefault  = 0b001000,
             Independent           = 0b010000,
             IndependentDefault    = 0b100000
@@ -63,11 +63,11 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                 }
                 else if (value.Property.Insignificant)
                 {
-                    currentCategory = isDefault ? ConfigurationValueCategories.InsignificantDefault : ConfigurationValueCategories.Insignficant;
+                    currentCategory = isDefault ? ConfigurationValueCategories.InsignificantDefault : ConfigurationValueCategories.Insignificant;
                 }
                 else
                 {
-                    currentCategory = isDefault ? ConfigurationValueCategories.SignificantDefault : ConfigurationValueCategories.Signficant;
+                    currentCategory = isDefault ? ConfigurationValueCategories.SignificantDefault : ConfigurationValueCategories.Significant;
 
                 }
 
@@ -112,13 +112,13 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
         {
             bool encounteredDefault = false;
 
-            yield return GetConfigurationString(ConfigurationValueCategories.Signficant |
-                                                ConfigurationValueCategories.Insignficant,
+            yield return GetConfigurationString(ConfigurationValueCategories.Significant |
+                                                ConfigurationValueCategories.Insignificant,
                                                 out encounteredDefault);
             if (encounteredDefault)
             {
-                yield return GetConfigurationString(ConfigurationValueCategories.Signficant | ConfigurationValueCategories.SignificantDefault |
-                                                    ConfigurationValueCategories.Insignficant | ConfigurationValueCategories.InsignificantDefault,
+                yield return GetConfigurationString(ConfigurationValueCategories.Significant | ConfigurationValueCategories.SignificantDefault |
+                                                    ConfigurationValueCategories.Insignificant | ConfigurationValueCategories.InsignificantDefault,
                                                     out encounteredDefault);
             }
         }
@@ -127,20 +127,20 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
         {
             bool encounteredDefault = false;
 
-            yield return GetConfigurationString(ConfigurationValueCategories.Signficant,
+            yield return GetConfigurationString(ConfigurationValueCategories.Significant,
                                                 out encounteredDefault);
 
             if (encounteredDefault)
             {
-                yield return GetConfigurationString(ConfigurationValueCategories.Signficant | ConfigurationValueCategories.SignificantDefault,
+                yield return GetConfigurationString(ConfigurationValueCategories.Significant | ConfigurationValueCategories.SignificantDefault,
                                                     out encounteredDefault);
             }
         }
 
         public string GetDefaultConfigurationString()
         {
-            return GetConfigurationString(ConfigurationValueCategories.Signficant | ConfigurationValueCategories.SignificantDefault |
-                                          ConfigurationValueCategories.Insignficant | ConfigurationValueCategories.InsignificantDefault,
+            return GetConfigurationString(ConfigurationValueCategories.Significant | ConfigurationValueCategories.SignificantDefault |
+                                          ConfigurationValueCategories.Insignificant | ConfigurationValueCategories.InsignificantDefault,
                                           out bool unused);
         }
 
@@ -220,8 +220,8 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
 
         public override string ToString()
         {
-            return GetConfigurationString(ConfigurationValueCategories.Signficant |
-                                          ConfigurationValueCategories.Insignficant,
+            return GetConfigurationString(ConfigurationValueCategories.Significant |
+                                          ConfigurationValueCategories.Insignificant,
                                           out bool unused);
         }
 
@@ -230,8 +230,8 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
         /// </summary>
         public string ToFullString()
         {
-            return GetConfigurationString(ConfigurationValueCategories.Signficant |
-                                          ConfigurationValueCategories.Insignficant | ConfigurationValueCategories.InsignificantDefault,
+            return GetConfigurationString(ConfigurationValueCategories.Significant |
+                                          ConfigurationValueCategories.Insignificant | ConfigurationValueCategories.InsignificantDefault,
                                           out bool unused);
         }
     }
