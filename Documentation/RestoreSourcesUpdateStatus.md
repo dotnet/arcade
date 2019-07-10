@@ -43,7 +43,7 @@ We need repo owners to complete a two-part work explained bellow in the followin
 | aspnet-AspLabs             | namc             |                   |                    |
 | CLI                        | licavalc         |                   |                    |
 | CLI-Migrate                | licavalc         |                   |                    |
-| CLICommandLineParser       | licavalc         |                   |                    |
+| CLICommandLineParser       | licavalc         | Part 1 complete   | No change needed   |
 | nuget-NugetClient          | dtivel           | Part 1 complete   | No change needed   |
 | aspnet-AspNetCore          | namc             |                   |                    |
 | Core-Setup                 | dleeapho         |                   |                    |
