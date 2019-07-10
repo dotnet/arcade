@@ -438,13 +438,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             const string azureStorageProxyFeedPattern =
                 @"(?<feedURL>https://([a-z-]+).azurewebsites.net/container/(?<container>[^/]+)/sig/\w+/se/([0-9]{4}-[0-9]{2}-[0-9]{2})/(?<baseFeedName>darc-(?<type>int|pub)-(?<repository>.+?)-(?<sha>[A-Fa-f0-9]{7,40})-?(?<subversion>\d*)/))index.json";
 
-            var match = Regex.Match(feedConfig.TargetFeedURL, azureStorageProxyFeedPattern);
+            // Matches package feeds like
+            // https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
+            const string azureStorageStaticBlobFeedPattern =
+                @"https://([a-z-]+).blob.core.windows.net/[^/]+/index.json";
 
-            if (match.Success)
+            var proxyBackedFeedMatch = Regex.Match(feedConfig.TargetFeedURL, azureStorageProxyFeedPattern);
+            var azureStorageStaticBlobFeedMatch = Regex.Match(feedConfig.TargetFeedURL, azureStorageStaticBlobFeedPattern);
+
+            if (proxyBackedFeedMatch.Success)
             {
-                var containerName = match.Groups["container"].Value;
-                var baseFeedName = match.Groups["baseFeedName"].Value;
-                var feedURL = match.Groups["feedURL"].Value;
+                var containerName = proxyBackedFeedMatch.Groups["container"].Value;
+                var baseFeedName = proxyBackedFeedMatch.Groups["baseFeedName"].Value;
+                var feedURL = proxyBackedFeedMatch.Groups["feedURL"].Value;
                 var storageAccountName = "dotnetfeed";
 
                 // Initialize the feed using sleet
@@ -460,6 +466,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 };
 
                 return new BlobFeedAction(sleetSource, feedConfig.FeedKey, Log);
+            }
+            else if (azureStorageStaticBlobFeedMatch.Success)
+            {
+                return new BlobFeedAction(feedConfig.TargetFeedURL, feedConfig.FeedKey, Log);
             }
             else
             {

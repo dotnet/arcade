@@ -10,7 +10,11 @@
       - RepositoryName
       - ChannelId
       - CommitSha
-      - AzdoTargetFeedPAT
+      - AzureStorageAccountName
+      - AzureStorageAccountKey
+      - AzureDevOpsFeedsBaseUrl
+      - ArtifactsCategory
+      - AzureStorageTargetFeedPAT
   -->
 
   <Target Name="SetupTargetFeeds">
@@ -27,39 +31,33 @@
       Text="Parameter 'ChannelId' is empty. The ID of the target channel id BAR is required." />
 
     <Error
-      Condition="'$(AzdoTargetFeedPAT)' == '' and '$(IsStableBuild)' == 'true'"
-      Text="Parameter 'AzdoTargetFeedPAT' is empty. The PAT used for creating AzDO feeds is required for publishing stable builds." />
+      Condition="('$(AzureStorageAccountName)' == '' or '$(AzureStorageAccountKey)' == '') and '$(IsStableBuild)' == 'true'"
+      Text="Parameters 'AzureStorageAccountName/Key' are empty." />
 
     <!--
-      When a build is stable we ask `CreateAzureDevOpsFeed` in Tasks.Feed to create a new AzDO feed.
-      That feed will be public/internal depending on whether the build is public/internal.
+      When a build is stable we ask `CreateInternalBlobFeed` in Tasks.Feed to create a new AzDO feed.
+      That task will return an Azure Storage feed wrapped by an authenticated Azure function proxy,
+      we use that to mimic an internal/authenticated feed. This will likely change in the future once
+      we switch to using AzDO private feeds.
     -->
-    <CreateAzureDevOpsFeed
+    <CreateInternalBlobFeed
         Condition="'$(IsStableBuild)' == 'true'"
-        IsInternal="$(IsInternalBuild)"
         RepositoryName="$(RepositoryName)"
         CommitSha="$(CommitSha)"
-        AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)">
+        AzureDevOpsFeedsBaseUrl="$(AzureDevOpsFeedsBaseUrl)"
+        AzureStorageAccountName="$(AzureStorageAccountName)"
+        AzureStorageAccountKey="$(AzureStorageAccountKey)">
       <Output TaskParameter="TargetFeedURL" PropertyName="NewAzDoFeedURL"/>
       <Output TaskParameter="TargetFeedName" PropertyName="NewTargetFeedName"/>
-    </CreateAzureDevOpsFeed>
+    </CreateInternalBlobFeed>
 
     <ItemGroup Condition="'$(IsStableBuild)' == 'true'">
       <TargetFeedConfig
-        Condition="'$(IsInternalBuild)' == 'true'"
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
-        TargetURL="$(NewAzDoFeedURL)/nuget/v3/index.json"
+        TargetURL="$(NewAzDoFeedURL)/index.json"
         FeedName="$(NewTargetFeedName)"
-        Type="AzDoNugetFeed"
-        Token="$(AzdoTargetFeedPAT)" />
-
-      <TargetFeedConfig
-        Condition="'$(IsInternalBuild)' == 'false'"
-        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
-        TargetURL="$(NewAzDoFeedURL)/nuget/v3/index.json"
-        FeedName="public/$(NewTargetFeedName)"
-        Type="AzDoNugetFeed"
-        Token="$(AzdoTargetFeedPAT)" />
+        Type="AzureStorageFeed"
+        Token="$(AzureStorageAccountKey)" />
     </ItemGroup>
 
     <!-- Assets for non-stable AND Internal builds are published to a static feed for now. -->
@@ -69,14 +67,39 @@
         TargetURL="https://dnceng.pkgs.visualstudio.com/_packaging/dotnet-core-internal/nuget/v3/index.json"
         FeedName="dotnet-core-internal"
         Type="AzDoNugetFeed"
-        Token="$(AzdoTargetFeedPAT)" />
+        Token="$(AzureStorageAccountKey)" />
     </ItemGroup>
+
+    <!--
+      - Adding this to let repos that want to override the TargetFeed be able to do so.
+      - I'm reusing the parameter that was introduced by RM pipelines so that no further 
+        changes are needed in customer repos.
+      - Eventually this will be deprecated or at least modified so that the build TargetFeed
+        is selected based on build intent ('channel').
+    -->
+    <PropertyGroup>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == '.NETCORE'">https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == '.NETCOREVALIDATION'">https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'ASPNETCORE'">https://dotnetfeed.blob.core.windows.net/aspnet-aspnetcore/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'ASPNETCORETOOLING'">https://dotnetfeed.blob.core.windows.net/aspnet-aspnetcore-tooling/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'ENTITYFRAMEWORKCORE'">https://dotnetfeed.blob.core.windows.net/aspnet-entityframeworkcore/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'ASPNETEXTENSIONS'">https://dotnetfeed.blob.core.windows.net/aspnet-extensions/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'CORECLR'">https://dotnetfeed.blob.core.windows.net/dotnet-coreclr/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'CORESDK'">https://dotnetfeed.blob.core.windows.net/dotnet-sdk/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'TOOLSINTERNAL'">https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'TOOLSET'">https://dotnetfeed.blob.core.windows.net/dotnet-toolset/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'WINDOWSDESKTOP'">https://dotnetfeed.blob.core.windows.net/dotnet-windowsdesktop/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'NUGETCLIENT'">https://dotnetfeed.blob.core.windows.net/nuget-nugetclient/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'ASPNETENTITYFRAMEWORK6'">https://dotnetfeed.blob.core.windows.net/aspnet-entityframework6/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'ASPNETBLAZOR'">https://dotnetfeed.blob.core.windows.net/aspnet-blazor/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(TargetStaticFeed)' == ''">https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</TargetStaticFeed>
+    </PropertyGroup>
 
     <!-- Public non-stable feed used by `Validation` Channel. -->
     <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(ChannelId)' == '9'">
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
-        TargetURL="https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json"
+        TargetURL="$(TargetStaticFeed)"
         FeedName="public/dotnet-core-validation-public"
         Type="AzureStorageFeed"
         Token="$(AzureStorageTargetFeedPAT)" />
@@ -86,7 +109,7 @@
     <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(ChannelId)' == '3'">
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
-        TargetURL="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json"
+        TargetURL="$(TargetStaticFeed)"
         FeedName="public/dotnet-core-public"
         Type="AzureStorageFeed"
         Token="$(AzureStorageTargetFeedPAT)" />
