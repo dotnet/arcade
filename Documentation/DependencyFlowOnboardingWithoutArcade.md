@@ -25,6 +25,7 @@ File layout
   -global.json
   -NuGet.config
   -eng\GenerateBuildManifest.props
+  -eng\Version.Details.xml
   -eng\common\sdk-task.ps1
   -eng\common\tools.ps1
 ```
@@ -39,7 +40,8 @@ global.json
     "dotnet": "2.2.104"
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Build.Tasks.Feed": "2.2.0-beta.19151.1"
+    "Microsoft.DotNet.Build.Tasks.Feed": "2.2.0-beta.19151.1",
+    "Microsoft.DotNet.Arcade.Sdk": "1.0.0-beta.19320.1"
   }
 }
 ```
@@ -83,6 +85,22 @@ GenerateBuildManifest.props
     </ItemsToPush>
   </ItemGroup>
 </Project>
+```
+
+Version.Details.xml
+
+```XML
+<?xml version="1.0" encoding="utf-8"?>
+<Dependencies>
+  <ProductDependencies>
+  </ProductDependencies>
+  <ToolsetDependencies>
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="1.0.0-beta.19320.1">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>9d8abf998866f10bc19d97e1916ff1c0ada3fd42</Sha>
+    </Dependency>
+  </ToolsetDependencies>
+</Dependencies>
 ```
 
 Generate a manifest
