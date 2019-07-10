@@ -199,7 +199,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
             buildConfigurationProps.AppendChild(buildConfigurationImport);
 
             // iterate over all possible configuration strings
-            foreach (var buildConfiguration in ConfigurationFactory.GetSignficantConfigurations())
+            foreach (var buildConfiguration in ConfigurationFactory.GetSignificantConfigurations())
             {
                 CreateBuildConfigurationPropsFile(buildConfiguration);
             }
