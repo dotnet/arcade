@@ -24,6 +24,7 @@
       - AzureStorageAccountKey
       - AzureDevOpsFeedsBaseUrl
       - ArtifactsCategory
+      - AzureStorageTargetFeedPAT
   -->
 
   <PropertyGroup>
