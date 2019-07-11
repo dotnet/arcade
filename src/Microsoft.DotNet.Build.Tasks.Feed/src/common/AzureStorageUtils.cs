@@ -156,8 +156,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                 {".svg", "image/svg+xml"}
             };
 
-            if (string.IsNullOrEmpty(filePath) || 
-                string.IsNullOrEmpty(Path.GetExtension(filePath)))
+            if (string.IsNullOrEmpty(Path.GetExtension(filePath)))
             {
                 throw new ArgumentNullException($"Invalid path to file was informed: '{filePath}'");
             }
