@@ -156,14 +156,14 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                 {".svg", "image/svg+xml"}
             };
 
-            if (string.IsNullOrEmpty(Path.GetExtension(filePath)))
+            if (string.IsNullOrWhiteSpace(filePath))
             {
-                throw new ArgumentNullException($"Invalid path to file was informed: '{filePath}'");
+                throw new ArgumentNullException($"An empty file's path was informed.");
             }
 
             return mimeMappings.TryGetValue(Path.GetExtension(filePath).ToLower(), out string mime) ?
-                mime :
-                "application/octet-stream";
+               mime :
+               "application/octet-stream";
         }
     }
 }
