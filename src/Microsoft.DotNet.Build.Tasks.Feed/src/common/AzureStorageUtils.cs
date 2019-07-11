@@ -162,8 +162,8 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             }
 
             return mimeMappings.TryGetValue(Path.GetExtension(filePath).ToLower(), out string mime) ?
-               mime :
-               "application/octet-stream";
+                mime :
+                "application/octet-stream";
         }
     }
 }
