@@ -13,9 +13,12 @@ Target completion date is 8/13/2019.
 | Arcade                     | mawilkie         | Complete | ✔️ | |
 | Arcade-Services            | mawilkie         | Complete | ✔️ | |
 | Arcade-Validation          | mawilkie         | Complete | ✔️ | |
+| aspnet-AspLabs             | dougbu/johluo    | On track | ➖ | |
 | aspnet-AspNetCore          | dougbu/johluo    | On track | ➖ | |
 | aspnet-AspNetCore-Tooling  | dougbu/johluo    | On track | ➖ | |
+| aspnet-EntityFramework6    | dougbu/johluo    | On track | ➖ | |
 | aspnet-EntityFrameworkCore | dougbu/johluo    | On track | ➖ | |
+| aspnet-Blazor              | dougbu/johluo    | On track | ➖ | |
 | aspnet-Extensions          | dougbu/johluo    | On track | ➖ | |
 | CLI                        | licavalc         | On track | ➖ | |
 | CLICommandLineParser       | licavalc         | On track | ➖ | |
@@ -26,6 +29,7 @@ Target completion date is 8/13/2019.
 | Core-Setup                 | dleeapho         | On track | ➖ | |
 | FSharp                     | brettfo          | On track | ➖ | |
 | MSBuild                    | licavalc         | On track | ➖ | |
+| nuget-NugetClient          | dtivel           | On track | ➖ | |
 | Roslyn                     | jaredpar         | On track | ➖ | |
 | SDK                        | licavalc         | On track | ➖ | |
 | Standard                   | danmose          | On track | ➖ | |
