@@ -5,7 +5,7 @@ from builtins import str as text
 from azure.devops.connection import Connection
 from msrest.authentication import BasicTokenAuthentication, BasicAuthentication
 from azure.devops.v5_1.test import TestClient
-from azure.devops.v5_1.test.models import TestCaseResult, TestAttachmentRequestModel
+from azure.devops.v5_1.test.models import TestCaseResult, TestAttachmentRequestModel, TestSubResult
 
 from helpers import get_env
 from defs import TestResult
@@ -114,7 +114,38 @@ class AzureDevOpsTestResultPublisher:
 
             print("Unexpected result value {} for {}".format(r.result, r.name))
 
-        return (convert_result(r) for r in results if r is not None)
+        sub_result_failure_1 = TestSubResult(
+            comment="Sub result failure 1 comment",
+            duration_in_ms=2345,
+            error_message="Sub result failure 1 error message",
+            outcome="Failed"
+        )
+
+        sub_result_success_2 = TestSubResult(
+            comment="Sub result success 2 comment",
+            duration_in_ms=2345,
+            error_message="Sub result success 2 error message",
+            outcome="Passed"
+        )
+
+        test_case_failure = TestCaseResult(
+            test_case_title="Test Case Title 1",
+            automated_test_name="Automated Test Name 1",
+            automated_test_type = "Automated Test Type 1",
+            automated_test_storage = "Work Item Name",
+            priority = 1,
+            duration_in_ms = 1234,
+            outcome = "Failed",
+            state = "Completed",
+            error_message = "Error Message",
+            comment = "Comment",
+        )
+
+        test_case_failure.result_group_type = "dataDriven"
+        sub_results = [sub_result_failure_1, sub_result_success_2]
+        test_case_failure.sub_results = sub_results
+
+        return [test_case_failure]
 
     def get_connection(self):
         credentials = self.get_credentials()
