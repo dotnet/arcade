@@ -35,9 +35,9 @@ We need repo owners to complete a two-part work explained bellow in the followin
 | WebSDK                     | vramak           | Part 1 complete   |                    |
 | WinForms                   | mmcgaw           | Part 1 complete   | No change needed   |
 | WPF                        | vatsan-madhavan  | Part 1 complete   | No change needed   |
-| aspnet-EntityFrameworkCore | namc             | PR: https://github.com/aspnet/EntityFrameworkCore/pull/16573                  |                    |
+| aspnet-EntityFrameworkCore | namc             | Part 1 complete   |                    |
 | aspnet-Extensions          | namc             | Part 1 complete   | No change needed   |
-| aspnet-AspNetCore-Tooling  | namc             | PR: https://github.com/aspnet/AspNetCore-Tooling/pull/811   |    |
+| aspnet-AspNetCore-Tooling  | namc             |                   |                    |
 | aspnet-Blazor              | namc             | Part 1 complete   | No change needed   |
 | aspnet-EntityFramework6    | namc             | Part 1 complete   | No change needed   |
 | aspnet-AspLabs             | namc             |                   |                    |
