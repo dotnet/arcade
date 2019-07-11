@@ -156,9 +156,10 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                 {".svg", "image/svg+xml"}
             };
 
-            if (string.IsNullOrEmpty(filePath))
+            if (string.IsNullOrEmpty(filePath) || 
+                string.IsNullOrEmpty(Path.GetExtension(filePath)))
             {
-                return null;
+                throw new ArgumentNullException($"Invalid path to file was informed: '{filePath}'");
             }
 
             return mimeMappings.TryGetValue(Path.GetExtension(filePath).ToLower(), out string mime) ?
