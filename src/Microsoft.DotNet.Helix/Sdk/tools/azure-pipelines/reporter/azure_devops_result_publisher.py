@@ -2,10 +2,10 @@ import base64
 import os
 from typing import Iterable, Mapping
 from builtins import str as text
-from vsts.vss_connection import VssConnection
+from azure.devops.connection import Connection
 from msrest.authentication import BasicTokenAuthentication, BasicAuthentication
-from vsts.test.v4_1.test_client import TestClient
-from vsts.test.v4_1.models import TestCaseResult, TestAttachmentRequestModel
+from azure.devops.v5_1.test import TestClient
+from azure.devops.v5_1.test.models import TestCaseResult, TestAttachmentRequestModel
 
 from helpers import get_env
 from defs import TestResult
@@ -45,7 +45,7 @@ class AzureDevOpsTestResultPublisher:
         :param results_with_attachments:
         """
         connection = self.get_connection()
-        test_client = connection.get_client("vsts.test.v4_1.test_client.TestClient")  # type: TestClient
+        test_client = connection.get_client("azure.devops.v5_1.test.TestClient")  # type: TestClient
 
         published_results = test_client.add_test_results_to_test_run(list(test_case_results), self.team_project, self.test_run_id)  # type: List[TestCaseResult]
 
@@ -118,7 +118,7 @@ class AzureDevOpsTestResultPublisher:
 
     def get_connection(self):
         credentials = self.get_credentials()
-        return VssConnection(self.collection_uri, credentials)
+        return Connection(self.collection_uri, credentials)
 
     def get_credentials(self):
         if self.access_token:

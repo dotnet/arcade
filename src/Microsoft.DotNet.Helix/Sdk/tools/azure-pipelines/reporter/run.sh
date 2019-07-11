@@ -10,10 +10,10 @@ if [ ! -f $ENV_PATH/bin/python ]; then
   $HELIX_PYTHONPATH -m virtualenv --no-site-packages $ENV_PATH
 fi
 
-if $ENV_PATH/bin/python -c "import vsts"; then
-  echo "vsts module already available"
+if $ENV_PATH/bin/python -c "import azure-devops"; then
+  echo "azure-devops module already available"
 else
-  $ENV_PATH/bin/python -m pip install vsts==0.1.20
+  $ENV_PATH/bin/python -m pip install vsts==5.0.0b9
 fi
 
 if $ENV_PATH/bin/python -c "import future"; then
