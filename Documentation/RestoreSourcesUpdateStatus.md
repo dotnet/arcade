@@ -24,14 +24,14 @@ We need repo owners to complete a two-part work explained bellow in the followin
 | Arcade                     | mawilkie         | Part 1 complete   |                    |
 | Arcade-Validation          | mawilkie         | Part 1 complete   |                    |
 | Arcade-Services            | mawilkie         | Part 1 complete   |                    |
-| Standard                   | danmose          |                   |                    |
+| Standard                   | danmose          | Part 1 complete   | No change needed   |
 | SymReader                  | tmat             |                   |                    |
-| SymReader-Portable         | tmat             |                   |                    |
+| SymReader-Portable         | tmat             | Part 1 complete   |                    |
 | CoreFx                     | danmose          |                   |                    |
 | Templating                 | vramak           |                   |                    |
-| Test-Templates             | singhsarab       |                   |                    |
+| Test-Templates             | singhsarab       | Part 1 complete   |                    |
 | Toolset                    | licavalc         |                   |                    |
-| CoreClr                    | russellk         |                   |                    |
+| CoreClr                    | russellk         | Part 1 complete   | No change needed   |
 | WebSDK                     | vramak           |                   |                    |
 | WinForms                   | mmcgaw           |                   |                    |
 | WPF                        | vatsan-madhavan  |                   |                    |
