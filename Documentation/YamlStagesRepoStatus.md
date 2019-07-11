@@ -22,7 +22,6 @@ Target completion date is 8/13/2019.
 | aspnet-Extensions          | dougbu/johluo    | On track | ➖ | |
 | CLI                        | licavalc         | On track | ➖ | |
 | CLICommandLineParser       | licavalc         | On track | ➖ | |
-| CLI-Migrate                | licavalc         | On track | ➖ | |
 | CoreClr                    | russellk         | On track | ➖ | |
 | CoreFx                     | danmose          | On track | ➖ | |
 | Core-SDK                   | licavalc         | On track | ➖ | |
