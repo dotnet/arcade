@@ -40,16 +40,16 @@ We need repo owners to complete a two-part work explained bellow in the followin
 | aspnet-AspNetCore-Tooling  | namc             |                   |                    |
 | aspnet-Blazor              | namc             | Part 1 complete   | No change needed   |
 | aspnet-EntityFramework6    | namc             | Part 1 complete   | No change needed   |
-| aspnet-AspLabs             | namc             |                   |                    |
+| aspnet-AspLabs             | namc             | Part 1 complete   |                    |
 | CLI                        | licavalc         |                   |                    |
 | CLI-Migrate                | licavalc         |                   |                    |
 | CLICommandLineParser       | licavalc         | Part 1 complete   | No change needed   |
 | nuget-NugetClient          | dtivel           | Part 1 complete   | No change needed   |
-| aspnet-AspNetCore          | namc             |                   |                    |
-| Core-Setup                 | dleeapho         |                   |                    |
+| aspnet-AspNetCore          | namc             | Part 1 complete   |                    |
+| Core-Setup                 | dleeapho         | Part 1 complete   |                    |
 | MSBuild                    | licavalc         |                   |                    |
-| Roslyn                     | jaredpar         |                   |                    |
-| Visual-FSharp              | brettfo          |                   |                    |
+| Roslyn                     | jaredpar         | Part 1 complete   |                    |
+| Visual-FSharp              | brettfo          | Part 1 complete   |                    |
 | Core-SDK                   | licavalc         |                   |                    |
 
 For any question, please ping @tmat or @jcagme
