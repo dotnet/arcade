@@ -20,6 +20,8 @@ Using stages for publishing seeks to unify the Arcade SDK build artifact publish
 
 In order to use this new publishing mechanism, the easiest way to start is by making your existing build pipeline a single stage, and adding a second stage that is driven by a template distributed with Arcade.
 
+1. Update the repo's arcade version to `1.0.0-beta.19360.8` or newer.
+
 1. Disable package publishing during the build:
 
     Set the `enablePublishUsingPipelines` template parameter to `true` when calling the `/eng/common/templates/jobs/jobs.yml` template.
