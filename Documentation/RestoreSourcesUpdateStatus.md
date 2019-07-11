@@ -32,12 +32,12 @@ We need repo owners to complete a two-part work explained bellow in the followin
 | Test-Templates             | singhsarab       | Part 1 complete   |                    |
 | Toolset                    | licavalc         | Part 1 complete   |                    |
 | CoreClr                    | russellk         | Part 1 complete   | No change needed   |
-| WebSDK                     | vramak           |                   |                    |
-| WinForms                   | mmcgaw           |                   |                    |
-| WPF                        | vatsan-madhavan  |                   |                    |
+| WebSDK                     | vramak           | Part 1 complete   |                    |
+| WinForms                   | mmcgaw           | Part 1 complete   | No change needed   |
+| WPF                        | vatsan-madhavan  | Part 1 complete   | No change needed   |
 | aspnet-EntityFrameworkCore | namc             |                   |                    |
 | aspnet-Extensions          | namc             |                   |                    |
-| aspnet-AspNetCore-Tooling  | namc             |                   |                    |
+| aspnet-AspNetCore-Tooling  | namc             | Part 1 complete   | No change needed   |
 | aspnet-Blazor              | namc             | Part 1 complete   | No change needed   |
 | aspnet-EntityFramework6    | namc             | Part 1 complete   | No change needed   |
 | aspnet-AspLabs             | namc             |                   |                    |
