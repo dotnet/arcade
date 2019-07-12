@@ -25,7 +25,7 @@ We need repo owners to complete a two-part work explained bellow in the followin
 | Arcade-Validation          | mawilkie         | Part 1 complete   |                    |
 | Arcade-Services            | mawilkie         | Part 1 complete   |                    |
 | Standard                   | danmose          | Part 1 complete   | No change needed   |
-| SymReader                  | tmat             |                   |                    |
+| SymReader                  | tmat             | Part 1 complete   |                    |
 | SymReader-Portable         | tmat             | Part 1 complete   |                    |
 | CoreFx                     | danmose          | Part 1 complete   | No change needed   |
 | Templating                 | vramak           | Part 1 complete   |                    |
@@ -37,7 +37,7 @@ We need repo owners to complete a two-part work explained bellow in the followin
 | WPF                        | vatsan-madhavan  | Part 1 complete   | No change needed   |
 | aspnet-EntityFrameworkCore | namc             | Part 1 complete   |                    |
 | aspnet-Extensions          | namc             | Part 1 complete   | No change needed   |
-| aspnet-AspNetCore-Tooling  | namc             |                   |                    |
+| aspnet-AspNetCore-Tooling  | namc             | Part 1 complete   |                    |
 | aspnet-Blazor              | namc             | Part 1 complete   | No change needed   |
 | aspnet-EntityFramework6    | namc             | Part 1 complete   | No change needed   |
 | aspnet-AspLabs             | namc             | Part 1 complete   |                    |
