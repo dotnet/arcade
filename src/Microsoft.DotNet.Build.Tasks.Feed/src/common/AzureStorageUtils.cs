@@ -158,7 +158,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                throw new ArgumentNullException($"An empty file's path was informed.");
+                throw new ArgumentNullException("An attempt to get the MIME mapping of an empty path was made.");
             }
 
             return mimeMappings.TryGetValue(Path.GetExtension(filePath).ToLower(), out string mime) ?
