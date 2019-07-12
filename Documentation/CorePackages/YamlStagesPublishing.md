@@ -82,9 +82,10 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
 
     ```YAML
     - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-    - template: eng\common\templates\post-build\post-build.yml
+      - template: eng\common\templates\post-build\post-build.yml
         parameters:
-        enableSymbolValidation: false
+          enableSymbolValidation: false
+          ...
     ```
 
     The parameters for the template are the following:
