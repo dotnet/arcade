@@ -27,7 +27,7 @@ We need repo owners to complete a two-part work explained bellow in the followin
 | Standard                   | danmose          | Part 1 complete   | No change needed   |
 | SymReader                  | tmat             |                   |                    |
 | SymReader-Portable         | tmat             | Part 1 complete   |                    |
-| CoreFx                     | danmose          |                   |                    |
+| CoreFx                     | danmose          | Part 1 complete   | No change needed   |
 | Templating                 | vramak           | Part 1 complete   |                    |
 | Test-Templates             | singhsarab       | Part 1 complete   |                    |
 | Toolset                    | licavalc         | Part 1 complete   |                    |
