@@ -1,6 +1,6 @@
 import base64
 import os
-from typing import Iterable, Mapping
+from typing import Iterable, Mapping, List, Dict
 from builtins import str as text
 from azure.devops.connection import Connection
 from msrest.authentication import BasicTokenAuthentication, BasicAuthentication
@@ -70,6 +70,18 @@ class AzureDevOpsTestResultPublisher:
             os.getenv("HELIX_WORKITEM_FRIENDLYNAME"),
         )
 
+        def is_data_driven_test(r: TestResult) -> bool:
+            return r.name.endswith(")")
+
+        def get_ddt_base_name(r: TestResult):
+            return r.name.split('(',1)[0]
+
+        def convert_to_sub_test(r: TestResult) -> TestSubResult:
+            return TestSubResult(
+                comment=comment,
+                display_name=text(r.name),
+                duration_in_ms=r.duration_seconds*1000)
+
         def convert_result(r: TestResult) -> TestCaseResult:
             if r.result == "Pass":
                 return TestCaseResult(
@@ -114,8 +126,34 @@ class AzureDevOpsTestResultPublisher:
 
             print("Unexpected result value {} for {}".format(r.result, r.name))
 
+        data_driven_tests = {}  # type: Dict[str, TestCaseResult]
 
-    def get_connection(self):
+        # Return normal, not-DDT entries while caching DDT entries for later action.
+        for r in results:
+            if r == None:
+                continue
+            elif is_data_driven_test(r):
+                base_name = get_ddt_base_name(r)
+                if base_name in data_driven_tests:
+                    data_driven_tests[base_name].sub_results.append(convert_to_sub_test(r))
+                else:
+                    data_driven_tests[base_name] = convert_result(r)
+                    data_driven_tests[base_name].result_group_type = "dataDriven"
+                    data_driven_tests[base_name].sub_results = [convert_to_sub_test(r)]
+            else:
+                # This is a non-DDT entry; pass it through.
+                yield convert_result(r)
+
+        # Once all normal tests are sent, process the DDTs
+        if not data_driven_tests or len(data_driven_tests) == 0:
+            print("No data driven tests")
+            return
+
+        for k,v in data_driven_tests.items():
+            print("Returning DDT: {0}".format(v.test_case_title))
+            yield v
+
+    def get_connection(self) -> Connection:
         credentials = self.get_credentials()
         return Connection(self.collection_uri, credentials)
 
