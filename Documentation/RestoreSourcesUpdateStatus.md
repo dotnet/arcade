@@ -40,16 +40,15 @@ We need repo owners to complete a two-part work explained bellow in the followin
 | aspnet-AspNetCore-Tooling  | namc             |                   |                    |
 | aspnet-Blazor              | namc             | Part 1 complete   | No change needed   |
 | aspnet-EntityFramework6    | namc             | Part 1 complete   | No change needed   |
-| aspnet-AspLabs             | namc             |                   |                    |
-| CLI                        | licavalc         |                   |                    |
-| CLI-Migrate                | licavalc         |                   |                    |
+| aspnet-AspLabs             | namc             | Part 1 complete   |                    |
+| CLI                        | licavalc         | Part 1 complete   |                    |
 | CLICommandLineParser       | licavalc         | Part 1 complete   | No change needed   |
 | nuget-NugetClient          | dtivel           | Part 1 complete   | No change needed   |
-| aspnet-AspNetCore          | namc             |                   |                    |
-| Core-Setup                 | dleeapho         |                   |                    |
-| MSBuild                    | licavalc         |                   |                    |
-| Roslyn                     | jaredpar         |                   |                    |
-| Visual-FSharp              | brettfo          |                   |                    |
-| Core-SDK                   | licavalc         |                   |                    |
+| aspnet-AspNetCore          | namc             | Part 1 complete   |                    |
+| Core-Setup                 | dleeapho         | Part 1 complete   |                    |
+| MSBuild                    | licavalc         | Part 1 complete   |                    |
+| Roslyn                     | jaredpar         | Part 1 complete   |                    |
+| Visual-FSharp              | brettfo          | Part 1 complete   |                    |
+| Core-SDK                   | licavalc         | Part 1 complete   |                    |
 
 For any question, please ping @tmat or @jcagme
