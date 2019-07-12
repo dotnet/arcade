@@ -156,9 +156,9 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                 {".svg", "image/svg+xml"}
             };
 
-            if (string.IsNullOrEmpty(Path.GetExtension(filePath)))
+            if (string.IsNullOrWhiteSpace(filePath))
             {
-                throw new ArgumentNullException($"Invalid path to file was informed: '{filePath}'");
+                throw new ArgumentException("An attempt to get the MIME mapping of an empty path was made.");
             }
 
             return mimeMappings.TryGetValue(Path.GetExtension(filePath).ToLower(), out string mime) ?
