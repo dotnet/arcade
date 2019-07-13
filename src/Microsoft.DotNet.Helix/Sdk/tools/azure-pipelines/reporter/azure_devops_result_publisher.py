@@ -25,25 +25,14 @@ class AzureDevOpsTestResultPublisher:
         self.work_item_name = get_env("HELIX_WORKITEM_FRIENDLYNAME")
         pass
 
-    def upload_batch(self, results):
-        """
-
-        :type results: Iterable[TestResult]
-        """
+    def upload_batch(self, results) -> Iterable[TestResult]:
         results_with_attachments = {r.name: r for r in results if r.attachments}
 
         test_case_results = self.convert_results(results)
 
         self.publish_results(test_case_results, results_with_attachments)
 
-    def publish_results(self, test_case_results, results_with_attachments):
-        """
-
-        :type test_case_results: Iterable[TestCaseResult]
-        :param test_case_results:
-        :type results_with_attachments: Mapping[str, TestResult]
-        :param results_with_attachments:
-        """
+    def publish_results(self, test_case_results: Iterable[TestCaseResult], results_with_attachments: Mapping[str, TestResult]) -> None:
         connection = self.get_connection()
         test_client = connection.get_client("azure.devops.v5_1.test.TestClient")  # type: TestClient
 
@@ -133,10 +122,13 @@ class AzureDevOpsTestResultPublisher:
             if r == None:
                 continue
             elif is_data_driven_test(r):
+                print("Found data driven test: {0}".format(r.name))
                 base_name = get_ddt_base_name(r)
                 if base_name in data_driven_tests:
+                    print("Data driven test already known; adding as sub result.")
                     data_driven_tests[base_name].sub_results.append(convert_to_sub_test(r))
                 else:
+                    print("Data driven test not yet known; adding.")
                     data_driven_tests[base_name] = convert_result(r)
                     data_driven_tests[base_name].result_group_type = "dataDriven"
                     data_driven_tests[base_name].sub_results = [convert_to_sub_test(r)]
@@ -157,7 +149,7 @@ class AzureDevOpsTestResultPublisher:
         credentials = self.get_credentials()
         return Connection(self.collection_uri, credentials)
 
-    def get_credentials(self):
+    def get_credentials(self) -> BasicTokenAuthentication:
         if self.access_token:
             return BasicTokenAuthentication({'access_token': self.access_token})
 
