@@ -32,9 +32,13 @@
     <OutDir/>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(IsWpfTempProject)' == 'true' and '$(TargetFrameworkIdentifier)' == '.NETFramework'">
-    <Reference Include="mscorlib" Pack="false" />
-  </ItemGroup>
+  <Choose>
+    <When Condition=" '$(IsWpfTempProject)' == 'true' AND '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+      <ItemGroup>
+        <Reference Include="mscorlib" Pack="false" />
+      </ItemGroup>
+    </When>
+  </Choose>
 
   <!--
     Workaround for a race condition https://github.com/Microsoft/msbuild/issues/1479.
@@ -44,7 +48,7 @@
     <TargetFrameworkMonikerAssemblyAttributesFileClean>true</TargetFrameworkMonikerAssemblyAttributesFileClean>
   </PropertyGroup>
 
-  <!-- 
+  <!--
      Portable PDBs are not included in .nupkg by default. Include them unless the project produces symbol packages.
      Remove this once we migrate to .snupkg. See https://github.com/dotnet/arcade/issues/1959.
    -->
@@ -143,7 +147,7 @@
 
   <!--
     NuGet Restore uses PackageId and project name in the same namespace, so that project reference can be interchanged with a package reference.
-    This causes issues however for leaf packages that are not to be referenced (such as analyzer or tools packages) when we want to name the package 
+    This causes issues however for leaf packages that are not to be referenced (such as analyzer or tools packages) when we want to name the package
     the same as an existing project in the solution. In that case we set PackageId to an invalid but unique value for Restore and override it for Pack
     with the desired name stored in $(NuspecPackageId).
   -->
