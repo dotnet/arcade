@@ -135,38 +135,10 @@ class AzureDevOpsTestResultPublisher:
 
             print("Unexpected result value {} for {}".format(r.result, r.name))
 
-        data_driven_tests = {}  # type: Dict[str, TestCaseResult]
-
-        # Return normal, not-DDT entries while caching DDT entries for later action.
         for r in results:
             if r == None:
                 continue
-            elif is_data_driven_test(r):
-                print("Found data driven test: {0}".format(r.name))
-                base_name = get_ddt_base_name(r)
-                if base_name in data_driven_tests:
-                    print("Data driven test already known; adding as sub result.")
-                    data_driven_tests[base_name].sub_results.append(convert_to_sub_test(r))
-                else:
-                    print("Data driven test not yet known; adding as \"{0}\".".format(base_name))
-                    data_driven_tests[base_name] = convert_result(r)
-                    data_driven_tests[base_name].automated_test_name = get_ddt_base_name(r)
-                    data_driven_tests[base_name].result_group_type = "dataDriven"
-                    data_driven_tests[base_name].sub_results = [convert_to_sub_test(r)]
-            else:
-                # This is a non-DDT entry; pass it through.
-                print("Non-DDT entry")
-                yield convert_result(r)
-
-        # Once all normal tests are sent, process the DDTs
-        if not data_driven_tests or len(data_driven_tests) == 0:
-            print("No data driven tests")
-            return
-
-        print("There are {0} items in data_driven_tests".format(len(data_driven_tests)))
-        for k,v in data_driven_tests.items():
-            print("Returning DDT: {0}".format(v.test_case_title))
-            yield v
+            yield convert_result(r)
 
     def get_connection(self) -> Connection:
         credentials = self.get_credentials()
