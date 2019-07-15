@@ -91,6 +91,32 @@ class AzureDevOpsTestResultPublisher:
                     )
             print("Unexpected result value {} for {}".format(r.result, r.name))
 
+        def convert_to_sub_test(r: TestResult) -> TestSubResult:
+            if r.result == "Pass":
+                return TestSubResult(
+                    comment=comment,
+                    display_name=text(r.name),
+                    duration_in_ms=r.duration_seconds*1000,
+                    outcome="Passed"
+                    )
+            if r.result == "Fail":
+                return TestSubResult(
+                    comment=comment,
+                    display_name=text(r.name),
+                    duration_in_ms=r.duration_seconds*1000,
+                    outcome="Failed",
+                    stack_trace=text(r.stack_trace) if r.stack_trace is not None else None,
+                    error_message=text(r.failure_message)
+                    )
+            if r.result == "Skip":
+                return TestSubResult(
+                    comment=comment,
+                    display_name=text(r.name),
+                    duration_in_ms=r.duration_seconds*1000,
+                    outcome="NotExecuted"
+                    )
+            print("Unexpected result value {} for {}".format(r.result, r.name))
+
         def convert_result(r: TestResult) -> TestCaseResult:
             if r.result == "Pass":
                 return TestCaseResult(
@@ -135,19 +161,24 @@ class AzureDevOpsTestResultPublisher:
 
             print("Unexpected result value {} for {}".format(r.result, r.name))
         
-        other_results = []
+        cheese = None
+        cheese2 = None
         
         for r in results:
             if r is None:
                 continue
-            if r.name.endswith("1") or r.name.endswith("2"):
-                other_results.append(r)
+            if r.name.endswith("cheese2"):
+                cheese2 = r
+                continue
+            elif r.name.endswith("cheese"):
+                cheese = r
                 continue
             else:
                 yield convert_result(r)
 
-        for r in other_results:
-            yield convert_result(r)
+        lastresult = convert_result(cheese)
+        lastresult.sub_results = [convert_to_sub_test(cheese2)]
+        yield lastresult
         
 
     def get_connection(self) -> Connection:
