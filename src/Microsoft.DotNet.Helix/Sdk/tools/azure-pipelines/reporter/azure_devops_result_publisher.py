@@ -70,28 +70,22 @@ class AzureDevOpsTestResultPublisher:
                 return TestSubResult(
                     comment=comment,
                     display_name=text(r.name),
-                    automated_test_name=text(r.name),
                     duration_in_ms=r.duration_seconds*1000,
-                    outcome="Passed",
-                    state="Completed"
+                    outcome="Passed"
                     )
             if r.result == "Fail":
                 return TestSubResult(
                     comment=comment,
                     display_name=text(r.name),
-                    automated_test_name=text(r.name),
                     duration_in_ms=r.duration_seconds*1000,
-                    outcome="Failed",
-                    state="Completed"
+                    outcome="Failed"
                     )
             if r.result == "Skip":
                 return TestSubResult(
                     comment=comment,
                     display_name=text(r.name),
-                    automated_test_name=text(r.name),
                     duration_in_ms=r.duration_seconds*1000,
-                    outcome="NotExecuted",
-                    state="Completed"
+                    outcome="NotExecuted"
                     )
 
         def convert_result(r: TestResult) -> TestCaseResult:
@@ -153,6 +147,7 @@ class AzureDevOpsTestResultPublisher:
                 else:
                     print("Data driven test not yet known; adding.")
                     data_driven_tests[base_name] = convert_result(r)
+                    data_driven_tests[base_name].automated_test_name = get_ddt_base_name(r)
                     data_driven_tests[base_name].result_group_type = "dataDriven"
                     data_driven_tests[base_name].sub_results = [convert_to_sub_test(r)]
             else:
