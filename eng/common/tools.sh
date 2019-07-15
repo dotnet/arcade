@@ -146,15 +146,10 @@ function InitializeDotNetCli {
 
   # Add dotnet to PATH. This prevents any bare invocation of dotnet in custom
   # build steps from using anything other than what we've downloaded.
-  export PATH="$dotnet_root:$PATH"
+  Write-PipelinePrependPath -path "$dotnet_root"
 
   Write-PipelineSetVariable -name "DOTNET_MULTILEVEL_LOOKUP" -value "0"
   Write-PipelineSetVariable -name "DOTNET_SKIP_FIRST_TIME_EXPERIENCE" -value "1"
-
-  if [[ $ci == true ]]; then
-    # Make Sure that our bootstrapped dotnet cli is available in future steps of the Azure Pipelines build
-    echo "##vso[task.prependpath]$dotnet_root"
-  fi
 
   # return value
   _InitializeDotNetCli="$dotnet_root"
