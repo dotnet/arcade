@@ -13,7 +13,7 @@ fi
 if $ENV_PATH/bin/python -c "import azure-devops"; then
   echo "azure-devops module already available"
 else
-  $ENV_PATH/bin/python -m pip install vsts==5.0.0b9
+  $ENV_PATH/bin/python -m pip install azure-devops==5.0.0b9
 fi
 
 if $ENV_PATH/bin/python -c "import future"; then
