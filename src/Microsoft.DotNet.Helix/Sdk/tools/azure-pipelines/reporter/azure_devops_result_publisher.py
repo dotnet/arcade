@@ -67,11 +67,12 @@ class AzureDevOpsTestResultPublisher:
 
         def convert_to_sub_test(r: TestResult) -> TestSubResult:
             return TestSubResult(
-                comment=r.comment,
+                comment=comment,
                 display_name=text(r.name),
                 automated_test_name=text(r.name),
                 duration_in_ms=r.duration_seconds*1000,
-                outcome=r.result)
+                outcome=r.result,
+                state="Completed")
 
         def convert_result(r: TestResult) -> TestCaseResult:
             if r.result == "Pass":
