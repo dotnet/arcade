@@ -38,20 +38,20 @@ class AzureDevOpsTestResultPublisher:
 
         published_results = test_client.add_test_results_to_test_run(list(test_case_results), self.team_project, self.test_run_id)  # type: List[TestCaseResult]
 
-        for published_result in published_results:
-            if published_result.automated_test_name in results_with_attachments:
-                result = results_with_attachments.get(published_result.automated_test_name)
-                for attachment in result.attachments:
-                    try:
-                        # Python 3 will throw a TypeError exception because b64encode expects bytes
-                        stream=base64.b64encode(text(attachment.text))
-                    except TypeError:
-                        # stream has to be a string but b64encode takes and returns bytes on Python 3
-                        stream=base64.b64encode(bytes(attachment.text, "utf-8")).decode("utf-8") 
-                    test_client.create_test_result_attachment(TestAttachmentRequestModel(
-                        file_name=text(attachment.name),
-                        stream=stream,
-                    ), self.team_project, self.test_run_id, published_result.id)
+        # for published_result in published_results:
+        #     if published_result.automated_test_name in results_with_attachments:
+        #         result = results_with_attachments.get(published_result.automated_test_name)
+        #         for attachment in result.attachments:
+        #             try:
+        #                 # Python 3 will throw a TypeError exception because b64encode expects bytes
+        #                 stream=base64.b64encode(text(attachment.text))
+        #             except TypeError:
+        #                 # stream has to be a string but b64encode takes and returns bytes on Python 3
+        #                 stream=base64.b64encode(bytes(attachment.text, "utf-8")).decode("utf-8") 
+        #             test_client.create_test_result_attachment(TestAttachmentRequestModel(
+        #                 file_name=text(attachment.name),
+        #                 stream=stream,
+        #             ), self.team_project, self.test_run_id, published_result.id)
 
     def convert_results(self, results: Iterable[TestResult]) -> Iterable[TestCaseResult]:
         comment = "{{ \"HelixJobId\": \"{}\", \"HelixWorkItemName\": \"{}\" }}".format(
@@ -163,6 +163,7 @@ class AzureDevOpsTestResultPublisher:
             print("No data driven tests")
             return
 
+        print("There are {0} items in data_driven_tests".format(len(data_driven_tests)))
         for k,v in data_driven_tests.items():
             print("Returning DDT: {0}".format(v.test_case_title))
             yield v
