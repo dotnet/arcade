@@ -134,11 +134,21 @@ class AzureDevOpsTestResultPublisher:
                 )
 
             print("Unexpected result value {} for {}".format(r.result, r.name))
-
+        
+        other_results = []
+        
         for r in results:
-            if r == None:
+            if r is None:
                 continue
+            if r.name.endswith("1") or r.name.endswith("2"):
+                other_results.append(r)
+                continue
+            else:
+                yield convert_result(r)
+
+        for r in other_results:
             yield convert_result(r)
+        
 
     def get_connection(self) -> Connection:
         credentials = self.get_credentials()
