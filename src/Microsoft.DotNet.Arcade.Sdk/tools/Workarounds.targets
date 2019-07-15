@@ -32,8 +32,12 @@
     <OutDir/>
   </PropertyGroup>
 
+  <!--
+    Workaround to fix that Visual Studio sometimes uses a special MSBuild evaluation
+    mode where all common conditions (e.g., inside ItemGroup) are ignored.
+  -->
   <Choose>
-    <When Condition=" '$(IsWpfTempProject)' == 'true' AND '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+    <When Condition=" '$(IsWpfTempProject)' == 'true' and '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
       <ItemGroup>
         <Reference Include="mscorlib" Pack="false" />
       </ItemGroup>
