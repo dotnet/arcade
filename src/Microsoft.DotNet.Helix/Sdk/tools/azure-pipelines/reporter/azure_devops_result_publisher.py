@@ -62,7 +62,7 @@ class AzureDevOpsTestResultPublisher:
         def is_data_driven_test(r: TestResult) -> bool:
             return r.name.endswith(")")
 
-        def get_ddt_base_name(r: TestResult):
+        def get_ddt_base_name(r: TestResult) -> str:
             return r.name.split('(',1)[0]
 
         def convert_to_sub_test(r: TestResult) -> TestSubResult:
@@ -78,7 +78,9 @@ class AzureDevOpsTestResultPublisher:
                     comment=comment,
                     display_name=text(r.name),
                     duration_in_ms=r.duration_seconds*1000,
-                    outcome="Failed"
+                    outcome="Failed",
+                    stack_trace=text(r.stack_trace) if r.stack_trace is not None else None,
+                    error_message=text(r.failure_message)
                     )
             if r.result == "Skip":
                 return TestSubResult(
@@ -87,6 +89,7 @@ class AzureDevOpsTestResultPublisher:
                     duration_in_ms=r.duration_seconds*1000,
                     outcome="NotExecuted"
                     )
+            print("Unexpected result value {} for {}".format(r.result, r.name))
 
         def convert_result(r: TestResult) -> TestCaseResult:
             if r.result == "Pass":
@@ -159,14 +162,16 @@ class AzureDevOpsTestResultPublisher:
             comment="Sub result failure 1 comment",
             duration_in_ms=2345,
             error_message="Sub result failure 1 error message",
-            outcome="Failed"
+            outcome="Failed",
+            display_name="Sub result failure 1 display name"
         )
 
         sub_result_success_2 = TestSubResult(
             comment="Sub result success 2 comment",
             duration_in_ms=2345,
             error_message="Sub result success 2 error message",
-            outcome="Passed"
+            outcome="Passed",
+            display_name="Sub result success 2 display name"
         )
 
         test_case_failure = TestCaseResult(
