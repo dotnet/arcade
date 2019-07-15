@@ -148,11 +148,12 @@ function InitializeDotNetCli {
   # build steps from using anything other than what we've downloaded.
   export PATH="$dotnet_root:$PATH"
 
+  Write-PipelineSetVariable -name "DOTNET_MULTILEVEL_LOOKUP" -value "0"
+  Write-PipelineSetVariable -name "DOTNET_SKIP_FIRST_TIME_EXPERIENCE" -value "1"
+
   if [[ $ci == true ]]; then
     # Make Sure that our bootstrapped dotnet cli is available in future steps of the Azure Pipelines build
     echo "##vso[task.prependpath]$dotnet_root"
-    echo "##vso[task.setvariable variable=DOTNET_MULTILEVEL_LOOKUP]0"
-    echo "##vso[task.setvariable variable=DOTNET_SKIP_FIRST_TIME_EXPERIENCE]1"
   fi
 
   # return value
@@ -387,7 +388,8 @@ mkdir -p "$toolset_dir"
 mkdir -p "$temp_dir"
 mkdir -p "$log_dir"
 
-if [[ $ci == true ]]; then
-  export TEMP="$temp_dir"
-  export TMP="$temp_dir"
-fi
+Write-PipelineSetVariable -name "Artifacts" -value "$artifacts_dir"
+Write-PipelineSetVariable -name "Artifacts.Toolset" -value "$toolset_dir"
+Write-PipelineSetVariable -name "Artifacts.Log" -value "$log_dir"
+Write-PipelineSetVariable -name "Temp" -value "$temp_dir"
+Write-PipelineSetVariable -name "TMP" -value "$temp_dir"

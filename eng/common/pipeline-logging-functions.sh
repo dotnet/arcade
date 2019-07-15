@@ -100,3 +100,54 @@ function Write-PipelineTaskError {
   echo "$message"
 }
 
+function Write-PipelineSetVariable {
+  if [[ "$ci" != true ]]; then
+    return
+  fi
+
+  name=''
+  value=''
+  secret=false
+  as_output=false
+  is_multi_job_variable=true
+
+  while [[ $# -gt 0 ]]; do
+    opt="$(echo "${1/#--/-}" | awk '{print tolower($0)}')"
+    case "$opt" in
+      -name|-n)
+        name=$2
+        shift
+        ;;
+      -value|-v)
+        value=$2
+        shift
+        ;;
+      -secret|-s)
+        secret=true
+        ;;
+      -as_output|-a)
+        as_output=true
+        ;;
+      -is_multi_job_variable|-i)
+        is_multi_job_variable=$2
+        shift
+        ;;
+    esac
+    shift
+  done
+
+  value=${value/;/%3B}
+  value=${value/\\r/%0D}
+  value=${value/\\n/%0A}
+  value=${value/]/%5D}
+
+  message="##vso[task.setvariable variable=$name;isSecret=$secret;isOutput=$is_multi_job_variable]$value"
+
+  if [[ "$as_output" == true ]]; then
+    $message
+  else
+    echo "$message"
+  fi
+
+}
+
