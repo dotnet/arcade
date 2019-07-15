@@ -66,13 +66,33 @@ class AzureDevOpsTestResultPublisher:
             return r.name.split('(',1)[0]
 
         def convert_to_sub_test(r: TestResult) -> TestSubResult:
-            return TestSubResult(
-                comment=comment,
-                display_name=text(r.name),
-                automated_test_name=text(r.name),
-                duration_in_ms=r.duration_seconds*1000,
-                outcome=r.result,
-                state="Completed")
+            if r.result == "Pass":
+                return TestSubResult(
+                    comment=comment,
+                    display_name=text(r.name),
+                    automated_test_name=text(r.name),
+                    duration_in_ms=r.duration_seconds*1000,
+                    outcome="Passed",
+                    state="Completed"
+                    )
+            if r.result == "Fail":
+                return TestSubResult(
+                    comment=comment,
+                    display_name=text(r.name),
+                    automated_test_name=text(r.name),
+                    duration_in_ms=r.duration_seconds*1000,
+                    outcome="Failed",
+                    state="Completed"
+                    )
+            if r.result == "Skip":
+                return TestSubResult(
+                    comment=comment,
+                    display_name=text(r.name),
+                    automated_test_name=text(r.name),
+                    duration_in_ms=r.duration_seconds*1000,
+                    outcome="NotExecuted",
+                    state="Completed"
+                    )
 
         def convert_result(r: TestResult) -> TestCaseResult:
             if r.result == "Pass":
