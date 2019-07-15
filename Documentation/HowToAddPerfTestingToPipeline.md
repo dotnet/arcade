@@ -2,7 +2,7 @@
 
 ## Performance scripts
 
-The performance scripts are a powershell and shell script that set up the environment variables necessary for running performance testing. Scripts can be found [here](../eng/common/performnace).
+The performance scripts are a powershell and shell script that set up the environment variables necessary for running performance testing. Scripts can be found [here](../eng/common/performance).
 
 ## How to add performance testing to a pipeline
 
@@ -17,8 +17,8 @@ Additional template parameters are:
 | container            | object | The container to run in (if the build machine is linux) |
 | extraSetupParameters | string | Extra parameters to send to the performance scripts |
 | frameworks           | array  | Dotnet frameworks to run against (i.e. netcoreapp3.0, netcoreapp2.2, etc) |
-| continueOnError      | string | Determins whether to continue the build if the step errors |
-| dependsOn            | object | Jobs that the performance testing depends on (i.e. Previous build jobs whose aritfacts the performance testing job will use) |
+| continueOnError      | string | Determines whether to continue the build if the step errors |
+| dependsOn            | object | Jobs that the performance testing depends on (i.e. Previous build jobs whose artifacts the performance testing job will use) |
 | timeoutInMinutes     | int    | How long to wait before timing out |
 | enableTelemetry      | bool   | If we should enable telemetry |
 
