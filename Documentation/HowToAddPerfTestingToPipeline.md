@@ -8,7 +8,7 @@ The performance scripts are a powershell and shell script that set up the enviro
 
 ## How to add performance testing to a pipeline
 
-The pre-reqs for running performance testing are defined in the template -- [performance.yml](../eng/common/templates/job/performance.yml). The template will need to be added as a job to any repository that wishes to run performance testing. The only required parameter are jobName and pool. If no other parameters are supplied, the testing will pull down the performance repository and run the performance testing against the latest dotnet sdk.
+The pre-reqs for running performance testing are defined in the template -- [performance.yml](../eng/common/templates/job/performance.yml). The template will need to be added as a job to any repository that wishes to run performance testing. The only required parameters are jobName and pool. If no other parameters are supplied, the testing will pull down the performance repository and run the performance testing against the latest dotnet sdk.
 
 Additional template parameters are:
 
