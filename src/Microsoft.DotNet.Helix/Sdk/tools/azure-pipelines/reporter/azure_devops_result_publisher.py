@@ -38,6 +38,8 @@ class AzureDevOpsTestResultPublisher:
 
         published_results = test_client.add_test_results_to_test_run(list(test_case_results), self.team_project, self.test_run_id)  # type: List[TestCaseResult]
 
+        print("Published Results count: {0}".format(len(published_results)))
+
         # for published_result in published_results:
         #     if published_result.automated_test_name in results_with_attachments:
         #         result = results_with_attachments.get(published_result.automated_test_name)
