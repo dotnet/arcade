@@ -143,6 +143,7 @@ class AzureDevOpsTestResultPublisher:
         cheese2 = None
 
         unconverted_results = list(results)
+        print("Count of unconverted_results: {0}".format(len(unconverted_results)))
 
         for r in unconverted_results:
             if r is None:
@@ -160,10 +161,11 @@ class AzureDevOpsTestResultPublisher:
             
         converted_results = []        
 
-        lastresult = convert_result(cheese)
-        lastresult.result_group_type = "generic"
-        lastresult.sub_results = [convert_to_sub_test(cheese2)]
-        converted_results.append(lastresult)
+        if cheese is not None and cheese2 is not None:
+            lastresult = convert_result(cheese)
+            lastresult.result_group_type = "generic"
+            lastresult.sub_results = [convert_to_sub_test(cheese2)]
+            converted_results.append(lastresult)
 
         for r in unconverted_results:
             if r is None:
