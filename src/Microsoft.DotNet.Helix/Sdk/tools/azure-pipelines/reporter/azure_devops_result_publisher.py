@@ -91,32 +91,6 @@ class AzureDevOpsTestResultPublisher:
                     )
             print("Unexpected result value {} for {}".format(r.result, r.name))
 
-        def convert_to_sub_test(r: TestResult) -> TestSubResult:
-            if r.result == "Pass":
-                return TestSubResult(
-                    comment=comment,
-                    display_name=text(r.name),
-                    duration_in_ms=r.duration_seconds*1000,
-                    outcome="Passed"
-                    )
-            if r.result == "Fail":
-                return TestSubResult(
-                    comment=comment,
-                    display_name=text(r.name),
-                    duration_in_ms=r.duration_seconds*1000,
-                    outcome="Failed",
-                    stack_trace=text(r.stack_trace) if r.stack_trace is not None else None,
-                    error_message=text(r.failure_message)
-                    )
-            if r.result == "Skip":
-                return TestSubResult(
-                    comment=comment,
-                    display_name=text(r.name),
-                    duration_in_ms=r.duration_seconds*1000,
-                    outcome="NotExecuted"
-                    )
-            print("Unexpected result value {} for {}".format(r.result, r.name))
-
         def convert_result(r: TestResult) -> TestCaseResult:
             if r.result == "Pass":
                 return TestCaseResult(
