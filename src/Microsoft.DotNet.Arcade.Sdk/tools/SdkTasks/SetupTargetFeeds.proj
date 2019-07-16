@@ -67,7 +67,7 @@
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(StaticInternalFeed)/index.json"
         FeedName="dotnet-core-internal"
-        Type="AzDoNugetFeed"
+        Type="AzureStorageFeed"
         Token="$(AzureStorageAccountKey)" />
     </ItemGroup>
 
