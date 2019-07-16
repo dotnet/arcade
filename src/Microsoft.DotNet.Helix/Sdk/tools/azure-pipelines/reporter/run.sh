@@ -10,7 +10,7 @@ if [ ! -f $ENV_PATH/bin/python ]; then
   $HELIX_PYTHONPATH -m virtualenv --no-site-packages $ENV_PATH
 fi
 
-if $ENV_PATH/bin/python -c "import azure-devops"; then
+if $ENV_PATH/bin/python -c "import azure.devops"; then
   echo "azure-devops module already available"
 else
   $ENV_PATH/bin/python -m pip install azure-devops==5.0.0b9
