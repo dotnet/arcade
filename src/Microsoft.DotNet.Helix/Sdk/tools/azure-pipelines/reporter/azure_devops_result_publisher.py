@@ -105,7 +105,6 @@ class AzureDevOpsTestResultPublisher:
                     outcome="Passed",
                     state="Completed",
                     comment=comment,
-                    result_group_type = "generic"
                 )
             if r.result == "Fail":
                 return TestCaseResult(
@@ -120,7 +119,6 @@ class AzureDevOpsTestResultPublisher:
                     error_message=text(r.failure_message),
                     stack_trace=text(r.stack_trace) if r.stack_trace is not None else None,
                     comment=comment,
-                    result_group_type = "generic"
                 )
 
             if r.result == "Skip":
@@ -135,7 +133,6 @@ class AzureDevOpsTestResultPublisher:
                     state="Completed",
                     error_message=text(r.skip_reason),
                     comment=comment,
-                    result_group_type = "generic"
                 )
 
             print("Unexpected result value {} for {}".format(r.result, r.name))
@@ -156,6 +153,7 @@ class AzureDevOpsTestResultPublisher:
                 yield convert_result(r)
 
         lastresult = convert_result(cheese)
+        lastresult.result_group_type = "generic"
         lastresult.sub_results = [convert_to_sub_test(cheese2)]
         yield lastresult
         
