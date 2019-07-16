@@ -1,5 +1,7 @@
 # Automate Performance testing run in AzDO Pipelines
 
+This document is meant to help repo owners onboard to performance testing. Currently, following these steps to add performance testing to your repo will allow you to run per-commit performance testing on physical hardware for internal builds. It is also set up to allow per-PR testing to run on virtual machines for functional testing of performance assets, with the ability to run PR performance testing on physical hardware to come in the near future. Performance testing run on internal builds will generate and upload performance data that will be able to be viewed in the performance visualization tool that is being developed by the perf team. 
+
 ## Performance scripts
 
 The performance scripts are a powershell and shell script that set up the environment variables necessary for running performance testing. Scripts can be found [here](../eng/common/performance).
