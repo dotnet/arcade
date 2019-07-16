@@ -6,6 +6,7 @@ from azure.devops.connection import Connection
 from msrest.authentication import BasicTokenAuthentication, BasicAuthentication
 from azure.devops.v5_1.test import TestClient
 from azure.devops.v5_1.test.models import TestCaseResult, TestAttachmentRequestModel, TestSubResult
+#from azure.devops.v5_1.test_results import TestResultsClient
 
 from helpers import get_env
 from defs import TestResult
@@ -35,6 +36,7 @@ class AzureDevOpsTestResultPublisher:
     def publish_results(self, test_case_results: Iterable[TestCaseResult], results_with_attachments: Mapping[str, TestResult]) -> None:
         connection = self.get_connection()
         test_client = connection.get_client("azure.devops.v5_1.test.TestClient")  # type: TestClient
+        # test_client = connection.get_client("azure.devops.v5_1.test_results.TestResultsClient")  # type: TestResultsClient
 
         published_results = test_client.add_test_results_to_test_run(list(test_case_results), self.team_project, self.test_run_id)  # type: List[TestCaseResult]
 
@@ -155,10 +157,6 @@ class AzureDevOpsTestResultPublisher:
             elif r.name.endswith("cheese"):
                 cheese = r
                 break
-        
-        for r in results:
-            
-                continue
             
         converted_results = []        
 
@@ -168,6 +166,8 @@ class AzureDevOpsTestResultPublisher:
         converted_results.append(lastresult)
 
         for r in unconverted_results:
+            if r is None:
+                continue
             converted_results.append(convert_result(r))
 
         return converted_results
