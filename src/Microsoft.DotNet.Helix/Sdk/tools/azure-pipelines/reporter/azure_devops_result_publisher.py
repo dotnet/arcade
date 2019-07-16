@@ -139,24 +139,38 @@ class AzureDevOpsTestResultPublisher:
         
         cheese = None
         cheese2 = None
-        
-        for r in results:
+
+        unconverted_results = list(results)
+
+        for r in unconverted_results:
             if r is None:
                 continue
             if r.name.endswith("cheese2"):
                 cheese2 = r
+                break
+
+        for r in unconverted_results:
+            if r is None:
                 continue
             elif r.name.endswith("cheese"):
                 cheese = r
+                break
+        
+        for r in results:
+            
                 continue
-            else:
-                yield convert_result(r)
+            
+        converted_results = []        
 
         lastresult = convert_result(cheese)
         lastresult.result_group_type = "generic"
         lastresult.sub_results = [convert_to_sub_test(cheese2)]
-        yield lastresult
-        
+        converted_results.append(lastresult)
+
+        for r in unconverted_results:
+            converted_results.append(convert_result(r))
+
+        return converted_results
 
     def get_connection(self) -> Connection:
         credentials = self.get_credentials()
