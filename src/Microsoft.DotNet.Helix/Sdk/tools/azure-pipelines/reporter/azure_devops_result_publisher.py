@@ -151,6 +151,7 @@ class AzureDevOpsTestResultPublisher:
                 yield convert_result(r)
 
         lastresult = convert_result(cheese)
+        lastresult.result_group_type = "generic"
         lastresult.sub_results = [convert_to_sub_test(cheese2)]
         yield lastresult
         
