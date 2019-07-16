@@ -93,7 +93,7 @@ class AzureDevOpsTestResultPublisher:
 
         def convert_result(r: TestResult) -> TestCaseResult:
             if r.result == "Pass":
-                return TestCaseResult(
+                test_case_result = TestCaseResult(
                     test_case_title=text(r.name),
                     automated_test_name=text(r.name),
                     automated_test_type=text(r.kind),
@@ -105,8 +105,11 @@ class AzureDevOpsTestResultPublisher:
                     comment=comment,
                     result_group_type = "generic"
                 )
+                test_case_result.sub_results = ()
+                return test_case_result
+
             if r.result == "Fail":
-                return TestCaseResult(
+                test_case_result = TestCaseResult(
                     test_case_title=text(r.name),
                     automated_test_name=text(r.name),
                     automated_test_type=text(r.kind),
@@ -120,9 +123,11 @@ class AzureDevOpsTestResultPublisher:
                     comment=comment,
                     result_group_type = "generic"
                 )
+                test_case_result.sub_results = ()
+                return test_case_result
 
             if r.result == "Skip":
-                return TestCaseResult(
+                test_case_result = TestCaseResult(
                     test_case_title=text(r.name),
                     automated_test_name=text(r.name),
                     automated_test_type=text(r.kind),
@@ -135,6 +140,8 @@ class AzureDevOpsTestResultPublisher:
                     comment=comment,
                     result_group_type = "generic"
                 )
+                test_case_result.sub_results = ()
+                return test_case_result
 
             print("Unexpected result value {} for {}".format(r.result, r.name))
         
