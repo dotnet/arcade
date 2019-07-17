@@ -159,19 +159,18 @@ class AzureDevOpsTestResultPublisher:
                 cheese = r
                 break
             
-        converted_results = []        
-
-        if cheese is not None and cheese2 is not None:
-            lastresult = convert_result(cheese)
-            lastresult.result_group_type = "generic"
-            lastresult.sub_results = [convert_to_sub_test(cheese2)]
-            converted_results.append(lastresult)
+        converted_results = []
 
         for r in unconverted_results:
             if r is None:
                 continue
             converted_results.append(convert_result(r))
 
+        if cheese is not None and cheese2 is not None:
+            lastresult = convert_result(cheese)
+            lastresult.result_group_type = "generic"
+            lastresult.sub_results = [convert_to_sub_test(cheese2)]
+            converted_results.append(lastresult)
         return converted_results
 
     def get_connection(self) -> Connection:
